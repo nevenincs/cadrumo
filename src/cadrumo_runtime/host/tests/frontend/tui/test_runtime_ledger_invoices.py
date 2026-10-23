@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import threading
+from collections.abc import Callable, Coroutine
 from dataclasses import replace
 from pathlib import Path
+from typing import Any
 from uuid import UUID
 
 import pytest
@@ -145,6 +148,34 @@ def test_preview_reads_nothing_once_the_session_lapsed(monkeypatch: pytest.Monke
     with pytest.raises(AccountSessionExpiredError):
         asyncio.run(door.preview(str(_book(tmp_path))))
     assert read == []
+
+
+# --- the event loop: the blocking session read never runs on the calling thread -------------------
+
+
+def _off_the_calling_thread(boundary: Boundary, call: Callable[[], Coroutine[Any, Any, object]]) -> None:
+    """Run ``call`` on a loop in this thread and require every session read it made to run elsewhere."""
+    boundary.session_read_threads.clear()
+    asyncio.run(call())
+    assert boundary.session_read_threads, "the door reads its session around its work"
+    assert threading.get_ident() not in boundary.session_read_threads
+
+
+def test_preview_reads_its_session_off_the_event_loop_thread(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """The session read is a blocking IPC exchange; a preview awaited on the loop never runs it there."""
+    boundary = install(monkeypatch)
+    door = _import_door(boundary)
+    path = str(_book(tmp_path))
+    _off_the_calling_thread(boundary, lambda: door.preview(path))
+
+
+def test_apply_reads_its_session_off_the_event_loop_thread(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    boundary = install(
+        monkeypatch, Settled(INVOICE_IMPORT_OPERATION_DEFINITION_ID, _outcome(), effect=OperationEffect.PARTIAL)
+    )
+    door = _import_door(boundary)
+    request = _import_request(_book(tmp_path))
+    _off_the_calling_thread(boundary, lambda: door.apply(request))
 
 
 # --- apply: exactly the reviewed digest ----------------------------------------------------------
@@ -307,6 +338,14 @@ def test_the_wizard_returns_the_settled_outcome_for_the_exact_request(
     assert asyncio.run(_wizard_door(boundary)(_wizard_request())) == settled.result
     assert boundary.payloads == [_wizard_request()]
     assert boundary.reads == [(InvoiceWizardOutcome, True)]
+
+
+def test_the_wizard_reads_its_session_off_the_event_loop_thread(monkeypatch: pytest.MonkeyPatch) -> None:
+    boundary = install(
+        monkeypatch, Settled(INVOICE_WIZARD_OPERATION_DEFINITION_ID, _recorded(), effect=OperationEffect.UPDATED)
+    )
+    door = _wizard_door(boundary)
+    _off_the_calling_thread(boundary, lambda: door(_wizard_request()))
 
 
 @pytest.mark.parametrize(

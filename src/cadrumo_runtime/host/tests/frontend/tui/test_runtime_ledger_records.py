@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 from collections.abc import Callable, Coroutine
 from dataclasses import replace
 from typing import Any
@@ -582,6 +583,50 @@ def test_a_lapsed_session_submits_nothing(
     with pytest.raises(AccountSessionExpiredError):
         asyncio.run(call(doors, submitter))
     assert boundary.submissions == []
+
+
+def _successes(call: _Call) -> tuple[Settled, ...]:
+    """The scripted terminal states that settle ``call`` successfully, re-reads included."""
+    corrected = _INVOICE.model_copy(update={"notes": "corrected"})
+    scripts: dict[_Call, tuple[Settled, ...]] = {
+        _call_invoices: (Settled(INVOICE_LIST_OPERATION_DEFINITION_ID, _list()),),
+        _call_invoice: (Settled(INVOICE_VIEW_OPERATION_DEFINITION_ID, _view()),),
+        _call_update_invoice: (
+            Settled(INVOICE_VIEW_OPERATION_DEFINITION_ID, _view()),
+            Settled(INVOICE_UPDATE_OPERATION_DEFINITION_ID, _updated(corrected), effect=OperationEffect.UPDATED),
+        ),
+        _call_remove_invoice: (
+            Settled(INVOICE_VIEW_OPERATION_DEFINITION_ID, _view()),
+            Settled(INVOICE_REMOVE_OPERATION_DEFINITION_ID, _removed(), effect=OperationEffect.UPDATED),
+        ),
+        _call_transaction: (Settled(LEDGER_VIEW_OPERATION_DEFINITION_ID, _ledger_view()),),
+        _call_update_transaction: (
+            Settled(LEDGER_VIEW_OPERATION_DEFINITION_ID, _ledger_view()),
+            Settled(
+                LEDGER_UPDATE_OPERATION_DEFINITION_ID,
+                _ledger_updated(transaction_projection(description="corrected")),
+                effect=OperationEffect.UPDATED,
+            ),
+        ),
+        _call_link: (Settled(LEDGER_LINK_OPERATION_DEFINITION_ID, _linked(), effect=OperationEffect.UPDATED),),
+    }
+    return scripts[call]
+
+
+@pytest.mark.parametrize(("call", "definitions"), _CALLS_AND_DEFINITIONS)
+def test_each_door_reads_its_session_off_the_event_loop_thread(
+    monkeypatch: pytest.MonkeyPatch, call: _Call, definitions: tuple[str, ...]
+) -> None:
+    """The session read is a blocking IPC exchange; a door awaited on the loop never runs it there."""
+    boundary = install(monkeypatch, *_successes(call))
+    doors, submitter = _doors(boundary), _submitter(boundary)
+    boundary.session_read_threads.clear()
+
+    asyncio.run(call(doors, submitter))
+
+    assert boundary.definitions == list(definitions)
+    assert boundary.session_read_threads, "a door reads its session around its operation"
+    assert threading.get_ident() not in boundary.session_read_threads
 
 
 @pytest.mark.asyncio

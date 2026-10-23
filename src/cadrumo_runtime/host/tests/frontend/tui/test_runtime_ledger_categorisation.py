@@ -10,6 +10,7 @@ refusal receipt and a lapsed session are each refused.
 from __future__ import annotations
 
 import asyncio
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
@@ -185,6 +186,8 @@ class _Client:
     def __init__(self) -> None:
         self.profile_id = _PROFILE_ID
         self.session_id = _SESSION_ID
+        self.session_read_threads: list[int] = []
+        """The thread of each blocking session read: at composition, then around each operation."""
 
 
 class _Controller:
@@ -584,6 +587,7 @@ def _install(monkeypatch: pytest.MonkeyPatch, client: _Client, controller: _Cont
 
     def read_session(_client: FrontendClient, *, profile_id: UUID, session_id: UUID, profile_label: str) -> object:
         assert profile_label == "Fixture profile"
+        client.session_read_threads.append(threading.get_ident())
         if client.profile_id != profile_id or client.session_id != session_id:
             raise AccountSessionExpiredError()
         return object()
@@ -681,6 +685,20 @@ def test_each_door_fails_closed_when_its_session_lapses(monkeypatch: pytest.Monk
     assert submissions == []
 
 
+@pytest.mark.parametrize("case", _CASES, ids=lambda case: case.door)
+def test_each_door_reads_its_session_off_the_event_loop_thread(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
+    """The session read is a blocking IPC exchange; a door awaited on the loop never runs it there."""
+    client = _Client()
+    _install(monkeypatch, client, _Controller(_observation(case), case.result(_PROFILE_ID)))
+    doors = _doors(client)
+    client.session_read_threads.clear()
+
+    _call(doors, case)
+
+    assert client.session_read_threads, "a door reads its session around its operation"
+    assert threading.get_ident() not in client.session_read_threads
+
+
 def test_a_declared_refusal_is_read_with_its_findings(monkeypatch: pytest.MonkeyPatch) -> None:
     case = next(item for item in _CASES if item.door == "bulk_classify")
     client = _Client()
@@ -754,6 +772,7 @@ def _install_review(monkeypatch: pytest.MonkeyPatch, client: _Client, result: Ba
 
     def read_session(_client: FrontendClient, *, profile_id: UUID, session_id: UUID, profile_label: str) -> object:
         del profile_label
+        client.session_read_threads.append(threading.get_ident())
         if client.profile_id != profile_id or client.session_id != session_id:
             raise AccountSessionExpiredError()
         return object()
@@ -860,3 +879,39 @@ def test_the_review_door_reads_a_settled_outcome_only_when_its_receipt_agrees(
     lapsed.session_id = UUID("7cc00000-0000-4000-8000-0000000000cc")
     with pytest.raises(AccountSessionExpiredError):
         asyncio.run(door.read_result(request, _observation(case).projection))
+
+
+@pytest.mark.parametrize("definition_id", [LEDGER_CLASSIFY_REVIEW_DEFINITION_ID, LEDGER_SPLIT_REVIEW_DEFINITION_ID])
+def test_the_review_door_reads_its_session_off_the_event_loop_thread(
+    monkeypatch: pytest.MonkeyPatch, definition_id: str
+) -> None:
+    """Starting a review and reading its outcome each check the session without blocking the loop."""
+    case = _review_case(definition_id)
+    request = cast(LedgerLlmReviewRequest, case.request)
+    client = _Client()
+    result = case.result(_PROFILE_ID)
+    if definition_id == LEDGER_SPLIT_REVIEW_DEFINITION_ID:
+        result = LedgerLlmOperationResult(
+            profile_id=_PROFILE_ID,
+            reviewed_proposal_digest="9" * 64,
+            outcome="split",
+            transaction_id=_TX,
+            split_group_id="d" * 64,
+            child_transaction_ids=("e" * 64, "f" * 64),
+            classified_child_count=2,
+            provenance="llm:lector-local",
+        )
+    _install_review(monkeypatch, client, result)
+    door = getattr(_doors(client), case.door)
+    client.session_read_threads.clear()
+
+    asyncio.run(door.submit(request))
+
+    assert client.session_read_threads, "starting a review reads the session"
+    assert threading.get_ident() not in client.session_read_threads
+
+    client.session_read_threads.clear()
+    asyncio.run(door.read_result(request, _observation(case).projection))
+
+    assert client.session_read_threads, "reading a settled review reads the session"
+    assert threading.get_ident() not in client.session_read_threads

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
 modified: '2026-10-23'
 body_schema: body-v2
-body_hash: 'sha256:38b28a7f6bd96d436a69848e66b52828c5f87922323161059b4d1d63aa817640'
+body_hash: 'sha256:25bfb4aa770ef04b8394d7e77a4e9cc1992e719970729455ec58bc194dc49aee'
 ---
 
 # `ledger-tui-doors` plan
@@ -74,7 +74,7 @@ The orchestrator applies locales, registers visual surfaces, runs every gate and
 
 - [x] `P03.S07` - apply the domain locale manifests and register the domain harness surfaces; `src/cadrumo/locales and dev/tui/harness/surfaces.py`.
 - [ ] `P03.S08` - run gates B1 to B8 over the integrated workspace and review it against the base brief; `src/cadrumo/entrypoints/tui/ledger and src/cadrumo_runtime/host/frontend/tui`.
-- [ ] `P03.S20` - move every blocking session check in the categorisation review and invoice import runtime doors off the event loop, with thread-recording tests for each door outside run_operation; `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_categorisation.py and runtime_ledger_invoices.py`.
+- [x] `P03.S20` - move every blocking session check in the categorisation review and invoice import runtime doors off the event loop, with thread-recording tests for each door outside run_operation; `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_categorisation.py and runtime_ledger_invoices.py`.
 - [ ] `P03.S21` - make the Records workspace refuse area and tool changes while its body has a write in flight, tested per write flow; `src/cadrumo/entrypoints/tui/ledger/controller.py`.
 - [ ] `P03.S22` - report a submitted write that times out or settles with an unknown or partial effect as a typed outcome-unknown refusal carrying the operation id, shown as unknown on every write screen; `src/cadrumo_runtime/host/frontend/tui/runtime_profile_session.py`.
 - [x] `P03.S23` - send every reviewed row of a bulk-classify page and show the operation's applied and skipped counts; `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`.

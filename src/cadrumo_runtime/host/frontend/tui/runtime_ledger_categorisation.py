@@ -10,6 +10,7 @@ operation modal and reads the settled outcome afterwards under the same checks.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from uuid import UUID
 
@@ -493,7 +494,8 @@ class RuntimeSuggestionReviewTuiDoorV1:
 
     async def submit(self, request: LedgerLlmReviewRequest) -> OperationControllerPort:
         """Submit and start one review of the admitted profile, still pinned to its session."""
-        self._session.require_binding()
+        # The binding check reads the session over IPC; it never runs on the event loop.
+        await asyncio.to_thread(self._session.require_binding)
         if request.profile_id != self._session.profile_id or ledger_llm_review_definition_id(request) != (
             self._definition_id
         ):
@@ -512,7 +514,7 @@ class RuntimeSuggestionReviewTuiDoorV1:
         self, request: LedgerLlmReviewRequest, projection: OperationPublicProjectionV1
     ) -> LedgerLlmOperationResult:
         """Read a settled review this door submitted and refuse one its receipt does not support."""
-        self._session.require_binding()
+        await asyncio.to_thread(self._session.require_binding)
         if (
             projection.definition_id != self._definition_id
             or projection.subject_ref != self._subject()
@@ -523,7 +525,7 @@ class RuntimeSuggestionReviewTuiDoorV1:
             client=self._client, operation_id=projection.operation_id, session_id=self._session.session_id
         )
         result = await controller.read_settled_result(projection, LedgerLlmOperationResult, result_version=1)
-        self._session.require_binding()
+        await asyncio.to_thread(self._session.require_binding)
         if not review_result_matches(result, request, projection):
             raise RefusalError(RefusalCode.INVALID_FRAME)
         return result

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
@@ -209,6 +210,8 @@ class _Client:
     def __init__(self) -> None:
         self.profile_id = _PROFILE_ID
         self.session_id = _SESSION_ID
+        self.session_read_threads: list[int] = []
+        """The thread of each blocking session read: at composition, then around each operation."""
 
 
 class _Controller:
@@ -304,6 +307,7 @@ def _install(monkeypatch: pytest.MonkeyPatch, client: _Client, controller: _Cont
 
     def read_session(_client: FrontendClient, *, profile_id: UUID, session_id: UUID, profile_label: str) -> object:
         assert profile_label == _LABEL
+        client.session_read_threads.append(threading.get_ident())
         if client.profile_id != profile_id or client.session_id != session_id:
             raise AccountSessionExpiredError()
         return object()
@@ -653,6 +657,26 @@ def test_each_door_fails_closed_when_its_session_has_lapsed(monkeypatch: pytest.
         asyncio.run(case.call(door))
 
     assert submissions == []
+
+
+@pytest.mark.parametrize("case", _SUCCESSES, ids=[case.name for case in _SUCCESSES])
+def test_each_door_reads_its_session_off_the_event_loop_thread(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
+    """The session read is a blocking IPC exchange; a door awaited on the loop never runs it there."""
+    client = _Client()
+    controller = _Controller(
+        _observation(
+            case.definition_id, condition=OperationTerminalCondition.SUCCEEDED, effect=case.effect, refusal_ref=None
+        ),
+        case.result,
+    )
+    _install(monkeypatch, client, controller)
+    door = case.door(client)
+    client.session_read_threads.clear()
+
+    asyncio.run(case.call(door))
+
+    assert client.session_read_threads, "a door reads its session around its operation"
+    assert threading.get_ident() not in client.session_read_threads
 
 
 _REFUSALS: tuple[tuple[_Case, BaseModel, str], ...] = (

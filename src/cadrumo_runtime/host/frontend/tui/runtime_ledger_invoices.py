@@ -68,7 +68,8 @@ class RuntimeLedgerInvoiceImportTuiDoorV1:
 
     async def preview(self, source_path: str) -> LedgerInvoiceImportSourceV1:
         """Find the typed file on the host and digest it off the event loop; nothing is submitted."""
-        self._session.require_binding()
+        # The binding check reads the session over IPC; it never runs on the event loop.
+        await asyncio.to_thread(self._session.require_binding)
         try:
             return await asyncio.to_thread(_read_invoice_import_source, source_path)
         except OSError as error:

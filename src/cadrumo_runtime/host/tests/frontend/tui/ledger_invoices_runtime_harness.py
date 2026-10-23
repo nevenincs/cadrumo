@@ -7,6 +7,7 @@ so the door under test meets exactly the receipt shape the runtime publishes.
 
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import cast
@@ -219,6 +220,8 @@ class Boundary:
     script: list[Settled]
     submissions: list[dict[str, object]] = field(default_factory=list)
     reads: list[tuple[type[BaseModel], bool]] = field(default_factory=list)
+    session_read_threads: list[int] = field(default_factory=list)
+    """The thread of each blocking session read: at composition, then around each operation."""
 
     @property
     def payloads(self) -> list[object]:
@@ -237,6 +240,7 @@ def install(monkeypatch: pytest.MonkeyPatch, *script: Settled) -> Boundary:
 
     def read_session(_client: FrontendClient, *, profile_id: UUID, session_id: UUID, profile_label: str) -> object:
         assert profile_label == PROFILE_LABEL
+        boundary.session_read_threads.append(threading.get_ident())
         if boundary.client.profile_id != profile_id or boundary.client.session_id != session_id:
             raise AccountSessionExpiredError()
         return object()
