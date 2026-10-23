@@ -19,7 +19,7 @@ from dev._paths import REPO_ROOT
 
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
-from .action_cache import action_lock, completed, current, fingerprint
+from .action_cache import action_lock, changed_inputs, completed, current, digests_fingerprint, input_digests
 from .build_directory import require_enrolled_build
 from .build_log import BuildLog, display_path
 from .build_paths import build_paths
@@ -38,6 +38,9 @@ _RAISED = re.compile(r"^\s*((?:\w+\.)*\w*(?:Error|Exception): .+)$")
 #: opposite contract -- they must index nothing -- and the two values only make
 #: sense read together.
 PACKAGE_INDEX_ENVIRONMENT: dict[str, str] = {"CADRUMO_DOCS_PAGEFIND_MODE": "full"}
+
+#: How many changed inputs a refusal names before it only counts the rest.
+NAMED_CHANGED_INPUTS = 10
 
 #: A reusable site owned by this binary directory's documentation work target.
 SHARED_SITE_CACHE = "user-docs"
@@ -139,17 +142,19 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_
     build_root = paths["user_docs_build"]
     with action_lock(build, "user-docs"):
         authority = selected_published_authority(REPO_ROOT)
-        input_identity = fingerprint(inputs, authority)
+        digests = input_digests(inputs, authority)
+        input_identity = digests_fingerprint(digests)
         shared_inputs = shared_docs_inputs(inputs, authority, source=REPO_ROOT, build=build)
 
         def validate_inputs() -> None:
             selected = selected_published_authority(REPO_ROOT)
+            observed = input_digests(inputs, selected)
             if (
                 selected != authority
-                or fingerprint(inputs, selected) != input_identity
+                or digests_fingerprint(observed) != input_identity
                 or shared_docs_inputs(inputs, selected, source=REPO_ROOT, build=build) != shared_inputs
             ):
-                raise DocsPackagingError("Documentation inputs changed during the build; retry from stable sources")
+                raise DocsPackagingError(inputs_changed_message(changed_inputs(digests, observed)))
 
         validate_inputs()
         if current(build_root, input_identity):
@@ -175,6 +180,22 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_
             _log().status("reusing the documentation work target's site from the same inputs")
         validate_inputs()
         completed(build_root, input_identity)
+
+
+def inputs_changed_message(changed: list[Path]) -> str:
+    """Refuse a build whose inputs changed, naming them so the writer can be found.
+
+    The site was compiled from the checkout as it was being edited, so it may
+    mix both states; naming the files tells an operator whether another writer
+    of the checkout or the build itself changed them.
+    """
+    if changed:
+        named = ", ".join(display_path(path) for path in changed[:NAMED_CHANGED_INPUTS])
+        unnamed = len(changed) - NAMED_CHANGED_INPUTS
+        detail = f"{len(changed)} changed: {named}" + (f" and {unnamed} more" if unnamed > 0 else "")
+    else:
+        detail = "none differs from the start of the build any more, so one changed and was restored"
+    return f"Documentation inputs changed during the build ({detail}); retry from stable sources"
 
 
 def shared_site_identity(inputs_outside_the_build: str, languages: tuple[str, ...]) -> str:

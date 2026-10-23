@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ..action_cache import completed, current, modified_inputs
+from ..action_cache import changed_inputs, completed, current, fingerprint, input_digests, modified_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -103,3 +103,25 @@ def test_modified_inputs_names_edited_and_removed_inputs_only(tmp_path: Path) ->
     os.utime(edited, ns=(started, started))
     removed.unlink()
     assert modified_inputs(listing, (extra,), started) == [edited, removed]
+
+
+def test_changed_inputs_names_rewritten_removed_and_reselected_inputs_by_content(tmp_path: Path) -> None:
+    steady, rewritten, removed, old_extra, new_extra = (
+        tmp_path / name for name in ("steady", "rewritten", "removed", "old-extra", "new-extra")
+    )
+    for path in (steady, rewritten, removed, old_extra, new_extra):
+        path.write_text("before", encoding="utf-8")
+    listing = tmp_path / "inputs.txt"
+    listing.write_text("\n".join(str(path) for path in (steady, rewritten, removed)), encoding="utf-8")
+    before = input_digests(listing, (old_extra,))
+    stamp = steady.stat().st_mtime_ns
+    # Same bytes under a new timestamp is no change; new bytes under the old timestamp are one.
+    os.utime(steady, ns=(stamp + 1_000_000_000, stamp + 1_000_000_000))
+    rewritten.write_text("after!", encoding="utf-8")
+    os.utime(rewritten, ns=(stamp, stamp))
+    removed.unlink()
+    listing.write_text("\n".join(str(path) for path in (steady, rewritten)), encoding="utf-8")
+    after = input_digests(listing, (new_extra,))
+    assert changed_inputs(before, after) == [new_extra, old_extra, removed, rewritten]
+    assert changed_inputs(after, after) == []
+    assert fingerprint(listing, (new_extra,)) != fingerprint(listing, (old_extra,))

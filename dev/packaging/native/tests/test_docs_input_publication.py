@@ -9,6 +9,7 @@ import pytest
 
 from .. import docs_build
 from ..action_cache import current, fingerprint
+from ..build_log import display_path
 from ..docs_stage import DocsPackagingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -67,8 +68,16 @@ def test_source_and_authority_changes_refuse_completion(
 
         monkeypatch.setattr(docs_build, "_copy_site", changed_copy)
 
-    with pytest.raises(DocsPackagingError, match="inputs changed"):
+    with pytest.raises(DocsPackagingError, match="inputs changed") as refusal:
         docs_build.build_roots(build, inputs, target="windows-x86-64")
+    # The refusal names exactly what changed, so the writer can be found.
+    named = {
+        "source": [source],
+        "reuse": [source],
+        "authority": [authority],
+        "selection": [authority, tmp_path / "successor.json"],
+    }[change]
+    assert f"({len(named)} changed: {', '.join(display_path(path) for path in named)})" in str(refusal.value)
     assert not (destination / "ready").exists()
     if change == "reuse":
         assert (shared / "ready").read_bytes() == original_receipt

@@ -91,8 +91,10 @@ def resolve_paths(paths: Iterable[Path]) -> dict[Path, Path]:
     return resolved
 
 
-def fingerprint(inputs: Path, extra: tuple[Path, ...] = (), *, outside: Path | None = None) -> str:
-    """Hash the enrolled inputs by name and bytes, including selected authority.
+def input_digests(
+    inputs: Path, extra: tuple[Path, ...] = (), *, outside: Path | None = None
+) -> dict[Path, tuple[Path, str]]:
+    """Return each enrolled input's resolved path and content digest, in enrolled-name order.
 
     Args:
         inputs: The file listing the enrolled inputs, one path per line.
@@ -102,20 +104,41 @@ def fingerprint(inputs: Path, extra: tuple[Path, ...] = (), *, outside: Path | N
             that configuration writes; a fingerprint that is to mean the same
             thing in every configuration of one checkout cannot include them.
     """
-    result = hashlib.sha256()
     paths = {*map(Path, inputs.read_text(encoding="utf-8").splitlines()), *extra}
     resolved = resolve_paths(paths)
     if outside is not None:
         boundary = outside.resolve()
         paths = {path for path in paths if not resolved[path].is_relative_to(boundary)}
+    digests: dict[Path, tuple[Path, str]] = {}
     for path in sorted(paths):
-        result.update(str(resolved[path]).encode("utf-8"))
         try:
             # Inside a digest cache an unchanged input is not read again; the bytes hashed are the same.
-            result.update(bytes.fromhex(digest(path)))
+            digests[path] = (resolved[path], digest(path))
         except OSError as error:
             raise OSError(f"Cannot fingerprint build input: {path}") from error
+    return digests
+
+
+def digests_fingerprint(digests: dict[Path, tuple[Path, str]]) -> str:
+    """Hash the inputs :func:`input_digests` returned by resolved name and bytes."""
+    result = hashlib.sha256()
+    for resolved, value in digests.values():
+        result.update(str(resolved).encode("utf-8"))
+        result.update(bytes.fromhex(value))
     return result.hexdigest()
+
+
+def fingerprint(inputs: Path, extra: tuple[Path, ...] = (), *, outside: Path | None = None) -> str:
+    """Hash the enrolled inputs by name and bytes, including selected authority.
+
+    The arguments are those of :func:`input_digests`.
+    """
+    return digests_fingerprint(input_digests(inputs, extra, outside=outside))
+
+
+def changed_inputs(before: dict[Path, tuple[Path, str]], after: dict[Path, tuple[Path, str]]) -> list[Path]:
+    """Return the inputs enrolled, removed or rewritten between two :func:`input_digests`, in name order."""
+    return sorted(path for path in before.keys() | after.keys() if before.get(path) != after.get(path))
 
 
 def modified_inputs(inputs: Path, extra: tuple[Path, ...], since_ns: int) -> list[Path]:
