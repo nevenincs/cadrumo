@@ -5,40 +5,14 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:c6ef3d7dac1c94fd66d1418444d52c9eddc93c64ddf07073e9f8cde2712a4376'
+body_hash: 'sha256:ecd6bb2dd95289875a79f30fc861c595f81b6cb7f1576fbf704b12eafd237264'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `desktop-ledger-editor` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `A` `native/desktop/src-tauri/src/shell/relay.rs`
 - `S01` `A` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
@@ -96,7 +70,13 @@ related:
 - `S04` `verify:` `npx prettier --check on touched files` -> `pass`
 - `S04` `verify:` `scratch semantics probe of the scenario ledger (esbuild bundle run in node, 31 checks)` -> `pass`
 - `S04` `by:` `vaultspec-high-executor`
+- `S01` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S01` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S01` `M` `.vault/adr/2026-10-23-desktop-ledger-editor-adr.md`
+- `S01` `verify:` `desktop-host-unit-test` -> `pass`
+- `S01` `verify:` `desktop-host-unit-clippy` -> `pass`
 
 ## Notes
 
 - `S04` Playwright scenario suite not run here: it starts the fixed-port development and preview servers; the Ledger page's scenario tests belong to P04.S16.
+- `S01` Follow-up correction: results reach the window with file names, not paths (ADR amendment 2026-10-24)
