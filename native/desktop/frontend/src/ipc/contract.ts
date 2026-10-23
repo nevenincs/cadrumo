@@ -1158,6 +1158,78 @@ export interface HostCommands {
     args: Authorized<{ from: string; to: string; language: string }>;
     result: import("../shell/views").FilingCalendar;
   };
+  /** Submits one admitted ledger operation with its request, without the
+   * profile, and follows it until it settles or waits on the person. A
+   * failure rejects with `LedgerFailure`. */
+  ledger_submit: {
+    args: Authorized<{
+      definition: import("../shell/ledger").LedgerDefinitionId;
+      /** A JSON object: the definition's registered request. */
+      payload: object;
+    }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  /** Where an operation this window submitted stands, without waiting. */
+  ledger_observe: {
+    args: Authorized<{ operation: string }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  ledger_review: {
+    args: Authorized<{ operation: string }>;
+    result: import("../shell/ledger").LedgerReview;
+  };
+  /** Refused with `review_changed` unless `reviewDigest` is the digest of
+   * the review the window read last for that operation. */
+  ledger_answer: {
+    args: Authorized<{
+      operation: string;
+      reviewDigest: string;
+      decision: import("../shell/ledger").LedgerDecision;
+    }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  ledger_cancel: {
+    args: Authorized<{ operation: string; revision: number }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  /** Tokens for the files picked in the native dialog; never a path. */
+  ledger_files_pick: {
+    args: Authorized<{
+      purpose: Exclude<import("../shell/ledger").FilePurpose, "export">;
+      pick: import("../shell/ledger").FilePick;
+      filterLabel: string;
+    }>;
+    result: import("../shell/ledger").FilePicks;
+  };
+  ledger_files_save: {
+    args: Authorized<{
+      format: import("../shell/ledger").LedgerExportFormat;
+      filterLabel: string;
+      suggestedName: string | null;
+    }>;
+    result: import("../shell/ledger").FilePicks;
+  };
+  ledger_files_forget: {
+    args: Authorized<{ tokens: import("../shell/ledger").FileToken[] }>;
+    result: null;
+  };
+  ledger_drop_observe: {
+    args: Authorized<{
+      purpose: Exclude<import("../shell/ledger").FilePurpose, "export">;
+      updates: Channel<import("../shell/ledger").LedgerDropSignal>;
+    }>;
+    result: number;
+  };
+  ledger_drop_unobserve: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
+  /** Raw body only: the bytes of `ownAccountChange`, the one route for an
+   * own account's number and bank block. */
+  ledger_own_account: {
+    args: Authorized;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
   startup_begin: { args: Authorized; result: void };
   startup_status: { args: Authorized; result: StartupProgress };
 

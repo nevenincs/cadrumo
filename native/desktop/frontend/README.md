@@ -650,6 +650,7 @@ manager records have `source: "manager"` and scrubbed lifecycle facts in
 | `dev/product-boundary.ts`                       | The build check that keeps development modules out of the product              |
 | `src/App.tsx`, `src/shell/`                     | Composition, the action registry, layout state and the host port               |
 | `src/shell/views.ts`                            | The read-only profile views a host may offer, types only                       |
+| `src/shell/ledger.ts`                           | The ledger port a host may offer: its admitted definitions and typed requests  |
 | `src/styles/tokens.css`, `src/styles/theme.css` | The design tokens and the colour roles                                         |
 | `src/components/ui/`                            | The primitives                                                                 |
 | `src/components/`                               | Public shell components, feature internals and colocated stories               |

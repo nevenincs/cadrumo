@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:cb531ae6ab10d9071c4068db653988197006b3224c96ce5bbb2fd1c90ce40887'
+body_hash: 'sha256:863dd189538b7e03149c006b3e9ee81f12a2aa629ad293a211f5d01b6e68416f'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -71,3 +71,17 @@ related:
 - `S02` `verify:` `tauri.mjs test-unit app::tests` -> `pass`
 - `S02` `verify:` `tauri.mjs clippy-backend` -> `pass`
 - `S02` `by:` `vaultspec-high-executor`
+- `S03` `A` `native/desktop/frontend/src/shell/ledger.ts`
+- `S03` `A` `native/desktop/frontend/src/shell/tauriLedger.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S03` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S03` `M` `native/desktop/frontend/eslint.config.js`
+- `S03` `M` `native/desktop/frontend/README.md`
+- `S03` `M` `native/desktop/src-tauri/src/shell/ledger/relay_contracts.py`
+- `S03` `verify:` `npx tsc --noEmit` -> `pass`
+- `S03` `verify:` `npx eslint on touched files` -> `pass`
+- `S03` `verify:` `npx prettier --check on touched files` -> `pass`
+- `S03` `verify:` `relay_contracts.py --check (and a deliberate mirror drift refused)` -> `pass`
+- `S03` `verify:` `ruff check and format --check relay_contracts.py` -> `pass`
+- `S03` `by:` `vaultspec-high-executor`

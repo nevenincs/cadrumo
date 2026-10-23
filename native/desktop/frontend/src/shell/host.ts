@@ -185,6 +185,10 @@ export interface Host {
   /** Read-only views of the signed-in profile, where this host offers any.
    * Without them the shell shows no way into a view. */
   readonly views?: ProfileViews;
+  /** The signed-in profile's ledger: its registered operations, the files
+   * the person picks for them and the reviews they pause for, where this
+   * host offers them. Without it the shell shows no Ledger page. */
+  readonly ledger?: import("./ledger").LedgerPort;
   /** What the agent column reads, where this host serves the agent.
    * Without it each of the column's views says it is not available yet. */
   readonly agent?: AgentViews;
