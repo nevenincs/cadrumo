@@ -11,7 +11,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
 modified: '2026-10-23'
 body_schema: body-v2
-body_hash: 'sha256:86fc923f94c50fe4f674ac424eb868a0e57f522d3f7c63bee61a2645d9cf4912'
+body_hash: 'sha256:3b976cf13300816c1e297a6ddb2ef716b6c71380eb9dd07c102d429ac67bb452'
 ---
 
 # `ledger-tui-doors` plan
@@ -79,6 +79,7 @@ The orchestrator applies locales, registers visual surfaces, runs every gate and
 - [x] `P03.S22` - report a submitted write that times out or settles with an unknown or partial effect as a typed outcome-unknown refusal carrying the operation id, shown as unknown on every write screen; `src/cadrumo_runtime/host/frontend/tui/runtime_profile_session.py`.
 - [x] `P03.S23` - send every reviewed row of a bulk-classify page and show the operation's applied and skipped counts; `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`.
 - [ ] `P03.S24` - give ledger.review and ledger.evidence.review.list dedicated Records doors so no ledger operation is reachable only through Ctrl+P, and name the eight remaining ledger locale key families in full; `src/cadrumo/entrypoints/tui/ledger/review.py, evidence.py and runtime_ledger_*.py`.
+- [ ] `P03.S25` - make every Records body answer an area choice, so entries add, export and reset, the import flow, invoice entry and the categorisation tools no longer show a navigation table that does nothing; `src/cadrumo/entrypoints/tui/ledger/controller.py and the bodies that bypass handle_navigation_selection`.
 
 ## Parallelization
 
