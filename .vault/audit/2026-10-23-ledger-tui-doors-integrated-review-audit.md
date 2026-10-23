@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:131459b63d85c4cbef4d97b24a222e4f35847b0bc7a27195f7c3b3ff2f6b0d49'
+body_hash: 'sha256:f2d2578b5a5057441f4b3a66b7b1a5d4063d1ff5b950e72f73dc968fa4ff4ada'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -155,6 +155,22 @@ The asset write hold is now bound to the asset each action names and released on
 
 `aeat_sync/screens.py:510`, `modelo/workbench/screen_operation.py:210`, `operations/settled_submission.py:51` and `profile/manager_client.py:440` (runtime) treat a `None` dismissal as nothing, and `setup/screen.py:283` re-reads without saying the outcome is unknown. `operations/run_screen.py:485` already words it as unobserved with the operation id. These are outside the Records plan.
 
+### frontend-behaviour | medium | Fourth re-review: a manual split during the re-read after an unknown review drops the re-read's continuation
+
+`refresh_then` keeps a single continuation (`controller.py:679`). On `LedgerSplitScreen` an unknown review calls `reread_then` (`categorisation_review.py:223-226`); the manual split is not gated by `review_awaits_reread` (`categorisation_split.py:153-154`), and its success path calls `refresh_then(self.after_refresh)` (`categorisation_common.py:365`), replacing `landed`. Ask then stays refused for the life of the screen, and `refuse("")` (`categorisation_common.py:327`) erases the unknown review's operation id. A probe confirmed it; nothing is written twice.
+
+### frontend-behaviour | low | Fourth re-review: a failed re-read withholds the write with no retry and hides the Home guidance
+
+`_reread_after_unknown_review` (`categorisation_review.py:228-233`) overwrites the `refresh_failed_unknown` line, and Ask only repeats the unknown wording without starting another re-read. Evidence Add has the same shape after a failed records load (`evidence_records.py:68-70`).
+
+### copy | low | Fourth re-review: write_outcome_unknown is never cleared
+
+A later saved write whose re-read fails is worded as possibly unsaved (`evidence_records.py:309-311`). The read counters allow a safe reset: record `_refreshes_started` when the unknown outcome arrives and clear the flag once `_refreshes_returned` exceeds it.
+
+### settlement | low | Fourth re-review: an own-account write with an unknown outcome keeps its secrets and is offered again over the old register
+
+`own_accounts.py:435-447` unstages without clearing the account-number inputs (unlike `:454`) and without re-reading the register (unlike `registers_presentation.py:445-451`), so update, close or designate can be resent against an outdated register. `_submit` also no longer clears `_busy` on a non-Cadrumo exception.
+
 ## Recommendations
 
 - Event loop: move every blocking session check in a runtime door off the loop, and add thread-recording tests for each door that does not go through `run_operation`.
@@ -167,3 +183,4 @@ The asset write hold is now bound to the asset each action names and released on
 - The P03.S20 to S22 re-review findings reopen those Steps. Every path after start, and every way of leaving a body, must go through one shared check rather than through per-scenario fixes.
 - The second re-review passes S20 and S21 and reopens S22: activity-asset correlation must move into `settle`, session-lost unknown outcomes must read as unknown on every write screen, and the categorisation result read must be judged inside the shared check.
 - The third re-review passes S22. The own-accounts follow-up read, the modal `None` dismissal and the four lows are in-scope corrections for P03.S26. Whether the recompose outcome carries pending unknown operations is a follow-on decision on the recompose contract.
+- The fourth re-review passes S26. Its medium and three lows are in-scope corrections for P03.S27.
