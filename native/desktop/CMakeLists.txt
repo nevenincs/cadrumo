@@ -275,6 +275,8 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
     endif()
     set(host_fixture_check COMMAND "${CADRUMO_DEV_PYTHON}" -B
       "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/sign_in/cli_contract_fixtures.py" --check)
+    list(APPEND host_fixture_check COMMAND "${CADRUMO_DEV_PYTHON}" -B
+      "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/ledger/relay_contracts.py" --check)
   endif()
   set(host_test_arguments)
   if(action STREQUAL "test" OR action STREQUAL "unit-test")

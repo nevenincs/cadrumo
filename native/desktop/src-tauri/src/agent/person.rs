@@ -20,6 +20,24 @@ const STDERR_LIMIT: usize = 64 * 1024;
 /// (and every agent child) while the runtime was still handling the request.
 const REPLY_LIMIT: Duration = Duration::from_secs(140);
 
+/// The longest request line the holder reads, before its newline.
+pub const REQUEST_LIMIT: usize = 16_383;
+
+/// Whether `document` fits one request line once its request id is added.
+/// A request that does not is refused before it is written, and that refusal
+/// loses the bridge: check first.
+pub fn request_fits(document: &Value) -> bool {
+    let Some(fields) = document.as_object() else {
+        return false;
+    };
+    let mut fields = fields.clone();
+    fields.insert(
+        "request_id".into(),
+        json!("00000000-0000-4000-8000-000000000000"),
+    );
+    serde_json::to_vec(&fields).is_ok_and(|bytes| bytes.len() <= REQUEST_LIMIT)
+}
+
 fn failed(reason: &'static str) -> ApplicationError {
     ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli).with_reason(reason)
 }
@@ -494,7 +512,7 @@ impl Person {
         document["request_id"] = json!(id);
         let mut bytes = serde_json::to_vec(document)
             .map_err(|error| failed("person_request_encode").caused_by(error))?;
-        if bytes.len() > 16_383 {
+        if bytes.len() > REQUEST_LIMIT {
             return Err(failed("person_request_too_large"));
         }
         bytes.push(b'\n');

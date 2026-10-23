@@ -10,7 +10,7 @@ mod admin;
 mod gateway;
 mod launcher;
 pub(crate) mod person;
-mod runner;
+pub(crate) mod runner;
 mod session;
 mod sse;
 mod stream;

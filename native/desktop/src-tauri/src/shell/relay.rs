@@ -1,0 +1,161 @@
+//! The held person's registered-operation relay, shared by the host modules
+//! that submit through it: submission, observation until a projection
+//! settles, the result read, and the closed failure codes the window maps to
+//! its own words. No operation's meaning lives here.
+use crate::agent::person::{HeldPerson, PersonEvent};
+use cadrumo_application::error::application::ApplicationError;
+use serde::Serialize;
+use serde_json::{Value, json};
+use std::{sync::Mutex, time::Duration};
+
+/// How long a submitted operation is followed before its outcome is unknown.
+pub(crate) const SETTLE_LIMIT: Duration = Duration::from_secs(90);
+
+#[derive(Debug, Serialize)]
+pub struct Failure {
+    pub(crate) code: &'static str,
+    pub(crate) operation_id: Option<String>,
+    /// The runtime's closed refusal code, where one was given.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) reason: Option<String>,
+}
+impl Failure {
+    pub(crate) fn new(code: &'static str) -> Self {
+        Self {
+            code,
+            operation_id: None,
+            reason: None,
+        }
+    }
+}
+impl From<ApplicationError> for Failure {
+    fn from(_: ApplicationError) -> Self {
+        Self::new("unavailable")
+    }
+}
+pub(crate) type Result<T> = std::result::Result<T, Failure>;
+pub(crate) fn lock<T>(value: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
+    value.lock().unwrap_or_else(|e| e.into_inner())
+}
+pub(crate) fn protocol() -> Failure {
+    Failure::new("unavailable")
+}
+
+pub(crate) async fn identity(person: &HeldPerson) -> Result<Value> {
+    let person = person.clone();
+    // The same mutex is held by blocking IPC exchanges. Never wait on it
+    // on a Tokio executor thread: that can also starve the read's timer.
+    Ok(super::blocking(move || Ok(lock(&person).identity.clone())).await?)
+}
+pub(crate) async fn profile_of(person: &HeldPerson) -> Result<String> {
+    Ok(identity(person).await?["profile_id"]
+        .as_str()
+        .ok_or_else(protocol)?
+        .to_owned())
+}
+pub(crate) async fn call(person: &HeldPerson, request: Value) -> Result<Value> {
+    let person = person.clone();
+    Ok(super::blocking(move || lock(&person).exchange(request)).await?)
+}
+
+/// One operation this host submitted, as the relay names it.
+pub(crate) struct Relayed<'a> {
+    pub(crate) person: &'a HeldPerson,
+    pub(crate) operation: String,
+    pub(crate) definition: &'a str,
+    pub(crate) subject: String,
+}
+
+pub(crate) fn subject(profile: &str) -> String {
+    format!("profile:{profile}")
+}
+
+/// Submits `payload` for `definition` and answers the operation id. A refused
+/// submission is `refused` with the relay's code; one whose answer was lost
+/// is `unknown` for a mutation, which may have been admitted.
+pub(crate) async fn submit(
+    person: &HeldPerson,
+    definition: &str,
+    subject: &str,
+    payload: Value,
+    mutation: bool,
+) -> Result<String> {
+    let lost = || Failure::new(if mutation { "unknown" } else { "unavailable" });
+    let submitted = call(
+        person,
+        json!({"action":"operation_submit", "definition_id":definition,
+        "subject_ref":subject, "payload":payload}),
+    )
+    .await
+    .map_err(|_| lost())?;
+    if submitted["kind"] == "operation_refused" {
+        let mut refused = Failure::new("refused");
+        refused.reason = submitted["code"].as_str().map(str::to_owned);
+        return Err(refused);
+    }
+    Ok(submitted["operation_id"]
+        .as_str()
+        .filter(|id| super::setup::wire::is_hex64(id))
+        .ok_or_else(lost)?
+        .to_owned())
+}
+
+/// The operation's current public projection, checked to be the one submitted.
+pub(crate) async fn observe(relayed: &Relayed<'_>) -> Result<Value> {
+    let reply = call(
+        relayed.person,
+        json!({"action":"operation_observe", "operation_id":relayed.operation, "after_cursor":0}),
+    )
+    .await?;
+    let p = &reply["observation"]["projection"];
+    if reply["kind"] != "operation_observed"
+        || p["operation_id"] != relayed.operation
+        || p["definition_id"] != relayed.definition
+        || p["subject_ref"] != relayed.subject
+    {
+        return Err(protocol());
+    }
+    Ok(p.clone())
+}
+
+/// Observes until the operation is terminal or `stop` accepts its projection,
+/// waking on the runtime's change cue rather than a timer. Subscribe `events`
+/// before submitting: the observe request installs the watch before answering,
+/// so a fast settlement cannot lose its wake.
+pub(crate) async fn follow(
+    events: &mut tokio::sync::broadcast::Receiver<PersonEvent>,
+    relayed: &Relayed<'_>,
+    stop: impl Fn(&Value) -> bool,
+) -> Result<Value> {
+    loop {
+        let projection = observe(relayed).await?;
+        if projection["lifecycle"] == "terminal" || stop(&projection) {
+            return Ok(projection);
+        }
+        loop {
+            match events.recv().await {
+                Ok(PersonEvent::OperationChanged)
+                | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => break,
+                Ok(PersonEvent::Retired)
+                | Err(tokio::sync::broadcast::error::RecvError::Closed) => return Err(protocol()),
+                _ => {}
+            }
+        }
+    }
+}
+
+/// The settled operation's result document, or its declared refusal detail.
+pub(crate) async fn result(relayed: &Relayed<'_>) -> Result<Value> {
+    let result = call(
+        relayed.person,
+        json!({"action":"operation_result", "operation_id":relayed.operation}),
+    )
+    .await?;
+    if result["kind"] != "operation_result"
+        || result["operation_id"] != relayed.operation
+        || result["definition_id"] != relayed.definition
+    {
+        return Err(protocol());
+    }
+    Ok(result["document"].clone())
+}

@@ -1,0 +1,356 @@
+{
+  "operations": {
+    "ledger.actividad-asset.claim": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.actividad-asset.correct": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.actividad-asset.create": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.actividad-asset.filing-handoff": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.actividad-asset.forecast": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.actividad-asset.inspect": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.add": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.allocate": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.archive": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.attach": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.bienes_inversion.declare": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.bienes_inversion.list": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.check": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.classify.bulk": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.classify.iva-derive": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.classify.review": {
+      "may_write": true,
+      "review": true
+    },
+    "ledger.classify.single": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.counterparty": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.detach": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.evidence.add": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.evidence.attachment_queue": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.evidence.attachment_view": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.evidence.batch": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.evidence.confirm": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.evidence.consent.list": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.evidence.extract": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.evidence.list": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.evidence.query": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.evidence.reader-readiness": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.evidence.remove": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.evidence.review.list": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.evidence.review.summary": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.evidence.review.view": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.evidence.update": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.evidence.view": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.exclude": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.export": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.history": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.history.typed": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.import": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.inventory.closing-authority.record": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.inventory.create": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.inventory.list": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.inventory.movement.add": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.inventory.valuation.preview": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.invoice.add": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.invoice.import": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.invoice.list": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.invoice.remove": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.invoice.update": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.invoice.view": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.invoice.wizard": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.link": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.list": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.llm-diagnostics": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.merge": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.own_account": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.participation": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.participation.rebuild": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.preflight": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.prorrata.declare_sector": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.prorrata.elect_especial": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.prorrata.elect_general": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.prorrata.list": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.prorrata.revoke_especial": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.prorrata.seed": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.prorrata.seed_sector": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.prorrata.settle_sector": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.ratios.eligible": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.ratios.list": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.ratios.set": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.ratios.unset": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.ratios.validate": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.remove": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.reset": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.restore": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.review": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.rule.add": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.rule.apply": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.rule.list": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.split.manual": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.split.review": {
+      "may_write": true,
+      "review": true
+    },
+    "ledger.stash": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.status": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.track": {
+      "may_write": false,
+      "review": false
+    },
+    "ledger.update": {
+      "may_write": true,
+      "review": false
+    },
+    "ledger.view": {
+      "may_write": false,
+      "review": false
+    }
+  },
+  "relay": {
+    "payload_text_limit": 12288,
+    "request_line_limit": 16384
+  }
+}

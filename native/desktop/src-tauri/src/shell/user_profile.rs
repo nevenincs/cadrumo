@@ -3,9 +3,9 @@
 pub(crate) mod censo;
 mod views;
 mod wire;
+use super::relay::{self, Failure, Result, lock, protocol};
 use super::sign_in::{Presence, SignIn};
 use crate::agent::person::{HeldPerson, PersonEvent};
-use cadrumo_application::error::application::ApplicationError;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::{
@@ -21,32 +21,6 @@ use wire::{Overview, Pages};
 // Bound the complete read, including admission, queueing and every page.
 // A per-operation timeout alone leaves admission and queue waits unbounded.
 const PROFILE_READ_LIMIT: Duration = Duration::from_secs(140);
-
-#[derive(Debug, Serialize)]
-pub struct Failure {
-    code: &'static str,
-    operation_id: Option<String>,
-}
-impl Failure {
-    fn new(code: &'static str) -> Self {
-        Self {
-            code,
-            operation_id: None,
-        }
-    }
-}
-impl From<ApplicationError> for Failure {
-    fn from(_: ApplicationError) -> Self {
-        Self::new("unavailable")
-    }
-}
-type Result<T> = std::result::Result<T, Failure>;
-fn lock<T>(value: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
-    value.lock().unwrap_or_else(|e| e.into_inner())
-}
-fn protocol() -> Failure {
-    Failure::new("unavailable")
-}
 
 pub struct ProfileHost {
     sign_in: Arc<SignIn>,
@@ -79,7 +53,20 @@ impl ProfileHost {
         }
         *lock(&self.held) = None;
     }
-    async fn person(&self, expected: Option<&str>) -> Result<HeldPerson> {
+    /// Every profile operation, and each ledger operation, runs under this
+    /// one lock: they share the held person and its relay.
+    pub(crate) async fn serial(&self) -> tokio::sync::MutexGuard<'_, ()> {
+        self.operation.lock().await
+    }
+    pub(crate) fn sign_in(&self) -> &Arc<SignIn> {
+        &self.sign_in
+    }
+    pub(crate) fn is_closed(&self) -> bool {
+        self.closed.load(Ordering::Acquire)
+    }
+    /// The held person for the window's signed-in profile, or for exactly
+    /// `expected` where one is named.
+    pub(crate) async fn person(&self, expected: Option<&str>) -> Result<HeldPerson> {
         if self.closed.load(Ordering::Acquire) {
             return Err(protocol());
         }
@@ -104,14 +91,10 @@ impl ProfileHost {
         Ok(person)
     }
     async fn identity(person: &HeldPerson) -> Result<Value> {
-        let person = person.clone();
-        // The same mutex is held by blocking IPC exchanges. Never wait on it
-        // on a Tokio executor thread: that can also starve the read's timer.
-        Ok(super::blocking(move || Ok(lock(&person).identity.clone())).await?)
+        relay::identity(person).await
     }
     async fn call(person: &HeldPerson, request: Value) -> Result<Value> {
-        let person = person.clone();
-        Ok(super::blocking(move || lock(&person).exchange(request)).await?)
+        relay::call(person, request).await
     }
     async fn run(
         &self,
@@ -121,55 +104,42 @@ impl ProfileHost {
         mutation: bool,
     ) -> Result<Value> {
         let mut events = self.sign_in.person_events();
-        let profile = Self::identity(person).await?["profile_id"]
-            .as_str()
-            .ok_or_else(protocol)?
-            .to_owned();
-        let subject = format!("profile:{profile}");
-        let submitted = Self::call(
+        let subject = relay::subject(&relay::profile_of(person).await?);
+        // The profile pages map a refusal by its code alone.
+        let operation = relay::submit(person, definition, &subject, payload, mutation)
+            .await
+            .map_err(|mut refused| {
+                refused.reason = None;
+                refused
+            })?;
+        let relayed = relay::Relayed {
             person,
-            json!({"action":"operation_submit", "definition_id":definition,
-            "subject_ref":subject, "payload":payload}),
-        )
-        .await
-        .map_err(|_| Failure::new(if mutation { "unknown" } else { "unavailable" }))?;
-        if submitted["kind"] == "operation_refused" {
-            return Err(Failure::new("refused"));
-        }
-        let operation = submitted["operation_id"]
-            .as_str()
-            .filter(|id| super::setup::wire::is_hex64(id))
-            .ok_or_else(|| Failure::new(if mutation { "unknown" } else { "unavailable" }))?
-            .to_owned();
-        let result = tokio::time::timeout(Duration::from_secs(90), async {
-            loop {
-                let reply = Self::call(person, json!({"action":"operation_observe", "operation_id":operation, "after_cursor":0})).await?;
-                let p = &reply["observation"]["projection"];
-                if reply["kind"] != "operation_observed" || p["operation_id"] != operation || p["definition_id"] != definition || p["subject_ref"] != subject {
-                    return Err(protocol());
-                }
-                if p["lifecycle"] == "terminal" {
-                    if p["terminal_condition"] != "succeeded" {
-                        return Err(Failure::new(wire::mutation_failure(p)));
-                    }
-                    let result = Self::call(person, json!({"action":"operation_result", "operation_id":operation})).await
-                        .map_err(|_| Failure::new(if mutation {"saved_unread"} else {"unavailable"}))?;
-                    if result["kind"] != "operation_result" || result["operation_id"] != operation || result["definition_id"] != definition {
-                        return Err(Failure::new(if mutation {"saved_unread"} else {"unavailable"}));
-                    }
-                    return Ok(result["document"]["projection"].clone());
-                }
-                // The observe request installs the watch before answering. Subscribe
-                // before that request so a fast settlement cannot lose its wake.
-                loop {
-                    match events.recv().await {
-                        Ok(PersonEvent::OperationChanged) | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => break,
-                        Ok(PersonEvent::Retired) | Err(tokio::sync::broadcast::error::RecvError::Closed) => return Err(protocol()),
-                        _ => {},
-                    }
-                }
+            operation: operation.clone(),
+            definition,
+            subject,
+        };
+        let result = tokio::time::timeout(relay::SETTLE_LIMIT, async {
+            let p = relay::follow(&mut events, &relayed, |_| false).await?;
+            if p["terminal_condition"] != "succeeded" {
+                return Err(Failure::new(wire::mutation_failure(&p)));
             }
-        }).await.unwrap_or_else(|_| Err(Failure::new(if mutation {"unknown"} else {"unavailable"})));
+            let document = relay::result(&relayed).await.map_err(|_| {
+                Failure::new(if mutation {
+                    "saved_unread"
+                } else {
+                    "unavailable"
+                })
+            })?;
+            Ok(document["projection"].clone())
+        })
+        .await
+        .unwrap_or_else(|_| {
+            Err(Failure::new(if mutation {
+                "unknown"
+            } else {
+                "unavailable"
+            }))
+        });
         result.map_err(|mut failure| {
             if mutation && failure.code == "unavailable" {
                 failure.code = "unknown";

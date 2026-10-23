@@ -153,6 +153,7 @@ pub fn run(
             shell::setup::commands(),
             shell::user_profile::commands(),
             shell::user_profile::censo::commands(),
+            shell::ledger::commands(),
             manager::commands(),
             agent::commands(),
             crate::startup::commands(),
@@ -263,6 +264,9 @@ pub fn run(
 /// every cleanup even after a failure, including on run-loop exit without a
 /// window close event. Each owner keeps failed cleanup available for retry.
 fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Result<()> {
+    if let Some(ledger) = handle.try_state::<Arc<shell::ledger::LedgerHost>>() {
+        ledger.close();
+    }
     if let Some(profile) = handle.try_state::<Arc<shell::user_profile::ProfileHost>>() {
         profile.close();
     }
@@ -332,9 +336,9 @@ pub(crate) async fn assemble<R: Runtime>(
     app.manage(Arc::new(TerminalState::new(launch)));
     let sign_in = app.state::<Arc<shell::sign_in::SignIn>>().inner().clone();
     app.manage(Arc::new(shell::setup::SetupHost::new(sign_in.clone())));
-    app.manage(Arc::new(shell::user_profile::ProfileHost::new(
-        sign_in.clone(),
-    )));
+    let profile = Arc::new(shell::user_profile::ProfileHost::new(sign_in.clone()));
+    app.manage(profile.clone());
+    app.manage(Arc::new(shell::ledger::LedgerHost::new(profile)));
     startup.stage(crate::startup::Phase::Runtime);
     #[cfg(windows)]
     tokio::select! {
@@ -566,6 +570,7 @@ mod tests {
             shell::setup::commands(),
             shell::user_profile::commands(),
             shell::user_profile::censo::commands(),
+            shell::ledger::commands(),
             manager::commands(),
             agent::commands(),
             crate::startup::commands(),
