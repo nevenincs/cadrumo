@@ -507,13 +507,30 @@ class RuntimeSuggestionReviewTuiDoorV1:
             payload=request,
             expected_session_id=self._session.session_id,
         )
-        await controller.start()
+        try:
+            await controller.start()
+        except Exception as error:
+            # The runtime accepted the review, so a lost start reply does not say it never ran.
+            failure = await self._session.failure_after_submission(
+                error,
+                operation_id=str(controller.operation_id),
+                contract=controller.definition_contract,
+                terminal=None,
+            )
+            if failure is error:
+                raise
+            raise failure from error
         return controller
 
     async def read_result(
         self, request: LedgerLlmReviewRequest, projection: OperationPublicProjectionV1
     ) -> LedgerLlmOperationResult:
-        """Read a settled review this door submitted and refuse one its receipt does not support."""
+        """Read a settled review this door submitted and refuse one its receipt does not support.
+
+        A result that cannot be read, or that its receipt does not support, is
+        judged against that receipt: one that saved something leaves the
+        outcome unknown rather than refused.
+        """
         await asyncio.to_thread(self._session.require_binding)
         if (
             projection.definition_id != self._definition_id
@@ -524,10 +541,21 @@ class RuntimeSuggestionReviewTuiDoorV1:
         controller = OperationController(
             client=self._client, operation_id=projection.operation_id, session_id=self._session.session_id
         )
-        result = await controller.read_settled_result(projection, LedgerLlmOperationResult, result_version=1)
-        await asyncio.to_thread(self._session.require_binding)
-        if not review_result_matches(result, request, projection):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
+        try:
+            result = await controller.read_settled_result(projection, LedgerLlmOperationResult, result_version=1)
+            await asyncio.to_thread(self._session.require_binding)
+            if not review_result_matches(result, request, projection):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+        except Exception as error:
+            failure = await self._session.failure_after_submission(
+                error,
+                operation_id=projection.operation_id,
+                contract=projection.definition_contract,
+                terminal=projection,
+            )
+            if failure is error:
+                raise
+            raise failure from error
         return result
 
 

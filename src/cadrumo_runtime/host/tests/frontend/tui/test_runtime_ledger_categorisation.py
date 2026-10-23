@@ -159,6 +159,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.categorisation_doors import LedgerCategorisationDoorsV1
 from cadrumo.entrypoints.tui.ledger.categorisation_tools import CATEGORISATION_TOOL_KEYS
+from cadrumo.entrypoints.tui.operations.outcome import OperationOutcomeUnknownError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -168,6 +169,7 @@ from ....frontend.tui.runtime_ledger_categorisation import (
     compose_categorisation_tools,
     compose_runtime_categorisation_doors,
 )
+from .unsupported_result import raises_unsupported_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -635,24 +637,22 @@ def test_each_door_submits_the_exact_request_and_reads_its_registered_result(
 @pytest.mark.parametrize("case", _CASES, ids=lambda case: case.door)
 def test_each_door_refuses_a_result_for_another_profile(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
     client = _Client()
-    _install(monkeypatch, client, _Controller(_observation(case), case.result(_OTHER_PROFILE_ID)))
+    receipt = _observation(case)
+    _install(monkeypatch, client, _Controller(receipt, case.result(_OTHER_PROFILE_ID)))
 
-    with pytest.raises(RefusalError) as raised:
+    with raises_unsupported_result(receipt.projection.effect, receipt.projection.definition_contract):
         _call(_doors(client), case)
-
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 @pytest.mark.parametrize("case", _CASES, ids=lambda case: case.door)
 def test_each_door_refuses_a_receipt_with_the_wrong_effect(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
     client = _Client()
     wrong = OperationEffect.NONE if case.effect is OperationEffect.UPDATED else OperationEffect.UPDATED
-    _install(monkeypatch, client, _Controller(_observation(case, effect=wrong), case.result(_PROFILE_ID)))
+    receipt = _observation(case, effect=wrong)
+    _install(monkeypatch, client, _Controller(receipt, case.result(_PROFILE_ID)))
 
-    with pytest.raises(RefusalError) as raised:
+    with raises_unsupported_result(receipt.projection.effect, receipt.projection.definition_contract):
         _call(_doors(client), case)
-
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 @pytest.mark.parametrize("case", _CASES, ids=lambda case: case.door)
@@ -863,9 +863,11 @@ def test_the_review_door_reads_a_settled_outcome_only_when_its_receipt_agrees(
 
     assert read(good, _observation(case), _Client()) == good
 
+    # A result for another profile cannot correlate; the receipt still reported its effect.
     other = good.model_copy(update={"profile_id": _OTHER_PROFILE_ID})
-    with pytest.raises(RefusalError):
-        read(other, _observation(case), _Client())
+    receipt = _observation(case)
+    with raises_unsupported_result(receipt.projection.effect, receipt.projection.definition_contract):
+        read(other, receipt, _Client())
 
     with pytest.raises(RefusalError):
         read(good, _observation(case, effect=OperationEffect.NONE), _Client())
@@ -915,3 +917,57 @@ def test_the_review_door_reads_its_session_off_the_event_loop_thread(
 
     assert client.session_read_threads, "reading a settled review reads the session"
     assert threading.get_ident() not in client.session_read_threads
+
+
+def test_a_review_whose_start_reply_is_lost_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The runtime accepted the review; a lost start reply does not say it never ran."""
+    client = _Client()
+    case = _review_case(LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
+    contract = _observation(case).projection.definition_contract
+    _install_review(monkeypatch, client, case.result(_PROFILE_ID))
+
+    async def submit(_type: type[OperationController], _received: FrontendClient, **_kwargs: object) -> object:
+        class _Accepted:
+            operation_id = _OPERATION_ID
+            definition_contract = contract
+
+            async def start(self) -> str:
+                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+
+        return _Accepted()
+
+    monkeypatch.setattr(OperationController, "submit", classmethod(submit))
+    door = _doors(client).classify_review
+
+    with pytest.raises(OperationOutcomeUnknownError) as raised:
+        asyncio.run(door.submit(_review_request()))
+
+    assert raised.value.operation_id == _OPERATION_ID
+    assert raised.value.effect is None
+
+
+def test_a_settled_review_whose_result_cannot_be_read_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The receipt reported the classification applied; failing to read it does not unapply it."""
+    client = _Client()
+    case = _review_case(LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
+    _install_review(monkeypatch, client, case.result(_PROFILE_ID))
+
+    async def refused_read(
+        _self: OperationController,
+        _projection: OperationPublicProjectionV1,
+        _result_type: type[BaseModel],
+        *,
+        result_version: int,
+        allow_refusal_detail: bool = False,
+    ) -> BaseModel:
+        raise FrontendRefusedError("result_unavailable")
+
+    monkeypatch.setattr(OperationController, "read_settled_result", refused_read)
+    receipt = _observation(case, effect=OperationEffect.UPDATED)
+    door = _doors(client).classify_review
+
+    with pytest.raises(OperationOutcomeUnknownError) as raised:
+        asyncio.run(door.read_result(cast(LedgerLlmReviewRequest, case.request), receipt.projection))
+
+    assert raised.value.effect is OperationEffect.UPDATED
+    assert isinstance(raised.value.reason, FrontendRefusedError)

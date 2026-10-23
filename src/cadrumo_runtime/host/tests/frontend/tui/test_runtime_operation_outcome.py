@@ -1,23 +1,28 @@
 """A submitted TUI operation whose outcome is not known is reported as unknown, never as a refusal.
 
-The doors submit through one exact-session helper. Once the operation is
-submitted, a wait that ends before its settlement is observed, or a receipt
-that did not succeed yet reports an effect, may hide a saved change; only a
-receipt that committed nothing is a refusal. The operation is the registered
-own-account write, observed through its real definition and registration.
+The doors submit through one exact-session helper. Once the runtime accepted
+the submission, any failure may hide a saved change unless a terminal receipt
+that committed nothing was observed, or the operation's definition permits no
+effect that changes records. The operations are the registered own-account
+write and the ledger review read, observed through their real definitions and
+registrations; the session is checked by the real session reader against the
+client's scripted status.
 """
 
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import UTC, datetime
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.application.ledger.action_ports import LedgerActionPortsFactory
 from cadrumo.application.ledger.own_account_operation import (
     LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
     LedgerOwnAccountRequest,
@@ -27,15 +32,32 @@ from cadrumo.application.ledger.own_account_operation import (
     build_ledger_own_account_registration,
 )
 from cadrumo.application.ledger.own_account_ports import OwnAccountRepositoryFactory
+from cadrumo.application.ledger.review_operation import (
+    LEDGER_REVIEW_OPERATION_DEFINITION_ID,
+    LedgerReviewProjection,
+    LedgerReviewRequest,
+    build_ledger_review_definition,
+    build_ledger_review_registration,
+)
 from cadrumo.application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
-from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
+from cadrumo.application.operations.frontend_requests import (
+    OperationObservationRefusalCode,
+    OperationObservationRefusalV1,
+    OperationObservationSuccessV1,
+    OperationPublicEventPageV1,
+)
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.core.errors.error_codes import resolve_error_message
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
+    OperationRegistry,
+)
+from cadrumo.core.config import override_settings
+from cadrumo.core.errors.error_codes import get_registered_error_code, resolve_error_message
 from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.operations import (
     OperationEffect,
@@ -44,13 +66,19 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.domain.transactions.own_accounts import OwnAccountHolding
-from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo.entrypoints.tui.operations.outcome import OperationOutcomeUnknownError
+from cadrumo.entrypoints.tui.account import AccountSessionExpiredError, AccountSessionUnavailableError
+from cadrumo.entrypoints.tui.operations.outcome import (
+    OperationOutcomeUnknownError,
+    SessionExpiredOutcomeUnknownError,
+    SessionUnavailableOutcomeUnknownError,
+)
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.operation_controller import OperationController
 
+from ....frontend.tui.operations.runtime_profile_session import RuntimeProfileSession
+from ....frontend.tui.runtime_ledger_review import RuntimeLedgerReviewTuiDoorV1
 from ....frontend.tui.runtime_own_accounts import RuntimeOwnAccountTuiDoorV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -63,20 +91,86 @@ _NOW = datetime(2026, 10, 4, tzinfo=UTC)
 _ES_IBAN = "ES9121000418450200051332"
 _REFUSAL_CODE = "REFUSED_LEDGER_OWN_ACCOUNT_REGISTER_VALIDATION"
 _REFUSAL_KEY = "errors.refused.refused_ledger_own_account_register_validation"
+_LABEL = "Fixture profile"
+
+
+@dataclass(frozen=True, slots=True)
+class _Registered:
+    """One operation as its real definition and registration declare it."""
+
+    definition_id: str
+    contract: OperationPublicDefinitionContractV1
+    contract_set_digest: str
+    result_type: type[BaseModel]
+
+
+def _registered(registry: OperationRegistry, definition_id: str, result_type: type[BaseModel]) -> _Registered:
+    return _Registered(
+        definition_id=definition_id,
+        contract=registry.lookup_public_contract(definition_id),
+        contract_set_digest=registry.public_contract_set.contract_set_digest,
+        result_type=result_type,
+    )
+
+
+def _own_account() -> _Registered:
+    """The own-account register: a write whose definition permits an updated effect."""
+    factory = cast(OwnAccountRepositoryFactory, cast(object, lambda **_kwargs: None))
+    definition = build_ledger_own_account_definition(factory)
+    registry = OperationRegistry(
+        definitions=(definition,),
+        public_registrations=(build_ledger_own_account_registration(definition),),
+    )
+    return _registered(registry, LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID, LedgerOwnAccountResult)
+
+
+def _review() -> _Registered:
+    """The ledger review queue: a read whose definition permits no effect that changes records."""
+    actions = cast(LedgerActionPortsFactory, cast(object, lambda **_kwargs: None))
+    definition = build_ledger_review_definition(actions)
+    registry = OperationRegistry(
+        definitions=(definition,),
+        public_registrations=(build_ledger_review_registration(definition),),
+    )
+    return _registered(registry, LEDGER_REVIEW_OPERATION_DEFINITION_ID, LedgerReviewProjection)
+
+
+_OWN_ACCOUNT = _own_account()
+_REVIEW = _review()
 
 
 class _Client:
+    """The retained runtime connection, answering status the way the runtime does."""
+
     frontend = OperationFrontendProjection.TUI
 
     def __init__(self) -> None:
         self.profile_id = _PROFILE_ID
         self.session_id = _SESSION_ID
         self.subscriptions = 0
+        self.session_expires_at = datetime.now(UTC) + timedelta(minutes=10)
+        self.transport_closed = False
+        """Set by a failed exchange: the transport closes, and every later exchange is refused."""
 
     def subscribe_operation_changes(self, _receive: Callable[[], None]) -> Callable[[], None]:
         """Accept the operation cue and never fire it: the operation never advances."""
         self.subscriptions += 1
         return lambda: None
+
+    def status(self) -> SimpleNamespace:
+        if self.transport_closed:
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+        return SimpleNamespace(
+            status=SimpleNamespace(
+                connected=True,
+                credential_authenticated=True,
+                profile_bound=True,
+                profile_id=self.profile_id,
+                session_id=self.session_id,
+                session_expires_at=self.session_expires_at,
+                denial=None,
+            )
+        )
 
 
 class _Controller:
@@ -87,27 +181,47 @@ class _Controller:
 
     def __init__(
         self,
+        registered: _Registered,
         *,
-        observation: OperationObservationSuccessV1,
+        observation: OperationObservationSuccessV1 | OperationObservationRefusalV1,
         result: BaseModel | None = None,
         detail: OperationErrorDetailV1 | None = None,
-        result_refusal: RefusalError | None = None,
+        result_refusal: Exception | None = None,
+        observe_failure: RefusalError | None = None,
+        start_failure: RefusalError | None = None,
+        closes_transport: bool = False,
+        on_observe: Callable[[], None] = lambda: None,
         on_detail: Callable[[], None] = lambda: None,
     ) -> None:
+        self.registered = registered
+        self.definition_contract = registered.contract
         self.observation = observation
         self.result = result
         self.detail = detail
         self.result_refusal = result_refusal
+        self.observe_failure = observe_failure
+        self.start_failure = start_failure
+        self.closes_transport = closes_transport
+        self.on_observe = on_observe
         self.on_detail = on_detail
         self.observations = 0
         self.result_reads = 0
 
     async def start(self) -> str:
+        if self.start_failure is not None:
+            raise self.start_failure
         return self.operation_id
 
-    async def observe(self, after_cursor: int, *, page_limit: int) -> OperationObservationSuccessV1:
+    async def observe(
+        self, after_cursor: int, *, page_limit: int
+    ) -> OperationObservationSuccessV1 | OperationObservationRefusalV1:
         assert (after_cursor, page_limit) == (0, 1)
         self.observations += 1
+        self.on_observe()
+        if self.observe_failure is not None:
+            # A failed exchange closes the transport before the refusal reaches the caller.
+            self.client.transport_closed = self.closes_transport
+            raise self.observe_failure
         return self.observation
 
     async def read_settled_result(
@@ -119,7 +233,7 @@ class _Controller:
         allow_refusal_detail: bool = False,
     ) -> BaseModel:
         assert projection.operation_id == self.operation_id
-        assert (result_type, result_version, allow_refusal_detail) == (LedgerOwnAccountResult, 1, False)
+        assert (result_type, result_version, allow_refusal_detail) == (self.registered.result_type, 1, False)
         self.result_reads += 1
         if self.result_refusal is not None:
             raise self.result_refusal
@@ -133,28 +247,22 @@ class _Controller:
 
 
 def _observation(
+    registered: _Registered = _OWN_ACCOUNT,
     *,
     lifecycle: OperationLifecycle = OperationLifecycle.TERMINAL,
     condition: OperationTerminalCondition | None = OperationTerminalCondition.SUCCEEDED,
     effect: OperationEffect = OperationEffect.NONE,
 ) -> OperationObservationSuccessV1:
-    """One observation of the own-account operation through its real definition and registration."""
-    factory = cast(OwnAccountRepositoryFactory, cast(object, lambda **_kwargs: None))
-    definition = build_ledger_own_account_definition(factory)
-    registry = OperationRegistry(
-        definitions=(definition,),
-        public_registrations=(build_ledger_own_account_registration(definition),),
-    )
-    contract = registry.lookup_public_contract(LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID)
+    """One observation of ``registered`` under its real public contract."""
     refused = condition is OperationTerminalCondition.REFUSED
     state = OperationPublicProjectionV1(
         operation_id=_OPERATION_ID,
-        definition_id=LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
+        definition_id=registered.definition_id,
         subject_ref=profile_operation_subject(str(_PROFILE_ID)),
         revision=1,
         anchor_cursor=0,
-        definition_contract=contract,
-        contract_set_digest=registry.public_contract_set.contract_set_digest,
+        definition_contract=registered.contract,
+        contract_set_digest=registered.contract_set_digest,
         lifecycle=lifecycle,
         terminal_condition=condition,
         effect=effect,
@@ -162,8 +270,8 @@ def _observation(
         started_at=_NOW,
         updated_at=_NOW,
         progress=None,
-        close_policy=contract.close_policy,
-        cancellation=contract.cancellation,
+        close_policy=registered.contract.close_policy,
+        cancellation=registered.contract.cancellation,
         cancellable_now=False,
         cancellation_requested=False,
         cancellation_acknowledged=False,
@@ -189,22 +297,11 @@ def _observation(
     )
 
 
+def _running(registered: _Registered = _OWN_ACCOUNT) -> OperationObservationSuccessV1:
+    return _observation(registered, lifecycle=OperationLifecycle.RUNNING, condition=None)
+
+
 def _install(monkeypatch: pytest.MonkeyPatch, client: _Client, controller: _Controller) -> list[dict[str, object]]:
-    from ....frontend.tui.operations import runtime_profile_session as bridge
-
-    def read_session(
-        _client: FrontendClient,
-        *,
-        profile_id: UUID,
-        session_id: UUID,
-        profile_label: str,
-    ) -> object:
-        assert profile_label == "Fixture profile"
-        if client.profile_id != profile_id or client.session_id != session_id:
-            raise AccountSessionExpiredError()
-        return object()
-
-    monkeypatch.setattr(bridge, "read_runtime_account_session", read_session)
     submissions: list[dict[str, object]] = []
 
     async def submit(
@@ -222,7 +319,11 @@ def _install(monkeypatch: pytest.MonkeyPatch, client: _Client, controller: _Cont
 
 
 def _door(client: _Client) -> RuntimeOwnAccountTuiDoorV1:
-    return RuntimeOwnAccountTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+    return RuntimeOwnAccountTuiDoorV1(cast(FrontendClient, client), profile_label=_LABEL)
+
+
+def _review_door(client: _Client) -> RuntimeLedgerReviewTuiDoorV1:
+    return RuntimeLedgerReviewTuiDoorV1(RuntimeProfileSession(cast(FrontendClient, client), profile_label=_LABEL))
 
 
 def _add_request() -> LedgerOwnAccountRequest:
@@ -235,7 +336,7 @@ def _add_request() -> LedgerOwnAccountRequest:
     )
 
 
-def _added() -> LedgerOwnAccountResult:
+def _added(*, changed: bool = True) -> LedgerOwnAccountResult:
     account = OwnAccountProjection(
         own_account_id="acc-01",
         label="main",
@@ -248,7 +349,7 @@ def _added() -> LedgerOwnAccountResult:
         currency="EUR",
     )
     return LedgerOwnAccountResult(
-        profile_id=_PROFILE_ID, action="add", own_account_id="acc-01", accounts=(account,), changed=True
+        profile_id=_PROFILE_ID, action="add", own_account_id="acc-01", accounts=(account,), changed=changed
     )
 
 
@@ -261,12 +362,16 @@ def _recorded_detail() -> OperationErrorDetailV1:
     )
 
 
+def _english(error: BaseException) -> str:
+    with override_settings(cadrumo_output_language="en"):
+        return resolve_error_message(error)
+
+
 def test_a_write_still_running_at_the_deadline_is_unknown_not_refused(monkeypatch: pytest.MonkeyPatch) -> None:
     from ....frontend.tui.operations import runtime_profile_session as bridge
 
     client = _Client()
-    running = _observation(lifecycle=OperationLifecycle.RUNNING, condition=None)
-    controller = _Controller(observation=running)
+    controller = _Controller(_OWN_ACCOUNT, observation=_running())
     submissions = _install(monkeypatch, client, controller)
     # The real observation loop runs against a short deadline, so the budget itself expires.
     monkeypatch.setattr(bridge, "_OPERATION_TIMEOUT_SECONDS", 0.2)
@@ -293,7 +398,7 @@ def test_a_failed_receipt_with_an_effect_is_unknown_and_keeps_the_recorded_reaso
 ) -> None:
     client = _Client()
     failed = _observation(condition=OperationTerminalCondition.FAILED, effect=effect)
-    controller = _Controller(observation=failed, detail=_recorded_detail())
+    controller = _Controller(_OWN_ACCOUNT, observation=failed, detail=_recorded_detail())
     _install(monkeypatch, client, controller)
 
     with pytest.raises(OperationOutcomeUnknownError) as raised:
@@ -312,19 +417,21 @@ def test_a_failed_receipt_with_an_effect_and_no_recorded_reason_is_still_unknown
 ) -> None:
     client = _Client()
     failed = _observation(condition=OperationTerminalCondition.FAILED, effect=OperationEffect.PARTIAL)
-    _install(monkeypatch, client, _Controller(observation=failed))
+    _install(monkeypatch, client, _Controller(_OWN_ACCOUNT, observation=failed))
 
     with pytest.raises(OperationOutcomeUnknownError) as raised:
         asyncio.run(_door(client)(_add_request()))
 
     assert raised.value.effect is OperationEffect.PARTIAL
-    assert raised.value.reason is None
+    assert isinstance(raised.value.reason, FrontendRefusedError)
 
 
 def test_a_succeeded_write_whose_result_read_times_out_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _Client()
     succeeded = _observation(effect=OperationEffect.UPDATED)
-    controller = _Controller(observation=succeeded, result_refusal=RefusalError(RefusalCode.DEADLINE_EXCEEDED))
+    controller = _Controller(
+        _OWN_ACCOUNT, observation=succeeded, result_refusal=RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+    )
     _install(monkeypatch, client, controller)
 
     with pytest.raises(OperationOutcomeUnknownError) as raised:
@@ -334,17 +441,251 @@ def test_a_succeeded_write_whose_result_read_times_out_is_unknown(monkeypatch: p
     assert controller.result_reads == 1
 
 
+def test_a_refused_observation_of_a_started_write_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The runtime refused to say how the started write stands, so it may have saved the change."""
+    client = _Client()
+    refused = OperationObservationRefusalV1(
+        code=OperationObservationRefusalCode.OBSERVATION_UNAVAILABLE, requested_version=1, diagnostic_ref=None
+    )
+    controller = _Controller(_OWN_ACCOUNT, observation=refused)
+    _install(monkeypatch, client, controller)
+
+    with pytest.raises(OperationOutcomeUnknownError) as raised:
+        asyncio.run(_door(client)(_add_request()))
+
+    assert raised.value.operation_id == _OPERATION_ID
+    assert raised.value.effect is None
+    assert isinstance(raised.value.reason, FrontendRefusedError)
+    assert raised.value.reason.reason == OperationObservationRefusalCode.OBSERVATION_UNAVAILABLE.value
+    assert controller.result_reads == 0
+
+
+@pytest.mark.parametrize(
+    "refusal",
+    [FrontendRefusedError("result_unavailable"), RefusalError(RefusalCode.INVALID_FRAME)],
+    ids=["refused", "invalid-frame"],
+)
+def test_a_result_read_that_fails_after_an_updated_receipt_is_unknown(
+    monkeypatch: pytest.MonkeyPatch, refusal: Exception
+) -> None:
+    """The receipt said the change was saved; failing to read what it saved does not unsave it."""
+    client = _Client()
+    succeeded = _observation(effect=OperationEffect.UPDATED)
+    controller = _Controller(_OWN_ACCOUNT, observation=succeeded, result_refusal=refusal)
+    _install(monkeypatch, client, controller)
+
+    with pytest.raises(OperationOutcomeUnknownError) as raised:
+        asyncio.run(_door(client)(_add_request()))
+
+    assert raised.value.effect is OperationEffect.UPDATED
+    assert raised.value.reason is refusal
+    assert raised.value.__cause__ is refusal
+    assert controller.result_reads == 1
+
+
+def test_a_result_that_disagrees_with_an_updated_receipt_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The door's correlation refuses the result, but the receipt already reported a saved change."""
+    client = _Client()
+    succeeded = _observation(effect=OperationEffect.UPDATED)
+    # A result that claims nothing changed cannot correlate with a receipt that reports an update.
+    controller = _Controller(_OWN_ACCOUNT, observation=succeeded, result=_added(changed=False))
+    _install(monkeypatch, client, controller)
+
+    with pytest.raises(OperationOutcomeUnknownError) as raised:
+        asyncio.run(_door(client)(_add_request()))
+
+    assert raised.value.effect is OperationEffect.UPDATED
+    assert isinstance(raised.value.reason, RefusalError)
+    assert raised.value.reason.reason is RefusalCode.INVALID_FRAME
+
+
+def test_a_start_whose_acknowledgement_is_malformed_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The runtime accepted the submission; an unreadable start acknowledgement does not say the write never ran."""
+    client = _Client()
+    controller = _Controller(
+        _OWN_ACCOUNT, observation=_running(), start_failure=RefusalError(RefusalCode.INVALID_FRAME)
+    )
+    _install(monkeypatch, client, controller)
+
+    with pytest.raises(OperationOutcomeUnknownError) as raised:
+        asyncio.run(_door(client)(_add_request()))
+
+    assert raised.value.operation_id == _OPERATION_ID
+    assert raised.value.effect is None
+    assert controller.observations == 0
+
+
+def test_a_dropped_connection_with_the_session_live_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = _Client()
+    controller = _Controller(
+        _OWN_ACCOUNT, observation=_running(), observe_failure=RefusalError(RefusalCode.CONNECTION_CLOSED)
+    )
+    _install(monkeypatch, client, controller)
+
+    with pytest.raises(OperationOutcomeUnknownError) as raised:
+        asyncio.run(_door(client)(_add_request()))
+
+    assert not isinstance(raised.value, AccountSessionExpiredError)
+    assert raised.value.operation_id == _OPERATION_ID
+    assert raised.value.effect is None
+    assert _OPERATION_ID in _english(raised.value)
+
+
+def test_a_dropped_connection_whose_session_expired_says_both(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The session is gone, so the operator must sign in; the change may still be saved, so they are told."""
+    client = _Client()
+
+    def expire() -> None:
+        client.session_expires_at = datetime.now(UTC) - timedelta(seconds=1)
+
+    controller = _Controller(
+        _OWN_ACCOUNT,
+        observation=_running(),
+        observe_failure=RefusalError(RefusalCode.CONNECTION_CLOSED),
+        on_observe=expire,
+    )
+    _install(monkeypatch, client, controller)
+
+    with pytest.raises(AccountSessionExpiredError) as raised:
+        asyncio.run(_door(client)(_add_request()))
+
+    error = raised.value
+    assert isinstance(error, SessionExpiredOutcomeUnknownError)
+    assert not isinstance(error, AccountSessionUnavailableError)
+    assert error.outcome.operation_id == _OPERATION_ID
+    assert error.outcome.effect is None
+    assert get_registered_error_code(error).code == "FAIL_TUI_SESSION_EXPIRED_OUTCOME_UNKNOWN"
+    message = _english(error)
+    assert _OPERATION_ID in message
+    assert message != _english(AccountSessionExpiredError())
+
+
+def test_a_dropped_connection_that_closed_the_transport_is_unavailable_and_unknown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A closed transport cannot report the session, so nothing says it expired: it is unavailable."""
+    client = _Client()
+    controller = _Controller(
+        _OWN_ACCOUNT,
+        observation=_running(),
+        observe_failure=RefusalError(RefusalCode.CONNECTION_CLOSED),
+        closes_transport=True,
+    )
+    _install(monkeypatch, client, controller)
+
+    with pytest.raises(AccountSessionUnavailableError) as raised:
+        asyncio.run(_door(client)(_add_request()))
+
+    error = raised.value
+    assert isinstance(error, SessionUnavailableOutcomeUnknownError)
+    assert error.outcome.operation_id == _OPERATION_ID
+    assert get_registered_error_code(error).code == "FAIL_TUI_SESSION_UNAVAILABLE_OUTCOME_UNKNOWN"
+    assert _OPERATION_ID in _english(error)
+
+
+def test_a_lapsed_session_after_a_failed_receipt_with_an_effect_says_both(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = _Client()
+    failed = _observation(condition=OperationTerminalCondition.FAILED, effect=OperationEffect.UNKNOWN)
+
+    def lapse() -> None:
+        client.session_id = _LAPSED_SESSION_ID
+
+    _install(
+        monkeypatch, client, _Controller(_OWN_ACCOUNT, observation=failed, detail=_recorded_detail(), on_detail=lapse)
+    )
+    door = _door(client)
+
+    with pytest.raises(SessionExpiredOutcomeUnknownError) as raised:
+        asyncio.run(door(_add_request()))
+
+    assert raised.value.outcome.operation_id == _OPERATION_ID
+    assert raised.value.outcome.effect is OperationEffect.UNKNOWN
+    assert isinstance(raised.value.outcome.reason, RecordedRegisteredError)
+
+
+def test_a_lapsed_session_after_a_receipt_that_committed_nothing_reports_the_receipt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = _Client()
+    refused = _observation(condition=OperationTerminalCondition.REFUSED, effect=OperationEffect.NONE)
+
+    def lapse() -> None:
+        client.session_id = _LAPSED_SESSION_ID
+
+    _install(
+        monkeypatch, client, _Controller(_OWN_ACCOUNT, observation=refused, detail=_recorded_detail(), on_detail=lapse)
+    )
+    door = _door(client)
+
+    with pytest.raises(AccountSessionExpiredError) as raised:
+        asyncio.run(door(_add_request()))
+
+    assert not isinstance(raised.value, SessionExpiredOutcomeUnknownError)
+    assert raised.value.context == {
+        "operation_id": _OPERATION_ID,
+        "terminal_condition": OperationTerminalCondition.REFUSED.value,
+        "effect": OperationEffect.NONE.value,
+        "refusal_code": _REFUSAL_CODE,
+    }
+
+
+def test_a_read_that_times_out_stays_a_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A read's definition permits no effect that changes records, so nothing may have been saved."""
+    from ....frontend.tui.operations import runtime_profile_session as bridge
+
+    client = _Client()
+    controller = _Controller(_REVIEW, observation=_running(_REVIEW))
+    _install(monkeypatch, client, controller)
+    monkeypatch.setattr(bridge, "_OPERATION_TIMEOUT_SECONDS", 0.2)
+
+    with pytest.raises(RefusalError) as raised:
+        asyncio.run(_review_door(client)(LedgerReviewRequest(profile_id=_PROFILE_ID)))
+
+    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert controller.observations >= 2
+
+
+def test_a_read_that_settles_with_an_unknown_effect_stays_a_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every definition may settle unknown after owner loss; for a read that still changes no records."""
+    client = _Client()
+    failed = _observation(_REVIEW, condition=OperationTerminalCondition.FAILED, effect=OperationEffect.UNKNOWN)
+    _install(monkeypatch, client, _Controller(_REVIEW, observation=failed))
+
+    with pytest.raises(FrontendRefusedError):
+        asyncio.run(_review_door(client)(LedgerReviewRequest(profile_id=_PROFILE_ID)))
+
+
+def test_a_submission_whose_reply_is_lost_stays_a_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without an accepted submission there is no operation to start, so nothing ran."""
+    client = _Client()
+
+    async def submit(
+        _controller_type: type[OperationController], _client: FrontendClient, **_kwargs: object
+    ) -> _Controller:
+        raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+
+    monkeypatch.setattr(OperationController, "submit", classmethod(submit))
+
+    with pytest.raises(RefusalError) as raised:
+        asyncio.run(_door(client)(_add_request()))
+
+    assert not isinstance(raised.value, OperationOutcomeUnknownError)
+    assert raised.value.reason is RefusalCode.CONNECTION_CLOSED
+
+
 def test_a_receipt_that_committed_nothing_stays_a_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _Client()
     refused = _observation(condition=OperationTerminalCondition.REFUSED, effect=OperationEffect.NONE)
-    _install(monkeypatch, client, _Controller(observation=refused, detail=_recorded_detail()))
+    _install(monkeypatch, client, _Controller(_OWN_ACCOUNT, observation=refused, detail=_recorded_detail()))
 
     with pytest.raises(RecordedRegisteredError) as recorded:
         asyncio.run(_door(client)(_add_request()))
     assert recorded.value.recorded_code == _REFUSAL_CODE
 
     failed = _observation(condition=OperationTerminalCondition.FAILED, effect=OperationEffect.NONE)
-    _install(monkeypatch, client, _Controller(observation=failed))
+    _install(monkeypatch, client, _Controller(_OWN_ACCOUNT, observation=failed))
     with pytest.raises(FrontendRefusedError):
         asyncio.run(_door(client)(_add_request()))
 
@@ -357,7 +698,11 @@ def test_a_refusal_whose_detail_read_times_out_stays_a_refusal(monkeypatch: pyte
     def deadline() -> None:
         raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
 
-    _install(monkeypatch, client, _Controller(observation=refused, detail=_recorded_detail(), on_detail=deadline))
+    _install(
+        monkeypatch,
+        client,
+        _Controller(_OWN_ACCOUNT, observation=refused, detail=_recorded_detail(), on_detail=deadline),
+    )
 
     with pytest.raises(RefusalError) as raised:
         asyncio.run(_door(client)(_add_request()))
@@ -367,35 +712,11 @@ def test_a_refusal_whose_detail_read_times_out_stays_a_refusal(monkeypatch: pyte
 
 def test_a_result_the_receipt_does_not_support_stays_an_invalid_frame(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _Client()
-    # A change the receipt reports as having no effect.
+    # A change the receipt reports as having no effect: nothing was committed, so the frame is simply invalid.
     succeeded = _observation(effect=OperationEffect.NONE)
-    _install(monkeypatch, client, _Controller(observation=succeeded, result=_added()))
+    _install(monkeypatch, client, _Controller(_OWN_ACCOUNT, observation=succeeded, result=_added()))
 
     with pytest.raises(RefusalError) as raised:
         asyncio.run(_door(client)(_add_request()))
 
     assert raised.value.reason is RefusalCode.INVALID_FRAME
-
-
-def test_a_lapsed_session_reports_the_receipt_rather_than_an_unknown_outcome(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    client = _Client()
-    failed = _observation(condition=OperationTerminalCondition.FAILED, effect=OperationEffect.UNKNOWN)
-
-    def lapse() -> None:
-        client.session_id = _LAPSED_SESSION_ID
-
-    _install(monkeypatch, client, _Controller(observation=failed, detail=_recorded_detail(), on_detail=lapse))
-    door = _door(client)
-
-    with pytest.raises(AccountSessionExpiredError) as raised:
-        asyncio.run(door(_add_request()))
-
-    assert not isinstance(raised.value, OperationOutcomeUnknownError)
-    assert raised.value.context == {
-        "operation_id": _OPERATION_ID,
-        "terminal_condition": OperationTerminalCondition.FAILED.value,
-        "effect": OperationEffect.UNKNOWN.value,
-        "refusal_code": None,
-    }

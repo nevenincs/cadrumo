@@ -440,7 +440,13 @@ class RuntimeLedgerExclusionSubmitterV1:
 
     def __init__(self, session: RuntimeProfileSession) -> None:
         """Pin the admitted session every exclusion is submitted under."""
-        self._door = RuntimeLedgerLifecycleTuiDoorV1(session, operation_id=LEDGER_EXCLUDE_OPERATION_DEFINITION_ID)
+        self._door = RuntimeLedgerEntryTuiDoorV1(
+            session,
+            definition_id=LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
+            result_type=LedgerLifecycleOperationResult,
+            correlate=_exclusion_matches,
+            allow_refusal_detail=True,
+        )
 
     async def __call__(self, submission: LedgerExclusionSubmissionV1) -> LedgerExclusionResultV1:
         """Exclude exactly the submitted entry and refuse any other settled identity."""
@@ -450,12 +456,27 @@ class RuntimeLedgerExclusionSubmitterV1:
             profile_id=self._door.profile_id, transaction_id=submission.transaction_id
         )
         result = await self._door(request)
+        # The correlation already held the receipt to this: a validation refusal committed nothing,
+        # and a success names exactly the submitted entry.
         if result.validation is not None:
             raise LedgerLifecycleValidationRefusedError(result.validation)
         projection = result.result
-        if projection is None or projection.transaction.transaction_id != submission.transaction_id:
+        if projection is None:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         return LedgerExclusionResultV1(transaction_id=projection.transaction.transaction_id)
+
+
+def _exclusion_matches(
+    result: LedgerLifecycleOperationResult,
+    request: LedgerLifecycleMutationRequest,
+    condition: OperationTerminalCondition,
+    terminal: OperationPublicProjectionV1,
+) -> bool:
+    """An exclusion receipt that settled exactly the submitted entry, not merely one it names by prefix."""
+    projection = result.result
+    return _lifecycle_matches(LEDGER_EXCLUDE_OPERATION_DEFINITION_ID)(result, request, condition, terminal) and (
+        projection is None or projection.transaction.transaction_id == request.transaction_id
+    )
 
 
 def compose_runtime_ledger_entries_doors(client: FrontendClient, *, profile_label: str) -> LedgerEntriesDoorsV1:

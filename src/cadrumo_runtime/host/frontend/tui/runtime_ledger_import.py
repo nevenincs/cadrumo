@@ -8,6 +8,7 @@ operator saw its preview instead of importing something they never reviewed.
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 from cadrumo.application.ledger.actions_import import plan_ledger_import_sources
@@ -90,7 +91,8 @@ class RuntimeLedgerImportTuiDoorV1:
     async def preview(self, request: LedgerImportRequestV1) -> LedgerImportOutcomeV1:
         """Read the planned files without writing and report what applying them would do."""
         _require_bank_statement(request)
-        files = tuple(path.absolute() for path in plan_ledger_import_sources(request.path))
+        # Planning lists the named folder on disk; it never runs on the event loop.
+        files = await asyncio.to_thread(_planned_files, request.path)
         return await self._run(request, files=files, expected=None, dry_run=True)
 
     async def apply(self, request: LedgerImportRequestV1) -> LedgerImportOutcomeV1:
@@ -138,6 +140,11 @@ class RuntimeLedgerImportTuiDoorV1:
             explain_failure=True,
         )
         return _outcome(result, files)
+
+
+def _planned_files(path: Path) -> tuple[Path, ...]:
+    """The files an import of ``path`` reads, each named absolutely."""
+    return tuple(planned.absolute() for planned in plan_ledger_import_sources(path))
 
 
 def _require_bank_statement(request: LedgerImportRequestV1) -> None:

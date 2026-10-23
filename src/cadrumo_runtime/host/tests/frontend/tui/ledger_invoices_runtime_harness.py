@@ -53,7 +53,11 @@ from cadrumo.application.operations.frontend_projection import (
 )
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
+    OperationRegistry,
+)
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -122,8 +126,13 @@ class Settled:
     refusal_ref: str | None = None
     detail: OperationErrorDetailV1 | None = None
 
+    @property
+    def contract(self) -> OperationPublicDefinitionContractV1:
+        """The operation's public contract, as its real definition and registration declare it."""
+        return REGISTRY.lookup_public_contract(self.definition_id)
+
     def observation(self) -> OperationObservationSuccessV1:
-        contract = REGISTRY.lookup_public_contract(self.definition_id)
+        contract = self.contract
         succeeded = self.condition is OperationTerminalCondition.SUCCEEDED
         state = OperationPublicProjectionV1(
             operation_id=_OPERATION_ID,
@@ -182,6 +191,7 @@ class _Controller:
 
     def __init__(self, client: FakeClient, settled: Settled, reads: list[tuple[type[BaseModel], bool]]) -> None:
         self.client = client
+        self.definition_contract = settled.contract
         self._settled = settled
         self._reads = reads
 

@@ -152,7 +152,8 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.review.loading"))
         self.run_worker(self._load(door), group="ledger-review-read", exclusive=True)
 
-    async def _load(self, door: LedgerReviewDoorV1) -> None:
+    async def _load(self, door: LedgerReviewDoorV1, *, then_status: str = "") -> None:
+        """Read the queue; once it lands, the status line says ``then_status``."""
         status = self.query_one("#ledger-flow-status", Static)
         refusal = self.query_one("#ledger-refusal", Static)
         try:
@@ -169,7 +170,7 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         self.rows = result.rows
         self.loaded = True
         self._open_page_holding(self.controller.restored_transaction_id())
-        status.update("")
+        status.update(then_status)
         self._populate_view()
         self._restore_focus()
 
@@ -242,7 +243,7 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         table.focus()
 
     def _forget_rows(self) -> None:
-        """Discard the queue once the admitted session is lost."""
+        """Discard the queue once the admitted session is lost, or once it may no longer be current."""
         self.rows = ()
         self.loaded = False
         self.page_offset = 0
@@ -284,7 +285,7 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         if not self.controller.can_exclude():
             notice.update(tr("tui.ledger.refusal.submission_unavailable"))
             return
-        if self.excluding or self.refreshing:
+        if self.excluding or self.refreshing or not self.loaded:
             return
         table = cast("DataTable[str]", self.query_one("#ledger-review", DataTable))
         if not table.row_count:
@@ -344,18 +345,27 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         except (CadrumoError, ValidationError) as error:
             self.excluding = False
             self.query_one("#ledger-exclusion-confirm", Button).disabled = False
-            status.update(self.failed_write_status(error, "tui.ledger.review.exclude_failed"))
+            outcome = self.failed_write_status(error, "tui.ledger.review.exclude_failed")
+            status.update(outcome)
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
             if isinstance(error, OperationOutcomeUnknownError):
-                # The entry may already be excluded, so the same question is not left open to confirm again.
-                self.pending_exclusion = None
-                self._show_exclusion_controls(open_=False)
+                # The entry may already be excluded: nothing is offered again until the queue is read again.
+                self._forget_rows()
+                self.refresh_then(lambda: self._reread_queue(outcome))
             return
         self.excluding = False
         self.pending_exclusion = None
         self._show_exclusion_controls(open_=False)
         status.update(tr("tui.ledger.review.excluded", entry=label))
         self.refresh_then(self._reopen)
+
+    def _reread_queue(self, outcome: str) -> None:
+        """Read the queue again after an exclusion whose outcome is unknown, keeping that outcome in view."""
+        door = self.controller.review_door
+        if door is None:
+            return
+        self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.review.loading"))
+        self.run_worker(self._load(door, then_status=outcome), group="ledger-review-read", exclusive=True)
 
     def _reopen(self) -> None:
         """Show the re-read review queue, staying on the area the operator is working in."""

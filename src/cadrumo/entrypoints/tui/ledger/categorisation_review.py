@@ -151,7 +151,10 @@ class ReviewingCategorisationScreen(CategorisationScreen):
         except CadrumoError as error:
             self.busy = False
             self.refuse(door_refusal_text(error))
-            self.status("tui.ledger.categorisation.failed")
+            # A review the runtime accepted but was not seen to start may be running: it is unknown, not refused.
+            self.query_one("#ledger-flow-status", Static).update(
+                self.failed_write_status(error, "tui.ledger.categorisation.failed")
+            )
             return
         self.status("tui.ledger.categorisation.review.waiting")
         self.app.push_screen(

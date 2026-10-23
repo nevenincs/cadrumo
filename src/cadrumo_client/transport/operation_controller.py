@@ -244,6 +244,8 @@ class OperationController:
     operation_id: OperationId
     session_id: UUID
     deadline: float | None = None
+    definition_contract: OperationPublicDefinitionContractV1 | None = field(default=None, repr=False, compare=False)
+    """The contract the submission was admitted under; ``None`` for a controller rebuilt from an operation id."""
 
     def __post_init__(self) -> None:
         """Refuse another frontend or an already replaced application session."""
@@ -365,7 +367,13 @@ class OperationController:
         )
         if client.session_id != session_id:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-        return cls(client=client, operation_id=receipt.receipt.operation_id, session_id=session_id, deadline=deadline)
+        return cls(
+            client=client,
+            operation_id=receipt.receipt.operation_id,
+            session_id=session_id,
+            deadline=deadline,
+            definition_contract=contract,
+        )
 
     async def read_settled_result[ResultT: BaseModel](
         self,

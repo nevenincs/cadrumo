@@ -158,6 +158,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.entrypoints.tui.operations.outcome.SessionExpiredOutcomeUnknownError",
+        ErrorCode(
+            code="FAIL_TUI_SESSION_EXPIRED_OUTCOME_UNKNOWN",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.canonical_tui_session_expired_outcome_unknown",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.entrypoints.tui.operations.outcome.SessionUnavailableOutcomeUnknownError",
+        ErrorCode(
+            code="FAIL_TUI_SESSION_UNAVAILABLE_OUTCOME_UNKNOWN",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.canonical_tui_session_unavailable_outcome_unknown",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.tui.account.AccountSessionUnavailableError",
         ErrorCode(
             code="FAIL_TUI_ACCOUNT_SESSION_UNAVAILABLE",

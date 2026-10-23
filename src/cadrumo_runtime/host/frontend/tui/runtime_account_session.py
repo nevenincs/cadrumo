@@ -15,6 +15,11 @@ from cadrumo.entrypoints.tui.account import (
     AccountSessionReaderV1,
     AccountSessionUnavailableError,
 )
+from cadrumo.entrypoints.tui.operations.outcome import (
+    OperationOutcomeUnknownError,
+    SessionExpiredOutcomeUnknownError,
+    SessionUnavailableOutcomeUnknownError,
+)
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.profile_access import status_admits_session
@@ -25,7 +30,6 @@ if TYPE_CHECKING:
 
     from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
     from cadrumo_client.transport.frontend_client import FrontendClient
-    from cadrumo_client.transport.operation_controller import OperationController
 
 
 def runtime_account_activity_reporter(client: FrontendClient) -> Callable[[], Awaitable[None]]:
@@ -94,28 +98,38 @@ def read_runtime_account_session(
     )
 
 
-def session_expired_with_receipt(
-    controller: OperationController | None,
+def session_lost_with_receipt(
+    lost: AccountSessionExpiredError,
+    operation_id: str,
     projection: OperationPublicProjectionV1 | None,
+    *,
+    unknown_outcome: OperationOutcomeUnknownError | None = None,
 ) -> AccountSessionExpiredError:
-    """Keep a submitted operation's receipt visible when its retained session expires.
+    """Keep a submitted operation's receipt visible when its retained session is lost.
 
-    Before submission there is no receipt. After it, the operation ID is kept
-    with the last observed terminal facts, and an unobserved effect is unknown.
+    An expired session and a runtime that could not be observed stay distinct,
+    as ``lost`` observed them, and the error keeps the operation ID with the
+    last observed terminal facts. When ``unknown_outcome`` says the change may
+    have been saved, the session error carries it, and its message says so
+    with the operation ID.
     """
-    if controller is None:
-        return AccountSessionExpiredError()
+    unavailable = isinstance(lost, AccountSessionUnavailableError)
+    if unknown_outcome is not None:
+        if unavailable:
+            return SessionUnavailableOutcomeUnknownError(unknown_outcome)
+        return SessionExpiredOutcomeUnknownError(unknown_outcome)
     condition = projection.terminal_condition if projection is not None else None
     effect = projection.effect if projection is not None else OperationEffect.UNKNOWN
     refusal_code = projection.refusal_ref if projection is not None else None
-    return AccountSessionExpiredError(
-        context={
-            "operation_id": str(controller.operation_id),
-            "terminal_condition": condition.value if condition is not None else "unknown",
-            "effect": effect.value,
-            "refusal_code": refusal_code,
-        }
-    )
+    receipt: dict[str, object] = {
+        "operation_id": operation_id,
+        "terminal_condition": condition.value if condition is not None else "unknown",
+        "effect": effect.value,
+        "refusal_code": refusal_code,
+    }
+    if unavailable:
+        return AccountSessionUnavailableError(context=receipt)
+    return AccountSessionExpiredError(context=receipt)
 
 
-__all__ = ["read_runtime_account_session", "runtime_account_session_reader", "session_expired_with_receipt"]
+__all__ = ["read_runtime_account_session", "runtime_account_session_reader", "session_lost_with_receipt"]

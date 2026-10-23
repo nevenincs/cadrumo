@@ -57,6 +57,7 @@ from .ledger_invoices_runtime_harness import (
     client_of,
     install,
 )
+from .unsupported_result import raises_unsupported_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -242,9 +243,8 @@ def test_apply_refuses_a_result_its_receipt_does_not_support(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, settled: Settled
 ) -> None:
     boundary = install(monkeypatch, settled)
-    with pytest.raises(RefusalError) as raised:
+    with raises_unsupported_result(settled.effect, settled.contract):
         asyncio.run(_import_door(boundary).apply(_import_request(_book(tmp_path))))
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 def test_a_refused_import_raises_its_recorded_error_or_bare_code(
@@ -372,9 +372,8 @@ def test_the_wizard_refuses_a_result_its_receipt_does_not_support(
     monkeypatch: pytest.MonkeyPatch, settled: Settled
 ) -> None:
     boundary = install(monkeypatch, settled)
-    with pytest.raises(RefusalError) as raised:
+    with raises_unsupported_result(settled.effect, settled.contract):
         asyncio.run(_wizard_door(boundary)(_wizard_request()))
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 def test_a_refused_wizard_entry_raises_its_recorded_error_and_a_lapsed_session_submits_nothing(

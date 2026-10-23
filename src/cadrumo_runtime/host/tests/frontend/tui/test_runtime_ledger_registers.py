@@ -139,6 +139,7 @@ from ....frontend.tui.runtime_ledger_registers import (
     RuntimeProrrataRegisterTuiDoorV1,
     compose_registers_tools,
 )
+from .unsupported_result import raises_unsupported_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -618,9 +619,9 @@ def _wrong_effect(effect: OperationEffect) -> OperationEffect:
 def test_each_door_refuses_a_result_whose_receipt_reports_another_effect(
     monkeypatch: pytest.MonkeyPatch, case: _Case
 ) -> None:
-    with pytest.raises(RefusalError) as raised:
-        _run(monkeypatch, case, result=case.result, effect=_wrong_effect(case.effect))
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
+    effect = _wrong_effect(case.effect)
+    with raises_unsupported_result(effect, _REGISTRY.lookup_public_contract(case.definition_id)):
+        _run(monkeypatch, case, result=case.result, effect=effect)
 
 
 def _for_other_profile(result: BaseModel) -> BaseModel:
@@ -635,9 +636,8 @@ def _for_other_profile(result: BaseModel) -> BaseModel:
 
 @pytest.mark.parametrize("case", _SUCCESSES, ids=[case.name for case in _SUCCESSES])
 def test_each_door_refuses_a_result_for_another_profile(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
-    with pytest.raises(RefusalError) as raised:
+    with raises_unsupported_result(case.effect, _REGISTRY.lookup_public_contract(case.definition_id)):
         _run(monkeypatch, case, result=_for_other_profile(case.result))
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 @pytest.mark.parametrize("case", _SUCCESSES, ids=[case.name for case in _SUCCESSES])
@@ -747,9 +747,8 @@ def test_a_refusal_receipt_never_settles_a_successful_result_nor_a_refusal_settl
             refusal_ref=code,
         )
     assert success_under_refusal.value.reason is RefusalCode.INVALID_FRAME
-    with pytest.raises(RefusalError) as refusal_under_success:
+    with raises_unsupported_result(case.effect, _REGISTRY.lookup_public_contract(case.definition_id)):
         _run(monkeypatch, case, result=refused)
-    assert refusal_under_success.value.reason is RefusalCode.INVALID_FRAME
 
 
 def test_a_refused_register_read_is_raised_rather_than_read(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -815,9 +814,8 @@ def test_a_refused_register_read_is_raised_rather_than_read(monkeypatch: pytest.
 def test_a_result_naming_another_record_than_its_request_is_refused(
     monkeypatch: pytest.MonkeyPatch, case: _Case, result: BaseModel
 ) -> None:
-    with pytest.raises(RefusalError) as raised:
+    with raises_unsupported_result(case.effect, _REGISTRY.lookup_public_contract(case.definition_id)):
         _run(monkeypatch, case, result=result)
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 def test_typed_source_files_are_read_and_validated_as_the_command_line_reads_them(

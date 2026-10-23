@@ -36,12 +36,12 @@ from cadrumo.core.operations import (
 )
 from cadrumo.domain.transactions.own_accounts import OwnAccountHolding
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.operation_controller import OperationController
 
 from ....frontend.tui.runtime_own_accounts import RuntimeOwnAccountTuiDoorV1
+from .unsupported_result import raises_unsupported_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -302,12 +302,11 @@ def test_own_account_door_refuses_a_result_its_receipt_does_not_support(
     effect: OperationEffect,
 ) -> None:
     client = _Client()
-    _install(monkeypatch, client, _Controller(observation=_observation(effect=effect), result=result))
+    receipt = _observation(effect=effect)
+    _install(monkeypatch, client, _Controller(observation=receipt, result=result))
 
-    with pytest.raises(RefusalError) as raised:
+    with raises_unsupported_result(effect, receipt.projection.definition_contract):
         asyncio.run(_door(client)(_add_request()))
-
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 def test_own_account_door_raises_the_recorded_refusal_of_a_refused_removal(monkeypatch: pytest.MonkeyPatch) -> None:

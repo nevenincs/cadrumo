@@ -95,6 +95,11 @@ async def read_sync_readiness(client: FrontendClient) -> AuthSyncReadiness:
     return result.sync_readiness
 
 
+def _certificate_file(certificate_path: str) -> Path | None:
+    """The operator's certificate path, made absolute, or ``None`` when none was given; reads the filesystem."""
+    return Path(certificate_path).expanduser().resolve(strict=False) if certificate_path.strip() else None
+
+
 class AeatAuthClient:
     """Bind editable profile facts and protected credentials to their originating session."""
 
@@ -172,19 +177,22 @@ class AeatAuthClient:
                 except Exception as error:
                     raise AeatAuthFieldSaveError(path) from error
                 self._pin()
-            await asyncio.to_thread(
-                configure_profile_authentication,
-                self.client,
-                AuthConfigureOperationRequest(
-                    provider=provider,
-                    clave_movil_route=route if provider is AuthProviderKind.CLAVE_MOVIL else None,
-                    certificate_path=Path(certificate_path).expanduser().resolve(strict=False)
-                    if certificate_path.strip()
-                    else None,
-                    expected_profile_revision=revision,
-                    expected_profile_digest=digest,
-                ),
-            )
+            expected_revision, expected_digest = revision, digest
+
+            def configure() -> None:
+                # Resolving the certificate path reads the filesystem, so it runs here, off the event loop.
+                configure_profile_authentication(
+                    self.client,
+                    AuthConfigureOperationRequest(
+                        provider=provider,
+                        clave_movil_route=route if provider is AuthProviderKind.CLAVE_MOVIL else None,
+                        certificate_path=_certificate_file(certificate_path),
+                        expected_profile_revision=expected_revision,
+                        expected_profile_digest=expected_digest,
+                    ),
+                )
+
+            await asyncio.to_thread(configure)
             self._pin()
             if (
                 secret is not None

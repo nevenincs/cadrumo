@@ -407,6 +407,14 @@ errors:
       munkaegységeket nem sikerült betölteni.
     canonical_tui_account_session_expired: A TUI-fiók munkamenete lejárt; a folytatáshoz
       jelentkezz be újra.
+    canonical_tui_session_expired_outcome_unknown: 'A munkameneted lejárt, mielőtt
+      a(z) %{operation_id} művelet befejeződését láttuk, ezért az eredménye ismeretlen:
+      a módosítás lehet, hogy teljesen, részben vagy egyáltalán nem mentődött el.
+      Jelentkezz be újra, és olvasd be a nyilvántartást, mielőtt újra próbálkozol.'
+    canonical_tui_session_unavailable_outcome_unknown: 'A futtatókörnyezet nem válaszolt,
+      mielőtt a(z) %{operation_id} művelet befejeződését láttuk, ezért az eredménye
+      ismeretlen: a módosítás lehet, hogy teljesen, részben vagy egyáltalán nem mentődött
+      el. Ha újra elérhető, olvasd be a nyilvántartást, mielőtt újra próbálkozol.'
     canonical_workflow_gate_persistence: A munkafolyamat-kaput nem sikerült menteni.
     censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.

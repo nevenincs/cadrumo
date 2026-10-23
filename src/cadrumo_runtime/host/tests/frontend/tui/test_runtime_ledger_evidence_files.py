@@ -129,6 +129,7 @@ from ....frontend.tui.runtime_ledger_evidence_files import (
     compose_evidence_files_tools,
     compose_runtime_evidence_files_doors,
 )
+from .unsupported_result import raises_unsupported_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -635,10 +636,8 @@ def test_each_door_refuses_a_result_for_another_profile(monkeypatch: pytest.Monk
     observation = _observation(case.definition_id, effect=case.effect)
     _install(monkeypatch, client, _Controller(observation=observation, result=case.result(_OTHER_PROFILE_ID)))
 
-    with pytest.raises(RefusalError) as raised:
+    with raises_unsupported_result(observation.projection.effect, observation.projection.definition_contract):
         asyncio.run(_door(client, case)(case.request))
-
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
@@ -647,10 +646,8 @@ def test_each_door_refuses_a_receipt_reporting_the_wrong_effect(monkeypatch: pyt
     observation = _observation(case.definition_id, effect=case.wrong_effect)
     _install(monkeypatch, client, _Controller(observation=observation, result=case.result(_PROFILE_ID)))
 
-    with pytest.raises(RefusalError) as raised:
+    with raises_unsupported_result(observation.projection.effect, observation.projection.definition_contract):
         asyncio.run(_door(client, case)(case.request))
-
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
@@ -770,13 +767,14 @@ def test_an_attachment_validation_refusal_is_read_as_its_messages(
     assert answered == refused
 
 
-def test_an_update_that_did_not_apply_the_requested_value_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_an_update_that_did_not_apply_the_requested_value_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The receipt reported an update; a record without the requested value leaves what was saved unknown."""
     client = _Client()
     stale = LedgerEvidenceUpdateProjection(profile_id=_PROFILE_ID, record=_record(), bucket_event_ids=(_EVENT_ID,))
     observation = _observation("ledger.evidence.update", effect=OperationEffect.UPDATED)
     _install(monkeypatch, client, _Controller(observation=observation, result=stale))
 
-    with pytest.raises(RefusalError):
+    with raises_unsupported_result(OperationEffect.UPDATED, observation.projection.definition_contract):
         asyncio.run(_doors(client).update(_UPDATE_REQUEST))
 
 

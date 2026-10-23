@@ -444,6 +444,15 @@ errors:
       de treball per comparar la tributació.
     canonical_tui_account_session_expired: La sessió del compte del TUI ha caducat;
       torna a iniciar sessió per continuar.
+    canonical_tui_session_expired_outcome_unknown: 'La teva sessió ha caducat abans
+      de veure acabar l''operació %{operation_id}, així que el seu resultat és desconegut:
+      pot ser que el canvi s''hagi desat sencer, en part o gens. Torna a iniciar sessió
+      i llegeix els registres abans de tornar-ho a provar.'
+    canonical_tui_session_unavailable_outcome_unknown: 'L''entorn d''execució ha deixat
+      de respondre abans de veure acabar l''operació %{operation_id}, així que el
+      seu resultat és desconegut: pot ser que el canvi s''hagi desat sencer, en part
+      o gens. Quan torni a estar disponible, llegeix els registres abans de tornar-ho
+      a provar.'
     canonical_workflow_gate_persistence: No s'ha pogut desar el control d'accés del
       flux de treball.
     censo_sync: La sincronització del cens del Model 036 ha fallat.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -18,22 +19,32 @@ from cadrumo.application.ledger.evidence_add_operation import (
     LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
     LedgerEvidenceAddProjection,
     LedgerEvidenceAddRequest,
+    build_ledger_evidence_add_definition,
+    build_ledger_evidence_add_registration,
 )
+from cadrumo.application.ledger.evidence_ports import LedgerEvidencePortsFactory
 from cadrumo.application.ledger.evidence_read_operation import (
     LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID,
     LedgerEvidenceListProjection,
     LedgerEvidenceRecordProjection,
+    build_ledger_evidence_list_definition,
+    build_ledger_evidence_list_registration,
 )
 from cadrumo.application.ledger.invoice_evidence_confirm_operation import (
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
     LedgerEvidenceConfirmProjection,
     LedgerEvidenceConfirmRequest,
+    build_ledger_evidence_confirm_definition,
+    build_ledger_evidence_confirm_registration,
 )
 from cadrumo.application.ledger.invoice_evidence_extract_operation import (
     LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
     LedgerEvidenceExtractProjection,
     LedgerEvidenceExtractRequest,
+    build_ledger_evidence_extract_definition,
+    build_ledger_evidence_extract_registration,
 )
+from cadrumo.application.ledger.invoice_evidence_operation import InvoiceEvidenceOperationPortsFactory
 from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
     DraftDiscrepancyProjectionV1,
     FieldAmbiguityCandidateProjectionV1,
@@ -47,8 +58,11 @@ from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
 from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceClassificationKind
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
+    OperationRegistry,
+)
 from cadrumo.core.config import override_settings
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_grounding import FieldGroundingOutcome
@@ -64,6 +78,7 @@ from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.evidence_draft import draft_lines
 from cadrumo.entrypoints.tui.ledger.models import LedgerEvidenceConfirmationV1, LedgerEvidenceRecordStatus
+from cadrumo.entrypoints.tui.operations.outcome import OperationOutcomeUnknownError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
@@ -87,12 +102,39 @@ _RESULT_VERSIONS = {
 }
 
 
+def _contracts() -> dict[str, OperationPublicDefinitionContractV1]:
+    """The four evidence operations' public contracts, declared through their own builders."""
+    evidence = cast(LedgerEvidencePortsFactory, cast(object, lambda **_kwargs: None))
+    invoice_evidence = cast(InvoiceEvidenceOperationPortsFactory, cast(object, lambda **_kwargs: None))
+    add = build_ledger_evidence_add_definition(evidence)
+    listing = build_ledger_evidence_list_definition(evidence)
+    extract = build_ledger_evidence_extract_definition(invoice_evidence)
+    confirm = build_ledger_evidence_confirm_definition(invoice_evidence)
+    definitions = (add, listing, extract, confirm)
+    registrations = (
+        build_ledger_evidence_add_registration(add),
+        build_ledger_evidence_list_registration(listing),
+        build_ledger_evidence_extract_registration(extract),
+        build_ledger_evidence_confirm_registration(confirm),
+    )
+    registry = OperationRegistry(
+        definitions=tuple(sorted(definitions, key=lambda item: item.definition_id)),
+        public_registrations=tuple(sorted(registrations, key=lambda item: item.contract.definition_id)),
+    )
+    return {item.definition_id: registry.lookup_public_contract(item.definition_id) for item in definitions}
+
+
+_CONTRACTS = _contracts()
+
+
 class _Client:
     frontend = OperationFrontendProjection.TUI
 
     def __init__(self) -> None:
         self.profile_id = _PROFILE_ID
         self.session_id = _SESSION_ID
+        self.session_read_threads: list[int] = []
+        """The thread of each blocking session read: at composition, then around each operation."""
 
 
 class _Controller:
@@ -105,16 +147,12 @@ class _Controller:
         self.definition_id = definition_id
         self.result = result
         self.started = False
-        request_schema = OperationSchemaIdentityV1.from_model(
-            schema_id=f"{definition_id}.request",
-            schema_version=1,
-            model_type=type(request),
-        )
+        self.definition_contract = _CONTRACTS[definition_id]
         self.projection = SimpleNamespace(
             operation_id=self.operation_id,
             definition_id=definition_id,
             subject_ref=profile_operation_subject(str(_PROFILE_ID)),
-            definition_contract=SimpleNamespace(request_schema=request_schema),
+            definition_contract=self.definition_contract,
             lifecycle=OperationLifecycle.TERMINAL,
             terminal_condition=OperationTerminalCondition.SUCCEEDED,
             effect=effect,
@@ -287,6 +325,7 @@ def _install_runtime(
         profile_label: str,
     ) -> object:
         assert profile_label == "Fixture profile"
+        client.session_read_threads.append(threading.get_ident())
         if client.profile_id != profile_id or client.session_id != session_id:
             raise AccountSessionExpiredError()
         return object()
@@ -343,9 +382,13 @@ async def test_runtime_evidence_add_preserves_caller_directory_and_source_proven
     )
     door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
     if substituted_source:
-        with pytest.raises(RefusalError) as refused:
+        # The receipt reported the file added, so a result naming another source leaves the outcome unknown.
+        with pytest.raises(OperationOutcomeUnknownError) as unknown:
             await door.add(source_path)
-        assert refused.value.reason is RefusalCode.INVALID_FRAME
+        assert unknown.value.operation_id == _OPERATION_ID
+        assert unknown.value.effect is OperationEffect.UPDATED
+        assert isinstance(unknown.value.reason, RefusalError)
+        assert unknown.value.reason.reason is RefusalCode.INVALID_FRAME
     else:
         row = await door.add(source_path)
         assert row.file_name == "record.pdf"
@@ -495,3 +538,119 @@ def test_runtime_evidence_maps_complete_list_to_unmeasured_safe_rows(monkeypatch
     assert rows[0].status is LedgerEvidenceRecordStatus.UNMEASURED
     assert rows[0].evidence_id == "f" * 16
     assert "private" not in repr(rows[0])
+
+
+def _confirmation() -> LedgerEvidenceConfirmationV1:
+    return LedgerEvidenceConfirmationV1(
+        evidence_id="f" * 16,
+        kind=InvoiceKind.RECEIVED,
+        country_code="ES",
+        counterparty_name="Proveedor Example SL",
+    )
+
+
+def _added_record() -> LedgerEvidenceAddProjection:
+    record = LedgerEvidenceRecordProjection.model_construct(
+        evidence_id="f" * 16,
+        bucket_id=str(_PROFILE_ID),
+        source_path="record.pdf",
+        source_sha256=_SOURCE_DIGEST,
+        attachment_id=_SOURCE_DIGEST,
+        media_kind=MediaKind.PDF,
+        supplier=None,
+        invoice_number=None,
+        created_at=datetime(2026, 3, 16, tzinfo=UTC),
+    )
+    return LedgerEvidenceAddProjection.model_construct(
+        profile_id=_PROFILE_ID, record=record, bucket_event_ids=("c" * 64,)
+    )
+
+
+@pytest.mark.asyncio
+async def test_runtime_evidence_doors_read_their_session_off_the_event_loop_thread(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The session read is a blocking IPC exchange; extract, confirm and add never run it on the loop."""
+    client = _Client()
+    _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[
+            (LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID, _extract_projection(), OperationEffect.NONE),
+            (LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID, _confirm_projection(), OperationEffect.UPDATED),
+            (LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID, _added_record(), OperationEffect.UPDATED),
+        ],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+    assert client.session_read_threads, "composing the door reads the session once, before any loop runs"
+    loop_thread = threading.get_ident()
+
+    for call in (
+        lambda: door.extract("f" * 16),
+        lambda: door.confirm(_confirmation()),
+        lambda: door.add("record.pdf"),
+    ):
+        client.session_read_threads.clear()
+        await call()
+        assert client.session_read_threads, "a door reads its session around its operation"
+        assert loop_thread not in client.session_read_threads
+
+
+@pytest.mark.asyncio
+async def test_the_evidence_gate_catches_a_session_read_on_the_loop_thread(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Detector teeth: a binding check called directly on the loop thread is recorded there."""
+    client = _Client()
+    _install_runtime(monkeypatch, client=client, results=[])
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+    client.session_read_threads.clear()
+
+    door._session.require_binding()
+
+    assert client.session_read_threads == [threading.get_ident()]
+
+
+@pytest.mark.asyncio
+async def test_a_confirmation_whose_result_disagrees_with_its_updated_receipt_is_unknown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The receipt reported the invoice confirmed; a result for another source cannot unsay it."""
+    client = _Client()
+    mismatched = _confirm_projection().model_copy(update={"source_sha256": "9" * 64})
+    _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[
+            (LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID, _extract_projection(), OperationEffect.NONE),
+            (LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID, mismatched, OperationEffect.UPDATED),
+        ],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+    await door.extract("f" * 16)
+
+    with pytest.raises(OperationOutcomeUnknownError) as raised:
+        await door.confirm(_confirmation())
+
+    assert raised.value.operation_id == _OPERATION_ID
+    assert raised.value.effect is OperationEffect.UPDATED
+    assert isinstance(raised.value.reason, RefusalError)
+    assert raised.value.reason.reason is RefusalCode.INVALID_FRAME
+
+
+@pytest.mark.asyncio
+async def test_an_extraction_whose_result_disagrees_with_a_receipt_that_saved_nothing_stays_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = _Client()
+    other = _extract_projection().model_copy(update={"evidence_id": "e" * 16})
+    _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[(LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID, other, OperationEffect.NONE)],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+
+    with pytest.raises(RefusalError) as raised:
+        await door.extract("f" * 16)
+
+    assert not isinstance(raised.value, OperationOutcomeUnknownError)
+    assert raised.value.reason is RefusalCode.INVALID_FRAME

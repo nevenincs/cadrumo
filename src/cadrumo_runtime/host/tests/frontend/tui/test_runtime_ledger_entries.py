@@ -161,7 +161,7 @@ from cadrumo.entrypoints.tui.ledger.tests.entries_door_fixtures import (
     entry_id,
 )
 from cadrumo.entrypoints.tui.operations.outcome import OperationOutcomeUnknownError
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.operation_controller import OperationController
@@ -173,6 +173,7 @@ from ....frontend.tui.runtime_ledger_entries import (
     compose_runtime_ledger_exclusion_submitter,
 )
 from ....frontend.tui.runtime_ledger_tools import compose_runtime_ledger_tools
+from .unsupported_result import raises_unsupported_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -515,10 +516,8 @@ def test_each_door_refuses_a_result_for_another_profile(monkeypatch: pytest.Monk
     observation = _observation(case.definition_id, effect=case.effect)
     _install(monkeypatch, client, _Controller(observation=observation, result=foreign))
 
-    with pytest.raises(RefusalError) as raised:
+    with raises_unsupported_result(observation.projection.effect, observation.projection.definition_contract):
         _call(_doors(client), case)
-
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
@@ -527,10 +526,8 @@ def test_each_door_refuses_an_effect_its_request_cannot_cause(monkeypatch: pytes
     observation = _observation(case.definition_id, effect=_OTHER_EFFECT[case.effect])
     _install(monkeypatch, client, _Controller(observation=observation, result=case.result))
 
-    with pytest.raises(RefusalError) as raised:
+    with raises_unsupported_result(observation.projection.effect, observation.projection.definition_contract):
         _call(_doors(client), case)
-
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 def _registered_detail() -> OperationErrorDetailV1:
@@ -631,7 +628,8 @@ def test_an_add_validation_refusal_is_read_as_the_operations_own_refusal(monkeyp
     assert asyncio.run(_doors(client).add(request)) == refused
 
 
-def test_an_add_whose_entry_differs_from_the_request_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_an_add_whose_entry_differs_from_the_request_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The receipt reported the entry added; a result for another entry leaves what was added unknown."""
     client = _Client()
     request = LedgerAddRequest(
         profile_id=_PROFILE_ID, booked_date="2026-03-14", amount="10.00", direction="OUTGOING", description="Synthetic"
@@ -640,7 +638,7 @@ def test_an_add_whose_entry_differs_from_the_request_is_refused(monkeypatch: pyt
     observation = _observation(LEDGER_ADD_OPERATION_DEFINITION_ID, effect=OperationEffect.UPDATED)
     _install(monkeypatch, client, _Controller(observation=observation, result=other))
 
-    with pytest.raises(RefusalError):
+    with raises_unsupported_result(OperationEffect.UPDATED, observation.projection.definition_contract):
         asyncio.run(_doors(client).add(request))
 
 
@@ -708,7 +706,7 @@ def test_a_failed_export_that_wrote_nothing_raises(monkeypatch: pytest.MonkeyPat
         {"export_format": ExportSerializationFormat.XLSX},
     ],
 )
-def test_the_export_door_refuses_a_report_for_another_request(
+def test_the_export_door_reports_a_report_for_another_request_as_unknown(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, change: dict[str, object]
 ) -> None:
     client = _Client()
@@ -717,7 +715,8 @@ def test_the_export_door_refuses_a_report_for_another_request(
     observation = _observation(LEDGER_EXPORT_OPERATION_DEFINITION_ID, effect=OperationEffect.UPDATED)
     _install(monkeypatch, client, _Controller(observation=observation, result=foreign))
 
-    with pytest.raises(RefusalError):
+    # The export reported a published file, so a report for another request leaves that file unknown.
+    with raises_unsupported_result(OperationEffect.UPDATED, observation.projection.definition_contract):
         asyncio.run(_doors(client).export(request))
 
 
@@ -783,7 +782,10 @@ def test_the_exclusion_submitter_excludes_exactly_the_submitted_entry_off_the_lo
     assert threading.get_ident() not in client.session_read_threads
 
 
-def test_the_exclusion_submitter_refuses_a_settled_entry_it_did_not_submit(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_the_exclusion_submitter_reports_a_settled_entry_it_did_not_submit_as_unknown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The receipt reported an exclusion; one of another entry leaves the submitted entry's state unknown."""
     client = _Client()
     observation = _observation(LEDGER_EXCLUDE_OPERATION_DEFINITION_ID, effect=OperationEffect.UPDATED)
     settled = _excluded(entry_id(1))
@@ -792,7 +794,7 @@ def test_the_exclusion_submitter_refuses_a_settled_entry_it_did_not_submit(monke
     other = settled.model_copy(update={"result": settled.result.model_copy(update={"transaction": moved})})
     _install(monkeypatch, client, _Controller(observation=observation, result=other))
 
-    with pytest.raises(RefusalError):
+    with raises_unsupported_result(OperationEffect.UPDATED, observation.projection.definition_contract):
         asyncio.run(_submitter(client)(_exclusion(entry_id(1))))
 
 

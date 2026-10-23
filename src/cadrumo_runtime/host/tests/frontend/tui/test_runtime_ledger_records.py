@@ -95,6 +95,7 @@ from .ledger_invoices_runtime_harness import (
     client_of,
     install,
 )
+from .unsupported_result import raises_unsupported_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -524,9 +525,9 @@ def test_a_result_its_receipt_does_not_support_is_refused(
     monkeypatch: pytest.MonkeyPatch, call: _Call, script: tuple[Settled, ...]
 ) -> None:
     boundary = install(monkeypatch, *script)
-    with pytest.raises(RefusalError) as raised:
+    # The last scripted operation is the one whose result is refused; earlier ones are its fresh reads.
+    with raises_unsupported_result(script[-1].effect, script[-1].contract):
         _run(call, boundary)
-    assert raised.value.reason is RefusalCode.INVALID_FRAME
 
 
 _CALLS_AND_DEFINITIONS: tuple[tuple[_Call, tuple[str, ...]], ...] = (

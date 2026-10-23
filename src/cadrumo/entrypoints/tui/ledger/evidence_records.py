@@ -13,6 +13,7 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....domain.iva.schema import InvoiceKind
 from ..account import AccountSessionExpiredError
+from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import LedgerWorkspaceScreen
 from .evidence_draft import draft_lines
 from .models import (
@@ -245,7 +246,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         if not raw:
             notice.update(tr("tui.ledger.import.path_required"))
             return
-        if self.reading:
+        if self.reading or self.refreshing:
             return
         notice.update("")
         self.query_one("#ledger-evidence-add", Button).disabled = True
@@ -259,8 +260,14 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             status.update(tr("tui.ledger.evidence.add_failed"))
             self._handle_expired_session(error)
         except (CadrumoError, ValidationError) as error:
-            status.update(self.failed_write_status(error, "tui.ledger.evidence.add_failed"))
+            outcome = self.failed_write_status(error, "tui.ledger.evidence.add_failed")
+            status.update(outcome)
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+            if isinstance(error, OperationOutcomeUnknownError):
+                # The document may already be added: read the records again before the addition is offered once more.
+                self.reading = False
+                self.refresh_then(lambda: self._reoffer_add(outcome))
+                return
         else:
             self.query_one("#ledger-evidence-path", Input).value = ""
             added = tr("tui.ledger.evidence.added", file=record.file_name)
@@ -278,6 +285,11 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         status = self.query_one("#ledger-flow-status", Static)
         if not str(status.render()):
             status.update(added)
+
+    def _reoffer_add(self, outcome: str) -> None:
+        """Offer the addition again only over records read after its unknown outcome."""
+        self._after_reread(outcome)
+        self.query_one("#ledger-evidence-add", Button).disabled = False
 
 
 __all__ = ["LedgerEvidenceRecordActions"]

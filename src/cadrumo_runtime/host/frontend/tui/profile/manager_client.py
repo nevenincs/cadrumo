@@ -420,10 +420,11 @@ class ProfileManagerClientComposition:
             )
         screen.disabled = True
         try:
+            # Settings read the active-profile pointer from disk, so they are read on the worker thread too.
             handoff, _ = await asyncio.to_thread(
-                compose_runtime_aeat_sync_handoff,
-                self.client,
-                output_root=load_settings().cadrumo_filed_declarations_dir,
+                lambda: compose_runtime_aeat_sync_handoff(
+                    self.client, output_root=load_settings().cadrumo_filed_declarations_dir
+                )
             )
             self._pin()
             if handoff is None:

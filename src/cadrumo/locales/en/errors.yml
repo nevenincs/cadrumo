@@ -404,6 +404,14 @@ errors:
       could not be loaded.
     canonical_tui_account_session_expired: The TUI account session has expired; sign
       in again to continue.
+    canonical_tui_session_expired_outcome_unknown: 'Your session expired before operation
+      %{operation_id} was seen to finish, so its outcome is unknown: the change may
+      have been saved in full, in part or not at all. Sign in again and read the records
+      before you try again.'
+    canonical_tui_session_unavailable_outcome_unknown: 'The runtime stopped answering
+      before operation %{operation_id} was seen to finish, so its outcome is unknown:
+      the change may have been saved in full, in part or not at all. Once the runtime
+      is available again, read the records before you try again.'
     canonical_workflow_gate_persistence: The workflow gate could not be persisted.
     censo_sync: The Modelo 036 censo sync failed.
     currency_error: Currency normalization failed.

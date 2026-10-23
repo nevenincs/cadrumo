@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
@@ -341,3 +342,40 @@ def test_invoice_books_and_unpreviewed_applies_are_refused_before_anything_is_su
     with pytest.raises(RefusalError):
         asyncio.run(door.apply(LedgerImportRequestV1(path=first, source_kind=LedgerImportSourceKind.BANK_STATEMENT)))
     assert submissions == []
+
+
+def test_preview_plans_its_files_off_the_event_loop_thread(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Planning lists the named folder on disk, a blocking read that never runs on the loop."""
+    from ....frontend.tui import runtime_ledger_import as door_module
+
+    client = _Client()
+    folder, first, second = _folder(tmp_path)
+    preview = _result(
+        dry_run=True,
+        imported=2,
+        valid_files=1,
+        digests=(LedgerImportSourceDigest(file_index=0, sha256="b" * 64),),
+        refused=(LedgerImportFileRefusal(file_name="may.csv", reason_code="own_account_mismatch"),),
+    )
+    submissions = _install(monkeypatch, client, [(OperationEffect.NONE, preview)])
+    planning_threads: list[int] = []
+    plan = door_module.plan_ledger_import_sources
+
+    def recorded_plan(path: Path) -> tuple[Path, ...]:
+        planning_threads.append(threading.get_ident())
+        return plan(path)
+
+    monkeypatch.setattr(door_module, "plan_ledger_import_sources", recorded_plan)
+    request = LedgerImportRequestV1(
+        path=folder, source_kind=LedgerImportSourceKind.BANK_STATEMENT, provider=LedgerProviderID.CSV
+    )
+
+    async def preview_on_the_loop() -> int:
+        await _door(client).preview(request)
+        return threading.get_ident()
+
+    loop_thread = asyncio.run(preview_on_the_loop())
+
+    assert planning_threads
+    assert loop_thread not in planning_threads
+    assert cast(LedgerImportRequest, submissions[0]["payload"]).files == (first.absolute(), second.absolute())

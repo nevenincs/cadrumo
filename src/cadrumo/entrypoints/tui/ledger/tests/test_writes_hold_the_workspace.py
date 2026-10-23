@@ -11,6 +11,7 @@ refused, together with the instruction to read the records again.
 from __future__ import annotations
 
 import asyncio
+import threading
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, replace
 from decimal import Decimal
@@ -42,6 +43,7 @@ from .....application.ledger.llm_review_contracts import LedgerLlmReviewRequest
 from .....application.ledger.models import ManualLedgerTransactionResult
 from .....application.ledger.remove_operation import LedgerRemoveRequest
 from .....application.ledger.reset_operation import LedgerResetRequest
+from .....application.ledger.review_operation import LedgerReviewProjection, LedgerReviewRequest
 from .....application.ledger.transaction_projection import LedgerTransactionProjection
 from .....application.ledger.update_contracts import LedgerUpdatePatch, LedgerUpdatePatchField
 from .....application.ledger.workspace import LedgerWorkspaceArea
@@ -89,7 +91,7 @@ from ..own_accounts import LedgerOwnAccountDoorV1, LedgerOwnAccountsScreen
 from ..reconciliation import LedgerReconciliationScreen
 from ..record_views import LedgerInvoiceDetailScreen
 from ..registers_capital_goods import LedgerCapitalGoodsDoorV1, LedgerCapitalGoodsScreen
-from ..review import LedgerReviewScreen
+from ..review import LedgerReviewDoorV1, LedgerReviewScreen
 from ..tools import LedgerToolV1
 from ..transaction_views import LedgerTransactionDetailScreen
 from ..workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshV1
@@ -999,3 +1001,137 @@ async def test_a_review_that_settles_failed_with_an_effect_is_said_to_be_unknown
             assert tr("tui.ledger.categorisation.not_done") not in _text(screen, "#ledger-refusal")
             assert screen.write_outcome_unknown
             assert door.results == []
+
+
+class _CountingGate(_Gate):
+    """A gate that also counts the door calls that reached it."""
+
+    def __init__(self, error: OperationOutcomeUnknownError | None) -> None:
+        super().__init__(error)
+        self.calls = 0
+
+    @override
+    async def wait(self) -> None:
+        self.calls += 1
+        await super().wait()
+
+
+class _HeldRereadDoor:
+    """The review queue door: the first read opens the area, and every later re-read waits at the gate."""
+
+    def __init__(self, door: LedgerReviewDoorV1, gate: _Gate) -> None:
+        self._door = door
+        self._gate = gate
+        self._reads = 0
+
+    @property
+    def profile_id(self) -> UUID:
+        return self._door.profile_id
+
+    async def __call__(self, request: LedgerReviewRequest) -> LedgerReviewProjection:
+        self._reads += 1
+        if self._reads > 1:
+            await self._gate.wait()
+        return await self._door(request)
+
+
+@pytest.mark.asyncio
+async def test_an_exclusion_whose_outcome_is_unknown_is_offered_again_only_over_a_reread_queue() -> None:
+    write = _CountingGate(error=_UNKNOWN)
+    write.release.set()
+    reread = _Gate(error=None)
+    projection = ledger_projection()
+    queue = ledger_review_door(projection)
+    held_queue = _HeldRereadDoor(queue, reread)
+    controller = LedgerWorkspaceController(
+        ledger_context(),
+        projection,
+        LedgerWorkspaceInjection(
+            review_action=ledger_review_action(),
+            review_door=held_queue,
+            classify_action=_classify_action(),
+            classification_submitter=_ClassificationDoor(),
+            exclusion_submitter=_HeldExclusionDoor(write),
+            tools=_tools(LedgerWorkspaceArea.REVIEW),
+        ),
+    )
+    body = LedgerReviewScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ReplacingHostApp(body).run_test(size=(120, 60)) as pilot:
+            await _settle(pilot)
+            listed = body.rows
+            assert listed
+            review = body.query_one("#ledger-review", DataTable)
+            review.focus()
+            review.move_cursor(row=0)
+            await pilot.press("x")
+            await pilot.pause()
+            await _click(pilot, body, "ledger-exclusion-confirm")
+            await asyncio.wait_for(reread.started.wait(), timeout=10)
+
+            # The entry may already be excluded: until the queue is read again, nothing is offered to exclude.
+            assert body.rows == ()
+            assert body.pending_exclusion is None
+            await pilot.press("x")
+            await pilot.pause()
+            assert body.pending_exclusion is None
+            assert write.calls == 1
+
+            reread.release.set()
+            await _settle(pilot)
+            assert len(queue.requests) == 2
+            assert body.rows == listed
+            assert _status(body) == tr("tui.ledger.flow.outcome_unknown")
+            assert resolve_error_message(_UNKNOWN) in _text(body, "#ledger-refusal")
+            assert pilot.app.screen is body
+
+
+@pytest.mark.asyncio
+async def test_an_evidence_addition_whose_outcome_is_unknown_is_offered_again_only_over_reread_records() -> None:
+    write = _CountingGate(error=_UNKNOWN)
+    write.release.set()
+    door = _HeldEvidenceDoor(write)
+    projection = ledger_projection()
+    refreshing = threading.Event()
+    refreshed = threading.Event()
+    refreshes: list[int] = []
+
+    def refresh() -> LedgerWorkspaceRefreshV1:
+        refreshes.append(1)
+        refreshing.set()
+        refreshed.wait(timeout=10)
+        return LedgerWorkspaceRefreshV1(projection=projection, evidence_items=())
+
+    controller = LedgerWorkspaceController(
+        ledger_context(),
+        projection,
+        LedgerWorkspaceInjection(
+            review_action=ledger_review_action(),
+            evidence_action=ledger_evidence_action(),
+            evidence_items=(),
+            evidence_door=door,
+            refresh=refresh,
+            tools=_tools(LedgerWorkspaceArea.EVIDENCE),
+        ),
+    )
+    body = LedgerEvidenceScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ReplacingHostApp(body).run_test(size=(120, 60)) as pilot:
+            await _settle(pilot)
+            body.query_one("#ledger-evidence-path", Input).value = _EVIDENCE_PATH
+            await _click(pilot, body, "ledger-evidence-add")
+            assert await asyncio.to_thread(refreshing.wait, 10)
+            await pilot.pause()
+
+            # The document may already be added: until the records are read again, the addition is not offered.
+            add = body.query_one("#ledger-evidence-add", Button)
+            assert add.disabled
+            await _click(pilot, body, "ledger-evidence-add")
+            assert write.calls == 1
+
+            refreshed.set()
+            await _settle(pilot)
+            assert refreshes == [1]
+            assert not add.disabled
+            assert _status(body) == tr("tui.ledger.flow.outcome_unknown")
+            assert resolve_error_message(_UNKNOWN) in _text(body, "#ledger-refusal")

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d27447a04d70fcbe36627d12b4385dbef70b7e46b02c9dd4c76ce7a3a3bf5b0'
+body_hash: 'sha256:f4aaeeb6de3197f09cb2e3c13c3c75cdd63380c7aa0f9ad1d539fb2409333438'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -425,6 +425,39 @@ related:
 - `S21` `verify:` `just test-tui` -> `pass`
 - `S21` `verify:` `ruff format/check` -> `pass`
 - `S21` `verify:` `lint-imports` -> `pass`
+- `S20` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_evidence.py`
+- `S20` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_import.py`
+- `S20` `M` `src/cadrumo_runtime/host/frontend/tui/profile/manager_client.py`
+- `S20` `M` `src/cadrumo_runtime/host/frontend/tui/profile/aeat_auth_client.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_evidence.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_import.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/profile/test_runtime_manager.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/profile/test_auth_setup_client.py`
+- `S20` `verify:` `pytest ledger, runtime tui and client transport suites, 1718 tests` -> `pass`
+- `S20` `verify:` `ruff` -> `pass`
+- `S20` `verify:` `lint-imports` -> `pass`
+- `S22` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_account_session.py`
+- `S22` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_evidence.py`
+- `S22` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_categorisation.py`
+- `S22` `M` `src/cadrumo_client/transport/operation_controller.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/operations/outcome.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/review.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_records.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_review.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_writes_hold_the_workspace.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_operation_outcome.py`
+- `S22` `A` `src/cadrumo_runtime/host/tests/frontend/tui/unsupported_result.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/ledger_invoices_runtime_harness.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_categorisation.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_entries.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_evidence_files.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_invoices.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_records.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_registers.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_own_accounts.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_evidence.py`
+- `S22` `verify:` `pytest ledger, runtime tui and client transport suites, 1718 tests` -> `pass`
+- `S22` `verify:` `old-code mutation run of the new and changed tests` -> `fail`
 
 ## Notes
 
@@ -458,3 +491,5 @@ related:
 - `S24` S24 and S25 share one commit because eight files serve both. ledger.review and ledger.evidence.review.list take no paging fields, so each area holds the answer and renders one page. Neither screen offers the request filters yet. Back from an entry opened in Review returns to the overview. `tui.ledger.own_accounts.*,` `classification.field.*` and `review_status.*` still build keys from values.
 - `S25` The walk test discovers 41 concrete Records bodies by subclass. With the shared row handler removed it fails 41 of 41.
 - `S21` Re-review fix: root navigation, account actions and quit ask the destination's leave guard; asset screen runs actions in a worker; guard-disabled mutation fails 10 of 10
+- `S20` Re-review fix: evidence extract/confirm session checks, import preview folder listing, manager settings load and certificate path resolve moved off the loop; sweep of 39 runtime TUI door modules found no other blocking door
+- `S22` Re-review fix: every failure after acceptance judged once; unknown unless a NONE receipt was observed or the contract permits no UPDATED/PARTIAL; lost connection keeps expired vs unavailable; review and evidence add re-read on unknown. The old-code run is the expected detection proof (21 new runtime cases, 65 changed cases, 2 screen tests fail on HEAD code). Doors outside RuntimeProfileSession (auth, modelo create/lifecycle, `aeat_sync` handoff) are out of plan scope

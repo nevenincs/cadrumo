@@ -441,6 +441,15 @@ errors:
       de trabajo para comparar la tributación.
     canonical_tui_account_session_expired: La sesión de la cuenta del TUI ha caducado;
       vuelve a iniciar sesión para continuar.
+    canonical_tui_session_expired_outcome_unknown: 'Tu sesión caducó antes de ver
+      terminar la operación %{operation_id}, así que su resultado es desconocido:
+      puede que el cambio se haya guardado entero, en parte o nada. Vuelve a iniciar
+      sesión y lee los registros antes de intentarlo de nuevo.'
+    canonical_tui_session_unavailable_outcome_unknown: 'El entorno de ejecución dejó
+      de responder antes de ver terminar la operación %{operation_id}, así que su
+      resultado es desconocido: puede que el cambio se haya guardado entero, en parte
+      o nada. Cuando vuelva a estar disponible, lee los registros antes de intentarlo
+      de nuevo.'
     canonical_workflow_gate_persistence: No se pudo guardar el control de acceso del
       flujo de trabajo.
     censo_sync: La sincronización del censo del Modelo 036 falló.

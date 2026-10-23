@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
@@ -29,6 +30,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileRepeatableRowUpdateOperationRequest,
 )
 from cadrumo.application.user_profile.view_operation import ProfileViewOperationProjection, ProfileViewPageKind
+from cadrumo.core.config import Settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.external_constants import OutputLanguage
@@ -161,6 +163,14 @@ async def test_onboarding_source_buttons_reach_the_runtime_handoff(
 ) -> None:
     client = _Client(uuid4())
     requests: list[AeatSyncOperationRequestV1] = []
+    settings_threads: list[int] = []
+    load_settings = manager_client.load_settings
+
+    def recorded_settings() -> Settings:
+        settings_threads.append(threading.get_ident())
+        return load_settings()
+
+    monkeypatch.setattr(manager_client, "load_settings", recorded_settings)
 
     async def handoff(request: AeatSyncOperationRequestV1, /) -> OperationControllerPort:
         requests.append(request)
@@ -203,6 +213,9 @@ async def test_onboarding_source_buttons_reach_the_runtime_handoff(
         await pilot.pause()
         assert [str(request.operation) for request in requests] == [definition]
         assert not screen.disabled
+        # Settings read the active-profile pointer from disk; the acquisition never reads them on the loop.
+        assert settings_threads
+        assert threading.get_ident() not in settings_threads
 
 
 def test_every_write_door_carries_exact_dialog_cas_and_reads_authorized_overview() -> None:
