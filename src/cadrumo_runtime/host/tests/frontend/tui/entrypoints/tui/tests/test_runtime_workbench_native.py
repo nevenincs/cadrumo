@@ -120,6 +120,7 @@ from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
 from .......frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ....settled_click import click_when_laid_out
 
 pytestmark = [
     pytest.mark.integration,
@@ -878,7 +879,9 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
                 assert not hasattr(app, "services")
                 await launched_session(kind=SessionKind.API_KEY)
                 stages.append("restricted-change-user")
-                await pilot.click("#restricted-change-user")
+                change_user = app.query_one("#restricted-change-user", Button)
+                change_user.scroll_visible(animate=False)
+                assert await click_when_laid_out(pilot, change_user)
                 return
 
             screen = pilot.app.screen
@@ -906,8 +909,7 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
                 possession.get_secret_value().decode("utf-8") if method is RuntimeLoginMethod.API_KEY else PROFILE_INPUT
             )
             submit.scroll_visible(animate=False)
-            await pilot.pause()
-            await pilot.click("#runtime-login-submit")
+            assert await click_when_laid_out(pilot, submit)
             assert credential.value == ""
 
         with override_settings(cadrumo_local_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:

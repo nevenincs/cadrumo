@@ -19,6 +19,7 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ....frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from ....frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from .settled_click import click_when_laid_out
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -48,7 +49,7 @@ async def test_empty_password_refuses_without_opening_a_connection() -> None:
     host = ScreenHostApp(screen)
     async with host.run_test(size=(140, 60)) as pilot:
         await pilot.pause()
-        await pilot.click("#runtime-login-submit")
+        assert await click_when_laid_out(pilot, screen.query_one("#runtime-login-submit", Button))
         await pilot.pause()
         assert host.return_value is None
         assert screen.is_mounted
@@ -100,7 +101,7 @@ async def test_profile_chooser_routes_current_selection_to_the_runtime_opener() 
         await pilot.pause()
         field = screen.query_one("#runtime-login-credential", Input)
         field.value = "synthetic-runtime-proof"
-        await pilot.click("#runtime-login-submit")
+        assert await click_when_laid_out(pilot, screen.query_one("#runtime-login-submit", Button))
         await host.workers.wait_for_complete()
         await pilot.pause()
         assert opened == [UUID(choices[1].profile_id)], opened
@@ -121,7 +122,7 @@ async def test_cancel_discards_unused_password_without_opening_a_connection(gest
         field = screen.query_one("#runtime-login-credential", Input)
         field.value = "synthetic-unused-password"
         if gesture == "button":
-            await pilot.click("#runtime-login-cancel")
+            assert await click_when_laid_out(pilot, screen.query_one("#runtime-login-cancel", Button))
         else:
             await pilot.press("escape")
         await pilot.pause()

@@ -45,6 +45,7 @@ from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from .......frontend.tui.launcher import main
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ....settled_click import click_when_laid_out
 
 pytestmark = [
     pytest.mark.integration,
@@ -138,8 +139,7 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
                 credential.value = PROFILE_INPUT if not stages else _REPLACEMENT
                 stages.append("login-original" if not stages else "login-replacement")
                 submit.scroll_visible(animate=False)
-                await pilot.pause()
-                await pilot.click("#runtime-login-submit")
+                assert await click_when_laid_out(pilot, submit)
                 assert credential.value == ""
                 return
 

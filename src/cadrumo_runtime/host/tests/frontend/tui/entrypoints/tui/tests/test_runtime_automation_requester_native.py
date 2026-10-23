@@ -490,8 +490,7 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                                 assert credential.password and credential.value == "" and not credential.display
                                 login.query_one("#runtime-login-reference", Input).value = str(selected_reference)
                                 submit.scroll_visible(animate=False)
-                                await pilot.pause()
-                                await pilot.click("#runtime-login-submit")
+                                assert await click_when_laid_out(pilot, submit)
                                 await _until(pilot, lambda: not login._busy, timeout=20)
                                 if not login._transferred:
                                     status = login.query_one("#runtime-login-status", PinnedStatusBar)
@@ -507,8 +506,7 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                             request_button = app.query_one("#restricted-request-access", Button)
                             # Status rows fill in after the profile line and can push the actions below the fold.
                             request_button.scroll_visible(animate=False)
-                            await pilot.pause()
-                            clicked = await pilot.click("#restricted-request-access")
+                            clicked = await click_when_laid_out(pilot, request_button)
                             if not clicked:
                                 raise AssertionError(
                                     f"Restricted requester button was not clicked: kind={selected_kind.value}, "

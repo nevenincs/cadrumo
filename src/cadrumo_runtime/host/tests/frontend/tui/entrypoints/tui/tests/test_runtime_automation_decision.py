@@ -48,6 +48,7 @@ from .......frontend.tui.runtime_access_management import RuntimeAccessManagemen
 from .......frontend.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ....settled_click import click_when_laid_out
 
 pytestmark = [
     pytest.mark.integration,
@@ -178,8 +179,7 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
                             assert credential.password
                             credential.value = PROFILE_INPUT
                             submit.scroll_visible(animate=False)
-                            await pilot.pause()
-                            await pilot.click("#runtime-login-submit")
+                            assert await click_when_laid_out(pilot, submit)
                             assert credential.value == ""
                             stages.append("human-login")
                             return

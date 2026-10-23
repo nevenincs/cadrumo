@@ -53,6 +53,7 @@ from cadrumo_runtime.host.tests.test_profile_connections import LoginObservation
 
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginHandoff, RuntimeLoginMethod
+from ....settled_click import click_when_laid_out
 
 pytestmark = [
     pytest.mark.integration,
@@ -174,8 +175,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
                             assert credential.password
                             credential.value = _CREDENTIAL_INPUT
                             submit.scroll_visible(animate=False)
-                            await pilot.pause()
-                            assert await pilot.click("#runtime-login-submit")
+                            assert await click_when_laid_out(pilot, submit)
                             async with asyncio.timeout(30):
                                 await app.handoff_received.wait()
                             # The preselected profile first attempts receipt

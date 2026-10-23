@@ -15,7 +15,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from textual.pilot import Pilot
-from textual.widgets import Input, Select, Static
+from textual.widgets import Button, Input, Select, Static
 
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
@@ -41,6 +41,7 @@ from .......frontend.tui.runtime_admission import runtime_login_session
 from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ....settled_click import click_when_laid_out
 
 pytestmark = [
     pytest.mark.integration,
@@ -132,7 +133,7 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
             assert credential.password and credential.value == "" and not credential.display
             assert reference.display
             reference.value = str(approved.credential_reference)
-            await pilot.click("#runtime-login-submit")
+            assert await click_when_laid_out(pilot, screen.query_one("#runtime-login-submit", Button))
             assert reference.value == "" and credential.value == ""
 
         async def drive_restricted(pilot: Pilot[object]) -> None:
@@ -142,7 +143,9 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
                 while str(profile_id) not in str(app.query_one("#restricted-profile", Static).render()):
                     await pilot.pause(0.05)
             assert not hasattr(app, "services")
-            await pilot.click("#restricted-close")
+            close = app.query_one("#restricted-close", Button)
+            close.scroll_visible(animate=False)
+            assert await click_when_laid_out(pilot, close)
 
         async def drive_refusals(pilot: Pilot[object]) -> None:
             screen = pilot.app.screen
@@ -153,7 +156,7 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
             reference = screen.query_one("#runtime-login-reference", Input)
             credential = screen.query_one("#runtime-login-credential", Input)
             reference.value = "not-a-uuid"
-            await pilot.click("#runtime-login-submit")
+            assert await click_when_laid_out(pilot, screen.query_one("#runtime-login-submit", Button))
             assert reference.value == "" and credential.value == ""
             assert opened_references == [(profile_id, approved.credential_reference)]
             subject.client_native.unavailable = True

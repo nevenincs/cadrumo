@@ -12,7 +12,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from textual.pilot import Pilot
-from textual.widgets import Input, Select
+from textual.widgets import Button, Input, Select
 
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.user_profile.automation_operations import (
@@ -45,6 +45,7 @@ from ....frontend.tui import installed_session
 from ....frontend.tui.runtime_admission import runtime_login_session
 from ....frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from ....frontend.tui.secret.runtime_login_contracts import RuntimeLoginHandoff, RuntimeLoginMethod
+from .settled_click import click_when_laid_out
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -160,7 +161,7 @@ async def test_login_scope_keeps_one_exact_client_until_frontend_finishes(root_f
         await pilot.resize_terminal(140, 60)
         await pilot.pause()
         pilot.app.screen.query_one("#runtime-login-credential", Input).value = "synthetic-proof"
-        await pilot.click("#runtime-login-submit")
+        assert await click_when_laid_out(pilot, pilot.app.screen.query_one("#runtime-login-submit", Button))
 
     seen = False
     try:
@@ -266,7 +267,7 @@ async def test_no_saved_sign_in_falls_back_to_the_password_without_a_refusal(
         await _settled(pilot, lambda: presentations == ["ready"])
         seen.append((status.message, credential.has_focus))
         credential.value = "synthetic-proof"
-        await pilot.click("#runtime-login-submit")
+        assert await click_when_laid_out(pilot, pilot.app.screen.query_one("#runtime-login-submit", Button))
 
     async with asyncio.timeout(20):
         async with runtime_login_session(
@@ -376,7 +377,7 @@ async def test_stored_reference_handoff_stays_owned_through_restricted_session_s
         pilot.app.screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_REFERENCE
         await pilot.pause()
         pilot.app.screen.query_one("#runtime-login-reference", Input).value = str(reference)
-        await pilot.click("#runtime-login-submit")
+        assert await click_when_laid_out(pilot, pilot.app.screen.query_one("#runtime-login-submit", Button))
 
     async with runtime_login_session(
         choices=(ProfileLoginChoice(profile_id=str(profile_id), label="Restricted profile"),),
@@ -428,7 +429,7 @@ async def test_accepted_handoff_failed_close_retains_owner_and_exact_body(body: 
         await pilot.pause()
         await pilot.resize_terminal(140, 60)
         pilot.app.screen.query_one("#runtime-login-credential", Input).value = "synthetic-proof"
-        await pilot.click("#runtime-login-submit")
+        assert await click_when_laid_out(pilot, pilot.app.screen.query_one("#runtime-login-submit", Button))
 
     expected = type(primary) if primary is not None else AsyncResourceCleanupError
     with pytest.raises(expected) as caught:
