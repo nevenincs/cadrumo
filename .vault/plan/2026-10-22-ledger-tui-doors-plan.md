@@ -8,9 +8,10 @@ related:
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
   - '[[2026-07-05-ledger-latency-budget-adr]]'
   - '[[2026-10-22-ledger-tui-doors-authenticated-stored-reads-adr]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
 modified: '2026-10-23'
 body_schema: body-v2
-body_hash: 'sha256:77a5cb7cd4c60166530bc0faefc3e2e81bb3abe6bb9c6ae4498a59c65b30d096'
+body_hash: 'sha256:101fb143fe4481220c196105d3cc4a59c7906cf9b7a6280dac881680c47f411a'
 ---
 
 # `ledger-tui-doors` plan
@@ -30,6 +31,8 @@ Every domain agent works from the verified base brief, which carries the archite
 P04 added 2026-10-22 on the user's instruction. The D1 CPU gate measured a period-filtered `ledger.list` page at about 12.6 CPU-seconds for 30,000 transactions, against the 3-second budget, because the list query loads and decodes the whole catalogue before filtering. The user chose to fix it and to dedicate extra agents to optimisation. TUI enrolment of the ledger operations remains the priority; the optimisation exists so those screens load in usable time. The ledger latency budget ADR governs P04: period-first partitioning through the existing plaintext date index, a per-read completeness gate (stale index falls back to a full scan, never a silent drop), full-scan-versus-partition parity tests, no new index columns, and no change to regulated results. The unfiltered full-catalogue listing stays outside that decision; a lever for it needs its own decision before implementation.
 
 P04.S17 and P04.S18 implement the authenticated-stored-reads ADR, accepted on the user's instruction. P04.S19 was added 2026-10-22 when the user answered "Yes, harden": the filing consumers that default an unaccepted registry value instead of refusing it (income concept, Art. 104.tres tag, cash-accounting treatment, counterparty identification state, and the untyped input-classification failure) must refuse at use against the operation's pinned authority, with typed refusals. It changes no registry data or request contract, and any later widening of the authenticated read's skip set remains a separate decision.
+
+P03.S20 to P03.S23 were added 2026-10-23 as in-scope corrections from the integrated review (`2026-10-23-ledger-tui-doors-integrated-review-audit`). Its three high findings require them: blocking session checks on the event loop, writes abandoned by navigation, and ambiguous write outcomes reported as refusals. Its medium finding on bulk classify adds the fourth. P04.S13 is also governed by the secure-storage performance hardening ADR, which is now linked.
 
 ## Steps
 
@@ -71,6 +74,10 @@ The orchestrator applies locales, registers visual surfaces, runs every gate and
 
 - [x] `P03.S07` - apply the domain locale manifests and register the domain harness surfaces; `src/cadrumo/locales and dev/tui/harness/surfaces.py`.
 - [ ] `P03.S08` - run gates B1 to B8 over the integrated workspace and review it against the base brief; `src/cadrumo/entrypoints/tui/ledger and src/cadrumo_runtime/host/frontend/tui`.
+- [ ] `P03.S20` - move every blocking session check in the categorisation review and invoice import runtime doors off the event loop, with thread-recording tests for each door outside run_operation; `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_categorisation.py and runtime_ledger_invoices.py`.
+- [ ] `P03.S21` - make the Records workspace refuse area and tool changes while its body has a write in flight, tested per write flow; `src/cadrumo/entrypoints/tui/ledger/controller.py`.
+- [ ] `P03.S22` - report a submitted write that times out or settles with an unknown or partial effect as a typed outcome-unknown refusal carrying the operation id, shown as unknown on every write screen; `src/cadrumo_runtime/host/frontend/tui/runtime_profile_session.py`.
+- [ ] `P03.S23` - send every reviewed row of a bulk-classify page and show the operation's applied and skipped counts; `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`.
 
 ## Parallelization
 
