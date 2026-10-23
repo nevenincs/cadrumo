@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Annotated
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -11,13 +10,9 @@ from pydantic import BaseModel, Field
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.filing_year import FilingYear
-from ...core.identity.bucket import BucketId
-from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
-from ...domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -32,67 +27,25 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_lifecycle import reset_ledger_catalogue
-from .models import LedgerCatalogueResetReport, LedgerRemovalBlocker
+from .models import LedgerCatalogueResetReport
 from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from .removal_receipt_projection import (
+    MAX_LEDGER_REMOVAL_RECEIPT_ITEMS,
+    MAX_LEDGER_REMOVAL_RECEIPT_REASON_LENGTH,
+    LedgerRemovalReceiptIdentities,
+    LedgerRemovalReceiptProjection,
+    project_removal_blockers,
+)
 
 LEDGER_RESET_OPERATION_DEFINITION_ID = "ledger.reset"
 LEDGER_RESET_PHASE = "ledger.reset"
-_MAX_RECEIPT_COLLECTION_ITEMS = 4096
-_MAX_RECEIPT_REASON_LENGTH = 4096
-_ReceiptIdentity = Annotated[str, Field(min_length=1, max_length=64)]
-_ReceiptIdentities = Annotated[tuple[_ReceiptIdentity, ...], Field(max_length=_MAX_RECEIPT_COLLECTION_ITEMS)]
 
 
-class LedgerResetBlockerProjection(BaseModel):
-    """One bounded finalized filing reference or stale-draft advisory."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    work_unit_id: WorkUnitId
-    calculation_revision_id: CalculationRevisionId
-    revision_state: str = Field(min_length=1, max_length=64)
-    modelo: str = Field(min_length=1, max_length=16)
-    filing_year: FilingYear
-    period: str = Field(min_length=1, max_length=16)
-
-
-_ReceiptBlockers = Annotated[
-    tuple[LedgerResetBlockerProjection, ...],
-    Field(max_length=_MAX_RECEIPT_COLLECTION_ITEMS),
-]
-
-
-class LedgerResetReportProjection(BaseModel):
+class LedgerResetReportProjection(LedgerRemovalReceiptProjection):
     """Bounded wire projection of every canonical catalogue-reset finding."""
 
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    bucket_id: BucketId
-    removed_transaction_ids: _ReceiptIdentities = ()
+    removed_transaction_ids: LedgerRemovalReceiptIdentities = ()
     reset: bool = False
-    dry_run: bool = False
-    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
-    reason: str = Field(max_length=_MAX_RECEIPT_REASON_LENGTH)
-    cascaded_purchase_invoice_evidence_ids: _ReceiptIdentities = ()
-    cascaded_attachment_ids: _ReceiptIdentities = ()
-    blocking_modelo_references: _ReceiptBlockers = ()
-    stale_draft_revision_references: _ReceiptBlockers = ()
-    bucket_event_ids: _ReceiptIdentities = ()
-
-
-def _project_blockers(rows: tuple[LedgerRemovalBlocker, ...]) -> tuple[LedgerResetBlockerProjection, ...]:
-    """Copy every canonical blocker while enforcing the published item limit."""
-    return tuple(
-        LedgerResetBlockerProjection(
-            work_unit_id=row.work_unit_id,
-            calculation_revision_id=row.calculation_revision_id,
-            revision_state=row.revision_state,
-            modelo=row.modelo,
-            filing_year=row.filing_year,
-            period=row.period,
-        )
-        for row in rows
-    )
 
 
 def _project_report(report: LedgerCatalogueResetReport) -> LedgerResetReportProjection:
@@ -106,8 +59,8 @@ def _project_report(report: LedgerCatalogueResetReport) -> LedgerResetReportProj
         reason=report.reason,
         cascaded_purchase_invoice_evidence_ids=report.cascaded_purchase_invoice_evidence_ids,
         cascaded_attachment_ids=report.cascaded_attachment_ids,
-        blocking_modelo_references=_project_blockers(report.blocking_modelo_references),
-        stale_draft_revision_references=_project_blockers(report.stale_draft_revision_references),
+        blocking_modelo_references=project_removal_blockers(report.blocking_modelo_references),
+        stale_draft_revision_references=project_removal_blockers(report.stale_draft_revision_references),
         bucket_event_ids=report.bucket_event_ids,
     )
 
@@ -118,7 +71,7 @@ class LedgerResetRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    reason: str = Field(default="", max_length=_MAX_RECEIPT_REASON_LENGTH)
+    reason: str = Field(default="", max_length=MAX_LEDGER_REMOVAL_RECEIPT_REASON_LENGTH)
     dry_run: bool = False
     actor: str | None = Field(default=None, min_length=1, max_length=64)
 
@@ -172,7 +125,7 @@ class LedgerResetExecutor:
                 invoice_repository=ports.invoice_repository,
                 work_unit_repository=ports.work_unit_repository,
                 calculation_repository=ports.calculation_repository,
-                max_receipt_items=_MAX_RECEIPT_COLLECTION_ITEMS,
+                max_receipt_items=MAX_LEDGER_REMOVAL_RECEIPT_ITEMS,
             )
 
         if payload.dry_run:

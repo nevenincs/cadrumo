@@ -20,9 +20,9 @@ from ...operations.registry import (
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts
+from ..removal_receipt_projection import LedgerRemovalBlockerProjection
 from ..reset_operation import (
     LEDGER_RESET_OPERATION_DEFINITION_ID,
-    LedgerResetBlockerProjection,
     LedgerResetOperationResult,
     LedgerResetReportProjection,
     LedgerResetRequest,
@@ -71,7 +71,7 @@ def _access_context(
 
 
 def _report(*, bucket_id: str = str(_PROFILE)) -> LedgerResetReportProjection:
-    blocker = LedgerResetBlockerProjection(
+    blocker = LedgerRemovalBlockerProjection(
         work_unit_id="b" * 64,
         calculation_revision_id="c" * 64,
         revision_state="FINALIZED",

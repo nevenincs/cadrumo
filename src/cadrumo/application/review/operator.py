@@ -57,7 +57,7 @@ class ReviewQueueRow(BaseModel):
     only deterministic while every row's instant is comparable.
     """
     summary: str = Field(min_length=1)
-    legal_refs: tuple[LegalRefId, ...] = Field(default_factory=tuple)
+    legal_refs: tuple[LegalRefId, ...] = ()
     """Legal references (BOE permalinks or canonical IDs) justifying the finding.
 
     Populated for ``modelo_finding`` items from the underlying

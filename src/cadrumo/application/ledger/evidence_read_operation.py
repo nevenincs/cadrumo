@@ -99,14 +99,13 @@ class LedgerEvidenceQueryRequest(BaseModel):
     evidence_id: _EvidenceIdentity | None = None
 
 
-class LedgerEvidenceRecordProjection(BaseModel):
-    """Bounded allowlist of fields already shown by the evidence CLI."""
+class _LedgerEvidenceRecordFacts(BaseModel):
+    """Bounded evidence fields shared by the person's record and the automation's record."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     evidence_id: _EvidenceIdentity
     bucket_id: BucketId
-    source_path: _SourcePath
     source_sha256: ContentDigest
     attachment_id: Hex64Str
     media_kind: MediaKind
@@ -125,6 +124,12 @@ class LedgerEvidenceRecordProjection(BaseModel):
     @pydantic_validation_boundary
     def _timestamps_are_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
+
+
+class LedgerEvidenceRecordProjection(_LedgerEvidenceRecordFacts):
+    """Bounded allowlist of fields already shown by the evidence CLI."""
+
+    source_path: _SourcePath
 
     @classmethod
     def from_record(cls, record: PurchaseInvoiceEvidence) -> LedgerEvidenceRecordProjection:
@@ -171,32 +176,10 @@ class LedgerEvidenceRecordProjection(BaseModel):
         )
 
 
-class LedgerEvidenceAutomationRecordProjection(BaseModel):
+class LedgerEvidenceAutomationRecordProjection(_LedgerEvidenceRecordFacts):
     """One evidence record as an automation receives it: every field but the directory it was added from."""
 
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    evidence_id: _EvidenceIdentity
-    bucket_id: BucketId
     source_file_name: _SourceFileName | None = None
-    source_sha256: ContentDigest
-    attachment_id: Hex64Str
-    media_kind: MediaKind
-    supplier: _Supplier | None = None
-    invoice_number: _InvoiceNumber | None = None
-    invoice_date: _InvoiceDate | None = None
-    taxable_base: _DecimalText | None = None
-    iva_rate: _DecimalText | None = None
-    iva_amount: _DecimalText | None = None
-    notes: _Notes = ""
-    created_at: datetime
-    updated_at: datetime
-
-    @field_validator("created_at", "updated_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _timestamps_are_utc(cls, value: datetime) -> datetime:
-        return validate_utc_aware(value)
 
     @classmethod
     def from_person_projection(cls, record: LedgerEvidenceRecordProjection) -> LedgerEvidenceAutomationRecordProjection:

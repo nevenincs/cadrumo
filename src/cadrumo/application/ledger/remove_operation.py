@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Annotated
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -11,14 +10,10 @@ from pydantic import BaseModel, Field
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.filing_year import FilingYear
-from ...core.identity.bucket import BucketId
-from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
-from ...domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
@@ -33,67 +28,23 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_lifecycle import remove_manual_transaction
 from .id_resolution import resolve_transaction_id
-from .models import LedgerRemovalBlocker, LedgerTransactionRemovalReport
+from .models import LedgerTransactionRemovalReport
 from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from .removal_receipt_projection import (
+    MAX_LEDGER_REMOVAL_RECEIPT_REASON_LENGTH,
+    LedgerRemovalReceiptProjection,
+    project_removal_blockers,
+)
 
 LEDGER_REMOVE_OPERATION_DEFINITION_ID = "ledger.remove"
 LEDGER_REMOVE_PHASE = "ledger.remove"
-_MAX_RECEIPT_COLLECTION_ITEMS = 4096
-_MAX_RECEIPT_REASON_LENGTH = 4096
-_ReceiptIdentity = Annotated[str, Field(max_length=64)]
-_ReceiptIdentities = Annotated[tuple[_ReceiptIdentity, ...], Field(max_length=_MAX_RECEIPT_COLLECTION_ITEMS)]
 
 
-class LedgerRemoveBlockerProjection(BaseModel):
-    """One bounded filed-basis blocker or stale-draft advisory."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    work_unit_id: WorkUnitId
-    calculation_revision_id: CalculationRevisionId
-    revision_state: str = Field(min_length=1, max_length=64)
-    modelo: str = Field(min_length=1, max_length=16)
-    filing_year: FilingYear
-    period: str = Field(min_length=1, max_length=16)
-
-
-_ReceiptBlockers = Annotated[
-    tuple[LedgerRemoveBlockerProjection, ...],
-    Field(max_length=_MAX_RECEIPT_COLLECTION_ITEMS),
-]
-
-
-class LedgerRemoveReportProjection(BaseModel):
+class LedgerRemoveReportProjection(LedgerRemovalReceiptProjection):
     """Bounded wire projection of the canonical lifecycle report."""
 
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    bucket_id: BucketId
     transaction_id: TransactionId
     removed: bool = False
-    dry_run: bool = False
-    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
-    reason: str = Field(max_length=_MAX_RECEIPT_REASON_LENGTH)
-    cascaded_purchase_invoice_evidence_ids: _ReceiptIdentities = ()
-    cascaded_attachment_ids: _ReceiptIdentities = ()
-    blocking_modelo_references: _ReceiptBlockers = ()
-    stale_draft_revision_references: _ReceiptBlockers = ()
-    bucket_event_ids: _ReceiptIdentities = ()
-
-
-def _project_blockers(rows: tuple[LedgerRemovalBlocker, ...]) -> tuple[LedgerRemoveBlockerProjection, ...]:
-    """Copy every canonical blocker while enforcing the published item limit."""
-    return tuple(
-        LedgerRemoveBlockerProjection(
-            work_unit_id=row.work_unit_id,
-            calculation_revision_id=row.calculation_revision_id,
-            revision_state=row.revision_state,
-            modelo=row.modelo,
-            filing_year=row.filing_year,
-            period=row.period,
-        )
-        for row in rows
-    )
 
 
 def _project_report(report: LedgerTransactionRemovalReport) -> LedgerRemoveReportProjection:
@@ -107,8 +58,8 @@ def _project_report(report: LedgerTransactionRemovalReport) -> LedgerRemoveRepor
         reason=report.reason,
         cascaded_purchase_invoice_evidence_ids=report.cascaded_purchase_invoice_evidence_ids,
         cascaded_attachment_ids=report.cascaded_attachment_ids,
-        blocking_modelo_references=_project_blockers(report.blocking_modelo_references),
-        stale_draft_revision_references=_project_blockers(report.stale_draft_revision_references),
+        blocking_modelo_references=project_removal_blockers(report.blocking_modelo_references),
+        stale_draft_revision_references=project_removal_blockers(report.stale_draft_revision_references),
         bucket_event_ids=report.bucket_event_ids,
     )
 
@@ -120,7 +71,7 @@ class LedgerRemoveRequest(BaseModel):
 
     profile_id: UUID
     transaction_id: str = Field(min_length=1, max_length=96)
-    reason: str = Field(default="", max_length=_MAX_RECEIPT_REASON_LENGTH)
+    reason: str = Field(default="", max_length=MAX_LEDGER_REMOVAL_RECEIPT_REASON_LENGTH)
     dry_run: bool = False
     actor: str | None = Field(default=None, min_length=1, max_length=64)
 
