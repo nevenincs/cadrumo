@@ -8,7 +8,7 @@ related:
   - '[[2026-10-23-desktop-ledger-editor-adr]]'
 modified: '2026-10-23'
 body_schema: body-v2
-body_hash: 'sha256:962e5b7cf372c79b4febe3fc34afd69eb4991fcddcdcc9a4eb36916bea4b1cd4'
+body_hash: 'sha256:b24bae7931a9a8b212556e84a23902191e5818c6972d9f94ae34cd3ab0bb0733'
 ---
 
 # `desktop-ledger-editor` plan
@@ -28,7 +28,7 @@ Give the window a closed, typed way to run the ledger family's registered operat
 - [x] `P01.S01` - Add the ledger host module: admitted ledger definition list checked against the contract manifest, submit and settle, review read and digest-bound answer, cancel, and registration in the command list; `native/desktop/src-tauri/src/shell/ledger/`.
 - [x] `P01.S02` - Add native file and save dialogs and window drag-drop that issue session-bound file tokens, and the own-account secret raw body; `native/desktop/src-tauri/src/shell/ledger/`.
 - [x] `P01.S03` - Add the ledger contract types, the optional ledger Host port and its Tauri wiring; `native/desktop/frontend/src/ipc/contract.ts`.
-- [ ] `P01.S04` - Answer the ledger port in the scenario host from an in-memory synthetic ledger with refusal, unknown and review cases; `native/desktop/frontend/src/dev/`.
+- [x] `P01.S04` - Answer the ledger port in the scenario host from an in-memory synthetic ledger with refusal, unknown and review cases; `native/desktop/frontend/src/dev/`.
 
 ### Phase `P02` - Grid primitive
 

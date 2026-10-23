@@ -19,6 +19,7 @@ import type {
   SignInStatus,
 } from "../ipc/contract";
 import { censoFixture } from "./censoFixture";
+import { ledgerFixture, type LedgerShape } from "./ledgerFixture";
 import { SCENARIO_PASSWORD } from "./fixtures/password";
 import { userProfileFixture } from "./userProfileFixture";
 import type { Host } from "../shell/host";
@@ -103,6 +104,8 @@ export type ScenarioHostOptions = {
   /** The shape of the made-up computer's component setup; where neither
    * this nor the scenario names one, the host offers no setup. */
   setup?: SetupShape | null;
+  /** How the made-up ledger answers, over the scenario's own shape. */
+  ledger?: LedgerShape | null;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
 };
@@ -351,6 +354,14 @@ export function scenarioHost(
     },
   };
 
+  // The profile's ledger goes with its views, as the agent does.
+  const ledger = ledgerFixture({
+    say,
+    wait: () => wait(options.latencyMs),
+    signedIn,
+    shape: options.ledger ?? scenario.ledger ?? "fixture",
+  });
+
   const providerFixture = providerSettingsFixture({
     say,
     wait: () => wait(options.latencyMs),
@@ -531,7 +542,7 @@ export function scenarioHost(
     available: true,
     ...(scenario.views === "none"
       ? {}
-      : { views, agent, agentSession, providerSettings, agentAccess }),
+      : { views, ledger, agent, agentSession, providerSettings, agentAccess }),
     ...(setup ? { setup } : {}),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,

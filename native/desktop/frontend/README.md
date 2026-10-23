@@ -99,11 +99,19 @@ A scenario is a named, deterministic host behaviour, declared as data in
 | `session-failure`     | Sessions that start, print a line, then fail and exit                    |
 | `tui-unavailable`     | Signed out, with sessions that cannot start: the TUI is not a way on     |
 | `views-refused`       | Signed in, with every profile view refused: not an empty calendar        |
+| `ledger`              | Signed in with a made-up 2026 ledger; its first quarter is sealed        |
 | `no-views`            | Signed in on a host with no profile views                                |
 
 Every scenario but `no-views` offers the profile views (the filing calendar
 and the notification counts behind the Messages button) from a fixture;
 `empty` offers a calendar with nothing due and notifications never captured.
+The same scenarios offer the ledger port from a made-up ledger held in the
+page's memory, which answers with the registered contracts' rules: the list's
+filter, sort, group and page order, ids that change with a movement's amount,
+description, date or account, refusals for sealed rows, idempotent adds, and
+a model review answered only with the digest the page read. In the console,
+`window.__scenarioLedger.drop(["extracto.csv"])` drops files on the window and
+`window.__scenarioLedger.changeReviews()` changes every pending review.
 
 Select one in the control or in the address:
 
@@ -111,15 +119,16 @@ Select one in the control or in the address:
 /scenarios.html?scenario=throttled&lang=es
 ```
 
-| Parameter  | Values                                  | Meaning                                                                                                                                                                             |
-| ---------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scenario` | a name from the table                   | The scenario to start in                                                                                                                                                            |
-| `lang`     | `en`, `es`, `ca`, `hu`                  | The output language the host reports                                                                                                                                                |
-| `latency`  | milliseconds                            | The fixed delay before a sign-in or sign-out answer, 600 by default                                                                                                                 |
-| `bar`      | `off`                                   | Hide the scenario control, for a clean screenshot                                                                                                                                   |
-| `records`  | a count                                 | Fill the log with that many generated records, up to its ring size                                                                                                                  |
-| `feed`     | milliseconds                            | Keep the log growing: twenty more records at that interval                                                                                                                          |
-| `calendar` | `behind`, `ahead`, `straddling`, `busy` | Another shape of the fixture calendar: all of it behind its day, all ahead, that day inside a month, or the turn of a year with nine windows open at once (evaluated on 2027-01-12) |
+| Parameter  | Values                                               | Meaning                                                                                                                                                                              |
+| ---------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `scenario` | a name from the table                                | The scenario to start in                                                                                                                                                             |
+| `lang`     | `en`, `es`, `ca`, `hu`                               | The output language the host reports                                                                                                                                                 |
+| `latency`  | milliseconds                                         | The fixed delay before a sign-in or sign-out answer, 600 by default                                                                                                                  |
+| `bar`      | `off`                                                | Hide the scenario control, for a clean screenshot                                                                                                                                    |
+| `records`  | a count                                              | Fill the log with that many generated records, up to its ring size                                                                                                                   |
+| `feed`     | milliseconds                                         | Keep the log growing: twenty more records at that interval                                                                                                                           |
+| `calendar` | `behind`, `ahead`, `straddling`, `busy`              | Another shape of the fixture calendar: all of it behind its day, all ahead, that day inside a month, or the turn of a year with nine windows open at once (evaluated on 2027-01-12)  |
+| `ledger`   | `empty`, `refused`, `unknown`, `unavailable`, `slow` | How the made-up ledger answers: nothing recorded, every write refused, every write landing with an outcome that is not observed, nothing readable, or every answer four seconds late |
 
 The terminals show deterministic fixture sessions in the real xterm view: type
 `exit` in the console or `exit()` in the Python tab, or press `q` in the TUI, to

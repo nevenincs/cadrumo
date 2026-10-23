@@ -1,0 +1,1665 @@
+// The scenario host's ledger: the ledger port answered from the synthetic
+// ledger in ./fixtures/ledger.ts, held in this page's memory. It follows the
+// registered contracts the page relies on: the list's order of filter, group
+// selection, sort, group partition and page; a bulk classification that needs
+// a classification on every row; a new id when a movement's amount,
+// description, date or own account changes; refusals for rows a finalized
+// revision cites; idempotency keys on add; and a model review answered only
+// with the digest of the review the page read. What it answers is design and
+// test evidence only. Its call lines name a definition, never a value.
+
+import {
+  LEDGER_PAYLOAD_LIMIT,
+  LEDGER_UPDATE_FIELDS,
+  isLedgerDefinition,
+  type CatalogueInvoice,
+  type FilePicks,
+  type FilePurpose,
+  type FileToken,
+  type JsonObject,
+  type JsonValue,
+  type LedgerDefinitionId,
+  type LedgerDropSignal,
+  type LedgerFailure,
+  type LedgerFailureCode,
+  type LedgerOutcome,
+  type LedgerPort,
+  type LedgerReview,
+  type LedgerResult,
+  type LedgerReviewStatus,
+  type LedgerRow,
+  type LedgerSortField,
+  type LedgerTransaction,
+  type LedgerUpdateField,
+  type PublicPeriod,
+} from "../shell/ledger";
+import {
+  LEDGER_FIXTURE_PROFILE_ID,
+  LEDGER_FIXTURE_TODAY,
+  cents,
+  emptyLedger,
+  fixtureLedger,
+  hex64,
+  money,
+  movementId,
+  type FixtureAccount,
+  type FixtureLedger,
+  type FixtureMovement,
+} from "./fixtures/ledger";
+
+/** How the scenario's ledger answers. */
+export const LEDGER_SHAPES = [
+  "fixture",
+  "empty",
+  "refused",
+  "unknown",
+  "unavailable",
+  "slow",
+] as const;
+export type LedgerShape = (typeof LEDGER_SHAPES)[number];
+
+/** Delay added to every answer of the `slow` shape. */
+const SLOW_MS = 4000;
+
+declare global {
+  interface Window {
+    /** Controls for what the scenario's ledger cannot get from a person. */
+    __scenarioLedger?: {
+      /** Drops files with these names on the window. */
+      drop(names: string[]): void;
+      /** Changes every pending review, as a model reading again would. */
+      changeReviews(): void;
+    };
+  }
+}
+
+type Options = {
+  say: (call: string) => void;
+  wait: () => Promise<void>;
+  signedIn: () => boolean;
+  shape: LedgerShape;
+};
+
+const PURPOSE_KINDS: Record<FilePurpose, readonly string[]> = {
+  bank_statements: ["csv", "txt", "tsv", "xlsx", "xls", "ofx", "qfx", "pdf"],
+  invoice_books: ["csv", "tsv", "xlsx", "xlsm", "xls"],
+  documents: [
+    "pdf",
+    "xml",
+    "png",
+    "jpg",
+    "jpeg",
+    "tif",
+    "tiff",
+    "webp",
+    "heic",
+    "heif",
+  ],
+  export: ["csv", "jsonl", "xlsx"],
+};
+/** What each dialog of the made-up computer offers. */
+const PICKABLE: Record<Exclude<FilePurpose, "export">, string[]> = {
+  bank_statements: [
+    "extracto-cuenta-estudio-2026-10.csv",
+    "extracto-cuenta-personal-2026-10.ofx",
+    "notas-del-banco.docx",
+  ],
+  invoice_books: ["libro-facturas-recibidas-2026.xlsx"],
+  documents: ["ticket-gasolinera-ruta7.jpg", "factura-papeleria-trazo.pdf"],
+};
+const UPDATE_REQUIRED: readonly LedgerUpdateField[] = [
+  "booked_date",
+  "amount",
+  "currency",
+  "direction",
+  "description",
+  "notes",
+];
+const DIRECTIONS = ["INCOMING", "OUTGOING", "INTERNAL_TRANSFER"];
+const DECIDED = ["BUSINESS", "PERSONAL", "MIXED"];
+const CLASSIFICATIONS = [
+  ...DECIDED,
+  "NOT_YET_PROCESSED",
+  "PROCESSED_UNCLASSIFIED",
+  "SKIPPED_BY_RULE",
+  "FAILED_VALIDATION",
+  "REVIEWED_EXCLUDED",
+];
+const BULK_COLUMNS = [
+  "transaction_id",
+  "classification",
+  "category_id",
+  "business_pct",
+  "usage_ratio_id",
+  "taxable_base",
+  "iva_rate",
+  "iva_amount",
+  "iva_category",
+  "irpf_category",
+  "notes",
+];
+const OWN_ACCOUNT_SECRETS = [
+  "iban",
+  "swift_bic",
+  "bank_name",
+  "bank_address",
+  "bank_city",
+  "bank_country_code",
+];
+const SEALED_MESSAGE =
+  "A finalized Modelo 303 revision for 2026 1T cites this movement; correct it through an amendment.";
+
+class Refusal extends Error {
+  constructor(readonly failure: LedgerFailure) {
+    super(failure.code);
+  }
+}
+const reject = (
+  code: LedgerFailureCode,
+  extra: Partial<LedgerFailure> = {},
+): never => {
+  throw new Refusal({ code, operation_id: null, ...extra });
+};
+/** A request its registered contract would not decode. */
+const invalid = () => reject("refused", { reason: "invalid" });
+
+const text = (value: JsonValue | undefined) =>
+  typeof value === "string" ? value : null;
+const AMOUNT = /^\d{1,12}(\.\d{1,2})?$/;
+const FRACTION = /^(0(\.\d{1,4})?|1(\.0{1,4})?)$/;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function reviewStatus(classification: string): LedgerReviewStatus {
+  if (classification === "NOT_YET_PROCESSED") return "pending";
+  if (classification === "SKIPPED_BY_RULE") return "skipped";
+  if (classification === "REVIEWED_EXCLUDED") return "excluded";
+  return "reviewed";
+}
+const row = (movement: FixtureMovement): LedgerRow => ({
+  transaction: { ...movement.transaction },
+  review_status: reviewStatus(movement.transaction.business_classification),
+  group_label: movement.group_label,
+});
+
+function periodSpan(year: number, code: string): [string, string] | null {
+  const quarter = /^([1-4])[TP]$/.exec(code);
+  const month = /^(0[1-9]|1[0-2])$/.exec(code);
+  const pad = (value: number) => String(value).padStart(2, "0");
+  if (quarter) {
+    const first = (Number(quarter[1]) - 1) * 3 + 1;
+    const last = new Date(Date.UTC(year, first + 2, 0)).getUTCDate();
+    return [
+      `${year}-${pad(first)}-01`,
+      `${year}-${pad(first + 2)}-${pad(last)}`,
+    ];
+  }
+  if (month) {
+    const at = Number(month[1]);
+    const last = new Date(Date.UTC(year, at, 0)).getUTCDate();
+    return [`${year}-${pad(at)}-01`, `${year}-${pad(at)}-${pad(last)}`];
+  }
+  if (code === "0A") return [`${year}-01-01`, `${year}-12-31`];
+  return null;
+}
+
+/** The list's filter clauses, refused as the product refuses them. */
+function filterOf(clauses: JsonValue | undefined) {
+  if (clauses === undefined) clauses = [];
+  if (!Array.isArray(clauses)) return invalid();
+  const seen = new Map<string, string>();
+  for (const clause of clauses) {
+    const found =
+      typeof clause === "string"
+        ? /^([a-z][a-z0-9_.]*)=(.*)$/s.exec(clause)
+        : null;
+    if (!found || seen.has(found[1]!)) return invalid();
+    seen.set(found[1]!, found[2]!);
+  }
+  const tests: ((movement: FixtureMovement) => boolean)[] = [];
+  for (const [key, value] of seen) {
+    if (key === "status") {
+      if (!["pending", "reviewed", "skipped", "excluded"].includes(value))
+        return invalid();
+      tests.push(
+        (m) => reviewStatus(m.transaction.business_classification) === value,
+      );
+    } else if (key === "period" || key === "year") {
+      if (!seen.has("period") || !seen.has("year")) return invalid();
+      if (key === "year") continue;
+      const year = Number(seen.get("year"));
+      const span = /^\d{4}$/.test(seen.get("year")!)
+        ? periodSpan(year, value)
+        : null;
+      if (!span) return invalid();
+      tests.push(
+        (m) => m.transaction.date >= span[0] && m.transaction.date <= span[1],
+      );
+    } else if (key === "issue") {
+      if (!["original-file", "gap", "duplicate", "parser"].includes(value))
+        return invalid();
+      tests.push((m) => m.issue === value);
+    } else if (key === "import") {
+      tests.push((m) => m.import_batch_id === value);
+    } else if (key === "classification") {
+      const wanted = value.toUpperCase();
+      if (!CLASSIFICATIONS.includes(wanted)) return invalid();
+      tests.push((m) => m.transaction.business_classification === wanted);
+    } else if (key === "text") {
+      if (value.length > 128) return invalid();
+      const needle = value.toLowerCase();
+      tests.push((m) =>
+        [
+          m.transaction.description,
+          m.transaction.counterparty,
+          m.transaction.category_id ?? "",
+        ].some((field) => field.toLowerCase().includes(needle)),
+      );
+    } else if (key === "direction") {
+      const wanted = value.toUpperCase();
+      if (!DIRECTIONS.includes(wanted)) return invalid();
+      tests.push((m) => m.transaction.direction === wanted);
+    } else if (key === "account") {
+      if (!/^acc-[0-9]{2,}$/.test(value)) return invalid();
+      tests.push((m) => m.own_account_id === value);
+    } else {
+      return invalid();
+    }
+  }
+  return (movement: FixtureMovement) => tests.every((test) => test(movement));
+}
+
+function sortKey(movement: FixtureMovement, field: LedgerSortField): string {
+  const t = movement.transaction;
+  switch (field) {
+    case "date":
+      return t.date;
+    case "value_date":
+      return t.value_date ?? "";
+    case "amount":
+      return t.amount.padStart(20, "0");
+    case "description":
+      return t.description;
+    case "created_at":
+      return t.created_at;
+    case "modified_at":
+      return t.modified_at;
+    case "classified_at":
+      return t.classified_at ?? "";
+    case "lifecycle_state":
+      return t.lifecycle_state;
+    case "classification":
+      return t.business_classification;
+  }
+}
+const compare = (left: string, right: string) =>
+  left < right ? -1 : left > right ? 1 : 0;
+
+/** Filter, then group selection, then sort, then group partition, then
+ * the page: the product's order. */
+function list(ledger: FixtureLedger, request: JsonObject): JsonObject {
+  const keep = filterOf(request.filters);
+  const sortBy = request.sort_by ?? null;
+  const order = request.sort_order ?? "asc";
+  const limit = request.limit ?? null;
+  const offset = request.offset ?? 0;
+  const SORTS: readonly string[] = [
+    "date",
+    "value_date",
+    "amount",
+    "description",
+    "created_at",
+    "modified_at",
+    "classified_at",
+    "lifecycle_state",
+    "classification",
+  ];
+  if (
+    (sortBy !== null && !SORTS.includes(sortBy as string)) ||
+    (order !== "asc" && order !== "desc") ||
+    (limit !== null &&
+      (typeof limit !== "number" || !Number.isInteger(limit) || limit < 1)) ||
+    typeof offset !== "number" ||
+    !Number.isInteger(offset) ||
+    offset < 0
+  )
+    return invalid();
+  let rows = ledger.movements.filter(
+    (movement) =>
+      keep(movement) &&
+      !(request.exclude_llm_rejected === true && movement.llm_rejected),
+  );
+  if (typeof request.group === "string") {
+    const group = request.group.trim();
+    rows = rows.filter((movement) => (movement.group_label ?? "") === group);
+  }
+  if (sortBy === null) {
+    rows.sort(
+      (a, b) =>
+        compare(a.transaction.date, b.transaction.date) ||
+        compare(a.transaction.transaction_id, b.transaction.transaction_id),
+    );
+  } else {
+    const field = sortBy as LedgerSortField;
+    const descending = order === "desc";
+    rows.sort((a, b) => {
+      const left = sortKey(a, field);
+      const right = sortKey(b, field);
+      // An empty projection sorts last in both directions; ties go by id.
+      if ((left === "") !== (right === "")) return left === "" ? 1 : -1;
+      const primary = compare(left, right) * (descending ? -1 : 1);
+      return (
+        primary ||
+        compare(a.transaction.transaction_id, b.transaction.transaction_id)
+      );
+    });
+  }
+  if (request.by_group === true) {
+    const UNGROUPED = "￿";
+    rows = rows
+      .map((movement, at) => ({ movement, at }))
+      .sort(
+        (a, b) =>
+          compare(
+            a.movement.group_label ?? UNGROUPED,
+            b.movement.group_label ?? UNGROUPED,
+          ) ||
+          (sortBy === null
+            ? compare(
+                a.movement.transaction.transaction_id,
+                b.movement.transaction.transaction_id,
+              )
+            : a.at - b.at),
+      )
+      .map(({ movement }) => movement);
+  }
+  const total = rows.length;
+  const end =
+    limit === null ? total : Math.min(offset + (limit as number), total);
+  return {
+    profile_id: LEDGER_FIXTURE_PROFILE_ID,
+    rows: rows.slice(offset, end).map(row) as unknown as JsonValue,
+    total,
+    truncated: offset > 0 || end < total,
+    offset,
+    limit: limit as number | null,
+    by_group: request.by_group === true,
+  };
+}
+
+/** The one movement `prefix` names, as the product resolves an id prefix. */
+function resolve(ledger: FixtureLedger, prefix: JsonValue | undefined) {
+  if (typeof prefix !== "string" || prefix.length < 1 || prefix.length > 96)
+    return invalid();
+  const found = ledger.movements.filter((movement) =>
+    movement.transaction.transaction_id.startsWith(prefix),
+  );
+  if (found.length === 0) throw new Stopped("ERROR_TRANSACTION_NOT_FOUND");
+  if (found.length > 1)
+    throw new Stopped("REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX");
+  return found[0]!;
+}
+/** An operation the runtime settled without changing anything. */
+class Stopped extends Error {
+  constructor(readonly reason: string) {
+    super(reason);
+  }
+}
+
+function inPeriod(movement: FixtureMovement, period: JsonValue | undefined) {
+  if (period === null || period === undefined) return true;
+  const { filing_year, code } = period as unknown as PublicPeriod;
+  const span = periodSpan(filing_year, code);
+  return (
+    span !== null &&
+    movement.transaction.date >= span[0] &&
+    movement.transaction.date <= span[1]
+  );
+}
+
+/** What the readiness checks find missing for the movements of a period. */
+function issues(ledger: FixtureLedger, period: JsonValue | undefined) {
+  const found: { transaction_id: string; reason: string; detail: string }[] =
+    [];
+  for (const movement of ledger.movements) {
+    if (
+      !inPeriod(movement, period) ||
+      movement.transaction.lifecycle_state !== "ACTIVE"
+    )
+      continue;
+    const t = movement.transaction;
+    const id = t.transaction_id;
+    if (t.business_classification === "NOT_YET_PROCESSED")
+      found.push({
+        transaction_id: id,
+        reason: "missing_business_classification",
+        detail: "Not yet classified.",
+      });
+    else if (
+      t.business_classification === "BUSINESS" ||
+      t.business_classification === "MIXED"
+    ) {
+      if (t.direction === "OUTGOING" && !t.category_id)
+        found.push({
+          transaction_id: id,
+          reason: "missing_category",
+          detail: "No expense category.",
+        });
+      if (t.currency !== "EUR" && !t.value_in_eur)
+        found.push({
+          transaction_id: id,
+          reason: "missing_eur_tax_substrate",
+          detail: "No euro value.",
+        });
+    }
+  }
+  return found;
+}
+
+export function ledgerFixture(options: Options): LedgerPort {
+  const { say, signedIn, shape } = options;
+  const ledger = shape === "empty" ? emptyLedger() : fixtureLedger();
+  let clock = 0;
+  const now = () => {
+    clock += 1;
+    return `${LEDGER_FIXTURE_TODAY}T12:${String(Math.floor(clock / 60) % 60).padStart(2, "0")}:${String(clock % 60).padStart(2, "0")}Z`;
+  };
+  let operations = 0;
+  const outcomes = new Map<string, LedgerOutcome>();
+  type Pending = {
+    request: JsonObject;
+    transaction: string;
+    version: number;
+    shown: string | null;
+  };
+  const reviews = new Map<string, Pending>();
+  const files = new Map<FileToken, { name: string; purpose: FilePurpose }>();
+  const drops = new Set<(signal: LedgerDropSignal) => void>();
+  let dropPurpose: Exclude<FilePurpose, "export"> = "bank_statements";
+
+  const answer = async () => {
+    await options.wait();
+    if (shape === "slow")
+      await new Promise((done) => window.setTimeout(done, SLOW_MS));
+    if (shape === "unavailable") reject("unavailable");
+    if (!signedIn()) reject("not_signed_in");
+  };
+  const nextOperation = () => {
+    operations += 1;
+    return hex64(`operation:${operations}`);
+  };
+  const settle = (operation: string, result: JsonValue): LedgerOutcome => {
+    const outcome: LedgerOutcome = {
+      kind: "settled",
+      operation_id: operation,
+      revision: 3,
+      result: result as JsonObject,
+    };
+    outcomes.set(operation, outcome);
+    return outcome;
+  };
+  const events = () => [hex64(`event:${now()}`)];
+
+  const issue = (name: string, purpose: FilePurpose): FileToken => {
+    const token =
+      `file-${hex64(`file:${files.size}:${name}`).slice(0, 32)}` as FileToken;
+    files.set(token, { name, purpose });
+    return token;
+  };
+  const take = (names: string[], purpose: FilePurpose): FilePicks => {
+    const picks: FilePicks = { files: [], refused: 0 };
+    for (const name of names) {
+      const kind = name.split(".").pop()?.toLowerCase() ?? "";
+      if (PURPOSE_KINDS[purpose].includes(kind))
+        picks.files.push({
+          token: issue(name, purpose),
+          name,
+          bytes: 2048 + name.length * 97,
+        });
+      else picks.refused += 1;
+    }
+    return picks;
+  };
+  const fileOf = (token: JsonValue | undefined, purpose: FilePurpose) => {
+    if (typeof token !== "string") return invalid();
+    const found = files.get(token as FileToken);
+    if (!found) return reject("file_unavailable");
+    if (found.purpose !== purpose) return invalid();
+    return found;
+  };
+
+  window.__scenarioLedger = {
+    drop(names) {
+      const picks = take(names, dropPurpose);
+      drops.forEach((listener) => {
+        listener({ kind: "over" });
+        listener({ kind: "dropped", ...picks });
+      });
+    },
+    changeReviews() {
+      reviews.forEach((pending) => {
+        pending.version += 1;
+      });
+    },
+  };
+
+  const transactionOf = (id: string) =>
+    ledger.movements.find(
+      (movement) => movement.transaction.transaction_id === id,
+    );
+
+  function update(request: JsonObject): JsonObject {
+    const fields = request.patch_fields;
+    const patch = request.patch;
+    if (
+      !Array.isArray(fields) ||
+      fields.length < 1 ||
+      fields.length > 14 ||
+      new Set(fields).size !== fields.length ||
+      typeof patch !== "object" ||
+      patch === null ||
+      Array.isArray(patch)
+    )
+      return invalid();
+    const values = patch as JsonObject;
+    for (const field of fields) {
+      if (
+        typeof field !== "string" ||
+        !(LEDGER_UPDATE_FIELDS as readonly string[]).includes(field)
+      )
+        return invalid();
+      if (
+        (UPDATE_REQUIRED as string[]).includes(field) &&
+        (values[field] ?? null) === null
+      )
+        return invalid();
+    }
+    const movement = resolve(ledger, request.transaction_id);
+    const refused = (message: string): JsonObject => ({
+      outcome: "validation_error",
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      result: null,
+      validation_messages: [message],
+    });
+    if (movement.transaction.lifecycle_state !== "ACTIVE")
+      return refused("Only an active movement can be updated.");
+    if (movement.sealed) return refused(SEALED_MESSAGE);
+    const next: LedgerTransaction = { ...movement.transaction };
+    let group = movement.group_label;
+    let account = movement.own_account_id;
+    for (const field of fields as LedgerUpdateField[]) {
+      const value = text(values[field]);
+      if (field === "amount") {
+        if (!value || !AMOUNT.test(value))
+          return refused("The amount is not a canonical decimal.");
+        next.amount = money(cents(value));
+      } else if (field === "booked_date" || field === "value_date") {
+        if (value !== null && !DATE.test(value))
+          return refused("The date is not a calendar day.");
+        next[field] = value as string;
+      } else if (field === "direction") {
+        if (!value || !DIRECTIONS.includes(value.toUpperCase()))
+          return refused("Unknown direction.");
+        next.direction = value.toUpperCase();
+      } else if (field === "currency") {
+        if (!value || !/^[A-Z]{3}$/.test(value))
+          return refused("Unknown currency.");
+        next.currency = value;
+      } else if (field === "group_label") {
+        group = value === null || value.trim() === "" ? null : value.trim();
+      } else if (field === "own_account_id") {
+        if (
+          value !== null &&
+          !ledger.accounts.some((own) => own.own_account_id === value)
+        )
+          return refused("No own account has that id.");
+        account = value;
+      } else if (field === "counterparty") {
+        next.counterparty = value ?? "";
+      } else if (field === "description" || field === "notes") {
+        next[field] = value ?? "";
+      } else {
+        next[field] = value;
+      }
+    }
+    next.date = next.value_date ?? next.booked_date;
+    const changed =
+      JSON.stringify(next) !== JSON.stringify(movement.transaction) ||
+      group !== movement.group_label ||
+      account !== movement.own_account_id;
+    if (!changed)
+      return refused(
+        "manual ledger update must change at least one ledger field",
+      );
+    const source = movement.transaction.transaction_id;
+    // The id is the content address of these facts: changing one re-keys.
+    if (
+      next.amount !== movement.transaction.amount ||
+      next.description !== movement.transaction.description ||
+      next.date !== movement.transaction.date ||
+      account !== movement.own_account_id
+    )
+      next.transaction_id = movementId({
+        date: next.date,
+        amount: next.amount,
+        description: next.description,
+        own_account_id: account,
+        salt: source,
+      });
+    next.modified_at = now();
+    movement.transaction = next;
+    movement.group_label = group;
+    movement.own_account_id = account;
+    return {
+      outcome: "updated",
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      result: {
+        outcome: "updated",
+        profile_id: LEDGER_FIXTURE_PROFILE_ID,
+        source_transaction_id: source,
+        transaction: { ...next } as unknown as JsonValue,
+        review_status: reviewStatus(next.business_classification),
+        bucket_event_ids: events(),
+        group_label: group,
+        own_account_id: account,
+        validation_messages: [],
+      },
+      validation_messages: [],
+    };
+  }
+
+  /** One row's classification, shared by the single and bulk writes. */
+  function classifyRow(
+    movement: FixtureMovement,
+    values: Record<string, string | null>,
+    by: string,
+  ): "applied" | "skipped" {
+    const next: LedgerTransaction = { ...movement.transaction };
+    for (const [field, value] of Object.entries(values)) {
+      if (field === "classification")
+        next.business_classification = value ?? next.business_classification;
+      else if (field === "notes") next.notes = value ?? "";
+      else if (field in next)
+        (next as unknown as Record<string, string | null>)[field] = value;
+    }
+    if (next.business_classification === "PERSONAL") {
+      next.category_id = null;
+      next.business_pct = null;
+    }
+    if (JSON.stringify(next) === JSON.stringify(movement.transaction))
+      return "skipped";
+    next.classified_by = by;
+    next.classified_at = now();
+    next.classification_reason = by;
+    next.modified_at = next.classified_at;
+    movement.transaction = next;
+    return "applied";
+  }
+  const checkDecision = (classification: string | null, pct: string | null) => {
+    if (!classification || !DECIDED.includes(classification)) return invalid();
+    if ((classification === "MIXED") !== (pct !== null)) return invalid();
+    if (pct !== null && !FRACTION.test(pct)) return invalid();
+  };
+
+  function classify(request: JsonObject): JsonObject {
+    const fields = request.patch_fields;
+    const patch = request.patch as JsonObject | undefined;
+    if (
+      !Array.isArray(fields) ||
+      !fields.includes("business_classification") ||
+      !patch
+    )
+      return invalid();
+    const classification = text(patch.business_classification);
+    const pct = text(patch.business_pct);
+    checkDecision(classification, pct);
+    const rate = text(patch.iva_rate);
+    if (rate !== null && !FRACTION.test(rate)) return invalid();
+    const movement = resolve(ledger, request.transaction_id);
+    if (movement.sealed || movement.transaction.lifecycle_state !== "ACTIVE")
+      return {
+        outcome: "validation_error",
+        profile_id: LEDGER_FIXTURE_PROFILE_ID,
+        result: null,
+        validation_kind: "input",
+        validation_messages: [
+          movement.sealed
+            ? SEALED_MESSAGE
+            : "Only an active movement can be classified.",
+        ],
+      };
+    const values: Record<string, string | null> = {};
+    for (const field of fields as string[]) {
+      if (field === "m210_income_classification") continue;
+      values[field === "business_classification" ? "classification" : field] =
+        text(patch[field]);
+    }
+    classifyRow(movement, values, "operator");
+    const transaction = movement.transaction;
+    return {
+      outcome: "classified",
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      result: {
+        outcome: "classified",
+        profile_id: LEDGER_FIXTURE_PROFILE_ID,
+        transaction: { ...transaction } as unknown as JsonValue,
+        deduction_fact_kind: null,
+        investment_asset_id: null,
+        review_status: reviewStatus(transaction.business_classification),
+        bucket_event_ids: events(),
+        validation_kind: "none",
+        validation_messages: [],
+      },
+      validation_kind: "none",
+      validation_messages: [],
+    };
+  }
+
+  function bulk(request: JsonObject): JsonObject {
+    const csv = text(request.csv_text);
+    if (csv === null) return invalid();
+    const refused = (message: string): JsonObject => ({
+      projection: {
+        profile_id: LEDGER_FIXTURE_PROFILE_ID,
+        outcome: "validation_error",
+        result: null,
+        validation_messages: [message],
+      },
+    });
+    const lines = parseCsv(csv);
+    const header = lines.shift() ?? [];
+    if (
+      !header.includes("transaction_id") ||
+      !header.includes("classification")
+    )
+      return refused(
+        "The CSV needs transaction_id and classification columns.",
+      );
+    const unknown = header.find((column) => !BULK_COLUMNS.includes(column));
+    if (unknown !== undefined)
+      return refused(
+        "The CSV names a column bulk classification does not take.",
+      );
+    const failures: JsonValue[] = [];
+    let applied = 0;
+    let skipped = 0;
+    lines.forEach((cells, index) => {
+      const value = (column: string) => {
+        const at = header.indexOf(column);
+        const cell = at < 0 ? "" : (cells[at] ?? "");
+        return cell.trim() === "" ? null : cell.trim();
+      };
+      const id = value("transaction_id") ?? "";
+      const fail = (reason: string) =>
+        failures.push({ row_index: index, transaction_id: id, reason });
+      if (cells.length > header.length)
+        return fail("The row has more cells than the header.");
+      const classification = value("classification")?.toUpperCase() ?? null;
+      const pct = value("business_pct");
+      if (!classification) return fail("Every row needs a classification.");
+      if (
+        !DECIDED.includes(classification) ||
+        (classification === "MIXED") !== (pct !== null)
+      )
+        return fail(
+          "The classification is not one a person decides, or its business share is missing.",
+        );
+      let movement: FixtureMovement;
+      try {
+        movement = resolve(ledger, id);
+      } catch {
+        return fail("No single movement has that id.");
+      }
+      if (movement.transaction.lifecycle_state !== "ACTIVE")
+        return fail("Only an active movement can be classified.");
+      if (movement.sealed) return fail(SEALED_MESSAGE);
+      const values: Record<string, string | null> = { classification };
+      for (const column of header)
+        if (
+          !["transaction_id", "classification"].includes(column) &&
+          value(column) !== null
+        )
+          values[column] = value(column);
+      if (classifyRow(movement, values, "operator:bulk") === "applied")
+        applied += 1;
+      else skipped += 1;
+    });
+    return {
+      projection: {
+        profile_id: LEDGER_FIXTURE_PROFILE_ID,
+        outcome: "classified",
+        result: {
+          total: lines.length,
+          applied,
+          skipped,
+          failures,
+          bucket_event_ids: applied ? events() : [],
+        },
+        validation_messages: [],
+      },
+    };
+  }
+
+  function add(request: JsonObject): JsonObject {
+    const booked = text(request.booked_date);
+    const amount = text(request.amount);
+    const direction = text(request.direction)?.toUpperCase() ?? null;
+    const description = text(request.description);
+    if (!booked || !DATE.test(booked) || !amount || !direction || !description)
+      return invalid();
+    const refused = (message: string): JsonObject => ({
+      outcome: "validation_error",
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      result: null,
+      validation_code: "invalid_command",
+      validation_messages: [message],
+    });
+    if (!AMOUNT.test(amount))
+      return refused("The amount is not a canonical decimal.");
+    if (!DIRECTIONS.includes(direction)) return refused("Unknown direction.");
+    const classification =
+      text(request.business_classification) ?? "NOT_YET_PROCESSED";
+    const key = text(request.idempotency_key);
+    const date = text(request.value_date) ?? booked;
+    const account = text(request.own_account_id);
+    const facts: LedgerTransaction = {
+      transaction_id: "",
+      date,
+      booked_date: booked,
+      value_date: text(request.value_date),
+      amount: money(cents(amount)),
+      currency: text(request.currency) ?? "EUR",
+      direction,
+      counterparty: text(request.counterparty) ?? "",
+      description,
+      business_classification: classification,
+      business_pct: text(request.business_pct),
+      category_id: text(request.category_id),
+      taxable_base: text(request.taxable_base),
+      iva_rate: text(request.iva_rate),
+      iva_amount: text(request.iva_amount),
+      iva_category: text(request.iva_category),
+      counterparty_country: text(request.counterparty_country),
+      counterparty_identification_state: text(
+        request.counterparty_identification_state,
+      ),
+      irpf_category: text(request.irpf_category),
+      m210_income_classification: null,
+      usage_ratio_id: text(request.usage_ratio_id),
+      prorrata_reference: text(request.prorrata_reference),
+      purchase_invoice_evidence_id: text(request.purchase_invoice_evidence_id),
+      invoice_id: null,
+      attachment_ids: [],
+      notes: text(request.notes) ?? "",
+      lifecycle_state: "ACTIVE",
+      classified_by: classification === "NOT_YET_PROCESSED" ? "" : "operator",
+      classified_at: null,
+      classification_reason: "",
+      classification_confidence: null,
+      source_jurisdiction: text(request.source_jurisdiction),
+      value_in_eur: null,
+      fx_rate: null,
+      created_at: "",
+      modified_at: "",
+    };
+    const result = (
+      transaction: LedgerTransaction,
+      written: boolean,
+    ): JsonObject => ({
+      outcome: "created",
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      result: {
+        outcome: "created",
+        profile_id: LEDGER_FIXTURE_PROFILE_ID,
+        transaction: { ...transaction } as unknown as JsonValue,
+        review_status: reviewStatus(transaction.business_classification),
+        bucket_event_ids: written ? events() : [],
+        advisory_input_classification: null,
+        advisory_input_classification_inert: false,
+        advisory_sector_id: null,
+        advisory_sector_unmatched: false,
+        validation_code: null,
+        validation_messages: [],
+      },
+      validation_code: null,
+      validation_messages: [],
+    });
+    if (key !== null) {
+      const stored = ledger.movements.find(
+        (movement) => movement.idempotency_key === key,
+      );
+      if (stored) {
+        const same = (Object.keys(facts) as (keyof LedgerTransaction)[])
+          .filter(
+            (field) =>
+              ![
+                "transaction_id",
+                "created_at",
+                "modified_at",
+                "classified_at",
+              ].includes(field),
+          )
+          .every(
+            (field) =>
+              JSON.stringify(facts[field]) ===
+              JSON.stringify(stored.transaction[field]),
+          );
+        // A retry of the same add returns the row it stored and writes nothing.
+        return same
+          ? result(stored.transaction, false)
+          : refused("application.ledger.errors.idempotency_key_conflict");
+      }
+    }
+    const created = now();
+    facts.transaction_id = movementId({
+      date,
+      amount: facts.amount,
+      description,
+      own_account_id: account,
+      salt: key ?? created,
+    });
+    facts.created_at = created;
+    facts.modified_at = created;
+    if (classification !== "NOT_YET_PROCESSED") facts.classified_at = created;
+    ledger.movements.push({
+      transaction: facts,
+      group_label: null,
+      own_account_id: account,
+      import_batch_id: null,
+      issue: null,
+      sealed: false,
+      llm_rejected: false,
+      idempotency_key: key,
+    });
+    return result(facts, true);
+  }
+
+  function status(request: JsonObject): JsonObject {
+    const period = request.period ?? null;
+    const rows = ledger.movements.filter((movement) =>
+      inPeriod(movement, period),
+    );
+    const sum = (direction: string) =>
+      money(
+        rows
+          .filter(
+            (movement) =>
+              movement.transaction.direction === direction &&
+              ["BUSINESS", "MIXED"].includes(
+                movement.transaction.business_classification,
+              ),
+          )
+          .reduce(
+            (total, movement) =>
+              total +
+              cents(
+                movement.transaction.taxable_base ??
+                  movement.transaction.amount,
+              ),
+            0,
+          ),
+      );
+    const found = issues(ledger, period);
+    const by = (state: LedgerReviewStatus) =>
+      rows.filter(
+        (movement) =>
+          reviewStatus(movement.transaction.business_classification) === state,
+      ).length;
+    const income = sum("INCOMING");
+    const expense = sum("OUTGOING");
+    return {
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      period: period as JsonValue,
+      business_income_total: income,
+      business_expense_total: expense,
+      business_net_total: money(cents(income) - cents(expense)),
+      total_count: rows.length,
+      active_count: rows.filter(
+        (movement) => movement.transaction.lifecycle_state === "ACTIVE",
+      ).length,
+      archived_count: 0,
+      stashed_count: 0,
+      split_count: 0,
+      pending_review_count: by("pending"),
+      reviewed_count: by("reviewed"),
+      skipped_count: by("skipped"),
+      checked_transaction_count: rows.length,
+      readiness_issue_count: found.length,
+      unconverted_currency_count: rows.filter(
+        (movement) =>
+          movement.transaction.currency !== "EUR" &&
+          !movement.transaction.value_in_eur,
+      ).length,
+      ready: rows.length === 0 ? null : found.length === 0,
+      readiness_issues: found.map((issue) => ({
+        ...issue,
+        transaction_present: true,
+        business_classification:
+          transactionOf(issue.transaction_id)?.transaction
+            .business_classification ?? null,
+        category_id: null,
+        taxable_base: null,
+        iva_rate: null,
+        iva_amount: null,
+      })),
+      stale_filings: [],
+    };
+  }
+
+  function preflight(request: JsonObject): JsonObject {
+    const period = request.period;
+    if (!period || typeof period !== "object" || Array.isArray(period))
+      return invalid();
+    const found = issues(ledger, period);
+    return {
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      period,
+      bucket_id: LEDGER_FIXTURE_PROFILE_ID,
+      checked_transaction_count: ledger.movements.filter((movement) =>
+        inPeriod(movement, period),
+      ).length,
+      issues: found,
+      ready: found.length === 0,
+    };
+  }
+
+  function importStatement(request: JsonObject): JsonObject {
+    const tokens = request.files;
+    if (!Array.isArray(tokens) || tokens.length === 0) return invalid();
+    const chosen = tokens.map((token) => ({
+      token: token as string,
+      ...fileOf(token, "bank_statements"),
+    }));
+    const dryRun = request.dry_run === true;
+    const expected = request.expected_source_sha256 ?? null;
+    const digest = (token: string) => hex64(`bytes:${token}`);
+    const refused: JsonValue[] = [];
+    const results: JsonValue[] = [];
+    chosen.forEach((file, index) => {
+      const sha = digest(file.token);
+      // Apply takes exactly the files the preview read, unchanged since.
+      if (!dryRun && Array.isArray(expected) && expected[index] !== sha) {
+        refused.push({ file_name: file.name, reason_code: "source_changed" });
+        return;
+      }
+      const rows = 12 + (file.name.length % 9);
+      const duplicates = 2;
+      const batch = `import-${sha.slice(0, 8)}`;
+      const imported: JsonValue[] = [];
+      if (!dryRun) {
+        for (let at = 0; at < rows - duplicates; at += 1) {
+          const amount = money(1500 + at * 731);
+          const date = `2026-10-${String(1 + (at % 22)).padStart(2, "0")}`;
+          const description = `MOVIMIENTO IMPORTADO ${String(at + 1).padStart(2, "0")}`;
+          const id = movementId({
+            date,
+            amount,
+            description,
+            own_account_id: text(request.own_account_id),
+            salt: batch,
+          });
+          if (transactionOf(id)) continue;
+          const created = now();
+          ledger.movements.push({
+            transaction: {
+              ...fixtureTemplate(),
+              transaction_id: id,
+              date,
+              booked_date: date,
+              value_date: date,
+              amount,
+              direction: at % 4 === 0 ? "INCOMING" : "OUTGOING",
+              description,
+              created_at: created,
+              modified_at: created,
+            },
+            group_label: null,
+            own_account_id: text(request.own_account_id),
+            import_batch_id: batch,
+            issue: null,
+            sealed: false,
+            llm_rejected: false,
+            idempotency_key: null,
+          });
+          imported.push({
+            bucket_id: LEDGER_FIXTURE_PROFILE_ID,
+            transaction_id: id,
+          });
+        }
+      }
+      results.push({
+        file_name: file.name,
+        file_index: index,
+        source_sha256: sha,
+        result: {
+          rows,
+          imported: dryRun ? rows - duplicates : imported.length,
+          skipped: duplicates,
+          likely_duplicates: duplicates,
+          dry_run: dryRun,
+          verify: request.verify === true,
+          period: null,
+          bucket_id: LEDGER_FIXTURE_PROFILE_ID,
+          import_batch_id: dryRun ? null : batch,
+          bucket_event_ids: dryRun ? [] : events(),
+          imported_transaction_refs: imported,
+          skipped_transaction_refs: [],
+          likely_duplicate_transaction_refs: [],
+          validations: [
+            { valid: true, warnings: [], encoding: "utf-8", dialect: "excel" },
+          ],
+          sources: [{ requested: false, path: null, sha256: sha }],
+          diagnostics: [],
+        },
+      });
+    });
+    return {
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      dry_run: dryRun,
+      verify: request.verify === true,
+      period: null,
+      files: results,
+      refused_files: refused,
+    };
+  }
+
+  function exportLedger(request: JsonObject): JsonObject {
+    const target = fileOf(request.output_path, "export");
+    const format = (request.export_format as string | undefined) ?? "csv";
+    if (target.name.split(".").pop() !== format) return invalid();
+    const rows = ledger.movements.filter(
+      (movement) =>
+        (request.include_inactive === true ||
+          movement.transaction.lifecycle_state === "ACTIVE") &&
+        inPeriod(movement, request.period),
+    );
+    return {
+      projection: {
+        profile_id: LEDGER_FIXTURE_PROFILE_ID,
+        bucket_id: LEDGER_FIXTURE_PROFILE_ID,
+        export_id: hex64(`export:${now()}`),
+        export_format: format,
+        media_type:
+          format === "csv"
+            ? "text/csv"
+            : format === "jsonl"
+              ? "application/x-ndjson"
+              : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename_extension: format,
+        row_count: rows.length,
+        byte_size: rows.length * 312,
+        sha256: hex64(`export-bytes:${rows.length}`),
+        fieldnames: [
+          "transaction_id",
+          "booked_date",
+          "amount",
+          "direction",
+          "description",
+        ],
+        rows: [],
+        bucket_event_ids: events(),
+        output_path: target.name,
+      },
+    };
+  }
+
+  /** Adds an own account or changes its details; the window sees it
+   * masked, as the product publishes it. */
+  function changeAccount(request: JsonObject): JsonObject {
+    const action = request.action;
+    const iban = text(request.iban);
+    const id =
+      action === "add"
+        ? `acc-${String(ledger.accounts.length + 1).padStart(2, "0")}`
+        : text(request.own_account_id);
+    const existing = ledger.accounts.find(
+      (account) => account.own_account_id === id,
+    );
+    if (action === "add" && (!iban || !text(request.label))) return invalid();
+    if (action === "update" && !existing)
+      throw new Stopped("ERROR_TRANSACTION_VALIDATION");
+    const masked = iban
+      ? `${iban.slice(0, 2).toUpperCase()}**${iban.slice(-4)}`
+      : (existing?.masked_iban ?? "");
+    const holding = text(request.holding) ?? existing?.holding ?? "titular";
+    const account: FixtureAccount = {
+      own_account_id: id!,
+      label: text(request.label) ?? existing?.label ?? "",
+      holding: holding === "cotitular" ? "cotitular" : "titular",
+      masked_iban: masked,
+      country_code: masked.slice(0, 2),
+      sepa_marca: "1",
+      has_swift_bic:
+        Boolean(text(request.swift_bic)) || (existing?.has_swift_bic ?? false),
+      has_bank_block:
+        Boolean(text(request.bank_name)) || (existing?.has_bank_block ?? false),
+      currency: text(request.currency) ?? existing?.currency ?? "EUR",
+      opened_on: text(request.opened_on) ?? existing?.opened_on ?? null,
+      closed_on: existing?.closed_on ?? null,
+    };
+    if (existing) Object.assign(existing, account);
+    else ledger.accounts.push(account);
+    return {
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      action: action as string,
+      own_account_id: id,
+      accounts: [account as unknown as JsonValue],
+      designations: [],
+      changed: true,
+    };
+  }
+  function ownAccount(request: JsonObject): JsonObject {
+    const action = text(request.action);
+    const id = text(request.own_account_id);
+    const accounts = ledger.accounts;
+    if (action === "add" || action === "update") return changeAccount(request);
+    if (action === "list")
+      return {
+        profile_id: LEDGER_FIXTURE_PROFILE_ID,
+        action,
+        own_account_id: null,
+        accounts: accounts as unknown as JsonValue,
+        designations: [
+          { role: "charge", modelo: null, own_account_id: "acc-01" },
+        ],
+        changed: false,
+      };
+    if (action === "show") {
+      const found = accounts.find((account) => account.own_account_id === id);
+      if (!found) throw new Stopped("ERROR_TRANSACTION_VALIDATION");
+      return {
+        profile_id: LEDGER_FIXTURE_PROFILE_ID,
+        action,
+        own_account_id: id,
+        accounts: [found as unknown as JsonValue],
+        designations: [],
+        changed: false,
+      };
+    }
+    return reject("unavailable");
+  }
+
+  const reads: Partial<
+    Record<LedgerDefinitionId, (request: JsonObject) => JsonObject>
+  > = {
+    "ledger.list": (request) => list(ledger, request),
+    "ledger.view": (request) => {
+      const movement = resolve(ledger, request.transaction_prefix);
+      return {
+        profile_id: LEDGER_FIXTURE_PROFILE_ID,
+        transaction_prefix: request.transaction_prefix as string,
+        transaction: { ...movement.transaction } as unknown as JsonValue,
+        review_status: reviewStatus(
+          movement.transaction.business_classification,
+        ),
+        latest_llm_rejection: movement.llm_rejected
+          ? {
+              occurred_at: "2026-10-02T09:30:00Z",
+              operator_reason: "La propuesta no reconoce el proveedor.",
+            }
+          : null,
+      };
+    },
+    "ledger.invoice.list": (request) => ({
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      kind: (request.kind as string | null | undefined) ?? null,
+      invoices: ledger.invoices.filter((invoice: CatalogueInvoice) =>
+        request.kind ? invoice.kind === request.kind : true,
+      ) as unknown as JsonValue,
+    }),
+    "ledger.status": status,
+    "ledger.preflight": preflight,
+    "ledger.evidence.list": () => ({
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      result: {
+        profile_id: LEDGER_FIXTURE_PROFILE_ID,
+        count: ledger.evidence.length,
+        rows: ledger.evidence as unknown as JsonValue,
+      },
+    }),
+    "ledger.rule.list": () => ({
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      rules: ledger.rules as unknown as JsonValue,
+    }),
+  };
+  const writes: Partial<
+    Record<LedgerDefinitionId, (request: JsonObject) => JsonObject>
+  > = {
+    "ledger.update": update,
+    "ledger.classify.single": classify,
+    "ledger.classify.bulk": bulk,
+    "ledger.add": add,
+    "ledger.import": importStatement,
+    "ledger.export": exportLedger,
+  };
+
+  function suggestion(pending: Pending, operation: string) {
+    const movement = transactionOf(pending.transaction);
+    const proposed = pending.version % 2 === 0 ? "BUSINESS" : "MIXED";
+    return {
+      projection_version: 1,
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      reviewed_proposal_digest: hex64(
+        `proposal:${operation}:${pending.version}`,
+      ),
+      suggestion: {
+        kind: "classification",
+        transaction_id: pending.transaction,
+        provenance: "local-model",
+        reason:
+          "The counterparty and the description match an office supplier.",
+        evidence_id: movement?.transaction.purchase_invoice_evidence_id ?? null,
+        classification: proposed,
+        category: "material_oficina",
+        confidence: "0.82",
+        multiple_components: false,
+        business_pct: proposed === "MIXED" ? "0.50" : null,
+        iva_category: "domestic_general",
+        iva_rate: "0.21",
+        taxable_base: null,
+        iva_amount: null,
+        rate_derivable: false,
+        derivation_note: "",
+        evidence_advisory: "",
+        parent_amount: null,
+        children: [],
+      },
+    };
+  }
+
+  /** Whether settling `definition` with `request` may change records. */
+  const changes = (definition: LedgerDefinitionId, request: JsonObject) =>
+    definition in writes ||
+    definition === "ledger.classify.review" ||
+    (definition === "ledger.own_account" &&
+      request.action !== "list" &&
+      request.action !== "show");
+
+  async function run(
+    definition: string,
+    payload: unknown,
+  ): Promise<LedgerOutcome> {
+    say(`ledger ${definition}`);
+    await answer();
+    if (!isLedgerDefinition(definition)) return reject("not_admitted");
+    if (
+      typeof payload !== "object" ||
+      payload === null ||
+      Array.isArray(payload)
+    )
+      return reject("invalid");
+    const request = payload as JsonObject;
+    if ("profile_id" in request || "source_directory" in request)
+      return reject("invalid");
+    if (
+      definition === "ledger.own_account" &&
+      OWN_ACCOUNT_SECRETS.some((field) => field in request)
+    )
+      return reject("invalid");
+    if (JSON.stringify(request).length > LEDGER_PAYLOAD_LIMIT)
+      return reject("too_large");
+    const mutation = changes(definition, request);
+    if (mutation && shape === "refused")
+      return reject("refused", { reason: "operation_unavailable" });
+    const operation = nextOperation();
+    try {
+      if (definition === "ledger.classify.review") {
+        const movement = resolve(ledger, request.transaction_id);
+        reviews.set(operation, {
+          request,
+          transaction: movement.transaction.transaction_id,
+          version: 0,
+          shown: null,
+        });
+        const paused: LedgerOutcome = {
+          kind: "review",
+          operation_id: operation,
+          revision: 2,
+          cancellable: false,
+        };
+        outcomes.set(operation, paused);
+        return paused;
+      }
+      const handle =
+        definition === "ledger.own_account"
+          ? ownAccount
+          : (writes[definition] ?? reads[definition]);
+      if (!handle) return reject("unavailable");
+      const result = handle(request);
+      // The write landed; its settlement was not observed.
+      if (mutation && shape === "unknown")
+        return reject("unknown", { operation_id: operation });
+      return settle(operation, result);
+    } catch (error) {
+      if (!(error instanceof Stopped)) throw error;
+      const stopped: LedgerOutcome = {
+        kind: "refused",
+        operation_id: operation,
+        revision: 3,
+        reason: error.reason,
+        detail: null,
+      };
+      outcomes.set(operation, stopped);
+      return stopped;
+    }
+  }
+
+  return {
+    async submit(definition, payload) {
+      const outcome = await run(definition, payload);
+      return outcome as LedgerOutcome<LedgerResult<typeof definition>>;
+    },
+    async observe(operation) {
+      say("ledger observe");
+      await answer();
+      return outcomes.get(operation) ?? reject("not_admitted");
+    },
+    async review<Review>(operation: string) {
+      say("ledger review");
+      await answer();
+      const pending = reviews.get(operation);
+      if (!outcomes.has(operation)) return reject("not_admitted");
+      if (!pending) return reject("review_changed", { reason: "not_pending" });
+      const review = suggestion(pending, operation);
+      pending.shown = hex64(JSON.stringify(review));
+      const shown: LedgerReview<Review> = {
+        operation_id: operation,
+        revision: 2 + pending.version,
+        review_digest: pending.shown,
+        expires_at: null,
+        review: review as Review,
+      };
+      return shown;
+    },
+    async answer(operation, reviewDigest, decision) {
+      say(`ledger answer ${decision}`);
+      await answer();
+      const pending = reviews.get(operation);
+      if (!pending || pending.shown !== reviewDigest)
+        return reject("review_changed");
+      // The review may have changed since the page read it.
+      if (
+        hex64(JSON.stringify(suggestion(pending, operation))) !== reviewDigest
+      )
+        return reject("review_changed", { reason: "review_changed" });
+      if (shape === "refused")
+        return reject("refused", { reason: "operation_unavailable" });
+      reviews.delete(operation);
+      const movement = transactionOf(pending.transaction);
+      const proposal = suggestion(pending, operation).suggestion;
+      if (decision === "apply" && movement && !movement.sealed)
+        classifyRow(
+          movement,
+          {
+            classification: proposal.classification,
+            category_id: proposal.category,
+            business_pct: proposal.business_pct,
+          },
+          "llm",
+        );
+      if (shape === "unknown")
+        return reject("unknown", { operation_id: operation });
+      return settle(operation, {
+        identity: {
+          operation_id: operation,
+          definition_id: "ledger.classify.review",
+          subject_ref: `profile:${LEDGER_FIXTURE_PROFILE_ID}`,
+        },
+        request: { ...pending.request, profile_id: LEDGER_FIXTURE_PROFILE_ID },
+        response: decision,
+        result: {
+          profile_id: LEDGER_FIXTURE_PROFILE_ID,
+          reviewed_proposal_digest: suggestion(pending, operation)
+            .reviewed_proposal_digest,
+          outcome: decision === "apply" ? "classified" : "rejected",
+          transaction_id: pending.transaction,
+          provenance: proposal.provenance,
+          operator_reason: "",
+        },
+      });
+    },
+    async cancel(operation) {
+      say("ledger cancel");
+      await answer();
+      if (!outcomes.has(operation)) return reject("not_admitted");
+      return reject("refused", {
+        operation_id: operation,
+        reason: "cancellation_unsupported",
+      });
+    },
+    async pickFiles(purpose, pick) {
+      say(`ledger pickFiles ${purpose} ${pick}`);
+      await answer();
+      const offered = PICKABLE[purpose];
+      return take(pick === "file" ? offered.slice(0, 1) : offered, purpose);
+    },
+    async saveFile(format, _filterLabel, suggestedName) {
+      say(`ledger saveFile ${format}`);
+      await answer();
+      const name = suggestedName ?? `movimientos-2026.${format}`;
+      return name.split(".").pop() === format
+        ? take([name], "export")
+        : { files: [], refused: 1 };
+    },
+    async forgetFiles(tokens) {
+      say("ledger forgetFiles");
+      tokens.forEach((token) => files.delete(token));
+    },
+    async observeDrops(purpose, listener) {
+      say(`ledger observeDrops ${purpose}`);
+      dropPurpose = purpose;
+      drops.add(listener);
+      return () => {
+        drops.delete(listener);
+      };
+    },
+    async changeOwnAccount(change) {
+      say("ledger changeOwnAccount");
+      try {
+        await answer();
+        let request: JsonObject;
+        try {
+          request = JSON.parse(new TextDecoder().decode(change)) as JsonObject;
+        } catch {
+          return reject("invalid");
+        }
+        if (request.action !== "add" && request.action !== "update")
+          return reject("invalid");
+        if (shape === "refused")
+          return reject("refused", { reason: "operation_unavailable" });
+        const operation = nextOperation();
+        try {
+          const result = changeAccount(request);
+          if (shape === "unknown")
+            return reject("unknown", { operation_id: operation });
+          return settle(operation, result);
+        } catch (error) {
+          if (!(error instanceof Stopped)) throw error;
+          return {
+            kind: "refused",
+            operation_id: operation,
+            revision: 3,
+            reason: error.reason,
+            detail: null,
+          };
+        }
+      } finally {
+        change.fill(0);
+      }
+    },
+  };
+}
+
+/** A blank imported movement the import fills in. */
+function fixtureTemplate(): LedgerTransaction {
+  return {
+    transaction_id: "",
+    date: "",
+    booked_date: "",
+    value_date: null,
+    amount: "0.00",
+    currency: "EUR",
+    direction: "OUTGOING",
+    counterparty: "",
+    description: "",
+    business_classification: "NOT_YET_PROCESSED",
+    business_pct: null,
+    category_id: null,
+    taxable_base: null,
+    iva_rate: null,
+    iva_amount: null,
+    iva_category: null,
+    counterparty_country: null,
+    counterparty_identification_state: null,
+    irpf_category: null,
+    m210_income_classification: null,
+    usage_ratio_id: null,
+    prorrata_reference: null,
+    purchase_invoice_evidence_id: null,
+    invoice_id: null,
+    attachment_ids: [],
+    notes: "",
+    lifecycle_state: "ACTIVE",
+    classified_by: "",
+    classified_at: null,
+    classification_reason: "",
+    classification_confidence: null,
+    source_jurisdiction: null,
+    value_in_eur: null,
+    fx_rate: null,
+    created_at: "",
+    modified_at: "",
+  };
+}
+
+/** Rows of RFC 4180 CSV: quoted cells may hold commas, quotes and breaks. */
+function parseCsv(source: string): string[][] {
+  const rows: string[][] = [];
+  let cells: string[] = [];
+  let cell = "";
+  let quoted = false;
+  for (let at = 0; at < source.length; at += 1) {
+    const char = source[at]!;
+    if (quoted) {
+      if (char === '"' && source[at + 1] === '"') {
+        cell += '"';
+        at += 1;
+      } else if (char === '"') quoted = false;
+      else cell += char;
+    } else if (char === '"') quoted = true;
+    else if (char === ",") {
+      cells.push(cell);
+      cell = "";
+    } else if (char === "\n" || char === "\r") {
+      if (char === "\r" && source[at + 1] === "\n") at += 1;
+      cells.push(cell);
+      rows.push(cells);
+      cells = [];
+      cell = "";
+    } else cell += char;
+  }
+  if (cell !== "" || cells.length) {
+    cells.push(cell);
+    rows.push(cells);
+  }
+  return rows.filter((line) => line.some((value) => value.trim() !== ""));
+}

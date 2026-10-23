@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-ledger-editor'
 date: '2026-10-23'
-modified: '2026-10-23'
+modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:863dd189538b7e03149c006b3e9ee81f12a2aa629ad293a211f5d01b6e68416f'
+body_hash: 'sha256:c6ef3d7dac1c94fd66d1418444d52c9eddc93c64ddf07073e9f8cde2712a4376'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -85,3 +85,18 @@ related:
 - `S03` `verify:` `relay_contracts.py --check (and a deliberate mirror drift refused)` -> `pass`
 - `S03` `verify:` `ruff check and format --check relay_contracts.py` -> `pass`
 - `S03` `by:` `vaultspec-high-executor`
+- `S04` `A` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S04` `A` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S04` `M` `native/desktop/frontend/README.md`
+- `S04` `verify:` `npx tsc --noEmit` -> `pass`
+- `S04` `verify:` `npx eslint on touched files` -> `pass`
+- `S04` `verify:` `npx prettier --check on touched files` -> `pass`
+- `S04` `verify:` `scratch semantics probe of the scenario ledger (esbuild bundle run in node, 31 checks)` -> `pass`
+- `S04` `by:` `vaultspec-high-executor`
+
+## Notes
+
+- `S04` Playwright scenario suite not run here: it starts the fixed-port development and preview servers; the Ledger page's scenario tests belong to P04.S16.

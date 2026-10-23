@@ -4,6 +4,7 @@
 // summaries are tool text for developers, not product chrome, so they are not
 // in the locale catalogues.
 
+import type { LedgerShape } from "./ledgerFixture";
 import type { SetupShape } from "./setupFixture";
 import type {
   HostErrorCode,
@@ -119,6 +120,11 @@ export type Scenario = {
   /** The component setup of the made-up computer; left out, the host
    * offers no setup. The `setup` parameter chooses another shape. */
   setup?: SetupShape;
+  /** How the made-up ledger answers wherever the views are offered: the
+   * fixture, nothing recorded, writes refused, writes whose outcome is
+   * unknown, nothing readable, or every answer slow. Left out, the fixture.
+   * The `ledger` parameter chooses another shape. */
+  ledger?: LedgerShape;
 };
 
 const signedOut: Scenario["signIn"]["status"] = {
@@ -1007,6 +1013,17 @@ export const SCENARIOS: readonly Scenario[] = [
       submit: { kind: "accept" },
     },
     setup: "google_signed_out",
+  },
+  {
+    ...base,
+    id: "ledger",
+    title: "Ledger",
+    summary:
+      "Signed in with a made-up 2026 ledger of a design studio: about 350 movements, 60 invoices, receipts, rules and two accounts. The first quarter is sealed by a filed Modelo 303. Add ?ledger=empty, refused, unknown, unavailable or slow for its other answers.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
   },
   {
     ...base,

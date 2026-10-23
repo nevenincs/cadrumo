@@ -16,6 +16,7 @@ import {
   scenarioHost,
   type CalendarShape,
 } from "./scenarioHost";
+import { LEDGER_SHAPES } from "./ledgerFixture";
 import { findScenario, type Scenario } from "./scenarios";
 import { SETUP_SHAPES } from "./setupFixture";
 
@@ -89,6 +90,8 @@ function readParams() {
     ),
     // The shape of the component setup.
     setup: SETUP_SHAPES.find((shape) => shape === params.get("setup")),
+    // How the made-up ledger answers.
+    ledger: LEDGER_SHAPES.find((shape) => shape === params.get("ledger")),
   };
 }
 
@@ -143,6 +146,7 @@ function Scenarios() {
       agentSkills: initial.agentSkills,
       agentCatalog: initial.agentCatalog,
       setup: initial.setup,
+      ledger: initial.ledger,
       language: run.language,
       latencyMs: initial.latencyMs,
       onCall: (call) => {
