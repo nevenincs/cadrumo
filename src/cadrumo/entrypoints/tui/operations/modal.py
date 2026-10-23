@@ -19,9 +19,11 @@ from datetime import timedelta
 from typing import ClassVar, Literal, override
 
 from pydantic import BaseModel
+from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import ItemGrid, Vertical, VerticalScroll
+from textual.messages import Prune
 from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerFailed
@@ -336,6 +338,26 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         worker.cancel()
         with suppress(WorkerCancelled, WorkerFailed):
             await worker.wait()
+
+    @on(Prune)
+    def _stop_observing_on_removal(self) -> None:
+        """Cancel the poll worker as soon as removal begins, before any row is removed.
+
+        A screen can be removed without its own close controls: the app pops
+        every screen above the base for an account action, and a shutdown
+        closes the screens. Textual removes this screen's rows first and
+        cancels its workers only afterwards, at unmount, so a read completing
+        between the two resumed the worker against rows that no longer existed
+        and its failure ended the app. The ``Prune`` request is handled by this
+        screen before it removes any row, and a cancelled worker runs no more
+        of its own code. Nothing is reported: removal is not a dismissal and
+        says nothing about the operation's outcome.
+        """
+        self._observation_stopped = True
+        worker = self._poll_worker
+        self._poll_worker = None
+        if worker is not None:
+            worker.cancel()
 
     def _refresh_view_state(self) -> None:
         view_model = self._view_model
