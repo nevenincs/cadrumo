@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:26346bbdaaa5b82c7d02935d0e3e31e1906360b18764270c2e5e71bda2f758d1'
+body_hash: 'sha256:1d221afb646ae4627fca5826c9391502bf3204233aa2362f78d72cbc0d5bb391'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -54,6 +54,43 @@ There are separate session constructions in `runtime_ledger_registers.py:140,493
 
 `registers_presentation.py:275-283,392-400` uses a Review then Confirm button pair. None of these operations deletes anything.
 
+### settlement | high | Re-review: app-level navigation still swaps out the Records body during a write
+
+Re-review of P03.S20 to S25 (`0f10a06111` to `802d691424`). The S21 guard covers only routes the workspace handles itself. `app_navigation.py:96` (`navigate_to`) and `:319`, `:332-341` (`_replace_destination`, `_swap_destination`) never ask the body. Ctrl+P destination, search and operation commands (`search.py:304,325,339`, `operations/palette.py:68`), F4 Profile and F2 Language (`app.py:780,792-794`), a desktop page request (`app.py:428`), and change user or sign out all unmount the body mid-write. A probe confirmed it in the real `CadrumoTuiApp`. `ActivityAssetScreen` has no in-flight guard.
+
+### settlement | high | Re-review: failures after the operation started other than timeouts still read as refusals
+
+`runtime_profile_session.py:163-179` converts only four transport refusal codes. These still surface as plain refusals although the change may be saved:
+- an observation refused while running (`operation_controller.py:634-635`, `observation.py:112-113,127-128`);
+- a refused or malformed result read after a SUCCEEDED or UPDATED receipt;
+- a door admit or settle correlation failure after a committed receipt (`runtime_evidence.py:293-310`).
+
+All three were confirmed by probe. When the submit reply is lost, `controller` is None and the operation stays CREATED and never started, so that path is correctly a refusal.
+
+### event-loop | high | Re-review: the evidence extract and confirm doors still check the session on the event loop
+
+`runtime_evidence.py:208` (`extract`) and `:235` (`confirm`) call `require_binding()` directly in async methods awaited from loop workers (`evidence_records.py:142-148,184,216`). A thread-recording probe saw one of three session reads on the loop thread, and no thread test covers this door.
+
+### settlement | medium | Re-review: a dropped connection after submission reads as an expired session
+
+A failed exchange closes the transport (`operation_transport.py:70-72`). The recheck at `runtime_profile_session.py:164-167` then gets `AccountSessionUnavailableError`, and `session_expired_with_receipt` reports "sign in again". The operation id and the unknown effect stay in a context the screens never render, so the CONNECTION_CLOSED case is unreachable.
+
+### frontend-behaviour | low | Re-review: review exclusion and evidence add re-offer the write without re-reading
+
+`review.py:332-341` and `evidence_records.py:261-270` handle an unknown outcome without re-reading, so the same write can be offered again at once.
+
+### copy | low | Re-review: a read that times out says the change may have been saved
+
+`run_operation` raises outcome-unknown for read-only definitions too, and `review.py:206-209` shows the write wording. It should do so only when the definition permits an effect beyond NONE.
+
+### s24 | low | Re-review: choosing an evidence draft resets the cursor to the top
+
+`evidence.py:320-323` repaints with `table.clear(columns=True)`, which resets the cursor and scroll.
+
+### s25 | low | Re-review: the body walk does not recurse into subpackages
+
+`test_every_body_answers_an_area_choice.py:106-122` uses `pkgutil.iter_modules`. A body in a future `ledger/` subpackage would escape the walk.
+
 ## Recommendations
 
 - Event loop: move every blocking session check in a runtime door off the loop, and add thread-recording tests for each door that does not go through `run_operation`.
@@ -63,3 +100,4 @@ There are separate session constructions in `runtime_ledger_registers.py:140,493
 - Bulk classify: send every reviewed row and let the operation report applied and skipped rows.
 - Stale records: a follow-on decision should settle whether `ledger.update`, `ledger.invoice.update`, `ledger.invoice.remove` and the reset preview carry revision or digest preconditions.
 - Paging: `invoice.list`, the register lists, `evidence.query`, `rule.list` and `consent.list` take no paging fields. Paging them needs a decision on those request contracts.
+- The P03.S20 to S22 re-review findings reopen those Steps. Every path after start, and every way of leaving a body, must go through one shared check rather than through per-scenario fixes.
