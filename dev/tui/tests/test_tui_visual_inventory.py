@@ -730,6 +730,25 @@ def test_the_refusal_reason_is_extracted_for_the_skip_note() -> None:
     assert _first_refusal_line("") == "no diagnostics"
 
 
+def test_a_crash_names_its_exception_and_where_it_was_raised() -> None:
+    """A crashed frame's log line must say why, because a run that dies writes no manifest."""
+    from .._render import _crash_summary
+
+    detail = (
+        "harness `open ledger-entries-add-empty --size 120x40 --theme light` exited 1\n"
+        "Traceback (most recent call last):\n"
+        '  File "<frozen runpy>", line 88, in _run_code\n'
+        '  File "dev/tui/harness/__main__.py", line 17, in <module>\n'
+        "    from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES\n"
+        "ModuleNotFoundError: No module named 'cadrumo'"
+    )
+    assert _crash_summary(detail) == (
+        "ModuleNotFoundError: No module named 'cadrumo' (at File \"dev/tui/harness/__main__.py\", line 17, in <module>)"
+    )
+    assert _crash_summary("harness `open x` exited 3221225477") == "harness `open x` exited 3221225477"
+    assert _crash_summary("") == "no diagnostics"
+
+
 def test_a_blocked_surface_is_named_from_failures_and_skips_together() -> None:
     """A surface is blocked when it produced no frame, however it got there.
 

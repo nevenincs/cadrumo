@@ -118,12 +118,26 @@ def _attempt_scenario_capture(
             if refusal.kind is FrameFailureKind.REFUSED:
                 break
             if attempt <= retries:
-                _echo(f"    {kind}; retrying ({attempt}/{retries})")
+                _echo(f"    {kind}; retrying ({attempt}/{retries}): {_crash_summary(detail)}")
     return outcome, detail, kind, made
 
 
 def _relative(path: Path, root: Path) -> str:
     return path.relative_to(root).as_posix()
+
+
+def _crash_summary(detail: str) -> str:
+    """The exception a crashed harness died with, and the innermost frame it was raised in.
+
+    Printed with every crash as it happens. The full diagnostics reach only the
+    manifest, and a run that dies, or that spans a source change, writes none:
+    without this line the log says that frames crashed and never why.
+    """
+    lines = [line.strip() for line in detail.splitlines() if line.strip()]
+    if not lines:
+        return "no diagnostics"
+    frames = [line for line in lines if line.startswith('File "')]
+    return f"{lines[-1]} (at {frames[-1]})" if frames else lines[-1]
 
 
 def _first_refusal_line(detail: str) -> str:
@@ -181,7 +195,7 @@ def _attempt_frame(
         else:
             return captured, raster
         if attempt <= retries:
-            _echo(f"    {kind}; retrying ({attempt}/{retries})")
+            _echo(f"    {kind}; retrying ({attempt}/{retries}): {_crash_summary(detail)}")
     return FailedFrame(
         surface=surface,
         viewport=shape.name,
@@ -216,7 +230,7 @@ def _render_scenario(
     staging = SCRATCH_DIR / f"sequence-{scenario.name}"
     outcome, detail, kind, made = _attempt_scenario_capture(scenario, viewports, themes, staging, workspace, retries)
     if outcome is None:
-        _echo(f"    {kind} after {made} attempt(s)")
+        _echo(f"    {kind} after {made} attempt(s): {_crash_summary(detail)}")
         failures.extend(
             FailedFrame(surface=surface, viewport=shape.name, theme=theme, kind=kind, attempts=made, detail=detail)
             for surface in scenario.pages.values()
@@ -308,7 +322,7 @@ def _capture_matrix_frame(
         retries=retries,
     )
     if isinstance(outcome, FailedFrame):
-        _echo(f"    {outcome.kind} after {outcome.attempts} attempt(s)")
+        _echo(f"    {outcome.kind} after {outcome.attempts} attempt(s): {_crash_summary(outcome.detail)}")
         failures.append(outcome)
         if outcome.kind is FrameFailureKind.REFUSED:
             refusal_reason = _first_refusal_line(outcome.detail)
