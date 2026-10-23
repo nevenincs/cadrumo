@@ -65,6 +65,7 @@ from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
     ledger_review_action,
 )
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
+from cadrumo.entrypoints.tui.operations.outcome import SessionExpiredOutcomeUnknownError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
 
@@ -433,11 +434,12 @@ async def test_invoice_add_tui_door_preserves_receipt_for_a_duplicate_refusal(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_invoice_add_tui_door_clears_disclosure_if_session_expires_after_settlement(
+async def test_invoice_add_tui_door_withholds_the_invoice_as_unknown_if_session_expires_after_settlement(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """An updated receipt whose result was never correlated is an unknown outcome, not a disclosed invoice."""
     client = _Client()
-    submissions, _controller, _status_checks = _install_runtime(
+    submissions, controller, _status_checks = _install_runtime(
         monkeypatch,
         client=client,
         result=_created_result(),
@@ -445,15 +447,16 @@ async def test_invoice_add_tui_door_clears_disclosure_if_session_expires_after_s
     )
     door = RuntimeInvoiceAddTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
 
-    with pytest.raises(AccountSessionExpiredError) as raised:
+    with pytest.raises(SessionExpiredOutcomeUnknownError) as raised:
         await door(_entry())
 
     assert submissions[0]["expected_session_id"] == _SESSION_ID
+    assert len(controller.result_reads) == 1
+    assert raised.value.outcome.operation_id == _OPERATION_ID
+    assert raised.value.outcome.effect is OperationEffect.UPDATED
     assert raised.value.context == {
         "operation_id": _OPERATION_ID,
-        "terminal_condition": OperationTerminalCondition.SUCCEEDED.value,
         "effect": OperationEffect.UPDATED.value,
-        "refusal_code": None,
     }
 
 
