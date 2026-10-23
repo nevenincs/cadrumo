@@ -11,7 +11,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
 modified: '2026-10-23'
 body_schema: body-v2
-body_hash: 'sha256:25bfb4aa770ef04b8394d7e77a4e9cc1992e719970729455ec58bc194dc49aee'
+body_hash: 'sha256:5ea68337bcc97f309861b1220bc61174657c8549064d373ace55267802f98988'
 ---
 
 # `ledger-tui-doors` plan
@@ -78,6 +78,7 @@ The orchestrator applies locales, registers visual surfaces, runs every gate and
 - [ ] `P03.S21` - make the Records workspace refuse area and tool changes while its body has a write in flight, tested per write flow; `src/cadrumo/entrypoints/tui/ledger/controller.py`.
 - [ ] `P03.S22` - report a submitted write that times out or settles with an unknown or partial effect as a typed outcome-unknown refusal carrying the operation id, shown as unknown on every write screen; `src/cadrumo_runtime/host/frontend/tui/runtime_profile_session.py`.
 - [x] `P03.S23` - send every reviewed row of a bulk-classify page and show the operation's applied and skipped counts; `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`.
+- [ ] `P03.S24` - give ledger.review and ledger.evidence.review.list dedicated Records doors so no ledger operation is reachable only through Ctrl+P, and name the eight remaining ledger locale key families in full; `src/cadrumo/entrypoints/tui/ledger/review.py, evidence.py and runtime_ledger_*.py`.
 
 ## Parallelization
 
