@@ -15,6 +15,7 @@ from ....core.i18n.render import tr
 from ....core.identity.transaction_ids import TransactionId
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
+from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import (
     LedgerReviewRequested,
     LedgerRouteRequested,
@@ -46,6 +47,12 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         self.requested_transaction_id: TransactionId | None = None
         self.pending_exclusion: TransactionId | None = None
         self.excluding = False
+
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """An exclusion is out through its door."""
+        return self.excluding
 
     @override
     def compose(self) -> ComposeResult:
@@ -170,8 +177,7 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
     @override
     def action_back(self) -> None:
         """Withdraw an open exclusion question before leaving the area."""
-        if self.excluding:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
+        if self.refuse_leaving():
             return
         if self.pending_exclusion is not None:
             self._withdraw()
@@ -203,8 +209,12 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         except (CadrumoError, ValidationError) as error:
             self.excluding = False
             self.query_one("#ledger-exclusion-confirm", Button).disabled = False
-            status.update(tr("tui.ledger.review.exclude_failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.review.exclude_failed"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+            if isinstance(error, OperationOutcomeUnknownError):
+                # The entry may already be excluded, so the same question is not left open to confirm again.
+                self.pending_exclusion = None
+                self._show_exclusion_controls(open_=False)
             return
         self.excluding = False
         self.pending_exclusion = None

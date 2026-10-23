@@ -28,6 +28,7 @@ from ..account import AccountSessionExpiredError
 from ..components.language import localized, repaint_tables
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable
+from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 
@@ -210,6 +211,12 @@ class LedgerRegisterScreen(LedgerWorkspaceScreen):
         self.selected_key: str | None = None
         self.pagers: dict[str, RegisterPager] = {}
         self._busy = False
+
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """A register read, a review or a write is out through a door."""
+        return self._busy
 
     def register_lists(self) -> tuple[RegisterListV1, ...]:
         """The paged tables this register shows."""
@@ -435,8 +442,15 @@ class LedgerRegisterScreen(LedgerWorkspaceScreen):
             status.update(tr("tui.ledger.records.failed"))
             return
         except CadrumoError as error:
-            self._busy = False
             refusal.update(door_refusal_text(error))
+            if isinstance(error, OperationOutcomeUnknownError):
+                # The change may be saved: drop it and show the register as it now stands.
+                self._unstage()
+                unknown = self.failed_write_status(error, "tui.ledger.records.failed")
+                await self._read()
+                status.update(unknown)
+                return
+            self._busy = False
             status.update(tr("tui.ledger.records.failed"))
             self._set_staged_controls(staged=True)
             return
@@ -506,13 +520,6 @@ class LedgerRegisterScreen(LedgerWorkspaceScreen):
     def set_input(self, selector: str, value: str) -> None:
         """Prefill one input from a chosen record."""
         self.query_one(selector, Input).value = value
-
-    @override
-    def action_back(self) -> None:
-        if self._busy:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
-            return
-        super().action_back()
 
 
 def labelled_input(field_key: str, input_id: str, *, placeholder: str = "") -> ComposeResult:

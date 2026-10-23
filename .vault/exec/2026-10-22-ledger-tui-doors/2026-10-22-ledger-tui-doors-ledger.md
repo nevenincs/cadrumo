@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:95c22259a334f634d9666b4dd64ae8293e98f7aa879f046009a2537af6c1fe0a'
+body_hash: 'sha256:dd326ed5179c5c4d7ebeeb0459dcbe9a5cb9015584e895a9bbab4a4bef1550ae'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -357,6 +357,25 @@ related:
 - `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_registers.py`
 - `S20` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' src/cadrumo_runtime/host/tests/frontend/tui` -> `pass`
 - `S20` `by:` `vaultspec-high-executor`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/workspace_presentation.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_records.py`
+- `S21` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_writes_hold_the_workspace.py`
+- `S21` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' src/cadrumo/entrypoints/tui/ledger/tests/test_writes_hold_the_workspace.py` -> `pass`
+- `S21` `by:` `vaultspec-high-executor`
+- `S22` `A` `src/cadrumo/entrypoints/tui/operations/outcome.py`
+- `S22` `M` `src/cadrumo_runtime/host/frontend/tui/operations/runtime_profile_session.py`
+- `S22` `M` `src/cadrumo/core/errors/registry/_entrypoints.py`
+- `S22` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_entries.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/entries_doors.py`
+- `S22` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_operation_outcome.py`
+- `S22` `M` `src/cadrumo/locales/en/errors.yml`
+- `S22` `M` `src/cadrumo/locales/es/errors.yml`
+- `S22` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S22` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S22` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' -n 8 src/cadrumo/entrypoints/tui/ledger/tests src/cadrumo_runtime/host/tests/frontend/tui` -> `pass`
+- `S22` `verify:` `just test-tui` -> `pass`
+- `S22` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -385,3 +404,5 @@ related:
 - `S07` 23 frames crashed in one earlier loaded render; the cause was not recovered because a re-render overwrote that run's manifest. Forty-six harness processes in a row failed and then recovered, which points to a machine-wide event, not these states; it did not reproduce in 120 opens under load. The timed fixture settling, which could silently leave a frame in the wrong state, was replaced by deterministic waits. The settling and fixture files were committed inside another session's checkpoint 47d4a24167.
 - `S23` ledger.classify.bulk reports skips as a count only; a row is skipped when it already holds exactly the submitted values. The table id categorisation-bulk-changing is kept because the shared geometry test names it.
 - `S20` Before the fix, the off-loop thread tests failed for exactly invoice import preview, classify.review and split.review. All five domains' screens await doors on the loop since d84d3a639a, so the guarantee is the runtime door's own off-loop work, now proved per door.
+- `S21` S21 and S22 share one commit because both rewrite the same write screens' busy and failure handling. Evidence add had no in-flight flag at all and now runs under the extract and confirm flag. Disabling the guard fails all 18 in-flight tests. Some bodies (entries add, export and reset, import flow, invoice entry, most categorisation tools) never answer an area choice even when idle; left open.
+- `S22` Scope path is `src/cadrumo_runtime/host/frontend/tui/operations/runtime_profile_session.py.` A failed receipt whose effect is anything but NONE, UPDATED included, is reported as unknown, never refused. The export-only workaround door is removed. In the full run, `test_runtime_automation_requester_native` failed once and passed alone; routed to root-cause work.

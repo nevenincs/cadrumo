@@ -40,6 +40,7 @@ from ..components.language import localized, repaint_tables
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
+from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import (
     LedgerTransactionDetailRequested,
     LedgerWorkspaceController,
@@ -206,6 +207,12 @@ class LedgerEntriesBrowseScreen(LedgerWorkspaceScreen):
         self.selected_id: str | None = initial.selected_id
         self.marked: dict[str, str] = dict(initial.marked)
         self.busy = False
+
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """A page read or an entry write is out through a door."""
+        return self.busy
 
     @override
     def compose(self) -> ComposeResult:
@@ -833,6 +840,11 @@ class LedgerEntriesBrowseScreen(LedgerWorkspaceScreen):
         if private:
             self._clear_private_view()
         self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+        if isinstance(error, OperationOutcomeUnknownError):
+            # The write may be saved: show the page as it now stands before anything is offered again.
+            self.marked.clear()
+            self._reread(self.failed_write_status(error, "tui.ledger.records.failed"))
+            return
         self._settle_without_write()
 
     def _clear_private_view(self) -> None:
@@ -862,13 +874,6 @@ class LedgerEntriesBrowseScreen(LedgerWorkspaceScreen):
         )
         screen.back_area = self.back_area
         replace_workspace_body(self.app, screen)
-
-    @override
-    def action_back(self) -> None:
-        if self.busy:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
-            return
-        super().action_back()
 
 
 def removal_preview_text(preview: LedgerRemoveOperationResult, label: str) -> str:

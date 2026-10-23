@@ -111,6 +111,12 @@ class LedgerEntryTraceScreen(LedgerWorkspaceScreen):
         self.full: LedgerHistoryProjection | None = None
         self.busy = False
 
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """A history read is out through a door."""
+        return self.busy
+
     @override
     def compose(self) -> ComposeResult:
         yield localized(
@@ -275,8 +281,7 @@ class LedgerEntryTraceScreen(LedgerWorkspaceScreen):
     @override
     def action_back(self) -> None:
         """Return to the list this entry was chosen from, as it stood."""
-        if self.busy:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
+        if self.refuse_leaving():
             return
         screen = self._back_to(self.controller)
         screen.back_area = self.back_area

@@ -158,6 +158,12 @@ class EvidenceFilesToolScreen(LedgerWorkspaceScreen):
         self.busy = False
         """Whether a door call is out; a second request waits for it."""
 
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """A door call is out."""
+        return self.busy
+
     @staticmethod
     def banner(title: str, key: str) -> Static:
         """The tool's title line, ``title`` being ``tr(key)``, reworded on a language change."""
@@ -204,13 +210,6 @@ class EvidenceFilesToolScreen(LedgerWorkspaceScreen):
     def clear_private_view(self) -> None:
         """Discard every evidence fact the tool shows once the admitted session is lost."""
         raise NotImplementedError
-
-    @override
-    def action_back(self) -> None:
-        if self.busy:
-            self.status(tr("tui.ledger.flow.in_flight_refusal"))
-            return
-        super().action_back()
 
 
 __all__ = [

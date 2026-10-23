@@ -151,6 +151,9 @@ errors:
     entry_count: número de entradas
     reason: motivo
   error:
+    canonical_tui_operation_outcome_unknown: 'La operación %{operation_id} se envió,
+      pero su resultado es desconocido: puede que el cambio se haya guardado entero,
+      en parte o nada. Vuelve a leer los registros antes de intentarlo de nuevo.'
     error_access_gate_submission: La política de control de acceso rechazó una operación
       de envío.
     error_access_gate_submission_preflight: La comprobación previa del control de

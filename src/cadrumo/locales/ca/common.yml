@@ -3677,6 +3677,8 @@ tui:
     flow:
       in_flight_refusal: Espera que acabi l'operació actual abans de sortir d'aquesta
         pantalla.
+      outcome_unknown: 'Resultat desconegut: pot ser que el canvi s''hagi desat o
+        no.'
       refresh_failed: El canvi s'ha desat, però aquesta vista no s'ha pogut tornar
         a llegir. Torna a l'Inici per actualitzar-la.
       refreshing: S'està actualitzant…

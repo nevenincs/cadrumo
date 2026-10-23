@@ -153,6 +153,9 @@ errors:
     entry_count: nombre d'entrades
     reason: motiu
   error:
+    canonical_tui_operation_outcome_unknown: 'L''operació %{operation_id} s''ha enviat,
+      però el seu resultat és desconegut: pot ser que el canvi s''hagi desat sencer,
+      en part o gens. Torna a llegir els registres abans de tornar-ho a provar.'
     error_access_gate_submission: La política de control d'accés ha rebutjat una operació
       d'enviament.
     error_access_gate_submission_preflight: La comprovació prèvia del control d'accés

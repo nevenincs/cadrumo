@@ -12,6 +12,7 @@ from textual.widgets import Button, Input, Static
 from ....application.actividad_asset.history import ActivityAssetHistoryClaimResult
 from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
 from ....application.operator_actions.models import PreconditionVerdict
+from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date
@@ -21,6 +22,7 @@ from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
+from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .models_actividad_asset import (
     ActivityAssetClaimRequestV1,
@@ -143,6 +145,10 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         except AccountSessionExpiredError as exc:
             self._clear_private_view()
             self.query_one("#asset-result", Static).update(f"refused\t{exc}")
+            return
+        except OperationOutcomeUnknownError as exc:
+            # The change may be saved, so it is never reported as refused: re-read before a retry.
+            self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(exc)}")
             return
         except (CadrumoError, ValueError) as exc:
             self.query_one("#asset-result", Static).update(f"refused\t{exc}")

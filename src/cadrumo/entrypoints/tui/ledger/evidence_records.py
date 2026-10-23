@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
-from typing import Final, cast
+from typing import Final, cast, override
 
 from pydantic import ValidationError
 from textual.widgets import Button, DataTable, Input, Select, Static
@@ -40,6 +40,12 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
     _records: tuple[LedgerEvidenceRecordRowV1, ...] | None
     draft: LedgerEvidenceDraftV1 | None
     reading: bool
+
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """A read, an addition or a confirmation is out through a door."""
+        return self.reading
 
     def _show_records(self) -> None:
         """Read the records off the event loop; listing them decrypts the whole evidence catalogue."""
@@ -215,7 +221,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             return
         except (CadrumoError, ValidationError) as error:
             self.reading = False
-            status.update(tr("tui.ledger.evidence.confirm_failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.evidence.confirm_failed"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
             return
         self.reading = False
@@ -239,10 +245,11 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         if not raw:
             notice.update(tr("tui.ledger.import.path_required"))
             return
+        if self.reading:
+            return
         notice.update("")
         self.query_one("#ledger-evidence-add", Button).disabled = True
-        self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.evidence.adding"))
-        self.run_worker(self._submit_add(raw), exclusive=True)
+        self._start(self._submit_add(raw), tr("tui.ledger.evidence.adding"))
 
     async def _submit_add(self, source_path: str) -> None:
         status = self.query_one("#ledger-flow-status", Static)
@@ -252,12 +259,14 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             status.update(tr("tui.ledger.evidence.add_failed"))
             self._handle_expired_session(error)
         except (CadrumoError, ValidationError) as error:
-            status.update(tr("tui.ledger.evidence.add_failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.evidence.add_failed"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self.query_one("#ledger-evidence-path", Input).value = ""
             added = tr("tui.ledger.evidence.added", file=record.file_name)
             self.refresh_then(lambda: self._after_reread(added))
+        finally:
+            self.reading = False
         self.query_one("#ledger-evidence-add", Button).disabled = False
 
     def _after_reread(self, added: str) -> None:

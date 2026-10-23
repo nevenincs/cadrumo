@@ -368,7 +368,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
             outcome = await self.controller.apply_import(request)
         except (CadrumoError, ValidationError) as error:
             self._transition(LedgerFlowState.FAILED)
-            status.update(tr("tui.ledger.import.failure"))
+            status.update(self.failed_write_status(error, "tui.ledger.import.failure"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self.outcome = outcome

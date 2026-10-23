@@ -32,6 +32,7 @@ from ..components.language import localized, repaint_tables
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
+from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .models import LedgerRecordDoorsV1
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
@@ -355,6 +356,12 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
         self.staged: CatalogueInvoicePatch | None = None
         self._busy = False
 
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """The invoice read, its correction or its removal is out through a door."""
+        return self._busy
+
     @override
     def compose(self) -> ComposeResult:
         yield localized(
@@ -550,8 +557,12 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
             updated = await self.doors.update_invoice(baseline, patch)
         except CadrumoError as error:
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
-            status.update(tr("tui.ledger.records.failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.records.failed"))
             self._busy = False
+            if isinstance(error, OperationOutcomeUnknownError):
+                # The correction may be saved; offering it again could apply it twice.
+                self._unstage()
+                return
             self.query_one("#ledger-invoice-edit-save", Button).disabled = False
             self.query_one("#ledger-invoice-edit-cancel", Button).disabled = False
             return
@@ -567,9 +578,10 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
             removed = await self.doors.remove_invoice(baseline)
         except CadrumoError as error:
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
-            status.update(tr("tui.ledger.records.failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.records.failed"))
             self._busy = False
-            self.query_one("#ledger-invoice-remove", Button).disabled = False
+            # A removal whose outcome is unknown may have removed the invoice, so it is not offered again.
+            self.query_one("#ledger-invoice-remove", Button).disabled = isinstance(error, OperationOutcomeUnknownError)
             return
         self._busy = False
         replace_workspace_body(
@@ -619,18 +631,14 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
     @override
     def action_back(self) -> None:
         """Return to the catalogue on the invoice shown here; never while a write is in flight."""
-        if self._busy:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
+        if self.refuse_leaving():
             return
         catalogue = LedgerInvoiceCatalogueScreen(self.controller, self.doors, selected_id=self.invoice_id)
         if not replace_workspace_body(self.app, catalogue):
             super().action_back()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Refuse navigation while a write is in flight."""
-        if self._busy:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
-            return
+        """Answer the area navigation, which is refused while a write is in flight."""
         self.handle_navigation_selection(event)
 
 

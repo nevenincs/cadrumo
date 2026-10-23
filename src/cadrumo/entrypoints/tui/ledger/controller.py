@@ -37,6 +37,7 @@ from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
+from ..operations.outcome import OperationOutcomeUnknownError
 from .models import (
     LEDGER_DESTINATION_BY_AREA,
     LedgerClassificationPatchV1,
@@ -632,6 +633,41 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         """How long each completed re-read took, newest last."""
         self.back_area: LedgerWorkspaceArea | None = None
         """The area Back returns to when this body was opened as one of its tools."""
+        self.write_outcome_unknown = False
+        """Whether a write this body submitted ended without a known outcome, so the workspace must be re-read."""
+
+    @property
+    def in_flight(self) -> bool:
+        """Whether this body awaits a door call it must not abandon.
+
+        Leaving a body unmounts it, and unmounting cancels its workers: a write
+        cancelled after submission still settles, but nobody sees how, and a
+        retry may repeat it. Back, area changes and tool choices are all
+        refused while this holds. A body that submits work overrides it with
+        the state its own Back guard already keeps.
+        """
+        return False
+
+    def refuse_leaving(self) -> bool:
+        """Say that this body cannot be left yet and return ``True``, or return ``False`` when it can."""
+        if not self.in_flight:
+            return False
+        message = tr("tui.ledger.flow.in_flight_refusal")
+        self._status_line().update(message)
+        self.notify(message, severity="warning")
+        return True
+
+    def failed_write_status(self, error: BaseException, failed_key: str) -> str:
+        """Word a write that did not succeed: unknown when its outcome is, otherwise ``failed_key``.
+
+        A write whose outcome is unknown may have been saved, so it is never
+        worded as refused, and the workspace is read again before it is offered
+        once more.
+        """
+        if isinstance(error, OperationOutcomeUnknownError):
+            self.write_outcome_unknown = True
+            return tr("tui.ledger.flow.outcome_unknown")
+        return tr(failed_key)
 
     def refresh_then(self, then: Callable[[], object]) -> None:
         """Re-read the workspace off the event loop, then continue with ``then``.
@@ -715,7 +751,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
     def _open_tool(self, event: DataTable.RowSelected) -> None:
         """Open the chosen tool in place of this body; Back returns to this area."""
         tool = self.controller.tool(str(event.row_key.value))
-        if tool is None:
+        if tool is None or self.refuse_leaving():
             return
         screen = tool.build(self.controller)
         screen.back_area = tool.area
@@ -748,6 +784,8 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
             return True
         if event_table.id != "ledger-navigation":
             return False
+        if self.refuse_leaving():
+            return True
         area = LedgerWorkspaceArea(str(event.row_key.value))
         refusal = self.controller.refusal_for(area)
         notice = self.query_one("#ledger-refusal", Static)
@@ -762,7 +800,9 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         return True
 
     def action_back(self) -> None:
-        """Ask the host to return; never terminate the application."""
+        """Ask the host to return, unless a write is in flight; never terminate the application."""
+        if self.refuse_leaving():
+            return
         self.back_requested = True
         self.post_message(LedgerBackRequested())
 
@@ -797,12 +837,16 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         # for the shared shell; at module scope the two would form a cycle.
         from .routes import resolve_ledger_screen
 
+        if self.refuse_leaving():
+            return
         replace_workspace_body(self.app, resolve_ledger_screen(self.controller, event.target))
 
     def on_ledger_invoice_entry_requested(self, _: LedgerInvoiceEntryRequested) -> None:
         """Open the invoice entry form, or say why it cannot open in this session."""
         from .invoice_entry import LedgerInvoiceEntryScreen
 
+        if self.refuse_leaving():
+            return
         if not self.controller.can_add_invoices():
             self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.submission_unavailable"))
             return
@@ -812,6 +856,8 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         """Open canonical invoice readback through the injected record door."""
         from .record_views import LedgerInvoiceCatalogueScreen
 
+        if self.refuse_leaving():
+            return
         doors = self.controller.record_doors
         if doors is None:
             self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.submission_unavailable"))
@@ -822,6 +868,8 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         """Open the selected transaction without resolving a row position."""
         from .transaction_views import LedgerTransactionDetailScreen
 
+        if self.refuse_leaving():
+            return
         doors = self.controller.record_doors
         if doors is None:
             self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.submission_unavailable"))

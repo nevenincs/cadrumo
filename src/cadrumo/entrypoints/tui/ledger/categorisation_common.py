@@ -31,6 +31,7 @@ from ..account import AccountSessionExpiredError
 from ..components.dialogs import ConfirmScreen
 from ..components.language import localized, repaint_tables
 from ..components.theme import tokenised
+from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 
@@ -127,6 +128,12 @@ class CategorisationScreen(LedgerWorkspaceScreen):
         self.busy = False
         self.staged: StagedChangeV1 | None = None
         self._outcome: Wording | None = None
+
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """A read or a write is out through a door."""
+        return self.busy
 
     @property
     def available(self) -> bool:
@@ -317,8 +324,16 @@ class CategorisationScreen(LedgerWorkspaceScreen):
             return
         except CadrumoError as error:
             self.refuse(door_refusal_text(error))
-            self.status("tui.ledger.categorisation.failed")
-            if writing:
+            if not writing:
+                self.status("tui.ledger.categorisation.failed")
+            elif isinstance(error, OperationOutcomeUnknownError):
+                # The change may be saved; offering the same confirmation again could apply it twice.
+                self.query_one("#ledger-flow-status", Static).update(
+                    self.failed_write_status(error, "tui.ledger.categorisation.failed")
+                )
+                self.unstage()
+            else:
+                self.status("tui.ledger.categorisation.failed")
                 self._show_staged_controls(staged=self.staged is not None)
             return
         finally:
@@ -394,13 +409,6 @@ class CategorisationScreen(LedgerWorkspaceScreen):
             exclusive=True,
             group="categorisation",
         )
-
-    @override
-    def action_back(self) -> None:
-        if self.busy:
-            self.status("tui.ledger.flow.in_flight_refusal")
-            return
-        super().action_back()
 
 
 __all__ = [

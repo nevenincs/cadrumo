@@ -32,6 +32,7 @@ from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable
+from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 
@@ -119,6 +120,12 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
         self.selected_id: str | None = None
         self.staged: LedgerOwnAccountRequest | None = None
         self._busy = False
+
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """A register read or write is out through the door."""
+        return self._busy
 
     DEFAULT_CSS = tokenised(
         """
@@ -425,8 +432,15 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
             return
         except CadrumoError as error:
             refusal.update(door_refusal_text(error))
-            status.update(tr("tui.ledger.records.failed"))
-            self._set_staged_controls(staged=self.staged is not None)
+            if reading:
+                status.update(tr("tui.ledger.records.failed"))
+            else:
+                status.update(self.failed_write_status(error, "tui.ledger.records.failed"))
+            if isinstance(error, OperationOutcomeUnknownError):
+                # The change may be saved; offering the same confirmation again could apply it twice.
+                self._unstage()
+            else:
+                self._set_staged_controls(staged=self.staged is not None)
             return
         finally:
             self._busy = False
@@ -573,13 +587,6 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
         self.query_one("#own-account-detail", Static).update("")
         cast("DataTable[str]", self.query_one("#ledger-own-accounts", DataTable)).clear()
         self._set_staged_controls(staged=False)
-
-    @override
-    def action_back(self) -> None:
-        if self._busy:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
-            return
-        super().action_back()
 
 
 __all__ = ["LedgerOwnAccountDoorV1", "LedgerOwnAccountsScreen"]

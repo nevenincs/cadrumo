@@ -143,6 +143,9 @@ errors:
     entry_count: entry count
     reason: reason
   error:
+    canonical_tui_operation_outcome_unknown: 'Operation %{operation_id} was submitted,
+      but its outcome is unknown: the change may have been saved in full, in part
+      or not at all. Read the records again before you try again.'
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
       operation.

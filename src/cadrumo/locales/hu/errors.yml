@@ -154,6 +154,9 @@ errors:
     entry_count: bejegyzések száma
     reason: ok
   error:
+    canonical_tui_operation_outcome_unknown: 'A(z) %{operation_id} műveletet elküldtük,
+      de az eredménye ismeretlen: a módosítás lehet, hogy teljesen, részben vagy egyáltalán
+      nem mentődött el. Mielőtt újra próbálkozol, olvasd be újra a nyilvántartást.'
     error_access_gate_submission: A hozzáférési kapu szabályzata elutasított egy benyújtási
       műveletet.
     error_access_gate_submission_preflight: A hozzáférési kapu előzetes ellenőrzése

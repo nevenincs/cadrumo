@@ -22,6 +22,7 @@ from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.model_validation import validate_business_pct_coupling, validate_non_negative_decimal
 from ..components.language import localized
 from ..components.widgets import ContentDataTable
+from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import LedgerWorkspaceController
 from .models import LedgerClassificationPatchV1, LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
@@ -213,9 +214,11 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
             raise InternalInvariantError("classification patch disappeared before submission")
         try:
             await self.controller.submit_classification(patch)
-        except Exception:
+        except Exception as error:
             self._transition(LedgerFlowState.FAILED)
-            status.update(tr("tui.ledger.classification.failure"))
+            status.update(self.failed_write_status(error, "tui.ledger.classification.failure"))
+            if isinstance(error, OperationOutcomeUnknownError):
+                self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self._transition(LedgerFlowState.SUCCEEDED)
             status.update(tr("tui.ledger.classification.success"))

@@ -14,6 +14,9 @@ from textual.widgets import Button, Input, Static
 from .....application.actividad_asset.history import ActivityAssetHistoryClaimResult
 from .....application.actividad_asset.operations import ActivityAssetFilingHandoff
 from .....application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
+from .....core.config import override_settings
+from .....core.errors.error_codes import resolve_error_message
+from .....core.operations import OperationEffect
 from .....domain.renta.actividad_asset.claims import ClaimProjection
 from .....domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -43,6 +46,7 @@ from .....domain.renta.actividad_asset.schedule import (
 )
 from ...account import AccountSessionExpiredError
 from ...components.host import ScreenHostApp
+from ...operations.outcome import OperationOutcomeUnknownError
 from ..actividad_asset import ActivityAssetScreen
 from ..controller import LedgerWorkspaceController
 from ..models_actividad_asset import (
@@ -295,6 +299,23 @@ async def test_activity_asset_screen_clears_private_facts_when_the_session_is_lo
             )
         )
         assert str(screen.query_one("#asset-current-revision-id", Static).render()).strip() == ""
+
+
+@pytest.mark.asyncio
+async def test_an_activity_asset_write_whose_outcome_is_unknown_is_not_reported_as_refused() -> None:
+    revision = _revision("unknown-outcome")
+    unknown = OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UNKNOWN)
+    actions = _ActionStub(revision, create_error=unknown)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    with override_settings(cadrumo_output_language="en"):
+        async with app.run_test(size=(100, 35)) as pilot:
+            screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+            await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+            rendered = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="unknown\t")
+            assert rendered == f"unknown\t{resolve_error_message(unknown)}"
+            assert "refused" not in rendered
 
 
 @pytest.mark.asyncio

@@ -1,8 +1,9 @@
 """Export entries: ``ledger.export`` to a path the operator types, reviewed before it is written.
 
-The screen reports what the export says it wrote. An export whose file was
-published but whose ledger record was not is reported as partial, in words,
-because the file may exist although the ledger does not list the export.
+The screen reports what the export says it wrote. An export whose outcome is
+unknown, or whose file was published but whose ledger record was not, is
+reported as unknown or partial, in words, because the file may exist although
+the ledger does not list the export.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ from textual.containers import Horizontal
 from textual.widgets import Button, Checkbox, Input, Select, Static
 
 from ....application.export.tabular import ExportSerializationFormat
-from ....application.ledger.export_operation import LedgerExportRequest
+from ....application.ledger.export_operation import LedgerExportProjection, LedgerExportRequest
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.operations import OperationEffect
@@ -24,9 +25,10 @@ from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..components.theme import tokenised
 from ..components.workspace_host import replace_workspace_body
+from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import LedgerWorkspaceController
 from .entries_common import joined, period_label, period_options, read_period, selected_value
-from .entries_doors import LedgerEntriesDoorsV1, LedgerExportOutcomeV1
+from .entries_doors import LedgerEntriesDoorsV1
 from .models import LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
@@ -59,24 +61,29 @@ def staged_export_lines(request: LedgerExportRequest) -> tuple[str, ...]:
     )
 
 
-def export_outcome_lines(outcome: LedgerExportOutcomeV1, request: LedgerExportRequest) -> tuple[str, ...]:
+def export_outcome_lines(
+    outcome: LedgerExportProjection | OperationOutcomeUnknownError, request: LedgerExportRequest
+) -> tuple[str, ...]:
     """Say what the export reports it wrote, or that it is partial or unknown."""
-    projection = outcome.projection
-    if projection is not None:
+    if isinstance(outcome, LedgerExportProjection):
         return (
-            tr("tui.ledger.entry_tools.export.written", path=projection.output_path),
+            tr("tui.ledger.entry_tools.export.written", path=outcome.output_path),
             tr(
                 "tui.ledger.entry_tools.export.written_facts",
-                rows=projection.row_count,
-                bytes=projection.byte_size,
-                format=tr(_FORMAT_LOCALE_KEYS[projection.export_format]),
+                rows=outcome.row_count,
+                bytes=outcome.byte_size,
+                format=tr(_FORMAT_LOCALE_KEYS[outcome.export_format]),
             ),
-            tr("tui.ledger.entry_tools.export.digest", digest=projection.sha256),
+            tr("tui.ledger.entry_tools.export.digest", digest=outcome.sha256),
         )
-    reason = "" if outcome.error is None else door_refusal_text(outcome.error)
-    if outcome.effect is OperationEffect.PARTIAL:
-        return (tr("tui.ledger.entry_tools.export.partial", path=request.output_path), reason)
-    return (tr("tui.ledger.entry_tools.export.unknown", path=request.output_path), reason)
+    headline = tr(
+        "tui.ledger.entry_tools.export.partial"
+        if outcome.effect is OperationEffect.PARTIAL
+        else "tui.ledger.entry_tools.export.unknown",
+        path=request.output_path,
+    )
+    reason = "" if outcome.reason is None else door_refusal_text(outcome.reason)
+    return (headline, reason, door_refusal_text(outcome))
 
 
 class LedgerEntriesExportScreen(LedgerConfirmationFlowScreen):
@@ -98,7 +105,7 @@ class LedgerEntriesExportScreen(LedgerConfirmationFlowScreen):
         super().__init__(controller, id=f"ledger-entries-export-screen-{next(_SCREEN_SERIALS)}")
         self.doors = doors
         self.staged: LedgerExportRequest | None = None
-        self.outcome: LedgerExportOutcomeV1 | None = None
+        self.outcome: LedgerExportProjection | OperationOutcomeUnknownError | None = None
 
     @override
     def compose(self) -> ComposeResult:
@@ -250,7 +257,13 @@ class LedgerEntriesExportScreen(LedgerConfirmationFlowScreen):
         if request is None:
             raise InternalInvariantError("the reviewed export disappeared before submission")
         try:
-            outcome = await self.doors.export(request)
+            written = await self.doors.export(request)
+        except OperationOutcomeUnknownError as error:
+            # The file may exist although the ledger does not list it, so the workspace is re-read on leaving.
+            self.outcome = error
+            self.write_outcome_unknown = True
+            self._transition(LedgerFlowState.FAILED)
+            status.update(joined(export_outcome_lines(error, request)))
         except AccountSessionExpiredError as error:
             self._transition(LedgerFlowState.FAILED)
             status.update(tr("tui.ledger.entry_tools.export.failed"))
@@ -260,11 +273,9 @@ class LedgerEntriesExportScreen(LedgerConfirmationFlowScreen):
             status.update(tr("tui.ledger.entry_tools.export.failed"))
             notice.update(door_refusal_text(error))
         else:
-            self.outcome = outcome
-            # The door returns an outcome only for a complete export or one that may have
-            # written its file, so either way the workspace is re-read on leaving.
+            self.outcome = written
             self._transition(LedgerFlowState.SUCCEEDED)
-            status.update(joined(export_outcome_lines(outcome, request)))
+            status.update(joined(export_outcome_lines(written, request)))
         again = self.query_one("#entries-export-again", Button)
         again.add_class("-open")
         again.focus()

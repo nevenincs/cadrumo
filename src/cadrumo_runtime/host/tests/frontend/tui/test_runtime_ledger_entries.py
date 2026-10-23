@@ -160,6 +160,7 @@ from cadrumo.entrypoints.tui.ledger.tests.entries_door_fixtures import (
     entries_controller,
     entry_id,
 )
+from cadrumo.entrypoints.tui.operations.outcome import OperationOutcomeUnknownError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -650,9 +651,7 @@ def _export_request(tmp_path: Path) -> LedgerExportRequest:
 
 
 def _export_projection(request: LedgerExportRequest) -> LedgerExportProjection:
-    outcome = MemoryEntriesLedger().export(request)
-    assert outcome.projection is not None
-    return outcome.projection
+    return MemoryEntriesLedger().export(request)
 
 
 def test_the_export_door_returns_the_written_report(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -662,10 +661,9 @@ def test_the_export_door_returns_the_written_report(monkeypatch: pytest.MonkeyPa
     observation = _observation(LEDGER_EXPORT_OPERATION_DEFINITION_ID, effect=OperationEffect.UPDATED)
     submissions = _install(monkeypatch, client, _Controller(observation=observation, result=projection))
 
-    outcome = asyncio.run(_doors(client).export(request))
+    written = asyncio.run(_doors(client).export(request))
 
-    assert outcome.projection == projection
-    assert outcome.effect is OperationEffect.UPDATED
+    assert written == projection
     assert submissions[0]["definition_id"] == LEDGER_EXPORT_OPERATION_DEFINITION_ID
     assert submissions[0]["payload"] == request
     assert submissions[0]["expected_session_id"] == _SESSION_ID
@@ -682,11 +680,12 @@ def test_a_failed_export_that_may_have_written_reports_its_effect(
     controller = _Controller(observation=observation, result=None, detail=_registered_detail())
     _install(monkeypatch, client, controller)
 
-    outcome = asyncio.run(_doors(client).export(_export_request(tmp_path)))
+    with pytest.raises(OperationOutcomeUnknownError) as raised:
+        asyncio.run(_doors(client).export(_export_request(tmp_path)))
 
-    assert outcome.projection is None
-    assert outcome.effect is effect
-    assert isinstance(outcome.error, RecordedRegisteredError)
+    assert raised.value.operation_id == _OPERATION_ID
+    assert raised.value.effect is effect
+    assert isinstance(raised.value.reason, RecordedRegisteredError)
     assert controller.result_reads == []
 
 

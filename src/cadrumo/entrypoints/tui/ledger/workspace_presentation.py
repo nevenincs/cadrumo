@@ -7,11 +7,10 @@ from contextlib import contextmanager
 from typing import ClassVar, override
 
 from pydantic import ValidationError
-from textual.widgets import DataTable, Static
+from textual.widgets import DataTable
 
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
-from ....core.i18n.render import tr
 from ....core.identity.transaction_ids import TransactionId
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
@@ -83,6 +82,12 @@ class LedgerConfirmationFlowScreen(LedgerWorkspaceScreen):
         """Expose the guarded interaction state without a public setter."""
         return self._flow_state
 
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """A confirmed write is in flight from submission until it settles."""
+        return self._flow_state is LedgerFlowState.SUBMITTING
+
     def _transition(self, target: LedgerFlowState) -> None:
         if target not in ALLOWED_FLOW_TRANSITIONS.get(self._flow_state, frozenset()):
             raise InternalInvariantError(f"invalid {self.FLOW_NAME} flow transition")
@@ -94,10 +99,10 @@ class LedgerConfirmationFlowScreen(LedgerWorkspaceScreen):
     def refresh_after_write(self, then: Callable[[], object]) -> None:
         """Continue with ``then`` over a re-read workspace once this flow has written.
 
-        Only a settled write changes anything, so any other state continues at
-        once over the snapshot already shown.
+        A settled write changes the workspace, and so may one whose outcome is
+        unknown; any other state continues at once over the snapshot shown.
         """
-        if self.flow_state is LedgerFlowState.SUCCEEDED:
+        if self.flow_state is LedgerFlowState.SUCCEEDED or self.write_outcome_unknown:
             self.refresh_then(then)
         else:
             then()
@@ -105,8 +110,7 @@ class LedgerConfirmationFlowScreen(LedgerWorkspaceScreen):
     @override
     def action_back(self) -> None:
         """Refuse abandonment after submission; otherwise unwind confirmation."""
-        if self.flow_state is LedgerFlowState.SUBMITTING:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
+        if self.refuse_leaving():
             return
         if self.flow_state is LedgerFlowState.CONFIRMING:
             self._cancel_flow()

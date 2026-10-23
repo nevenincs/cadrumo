@@ -291,7 +291,7 @@ class LedgerInvoiceImportScreen(LedgerConfirmationFlowScreen):
         except CadrumoError as error:
             self._transition(LedgerFlowState.FAILED)
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
-            status.update(tr("tui.ledger.invoices.import.failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.invoices.import.failed"))
             self._settled()
             return
         self._transition(LedgerFlowState.SUCCEEDED)
@@ -360,10 +360,7 @@ class LedgerInvoiceImportScreen(LedgerConfirmationFlowScreen):
         self.refresh_after_write(reopen)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Answer the area navigation; refused rows are read-only."""
-        if self.flow_state is LedgerFlowState.SUBMITTING:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
-            return
+        """Answer the area navigation, which is refused while the import is applied; refused rows are read-only."""
         self.handle_navigation_selection(event)
 
 

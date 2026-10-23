@@ -26,6 +26,7 @@ from ..components.dialogs import ConfirmScreen
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
+from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .evidence_files_common import EVIDENCE_FILES_CSS, EvidenceFilesPager, paging_controls, paint_paging
 from .models import LedgerFlowState
@@ -166,6 +167,8 @@ class LedgerEvidenceFilesWriteScreen(LedgerConfirmationFlowScreen):
         status_key = _STATUS_KEYS.get(self.flow_state)
         if self._failure is not None:
             refusal = door_refusal_text(self._failure)
+            if isinstance(self._failure, OperationOutcomeUnknownError):
+                status_key = "tui.ledger.flow.outcome_unknown"
         elif outcome is not None and outcome.refused:
             refusal = "\n".join(outcome.lines)
             status_key = "tui.ledger.evidence_files.write.refused"
@@ -229,6 +232,7 @@ class LedgerEvidenceFilesWriteScreen(LedgerConfirmationFlowScreen):
         except (CadrumoError, ValidationError) as error:
             self._failure = error
             self._review_withdrawn = isinstance(error, AccountSessionExpiredError)
+            self.write_outcome_unknown = isinstance(error, OperationOutcomeUnknownError)
             self._transition(LedgerFlowState.FAILED)
         else:
             self._wording = wording
@@ -272,8 +276,7 @@ class LedgerEvidenceFilesWriteScreen(LedgerConfirmationFlowScreen):
     @override
     def action_back(self) -> None:
         """Refuse while a write is out; otherwise return to the tool that staged the change."""
-        if self.flow_state is LedgerFlowState.SUBMITTING:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
+        if self.refuse_leaving():
             return
         if self.flow_state is LedgerFlowState.CONFIRMING:
             self._cancel_flow()

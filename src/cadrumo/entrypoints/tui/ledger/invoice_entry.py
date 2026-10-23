@@ -603,7 +603,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         except (CadrumoError, ValidationError) as error:
             self._transition(LedgerFlowState.FAILED)
-            status.update(tr("tui.ledger.invoice.failure"))
+            status.update(self.failed_write_status(error, "tui.ledger.invoice.failure"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self._transition(LedgerFlowState.SUCCEEDED)

@@ -84,6 +84,12 @@ class LedgerResetScreen(LedgerConfirmationFlowScreen):
         self.result: LedgerResetOperationResult | None = None
         self.busy = False
 
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """The preview or the reset itself is out through the door."""
+        return self.busy or super().in_flight
+
     @override
     def compose(self) -> ComposeResult:
         yield localized(
@@ -234,7 +240,7 @@ class LedgerResetScreen(LedgerConfirmationFlowScreen):
             result = await self.doors.reset(request)
         except CadrumoError as error:
             self._transition(LedgerFlowState.FAILED)
-            status.update(tr("tui.ledger.records.failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.records.failed"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self.result = result
@@ -269,13 +275,6 @@ class LedgerResetScreen(LedgerConfirmationFlowScreen):
         self.query_one("#entries-reset-reason", Input).disabled = True
         self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.entry_tools.reset.cancelled"))
         self._offer_again()
-
-    @override
-    def action_back(self) -> None:
-        if self.busy:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
-            return
-        super().action_back()
 
 
 __all__ = ["LedgerResetScreen", "reset_preview_lines"]

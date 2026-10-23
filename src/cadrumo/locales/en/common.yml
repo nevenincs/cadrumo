@@ -3592,6 +3592,7 @@ tui:
     flow:
       in_flight_refusal: Wait for the current operation to finish before leaving this
         screen.
+      outcome_unknown: 'Outcome unknown: the change may or may not have been saved.'
       refresh_failed: Your change was saved, but this view could not be re-read. Return
         to Home to refresh it.
       refreshing: Updating…

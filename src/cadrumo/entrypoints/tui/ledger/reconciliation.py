@@ -15,9 +15,10 @@ from ....core.identity.transaction_ids import TransactionId
 from ....core.invoice_link import LinkInconsistencyDirection
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
+from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import LedgerWorkspaceController
 from .models import LedgerFlowState
-from .workspace_presentation import LedgerConfirmationFlowScreen, ledger_workspace_page
+from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
 #: Operator copy for each one-sided link direction, keyed by the canonical
 #: value rather than a hand-typed string.
@@ -287,9 +288,11 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         status = self.query_one("#ledger-flow-status", Static)
         try:
             await self.controller.submit_link(*pair)
-        except Exception:
+        except Exception as error:
             self._transition(LedgerFlowState.FAILED)
-            status.update(tr("tui.ledger.reconciliation.failure"))
+            status.update(self.failed_write_status(error, "tui.ledger.reconciliation.failure"))
+            if isinstance(error, OperationOutcomeUnknownError):
+                self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self._transition(LedgerFlowState.SUCCEEDED)
             status.update(tr("tui.ledger.reconciliation.success"))

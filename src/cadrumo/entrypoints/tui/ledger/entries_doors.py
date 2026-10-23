@@ -32,8 +32,6 @@ from ....application.ledger.remove_operation import LedgerRemoveOperationResult,
 from ....application.ledger.reset_operation import LedgerResetOperationResult, LedgerResetRequest
 from ....application.ledger.status_operation import LedgerStatusProjection, LedgerStatusRequest
 from ....application.ledger.track_operation import LedgerTrackProjection, LedgerTrackRequest
-from ....core.errors.hierarchy import CadrumoError
-from ....core.operations import OperationEffect
 
 
 class _ProfileDoor(Protocol):
@@ -144,26 +142,17 @@ class LedgerResetDoorV1(_ProfileDoor, Protocol):
         ...
 
 
-@dataclass(frozen=True, slots=True)
-class LedgerExportOutcomeV1:
-    """What one export reports: its written report, or the effect a failed export left.
-
-    ``projection`` is present only for a complete export. A failed export whose
-    receipt reports a partial or unknown effect carries that effect and the
-    recorded refusal, if the operation recorded one, so the screen can say the
-    file may exist although the ledger did not record it.
-    """
-
-    effect: OperationEffect
-    projection: LedgerExportProjection | None = None
-    error: CadrumoError | None = None
-
-
 class LedgerExportDoorV1(_ProfileDoor, Protocol):
     """Injected door to ``ledger.export`` for one admitted profile."""
 
-    async def __call__(self, request: LedgerExportRequest) -> LedgerExportOutcomeV1:
-        """Write one export and report what was written."""
+    async def __call__(self, request: LedgerExportRequest) -> LedgerExportProjection:
+        """Write one export and report what was written.
+
+        An export that failed after it may have published its file raises
+        :class:`~cadrumo.entrypoints.tui.operations.outcome.OperationOutcomeUnknownError`
+        with the receipt's effect, since the file can exist although the
+        ledger does not record it.
+        """
         ...
 
 
@@ -222,7 +211,6 @@ __all__ = [
     "LedgerCheckDoorV1",
     "LedgerEntriesDoorsV1",
     "LedgerExportDoorV1",
-    "LedgerExportOutcomeV1",
     "LedgerHistoryDoorV1",
     "LedgerHistoryTypedDoorV1",
     "LedgerLifecycleDoorV1",

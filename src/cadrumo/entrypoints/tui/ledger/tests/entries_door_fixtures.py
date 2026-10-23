@@ -64,8 +64,9 @@ from .....domain.buckets.event import BucketEventObjectType, BucketEventType
 from .....domain.buckets.event_repository import build_bucket_event
 from .....domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...account import AccountSessionExpiredError
+from ...operations.outcome import OperationOutcomeUnknownError
 from ..controller import LedgerWorkspaceController
-from ..entries_doors import LedgerEntriesDoorsV1, LedgerExportOutcomeV1
+from ..entries_doors import LedgerEntriesDoorsV1
 from ..workspace_injection import LedgerWorkspaceInjection
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
 
@@ -497,32 +498,30 @@ class MemoryEntriesLedger:
             ),
         )
 
-    def export(self, request: LedgerExportRequest) -> LedgerExportOutcomeV1:
-        """Report a complete export, or the configured partial effect."""
+    def export(self, request: LedgerExportRequest) -> LedgerExportProjection:
+        """Report a complete export, or raise the configured partial or unknown effect as the door does."""
         if self.export_effect is not OperationEffect.UPDATED:
-            return LedgerExportOutcomeV1(
+            raise OperationOutcomeUnknownError(
+                operation_id="e" * 64,
                 effect=self.export_effect,
-                error=RecordedRegisteredError(ENTRIES_REFUSAL_CODE, translated_message=ENTRIES_REFUSAL_KEY),
+                reason=RecordedRegisteredError(ENTRIES_REFUSAL_CODE, translated_message=ENTRIES_REFUSAL_KEY),
             )
-        return LedgerExportOutcomeV1(
-            effect=OperationEffect.UPDATED,
-            projection=LedgerExportProjection(
-                profile_id=request.profile_id,
-                bucket_id=str(request.profile_id),
-                export_id="9" * 64,
-                export_format=request.export_format,
-                media_type="text/csv"
-                if request.export_format is ExportSerializationFormat.CSV
-                else "application/octet-stream",
-                filename_extension=f".{request.export_format.value}",
-                row_count=0,
-                byte_size=128,
-                sha256="8" * 64,
-                fieldnames=("transaction_id",),
-                rows=(),
-                bucket_event_ids=("7" * 64,),
-                output_path=request.output_path,
-            ),
+        return LedgerExportProjection(
+            profile_id=request.profile_id,
+            bucket_id=str(request.profile_id),
+            export_id="9" * 64,
+            export_format=request.export_format,
+            media_type="text/csv"
+            if request.export_format is ExportSerializationFormat.CSV
+            else "application/octet-stream",
+            filename_extension=f".{request.export_format.value}",
+            row_count=0,
+            byte_size=128,
+            sha256="8" * 64,
+            fieldnames=("transaction_id",),
+            rows=(),
+            bucket_event_ids=("7" * 64,),
+            output_path=request.output_path,
         )
 
 

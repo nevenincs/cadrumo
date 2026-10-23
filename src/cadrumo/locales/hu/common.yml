@@ -3659,6 +3659,7 @@ tui:
     flow:
       in_flight_refusal: A képernyő elhagyása előtt várja meg a jelenlegi művelet
         befejezését.
+      outcome_unknown: 'Ismeretlen eredmény: a módosítás vagy mentődött, vagy nem.'
       refresh_failed: A módosítás mentésre került, de ezt a nézetet nem sikerült újraolvasni.
         Térj vissza a Kezdőlapra a frissítéshez.
       refreshing: Frissítés…

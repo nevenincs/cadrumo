@@ -26,9 +26,10 @@ from ....application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
-from ....core.operations import OperationTerminalCondition
+from ....core.operations import OperationEffect, OperationTerminalCondition
 from ..account import AccountSessionExpiredError
 from ..operations.modal import OperationModal, OperationModalDetachedOutcomeV1, OperationModalSettledOutcomeV1
+from ..operations.outcome import OperationOutcomeUnknownError
 from ..operations.refusal_explanation import public_refusal_explanation
 from .categorisation_common import (
     CategorisationScreen,
@@ -177,6 +178,15 @@ class ReviewingCategorisationScreen(CategorisationScreen):
         explanation = outcome.error_explanation or (
             public_refusal_explanation(view.receipt_ref) if view.receipt_kind == "refusal" else None
         )
+        if view.projection.effect is not OperationEffect.NONE:
+            # The review settled without succeeding yet changed something, so its outcome is unknown, not refused.
+            self.write_outcome_unknown = True
+            self.status("tui.ledger.flow.outcome_unknown")
+            unknown = door_refusal_text(
+                OperationOutcomeUnknownError(operation_id=view.projection.operation_id, effect=view.projection.effect)
+            )
+            self.refuse(unknown if explanation is None else "\n".join((explanation, unknown)))
+            return
         self.status("tui.ledger.categorisation.failed")
         self.refuse(tr("tui.ledger.categorisation.not_done") if explanation is None else explanation)
 
@@ -195,7 +205,9 @@ class ReviewingCategorisationScreen(CategorisationScreen):
             return
         except CadrumoError as error:
             self.refuse(door_refusal_text(error))
-            self.status("tui.ledger.categorisation.failed")
+            self.query_one("#ledger-flow-status", Static).update(
+                self.failed_write_status(error, "tui.ledger.categorisation.failed")
+            )
             return
         finally:
             self.busy = False

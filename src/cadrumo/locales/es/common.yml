@@ -3700,6 +3700,8 @@ tui:
     flow:
       in_flight_refusal: Espera a que termine la operación actual antes de salir de
         esta pantalla.
+      outcome_unknown: 'Resultado desconocido: puede que el cambio se haya guardado
+        o no.'
       refresh_failed: El cambio se ha guardado, pero esta vista no se ha podido volver
         a leer. Vuelve al Inicio para actualizarla.
       refreshing: Actualizando…

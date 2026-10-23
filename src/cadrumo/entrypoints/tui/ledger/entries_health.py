@@ -136,6 +136,12 @@ class LedgerHealthScreen(LedgerWorkspaceScreen):
         self.preflight: LedgerPreflightProjection | None = None
         self.busy = False
 
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """A health read is out through a door."""
+        return self.busy
+
     @override
     def compose(self) -> ComposeResult:
         yield localized(
@@ -243,13 +249,6 @@ class LedgerHealthScreen(LedgerWorkspaceScreen):
             preflight.update(tr("tui.ledger.entry_tools.health.preflight_needs_period"))
         else:
             preflight.update("")
-
-    @override
-    def action_back(self) -> None:
-        if self.busy:
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
-            return
-        super().action_back()
 
 
 __all__ = ["LedgerHealthScreen", "check_lines", "preflight_lines", "status_lines"]

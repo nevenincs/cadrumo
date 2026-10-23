@@ -8,8 +8,6 @@ receipt, or an effect the request cannot have caused.
 
 from __future__ import annotations
 
-import asyncio
-import time
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 from typing import Final
@@ -87,19 +85,14 @@ from cadrumo.application.ledger.track_operation import (
     LedgerTrackRequest,
 )
 from cadrumo.application.ledger.workspace import LedgerWorkspaceArea
-from cadrumo.application.operations.error_detail import OperationErrorDetailKind
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
-from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.operator_actions.catalogue import lookup_action
 from cadrumo.application.review.filter import LedgerReviewStatus
-from cadrumo.core.errors.hierarchy import CadrumoError, RecordedRegisteredError
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
+from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.entrypoints.tui.ledger.entries_add import LedgerEntryAddScreen
 from cadrumo.entrypoints.tui.ledger.entries_browse import LedgerEntriesBrowseScreen
 from cadrumo.entrypoints.tui.ledger.entries_doors import (
     LedgerEntriesDoorsV1,
-    LedgerExportOutcomeV1,
 )
 from cadrumo.entrypoints.tui.ledger.entries_export import LedgerEntriesExportScreen
 from cadrumo.entrypoints.tui.ledger.entries_health import LedgerHealthScreen
@@ -112,14 +105,9 @@ from cadrumo.entrypoints.tui.ledger.models import (
 from cadrumo.entrypoints.tui.ledger.tools import LedgerToolV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
-from cadrumo_client.transport.operation_controller import OperationController, await_terminal_projection
 
 from .operations.runtime_profile_session import RuntimeProfileSession
-from .runtime_account_session import session_expired_with_receipt
 
-_OPERATION_TIMEOUT_SECONDS: Final = 120
-_EXPORT_FAILED_EFFECTS: Final = frozenset({OperationEffect.PARTIAL, OperationEffect.UNKNOWN})
 _LIFECYCLE_SUCCESS_STATES: Final[dict[LedgerLifecycleOperationId, str]] = {
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID: "ARCHIVED",
     LEDGER_STASH_OPERATION_DEFINITION_ID: "STASHED",
@@ -358,12 +346,13 @@ def _reset_matches(
 
 
 def _export_matches(
-    result: LedgerExportProjection, request: LedgerExportRequest, terminal: OperationPublicProjectionV1
+    result: LedgerExportProjection,
+    request: LedgerExportRequest,
+    condition: OperationTerminalCondition,
+    terminal: OperationPublicProjectionV1,
 ) -> bool:
-    condition = terminal.terminal_condition
     return (
-        condition is not None
-        and _settled(condition, terminal, OperationEffect.UPDATED)
+        _settled(condition, terminal, OperationEffect.UPDATED)
         and result.profile_id == request.profile_id
         and result.bucket_id == str(request.profile_id)
         and result.output_path == request.output_path
@@ -444,93 +433,6 @@ class RuntimeLedgerLifecycleTuiDoorV1(
     def operation_id(self) -> LedgerLifecycleOperationId:
         """The lifecycle operation this door submits."""
         return self._operation_id
-
-
-class RuntimeLedgerExportTuiDoorV1:
-    """Submit ``ledger.export`` and report a failed export's partial or unknown effect.
-
-    The export publishes its file before it records the export in the ledger,
-    so a failure after publication leaves a file the ledger does not list. The
-    shared session helper raises on every failed receipt without its effect;
-    this door observes the receipt itself so that effect reaches the operator.
-    """
-
-    def __init__(self, client: FrontendClient, session: RuntimeProfileSession) -> None:
-        """Pin the client and the admitted session it was retained for."""
-        self._client = client
-        self._session = session
-
-    @property
-    def profile_id(self) -> UUID:
-        """The admitted profile every request must name."""
-        return self._session.profile_id
-
-    async def __call__(self, request: LedgerExportRequest) -> LedgerExportOutcomeV1:
-        """Write one export; return its report, or the effect a failed export left behind."""
-        # The binding check reads the session over IPC; it never runs on the event loop.
-        await asyncio.to_thread(self._session.require_binding)
-        if request.profile_id != self._session.profile_id:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        definition_id = LEDGER_EXPORT_OPERATION_DEFINITION_ID
-        subject_ref = profile_operation_subject(str(request.profile_id))
-        deadline = time.monotonic() + _OPERATION_TIMEOUT_SECONDS
-        controller: OperationController | None = None
-        terminal: OperationPublicProjectionV1 | None = None
-        try:
-            controller = await OperationController.submit(
-                self._client,
-                definition_id=definition_id,
-                subject_ref=subject_ref,
-                payload=request,
-                expected_session_id=self._session.session_id,
-                deadline=deadline,
-            )
-            await controller.start()
-            terminal = await await_terminal_projection(
-                controller,
-                definition_id=definition_id,
-                subject_ref=subject_ref,
-                request_schema=OperationSchemaIdentityV1.from_model(
-                    schema_id=f"{definition_id}.request", schema_version=1, model_type=LedgerExportRequest
-                ),
-                deadline=deadline,
-            )
-            return await self._settle(controller, terminal, request)
-        except AccountSessionExpiredError as error:
-            raise session_expired_with_receipt(controller, terminal) from error
-        except (FrontendRefusedError, RefusalError):
-            try:
-                await asyncio.to_thread(self._session.require_binding)
-            except AccountSessionExpiredError as error:
-                raise session_expired_with_receipt(controller, terminal) from error
-            raise
-
-    async def _settle(
-        self, controller: OperationController, terminal: OperationPublicProjectionV1, request: LedgerExportRequest
-    ) -> LedgerExportOutcomeV1:
-        condition = terminal.terminal_condition
-        if condition is None:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        if condition is OperationTerminalCondition.SUCCEEDED:
-            result = await controller.read_settled_result(terminal, LedgerExportProjection, result_version=1)
-            await asyncio.to_thread(self._session.require_binding)
-            if not _export_matches(result, request, terminal):
-                raise RefusalError(RefusalCode.INVALID_FRAME)
-            return LedgerExportOutcomeV1(effect=terminal.effect, projection=result)
-        detail = await controller.settled_error_detail(terminal)
-        await asyncio.to_thread(self._session.require_binding)
-        error: CadrumoError = FrontendRefusedError(
-            terminal.refusal_ref or terminal.failure_error_code or "operation_not_successful"
-        )
-        if detail is not None and detail.kind is OperationErrorDetailKind.REGISTERED_ERROR:
-            code = detail.error_code
-            if code is not None:
-                error = RecordedRegisteredError(
-                    code, context=detail.context_mapping(), translated_message=detail.message_key
-                )
-        if terminal.effect in _EXPORT_FAILED_EFFECTS:
-            return LedgerExportOutcomeV1(effect=terminal.effect, error=error)
-        raise error
 
 
 class RuntimeLedgerExclusionSubmitterV1:
@@ -631,7 +533,12 @@ def compose_runtime_ledger_entries_doors(client: FrontendClient, *, profile_labe
             result_type=LedgerResetOperationResult,
             correlate=_reset_matches,
         ),
-        export=RuntimeLedgerExportTuiDoorV1(client, session),
+        export=RuntimeLedgerEntryTuiDoorV1(
+            session,
+            definition_id=LEDGER_EXPORT_OPERATION_DEFINITION_ID,
+            result_type=LedgerExportProjection,
+            correlate=_export_matches,
+        ),
     )
 
 
@@ -682,7 +589,6 @@ def compose_entries_tools(client: FrontendClient, profile_label: str) -> tuple[L
 __all__ = [
     "RuntimeLedgerEntryTuiDoorV1",
     "RuntimeLedgerExclusionSubmitterV1",
-    "RuntimeLedgerExportTuiDoorV1",
     "RuntimeLedgerLifecycleTuiDoorV1",
     "compose_entries_tools",
     "compose_runtime_ledger_entries_doors",

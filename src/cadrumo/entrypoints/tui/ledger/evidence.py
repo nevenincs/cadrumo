@@ -40,7 +40,7 @@ class LedgerEvidenceScreen(LedgerEvidenceRecordActions):
         self._records: tuple[LedgerEvidenceRecordRowV1, ...] | None = None
         self.draft: LedgerEvidenceDraftV1 | None = None
         self.reading = False
-        """Whether a read or a confirmation is out; a second press waits for it."""
+        """Whether a read, an addition or a confirmation is out; a second press waits for it."""
 
     @override
     def compose(self) -> ComposeResult:
