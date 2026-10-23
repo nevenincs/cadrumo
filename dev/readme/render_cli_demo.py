@@ -1,7 +1,7 @@
 """Render the README's light-theme CLI GIF from a real Modelo 115 run.
 
 Run from the repository root with
-``uv run --no-sync python dev/readme/render_cli_demo.py``.
+``uv run --no-sync python -m dev.readme.render_cli_demo``.
 """
 
 from __future__ import annotations

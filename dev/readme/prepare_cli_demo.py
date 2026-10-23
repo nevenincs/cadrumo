@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import sys
 from datetime import date
@@ -19,7 +20,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxStatus,
 )
 from cadrumo.core.link_safety import is_link_like
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import AUTHORITY_ROOT_ENV, REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 from dev.product_environment import ambient_product_settings_removed
 
@@ -59,7 +60,10 @@ def _reset_demo_root() -> None:
 
 def demo_environment() -> dict[str, str]:
     """Return a clean Cadrumo environment rooted in the disposable demo directory."""
+    authority_root = os.environ.get(AUTHORITY_ROOT_ENV, "").strip()
     environment = ambient_product_settings_removed()
+    if authority_root:
+        environment[AUTHORITY_ROOT_ENV] = authority_root
     environment.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(DEMO_ROOT),
