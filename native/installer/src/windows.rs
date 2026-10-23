@@ -1139,7 +1139,7 @@ impl NativeProductInventory for MsiInventory {
                     .ok_or_else(|| {
                         Error::Integrity("native product install location is unavailable".into())
                     })?;
-            if owner.feature().is_some() && PathBuf::from(&location) != owner.prefix() {
+            if owner.feature().is_some() && Path::new(&location) != owner.prefix() {
                 return Err(Error::Integrity(
                     "native feature belongs to another prefix".into(),
                 ));
