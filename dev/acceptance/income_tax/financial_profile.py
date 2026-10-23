@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from cadrumo.entrypoints.tui.tests.settling import settle
-
 from .financial_contracts import ProfileFactEntry
 from .financial_navigation import _activate_button, wait_for_refreshed_home
 from .installed_tui_child import (
@@ -68,7 +66,7 @@ async def _configure_profile(pilot: Any, *, scenario: IncomeTaxScenario) -> None
     await wait_for_public_selector(pilot, "#row-input-0")
     query_public_selector(pilot, "#row-input-0", Input).value = "income-tax acceptance activity"
     await _activate_button(pilot, "#btn-row-save")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#manager-status", polls=180)
     for fact in required_profile_facts(scenario):
         try:
@@ -84,6 +82,6 @@ async def _configure_profile(pilot: Any, *, scenario: IncomeTaxScenario) -> None
                 diagnostic=public_surface_diagnostic(pilot),
             ) from exc
     await pilot.press("f8")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
     await pilot.press("escape")
     await wait_for_refreshed_home(pilot)

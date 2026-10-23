@@ -28,6 +28,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import Availability
@@ -48,7 +49,6 @@ from .......frontend.tui.runtime_access_management import RuntimeAccessManagemen
 from .......frontend.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
-from ....settled_click import click_when_laid_out
 
 pytestmark = [
     pytest.mark.integration,

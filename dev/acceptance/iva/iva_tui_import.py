@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast
 
-from cadrumo.entrypoints.tui.tests.settling import settle
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
     public_surface_diagnostic,
@@ -29,19 +29,19 @@ async def _import_statement(pilot: Any, *, statement: Path) -> None:
     cast(Select[str], query_public_selector(pilot, "#ledger-import-provider", Select)).value = "csv"
     query_public_selector(pilot, "#ledger-import-path", Input).value = str(statement)
     await _activate(pilot, "#ledger-import-preview-button")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-confirm", polls=180)
     refusal = _visible_text(query_public_selector(pilot, "#ledger-refusal", Static))
     confirm = query_public_selector(pilot, "#ledger-import-confirm", Button)
     if refusal or confirm.disabled:
         raise InstalledTuiChildError("installed Ledger import preview did not reach its visible confirmation state")
     await _activate(pilot, "#ledger-import-confirm")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
     refusal = _visible_text(query_public_selector(pilot, "#ledger-refusal", Static))
     if refusal:
         raise InstalledTuiChildError("installed Ledger import exposed a persistence refusal")
     await _activate(pilot, "#ledger-import-again")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-preview-button", polls=180)
 
 
@@ -91,6 +91,7 @@ async def _classify_transaction(
 ) -> None:
     """Submit one combined IVA classification through the public TUI form."""
     from textual.widgets import DataTable, Input, Static
+    from textual.worker import WorkerCancelled
 
     from cadrumo.core.i18n.render import tr
 
@@ -102,7 +103,7 @@ async def _classify_transaction(
     if row_key is None:
         raise InstalledTuiChildError("installed Ledger Entries lost an imported transaction before classification")
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-entries", row_key=transaction_id)
-    await settle(pilot)
+    await pilot.pause()
     await select_public_data_table_row(
         pilot=pilot,
         table_selector="#ledger-navigation",
@@ -124,7 +125,7 @@ async def _classify_transaction(
         row_key="BUSINESS",
     )
     await _activate(pilot, "#ledger-classification-confirm")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
     refusal = _visible_text(query_public_selector(pilot, "#ledger-refusal", Static))
     terminal = _visible_text(query_public_selector(pilot, "#ledger-flow-status", Static))
     if refusal or terminal != tr("tui.ledger.classification.success"):
@@ -132,8 +133,12 @@ async def _classify_transaction(
             "installed combined IVA classification did not reach its succeeded public terminal"
         )
     await pilot.press("escape")
-    # Only the visible destination can prove the return completed: screen
-    # replacement can cancel the departing refresh worker, so workers are not
-    # joined here.
-    await settle(pilot, workers=False)
+    # Settle this write's read before starting the existing public-control
+    # polling budget. Other application workers have independent lifetimes.
+    refresh_workers = [worker for worker in pilot.app.workers if worker.group == "ledger-refresh"]
+    if refresh_workers:
+        # Screen replacement can cancel its departing worker. Only the visible
+        # destination below can prove that the return completed.
+        with suppress(WorkerCancelled):
+            await pilot.app.workers.wait_for_complete(refresh_workers)
     await wait_for_public_selector(pilot, "#ledger-quality", polls=180)

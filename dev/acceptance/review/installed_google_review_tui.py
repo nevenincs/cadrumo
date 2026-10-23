@@ -37,7 +37,6 @@ from cadrumo.entrypoints.tui.google_saved_review import GoogleSavedReviewModal, 
 from cadrumo.entrypoints.tui.home import HomeScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
-from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import status_admits_session
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -189,7 +188,7 @@ async def _until[T](
         if monotonic() >= deadline:
             _capture_public_failure(pilot.app, output_dir, stage=stage, reason="stage_timeout")
             raise GoogleReviewTuiAcceptanceError(f"TUI acceptance timed out at {stage}")
-        await settle(pilot, workers=False)
+        await pilot.pause(0.1)
 
 
 @asynccontextmanager
@@ -320,7 +319,7 @@ async def run_google_saved_review_tui(
             or workbench.staged_changes
         ):
             raise GoogleReviewTuiAcceptanceError("the production workbench differs from the exact saved selection")
-        await settle(pilot)
+        await pilot.pause()
         path = Path(app.save_screenshot("01-saved-workbench.svg", str(output_dir)))
         screenshots.append((str(path), sha256_file(path)))
         button = workbench.query_one("#wb-google-review", Button)
@@ -356,7 +355,7 @@ async def run_google_saved_review_tui(
             output_dir=output_dir,
             refusal=prepare_refusal,
         )
-        await settle(pilot)
+        await pilot.pause()
         path = Path(app.save_screenshot("02-human-disclosure.svg", str(output_dir)))
         screenshots.append((str(path), sha256_file(path)))
         await pilot.press("t")
@@ -426,7 +425,7 @@ async def run_google_saved_review_tui(
             raise GoogleReviewTuiAcceptanceError("the public terminal surface does not confirm verified publication")
         if client.profile_id != profile_id or client.session_id != session_id:
             raise GoogleReviewTuiAcceptanceError("the native profile session changed during acceptance")
-        await settle(pilot)
+        await pilot.pause()
         path = Path(app.save_screenshot("04-verified-publication.svg", str(output_dir)))
         screenshots.append((str(path), sha256_file(path)))
 

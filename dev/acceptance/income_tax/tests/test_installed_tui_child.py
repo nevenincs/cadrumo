@@ -18,7 +18,6 @@ from textual.widgets import OptionList, Static
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
-from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.profile_access import ProfileStatus
@@ -308,7 +307,7 @@ async def test_public_root_diagnostic_distinguishes_pending_and_refused_home_wit
             yield Static("private-profile-value", id="root-navigation-refusal", markup=False)
 
     async with RootApp().run_test() as pilot:
-        await settle(pilot)
+        await pilot.pause()
         diagnostic = public_surface_diagnostic(pilot)
         assert diagnostic["root_updating_visible"] is True
         assert diagnostic["root_account_refusal_shown"] is True
@@ -423,7 +422,7 @@ def test_child_process_runner_uses_stdin_credentials_and_hash_only_artifacts(tmp
     assert evidence.receipt_sha256 != ""
 
 
-def test_public_table_row_selection_uses_semantic_key_not_position(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_public_table_row_selection_uses_semantic_key_not_position() -> None:
     class Table:
         rows = (SimpleNamespace(value="ledger.overview"), SimpleNamespace(value="ledger.import"))
 
@@ -466,15 +465,13 @@ def test_public_table_row_selection_uses_semantic_key_not_position(monkeypatch: 
         async def press(self, key: str) -> None:
             self.keys.append(key)
 
+        async def pause(self) -> None:
+            assert self.app.focused is self.app.table
+            assert self.app.table.cursor_row == 1
+            self.pauses += 1
+
     table = Table()
     pilot = Pilot(table)
-
-    async def settle_fake(settling: Pilot) -> None:
-        assert settling.app.focused is settling.app.table
-        assert settling.app.table.cursor_row == 1
-        settling.pauses += 1
-
-    monkeypatch.setattr(installed_child_module, "settle", settle_fake)
     asyncio.run(
         select_public_data_table_row(
             pilot=pilot,
@@ -496,7 +493,13 @@ def test_profile_manager_choice_uses_visible_option_list_highlight_and_save(monk
         def __init__(self) -> None:
             self.highlighted: int | None = None
 
+    class Workers:
+        async def wait_for_complete(self) -> None:
+            return None
+
     class Pilot:
+        app = SimpleNamespace(workers=Workers())
+
         def __init__(self) -> None:
             self.clicks: list[str] = []
 
@@ -524,11 +527,6 @@ def test_profile_manager_choice_uses_visible_option_list_highlight_and_save(monk
     monkeypatch.setattr(installed_child_module, "wait_for_any_public_selector", wait_for_any)
     monkeypatch.setattr(installed_child_module, "wait_for_public_selector", wait_for_selector)
     monkeypatch.setattr(installed_child_module, "query_public_selector", query)
-
-    async def settle_fake(_pilot: object) -> None:
-        return None
-
-    monkeypatch.setattr(installed_child_module, "settle", settle_fake)
 
     pilot = Pilot()
     asyncio.run(

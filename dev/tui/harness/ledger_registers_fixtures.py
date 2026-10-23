@@ -44,8 +44,9 @@ from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
     ledger_review_action,
 )
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
+from cadrumo.entrypoints.tui.tests.settling import settle_host
 
-from .settling import press_when_enabled, settle
+from .settling import press_when_enabled
 
 _PRORRATA_INTERFACE = "cadrumo.entrypoints.tui.ledger.registers_prorrata.LedgerProrrataRegisterScreen"
 _CAPITAL_GOODS_INTERFACE = "cadrumo.entrypoints.tui.ledger.registers_capital_goods.LedgerCapitalGoodsScreen"
@@ -97,7 +98,7 @@ class RegisterCaptureHost(ScreenHostApp[None]):
 
     async def settle(self) -> None:
         """Wait until the screen has handled every posted message and finished every door call."""
-        await settle(self)
+        await settle_host(self)
 
     async def press(self, button_id: str) -> None:
         """Press one control once it is enabled, and wait for what it started."""

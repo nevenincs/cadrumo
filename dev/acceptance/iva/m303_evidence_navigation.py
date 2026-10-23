@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
-from cadrumo.entrypoints.tui.tests.settling import settle
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
     public_surface_diagnostic,
@@ -35,7 +34,7 @@ async def _await_selector(pilot: Any, selector: str, *, seconds: float = 120.0) 
         try:
             pilot.app.screen.query_one(selector)
         except NoMatches:
-            await settle(pilot, workers=False)
+            await pilot.pause(0.2)
         else:
             return
     raise InstalledTuiChildError(
@@ -52,7 +51,7 @@ async def _open_declarations(pilot: Any) -> None:
     label = tr("tui.search.destination.declarations")
     await pilot.press("ctrl+p")
     for _ in range(180):
-        await settle(pilot, workers=False)
+        await pilot.pause()
         try:
             search = pilot.app.screen.query_one(Input)
             results = pilot.app.screen.query_one(OptionList)
@@ -60,7 +59,7 @@ async def _open_declarations(pilot: Any) -> None:
             continue
         search.value = "declarations"
         for _ in range(180):
-            await settle(pilot, workers=False)
+            await pilot.pause()
             for index in range(results.option_count):
                 if getattr(getattr(results.get_option_at_index(index), "hit", None), "text", None) == label:
                     results.highlighted = index
@@ -80,7 +79,7 @@ async def _close_modals(pilot: Any) -> None:
         if not isinstance(pilot.app.screen, OperationModal):
             return
         await pilot.press("escape")
-        await settle(pilot, workers=False)
+        await pilot.pause()
     raise InstalledTuiChildError("installed operation modal did not close after its terminal result")
 
 

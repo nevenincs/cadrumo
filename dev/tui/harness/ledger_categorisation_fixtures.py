@@ -27,8 +27,9 @@ from cadrumo.entrypoints.tui.ledger.tests.categorisation_memory_doors import (
     categorisation_controller,
 )
 from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import LEDGER_TX_A
+from cadrumo.entrypoints.tui.tests.settling import settle_host
 
-from .settling import press_when_enabled, settle
+from .settling import press_when_enabled
 
 _INTERFACES = {
     "ledger.tool.categorisation.bulk": "cadrumo.entrypoints.tui.ledger.categorisation_bulk.LedgerBulkClassifyScreen",
@@ -128,7 +129,7 @@ class CategorisationCaptureHost(ScreenHostApp[None]):
             await drive(self)
 
     async def _settle(self) -> None:
-        await settle(self)
+        await settle_host(self)
 
     async def press(self, button_id: str) -> None:
         """Press one of the tool's buttons once it is enabled, and wait for what it started."""

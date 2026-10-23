@@ -14,13 +14,13 @@ from textual.widgets import Button, Input, Select
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ....frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from ....frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
-from .settled_click import click_when_laid_out
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -6,7 +6,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-from cadrumo.entrypoints.tui.tests.settling import SettleTimeoutError, settle, settle_until
 from dev.acceptance.income_tax.financial_navigation import open_work, wait_for_refreshed_home
 from dev.acceptance.income_tax.installed_tui_child import InstalledTuiChildError, wait_for_public_selector
 from dev.acceptance.income_tax.tui_lifecycle_contract import installed_lifecycle_contract
@@ -31,14 +30,12 @@ async def _home(pilot: Any) -> None:
             return
         departing = pilot.app.screen
         await pilot.press("escape")
-        try:
-            await settle_until(
-                pilot,
-                lambda leaving=departing: pilot.app.screen is not leaving,
-                "the Back control to change the screen",
-            )
-        except SettleTimeoutError as exc:
-            raise InstalledTuiChildError("installed withholding public Back control did not change its screen") from exc
+        for _ in range(900):
+            await pilot.pause()
+            if pilot.app.screen is not departing:
+                break
+        else:
+            raise InstalledTuiChildError("installed withholding public Back control did not change its screen")
     raise InstalledTuiChildError("installed withholding journey could not return to Home")
 
 
@@ -65,7 +62,7 @@ async def assert_capture_unavailable(pilot: Any) -> None:
     withholding = tr("tui.search.destination.withholding")
     declarations = tr("tui.search.destination.declarations")
     for _ in range(180):
-        await settle(pilot)
+        await pilot.pause()
         try:
             options = pilot.app.screen.query_one(OptionList)
             search = pilot.app.screen.query_one(Input)
@@ -82,13 +79,14 @@ async def assert_capture_unavailable(pilot: Any) -> None:
     else:
         raise InstalledTuiChildError("installed withholding refusal check never observed a populated palette")
     search.value = "withholding"
-    await settle(pilot)
-    options = pilot.app.screen.query_one(OptionList)
-    if any(
-        getattr(getattr(options.get_option_at_index(i), "hit", None), "text", None) == withholding
-        for i in range(options.option_count)
-    ):
-        raise InstalledTuiChildError("installed palette search offered unavailable withholding capture")
+    for _ in range(30):
+        await pilot.pause(0.1)
+        options = pilot.app.screen.query_one(OptionList)
+        if any(
+            getattr(getattr(options.get_option_at_index(i), "hit", None), "text", None) == withholding
+            for i in range(options.option_count)
+        ):
+            raise InstalledTuiChildError("installed palette search offered unavailable withholding capture")
     await pilot.press("escape")
 
 

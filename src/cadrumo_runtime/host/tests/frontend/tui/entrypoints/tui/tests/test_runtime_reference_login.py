@@ -26,6 +26,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext, SessionKind
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
@@ -42,7 +43,6 @@ from .......frontend.tui.runtime_admission import runtime_login_session
 from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
-from ....settled_click import click_when_laid_out
 
 pytestmark = [
     pytest.mark.integration,

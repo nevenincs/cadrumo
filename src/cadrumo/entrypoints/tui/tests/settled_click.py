@@ -10,7 +10,7 @@ from textual.pilot import Pilot
 from textual.screen import Screen
 from textual.widget import Widget
 
-from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle
+from .settling import SETTLE_TIMEOUT_SECONDS, settle
 
 type _Geometry = tuple[tuple[Region, Size, Offset], ...]
 

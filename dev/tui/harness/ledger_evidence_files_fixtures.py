@@ -38,8 +38,9 @@ from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
     ledger_review_action,
 )
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
+from cadrumo.entrypoints.tui.tests.settling import settle_host, settle_host_until
 
-from .settling import press_when_enabled, settle, settle_until
+from .settling import press_when_enabled
 
 _PACKAGE = "cadrumo.entrypoints.tui.ledger"
 _WRITE_INTERFACE = f"{_PACKAGE}.evidence_files_write.LedgerEvidenceFilesWriteScreen"
@@ -150,7 +151,7 @@ class EvidenceFilesCaptureHost(ScreenHostApp[None]):
 
     async def _settle(self) -> None:
         """Wait until the screen has handled every posted message and finished every door call."""
-        await settle(self)
+        await settle_host(self)
 
     async def _press(self, button_id: str) -> None:
         await press_when_enabled(self, button_id)
@@ -158,7 +159,7 @@ class EvidenceFilesCaptureHost(ScreenHostApp[None]):
 
     async def _select(self, table_id: str, row: int) -> None:
         table = cast("DataTable[str]", self.screen.query_one(f"#{table_id}", DataTable))
-        await settle_until(self, lambda: table.row_count > row, f"#{table_id} to show row {row}")
+        await settle_host_until(self, lambda: table.row_count > row, f"#{table_id} to show row {row}")
         table.move_cursor(row=row)
         table.action_select_cursor()
         await self._settle()

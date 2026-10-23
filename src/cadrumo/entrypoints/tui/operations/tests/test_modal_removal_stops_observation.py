@@ -19,7 +19,6 @@ window, so the old code fails here every time rather than occasionally.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import UTC, datetime
 from functools import lru_cache
 from typing import Literal
@@ -46,6 +45,7 @@ from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationPublicContractSetV1
 from .....core.operations import OperationEffect, OperationLifecycle
 from ....operation_composition import build_production_operation_registry
+from ...tests.settling import settle_until
 from ..controller_port import OperationResponseControlPort
 from ..modal import OperationModal, OperationModalOutcomeV1
 
@@ -182,15 +182,6 @@ class _Host(App[None]):
         self.push_screen(self.modal, self.outcomes.append)
 
 
-async def _until(condition: Callable[[], bool], reason: str) -> None:
-    try:
-        async with asyncio.timeout(_DEADLINE_SECONDS):
-            while not condition():
-                await asyncio.sleep(0)
-    except TimeoutError:
-        raise AssertionError(reason) from None
-
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize("removal", ["pop", "shutdown"])
 async def test_removing_the_modal_mid_read_stops_observation_without_a_result(
@@ -198,11 +189,15 @@ async def test_removing_the_modal_mid_read_stops_observation_without_a_result(
 ) -> None:
     controller = _Controller()
     host = _Host(controller)
-    async with host.run_test(size=(100, 40)):
-        await _until(lambda: controller.observe_calls == 2, "the modal never started its second read")
+    async with host.run_test(size=(100, 40)) as pilot:
+        await settle_until(
+            pilot, lambda: controller.observe_calls == 2, "the modal to start its second read", workers=False
+        )
         if removal == "pop":
             await host.pop_screen()
-            await _until(lambda: controller.held_read_cancelled, "the held read was never cancelled")
+            await settle_until(
+                pilot, lambda: controller.held_read_cancelled, "the held read to be cancelled", workers=False
+            )
         # Otherwise leaving the block shuts the app down with the modal still observing.
     # Reaching here means ``run_test`` had no worker failure to re-raise.
     assert controller.held_read_cancelled

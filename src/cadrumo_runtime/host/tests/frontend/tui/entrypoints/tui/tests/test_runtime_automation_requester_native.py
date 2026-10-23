@@ -45,6 +45,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
@@ -72,7 +73,6 @@ from .......frontend.tui.secret.automation_requester import RuntimeAutomationReq
 from .......frontend.tui.secret.automation_requester_contracts import AutomationRequestOutcome
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
-from ....settled_click import click_when_laid_out
 
 pytestmark = [
     pytest.mark.integration,

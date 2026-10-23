@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from cadrumo.entrypoints.tui.tests.settling import settle
-
 from .installed_tui_child import (
     InstalledTuiChildError,
     public_surface_diagnostic,
@@ -48,7 +46,7 @@ async def _open_destination(pilot: Any, *, query: str, expected_selector: str) -
 
     await pilot.press("ctrl+p")
     for _ in range(180):
-        await settle(pilot)
+        await pilot.pause()
         try:
             search = pilot.app.screen.query_one(Input)
             pilot.app.screen.query_one(OptionList)
@@ -59,12 +57,13 @@ async def _open_destination(pilot: Any, *, query: str, expected_selector: str) -
     else:
         raise InstalledTuiChildError("installed command palette did not expose its search controls")
     for _ in range(180):
-        await settle(pilot)
+        await pilot.pause()
         try:
             results = pilot.app.screen.query_one(OptionList)
         except NoMatches:
             continue
         if not _highlight_palette_destination(results, destination_label):
+            await pilot.pause()
             continue
         break
     else:
@@ -96,7 +95,7 @@ async def wait_for_refreshed_home(pilot: Any, *, polls: int = 360) -> None:
         else:
             if not updating.display:
                 return
-        await settle(pilot)
+        await pilot.pause()
     raise InstalledTuiChildError(
         "installed TUI did not complete its public Home refresh",
         diagnostic={
@@ -127,7 +126,7 @@ async def _create_calendar_work(pilot: Any, *, modelo: str, year: int, period: s
     )
     await wait_for_public_selector(pilot, "#btn-confirm-accept")
     await _activate_button(pilot, "#btn-confirm-accept")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
     notice = str(query_public_selector(pilot, "#declarations-calendar-notice", Static).render()).strip()
     if notice.startswith("Created ") is False:
         if "setup complete" in notice:

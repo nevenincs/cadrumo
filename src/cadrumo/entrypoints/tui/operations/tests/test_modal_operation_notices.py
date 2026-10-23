@@ -14,8 +14,9 @@ from .....application.operations.frontend_requests import (
 )
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....core.i18n.render import tr
+from ...tests.settling import settle_until
 from ..modal import OperationModal
-from .test_access_loss import _NOW, _OPERATION_ID, _Controller, _Host, _until
+from .test_access_loss import _NOW, _OPERATION_ID, _Controller, _Host
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -62,7 +63,12 @@ def test_clave_notices_render_the_localized_prompt_and_unknown_codes_render_as_b
         controller.observation = _with_notices(controller.observation)
         host = _Host(controller)
         async with host.run_test(size=(100, 40)) as pilot:
-            await _until(pilot, lambda: isinstance(host.screen, OperationModal) and host.screen._view_model is not None)
+            await settle_until(
+                pilot,
+                lambda: isinstance(host.screen, OperationModal) and host.screen._view_model is not None,
+                "the operation modal to show its first view",
+                workers=False,
+            )
             modal = host.screen
             assert isinstance(modal, OperationModal)
             lines = str(modal.query_one("#operation-modal-log", Static).content).split("\n")

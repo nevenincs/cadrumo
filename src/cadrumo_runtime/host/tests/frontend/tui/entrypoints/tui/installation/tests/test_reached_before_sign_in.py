@@ -33,6 +33,7 @@ from cadrumo_client.contracts.installation_requests import InstallationAct
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ........frontend.tui.secret.runtime_login import RuntimeLoginScreen
+from .installation_act_settling import act_settled
 from .runtime_support import ServedRuntime, serving_test_acts
 
 pytestmark = [
@@ -128,14 +129,6 @@ async def _act(pilot: Pilot[None], area: InstallationScreen, act: InstallationAc
     return screen
 
 
-async def _settled(pilot: Pilot[None], screen: InstallationActScreen) -> None:
-    def done() -> bool:
-        worker = screen._act_worker
-        return worker is not None and worker.is_finished and not screen._busy
-
-    await settle_until(pilot, done, "done", workers=False)
-
-
 async def _clear_the_active_profile_setting(pilot: Pilot[None], area: InstallationScreen) -> None:
     """Run one confirmed act that changes records, then return to the area's list."""
     repair = await _act(pilot, area, InstallationAct.REPAIR_PROFILE)
@@ -148,7 +141,7 @@ async def _clear_the_active_profile_setting(pilot: Pilot[None], area: Installati
         workers=False,
     )
     pilot.app.screen.query_one("#btn-confirm-accept", Button).press()
-    await _settled(pilot, repair)
+    await act_settled(pilot, repair)
     repair.action_close()
     await settle_until(pilot, lambda: pilot.app.screen is area, "pilot.app.screen is area", workers=False)
 
@@ -166,7 +159,7 @@ async def test_the_sign_in_screen_opens_the_area_with_no_session_and_stays_when_
             assert area.query_one(".cadrumo-banner", Static).content == tr("tui.installation.title")
 
             check = await _act(pilot, area, InstallationAct.STORAGE_CHECK)
-            await _settled(pilot, check)
+            await act_settled(pilot, check)
             assert served.root.name in str(check.query_one("#installation-act-result", Static).content)
 
             check.action_close()
@@ -267,7 +260,7 @@ async def test_the_area_opened_from_registration_is_worded_in_the_language_chose
             ], f"chosen={chosen}, area_locale={area._locale}, labels={labels!r}"
 
             check = await _act(pilot, area, InstallationAct.STORAGE_CHECK)
-            await _settled(pilot, check)
+            await act_settled(pilot, check)
             assert str(check.query_one("#installation-act-close", Button).label) == tr(
                 "tui.installation.action.close", locale=chosen
             )

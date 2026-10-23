@@ -31,8 +31,9 @@ from cadrumo.entrypoints.tui.ledger.tests.entries_door_fixtures import (
     entries_controller,
     entry_id,
 )
+from cadrumo.entrypoints.tui.tests.settling import settle_host, settle_host_until
 
-from .settling import press_when_enabled, settle, settle_until
+from .settling import press_when_enabled
 
 _INTERFACES = {
     "browse": "cadrumo.entrypoints.tui.ledger.entries_browse.LedgerEntriesBrowseScreen",
@@ -94,7 +95,7 @@ class EntriesCaptureHost(ScreenHostApp[None]):
 
     async def settle(self) -> None:
         """Wait until the screen has handled every posted message and finished every door call."""
-        await settle(self)
+        await settle_host(self)
 
     async def press(self, button_id: str) -> None:
         """Press one control on the tool screen once it is enabled, and wait for the work it started."""
@@ -107,7 +108,7 @@ class EntriesCaptureHost(ScreenHostApp[None]):
     async def choose(self, row: int) -> None:
         """Choose one row of the entry list."""
         table = cast("DataTable[str]", self.tool_screen.query_one("#entries-browse", DataTable))
-        await settle_until(self, lambda: table.row_count > row, f"the entry list to show row {row}")
+        await settle_host_until(self, lambda: table.row_count > row, f"the entry list to show row {row}")
         table.move_cursor(row=row)
         table.action_select_cursor()
         await self.settle()

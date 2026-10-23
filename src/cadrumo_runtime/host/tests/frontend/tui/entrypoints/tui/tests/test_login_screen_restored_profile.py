@@ -40,6 +40,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -54,7 +55,6 @@ from cadrumo_runtime.host.tests.test_profile_connections import LoginObservation
 
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginHandoff, RuntimeLoginMethod
-from ....settled_click import click_when_laid_out
 
 pytestmark = [
     pytest.mark.integration,

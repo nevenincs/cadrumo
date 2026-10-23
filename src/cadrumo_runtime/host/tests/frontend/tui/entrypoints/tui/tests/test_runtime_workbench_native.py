@@ -79,6 +79,7 @@ from cadrumo.entrypoints.tui.modelo.workbench.factory import InstalledModeloWork
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -121,7 +122,6 @@ from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
 from .......frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
-from ....settled_click import click_when_laid_out
 
 pytestmark = [
     pytest.mark.integration,
@@ -699,7 +699,9 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                             "the account session to be published",
                             workers=False,
                         )
-                        assert app.account_session.profile_label == "Enrollment tests"
+                        session = app.account_session
+                        assert session is not None
+                        assert session.profile_label == "Enrollment tests"
                         assert (
                             app.destination_catalogue.resolve("workbench.profile").admission.state
                             is WorkbenchDestinationAdmissionState.AVAILABLE
@@ -855,7 +857,9 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
                 except AssertionError as error:
                     error.add_note(f"Initial root reads: {reads!r}")
                     raise
-                assert root_app.account_session.profile_label == "Enrollment tests"
+                published = root_app.account_session
+                assert published is not None
+                assert published.profile_label == "Enrollment tests"
                 assert (
                     root_app.destination_catalogue.resolve("workbench.profile").admission.state
                     is WorkbenchDestinationAdmissionState.AVAILABLE

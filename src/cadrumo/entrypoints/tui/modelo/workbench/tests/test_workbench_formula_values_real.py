@@ -130,8 +130,10 @@ async def test_the_zero_floor_and_its_saved_income_are_explained_in_both_editor_
             assert str(label.render()) == tr("tui.modelo.workbench.editor.block.calculation")
             back = panel.query_one("#editor-cancel", Button)
             assert back.region.y >= 0 and back.region.bottom <= size[1]
-            identities = {str(screen.form.work_unit_id), str(screen.form.calculation_revision_id)}
-            for field in screen.form.fields():
+            form = screen.form
+            assert form is not None
+            identities = {str(form.work_unit_id), str(form.calculation_revision_id)}
+            for field in form.fields():
                 kind, identity = address_key(field.address)
                 if kind == "binding" or not identity.isdigit():
                     identities.add(identity)

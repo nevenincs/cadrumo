@@ -6,8 +6,6 @@ import re
 from time import monotonic
 from typing import Any
 
-from cadrumo.entrypoints.tui.tests.settling import SettleTimeoutError, settle, settle_until
-
 from .installed_tui_contracts import InstalledAssetTuiError, _PublicAssetActionTransition
 
 
@@ -27,19 +25,6 @@ def _public_surface_diagnostic(pilot: Any) -> dict[str, object]:
     }
 
 
-def _public_selector_present(pilot: Any, selector: str) -> bool:
-    from textual.css.query import NoMatches
-
-    try:
-        pilot.app.query_one(selector)
-    except NoMatches:
-        try:
-            pilot.app.screen.query_one(selector)
-        except NoMatches:
-            return False
-    return True
-
-
 async def _wait_for_public_selector(
     pilot: Any,
     selector: str,
@@ -48,19 +33,17 @@ async def _wait_for_public_selector(
     timeout_seconds: float = 15.0,
 ) -> object:
     """Wait a bounded time for one visible public control."""
-    try:
-        await settle_until(
-            pilot, lambda: _public_selector_present(pilot, selector), f"{selector} to appear", timeout=timeout_seconds
-        )
-    except SettleTimeoutError:
-        pass
-    else:
-        from textual.css.query import NoMatches
+    from textual.css.query import NoMatches
 
+    deadline = monotonic() + timeout_seconds
+    while monotonic() < deadline:
         try:
             return pilot.app.query_one(selector)
         except NoMatches:
-            return pilot.app.screen.query_one(selector)
+            try:
+                return pilot.app.screen.query_one(selector)
+            except NoMatches:
+                await pilot.pause()
     raise InstalledAssetTuiError(
         f"installed TUI did not expose {selector}",
         stage=stage,
@@ -76,17 +59,18 @@ async def _wait_for_public_selector_absent(
     timeout_seconds: float = 15.0,
 ) -> None:
     """Wait for a public control to disappear after its supported operation."""
-    try:
-        await settle_until(
-            pilot,
-            lambda: not _public_selector_present(pilot, selector),
-            f"{selector} to disappear",
-            timeout=timeout_seconds,
-        )
-    except SettleTimeoutError:
-        pass
-    else:
-        return
+    from textual.css.query import NoMatches
+
+    deadline = monotonic() + timeout_seconds
+    while monotonic() < deadline:
+        try:
+            pilot.app.query_one(selector)
+        except NoMatches:
+            try:
+                pilot.app.screen.query_one(selector)
+            except NoMatches:
+                return
+        await pilot.pause()
     raise InstalledAssetTuiError(
         f"installed TUI did not complete the public operation for {selector}",
         stage=stage,
@@ -100,7 +84,7 @@ async def _open_ledger_destination(*, pilot: Any) -> None:
     from textual.widgets import Input, OptionList
 
     await pilot.press("ctrl+p")
-    await settle(pilot)
+    await pilot.pause()
     try:
         query = pilot.app.screen.query_one(Input)
         results = pilot.app.screen.query_one(OptionList)
@@ -111,17 +95,19 @@ async def _open_ledger_destination(*, pilot: Any) -> None:
             diagnostic=_public_surface_diagnostic(pilot),
         ) from exc
     query.value = "Ledger"
-    try:
-        await settle_until(pilot, lambda: results.option_count > 0, "the palette to offer Ledger", timeout=45.0)
-    except SettleTimeoutError as exc:
-        raise InstalledAssetTuiError(
-            "installed TUI command palette did not offer Ledger",
-            stage="ledger_navigation",
-            diagnostic=_public_surface_diagnostic(pilot),
-        ) from exc
-    results.highlighted = 0
-    await pilot.press("enter")
-    await _wait_for_public_selector(pilot, "#ledger-navigation", stage="ledger_ready", timeout_seconds=45.0)
+    deadline = monotonic() + 45.0
+    while monotonic() < deadline:
+        if results.option_count > 0:
+            results.highlighted = 0
+            await pilot.press("enter")
+            await _wait_for_public_selector(pilot, "#ledger-navigation", stage="ledger_ready", timeout_seconds=45.0)
+            return
+        await pilot.pause()
+    raise InstalledAssetTuiError(
+        "installed TUI command palette did not offer Ledger",
+        stage="ledger_navigation",
+        diagnostic=_public_surface_diagnostic(pilot),
+    )
 
 
 def _safe_asset_result_state(rendered: str) -> str:
@@ -194,7 +180,7 @@ async def _activate_public_button(
         )
     button.focus()
     await pilot.press("enter")
-    await settle(pilot)
+    await pilot.pause()
     return _PublicAssetActionTransition(
         button_id=button.id or selector.removeprefix("#"),
         result_before=result_before,
@@ -215,7 +201,7 @@ async def _set_public_input(*, pilot: Any, selector: str, value: str, stage: str
             diagnostic=_public_surface_diagnostic(pilot),
         )
     field.value = value
-    await settle(pilot)
+    await pilot.pause()
 
 
 def _asset_result_matches(
@@ -269,9 +255,9 @@ async def _wait_for_asset_result(
             # before the next keyboard action is sent.  This matters for a
             # replay against an encrypted history, whose thread can complete
             # immediately before the Textual handler unwinds.
-            await settle(pilot)
+            await pilot.pause()
             return rendered
-        await settle(pilot)
+        await pilot.pause()
     raise InstalledAssetTuiError(
         "installed TUI asset action did not publish its expected public result",
         stage=stage,
@@ -300,7 +286,7 @@ async def _wait_for_current_revision_id(*, pilot: Any, stage: str, timeout_secon
         match = re.fullmatch(r"current_revision_id\t([0-9a-f]{64})", rendered)
         if match is not None:
             return str(match.group(1))
-        await settle(pilot)
+        await pilot.pause()
     raise InstalledAssetTuiError(
         "installed TUI did not expose the current immutable revision identity",
         stage=stage,

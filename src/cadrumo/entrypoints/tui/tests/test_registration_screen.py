@@ -29,8 +29,6 @@ from uuid import UUID
 
 import pytest
 from textual.css.query import NoMatches
-from textual.screen import Screen
-from textual.widget import Widget
 from textual.widgets import Button, Input, Static
 
 from ....adapters.persistence.storage.custody.recovery import PROFILE_CUSTODY_RECOVERY_FILENAME
@@ -49,6 +47,7 @@ from ..components.status import PinnedStatusBar
 from ..secret.credentials import assessment_refusal
 from ..secret.registration import RecoveryCodeScreen, RecoveryOfferScreen, RegistrationScreen
 from .fixture import recovery_enrollment_attempt, registration_attempt
+from .registration_pilot import wait_for_screen
 from .settling import SettleTimeoutError, settle, settle_until
 
 pytestmark = [
@@ -87,28 +86,6 @@ async def _wait_until(pilot, condition: Callable[[], bool]) -> bool:
     except SettleTimeoutError:
         return condition()
     return True
-
-
-async def _wait_for_screen(pilot, screen_type: type, *, composed: str) -> bool:
-    """Wait for ``screen_type`` to be active AND for ``composed`` to be laid out on it.
-
-    A pushed screen is active before its ``compose`` has run, and a composed
-    widget has no place on screen until the next layout pass. A click sent
-    in either window lands on nothing and presses nothing, so the widget
-    having a non-empty region is what proves the screen can be driven.
-    """
-
-    def laid_out() -> bool:
-        screen: object = pilot.app.screen
-        if not isinstance(screen, Screen) or not isinstance(screen, screen_type):
-            return False
-        try:
-            widget: Widget = screen.query_one(composed, Widget)
-        except NoMatches:
-            return False
-        return widget.region.area > 0
-
-    return await _wait_until(pilot, laid_out)
 
 
 async def _displayed_recovery_code(pilot) -> str:
@@ -417,7 +394,7 @@ async def _create_and_reach_the_offer(app: RegistrationScreen, pilot, *, usernam
     await _fill(app, pilot, username=username, password=_TYPED_INPUT, confirm=_TYPED_INPUT)
     await pilot.click("#btn-create")
     await settle(pilot)
-    assert await _wait_for_screen(pilot, RecoveryOfferScreen, composed="#btn-skip-recovery"), (
+    assert await wait_for_screen(pilot, RecoveryOfferScreen, composed="#btn-skip-recovery"), (
         "creation must be followed by the recovery offer; "
         f"screen={type(pilot.app.screen).__name__}, error={type(app.error).__name__}, "
         f"created={app.outcome is not None}, status={app.query_one('#credential-status', PinnedStatusBar).message}"
@@ -466,7 +443,7 @@ async def test_confirming_the_displayed_code_installs_the_recovery_wrapper(tmp_p
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _create_and_reach_the_offer(app, pilot, username="Enrols Recovery")
             await pilot.click("#btn-setup-recovery")
-            assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
+            assert await wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
                 "setting up must show the code screen"
             )
             assert _recovery_envelopes(storage_root) == (), "nothing is installed before the code is confirmed"
@@ -498,7 +475,7 @@ async def test_a_wrong_code_is_refused_in_place_without_installing(tmp_path) -> 
             await _create_and_reach_the_offer(app, pilot, username="Mistypes Code")
             status = app.query_one("#credential-status", PinnedStatusBar)
             await pilot.click("#btn-setup-recovery")
-            assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
+            assert await wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
                 f"setting up must show the code screen; status read {status.tone!r}: {status.message}"
             )
             code = await _displayed_recovery_code(pilot)
@@ -533,7 +510,7 @@ async def test_cancelling_on_the_code_screen_installs_nothing_and_still_leaves_w
             await _create_and_reach_the_offer(app, pilot, username="Cancels Recovery")
             status = app.query_one("#credential-status", PinnedStatusBar)
             await pilot.click("#btn-setup-recovery")
-            assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
+            assert await wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
                 f"setting up must show the code screen; status read {status.tone!r}: {status.message}"
             )
             await _displayed_recovery_code(pilot)
@@ -560,7 +537,7 @@ async def test_an_app_that_stops_while_the_code_is_shown_releases_the_enrolment_
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _create_and_reach_the_offer(app, pilot, username="Stops Mid Code")
             await pilot.click("#btn-setup-recovery")
-            assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code")
+            assert await wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code")
             await _displayed_recovery_code(pilot)
             enrolling = [worker for worker in pilot.app.workers if worker.name == "profile-recovery-enrollment"]
             assert enrolling, "the enrolment must be waiting on the code screen"

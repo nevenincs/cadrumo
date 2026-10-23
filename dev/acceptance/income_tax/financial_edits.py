@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
-from cadrumo.entrypoints.tui.tests.settling import settle
-
 from .financial_contracts import _ANNUAL_EDITS, _EDIT_SECONDS
 from .financial_lifecycle import _workbench_notice
 from .financial_navigation import open_work
@@ -42,17 +40,15 @@ async def _open_visible_casilla_editor(
     casilla_list = workbench.query_one(WORKBENCH_LIST, CasillaList)
     for _ in range(pages):
         await pilot.press("left_square_bracket")
-        await settle(pilot)
     for _ in range(pages):
         if casilla_list.focus_address(address):
             break
         await pilot.press("right_square_bracket")
-        await settle(pilot)
+        await pilot.pause()
     else:
         raise InstalledTuiChildError(f"the annual workbench shows no {label} on any page")
     casilla_list.focus()
     await pilot.press("enter")
-    await settle(pilot)
 
 
 async def _wait_for_casilla_editor(pilot: Any, workbench: ModeloWorkbenchScreen, label: str, deadline: float) -> Input:
@@ -73,7 +69,7 @@ async def _wait_for_casilla_editor(pilot: Any, workbench: ModeloWorkbenchScreen,
                 raise InstalledTuiChildError(
                     f"the annual workbench opened no editor for {label}", diagnostic=public_surface_diagnostic(pilot)
                 ) from None
-            await settle(pilot)
+            await pilot.pause()
             continue
         break
     return cast("Input", value_input)
@@ -102,13 +98,13 @@ async def _stage_workbench_value(
             raise InstalledTuiChildError(
                 f"the annual editor did not accept the value for {label}: {str(readback.render()).strip()[:200]}"
             )
-        await settle(pilot)
+        await pilot.pause()
     save.focus()
     await pilot.press("enter")
     while pilot.app.screen is not workbench:
         if time.monotonic() > deadline:
             raise InstalledTuiChildError(f"the annual editor for {label} did not close")
-        await settle(pilot)
+        await pilot.pause()
     if not any(address_key(change.field.address) == address for change in workbench.staged_changes):
         raise InstalledTuiChildError(
             f"the annual workbench staged no change for {label}: {_workbench_notice(workbench)[:200]}"

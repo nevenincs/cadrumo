@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from cadrumo.entrypoints.tui.tests.settling import settle
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
     public_surface_diagnostic,
@@ -22,12 +21,20 @@ async def _open_ledger(pilot: Any) -> None:
     destination_label = tr("tui.search.destination.ledger")
     destination_help = tr("tui.search.destination_help.ledger")
     await pilot.press("ctrl+p")
-    await settle(pilot)
+    await pilot.pause()
     search = pilot.app.screen.query_one(Input)
     search.focus()
-    await settle(pilot)
+    await pilot.pause()
     if pilot.app.focused is not search:
         raise InstalledTuiChildError("installed command palette search did not receive keyboard focus")
+    discovery_workers = [
+        worker
+        for worker in pilot.app.workers
+        if worker.group == "--textual-command-palette-gather-commands" and not worker.is_cancelled
+    ]
+    if discovery_workers:
+        await pilot.app.workers.wait_for_complete(discovery_workers)
+    await pilot.pause()
     for _ in range(180):
         options = pilot.app.screen.query_one(OptionList)
         matches: list[int] = []
@@ -43,7 +50,7 @@ async def _open_ledger(pilot: Any) -> None:
             await pilot.press("enter")
             await wait_for_public_selector(pilot, "#ledger-navigation", polls=180)
             return
-        await settle(pilot)
+        await pilot.pause()
     raise InstalledTuiChildError(
         "installed command palette did not offer the Ledger destination",
         diagnostic=public_surface_diagnostic(pilot),
@@ -56,7 +63,7 @@ async def _activate(pilot: Any, selector: str) -> None:
 
     button = query_public_selector(pilot, selector, Button)
     button.focus()
-    await settle(pilot)
+    await pilot.pause()
     if pilot.app.focused is not button:
         raise InstalledTuiChildError(f"installed IVA control {selector} did not receive keyboard focus")
     await pilot.press("enter")

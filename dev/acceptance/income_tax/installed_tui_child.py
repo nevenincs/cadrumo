@@ -24,7 +24,6 @@ from pathlib import Path
 from typing import Any, Final, cast, overload
 
 from cadrumo.core.hashing import sha256_file
-from cadrumo.entrypoints.tui.tests.settling import settle
 from dev.product_environment import clean_product_env
 
 
@@ -151,7 +150,7 @@ async def wait_for_public_selector(pilot: Any, selector: str, *, polls: int = 80
         try:
             query_public_selector(pilot, selector)
         except NoMatches:
-            await settle(pilot)
+            await pilot.pause()
         else:
             return
     raise InstalledTuiChildError(
@@ -172,7 +171,7 @@ async def wait_for_any_public_selector(pilot: Any, selectors: tuple[str, ...], *
                 continue
             else:
                 return selector
-        await settle(pilot)
+        await pilot.pause()
     expected = ", ".join(selectors)
     raise InstalledTuiChildError(
         f"installed TUI did not expose one of: {expected}",
@@ -310,15 +309,15 @@ async def register_profile_through_installed_tui(*, profile_label: str, passphra
     )
     app = ScreenHostApp(screen)
     async with app.run_test(size=(160, 60)) as pilot:
-        await settle(pilot)
+        await pilot.pause()
         screen.query_one("#field-username", Input).value = profile_label
         screen.query_one("#field-password", Input).value = passphrase
         screen.query_one("#field-confirm", Input).value = passphrase
         await pilot.click("#btn-create")
-        await settle(pilot)
+        await pilot.app.workers.wait_for_complete()
         await wait_for_public_selector(pilot, "#btn-skip-recovery")
         await pilot.click("#btn-skip-recovery")
-        await settle(pilot)
+        await pilot.pause()
     if screen.outcome is None:
         raise InstalledTuiChildError("registration screen closed without an admitted profile")
 
@@ -335,13 +334,13 @@ async def _submit_visible_runtime_login(
     if not isinstance(profile, str):
         raise InstalledTuiChildError("installed runtime login has no selected profile")
     query_public_selector(pilot, "#runtime-login-method", Select).value = RuntimeLoginMethod.PASSWORD
-    await settle(pilot)
+    await pilot.pause()
     credential = query_public_selector(pilot, "#runtime-login-credential", Input)
     submit = query_public_selector(pilot, "#runtime-login-submit", Button)
     await wait_for(lambda: not credential.disabled and not submit.disabled)
     credential.value = passphrase
     submit.scroll_visible(immediate=True)
-    await settle(pilot)
+    await pilot.pause()
     await wait_for(lambda: not credential.disabled and not submit.disabled)
     clicked = await pilot.click(submit)
     if not clicked:
@@ -384,7 +383,7 @@ async def admit_installed_session(
             if deadline is not None and loop.time() >= deadline:
                 break
             remaining -= 1
-            await settle(pilot)
+            await pilot.pause(0.2 if deadline is not None else None)
         raise InstalledTuiChildError(
             "installed runtime admission did not settle",
             diagnostic=public_surface_diagnostic(pilot),
@@ -405,7 +404,15 @@ async def admit_installed_session(
 
     try:
         async with asyncio.timeout_at(deadline):
-            await settle(pilot)
+            # CPU-idle polling can finish before the launcher's finite native read.
+            await pilot.pause()
+            opening_workers = [worker for worker in pilot.app.workers if worker.group == "root-open"]
+            if opening_workers:
+                await pilot.app.workers.wait_for_complete(opening_workers)
+            await pilot.pause()
+            login_workers = [worker for worker in pilot.app.workers if worker.group == "tui-runtime-login"]
+            if login_workers:
+                await pilot.app.workers.wait_for_complete(login_workers)
             await wait_for(locate_surface)
             if surface == "#runtime-login-credential":
                 await _submit_visible_runtime_login(pilot, passphrase, wait_for)
@@ -426,11 +433,16 @@ async def leave_the_setup_walk_if_handed_off(*, pilot: Any, polls: int = 180) ->
     """
     # The hand-off is scheduled once Home is up; let it land before reading
     # which screen the session is on.
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
+    await pilot.pause()
+    await pilot.pause()
     surface = await wait_for_any_public_selector(pilot, (SETUP_WALK_SURFACE, "#home-agenda"), polls=polls)
     if surface == SETUP_WALK_SURFACE:
         await pilot.press("escape")
-        await settle(pilot)
+        await pilot.pause()
+        returning_workers = [worker for worker in pilot.app.workers if worker.group == "root-return-home"]
+        if returning_workers:
+            await pilot.app.workers.wait_for_complete(returning_workers)
     await wait_for_public_selector(pilot, "#home-agenda", polls=polls)
 
 
@@ -517,7 +529,7 @@ async def select_public_data_table_row(*, pilot: Any, table_selector: str, row_k
             continue
         table.focus()
         table.move_cursor(row=table.get_row_index(candidate))
-        await settle(pilot)
+        await pilot.pause()
         if pilot.app.focused is not table:
             raise InstalledTuiChildError(f"installed TUI table {table_selector} did not receive keyboard focus")
         await pilot.press("enter")
@@ -564,7 +576,7 @@ async def set_profile_manager_field(
             )
         options.highlighted = option_index
     await pilot.click("#btn-edit-save")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#manager-status")
 
 

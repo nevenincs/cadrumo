@@ -24,15 +24,21 @@ on the same active screen, count as settled.
 Every wait is bounded by a deadline, not by a count, and names what it was
 waiting for, so a step whose work never finishes fails with that reason
 rather than with an assertion about the wrong state.
+
+A capture host drives its screen from inside its own mount handler, with no
+pilot. ``settle_host`` and ``settle_host_until`` settle such an app the same
+way, leaving out the app's own pump: it is busy running the handler that
+waits, and the pilot drains it once that handler returns.
 """
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from typing import Any, Final
 
+from textual.app import App
 from textual.message_pump import MessagePump
 from textual.pilot import Pilot
 from textual.widget import Widget
@@ -57,16 +63,15 @@ class SettleTimeoutError(AssertionError):
     """The app was still busy, or the awaited state never held, when the deadline passed."""
 
 
-def _pumps[ResultT](pilot: Pilot[ResultT]) -> tuple[MessagePump, ...]:
-    app = pilot.app
-    pumps: list[MessagePump] = [app]
+def _pumps[ResultT](app: App[ResultT], *, with_app: bool) -> tuple[MessagePump, ...]:
+    pumps: list[MessagePump] = [app] if with_app else []
     for screen in app.screen_stack:
         pumps.append(screen)
         pumps.extend(screen.walk_children(Widget, with_self=False))
     return tuple(pumps)
 
 
-async def _still_handling[ResultT](pilot: Pilot[ResultT]) -> tuple[str, ...]:
+async def _still_handling[ResultT](app: App[ResultT], *, with_app: bool) -> tuple[str, ...]:
     """The pumps that did not run a callback within a few turns of the event loop, by name.
 
     The callback is queued behind whatever the pump holds, so a pump that
@@ -75,7 +80,7 @@ async def _still_handling[ResultT](pilot: Pilot[ResultT]) -> tuple[str, ...]:
     read again.
     """
     answered: set[int] = set()
-    asked = [pump for pump in _pumps(pilot) if pump.call_later(answered.add, id(pump))]
+    asked = [pump for pump in _pumps(app, with_app=with_app) if pump.call_later(answered.add, id(pump))]
     for _ in range(_PROMPT_TURNS):
         await asyncio.sleep(0)
         if len(answered) == len(asked):
@@ -83,13 +88,13 @@ async def _still_handling[ResultT](pilot: Pilot[ResultT]) -> tuple[str, ...]:
     return tuple(f"{pump!r} is still handling a message" for pump in asked if id(pump) not in answered)
 
 
-def _app_is_running[ResultT](pilot: Pilot[ResultT]) -> bool:
+def _app_is_running[ResultT](app: App[ResultT]) -> bool:
     """Read the flag afresh: it changes across the awaits, so a narrowing from the loop test must not carry over."""
-    return pilot.app.is_running
+    return app.is_running
 
 
-def _running[ResultT](pilot: Pilot[ResultT]) -> tuple[str, ...]:
-    return tuple(f"worker {worker.name or worker!r}" for worker in pilot.app.workers if not worker.is_finished)
+def _running[ResultT](app: App[ResultT]) -> tuple[str, ...]:
+    return tuple(f"worker {worker.name or worker!r}" for worker in app.workers if not worker.is_finished)
 
 
 async def _finish(workers: list[Worker[Any]]) -> None:
@@ -107,6 +112,50 @@ async def _finished_by(workers: list[Worker[Any]], deadline: float) -> bool:
     except TimeoutError:
         return False
     return True
+
+
+async def _settled_until[ResultT](
+    app: App[ResultT],
+    reached: Callable[[], bool],
+    waiting_for: str,
+    *,
+    pause: Callable[[], Awaitable[None]],
+    with_app: bool,
+    workers: bool,
+    timeout: float,
+) -> None:
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + timeout
+    settled_rounds = 0
+    settled_on: object = None
+    why = "the app has not settled yet"
+    while _app_is_running(app):
+        await pause()
+        if not _app_is_running(app):
+            return
+        unfinished = [worker for worker in app.workers if workers and not worker.is_finished]
+        if unfinished:
+            settled_rounds = 0
+            if await _finished_by(unfinished, deadline):
+                continue
+            why = "; ".join(_running(app))
+        else:
+            busy = await _still_handling(app, with_app=with_app) + (_running(app) if workers else ())
+            if busy:
+                settled_rounds = 0
+                why = "; ".join(busy)
+            elif not reached():
+                settled_rounds = 0
+                why = "the state never held on a settled app"
+            else:
+                screen = app.screen
+                settled_rounds = settled_rounds + 1 if screen is settled_on else 1
+                settled_on = screen
+                if settled_rounds >= _QUIET_ROUNDS:
+                    return
+                why = "the app had settled for only one round"
+        if loop.time() >= deadline:
+            raise SettleTimeoutError(f"timed out after {timeout:g}s waiting for {waiting_for}: {why}")
 
 
 async def settle_until[ResultT](
@@ -129,38 +178,9 @@ async def settle_until[ResultT](
             held on a settled app, ``timeout`` seconds after the call.
         textual.worker.WorkerFailed: when a worker the gesture started raised.
     """
-    loop = asyncio.get_running_loop()
-    deadline = loop.time() + timeout
-    settled_rounds = 0
-    settled_on: object = None
-    why = "the app has not settled yet"
-    while _app_is_running(pilot):
-        await pilot.pause()
-        if not _app_is_running(pilot):
-            return
-        unfinished = [worker for worker in pilot.app.workers if workers and not worker.is_finished]
-        if unfinished:
-            settled_rounds = 0
-            if await _finished_by(unfinished, deadline):
-                continue
-            why = "; ".join(_running(pilot))
-        else:
-            busy = await _still_handling(pilot) + (_running(pilot) if workers else ())
-            if busy:
-                settled_rounds = 0
-                why = "; ".join(busy)
-            elif not reached():
-                settled_rounds = 0
-                why = "the state never held on a settled app"
-            else:
-                screen = pilot.app.screen
-                settled_rounds = settled_rounds + 1 if screen is settled_on else 1
-                settled_on = screen
-                if settled_rounds >= _QUIET_ROUNDS:
-                    return
-                why = "the app had settled for only one round"
-        if loop.time() >= deadline:
-            raise SettleTimeoutError(f"timed out after {timeout:g}s waiting for {waiting_for}: {why}")
+    await _settled_until(
+        pilot.app, reached, waiting_for, pause=pilot.pause, with_app=True, workers=workers, timeout=timeout
+    )
 
 
 async def settle[ResultT](
@@ -177,4 +197,41 @@ async def settle[ResultT](
     await settle_until(pilot, lambda: True, "the app to settle", workers=workers, timeout=timeout)
 
 
-__all__ = ["SETTLE_TIMEOUT_SECONDS", "SettleTimeoutError", "settle", "settle_until"]
+async def _next_turn() -> None:
+    await asyncio.sleep(0)
+
+
+async def settle_host_until[ResultT](
+    app: App[ResultT],
+    reached: Callable[[], bool],
+    waiting_for: str,
+    *,
+    timeout: float = SETTLE_TIMEOUT_SECONDS,
+) -> None:
+    """``settle_until`` for a host settling its own screen from inside its mount handler.
+
+    Raises:
+        SettleTimeoutError: as ``settle_until``.
+        textual.worker.WorkerFailed: when a worker the gesture started raised.
+    """
+    await _settled_until(app, reached, waiting_for, pause=_next_turn, with_app=False, workers=True, timeout=timeout)
+
+
+async def settle_host[ResultT](app: App[ResultT], *, timeout: float = SETTLE_TIMEOUT_SECONDS) -> None:
+    """``settle`` for a host settling its own screen from inside its mount handler.
+
+    Raises:
+        SettleTimeoutError: as ``settle``.
+        textual.worker.WorkerFailed: when a worker the gesture started raised.
+    """
+    await settle_host_until(app, lambda: True, "the screen to settle", timeout=timeout)
+
+
+__all__ = [
+    "SETTLE_TIMEOUT_SECONDS",
+    "SettleTimeoutError",
+    "settle",
+    "settle_host",
+    "settle_host_until",
+    "settle_until",
+]

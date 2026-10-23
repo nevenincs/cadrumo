@@ -11,7 +11,6 @@ from pathlib import Path
 from time import monotonic, sleep
 from typing import Any, Literal, cast
 
-from cadrumo.entrypoints.tui.tests.settling import settle
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
     admit_installed_session,
@@ -147,15 +146,15 @@ async def _register_profile(*, profile_label: str, passphrase: str) -> None:
     )
     app = ScreenHostApp(screen)
     async with app.run_test(size=(160, 60)) as pilot:
-        await settle(pilot)
+        await pilot.pause()
         screen.query_one("#field-username", Input).value = profile_label
         screen.query_one("#field-password", Input).value = passphrase
         screen.query_one("#field-confirm", Input).value = passphrase
         await pilot.click("#btn-create")
-        await settle(pilot)
+        await pilot.app.workers.wait_for_complete()  # type: ignore[reportUnknownMemberType]
         await _wait_for_public_selector(pilot, "#btn-skip-recovery", stage="registration_recovery")
         await pilot.click("#btn-skip-recovery")
-        await settle(pilot)
+        await pilot.pause()
     if screen.outcome is None:
         raise InstalledAssetTuiError("registration completed without an admitted profile", stage="registration")
 
@@ -311,7 +310,7 @@ def _run_probe(
                 completed.append("session_admitted")
                 publish("session_admitted")
             return
-        await settle(pilot)
+        await pilot.pause()
         observed.append(_public_surface_diagnostic(pilot))
         completed.append("launcher_autopilot")
         publish("launcher_autopilot", diagnostic=observed[-1])

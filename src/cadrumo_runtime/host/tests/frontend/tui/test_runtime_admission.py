@@ -31,6 +31,7 @@ from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBin
 from cadrumo.entrypoints import operation_composition
 from cadrumo.entrypoints.tui.components.quiet_app import QuietApp
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
@@ -46,7 +47,6 @@ from ....frontend.tui import installed_session
 from ....frontend.tui.runtime_admission import runtime_login_session
 from ....frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from ....frontend.tui.secret.runtime_login_contracts import RuntimeLoginHandoff, RuntimeLoginMethod
-from .settled_click import click_when_laid_out
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

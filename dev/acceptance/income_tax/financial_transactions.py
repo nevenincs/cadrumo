@@ -5,8 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from cadrumo.entrypoints.tui.tests.settling import settle
-
 from .financial_contracts import _N26_HEADER
 from .financial_navigation import _activate_button, _open_destination
 from .installed_tui_child import (
@@ -55,7 +53,7 @@ async def _import_transactions(pilot: Any, *, csv_path: Path) -> None:
     query_public_selector(pilot, "#ledger-import-provider", Select).value = "csv"
     query_public_selector(pilot, "#ledger-import-path", Input).value = str(csv_path)
     await _activate_button(pilot, "#ledger-import-preview-button")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-confirm")
     from textual.widgets import Button, Static
 
@@ -64,12 +62,12 @@ async def _import_transactions(pilot: Any, *, csv_path: Path) -> None:
     if refusal or confirm.disabled:
         raise InstalledTuiChildError("installed transaction import preview did not reach confirmation")
     await _activate_button(pilot, "#ledger-import-confirm")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
     refusal = str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip()
     if refusal:
         raise InstalledTuiChildError("installed transaction import reported a visible persistence refusal")
     await _activate_button(pilot, "#ledger-import-again")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-preview-button")
 
 
@@ -126,7 +124,7 @@ async def _classify_transaction(
     table.focus()
     table.move_cursor(row=table.get_row_index(row_key))
     await pilot.press("enter")
-    await settle(pilot)
+    await pilot.pause()
     await select_public_data_table_row(
         pilot=pilot,
         table_selector="#ledger-navigation",
@@ -148,9 +146,9 @@ async def _classify_transaction(
         row_key="BUSINESS",
     )
     await _activate_button(pilot, "#ledger-classification-confirm")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()
     status = str(query_public_selector(pilot, "#ledger-flow-status", Static).render()).strip()
     if not status:
         raise InstalledTuiChildError("installed classification did not expose a terminal status")
     await pilot.press("escape")
-    await settle(pilot)
+    await pilot.app.workers.wait_for_complete()

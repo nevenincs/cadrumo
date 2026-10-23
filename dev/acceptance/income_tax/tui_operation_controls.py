@@ -5,8 +5,6 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING, Any
 
-from cadrumo.entrypoints.tui.tests.settling import settle
-
 from .scenario import AcceptanceOutcome
 from .tui_checkbox import _tick
 from .tui_contracts import TuiJourneyError, TuiOperationBinding, TuiTerminalEvidence, _TuiScreen
@@ -54,12 +52,12 @@ async def activate_tui_operation(
         activation = _query_visible_tui_control(pilot, binding.activation_id)
         activation.focus()
         await pilot.press("enter")
-    await settle(pilot, workers=False)
+    await pilot.pause()
     if binding.confirmation_id is not None:
         confirmation = await _wait_for_visible_tui_control(pilot, binding.confirmation_id, maximum_polls=maximum_polls)
         confirmation.focus()
         await pilot.press("enter")
-        await settle(pilot, workers=False)
+        await pilot.pause()
     modal = await _wait_for_operation_modal_or_refusal(
         pilot,
         binding=binding,
@@ -143,7 +141,7 @@ async def confirm_assumed_values(
             raise TuiJourneyError(
                 f"the workbench did not offer to apply the confirmed values (it offers {_offered_line(pilot)[:200]!r})"
             )
-        await settle(pilot, workers=False)
+        await pilot.pause()
     await open_review_ready_to_apply(pilot, seconds=seconds)
     terminal = await activate_tui_operation(pilot, binding=binding, maximum_polls=maximum_polls)
     if terminal.outcome is AcceptanceOutcome.PROVEN:
@@ -165,7 +163,7 @@ async def _wait_for_dialog_control(pilot: Pilot[Any], selector: str, *, seconds:
                 raise TuiJourneyError(f"the workbench did not open {label}: {notice[:240]!r}") from None
             if time.monotonic() > deadline:
                 raise TuiJourneyError(f"the workbench did not open {label}") from None
-            await settle(pilot, workers=False)
+            await pilot.pause()
 
 
 async def _proceed_past_at_risk_confirmation(pilot: Pilot[Any], selector: str | None) -> bool:
@@ -180,7 +178,7 @@ async def _proceed_past_at_risk_confirmation(pilot: Pilot[Any], selector: str | 
         return False
     proceed.focus()
     await pilot.press("enter")
-    await settle(pilot, workers=False)
+    await pilot.pause()
     return True
 
 
@@ -204,5 +202,5 @@ async def _wait_for_operation_modal_or_refusal(
             continue
         if _stack_text(pilot, refusal_notice_id):
             return None
-        await settle(pilot, workers=False)
+        await pilot.pause()
     raise TuiJourneyError(f"{binding.operation_id} did not open an operation modal or visible refusal")

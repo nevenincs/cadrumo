@@ -27,6 +27,7 @@ from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
 from cadrumo.entrypoints.tui.operations.destination import OperationsCatalogueScreen
 from cadrumo.entrypoints.tui.reference.destination import ReferenceScreen
 from cadrumo.entrypoints.tui.reference.reads import ReferenceRead
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import (
@@ -51,7 +52,6 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ....frontend.tui.runtime_session import RuntimeRestrictedSessionApp
-from .settled_click import click_when_laid_out
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

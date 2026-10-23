@@ -12,7 +12,6 @@ from uuid import UUID, uuid4
 import pytest
 from textual.app import App
 from textual.await_complete import AwaitComplete
-from textual.pilot import Pilot
 from textual.widgets import Button, Checkbox, Input, Select
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -21,6 +20,7 @@ from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_re
 from cadrumo.core.config import override_settings
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
@@ -40,7 +40,6 @@ from .....frontend.tui.secret.runtime_login_contracts import (
     RuntimeLoginHandoff,
     RuntimeLoginMethod,
 )
-from ..settled_click import click_when_laid_out
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -329,10 +328,6 @@ class _RejectedDismissalScreen(RuntimeLoginScreen):
     @override
     def dismiss(self, result: RuntimeLoginHandoff | None = None) -> AwaitComplete:
         raise RuntimeError("test handoff callback was not accepted")
-
-
-async def _until(pilot: Pilot[None], predicate: Callable[[], bool]) -> None:
-    await settle_until(pilot, lambda: bool(predicate()), "not not predicate()", workers=False)
 
 
 def _choices() -> tuple[ProfileLoginChoice, ProfileLoginChoice]:

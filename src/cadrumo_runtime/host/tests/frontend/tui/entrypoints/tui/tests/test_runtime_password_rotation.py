@@ -30,6 +30,7 @@ from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
 from cadrumo.entrypoints.tui.secret.passphrase import PassphraseScreen
+from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello, RefusalError
@@ -45,7 +46,6 @@ from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from .......frontend.tui.launcher import main
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
-from ....settled_click import click_when_laid_out
 
 pytestmark = [
     pytest.mark.integration,
@@ -127,10 +127,11 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
             if not isinstance(app, CadrumoTuiApp):
                 screen = pilot.app.screen
                 assert isinstance(screen, RuntimeLoginScreen)
+                login: RuntimeLoginScreen = screen
                 submit = screen.query_one("#runtime-login-submit", Button)
                 await settle_until(
                     pilot,
-                    lambda: (screen._worker is None or screen._worker.is_finished) and not submit.disabled,
+                    lambda: (login._worker is None or login._worker.is_finished) and not submit.disabled,
                     "the sign-in worker to finish and the submit control to enable",
                     workers=False,
                 )
@@ -153,7 +154,9 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
                 "the account session to be published",
                 workers=False,
             )
-            assert root_app.account_session.profile_label == "Enrollment tests"
+            session = root_app.account_session
+            assert session is not None
+            assert session.profile_label == "Enrollment tests"
             await settle_until(
                 pilot,
                 lambda: (
