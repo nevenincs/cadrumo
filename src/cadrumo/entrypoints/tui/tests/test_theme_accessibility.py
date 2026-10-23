@@ -20,6 +20,7 @@ import re
 from collections.abc import Iterator
 
 import pytest
+from textual.screen import Screen
 
 from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
@@ -61,10 +62,14 @@ async def _observe(
     on the screen after layout and clipping, which is what a filer reads.
     Animation is off so a scroll never lands mid-way and differs by timing.
     """
-    app = ScreenHostApp(ModeloWorkbenchScreen(workbench, actions=workbench))
+    # The host carries an empty screen, not a second workbench: the first-open
+    # greeting is said once per application, by whichever workbench finishes
+    # reading first, so a hidden workbench racing the observed one would take
+    # it in one theme and leave it to the observed one in the other.
+    app = ScreenHostApp(Screen[None]())
     app.animation_level = "none"
     async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-        # The theme is set, then a fresh workbench is pushed, so its mount runs
+        # The theme is set, then the workbench is pushed, so its mount runs
         # under that theme rather than re-applying CSS to one mounted under the
         # default appearance -- which would make both observations identical.
         app.theme = theme
