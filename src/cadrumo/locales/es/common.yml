@@ -1192,6 +1192,50 @@ desktop:
       telecoms: Telecomunicaciones
       travel: Viajes
       vehicle: Vehículo
+    category_keywords:
+      amortizacion_vivienda_afecto: amortizacion vivienda casa
+      arrendamiento_local: alquiler local oficina arrendamiento renta
+      arrendamiento_vivienda_afecto: alquiler vivienda casa piso arrendamiento
+      asesoria_contable: asesoria gestoria contable contabilidad
+      asesoria_fiscal: asesoria gestoria fiscal impuestos
+      asesoria_juridica: abogado asesoria juridica legal notario
+      comunidad_vivienda_afecto: comunidad propietarios cuota
+      cuotas_autonomos_ss: autonomos seguridad social reta tgss cuota
+      cuotas_colegiales: colegio colegiado cuota colegial
+      formacion_profesional: curso formacion academia master taller
+      gastos_bancarios: comision banco mantenimiento cuenta transferencia
+      gastos_financieros: intereses prestamo financiacion
+      hardware_amortizable: ordenador portatil pc monitor hardware
+      ibi_local_afecto: ibi impuesto bienes inmuebles ayuntamiento local
+      ibi_vivienda_afecto: ibi impuesto bienes inmuebles ayuntamiento vivienda
+      manutencion_dietas_extranjero: restaurante comida dietas extranjero
+      manutencion_dietas_nacional: restaurante comida dietas menu bar
+      material_oficina: papeleria material oficina folios toner
+      mobiliario_amortizable: mueble mobiliario silla mesa
+      mutualidad_alternativa: mutualidad mutua
+      publicidad_marketing: publicidad anuncios marketing
+      reparaciones_conservacion: reparacion mantenimiento arreglo
+      seguros_responsabilidad_civil: seguro responsabilidad civil poliza
+      seguros_salud_autonomo: seguro salud medico poliza
+      software_suscripcion: software suscripcion licencia aplicacion
+      subcontratacion: subcontratacion colaborador freelance
+      suministros_cliente_directos: suministros cliente
+      suministros_home_office_agua: agua
+      suministros_home_office_gas: gas butano
+      suministros_home_office_internet: internet fibra adsl wifi
+      suministros_home_office_luz: luz electricidad energia
+      suministros_local_afecto: suministros luz agua gas local
+      telefonia_fija: telefono fijo linea telefonia
+      telefonia_movil: telefono movil celular telefonia
+      tributos_fiscalmente_deducibles: tasa tributo impuesto ayuntamiento
+      vehiculo_combustible: gasolina gasoil diesel combustible carburante gasolinera
+        coche
+      vehiculo_mantenimiento: taller revision itv neumaticos coche
+      vehiculo_parking: parking aparcamiento estacionamiento
+      vehiculo_peaje: peaje autopista
+      vehiculo_seguro: seguro coche vehiculo
+      viajes_alojamiento: hotel alojamiento hostal apartamento
+      viajes_transporte: tren avion vuelo taxi autobus
     classification:
       business: Empresarial
       failed_validation: Validación fallida
