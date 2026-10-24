@@ -300,6 +300,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             f"pub const MANAGER_FAILED_VERSIONS: &str = {_rust_string(components['manager_failed_versions'])};",
             f"pub const MANAGER_LANGUAGE_ENV: &str = {_rust_string(components['language_variable'])};",
             f"pub const MANAGER_LANGUAGE_DEFAULT: &str = {_rust_string(components['language_default'])};",
+            f"pub const LOCAL_AI_ADDRESS: &str = {_rust_string(components['local_ai_address'])};",
             "pub const MANAGER_STRINGS_JSON: &str = "
             f"{_rust_string(json.dumps(manager_chrome_strings(), ensure_ascii=False, sort_keys=True))};",
             f"pub const LOG_MAX_BYTES: u64 = {contract['desktop_defaults']['log_max_bytes']};",

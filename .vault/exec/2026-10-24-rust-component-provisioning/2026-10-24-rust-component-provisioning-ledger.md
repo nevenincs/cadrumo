@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:7505dc3eed7c3ea8e2f4f7497f4de0ca8361d88faf049d90bf4a7d0e5ff8c561'
+body_hash: 'sha256:388628c5cdb169131e8787082f1600356cc92c2c0d25ef806b40bf7e73b04f23'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -255,6 +255,32 @@ related:
 - `S06` `verify:` `rustfmt --edition 2024 through stdin on browser.rs and browser/launch.rs` -> `pass`
 - `S06` `by:` `implementation-engineer-high`
 - `S06` `verify:` `browser checks and record reader verified in 07a0457000 and 25d1f4c659 (lib 143, platform browser 16, reader pytest 9)` -> `pass`
+- `S17` `A` `native/application/src/provisioning/local_ai/lease.rs`
+- `S17` `A` `native/application/src/provisioning/local_ai/supervision.rs`
+- `S17` `A` `native/application/src/provisioning/local_ai/supervision/tests.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/program.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/fake_ollama.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S17` `A` `native/manager/src/supervision/local_ai.rs`
+- `S17` `M` `native/manager/src/supervision.rs`
+- `S17` `M` `native/manager/src/supervision/launch.rs`
+- `S17` `M` `native/manager/src/background.rs`
+- `S17` `M` `native/application-environment.toml`
+- `S17` `M` `dev/packaging/native/application_environment.py`
+- `S17` `M` `dev/packaging/native/generate.py`
+- `S17` `A` `dev/packaging/tests/test_native_local_ai_address.py`
+- `S17` `M` `src/cadrumo/core/config_runtime_fields.py`
+- `S17` `A` `src/cadrumo/core/tests/_component_records/local_ai.json`
+- `S17` `M` `docs/reference/environment-overrides.md`
+- `S17` `M` `env/.env.example`
+- `S17` `verify:` `cargo test --lib --test application on an export of HEAD plus this Step (lib 151, application 25)` -> `pass`
+- `S17` `verify:` `cargo test --lib on native/manager with a generated scratch contract (145 passed, 1 ignored) and --features fixture-test-mode --test supervision (42)` -> `pass`
+- `S17` `verify:` `cargo clippy --all-targets -D warnings: application, application --features platform, manager, manager --features fixture-test-mode` -> `pass`
+- `S17` `verify:` `rustfmt --edition 2024 through stdin on the touched files` -> `pass`
+- `S17` `verify:` `pytest test_native_local_ai_address, test_native_storage_environment_contract, test_application_environment, generator boundary and conformance, test_env_reference, loopback endpoint, consumer gating, provisioning fitness (pre-existing linux-x86-64 contract digest failure only)` -> `pass`
+- `S17` `verify:` `ruff check, ruff format --check, ty check on the touched Python` -> `pass`
+- `S17` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -281,3 +307,7 @@ related:
 - `S08` S08 total memory comes from /proc/meminfo on Linux, sysctl hw.memsize on macOS and a PowerShell CIM query on Windows (0.44 s measured here), NVIDIA VRAM from nvidia-smi; each is a separate bounded program with no console window, since the crate forbids unsafe; macOS code paths are compiled only on a macOS host
 - `S06` S06 open: the Python launch guard re-point `(provisioning_browser.py` `probe_playwright_browser,` session.py) is held back. Records live under each storage root (components/receipts, fixed), while the test bootstrap shares one relocated browser cache across private storage roots; with the guard reading records, 25 real-browser tests that build their own storage roots refuse (auth real lifecycle, clave movil recovery, authenticator real boundary, representation alert race, justificante capture authenticity). The guard patch and its test updates are kept outside the tree pending the decision
 - `S06` Rescoped: the Python launch guard re-point moves to P04.S19, after the components role can adopt existing builds; records stay per storage root (D12) and test support writes the engine's fixture record
+- `S17` S17 fixed local AI address 127.0.0.1:23743: IANA-unassigned (block 23547-23999), below the Linux (32768-60999) and Windows (49152-65535) ephemeral ranges, not 11434, outside this host's excluded port ranges; the generator refuses any other loopback-less, privileged, ephemeral or 11434 value
+- `S17` S17 coordination: two kernel-released locks under components/activity; the supervisor holds `local_ai.server.lock` for a server's life and finds `local_ai.program.lock` held as an engine's change request, stops and yields; the engine waits on the server lock in a kernel wait bounded at 60 s, then replaces or removes; the manager looks at a 1 s pace on its own thread
+- `S17` S17 the engine no longer starts a server: the full check observes the manager's server, and Program::start (fixed address, lease, containment hook) is the supervisor's alone; containment is a kill-on-close job per server on Windows, none yet on POSIX
+- `S17` S17 env/.env (gitignored developer file) still overrides the chat URL to 11434; left untouched

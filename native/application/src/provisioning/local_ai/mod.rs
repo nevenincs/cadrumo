@@ -1,17 +1,22 @@
 //! The local AI item: the program that runs models, installed from its pinned portable
-//! archive and run as the engine's own child, and the model every catalogue role reads
-//! with, pulled through that program.
+//! archive, the one server run from it on the installation's fixed loopback address, and
+//! the model every catalogue role reads with, pulled through that server.
 //!
-//! `program` installs, checks, starts, stops and removes the program, and reports a copy
-//! installed outside Cadrumo without touching it. `models` pulls and checks each role's
-//! model through the server the engine started, and `hardware` decides whether this
-//! computer can hold a model at all. `loopback` is the engine's client for the program's
-//! own API on this computer. [`reading`] folds the parts into the item's one reading.
+//! `program` installs, checks, starts, stops and removes the program, records where it
+//! is, and reports a copy installed outside Cadrumo without touching it. `supervision`
+//! is the runtime manager's part: it keeps the server running while the program is set
+//! up. `lease` keeps that server and a change of the program apart across processes.
+//! `models` pulls and checks each role's model through the running server, and
+//! `hardware` decides whether this computer can hold a model at all. `loopback` is the
+//! client for the program's own API on this computer. [`reading`] folds the parts into
+//! the item's one reading.
 
 pub mod hardware;
+pub mod lease;
 pub mod loopback;
 pub mod models;
 pub mod program;
+pub mod supervision;
 
 #[cfg(test)]
 pub(crate) mod fake_ollama;

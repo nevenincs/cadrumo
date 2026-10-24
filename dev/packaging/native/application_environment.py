@@ -571,7 +571,13 @@ _COMPONENT_VALUES = (
     "language_variable",
     "language_default",
     "profile_variable",
+    "local_ai_address",
 )
+#: The local AI server's address: IPv4 loopback, a port outside the privileged range and
+#: below every platform's ephemeral range, and never the publisher's default port.
+_LOCAL_AI_ADDRESS = re.compile(r"127\.0\.0\.1:(?P<port>[1-9][0-9]{3,4})")
+_LOCAL_AI_PORTS = range(1024, 32768)
+_LOCAL_AI_UPSTREAM_PORT = 11434
 
 
 def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
@@ -591,6 +597,11 @@ def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str
         raise _fail("components.language_default must be a two-letter lower-case language")
     if names.get(entry["profile_variable"]) != {"kind": "directory", "role": "slot"}:
         raise _fail("components.profile_variable must name a declared directory slot")
+    address = entry["local_ai_address"]
+    matched = _LOCAL_AI_ADDRESS.fullmatch(address) if isinstance(address, str) else None
+    port = int(matched["port"]) if matched else None
+    if port is None or port not in _LOCAL_AI_PORTS or port == _LOCAL_AI_UPSTREAM_PORT:
+        raise _fail("components.local_ai_address must be 127.0.0.1 with a port from 1024 to 32767 other than 11434")
     components.update(
         log_variable=entry["log_variable"],
         log_format=entry["log_format"],
@@ -599,6 +610,7 @@ def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str
         language_variable=entry["language_variable"],
         language_default=language,
         profile_variable=entry["profile_variable"],
+        local_ai_address=address,
     )
     return components
 

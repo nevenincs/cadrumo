@@ -6,6 +6,7 @@ use crate::{
         local_ai::fake_ollama::{HELPER_ARGUMENTS, HELPER_MODE, HELPER_VERSION},
         pins::ComponentPins,
         plan::PlanEntry,
+        receipts::ReceiptReading,
         test_servers::{Reply, Request, TestCertificate, TlsServer, network_to, response},
         transfer::{RetryPolicy, SystemPacing},
     },
@@ -16,6 +17,7 @@ use std::{
     io::{Cursor, Write},
     net::TcpStream,
     sync::{Arc, Mutex},
+    time::UNIX_EPOCH,
 };
 
 fn committed_pins() -> ProgramPins {
@@ -85,7 +87,16 @@ fn the_program_part_plans_its_own_folder_and_nothing_outside_cadrumo() {
 
 /// A pin table naming one archive for this platform at `url`'s path on github.com.
 fn pins_for(bytes: &[u8], version: &str, executable: &str) -> ProgramPins {
-    let platform = Platform::current().unwrap();
+    pins_for_platform(bytes, version, Platform::current().unwrap(), executable)
+}
+
+/// A pin table naming one archive for `platform`.
+fn pins_for_platform(
+    bytes: &[u8],
+    version: &str,
+    platform: Platform,
+    executable: &str,
+) -> ProgramPins {
     ProgramPins::parse(&format!(
         "program = \"ollama\"\nversion = \"{version}\"\nhosts = [\"github.com\"]\n\n\
          [[archives]]\nplatform = \"{}\"\n\
@@ -122,13 +133,21 @@ const EXECUTABLE: &str = if cfg!(windows) {
 
 /// The publisher's layout in miniature, with the test binary itself as the program.
 fn archive(marker: &[u8]) -> Vec<u8> {
-    let program = fs::read(std::env::current_exe().unwrap()).unwrap();
+    archive_of(
+        EXECUTABLE,
+        &fs::read(std::env::current_exe().unwrap()).unwrap(),
+        marker,
+    )
+}
+
+/// The publisher's layout in miniature, with `program` as the program at `executable`.
+fn archive_of(executable: &str, program: &[u8], marker: &[u8]) -> Vec<u8> {
     let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let stored = zip::write::SimpleFileOptions::default()
         .compression_method(zip::CompressionMethod::Stored)
         .unix_permissions(0o755);
-    zip.start_file(EXECUTABLE, stored).unwrap();
-    zip.write_all(&program).unwrap();
+    zip.start_file(executable, stored).unwrap();
+    zip.write_all(program).unwrap();
     zip.start_file("lib/ollama/marker", stored.unix_permissions(0o644))
         .unwrap();
     zip.write_all(marker).unwrap();
@@ -159,11 +178,11 @@ fn publisher(archives: Vec<(String, Vec<u8>)>) -> (TestCertificate, TlsServer) {
     (certificate, server)
 }
 
-fn ambient(name: &str) -> Option<OsString> {
+pub(crate) fn ambient(name: &str) -> Option<OsString> {
     std::env::var_os(name)
 }
 
-fn stand_in(program: &mut Program, version: &str) {
+pub(crate) fn stand_in(program: &mut Program, version: &str) {
     program.serve_override = Some(ServeOverride {
         arguments: HELPER_ARGUMENTS.map(OsString::from).to_vec(),
         environment: vec![
@@ -173,8 +192,61 @@ fn stand_in(program: &mut Program, version: &str) {
     });
 }
 
-fn answers(address: SocketAddr) -> bool {
+pub(crate) fn answers(address: SocketAddr) -> bool {
     TcpStream::connect_timeout(&address, Duration::from_secs(2)).is_ok()
+}
+
+/// A loopback address free now, for one server a test starts.
+pub(crate) fn free_address() -> SocketAddr {
+    std::net::TcpListener::bind("127.0.0.1:0")
+        .unwrap()
+        .local_addr()
+        .unwrap()
+}
+
+/// The program of `version` for `platform`, installed under `locations` from a local
+/// publisher of an archive holding `program` at `executable`, with the test binary
+/// standing in for its server, and the pins that name it.
+pub(crate) fn installed_with(
+    locations: &Locations,
+    version: &str,
+    platform: Platform,
+    executable: &str,
+    program: &[u8],
+) -> (Program, ProgramPins) {
+    let bytes = archive_of(executable, program, b"marker");
+    let (certificate, publisher) = publisher(vec![(version.into(), bytes.clone())]);
+    let network = network_to(certificate.roots(), publisher.address(), None);
+    let hosts: BTreeSet<HostName> = [HostName::new("github.com").unwrap()].into();
+    let mut pacing = SystemPacing::default();
+    let cancellation = Cancellation::default();
+    let mut events = |_| {};
+    let mut transfer = Transfer {
+        network: &network,
+        hosts: &hosts,
+        policy: RetryPolicy::default(),
+        pacing: &mut pacing,
+        events: &mut events,
+        cancellation: &cancellation,
+    };
+    let pins = pins_for_platform(&bytes, version, platform, executable);
+    let mut program = Program::new(&pins, platform, locations.clone())
+        .unwrap()
+        .unwrap();
+    program.install(&mut transfer).unwrap();
+    stand_in(&mut program, version);
+    (program, pins)
+}
+
+/// [`installed_with`] the test binary as the program.
+pub(crate) fn installed(locations: &Locations, version: &str) -> (Program, ProgramPins) {
+    installed_with(
+        locations,
+        version,
+        Platform::current().unwrap(),
+        EXECUTABLE,
+        &fs::read(std::env::current_exe().unwrap()).unwrap(),
+    )
 }
 
 #[test]
@@ -221,7 +293,9 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
 
     // The program runs as this engine's child, configured only by the engine.
     stand_in(&mut program, "9.8.7");
-    let server = program.start(&ambient, None).unwrap();
+    let server = program
+        .start(free_address(), &Uncontained, &ambient, None)
+        .unwrap();
     let address = server.address();
     assert!(address.ip().is_loopback());
     let (status, body) = server.loopback().get("/fake/environment").unwrap();
@@ -271,9 +345,12 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
         "a loaded model is unloaded before the server ends: {log}"
     );
 
-    // Another engine's newer version installs beside a running server, but its old
-    // versions are not removed while that server answers.
-    let address = program.start(&ambient, None).unwrap().address();
+    // Another engine's newer version waits for the running server's supervisor to stop
+    // it before it is put in place.
+    let address = program
+        .start(free_address(), &Uncontained, &ambient, None)
+        .unwrap()
+        .address();
     let mut newer = Program::new(
         &pins_for(&second, "9.8.8", EXECUTABLE),
         platform,
@@ -281,16 +358,25 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
     )
     .unwrap()
     .unwrap();
+    let (asked, request) = std::sync::mpsc::channel();
+    newer.on_change_requested(Box::new(move || asked.send(()).unwrap()));
+    // The supervisor's side: it notices the request, while its server still answers, and
+    // stops the server, which is what the install waits for.
+    let supervisor = std::thread::spawn(move || {
+        request.recv().unwrap();
+        let requested = program.leases().change_requested().unwrap();
+        let answering = answers(address);
+        program.stop();
+        (program, requested, answering)
+    });
     newer.install(&mut transfer).unwrap();
+    let (mut program, requested, answering) = supervisor.join().unwrap();
+    assert!(
+        requested && answering,
+        "the server ran until its supervisor stopped it"
+    );
+    assert!(!answers(address));
     assert_eq!(*progress.lock().unwrap(), second.len() as u64);
-    assert!(matches!(
-        newer.prune(),
-        Err(LocalAiError::Engine(Error::Busy))
-    ));
-    assert!(matches!(
-        newer.remove(),
-        Err(LocalAiError::Engine(Error::Busy))
-    ));
     assert_eq!(
         program.observe_quick(),
         Observation::Differs {
@@ -298,8 +384,10 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
             note: None
         }
     );
-    program.stop();
-    assert!(!answers(address));
+    assert!(matches!(
+        program.start(free_address(), &Uncontained, &ambient, None),
+        Err(LocalAiError::Failed(FailureCategory::ProgramMissing))
+    ));
     newer.prune().unwrap();
     assert_eq!(
         fs::read_dir(locations.programs.join("versions"))
@@ -310,7 +398,10 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
 
     // Removal stops the engine's own server and leaves no version behind.
     stand_in(&mut newer, "9.8.8");
-    let address = newer.start(&ambient, None).unwrap().address();
+    let address = newer
+        .start(free_address(), &Uncontained, &ambient, None)
+        .unwrap()
+        .address();
     newer.remove().unwrap();
     assert!(!answers(address));
     assert_eq!(newer.observe_quick(), Observation::Absent);
@@ -345,7 +436,7 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
     .unwrap()
     .unwrap();
     assert!(matches!(
-        program.start(&ambient, None),
+        program.start(free_address(), &Uncontained, &ambient, None),
         Err(LocalAiError::Failed(FailureCategory::ProgramMissing))
     ));
     program.install(&mut transfer).unwrap();
@@ -356,27 +447,56 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
         environment: Vec::new(),
     });
     assert!(matches!(
-        program.start(&ambient, None),
+        program.start(free_address(), &Uncontained, &ambient, None),
         Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning))
     ));
     // A program that listens but reports another version is ended.
     stand_in(&mut program, "0.0.1");
     assert!(matches!(
-        program.start(&ambient, None),
+        program.start(free_address(), &Uncontained, &ambient, None),
         Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning))
     ));
     assert!(program.server().is_none());
     assert!(ServerRecord::read(&locations.programs).is_none());
     assert_eq!(
-        program.observe_full(&ambient, None),
+        program.observe_full(),
         Observation::Failed(FailureCategory::ProgramNotRunning)
     );
     stand_in(&mut program, "9.8.7");
+    // The full check only observes: it starts nothing of its own.
     assert_eq!(
-        program.observe_full(&ambient, None),
-        Observation::Present { note: None }
+        program.observe_full(),
+        Observation::Failed(FailureCategory::ProgramNotRunning)
     );
-    let address = program.server().unwrap().address();
+    assert!(program.server().is_none());
+    let address = program
+        .start(free_address(), &Uncontained, &ambient, None)
+        .unwrap()
+        .address();
+    assert_eq!(program.observe_full(), Observation::Present { note: None });
+    // A second start under the same lease is refused while this server holds it.
+    let mut second = Program::new(
+        &pins_for(&bytes, "9.8.7", EXECUTABLE),
+        Platform::current().unwrap(),
+        locations.clone(),
+    )
+    .unwrap()
+    .unwrap();
+    stand_in(&mut second, "9.8.7");
+    assert!(matches!(
+        second.start(free_address(), &Uncontained, &ambient, None),
+        Err(LocalAiError::Engine(Error::Busy))
+    ));
+    assert_eq!(
+        second.running_server().map(|server| server.address()),
+        Some(address),
+        "another engine observes the one running server"
+    );
+    drop(second);
+    assert!(
+        answers(address),
+        "an observing engine leaves the server running"
+    );
     drop(program);
     assert!(
         !answers(address),
@@ -442,5 +562,90 @@ fn a_copy_installed_outside_cadrumo_is_reported_and_left_untouched() {
     assert_eq!(
         fs::metadata(&candidates[2]).unwrap().modified().unwrap(),
         before
+    );
+}
+
+/// The local AI record the Python reader's tests read, with the storage root spelled as a
+/// placeholder those tests replace.
+const RECORD_FIXTURE: &str = "src/cadrumo/core/tests/_component_records/local_ai.json";
+const STORAGE_ROOT_PLACEHOLDER: &str = "<storage-root>";
+/// Set to rewrite the fixture from what the engine writes now.
+const REWRITE_FIXTURE: &str = "CADRUMO_REWRITE_COMPONENT_RECORD_FIXTURE";
+
+/// The fixed address the package's environment declaration gives the local AI server.
+fn declared_address() -> SocketAddr {
+    let native = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+    let declared: toml::Table =
+        toml::from_str(&fs::read_to_string(native.join("application-environment.toml")).unwrap())
+            .unwrap();
+    declared["components"]["local_ai_address"]
+        .as_str()
+        .unwrap()
+        .parse()
+        .unwrap()
+}
+
+#[test]
+fn the_record_names_the_program_the_models_and_the_fixed_address_the_python_reader_reads() {
+    let directory = tempfile::tempdir().unwrap();
+    let storage = directory.path().join("storage");
+    let locations = Locations::under(&storage);
+    // One platform's layout, so the record is the same on every host.
+    let (program, _) = installed_with(
+        &locations,
+        "0.40.10",
+        Platform::WinX64,
+        "ollama.exe",
+        b"local AI program",
+    );
+    let receipts = ReceiptStore::new(locations.receipts.clone()).unwrap();
+    let address = declared_address();
+    assert!(address.ip().is_loopback());
+    assert_ne!(address.port(), 11434, "never the publisher's default port");
+    assert!(
+        program
+            .settle(&receipts, "192.0.2.1:80".parse().unwrap(), UNIX_EPOCH)
+            .is_err(),
+        "only a loopback address is recorded"
+    );
+    program
+        .settle(
+            &receipts,
+            address,
+            UNIX_EPOCH + Duration::from_secs(1_792_846_800),
+        )
+        .unwrap();
+    let ReceiptReading::Present(receipt) = receipts.read(ItemId::LocalAi) else {
+        panic!("the receipt reads back");
+    };
+    let location = receipt.location.as_ref().unwrap();
+    assert_eq!(location.root(), storage);
+    assert_eq!(location.facts["address"], address.to_string());
+    assert!(location.paths["program"].under(&location.root()).is_file());
+    assert_eq!(
+        location.paths["models"].under(&location.root()),
+        locations.models
+    );
+
+    let mut written: serde_json::Value =
+        serde_json::from_slice(&fs::read(locations.receipts.join("local_ai.json")).unwrap())
+            .unwrap();
+    written["location"]["root"] = STORAGE_ROOT_PLACEHOLDER.into();
+    let checkout = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .unwrap();
+    let fixture = checkout.join(RECORD_FIXTURE);
+    if std::env::var_os(REWRITE_FIXTURE).is_some() {
+        fs::create_dir_all(fixture.parent().unwrap()).unwrap();
+        let mut text = serde_json::to_string_pretty(&written).unwrap();
+        text.push('\n');
+        fs::write(&fixture, text).unwrap();
+    }
+    let committed: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&fixture).unwrap()).unwrap();
+    assert_eq!(
+        committed, written,
+        "rewrite {RECORD_FIXTURE} with {REWRITE_FIXTURE}=1 when the record changes on purpose"
     );
 }

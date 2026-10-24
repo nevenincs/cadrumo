@@ -7,18 +7,28 @@ the LLM-backed invoice-read pipeline.
 
 from __future__ import annotations
 
+from typing import Final
+
 from pydantic import Field
 
 from .config_timeouts import CadrumoTimeoutSettings
 from .model_catalogue import ModelRole, default_model_runtime_id
+
+#: The loopback address the runtime manager's local AI server listens on. The package's
+#: environment declaration states the same address for the native side; a package-side
+#: test keeps the two equal.
+LOCAL_AI_SERVER_ADDRESS: Final = "127.0.0.1:23743"
 
 
 class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
     """LLM provider endpoints and runtime tuning fields layered on top of timeouts."""
 
     cadrumo_llm_ollama_chat_url: str = Field(
-        default="http://127.0.0.1:11434/api/chat",
-        description="Local Ollama /api/chat endpoint; override for non-localhost Ollama deployments",
+        default=f"http://{LOCAL_AI_SERVER_ADDRESS}/api/chat",
+        description=(
+            "Local Ollama /api/chat endpoint; defaults to the server the runtime manager runs, "
+            "override for non-localhost Ollama deployments"
+        ),
     )
     cadrumo_llm_ollama_num_ctx: int = Field(
         default=8192,

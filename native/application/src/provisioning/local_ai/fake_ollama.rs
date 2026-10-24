@@ -54,6 +54,8 @@ pub(crate) struct FakeState {
     pub tags: BTreeMap<String, String>,
     /// The status and body a generation answers with instead of one token.
     pub generation: Option<(String, Value)>,
+    /// Whether `POST /fake/exit` ends the process, as a crash would: only in the helper.
+    pub exits_on_request: bool,
 }
 
 pub(crate) type Shared = Arc<Mutex<FakeState>>;
@@ -142,6 +144,11 @@ fn answer(state: &Shared, mut stream: TcpStream) {
                 .collect();
             drop(guard);
             respond(&mut stream, "200 OK", &json!({ "models": models }));
+        }
+        ("POST", "/fake/exit") if guard.exits_on_request => {
+            drop(guard);
+            respond(&mut stream, "200 OK", &json!({}));
+            std::process::exit(3);
         }
         ("GET", "/fake/environment") => {
             let environment = json!(guard.environment);
@@ -303,6 +310,7 @@ fn serve_helper() {
         log: Some(
             std::path::Path::new(&std::env::var("OLLAMA_HOME").unwrap()).join("requests.log"),
         ),
+        exits_on_request: true,
         ..FakeState::default()
     }));
     // The program's own announcement, which the engine waits for.

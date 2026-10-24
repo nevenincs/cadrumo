@@ -340,6 +340,13 @@ language_default = "es"
 # The profile-folder slot. The desktop serves whichever profile is signed in, so it
 # relays no received value to the children it starts; their own launchers derive it.
 profile_variable = "CADRUMO_PROFILE_ROOT"
+# The one loopback address the runtime manager's local AI server listens on, for every
+# surface and profile. The port is unassigned in the IANA registry, below the ephemeral
+# ranges Linux (32768-60999) and Windows (49152-65535) hand out for outgoing
+# connections, and never the publisher's default 11434, so a copy of the program
+# installed outside Cadrumo keeps its own port. The command line's default chat address
+# states the same value; a package-side test keeps them equal.
+local_ai_address = "127.0.0.1:23743"
 
 # ---------------------------------------------------------------------------
 # The storage root: its variable, the per-platform installed default under the

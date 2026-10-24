@@ -1,20 +1,26 @@
 //! The local AI program: the publisher's portable archive for this platform, installed
-//! into the component store under `components/ollama` and run only as the engine's own
-//! child.
+//! into the component store under `components/ollama`, and the one server run from it.
 //!
 //! Each pinned version lives in its own folder under `versions`, activated by one pointer
-//! as the component store does for every component. The server the engine starts keeps
-//! its models in the installation's models folder and its home, settings and temporary
-//! files under `components/ollama/home`, listens on a loopback port chosen at start, and
-//! is stopped before its version is replaced or removed. While it runs, `server.json`
-//! beside the versions names its address for the readers that use it.
+//! as the component store does for every component. One supervisor, the runtime
+//! manager, runs the server: it keeps its models in the installation's models folder and
+//! its home, settings and temporary files under `components/ollama/home`, and listens on
+//! the installation's one fixed loopback address, which its owner supplies from the
+//! package's environment declaration. While it runs, `server.json` beside the versions
+//! names its address and process. Any other engine only observes that server; it never
+//! starts a second one.
 //!
-//! The server inherits the engine's containment: it is started without a console window
-//! and without leaving the engine's job, so an owner that hosts the engine in a
-//! kill-on-close job ends the server with it. On an orderly exit the engine unloads any
-//! model the server holds, which ends the server's own runner processes, and then ends
-//! the server. A copy installed outside Cadrumo is found and reported, never started,
-//! changed or removed.
+//! The [`lease`](super::lease) locks keep the server and a program change apart: the
+//! supervisor runs a server only under the server lease, and an engine replaces or
+//! removes the program only once the supervisor has stopped its server and given the
+//! lease up.
+//!
+//! The owner contains the server: it supplies a [`Containment`] that places the process
+//! in a kill-on-close job before any of its code runs, so nothing the server starts
+//! outlives its stop. The server gets no console window. On an orderly stop the
+//! supervisor unloads any model the server holds, which ends its runner processes, and
+//! then ends the server. A copy installed outside Cadrumo is found and reported, never
+//! started, changed or removed.
 //!
 //! Archive bounds were measured on the 0.40.10 archives by streaming each one through its
 //! decompressor and summing its members, with each link counted again at its target's
@@ -30,7 +36,11 @@
 //! A program archive may unpack to six times its pinned size, about 1.8 times the largest
 //! measured ratio, and hold 1024 members, over twelve times the most measured.
 
-use super::{LocalAiError, loopback::Loopback};
+use super::{
+    LocalAiError,
+    lease::{Leases, PROGRAM_CHANGE_BUDGET, ProgramChange, ServerLease},
+    loopback::Loopback,
+};
 use crate::{
     component::{ActiveComponent, Artifact, ComponentStore, QuickInspection},
     error::Error,
@@ -38,14 +48,15 @@ use crate::{
     package::Readiness,
     provisioning::{
         failure::FailureCategory,
-        items::{Destination, Locations, PROGRAM_PART},
+        items::{Destination, ItemId, Locations, PROGRAM_PART},
         pins::{Platform, ProgramPins},
         plan::PlanPart,
         proxy::ProxySettings,
+        receipts::{Receipt, ReceiptFile, ReceiptLocation, ReceiptStore, build_manifest},
         state::{Observation, StaleReason},
         transfer::Transfer,
     },
-    value::HostName,
+    value::{HostName, RelativePath},
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -53,11 +64,11 @@ use std::{
     ffi::{OsStr, OsString},
     fs,
     io::{BufRead, BufReader, Read},
-    net::{Ipv4Addr, SocketAddr, TcpListener},
+    net::SocketAddr,
     path::{Path, PathBuf},
     process::{Child, ChildStdin, Command, Stdio},
     sync::mpsc,
-    time::Duration,
+    time::{Duration, SystemTime},
 };
 
 /// How many bytes a program archive may unpack to for each byte it downloads.
@@ -74,6 +85,12 @@ const LISTENING: &str = "Listening on ";
 const LOG_LINE_LIMIT: u64 = 64 * 1024;
 /// The running server's record beside the versions.
 pub const SERVER_RECORD: &str = "server.json";
+/// The receipt location's path naming the program's executable.
+pub const PROGRAM_PATH: &str = "program";
+/// The receipt location's path naming the models folder.
+pub const MODELS_PATH: &str = "models";
+/// The receipt location's fact naming the fixed `host:port` the server answers on.
+pub const ADDRESS_FACT: &str = "address";
 const SERVER_RECORD_LIMIT: u64 = 64 * 1024;
 /// Windows `CREATE_NO_WINDOW`: the server gets no console window of its own.
 #[cfg(windows)]
@@ -105,7 +122,32 @@ pub fn archive_limits(download_bytes: u64) -> (u64, usize) {
     )
 }
 
-/// The record of a server the engine started, read by the programs that use it.
+/// How the owner contains each server process: the creation flags the process is created
+/// with, and the step that places it before any of its code runs. The guard `contain`
+/// returns lives as long as the server and is dropped once it has ended, which is where a
+/// kill-on-close job ends anything the server left behind.
+pub trait Containment {
+    /// Windows process creation flags added to the server's own.
+    fn creation_flags(&self) -> u32 {
+        0
+    }
+
+    /// Contains `child`, created with [`Self::creation_flags`], and lets it run. On an
+    /// error the child is ended without having run.
+    fn contain(&self, child: &Child) -> std::io::Result<Box<dyn Send>>;
+}
+
+/// No containment of its own, for an owner already contained as a whole.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Uncontained;
+
+impl Containment for Uncontained {
+    fn contain(&self, _: &Child) -> std::io::Result<Box<dyn Send>> {
+        Ok(Box::new(()))
+    }
+}
+
+/// The record of the running server, read by the programs that use it.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ServerRecord {
@@ -144,8 +186,8 @@ pub struct ServeCommand {
     pub address: SocketAddr,
 }
 
-/// A server the engine started. Dropping it stops it.
-#[derive(Debug)]
+/// A running server. The one the supervisor started stops when dropped; one only
+/// observed through its record is left running.
 pub struct Server {
     child: Option<Child>,
     stdin: Option<ChildStdin>,
@@ -153,6 +195,20 @@ pub struct Server {
     version: String,
     executable: PathBuf,
     record: PathBuf,
+    /// Dropped after the process has ended.
+    containment: Option<Box<dyn Send>>,
+    /// Released last, once the process has ended and its record is gone.
+    lease: Option<ServerLease>,
+}
+
+impl std::fmt::Debug for Server {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Server")
+            .field("address", &self.loopback.address())
+            .field("version", &self.version)
+            .field("process_id", &self.process_id())
+            .finish_non_exhaustive()
+    }
 }
 
 impl Server {
@@ -186,13 +242,58 @@ impl Server {
             version: version.to_owned(),
             executable: PathBuf::new(),
             record: PathBuf::new(),
+            containment: None,
+            lease: None,
         }
     }
 
-    /// Starts `command` and waits for the program to announce that it listens, then for
-    /// it to answer with `version`. A program that exits, stays silent past
+    /// The server `programs`' record names, when it answers there with `version`. The
+    /// handle owns nothing: dropping it leaves the server running.
+    pub fn observed(programs: &Path, version: &str) -> Option<Self> {
+        let record = ServerRecord::read(programs)?;
+        let server = Self {
+            child: None,
+            stdin: None,
+            loopback: record.loopback()?,
+            version: record.version.clone(),
+            executable: record.executable.clone(),
+            record: programs.join(SERVER_RECORD),
+            containment: None,
+            lease: None,
+        };
+        (record.version == version
+            && server
+                .answers_version()
+                .is_some_and(|found| found == version))
+        .then_some(server)
+    }
+
+    /// Whether the process this handle started has ended. An observed server is never
+    /// seen to end here.
+    pub fn exited(&mut self) -> bool {
+        self.child
+            .as_mut()
+            .is_some_and(|child| !matches!(child.try_wait(), Ok(None)))
+    }
+
+    /// Waits until the process this handle started has ended.
+    #[cfg(test)]
+    pub(crate) fn wait_exit(&mut self) {
+        if let Some(child) = self.child.as_mut() {
+            let _ = child.wait();
+        }
+    }
+
+    /// Starts `command` contained and waits for the program to announce that it listens,
+    /// then for it to answer with `version`. A program that exits, stays silent past
     /// [`START_BUDGET`] or answers otherwise is ended and reads `program_not_running`.
-    fn spawn(command: ServeCommand, version: &str, record: PathBuf) -> Result<Self, LocalAiError> {
+    fn spawn(
+        command: ServeCommand,
+        version: &str,
+        record: PathBuf,
+        containment: &dyn Containment,
+        lease: ServerLease,
+    ) -> Result<Self, LocalAiError> {
         let mut process = Command::new(&command.executable);
         process
             .args(&command.arguments)
@@ -205,18 +306,29 @@ impl Server {
         #[cfg(windows)]
         {
             use std::os::windows::process::CommandExt;
-            process.creation_flags(CREATE_NO_WINDOW);
+            process.creation_flags(CREATE_NO_WINDOW | containment.creation_flags());
         }
+        let loopback = Loopback::new(command.address)?;
         let mut child = crate::process::creation::run(|| process.spawn())
             .map_err(|_| LocalAiError::Failed(FailureCategory::ProgramNotRunning))?;
+        let guard = match containment.contain(&child) {
+            Ok(guard) => guard,
+            Err(_) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning));
+            }
+        };
         let stdin = child.stdin.take();
         let mut server = Self {
             child: Some(child),
             stdin,
-            loopback: Loopback::new(command.address)?,
+            loopback,
             version: version.to_owned(),
             executable: command.executable,
             record,
+            containment: Some(guard),
+            lease: Some(lease),
         };
         let announced = server.announced();
         let answered = announced
@@ -278,8 +390,9 @@ impl Server {
         value["version"].as_str().map(str::to_owned)
     }
 
-    /// Asks the server to unload every model it holds, which ends its runners, and then
-    /// ends the server and removes its record. Safe to call more than once.
+    /// Asks the server to unload every model it holds, which ends its runners, then ends
+    /// the server and whatever it left in its containment, removes its record and gives
+    /// the lease up. Safe to call more than once.
     fn halt(&mut self) {
         let Some(mut child) = self.child.take() else {
             return;
@@ -290,11 +403,13 @@ impl Server {
         drop(self.stdin.take());
         let _ = child.kill();
         let _ = child.wait();
+        drop(self.containment.take());
         if ServerRecord::read(self.record.parent().unwrap_or(Path::new("")))
             .is_some_and(|record| record.process_id == child.id())
         {
             let _ = fs::remove_file(&self.record);
         }
+        drop(self.lease.take());
     }
 }
 
@@ -333,14 +448,17 @@ pub(crate) struct ServeOverride {
 }
 
 /// The pinned local AI program on this platform, where it is installed, and the server
-/// this engine runs from it.
+/// run from it.
 pub struct Program {
     store: ComponentStore,
     artifact: Artifact,
     version: String,
     hosts: Vec<HostName>,
     locations: Locations,
+    leases: Leases,
     server: Option<Server>,
+    /// Runs when a program change has asked the supervisor to stop and is waiting.
+    change_requested: Option<Box<dyn FnMut() + Send>>,
     /// The arguments and extra environment a test runs its stand-in program with.
     #[cfg(test)]
     pub(crate) serve_override: Option<ServeOverride>,
@@ -365,6 +483,7 @@ impl Program {
             _ => return Err(Error::Invalid("local AI program folder".into())),
         };
         let (max_unpacked_bytes, max_entries) = archive_limits(pin.download_bytes);
+        let leases = Leases::new(locations.activity.clone())?;
         Ok(Some(Self {
             store: ComponentStore::new(root, platform.as_str().into())?,
             artifact: Artifact {
@@ -382,10 +501,22 @@ impl Program {
             version: pins.version.clone(),
             hosts: pins.hosts.iter().cloned().collect(),
             locations,
+            leases,
             server: None,
+            change_requested: None,
             #[cfg(test)]
             serve_override: None,
         }))
+    }
+
+    /// Runs `hook` whenever a change of the program has asked the running server's
+    /// supervisor to stop and waits for it, so a surface can say what it is waiting for.
+    pub fn on_change_requested(&mut self, hook: Box<dyn FnMut() + Send>) {
+        self.change_requested = Some(hook);
+    }
+
+    pub fn leases(&self) -> &Leases {
+        &self.leases
     }
 
     pub fn artifact(&self) -> &Artifact {
@@ -429,13 +560,10 @@ impl Program {
         }
     }
 
-    /// The full check: every installed file against its receipt, then a server started
-    /// from it that answers with the pinned version. The server keeps running.
-    pub fn observe_full(
-        &mut self,
-        ambient: &dyn Fn(&str) -> Option<OsString>,
-        proxy: Option<&ProxySettings>,
-    ) -> Observation {
+    /// The full check: every installed file against its receipt, then the running server
+    /// answering at its recorded address with the pinned version. Nothing is started:
+    /// with no server running the program reads `program_not_running`.
+    pub fn observe_full(&self) -> Observation {
         let quick = self.observe_quick();
         if quick != (Observation::Present { note: None }) {
             return quick;
@@ -445,14 +573,70 @@ impl Program {
             Ok(_) => return Observation::Failed(FailureCategory::DamagedDownload),
             Err(_) => return Observation::Unreadable,
         }
-        match self.start(ambient, proxy) {
-            Ok(_) => Observation::Present { note: None },
-            Err(error) => Observation::Failed(error.category()),
+        match self.running_server() {
+            Some(_) => Observation::Present { note: None },
+            None => Observation::Failed(FailureCategory::ProgramNotRunning),
         }
     }
 
-    /// Downloads and activates the pinned version unless it is already active, stopping
-    /// the server this engine runs first so no version is replaced under it.
+    /// The running server answering with the pinned version, whoever runs it.
+    pub fn running_server(&self) -> Option<Server> {
+        Server::observed(&self.locations.programs, &self.version)
+    }
+
+    /// Records the verified program in the local AI's receipt: the active version's
+    /// files, and where a consumer finds the program, the models folder and the fixed
+    /// `address` the supervisor's server answers on. The location's folder is the nearest
+    /// one holding both the program and the models.
+    pub fn settle(
+        &self,
+        receipts: &ReceiptStore,
+        address: SocketAddr,
+        verified_at: SystemTime,
+    ) -> Result<(), LocalAiError> {
+        Loopback::new(address)?;
+        let QuickInspection::Active(active) = self.store.inspect_quick(&self.artifact)? else {
+            return Err(LocalAiError::Failed(FailureCategory::ProgramMissing));
+        };
+        let root = common_folder(&self.locations.programs, &self.locations.models)
+            .ok_or_else(|| Error::Invalid("local AI program and models share no folder".into()))?;
+        let relative = |path: &Path| -> Result<RelativePath, Error> {
+            RelativePath::from_native(
+                path.strip_prefix(&root)
+                    .map_err(|_| Error::Invalid("local AI location escaped".into()))?,
+            )
+        };
+        let payload = relative(&active.root)?;
+        let mut files = Vec::new();
+        for file in build_manifest(&active.root)? {
+            files.push(ReceiptFile {
+                path: RelativePath::new(format!("{}/{}", payload.as_str(), file.path.as_str()))?,
+                ..file
+            });
+        }
+        files.sort_by(|a, b| a.path.cmp(&b.path));
+        let location = ReceiptLocation::new(
+            &root,
+            [
+                (PROGRAM_PATH.to_owned(), relative(&active.executable)?),
+                (MODELS_PATH.to_owned(), relative(&self.locations.models)?),
+            ]
+            .into(),
+            [(ADDRESS_FACT.to_owned(), address.to_string())].into(),
+        )?;
+        let receipt = Receipt::new(
+            ItemId::LocalAi,
+            Some(self.version.clone()),
+            files,
+            verified_at,
+            self.hosts.clone(),
+        )?
+        .located(location)?;
+        Ok(receipts.write(&receipt)?)
+    }
+
+    /// Downloads and activates the pinned version unless it is already active. The
+    /// running server is stopped first, so no version is replaced under it.
     pub fn install(
         &mut self,
         transfer: &mut Transfer<'_>,
@@ -460,69 +644,73 @@ impl Program {
         if let QuickInspection::Active(active) = self.store.inspect_quick(&self.artifact)? {
             return Ok(active);
         }
-        self.stop();
+        let _change = self.change()?;
         Ok(self.store.download_and_activate(&self.artifact, transfer)?)
     }
 
-    /// Removes every version but the active one, once the pinned version verified. A
-    /// server this engine runs from a superseded version is stopped first; one another
-    /// engine runs refuses the removal as busy.
+    /// Removes every version but the active one, once the pinned version verified, with
+    /// the running server stopped first.
     pub fn prune(&mut self) -> Result<(), LocalAiError> {
-        let QuickInspection::Active(active) = self.store.inspect_quick(&self.artifact)? else {
+        let QuickInspection::Active(_) = self.store.inspect_quick(&self.artifact)? else {
             return Err(LocalAiError::Failed(FailureCategory::ProgramMissing));
         };
-        if self
-            .server
-            .as_ref()
-            .is_some_and(|server| server.executable != active.executable)
-        {
-            self.stop();
-        }
-        self.refuse_foreign_server()?;
+        let _change = self.change()?;
         Ok(self.store.prune(&self.artifact)?)
     }
 
-    /// Removes every installed version. The server this engine runs is stopped first; a
-    /// server another engine still runs refuses the removal as busy.
+    /// Removes every installed version, with the running server stopped first.
     pub fn remove(&mut self) -> Result<(), LocalAiError> {
-        self.stop();
-        self.refuse_foreign_server()?;
+        let _change = self.change()?;
         Ok(self.store.remove(&self.artifact.id)?)
     }
 
-    /// Busy while a server this engine did not start still answers at the recorded
-    /// address; a record no server answers for is left by an engine that is gone, and
-    /// is removed.
-    fn refuse_foreign_server(&self) -> Result<(), LocalAiError> {
-        let Some(record) = ServerRecord::read(&self.locations.programs) else {
-            return Ok(());
+    /// The right to change the program: a server this program runs is stopped here, and
+    /// the supervisor of any other is asked to stop it and waited for. A server still
+    /// answering at the recorded address once the lease is held runs outside the lease
+    /// and leaves the program busy; a record no server answers for is removed.
+    fn change(&mut self) -> Result<ProgramChange, LocalAiError> {
+        self.stop();
+        let hook = &mut self.change_requested;
+        let mut requested = || {
+            if let Some(hook) = hook.as_mut() {
+                hook();
+            }
         };
-        if self
-            .server
-            .as_ref()
-            .is_some_and(|server| server.process_id() == Some(record.process_id))
-        {
-            return Ok(());
+        let change = self
+            .leases
+            .change_program(PROGRAM_CHANGE_BUDGET, &mut requested)?;
+        if let Some(record) = ServerRecord::read(&self.locations.programs) {
+            let answering = record
+                .loopback()
+                .is_some_and(|loopback| loopback.get("/api/version").is_ok());
+            if answering {
+                return Err(LocalAiError::Engine(Error::Busy));
+            }
+            remove_record(&self.locations.programs)?;
         }
-        let answering = record
-            .loopback()
-            .is_some_and(|loopback| loopback.get("/api/version").is_ok());
-        if answering {
-            return Err(LocalAiError::Engine(Error::Busy));
-        }
-        Ok(remove_record(&self.locations.programs)?)
+        Ok(change)
     }
 
-    /// The server this engine runs, when one is running.
+    /// The server this program started, when it is running.
     pub fn server(&self) -> Option<&Server> {
         self.server.as_ref()
     }
 
-    /// Starts the server from the active pinned version, unless this engine already runs
-    /// it. `ambient` reads the engine's own environment for the operating system settings
-    /// the server is given; `proxy` is the operator's proxy for the models it downloads.
+    /// The server this program started, to learn whether it has ended.
+    pub fn server_mut(&mut self) -> Option<&mut Server> {
+        self.server.as_mut()
+    }
+
+    /// Starts the server from the active pinned version on `address`, contained by
+    /// `containment`, unless this program already runs it. Only the supervisor calls
+    /// this. `Busy` while an engine changes the program or asks to, or another server
+    /// holds the lease. `ambient` reads the supervisor's own environment for the
+    /// operating system settings the server is given; `proxy` is the operator's proxy for
+    /// the models it downloads.
     pub fn start(
         &mut self,
+        address: SocketAddr,
+        containment: &dyn Containment,
         ambient: &dyn Fn(&str) -> Option<OsString>,
         proxy: Option<&ProxySettings>,
     ) -> Result<&Server, LocalAiError> {
@@ -535,19 +723,23 @@ impl Program {
         let QuickInspection::Active(active) = self.store.inspect_quick(&self.artifact)? else {
             return Err(LocalAiError::Failed(FailureCategory::ProgramMissing));
         };
-        let command = self.serve_command(&active, ambient, proxy)?;
-        self.start_with(command)
+        let Some(lease) = self.leases.try_serve()? else {
+            return Err(LocalAiError::Engine(Error::Busy));
+        };
+        let command = self.serve_command(&active, address, ambient, proxy)?;
+        self.start_with(command, containment, lease)
     }
 
-    /// The command a start of `active` runs: `serve` on a free loopback port, with the
-    /// models, home and temporary folders under the installation's storage root.
+    /// The command a start of `active` runs: `serve` on `address`, with the models, home
+    /// and temporary folders under the installation's storage root.
     fn serve_command(
         &self,
         active: &ActiveComponent,
+        address: SocketAddr,
         ambient: &dyn Fn(&str) -> Option<OsString>,
         proxy: Option<&ProxySettings>,
     ) -> Result<ServeCommand, LocalAiError> {
-        let address = free_loopback_address()?;
+        Loopback::new(address)?;
         let home = &self.locations.ollama_home;
         let mut environment = BTreeMap::new();
         for name in PASSED_THROUGH {
@@ -603,8 +795,13 @@ impl Program {
         }
     }
 
-    /// Starts exactly `command` as this engine's server and records it.
-    fn start_with(&mut self, command: ServeCommand) -> Result<&Server, LocalAiError> {
+    /// Starts exactly `command` as this program's server under `lease` and records it.
+    fn start_with(
+        &mut self,
+        command: ServeCommand,
+        containment: &dyn Containment,
+        lease: ServerLease,
+    ) -> Result<&Server, LocalAiError> {
         let home = &self.locations.ollama_home;
         for folder in [
             self.locations.models.clone(),
@@ -616,7 +813,7 @@ impl Program {
             fs::create_dir_all(&folder)?;
         }
         let record = self.locations.programs.join(SERVER_RECORD);
-        let server = Server::spawn(command, &self.version, record.clone())?;
+        let server = Server::spawn(command, &self.version, record.clone(), containment, lease)?;
         filesystem::replace_json(
             &record,
             &ServerRecord {
@@ -631,7 +828,7 @@ impl Program {
         Ok(self.server.insert(server))
     }
 
-    /// Stops the server this engine runs, if any.
+    /// Stops the server this program started, if any.
     pub fn stop(&mut self) {
         if let Some(mut server) = self.server.take() {
             server.halt();
@@ -639,17 +836,23 @@ impl Program {
     }
 }
 
+/// The deepest folder holding both `left` and `right`.
+fn common_folder(left: &Path, right: &Path) -> Option<PathBuf> {
+    let mut common = PathBuf::new();
+    for (a, b) in left.components().zip(right.components()) {
+        if a != b {
+            break;
+        }
+        common.push(a);
+    }
+    common.is_absolute().then_some(common)
+}
+
 fn remove_record(programs: &Path) -> Result<(), Error> {
     match fs::remove_file(programs.join(SERVER_RECORD)) {
         Err(error) if error.kind() != std::io::ErrorKind::NotFound => Err(error.into()),
         _ => Ok(()),
     }
-}
-
-/// A loopback port free now, for the server to bind. Another process could take it in
-/// between; the server then fails to start and reads `program_not_running`.
-fn free_loopback_address() -> std::io::Result<SocketAddr> {
-    TcpListener::bind((Ipv4Addr::LOCALHOST, 0))?.local_addr()
 }
 
 /// Where the publisher's own installers put the program on this platform, and every
@@ -701,4 +904,4 @@ pub fn system_program(candidates: &[PathBuf], own: &Path) -> Option<PathBuf> {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

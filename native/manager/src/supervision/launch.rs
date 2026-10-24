@@ -153,6 +153,11 @@ impl LaunchTarget {
         &self.storage_root
     }
 
+    /// The package root of an installed runtime; a fixture target has none.
+    pub fn package_root(&self) -> Option<&Path> {
+        self.package_root.as_deref()
+    }
+
     pub fn storage_identity(&self) -> &str {
         &self.storage_identity
     }

@@ -9,6 +9,7 @@ use crate::{
     },
     startup::{self, Running, Start},
     supervision::{
+        local_ai::LocalAiHost,
         stop::PlatformStopSignal,
         supervisor::{
             Collaborators, EVENT_QUEUE, Event, Outcome, Request, SessionActivity, SupervisorConfig,
@@ -61,6 +62,8 @@ pub struct Background {
     control_retry: Option<Instant>,
     /// A refused uninstall stop is retried at the control pace.
     stop_retry: Option<Instant>,
+    /// The local AI server, for a package whose build carries the program.
+    local_ai: Option<LocalAiHost>,
 }
 
 impl Background {
@@ -71,6 +74,10 @@ impl Background {
         diagnostics: Arc<Diagnostics>,
         initial: StartKind,
     ) -> io::Result<Self> {
+        let local_ai = installed
+            .target
+            .package_root()
+            .and_then(|package| LocalAiHost::for_package(package, installed.target.storage_root()));
         let ownership = Ownership::new(
             installed.target.storage_root().to_path_buf(),
             session,
@@ -103,6 +110,7 @@ impl Background {
             next_start: None,
             control_retry: None,
             stop_retry: None,
+            local_ai,
         })
     }
 
@@ -256,8 +264,18 @@ impl Background {
         self.stop_retry = None;
         self.quitting = true;
         self.suspended = true;
+        self.stop_local_ai();
         Ok(())
     }
+
+    /// The local AI server stops with the runtime's supervision and starts nothing
+    /// until supervision resumes. Its own thread carries the stop out.
+    fn stop_local_ai(&mut self) {
+        if let Some(local_ai) = &mut self.local_ai {
+            local_ai.stop();
+        }
+    }
+
     pub fn poll(&mut self) -> io::Result<()> {
         // Re-armed only if this poll's uninstall is refused again.
         self.stop_retry = None;
@@ -276,6 +294,9 @@ impl Background {
             self.uninstall()?;
         }
         self.restore_adopted_control()?;
+        if self.quitting || self.suspended {
+            self.stop_local_ai();
+        }
         if let Some(running) = &mut self.running {
             self.backlog = drain_events(
                 running,
@@ -413,6 +434,9 @@ impl Background {
             return Err(io::ErrorKind::WouldBlock.into());
         }
         crate::failed_versions::FailedVersions::retry(self.installed.target.storage_root())?;
+        if let Some(local_ai) = &self.local_ai {
+            local_ai.retry();
+        }
         self.blocked = false;
         self.update_failed = false;
         self.next_start = None;
@@ -475,6 +499,7 @@ impl Background {
         }
         self.quitting = true;
         self.suspended = true;
+        self.stop_local_ai();
         Ok(())
     }
 
@@ -508,11 +533,16 @@ impl Background {
     }
 
     fn suppress_session_end(&mut self) -> bool {
-        self.session_end.begin(&mut self.suspended, || {
+        let begun = self.session_end.begin(&mut self.suspended, || {
             if let Some(running) = &self.running {
                 running.handle.request(Request::SessionEnd);
             }
-        })
+        });
+        // After the runtime's request, so its settlement starts first.
+        if begun {
+            self.stop_local_ai();
+        }
+        begun
     }
 
     pub fn begin_session_end(&mut self) {
@@ -543,6 +573,11 @@ impl Background {
     pub fn cancel_session_end(&mut self) {
         // A still-settling supervisor must exit before a fresh one may start.
         self.session_end.cancel(&mut self.suspended, self.quitting);
+        if !self.quitting
+            && let Some(local_ai) = &mut self.local_ai
+        {
+            local_ai.resume();
+        }
         self.next_start = None;
         self.diagnostics.lifecycle(
             EventKind::StageCompleted,
