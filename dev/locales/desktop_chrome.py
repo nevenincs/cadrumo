@@ -3547,6 +3547,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.apply.blocker.too_large",
         "desktop.ledger.apply.blocker.transfer_with_tax",
         "desktop.ledger.apply.blocker_fields",
+        "desktop.ledger.apply.checking_locks",
         "desktop.ledger.apply.close",
         "desktop.ledger.apply.conflict_choice",
         "desktop.ledger.apply.conflicts_description",

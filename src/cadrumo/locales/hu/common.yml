@@ -896,8 +896,8 @@ desktop:
         mixed_needs_share: 'Vegyes üzleti arány nélkül: {count}'
         needs_classification: 'Besorolás hiányzik: {count}'
         not_active: 'Nem aktív, csak aktív tétel módosítható: {count}'
-        sealed: 'Véglegesített bevallás miatt lezárva: {count}'
-        sealed_unread: 'Lezárás nincs beolvasva: {count}'
+        sealed: 'Véglegesített bevallás miatt zárolva: {count}'
+        sealed_unread: 'Nem tudni, zárolt-e: {count}'
         share_needs_mixed: 'Arány, de nem Vegyes: {count}'
         suggestion_and_edits: 'Modell-jóváhagyás és szerkesztés együtt: {count}'
         suggestion_and_rules: 'Modell-jóváhagyás és rájuk is kiterjedő szabályalkalmazás:
@@ -906,6 +906,7 @@ desktop:
         too_large: 'Túl nagy a küldéshez: {count}'
         transfer_with_tax: 'Átvezetés adóadattal: {count}'
       blocker_fields: 'Mezők: {fields}'
+      checking_locks: Annak ellenőrzése, mely tételek zároltak · {done} / {total}
       close: Kész
       conflict_choice: Mit tartasz meg
       conflicts_description: Egy másik ablak elmentette ezeket a tételeket, miután
@@ -1646,7 +1647,7 @@ desktop:
         after_add: A tétel mentése után adható meg
         derived: A Cadrumo számolja
         not_active: 'Nem aktív: {state}. Csak aktív tétel módosítható.'
-        sealed: 'Lezárva: egy véglegesített bevallás használja'
+        sealed: 'Zárolva: egy véglegesített bevallás használja'
         transfer: Átvezetésnek nincs adóadata
       new_identity: Mentéskor új hivatkozást kap
       no_match: Nincs találat
@@ -2368,8 +2369,8 @@ desktop:
       skip:
         not_active: nem aktív
         personal: magán
-        sealed: lezárt
-        sealed_unread: lezárás nincs beolvasva
+        sealed: zárolt
+        sealed_unread: nem tudni, zárolt-e
         transfer: átvezetés
         unclassified: még nincs besorolva
       source_jurisdiction: Forrás szerinti joghatóság

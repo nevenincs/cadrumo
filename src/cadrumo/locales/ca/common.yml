@@ -908,8 +908,8 @@ desktop:
         mixed_needs_share: 'Mixt sense part professional: {count}'
         needs_classification: 'Sense classificació: {count}'
         not_active: 'No actius, i només canvien els actius: {count}'
-        sealed: 'Segellats per una declaració finalitzada: {count}'
-        sealed_unread: 'Segellat sense llegir: {count}'
+        sealed: 'Bloquejats per una declaració finalitzada: {count}'
+        sealed_unread: 'Sense saber si estan bloquejats: {count}'
         share_needs_mixed: 'Amb part però no Mixt: {count}'
         suggestion_and_edits: 'Aprovació del model i edicions alhora: {count}'
         suggestion_and_rules: 'Aprovació del model i una aplicació de regles que els
@@ -919,6 +919,7 @@ desktop:
         too_large: 'Massa grans per enviar: {count}'
         transfer_with_tax: 'Traspassos amb dades fiscals: {count}'
       blocker_fields: 'Camps: {fields}'
+      checking_locks: Comprovant quins moviments estan bloquejats · {done} de {total}
       close: Fet
       conflict_choice: Què conservar
       conflicts_description: Una altra finestra va desar aquests moviments després
@@ -1661,7 +1662,7 @@ desktop:
         after_add: S'indica quan el moviment estigui desat
         derived: El calcula Cadrumo
         not_active: 'No actiu: {state}. Només canvien els moviments actius.'
-        sealed: 'Segellat: l''usa una declaració finalitzada'
+        sealed: 'Bloquejat: l''usa una declaració finalitzada'
         transfer: Els traspassos no porten dades fiscals
       new_identity: Nova referència en desar
       no_match: Cap coincidència
@@ -2382,8 +2383,8 @@ desktop:
       skip:
         not_active: no actius
         personal: Personals
-        sealed: segellats
-        sealed_unread: segellat sense llegir
+        sealed: bloquejats
+        sealed_unread: sense saber si estan bloquejats
         transfer: transferències
         unclassified: sense classificar
       source_jurisdiction: Jurisdicció d'origen

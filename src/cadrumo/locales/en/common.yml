@@ -880,8 +880,8 @@ desktop:
         mixed_needs_share: 'Mixed without a business share: {count}'
         needs_classification: 'Classification missing: {count}'
         not_active: 'Not active, and only active movements change: {count}'
-        sealed: 'Sealed by a finalised declaration: {count}'
-        sealed_unread: 'Sealed state not read: {count}'
+        sealed: 'Locked by a finalised declaration: {count}'
+        sealed_unread: 'Not known whether locked: {count}'
         share_needs_mixed: 'A share but not Mixed: {count}'
         suggestion_and_edits: 'A model approval and edits together: {count}'
         suggestion_and_rules: 'A model approval and a rules apply that names them:
@@ -890,6 +890,7 @@ desktop:
         too_large: 'Too large to send: {count}'
         transfer_with_tax: 'Transfers with tax fields: {count}'
       blocker_fields: 'Fields: {fields}'
+      checking_locks: Checking which movements are locked · {done} of {total}
       close: Done
       conflict_choice: What to keep
       conflicts_description: Another window saved these movements after you read them.
@@ -1632,7 +1633,7 @@ desktop:
         after_add: Set once the movement is saved
         derived: Worked out by Cadrumo
         not_active: 'Not active: {state}. Only active movements change.'
-        sealed: 'Sealed: a finalised declaration uses it'
+        sealed: 'Locked: a finalised declaration uses it'
         transfer: Transfers take no tax fields
       new_identity: New reference after saving
       no_match: Nothing matches
@@ -2351,8 +2352,8 @@ desktop:
       skip:
         not_active: not active
         personal: Personal
-        sealed: sealed
-        sealed_unread: sealed state not read
+        sealed: locked
+        sealed_unread: not known whether locked
         transfer: transfers
         unclassified: not classified yet
       source_jurisdiction: Source jurisdiction
