@@ -723,6 +723,9 @@ _ADVISORY_PREDICATE_EVALUATORS: Mapping[VerificationPredicateOperator, _Advisory
     }
 )
 
+BLOCKING_PREDICATE_OPERATORS: frozenset[VerificationPredicateOperator] = frozenset(_BLOCKING_PREDICATE_EVALUATORS)
+ADVISORY_PREDICATE_OPERATORS: frozenset[VerificationPredicateOperator] = frozenset(_ADVISORY_PREDICATE_EVALUATORS)
+
 
 def evaluate_advisory_predicate_fires(
     expression: str,

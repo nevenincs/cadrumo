@@ -10,6 +10,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.modelo.verification_predicates import (
+    ADVISORY_PREDICATE_OPERATORS,
+    BLOCKING_PREDICATE_OPERATORS,
+)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
@@ -84,7 +88,9 @@ def test_every_known_operator_is_classified_and_has_an_authoring_route() -> None
     assert {operator.value for operator in operators} == KNOWN_VERIFICATION_PREDICATE_OPERATORS
     assert set(VERIFICATION_PREDICATE_SPECIFICATIONS) == operators
     assert not _ADVISORY_ONLY_OPERATORS & _BLOCKING_ONLY_OPERATORS
-    assert operators >= _ADVISORY_ONLY_OPERATORS | _BLOCKING_ONLY_OPERATORS
+    assert _ADVISORY_ONLY_OPERATORS == ADVISORY_PREDICATE_OPERATORS - BLOCKING_PREDICATE_OPERATORS
+    assert _BLOCKING_ONLY_OPERATORS == BLOCKING_PREDICATE_OPERATORS - ADVISORY_PREDICATE_OPERATORS
+    assert operators == ADVISORY_PREDICATE_OPERATORS | BLOCKING_PREDICATE_OPERATORS
     routed = set(_MIXED_TOKEN_PREDICATE_VALIDATORS) | set(_PROFILE_PREDICATE_VALIDATORS) | _CASILLA_LIST_OPERATORS
     assert routed == KNOWN_VERIFICATION_PREDICATE_OPERATORS
 

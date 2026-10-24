@@ -9,6 +9,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from cadrumo.application.modelo.verification_predicates import (
+    ADVISORY_PREDICATE_OPERATORS,
+    BLOCKING_PREDICATE_OPERATORS,
+)
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.decimal.grammar import try_parse_canonical_decimal
 from cadrumo.domain.calculations.registry.schema_scalars import registry_scalar_value_type
@@ -49,27 +53,9 @@ _CASILLA_LIST_OPERATORS = frozenset(
 # authored under the kind its evaluator does not serve never reports a finding: a
 # blocking rule over an advisory-only operator always holds, and an advisory over a
 # blocking-only operator never fires.
-_ADVISORY_ONLY_OPERATORS = frozenset(
-    {
-        VerificationPredicateOperator.ADVISORY_WHEN_COMPUTED_DIVERGES,
-        VerificationPredicateOperator.ADVISORY_WHEN_POSITIVE,
-        VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE,
-        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_DIVERGES,
-        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_PROFILE_FLAG,
-        VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE,
-        VerificationPredicateOperator.PROFILE_FLAG_ENABLED,
-    },
-)
+_ADVISORY_ONLY_OPERATORS = ADVISORY_PREDICATE_OPERATORS - BLOCKING_PREDICATE_OPERATORS
 
-_BLOCKING_ONLY_OPERATORS = frozenset(
-    {
-        VerificationPredicateOperator.ALL_NONZERO,
-        VerificationPredicateOperator.ANY_NONZERO,
-        VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE,
-        VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK,
-        VerificationPredicateOperator.PROFILE_FIELD_REQUIRED,
-    },
-)
+_BLOCKING_ONLY_OPERATORS = BLOCKING_PREDICATE_OPERATORS - ADVISORY_PREDICATE_OPERATORS
 
 
 def _finding_kind_failures(
