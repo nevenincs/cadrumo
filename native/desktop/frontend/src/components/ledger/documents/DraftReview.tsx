@@ -33,7 +33,9 @@ import type {
 } from "../../../shell/ledger";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { readAnswer } from "../../../shell/ledgerWindow";
+import { provisionActionOf } from "../../../shell/provisioningRecovery";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { SetupOffer } from "../../setup/SetupOffer";
 import { seriesAndNumber } from "../invoices/invoiceModel";
 import { figureText, kindChoice, problemText } from "../invoices/invoiceWords";
 import { write } from "../invoices/invoiceWrites";
@@ -268,7 +270,8 @@ function Finding({
 
 type Notice =
   | { kind: "changed" }
-  | { kind: "refused"; code: string }
+  /** `recovery` is the setup action the refusal names, if any. */
+  | { kind: "refused"; code: string; recovery: string | null }
   | { kind: "unknown" }
   | { kind: "failed"; code: string }
   | { kind: "checked"; saved: boolean };
@@ -370,7 +373,11 @@ export function DraftReview({
         sent.kind === "unknown"
           ? { kind: "unknown" }
           : sent.kind === "refused"
-            ? { kind: "refused", code: sent.reason ?? "refused" }
+            ? {
+                kind: "refused",
+                code: sent.reason ?? "refused",
+                recovery: provisionActionOf(sent.detail),
+              }
             : { kind: "failed", code: sent.code },
       );
       if (sent.kind === "unknown") {
@@ -472,7 +479,11 @@ export function DraftReview({
     // A refused confirmation wrote nothing; the reading may have changed.
     setNotice(
       sent.kind === "refused"
-        ? { kind: "refused", code: sent.reason ?? "refused" }
+        ? {
+            kind: "refused",
+            code: sent.reason ?? "refused",
+            recovery: provisionActionOf(sent.detail),
+          }
         : { kind: "failed", code: sent.code },
     );
     setBinding(null);
@@ -704,8 +715,11 @@ export function DraftReview({
       {(notice?.kind === "refused" || notice?.kind === "failed") && (
         <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
           <AlertTitle>{t("desktop.ledger.documents.not_done")}</AlertTitle>
-          <AlertDescription>
+          <AlertDescription className="flex flex-wrap items-center gap-2">
             <code className="font-mono text-xs">{notice.code}</code>
+            {notice.kind === "refused" && (
+              <SetupOffer action={notice.recovery} />
+            )}
           </AlertDescription>
         </Alert>
       )}
@@ -737,12 +751,22 @@ export function DraftReview({
         </Alert>
       )}
       {view.label_reading_fallback && (
-        <Alert tone="warning" icon={<Icon name="pause" />}>
+        <Alert
+          tone="warning"
+          icon={<Icon name="pause" />}
+          className="ledger-draft-unread"
+        >
           <AlertTitle>{t("desktop.ledger.documents.unread")}</AlertTitle>
-          <AlertDescription>
-            {view.label_reading_fallback.unread_fields
-              .map((field) => fieldLabel(t, field))
-              .join(" · ")}
+          <AlertDescription className="grid gap-2">
+            <span>
+              {view.label_reading_fallback.unread_fields
+                .map((field) => fieldLabel(t, field))
+                .join(" · ")}
+            </span>
+            <SetupOffer
+              action={provisionActionOf(view.label_reading_fallback)}
+              className="justify-self-start"
+            />
           </AlertDescription>
         </Alert>
       )}

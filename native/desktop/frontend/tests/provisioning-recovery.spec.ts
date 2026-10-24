@@ -1,0 +1,156 @@
+import { expect, test } from "@playwright/test";
+import {
+  LOCAL_AI_SETUP_ACTION,
+  provisionActionOf,
+  routeProvisioningRefusals,
+} from "../src/shell/provisioningRecovery";
+import type { LedgerPort } from "../src/shell/ledger";
+
+// The setup action a refusal names, wherever its shape carries it: an agent
+// tool's refusal, a settled operation's error detail with the verdict as its
+// JSON text, a verdict snapshot, or a label reading that stood without its
+// model fill. And the ledger port that hands each refusal naming one to the
+// window's setup prompt once. The scenario ledger needs a window; a bare one
+// stands in for it here. No page is opened.
+
+const stand = globalThis as unknown as { window?: unknown };
+stand.window = {
+  location: { search: "" },
+  setTimeout: globalThis.setTimeout,
+};
+const { ledgerFixture } = await import("../src/dev/ledgerFixture");
+
+/** A verdict as the product serializes it, recovered by `action`. */
+const verdict = (action: string | null) => ({
+  failed_condition_id: "provisioning.role_model.installed",
+  evidence: [],
+  action: action === null ? null : { action_id: action },
+  argument_bindings: [],
+  missing_argument_names: [],
+  conditionality: action === null ? "no_recovery" : "immediate",
+  no_recovery_outcome: action === null ? "not_recoverable" : null,
+});
+const detail = (verdictJson: string | null) => ({
+  detail_version: 1,
+  kind: "registered_error",
+  error_code: "REFUSED_LEDGER_EVIDENCE_READER",
+  message_key: "errors.refused.refused_ledger_evidence_reader_unavailable",
+  context: [],
+  context_entries_omitted: 0,
+  precondition_verdict_json: verdictJson,
+});
+
+test("the setup action is found in every shape a refusal carries it", () => {
+  expect(
+    provisionActionOf({
+      code: "operation_not_successful",
+      recovery_action_id: "operator.provision.browser",
+    }),
+  ).toBe("operator.provision.browser");
+  expect(
+    provisionActionOf(
+      detail(JSON.stringify(verdict("operator.provision.local_ai"))),
+    ),
+  ).toBe("operator.provision.local_ai");
+  expect(
+    provisionActionOf({
+      failed_condition_id: "provisioning.runtime.reachable",
+      action_id: "operator.provision.local_ai",
+    }),
+  ).toBe("operator.provision.local_ai");
+  expect(
+    provisionActionOf({
+      cause: "reader_unavailable",
+      unread_fields: ["grand_total"],
+      reader_error_type: "InvoiceDraftReaderUnavailableError",
+      recovery_action_id: LOCAL_AI_SETUP_ACTION,
+    }),
+  ).toBe(LOCAL_AI_SETUP_ACTION);
+  // Setup as a whole is a setup action too; where it leads is the window's.
+  expect(provisionActionOf("operator.provision.setup")).toBe(
+    "operator.provision.setup",
+  );
+});
+
+test("a refusal that names no setup, or names it malformed, has none", () => {
+  // A verdict with no recovery, and one recovered by something else.
+  expect(provisionActionOf(detail(JSON.stringify(verdict(null))))).toBeNull();
+  expect(
+    provisionActionOf(
+      detail(JSON.stringify(verdict("operator.ledger.classify"))),
+    ),
+  ).toBeNull();
+  expect(provisionActionOf(detail(null))).toBeNull();
+  expect(provisionActionOf(detail("{not json"))).toBeNull();
+  expect(provisionActionOf(null)).toBeNull();
+  expect(provisionActionOf({ code: "refused" })).toBeNull();
+  for (const malformed of [
+    "operator.provision.",
+    "operator.provision.Browser",
+    "operator.provision.browser now",
+    `operator.provision.${"a".repeat(128)}`,
+    "provision.browser",
+  ])
+    expect(provisionActionOf({ recovery_action_id: malformed })).toBeNull();
+});
+
+/** The scenario ledger on a computer without its local AI, and the image
+ * among its documents, which only that reader can read. */
+async function missingReader(shape: "reader_missing" | "documents") {
+  const port = ledgerFixture({
+    say: () => undefined,
+    wait: async () => undefined,
+    signedIn: () => true,
+    shape,
+  });
+  const listed = await port.submit("ledger.evidence.list", {});
+  if (listed.kind !== "settled") throw new Error("the list did not settle");
+  const scan = listed.result.rows.find(
+    (record) => record.media_kind === "image",
+  );
+  if (!scan) throw new Error("the ledger has no scan");
+  return { port, scan: scan.evidence_id };
+}
+
+test("each ledger refusal that names a setup reaches the prompt once, unchanged", async () => {
+  const { port, scan } = await missingReader("reader_missing");
+  const offered: string[] = [];
+  const routed: LedgerPort = routeProvisioningRefusals(port, (action) => {
+    offered.push(action);
+  });
+  const refused = await routed.submit("ledger.evidence.extract", {
+    evidence_id: scan,
+  });
+  expect(refused.kind).toBe("refused");
+  expect(offered).toEqual([LOCAL_AI_SETUP_ACTION]);
+  // The page still reads the refusal as the host gave it.
+  if (refused.kind !== "refused") throw new Error("not refused");
+  expect(refused.reason).toBe("REFUSED_LEDGER_EVIDENCE_READER");
+  // Observed again, the same operation is not offered twice; a new one is.
+  await routed.observe(refused.operation_id);
+  expect(offered).toHaveLength(1);
+  await routed.submit("ledger.evidence.extract", { evidence_id: scan });
+  expect(offered).toHaveLength(2);
+  // A read that settles offers nothing.
+  await routed.submit("ledger.evidence.reader-readiness", {});
+  expect(offered).toHaveLength(2);
+});
+
+test("a ledger refusal that names no setup offers nothing", async () => {
+  // With the reader present the scan is read; a refusal whose detail holds
+  // no verdict names nothing either.
+  const { port, scan } = await missingReader("documents");
+  const offered: string[] = [];
+  const routed = routeProvisioningRefusals(port, (action) => {
+    offered.push(action);
+  });
+  const read = await routed.submit("ledger.evidence.extract", {
+    evidence_id: scan,
+  });
+  expect(read.kind).toBe("settled");
+  const missing = await routed.submit("ledger.evidence.extract", {
+    evidence_id: "0".repeat(64),
+  });
+  expect(missing.kind).toBe("refused");
+  expect(offered).toEqual([]);
+});

@@ -10,6 +10,10 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  LOCAL_AI_SETUP_ACTION,
+  provisionActionOf,
+} from "../../../shell/provisioningRecovery";
 import type {
   AttachmentReviewItem,
   EvidenceConsentListResult,
@@ -21,6 +25,7 @@ import type {
   ReaderReadinessResult,
 } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { SetupOffer } from "../../setup/SetupOffer";
 import { kindChoice } from "../invoices/invoiceWords";
 import { failureCode } from "../ledgerWords";
 import { stampText } from "../movements/movementWords";
@@ -117,9 +122,11 @@ export function AttachmentQueue({
   const t = useStrings();
   const pause = useWritePause();
   const [reading, setReading] = useState<string | null>(null);
-  const [failed, setFailed] = useState<{ id: string; code: string } | null>(
-    null,
-  );
+  const [failed, setFailed] = useState<{
+    id: string;
+    code: string;
+    recovery: string | null;
+  } | null>(null);
   if (read.phase === "failed")
     return <Failed t={t} read={read} onRetry={onRetry} />;
   if (!read.value) return <Reading t={t} />;
@@ -146,6 +153,8 @@ export function AttachmentQueue({
             : sent.kind === "refused"
               ? (sent.reason ?? "refused")
               : sent.code,
+        recovery:
+          sent.kind === "refused" ? provisionActionOf(sent.detail) : null,
       });
   }
   if (rows.length === 0)
@@ -189,6 +198,9 @@ export function AttachmentQueue({
                 <span role="alert" className="block text-destructive">
                   <code className="font-mono text-xs">{failed.code}</code>
                 </span>
+              )}
+              {failed?.id === item.attachment_id && (
+                <SetupOffer action={failed.recovery} className="mt-1" />
               )}
             </td>
             <td className={cell}>
@@ -578,6 +590,10 @@ export function ReaderReadiness({
     return <Failed t={t} read={read} onRetry={onRetry} />;
   if (!read.value) return <Reading t={t} />;
   const ready = read.value;
+  // A reader that is not ready offers the local AI's setup, where setup
+  // can change what it lacks.
+  const lacking =
+    !ready.host.available || ready.roles.some((role) => !role.ready);
   const line = (ok: boolean, label: string, detail: string) => (
     <li className="flex items-start gap-2 border-b border-border py-2">
       <Icon
@@ -591,6 +607,12 @@ export function ReaderReadiness({
   );
   return (
     <div className="ledger-readers grid gap-3 p-3">
+      {lacking && (
+        <SetupOffer
+          action={LOCAL_AI_SETUP_ACTION}
+          className="ledger-readers-set-up justify-self-start"
+        />
+      )}
       <ul aria-label={t("desktop.ledger.documents.tab.readers")}>
         {line(
           ready.extraction_ready,

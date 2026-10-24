@@ -59,6 +59,12 @@ import { SetupDialog } from "./components/setup/SetupDialog";
 import { SetupPrompt } from "./components/setup/SetupPrompt";
 import { canSignInGoogle, outcomeToast } from "./components/setup/setupWords";
 import { liveRun, needsSetup, setupTargetOf, useSetup } from "./shell/setup";
+import {
+  provisionActionOf,
+  ProvisioningRecoveryContext,
+  routeProvisioningRefusals,
+  type ProvisioningRecovery,
+} from "./shell/provisioningRecovery";
 import { useAbout } from "./shell/about";
 import { accountLabel } from "./components/accountWords";
 import { SignedOut, SignInDialog } from "./components/SignIn";
@@ -859,30 +865,55 @@ export function App({ host }: { host: Host }) {
     },
     [setup, openSetup],
   );
-  // A tool call the product refused for a component that is not set up
-  // opens that component's prompt, once per refusal; an action that is not
-  // about setup opens nothing. The refusal's code is never shown.
-  const toolRefusalsSeen = useRef(new Set<string>());
+  // Something the product refused for a component that is not set up opens
+  // that component's prompt; an action that is not about setup opens
+  // nothing. The refusal's code is never shown.
   const setupRowsRef = useRef<readonly SetupRow[]>([]);
   setupRowsRef.current = setupSnapshot?.rows ?? [];
   const setupOfferedRef = useRef(setupOffered);
   setupOfferedRef.current = setupOffered;
+  const offerSetup = useCallback(
+    (action: string): boolean => {
+      if (!setupOfferedRef.current) return false;
+      const target = setupTargetOf(action, setupRowsRef.current);
+      if (target === null) return false;
+      if (target === "general") {
+        openSetup(null);
+        return true;
+      }
+      setSetupPromptFocus(!typingInto(document.activeElement));
+      setSetupPrompt(target);
+      return true;
+    },
+    [openSetup],
+  );
+  // A tool call's refusal opens it once per refusal.
+  const toolRefusalsSeen = useRef(new Set<string>());
   const onToolRefused = useCallback(
     (key: string, refusal: AgentToolRefusal) => {
       if (toolRefusalsSeen.current.has(key)) return;
       toolRefusalsSeen.current.add(key);
-      const action = refusal.recovery_action_id;
-      if (action === undefined || !setupOfferedRef.current) return;
-      const target = setupTargetOf(action, setupRowsRef.current);
-      if (target === null) return;
-      if (target === "general") {
-        openSetup(null);
-        return;
-      }
-      setSetupPromptFocus(!typingInto(document.activeElement));
-      setSetupPrompt(target);
+      const action = provisionActionOf(refusal);
+      if (action !== null) offerSetup(action);
     },
-    [openSetup],
+    [offerSetup],
+  );
+  // A ledger operation's refusal opens it once per operation, and the page
+  // still shows the refusal itself.
+  const routedLedger = useMemo(
+    () => host.ledger && routeProvisioningRefusals(host.ledger, offerSetup),
+    [host.ledger, offerSetup],
+  );
+  // What the ledger's own surfaces offer beside a refusal or a reader that
+  // is not ready: the same prompt, on the same item.
+  const setupRows = setupSnapshot?.rows;
+  const provisioning = useMemo<ProvisioningRecovery>(
+    () => ({
+      targetOf: (action) =>
+        setupOffered ? setupTargetOf(action, setupRows ?? []) : null,
+      offer: offerSetup,
+    }),
+    [setupOffered, setupRows, offerSetup],
   );
 
   const copyLogs = useCallback(
@@ -2783,45 +2814,47 @@ export function App({ host }: { host: Host }) {
             ],
           }}
         />
-      ) : ledgerOn && host.ledger ? (
-        <LedgerPage
-          key={reader ?? ""}
-          port={host.ledger}
-          reader={reader}
-          withheld={
-            <SignedOut
-              account={account}
-              lead={t("desktop.ledger.signed_out")}
-              quiet
-              onSignIn={askSignIn}
-            />
-          }
-          locale={locale}
-          shown={firstPaneShown}
-          page={ledgerPage}
-          view={layout.ledgerView}
-          onViewChange={changeLedgerView}
-          memory={ledgerKept.memory}
-          contribute={contribute}
-          copy={(text) => host.writeClipboard(text)}
-          pane={{
-            title: t("desktop.ledger.title"),
-            onToggleMaximize: () => toggleMaximize("docs"),
-            controls: [
-              maximizeControl("docs", "desktop.ledger.maximize"),
-              ...splitControls.map((control) => ({
-                ...control,
-                yields: true,
-              })),
-              {
-                id: "close",
-                icon: "close",
-                label: t("desktop.ledger.close"),
-                run: closePage,
-              },
-            ],
-          }}
-        />
+      ) : ledgerOn && routedLedger ? (
+        <ProvisioningRecoveryContext.Provider value={provisioning}>
+          <LedgerPage
+            key={reader ?? ""}
+            port={routedLedger}
+            reader={reader}
+            withheld={
+              <SignedOut
+                account={account}
+                lead={t("desktop.ledger.signed_out")}
+                quiet
+                onSignIn={askSignIn}
+              />
+            }
+            locale={locale}
+            shown={firstPaneShown}
+            page={ledgerPage}
+            view={layout.ledgerView}
+            onViewChange={changeLedgerView}
+            memory={ledgerKept.memory}
+            contribute={contribute}
+            copy={(text) => host.writeClipboard(text)}
+            pane={{
+              title: t("desktop.ledger.title"),
+              onToggleMaximize: () => toggleMaximize("docs"),
+              controls: [
+                maximizeControl("docs", "desktop.ledger.maximize"),
+                ...splitControls.map((control) => ({
+                  ...control,
+                  yields: true,
+                })),
+                {
+                  id: "close",
+                  icon: "close",
+                  label: t("desktop.ledger.close"),
+                  run: closePage,
+                },
+              ],
+            }}
+          />
+        </ProvisioningRecoveryContext.Provider>
       ) : (
         <PaneHeader
           title={t(

@@ -8,7 +8,9 @@
 // that one call, and is recorded as a dispatch. Results are the flat public
 // projections, naming files by name only. The `documents` shape adds the
 // documents, attachments and pairs the Documents and Matching sections
-// exercise. Everything it answers is synthetic.
+// exercise. Without the local AI, readings stand on what the labels print and
+// name its setup, a scan refuses with the reader probe's verdict, and the
+// readers are not ready. Everything it answers is synthetic.
 
 import type {
   AttachmentReviewItem,
@@ -57,6 +59,8 @@ type Tools = {
   ) => { transaction_id: string; reason: string; detail: string }[];
   /** Whether to add the documents, attachments and pairs to match. */
   seed: boolean;
+  /** Whether the local AI is missing on this computer. */
+  readerMissing: boolean;
 };
 
 type Reading = {
@@ -81,6 +85,48 @@ const text = (value: JsonValue | undefined): string | null =>
 const decimal = (value: string | null): PublicDecimal | null =>
   value === null ? null : { decimal: value };
 const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
+
+/** The setup the reader probe names when the local AI is missing. */
+const LOCAL_AI_SETUP = "operator.provision.local_ai";
+/** What the probe found missing: the program that runs the models. */
+const RUNTIME_REACHABLE = "provisioning.runtime.reachable";
+
+/** A label reading that stood without the model fill the local AI gives. */
+const withoutReader = (unread: string[]): LabelReadingFallback => ({
+  cause: "reader_unavailable",
+  unread_fields: unread,
+  reader_error_type: "InvoiceDraftReaderUnavailableError",
+  failed_condition_id: RUNTIME_REACHABLE,
+  recovery_action_id: LOCAL_AI_SETUP,
+});
+
+/** The registered refusal of a read that needed the missing local AI, with
+ * the probe's verdict as the product serializes it. */
+const readerRefusal = () =>
+  new InvoiceStopped("REFUSED_LEDGER_EVIDENCE_READER", {
+    detail_version: 1,
+    kind: "registered_error",
+    error_code: "REFUSED_LEDGER_EVIDENCE_READER",
+    message_key: "errors.refused.refused_ledger_evidence_reader_unavailable",
+    context: [],
+    context_entries_omitted: 0,
+    precondition_verdict_json: JSON.stringify({
+      failed_condition_id: RUNTIME_REACHABLE,
+      evidence: [
+        {
+          condition_id: RUNTIME_REACHABLE,
+          evidence_id: `${RUNTIME_REACHABLE}.observation`,
+          provenance: "runtime_observation",
+          values: { reachable: false },
+        },
+      ],
+      action: { action_id: LOCAL_AI_SETUP },
+      argument_bindings: [],
+      missing_argument_names: [],
+      conditionality: "immediate",
+      no_recovery_outcome: null,
+    }),
+  });
 
 /** A value of any shape in one comparable text, keys sorted. */
 function stable(value: unknown): string {
@@ -612,7 +658,9 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
             reader_error_type: "ReaderBusy",
             failed_condition_id: null,
           }
-        : null,
+        : tools.readerMissing
+          ? withoutReader(["retencion_rate", "retencion_amount"])
+          : null,
       extractor: image ? "text_rules" : "text_layer",
       drafted_at: now(),
       confirmed: false,
@@ -702,7 +750,15 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         source_path: spec.name,
       };
       ledger.evidence.push(record);
-      readings.set(record.evidence_id, specReading(spec));
+      const reading = specReading(spec);
+      // A page with text is read by its labels alone; the withholding the
+      // text model would have filled is left unread.
+      if (tools.readerMissing && spec.media === "pdf")
+        reading.fallback = withoutReader([
+          "retencion_rate",
+          "retencion_amount",
+        ]);
+      readings.set(record.evidence_id, reading);
     }
     ATTACHMENTS.forEach((attachment, at) => {
       const sha = hex64(`attachment:${at}`);
@@ -1013,6 +1069,13 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
     )
       invalid();
     const source = sourceOf(request);
+    // A scan has no text for the labels: it cannot be read here at all.
+    if (
+      tools.readerMissing &&
+      provider === null &&
+      source.record?.media_kind === "image"
+    )
+      throw readerRefusal();
     let reading = readingOf(source.reference);
     if (!reading) {
       // An attachment read for the first time.
@@ -1225,6 +1288,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
     };
   }
   function readerReadiness(): JsonObject {
+    if (tools.readerMissing) return missingReader();
     return {
       profile_id: profileId,
       host: {
@@ -1275,6 +1339,43 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       extraction_ready: true,
       document_readiness: "text_layer_only",
       text_layer_model_fill_available: true,
+    };
+  }
+
+  /** The readers of a computer whose local AI program is not installed: the
+   * probe reaches nothing, so no role can read and no model is measured. */
+  function missingReader(): JsonObject {
+    const role = (name: string) => ({
+      role: name,
+      model: null,
+      installed: null,
+      resident: null,
+      load_admitted: null,
+      contention_causes: [],
+      fitness: null,
+      fit_for_role: null,
+      ready: false,
+      failed_condition_id: RUNTIME_REACHABLE,
+    });
+    return {
+      profile_id: profileId,
+      host: {
+        platform: "windows",
+        endpoint_url: null,
+        endpoint_local: true,
+        executable_located: false,
+        reachable: false,
+        version: null,
+        version_withheld: false,
+        installer: "none",
+        available: false,
+        failed_condition_id: RUNTIME_REACHABLE,
+      },
+      roles: [role("document_text"), role("document_vision")],
+      last_pull: null,
+      extraction_ready: false,
+      document_readiness: "text_layer_only",
+      text_layer_model_fill_available: false,
     };
   }
 

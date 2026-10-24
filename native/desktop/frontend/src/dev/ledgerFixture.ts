@@ -115,6 +115,8 @@ export const LEDGER_SHAPES = [
   "slow",
   "large",
   "documents",
+  // The `documents` ledger on a computer whose local AI is not set up.
+  "reader_missing",
 ] as const;
 export type LedgerShape = (typeof LEDGER_SHAPES)[number];
 
@@ -1730,7 +1732,8 @@ export function ledgerFixture(options: Options): LedgerPort {
     now,
     fileOf: (token) => fileOf(token, "documents"),
     issuesFor: (period) => issues(ledger, period),
-    seed: shape === "documents",
+    seed: shape === "documents" || shape === "reader_missing",
+    readerMissing: shape === "reader_missing",
   });
   const reads: Partial<
     Record<LedgerDefinitionId, (request: JsonObject) => JsonObject>

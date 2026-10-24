@@ -1,0 +1,166 @@
+import { expect, test, type Page } from "@playwright/test";
+import { label } from "../support/strings";
+
+// The Documents section on a computer whose local AI is not set up: a scan
+// whose read is refused for it, a reading that stood on its labels alone,
+// and readers that are not ready each lead to the window's one setup prompt
+// on the local AI, which says its state once and leads into setting it up.
+// Where setup cannot change what is missing, or the window offers no setup,
+// nothing is offered. Every value is synthetic.
+
+const PLENOIL = "ticket-plenoil-1015.jpg";
+const ARROYO = "factura-arroyo-2026-10.pdf";
+/** The fixture's local AI row, as the host names and words it. */
+const LOCAL_AI = "Local AI";
+const NOT_SET_UP = "Not set up yet.";
+
+const section = (target: Page) => target.locator(".ledger-documents");
+const draft = (target: Page) => section(target).locator(".ledger-draft");
+const tab = (target: Page, name: string) =>
+  section(target).getByRole("tab", {
+    name: new RegExp(`^${label(`desktop.ledger.documents.tab.${name}`)}`),
+  });
+const setupDialog = (target: Page) =>
+  target.getByRole("dialog", { name: label("desktop.setup.title") });
+const prompt = (target: Page) => target.getByRole("dialog", { name: LOCAL_AI });
+
+async function openDocuments(target: Page, setup: string | null) {
+  await target.goto(
+    `/scenarios.html?scenario=ledger&latency=0&bar=off&ledger=reader_missing${
+      setup ? `&setup=${setup}` : ""
+    }`,
+  );
+  // Setup unfinished opens its dialog once per launch; it is put away here.
+  if (setup === "fresh" || setup === "hardware") {
+    await setupDialog(target)
+      .getByRole("button", { name: label("desktop.setup.not_now") })
+      .click();
+    await expect(setupDialog(target)).toBeHidden();
+  }
+  await target.locator("[data-rail=ledger]").click();
+  await expect(target.locator(".ledger-movements")).toBeVisible();
+  await target
+    .getByRole("tab", { name: label("desktop.ledger.section.documents") })
+    .click();
+  await expect(section(target)).toBeVisible();
+}
+
+async function choose(target: Page, name: string) {
+  await section(target)
+    .locator(".ledger-review-item")
+    .filter({ hasText: name })
+    .click();
+  await expect(draft(target).getByRole("heading", { name })).toBeVisible();
+}
+
+/** The prompt names the local AI, says its state once and nothing else of
+ * the refusal behind it. */
+async function promptSaysOnce(target: Page) {
+  const shown = prompt(target);
+  await expect(shown).toBeVisible();
+  await expect(shown).toContainText(NOT_SET_UP);
+  expect((await shown.innerText()).split(NOT_SET_UP).length - 1).toBe(1);
+  const body = target.locator("body");
+  await expect(body).not.toContainText("operator.");
+  await expect(body).not.toContainText("provisioning.");
+  await expect(body).not.toContainText("local_ai");
+}
+
+test("the Readers tab offers the local AI's setup and its prompt leads into it", async ({
+  page: target,
+}) => {
+  await openDocuments(target, "fresh");
+  await tab(target, "readers").click();
+  const readers = section(target).locator(".ledger-readers");
+  await expect(readers.locator(".ledger-reader-role")).toHaveCount(2);
+  await expect(readers.locator(".ledger-reader-role").first()).toContainText(
+    label("desktop.ledger.documents.reader.not_ready"),
+  );
+  const offer = readers.locator(".ledger-readers-set-up");
+  await expect(offer).toContainText(LOCAL_AI);
+  // The tab does not say the setup's state; the prompt does, once.
+  await expect(readers).not.toContainText(NOT_SET_UP);
+  await offer.getByRole("button", { name: "Set up", exact: true }).click();
+  await promptSaysOnce(target);
+  await prompt(target)
+    .getByRole("button", { name: "Set up", exact: true })
+    .click();
+  await expect(prompt(target)).toBeHidden();
+  await expect(setupDialog(target)).toBeVisible();
+});
+
+test("a scan refused for the missing local AI opens its prompt once", async ({
+  page: target,
+}) => {
+  await openDocuments(target, "fresh");
+  await choose(target, PLENOIL);
+  await draft(target)
+    .getByRole("button", { name: label("desktop.ledger.documents.read_again") })
+    .click();
+  await promptSaysOnce(target);
+  await prompt(target)
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
+  await expect(prompt(target)).toBeHidden();
+  // The refusal stays on the page, and offers the same prompt again.
+  const refused = draft(target)
+    .getByRole("alert")
+    .filter({
+      hasText: label("desktop.ledger.documents.not_done"),
+    });
+  await expect(refused).toBeVisible();
+  await expect(refused).toContainText(LOCAL_AI);
+  await expect(target.getByRole("dialog")).toHaveCount(0);
+  await refused.getByRole("button", { name: "Set up", exact: true }).click();
+  await promptSaysOnce(target);
+});
+
+test("a reading that stood on its labels names the local AI and opens its prompt", async ({
+  page: target,
+}) => {
+  await openDocuments(target, "fresh");
+  await choose(target, ARROYO);
+  const unread = draft(target).locator(".ledger-draft-unread");
+  await expect(unread).toContainText(label("desktop.ledger.documents.unread"));
+  await expect(unread).toContainText(
+    label("desktop.ledger.documents.field.retencion_rate"),
+  );
+  await expect(unread).toContainText(LOCAL_AI);
+  // A reading that stood is no refusal: nothing opens by itself.
+  await expect(target.getByRole("dialog")).toHaveCount(0);
+  await unread.getByRole("button", { name: "Set up", exact: true }).click();
+  await promptSaysOnce(target);
+});
+
+test("where setup cannot change what is missing, nothing is offered", async ({
+  page: target,
+}) => {
+  // This computer is below what the local AI needs: setup cannot help.
+  await openDocuments(target, "hardware");
+  await choose(target, ARROYO);
+  const unread = draft(target).locator(".ledger-draft-unread");
+  await expect(unread).toBeVisible();
+  await expect(unread.locator(".setup-offer")).toHaveCount(0);
+  await tab(target, "readers").click();
+  await expect(section(target).locator(".ledger-reader-role")).toHaveCount(2);
+  await expect(section(target).locator(".setup-offer")).toHaveCount(0);
+});
+
+test("a window that offers no setup offers nothing and opens nothing", async ({
+  page: target,
+}) => {
+  await openDocuments(target, null);
+  await choose(target, PLENOIL);
+  await draft(target)
+    .getByRole("button", { name: label("desktop.ledger.documents.read_again") })
+    .click();
+  await expect(
+    draft(target)
+      .getByRole("alert")
+      .filter({
+        hasText: label("desktop.ledger.documents.not_done"),
+      }),
+  ).toBeVisible();
+  await expect(target.getByRole("dialog")).toHaveCount(0);
+  await expect(section(target).locator(".setup-offer")).toHaveCount(0);
+});

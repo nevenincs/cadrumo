@@ -1489,6 +1489,9 @@ export type LabelReadingFallback = {
   unread_fields: string[];
   reader_error_type: string;
   failed_condition_id?: string | null;
+  /** The operator action that would let the model fill run, such as the
+   * local AI setup; an identifier for routing, never shown. */
+  recovery_action_id?: string | null;
 };
 export type ConfirmationBlockReason =
   | "closure_discrepancy"
