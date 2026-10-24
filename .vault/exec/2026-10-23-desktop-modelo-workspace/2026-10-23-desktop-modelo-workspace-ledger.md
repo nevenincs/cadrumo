@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a645a0297e8cddf61d102344b3da48ca7c63812f1438c6d61b3155cbb30bf1c'
+body_hash: 'sha256:742706761b0b724491acdb2eca5243775552c7ae1a6013bbeb92fb7fbc9d0a80'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -428,6 +428,94 @@ related:
 - `S39` `verify:` `operation_contract_manifest --check` -> `pass`
 - `S39` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
 - `S39` `by:` `opus-p01-lane-3`
+- `S17` `M` `native/desktop/frontend/src/shell/modelo.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/tauriModelo.ts`
+- `S17` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S17` `M` `native/desktop/frontend/tests/modelo-port.spec.ts`
+- `S17` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S17` `M` `native/desktop/frontend/scripts/modelo-fixtures.mjs`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-01-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-01-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-03-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-03-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-07-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-07-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-19-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-19-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-27-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-27-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-71-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-71-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130.json`
+- `S17` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S17` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S17` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S17` `M` `native/desktop/frontend/eslint.config.js`
+- `S17` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S17` `verify:` `playwright modelo-port.spec` -> `pass`
+- `S17` `verify:` `tsc --noEmit` -> `pass`
+- `S17` `verify:` `prettier and eslint` -> `pass`
+- `S17` `by:` `opus-port-lane`
+- `S36` `M` `native/desktop/frontend/src/shell/modelo.ts`
+- `S36` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S36` `M` `native/desktop/frontend/src/shell/tauriModelo.ts`
+- `S36` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S36` `M` `native/desktop/frontend/tests/modelo-port.spec.ts`
+- `S36` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S36` `M` `native/desktop/frontend/scripts/modelo-fixtures.mjs`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-01-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-01-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-03-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-03-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-07-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-07-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-19-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-19-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-27-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-27-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-71-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-71-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130.json`
+- `S36` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S36` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S36` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S36` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S36` `M` `native/desktop/frontend/eslint.config.js`
+- `S36` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S36` `verify:` `playwright modelo-port.spec` -> `pass`
+- `S36` `verify:` `tsc --noEmit` -> `pass`
+- `S36` `verify:` `prettier and eslint` -> `pass`
+- `S36` `by:` `opus-port-lane`
 
 ## Notes
 
@@ -453,3 +541,5 @@ related:
 - `S37` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
 - `S38` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
 - `S39` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S17` committed together in 78f2da88ea; S36 found no modelo that produces a missing-value finding through the real executors
+- `S36` committed together in 78f2da88ea; S36 found no modelo that produces a missing-value finding through the real executors
