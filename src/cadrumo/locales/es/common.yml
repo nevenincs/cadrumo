@@ -1791,6 +1791,320 @@ desktop:
       gap: Hueco en el extracto
       original_file: Archivo original
       parser: Leído con un aviso
+    inspector:
+      action:
+        archive: Archivar
+        exclude: Excluir
+        merge: Unir partes
+        merge_select: Selecciona todas las partes
+        remove: Eliminar
+        restore: Restaurar
+        split: Dividir en partes
+        stash: Apartar
+      action_staged: '{action} · sin guardar'
+      actions: Acciones del movimiento
+      added: Añadido
+      added_by_hand: Añadido a mano
+      affects: afecta a {declaration}
+      allocate:
+        prorrata: Referencia de prorrata
+        stage: Preparar asignación
+        staged: Asignación preparada · sin guardar
+        title: Asignar una parte profesional
+      by:
+        derived: Calculado por Cadrumo
+        model: Modelo de IA · {model} · aprobado por ti
+        nobody: Aún sin decidir
+        rule: Regla {rule}
+        you: Tú
+      came_from: De dónde viene
+      cancel: Cancelar
+      classification: Clasificación
+      clear: Vaciar el valor
+      close: Ocultar el inspector
+      copied_id: ID del movimiento copiado
+      copy_id: Copiar el ID completo
+      derive:
+        choose: Elige una categoría de IVA
+        stage: Calcular importes
+        staged: Cadrumo calculará los importes de {category} al guardar
+        staged_toast: Importes preparados · sin guardar
+        title: Calcular el IVA según una categoría
+      documents:
+        active_only: Solo los movimientos activos admiten documentos.
+        add_file: Añadir desde este ordenador
+        add_staged: '{file} · adjunto preparado'
+        adding: Añadir {file} · sin guardar
+        advisory: 'Aún no hay factura de compra. Solo es un aviso: nunca impide guardar
+          ni calcular.'
+        attach_existing: Adjuntar un documento
+        attach_staged: Adjunto preparado · sin guardar
+        attaching: Adjuntar {file} · sin guardar
+        detach: Quitar
+        detach_named: Quitar {file}
+        detach_pending: Quitar preparado
+        detach_staged: Quitar preparado · sin guardar
+        detaching: Quitar {file} · sin guardar
+        hint: Un PDF o una imagen, leído de este ordenador y guardado cifrado.
+        no_free: No hay otro documento en el libro
+        none: Sin documentos
+        pick_failed: No se abrió el diálogo de archivos.
+        purchase_invoice: Factura de compra · añadida {date}
+      drop: Descartar
+      earlier: Decisiones anteriores
+      earlier_ids: IDs anteriores
+      effective_date: Fecha efectiva
+      empty: vacío
+      eur_same: 'Igual: movimiento en euros'
+      eur_value: Valor en EUR
+      event:
+        allocated: Parte asignada
+        archived: Archivado
+        attachment_linked: Documento adjuntado
+        attachment_removed: Documento quitado
+        classified: Clasificado
+        corrected: Corregido
+        created: Añadido
+        evidence_attached: Factura de compra adjuntada
+        evidence_detached: Factura de compra quitada
+        evidence_replaced: Factura de compra sustituida
+        excluded: Excluido
+        exported: Exportado
+        imported: Importado
+        linked: Factura vinculada
+        merged: Partes unidas
+        model_rejected: Sugerencia del modelo rechazada
+        other: Cambio registrado
+        removed: Eliminado
+        restored: Restaurado
+        split: Dividido
+        stashed: Apartado
+        updated: Actualizado
+      file_row: '{file}, fila {row}'
+      fingerprint: Huella de importación
+      fix:
+        derive: Calcular importes
+        go: Corregir
+      from_booked_date: la fecha contable
+      from_value_date: la fecha valor
+      fx_rate: Tipo {rate}
+      history:
+        parts: '{count} partes'
+        reason_withheld: No se muestra el motivo del modelo
+        split_parts: Partes
+        split_siblings: Divididas del mismo movimiento
+        unsaved: 'Aún sin guardar: {fields}'
+      imported: Importado
+      index: Ir a una sección
+      invoice:
+        active_only: Solo se pueden vincular movimientos activos.
+        already_linked: Ya vinculada a {count} movimientos
+        ambiguous: 'Varias facturas liquidan este movimiento igual de bien. Elige
+          una: un vínculo no se puede deshacer.'
+        candidates: Facturas candidatas
+        counterparty: Contraparte
+        evidence: En qué se basa
+        group_other: Otras facturas
+        group_settles: Liquida este importe
+        issued: Emitida
+        issued_on: Fecha de emisión
+        link: Vincular · permanente
+        link_staged: Vínculo preparado · permanente al guardar
+        linked: Movimientos
+        linked_count: '{count} vinculados'
+        none: Ninguna factura del catálogo liquida este importe.
+        open: Abrir factura
+        other_candidates: Otras candidatas ({count})
+        partial_hint: Normalmente un movimiento liquida una factura. Vincula ambos
+          solo en pagos parciales.
+        payment: Pago
+        permanent: 'Un vínculo es permanente: aquí no se puede quitar.'
+        pick: Vincular otra factura
+        received: Recibida
+        rival: '{movement} la liquida igual de bien.'
+        show_other: Ver el otro
+        staged: Vínculo con {invoice} preparado · permanente al guardar
+        staged_for: Preparada para {movement}
+        taken: '{invoice} está preparada para {movement}'
+        transfer: Las transferencias entre tus cuentas no tienen factura.
+      issue_count: '{count} por corregir'
+      last_saved: Último guardado
+      lifecycle:
+        description: Un motivo para todos. No se guarda nada hasta que revises tus
+          cambios.
+        skipped: '{count} no lo admiten y se quedan como están'
+        title: '{action} · {count} movimientos'
+      m210:
+        applicable_rate: Tipo aplicable
+        asset_or_right_id: Bien o derecho
+        code_refused: Escribe el código de tipo de renta de dos cifras.
+        gross_income_amount: Rendimiento íntegro
+        incoming_only: Solo para rentas que un no residente obtiene en España.
+        payer_id: Pagador
+        payer_mode: Tipo de pagador
+        stage: Preparar datos del Modelo 210
+        staged: Datos del Modelo 210 preparados · sin guardar
+        tipo_renta_code: Tipo de renta
+        title: Modelo 210
+      merge:
+        description: Todas las partes vuelven al movimiento del que se dividieron.
+        title: Unir {count} partes
+      missing: Lo que aún falta
+      mode: Panel
+      mode_match: Por vincular
+      mode_movement: Movimiento
+      model:
+        about: Una propuesta del modelo local. Solo tú la apruebas.
+        approval_staged: Aprobación preparada · sin guardar
+        approve: Aprobar
+        ask: Preguntar al modelo
+        ask_how: Preguntar al modelo por
+        ask_with_share: Preguntar con esta parte
+        asking: Preguntando al modelo
+        confidence: '{value} de confianza'
+        continue_reject: Preguntar con este motivo
+        derived: calculado por Cadrumo
+        mode:
+          classification: Clasificación
+          saturated: Con importes de IVA
+          split: Sugerir una división
+        no_review: El modelo no dio ninguna propuesta que revisar.
+        reason: Por qué no es correcta
+        refused: El libro rechazó la petición
+        reject: Rechazar
+        rejected_before: Rechazaste una sugerencia anterior para este movimiento.
+        rejecting: Rechazando · {reason}
+        rejection_staged: Rechazo preparado · sin guardar
+        share_needed: Indica una parte para aprobar
+        stage_rejection: Preparar rechazo
+        title: Sugerencia del modelo
+        unavailable: El modelo no pudo responder
+      more: Más
+      more_tax: Más campos fiscales
+      movement_id: ID del movimiento
+      moves_to: Pasa a {period}
+      new_identity: Se guarda con un ID nuevo
+      no_counterparty: Sin contraparte
+      no_match: Sin coincidencias
+      no_rate: Sin tipo de cambio
+      no_rate_detail: El valor en EUR es desconocido, no cero.
+      not_read: No aparece en la lista
+      not_set: Sin indicar
+      not_stated: No consta
+      nothing: Selecciona un movimiento para verlo aquí.
+      panel: Detalle del movimiento
+      panel_match: Movimientos por vincular
+      ratio_missing: 'Ninguna: Mixto necesita una antes de calcular'
+      ratio_not_needed: No hace falta
+      read_as: Leído como
+      reason: Motivo
+      reason_optional: Motivo (opcional)
+      refused:
+        country: Escribe dos letras, como ES.
+        currency: Escribe tres letras, como EUR.
+      remove:
+        attachments: 'Adjuntos que se eliminan con él: {count}'
+        blocked: 'Lo usa una declaración finalizada, así que no se puede eliminar:'
+        checking: Comprobando qué supone eliminarlo
+        description: El libro ha comprobado qué arrastraría. No se elimina nada hasta
+          que guardes.
+        evidence: 'Facturas de compra que se eliminan con él: {count}'
+        stage: Eliminar
+        stale: 'Borradores que quedan desfasados: {declarations}'
+        title: Eliminar este movimiento
+        unchecked: El libro no pudo comprobar la eliminación
+      resize: Cambiar el ancho del inspector
+      revert: Deshacer
+      sealed: Usado en {declarations}. Solo lectura.
+      section:
+        classify: Clasificar
+        details: Detalles
+        documents: Documentos
+        history: Historial
+        invoice: Factura
+      sections: Secciones del movimiento
+      selection:
+        actions: Acciones
+        approve_all: Aprobar las {count} leídas
+        approved_all: '{count} aprobaciones preparadas'
+        ask_each: Preguntar al modelo por cada uno
+        asked: 'Sugerencias para leer: {count}'
+        body: Movimientos seleccionados
+        classification: Clasificación para todos
+        classify_first: Clasificar primero
+        clear: Quitar la selección
+        common: Valores comunes
+        copied: '{count} movimientos copiados como TSV'
+        copy: Copiar como TSV
+        cost: '{count} se guardarían uno a uno, unos {minutes} min. Si clasificas
+          primero, se guardan juntos.'
+        in: Entradas · {currency}
+        make_rule: Crear una regla
+        merge_hint: Selecciona todas las partes de un movimiento dividido para unirlas.
+        mixed_values: Varios · {count} valores
+        nothing: Ninguno lo admite
+        out: Salidas · {currency}
+        partial: Solo los movimientos cargados
+        set_for: Aplicar a {count}
+        set_hidden: Aplicar a {visible} visibles + {hidden} ocultos
+        set_title: Para todos · se aplica al elegir
+        skipped: '{count} omitidos'
+        skipped_reason: '{count} omitidos: {reason}'
+        stage_anyway: Preparar igualmente
+        staged: '{count} movimientos preparados · sin guardar'
+        title: '{count} seleccionados'
+        totals: Totales
+        transfer: Transferencias · {currency}
+      share: Parte profesional
+      share_required: Indica la parte profesional.
+      show: Ver
+      skip:
+        not_active: no activos
+        personal: Personales
+        sealed: sellados
+        transfer: transferencias
+        unclassified: sin clasificar
+      source_jurisdiction: Jurisdicción de origen
+      split:
+        add_part: Añadir una parte
+        amount: La parte {part} necesita un importe mayor que cero.
+        category_needed: Elige una categoría para la parte {part}.
+        choose_category: Elige una categoría
+        count: Una división tiene de 2 a {max} partes.
+        description: Las partes suman {amount} {currency}. La última parte se queda
+          con lo que falta.
+        description_needed: La parte {part} necesita una descripción.
+        duplicate: 'La parte {part} es igual que otra: cambia su importe o descripción.'
+        mixed_hint: ¿Lo usas en parte para trabajar? Usa Mixto con una parte.
+        over: Las partes superan el movimiento en {amount}.
+        part_amount: Importe de la parte {part}
+        part_category: Categoría de la parte {part}
+        part_classification: Clasificación de la parte {part}
+        part_description: Descripción de la parte {part}
+        remainder: Lo que falta
+        remove_part: Quitar la parte {part}
+        share_needed: Indica una parte profesional para la parte {part}.
+        stage: Preparar división
+        staged: División en {count} partes preparada · sin guardar
+        title: Dividir en partes
+        unclassified: Clasificar después
+        under: A las partes les faltan {amount} para el movimiento.
+      stage: Preparar
+      technical: Detalles técnicos
+      unread: No se pudo leer
+      unsaved: '{count} cambios · sin guardar'
+      unsaved_classification: → {classification} · sin guardar
+      used:
+        discarded: Descartado
+        draft: Borrador
+        filed_confirmed: Presentado · justificante confirmado
+        filed_local: Presentado en local · estado en la AEAT sin confirmar
+        name: Modelo {modelo} · {year} {period}
+        none: Ninguna declaración usa aún este movimiento.
+        not_built: Vínculos con declaraciones aún sin generar
+        superseded: Sustituido
+        title: Usado en
+        verified: Verificado (sellado)
     inventory:
       actividad: Identificador de la actividad
       authority: Registro de la autoridad del cierre (JSON)

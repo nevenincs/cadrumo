@@ -1751,6 +1751,319 @@ desktop:
       gap: Gap in the statement
       original_file: Original file
       parser: Read with a warning
+    inspector:
+      action:
+        archive: Archive
+        exclude: Exclude
+        merge: Merge parts
+        merge_select: Select every part
+        remove: Remove
+        restore: Restore
+        split: Split into parts
+        stash: Set aside
+      action_staged: '{action} · not saved'
+      actions: Actions for this movement
+      added: Added
+      added_by_hand: Added by hand
+      affects: affects {declaration}
+      allocate:
+        prorrata: Prorrata reference
+        stage: Stage allocation
+        staged: Allocation staged · not saved
+        title: Allocate a business share
+      by:
+        derived: Worked out by Cadrumo
+        model: Model · {model} · approved by you
+        nobody: Not decided yet
+        rule: Rule {rule}
+        you: You
+      came_from: Where it came from
+      cancel: Cancel
+      classification: Classification
+      clear: Clear the value
+      close: Hide the inspector
+      copied_id: Movement ID copied
+      copy_id: Copy the full ID
+      derive:
+        choose: Choose an IVA category
+        stage: Work out figures
+        staged: Figures for {category} worked out by Cadrumo when saved
+        staged_toast: Figures staged · not saved
+        title: Work out IVA from a category
+      documents:
+        active_only: Only active movements take documents.
+        add_file: Add from this computer
+        add_staged: '{file} · attach staged'
+        adding: Add {file} · not saved
+        advisory: 'No purchase invoice yet. Advice only: it never blocks saving or
+          calculation.'
+        attach_existing: Attach a document
+        attach_staged: Attach staged · not saved
+        attaching: Attach {file} · not saved
+        detach: Detach
+        detach_named: Detach {file}
+        detach_pending: Detach staged
+        detach_staged: Detach staged · not saved
+        detaching: Detach {file} · not saved
+        hint: A PDF or an image, read from this computer and stored encrypted.
+        no_free: No other document in the ledger
+        none: No documents
+        pick_failed: The file dialog did not open.
+        purchase_invoice: Purchase invoice · added {date}
+      drop: Drop it
+      earlier: Earlier decisions
+      earlier_ids: Earlier IDs
+      effective_date: Effective date
+      empty: empty
+      eur_same: 'Same: a euro movement'
+      eur_value: EUR value
+      event:
+        allocated: Share allocated
+        archived: Archived
+        attachment_linked: Document attached
+        attachment_removed: Document removed
+        classified: Classified
+        corrected: Corrected
+        created: Added
+        evidence_attached: Purchase invoice attached
+        evidence_detached: Purchase invoice detached
+        evidence_replaced: Purchase invoice replaced
+        excluded: Excluded
+        exported: Exported
+        imported: Imported
+        linked: Invoice linked
+        merged: Parts merged
+        model_rejected: Model suggestion rejected
+        other: Recorded change
+        removed: Removed
+        restored: Restored
+        split: Split
+        stashed: Set aside
+        updated: Updated
+      file_row: '{file}, row {row}'
+      fingerprint: Import fingerprint
+      fix:
+        derive: Derive figures
+        go: Fix
+      from_booked_date: the booked date
+      from_value_date: the value date
+      fx_rate: Rate {rate}
+      history:
+        parts: '{count} parts'
+        reason_withheld: The model's reason is not shown
+        split_parts: Parts
+        split_siblings: Split from the same movement
+        unsaved: 'Not saved yet: {fields}'
+      imported: Imported
+      index: Jump to a section
+      invoice:
+        active_only: Only active movements can be linked.
+        already_linked: Already linked to {count} movements
+        ambiguous: 'Several invoices settle this movement equally well. Choose one:
+          a link cannot be undone.'
+        candidates: Candidate invoices
+        counterparty: Counterparty
+        evidence: What it stands on
+        group_other: Other invoices
+        group_settles: Settles this amount
+        issued: Issued
+        issued_on: Issued on
+        link: Link · permanent
+        link_staged: Link staged · permanent once saved
+        linked: Movements
+        linked_count: '{count} linked'
+        none: No invoice in the catalogue settles this amount.
+        open: Open invoice
+        other_candidates: Other candidates ({count})
+        partial_hint: Usually one movement settles one invoice. Link both only for
+          partial payments.
+        payment: Payment
+        permanent: 'A link is permanent: it cannot be removed here.'
+        pick: Link another invoice
+        received: Received
+        rival: '{movement} settles it equally well.'
+        show_other: Show the other
+        staged: Link to {invoice} staged · permanent once saved
+        staged_for: Staged for {movement}
+        taken: '{invoice} is staged for {movement}'
+        transfer: Transfers between your own accounts have no invoice.
+      issue_count: '{count} to fix'
+      last_saved: Last saved
+      lifecycle:
+        description: One reason for all. Nothing is saved until you review your changes.
+        skipped: '{count} cannot take it and are left as they are'
+        title: '{action} · {count} movements'
+      m210:
+        applicable_rate: Applicable rate
+        asset_or_right_id: Asset or right
+        code_refused: Write the two-digit tipo de renta code.
+        gross_income_amount: Gross income
+        incoming_only: Only for income a non-resident earns in Spain.
+        payer_id: Payer
+        payer_mode: Payer type
+        stage: Stage Modelo 210 facts
+        staged: Modelo 210 facts staged · not saved
+        tipo_renta_code: Tipo de renta
+        title: Modelo 210
+      merge:
+        description: Every part goes back into the movement it was split from.
+        title: Merge {count} parts
+      missing: What's still missing
+      mode: Panel
+      mode_match: To match
+      mode_movement: Movement
+      model:
+        about: A proposal from the local model. Only you approve it.
+        approval_staged: Approval staged · not saved
+        approve: Approve
+        ask: Ask the model
+        ask_how: Ask the model for
+        ask_with_share: Ask with this share
+        asking: Asking the model
+        confidence: '{value} confident'
+        continue_reject: Ask with this reason
+        derived: worked out by Cadrumo
+        mode:
+          classification: Classification
+          saturated: With IVA figures
+          split: Suggest a split
+        no_review: The model gave no proposal to review.
+        reason: Why it is wrong
+        refused: The ledger refused the request
+        reject: Reject
+        rejected_before: You rejected an earlier suggestion for this movement.
+        rejecting: Rejecting · {reason}
+        rejection_staged: Rejection staged · not saved
+        share_needed: Enter a share to approve
+        stage_rejection: Stage rejection
+        title: Model suggestion
+        unavailable: The model could not answer
+      more: More
+      more_tax: More tax fields
+      movement_id: Movement ID
+      moves_to: Moves to {period}
+      new_identity: Saved under a new ID
+      no_counterparty: No counterparty
+      no_match: No match
+      no_rate: No exchange rate
+      no_rate_detail: The EUR value is unknown, not zero.
+      not_read: Not shown in the list
+      not_set: Not set
+      not_stated: Not stated
+      nothing: Select a movement to see it here.
+      panel: Movement details
+      panel_match: Movements to match
+      ratio_missing: 'None: Mixed needs one before calculation'
+      ratio_not_needed: Not needed
+      read_as: Read as
+      reason: Reason
+      reason_optional: Reason (optional)
+      refused:
+        country: Write two letters, such as ES.
+        currency: Write three letters, such as EUR.
+      remove:
+        attachments: 'Attachments removed with it: {count}'
+        blocked: 'A finalised declaration uses it, so it cannot be removed:'
+        checking: Checking what removing it takes
+        description: The ledger checked what this would take with it. Nothing is removed
+          until you save.
+        evidence: 'Purchase invoices removed with it: {count}'
+        stage: Remove
+        stale: 'Drafts that go out of date: {declarations}'
+        title: Remove this movement
+        unchecked: The ledger could not check the removal
+      resize: Resize the inspector
+      revert: Revert
+      sealed: Used in {declarations}. Read-only.
+      section:
+        classify: Classify
+        details: Details
+        documents: Documents
+        history: History
+        invoice: Invoice
+      sections: Movement sections
+      selection:
+        actions: Actions
+        approve_all: Approve {count} read
+        approved_all: '{count} approvals staged'
+        ask_each: Ask the model for each
+        asked: 'Suggestions to read: {count}'
+        body: Selected movements
+        classification: Classification for all
+        classify_first: Classify first
+        clear: Clear selection
+        common: Common values
+        copied: '{count} movements copied as TSV'
+        copy: Copy as TSV
+        cost: '{count} would be saved one at a time, about {minutes} min. Classifying
+          first saves them together.'
+        in: In · {currency}
+        make_rule: Make a rule
+        merge_hint: Select every part of one split movement to merge them.
+        mixed_values: Mixed · {count} values
+        nothing: None of them takes it
+        out: Out · {currency}
+        partial: Loaded movements only
+        set_for: Set for {count}
+        set_hidden: Set for {visible} visible + {hidden} hidden
+        set_title: Set for all · applies as you choose
+        skipped: '{count} skipped'
+        skipped_reason: '{count} skipped: {reason}'
+        stage_anyway: Stage anyway
+        staged: '{count} movements staged · not saved'
+        title: '{count} selected'
+        totals: Totals
+        transfer: Transfers · {currency}
+      share: Business share
+      share_required: Enter the business share.
+      show: Show
+      skip:
+        not_active: not active
+        personal: Personal
+        sealed: sealed
+        transfer: transfers
+        unclassified: not classified yet
+      source_jurisdiction: Source jurisdiction
+      split:
+        add_part: Add a part
+        amount: Part {part} needs an amount above zero.
+        category_needed: Choose a category for part {part}.
+        choose_category: Choose a category
+        count: A split has 2 to {max} parts.
+        description: The parts add up to {amount} {currency}. The last part takes
+          what is left.
+        description_needed: Part {part} needs a description.
+        duplicate: 'Part {part} is the same as another: change its amount or description.'
+        mixed_hint: Partly used for work? Use Mixed with a share instead.
+        over: The parts are {amount} over the movement.
+        part_amount: Part {part} amount
+        part_category: Category of part {part}
+        part_classification: Classification of part {part}
+        part_description: Part {part} description
+        remainder: What is left
+        remove_part: Remove part {part}
+        share_needed: Enter a business share for part {part}.
+        stage: Stage split
+        staged: Split into {count} parts staged · not saved
+        title: Split into parts
+        unclassified: Classify later
+        under: The parts are {amount} short of the movement.
+      stage: Stage
+      technical: Technical details
+      unread: Could not be read
+      unsaved: '{count} changes · not saved'
+      unsaved_classification: → {classification} · not saved
+      used:
+        discarded: Discarded
+        draft: Draft
+        filed_confirmed: Filed · receipt confirmed
+        filed_local: Filed locally · AEAT status not confirmed
+        name: Modelo {modelo} · {year} {period}
+        none: No declaration uses this movement yet.
+        not_built: Declaration links not built yet
+        superseded: Superseded
+        title: Used in
+        verified: Verified (sealed)
     inventory:
       actividad: Activity id
       authority: Closing authority record (JSON)

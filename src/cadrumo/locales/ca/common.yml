@@ -1782,6 +1782,320 @@ desktop:
       gap: Buit a l'extracte
       original_file: Fitxer original
       parser: Llegit amb un avís
+    inspector:
+      action:
+        archive: Arxiva
+        exclude: Exclou
+        merge: Uneix parts
+        merge_select: Selecciona totes les parts
+        remove: Elimina
+        restore: Restaura
+        split: Divideix en parts
+        stash: Aparta
+      action_staged: '{action} · sense desar'
+      actions: Accions del moviment
+      added: Afegit
+      added_by_hand: Afegit a mà
+      affects: afecta {declaration}
+      allocate:
+        prorrata: Referència de prorrata
+        stage: Prepara l'assignació
+        staged: Assignació preparada · sense desar
+        title: Assigna una part professional
+      by:
+        derived: Calculat per Cadrumo
+        model: Model d'IA · {model} · aprovat per tu
+        nobody: Encara sense decidir
+        rule: Regla {rule}
+        you: Tu
+      came_from: D'on ve
+      cancel: Cancel·la
+      classification: Classificació
+      clear: Buida el valor
+      close: Amaga l'inspector
+      copied_id: ID del moviment copiat
+      copy_id: Copia l'ID complet
+      derive:
+        choose: Tria una categoria d'IVA
+        stage: Calcula imports
+        staged: Cadrumo calcularà els imports de {category} en desar
+        staged_toast: Imports preparats · sense desar
+        title: Calcula l'IVA segons una categoria
+      documents:
+        active_only: Només els moviments actius admeten documents.
+        add_file: Afegeix des d'aquest ordinador
+        add_staged: '{file} · adjunt preparat'
+        adding: Afegir {file} · sense desar
+        advisory: 'Encara no hi ha factura de compra. Només és un avís: mai impedeix
+          desar ni calcular.'
+        attach_existing: Adjunta un document
+        attach_staged: Adjunt preparat · sense desar
+        attaching: Adjuntar {file} · sense desar
+        detach: Treu
+        detach_named: Treu {file}
+        detach_pending: Treure preparat
+        detach_staged: Treure preparat · sense desar
+        detaching: Treure {file} · sense desar
+        hint: Un PDF o una imatge, llegit d'aquest ordinador i desat xifrat.
+        no_free: No hi ha cap altre document al llibre
+        none: Sense documents
+        pick_failed: No s'ha obert el diàleg de fitxers.
+        purchase_invoice: Factura de compra · afegida {date}
+      drop: Descarta
+      earlier: Decisions anteriors
+      earlier_ids: IDs anteriors
+      effective_date: Data efectiva
+      empty: buit
+      eur_same: 'Igual: moviment en euros'
+      eur_value: Valor en EUR
+      event:
+        allocated: Part assignada
+        archived: Arxivat
+        attachment_linked: Document adjuntat
+        attachment_removed: Document tret
+        classified: Classificat
+        corrected: Corregit
+        created: Afegit
+        evidence_attached: Factura de compra adjuntada
+        evidence_detached: Factura de compra treta
+        evidence_replaced: Factura de compra substituïda
+        excluded: Exclòs
+        exported: Exportat
+        imported: Importat
+        linked: Factura vinculada
+        merged: Parts unides
+        model_rejected: Suggeriment del model rebutjat
+        other: Canvi registrat
+        removed: Eliminat
+        restored: Restaurat
+        split: Dividit
+        stashed: Apartat
+        updated: Actualitzat
+      file_row: '{file}, fila {row}'
+      fingerprint: Empremta d'importació
+      fix:
+        derive: Calcula imports
+        go: Corregeix
+      from_booked_date: la data comptable
+      from_value_date: la data valor
+      fx_rate: Tipus {rate}
+      history:
+        parts: '{count} parts'
+        reason_withheld: No es mostra el motiu del model
+        split_parts: Parts
+        split_siblings: Dividides del mateix moviment
+        unsaved: 'Encara sense desar: {fields}'
+      imported: Importat
+      index: Ves a una secció
+      invoice:
+        active_only: Només es poden vincular moviments actius.
+        already_linked: Ja vinculada a {count} moviments
+        ambiguous: 'Diverses factures liquiden aquest moviment igual de bé. Tria''n
+          una: un vincle no es pot desfer.'
+        candidates: Factures candidates
+        counterparty: Contrapart
+        evidence: En què es basa
+        group_other: Altres factures
+        group_settles: Liquida aquest import
+        issued: Emesa
+        issued_on: Data d'emissió
+        link: Vincula · permanent
+        link_staged: Vincle preparat · permanent en desar
+        linked: Moviments
+        linked_count: '{count} vinculats'
+        none: Cap factura del catàleg liquida aquest import.
+        open: Obre la factura
+        other_candidates: Altres candidates ({count})
+        partial_hint: Normalment un moviment liquida una factura. Vincula'ls només
+          en pagaments parcials.
+        payment: Pagament
+        permanent: 'Un vincle és permanent: aquí no es pot treure.'
+        pick: Vincula una altra factura
+        received: Rebuda
+        rival: '{movement} la liquida igual de bé.'
+        show_other: Mostra l'altre
+        staged: Vincle amb {invoice} preparat · permanent en desar
+        staged_for: Preparada per a {movement}
+        taken: '{invoice} està preparada per a {movement}'
+        transfer: Les transferències entre els teus comptes no tenen factura.
+      issue_count: '{count} per corregir'
+      last_saved: Últim desat
+      lifecycle:
+        description: Un motiu per a tots. No es desa res fins que revisis els canvis.
+        skipped: '{count} no ho admeten i es queden com estan'
+        title: '{action} · {count} moviments'
+      m210:
+        applicable_rate: Tipus aplicable
+        asset_or_right_id: Bé o dret
+        code_refused: Escriu el codi de tipus de renda de dues xifres.
+        gross_income_amount: Rendiment íntegre
+        incoming_only: Només per a rendes que un no resident obté a Espanya.
+        payer_id: Pagador
+        payer_mode: Tipus de pagador
+        stage: Prepara dades del Model 210
+        staged: Dades del Model 210 preparades · sense desar
+        tipo_renta_code: Tipus de renda
+        title: Model 210
+      merge:
+        description: Totes les parts tornen al moviment del qual es van dividir.
+        title: Uneix {count} parts
+      missing: El que encara falta
+      mode: Tauler
+      mode_match: Per vincular
+      mode_movement: Moviment
+      model:
+        about: Una proposta del model local. Només tu l'aproves.
+        approval_staged: Aprovació preparada · sense desar
+        approve: Aprova
+        ask: Pregunta al model
+        ask_how: Pregunta al model per
+        ask_with_share: Pregunta amb aquesta part
+        asking: Preguntant al model
+        confidence: '{value} de confiança'
+        continue_reject: Pregunta amb aquest motiu
+        derived: calculat per Cadrumo
+        mode:
+          classification: Classificació
+          saturated: Amb imports d'IVA
+          split: Suggereix una divisió
+        no_review: El model no ha donat cap proposta per revisar.
+        reason: Per què no és correcta
+        refused: El llibre ha rebutjat la petició
+        reject: Rebutja
+        rejected_before: Vas rebutjar un suggeriment anterior per a aquest moviment.
+        rejecting: Rebutjant · {reason}
+        rejection_staged: Rebuig preparat · sense desar
+        share_needed: Indica una part per aprovar
+        stage_rejection: Prepara el rebuig
+        title: Suggeriment del model
+        unavailable: El model no ha pogut respondre
+      more: Més
+      more_tax: Més camps fiscals
+      movement_id: ID del moviment
+      moves_to: Passa a {period}
+      new_identity: Es desa amb un ID nou
+      no_counterparty: Sense contrapart
+      no_match: Cap coincidència
+      no_rate: Sense tipus de canvi
+      no_rate_detail: El valor en EUR és desconegut, no zero.
+      not_read: No apareix a la llista
+      not_set: Sense indicar
+      not_stated: No consta
+      nothing: Selecciona un moviment per veure'l aquí.
+      panel: Detall del moviment
+      panel_match: Moviments per vincular
+      ratio_missing: 'Cap: Mixt en necessita una abans de calcular'
+      ratio_not_needed: No cal
+      read_as: Llegit com a
+      reason: Motiu
+      reason_optional: Motiu (opcional)
+      refused:
+        country: Escriu dues lletres, com ES.
+        currency: Escriu tres lletres, com EUR.
+      remove:
+        attachments: 'Adjunts que s''eliminen amb ell: {count}'
+        blocked: 'El fa servir una declaració finalitzada, així que no es pot eliminar:'
+        checking: Comprovant què implica eliminar-lo
+        description: El llibre ha comprovat què arrossegaria. No s'elimina res fins
+          que desis.
+        evidence: 'Factures de compra que s''eliminen amb ell: {count}'
+        stage: Elimina
+        stale: 'Esborranys que queden desfasats: {declarations}'
+        title: Elimina aquest moviment
+        unchecked: El llibre no ha pogut comprovar l'eliminació
+      resize: Canvia l'amplada de l'inspector
+      revert: Desfés
+      sealed: Usat a {declarations}. Només lectura.
+      section:
+        classify: Classifica
+        details: Detalls
+        documents: Documents
+        history: Historial
+        invoice: Factura
+      sections: Seccions del moviment
+      selection:
+        actions: Accions
+        approve_all: Aprova les {count} llegides
+        approved_all: '{count} aprovacions preparades'
+        ask_each: Pregunta al model per cada un
+        asked: 'Suggeriments per llegir: {count}'
+        body: Moviments seleccionats
+        classification: Classificació per a tots
+        classify_first: Classifica primer
+        clear: Treu la selecció
+        common: Valors comuns
+        copied: '{count} moviments copiats com a TSV'
+        copy: Copia com a TSV
+        cost: '{count} es desarien un a un, uns {minutes} min. Si classifiques primer,
+          es desen junts.'
+        in: Entrades · {currency}
+        make_rule: Crea una regla
+        merge_hint: Selecciona totes les parts d'un moviment dividit per unir-les.
+        mixed_values: Diversos · {count} valors
+        nothing: Cap no ho admet
+        out: Sortides · {currency}
+        partial: Només els moviments carregats
+        set_for: Aplica a {count}
+        set_hidden: Aplica a {visible} visibles + {hidden} ocults
+        set_title: Per a tots · s'aplica en triar
+        skipped: '{count} omesos'
+        skipped_reason: '{count} omesos: {reason}'
+        stage_anyway: Prepara igualment
+        staged: '{count} moviments preparats · sense desar'
+        title: '{count} seleccionats'
+        totals: Totals
+        transfer: Transferències · {currency}
+      share: Part professional
+      share_required: Indica la part professional.
+      show: Mostra
+      skip:
+        not_active: no actius
+        personal: Personals
+        sealed: segellats
+        transfer: transferències
+        unclassified: sense classificar
+      source_jurisdiction: Jurisdicció d'origen
+      split:
+        add_part: Afegeix una part
+        amount: La part {part} necessita un import més gran que zero.
+        category_needed: Tria una categoria per a la part {part}.
+        choose_category: Tria una categoria
+        count: Una divisió té de 2 a {max} parts.
+        description: Les parts sumen {amount} {currency}. L'última part es queda el
+          que falta.
+        description_needed: La part {part} necessita una descripció.
+        duplicate: 'La part {part} és igual que una altra: canvia''n l''import o la
+          descripció.'
+        mixed_hint: L'utilitzes en part per a la feina? Fes servir Mixt amb una part.
+        over: Les parts superen el moviment en {amount}.
+        part_amount: Import de la part {part}
+        part_category: Categoria de la part {part}
+        part_classification: Classificació de la part {part}
+        part_description: Descripció de la part {part}
+        remainder: El que falta
+        remove_part: Treu la part {part}
+        share_needed: Indica una part professional per a la part {part}.
+        stage: Prepara la divisió
+        staged: Divisió en {count} parts preparada · sense desar
+        title: Divideix en parts
+        unclassified: Classifica després
+        under: A les parts els falten {amount} per al moviment.
+      stage: Prepara
+      technical: Detalls tècnics
+      unread: No s'ha pogut llegir
+      unsaved: '{count} canvis · sense desar'
+      unsaved_classification: → {classification} · sense desar
+      used:
+        discarded: Descartat
+        draft: Esborrany
+        filed_confirmed: Presentat · justificant confirmat
+        filed_local: Presentat en local · estat a l'AEAT sense confirmar
+        name: Model {modelo} · {year} {period}
+        none: Cap declaració no fa servir encara aquest moviment.
+        not_built: Vincles amb declaracions encara sense generar
+        superseded: Substituït
+        title: Usat a
+        verified: Verificat (segellat)
     inventory:
       actividad: Identificador de l'activitat
       authority: Registre de l'autoritat del tancament (JSON)

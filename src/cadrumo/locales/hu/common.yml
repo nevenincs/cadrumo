@@ -1765,6 +1765,321 @@ desktop:
       gap: Hézag a kivonatban
       original_file: Eredeti fájl
       parser: Figyelmeztetéssel beolvasva
+    inspector:
+      action:
+        archive: Archiválás
+        exclude: Kizárás
+        merge: Részek egyesítése
+        merge_select: Minden rész kijelölése
+        remove: Törlés
+        restore: Visszaállítás
+        split: Felosztás részekre
+        stash: Félretétel
+      action_staged: '{action} · nincs mentve'
+      actions: A tétel műveletei
+      added: Hozzáadva
+      added_by_hand: Kézzel hozzáadva
+      affects: 'érinti: {declaration}'
+      allocate:
+        prorrata: Prorrata-hivatkozás
+        stage: Felosztás előkészítése
+        staged: Felosztás előkészítve · nincs mentve
+        title: Üzleti arány felosztása
+      by:
+        derived: A Cadrumo számolta ki
+        model: Modell · {model} · általad jóváhagyva
+        nobody: Még nincs eldöntve
+        rule: '{rule} szabály'
+        you: Te
+      came_from: Honnan származik
+      cancel: Mégse
+      classification: Besorolás
+      clear: Érték törlése
+      close: Részletek elrejtése
+      copied_id: Tételazonosító másolva
+      copy_id: Teljes azonosító másolása
+      derive:
+        choose: Válassz ÁFA-kategóriát
+        stage: Összegek kiszámítása
+        staged: A(z) {category} összegeit mentéskor a Cadrumo számolja ki
+        staged_toast: Összegek előkészítve · nincs mentve
+        title: ÁFA kiszámítása kategória alapján
+      documents:
+        active_only: Csak aktív tételhez csatolható dokumentum.
+        add_file: Hozzáadás erről a gépről
+        add_staged: '{file} · csatolás előkészítve'
+        adding: '{file} hozzáadása · nincs mentve'
+        advisory: 'Még nincs beszerzési számla. Csak tanács: a mentést és a számítást
+          nem akadályozza.'
+        attach_existing: Dokumentum csatolása
+        attach_staged: Csatolás előkészítve · nincs mentve
+        attaching: '{file} csatolása · nincs mentve'
+        detach: Leválasztás
+        detach_named: '{file} leválasztása'
+        detach_pending: Leválasztás előkészítve
+        detach_staged: Leválasztás előkészítve · nincs mentve
+        detaching: '{file} leválasztása · nincs mentve'
+        hint: PDF vagy kép, erről a gépről olvasva, titkosítva tárolva.
+        no_free: Nincs más dokumentum a főkönyvben
+        none: Nincs dokumentum
+        pick_failed: A fájlválasztó nem nyílt meg.
+        purchase_invoice: 'Beszerzési számla · hozzáadva: {date}'
+      drop: Elvetés
+      earlier: Korábbi döntések
+      earlier_ids: Korábbi azonosítók
+      effective_date: Hatályos dátum
+      empty: üres
+      eur_same: 'Ugyanaz: euróban'
+      eur_value: EUR-érték
+      event:
+        allocated: Arány felosztva
+        archived: Archiválva
+        attachment_linked: Dokumentum csatolva
+        attachment_removed: Dokumentum eltávolítva
+        classified: Besorolva
+        corrected: Javítva
+        created: Hozzáadva
+        evidence_attached: Beszerzési számla csatolva
+        evidence_detached: Beszerzési számla leválasztva
+        evidence_replaced: Beszerzési számla lecserélve
+        excluded: Kizárva
+        exported: Exportálva
+        imported: Importálva
+        linked: Számla összekapcsolva
+        merged: Részek egyesítve
+        model_rejected: Modelljavaslat elutasítva
+        other: Rögzített változás
+        removed: Törölve
+        restored: Visszaállítva
+        split: Felosztva
+        stashed: Félretéve
+        updated: Frissítve
+      file_row: '{file}, {row}. sor'
+      fingerprint: Import-ujjlenyomat
+      fix:
+        derive: Összegek kiszámítása
+        go: Javítás
+      from_booked_date: a könyvelési dátum
+      from_value_date: az értéknap
+      fx_rate: 'Árfolyam: {rate}'
+      history:
+        parts: '{count} rész'
+        reason_withheld: A modell indoklása nem látható
+        split_parts: Részek
+        split_siblings: Ugyanabból a tételből felosztva
+        unsaved: 'Még nincs mentve: {fields}'
+      imported: Importálva
+      index: Ugrás szakaszra
+      invoice:
+        active_only: Csak aktív tétel kapcsolható össze.
+        already_linked: Már {count} tételhez kapcsolva
+        ambiguous: 'Több számla is ugyanúgy rendezi ezt a tételt. Válassz egyet: az
+          összekapcsolás nem vonható vissza.'
+        candidates: Lehetséges számlák
+        counterparty: Partner
+        evidence: Mire alapul
+        group_other: Egyéb számlák
+        group_settles: Ezt az összeget rendezi
+        issued: Kiállított
+        issued_on: Kiállítás dátuma
+        link: Összekapcsolás · végleges
+        link_staged: Összekapcsolás előkészítve · mentés után végleges
+        linked: Tételek
+        linked_count: '{count} összekapcsolva'
+        none: A katalógusban egy számla sem rendezi ezt az összeget.
+        open: Számla megnyitása
+        other_candidates: Egyéb lehetőségek ({count})
+        partial_hint: Általában egy tétel egy számlát rendez. Csak részfizetésnél
+          kapcsold össze mindkettőt.
+        payment: Fizetés
+        permanent: 'Az összekapcsolás végleges: itt nem bontható.'
+        pick: Másik számla összekapcsolása
+        received: Beérkezett
+        rival: '{movement} ugyanúgy rendezi.'
+        show_other: A másik mutatása
+        staged: 'Összekapcsolás ezzel: {invoice} · mentés után végleges'
+        staged_for: 'Előkészítve ehhez: {movement}'
+        taken: '{invoice} ehhez van előkészítve: {movement}'
+        transfer: A saját számláid közötti átvezetésnek nincs számlája.
+      issue_count: '{count} javítandó'
+      last_saved: Utoljára mentve
+      lifecycle:
+        description: Egy indoklás mindhez. Semmi sem mentődik, amíg át nem nézed a
+          változásokat.
+        skipped: '{count} tételre nem alkalmazható, változatlan marad'
+        title: '{action} · {count} tétel'
+      m210:
+        applicable_rate: Alkalmazandó kulcs
+        asset_or_right_id: Vagyon vagy jog
+        code_refused: Írd be a kétjegyű jövedelemtípus-kódot.
+        gross_income_amount: Bruttó jövedelem
+        incoming_only: Csak nem belföldi illetőségű személy spanyolországi jövedelmére.
+        payer_id: Kifizető
+        payer_mode: Kifizető típusa
+        stage: 210-es modell adatainak előkészítése
+        staged: 210-es adatok előkészítve · nincs mentve
+        tipo_renta_code: Jövedelemtípus
+        title: 210-es modell
+      merge:
+        description: Minden rész visszakerül abba a tételbe, amelyből felosztották.
+        title: '{count} rész egyesítése'
+      missing: Ami még hiányzik
+      mode: Panel
+      mode_match: Párosítandó
+      mode_movement: Tétel
+      model:
+        about: A helyi modell javaslata. Csak te hagyhatod jóvá.
+        approval_staged: Jóváhagyás előkészítve · nincs mentve
+        approve: Jóváhagyás
+        ask: Kérdezd a modellt
+        ask_how: Mit kérdezzen a modell
+        ask_with_share: Kérdezés ezzel az aránnyal
+        asking: A modell válaszára vár
+        confidence: '{value} biztos'
+        continue_reject: Kérdezés ezzel az indoklással
+        derived: a Cadrumo számolta ki
+        mode:
+          classification: Besorolás
+          saturated: ÁFA-összegekkel
+          split: Felosztás javaslata
+        no_review: A modell nem adott áttekinthető javaslatot.
+        reason: Miért hibás
+        refused: A főkönyv elutasította a kérést
+        reject: Elutasítás
+        rejected_before: Ehhez a tételhez már elutasítottál egy javaslatot.
+        rejecting: Elutasítás · {reason}
+        rejection_staged: Elutasítás előkészítve · nincs mentve
+        share_needed: Add meg az arányt a jóváhagyáshoz
+        stage_rejection: Elutasítás előkészítése
+        title: Modelljavaslat
+        unavailable: A modell nem tudott válaszolni
+      more: Több
+      more_tax: További adómezők
+      movement_id: Tételazonosító
+      moves_to: 'Átkerül ide: {period}'
+      new_identity: Új azonosítóval mentődik
+      no_counterparty: Nincs partner
+      no_match: Nincs találat
+      no_rate: Nincs árfolyam
+      no_rate_detail: Az EUR-érték ismeretlen, nem nulla.
+      not_read: A lista nem mutatja
+      not_set: Nincs megadva
+      not_stated: Nincs megadva
+      nothing: Jelölj ki egy tételt, hogy itt lásd.
+      panel: Tétel részletei
+      panel_match: Párosítandó tételek
+      ratio_missing: 'Nincs: vegyes tételhez számítás előtt kell'
+      ratio_not_needed: Nem szükséges
+      read_as: Beolvasva mint
+      reason: Indoklás
+      reason_optional: Indoklás (nem kötelező)
+      refused:
+        country: Írj két betűt, például ES.
+        currency: Írj három betűt, például EUR.
+      remove:
+        attachments: 'Vele törölt csatolmányok: {count}'
+        blocked: 'Egy véglegesített bevallás használja, ezért nem törölhető:'
+        checking: 'Ellenőrzés: mivel jár a törlés'
+        description: A főkönyv ellenőrizte, mit vinne magával. Semmi sem törlődik,
+          amíg nem mentesz.
+        evidence: 'Vele törölt beszerzési számlák: {count}'
+        stage: Törlés
+        stale: 'Elavuló tervezetek: {declarations}'
+        title: Tétel törlése
+        unchecked: A főkönyv nem tudta ellenőrizni a törlést
+      resize: Részletek panel átméretezése
+      revert: Visszavonás
+      sealed: 'Felhasználva: {declarations}. Csak olvasható.'
+      section:
+        classify: Besorolás
+        details: Részletek
+        documents: Dokumentumok
+        history: Előzmények
+        invoice: Számla
+      sections: A tétel szakaszai
+      selection:
+        actions: Műveletek
+        approve_all: '{count} elolvasott jóváhagyása'
+        approved_all: '{count} jóváhagyás előkészítve'
+        ask_each: Kérdezd a modellt egyenként
+        asked: 'Elolvasandó javaslatok: {count}'
+        body: Kijelölt tételek
+        classification: Besorolás mindegyiknek
+        classify_first: Előbb besorolás
+        clear: Kijelölés törlése
+        common: Közös értékek
+        copied: '{count} tétel TSV-ként másolva'
+        copy: Másolás TSV-ként
+        cost: '{count} tétel egyenként mentődne, kb. {minutes} perc. Előbb besorolva
+          együtt mentődnek.'
+        in: Bevétel · {currency}
+        make_rule: Szabály létrehozása
+        merge_hint: Az egyesítéshez jelöld ki egy felosztott tétel összes részét.
+        mixed_values: Vegyes · {count} érték
+        nothing: Egyikre sem alkalmazható
+        out: Kiadás · {currency}
+        partial: Csak a betöltött tételek
+        set_for: Beállítás {count} tételre
+        set_hidden: Beállítás {visible} látható + {hidden} rejtett tételre
+        set_title: Mindegyiknek · választáskor érvényes
+        skipped: '{count} kihagyva'
+        skipped_reason: '{count} kihagyva: {reason}'
+        stage_anyway: Előkészítés mégis
+        staged: '{count} tétel előkészítve · nincs mentve'
+        title: '{count} kijelölve'
+        totals: Összesen
+        transfer: Átvezetések · {currency}
+      share: Üzleti arány
+      share_required: Add meg az üzleti arányt.
+      show: Mutasd
+      skip:
+        not_active: nem aktív
+        personal: magán
+        sealed: lezárt
+        transfer: átvezetés
+        unclassified: még nincs besorolva
+      source_jurisdiction: Forrás szerinti joghatóság
+      split:
+        add_part: Rész hozzáadása
+        amount: A(z) {part}. résznek nullánál nagyobb összeg kell.
+        category_needed: Válassz kategóriát a(z) {part}. részhez.
+        choose_category: Válassz kategóriát
+        count: Egy felosztás 2–{max} részből áll.
+        description: A részek összege {amount} {currency}. Az utolsó rész kapja a
+          maradékot.
+        description_needed: A(z) {part}. résznek leírás kell.
+        duplicate: 'A(z) {part}. rész megegyezik egy másikkal: módosítsd az összegét
+          vagy a leírását.'
+        mixed_hint: Részben munkára használod? Inkább Vegyes, arányszámmal.
+        over: A részek {amount} összeggel többek a tételnél.
+        part_amount: '{part}. rész összege'
+        part_category: '{part}. rész kategóriája'
+        part_classification: '{part}. rész besorolása'
+        part_description: '{part}. rész leírása'
+        remainder: A maradék
+        remove_part: '{part}. rész eltávolítása'
+        share_needed: Add meg a(z) {part}. rész üzleti arányát.
+        stage: Felosztás előkészítése
+        staged: '{count} részre osztás előkészítve · nincs mentve'
+        title: Felosztás részekre
+        unclassified: Besorolás később
+        under: A részekből {amount} hiányzik a tételhez.
+      stage: Előkészítés
+      technical: Technikai részletek
+      unread: Nem olvasható
+      unsaved: '{count} változás · nincs mentve'
+      unsaved_classification: → {classification} · nincs mentve
+      used:
+        discarded: Elvetve
+        draft: Tervezet
+        filed_confirmed: Benyújtva · igazolás megerősítve
+        filed_local: Helyben benyújtva · AEAT-állapot nincs megerősítve
+        name: '{modelo}-es modell · {year} {period}'
+        none: Még egy bevallás sem használja ezt a tételt.
+        not_built: A bevallási kapcsolatok még nem készültek el
+        superseded: Felülírva
+        title: Felhasználva
+        verified: Ellenőrizve (lezárva)
     inventory:
       actividad: Tevékenység azonosítója
       authority: Zárási jogosultság rekordja (JSON)
