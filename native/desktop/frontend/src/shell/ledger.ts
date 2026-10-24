@@ -7,6 +7,62 @@
 // bytes of one call. Results and staged edits live in the page's memory
 // only: never in storage, a log line or an error message.
 
+import type {
+  ActivityAssetChangeResult,
+  ActivityAssetClaimRequest,
+  ActivityAssetClaimResult,
+  ActivityAssetFilingRequest,
+  ActivityAssetFilingResult,
+  ActivityAssetForecastRequest,
+  ActivityAssetForecastResult,
+  ActivityAssetInspectRequest,
+  ActivityAssetInspectResult,
+  ActivityAssetRevisionRequest,
+  CapitalGoodDeclareRequest,
+  CapitalGoodDeclareResult,
+  CapitalGoodsListResult,
+  InventoryBookRequest,
+  InventoryClosingAuthorityRequest,
+  InventoryClosingAuthorityResult,
+  InventoryCreateRequest,
+  InventoryCreateResult,
+  InventoryListResult,
+  InventoryMovementAddRequest,
+  InventoryMovementAddResult,
+  InventoryValuationResult,
+  LedgerCounterpartyRequest,
+  LedgerCounterpartyResult,
+  LedgerLlmDiagnosticsRequest,
+  LedgerLlmDiagnosticsResult,
+  LedgerOwnAccountRequest,
+  LedgerOwnAccountResult,
+  LedgerParticipationRebuildResult,
+  LedgerRatiosEligibleResult,
+  LedgerRatiosListResult,
+  LedgerRatiosSetRequest,
+  LedgerRatiosSetResult,
+  LedgerRatiosUnsetRequest,
+  LedgerRatiosUnsetResult,
+  LedgerRatiosValidateResult,
+  LedgerRatiosYearRequest,
+  LedgerResetRequest,
+  LedgerResetResult,
+  LedgerRuleAddRequest,
+  LedgerRuleAddResult,
+  LedgerRuleApplyRequest,
+  LedgerRuleApplyResult,
+  LedgerRuleListResult,
+  ProrrataDeclareSectorRequest,
+  ProrrataElectEspecialRequest,
+  ProrrataElectionRequest,
+  ProrrataListResult,
+  ProrrataMutationResult,
+  ProrrataRevokeEspecialRequest,
+  ProrrataSeedRequest,
+  ProrrataSeedSectorRequest,
+  ProrrataSettleSectorRequest,
+} from "./ledgerSetup";
+
 /** The definitions the host admits, mirroring its closed list. */
 export const LEDGER_DEFINITIONS = [
   "ledger.actividad-asset.claim",
@@ -1518,6 +1574,40 @@ export interface LedgerRequests {
   "ledger.attach": LedgerAttachRequest;
   "ledger.detach": LedgerDetachRequest;
   "ledger.check": LedgerCheckRequest;
+  "ledger.rule.list": Record<string, never>;
+  "ledger.rule.add": LedgerRuleAddRequest;
+  "ledger.rule.apply": LedgerRuleApplyRequest;
+  "ledger.ratios.list": LedgerRatiosYearRequest;
+  "ledger.ratios.eligible": LedgerRatiosYearRequest;
+  "ledger.ratios.validate": Record<string, never>;
+  "ledger.ratios.set": LedgerRatiosSetRequest;
+  "ledger.ratios.unset": LedgerRatiosUnsetRequest;
+  "ledger.counterparty": LedgerCounterpartyRequest;
+  "ledger.llm-diagnostics": LedgerLlmDiagnosticsRequest;
+  "ledger.own_account": LedgerOwnAccountRequest;
+  "ledger.prorrata.list": Record<string, never>;
+  "ledger.prorrata.seed": ProrrataSeedRequest;
+  "ledger.prorrata.declare_sector": ProrrataDeclareSectorRequest;
+  "ledger.prorrata.elect_general": ProrrataElectionRequest;
+  "ledger.prorrata.elect_especial": ProrrataElectEspecialRequest;
+  "ledger.prorrata.revoke_especial": ProrrataRevokeEspecialRequest;
+  "ledger.prorrata.seed_sector": ProrrataSeedSectorRequest;
+  "ledger.prorrata.settle_sector": ProrrataSettleSectorRequest;
+  "ledger.bienes_inversion.list": Record<string, never>;
+  "ledger.bienes_inversion.declare": CapitalGoodDeclareRequest;
+  "ledger.inventory.list": Record<string, never>;
+  "ledger.inventory.create": InventoryCreateRequest;
+  "ledger.inventory.movement.add": InventoryMovementAddRequest;
+  "ledger.inventory.valuation.preview": InventoryBookRequest;
+  "ledger.inventory.closing-authority.record": InventoryClosingAuthorityRequest;
+  "ledger.actividad-asset.create": ActivityAssetRevisionRequest;
+  "ledger.actividad-asset.inspect": ActivityAssetInspectRequest;
+  "ledger.actividad-asset.correct": ActivityAssetRevisionRequest;
+  "ledger.actividad-asset.forecast": ActivityAssetForecastRequest;
+  "ledger.actividad-asset.claim": ActivityAssetClaimRequest;
+  "ledger.actividad-asset.filing-handoff": ActivityAssetFilingRequest;
+  "ledger.participation.rebuild": Record<string, never>;
+  "ledger.reset": LedgerResetRequest;
 }
 export interface LedgerResults {
   "ledger.list": LedgerListResult;
@@ -1554,6 +1644,40 @@ export interface LedgerResults {
   "ledger.attach": LedgerAttachResult;
   "ledger.detach": LedgerAttachResult;
   "ledger.check": LedgerCheckResult;
+  "ledger.rule.list": LedgerRuleListResult;
+  "ledger.rule.add": LedgerRuleAddResult;
+  "ledger.rule.apply": LedgerRuleApplyResult;
+  "ledger.ratios.list": LedgerRatiosListResult;
+  "ledger.ratios.eligible": LedgerRatiosEligibleResult;
+  "ledger.ratios.validate": LedgerRatiosValidateResult;
+  "ledger.ratios.set": LedgerRatiosSetResult;
+  "ledger.ratios.unset": LedgerRatiosUnsetResult;
+  "ledger.counterparty": LedgerCounterpartyResult;
+  "ledger.llm-diagnostics": LedgerLlmDiagnosticsResult;
+  "ledger.own_account": LedgerOwnAccountResult;
+  "ledger.prorrata.list": ProrrataListResult;
+  "ledger.prorrata.seed": ProrrataMutationResult;
+  "ledger.prorrata.declare_sector": ProrrataMutationResult;
+  "ledger.prorrata.elect_general": ProrrataMutationResult;
+  "ledger.prorrata.elect_especial": ProrrataMutationResult;
+  "ledger.prorrata.revoke_especial": ProrrataMutationResult;
+  "ledger.prorrata.seed_sector": ProrrataMutationResult;
+  "ledger.prorrata.settle_sector": ProrrataMutationResult;
+  "ledger.bienes_inversion.list": CapitalGoodsListResult;
+  "ledger.bienes_inversion.declare": CapitalGoodDeclareResult;
+  "ledger.inventory.list": InventoryListResult;
+  "ledger.inventory.create": InventoryCreateResult;
+  "ledger.inventory.movement.add": InventoryMovementAddResult;
+  "ledger.inventory.valuation.preview": InventoryValuationResult;
+  "ledger.inventory.closing-authority.record": InventoryClosingAuthorityResult;
+  "ledger.actividad-asset.create": ActivityAssetChangeResult;
+  "ledger.actividad-asset.inspect": ActivityAssetInspectResult;
+  "ledger.actividad-asset.correct": ActivityAssetChangeResult;
+  "ledger.actividad-asset.forecast": ActivityAssetForecastResult;
+  "ledger.actividad-asset.claim": ActivityAssetClaimResult;
+  "ledger.actividad-asset.filing-handoff": ActivityAssetFilingResult;
+  "ledger.participation.rebuild": LedgerParticipationRebuildResult;
+  "ledger.reset": LedgerResetResult;
 }
 export type LedgerRequest<D extends LedgerDefinitionId> =
   D extends keyof LedgerRequests ? LedgerRequests[D] : JsonObject;

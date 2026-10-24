@@ -850,7 +850,7 @@ export function fixtureLedger(): FixtureLedger {
     evidence,
     rules: [
       {
-        rule_id: "rule-01",
+        rule_id: hex64("CUOTA AUTONOMOS|BUSINESS|cuotas_autonomos_ss"),
         description_pattern: "CUOTA AUTONOMOS",
         classification: "BUSINESS",
         category_id: "cuotas_autonomos_ss",
@@ -859,7 +859,7 @@ export function fixtureLedger(): FixtureLedger {
         created_at: "2026-01-04T10:00:00Z",
       },
       {
-        rule_id: "rule-02",
+        rule_id: hex64("HOJA VERDE|PERSONAL|"),
         description_pattern: "HOJA VERDE",
         classification: "PERSONAL",
         category_id: null,
@@ -868,7 +868,7 @@ export function fixtureLedger(): FixtureLedger {
         created_at: "2026-01-04T10:02:00Z",
       },
       {
-        rule_id: "rule-03",
+        rule_id: hex64("COMISION MANTENIMIENTO|BUSINESS|gastos_bancarios"),
         description_pattern: "COMISION MANTENIMIENTO",
         classification: "BUSINESS",
         category_id: "gastos_bancarios",

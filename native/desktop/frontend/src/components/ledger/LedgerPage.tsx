@@ -66,6 +66,13 @@ import { ExportDialog } from "./transfer/ExportDialog";
 import { useLedgerEditing, type LeaveGuard } from "./editing/LedgerEditing";
 import { ImportDialog } from "./transfer/ImportDialog";
 import { dayText } from "./transfer/transferWords";
+import type { OpenRuleFromSelection } from "../../shell/ledgerCommands";
+import { HealthSection } from "./setup/HealthSection";
+import { RegistersSection } from "./setup/RegistersSection";
+import { RuleDialog, type RuleDialogTarget } from "./setup/RuleDialog";
+import { RulesSection } from "./setup/RulesSection";
+import type { SetupProps } from "./setup/setupProps";
+import { NO_FILTERS, TO_CLASSIFY_REASON } from "./movements/movementsModel";
 
 /** What the page keeps of itself while it is put away, for one profile:
  * the period it showed and how its movements were looked at. Held in memory
@@ -178,7 +185,10 @@ export function LedgerPage({
   const { years, refresh: refreshYears } = useLedgerYears(
     port,
     reader,
-    periodOpen || transfer !== null,
+    periodOpen ||
+      transfer !== null ||
+      section === "rules" ||
+      section === "registers",
   );
   const numbers = useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const fallbackYear = Number(today.slice(0, 4));
@@ -223,6 +233,26 @@ export function LedgerPage({
     guardLeave,
     locale,
   });
+  // The rule dialog opens over whatever section is shown: from Rules, or
+  // from a selection or a group of movements.
+  const [ruleTarget, setRuleTarget] = useState<RuleDialogTarget | null>(null);
+  const [rulesVersion, setRulesVersion] = useState(0);
+  useEffect(() => setRuleTarget(null), [reader]);
+  const openRuleFromSelection: OpenRuleFromSelection = useCallback(
+    (seed) => setRuleTarget({ kind: "seed", seed }),
+    [],
+  );
+  const setupProps: SetupProps = {
+    port,
+    reader,
+    locale,
+    rows: periodWindow ? (shownRows(periodWindow)?.rows ?? null) : null,
+    stage: stage.content,
+    onStage: editing.onStage,
+    years,
+    fallbackYear,
+    period,
+  };
   const addAction: LedgerHeaderAction = readable
     ? {
         run: () => {
@@ -331,6 +361,13 @@ export function LedgerPage({
               },
               { enabled: runs(addInvoiceAction) },
             ),
+            action(
+              "rule_from_selection",
+              t("desktop.ledger.rules.from_selection"),
+              "filter",
+              () => openRuleFromSelection({ ids: [...movements.selection] }),
+              { enabled: () => movements.selection.size > 0 },
+            ),
             ...LEDGER_SECTIONS.map((value) =>
               action(
                 `section.${value}`,
@@ -370,6 +407,35 @@ export function LedgerPage({
         editor={invoiceEditor}
         onEditor={setInvoiceEditor}
         copy={copy}
+      />
+    );
+  else if (section === "rules")
+    body = (
+      <RulesSection
+        {...setupProps}
+        onOpenRule={setRuleTarget}
+        rulesVersion={rulesVersion}
+      />
+    );
+  else if (section === "registers") body = <RegistersSection {...setupProps} />;
+  else if (section === "health")
+    body = (
+      <HealthSection
+        {...setupProps}
+        onShowReason={(reason) => {
+          // A movement still to classify is its own filter, not a reason.
+          movements.setFilters(
+            reason === TO_CLASSIFY_REASON
+              ? { ...NO_FILTERS, readiness: "to_classify" }
+              : { ...NO_FILTERS, reason },
+          );
+          setSection("movements");
+        }}
+        onShowInvoices={() => setSection("invoices")}
+        onReset={() => {
+          reread();
+          refreshYears();
+        }}
       />
     );
   else if (section !== "movements")
@@ -553,6 +619,20 @@ export function LedgerPage({
         </div>
       </section>
       {readable && editing.dock}
+      {readable && ruleTarget && (
+        <RuleDialog
+          port={port}
+          reader={reader}
+          target={ruleTarget}
+          rows={setupProps.rows}
+          onStage={editing.onStage}
+          onSaved={() => {
+            setRulesVersion((value) => value + 1);
+            setRuleTarget(null);
+          }}
+          onClose={() => setRuleTarget(null)}
+        />
+      )}
       {readable && transfer === "import" && (
         <ImportDialog
           port={port}

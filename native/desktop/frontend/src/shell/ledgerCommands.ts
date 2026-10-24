@@ -248,3 +248,13 @@ export function categoryCells(
       }
     : { kind: "nothing", skipped };
 }
+
+/** What a rule made from a selection or a group starts from: the
+ * movements it was made from. */
+export type RuleSeed = { ids: readonly string[] };
+/**
+ * Opens the rule dialog over the page, prefilled from what the movements
+ * share. A group header, the inspector and the palette call it; nothing is
+ * saved until the person saves the rule.
+ */
+export type OpenRuleFromSelection = (seed: RuleSeed) => void;

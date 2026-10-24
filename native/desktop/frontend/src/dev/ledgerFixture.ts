@@ -54,6 +54,11 @@ import {
   InvoiceUnsettled,
   invoiceOperations,
 } from "./ledgerInvoiceFixture";
+import {
+  SetupRequestInvalid,
+  SetupStopped,
+  setupOperations,
+} from "./ledgerSetupFixture";
 
 /** How the scenario's ledger answers. */
 export const LEDGER_SHAPES = [
@@ -1167,7 +1172,7 @@ export function ledgerFixture(options: Options): LedgerPort {
         iva_rate: null,
         iva_amount: null,
       })),
-      stale_filings: [],
+      stale_filings: setupWork.staleFilings(period),
     };
   }
 
@@ -1619,7 +1624,7 @@ export function ledgerFixture(options: Options): LedgerPort {
         own_account_id: null,
         accounts: accounts as unknown as JsonValue,
         designations: [
-          { role: "charge", modelo: null, own_account_id: "acc-01" },
+          ...setupWork.designations(),
         ],
         changed: false,
       };
@@ -1635,9 +1640,16 @@ export function ledgerFixture(options: Options): LedgerPort {
         changed: false,
       };
     }
-    return reject("unavailable");
+    return setupWork.ownAccount(request);
   }
 
+  const setupWork = setupOperations(ledger, {
+    profileId: LEDGER_FIXTURE_PROFILE_ID,
+    today: LEDGER_FIXTURE_TODAY,
+    now,
+    events,
+    hex64,
+  });
   const invoiceWork = invoiceOperations(ledger, {
     profileId: LEDGER_FIXTURE_PROFILE_ID,
     events,
@@ -1647,6 +1659,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     Record<LedgerDefinitionId, (request: JsonObject) => JsonObject>
   > = {
     ...invoiceWork.reads,
+    ...setupWork.reads,
     "ledger.list": (request) => list(ledger, request),
     "ledger.view": (request) => {
       const movement = resolve(ledger, request.transaction_prefix);
@@ -1699,6 +1712,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     "ledger.invoice.import": importInvoiceBook,
     "ledger.evidence.batch": addDocuments,
     ...invoiceWork.writes,
+    ...setupWork.writes,
   };
 
   function suggestion(pending: Pending, operation: string) {
@@ -1738,7 +1752,8 @@ export function ledgerFixture(options: Options): LedgerPort {
   /** Whether settling `definition` with `request` may change records. */
   const changes = (definition: LedgerDefinitionId, request: JsonObject) =>
     (definition in writes &&
-      !(definition === "ledger.import" && request.dry_run === true)) ||
+      request.dry_run !== true &&
+      !(definition === "ledger.counterparty" && request.action === "view")) ||
     definition === "ledger.classify.review" ||
     (definition === "ledger.own_account" &&
       request.action !== "list" &&
@@ -1814,6 +1829,18 @@ export function ledgerFixture(options: Options): LedgerPort {
         return reject("unknown", { operation_id: operation });
       return settle(operation, result);
     } catch (error) {
+      if (error instanceof SetupRequestInvalid) return invalid();
+      if (error instanceof SetupStopped) {
+        const refused: LedgerOutcome = {
+          kind: "refused",
+          operation_id: operation,
+          revision: 3,
+          reason: error.reason,
+          detail: error.detail as unknown as LedgerErrorDetail | null,
+        };
+        outcomes.set(operation, refused);
+        return refused;
+      }
       if (error instanceof InvoiceRequestInvalid) return invalid();
       if (error instanceof InvoiceUnsettled)
         return reject("unknown", { operation_id: operation });
