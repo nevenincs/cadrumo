@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:06aa01b56dda3bf1ce1e9fb8803f65b61219db69ce31f7694cbc07685c607c33'
+body_hash: 'sha256:630f3e72fd4fb356f1b517dec5a24cc650013e58069fb2a8898d029ee1561af9'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
@@ -58,7 +58,41 @@ related:
 - `S06` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
 - `S06` `verify:` `ty, pyrefly and basedpyright on touched files` -> `pass`
 - `S06` `verify:` `pytest dev/locales/tests` -> `fail`
+- `S07` `M` `src/cadrumo_client/contracts/navigation.py`
+- `S07` `M` `src/cadrumo_client/contracts/presentation.py`
+- `S07` `M` `src/cadrumo_client/contracts/session_events.py`
+- `S07` `M` `src/cadrumo_client/contracts/tests/test_presentation_requests.py`
+- `S07` `M` `src/cadrumo_client/transport/frontend_client.py`
+- `S07` `M` `src/cadrumo_client/transport/tests/test_presentation_events.py`
+- `S07` `M` `src/cadrumo_runtime/host/session_hold.py`
+- `S07` `M` `src/cadrumo_runtime/host/profile_connection_sessions.py`
+- `S07` `M` `src/cadrumo_runtime/host/tests/test_presentation_routing.py`
+- `S07` `M` `src/cadrumo_runtime/host/tests/test_session_hold_presentation.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/presentation.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/account.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/routes.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/entries.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_presentation_navigation.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_root_waits_for_a_write.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_module_arguments.py`
+- `S07` `M` `src/cadrumo/application/operations/operation_pages.py`
+- `S07` `M` `src/cadrumo/application/operations/tests/test_operation_pages.py`
+- `S07` `M` `src/cadrumo/application/auth/setup_handoff.py`
+- `S07` `M` `src/cadrumo/application/auth/read_operation.py`
+- `S07` `M` `src/cadrumo/application/auth/tests/test_setup_handoff.py`
+- `S07` `M` `src/cadrumo_mcp/mcp/admitted_operations.py`
+- `S07` `M` `src/cadrumo_mcp/mcp/tests/test_execute_page_link.py`
+- `S07` `M` `src/cadrumo_mcp/mcp/tests/test_handshake_free_revision.py`
+- `S07` `M` `dev/runtime_lifecycle/tests/test_mcp_attended_adapter.py`
+- `S07` `D` `src/cadrumo_client/contracts/tests/test_presentation_links.py`
+- `S07` `A` `src/cadrumo_client/contracts/tests/test_presentation_requests.py`
+- `S07` `verify:` `pytest touched presentation, routing, session hold, TUI, ledger, handoff, operation pages and MCP page tests (1180 passed)` -> `pass`
+- `S07` `verify:` `pytest client, runtime TUI frontend, MCP, auth, operations and locale suites (3606 passed, 9 failed outside the touched code)` -> `fail`
+- `S07` `verify:` `ruff check, ruff format --check and ty on touched files` -> `pass`
+- `S07` `verify:` `lint-imports --config .importlinter --no-cache (1 broken: cadrumo.tests to application.local_reader, pre-existing uncommitted edit)` -> `fail`
 
 ## Notes
 
 - `S06` dev/locales/tests: 4 failures in `test_desktop_chrome,` `test_dict_constant_naming_convention,` `test_modelo_schema_runtime_localization` and `test_audit` product identity; none names a navigation key; they sit in files other sessions are editing. Locale spelling flags ca Instal·lació and es/ca Python shell for navigation labels exactly as for the existing tui.destination.installation and desktop.rail.python cells.
+- `S07` The 9 broader failures are outside S07: `desktop_chrome` and dict-naming and catalogue-identity locale gates over other sessions' edits, and runtime TUI automation-inventory and restored-login settle timeouts; locale key `tui.ledger.entries.selection_absent` landed inside another session's commit 44d85df020
