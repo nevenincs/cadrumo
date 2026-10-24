@@ -689,6 +689,30 @@ test("the classify chords work after a checkbox selection, and Shift+Space then 
   );
 });
 
+test("the classify chords work from the Ledger header, and never in a text field", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await choosePeriod(target, 2026, "4T");
+  await dataRows(target).nth(0).locator("input[type=checkbox]").click();
+  for (const control of [
+    head(target).locator(".ledger-period"),
+    head(target).getByRole("tab").first(),
+  ]) {
+    await control.focus();
+    await target.keyboard.press("Alt+KeyB");
+    await expect(classify(target)).toBeVisible();
+    await target.keyboard.press("Escape");
+    await expect(classify(target)).toHaveCount(0);
+  }
+  const search = page(target).getByRole("searchbox", {
+    name: label("desktop.ledger.search.label"),
+  });
+  await search.focus();
+  await target.keyboard.press("Alt+KeyB");
+  await expect(classify(target)).toHaveCount(0);
+});
+
 test("a cell range over other rows than the selection is said, and can become it", async ({
   page: target,
 }) => {
@@ -805,6 +829,25 @@ test("compact status cells draw a state as its glyph, named, and widen for the m
   const cell = (await archived.locator("[data-column=status]").boundingBox())!;
   const glyph = (await mark.boundingBox())!;
   expect(glyph.x + glyph.width).toBeLessThanOrEqual(cell.x + cell.width);
+});
+
+test("the tooltip of a cut-short cell goes away as the grid scrolls", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await choosePeriod(target, 2026, "4T");
+  const cell = rowWith(target, "SOFTNUBE IRELAND").locator(
+    "[data-column=description]",
+  );
+  await cell.click();
+  const tip = target.getByRole("tooltip");
+  await expect(tip).toContainText("SOFTNUBE IRELAND");
+  // The focused cell keeps its focus; its tip would float over other rows.
+  await grid(target).evaluate((element) => {
+    element.scrollTop += 120;
+  });
+  await expect(tip).toHaveCount(0);
+  await expect(cell).toBeFocused();
 });
 
 test("a failed read of the duplicate flags says so instead of marking none", async ({

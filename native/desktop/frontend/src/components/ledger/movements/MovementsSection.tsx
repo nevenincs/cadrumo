@@ -1089,9 +1089,10 @@ export function MovementsSection({
   };
 
   // Alt+B, Alt+P and Alt+M classify the selection wherever focus is on the
-  // Ledger page, as Alt+I opens the inspector: a row checkbox, the toolbar
-  // and the inspector beside the grid included. A text field keeps its keys,
-  // and a dialog over the page is not the page.
+  // Ledger page, as Alt+I opens the inspector: the header's tabs, period and
+  // buttons, a row checkbox, the toolbar and the inspector beside the grid
+  // included. A text field keeps its keys, and a dialog over the page is not
+  // the page.
   const chord = useRef<(kind: ClassifyKind) => void>(() => undefined);
   useEffect(() => {
     chord.current = (kind) => classifySelection(kind);
@@ -1103,7 +1104,7 @@ export function MovementsSection({
       const kind = CHORD_KINDS[event.code];
       if (!kind) return;
       const target = event.target as HTMLElement | null;
-      if (!target?.closest(".ledger-page") || takesText(target)) return;
+      if (!target?.closest("[data-ledger-root]") || takesText(target)) return;
       event.preventDefault();
       chord.current(kind);
     };
