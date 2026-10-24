@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:3eef40186fb86135f748aac6a45e9d8eac0ffe4a34961b68e2ecffb919ea6be5'
+body_hash: 'sha256:ace0d4d9924c64688ecb423ab30f2e5067a1e2360bf55261c42ffe30f17eaaf7'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
@@ -172,6 +172,46 @@ related:
 - `S08` `verify:` `ruff check, ruff format --check and ty on S08 files` -> `pass`
 - `S08` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
 - `S08` `verify:` `just check-import-boundaries (contracts kept; fails on other sessions' files: modelo vocabulary import, catalogue intake test syntax, dev registry private imports)` -> `fail`
+- `S11` `M` `dev/locales/desktop_chrome.py`
+- `S11` `M` `native/desktop/frontend/src/components/NavigationPrompt.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/RowReveal.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoiceEditor.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/invoices/invoiceReveal.ts`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/movements/movementReveal.ts`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/setup/AccountsPane.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/setup/AssetsPane.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/setup/CapitalGoodsPane.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/setup/CounterpartiesPane.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/setup/HealthSection.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/setup/InventoryPane.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/setup/ProrrataPane.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/setup/RatiosPane.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/setup/RegistersSection.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/setup/RulesSection.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/setup/SetupParts.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/profile/ProfileEditor.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/profile/UserProfilePage.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ui/dialog.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ui/sheet.tsx`
+- `S11` `M` `native/desktop/frontend/src/dev/agentFixtureHost.ts`
+- `S11` `M` `native/desktop/frontend/src/dev/censoFixture.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/navigation/hooks.ts`
+- `S11` `A` `native/desktop/frontend/src/shell/navigation/reveal.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/navigation/useNavigator.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/navigation/windowViews.ts`
+- `S11` `A` `native/desktop/frontend/tests/scenarios/navigation-guards.spec.ts`
+- `S11` `M` `src/cadrumo/locales/ca/common.yml`
+- `S11` `M` `src/cadrumo/locales/en/common.yml`
+- `S11` `M` `src/cadrumo/locales/es/common.yml`
+- `S11` `M` `src/cadrumo/locales/hu/common.yml`
+- `S11` `verify:` `npm run check (tsc, eslint excl. pre-existing .ux-a-lib.mjs, eslint rule tests, prettier)` -> `pass`
+- `S11` `verify:` `playwright scenarios navigation-guards 9/9` -> `pass`
+- `S11` `verify:` `playwright scenarios ledger-editing ledger-shell user-profile navigation-register agent-page-links ledger-invoices ledger-movements ledger-setup ledger-documents keyboard 152/152` -> `pass`
+- `S11` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py 23` -> `pass`
 
 ## Notes
 
