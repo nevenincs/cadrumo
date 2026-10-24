@@ -27,11 +27,15 @@ import {
 import type { LedgerPort } from "../../shell/ledger";
 import type { LedgerPeriod } from "../../shell/ledgerGrammar";
 import { readWindow } from "../../shell/ledgerWindow";
-import { useStrings } from "../../shell/strings";
+import { useStrings, type Translate } from "../../shell/strings";
 
 /** How a write that was not seen to settle ended as far as the page knows:
  * sent and not observed, or saved with its answer not read. */
 export type HeldOutcome = "unknown" | "saved_unread";
+
+/** What a re-read found that still does not settle a write: it stays
+ * held, and these lines say why. */
+export type StillHeld = { held: string[] };
 
 /** A write whose outcome the page does not know. */
 export type HeldWrite = {
@@ -39,12 +43,47 @@ export type HeldWrite = {
   what: string;
   outcome: HeldOutcome;
   /** Reads what the write touched and words what it found, one line per
-   * thing; null while the ledger could not be read, which keeps it held.
-   * Without one, a read of the ledger that answers settles it. */
-  settle?: () => Promise<string[] | null>;
+   * thing, which settles it; `StillHeld` where the read answered but
+   * cannot tell, and null while it could not be read, both of which keep
+   * it held. Without one, a read of the ledger that answers settles it:
+   * only writers not yet reading back what they wrote go without one. */
+  settle?: () => Promise<string[] | StillHeld | null>;
   /** Called once the re-read settled it. */
   onSettled?: () => void;
 };
+
+/** What a read of the register a write touched says about it: there,
+ * not there, not told but sent again the same write, or not told. */
+export type Landing = "saved" | "not_saved" | "repeatable" | "untold";
+/** Reads what a write touched and says how it landed; null while the
+ * register could not be read. */
+export type LandingCheck = () => Promise<Landing | null>;
+
+/** The settle of a write named `what`, from the read that says how it
+ * landed: saved, not saved and repeatable settle it, in words; untold
+ * keeps it held, in words, until a later re-read tells. */
+export function landingSettle(
+  t: Translate,
+  what: string,
+  check: LandingCheck,
+): () => Promise<string[] | StillHeld | null> {
+  return async () => {
+    const found = await check();
+    if (found === null) return null;
+    if (found === "untold")
+      return { held: [t("desktop.ledger.paused.untold", { movement: what })] };
+    return [
+      t(
+        found === "saved"
+          ? "desktop.ledger.paused.found_saved"
+          : found === "not_saved"
+            ? "desktop.ledger.paused.unsaved"
+            : "desktop.ledger.paused.repeatable",
+        { movement: what },
+      ),
+    ];
+  };
+}
 
 type Held = HeldWrite & { id: number };
 
@@ -130,6 +169,10 @@ export function usePagePause({
         if (write.settle) {
           const found = await write.settle();
           if (found === null) continue;
+          if (!Array.isArray(found)) {
+            lines.push(...found.held);
+            continue;
+          }
           lines.push(...found);
         } else {
           answered ??= (await readWindow(port, period, 1)).kind === "read";
@@ -147,7 +190,7 @@ export function usePagePause({
         write.onSettled?.();
       }
       setWrites((held) => held.filter((write) => !settled.has(write.id)));
-      if (lines.length) setFindings(lines);
+      setFindings(lines.length ? lines : null);
       setRound((value) => value + 1);
       busy.current = false;
       setRereading(false);
@@ -211,6 +254,11 @@ export function PausedBanner({ pause }: { pause: WritePause }) {
               {t("desktop.ledger.paused.reread")}
             </Button>
           </div>
+          {pause.findings && (
+            <p className="ledger-findings-held mt-1 text-sm">
+              {pause.findings.join(" · ")}
+            </p>
+          )}
         </Alert>
       ) : (
         <Alert

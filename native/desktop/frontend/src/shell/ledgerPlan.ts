@@ -200,6 +200,9 @@ export type PlanBlocker =
   | { kind: "gone" }
   | { kind: "not_active"; lifecycle: string }
   | { kind: "sealed" }
+  /** Whether a finalized declaration seals it was not read: it is never
+   * planned as savable on a guess. */
+  | { kind: "sealed_unread" }
   | { kind: "cannot_clear"; fields: PlanField[] }
   | { kind: "needs_classification"; fields: PlanField[] }
   | { kind: "mixed_needs_share" }
@@ -309,6 +312,9 @@ export type PlanContext = {
   rows: ReadonlyMap<string, LedgerRow>;
   /** Rows a finalized declaration cites: their facts are sealed. */
   sealed?: ReadonlySet<string>;
+  /** Rows whose sealed state was not read: held back, neither sealed nor
+   * savable, until a read answers for them. */
+  unread?: ReadonlySet<string>;
   outputLanguage?: OutputLanguage;
   /** The host's payload bound; tests use a smaller one. */
   payloadLimit?: number;
@@ -676,15 +682,16 @@ function checkRow(
       kind: "not_active",
       lifecycle: row.transaction.lifecycle_state,
     });
-  if (
-    context.sealed?.has(id) &&
-    (edits ||
-      structural.length ||
-      suggestions.length ||
-      classifying.length ||
-      files.length)
-  )
+  const sealable =
+    edits ||
+    structural.length > 0 ||
+    suggestions.length > 0 ||
+    classifying.length > 0 ||
+    files.length > 0;
+  if (context.sealed?.has(id) && sealable)
     entry.blockers.push({ kind: "sealed" });
+  else if (context.unread?.has(id) && sealable)
+    entry.blockers.push({ kind: "sealed_unread" });
   const first = structural[0];
   if (first && edits) {
     const classifying =

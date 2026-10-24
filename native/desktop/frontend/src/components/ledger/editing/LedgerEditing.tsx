@@ -7,7 +7,7 @@ import {
   type Dispatch,
 } from "react";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
-import type { ApplyReport } from "../../../shell/ledgerApply";
+import { releaseReview, type ApplyReport } from "../../../shell/ledgerApply";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import {
   actionRows,
@@ -17,6 +17,7 @@ import {
   type StageState,
 } from "../../../shell/ledgerStage";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
+import type { SealedRead } from "../useSealedMovements";
 import type { WritePause } from "../WritePause";
 import { ChangesTray } from "./ChangesTray";
 import { stageTally } from "./editingModel";
@@ -67,7 +68,7 @@ export function useLedgerEditing({
   /** The page's one write pause. */
   pause: WritePause;
   /** Which of `ids` a finalized declaration cites, read where not known. */
-  sealedOf: (ids: readonly string[]) => Promise<ReadonlySet<string>>;
+  sealedOf: (ids: readonly string[]) => Promise<SealedRead>;
   /** Puts the focus back on the grid's active cell: false where the page
    * draws no grid. */
   returnFocus?: () => boolean;
@@ -107,6 +108,24 @@ export function useLedgerEditing({
     }
     return out;
   }, [content]);
+
+  // A staged model approval that leaves the stage unanswered, wherever it
+  // was dropped (the review, the tray, the leave guard, undo or a row's ×),
+  // cancels its review, so it does not wait at its review step. One whose
+  // answer was sent has settled, and the host leaves it as it is.
+  const staging = useRef<ReadonlySet<string>>(new Set());
+  const portRef = useRef(port);
+  portRef.current = port;
+  useEffect(() => {
+    const now = new Set(
+      content.actions.flatMap((action) =>
+        action.kind === "suggestion" ? [action.operationId] : [],
+      ),
+    );
+    for (const operation of staging.current)
+      if (!now.has(operation)) void releaseReview(portRef.current, operation);
+    staging.current = now;
+  }, [content.actions]);
 
   // What stays staged is now compared with the ledger as just read.
   const rebase = useCallback((fresh: ReadonlyMap<string, LedgerRow>) => {

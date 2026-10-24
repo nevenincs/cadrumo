@@ -54,7 +54,7 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
 import { SetupOffer } from "../../setup/SetupOffer";
 import { PeriodSelector } from "../PeriodSelector";
-import { useWritePause, WriteHold } from "../WritePause";
+import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
   ACCOUNT_PROBE_LIMIT,
   IMPORT_KINDS,
@@ -65,6 +65,7 @@ import {
   applyBank,
   applyBook,
   applyDocuments,
+  importLanding,
   previewBankFile,
   previewForAccount,
   readBatchSpan,
@@ -585,6 +586,16 @@ export function ImportDialog({
   };
 
   const pause = useWritePause();
+  /** The settle of an import no read tells, which the product makes the
+   * same when sent again: it reads `register` to know the ledger answers. */
+  const repeatable = (what: string, register: "invoices" | "evidence") =>
+    landingSettle(t, what, async () => {
+      const read =
+        register === "invoices"
+          ? await port.submit("ledger.invoice.list", {}).catch(() => null)
+          : await port.submit("ledger.evidence.list", {}).catch(() => null);
+      return read?.kind === "settled" ? "repeatable" : null;
+    });
   const apply = async () => {
     if (pause.held !== null) return;
     if (kind === "bank") {
@@ -593,6 +604,16 @@ export function ImportDialog({
         account: accountOf(preview)!,
         digest: preview.digest!,
       }));
+      // What each file's preview said it brings in, for a re-read to tell
+      // whether an import not seen to settle wrote it.
+      const importing = new Map(
+        sendable.map((preview) => [
+          preview.file.token,
+          shown(preview).imported_transaction_refs.map(
+            (ref) => ref.transaction_id,
+          ),
+        ]),
+      );
       setProgress({ kind: "applying", done: 0, total: plan.length });
       const applied = await applyBank(port, plan, options, (done) =>
         setProgress({ kind: "applying", done, total: plan.length }),
@@ -603,13 +624,29 @@ export function ImportDialog({
       const unseen = applied.flatMap((item) =>
         item.kind === "unknown" ? [item] : [],
       );
-      if (unseen.length)
+      if (unseen.length) {
+        const what = unseen.map((item) => item.file.name).join(", ");
         pause.hold({
-          what: unseen.map((item) => item.file.name).join(", "),
+          what,
           outcome: unseen.every((item) => item.code === "saved_unread")
             ? "saved_unread"
             : "unknown",
+          settle: landingSettle(t, what, async () => {
+            // The import stops at the first file not seen to settle.
+            const found = await Promise.all(
+              unseen.map((item) =>
+                importLanding(port, importing.get(item.file.token) ?? []),
+              ),
+            );
+            if (found.some((landing) => landing === null)) return null;
+            return found.every((landing) => landing === "not_saved")
+              ? "not_saved"
+              : found.every((landing) => landing === "saved")
+                ? "saved"
+                : "repeatable";
+          }),
         });
+      }
       if (applied.some((item) => item.kind !== "not_sent")) onWritten();
       const flagged = applied.flatMap((item) =>
         item.kind === "imported"
@@ -635,7 +672,14 @@ export function ImportDialog({
         answer.kind === "failed" &&
         (answer.code === "unknown" || answer.code === "saved_unread")
       )
-        pause.hold({ what: file.name, outcome: answer.code });
+        pause.hold({
+          what: file.name,
+          outcome: answer.code,
+          // No read says which rows a book holds before it is imported; the
+          // import skips an invoice already in the catalogue
+          // (`skipped_duplicate`), so sent again it adds nothing twice.
+          settle: repeatable(file.name, "invoices"),
+        });
       if (answer.kind !== "refused") onWritten();
     } else {
       setProgress({ kind: "applying", done: 0, total: files.length });
@@ -645,11 +689,17 @@ export function ImportDialog({
       setProgress(null);
       setOutcome({ kind: "documents", applied });
       setStep("result");
-      if (applied.stopped?.code === "unknown")
+      if (applied.stopped?.code === "unknown") {
+        const what = applied.stopped.files.map((file) => file.name).join(", ");
         pause.hold({
-          what: applied.stopped.files.map((file) => file.name).join(", "),
+          what,
           outcome: "unknown",
+          // The documents' content addresses are known only once read; a
+          // document already held is left as it is (`no_op`), so sent
+          // again the part adds nothing twice.
+          settle: repeatable(what, "evidence"),
         });
+      }
       onWritten();
     }
   };

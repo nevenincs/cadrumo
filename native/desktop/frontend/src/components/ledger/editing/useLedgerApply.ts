@@ -27,6 +27,7 @@ import {
   type StageEvent,
   type StageField,
   type StagedContent,
+  type StagedValue,
 } from "../../../shell/ledgerStage";
 import {
   readAnswer,
@@ -36,6 +37,7 @@ import {
   type LedgerReadFailure,
 } from "../../../shell/ledgerWindow";
 import { useStrings, type Translate } from "../../../shell/strings";
+import type { SealedRead } from "../useSealedMovements";
 import type { WritePause } from "../WritePause";
 import { askedConflicts, type AskedConflict } from "./editingModel";
 import { actionText } from "./ReviewDialog";
@@ -56,6 +58,9 @@ export type ReviewState =
       invoices: CatalogueInvoice[] | null;
       /** The staged movements a finalized declaration cites, as read. */
       sealed: ReadonlySet<string>;
+      /** The staged movements whose sealed state could not be read: held
+       * back until a read answers for them. */
+      unread: ReadonlySet<string>;
     }
   | {
       phase: "applying";
@@ -176,6 +181,41 @@ async function readStaged(
   return failure ? { kind: "failed", failure } : { kind: "read", rows };
 }
 
+/** Whether two staged values are the same change. */
+function sameValue(
+  left: StagedValue | undefined,
+  right: StagedValue | undefined,
+): boolean {
+  if (!left || !right) return left === right;
+  return (
+    left.kind === right.kind &&
+    (left.kind === "clear" ||
+      (right.kind === "set" && left.value === right.value))
+  );
+}
+
+/** Whether two plain staged records hold the same content, whatever the
+ * order their keys were written in. */
+function sameJson(left: unknown, right: unknown): boolean {
+  if (left === right) return true;
+  if (
+    typeof left !== "object" ||
+    typeof right !== "object" ||
+    left === null ||
+    right === null ||
+    Array.isArray(left) !== Array.isArray(right)
+  )
+    return false;
+  const a = left as Record<string, unknown>;
+  const b = right as Record<string, unknown>;
+  const keys = Object.keys(a).filter((key) => a[key] !== undefined);
+  const others = Object.keys(b).filter((key) => b[key] !== undefined);
+  return (
+    keys.length === others.length &&
+    keys.every((key) => sameJson(a[key], b[key]))
+  );
+}
+
 /** The fields a step saves on each movement it names. */
 export function stepFields(step: PlanStep): Map<string, StageField[]> {
   switch (step.kind) {
@@ -218,7 +258,7 @@ export function useLedgerApply({
   /** The page's one write pause. */
   pause: WritePause;
   /** Which of `ids` a finalized declaration cites, read where not known. */
-  sealedOf: (ids: readonly string[]) => Promise<ReadonlySet<string>>;
+  sealedOf: (ids: readonly string[]) => Promise<SealedRead>;
   locale: string;
 }) {
   const t = useStrings();
@@ -247,7 +287,7 @@ export function useLedgerApply({
     const invoices = staged.actions.some((action) => action.kind === "link")
       ? await readInvoices(port)
       : [];
-    const sealed = await sealedOf([...stagedMovements(staged)]);
+    const { sealed, unread } = await sealedOf([...stagedMovements(staged)]);
     if (asked.current !== mine) return;
     setState({
       phase: "ready",
@@ -255,8 +295,26 @@ export function useLedgerApply({
       conflicts,
       invoices,
       sealed,
+      unread,
     });
   }, [port, period, read, sealedOf]);
+
+  /** Reads again the sealed state the review could not read. */
+  const rereadSealed = useCallback(async () => {
+    if (state.phase !== "ready" || state.unread.size === 0) return;
+    const mine = asked.current;
+    const found = await sealedOf([...state.unread]);
+    if (asked.current !== mine) return;
+    setState((current) =>
+      current.phase === "ready"
+        ? {
+            ...current,
+            sealed: new Set([...current.sealed, ...found.sealed]),
+            unread: found.unread,
+          }
+        : current,
+    );
+  }, [state, sealedOf]);
 
   /** Reads the catalogue again where the review could not read it. */
   const rereadInvoices = useCallback(async () => {
@@ -301,16 +359,21 @@ export function useLedgerApply({
     );
   }, []);
 
-  /** Reads the ledger after an unknown outcome and says, movement by
-   * movement, whether the write saved. What saved leaves the stage; the
-   * rest stays staged. Null while the ledger could not be read. */
-  /** Drops from the stage what `step` was found to have saved on `id`:
-   * staged again, it would be a change to the value already stored. */
+  /** Drops from the stage what `step` was found to have saved on `id`,
+   * which `sent` is the stage it was sent from: staged again, it would be
+   * a change to the value already stored. A value or an action staged
+   * again since, while writes were paused, is the person's newer change
+   * and stays. */
   const dropSaved = useCallback(
-    (step: PlanStep, id: string) => {
+    (step: PlanStep, id: string, sent: StagedContent) => {
+      const now = latest.current;
       for (const field of stepFields(step).get(id) ?? [])
-        dispatch({ type: "revert_cell", id, field });
-      if (step.kind === "action" || step.kind === "answer")
+        if (sameValue(now.rows[id]?.[field], sent.rows[id]?.[field]))
+          dispatch({ type: "revert_cell", id, field });
+      if (step.kind !== "action" && step.kind !== "answer") return;
+      // A re-staged approval keeps its id, so its content tells it apart.
+      const staged = now.actions.find((action) => action.id === step.action.id);
+      if (staged && sameJson(staged, step.action))
         dispatch({ type: "drop_action", id: step.action.id });
     },
     [dispatch],
@@ -329,7 +392,7 @@ export function useLedgerApply({
       // it since.
       for (const id of seen) found.set(id, "saved");
       for (const [id, resolution] of found)
-        if (resolution === "saved") dropSaved(step, id);
+        if (resolution === "saved") dropSaved(step, id, staged);
       rebase(answer.rows);
       // A rules apply is keyed by its action, which is worded.
       const nameOf = (id: string) => {
@@ -396,7 +459,7 @@ export function useLedgerApply({
         ))
           if (resolution === "saved") {
             seen.add(id);
-            dropSaved(unobserved.step, id);
+            dropSaved(unobserved.step, id, staged);
           }
       setState({
         phase: "done",
@@ -431,5 +494,6 @@ export function useLedgerApply({
     apply,
     paused,
     rereadInvoices,
+    rereadSealed,
   };
 }

@@ -33,6 +33,7 @@ import {
 import { importBatchFilters } from "../../../shell/ledgerImports";
 import { readPage } from "../../../shell/ledgerWindow";
 import { provisionActionOf } from "../../../shell/provisioningRecovery";
+import type { Landing } from "../WritePause";
 
 export const IMPORT_KINDS = ["bank", "book", "documents"] as const;
 export type ImportKind = (typeof IMPORT_KINDS)[number];
@@ -503,6 +504,31 @@ export async function readImported(
     false,
   );
   return read.kind === "settled" ? read.result.transaction : null;
+}
+
+/**
+ * How an import of one file whose outcome was not seen landed, from the
+ * movements its preview said it would bring in. Their ids derive from the
+ * file's rows, so they are in the ledger only where that import wrote
+ * them, and one import writes them all or none: the first tells. Null
+ * where the ledger did not answer. A preview that named none brings
+ * nothing in, so sent again it is the same import.
+ */
+export async function importLanding(
+  port: LedgerPort,
+  imported: readonly string[],
+): Promise<Landing | null> {
+  const id = imported[0];
+  if (id === undefined) return "repeatable";
+  const read = await attempt(
+    port,
+    "ledger.view",
+    { transaction_prefix: id },
+    false,
+  );
+  if (read.kind === "refused") return "not_saved";
+  if (read.kind !== "settled") return null;
+  return read.result.transaction.transaction_id === id ? "saved" : "not_saved";
 }
 
 /** The movements already in the ledger that `imported` was flagged

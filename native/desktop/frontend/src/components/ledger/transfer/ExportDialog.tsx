@@ -41,6 +41,7 @@ import {
 import { readAnswer } from "../../../shell/ledgerWindow";
 import { useStrings } from "../../../shell/strings";
 import { PeriodSelector } from "../PeriodSelector";
+import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
   INVOICE_TSV_COLUMNS,
   MOVEMENT_TSV_COLUMNS,
@@ -201,8 +202,29 @@ export function ExportDialog({
     }
   };
 
+  const pause = useWritePause();
+  /** An export not seen to settle holds every write on the page, this
+   * export too, until the page's re-read. No read shows the file; the
+   * export replaces the chosen file whole, so sent again it writes the
+   * same file, and the re-read settles it once the ledger it reads from
+   * answers. */
+  const unseen = (file: PickedFile) => {
+    setSent({ kind: "unknown" });
+    pause.hold({
+      what: file.name,
+      outcome: "unknown",
+      settle: landingSettle(t, file.name, async () => {
+        const read = await port
+          .submit("ledger.status", {
+            period: period ? publicPeriod(period) : null,
+          })
+          .catch(() => null);
+        return read?.kind === "settled" ? "repeatable" : null;
+      }),
+    });
+  };
   const send = async () => {
-    if (!target) return;
+    if (!target || pause.held !== null) return;
     setSent({ kind: "sending" });
     try {
       const outcome = await port.submit("ledger.export", {
@@ -215,14 +237,12 @@ export function ExportDialog({
         setSent({ kind: "done", result: outcome.result });
       else if (outcome.kind === "refused")
         setSent({ kind: "refused", reason: outcome.reason ?? "refused" });
-      else setSent({ kind: "unknown" });
+      else unseen(target);
     } catch (error) {
       const failure = ledgerFailure(error);
-      setSent(
-        failure.code === "unknown" || failure.code === "saved_unread"
-          ? { kind: "unknown" }
-          : { kind: "refused", reason: failure.reason ?? failure.code },
-      );
+      if (failure.code === "unknown" || failure.code === "saved_unread")
+        unseen(target);
+      else setSent({ kind: "refused", reason: failure.reason ?? failure.code });
     }
   };
 
@@ -588,23 +608,26 @@ export function ExportDialog({
               <Button variant="ghost" onClick={onClose}>
                 {t("desktop.ledger.export.cancel")}
               </Button>
-              <Button
-                pending={sent.kind === "sending"}
-                disabled={
-                  !target ||
-                  blockedByStaged ||
-                  sent.kind === "unknown" ||
-                  exported === null
-                }
-                onClick={() => void send()}
-              >
-                {exported === null
-                  ? t("desktop.ledger.export.send_unknown")
-                  : t("desktop.ledger.export.send", {
-                      count: exported,
-                      shown: count(exported),
-                    })}
-              </Button>
+              <WriteHold>
+                <Button
+                  className="ledger-export-send"
+                  pending={sent.kind === "sending"}
+                  disabled={
+                    !target ||
+                    blockedByStaged ||
+                    sent.kind === "unknown" ||
+                    exported === null
+                  }
+                  onClick={() => void send()}
+                >
+                  {exported === null
+                    ? t("desktop.ledger.export.send_unknown")
+                    : t("desktop.ledger.export.send", {
+                        count: exported,
+                        shown: count(exported),
+                      })}
+                </Button>
+              </WriteHold>
             </>
           )}
         </DialogFooter>

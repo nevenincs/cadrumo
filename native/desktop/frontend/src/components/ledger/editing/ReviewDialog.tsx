@@ -272,6 +272,7 @@ function BlockerFixes({
   onStage,
   onShowRows,
   onGoToDraft,
+  onRereadSealed,
 }: {
   kind: PlanBlocker["kind"];
   held: Held[];
@@ -280,6 +281,8 @@ function BlockerFixes({
   onStage: (event: StageEvent) => void;
   onShowRows: (ids: string[]) => void;
   onGoToDraft: (key: string) => void;
+  /** Reads again the sealed state the review could not read. */
+  onRereadSealed: () => void;
 }) {
   const t = useStrings();
   const [share, setShare] = useState("");
@@ -414,6 +417,21 @@ function BlockerFixes({
             <span className="text-sm text-foreground">{shareError}</span>
           )}
         </form>
+      );
+    case "sealed_unread":
+      return (
+        <>
+          {button(
+            t("desktop.ledger.paused.reread"),
+            onRereadSealed,
+            "reread-sealed",
+          )}
+          {button(
+            t("desktop.ledger.apply.fix.drop_changes"),
+            dropEdits(false),
+            "drop-changes",
+          )}
+        </>
       );
     case "share_needs_mixed":
       return button(
@@ -593,6 +611,7 @@ function NeedsYouFirst({
   onStage,
   onShowRows,
   onGoToDraft,
+  onRereadSealed,
 }: {
   plan: LedgerPlan;
   content: StagedContent;
@@ -600,6 +619,7 @@ function NeedsYouFirst({
   onStage: (event: StageEvent) => void;
   onShowRows: (ids: string[]) => void;
   onGoToDraft: (key: string) => void;
+  onRereadSealed: () => void;
 }) {
   const t = useStrings();
   const byKind = new Map<PlanBlocker["kind"], Held[]>();
@@ -653,6 +673,7 @@ function NeedsYouFirst({
                 onStage={onStage}
                 onShowRows={onShowRows}
                 onGoToDraft={onGoToDraft}
+                onRereadSealed={onRereadSealed}
               />
             </div>
             {fields && (
@@ -1355,6 +1376,7 @@ export function ReviewDialog({
         ? planApply(content, {
             rows: state.rows,
             sealed: state.sealed,
+            unread: state.unread,
             outputLanguage: locale as OutputLanguage,
           })
         : null,
@@ -1511,6 +1533,7 @@ export function ReviewDialog({
           onStage={onStage}
           onShowRows={onShowRows}
           onGoToDraft={onGoToDraft}
+          onRereadSealed={() => void apply.rereadSealed()}
         />
         <PermanentLinks
           links={links}
