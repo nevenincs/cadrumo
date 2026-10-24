@@ -11,10 +11,10 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import profile_operation_subject
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.interactions import OperationResponseIntentValue
 from ..operations.models import OperationIdentity
+from ..operations.subject_reference import OperationSubjectReferenceV1, expected_operation_subject
 from .actions_common import display_decimal
 from .id_resolution import normalise_transaction_id_prefix
 from .llm_classification_ports import (
@@ -159,10 +159,37 @@ def ledger_llm_review_definition_id(request: LedgerLlmReviewRequest) -> str:
     return LEDGER_SPLIT_REVIEW_DEFINITION_ID if request.mode == "split" else LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
 
 
+def ledger_llm_review_subject_reference(definition_id: str) -> OperationSubjectReferenceV1:
+    """Declare what one review holds until it settles.
+
+    A classification review holds only the movement it asks about, so reviews
+    of other movements proceed while it waits. A split review still holds the
+    whole profile.
+    """
+    if definition_id == LEDGER_CLASSIFY_REVIEW_DEFINITION_ID:
+        return OperationSubjectReferenceV1.payload_field("transaction_id")
+    if definition_id == LEDGER_SPLIT_REVIEW_DEFINITION_ID:
+        return OperationSubjectReferenceV1.profile()
+    raise ValueError("unknown ledger LLM review definition")
+
+
+def ledger_llm_review_subject(request: LedgerLlmReviewRequest) -> str:
+    """Render the subject one review request is submitted with, from its declaration."""
+    subject = expected_operation_subject(
+        ledger_llm_review_subject_reference(ledger_llm_review_definition_id(request)),
+        profile_id=request.profile_id,
+        payload=request,
+    )
+    if subject is None:
+        raise ValueError("ledger review subject is not derivable from its request")
+    return subject
+
+
 def require_ledger_llm_invocation(identity: OperationIdentity, request: LedgerLlmReviewRequest) -> None:
-    """Refuse any invocation whose definition or profile differs from its operand."""
-    expected_subject = profile_operation_subject(str(request.profile_id))
-    if identity.definition_id != ledger_llm_review_definition_id(request) or identity.subject_ref != expected_subject:
+    """Refuse any invocation whose definition or subject differs from its operand."""
+    if identity.definition_id != ledger_llm_review_definition_id(
+        request
+    ) or identity.subject_ref != ledger_llm_review_subject(request):
         raise ValueError("ledger review invocation and request disagree")
 
 

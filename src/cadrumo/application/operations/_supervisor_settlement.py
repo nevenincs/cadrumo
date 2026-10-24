@@ -102,7 +102,66 @@ class SupervisorSettlementMixin(SupervisorHost):
         cleanup_timeout = self._validate_cancellation_request(snapshot)
         if snapshot.cancellation_requested_at is not None:
             return snapshot
+        if self._suspended_without_local_work(snapshot):
+            return await self._cancel_suspended_interaction(snapshot, cleanup_timeout)
         return await self._persist_cancellation_request(operation_id, snapshot, cleanup_timeout)
+
+    def _suspended_without_local_work(self, snapshot: OperationPersistedSnapshot) -> bool:
+        """Whether the operation waits on its interaction and none of its work is still running here.
+
+        Its executor returned at the published interaction, which is its safe
+        stop. Only an executor that ran under this supervisor proves that: one
+        left by another owner is recovered through reconciliation instead.
+        """
+        operation_id = snapshot.identity.operation_id
+        executor_task = self._executor_tasks.get(operation_id)
+        others = (
+            self._settlement_tasks.get(operation_id),
+            self._continuation_tasks.get(operation_id),
+            self._cleanup_tasks.get(operation_id),
+        )
+        return (
+            snapshot.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
+            and snapshot.pending_interaction is not None
+            and not snapshot.cancellation_deferred
+            and executor_task is not None
+            and executor_task.done()
+            and all(task is None or task.done() for task in others)
+        )
+
+    async def _cancel_suspended_interaction(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        cleanup_timeout: timedelta,
+    ) -> OperationPersistedSnapshot:
+        """Withdraw a pending interaction and settle the stop with the effect recorded so far.
+
+        Withdrawing the interaction and acknowledging the stop commit together
+        at the snapshot's own revision, so a response that commits first makes
+        this cancellation fail as stale, and one that arrives later finds no
+        pending interaction to consume.
+        """
+        requested_at = self._clock()
+        acknowledged = await self._advance(
+            snapshot,
+            SnapshotAdvance(
+                lifecycle=OperationLifecycle.SETTLING,
+                pending=None,
+                cleanup_deadline=requested_at + cleanup_timeout,
+                cancellation_requested_at=requested_at,
+                cancellation_acknowledged_at=requested_at,
+            ),
+        )
+        return await self.settle(
+            acknowledged.identity.operation_id,
+            OperationTerminalReceipt(
+                identity=acknowledged.identity,
+                revision=acknowledged.revision + 1,
+                condition=self._acknowledged_cancellation_condition(acknowledged),
+                effect=acknowledged.effect,
+                settled_at=self._clock(),
+            ),
+        )
 
     @override
     async def _acknowledge_cancellation(

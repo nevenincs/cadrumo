@@ -42,13 +42,14 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
-from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .llm_review_contracts import (
+    LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LEDGER_LLM_REVIEW_DEFINITION_IDS,
     LedgerLlmReviewRequest,
     bound_ledger_llm_projection,
     ledger_llm_review_definition_id,
+    ledger_llm_review_subject_reference,
 )
 from .llm_review_execution import (
     LedgerLlmOperationPortsFactory,
@@ -146,7 +147,7 @@ def build_ledger_llm_review_definition(
     return OperationDefinition(
         definition_id=definition_id,
         request_type=LedgerLlmReviewRequest,
-        subject_reference=OperationSubjectReferenceV1.profile(),
+        subject_reference=ledger_llm_review_subject_reference(definition_id),
         result_type=LedgerLlmExecutionResult,
         executor_factory=OperationExecutorFactory(
             request_type=LedgerLlmReviewRequest,
@@ -157,7 +158,11 @@ def build_ledger_llm_review_definition(
         interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RESUMABLE,
-            cancellation=OperationCancellation.UNSUPPORTED,
+            # A classification review waiting for its answer has written nothing,
+            # so letting it go releases its movement with no effect.
+            cancellation=OperationCancellation.COOPERATIVE
+            if definition_id == LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
+            else OperationCancellation.UNSUPPORTED,
             deadline=OperationDeadline.ABSENT,
             replay=OperationReplayPolicy.RESUMABLE,
             baseline=OperationBaselinePolicy.EXACT_APPROVAL,

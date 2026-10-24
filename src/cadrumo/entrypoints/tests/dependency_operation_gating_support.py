@@ -69,11 +69,12 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.registry import OperationRegistry
+from ...application.operations.subject_reference import expected_operation_subject
 from ...application.operator_actions.models import PreconditionVerdict
 from ...application.operator_actions.projection import PreconditionVerdictSnapshot
 from ...core.config import override_settings
 from ...core.model_catalogue import ModelRole, candidates_for_role, default_model_runtime_id
-from ...core.operations import OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationTerminalCondition
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.models import Attachment
 from ...domain.iva.schema import InvoiceKind
@@ -182,10 +183,15 @@ class OperationRuntime:
     def settle(self, definition_id: str, payload: BaseModel, result_type: type[BaseModel]) -> SettledOperation:
         """Submit, start and settle ``payload``, then read what another process can read of it."""
 
+        subject = expected_operation_subject(
+            self.registry.lookup(definition_id).subject_reference, profile_id=self.profile_id, payload=payload
+        )
+        assert subject is not None, definition_id
+
         async def run() -> SettledOperation:
             submitted, _observed = await self.driver.run(
                 definition_id=definition_id,
-                subject_ref=profile_operation_subject(str(self.profile_id)),
+                subject_ref=subject,
                 payload=payload,
             )
             observed = (await self.driver.observe(submitted.receipt.operation_id)).projection

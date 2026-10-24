@@ -35,6 +35,7 @@ from cadrumo.application.ledger.llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LedgerLlmReviewProjection,
     LedgerLlmReviewRequest,
+    ledger_llm_review_subject,
 )
 from cadrumo.application.ledger.llm_review_execution import LedgerLlmOperationPorts, LedgerLlmReviewExecutor
 from cadrumo.application.ledger.llm_review_operand import LedgerLlmReviewedOperand
@@ -50,8 +51,15 @@ from cadrumo.application.operations.composition import (
     OperationSubmission,
     compose_operation_services,
 )
+from cadrumo.application.operations.errors import OperationSubjectBusyError
 from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from cadrumo.application.operations.frontend_requests import (
+    OperationCancellationRefusalCode,
+    OperationCancellationRefusalV1,
+    OperationCancellationRequestV1,
+    OperationCancellationSuccessV1,
+    OperationObservationRequestV1,
+    OperationObservationSuccessV1,
     OperationResponseApplyRequestV1,
     OperationResponseControlRefusalV1,
     OperationResponseControlRequestV1,
@@ -74,7 +82,6 @@ from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
-    profile_operation_subject,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -102,6 +109,32 @@ def _run_reader(_role: ModelRole, run: Callable[[], object]) -> object:
 
 def _record_reader(run: Callable[[], object], _provider: str) -> object:
     return run()
+
+
+def _movement(provider_id: str, amount: str, *, row: int) -> Transaction:
+    return Transaction.model_validate(
+        {
+            "raw": RawTransaction(
+                provider_transaction_id=provider_id,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal(amount),
+                currency="EUR",
+                description="synthetic private baseline",
+                provenance=RawProvenance(
+                    source_path=Path("synthetic-review.csv"),
+                    source_sha256="c" * 64,
+                    source_row_index=row,
+                    source_format=SourceFormat.CSV,
+                    ingested_at=_NOW,
+                    provider_name="csv",
+                ),
+                raw_fields={},
+            ),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+        }
+    )
 
 
 class _ResumeBarrier:
@@ -144,6 +177,7 @@ class _Case:
     registry: OperationRegistry
     ports: LedgerLlmOperationPorts
     baseline: Transaction
+    other: Transaction
     barrier: _ResumeBarrier
     acquisitions: list[PromptSpec]
 
@@ -165,16 +199,17 @@ class _Case:
             cleanup_timeout=timedelta(minutes=1),
         )
 
-    def request(self) -> OperationRequest[LedgerLlmReviewRequest]:
+    def request(self, movement: Transaction | None = None) -> OperationRequest[LedgerLlmReviewRequest]:
+        payload = LedgerLlmReviewRequest(
+            profile_id=UUID(_PROFILE),
+            transaction_id=(movement or self.baseline).transaction_id[:12],
+            mode="classification",
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
+        )
         return OperationRequest(
             definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
-            subject_ref=profile_operation_subject(_PROFILE),
-            payload=LedgerLlmReviewRequest(
-                profile_id=UUID(_PROFILE),
-                transaction_id=self.baseline.transaction_id[:12],
-                mode="classification",
-                origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
-            ),
+            subject_ref=ledger_llm_review_subject(payload),
+            payload=payload,
         )
 
 
@@ -185,30 +220,9 @@ def _case(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Gene
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE) as profile,
     ):
         repository = TransactionCatalogueRepository(bucket_id=_PROFILE, objects=profile.repository)
-        baseline = Transaction.model_validate(
-            {
-                "raw": RawTransaction(
-                    provider_transaction_id="encrypted-reviewed-row",
-                    booked_date=date(2026, 5, 1),
-                    amount=Decimal("121.00"),
-                    currency="EUR",
-                    description="synthetic private baseline",
-                    provenance=RawProvenance(
-                        source_path=Path("synthetic-review.csv"),
-                        source_sha256="c" * 64,
-                        source_row_index=1,
-                        source_format=SourceFormat.CSV,
-                        ingested_at=_NOW,
-                        provider_name="csv",
-                    ),
-                    raw_fields={},
-                ),
-                "direction": TransactionDirection.OUTGOING,
-                "group_label": None,
-                "source_jurisdiction": "ES",
-            }
-        )
-        repository.save(TransactionCatalogue.from_transactions((baseline,)))
+        baseline = _movement("encrypted-reviewed-row", "121.00", row=1)
+        other = _movement("encrypted-other-row", "64.00", row=2)
+        repository.save(TransactionCatalogue.from_transactions((baseline, other)))
         acquisitions: list[PromptSpec] = []
 
         def classifier(spec: PromptSpec) -> SubprocessLLMClassifier:
@@ -267,15 +281,16 @@ def _case(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Gene
                 ),
                 ports=ports,
                 baseline=baseline,
+                other=other,
                 barrier=barrier,
                 acquisitions=acquisitions,
             )
 
 
 async def _publish(
-    case: _Case, services: OperationComposedServices
+    case: _Case, services: OperationComposedServices, movement: Transaction | None = None
 ) -> tuple[OperationSubmission, OperationPersistedSnapshot]:
-    submission = await services.submission.submit(case.request(), actor_ref="operator:reviewer")
+    submission = await services.submission.submit(case.request(movement), actor_ref="operator:reviewer")
     waiting = await run_to_settlement(services.submission.supervisor, submission.receipt.operation_id)
     assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION and waiting.effect is OperationEffect.NONE
     assert submission.response_capability is not None
@@ -469,5 +484,134 @@ def test_stale_review_refuses_cas_without_overwrite_or_partial_audit(
             finally:
                 await services.shutdown()
                 await fresh.shutdown()
+
+        asyncio.run(run())
+
+
+async def _cancel(
+    services: OperationComposedServices, observed: OperationPersistedSnapshot
+) -> OperationCancellationSuccessV1 | OperationCancellationRefusalV1:
+    return await services.cancellation.request(
+        OperationCancellationRequestV1(operation_id=observed.identity.operation_id, expected_revision=observed.revision)
+    )
+
+
+def test_reviews_of_different_movements_wait_together_and_one_movement_holds_one_review(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    with _case(tmp_path, authority_operation) as case:
+        services = case.services()
+
+        async def run() -> None:
+            try:
+                _, first = await _publish(case, services)
+                _, second = await _publish(case, services, case.other)
+                assert first.identity.subject_ref == case.baseline.transaction_id[:12]
+                assert second.identity.subject_ref == case.other.transaction_id[:12]
+                with pytest.raises(OperationSubjectBusyError):
+                    await services.submission.submit(case.request(), actor_ref="operator:reviewer")
+                supervisor = services.submission.supervisor
+                for waiting in (first, second):
+                    current = await supervisor.inspect(waiting.identity.operation_id)
+                    assert current.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
+                observed = await services.observation.observe(
+                    OperationObservationRequestV1(
+                        operation_id=first.identity.operation_id, after_cursor=0, page_limit=1
+                    )
+                )
+                assert isinstance(observed, OperationObservationSuccessV1)
+                assert observed.projection.cancellable_now is True
+                assert len(case.acquisitions) == 2
+            finally:
+                await services.shutdown()
+
+        asyncio.run(run())
+
+
+def test_cancelling_a_waiting_review_releases_its_movement_with_no_effect(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    with _case(tmp_path, authority_operation) as case:
+        services = case.services()
+
+        async def run() -> None:
+            try:
+                submission, waiting = await _publish(case, services)
+                history = case.ports.ledger.bucket_event_repository.load()
+                cancelled = await _cancel(services, waiting)
+                assert isinstance(cancelled, OperationCancellationSuccessV1)
+                assert cancelled.cancellation_acknowledged is True
+                terminal = await services.submission.supervisor.inspect(waiting.identity.operation_id)
+                assert terminal.lifecycle is OperationLifecycle.TERMINAL
+                assert terminal.terminal_condition is OperationTerminalCondition.CANCELLED
+                assert terminal.effect is OperationEffect.NONE
+                # The answer that arrives after the cancel finds nothing to take.
+                request = OperationResponseApplyRequestV1(**_control(waiting).model_dump(), responded_at=_NOW)
+                late = await (await services.response(request, submission.response_capability)).apply(request)
+                assert not isinstance(late, OperationResponseMutationSuccessV1)
+                persisted = case.ports.ledger.transaction_repository.load().get(case.baseline.transaction_id)
+                assert persisted == case.baseline
+                assert case.ports.ledger.bucket_event_repository.load() == history
+                # The movement is free again: the next ask about it waits for its own answer.
+                _, again = await _publish(case, services)
+                assert again.identity.operation_id != waiting.identity.operation_id
+            finally:
+                await services.shutdown()
+
+        asyncio.run(run())
+
+
+def test_a_cancel_after_the_answer_was_taken_is_refused_and_the_answer_settles(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    with _case(tmp_path, authority_operation) as case:
+        services = case.services()
+        case.barrier.enabled = True
+
+        async def run() -> None:
+            try:
+                submission, waiting = await _publish(case, services)
+                await _apply(services, submission, waiting)
+                await asyncio.wait_for(case.barrier.entered.wait(), timeout=5)
+                refused = await _cancel(services, waiting)
+                assert isinstance(refused, OperationCancellationRefusalV1)
+                assert refused.code is OperationCancellationRefusalCode.STALE_OPERATION_REVISION
+                case.barrier.release.set()
+                terminal = await services.submission.supervisor.await_terminal(waiting.identity.operation_id)
+                assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+                assert terminal.effect is OperationEffect.UPDATED
+                persisted = case.ports.ledger.transaction_repository.load().get(case.baseline.transaction_id)
+                assert persisted is not None and persisted.business_classification is BusinessClassification.PERSONAL
+            finally:
+                await services.shutdown()
+
+        asyncio.run(run())
+
+
+def test_a_cancel_that_reaches_an_answered_review_before_its_write_stops_it_with_no_effect(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    with _case(tmp_path, authority_operation) as case:
+        services = case.services()
+        case.barrier.enabled = True
+
+        async def run() -> None:
+            try:
+                submission, waiting = await _publish(case, services)
+                await _apply(services, submission, waiting)
+                await asyncio.wait_for(case.barrier.entered.wait(), timeout=5)
+                answered = await services.submission.supervisor.inspect(waiting.identity.operation_id)
+                assert answered.lifecycle is OperationLifecycle.RUNNING
+                requested = await _cancel(services, answered)
+                assert isinstance(requested, OperationCancellationSuccessV1)
+                case.barrier.release.set()
+                terminal = await services.submission.supervisor.await_terminal(waiting.identity.operation_id)
+                assert terminal.terminal_condition is OperationTerminalCondition.CANCELLED
+                assert terminal.effect is OperationEffect.NONE
+                assert (
+                    case.ports.ledger.transaction_repository.load().get(case.baseline.transaction_id) == case.baseline
+                )
+            finally:
+                await services.shutdown()
 
         asyncio.run(run())

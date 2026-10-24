@@ -20,6 +20,7 @@ from ...application.ledger.llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LEDGER_SPLIT_REVIEW_DEFINITION_ID,
     LedgerLlmReviewRequest,
+    ledger_llm_review_subject,
 )
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.ledger.operator_iva_contracts import (
@@ -123,17 +124,18 @@ def _prepare_classify_review(context: ConformanceFamilyContext) -> ConformancePr
     transaction_id = seed_manual_transaction(
         context, booked_date=date(2025, 2, 11), amount=Decimal("18.00"), description="classification review row"
     )
+    # A preview settles terminally; a full review would otherwise suspend for an
+    # operator response before reaching a result.
+    request = LedgerLlmReviewRequest(
+        profile_id=context.profile_id,
+        transaction_id=transaction_id[:12],
+        mode="classification",
+        origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
+        preview=True,
+    )
     return ConformancePreparation(
-        subject_ref=profile_operation_subject(str(context.profile_id)),
-        # A preview settles terminally; a full review would otherwise suspend for an
-        # operator response before reaching a result.
-        request=LedgerLlmReviewRequest(
-            profile_id=context.profile_id,
-            transaction_id=transaction_id[:12],
-            mode="classification",
-            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
-            preview=True,
-        ),
+        subject_ref=ledger_llm_review_subject(request),
+        request=request,
         verify=ledger_unchanged_verifier(context),
     )
 

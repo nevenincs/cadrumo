@@ -31,7 +31,11 @@ from ...adapters.persistence.profile.tests.ledger_action_create_support import l
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.evidence_errors import EVIDENCE_LOCAL_AI_NOT_READY_KEY, PurchaseInvoiceEvidenceReaderError
-from ...application.ledger.llm_review_contracts import LEDGER_CLASSIFY_REVIEW_DEFINITION_ID, LedgerLlmReviewRequest
+from ...application.ledger.llm_review_contracts import (
+    LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
+    LedgerLlmReviewRequest,
+    ledger_llm_review_subject,
+)
 from ...application.ledger.llm_review_execution import LedgerLlmOperationPorts
 from ...application.ledger.llm_review_operation import (
     build_ledger_llm_review_definition,
@@ -56,7 +60,7 @@ from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, 
 from ...core.config import load_settings, override_settings
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_catalogue import ModelRole
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
@@ -189,16 +193,17 @@ def _settle_and_read_detail(
         )
 
         async def settle() -> tuple[OperationTerminalCondition, str | None, OperationErrorDetailV1]:
+            review = LedgerLlmReviewRequest(
+                profile_id=_PROFILE,
+                transaction_id=row.transaction_id[:12],
+                mode="classification",
+                origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
+            )
             operation_id = await supervisor.submit(
                 OperationRequest[BaseModel](
                     definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
-                    subject_ref=profile_operation_subject(str(_PROFILE)),
-                    payload=LedgerLlmReviewRequest(
-                        profile_id=_PROFILE,
-                        transaction_id=row.transaction_id[:12],
-                        mode="classification",
-                        origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
-                    ),
+                    subject_ref=ledger_llm_review_subject(review),
+                    payload=review,
                 ),
                 operation_id="4" * 64,
             )

@@ -147,12 +147,12 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
+from cadrumo.application.operations.subject_reference import expected_operation_subject
 from cadrumo.application.review.filter import LedgerReviewStatus
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
-    profile_operation_subject,
 )
 from cadrumo.domain.transactions.classification_rule import LedgerClassificationRule
 from cadrumo.domain.transactions.enums import BusinessClassification
@@ -547,7 +547,10 @@ def _observation(
     state = OperationPublicProjectionV1(
         operation_id=_OPERATION_ID,
         definition_id=definition.definition_id,
-        subject_ref=profile_operation_subject(str(_PROFILE_ID)),
+        subject_ref=expected_operation_subject(
+            definition.subject_reference, profile_id=_PROFILE_ID, payload=case.request
+        )
+        or "",
         revision=1,
         anchor_cursor=0,
         definition_contract=contract,
@@ -839,6 +842,7 @@ def test_the_review_door_starts_the_exact_review_and_refuses_another_definition(
     assert log.started == [_OPERATION_ID]
     assert submitted["definition_id"] == LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
     assert submitted["payload"] == _review_request()
+    assert submitted["subject_ref"] == _TX[:12], "a classification review holds only its movement"
     assert submitted["expected_session_id"] == _SESSION_ID
 
     with pytest.raises(RefusalError):

@@ -27,6 +27,7 @@ from ...application.ledger.llm_review_contracts import (
     LedgerLlmReviewRequest,
     LedgerLlmReviewResponse,
     LedgerLlmSuggestionProjection,
+    ledger_llm_review_subject,
 )
 from ...application.ledger.llm_review_results import LedgerLlmOperationResult
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
@@ -36,7 +37,7 @@ from ...application.ledger.operator_iva_contracts import (
 from ...application.operations.schema_identity import OperationSchemaIdentityV1
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...core.provenance_stamp import provenance_stamp_transport
 from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BusinessClassification
@@ -107,7 +108,7 @@ def _run_review(
         client,
         request,
         definition_id=definition_id,
-        subject_ref=profile_operation_subject(str(client.profile_id)),
+        subject_ref=ledger_llm_review_subject(request),
         result_type=LedgerLlmOperationResult,
         request_version=1,
         result_version=1,

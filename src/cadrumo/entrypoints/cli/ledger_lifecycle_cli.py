@@ -31,6 +31,7 @@ from ...application.ledger.llm_review_contracts import (
     LedgerLlmReviewRequest,
     LedgerLlmReviewResponse,
     LedgerLlmSuggestionProjection,
+    ledger_llm_review_subject,
 )
 from ...application.ledger.llm_review_results import LedgerLlmOperationResult
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
@@ -563,7 +564,6 @@ def _ledger_split_llm(
     from cadrumo_client.contracts.contracts import RefusalCode
 
     from ...application.operations.schema_identity import OperationSchemaIdentityV1
-    from ...core.operations import profile_operation_subject
 
     _validate_split_llm_options(
         child_amount=child_amount,
@@ -606,7 +606,7 @@ def _ledger_split_llm(
         client,
         request,
         definition_id=LEDGER_SPLIT_REVIEW_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(client.profile_id)),
+        subject_ref=ledger_llm_review_subject(request),
         result_type=LedgerLlmOperationResult,
         request_version=1,
         result_version=1,

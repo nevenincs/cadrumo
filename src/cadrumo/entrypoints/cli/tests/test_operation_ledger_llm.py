@@ -203,7 +203,12 @@ class _ReviewPort:
         ):
             assert bound is client
             assert kwargs["definition_id"] == definition_id
-            assert kwargs["subject_ref"] == profile_operation_subject(str(_PROFILE))
+            # A classification review holds its movement; a split review the profile.
+            assert kwargs["subject_ref"] == (
+                request.transaction_id
+                if definition_id == LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
+                else profile_operation_subject(str(_PROFILE))
+            )
             assert kwargs["result_type"] is LedgerLlmOperationResult
             assert kwargs["request_version"] == kwargs["result_version"] == 1
             handler = cast(RegisteredOperationReviewHandler[LedgerLlmReviewProjection], kwargs["review"])

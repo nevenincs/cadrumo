@@ -48,6 +48,7 @@ from cadrumo.application.ledger.llm_review_contracts import (
     LEDGER_SPLIT_REVIEW_DEFINITION_ID,
     LedgerLlmReviewRequest,
     ledger_llm_review_definition_id,
+    ledger_llm_review_subject,
 )
 from cadrumo.application.ledger.llm_review_results import LedgerLlmOperationResult
 from cadrumo.application.ledger.operator_iva_contracts import (
@@ -104,7 +105,7 @@ from cadrumo.application.ledger.split_operation import (
     LedgerSplitRequest,
 )
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.entrypoints.tui.ledger.categorisation_doors import LedgerCategorisationDoorsV1
 from cadrumo.entrypoints.tui.ledger.categorisation_tools import categorisation_tools
 from cadrumo.entrypoints.tui.ledger.tools import LedgerToolV1
@@ -489,9 +490,6 @@ class RuntimeSuggestionReviewTuiDoorV1:
         """The admitted profile every request must name."""
         return self._session.profile_id
 
-    def _subject(self) -> str:
-        return profile_operation_subject(str(self._session.profile_id))
-
     async def submit(self, request: LedgerLlmReviewRequest) -> OperationControllerPort:
         """Submit and start one review of the admitted profile, still pinned to its session."""
         # The binding check reads the session over IPC; it never runs on the event loop.
@@ -503,7 +501,7 @@ class RuntimeSuggestionReviewTuiDoorV1:
         controller = await OperationController.submit(
             self._client,
             definition_id=self._definition_id,
-            subject_ref=self._subject(),
+            subject_ref=ledger_llm_review_subject(request),
             payload=request,
             expected_session_id=self._session.session_id,
         )
@@ -537,7 +535,7 @@ class RuntimeSuggestionReviewTuiDoorV1:
             await asyncio.to_thread(self._session.require_binding)
             if (
                 projection.definition_id != self._definition_id
-                or projection.subject_ref != self._subject()
+                or projection.subject_ref != ledger_llm_review_subject(request)
                 or projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
             ):
                 raise RefusalError(RefusalCode.INVALID_FRAME)
