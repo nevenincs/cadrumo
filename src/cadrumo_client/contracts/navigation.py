@@ -25,7 +25,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from functools import cached_property, lru_cache
-from importlib.resources import files  # nosemgrep
+from importlib.resources import files
 from pathlib import Path
 from types import MappingProxyType
 from typing import Final, Literal, Self
