@@ -6,9 +6,10 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:b0241275ebcb61c8266f78c24b29c28a33a2a042c101e114ee38b744c4951353'
+body_hash: 'sha256:84044090cc898918be50d957f3f0ce0327f4c235f23c114ef66168ede6e189bc'
 related:
   - '[[2026-10-24-rust-component-provisioning-adr]]'
+  - '[[2026-10-24-rust-component-provisioning-audit]]'
   - '[[2026-10-24-rust-component-provisioning-ledger]]'
   - '[[2026-10-24-rust-component-provisioning-plan]]'
   - '[[2026-10-24-rust-component-provisioning-reference]]'
@@ -23,6 +24,10 @@ Auto-generated index of all documents tagged with `#rust-component-provisioning`
 ### adr
 
 - `2026-10-24-rust-component-provisioning-adr` - `rust-component-provisioning` adr: `Rust owns component provisioning` | (**status:** `accepted`)
+
+### audit
+
+- `2026-10-24-rust-component-provisioning-audit` - `rust-component-provisioning` audit: `Rust component provisioning review`
 
 ### exec
 
