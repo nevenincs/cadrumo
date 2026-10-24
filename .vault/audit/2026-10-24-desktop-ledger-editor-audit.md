@@ -659,3 +659,282 @@ When `child_transaction_ids` is missing or has the wrong length, `followUps` ret
 Evidence: `src/shell/ledgerApply.ts:326-328, 533`.
 
 Fix: emit a report row that says the parts’ classifications were not sent.
+
+## P03 usability and design review, 2026-10-24
+
+An adversarial walkthrough of ten quarterly-books tasks at 1440×900 and 1280×800, in both schemes, against the scenario host. 2 critical, 6 high, 10 medium and 7 low findings. Owner ruling taken under the standing "no decisions from me" authorization: `status-column-wasted` amends R17, so in compact density the Status column is 2.75rem; it stays 7.5rem in comfortable density, where R22 shows the word. Still deferred, as S14 recorded: rule matching on counterparty or amount range needs a product contract change.
+
+#### Task walkthroughs
+
+- **Steps** counts deliberate inputs. A click or a chord is one step. Typing a word is one step.
+- **Seconds** has two parts:
+  - the scripted wall time, from Playwright with zero latency;
+  - in brackets, an estimate for a practised person. The estimate uses keystroke-level timings: about 1.1 s per point-and-click, 0.3 s per key, 1 s per typed word and 1.5 s for each read-and-decide.
+
+| # | Task | Route taken | Steps | Seconds | Result |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Classify 10 unclassified movements as Business with a category, in bulk | Period ▾ → Year → `○ 18` → tick row 1 → Shift-tick row 10 → Alt+B (**does nothing**) → inspector "Business…" → category ▾ → type "software" → Enter → "Stage for 10" | 11 | 6.3 (≈ 24) | **Trap.** Alt+B is dead from a checkbox. Keyboard Shift+Space/Shift+↓ selects 1 row while 10 are outlined. Description is clipped. Income rows are given an expense category. |
+| 2 | Mixed expense at 30% | click row → Alt+M → type 30 → Enter | 4 | 1.3 (≈ 5) | Pass with a trap: focus drops to `<body>`, and no category is asked, so the row comes back "Needs fixing" after saving |
+| 3 | Every movement from one counterparty in a quarter, grouped by category | ‹ (to 3T) → search → type "Talleres" → Group ▾ → Category | 5 | 3.6 (≈ 9) | Pass. The group menu stays open after the choice. The group header has no "Make a rule". |
+| 4 | Fix a counterparty typo, then undo | click cell → F2 → End → type → Enter → Ctrl+Z (Ctrl+Y redoes) | 6 | 1.4 (≈ 6) | Pass |
+| 5a | Review staged changes and save | tray "Review" → Save 3 → Done | 3 | 1.5 (≈ 7) | Pass, but focus drops to `<body>` after Done |
+| 5b | Same, with the outcome unknown | as 5a, with `nextWrites(["unknown"])` | 3 | 1.9 | **Trap.** The dialog is titled "Nothing saved" while its body says "may or may not have saved". |
+| 5c | Same, with the save refused | as 5a, with `nextWrites(["refused"])` | 3 | 1.7 | Pass with copy defect: "Refused: precondition_failed." |
+| 6 | Import a bank statement (preview, choose the account, apply) | Import → Choose files… → Preview → Account ▾ → Import exactly these files (2) → Show imported movements | 6 | 7.1 (≈ 20) | Pass with gaps: no duplicate comparison in the preview, no duplicate marker in the grid afterwards, and a detected account that cannot be changed |
+| 7 | Export the quarter | Export → XLSX → Export without them → Choose… → Export (40) | 5 | 3.3 (≈ 12) | Pass. At 1280×800 the Export button is below the fold. The readiness count disagrees with the page. |
+| 8 | Confirm a received invoice from Documents and link it to its movement | Documents → document → Invoice I received → As read: ES → Confirm as invoice → Link · permanent → tray Review → tick → Save | 9 | 6.3 to Review (≈ 28) | Pass for the PDF. The scanned ticket cannot be judged because the image is never shown. Focus drops to `<body>` after three of the steps. |
+| 9 | Add a classification rule from a selection | search "farmacia" → header tick → Alt+I (the inspector didn't open on the tick) → scroll to "Make a rule…" → dialog → Save rule | 6 | 3.2 (≈ 15) | **Trap.** A rule built from 8 matching movements says "Matches 0 loaded". It can match on description only. |
+| 10 | What's missing for a quarter, in Health | Setup ▾ → Health → Check | 3 | 2.7 (≈ 6) | Pass. It says "Not checked in this window yet" although the strip has already measured readiness, and it uses ⚠ for classification where the strip uses ○. |
+
+Keyboard coverage, all checked live:
+
+- These work: ↑ ↓ ← → Home End Ctrl+Home Ctrl+End PageDown, F2, typing to edit, Enter to commit and move down, Escape to cancel, Ctrl+Z / Ctrl+Y, Ctrl+C on a range (gives TSV), the multi-cell paste preview, Delete to clear, ↑ from row 1 into the header, F8 / Shift+F8 (goes to the missing cell), Alt+I (open → focus the index → back to the grid), Ctrl+K (shell palette with Classify actions), and the period dropdown's arrow grid, Escape and focus return.
+- These fail or diverge: Alt+B/P/M from a checkbox; Shift+↓ after Shift+Space; Space on its own (no effect); and focus after dialogs (below).
+
+### UX · classify-flow-hides-description | critical | The "to classify" and reason-chip flows scroll the grid sideways, so Description and Counterparty slide under the sticky Status and Date columns while you are being asked to classify
+
+- **What I did.** At 1280×800 in the default layout (agent pane open), I clicked the `○ 8` pill.
+- **What happened.** The grid showed Status, Date, Direction, Classification and Amount, and nothing else. Description and Counterparty are scrolled out of view under the sticky left columns, and nothing tells you they are there (`scratchpad/reviews/ux/shots/20a-1280-agent-pill.png`).
+- **At 1440 with the agent hidden.** The same flow sets `scrollLeft` to 33. Every description then loses its first letters ("ription", "A HOGAR ALBOR", "NSFERENCIA TALLERES"), because the scrolled text runs under the sticky Date column with no edge (`scratchpad/reviews/ux/shots/03c-ten-selected.png`, `scratchpad/reviews/ux/shots/04d-staged.png`). The header geometry confirms it: Date spans 216–288 (sticky) and Description starts at 255.
+- **Why it matters.** You classify a bank movement by what it is. Here the grid hides exactly that, in the flow built for classifying. With the agent pane open at 1280, the grid is also only 591 px wide once the inspector opens, below the 40rem minimum that M6 promises (`scratchpad/reviews/ux/shots/05-1280-agent-inspector.png`).
+- **Proposed change.**
+  - Make Description part of the sticky identity group (Status · Date · Description, minimum 12rem), and never scroll horizontally to reveal the active cell when that would push the identity group out of view.
+  - When the grid is narrower than the preset needs, the preset drops its lowest-priority columns first (Group, then Direction folded into the Amount cell as ↗/↙). Hidden columns get a `+2 ›` cue in the header row.
+  - Give sticky columns the theme's edge shadow whenever content is scrolled under them.
+  - When the agent pane and the inspector are both open below 1440, either collapse the agent pane to its rail or open the inspector at `--inspector-min`, so the grid keeps its 40rem.
+
+### UX · unknown-titled-nothing-saved | critical | When a save's outcome is unknown, the dialog is titled "Nothing saved"
+
+- **What I did.** I staged 3 changes, set `nextWrites(["unknown"])` and pressed Save.
+- **What happened.** The title says "Nothing saved". The body says "One save has an unknown outcome · It may or may not have saved" (`scratchpad/reviews/ux/shots/09d-unknown-after-save.png`). The title is a factual claim the app cannot make, and it is the line a person reads.
+- **After closing, in the grid.** The fixture landed the write, so the rows read "→ Personal · changed, not saved, was Personal": a staged change equal to the stored value (`scratchpad/reviews/ux/shots/09e-unknown-closed.png`).
+- **The paused-writes banner.** It renders "Re-read" as a black bar about 1,320 px wide, which looks like a hand-built element rather than an Alert action.
+- **Proposed change.**
+  - Title the result by its worst outcome: `◌ Outcome unknown · 2` / `⊘ Not sent · 1`, with "Saved" used only when every part settled.
+  - The banner uses the Alert pattern with the action at its end ("Outcome unknown · writes paused · [Re-read]"), within the 8-word budget.
+  - After the re-read, a staged change whose value now equals the stored value is dropped, with the persistent "was saved" note R11 asks for, instead of staying as "changed, was the same".
+
+### UX · business-on-income-forces-expense-category | high | Bulk "Business" on income makes you pick an expense category and stages it with no warning
+
+- **What I did.** I selected 6 incoming client transfers (Talleres Ondara, all "In") and chose Classify as Business.
+- **What happened.**
+  - The category step offered only expense families: Social security, Premises, Vehicle, Meals and so on.
+  - It accepted "Vehicle fuel" and staged "Business · Vehicle fuel" on all six income rows.
+  - The review listed it without comment (`scratchpad/reviews/ux/shots/19a-income-fuel.png`, `scratchpad/reviews/ux/shots/19c-review-income-fuel.png`).
+  - Task 1 did the same with Software subscriptions on a mixed In/Out selection (`scratchpad/reviews/ux/shots/04d-staged.png`).
+- **Why it matters.** This is a filing-relevant miscategorisation that the UI invites. M4's "Business always asks for a category" was written for expenses.
+- **Proposed change.**
+  - The Business step counts directions first: "Business · 4 out · 2 in". It asks for an expense category for the out rows only, and gives the in rows the income list where one exists, or "no category needed".
+  - A selection made only of income skips the category step.
+  - The review adds a mismatch chip, "Expense category on income · 6", in the M1 chip idiom.
+
+### UX · alt-b-dead-after-checkbox-selection | high | The classify chords do nothing after a checkbox selection, and keyboard range selection selects 1 row while showing 10
+
+- **What I did, with the mouse.** I ticked row 1, Shift-ticked row 10 ("10 selected") and pressed Alt+B. Nothing happened, because focus sits on the row checkbox (`tabindex=-1`). The same happens after the header tick. I had to use the inspector segment or Ctrl+K "Classify as Business" (`scratchpad/reviews/ux/shots/04b2-altb.png`).
+- **What I did, with the keyboard.** I pressed Shift+Space, then Shift+↓ nine times. That drew a 10-row cell range, but the selection stayed at 1. Alt+B then opened "Business · 1 movements" while 10 rows were visibly outlined (`scratchpad/reviews/ux/shots/03c-ten-selected.png`, `scratchpad/reviews/ux/shots/03e-typed.png`). Shift+Space after a range does select the range, but a spreadsheet user does it the other way round.
+- **Proposed change.**
+  - Handle Alt+B/P/M once at page level, as M2 already does for Alt+I, so they work wherever focus is in the Ledger page and outside text fields.
+  - After Shift+Space, Shift+↑/↓ extends the row selection (Excel's row mode).
+  - The M4 dialog title always counts the selection the command will act on. When a cell range and the row selection differ, it says so ("1 selected · range covers 10 · Select range").
+
+### UX · document-no-preview | high | You confirm a scanned receipt without ever seeing it
+
+- **What I did.** I opened `ticket-plenoil-1015.jpg`. It asks "Two possible identities · Two tax ids are printed on the ticket" and "The totals do not add up".
+- **What happened.** Nothing in the Documents panel shows the image or the PDF. Answering "which NIF is the supplier's" means opening the file elsewhere (`scratchpad/reviews/ux/shots/12b-ticket.png`, `scratchpad/reviews/ux/shots/12a-documents.png`).
+- **More problems on the same panel.**
+  - The questions sit below 14 full-width fields. The flagged fields (Supplier NIF, Taxable base, Total) carry a ⚠ but don't link to their question.
+  - Every input is 646 px wide for values like "21" or "2026-10-01".
+- **Proposed change.**
+  - Split the right panel into a document viewer (fit-width, zoom, page ‹ ›) above or beside "What was read".
+  - Focusing a field highlights where it was read, when the reader gives a box.
+  - Each ⚠ glyph is a button that scrolls to its question.
+  - Fields are sized by kind: amounts and rates 8rem, dates 10rem.
+
+### UX · import-duplicates-unmarked | high | Possible duplicates are imported with no marker on the row, and the preview cannot compare them
+
+- **What I did.** I imported two statements. The preview says "Possible duplicates: 2. They are imported and flagged; compare them after importing." It has no popover or side-by-side view (`scratchpad/reviews/ux/shots/10c-preview-1440.png`). That falls short of R12 ("the preview shows each duplicate next to the existing movement, in a popover inside the dialog").
+- **After import.** The result step lists them with "Compare" (`scratchpad/reviews/ux/shots/10d-result-1440.png`). In the grid, "CARGO EXTRACTO-CUENTA-ES 01 · 77.44" and "… 02 · 294.00" show only `○` in Status. No row's text or accessible name contains "duplicate", and there is no "Archive as duplicate / Keep both" (`scratchpad/reviews/ux/shots/10e-shown-1440.png`). Once you click Done, nothing tells you that 77.44 and 294.00 are now in the quarter twice.
+- **Detected accounts.** An account "detected from the file" shows as plain text with no way to change it, so a wrong detection is a dead end.
+- **Proposed change.**
+  - In the preview, a `⚠ 2` chip on the file card opens the R12 popover pairing each new row with the existing movement.
+  - After import, give the row a `copy` glyph in the Status cell (named "Possible duplicate"), a readiness-strip chip "Duplicates 2", and the two R12 actions in the row's ⋯ menu and the inspector header.
+  - The detected account stays the same Select, prefilled, with "detected from the file" as its hint.
+
+### UX · rule-matches-zero | high | A rule made from 8 matching movements says "Matches 0 loaded", and it can only match on the description
+
+- **What I did.** I searched "farmacia", ticked the header, chose "Make a rule…" and accepted the prefill (Description contains "FARMACIA NUBE BLANCA" → Personal).
+- **What happened.** It showed "Matches 0 loaded", with "Also classify them now" disabled (`scratchpad/reviews/ux/shots/14a-rule-dialog.png`). The count includes only unclassified rows (`setupModel.ts:144-158`), and the copy doesn't say so. To a person it reads as "this rule is broken".
+- **Missing matchers.** R8 asks for counterparty and amount-range matching. The dialog only has description, plus a regex switch.
+- **The Category field.** It is a native select over about 45 categories, ungrouped and unsearchable. Everywhere else, categories use the grouped Combobox.
+- **Getting to it.** "Make a rule…" is only reachable from the bottom of the selection inspector, below the fold at 900 px, and the inspector doesn't open when you select with the header tick.
+- **Proposed change.**
+  - Show the count as two numbers: `Matches 8 · 0 to classify`.
+  - Add a "Match on" segmented control (Description · Counterparty · Amount), prefilled from what the selection shares. Use the Combobox primitive for Category.
+  - Add "Make a rule…" to the selection's toolbar actions, the `⋯` that appears when more than one row is selected, as well as the inspector.
+
+### UX · focus-lost-after-dialogs | high | Focus drops to `<body>` after six common commits
+
+Measured with `document.activeElement`. Focus fell to `<body>` after:
+
+- Enter in the Mixed share dialog (`scratchpad/reviews/ux/shots/07c-after-enter.png`);
+- "Done" on the save result (twice);
+- "As read: ES";
+- "Confirm as invoice";
+- "Link · permanent".
+
+Each time a keyboard user has to Tab through the shell from the top. R10 and V-05 require focus to return to the active cell.
+
+**Proposed change:**
+
+- Every dialog that the grid opens returns focus to the active cell on close.
+- In Documents, after a commit, focus goes to the next action in the flow: after "As read", to Confirm; after Confirm, to "Link · permanent"; after linking, to the next document in the list.
+- Add a test per dialog that asserts `activeElement` after close.
+
+### UX · export-footer-offscreen | medium | At 1280×800 the Export button is below the fold, and the dialog says everything twice
+
+- **What happened.** The dialog's content scrolls with its footer. At 1280×800, "Export (40)" sits outside the visible dialog, and at 1440×900 it is clipped at the edge (`scratchpad/reviews/ux/shots/11b-chosen-1280.png`, `scratchpad/reviews/ux/shots/11a-export-1440.png`).
+- **Repeated text.**
+  - "Movements to export: 40." repeats the button label.
+  - "Chosen last, in the system's save dialog, which asks before replacing a file. Changing the format or period clears it." is 22 words of inline help (R22: help goes behind ⓘ).
+  - "Export without them" changes nothing visible apart from its pressed state.
+- **Proposed change.**
+  - A sticky dialog footer, from the Dialog primitive, on every Ledger dialog: Export, Import, Review.
+  - Move the save-as and "nothing is sent to the AEAT" notes behind ⓘ.
+  - When "Export without them" is pressed, collapse the staged-changes alert to one line ("1 unsaved · not in this file").
+
+### UX · readiness-counts-disagree | medium | Three surfaces count readiness three different ways
+
+- The page strip shows `⚠ 2 ○ 8 ⊘ 1`.
+- Export says "Not ready for calculation · Readiness issues: 10" (`scratchpad/reviews/ux/shots/11a-export-1440.png`).
+- Health lists "⚠ Classification 8 · ⚠ EUR figures 1 · ⚠ Category 1", using ⚠ for to-classify where M3 reserves ○ (`scratchpad/reviews/ux/shots/15c-health-checked-1440.png`).
+- Health also says "Not checked in this window yet" while the strip on the same page already shows a check result (`scratchpad/reviews/ux/shots/15b-health-1440.png`).
+
+M3 and M8 ask for one unit and one glyph per state.
+
+**Proposed change.** Export and Health reuse the strip's pills and chips as the same component: `⚠ 2 ○ 8 ⊘ 1`, then "Category 1", "EUR figures 1". Health opens on the strip's last check, with its time in the tooltip, and offers "Check again".
+
+### UX · category-search-fuzzy | medium | Category search ranks letter scatter above words, so Enter picks the wrong category
+
+- **What I did.** In the Business dialog, I typed "soft". The first and highlighted option was "Professional association fees", followed by "Self-employed social security…", "Utilities…" and "Home-office water". "Software subscriptions" wasn't in the visible results (`scratchpad/reviews/ux/shots/03e-typed.png`), and Enter staged "Professional association fees".
+- **The popup.** It is narrower than its trigger (220 vs 344 px), so names are cut off ("Professional association f…", "Alternative mutual-insurance c…"), and it overlaps the dialog's Cancel button.
+- **Proposed change.**
+  - Rank exact word-prefix matches first, then word-contains, and show scattered-letter matches only when nothing matches by word.
+  - The popover is at least as wide as its trigger, up to the dialog width, and wraps long names instead of truncating them (R16).
+
+### UX · enter-reopens-combobox | medium | In the Business dialog, Enter after choosing a category reopens the list instead of staging
+
+After you pick with Enter, focus returns to the combobox trigger, and the next Enter opens the list again (`scratchpad/reviews/ux/shots/03g-staged.png`). To stage from the keyboard you need Tab, Tab, Enter.
+
+**Proposed change.** After a pick, move focus to the primary "Stage for n" button, or make the dialog a form so Enter submits once its required field is filled.
+
+### UX · mixed-without-category | medium | Alt+M asks only for the share, so the row comes back "Needs fixing"
+
+"Mixed · 1 movements" asks for the business share only (`scratchpad/reviews/ux/shots/07a-altm.png`). After saving, RECIBO TELEFONIA reads `⚠ 1 · Needs fixing` (`scratchpad/reviews/ux/shots/09d-ok-after-save.png`), so it needs a second pass. M4 requires a share for Mixed, and nothing stops the same step from asking for a category as well.
+
+**Proposed change.** The Mixed step asks for the share and the category together, with the category filtered to the families that allow a share. The toast reads "Mixed · 30% · Mobile phone · 1 movement staged".
+
+### UX · refused-raw-code | medium | A refusal shows the raw code
+
+The refused save reads "BAZAR EL FARO COMPRA: Counterparty · Refused: precondition_failed. It stays staged." (`scratchpad/reviews/ux/shots/09d-refused-after-save.png`). R18 keeps codes under "Technical details".
+
+**Proposed change.** "Not saved: changed elsewhere · stays staged · [Re-read]", with the code under Technical details.
+
+### UX · review-repeats-itself | medium | The review and its result say everything twice
+
+- **Before saving.** The review shows a Summary table and then the full per-movement list, which, for a bulk change, is 8 identical "Classification: To classify → Personal" rows (`scratchpad/reviews/ux/shots/20b-1280-review.png`).
+- **After saving.** The result repeats "Saved" under every movement (`scratchpad/reviews/ux/shots/09d-ok-after-save.png`).
+- **False affordance.** Each change row starts with a pencil glyph that looks like an edit button but isn't one.
+- **The time estimate.** "1 one by one (about 1 min)" for a single link is not believable.
+
+R22 asks for one summary line, with details expanding per kind.
+
+**Proposed change.**
+
+- Lead with the summary line, then the per-kind table. The per-movement list starts collapsed: "8 movements ›".
+- On success, show only "✓ 3 saved". List rows only for parts that did not save.
+- Drop the decorative pencil.
+- Show the time estimate only when it is more than a minute.
+
+### UX · hidden-columns-no-cue | medium | With the inspector open at 1280, Category and Group sit under the sticky Amount with no cue
+
+At 1280 with the inspector open, the Review preset's Category and Group columns are pushed under the sticky Amount column, and nothing in the header shows that there are more columns (`scratchpad/reviews/ux/shots/05-1280-noagent-inspector.png`, `scratchpad/reviews/ux/shots/01-home-1280-dark.png` with "Categ", "Bank", "Hom").
+
+**Proposed change.** The same fix as the first finding: an edge shadow on the sticky right group, and a `+2 ›` header cue that scrolls to them. The preset should also prefer Category over Group when space is short.
+
+### UX · group-header-actions | medium | Group-header actions look like plain text, are cut off, and leave out "Make a rule"
+
+- The group header's actions, "Business…  Personal  Mixed…  Category  Select 6", are ghost text with ellipses. They read as labels, not buttons.
+- R8's "Make a rule from this group" is missing (`scratchpad/reviews/ux/shots/08c-grouped.png`).
+- The Group ▾ menu stays open after you choose a grouping.
+
+**Proposed change.**
+
+- Use the toolbar's small outline buttons, with the M4 commands as one `Classify ▾` split button: Business · Personal · Mixed.
+- Add a `⋯` menu holding Category ▾, Make a rule from this group and Select 6.
+- The Group menu closes when you choose.
+
+### UX · selection-inspector-repeats | low | The selection inspector says "To classify" three times and the currency twice
+
+The selection inspector shows:
+
+- "To classify 8" twice, once from the classification counts and once from the status counts (`SelectionInspector.tsx:451-468`);
+- "Classification: To classify" again under Common values;
+- "In · EUR 2,226.00 EUR", with the currency in both the label and the value (`scratchpad/reviews/ux/shots/02c-selected-all.png`).
+
+Under "Set for all", "Category · 8 skipped / Set for 0" on unclassified rows reads like a refusal.
+
+**Proposed change.**
+
+- Show one status line of glyph counts (`○ 8`).
+- Write totals as "In 2,226.00 EUR".
+- While the rows are unclassified, replace the disabled tax-field selects with one line: "Classify first · Business… sets a category".
+
+### UX · plural-grammar | low | Singular counts get plural nouns throughout
+
+Examples:
+
+- "Business · 1 movements"
+- "Mixed · 30% · 1 movements staged"
+- "1 unsaved: 1 actions"
+- "1 changes are kept only in this window"
+
+They appear in dialog titles, toasts, the tray tooltip and the leave guard (`scratchpad/reviews/ux/shots/07a-altm.png`, `scratchpad/reviews/ux/shots/21b-leave-close.png`).
+
+**Proposed change.** Use ICU plural forms in the `dev.locales` catalogue for every count string, in all four locales.
+
+### UX · paste-refused-no-reason | low | A paste that is all refused gives no reason and still offers "Paste 0 cells"
+
+Pasting three text lines into Amount shows "Refused 3" with no reason, and "Paste 0 cells" focused as the primary button (`scratchpad/reviews/ux/shots/16e-paste.png`).
+
+**Proposed change.** Show the first refusal reason inline ("Amount: 'Proyecto A' is not an amount"), disable the primary button when no cell would change, and name the target column in the title.
+
+### UX · amount-comma-refusal | low | The decimal-comma refusal makes you retype
+
+Typing `77,45` is refused with '"77,45" uses a decimal comma: write 77.45.' (`scratchpad/reviews/ux/shots/18d-amount-comma.png`). That is correct under R3, but every Spanish bank statement uses a comma, so this refusal will come up all the time.
+
+**Proposed change.** Keep the grammar, and add the documents panel's one-click suggestion idiom to the refusal: `Use 77.45`. Nothing is guessed silently.
+
+### UX · usd-decimal-alignment | low | A currency suffix breaks the decimal column
+
+"1,800.00 USD" pushes its decimals left of the EUR rows above and below it (`scratchpad/reviews/ux/shots/01-home-1440-light.png`).
+
+**Proposed change.** Give the currency code its own fixed-width trailing slot in the Amount cell, empty for EUR, so the decimals line up down the column.
+
+### UX · status-column-wasted | low | The Status column is 7.5rem wide for a glyph
+
+In compact density the Status column holds only a glyph and a count, yet it takes 7.5rem (120 px) at every width. At 1280 that width is taken from Description.
+
+R17 set 7.5rem before R22 made the status word appear only in comfortable density. This proposal changes the R17 width table, so it needs the owner's ruling.
+
+**Proposed change.** Status is 2.75rem in compact density and 7.5rem in comfortable.
+
+### UX · small-copy-and-chrome | low | Smaller copy and chrome defects
+
+- The Import dialog says "A preview writes nothing" twice, in the subtitle and the info box (`scratchpad/reviews/ux/shots/10c-preview-1440.png`).
+- The import-period banner is 12 words, over the 8-word budget: "Showing the period of your import: Oct 1, 2026 to Oct 26, 2026. Dismiss".
+- An unreadable file card uses the destructive red border. An unreadable file is a refusal, not a danger.
+- The palette shows "No pages match 'classify'" above matching actions, and the Classify actions carry no Alt+B/P/M hints, while the shell entries do show theirs (`scratchpad/reviews/ux/shots/16d-ctrlk-classify.png`).
+- Accessible names repeat the count: "Movements88 to classify", "1818 to classify · 10 staged · 10 unsaved changes not included" (V-28).
+- "Transf…" is truncated in the 5rem Direction column. Use the ⇆ glyph and put the word in the tooltip.
+- Health's Status table spreads label and number across 680 px. Also, Active 40 ≠ To classify 8 + Reviewed 31 + Skipped 0, and nothing shows the missing one.
+- "Saved changes can't be undone here" gives no next step. Add "· edit the cell to change it back".
