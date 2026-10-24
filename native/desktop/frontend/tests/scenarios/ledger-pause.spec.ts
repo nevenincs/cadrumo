@@ -125,6 +125,17 @@ async function stageLink(target: Page, movement: string, invoice: string) {
   );
 }
 
+/** Alt+P on the selection, through the one question it asks over many
+ * movements classified otherwise. */
+async function personalForAll(target: Page) {
+  await target.keyboard.press("Alt+KeyP");
+  const asked = target.locator(".ledger-classify");
+  await expect(asked.or(target.locator(".ledger-tray")).first()).toBeVisible();
+  if (await asked.isVisible())
+    await asked.locator(".ledger-classify-stage").click();
+  await expect(target.locator(".ledger-tray")).toBeVisible();
+}
+
 async function openReview(target: Page) {
   await target.locator(".ledger-tray-review").click();
   await expect(review(target)).toBeVisible();
@@ -579,8 +590,7 @@ test("a bulk save with an unknown outcome is counted, not listed by name, and it
   await grid(target)
     .getByRole("checkbox", { name: label("desktop.ledger.select.shown") })
     .click();
-  await target.keyboard.press("Alt+KeyP");
-  await expect(target.locator(".ledger-tray")).toBeVisible();
+  await personalForAll(target);
   await openReview(target);
   await ledgerControls.nextWrites(target, ["unknown"]);
   await review(target).locator(".ledger-apply-save").click();
@@ -621,8 +631,7 @@ test("the review reads the lock of every staged movement before it saves, the sa
   await grid(target)
     .getByRole("checkbox", { name: label("desktop.ledger.select.shown") })
     .click();
-  await target.keyboard.press("Alt+KeyP");
-  await expect(target.locator(".ledger-tray")).toBeVisible();
+  await personalForAll(target);
   const summaries: string[] = [];
   for (let round = 0; round < 2; round += 1) {
     await target.locator(".ledger-tray-review").click();

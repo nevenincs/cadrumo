@@ -30,6 +30,7 @@ import type { Action } from "../../../shell/actions";
 import type { LedgerView } from "../../../shell/layout";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import {
+  CLASSIFICATION_OF,
   CLASSIFY_KINDS,
   categoryCells,
   categorySplit,
@@ -54,6 +55,7 @@ import {
   useSearchElsewhere,
 } from "../../../shell/ledgerMovementReads";
 import {
+  effectiveFacts,
   stagedMovements,
   type DraftField,
   type StageEvent,
@@ -132,6 +134,9 @@ import type { SpendingCategoryFamily } from "../../../shell/ledgerVocabulary";
 
 /** How long a confirmation stays on screen. */
 const TOAST_MS = 4000;
+/** Above this many movements classified otherwise, Personal, which asks
+ * nothing else, asks once before it changes them. */
+const OVERWRITE_ASK = 5;
 
 /** The page's classify chords, by the key they take with Alt. */
 const CHORD_KINDS: Partial<Record<string, ClassifyKind>> = {
@@ -156,7 +161,9 @@ const idOf = (row: LedgerRow) => row.transaction.transaction_id;
 
 /** A classification dialog asked for, and what it would act on. */
 type Asking = {
-  kind: "business" | "mixed" | "category";
+  kind: ClassifyKind | "category";
+  /** Of `ids`, how many are classified otherwise now. */
+  overwritten?: number;
   ids: string[];
   skipped: number;
   partial: boolean;
@@ -912,11 +919,27 @@ export function MovementsSection({
       ? { ids: scope.ids, hidden: 0, partial }
       : { ids: [...selected], hidden: hiddenSelected.length, partial };
 
+  /** Of `ids`, how many classifying as `kind` would change from another
+   * classification, stored or staged. */
+  const overwrittenBy = (kind: ClassifyKind, ids: readonly string[]) => {
+    const target = CLASSIFICATION_OF[kind];
+    return ids.filter((id) => {
+      const row = byId.get(id);
+      if (!row) return false;
+      const now = effectiveFacts(
+        row,
+        stage.content.rows[id],
+      ).business_classification;
+      return !!now && now !== "NOT_YET_PROCESSED" && now !== target;
+    }).length;
+  };
+
   function stageClassified(
     kind: ClassifyKind,
     ids: readonly string[],
     answer: { category?: string; share?: string },
   ): string | null {
+    const overwritten = overwrittenBy(kind, ids);
     const outcome = classifyCells(
       { kind, ids, ...answer, ratios, staged: stage.content },
       byId,
@@ -942,16 +965,23 @@ export function MovementsSection({
     ]
       .filter(Boolean)
       .join(" · ");
-    const said = detail
-      ? t("desktop.ledger.classify.staged_detail", {
-          classification,
-          detail,
-          count: outcome.movements,
-        })
-      : t("desktop.ledger.classify.staged", {
-          classification,
-          count: outcome.movements,
-        });
+    const said = [
+      detail
+        ? t("desktop.ledger.classify.staged_detail", {
+            classification,
+            detail,
+            count: outcome.movements,
+          })
+        : t("desktop.ledger.classify.staged", {
+            classification,
+            count: outcome.movements,
+          }),
+      overwritten > 0
+        ? t("desktop.ledger.classify.overwritten", { count: overwritten })
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
     edit.stageChecked(outcome.event, () => setToast(said));
     return null;
   }
@@ -971,7 +1001,20 @@ export function MovementsSection({
       return;
     }
     if (kind === "personal") {
-      stageClassified(kind, availability.ids, {});
+      // Personal asks nothing, so over many movements classified otherwise
+      // it asks once before it changes them.
+      const overwritten = overwrittenBy(kind, availability.ids);
+      if (overwritten > OVERWRITE_ASK && !scope?.answer)
+        setAsking({
+          kind,
+          ids: availability.ids,
+          skipped: availability.skipped,
+          partial: availability.partial,
+          split: { expenses: 0, income: 0 },
+          error: null,
+          overwritten,
+        });
+      else stageClassified(kind, availability.ids, {});
       return;
     }
     const answer = scope?.answer ?? {};
@@ -999,6 +1042,7 @@ export function MovementsSection({
       ids: availability.ids,
       skipped: availability.skipped,
       partial: availability.partial,
+      overwritten: overwrittenBy(kind, availability.ids),
       split,
       error:
         outcome.kind === "refused"
@@ -1207,7 +1251,9 @@ export function MovementsSection({
       focusActive: () => {
         const active = grid.current?.activeCell();
         const key = active?.key ?? [...selected][0] ?? visible[0];
-        if (key) grid.current?.focusCell(key, active?.column);
+        // With no cell active, the movement's description takes the focus,
+        // not the selection box before it.
+        if (key) grid.current?.focusCell(key, active?.column ?? "description");
       },
       showHidden: () => {
         setFilters(NO_FILTERS);
@@ -1765,6 +1811,7 @@ export function MovementsSection({
           skipped={asking.skipped}
           partial={asking.partial}
           error={asking.error}
+          overwritten={asking.overwritten ?? 0}
           onCancel={() => setAsking(null)}
           onStage={(answer) => {
             if (asking.draft) {

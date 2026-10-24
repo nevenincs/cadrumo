@@ -46,10 +46,13 @@ export function ClassifyDialog({
   onStage,
   onCancel,
   onClosed,
+  overwritten = 0,
 }: {
-  /** Business or Mixed, or a category alone for movements that already
-   * take one. */
-  kind: Exclude<ClassifyKind, "personal"> | "category";
+  /** Business, Mixed, or Personal over many movements already classified
+   * otherwise, or a category alone for movements that already take one. */
+  kind: ClassifyKind | "category";
+  /** Of the movements, how many are classified otherwise now. */
+  overwritten?: number;
   /** How many movements it will stage a change on. */
   movements: number;
   /** Of those, how many take a spending category and how many are income,
@@ -89,11 +92,15 @@ export function ClassifyDialog({
       ),
     [t, mixed],
   );
-  const asksCategory = kind === "category" || split.expenses > 0;
+  const asksCategory =
+    kind === "category" || (kind !== "personal" && split.expenses > 0);
   const asksShare = mixed;
   const ready =
     (!asksCategory || category !== null) && (!asksShare || share.trim() !== "");
   const notes = [
+    overwritten > 0
+      ? t("desktop.ledger.classify.overwritten", { count: overwritten })
+      : "",
     skipped > 0 ? t("desktop.ledger.classify.skipped", { count: skipped }) : "",
     partial ? t("desktop.ledger.classify.partial") : "",
   ].filter(Boolean);
@@ -226,6 +233,7 @@ export function ClassifyDialog({
           )}
           {mixed && category !== null && ratioOf && (
             <RatioLine
+              category={categoryLabel(t, category)}
               coverage={ratioOf(category)}
               onOpenRatios={onOpenRatios}
             />
@@ -257,30 +265,40 @@ export function ClassifyDialog({
 
 /** Where Mixed names a usage ratio with the category, and where it cannot:
  * none configured for the movement's year, or not read. */
+/** Whether the movements' years have a usage ratio for the category, named
+ * by it; a count only where the years disagree. */
 function RatioLine({
+  category,
   coverage,
   onOpenRatios,
 }: {
+  category: string;
   coverage: RatioCoverage;
   onOpenRatios?: () => void;
 }) {
   const t = useStrings();
   if (coverage.staged + coverage.missing + coverage.unread === 0) return null;
+  const split = coverage.staged > 0 && coverage.missing > 0;
+  const counted = (text: string, count: number) =>
+    split ? `${text} · ${count}` : text;
   return (
     <div className="ledger-classify-ratio grid gap-1 text-sm">
       {coverage.staged > 0 && (
-        <p className="ledger-classify-ratio-staged text-muted-foreground">
-          {t("desktop.ledger.classify.ratio_staged", {
-            count: coverage.staged,
-          })}
+        <p className="ledger-classify-ratio-staged flex flex-wrap items-center gap-2 text-muted-foreground">
+          <Icon name="check" size="xs" className="text-success" />
+          {counted(
+            t("desktop.ledger.classify.ratio_staged", { category }),
+            coverage.staged,
+          )}
         </p>
       )}
       {coverage.missing > 0 && (
         <p className="ledger-classify-ratio-missing flex flex-wrap items-center gap-2">
           <Icon name="alert" size="xs" className="text-warning" />
-          {t("desktop.ledger.classify.ratio_missing", {
-            count: coverage.missing,
-          })}
+          {counted(
+            t("desktop.ledger.classify.ratio_missing", { category }),
+            coverage.missing,
+          )}
           {onOpenRatios && (
             <Button
               type="button"

@@ -682,13 +682,17 @@ test("Mixed says which movements get a configured usage ratio, and leads to the 
   // The scenario's ledger has a ratio for the mobile phone.
   await pick("telefonia_movil");
   await expect(dialog.locator(".ledger-classify-ratio-staged")).toHaveText(
-    label("desktop.ledger.classify.ratio_staged", { count: 1 }),
+    label("desktop.ledger.classify.ratio_staged", {
+      category: label("desktop.ledger.category.telefonia_movil"),
+    }),
   );
   await expect(dialog.locator(".ledger-classify-ratio-missing")).toHaveCount(0);
   // None for vehicle fuel: the dialog says so and offers the ratios.
   await pick("vehiculo_combustible");
   await expect(dialog.locator(".ledger-classify-ratio-missing")).toContainText(
-    label("desktop.ledger.classify.ratio_missing", { count: 1 }),
+    label("desktop.ledger.classify.ratio_missing", {
+      category: label("desktop.ledger.category.vehiculo_combustible"),
+    }),
   );
   await dialog.locator(".ledger-classify-open-ratios").click();
   await expect(
@@ -1102,4 +1106,60 @@ test("the category search highlights a name or word match over scattered letters
       name: label("desktop.ledger.category.ibi_vivienda_afecto"),
     }),
   ).toHaveCount(0);
+});
+
+test("Personal over many movements classified otherwise asks once, and says how many it changes", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await choosePeriod(target, 2026, "4T");
+  await grid(target)
+    .getByRole("checkbox", { name: label("desktop.ledger.select.shown") })
+    .click();
+  await target.keyboard.press("Alt+KeyP");
+  const dialog = classify(target);
+  await expect(dialog).toBeVisible();
+  const changed = new RegExp(
+    label("desktop.ledger.classify.overwritten", { count: 999_999 }).replace(
+      "999999",
+      "\\d+",
+    ),
+  );
+  await expect(dialog).toContainText(changed);
+  await dialog.locator(".ledger-classify-stage").click();
+  await expect(dialog).toHaveCount(0);
+  await expect(toast(target)).toContainText(changed);
+});
+
+test("a rule saved from a selection says so and hands the keyboard back to the grid", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const row = rowWith(target, "PAPELERIA TRAZO");
+  await row.locator("[data-column=description]").click();
+  await target.keyboard.press("Control+KeyK");
+  await target
+    .locator(".palette")
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.ledger.rules.from_selection"));
+  await target.keyboard.press("Enter");
+  const dialog = target.locator(".ledger-rule-dialog");
+  await expect(dialog).toBeVisible();
+  await dialog
+    .getByLabel(label("desktop.ledger.rules.classification"), { exact: true })
+    .selectOption("PERSONAL");
+  await dialog.locator(".ledger-rule-save").click();
+  await expect(dialog).toHaveCount(0);
+  await expect(target.locator(".ledger-page-toast")).toContainText(
+    new RegExp(
+      label("desktop.ledger.rules.saved_toast", { place: 999_999 }).replace(
+        "999999",
+        "\\d+",
+      ),
+    ),
+  );
+  await expect(target.locator("[role=gridcell]:focus")).toHaveAttribute(
+    "data-column",
+    "description",
+  );
 });

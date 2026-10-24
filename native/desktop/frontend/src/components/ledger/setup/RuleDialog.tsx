@@ -118,7 +118,8 @@ export function RuleDialog({
   /** The movements loaded on the page, or null where none are. */
   rows: readonly LedgerRow[] | null;
   onStage(event: StageEvent): void;
-  onSaved(rule: LedgerRuleRow): void;
+  /** The rule was saved, at `place` in the order the rules run, from 1. */
+  onSaved(rule: LedgerRuleRow, place: number): void;
   onClose(): void;
   /** Called as the dialog closes, to hand focus back to where it was
    * opened from. */
@@ -236,7 +237,7 @@ export function RuleDialog({
         onSettled: () => {
           if (!mounted.current) return;
           setSaved(null);
-          if (stored) onSaved(stored);
+          if (stored) onSaved(stored, position + 1);
         },
       });
     }
@@ -258,7 +259,7 @@ export function RuleDialog({
         },
       });
     }
-    onSaved(call.result.rule);
+    onSaved(call.result.rule, position + 1);
   };
 
   const refusal = () => {

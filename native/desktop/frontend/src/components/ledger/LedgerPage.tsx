@@ -13,6 +13,7 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
+import { Toast } from "@/components/ui/toast";
 import { Icon, type IconName } from "@/components/ui/icon";
 import type { PaneControl } from "../PaneHeader";
 import type { Action } from "../../shell/actions";
@@ -98,6 +99,8 @@ import { MatchQueue } from "./matching/MatchQueue";
 import { useSealedMovements } from "./useSealedMovements";
 import { PausedBanner, usePagePause, WritePauseContext } from "./WritePause";
 
+/** How long a page toast stays. */
+const TOAST_MS = 4000;
 /** What the page keeps of itself while it is put away, for one profile:
  * the period it showed and how its movements were looked at. Held in memory
  * only. */
@@ -373,6 +376,13 @@ export function LedgerPage({
   // from a selection or a group of movements.
   const [ruleTarget, setRuleTarget] = useState<RuleDialogTarget | null>(null);
   const [rulesVersion, setRulesVersion] = useState(0);
+  // A short word on what the page's own dialogs saved.
+  const [toast, setToast] = useState<string | null>(null);
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), TOAST_MS);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
   useEffect(() => setRuleTarget(null), [reader]);
   const openRuleFromSelection: OpenRuleFromSelection = useCallback(
     (seed) => setRuleTarget({ kind: "seed", seed }),
@@ -1000,9 +1010,10 @@ export function LedgerPage({
             target={ruleTarget}
             rows={setupProps.rows}
             onStage={editing.onStage}
-            onSaved={() => {
+            onSaved={(_rule, place) => {
               setRulesVersion((value) => value + 1);
               setRuleTarget(null);
+              setToast(t("desktop.ledger.rules.saved_toast", { place }));
             }}
             onClose={() => setRuleTarget(null)}
             // Opened from the grid, it hands the keyboard back to the grid's
@@ -1054,6 +1065,7 @@ export function LedgerPage({
             onCloseAutoFocus={returnTransferFocus}
           />
         )}
+        <Toast className="ledger-page-toast">{toast}</Toast>
       </div>
     </WritePauseContext.Provider>
   );

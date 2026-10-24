@@ -24,6 +24,8 @@ import {
   reduceStage,
   type Draft,
   type StageEvent,
+  type StageField,
+  type StagedContent,
   type StageState,
 } from "../../../shell/ledgerStage";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
@@ -80,6 +82,30 @@ import { choiceLabels, fieldName, lockText, refusalText } from "./editingWords";
 import { CostDialog, PasteDialog } from "./PasteDialog";
 
 /** More saves one at a time than this, added by one change, asks first. */
+
+/** The fields whose staged value differs between two stages, over every
+ * movement either stages. */
+function changedFields(
+  now: StagedContent,
+  before: StagedContent,
+): StageField[] {
+  const found = new Set<StageField>();
+  for (const id of new Set([
+    ...Object.keys(now.rows),
+    ...Object.keys(before.rows),
+  ])) {
+    const a = now.rows[id] ?? {};
+    const b = before.rows[id] ?? {};
+    for (const field of new Set([
+      ...Object.keys(a),
+      ...Object.keys(b),
+    ]) as Set<StageField>)
+      if (JSON.stringify(a[field]) !== JSON.stringify(b[field]))
+        found.add(field);
+  }
+  return [...found];
+}
+
 export const COST_WARNING_WRITES = 10;
 
 const cellKey = (key: string, column: string) => `${key}\u0000${column}`;
@@ -686,9 +712,14 @@ export function useMovementEditing(input: MovementEditingInput) {
       return;
     }
     onStage({ type: "undo" });
+    // One field undone is named; several are the step's own name.
+    const fields = changedFields(stage.content, last.content);
     say(
       t("desktop.ledger.edit.undone", {
-        what: t(`desktop.ledger.edit.step.${last.label}`),
+        what:
+          fields.length === 1
+            ? fieldName(t, fields[0]!)
+            : t(`desktop.ledger.edit.step.${last.label}`),
       }),
     );
   };

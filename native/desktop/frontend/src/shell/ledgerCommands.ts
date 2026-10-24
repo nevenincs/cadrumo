@@ -18,7 +18,8 @@ import { isSpendingCategory, takesShare } from "./ledgerVocabulary";
 export const CLASSIFY_KINDS = ["business", "personal", "mixed"] as const;
 export type ClassifyKind = (typeof CLASSIFY_KINDS)[number];
 
-const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
+/** The stored classification each classify command sets. */
+export const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
   business: "BUSINESS",
   personal: "PERSONAL",
   mixed: "MIXED",

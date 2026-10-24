@@ -97,7 +97,9 @@ export function valueText(
       return directionLabel(t, value);
     case "business_classification":
       return classificationLabel(t, value);
+    // A usage ratio is named by the category it is configured for.
     case "category_id":
+    case "usage_ratio_id":
       return categoryLabel(t, value);
     case "iva_category":
       return ivaCategoryLabel(t, value);
