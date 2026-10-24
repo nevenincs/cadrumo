@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:63947a8a7201ecfcd23a163b96a29c8b90fb3e31b9f49719d0e1e4c91d1605cf'
+body_hash: 'sha256:0b92e75bb982888bf45cf87829e0761ef1187daab3a34e27b9806da73bb30822'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -223,6 +223,18 @@ related:
 - `S09` `verify:` `consumer gating gate after S13 (25)` -> `pass`
 - `S09` `verify:` `every structural row falsified in isolated fixtures` -> `pass`
 - `S09` `verify:` `TUI ledger and CLI evidence notice pytest (742)` -> `pass`
+- `S12` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx`
+- `S12` `M` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S12` `M` `native/desktop/frontend/tests/scenarios/ledger-provisioning.spec.ts`
+- `S12` `M` `src/cadrumo/application/ledger/llm_review_operation.py`
+- `S12` `A` `src/cadrumo/entrypoints/tests/test_evidence_batch_reader_pause_settlement.py`
+- `S12` `A` `src/cadrumo/entrypoints/tests/test_ledger_classification_reader_refusal_settlement.py`
+- `S12` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_evidence_label_reading_notice.py`
+- `S12` `verify:` `label-reading notice (11), classification refusal settlement (2), batch pause settlement (1), rerun after S13 (16)` -> `pass`
+- `S12` `verify:` `related operation suites (188), caller suites (137)` -> `pass`
+- `S12` `verify:` `ruff, ty, lint-imports, check-operation-contract-manifest` -> `pass`
+- `S12` `verify:` `frontend tsc, eslint, provisioning-recovery (4), ledger-provisioning (6), ledger-documents (13)` -> `pass`
 
 ## Notes
 
@@ -237,3 +249,4 @@ related:
 - `S11` The verdict was lost to a doubled refusal and to ledger.evidence.extract not publishing its error detail; `recovery_action_id` rides on role rows only because the host probe names no action
 - `S13` Supply-nature proposals have no production caller `(propose_supply_nature` is never requested), so their verdict is kept through the port but reaches no surface; accepted as a gap until a caller asks for a proposal
 - `S09` Gate lives in entrypoints/tests because it drives composed consumers; scope stops at setup's own traffic, `cadrumo_agent_service,` the desktop, and dispatches reached only through self attributes, dynamic imports or mapping lookups
+- `S12` Notice test lives under `cadrumo_runtime` host tests; ledger.evidence.batch is not opted in because it pauses with the verdict in its successful result; Readers tab now offers setup per role recovery action

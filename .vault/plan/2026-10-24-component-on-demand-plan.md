@@ -9,7 +9,7 @@ related:
   - '[[2026-10-24-rust-component-provisioning-reference]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:47a5209d355c7202a513d007b60321ce84f656a11d584287343ca3a853f145d1'
+body_hash: 'sha256:4a6aa51df46e3ebbd2df782785133b3bd0b84f5271c17ef30d2d529e6ddda091'
 ---
 
 # `component-on-demand` plan
@@ -42,7 +42,7 @@ The work is independent of the proposed `2026-10-24-rust-component-provisioning-
 - [x] `S09` - Add the consumer gating gate: every browser and model-role consumer declares its item and refuses with operator.provision.<item> before any effect; `src/cadrumo/application/tests/test_dependency_consumer_gating.py`.
 - [x] `S10` - Carry the column reader refusal through invoice bulk intake instead of turning every error into a silent decline, and make the reader probe check the model the mapper actually sends; `src/cadrumo/entrypoints/invoice_intake_operation_composition.py, src/cadrumo/adapters/outbound/llm/column_role_mapping.py, src/cadrumo/application/local_reader.py and tests`.
 - [x] `S11` - Keep the reader verdict on the outer evidence extraction refusal so it routes to setup, and carry the local AI recovery action on the reader readiness projections; `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py, src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py, src/cadrumo/_data/operations/contract_manifest.json and tests`.
-- [ ] `S12` - Repair the label-reading notice tests the reader pre-check broke, publish the error detail of the ledger classification and evidence ingestion operations so their reader verdicts reach every surface, and make the desktop Readers tab read each role's recovery action; `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_label_reading_notice.py and its loopback runtime, the ledger classification and evidence ingestion operation definitions, native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx and shell/ledger.ts, and tests`.
+- [x] `S12` - Repair the label-reading notice tests the reader pre-check broke, publish the error detail of the ledger classification and evidence ingestion operations so their reader verdicts reach every surface, and make the desktop Readers tab read each role's recovery action; `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_label_reading_notice.py and its loopback runtime, the ledger classification and evidence ingestion operation definitions, native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx and shell/ledger.ts, and tests`.
 - [x] `S13` - Check the local AI before the statement reader dispatches a text or scanned page, refusing with the setup verdict instead of a transport error, and keep the supply-nature verdict through the extraction composition instead of discarding it; `src/cadrumo/adapters/outbound/llm/statement_reading.py, src/cadrumo/adapters/inbound/financial/providers/pdf_statement.py, the supply-nature step of src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py, and tests`.
 
 ## Parallelization
