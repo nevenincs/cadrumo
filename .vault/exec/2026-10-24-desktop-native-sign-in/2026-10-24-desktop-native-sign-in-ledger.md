@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:e152068cc4480b8085910298e435c23dd8a389ffc880f1c7d3af860af4aa290c'
+body_hash: 'sha256:fc5fa1b0bfd9f7bdaf36639b56175ceba2d4f0d24702108b3e0f0e840c4cad35'
 related:
   - "[[2026-10-24-desktop-native-sign-in-plan]]"
 ---
@@ -43,6 +43,10 @@ related:
 - `S03` `M` `.vault/adr/2026-10-04-application-sign-in-adr.md`
 - `S03` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
 - `S03` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-clippy` -> `pass`
+- `S02` `M` `native/application/src/person_operations.rs`
+- `S02` `M` `native/application/src/runtime_client.rs`
+- `S02` `verify:` `cargo test --features platform --lib` -> `pass`
+- `S02` `verify:` `cargo clippy --features platform --all-targets -D warnings` -> `pass`
 
 ## Notes
 
@@ -51,3 +55,4 @@ related:
 - `S03` review fix: a session the window releases no longer broadcasts Retired
 - `S03` user ruling 2026-10-24 'lift': reply bound raised from 64 KiB to the relay's 16 MiB document bound
 - `S03` plan-close review fixes (audit 2026-10-24-desktop-native-sign-in-audit); diagnostics finding deferred
+- `S02` follow-up from CADRUMO-UX-LEDGER review: relayed payloads overwritten after sending; `MAX_PAYLOAD_TEXT` public
