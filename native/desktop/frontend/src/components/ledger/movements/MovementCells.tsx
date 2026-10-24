@@ -20,7 +20,8 @@ import {
   type StatusWord,
 } from "./movementWords";
 
-const STATUS_ICONS: Record<StatusWord, IconName> = {
+/** The glyph each review status draws. */
+export const STATUS_ICONS: Record<StatusWord, IconName> = {
   pending: "pending",
   needs_fixing: "alert",
   done: "check",
@@ -36,11 +37,14 @@ export const StatusCell = memo(function StatusCell({
   row,
   issues,
   wordy,
+  duplicate = false,
 }: {
   row: LedgerRow;
   /** Null while readiness is not measured. */
   issues: number | null;
   wordy: boolean;
+  /** An import flagged it as a likely duplicate of a stored movement. */
+  duplicate?: boolean;
 }) {
   const t = useStrings();
   const word = statusWord(row.review_status, issues);
@@ -78,48 +82,89 @@ export const StatusCell = memo(function StatusCell({
           <span className="sr-only">{label}</span>
         )}
       </span>
+      {duplicate && <DuplicateMark />}
       {state !== "ACTIVE" && <Badge>{lifecycleLabel(t, state)}</Badge>}
     </span>
   );
 });
 
-/** The direction, as an arrow and a word: never a sign on the amount. */
+/** An import flagged the movement as a likely duplicate: a glyph, named. */
+function DuplicateMark() {
+  const t = useStrings();
+  const name = t("desktop.ledger.import_issue.duplicate");
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          data-duplicate=""
+          className="inline-flex items-center text-warning"
+        >
+          <Icon name="copy" size="xs" />
+          <span className="sr-only">{name}</span>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{name}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** The direction, as an arrow and a word: never a sign on the amount. A
+ * transfer, whose word does not fit the column, is its glyph alone, with
+ * the word in its tooltip and its name. */
 export const DirectionCell = memo(function DirectionCell({
   direction,
 }: {
   direction: string;
 }) {
   const t = useStrings();
+  const word = directionLabel(t, direction);
+  if (direction === "INTERNAL_TRANSFER")
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex items-center">
+            <Icon name="swap" size="xs" className="text-muted-foreground" />
+            <span className="sr-only">{word}</span>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{word}</TooltipContent>
+      </Tooltip>
+    );
   const icon: IconName =
-    direction === "INCOMING"
-      ? "directionIn"
-      : direction === "OUTGOING"
-        ? "directionOut"
-        : "swap";
+    direction === "INCOMING" ? "directionIn" : "directionOut";
   return (
     <span className="inline-flex min-w-0 items-center gap-1">
       <Icon name={icon} size="xs" className="text-muted-foreground" />
-      <span className="truncate">{directionLabel(t, direction)}</span>
+      <span className="truncate">{word}</span>
     </span>
   );
 });
 
 /** A magnitude in the chrome language's grouping, with its currency where
- * it is not the euro. */
+ * it is not the euro. Where the column holds another currency, every cell
+ * keeps the same trailing slot for the code, empty for the euro, so the
+ * decimals line up down the column. */
 export const AmountCell = memo(function AmountCell({
   amount,
   currency,
   locale,
+  currencySlot = false,
 }: {
   amount: string;
   currency: string;
   locale: string;
+  currencySlot?: boolean;
 }) {
+  const code = currency !== "EUR" ? currency : null;
   return (
     <span className="inline-flex items-baseline gap-1 tabular-nums">
       {amountText(locale, amount)}
-      {currency !== "EUR" && (
-        <span className="text-xs text-muted-foreground">{currency}</span>
+      {currencySlot ? (
+        <span className="w-7 shrink-0 text-start text-xs text-muted-foreground">
+          {code}
+        </span>
+      ) : (
+        code && <span className="text-xs text-muted-foreground">{code}</span>
       )}
     </span>
   );

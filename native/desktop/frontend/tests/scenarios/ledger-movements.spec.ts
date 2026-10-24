@@ -309,6 +309,42 @@ test("grouping by counterparty heads each group with its count, sums and actions
   );
 });
 
+test("choosing a grouping closes the Group menu", async ({ page: target }) => {
+  await openLedger(target);
+  await choosePeriod(target, 2026, "4T");
+  await page(target)
+    .getByRole("button", { name: label("desktop.ledger.group.title") })
+    .click();
+  await target
+    .getByRole("menuitemradio", {
+      name: label("desktop.ledger.group.counterparty"),
+    })
+    .click();
+  await expect(target.getByRole("menu")).toHaveCount(0);
+  await expect(sections(target)).not.toHaveCount(0);
+});
+
+test("a transfer's direction is its glyph, with the word in its name and tooltip", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await choosePeriod(target, 2026, "4T");
+  const transfer = dataRows(target)
+    .filter({
+      has: target.locator("[data-column=description]", {
+        hasText: "TRASPASO",
+      }),
+    })
+    .first()
+    .locator("[data-column=direction]");
+  const word = label("desktop.ledger.direction.internal_transfer");
+  await expect(transfer.locator(".sr-only")).toHaveText(word);
+  // Nothing of the word is drawn to be cut short.
+  await expect(transfer.locator(".truncate")).toHaveCount(0);
+  await transfer.locator("[data-slot=tooltip-trigger]").hover();
+  await expect(target.getByRole("tooltip")).toHaveText(word);
+});
+
 test("sorting by a column header orders the stored figures", async ({
   page: target,
 }) => {

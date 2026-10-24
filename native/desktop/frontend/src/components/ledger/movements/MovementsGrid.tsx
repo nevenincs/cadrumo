@@ -83,6 +83,10 @@ export type ColumnContext = {
   sortable: (column: ColumnId) => boolean;
   /** The register's own accounts, null while unread. */
   accounts: readonly { id: string; label: string }[] | null;
+  /** Movements an import flagged as likely duplicates. */
+  duplicates?: ReadonlySet<string>;
+  /** Some shown movement is not in euros: amounts keep a currency slot. */
+  currencySlot?: boolean;
   /** Staged editing, where the grid takes edits. */
   editing?: ColumnEditing;
 };
@@ -142,6 +146,7 @@ function movementColumns(
             : null
         }
         wordy={context.density === "comfortable"}
+        duplicate={context.duplicates?.has(id(row)) ?? false}
       />
     ),
     date: missingOr("date", (row) => (
@@ -159,6 +164,7 @@ function movementColumns(
         amount={row.transaction.amount}
         currency={row.transaction.currency}
         locale={locale}
+        currencySlot={context.currencySlot ?? false}
       />
     ),
     eur: missingOr("eur", (row) => <EuroCell row={row} locale={locale} />),
@@ -345,6 +351,9 @@ export function MovementsGrid({
         ? lifecycleLabel(t, row.transaction.lifecycle_state)
         : "",
       context.readiness.noRate.has(key) ? t("desktop.ledger.no_rate") : "",
+      context.duplicates?.has(key)
+        ? t("desktop.ledger.import_issue.duplicate")
+        : "",
       edited ?? "",
     ]
       .filter(Boolean)

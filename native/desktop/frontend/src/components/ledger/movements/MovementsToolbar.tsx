@@ -242,6 +242,7 @@ export function MovementsToolbar({
 }) {
   const t = useStrings();
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [groupOpen, setGroupOpen] = useState(false);
   const count = activeFilters(filters);
   const chips = filterChips(t, filters, accounts, onFilters);
   const pills = <T extends string>(
@@ -509,7 +510,7 @@ export function MovementsToolbar({
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
-        <DropdownMenu>
+        <DropdownMenu open={groupOpen} onOpenChange={setGroupOpen}>
           <DropdownMenuTrigger asChild>
             <IconButton
               label={t("desktop.ledger.group.title")}
@@ -529,7 +530,10 @@ export function MovementsToolbar({
               <DropdownMenuRadioGroup value={groupBy ?? "none"}>
                 <DropdownMenuRadioItem
                   value="none"
-                  onSelect={() => onGroupBy(null)}
+                  onSelect={() => {
+                    onGroupBy(null);
+                    setGroupOpen(false);
+                  }}
                 >
                   {t("desktop.ledger.group.none")}
                 </DropdownMenuRadioItem>
@@ -540,7 +544,10 @@ export function MovementsToolbar({
                       key={grouping}
                       value={grouping}
                       disabled={!allowed}
-                      onSelect={() => onGroupBy(grouping)}
+                      onSelect={() => {
+                        onGroupBy(grouping);
+                        setGroupOpen(false);
+                      }}
                     >
                       {t(`desktop.ledger.group.${grouping}`)}
                       {!allowed && (
