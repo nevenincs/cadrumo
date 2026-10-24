@@ -13,6 +13,7 @@ from ....application.ledger.invoice_evidence_operation_dtos import (
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.i18n.render import tr
 from ....domain.iva.schema import InvoiceKind
+from ..setup.offer import setup_item_for_action
 from .models import LedgerEvidenceDraftV1
 
 _KIND_LOCALE_KEYS: Final[dict[InvoiceKind, str]] = {
@@ -294,4 +295,15 @@ def _label_reading_line(fallback: LabelReadingFallback) -> str:
     return tr(key, count=len(fallback.unread_fields), fields=", ".join(fallback.unread_fields))
 
 
-__all__ = ["draft_lines"]
+def label_reading_setup_item(fallback: LabelReadingFallback | None) -> str | None:
+    """The setup item whose setup would let the model fill what a label reading left unread.
+
+    Only a reader that was not ready and whose probe named a setup action names
+    an item; a refused load or a busy slot is not something setup ends.
+    """
+    if fallback is None or fallback.cause is not LabelReadingFallbackCause.READER_UNAVAILABLE:
+        return None
+    return setup_item_for_action(fallback.recovery_action_id)
+
+
+__all__ = ["draft_lines", "label_reading_setup_item"]

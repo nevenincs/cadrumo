@@ -13,6 +13,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from cadrumo.application.ledger.evidence import MediaKind
 from cadrumo.application.ledger.evidence_add_operation import (
@@ -21,6 +22,11 @@ from cadrumo.application.ledger.evidence_add_operation import (
     LedgerEvidenceAddRequest,
     build_ledger_evidence_add_definition,
     build_ledger_evidence_add_registration,
+)
+from cadrumo.application.ledger.evidence_errors import (
+    EVIDENCE_LOCAL_AI_NOT_READY_KEY,
+    PurchaseInvoiceEvidenceReaderError,
+    evidence_reader_refusal_key,
 )
 from cadrumo.application.ledger.evidence_ports import LedgerEvidencePortsFactory
 from cadrumo.application.ledger.evidence_read_operation import (
@@ -56,6 +62,8 @@ from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
     StructuredInvoiceClassProjectionV1,
 )
 from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceClassificationKind
+from cadrumo.application.local_reader import probe_local_reader
+from cadrumo.application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.registry import (
@@ -63,10 +71,14 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
     OperationRegistry,
 )
-from cadrumo.core.config import override_settings
+from cadrumo.application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
+from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
+from cadrumo.core.errors.error_codes import resolve_error_message
+from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -138,6 +150,8 @@ class _Client:
 
 
 class _Controller:
+    """One submitted operation that succeeds with ``result``, or refuses when ``result`` is its recorded detail."""
+
     operation_id = _OPERATION_ID
     # The client it was submitted through, as the real controller keeps it.
     client: _Client
@@ -148,18 +162,21 @@ class _Controller:
         self.result = result
         self.started = False
         self.definition_contract = _CONTRACTS[definition_id]
+        refused = result.error_code if isinstance(result, OperationErrorDetailV1) else None
         self.projection = SimpleNamespace(
             operation_id=self.operation_id,
             definition_id=definition_id,
             subject_ref=profile_operation_subject(str(_PROFILE_ID)),
             definition_contract=self.definition_contract,
             lifecycle=OperationLifecycle.TERMINAL,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
+            terminal_condition=OperationTerminalCondition.SUCCEEDED
+            if refused is None
+            else OperationTerminalCondition.REFUSED,
             effect=effect,
-            refusal_ref=None,
+            refusal_ref=refused,
             failure_error_code=None,
             diagnostic_ref=None,
-            result_ref="e" * 64,
+            result_ref="e" * 64 if refused is None else None,
         )
 
     async def start(self) -> str:
@@ -182,6 +199,9 @@ class _Controller:
         assert not allow_refusal_detail
         assert type(self.result) is result_type
         return self.result
+
+    async def settled_error_detail(self, _projection: object) -> OperationErrorDetailV1 | None:
+        return self.result if isinstance(self.result, OperationErrorDetailV1) else None
 
 
 def _draft_projection() -> InvoiceDraftProjectionV1:
@@ -654,3 +674,42 @@ async def test_an_extraction_whose_result_disagrees_with_a_receipt_that_saved_no
 
     assert not isinstance(raised.value, OperationOutcomeUnknownError)
     assert raised.value.reason is RefusalCode.INVALID_FRAME
+
+
+@pytest.mark.asyncio
+async def test_a_refused_extraction_raises_its_recorded_reason_with_the_verdict_naming_the_local_ai_setup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The recorded detail is the one the real reader probe's refusal publishes, read back as another process reads it."""
+    status = probe_local_reader(
+        ModelRole.TEXT_EXTRACTION, Settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat")
+    )
+    verdict = status.precondition_verdict
+    assert verdict is not None
+    detail = build_operation_error_detail(
+        PurchaseInvoiceEvidenceReaderError(
+            translated_message=evidence_reader_refusal_key(verdict), precondition_verdict=verdict
+        )
+    )
+    assert detail is not None
+    client = _Client()
+    _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[(LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID, detail, OperationEffect.NONE)],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
+
+    with pytest.raises(RecordedRegisteredError) as raised:
+        await door.extract("f" * 16)
+
+    assert raised.value.recorded_code == detail.error_code
+    assert raised.value.translated_message == EVIDENCE_LOCAL_AI_NOT_READY_KEY
+    assert resolve_error_message(raised.value, locale="en") == (
+        "Local AI is not ready, so nothing was read. Set it up, then try again."
+    )
+    restored = nested_terminal_precondition_verdict(raised.value)
+    assert restored == verdict
+    assert restored is not None
+    assert restored.action is not None
+    assert restored.action.action_id == LOCAL_AI_PROVISION_ACTION_ID

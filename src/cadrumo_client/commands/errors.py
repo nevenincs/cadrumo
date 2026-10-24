@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
+from typing import override
 
 from pydantic import BaseModel, ValidationError
 
@@ -104,15 +105,22 @@ class CliRecordedOperationError(CliRefusedBoundaryError, RecordedRegisteredError
         precondition_verdict: PreconditionVerdict | None = None,
     ) -> None:
         """Retain the registered failure context and optional precondition result."""
-        super().__init__(registered_code, context=context, translated_message=translated_message)
-        self._terminal_precondition_verdict = precondition_verdict
+        super().__init__(
+            registered_code,
+            context=context,
+            translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
+        )
 
     @property
+    @override
     def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
         """Return the terminal precondition result, if one was recorded."""
-        return self._terminal_precondition_verdict
+        verdict = self._terminal_precondition_verdict
+        return verdict if isinstance(verdict, PreconditionVerdict) else None
 
     @terminal_precondition_verdict.setter
+    @override
     def terminal_precondition_verdict(self, verdict: PreconditionVerdict | None) -> None:
         """Attach a follow-up verdict while retaining this recorded failure."""
         self._terminal_precondition_verdict = verdict

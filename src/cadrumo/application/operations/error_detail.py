@@ -35,7 +35,7 @@ from ...core.errors.error_codes import (
     public_error_context,
     scrub_error_context,
 )
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from ...core.errors.record_fault import internal_record_fault_context
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -135,6 +135,20 @@ class OperationErrorDetailV1(BaseModel):
         if self.precondition_verdict_json is None:
             return None
         return PreconditionVerdict.model_validate_json(self.precondition_verdict_json)
+
+    def recorded_error(self) -> RecordedRegisteredError | None:
+        """Raise-ready form of the registered error the detail records, keeping its verdict.
+
+        ``None`` for a record fault, which has no registered error of its own.
+        """
+        if self.kind is not OperationErrorDetailKind.REGISTERED_ERROR or self.error_code is None:
+            return None
+        return RecordedRegisteredError(
+            self.error_code,
+            context=self.context_mapping(),
+            translated_message=self.message_key,
+            precondition_verdict=self.precondition_verdict(),
+        )
 
 
 @cache

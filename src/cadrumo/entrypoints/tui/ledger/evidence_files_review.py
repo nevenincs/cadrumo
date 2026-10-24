@@ -3,7 +3,8 @@
 The summary carries the draft's figures, findings and blocking questions with
 the document's own text left out; the full review is the person's projection
 and carries that text. Both are reads; confirming a draft stays on the Evidence
-area's own screen.
+area's own screen. A full review whose label reading stood without the local AI
+offers its setup beside the review, while the item's row can set it up.
 """
 
 from __future__ import annotations
@@ -25,8 +26,9 @@ from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.i18n.render import tr
 from ....domain.iva.schema import InvoiceKind
 from ..components.language import localized
+from ..setup.offer import SetupItemOffer
 from .controller import LedgerWorkspaceController
-from .evidence_draft import draft_lines
+from .evidence_draft import draft_lines, label_reading_setup_item
 from .evidence_files_common import EvidenceFilesToolScreen, blank_to_none, short_identity, shown
 from .evidence_files_doors import LedgerEvidenceFilesDoorsV1
 from .models import LedgerEvidenceDraftV1
@@ -184,6 +186,7 @@ class LedgerEvidenceFilesReviewScreen(EvidenceFilesToolScreen):
             yield Static("", id="ledger-flow-status", markup=False)
             yield Static("", id="ledger-refusal", classes="ledger-refusal", markup=False)
             yield Static("", id="evidence-files-review-body", classes="evidence-files-detail", markup=False)
+            yield SetupItemOffer(offer_id="evidence-files-review-setup")
 
     def on_mount(self) -> None:
         """Show the shell; a reference read from the records list is read at once."""
@@ -216,7 +219,7 @@ class LedgerEvidenceFilesReviewScreen(EvidenceFilesToolScreen):
         self.status(tr("tui.ledger.evidence_files.loading"))
         summary = await self.ask(self.doors.review_summary(request))
         if summary is not None:
-            self._show(summary)
+            await self._show(summary)
 
     async def _read_full(self) -> None:
         request = self._request()
@@ -225,12 +228,17 @@ class LedgerEvidenceFilesReviewScreen(EvidenceFilesToolScreen):
         self.status(tr("tui.ledger.evidence_files.loading"))
         view = await self.ask(self.doors.review_view(request))
         if view is not None:
-            self._show(view)
+            await self._show(view)
 
-    def _show(self, review: LedgerEvidenceReviewSummaryProjection | LedgerEvidenceReviewViewProjection) -> None:
+    async def _show(self, review: LedgerEvidenceReviewSummaryProjection | LedgerEvidenceReviewViewProjection) -> None:
         self._shown = review
         self._paint_review()
         self.status("")
+        # Only the full review carries the label reading's fallback; the summary offers nothing.
+        fallback = review.label_reading_fallback if isinstance(review, LedgerEvidenceReviewViewProjection) else None
+        await self.query_one(SetupItemOffer).show_for(
+            None if fallback is None else label_reading_setup_item(fallback.to_fallback())
+        )
 
     def _paint_review(self) -> None:
         review = self._shown
@@ -246,11 +254,13 @@ class LedgerEvidenceFilesReviewScreen(EvidenceFilesToolScreen):
     async def refresh_language(self) -> None:
         await super().refresh_language()
         self._paint_review()
+        self.query_one(SetupItemOffer).repaint()
 
     @override
     def clear_private_view(self) -> None:
         self._shown = None
         self._paint_review()
+        self.query_one(SetupItemOffer).clear()
 
 
 __all__ = ["LedgerEvidenceFilesReviewScreen", "review_reason_label", "summary_lines", "view_lines"]

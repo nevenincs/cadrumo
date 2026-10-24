@@ -9,7 +9,7 @@ from typing import Final, cast, override
 from pydantic import ValidationError
 from textual.widgets import Button, DataTable, Input, Select, Static
 
-from ....application.ledger.invoice_draft_records import LabelReadingFallbackCause
+from ....application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....domain.iva.schema import InvoiceKind
@@ -17,7 +17,7 @@ from ..account import AccountSessionExpiredError
 from ..operations.outcome import OperationOutcomeUnknownError
 from ..setup.offer import SetupItemOffer, setup_item_for_action
 from .controller import LedgerWorkspaceScreen
-from .evidence_draft import draft_lines
+from .evidence_draft import draft_lines, label_reading_setup_item
 from .models import (
     LedgerEvidenceConfirmationV1,
     LedgerEvidenceDraftV1,
@@ -35,12 +35,12 @@ _RECORD_STATUS_LOCALE_KEYS: Final[dict[LedgerEvidenceRecordStatus, str]] = {
 }
 
 
-def _label_reading_setup_item(draft: LedgerEvidenceDraftV1) -> str | None:
-    """The setup item whose setup would let the model fill what a label reading left unread."""
-    fallback = draft.label_reading_fallback
-    if fallback is None or fallback.cause is not LabelReadingFallbackCause.READER_UNAVAILABLE:
+def _refusal_setup_item(error: CadrumoError | ValidationError) -> str | None:
+    """The setup item a refused read names: its verdict's action is that item's setup."""
+    verdict = nested_terminal_precondition_verdict(error) if isinstance(error, CadrumoError) else None
+    if verdict is None or verdict.action is None:
         return None
-    return setup_item_for_action(fallback.recovery_action_id)
+    return setup_item_for_action(verdict.action.action_id)
 
 
 class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
@@ -218,6 +218,9 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         except (CadrumoError, ValidationError) as error:
             status.update(tr("tui.ledger.evidence.read_failed"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+            if self.selected_record_id == evidence_id:
+                # A read refused for a missing component offers its setup while its row can act.
+                await self.query_one(SetupItemOffer).show_for(_refusal_setup_item(error))
         else:
             status.update(tr("tui.ledger.evidence.read_done"))
             if self.selected_record_id == evidence_id and draft.evidence_id == evidence_id:
@@ -230,7 +233,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
                 counterparty = self.query_one("#ledger-evidence-counterparty", Input)
                 if not counterparty.value and (draft.supplier_name is not None and draft.supplier_name):
                     counterparty.value = draft.supplier_name
-                await self.query_one(SetupItemOffer).show_for(_label_reading_setup_item(draft))
+                await self.query_one(SetupItemOffer).show_for(label_reading_setup_item(draft.label_reading_fallback))
         finally:
             self.reading = False
 

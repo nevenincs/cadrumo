@@ -230,6 +230,8 @@ class RuntimeEvidenceTuiDoorV1:
             result_version=3,
             success_effect=OperationEffect.NONE,
             correlate=correlate,
+            # A refused read raises its recorded reason, with the verdict naming the setup it needs.
+            explain_failure=True,
         )
         self._review = _ReviewedEvidence(
             profile_id=self._profile_id,
@@ -303,12 +305,15 @@ class RuntimeEvidenceTuiDoorV1:
         result_version: int = 1,
         success_effect: OperationEffect,
         correlate: Callable[[ResultT], None] = lambda _result: None,
+        explain_failure: bool = False,
     ) -> ResultT:
         """Submit, observe, disclose and correlate one terminal receipt.
 
         ``correlate`` refuses a result its request does not account for. It
         runs inside the session's settlement, so a refused result after a
-        receipt that saved something reads as an unknown outcome there.
+        receipt that saved something reads as an unknown outcome there. With
+        ``explain_failure``, a stopped operation that recorded a registered
+        error raises that error with its verdict.
         """
 
         def admit(terminal: OperationPublicProjectionV1) -> None:
@@ -338,6 +343,7 @@ class RuntimeEvidenceTuiDoorV1:
             settle=settle,
             admit=admit,
             result_version=result_version,
+            explain_failure=explain_failure,
         )
 
     @staticmethod

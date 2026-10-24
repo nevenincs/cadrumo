@@ -10,7 +10,6 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from cadrumo.application.operations.error_detail import OperationErrorDetailKind
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
@@ -247,15 +246,9 @@ class RuntimeProfileSession:
         controller: OperationController,
         terminal: OperationPublicProjectionV1,
     ) -> RecordedRegisteredError | None:
-        """The executor's recorded registered error, if it recorded one."""
+        """The executor's recorded registered error and its verdict, if it recorded one."""
         detail = await controller.settled_error_detail(terminal)
-        if detail is None or detail.kind is not OperationErrorDetailKind.REGISTERED_ERROR or detail.error_code is None:
-            return None
-        return RecordedRegisteredError(
-            detail.error_code,
-            context=detail.context_mapping(),
-            translated_message=detail.message_key,
-        )
+        return None if detail is None else detail.recorded_error()
 
 
 def _may_change_records(contract: OperationPublicDefinitionContractV1 | None) -> bool:

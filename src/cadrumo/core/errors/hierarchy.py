@@ -214,7 +214,12 @@ class CadrumoError(Exception):
 
 
 class RecordedRegisteredError(CadrumoError):
-    """Render a recorded registry reference without recreating its original exception."""
+    """Render a recorded registry reference without recreating its original exception.
+
+    A recorded error may keep the typed terminal verdict its original carried,
+    so a frontend can act on the remedy it names. The verdict is held opaque,
+    as :class:`TerminalPreconditionErrorMixin` holds it.
+    """
 
     def __init__(
         self,
@@ -222,17 +227,24 @@ class RecordedRegisteredError(CadrumoError):
         *,
         context: Mapping[str, object] | None = None,
         translated_message: str | None = None,
+        precondition_verdict: object | None = None,
     ) -> None:
-        """Accept only a declared code and locally supplied presentation facts."""
+        """Accept only a declared code, locally supplied presentation facts and the recorded verdict."""
         from .error_codes import get_registered_error_code_by_code
 
         self._recorded_code = get_registered_error_code_by_code(registered_code).code
         super().__init__(context=context, translated_message=translated_message)
+        self._terminal_precondition_verdict = precondition_verdict
 
     @property
     def recorded_code(self) -> str:
         """Return the validated code, without exception text or arguments."""
         return self._recorded_code
+
+    @property
+    def terminal_precondition_verdict(self) -> object | None:
+        """Return the opaque terminal verdict the recorded error carried, if one was recorded."""
+        return self._terminal_precondition_verdict
 
 
 def pydantic_validation_boundary[**PydanticArgs, PydanticResultT](
