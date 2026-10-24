@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:381de1d5d6585b2fe30136920c11e29b8a32f1c18203d569d7ab62ee5475a8b1'
+body_hash: 'sha256:0a78b6ceb851f1463952481d7e40d6a2b59b7fec576179c3c462b3e74d61c886'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -589,6 +589,48 @@ related:
 - `S23` `verify:` `ruff check, ruff format --check, ty check on the four touched Python files` -> `pass`
 - `S23` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
 - `S23` `by:` `implementation-engineer-high`
+- `S13` `A` `src/cadrumo_mcp/mcp/component_setup.py`
+- `S13` `A` `src/cadrumo_mcp/mcp/tests/components_role.py`
+- `S13` `A` `src/cadrumo_mcp/mcp/tests/test_setup_tools.py`
+- `S13` `A` `src/cadrumo_mcp/mcp/tests/test_setup_tools_drive_the_real_role.py`
+- `S13` `A` `src/cadrumo/tests/components_role_dispatch.py`
+- `S13` `A` `src/cadrumo/entrypoints/tui/setup/tests/role_replay.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/setup/door.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/setup/screen.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/setup/destination.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_setup_offer.py`
+- `S13` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py`
+- `S13` `M` `src/cadrumo/application/dependency_wording.py`
+- `S13` `M` `src/cadrumo_mcp/mcp/protocol_contract.py`
+- `S13` `M` `src/cadrumo_mcp/mcp/surfaces.py`
+- `S13` `M` `src/cadrumo_mcp/mcp/runtime_adapter.py`
+- `S13` `M` `src/cadrumo_mcp/mcp/server.py`
+- `S13` `M` `src/cadrumo_mcp/mcp/progress_relay.py`
+- `S13` `M` `src/cadrumo_mcp/mcp/admitted_operations.py`
+- `S13` `M` `src/cadrumo_mcp/mcp/result_request.py`
+- `S13` `M` `src/cadrumo_mcp/mcp/tests/test_mcp_surface_pins.py`
+- `S13` `M` `src/cadrumo_mcp/mcp/tests/test_tool_annotations.py`
+- `S13` `M` `src/cadrumo_mcp/mcp/tests/test_surface_tools.py`
+- `S13` `M` `src/cadrumo_mcp/mcp/tests/test_progress_relay.py`
+- `S13` `M` `src/cadrumo_mcp/mcp/tests/test_result_page_tool.py`
+- `S13` `M` `dev/runtime_lifecycle/tests/test_operation_mcp_surfaces.py`
+- `S13` `M` `dev/locales/fstring_registry.py`
+- `S13` `M` `dev/quality/metadata/import_load_targets.cadrumo_mcp.json`
+- `S13` `M` `dev/quality/metadata/import_load_targets.json`
+- `S13` `M` `justfile`
+- `S13` `M` `src/cadrumo/locales/en/common.yml`
+- `S13` `M` `src/cadrumo/locales/es/common.yml`
+- `S13` `M` `src/cadrumo/locales/ca/common.yml`
+- `S13` `M` `src/cadrumo/locales/hu/common.yml`
+- `S13` `verify:` `pytest -m '' src/cadrumo_mcp/mcp/tests plus MCP surface and no-write lifecycle tests and registry conformance (414 passed)` -> `pass`
+- `S13` `verify:` `pytest -m '' src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py (14 passed) and the TUI setup offer tests` -> `pass`
+- `S13` `verify:` `just test-components-role with the cargo release cadrumo.exe, MCP and client cases (10 passed)` -> `pass`
+- `S13` `verify:` `ruff check, ruff format --check and ty on the touched paths; basedpyright and pyrefly on dependency_wording.py` -> `pass`
+- `S13` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S13` `verify:` `just check-operation-contract-manifest` -> `pass`
+- `S13` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -654,3 +696,6 @@ related:
 - `S23` S23 cancel semantics: a follower's cancel line or input end stops only the following (result busy); the cancel command stops the followed setup; a desktop window that follows asks the followed setup to stop through the engine's cancel request `(Engine::ask_to_stop)` and keeps following, and closing the window stops only its following
 - `S23` S23 wake sources: the platform folder change notification on Windows, the kernel granting a shared lock on a thread when the writer ends or dies, and the follower's cancellation through a new Cancellation wake hook; on Linux and macOS, and without the platform feature, the wait is bounded at 100 ms because the platform layer has no notification source there yet
 - `S23` S23 the Python decoder now accepts the cancelled category on a cancelled result, which the role already sent and the decoder refused; the Linux and macOS follow paths were not compiled here
+- `S13` Re-review findings cli-row-source-differs-from-tui (TUI rows now read through the components role) and success-verdict-not-lifted-for-agents, MCP part (result-carried verdicts lifted as `recovery_action_ids,` setup actions gated by the quick row, held items in `setup_held)` are closed here.
+- `S13` MCP surface full gains `setup_status,` `setup_plan` and setup under its existing name, pin table updated because no consumer has pinned a release; read-only-local serves none of them.
+- `S13` Failing but not reached by this change: just check-locales (desktop domain 17 keys and inventory violations), two dev/locales `test_audit` cases on foreign keys, three runtime TUI automation inventory tests and the automation requester native test, and lane reachability for `cadrumo_client` `test_windows_process.`

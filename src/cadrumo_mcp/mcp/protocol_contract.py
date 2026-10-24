@@ -11,6 +11,7 @@ from typing import Any, Final, NotRequired, TypedDict, cast
 from pydantic import BaseModel, ValidationError
 
 from cadrumo.application.corpus_search.errors import CorpusSearchError
+from cadrumo.application.dependency_contracts import DependencyItemKind
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationResultProjectionRefusalV1,
@@ -48,7 +49,7 @@ class _FieldSchema(TypedDict):
     maxLength: NotRequired[int]
     pattern: NotRequired[str]
     format: NotRequired[str]
-    items: NotRequired[dict[str, str]]
+    items: NotRequired[dict[str, object]]
 
 
 class _ToolSchema(TypedDict):
@@ -75,6 +76,10 @@ def _observation_arguments_schema() -> _ToolSchema:
 
 
 _TEXT: _FieldSchema = {"type": "string"}
+_SETUP_ITEMS: _FieldSchema = {
+    "type": "array",
+    "items": {"type": "string", "enum": [kind.value for kind in DependencyItemKind]},
+}
 _DOC: _FieldSchema = {"type": "object"}
 _FLAG: _FieldSchema = {"type": "boolean"}
 SEARCH_PAGE_DEFAULT = 10
@@ -393,7 +398,12 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "recorded about why, which is the registered error code, the message key, the context and any "
         "precondition verdict the command line prints; "
         "when that verdict names its recovery, recovery_action_id carries the action's identifier, for example "
-        "operator.provision.browser when the browser needs setting up. A succeeded result that names exactly "
+        "operator.provision.browser when the browser needs setting up. A succeeded result whose verdicts name a "
+        "recovery, such as an import that read some files and refused one for want of the local AI, or a batch "
+        "paused for it, carries recovery_action_ids, each action once. A setup action is named only while the "
+        "item's quick setup row can set it up; while it cannot, setup_held names the item, its state and the "
+        "row's sentence in the profile's language instead, and while the setup status cannot be read neither is "
+        "given. A succeeded result that names exactly "
         "one transaction or invoice carries record: its view, params with select, and link, the cadrumo://view "
         "link that opens that record for the person",
         _schema({"result": _DOC}),
@@ -437,6 +447,57 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         ),
         # Starting an operation lets it do whatever execute could have started.
         _acts("Control an operation", destructive=True, open_world=True),
+    ),
+    (
+        "setup_status",
+        "Read whether what Cadrumo needs on this computer is set up: the browser for the tax agency website "
+        "(item browser) and the local AI (item local_ai). Each row carries the item's state (ready, absent, "
+        "stale, failed, blocked, unknown and so on), the reason its state names, recovery, the one action its "
+        "row offers, and recovery_action_id, operator.provision.browser or operator.provision.local_ai when "
+        "setup can act; words carries the item's name, the row's sentence and the action's label in the "
+        "profile's language. setup_complete says whether everything is set up. The default quick check reads "
+        "this computer only and answers within seconds; full=true also checks the network and exercises each "
+        "item, one browser launch and one generated word for each local AI model, which can take minutes, and "
+        "sends progress notifications when the call carries a progressToken. items narrows to the named items. "
+        "Nothing is downloaded or changed. Where this build has no component engine every item reads blocked "
+        "with blocked_reason not_in_this_build",
+        _schema({}, {"full": _FLAG, "items": _SETUP_ITEMS}),
+        # A full check reaches the download hosts; no call changes anything.
+        ToolHints(title="Check setup", read_only=True, destructive=False, idempotent=True, open_world=True),
+    ),
+    (
+        "setup_plan",
+        "Read the plan that setting up the named items, by default every item whose row offers setup, asks the "
+        "person to approve: each entry's download size in bytes, the hosts it comes from, where it is stored, "
+        "whether it installs a program, its parts (the local AI's program and each role's model with its "
+        "licence), the free space it needs, and notices, the licence notices to show in the profile's "
+        "language. plan_digest identifies exactly this plan. Show the plan and its notices to the person and "
+        "set up only once they approved it, by calling setup with that plan_digest. Outcome nothing_to_do "
+        "means nothing can be set up now, and the rows say why. Nothing is downloaded or changed",
+        _schema({}, {"items": _SETUP_ITEMS}),
+        _reads("Plan a setup"),
+    ),
+    (
+        "setup",
+        "Set up the named items, by default every item whose row offers setup, exactly as the plan the person "
+        "approved: plan_digest is the digest setup_plan returned, and nothing is set up without it. The plan is "
+        "computed again first; if it changed, outcome plan_changed carries the new plan and its plan_digest, "
+        "nothing moved, and the person approves the new plan before you call again. An offline computer, an "
+        "unreachable or blocking network, or too little free space is refused before anything moves, with "
+        "failure_category and failure, the sentence in the profile's language. The call returns when the setup "
+        "ends, which for the local AI can take many minutes; it sends progress notifications when the call "
+        "carries a progressToken, and progress carries each item's last figure in bytes. Cancelling the request "
+        "stops the setup at its next download chunk. A setup that was interrupted reads failed interrupted and "
+        "resumes when set up again: under an unchanged plan_digest the person's earlier approval still holds. "
+        "If the item is already being set up by another process, the call follows that setup instead: nothing is "
+        "asked, its progress is relayed the same way, the reply is that setup's result and followed names the item "
+        "and the plan_digest that setup runs under; cancelling the request then stops only the following, which "
+        "ends busy, and the other setup goes on. "
+        "Outcomes: completed, nothing_to_do, plan_changed, busy (another setup is changing the item, or this call "
+        "stopped following it), refused, failed and cancelled; rows carry every item's row after the setup",
+        _schema({"plan_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}, {"items": _SETUP_ITEMS}),
+        # It downloads from the declared hosts and replaces a superseded build once the new one checks.
+        _acts("Set up components", destructive=True, open_world=True),
     ),
 )
 MCP_TOOL_CATALOGUE = tuple((name, description, schema) for name, description, schema, _hints in _DECLARED_TOOLS)

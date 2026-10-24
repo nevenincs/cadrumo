@@ -7177,6 +7177,7 @@ tui:
       item: Component
       state: State
     complete: Cadrumo is set up.
+    following: '%{name}: following a setup that is already running…'
     hardware_limited: This computer does not have enough memory for the local AI.
     hint: Enter runs the action of the selected row. Setting up shows the plan and
       asks before anything is downloaded.
@@ -7184,10 +7185,10 @@ tui:
     intro: 'What Cadrumo needs on this computer: the browser for the tax agency website
       and the local AI. Choose a row to run its action.'
     outcome:
+      busy: Another setup is changing this right now. Try again when it has finished.
       cancelled: You cancelled the setup.
       completed: Setup finished.
-      interrupted: Setup was interrupted before it finished. Choose Resume to continue.
-      not_enough_space: There is not enough free disk space, so nothing was downloaded.
+      follow_stopped: You stopped following the other setup. It carries on by itself.
       nothing_to_do: Everything is already set up.
       plan_changed: The plan changed after you approved it, so nothing was downloaded.
         Start again to see the new plan.
@@ -7204,13 +7205,28 @@ tui:
       total: 'Total download: %{size}.'
       total_unknown: 'Total download: at least %{size}. Some sizes are only known
         once the download starts.'
+    progress: '%{name}: %{step}'
+    progress_bytes: '%{name}: downloading %{done} of %{total} (%{percent}%)'
+    review:
+      decline: Not now
+      title: Set this up?
     set_up_all: Set up everything
     size:
       gigabytes: '%{value} GB'
       megabytes: '%{value} MB'
+    step:
+      cleanup: tidying up
+      download: downloading
+      install: installing
+      plan: planning
+      preflight: checking the connection
+      verify: checking that it works
+    stop: Stop
+    stopping: Stopping the setup…
     title: Components
-    unavailable: Cadrumo's background service could not be reached, so components
-      cannot be checked or set up right now.
+    unavailable: Cadrumo could not start its component engine, so components cannot
+      be checked or set up right now.
+    waiting_for_program: '%{name}: waiting for the program to start'
     working: Preparing the plan…
 workspace:
   declarations:

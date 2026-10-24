@@ -1,182 +1,282 @@
-"""The setup screen renders the registry's rows, runs each row's one action, and reports an unreachable runtime.
+"""The setup screen reads the component engine's rows, sets items up under the person's approval of their plan.
 
-The screen runs headless under Textual's test pilot. Its door is a recording
-stand-in that answers with rows derived by the real registry, so what is
-checked is the screen's own decisions: which rows and sentences it shows,
-which action a row's button runs, and that an unreachable runtime is
-reported as unavailable rather than acted around.
+The screen runs headless under Textual's test pilot with its real door and the
+real components client. Only the role's process is replaced: each start
+replays a conversation the real role recorded (:mod:`.role_replay`), so the
+client decodes real lines and the test reads what the screen sent back. What is
+checked is the screen's own part: the rows and sentences it shows, the plan it
+words, the answer it sends for exactly the reviewed digest, the progress and
+stop it offers, and that an engine that cannot be started is reported rather
+than acted around.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from typing import Any, override
 
 import pytest
 from textual.pilot import Pilot
-from textual.widgets import Button, DataTable
+from textual.widgets import Button, DataTable, Static
 
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.contracts.operation_ids import DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID
+from cadrumo.tests.components_role_dispatch import RoleReplay
+from cadrumo.tests.components_role_replay import transcript_lines
 
-from .....application.dependency_contracts import (
-    DependencyCheckMode,
-    DependencyPlanPart,
-    DependencyProbeOutcome,
-    DependencyProbeReading,
-    DependencyStatusRow,
-    combine_plan_parts,
+from .....adapters.outbound.components.protocol import (
+    CANCEL_LINE,
+    ComponentsApprove,
+    ComponentsDecline,
+    ComponentsReviewLine,
+    answer_line,
+    decode_components_line,
 )
-from .....application.dependency_registry import (
-    build_setup_plan,
-    dependency_item_declarations,
-    derive_dependency_row,
-    is_setup_complete,
-)
-from .....application.dependency_setup_operation import (
-    DEPENDENCIES_OPERATION_SUBJECT,
-    DependencyPlanEntryViewV1,
-    DependencyPlanPartViewV1,
-    DependencySetupResultV1,
-    DependencySetupReviewV2,
-    DependencyStatusResultV1,
-)
+from .....adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
+from .....application.dependency_contracts import DependencyBlockedReason, DependencyItemKind, DependencyState
+from .....application.dependency_registry import dependency_item_declarations
 from .....application.dependency_wording import dependency_row_wording
-from .....application.operations.frontend_projection import OperationPublicProjectionV1
-from .....application.operations.models import OperationIdentity
 from .....core.config import override_settings
+from .....core.model_catalogue import ModelSelectionAdvisory
 from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_path
+from ...components.dialogs import ConfirmScreen
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
-from ...operations.controller_port import OperationControllerPort
 from ...tests.settling import settle, settle_until
+from ..door import ComponentsSetupDoor
 from ..focus import setup_item_focus, setup_item_target
 from ..screen import SetupScreen, setup_review_text
+from .role_replay import role_replay_fixture
+
+__all__ = ["role_replay_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _SIZE = (120, 40)
+_BROWSER = "Browser for the tax agency website"
+type _Replay = Callable[..., RoleReplay]
 
 
-def _rows(*, absent: frozenset[str]) -> tuple[DependencyStatusRow, ...]:
-    return tuple(
-        derive_dependency_row(
-            declaration,
-            DependencyProbeReading(
-                item_id=declaration.item_id,
-                mode=DependencyCheckMode.QUICK,
-                outcome=DependencyProbeOutcome.ABSENT
-                if declaration.item_id in absent
-                else DependencyProbeOutcome.PRESENT,
-            ),
-        )
-        for declaration in dependency_item_declarations()
-    )
+def _review(name: str) -> ComponentsReviewLine:
+    line = next(decode_components_line(raw) for raw in transcript_lines(name) if b'"type":"review"' in raw)
+    assert isinstance(line, ComponentsReviewLine)
+    return line
 
 
-def _status(rows: tuple[DependencyStatusRow, ...]) -> DependencyStatusResultV1:
-    return DependencyStatusResultV1(
-        mode=DependencyCheckMode.QUICK, rows=rows, complete=is_setup_complete(rows), hardware_limited=False
-    )
-
-
-@dataclass
-class _Door:
-    """Answers with registry rows and records each request; ``unreachable`` stands for a lost runtime."""
-
-    absent: set[str]
-    unreachable: bool = False
-    calls: list[tuple[str, object]] = field(default_factory=list)
-
-    def _answer(self) -> DependencyStatusResultV1:
-        if self.unreachable:
-            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-        return _status(_rows(absent=frozenset(self.absent)))
-
-    async def read_status(self, mode: DependencyCheckMode) -> DependencyStatusResultV1:
-        self.calls.append(("status", mode))
-        return self._answer()
-
-    async def verify(self, item_ids: tuple[str, ...] | None) -> DependencyStatusResultV1:
-        self.calls.append(("verify", item_ids))
-        return self._answer()
-
-    async def start_setup(self, item_ids: tuple[str, ...] | None) -> OperationControllerPort:
-        self.calls.append(("setup", item_ids))
-        raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-
-    async def setup_result(
-        self, controller: OperationControllerPort, projection: OperationPublicProjectionV1
-    ) -> DependencySetupResultV1:
-        raise AssertionError("no setup settles in these tests")
-
-
-async def _settled(pilot: Pilot[object], screen: SetupScreen) -> None:
+async def _settled(pilot: Pilot[Any], screen: SetupScreen) -> None:
     await settle_until(
         pilot, lambda: not screen.query_one("#btn-setup-check", Button).disabled, "the setup check to be offered again"
     )
 
 
+async def _dialog(pilot: Pilot[Any], app: _Host) -> ConfirmScreen:
+    # The setup waits for the answer on the role's thread, so its worker is held on purpose.
+    await settle_until(
+        pilot, lambda: isinstance(app.screen, ConfirmScreen), "the plan to be shown for approval", workers=False
+    )
+    assert isinstance(app.screen, ConfirmScreen)
+    return app.screen
+
+
+class _Host(ScreenHostApp[None]):
+    """Hosts the screen and keeps every notice it shows the person."""
+
+    def __init__(self, screen: SetupScreen) -> None:
+        super().__init__(screen)
+        self.notices: list[str] = []
+
+    @override
+    def notify(self, message: str, **kwargs: Any) -> None:
+        self.notices.append(message)
+        super().notify(message, **kwargs)
+
+
+def _notices(app: _Host) -> list[str]:
+    return app.notices
+
+
 @pytest.mark.asyncio
-async def test_the_screen_shows_every_registry_row_with_its_plain_sentence_and_action() -> None:
-    door = _Door(absent={"browser", "local_ai"})
-    screen = SetupScreen(door)
+async def test_the_screen_shows_every_row_the_role_reports_with_its_plain_sentence_and_action(
+    role_replay: _Replay,
+) -> None:
+    replay = role_replay(status=["status_quick"])
+    screen = SetupScreen(ComponentsSetupDoor())
     with override_settings(cadrumo_output_language="en"):
-        app = ScreenHostApp(screen)
-        async with app.run_test(size=_SIZE) as pilot:
+        async with ScreenHostApp(screen).run_test(size=_SIZE) as pilot:
             await _settled(pilot, screen)
             table = screen.query_one("#setup-items", DataTable)
             shown = [tuple(str(cell) for cell in table.get_row_at(index)) for index in range(table.row_count)]
-            set_up_all = screen.query_one("#btn-setup-all", Button)
 
-            assert [row.item_id for row in screen.rows] == [d.item_id for d in dependency_item_declarations()]
+            assert [row.item_id for row in screen.rows] == ["browser", "local_ai"]
+            assert {row.state for row in screen.rows} == {DependencyState.ABSENT}
             for row, cells in zip(screen.rows, shown, strict=True):
                 declaration = next(d for d in dependency_item_declarations() if d.item_id == row.item_id)
                 wording = dependency_row_wording(row, declaration)
-                assert cells[1] == wording.sentence
-                assert cells[2] == (wording.action or "")
+                assert cells == (wording.name, wording.sentence, wording.action or "")
+            assert shown[0] == (_BROWSER, "Not set up yet.", "Set up")
             assert screen.status_text == "Some components are not ready yet."
-            assert set_up_all.disabled is False
-            assert door.calls == [("status", DependencyCheckMode.QUICK)]
+            assert screen.query_one("#btn-setup-all", Button).disabled is False
+            assert screen.query_one("#btn-setup-stop", Button).display is False
+    assert replay.commands() == [("status",)]
 
 
 @pytest.mark.asyncio
-async def test_the_rows_are_software_only_and_the_local_ai_is_one_row() -> None:
-    door = _Door(absent={"local_ai"})
-    screen = SetupScreen(door)
+async def test_the_rows_are_software_only_and_the_local_ai_is_one_row(role_replay: _Replay) -> None:
+    replay = role_replay(status=["status_quick"])
+    screen = SetupScreen(ComponentsSetupDoor())
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp(screen).run_test(size=_SIZE) as pilot:
             await _settled(pilot, screen)
             table = screen.query_one("#setup-items", DataTable)
             names = [str(table.get_row_at(index)[0]) for index in range(table.row_count)]
 
-            assert names == ["Browser for the tax agency website", "Local AI"]
-            assert all("Google" not in name for name in names)
+            assert names == [_BROWSER, "Local AI"]
             screen.act_on("google")
             await settle(pilot)
-            assert [name for name, _ in door.calls] == ["status"]
+    assert replay.commands() == [("status",)]
 
 
 @pytest.mark.asyncio
-async def test_an_absent_item_row_starts_setup_for_that_item_only() -> None:
-    door = _Door(absent={"browser"})
-    screen = SetupScreen(door)
+async def test_setting_up_shows_the_plan_and_approves_exactly_the_reviewed_digest(role_replay: _Replay) -> None:
+    replay = role_replay(status=["status_quick"], setup=["setup_browser_completed"])
+    reviewed = _review("setup_browser_completed")
+    screen = SetupScreen(ComponentsSetupDoor())
     with override_settings(cadrumo_output_language="en"):
-        async with ScreenHostApp(screen).run_test(size=_SIZE) as pilot:
+        app = _Host(screen)
+        async with app.run_test(size=_SIZE) as pilot:
             await _settled(pilot, screen)
             screen.act_on("browser")
-            await settle(pilot)
+            dialog = await _dialog(pilot, app)
+            shown = str(dialog.query_one("#confirm-message", Static).render())
+            plan_text = setup_review_text(reviewed.plan)
+            assert shown == plan_text
+            assert plan_text.splitlines()[:3] == [
+                "Cadrumo will set up:",
+                f"{_BROWSER}: 317 MB from cdn.playwright.dev, playwright.download.prss.microsoft.com, "
+                "storage.googleapis.com",
+                f"  Stored in {storage_path(StorageCategory.PLAYWRIGHT_BROWSERS)}",
+            ]
+            await pilot.click("#btn-confirm-accept")
+            await settle_until(pilot, lambda: "Setup finished." in _notices(app), "the setup to settle")
             await _settled(pilot, screen)
 
-            assert ("setup", ("browser",)) in door.calls
-            assert "background service could not be reached" in screen.status_text
+    setup = replay.launches[1]
+    assert replay.commands() == [("status",), ("setup", "--item", "browser"), ("status",)]
+    assert setup.written == answer_line(ComponentsApprove(plan_digest=reviewed.plan_digest))
 
 
 @pytest.mark.asyncio
-async def test_a_screen_opened_on_an_item_selects_its_row_so_enter_sets_up_that_item() -> None:
-    door = _Door(absent={"browser", "local_ai"})
-    screen = SetupScreen(door, focus_item="local_ai")
+async def test_declining_the_plan_sends_the_decline_and_nothing_is_downloaded(role_replay: _Replay) -> None:
+    replay = role_replay(status=["status_quick"], setup=["setup_declined"])
+    screen = SetupScreen(ComponentsSetupDoor())
     with override_settings(cadrumo_output_language="en"):
-        async with ScreenHostApp(screen).run_test(size=_SIZE) as pilot:
+        app = _Host(screen)
+        async with app.run_test(size=_SIZE) as pilot:
+            await _settled(pilot, screen)
+            screen.start_setup((DependencyItemKind.BROWSER,))
+            await _dialog(pilot, app)
+            await pilot.click("#btn-confirm-cancel")
+            await settle_until(pilot, lambda: "Nothing was downloaded." in _notices(app), "the decline to settle")
+
+    assert replay.launches[1].written == answer_line(ComponentsDecline())
+
+
+@pytest.mark.asyncio
+async def test_a_running_setup_shows_its_progress_and_stop_asks_the_role_to_stop(role_replay: _Replay) -> None:
+    # The recorded setup stops writing after its first two byte figures, as a slow download would.
+    replay = role_replay(
+        status=["status_quick"], setup=["setup_browser_completed"], stall_after={"setup_browser_completed": 7}
+    )
+    reviewed = _review("setup_browser_completed")
+    screen = SetupScreen(ComponentsSetupDoor())
+    with override_settings(cadrumo_output_language="en"):
+        app = _Host(screen)
+        async with app.run_test(size=_SIZE) as pilot:
+            await _settled(pilot, screen)
+            screen.start_setup(())
+            await _dialog(pilot, app)
+            await pilot.click("#btn-confirm-accept")
+            await settle_until(
+                pilot, lambda: "downloading" in screen.status_text, "the download's progress", workers=False
+            )
+
+            assert screen.status_text == f"{_BROWSER}: downloading 3 MB of 317 MB (1%)"
+            stop = screen.query_one("#btn-setup-stop", Button)
+            setup = replay.launches[1]
+            assert stop.display is True
+            assert screen.query_one("#btn-setup-all", Button).disabled is True
+            await pilot.click("#btn-setup-stop")
+            await settle_until(pilot, lambda: CANCEL_LINE in setup.written, "the stop to reach the role", workers=False)
+            assert setup.written == answer_line(ComponentsApprove(plan_digest=reviewed.plan_digest)) + CANCEL_LINE
+            assert screen.status_text == "Stopping the setup…"
+
+            # The role goes away without its result: the screen says the engine is unavailable.
+            setup.end()
+            await _settled(pilot, screen)
+            assert screen.status_text.startswith("Cadrumo could not start its component engine")
+            assert stop.display is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("written_lines", "shown"),
+    [
+        (2, f"{_BROWSER}: following a setup that is already running…"),
+        (4, f"{_BROWSER}: downloading 1 MB of 317 MB (0%)"),
+    ],
+)
+async def test_a_setup_already_running_elsewhere_is_followed_without_a_dialog(
+    role_replay: _Replay, written_lines: int, shown: str
+) -> None:
+    # The recorded follower stops writing early, while the setup it follows goes on elsewhere.
+    replay = role_replay(
+        status=["status_quick"],
+        setup=["setup_followed_completed"],
+        stall_after={"setup_followed_completed": written_lines},
+    )
+    screen = SetupScreen(ComponentsSetupDoor())
+    with override_settings(cadrumo_output_language="en"):
+        app = _Host(screen)
+        async with app.run_test(size=_SIZE) as pilot:
+            await _settled(pilot, screen)
+            screen.start_setup((DependencyItemKind.BROWSER,))
+            await settle_until(pilot, lambda: screen.status_text == shown, "the followed setup shown", workers=False)
+            assert not isinstance(app.screen, ConfirmScreen)
+            assert screen.query_one("#btn-setup-stop", Button).display is True
+            follower = replay.launches[1]
+            # The follower is sent no review and answers none.
+            assert follower.written == b""
+            follower.end()
+            await _settled(pilot, screen)
+
+
+@pytest.mark.asyncio
+async def test_a_followed_setup_reports_its_result_and_a_stopped_following_says_it_carries_on(
+    role_replay: _Replay,
+) -> None:
+    role_replay(status=["status_quick"], setup=["setup_followed_completed", "setup_follow_stopped"])
+    screen = SetupScreen(ComponentsSetupDoor())
+    with override_settings(cadrumo_output_language="en"):
+        app = _Host(screen)
+        async with app.run_test(size=_SIZE) as pilot:
+            await _settled(pilot, screen)
+            screen.start_setup((DependencyItemKind.BROWSER,))
+            await settle_until(pilot, lambda: "Setup finished." in _notices(app), "the followed setup to finish")
+            await _settled(pilot, screen)
+            screen.start_setup((DependencyItemKind.BROWSER,))
+            stopped = "You stopped following the other setup. It carries on by itself."
+            await settle_until(pilot, lambda: stopped in _notices(app), "the following to stop")
+            dialogs = [shown for shown in app.screen_stack if isinstance(shown, ConfirmScreen)]
+
+    assert dialogs == []
+
+
+@pytest.mark.asyncio
+async def test_a_screen_opened_on_an_item_selects_its_row_so_enter_sets_up_that_item(role_replay: _Replay) -> None:
+    replay = role_replay(status=["status_quick"], setup=["setup_local_ai_refused_host_unreachable"])
+    screen = SetupScreen(ComponentsSetupDoor(), focus_item="local_ai")
+    with override_settings(cadrumo_output_language="en"):
+        app = _Host(screen)
+        async with app.run_test(size=_SIZE) as pilot:
             await _settled(pilot, screen)
             table = screen.query_one("#setup-items", DataTable)
 
@@ -184,83 +284,103 @@ async def test_a_screen_opened_on_an_item_selects_its_row_so_enter_sets_up_that_
             assert screen.focused is table
 
             await pilot.press("enter")
-            await settle(pilot)
-            await _settled(pilot, screen)
-            assert ("setup", ("local_ai",)) in door.calls
-            assert ("setup", ("browser",)) not in door.calls
+            expected = "Local AI: The download server could not be reached."
+            await settle_until(pilot, lambda: expected in _notices(app), "the refused setup to settle")
+            # Refused before any review: nothing was asked and nothing was answered.
+            assert not isinstance(app.screen, ConfirmScreen)
+
+    assert replay.commands()[1] == ("setup", "--item", "local_ai")
+    assert replay.launches[1].written == b""
 
 
 @pytest.mark.asyncio
-async def test_an_unreachable_runtime_is_reported_and_nothing_is_set_up() -> None:
-    door = _Door(absent={"browser"}, unreachable=True)
-    screen = SetupScreen(door)
+async def test_a_resume_under_an_approved_digest_asks_again_only_when_the_plan_changed(role_replay: _Replay) -> None:
+    replay = role_replay(status=["status_quick"], setup=["setup_plan_changed", "setup_browser_completed"])
+    approved = "0" * 64
+    reviewed = _review("setup_browser_completed")
+    screen = SetupScreen(ComponentsSetupDoor())
+    with override_settings(cadrumo_output_language="en"):
+        app = _Host(screen)
+        async with app.run_test(size=_SIZE) as pilot:
+            await _settled(pilot, screen)
+            screen.start_setup((DependencyItemKind.BROWSER,), approved=approved)
+            await _dialog(pilot, app)
+            await pilot.click("#btn-confirm-accept")
+            await settle_until(pilot, lambda: "Setup finished." in _notices(app), "the setup to settle")
+
+    assert replay.commands()[1:3] == [
+        ("setup", "--item", "browser", "--approve", approved),
+        ("setup", "--item", "browser"),
+    ]
+    assert replay.launches[1].written == b""
+    assert replay.launches[2].written == answer_line(ComponentsApprove(plan_digest=reviewed.plan_digest))
+
+
+@pytest.mark.asyncio
+async def test_an_engine_that_cannot_be_started_is_reported_and_nothing_is_set_up(role_replay: _Replay) -> None:
+    role_replay(unstartable=True)
+    screen = SetupScreen(ComponentsSetupDoor())
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp(screen).run_test(size=_SIZE) as pilot:
             await _settled(pilot, screen)
 
-            assert screen.status_text.startswith("Cadrumo's background service could not be reached")
+            assert screen.status_text == (
+                "Cadrumo could not start its component engine, so components cannot be checked or set up right now."
+            )
             assert screen.rows == ()
             assert screen.query_one("#btn-setup-all", Button).disabled is True
-            assert [name for name, _ in door.calls] == ["status"]
 
 
-def test_the_review_words_the_plan_and_shows_a_licence_notice_before_approval() -> None:
-    parts = (
-        DependencyPlanPart(
-            part_id="program",
-            download_bytes=None,
-            source_hosts=("github.com",),
-            destination=None,
-            installs_outside_program=True,
-        ),
-        DependencyPlanPart(
-            part_id="text_extraction",
-            download_bytes=3 * 1024**3,
-            source_hosts=("registry.example.org",),
-            destination=StorageCategory.OLLAMA_MODELS,
-            target_version="example-model:7b",
-        ),
+@pytest.mark.asyncio
+async def test_a_build_without_the_engine_reads_every_item_as_not_in_this_build(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(DEVELOPMENT_ROLE_IMAGE_VARIABLE, raising=False)
+    screen = SetupScreen(ComponentsSetupDoor())
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp(screen).run_test(size=_SIZE) as pilot:
+            await _settled(pilot, screen)
+            table = screen.query_one("#setup-items", DataTable)
+            sentences = [str(table.get_row_at(index)[1]) for index in range(table.row_count)]
+            set_up_all = screen.query_one("#btn-setup-all", Button).disabled
+
+    assert [row.blocked_reason for row in screen.rows] == [DependencyBlockedReason.NOT_IN_THIS_BUILD] * 2
+    assert sentences == ["This version of Cadrumo does not include this."] * 2
+    assert set_up_all is True
+
+
+def test_the_review_words_every_part_and_a_licence_notice_before_approval() -> None:
+    plan = _review("setup_browser_completed").plan
+    local_ai = next(
+        decode_components_line(raw) for raw in transcript_lines("plan_every_item") if b'"type":"result"' in raw
     )
-    entry = combine_plan_parts("local_ai", parts, destination=StorageCategory.OLLAMA_MODELS)
-    plan = build_setup_plan([entry], free_bytes=100 * 1024**3)
-    part_views = (
-        DependencyPlanPartViewV1(part_id="program", name="The program that runs the models", download_bytes=None),
-        DependencyPlanPartViewV1(part_id="text_extraction", name="Model for document text", download_bytes=3 * 1024**3),
-    )
-    notice = "This model's licence does not permit commercial use."
-    review = DependencySetupReviewV2(
-        identity=OperationIdentity(
-            operation_id="d" * 64,
-            definition_id=DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID,
-            subject_ref=DEPENDENCIES_OPERATION_SUBJECT,
-        ),
-        revision=1,
-        plan_digest="e" * 64,
-        entries=(
-            DependencyPlanEntryViewV1(
-                entry=entry, destination_path="/storage/models", licence_notice=notice, parts=part_views
-            ),
-        ),
-        known_download_bytes=plan.known_download_bytes,
-        has_unknown_size=plan.has_unknown_size,
-        installs_outside_program=plan.installs_outside_program,
-        space=plan.space,
-        space_sufficient=True,
-        reviewed_proposal_digest="f" * 64,
+    every = getattr(local_ai, "plan", None)
+    assert every is not None
+    entry = every.entries[1]
+    barred = entry.parts[1].model_copy(update={"advisories": (ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED,)})
+    restricted = every.model_copy(
+        update={"entries": (entry.model_copy(update={"parts": (entry.parts[0], barred, *entry.parts[2:])}),)}
     )
 
     with override_settings(cadrumo_output_language="en"):
-        text = setup_review_text(review)
+        browser = setup_review_text(plan)
+        text = setup_review_text(restricted)
 
+    assert browser.splitlines()[-1] == "Total download: 317 MB."
     assert text.splitlines() == [
         "Cadrumo will set up:",
-        "Local AI: 3.0 GB from github.com, registry.example.org",
-        "    The program that runs the models: size not known yet",
-        "    Model for document text: 3.0 GB",
-        "  Stored in /storage/models",
-        "  This installs a program on this computer. Its installer may ask for your permission.",
-        f"  {notice}",
-        "Total download: at least 3.0 GB. Some sizes are only known once the download starts.",
+        "Local AI: 4.5 GB from github.com, release-assets.githubusercontent.com, registry.ollama.ai",
+        "    The program that runs the models: 1.5 GB",
+        "    Model for scanned pages: 1.8 GB",
+        "    Model for document text: 1.3 GB",
+        "    Model for table columns: 1.3 GB",
+        "  Uses the same download as Model for document text.",
+        "    Model for the kind of sale or purchase: 1.3 GB",
+        "  Uses the same download as Model for document text.",
+        f"  Stored in {storage_path(StorageCategory.OLLAMA_MODELS)}",
+        "  Model qwen3-vl:2b is covered by the Apache License 2.0, which does not permit commercial use. Using it "
+        "in a commercial filing practice needs a separate licence from its publisher.",
+        "Total download: 4.8 GB.",
     ]
 
 

@@ -15,6 +15,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from cadrumo.application.operations.frontend_requests import (
@@ -50,8 +51,13 @@ _READ_ONLY = {
     "result",
     "result_page",
     "review",
+    "setup_status",
+    "setup_plan",
 }
-"""The tools that cannot change a record or reach the network, written here apart from the catalogue."""
+"""The tools that cannot change a record or a file, written here apart from the catalogue."""
+
+_READS_THE_NETWORK = {"setup_status"}
+"""The read-only tools some call of which reaches another host: a full setup check reaches the download hosts."""
 
 _READING_EXCHANGES = (OperationObserve, OperationReview)
 """The operation requests that only read; every other one submits, starts, resumes or manages."""
@@ -139,6 +145,9 @@ def _read_only_calls() -> dict[str, dict[str, object]]:
         },
         "review": {"review": review.model_dump(mode="json")},
         "views": {"query": "ledger"},
+        # Without a built binary the components role is not started: these read the session and language alone.
+        "setup_status": {},
+        "setup_plan": {},
     }
 
 
@@ -150,8 +159,11 @@ def test_every_tool_in_the_catalogue_declares_its_hints_and_the_read_only_set_is
     assert {name for name, hints in MCP_TOOL_HINTS.items() if hints.read_only} == _READ_ONLY
     for name, hints in MCP_TOOL_HINTS.items():
         if hints.read_only:
-            # A tool that only reads destroys nothing, reaches nothing and is harmless to repeat.
-            assert hints == ToolHints(hints.title, read_only=True, destructive=False, idempotent=True, open_world=False)
+            # A tool that only reads destroys nothing and is harmless to repeat; only a full setup check reaches out.
+            reaches = name in _READS_THE_NETWORK
+            assert hints == ToolHints(
+                hints.title, read_only=True, destructive=False, idempotent=True, open_world=reaches
+            )
         else:
             assert hints.idempotent is False, name
 
@@ -160,8 +172,9 @@ def test_the_hints_of_the_tools_that_act_state_the_widest_thing_each_can_do() ->
     reaching = {name for name, hints in MCP_TOOL_HINTS.items() if hints.open_world}
     additive = {name for name, hints in MCP_TOOL_HINTS.items() if not hints.read_only and not hints.destructive}
 
-    # Only a tool that runs or releases a registered operation can reach another host.
-    assert reaching == {"execute", "control", "respond"}
+    # Only a tool that runs or releases a registered operation, or sets up or fully checks a component, can
+    # reach another host.
+    assert reaching == {"execute", "control", "respond", "setup", "setup_status"}
     # Every tool that acts can overwrite or delete: none only adds, now that no tool admits a session.
     assert additive == set()
 
@@ -190,7 +203,8 @@ async def test_the_server_advertises_each_tools_hints_as_the_protocols_annotatio
 
 
 @pytest.mark.anyio
-async def test_a_tool_marked_read_only_sends_the_runtime_nothing_but_reads() -> None:
+async def test_a_tool_marked_read_only_sends_the_runtime_nothing_but_reads(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv(DEVELOPMENT_ROLE_IMAGE_VARIABLE, raising=False)
     calls = _read_only_calls()
     # The bundled reference tools are served with no session at all, so they have nothing to send.
     assert set(calls) == _READ_ONLY - {"authority", "corpus_search"}

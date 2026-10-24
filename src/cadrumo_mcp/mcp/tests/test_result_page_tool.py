@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import base64
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
+from types import SimpleNamespace
 from typing import NoReturn, cast, override
 from uuid import UUID, uuid4
 
 import pytest
 from pydantic import JsonValue
 
+from cadrumo.adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
 from cadrumo.application.operations.error_detail import (
@@ -40,6 +43,7 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
 )
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
+from cadrumo.application.operator_actions.projection import PreconditionVerdictSnapshot
 from cadrumo.application.provisioning_browser import browser_not_provisioned_verdict
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import (
@@ -48,6 +52,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.tests.components_role_dispatch import RoleReplay
 from cadrumo_client.contracts.operation_access import OperationObserve, OperationObserved
 from cadrumo_client.contracts.projection_pages import (
     PROJECTION_PAGE_BYTES,
@@ -60,7 +65,10 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
+from .components_role import role_replay_fixture
 from .session import connected_server_and_client_session
+
+__all__ = ["role_replay_fixture"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -563,7 +571,11 @@ async def test_the_result_of_a_stopped_operation_carries_what_it_recorded_about_
 
 
 @pytest.mark.anyio
-async def test_a_feature_stopped_for_a_missing_dependency_names_its_recovery_action() -> None:
+async def test_a_feature_stopped_for_a_missing_dependency_names_its_recovery_action(
+    role_replay: Callable[..., RoleReplay],
+) -> None:
+    # The browser's quick row, read through the components role, can set it up.
+    replay = role_replay(status=["status_quick"])
     # The refusal the browser item raises when no build is installed, as a live read records it.
     verdict = browser_not_provisioned_verdict({"chromium_installed": False})
     recorded = _DETAIL.model_copy(update={"precondition_verdict_json": verdict.model_dump_json()})
@@ -578,6 +590,109 @@ async def test_a_feature_stopped_for_a_missing_dependency_names_its_recovery_act
     assert stopped["code"] == "operation_not_successful"
     assert stopped["recovery_action_id"] == "operator.provision.browser"
     assert stopped["error_detail"] == recorded.model_dump(mode="json")
+    assert "setup_held" not in stopped
+    assert replay.commands() == [("status",)]
+
+
+class _LanguageClient(_StoppedClient):
+    """A stopped-operation lease whose profile names no language, so a held row is worded in the default one."""
+
+    def read_profile_view(self, page_kinds: tuple[object, ...]) -> SimpleNamespace:
+        del page_kinds
+        return SimpleNamespace(items=lambda _kind: (), record_revision=1, content_digest="0" * 64)
+
+
+_HELD_BROWSER = "Navegador para la web de la Agencia Tributaria: Esta versión de Cadrumo no lo incluye."
+
+
+@pytest.mark.anyio
+async def test_a_stopped_feature_whose_item_setup_cannot_act_names_the_rows_sentence_instead(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Without a built binary every item reads blocked as not in this build: no setup is offered for it.
+    monkeypatch.delenv(DEVELOPMENT_ROLE_IMAGE_VARIABLE, raising=False)
+    verdict = browser_not_provisioned_verdict({"chromium_installed": False})
+    recorded = _DETAIL.model_copy(update={"precondition_verdict_json": verdict.model_dump_json()})
+    profile_id = uuid4()
+    client = _LanguageClient(profile_id, _auth_registry(), detail="recorded", recorded=recorded)
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
+    try:
+        stopped = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
+    finally:
+        await adapter.close()
+    assert "recovery_action_id" not in stopped
+    assert stopped["setup_held"] == [
+        {
+            "recovery_action_id": "operator.provision.browser",
+            "item_id": "browser",
+            "state": "blocked",
+            "sentence": _HELD_BROWSER,
+        }
+    ]
+
+
+def _succeeded_with_refused_files() -> dict[str, JsonValue]:
+    """A succeeded import whose result refused two files for want of the browser and read a third."""
+    snapshot = PreconditionVerdictSnapshot.from_verdict(browser_not_provisioned_verdict({"chromium_installed": False}))
+    refused = {"precondition_verdict": cast(JsonValue, snapshot.model_dump(mode="json"))}
+    return {
+        "outcome": "success",
+        "projection": {
+            "imported_files": [{"name": "read.csv", "precondition_verdict": None}],
+            "refused_files": [{"name": "a.pdf", **refused}, {"name": "b.pdf", **refused}],
+        },
+    }
+
+
+@pytest.mark.anyio
+async def test_a_succeeded_result_lifts_the_recovery_its_verdicts_name_once(
+    role_replay: Callable[..., RoleReplay],
+) -> None:
+    replay = role_replay(status=["status_quick"])
+    profile_id = uuid4()
+    client = _ObservedClient(profile_id, _auth_registry())
+    client.document = _succeeded_with_refused_files()
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
+    try:
+        reply = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
+    finally:
+        await adapter.close()
+    assert reply["document"] == _succeeded_with_refused_files()
+    assert reply["recovery_action_ids"] == ["operator.provision.browser"]
+    assert "recovery_action_id" not in reply and "setup_held" not in reply
+    # Both refused files name the same item, whose row was read once.
+    assert replay.commands() == [("status",)]
+
+
+@pytest.mark.anyio
+async def test_a_succeeded_result_offers_nothing_while_the_setup_status_cannot_be_read(
+    role_replay: Callable[..., RoleReplay],
+) -> None:
+    role_replay(unstartable=True)
+    profile_id = uuid4()
+    client = _ObservedClient(profile_id, _auth_registry())
+    client.document = _succeeded_with_refused_files()
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
+    try:
+        reply = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
+    finally:
+        await adapter.close()
+    assert reply["outcome"] == "reply"
+    assert "recovery_action_ids" not in reply and "setup_held" not in reply
+
+
+@pytest.mark.anyio
+async def test_a_succeeded_result_without_verdicts_starts_no_role(role_replay: Callable[..., RoleReplay]) -> None:
+    replay = role_replay(status=["status_quick"])
+    profile_id = uuid4()
+    client = _ObservedClient(profile_id, _auth_registry())
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
+    try:
+        reply = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
+    finally:
+        await adapter.close()
+    assert reply["outcome"] == "reply" and "recovery_action_ids" not in reply
+    assert replay.launches == []
 
 
 @pytest.mark.anyio

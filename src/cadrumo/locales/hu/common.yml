@@ -7267,6 +7267,7 @@ tui:
       item: Összetevő
       state: Állapot
     complete: A Cadrumo elő van készítve.
+    following: '%{name}: egy már futó előkészítés követése…'
     hardware_limited: Ennek a számítógépnek nincs elég memóriája a helyi MI-hez.
     hint: Az Enter futtatja a kijelölt sor műveletét. Előkészítéskor megjelenik a
       terv, és a Cadrumo megkérdez, mielőtt bármit letöltene.
@@ -7274,12 +7275,10 @@ tui:
     intro: 'Amire a Cadrumónak szüksége van ezen a számítógépen: az adóhivatal webhelyéhez
       használt böngésző és a helyi MI. Válassz egy sort a műveletének futtatásához.'
     outcome:
+      busy: Egy másik előkészítés éppen ezt módosítja. Próbáld újra, ha befejeződött.
       cancelled: Megszakítottad az előkészítést.
       completed: Az előkészítés befejeződött.
-      interrupted: Az előkészítés befejezés előtt megszakadt. A folytatáshoz válaszd
-        a Folytatás lehetőséget.
-      not_enough_space: Nincs elég szabad hely a lemezen, ezért semmi sem töltődött
-        le.
+      follow_stopped: Abbahagytad a másik előkészítés követését. Az magától folytatódik.
       nothing_to_do: Már minden elő van készítve.
       plan_changed: A terv megváltozott, miután jóváhagytad, ezért semmi sem töltődött
         le. Kezdd újra az új terv megtekintéséhez.
@@ -7296,13 +7295,28 @@ tui:
       total: 'Teljes letöltés: %{size}.'
       total_unknown: 'Teljes letöltés: legalább %{size}. Néhány méret csak a letöltés
         kezdetekor derül ki.'
+    progress: '%{name}: %{step}'
+    progress_bytes: '%{name}: letöltés, %{done} / %{total} (%{percent}%)'
+    review:
+      decline: Most nem
+      title: Előkészíted?
     set_up_all: Mindent előkészít
     size:
       gigabytes: '%{value} GB'
       megabytes: '%{value} MB'
+    step:
+      cleanup: rendrakás
+      download: letöltés
+      install: telepítés
+      plan: tervezés
+      preflight: a kapcsolat ellenőrzése
+      verify: működés ellenőrzése
+    stop: Leállítás
+    stopping: Az előkészítés leállítása…
     title: Összetevők
-    unavailable: A Cadrumo háttérszolgáltatása nem érhető el, ezért az összetevők
+    unavailable: A Cadrumo nem tudta elindítani az összetevő-motorját, ezért az összetevők
       most nem ellenőrizhetők és nem készíthetők elő.
+    waiting_for_program: '%{name}: várakozás a program indulására'
     working: A terv készül…
 workspace:
   declarations:

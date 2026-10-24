@@ -16,6 +16,7 @@ opens the setup page on that item's row.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import NoReturn
@@ -25,6 +26,8 @@ from pydantic import BaseModel
 from textual.app import App
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
+
+from cadrumo.tests.components_role_dispatch import RoleReplay
 
 from .....adapters.outbound.aeat.browser.session import require_browser_ready
 from .....application.dependency_contracts import (
@@ -37,9 +40,7 @@ from .....application.dependency_contracts import (
 from .....application.dependency_registry import (
     dependency_item_declarations,
     derive_dependency_row,
-    is_setup_complete,
 )
-from .....application.dependency_setup_operation import DependencySetupResultV1, DependencyStatusResultV1
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
 from .....application.local_reader import probe_local_reader
 from .....application.modelo.operation_definitions import (
@@ -77,13 +78,17 @@ from ...navigation import (
     TuiScreenContextV1,
     build_destination_catalogue,
 )
+from ...setup.door import ComponentsSetupDoor
 from ...setup.focus import SetupItemRequested, setup_item_focus, setup_item_target
 from ...setup.screen import SetupScreen
+from ...setup.tests.role_replay import role_replay_fixture
 from ...tests.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from ...tests.settling import settle, settle_until
-from ..controller_port import OperationControllerPort, OperationResponseControlPort
+from ..controller_port import OperationResponseControlPort
 from ..modal import OperationModal, OperationModalSettledOutcomeV1
 from ..refusal_explanation import operation_error_explanation, recorded_setup_item
+
+__all__ = ["role_replay_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -393,40 +398,11 @@ async def test_a_session_that_reads_no_setup_status_closes_the_modal_at_once() -
     assert isinstance(host.outcome, OperationModalSettledOutcomeV1)
 
 
-class _SetupDoor:
-    """Answers every read with the real registry's rows, every item absent, and records each request."""
-
-    def __init__(self) -> None:
-        self.calls: list[tuple[str, object]] = []
-
-    async def read_status(self, mode: DependencyCheckMode) -> DependencyStatusResultV1:
-        self.calls.append(("status", mode))
-        rows = tuple(
-            derive_dependency_row(
-                declaration,
-                DependencyProbeReading(item_id=declaration.item_id, mode=mode, outcome=DependencyProbeOutcome.ABSENT),
-            )
-            for declaration in dependency_item_declarations()
-        )
-        return DependencyStatusResultV1(mode=mode, rows=rows, complete=is_setup_complete(rows), hardware_limited=False)
-
-    async def verify(self, item_ids: tuple[str, ...] | None) -> DependencyStatusResultV1:
-        raise AssertionError("opening the page on an item does not check it fully")
-
-    async def start_setup(self, item_ids: tuple[str, ...] | None) -> OperationControllerPort:
-        raise AssertionError("opening the page on an item does not set it up")
-
-    async def setup_result(
-        self, controller: OperationControllerPort, projection: OperationPublicProjectionV1
-    ) -> DependencySetupResultV1:
-        raise AssertionError("no setup runs")
-
-
 class _Page(Screen[None]):
     """A destination body the modal is opened over."""
 
 
-def _root_catalogue(door: _SetupDoor, contexts: list[TuiScreenContextV1]) -> TuiDestinationCatalogueV1:
+def _root_catalogue(door: ComponentsSetupDoor, contexts: list[TuiScreenContextV1]) -> TuiDestinationCatalogueV1:
     def page(context: TuiScreenContextV1) -> Screen[None]:
         return _Page()
 
@@ -446,8 +422,12 @@ def _root_catalogue(door: _SetupDoor, contexts: list[TuiScreenContextV1]) -> Tui
 
 
 @pytest.mark.asyncio
-async def test_the_root_opens_the_setup_page_on_the_item_the_refusal_needs() -> None:
-    door = _SetupDoor()
+async def test_the_root_opens_the_setup_page_on_the_item_the_refusal_needs(
+    role_replay: Callable[..., RoleReplay],
+) -> None:
+    # The root and the setup page read the components role's quick check, here a recorded one with every item absent.
+    replay = role_replay(status=["status_quick"])
+    door = ComponentsSetupDoor()
     contexts: list[TuiScreenContextV1] = []
     app = CadrumoTuiApp(
         destination_catalogue=_root_catalogue(door, contexts),
@@ -482,4 +462,4 @@ async def test_the_root_opens_the_setup_page_on_the_item_the_refusal_needs() -> 
             assert screen.focused is table
             assert len(app.screen_stack) == 2
             # The offer read the item's row first; the setup page then read every row.
-            assert door.calls == [("status", DependencyCheckMode.QUICK), ("status", DependencyCheckMode.QUICK)]
+            assert replay.commands() == [("status",), ("status",)]

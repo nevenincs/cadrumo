@@ -1,58 +1,110 @@
 """The setup screen: what Cadrumo needs on this computer, its state, and the one action each row offers.
 
-The rows are the setup registry's own rows, read through the runtime's
-``dependencies.status`` operation and worded by the shared setup wording, so
-this screen says what the command line and the desktop say. Setting
-something up submits ``dependencies.setup``; the runtime raises the plan for
-review and the operation modal shows it, worded here, with any model licence
-notice, before the person approves it. The rows are software only: the
-profile's Google sign-in is not a setup item and is not offered here.
+The rows are the native component engine's own rows, read through the
+components role and worded by the shared setup wording, so this screen says
+what the command line, MCP and the desktop say. Setting something up runs the
+role's setup: the role sends the plan, this screen shows it in a dialog with
+any model licence notice, and only the person's approval of exactly that plan
+lets anything move. While it runs the screen shows the role's progress and
+offers to stop it. A setup of an item another process is already setting up
+follows that one instead: no dialog, the other setup's progress, and its
+result; stopping it stops only the following. A Resume after an interruption
+that this screen approved runs under the same approval without a second
+dialog while the plan is unchanged. The rows are software only: the profile's
+Google sign-in is not a setup item and is not offered here.
 
-A runtime that cannot be reached is shown as unavailable; the screen never
-starts or recovers it.
+An engine that cannot be started or breaks its protocol is shown as
+unavailable; the screen never acts around it.
 """
 
 from __future__ import annotations
 
+import asyncio
+import math
+from collections.abc import Callable
+from concurrent.futures import Future
 from typing import ClassVar, Final, cast, override
 
-from pydantic import BaseModel, ValidationError
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.widgets import Button, DataTable, Static
 
 from cadrumo_client.contracts.contracts import RefusalError
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
+from ....adapters.outbound.components.client import ComponentsCancellation
+from ....adapters.outbound.components.protocol import (
+    ComponentsAnswer,
+    ComponentsApprove,
+    ComponentsDecline,
+    ComponentsEvent,
+    ComponentsNoticeCode,
+    ComponentsNoticeLine,
+    ComponentsOutcome,
+    ComponentsPhaseLine,
+    ComponentsPlan,
+    ComponentsPlanPart,
+    ComponentsProgressLine,
+    ComponentsResultLine,
+    ComponentsReviewLine,
+)
 from ....application.dependency_contracts import (
     DEPENDENCY_SETUP_RECOVERIES,
-    DependencyCheckMode,
+    DependencyBlockedReason,
     DependencyItemDeclaration,
+    DependencyItemKind,
     DependencyRecoveryAction,
+    DependencySetupStep,
+    DependencyState,
     DependencyStatusRow,
 )
 from ....application.dependency_registry import dependency_item_declarations
-from ....application.dependency_setup_operation import (
-    DependencySetupOutcome,
-    DependencySetupReviewV2,
-    DependencyStatusResultV1,
+from ....application.dependency_wording import (
+    dependency_failure_key,
+    dependency_licence_notice,
+    dependency_part_name,
+    dependency_retry_sentence,
+    dependency_row_wording,
+    dependency_space_sentence,
 )
-from ....application.dependency_wording import dependency_row_wording, dependency_space_sentence
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ..components.account_chrome import AccountChromeScreen
+from ..components.dialogs import ConfirmScreen
 from ..components.language import repaint_tables
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
-from ..operations.controller_port import OperationControllerPort
-from ..operations.modal import OperationModal, OperationModalOutcomeV1, OperationModalSettledOutcomeV1
 from .door import SetupDoorPort
 
-__all__ = ["SetupScreen", "setup_review_text"]
+__all__ = ["SetupScreen", "setup_outcome_text", "setup_review_text"]
 
 _MIB: Final = 1024**2
 _GIB: Final = 1024**3
+_ANSWER_POLL_S: Final = 0.2
+
+_STEP_KEYS: Final = {
+    DependencySetupStep.PLAN: "tui.setup.step.plan",
+    DependencySetupStep.PREFLIGHT: "tui.setup.step.preflight",
+    DependencySetupStep.DOWNLOAD: "tui.setup.step.download",
+    DependencySetupStep.INSTALL: "tui.setup.step.install",
+    DependencySetupStep.VERIFY: "tui.setup.step.verify",
+    DependencySetupStep.CLEANUP: "tui.setup.step.cleanup",
+}
+
+_OUTCOME_KEYS: Final = {
+    ComponentsOutcome.COMPLETED: "tui.setup.outcome.completed",
+    ComponentsOutcome.NOTHING_TO_DO: "tui.setup.outcome.nothing_to_do",
+    ComponentsOutcome.NEEDS_APPROVAL: "tui.setup.outcome.rejected",
+    ComponentsOutcome.PLAN_CHANGED: "tui.setup.outcome.plan_changed",
+    ComponentsOutcome.CANCELLED: "tui.setup.outcome.cancelled",
+    ComponentsOutcome.BUSY: "tui.setup.outcome.busy",
+}
+"""The summary of each setup outcome that names no failure; a refusal or failure says its category's sentence."""
+
+_UNREACHABLE: Final = (RefusalError, CadrumoError)
 
 
 def _declaration(item_id: str) -> DependencyItemDeclaration:
@@ -69,40 +121,129 @@ def _size(value: int) -> str:
     return tr("tui.setup.size.megabytes", value=f"{max(1, round(value / _MIB))}")
 
 
-def setup_review_text(projection: BaseModel) -> str:
-    """Word a setup plan for the person who approves it: what, how large, from where, where, and any licence notice."""
+def _space_sentence(plan: ComponentsPlan) -> str:
+    free = "?" if plan.space.free_bytes is None else _size(plan.space.free_bytes)
+    return dependency_space_sentence(required=_size(plan.space.required_bytes), free=free)
+
+
+def _destination(destination: str | None) -> str | None:
+    """Say where a plan stores what it downloads, for the destinations that are storage locations."""
+    if destination is None:
+        return None
     try:
-        review = DependencySetupReviewV2.model_validate_json(projection.model_dump_json())
-    except ValidationError:
-        return projection.model_dump_json()
+        category = StorageCategory(destination)
+    except ValueError:
+        return None
+    return tr("tui.setup.plan.destination", path=str(storage_path(category)))
+
+
+def _licence_notice(part: ComponentsPlanPart) -> str | None:
+    return dependency_licence_notice(
+        part_id=part.part_id,
+        target_version=part.target_version,
+        licence_name=None if part.licence is None else part.licence.name,
+        advisories=part.advisories,
+    )
+
+
+def setup_review_text(plan: ComponentsPlan) -> str:
+    """Word a setup plan for the person who approves it: what, how large, from where, where, and any licence notice."""
+    unknown = tr("tui.setup.plan.size_unknown")
     lines = [tr("tui.setup.plan.heading")]
-    for view in review.entries:
-        entry = view.entry
-        size = tr("tui.setup.plan.size_unknown") if entry.download_bytes is None else _size(entry.download_bytes)
+    for entry in plan.entries:
+        size = unknown if entry.download_bytes is None else _size(entry.download_bytes)
         lines.append(
             tr("tui.setup.plan.entry", name=_item_name(entry.item_id), size=size, hosts=", ".join(entry.source_hosts))
         )
-        for part in view.parts:
-            part_size = tr("tui.setup.plan.size_unknown") if part.download_bytes is None else _size(part.download_bytes)
-            lines.append(tr("tui.setup.plan.part", name=part.name, size=part_size))
-        if view.shares_download_with is not None:
-            lines.append(tr("tui.setup.plan.shared", name=_item_name(view.shares_download_with)))
-        if view.destination_path is not None:
-            lines.append(tr("tui.setup.plan.destination", path=view.destination_path))
+        first_by_download: dict[tuple[str, str], str] = {}
+        notices: list[str] = []
+        for part in entry.parts:
+            name = dependency_part_name(part.part_id)
+            part_size = unknown if part.download_bytes is None else _size(part.download_bytes)
+            lines.append(tr("tui.setup.plan.part", name=name, size=part_size))
+            if part.destination is not None and part.target_version is not None:
+                shared = first_by_download.setdefault((part.destination.value, part.target_version), name)
+                if shared != name:
+                    lines.append(tr("tui.setup.plan.shared", name=shared))
+            notice = _licence_notice(part)
+            if notice is not None and notice not in notices:
+                notices.append(notice)
+        destination = _destination(None if entry.destination is None else entry.destination.value)
+        if destination is not None:
+            lines.append(destination)
         if entry.installs_outside_program:
             lines.append(tr("tui.setup.plan.installs_program"))
-        if view.licence_notice is not None:
-            lines.append(f"  {view.licence_notice}")
-    total_key = "tui.setup.plan.total_unknown" if review.has_unknown_size else "tui.setup.plan.total"
-    lines.append(tr(total_key, size=_size(review.known_download_bytes)))
-    if not review.space_sufficient:
-        free = "?" if review.space.free_bytes is None else _size(review.space.free_bytes)
-        lines.append(dependency_space_sentence(required=_size(review.space.required_bytes), free=free))
+        lines.extend(f"  {notice}" for notice in notices)
+    total_key = "tui.setup.plan.total_unknown" if plan.has_unknown_size else "tui.setup.plan.total"
+    lines.append(tr(total_key, size=_size(plan.known_download_bytes)))
+    if not plan.space.sufficient:
+        lines.append(_space_sentence(plan))
     return "\n".join(lines)
 
 
+def _usable(rows: tuple[DependencyStatusRow, ...], items: tuple[DependencyItemKind, ...]) -> bool:
+    named = {item.value for item in items}
+    return all(
+        row.state in {DependencyState.READY, DependencyState.STALE} for row in rows if not named or row.item_id in named
+    )
+
+
+def setup_outcome_text(
+    result: ComponentsResultLine, items: tuple[DependencyItemKind, ...], *, followed: bool = False
+) -> str:
+    """Say how a setup ended: its outcome's sentence, or the item and sentence of its failure.
+
+    A setup that followed one already running ends ``busy`` when it stopped
+    following, while the followed setup carries on.
+    """
+    if followed and result.outcome is ComponentsOutcome.BUSY:
+        return tr("tui.setup.outcome.follow_stopped")
+    if result.outcome is ComponentsOutcome.NOTHING_TO_DO and not _usable(result.status_rows(), items):
+        # Nothing could be set up, so the rows say what holds each item.
+        return tr("tui.setup.incomplete")
+    key = _OUTCOME_KEYS.get(result.outcome)
+    if key is not None:
+        return tr(key)
+    category = result.failure_category
+    sentence = tr(dependency_failure_key(category)) if category is not None else tr("tui.setup.incomplete")
+    if result.item_id is not None:
+        sentence = f"{_item_name(result.item_id)}: {sentence}"
+    if category is DependencyFailureCategory.DISK_FULL and result.plan is not None:
+        sentence = f"{sentence} {_space_sentence(result.plan)}"
+    return sentence
+
+
+def _event_text(event: ComponentsEvent) -> str | None:
+    """Word one event the role sent while it works; ``None`` for one that changes nothing shown."""
+    if isinstance(event, ComponentsPhaseLine):
+        return tr("tui.setup.progress", name=_item_name(event.item_id), step=tr(_STEP_KEYS[event.step]))
+    if isinstance(event, ComponentsProgressLine):
+        return tr(
+            "tui.setup.progress_bytes",
+            name=_item_name(event.subject_code),
+            done=_size(event.completed),
+            total=_size(event.total),
+            percent=min(100, event.completed * 100 // event.total),
+        )
+    return _notice_text(event)
+
+
+def _notice_text(event: ComponentsNoticeLine) -> str | None:
+    if event.notice_code is ComponentsNoticeCode.RETRYING and event.subject_code is not None:
+        seconds = math.ceil((event.delay_ms or 0) / 1000)
+        sentence = dependency_retry_sentence(attempt=event.attempt or 1, delay_s=seconds)
+        return f"{_item_name(event.subject_code)}: {sentence}"
+    if event.notice_code is ComponentsNoticeCode.WAITING_FOR_SERVER and event.subject_code is not None:
+        return tr("tui.setup.waiting_for_program", name=_item_name(event.subject_code))
+    if event.notice_code is ComponentsNoticeCode.FOLLOWING and event.subject_code is not None:
+        return tr("tui.setup.following", name=_item_name(event.subject_code))
+    if event.notice_code is ComponentsNoticeCode.CANCEL_REQUESTED:
+        return tr("tui.setup.stopping")
+    return None
+
+
 class SetupScreen(AccountChromeScreen):
-    """List every setup item with its state and open the one action its row offers."""
+    """List every setup item with its state and run the one action its row offers."""
 
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
     CSS = BASE_CSS + tokenised(
@@ -123,15 +264,18 @@ class SetupScreen(AccountChromeScreen):
         self._status: str = ""
         self._busy = False
         self._focus_item = focus_item
+        self._setup_stop: ComponentsCancellation | None = None
+        self._approved: dict[tuple[DependencyItemKind, ...], str] = {}
+        self._following = False
 
     @property
     def rows(self) -> tuple[DependencyStatusRow, ...]:
-        """The registry rows this screen last read."""
+        """The rows this screen last read."""
         return self._rows
 
     @property
     def status_text(self) -> str:
-        """The line under the list: complete, incomplete, working, or unavailable."""
+        """The line under the list: complete, incomplete, working, progress, or unavailable."""
         return self._status
 
     @override
@@ -144,12 +288,19 @@ class SetupScreen(AccountChromeScreen):
             with Horizontal(id="setup-actions"):
                 yield Button(tr("tui.setup.set_up_all"), id="btn-setup-all", disabled=True)
                 yield Button(tr("tui.setup.check_again"), id="btn-setup-check", disabled=True)
+                yield Button(tr("tui.setup.stop"), id="btn-setup-stop")
             yield Static(tr("tui.setup.hint"), id="setup-hint", classes="cadrumo-note", markup=False)
 
     def on_mount(self) -> None:
         """Read every item's quick check."""
+        self.query_one("#btn-setup-stop", Button).display = False
         self._populate_columns()
-        self._read(DependencyCheckMode.QUICK)
+        self._read()
+
+    def on_unmount(self) -> None:
+        """Stop a setup still running, so the role ends with the screen."""
+        if self._setup_stop is not None:
+            self._setup_stop.cancel()
 
     @override
     async def refresh_language(self) -> None:
@@ -160,6 +311,7 @@ class SetupScreen(AccountChromeScreen):
         self.query_one("#setup-hint", Static).update(tr("tui.setup.hint"))
         self.query_one("#btn-setup-all", Button).label = tr("tui.setup.set_up_all")
         self.query_one("#btn-setup-check", Button).label = tr("tui.setup.check_again")
+        self.query_one("#btn-setup-stop", Button).label = tr("tui.setup.stop")
         repaint_tables(self, self._repaint)
 
     def _repaint(self) -> None:
@@ -176,8 +328,7 @@ class SetupScreen(AccountChromeScreen):
         table = cast("DataTable[str]", self.query_one("#setup-items", DataTable))
         table.clear()
         for row in self._rows:
-            declaration = _declaration(row.item_id)
-            wording = dependency_row_wording(row, declaration)
+            wording = dependency_row_wording(row, _declaration(row.item_id))
             sentence = wording.sentence if wording.note is None else f"{wording.sentence} {wording.note}"
             table.add_row(wording.name, sentence, wording.action or "", key=row.item_id)
 
@@ -200,32 +351,46 @@ class SetupScreen(AccountChromeScreen):
         complete = bool(self._rows) and all(row.recovery is None for row in self._rows)
         self.query_one("#btn-setup-all", Button).disabled = busy or not self._rows or complete
         self.query_one("#btn-setup-check", Button).disabled = busy
+        self.query_one("#btn-setup-stop", Button).display = self._setup_stop is not None
 
-    def _show_status(self, status: DependencyStatusResultV1) -> None:
-        self._rows = status.rows
+    def _show_status(self, status: ComponentsResultLine) -> None:
+        self._rows = status.status_rows()
         self._show_rows()
         self._select_focus_item()
-        lines = [tr("tui.setup.complete" if status.complete else "tui.setup.incomplete")]
-        if status.hardware_limited:
+        lines = [tr("tui.setup.complete" if status.setup_complete is True else "tui.setup.incomplete")]
+        if any(row.blocked_reason is DependencyBlockedReason.HARDWARE for row in self._rows):
             lines.append(tr("tui.setup.hardware_limited"))
         self._set_status("\n".join(lines))
 
     def _unavailable(self) -> None:
         self._set_status(tr("tui.setup.unavailable"))
 
-    def _read(self, mode: DependencyCheckMode, item_ids: tuple[str, ...] | None = None) -> None:
+    def _relay(self, loop: asyncio.AbstractEventLoop) -> _LoopRelay:
+        return _LoopRelay(loop, self._show_event)
+
+    def _show_event(self, event: ComponentsEvent) -> None:
+        if isinstance(event, ComponentsNoticeLine) and event.notice_code is ComponentsNoticeCode.FOLLOWING:
+            # Another process is setting the item up: this setup asks nothing and reports that one.
+            self._following = True
+        text = _event_text(event)
+        if text is not None and self.is_mounted:
+            self._set_status(text)
+
+    def _read(self, items: tuple[DependencyItemKind, ...] = (), *, full: bool = False) -> None:
         self._set_busy(True)
         self._set_status(tr("tui.setup.checking"))
-        self.run_worker(self._read_rows(mode, item_ids), group="setup-read", exclusive=True)
+        self.run_worker(self._read_rows(items, full=full), group="setup-read", exclusive=True)
 
-    async def _read_rows(self, mode: DependencyCheckMode, item_ids: tuple[str, ...] | None) -> None:
+    async def _read_rows(self, items: tuple[DependencyItemKind, ...], *, full: bool) -> None:
         try:
-            if item_ids is None and mode is DependencyCheckMode.QUICK:
-                status = await self._door.read_status(mode)
+            if full:
+                relay = self._relay(asyncio.get_running_loop())
+                checked = await self._door.verify(items, on_event=relay)
+                # A check of one item reports its row alone, so every row is read again.
+                status = await self._door.read_status() if items else checked
             else:
-                checked = await self._door.verify(item_ids)
-                status = checked if item_ids is None else await self._door.read_status(DependencyCheckMode.QUICK)
-        except (FrontendRefusedError, RefusalError, CadrumoError):
+                status = await self._door.read_status()
+        except _UNREACHABLE:
             self._unavailable()
         else:
             self._show_status(status)
@@ -233,13 +398,18 @@ class SetupScreen(AccountChromeScreen):
             self._set_busy(False)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Set up everything that is not ready, or check every item fully."""
+        """Set up everything that offers it, check every item fully, or stop the running setup."""
+        if event.button.id == "btn-setup-stop":
+            if self._setup_stop is not None:
+                self._setup_stop.cancel()
+                self._set_status(tr("tui.setup.stopping"))
+            return
         if self._busy:
             return
         if event.button.id == "btn-setup-all":
-            self.start_setup(None)
+            self.start_setup(())
         elif event.button.id == "btn-setup-check":
-            self._read(DependencyCheckMode.FULL)
+            self._read(full=True)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Run the selected row's one action."""
@@ -248,54 +418,119 @@ class SetupScreen(AccountChromeScreen):
         self.act_on(event.row_key.value)
 
     def act_on(self, item_id: str) -> None:
-        """Run the one action ``item_id``'s row offers: set up, or check again."""
+        """Run the one action ``item_id``'s row offers: set up, resume, try again, update, or check again."""
         row = next((row for row in self._rows if row.item_id == item_id), None)
         if row is None or row.recovery is None:
             return
         if row.recovery is DependencyRecoveryAction.CHECK_AGAIN:
-            self._read(DependencyCheckMode.FULL, (item_id,))
+            self._read((row.kind,), full=True)
         elif row.recovery in DEPENDENCY_SETUP_RECOVERIES:
-            self.start_setup((item_id,))
+            items = (row.kind,)
+            resumed = self._approved.get(items) if row.recovery is DependencyRecoveryAction.RESUME else None
+            self.start_setup(items, approved=resumed)
 
-    def start_setup(self, item_ids: tuple[str, ...] | None) -> None:
-        """Submit a setup and open its plan review in the operation modal."""
+    def start_setup(self, items: tuple[DependencyItemKind, ...], *, approved: str | None = None) -> None:
+        """Run a setup of ``items``, every item that offers it when empty; the plan is approved in a dialog.
+
+        With ``approved``, the digest of a plan this screen's person approved,
+        the setup runs under that approval while the plan is unchanged, and a
+        changed plan is shown for a new approval.
+        """
+        self._setup_stop = ComponentsCancellation()
+        self._following = False
         self._set_busy(True)
         self._set_status(tr("tui.setup.working"))
-        self.run_worker(self._setup(item_ids), group="setup-run", exclusive=True)
+        self.run_worker(self._setup(items, approved, self._setup_stop), group="setup-run", exclusive=True)
 
-    async def _setup(self, item_ids: tuple[str, ...] | None) -> None:
+    async def _setup(
+        self, items: tuple[DependencyItemKind, ...], approved: str | None, cancellation: ComponentsCancellation
+    ) -> None:
+        loop = asyncio.get_running_loop()
         try:
-            controller = await self._door.start_setup(item_ids)
-        except (FrontendRefusedError, RefusalError, CadrumoError):
+            result = await self._run_setup(items, approved, cancellation, loop)
+            if result.outcome is ComponentsOutcome.PLAN_CHANGED and approved is not None:
+                # The plan approved before is not this one: the person sees the new plan.
+                result = await self._run_setup(items, None, cancellation, loop)
+        except _UNREACHABLE:
+            self._setup_stop = None
             self._set_busy(False)
             self._unavailable()
             return
-
-        async def settled(outcome: OperationModalOutcomeV1 | None) -> None:
-            await self._settled(controller, outcome)
-
-        def dismissed(outcome: OperationModalOutcomeV1 | None) -> None:
-            self.run_worker(settled(outcome), group="setup-settled", exclusive=True)
-
-        self.app.push_screen(OperationModal(controller, review_text=setup_review_text), dismissed)
-
-    async def _settled(self, controller: OperationControllerPort, outcome: OperationModalOutcomeV1 | None) -> None:
-        summary: str | None = None
-        if isinstance(outcome, OperationModalSettledOutcomeV1):
-            try:
-                result = await self._door.setup_result(controller, outcome.view_model.projection)
-            except (FrontendRefusedError, RefusalError, CadrumoError):
-                result = None
-            if result is not None:
-                summary = tr(f"tui.setup.outcome.{result.outcome.value}")
-                if result.outcome is DependencySetupOutcome.NOT_ENOUGH_SPACE and result.space is not None:
-                    free = "?" if result.space.free_bytes is None else _size(result.space.free_bytes)
-                    summary += " " + dependency_space_sentence(required=_size(result.space.required_bytes), free=free)
+        self._setup_stop = None
         self._set_busy(False)
-        self._read(DependencyCheckMode.QUICK)
-        if summary is not None:
-            self.notify(summary)
+        self._read()
+        self.notify(setup_outcome_text(result, items, followed=self._following))
+
+    async def _run_setup(
+        self,
+        items: tuple[DependencyItemKind, ...],
+        approved: str | None,
+        cancellation: ComponentsCancellation,
+        loop: asyncio.AbstractEventLoop,
+    ) -> ComponentsResultLine:
+        def review(line: ComponentsReviewLine) -> ComponentsAnswer:
+            answer = self._ask(line, cancellation, loop)
+            if isinstance(answer, ComponentsApprove):
+                self._approved[items] = answer.plan_digest
+            return answer
+
+        return await self._door.set_up(
+            items, approved=approved, review=review, on_event=self._relay(loop), cancellation=cancellation
+        )
+
+    def _ask(
+        self, line: ComponentsReviewLine, cancellation: ComponentsCancellation, loop: asyncio.AbstractEventLoop
+    ) -> ComponentsAnswer:
+        """Show the plan in a dialog and wait, on the role's thread, for the person's answer to exactly that plan."""
+        decided: Future[bool] = Future()
+
+        def answered(approved: bool | None) -> None:
+            if not decided.done():
+                decided.set_result(approved is True)
+
+        def show() -> None:
+            if not self.is_mounted:
+                answered(False)
+                return
+            self.app.push_screen(
+                ConfirmScreen(
+                    title=lambda: tr("tui.setup.review.title"),
+                    message=lambda: setup_review_text(line.plan),
+                    confirm_label=lambda: tr("application.provisioning.action.set_up"),
+                    cancel_label=lambda: tr("tui.setup.review.decline"),
+                ),
+                answered,
+            )
+
+        try:
+            loop.call_soon_threadsafe(show)
+        except RuntimeError:
+            return ComponentsDecline()
+        while True:
+            try:
+                approved = decided.result(timeout=_ANSWER_POLL_S)
+            except TimeoutError:
+                if cancellation.requested:
+                    return ComponentsDecline()
+                continue
+            return ComponentsApprove(plan_digest=line.plan_digest) if approved else ComponentsDecline()
 
     def action_close(self) -> None:
         """Return to whatever opened the screen."""
         self.dismiss(None)
+
+
+class _LoopRelay:
+    """Relays each event the role sends, from its thread, to the screen's event loop without waiting."""
+
+    def __init__(self, loop: asyncio.AbstractEventLoop, show: Callable[[ComponentsEvent], None]) -> None:
+        """Bind the loop the screen runs on and the call that shows one event there."""
+        self._loop = loop
+        self._show = show
+
+    def __call__(self, event: ComponentsEvent) -> None:
+        """Hand ``event`` to the screen's loop; an event that arrives once the loop has closed is dropped."""
+        try:
+            self._loop.call_soon_threadsafe(self._show, event)
+        except RuntimeError:
+            return

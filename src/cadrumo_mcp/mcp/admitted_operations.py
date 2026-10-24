@@ -30,6 +30,7 @@ from cadrumo.application.operations.subject_reference import (
     expected_operation_subject,
 )
 from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
+from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import DisclosurePageRequest
@@ -51,7 +52,9 @@ from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.operation_changes import OperationChanges
+from cadrumo_client.transport.profile_language import read_profile_language
 
+from .component_setup import gate_setup_actions
 from .operation_contract_cache import OperationContractCache
 from .operation_discovery import search_operations
 from .payload_vocabulary import PAYLOAD_VOCABULARY_MEMBER, payload_vocabulary
@@ -64,6 +67,7 @@ from .protocol_contract import (
 )
 from .record_links import record_link
 from .result_request import (
+    published_recovery_actions,
     resolve_result_request,
     stopped_operation_code,
     stopped_operation_detail,
@@ -497,11 +501,25 @@ def _result(client: FrontendClient, binding: _Binding, args: dict[str, Any], dea
     if (code := stopped_operation_code(document)) is not None:
         reply["code"] = code
     detail = stopped_operation_detail(client, request, document, deadline)
+    stopped_action: str | None = None
     if detail is not None:
         reply["error_detail"] = detail
-        if (action := stopped_operation_recovery_action(detail)) is not None:
-            reply["recovery_action_id"] = action
+        stopped_action = stopped_operation_recovery_action(detail)
+    # A verdict is offered as every surface offers it: a setup action only while the item's row can act.
+    actions = (stopped_action,) if stopped_action is not None else published_recovery_actions(document)
+    if actions:
+        named, held = gate_setup_actions(actions, language=lambda: _profile_language(client))
+        if named and stopped_action is not None:
+            reply["recovery_action_id"] = named[0]
+        elif named:
+            reply["recovery_action_ids"] = named
+        if held:
+            reply["setup_held"] = held
     return reply
+
+
+def _profile_language(client: FrontendClient) -> str:
+    return (read_profile_language(client).language or DEFAULT_OUTPUT_LANGUAGE).value
 
 
 def _result_page(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:

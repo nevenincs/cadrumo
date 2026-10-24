@@ -12,7 +12,7 @@ import anyio
 from cadrumo.domain.calculations.registry.authority import release_bundled_indexed_authority
 
 from .operation_guidance import operation_guidance
-from .progress_relay import relayed_progress
+from .progress_relay import ProgressSink, RelayedProgress, relayed_progress
 from .protocol_contract import (
     MCP_TOOL_CATALOGUE,
     MCP_TOOL_HINTS,
@@ -66,7 +66,7 @@ def build_server(adapter: RuntimeMcpAdapter) -> Server:
         )
 
     async def call_tool(context: ServerRequestContext[Any], params: CallToolRequestParams) -> CallToolResult:
-        result = await adapter.call(params.name, params.arguments or {})
+        result = await adapter.call(params.name, params.arguments or {}, progress=_progress_sink(context))
         await _relay_progress(context, params.name, result)
         instruction = unknown_outcome_instruction(result)
         if instruction is not None:
@@ -83,13 +83,14 @@ def build_server(adapter: RuntimeMcpAdapter) -> Server:
     return Server("cadrumo", on_list_tools=list_tools, on_call_tool=call_tool)
 
 
-async def _relay_progress(context: ServerRequestContext[Any], tool: str, result: dict[str, Any]) -> None:
-    """Send each progress figure an observation carried, when the client supplied a progress token."""
+def _progress_sink(context: ServerRequestContext[Any]) -> ProgressSink | None:
+    """Return what sends one progress figure to the client, or ``None`` when it supplied no progress token."""
     meta = context.meta
     token = None if meta is None else meta.get("progress_token")
     if token is None:
-        return
-    for figure in relayed_progress(tool, result):
+        return None
+
+    async def send(figure: RelayedProgress) -> None:
         await context.session.send_progress_notification(
             token,
             figure.progress,
@@ -97,6 +98,17 @@ async def _relay_progress(context: ServerRequestContext[Any], tool: str, result:
             figure.message,
             related_request_id=None if context.request_id is None else str(context.request_id),
         )
+
+    return send
+
+
+async def _relay_progress(context: ServerRequestContext[Any], tool: str, result: dict[str, Any]) -> None:
+    """Send each progress figure an observation carried, when the client supplied a progress token."""
+    send = _progress_sink(context)
+    if send is None:
+        return
+    for figure in relayed_progress(tool, result):
+        await send(figure)
 
 
 def serve(

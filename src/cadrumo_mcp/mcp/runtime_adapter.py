@@ -22,6 +22,7 @@ from cadrumo.core.async_cleanup import (
 from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS, ProfileStatus
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -32,9 +33,11 @@ from cadrumo_client.transport.profile_language import read_profile_language
 from .access_scope import surface_scope
 from .admitted_operations import call_admitted_operation
 from .authority_query import authority_query
+from .component_setup import SETUP_TOOLS, run_setup_tool, setup_request
 from .corpus_query import corpus_query
 from .lifecycle_notices import LifecycleNoticeBoard
 from .operation_contract_cache import OperationContractCache
+from .progress_relay import ProgressSink
 from .protocol_contract import (
     MCP_TOOL_NAMES,
     PERSON_ACT_REMEDY,
@@ -393,37 +396,67 @@ class RuntimeMcpAdapter:
         """The admitted profile's output language, in which view labels are answered."""
         return (read_profile_language(self._admitted()).language or DEFAULT_OUTPUT_LANGUAGE).value
 
-    async def call(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
-        """Serialize all blocking wire calls; cancellation waits for cleanup."""
+    async def call(self, name: str, args: dict[str, Any], *, progress: ProgressSink | None = None) -> dict[str, Any]:
+        """Serialize all blocking wire calls; cancellation waits for cleanup.
+
+        A setup tool holds the connection only while it is admitted: the
+        component engine's command, which can run for minutes, runs outside the
+        lock, so the connection's other calls are answered meanwhile. Its
+        progress figures go to ``progress`` as they arrive.
+        """
         if name not in MCP_TOOL_NAMES or name not in self.surface.tools:
             _LOGGER.warning("MCP tool refused: reason=unknown_tool")
             return {"outcome": "refused", "code": "unknown_tool"}
+        if name in SETUP_TOOLS:
+            reply = await self._set_up(name, args, progress)
+            async with self._lock:
+                return self._settled(name, args, reply)
         async with self._lock:
-            reply = await self._answer(name, args)
-            status = reply.get("status")
-            denial = reply.get("denial") or (status.get("denial") if isinstance(status, dict) else None)
-            code = reply.get("code") if reply.get("outcome") == "refused" else denial
-            if code in {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}:
-                reply["remedy"] = PERSON_ACT_REMEDY
-                if (
-                    self.profile_id is not None
-                    and name == "execute"
-                    and args.get("definition_id") in {"auth.provider.configure", "auth.credential.save"}
-                ):
-                    reply["next_call"] = {
-                        "tool": "execute",
-                        "arguments": {
-                            "definition_id": "auth.local-read",
-                            "payload": {"profile_id": str(self.profile_id), "kind": "setup"},
-                            "wait_seconds": 2,
-                        },
-                    }
-            if code or has_refusal(reply):
-                # These replies are protocol successes, so transport exception
-                # logging cannot see them. Never log arguments or tool results.
-                _LOGGER.warning("MCP tool refused: tool=%s reason=%s", name, code or "operation_refused")
-            self._notices.annotate(name, reply)
-            return reply
+            return self._settled(name, args, await self._answer(name, args))
+
+    async def _set_up(self, name: str, args: dict[str, Any], progress: ProgressSink | None) -> dict[str, Any]:
+        """Admit one setup tool call as any other call is admitted, then run its command of the component engine."""
+        async with self._lock:
+            try:
+                validate_tool_arguments(name, args)
+                request = setup_request(name, args)
+                await self._hold_or_restore_session()
+                self._admitted()
+                language = await self._wire(self._label_language)
+            except Exception as error:
+                return await self._refusal(name, error)
+        try:
+            return await run_setup_tool(request, language=language, progress=progress)
+        except RefusalError as error:
+            # The engine, not the runtime, did not answer: no sign-in or runtime remedy applies.
+            return {"outcome": "refused", "code": refusal_code(error)}
+
+    def _settled(self, name: str, args: dict[str, Any], reply: dict[str, Any]) -> dict[str, Any]:
+        """Add the remedy, log a refusal and annotate the notice of one answered call."""
+        status = reply.get("status")
+        denial = reply.get("denial") or (status.get("denial") if isinstance(status, dict) else None)
+        code = reply.get("code") if reply.get("outcome") == "refused" else denial
+        if code in {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}:
+            reply["remedy"] = PERSON_ACT_REMEDY
+            if (
+                self.profile_id is not None
+                and name == "execute"
+                and args.get("definition_id") in {"auth.provider.configure", "auth.credential.save"}
+            ):
+                reply["next_call"] = {
+                    "tool": "execute",
+                    "arguments": {
+                        "definition_id": "auth.local-read",
+                        "payload": {"profile_id": str(self.profile_id), "kind": "setup"},
+                        "wait_seconds": 2,
+                    },
+                }
+        if code or has_refusal(reply):
+            # These replies are protocol successes, so transport exception
+            # logging cannot see them. Never log arguments or tool results.
+            _LOGGER.warning("MCP tool refused: tool=%s reason=%s", name, code or "operation_refused")
+        self._notices.annotate(name, reply)
+        return reply
 
     async def _answer(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         """Serve one tool call, turning every failure into its stable refusal.

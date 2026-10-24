@@ -24,9 +24,8 @@ from textual.screen import Screen
 from textual.widgets import Button, Footer, Static
 
 from cadrumo_client.contracts.contracts import RefusalError
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from ...application.dependency_contracts import DependencyCheckMode, DependencyStatusRow
+from ...application.dependency_contracts import DependencyStatusRow
 from ...application.overview.home import HomeSessionPosture
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
@@ -473,19 +472,20 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         self.navigate_to(presentation_target(message.view))
 
     async def read_setup_row(self, item_id: str) -> DependencyStatusRow | None:
-        """Read ``item_id``'s current row from the quick setup status, the setup page's own read.
+        """Read ``item_id``'s current row from the components role's quick check, the setup page's own read.
 
-        ``None`` when this session reads no setup status, the read is refused,
-        or the status has no row for the item: a surface then offers nothing.
+        ``None`` when this session reads no setup status, the role cannot be
+        started or breaks its protocol, or the status has no row for the item:
+        a surface then offers nothing.
         """
         door = self._setup_status
         if door is None:
             return None
         try:
-            status = await door.read_status(DependencyCheckMode.QUICK)
-        except (FrontendRefusedError, RefusalError, CadrumoError):
+            status = await door.read_status()
+        except (RefusalError, CadrumoError):
             return None
-        return next((row for row in status.rows if row.item_id == item_id), None)
+        return next((row for row in status.status_rows() if row.item_id == item_id), None)
 
     def on_setup_item_requested(self, message: SetupItemRequested) -> None:
         """Open the setup page on the item a refused operation needs, as any other navigation.

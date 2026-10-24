@@ -1409,14 +1409,14 @@ test-powershell-literal:
     uv run --no-sync pytest -v -n0 -m external_tool src/cadrumo/entrypoints/cli/tests/test_common_action_resolution.py
 
 # Drive the native component engine's `components` role of a built Cadrumo binary from
-# the Python client and the command line. The argument is the binary: a staged package's
+# the Python client, the command line and the MCP setup tools. The argument is the binary: a staged package's
 # `cadrumo` image, or one built with cargo, which the tests stage beside the package's
 # pin tables. Every case uses its own throwaway storage root and a local proxy, so
 # nothing reaches a publisher; a source checkout without a built binary has no role.
-[doc('Drive the components role of a built Cadrumo binary from the client and the command line (external_tool marker).')]
+[doc('Drive the components role of a built Cadrumo binary from the client, the command line and MCP (external_tool marker).')]
 [group('test')]
 test-components-role $CADRUMO_DEVELOPMENT_ROLE_IMAGE:
-    uv run --no-sync pytest -v -n0 -m "integration and external_tool" src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py src/cadrumo/entrypoints/cli/tests/test_provision_drives_the_real_role.py
+    uv run --no-sync pytest -v -n0 -m "integration and external_tool" src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py src/cadrumo/entrypoints/cli/tests/test_provision_drives_the_real_role.py src/cadrumo_mcp/mcp/tests/test_setup_tools_drive_the_real_role.py
 
 # Run the locale orthography tests. These carry `external_tool` because they
 # read the pinned Hunspell dictionaries that `setup-locale-spelling` installs

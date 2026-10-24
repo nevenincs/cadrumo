@@ -7320,6 +7320,7 @@ tui:
       item: Componente
       state: Estado
     complete: Cadrumo está preparado.
+    following: '%{name}: siguiendo una preparación que ya está en marcha…'
     hardware_limited: Este ordenador no tiene memoria suficiente para la IA local.
     hint: Intro ejecuta la acción de la fila elegida. Al preparar, se muestra el plan
       y se te pregunta antes de descargar nada.
@@ -7327,12 +7328,11 @@ tui:
     intro: 'Lo que Cadrumo necesita en este ordenador: el navegador para la web de
       la Agencia Tributaria y la IA local. Elige una fila para ejecutar su acción.'
     outcome:
+      busy: Otra preparación está cambiando esto ahora mismo. Vuelve a intentarlo
+        cuando termine.
       cancelled: Has cancelado la preparación.
       completed: La preparación ha terminado.
-      interrupted: La preparación se interrumpió antes de terminar. Elige Reanudar
-        para continuar.
-      not_enough_space: No hay espacio libre suficiente en el disco, así que no se
-        ha descargado nada.
+      follow_stopped: Has dejado de seguir la otra preparación. Continúa por su cuenta.
       nothing_to_do: Todo está ya preparado.
       plan_changed: El plan cambió después de que lo aprobaras, así que no se ha descargado
         nada. Empieza de nuevo para ver el plan nuevo.
@@ -7349,13 +7349,28 @@ tui:
       total: 'Descarga total: %{size}.'
       total_unknown: 'Descarga total: al menos %{size}. Algunos tamaños solo se conocen
         al empezar la descarga.'
+    progress: '%{name}: %{step}'
+    progress_bytes: '%{name}: descargando %{done} de %{total} (%{percent}%)'
+    review:
+      decline: Ahora no
+      title: ¿Quieres prepararlo?
     set_up_all: Preparar todo
     size:
       gigabytes: '%{value} GB'
       megabytes: '%{value} MB'
+    step:
+      cleanup: ordenando
+      download: descargando
+      install: instalando
+      plan: planificando
+      preflight: comprobando la conexión
+      verify: comprobando que funciona
+    stop: Detener
+    stopping: Deteniendo la preparación…
     title: Componentes
-    unavailable: No se ha podido contactar con el servicio en segundo plano de Cadrumo,
-      así que ahora no se pueden comprobar ni preparar los componentes.
+    unavailable: Cadrumo no ha podido iniciar su motor de componentes, así que ahora
+      no se pueden comprobar ni preparar los componentes.
+    waiting_for_program: '%{name}: esperando a que se inicie el programa'
     working: Preparando el plan…
 workspace:
   declarations:

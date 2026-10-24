@@ -115,12 +115,19 @@ _EVERY_TOOL: Final = frozenset(
         "review",
         "respond",
         "control",
+        "setup_status",
+        "setup_plan",
+        "setup",
     }
 )
 
 # A review is the step a person takes before an operation commits. No read
 # declares one, so the two tools that serve reviews have nothing to act on.
 _REVIEW_TOOLS: Final = frozenset({"review", "respond"})
+
+# Setting a component up downloads it, and a full check reaches the download
+# hosts, so a surface that reaches no other host serves none of the setup tools.
+_SETUP_TOOLS: Final = frozenset({"setup_status", "setup_plan", "setup"})
 
 
 def _local_reads() -> frozenset[str]:
@@ -145,7 +152,7 @@ MCP_SURFACES: Final[Mapping[McpSurfaceName, McpSurface]] = MappingProxyType(
             ),
             McpSurface(
                 name=McpSurfaceName.READ_ONLY_LOCAL,
-                tools=_EVERY_TOOL - _REVIEW_TOOLS,
+                tools=_EVERY_TOOL - _REVIEW_TOOLS - _SETUP_TOOLS,
                 changes_records=False,
                 reaches_network=False,
                 operations=_local_reads(),

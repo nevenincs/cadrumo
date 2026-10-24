@@ -48,7 +48,7 @@ from cadrumo.entrypoints.tui.presentation import opens_aeat_auth
 from cadrumo.entrypoints.tui.reconciliation_export import ReconciliationExportScreen
 from cadrumo.entrypoints.tui.reference.destination import reference_screen_factory
 from cadrumo.entrypoints.tui.setup.destination import setup_screen_factory
-from cadrumo.entrypoints.tui.setup.door import RuntimeSetupDoor
+from cadrumo.entrypoints.tui.setup.door import ComponentsSetupDoor
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.workbench_generation import read_workbench_generation
@@ -362,7 +362,7 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         factories = self._base_factories(generation, profile_factory)
         factories["workbench.operations"] = self._operations
         factories["workbench.installation"] = installation_screen_factory
-        factories["workbench.setup"] = setup_screen_factory(self._client)
+        factories["workbench.setup"] = setup_screen_factory
         factories["workbench.reference"] = reference_screen_factory
         ledger = self._ledger_factory(generation)
         if ledger is not None:
@@ -564,5 +564,5 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
                 self._client, profile_id=self._profile_id, profile_label=self._label
             ),
             note_activity=runtime_account_activity_reporter(self._client),
-            setup_status=RuntimeSetupDoor(self._client),
+            setup_status=ComponentsSetupDoor(),
         )

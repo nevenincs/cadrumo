@@ -1,132 +1,147 @@
-"""The setup screen's door to the runtime: the status, verification and setup operations.
+"""The setup screen's door to the native component engine: status, full check and setup.
 
-Every read and every setup goes through the runtime's registered
-``dependencies.*`` operations on the signed-in profile's connection, the same
-operations the command line and MCP submit, so all three make the same
-decision. A runtime that cannot be reached is a typed refusal the screen
-reports; nothing here starts, recovers or manages the runtime.
+Every read and every setup runs one command of the Cadrumo binary's
+``components`` role through the shared client, the engine the command line, MCP
+and the desktop use, so every surface reads the same rows and approves the same
+plan. The door decides nothing: rows, plan and outcome are the role's. Each
+command runs on a thread of its own so the screen stays live. A caller that
+leaves while a command runs stops it, and the call returns only once the role
+has ended. Where this build has no Cadrumo binary the client answers that every
+item is not in this build.
 """
 
 from __future__ import annotations
 
-import time
+import asyncio
 from typing import Final, Protocol
 
-from pydantic import BaseModel
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
-from cadrumo_client.contracts.operation_ids import DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID
-from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_client.transport.operation_controller import OperationController, await_terminal_projection
-
-from ....application.dependency_contracts import DependencyCheckMode
-from ....application.dependency_setup_operation import (
-    DEPENDENCIES_OPERATION_SUBJECT,
-    DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID,
-    DEPENDENCIES_VERIFY_OPERATION_DEFINITION_ID,
-    DependencySetupRequest,
-    DependencySetupResultV1,
-    DependencyStatusRequest,
-    DependencyStatusResultV1,
-    DependencyVerifyRequest,
+from ....adapters.outbound.components.client import (
+    ComponentsCancellation,
+    ComponentsEventSink,
+    ComponentsRequest,
+    ComponentsReviewer,
+    run_components_role,
 )
-from ....application.operations.frontend_projection import OperationPublicProjectionV1
-from ....application.operations.schema_identity import OperationSchemaIdentityV1
-from ..operations.controller_port import OperationControllerPort
+from ....adapters.outbound.components.protocol import (
+    ComponentsAnswer,
+    ComponentsCommand,
+    ComponentsOutcome,
+    ComponentsResultLine,
+    ComponentsReviewLine,
+)
+from ....application.dependency_contracts import DependencyItemKind
+from ....core.async_cleanup import await_cancellation_complete
 
-__all__ = ["RuntimeSetupDoor", "SetupDoorPort", "SetupStatusReaderPort"]
+__all__ = ["ComponentsSetupDoor", "SetupDoorPort", "SetupStatusReaderPort"]
 
-_QUICK_DEADLINE_S: Final = 60.0
-_FULL_DEADLINE_S: Final = 900.0
+_QUICK_TIMEOUT_S: Final = 30.0
+"""A quick check answers within its 2 s bound; this only stops a role that hangs."""
 
 
 class SetupStatusReaderPort(Protocol):
-    """The setup status read alone: what a surface reads before it offers an item's setup."""
+    """The quick setup status alone: what a surface reads before it offers an item's setup."""
 
-    async def read_status(self, mode: DependencyCheckMode) -> DependencyStatusResultV1:
-        """Read every setup item's row in ``mode``."""
+    async def read_status(self) -> ComponentsResultLine:
+        """Read every setup item's row from the quick check."""
         ...
 
 
 class SetupDoorPort(SetupStatusReaderPort, Protocol):
-    """What the setup screen asks of the runtime."""
+    """What the setup screen asks of the component engine."""
 
-    async def verify(self, item_ids: tuple[str, ...] | None) -> DependencyStatusResultV1:
-        """Fully check the named items, every item when ``None``."""
+    async def verify(
+        self, items: tuple[DependencyItemKind, ...], *, on_event: ComponentsEventSink
+    ) -> ComponentsResultLine:
+        """Fully check the named items, every item when none is named."""
         ...
 
-    async def start_setup(self, item_ids: tuple[str, ...] | None) -> OperationControllerPort:
-        """Submit and start a setup; its plan review is answered in the operation modal."""
+    async def set_up(
+        self,
+        items: tuple[DependencyItemKind, ...],
+        *,
+        approved: str | None,
+        review: ComponentsReviewer,
+        on_event: ComponentsEventSink,
+        cancellation: ComponentsCancellation,
+    ) -> ComponentsResultLine:
+        """Set the named items up, every item that offers it when none is named, under an approval of their plan."""
         ...
 
-    async def setup_result(
-        self, controller: OperationControllerPort, projection: OperationPublicProjectionV1
-    ) -> DependencySetupResultV1:
-        """Read a settled setup's result."""
-        ...
 
-
-def _request_schema(definition_id: str, model: type[BaseModel]) -> OperationSchemaIdentityV1:
-    return OperationSchemaIdentityV1.from_model(
-        schema_id=definition_id + ".request", schema_version=1, model_type=model
+async def _run(
+    request: ComponentsRequest,
+    *,
+    on_event: ComponentsEventSink | None = None,
+    review: ComponentsReviewer | None = None,
+    cancellation: ComponentsCancellation | None = None,
+    timeout: float | None = None,
+) -> ComponentsResultLine:
+    """Run ``request`` on a thread; a caller that is cancelled stops the role and waits for it to end."""
+    stop = ComponentsCancellation() if cancellation is None else cancellation
+    running = asyncio.ensure_future(
+        asyncio.to_thread(
+            run_components_role, request, on_event=on_event, review=review, cancellation=stop, timeout=timeout
+        )
     )
+    try:
+        return await asyncio.shield(running)
+    except asyncio.CancelledError as cancelled:
+        stop.cancel()
+        return await await_cancellation_complete(running, task_name="tui-components-role", cancellation=cancelled)
 
 
-class RuntimeSetupDoor:
-    """Reach the setup operations through one signed-in runtime connection."""
+def _checked(result: ComponentsResultLine) -> ComponentsResultLine:
+    if result.outcome is not ComponentsOutcome.OK:
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    return result
 
-    def __init__(self, client: FrontendClient) -> None:
-        """Bind the connection every request is sent on."""
-        self._client = client
 
-    async def _read(
-        self, definition_id: str, payload: DependencyStatusRequest | DependencyVerifyRequest, deadline_s: float
-    ) -> DependencyStatusResultV1:
-        controller = await OperationController.submit(
-            self._client,
-            definition_id=definition_id,
-            subject_ref=DEPENDENCIES_OPERATION_SUBJECT,
-            payload=payload,
-            expected_session_id=self._client.session_id,
+class ComponentsSetupDoor:
+    """Reach the component engine through the components role of this build's Cadrumo binary."""
+
+    async def read_status(self) -> ComponentsResultLine:
+        """Read every item's row from the quick check: local facts only, no network and no model load."""
+        return _checked(await _run(ComponentsRequest(ComponentsCommand.STATUS), timeout=_QUICK_TIMEOUT_S))
+
+    async def verify(
+        self, items: tuple[DependencyItemKind, ...], *, on_event: ComponentsEventSink
+    ) -> ComponentsResultLine:
+        """Run the full check of the named items, every item when none is named."""
+        return _checked(await _run(ComponentsRequest(ComponentsCommand.VERIFY, items=items), on_event=on_event))
+
+    async def set_up(
+        self,
+        items: tuple[DependencyItemKind, ...],
+        *,
+        approved: str | None,
+        review: ComponentsReviewer,
+        on_event: ComponentsEventSink,
+        cancellation: ComponentsCancellation,
+    ) -> ComponentsResultLine:
+        """Run one setup; with ``approved`` the role sets up only that plan and asks for no review.
+
+        A completed setup ran exactly the plan that was approved, here or by
+        ``review``; a result that names another plan is a broken exchange.
+        """
+        reviewed: list[str] = [] if approved is None else [approved]
+
+        def answer(line: ComponentsReviewLine) -> ComponentsAnswer:
+            reviewed.append(line.plan_digest)
+            return review(line)
+
+        result = await _run(
+            ComponentsRequest(ComponentsCommand.SETUP, items=items, approve=approved),
+            on_event=on_event,
+            review=answer,
+            cancellation=cancellation,
         )
-        await controller.start()
-        projection = await await_terminal_projection(
-            controller,
-            definition_id=definition_id,
-            subject_ref=DEPENDENCIES_OPERATION_SUBJECT,
-            request_schema=_request_schema(definition_id, type(payload)),
-            deadline=time.monotonic() + deadline_s,
-        )
-        return await controller.read_settled_result(projection, DependencyStatusResultV1, result_version=1)
-
-    async def read_status(self, mode: DependencyCheckMode) -> DependencyStatusResultV1:
-        """Read every item's row; the quick check reads local facts only."""
-        deadline = _QUICK_DEADLINE_S if mode is DependencyCheckMode.QUICK else _FULL_DEADLINE_S
-        return await self._read(
-            DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, DependencyStatusRequest(mode=mode), deadline
-        )
-
-    async def verify(self, item_ids: tuple[str, ...] | None) -> DependencyStatusResultV1:
-        """Run the full check of the named items."""
-        return await self._read(
-            DEPENDENCIES_VERIFY_OPERATION_DEFINITION_ID, DependencyVerifyRequest(item_ids=item_ids), _FULL_DEADLINE_S
-        )
-
-    async def start_setup(self, item_ids: tuple[str, ...] | None) -> OperationControllerPort:
-        """Submit and start one setup; the runtime raises its plan for review before anything moves."""
-        controller = await OperationController.submit(
-            self._client,
-            definition_id=DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID,
-            subject_ref=DEPENDENCIES_OPERATION_SUBJECT,
-            payload=DependencySetupRequest(item_ids=item_ids),
-            expected_session_id=self._client.session_id,
-        )
-        await controller.start()
-        return controller
-
-    async def setup_result(
-        self, controller: OperationControllerPort, projection: OperationPublicProjectionV1
-    ) -> DependencySetupResultV1:
-        """Read the settled setup's result through current disclosure."""
-        if not isinstance(controller, OperationController):
-            raise TypeError("a setup started by this door is read through its own controller")
-        return await controller.read_settled_result(projection, DependencySetupResultV1, result_version=1)
+        if (
+            result.outcome is ComponentsOutcome.COMPLETED
+            and result.plan_digest is not None
+            and reviewed
+            and result.plan_digest != reviewed[-1]
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return result

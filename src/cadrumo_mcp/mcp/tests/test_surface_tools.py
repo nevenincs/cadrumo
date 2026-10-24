@@ -171,8 +171,10 @@ async def test_a_tool_the_surface_leaves_out_does_not_answer() -> None:
     try:
         for name in left_out:
             assert await narrowed.call(name, {}) == {"outcome": "refused", "code": "unknown_tool"}
-            # The same call reaches the tool on the full surface, which then refuses its empty arguments.
-            assert await whole.call(name, {}) == {"outcome": "refused", "code": "invalid_request"}
+            # The same call reaches the tool on the full surface, which refuses empty arguments or the
+            # missing sign-in; neither is the unknown tool.
+            reached = await whole.call(name, {})
+            assert reached["outcome"] == "refused" and reached["code"] != "unknown_tool", (name, reached)
     finally:
         await narrowed.close()
         await whole.close()

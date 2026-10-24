@@ -107,8 +107,8 @@ class _ObservingAdapter:
 
     surface = MCP_SURFACES[DEFAULT_MCP_SURFACE]
 
-    async def call(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
-        del name, arguments
+    async def call(self, name: str, arguments: dict[str, Any], *, progress: object = None) -> dict[str, Any]:
+        del name, arguments, progress
         return _observe_reply()
 
 

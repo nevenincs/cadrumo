@@ -142,3 +142,41 @@ def stopped_operation_recovery_action(detail: JsonValue) -> str | None:
     if verdict is None or verdict.action is None:
         return None
     return verdict.action.action_id
+
+
+_VERDICT_FIELDS = frozenset({"failed_condition_id", "evidence", "conditionality"})
+"""The members every published precondition verdict carries, by which the walk recognises one."""
+
+
+def published_recovery_actions(document: dict[str, JsonValue]) -> tuple[str, ...]:
+    """Return the recovery actions the verdicts of a succeeded result name, in document order, each once.
+
+    A succeeded operation can still carry verdicts inside its result: an
+    import that read some files and refused one for want of the local AI, or
+    a batch paused for it. Each object of the published projection that reads
+    as a precondition verdict counts; any other value names nothing.
+    """
+    from cadrumo.application.operator_actions.projection import PreconditionVerdictSnapshot
+
+    if document.get("outcome") != "success":
+        return ()
+    found: list[str] = []
+
+    def walk(value: JsonValue) -> None:
+        if isinstance(value, dict):
+            if set(value) >= _VERDICT_FIELDS:
+                try:
+                    verdict = PreconditionVerdictSnapshot.model_validate_json(json.dumps(value))
+                except ValidationError:
+                    verdict = None
+                if verdict is not None and verdict.action_id is not None:
+                    found.append(verdict.action_id)
+                    return
+            for member in value.values():
+                walk(member)
+        elif isinstance(value, list):
+            for member in value:
+                walk(member)
+
+    walk(document.get("projection"))
+    return tuple(dict.fromkeys(found))

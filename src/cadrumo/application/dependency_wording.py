@@ -27,7 +27,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
 from ..core.i18n.render import tr
-from ..core.model_catalogue import ModelRole
+from ..core.model_catalogue import ModelRole, ModelSelectionAdvisory
 from ..core.models import STRICT_FROZEN_CONFIG
 from .dependency_contracts import (
     DependencyBlockedReason,
@@ -55,6 +55,7 @@ __all__ = [
     "dependency_copy_details",
     "dependency_failure_key",
     "dependency_held_sentence",
+    "dependency_licence_notice",
     "dependency_name_key",
     "dependency_note_key",
     "dependency_part_name",
@@ -180,6 +181,25 @@ def dependency_retry_sentence(*, attempt: int, delay_s: int, locale: str | None 
 def dependency_space_sentence(*, required: str, free: str, locale: str | None = None) -> str:
     """Render the sentence naming both sizes of a full disk; the caller formats the sizes."""
     return tr(_key("space_needed"), required=required, free=free, locale=locale)
+
+
+def dependency_licence_notice(
+    *,
+    part_id: str,
+    target_version: str | None,
+    licence_name: str | None,
+    advisories: Iterable[ModelSelectionAdvisory],
+    locale: str | None = None,
+) -> str | None:
+    """Word the notice of a planned model whose licence bars commercial use, naming the licence by its title.
+
+    ``None`` for a part without a licence or whose licence permits commercial
+    use. The model is named by its target version without the manifest digest.
+    """
+    if licence_name is None or ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED not in tuple(advisories):
+        return None
+    model = part_id if target_version is None else target_version.split("@", 1)[0]
+    return tr("provisioning.model.licence.plan_non_commercial", model=model, licence=licence_name, locale=locale)
 
 
 def column_reader_refusal_reason(verdict: PreconditionVerdict, *, locale: str | None = None) -> str:

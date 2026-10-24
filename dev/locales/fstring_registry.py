@@ -182,7 +182,6 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """
     from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
     from cadrumo.application.dependency_contracts import DependencySetupStep
-    from cadrumo.application.dependency_setup_operation import DependencySetupOutcome
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
     from cadrumo.application.operations.frontend_requests import (
         OperationCancellationRefusalCode,
@@ -305,11 +304,6 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="cli.config.provision.step.* (DependencySetupStep)",
             key_factory=lambda v: f"cli.config.provision.step.{v}",
             values=_enum_values(DependencySetupStep),
-        ),
-        FStringKeyRegistration(
-            description="tui.setup.outcome.* (DependencySetupOutcome)",
-            key_factory=lambda v: f"tui.setup.outcome.{v}",
-            values=_enum_values(DependencySetupOutcome),
         ),
         FStringKeyRegistration(
             # Bounded enumeration: LedgerReviewStatus is a closed catalogue of
