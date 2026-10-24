@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from textual.actions import SkipAction
 from textual.widgets import OptionList
 
+from .....application.modelo.work_form_wording import aeat_imported_on
 from .....core.i18n.render import tr
 from .casilla_list import CasillaList
 from .casilla_list_models import CasillaListEntry, Density
@@ -17,7 +18,6 @@ from .screen_constants import (
 )
 from .search import SearchMode, WorkbenchSearchPanel, search_entries
 from .sorting import SortOrder, next_order
-from .vocabulary import aeat_imported_on
 
 if TYPE_CHECKING:
     from .screen import ModeloWorkbenchScreen

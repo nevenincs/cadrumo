@@ -27,6 +27,7 @@ from ......application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ......application.modelo.work_form_models import ModeloFormCasillaAddressV1, ModeloFormField, ModeloFormOrigin
+from ......application.modelo.work_form_wording import origin_words
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -38,7 +39,6 @@ from ..editor import CasillaEditorPanel, CasillaEditorScreen, EditorDecision, Ed
 from ..factory import InstalledModeloWorkbench
 from ..header import StatusLine, status_line
 from ..session import WorkbenchEditSession
-from ..vocabulary import origin_words
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

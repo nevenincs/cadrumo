@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:4753ba756c1e39cc54ce610eed4b41cce7b3bc052217937199b3dece03c38479'
+body_hash: 'sha256:140e737e956a40abf5dce2982ac9f7e712a040818dd1f0ec273ad3c7774ebf7a'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -69,7 +69,55 @@ related:
 - `S02` `verify:` `pytest -n0 TUI review_effect, confirmation, scoped_confirm, bulk_confirm_real, confirm_real (35)` -> `pass`
 - `S02` `verify:` `mutation: design-constant standing correction removed fails its regression test` -> `pass`
 - `S02` `verify:` `ruff, format, lint-imports (30 kept), dev.quality.types (0), contract manifest check` -> `pass`
+- `S03` `A` `src/cadrumo/application/modelo/work_form_wording.py`
+- `S03` `M` `dev/locales/fstring_registry.py`
+- `S03` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_layout.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S03` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/controller.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/picker.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/portfolio_rows.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/row_words.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_calendar.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_models.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_values.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor_explanations.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/review.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_editor.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_help_content.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_navigation.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_operation.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_editor_panel.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_list.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_row_anatomy.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_held_values_and_sources.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_rate_boxes_real.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_bulk_confirm_real.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirm_real.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_deadline_parity.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_export_state.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_header.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_marks.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_origin_in_help.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_progress.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_refinements_real.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_review_check.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`
+- `S03` `verify:` `pytest -n0 TUI modelo workbench + declarations suites (383 + 513)` -> `pass`
+- `S03` `verify:` `pytest -n0 application form, loading, projection, every-revision, manifest (78)` -> `pass`
+- `S03` `verify:` `ruff, format, lint-imports (30 kept), dev.quality.types (0), operation contract manifest regenerated` -> `pass`
+- `S03` `verify:` `dev.locales status: no moved key family became catalogue-only` -> `pass`
 
 ## Notes
 
 - `S02` Fixes an S01 defect: a design-constant cell kept the standing of its pre-copy origin; field copies that change state now go through `revised_field`
+- `S03` Also moved period and date wording from the TUI (needed by origin words); the frontend-neutral key namespace remains P02

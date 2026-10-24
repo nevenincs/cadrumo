@@ -33,6 +33,7 @@ from ......adapters.persistence.profile.tests.modelo_export_support import (
 )
 from ......application.modelo.export import ModeloExportCommand, export_modelo_revision
 from ......application.modelo.work_form_models import ModeloFormExport, ModeloWorkForm
+from ......application.modelo.work_form_wording import day_text
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -48,7 +49,6 @@ from ....tests.modelo_workbench_session import application_workbench
 from ....tests.settling import settle
 from ..export import WorkbenchExportScreen
 from ..screen import ModeloWorkbenchScreen
-from ..wording import day_text
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
 __all__ = ["isolated_backend"]

@@ -46,8 +46,10 @@ from .....application.modelo.work_form_models import (
     ModeloWorkForm,
     address_key,
     field_needs_filer,
+    holds_zero,
     section_fields,
 )
+from .....application.modelo.work_form_wording import holds_nothing
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from .casilla_list_models import (
@@ -61,14 +63,7 @@ from .casilla_list_values import (
     shown_rate,
 )
 from .grid import CasillaListRecords, GridRowPlace, GridShape, GridSlot
-from .vocabulary import (
-    DONE_MARK,
-    AttentionCounts,
-    WorkbenchMark,
-    field_counts,
-    holds_nothing,
-    holds_zero,
-)
+from .vocabulary import DONE_MARK, AttentionCounts, WorkbenchMark, field_counts
 
 DETAILS_PAGE_ID: Final[str] = "details"
 _RATIO_DATA_TYPE: Final[str] = "ratio"

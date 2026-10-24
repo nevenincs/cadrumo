@@ -33,31 +33,24 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
 from rich.text import Text
 
-from .....application.modelo.edit_models import ModeloEditNonWritableReason
 from .....application.modelo.source_policy import SourceFamily
 from .....application.modelo.work_form_models import (
-    ABSENT_FROM_ADMISSION,
     ASKS_FOR_A_VALUE,
     ORIGIN_STANDINGS,
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
-    ModeloFormScalar,
     ModeloFormStanding,
-    ModeloWorkForm,
     field_needs_filer,
 )
-from .....core.aggregation import BindingSourceKind
+from .....application.modelo.work_form_wording import origin_words, origin_words_key, set_by_form
 from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import tr
-from .wording import date_text, period_words
 
 
 class ColourRole(StrEnum):
@@ -128,11 +121,6 @@ _ATTENTION_WORDS_LOCALE_KEYS: Final[Mapping[Attention, str]] = MappingProxyType(
         Attention.BLOCKED: "tui.modelo.workbench.level.blocks",
     }
 )
-
-
-def origin_words_key(origin: ModeloFormOrigin) -> str:
-    """The catalogue key naming one origin in a few words."""
-    return f"tui.modelo.workbench.origin.{origin.value}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -381,195 +369,10 @@ TYPED_EDITABILITIES: Final[frozenset[ModeloFormEditability]] = frozenset(
 )
 
 
-#: Origins whose value comes from a source, so their words name the kind of place it is.
-SOURCE_WORDED_ORIGINS: Final[tuple[ModeloFormOrigin, ...]] = (
-    ModeloFormOrigin.IMPORTED,
-    ModeloFormOrigin.NOT_IMPORTED_YET,
-    ModeloFormOrigin.OVERRIDES_SOURCE,
-)
-
 #: The mark of a value carried from an earlier declaration, in place of the imported glyph.
 EARLIER_FILING_GLYPH: Final[str] = EARLIER_FILING_MARK.glyph
 #: The mark of a value the official form sets, whether it reaches the box as a design constant or through a binding.
 FORM_SET_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.INFORMATIONAL]
-_FORM_SET_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.INFORMATIONAL}
-)
-"""Origins whose value, when the form's own design is the source, is the value the form sets."""
-_FORM_SET_WORDS_LOCALE_KEY: Final[str] = "tui.modelo.workbench.origin_source.imported.fixed_by_design"
-_HELD_ZERO_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
-    {ModeloFormOrigin.OPTIONAL_EMPTY: "tui.modelo.workbench.origin_held_zero.optional_empty"}
-)
-"""Words for an origin that says nobody entered the box, when the box still holds a zero: never "empty"."""
-_AEAT_IMPORTED_ON_LOCALE_KEY: Final[str] = "tui.modelo.workbench.origin_source.aeat_imported_on"
-
-
-def holds_zero(value: ModeloFormScalar) -> bool:
-    """Whether a value is an amount of exactly zero: a figure the form holds, which is not the same as nothing."""
-    return isinstance(value, Decimal | int) and not isinstance(value, bool) and value == 0
-
-
-def holds_nothing(value: ModeloFormScalar) -> bool:
-    """Whether a box holds no value at all: nothing, an unmarked choice or blank text, but never a zero amount."""
-    if value is None or value is False:
-        return True
-    return isinstance(value, str) and not value.strip()
-
-
-def set_by_form(field: ModeloFormField) -> bool:
-    """Whether the value a field shows is one the official form itself sets."""
-    source = field.source
-    return field.origin in _FORM_SET_ORIGINS and source is not None and source.family is SourceFamily.FIXED_BY_DESIGN
-
-
-def aeat_imported_on(form: ModeloWorkForm | None) -> date | None:
-    """The day the AEAT tax data the current calculation took values from was imported; ``None`` when not known."""
-    data = None if form is None else form.aeat_data
-    imported_at = None if data is None else data.imported_at
-    if imported_at is None:
-        return None
-    return imported_at.astimezone().date() if imported_at.tzinfo is not None else imported_at.date()
-
-
-def _from_aeat_data(field: ModeloFormField) -> bool:
-    source = field.source
-    return field.origin is ModeloFormOrigin.IMPORTED and source is not None and source.family is SourceFamily.AEAT_DRAFT
-
-
-_NAMING_CARRY_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
-    {
-        BindingSourceKind.PREVIOUS_FILING,
-        BindingSourceKind.RELATION_PREFILL,
-        BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
-    }
-)
-"""Carries whose binding names the earlier declarations it reads for the declaration at hand.
-
-The read model names them through each one's temporal window; a window that
-names none for this declaration is a scope-out, so an empty list for one of
-these carries means no earlier declaration applies, never that one was not
-identified.
-"""
-_FROM_EARLIER_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
-)
-"""Origins whose words say where a carried value comes from, so they must not name a declaration that does not exist."""
-
-
-_NO_EARLIER_WORDS_LOCALE_KEY: Final[str] = "tui.modelo.workbench.origin_source.imported.earlier_filings_none"
-_NO_EARLIER_EXPLANATION_LOCALE_KEY: Final[str] = "tui.modelo.workbench.help.origin_no_earlier_declaration"
-
-
-def no_earlier_filing(field: ModeloFormField) -> bool:
-    """Whether a value carried from an earlier declaration has none to carry from: no earlier one applies.
-
-    Only a carry that names its declarations can say so; a value it carries
-    is then a zero by rule, not one read from a filing.
-    """
-    source = field.source
-    return (
-        field.origin in _FROM_EARLIER_ORIGINS
-        and source is not None
-        and source.family is SourceFamily.EARLIER_FILINGS
-        and source.source_kind in _NAMING_CARRY_KINDS
-        and not source.earlier_filings
-    )
-
-
-def origin_explanation(field: ModeloFormField) -> str | None:
-    """A sentence explaining an origin its few words cannot, or ``None`` when the words suffice.
-
-    A zero carried where no earlier declaration applies is explained as such,
-    so the filer does not look for a filing that does not exist.
-    """
-    if no_earlier_filing(field) and holds_zero(field.value):
-        return tr(_NO_EARLIER_EXPLANATION_LOCALE_KEY)
-    return None
-
-
-_NAMED_FILING_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
-    {
-        ModeloFormOrigin.IMPORTED: "tui.modelo.workbench.origin_source.imported.named_filing",
-        ModeloFormOrigin.NOT_IMPORTED_YET: "tui.modelo.workbench.origin_source.not_imported_yet.named_filing",
-        ModeloFormOrigin.OVERRIDES_SOURCE: "tui.modelo.workbench.origin_source.overrides_source.named_filing",
-    }
-)
-"""Words for a value tied to one named earlier declaration, per origin; they take ``{modelo}`` and ``{period}``."""
-
-
-def origin_source_words_key(origin: ModeloFormOrigin, family: SourceFamily) -> str:
-    """The catalogue key naming an origin together with the kind of place its value comes from."""
-    return f"tui.modelo.workbench.origin_source.{origin.value}.{family.value}"
-
-
-_FILED_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
-    {
-        ModeloFormOrigin.NEEDS_INPUT: "tui.modelo.workbench.origin_filed.needs_input",
-        ModeloFormOrigin.DEFAULT_TO_CONFIRM: "tui.modelo.workbench.origin_filed.default_to_confirm",
-    }
-)
-"""Words for an origin that asks for a value, on a declaration recorded as filed: what the value is, not a request."""
-
-
-def _special_origin_words(
-    field: ModeloFormField,
-    *,
-    recorded: bool,
-    aeat_imported: date | None,
-    language: OutputLanguage | None,
-) -> str | None:
-    if recorded and field.origin in _FILED_LOCALE_KEYS:
-        return tr(_FILED_LOCALE_KEYS[field.origin])
-    if field.origin in _HELD_ZERO_LOCALE_KEYS and holds_zero(field.value):
-        return tr(_HELD_ZERO_LOCALE_KEYS[field.origin])
-    if set_by_form(field):
-        return tr(_FORM_SET_WORDS_LOCALE_KEY)
-    if aeat_imported is not None and language is not None and _from_aeat_data(field):
-        return tr(_AEAT_IMPORTED_ON_LOCALE_KEY, date=date_text(aeat_imported, language))
-    if no_earlier_filing(field):
-        return tr(_NO_EARLIER_WORDS_LOCALE_KEY)
-    return None
-
-
-def _source_origin_words(field: ModeloFormField) -> str:
-    source = field.source
-    if field.origin not in SOURCE_WORDED_ORIGINS or source is None:
-        return tr(origin_words_key(field.origin))
-    if source.family is SourceFamily.EARLIER_FILINGS and len(source.earlier_filings) == 1:
-        filing = source.earlier_filings[0]
-        return tr(_NAMED_FILING_LOCALE_KEYS[field.origin], modelo=filing.modelo, period=period_words(filing.period))
-    return tr(origin_source_words_key(field.origin, source.family))
-
-
-def origin_words(
-    field: ModeloFormField,
-    *,
-    recorded: bool = False,
-    aeat_imported: date | None = None,
-    language: OutputLanguage | None = None,
-) -> str:
-    """Say where one field's value stands, in the few words its row, help band and panel share.
-
-    A value from a source names the kind of place, and an earlier declaration by
-    its modelo and period when exactly one is known; a value the official form
-    sets says so, whatever carries it to the box; any other says its origin. An
-    optional box nobody entered that still holds a zero says it was left at
-    zero, never that it is empty. On a declaration ``recorded`` as filed nothing
-    is asked any more, so a box that would ask for a value says what it holds
-    instead. Given the day ``aeat_imported`` the AEAT tax data was imported, a
-    value taken from it names that day, written for ``language``. A row too
-    narrow for these words keeps only the glyph, so the help band calls this to
-    say them for the field under the cursor.
-    """
-    special = _special_origin_words(
-        field,
-        recorded=recorded,
-        aeat_imported=aeat_imported,
-        language=language,
-    )
-    if special is not None:
-        return special
-    return _source_origin_words(field)
 
 
 def origin_glyph(field: ModeloFormField) -> str:
@@ -609,20 +412,6 @@ def origin_text(
     return f"{origin_glyph(field)} {origin_words(field, aeat_imported=aeat_imported, language=language)}"
 
 
-NOT_WRITABLE_REASONS: Final[tuple[str, ...]] = (
-    *(reason.value for reason in ModeloEditNonWritableReason),
-    ABSENT_FROM_ADMISSION,
-)
-"""Every reason a field that cannot be edited here gives for it."""
-
-
-def editability_text(field: ModeloFormField) -> str:
-    """Say what may be done about a field; one that cannot be edited here says why."""
-    if field.editability is ModeloFormEditability.NOT_WRITABLE and field.not_writable_reason is not None:
-        return tr(f"tui.modelo.workbench.not_writable.{field.not_writable_reason}")
-    return tr(f"tui.modelo.workbench.editability.{field.editability.value}")
-
-
 def attention_words_key(attention: Attention) -> str:
     """The catalogue key naming one attention mark."""
     return _ATTENTION_WORDS_LOCALE_KEYS[attention]
@@ -640,11 +429,6 @@ def _require_attention_marks() -> None:
         raise ValueError("every attention mark needs its words")
 
 
-def _require_source_words() -> None:
-    if set(_NAMED_FILING_LOCALE_KEYS) != set(SOURCE_WORDED_ORIGINS):
-        raise ValueError("every origin worded by its source needs words for a named earlier declaration")
-
-
 def _require_attention_counts() -> None:
     if set(ORIGIN_STANDINGS) != set(ModeloFormOrigin):
         raise ValueError("every origin needs exactly one standing")
@@ -655,18 +439,11 @@ def _require_attention_counts() -> None:
         raise ValueError("every origin that is not done needs a level to count at, and only those")
 
 
-def _require_filed_origin_words() -> None:
-    if set(_FILED_LOCALE_KEYS) != ASKS_FOR_A_VALUE:
-        raise ValueError("every origin that asks for a value needs words for a declaration recorded as filed")
-
-
 def _require_closed_and_distinct() -> None:
     """Refuse a vocabulary that misses a state or lets two states share a mark."""
     _require_origin_marks()
     _require_attention_marks()
-    _require_source_words()
     _require_attention_counts()
-    _require_filed_origin_words()
     require_one_meaning_per_glyph(WORKBENCH_MARKS)
 
 
@@ -692,11 +469,9 @@ __all__ = [
     "MISSING_MARK",
     "NOT_CALCULATED_MARK",
     "NOT_IMPORTED_MARK",
-    "NOT_WRITABLE_REASONS",
     "ORIGIN_GLYPHS",
     "ORIGIN_MARKS",
     "ORIGIN_ROLES",
-    "SOURCE_WORDED_ORIGINS",
     "STALE_MARK",
     "TYPED_EDITABILITIES",
     "WORKBENCH_MARKS",
@@ -704,19 +479,9 @@ __all__ = [
     "AttentionCounts",
     "ColourRole",
     "WorkbenchMark",
-    "aeat_imported_on",
     "attention_words_key",
-    "editability_text",
     "field_counts",
-    "holds_nothing",
-    "holds_zero",
-    "no_earlier_filing",
-    "origin_explanation",
     "origin_glyph",
-    "origin_source_words_key",
     "origin_text",
-    "origin_words",
-    "origin_words_key",
     "require_one_meaning_per_glyph",
-    "set_by_form",
 ]

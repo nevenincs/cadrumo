@@ -97,6 +97,7 @@ from .work_form_models import (
     section_fields,
 )
 from .work_form_notes import collect_note_sources, project_calculation_notes, project_verification_issues
+from .work_form_wording import worded_form
 from .work_review import ModeloWorkReview
 
 
@@ -165,12 +166,12 @@ def build_modelo_work_form(
         notes=(sources, held),
     )
     if inspection is not None:
-        return inspection
+        return worded_form(inspection)
     usable_layout = cast(FormLayoutDefinition, layout)
     pages, working, unplaced = _project_layout(usable_layout, context)
     form_fields = [field for page in pages for section in page.sections for field in section_fields(section)]
     every_field = [*form_fields, *working, *(item.field for item in unplaced)]
-    return _assemble_work_form(
+    form = _assemble_work_form(
         review=review,
         snapshot=snapshot,
         layout=usable_layout,
@@ -186,6 +187,7 @@ def build_modelo_work_form(
         sources=sources,
         held=held,
     )
+    return worded_form(form)
 
 
 def _inspection_only_for_unusable_layout(

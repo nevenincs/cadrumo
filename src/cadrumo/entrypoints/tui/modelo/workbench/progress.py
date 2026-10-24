@@ -54,6 +54,7 @@ from textual.content import Content
 
 from .....application.modelo.calculation_notes import CHECK_REFUSED_REASONS
 from .....application.modelo.work_form_models import ModeloWorkForm
+from .....application.modelo.work_form_wording import date_text, day_text
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
@@ -62,7 +63,6 @@ from .header import blocking_count, confirm_count, missing_findings
 from .issue_scale import blocks_marked
 from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, DONE_MARK, HERE_MARK, WorkbenchMark
-from .wording import date_text, day_text
 
 
 class WorkbenchStep(StrEnum):

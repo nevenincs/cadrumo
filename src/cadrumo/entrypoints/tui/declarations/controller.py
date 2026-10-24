@@ -99,7 +99,7 @@ def work_create_refusal_message(refusal: CadrumoError) -> str:
 
 def natural_address(modelo: object, year: object, period: object) -> str:
     """Render the public Modelo/year/period coordinate."""
-    from ..modelo.workbench.wording import period_words
+    from ....application.modelo.work_form_wording import period_words
 
     words = period_words(period) if isinstance(period, Period) else f"{year} · {period}"
     return f"Modelo {modelo} · {words}"

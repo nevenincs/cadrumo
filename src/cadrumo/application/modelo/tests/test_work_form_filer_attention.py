@@ -74,6 +74,7 @@ from ..work_form_models import (
     section_fields,
 )
 from ..work_form_service import modelo_form_snapshot
+from ..work_form_wording import origin_explanation, origin_words
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -98,6 +99,7 @@ def _form(
     entered: frozenset[str] | None = None,
     lifecycle: CalculationRevisionState | None = None,
     findings: tuple[ModeloVerificationFinding, ...] = (),
+    language: OutputLanguage = OutputLanguage.EN,
 ) -> ModeloWorkForm:
     """Build a form whose ``held`` boxes carry the calculation's values; ``entered`` ``None`` is an unknown record."""
     snapshot = _snapshot(operation, modelo, year, code)
@@ -131,7 +133,7 @@ def _form(
         permitted_surface=None,
         entered_casilla_ids=None if entered is None else frozenset(validated_casilla_id(item) for item in entered),
         overridden_binding_ids=None if entered is None else frozenset(),
-        language=OutputLanguage.EN,
+        language=language,
     )
 
 
@@ -364,6 +366,53 @@ def test_on_a_declaration_recorded_as_filed_every_box_is_done(operation: PinnedA
     filed = _form(operation, "210", 2025, "0A", held=held, lifecycle=CalculationRevisionState.PRESENTADO)
 
     assert {field.standing for field, _ in _page_fields(filed)} == {ModeloFormStanding.DONE}
+
+
+# -- the words each box carries ------------------------------------------------
+
+
+def _catalogue(key: str, language: OutputLanguage) -> str:
+    text = lookup_translation(key, locale=language.value)
+    assert text is not None
+    return text
+
+
+@pytest.mark.parametrize("language", [OutputLanguage.EN, OutputLanguage.ES])
+def test_every_box_carries_its_origin_and_editability_in_the_forms_language(
+    operation: PinnedAuthorityOperation, language: OutputLanguage
+) -> None:
+    """A draft Modelo 210: the required box that is empty, and an optional box left at zero."""
+    optional = _optional_money_box(operation)
+    form = _form(operation, "210", 2025, "0A", held={optional: Decimal("0")}, language=language)
+
+    assert all(field.origin_words and field.editability_words for field in form.fields())
+    assert _casilla(form, "rendimientos_integros").origin_words == _catalogue(
+        "tui.modelo.workbench.origin.needs_input", language
+    )
+    assert _casilla(form, optional).origin_words == _catalogue(
+        "tui.modelo.workbench.origin_held_zero.optional_empty", language
+    )
+    assert _casilla(form, optional).editability_words == _catalogue(
+        f"tui.modelo.workbench.editability.{_casilla(form, optional).editability.value}", language
+    )
+
+
+def test_on_a_declaration_recorded_as_filed_an_empty_box_says_what_it_holds(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    filed = _form(operation, "210", 2025, "0A", lifecycle=CalculationRevisionState.PRESENTADO)
+
+    assert _casilla(filed, "rendimientos_integros").origin_words == _catalogue(
+        "tui.modelo.workbench.origin_filed.needs_input", OutputLanguage.EN
+    )
+
+
+def test_the_carried_words_are_the_ones_the_rule_gives_for_the_box(operation: PinnedAuthorityOperation) -> None:
+    """Every frontend shows the carried words; the rule a terminal applies live gives the same ones."""
+    form = _form(operation, "130", 2026, "1T", held={"05": Decimal("0")})
+    for field in form.fields():
+        assert field.origin_words == origin_words(field, recorded=False, language=OutputLanguage.EN)
+        assert field.origin_explanation == origin_explanation(field, OutputLanguage.EN)
 
 
 # -- what to do about each finding -------------------------------------------

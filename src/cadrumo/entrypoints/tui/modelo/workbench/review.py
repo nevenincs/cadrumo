@@ -42,6 +42,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Static
 
 from .....application.modelo.source_policy import SourceFamily
+from .....application.modelo.work_form_wording import period_words
 from .....core.i18n.render import tr
 from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
@@ -53,7 +54,6 @@ from .session import Displacement, StagedChange
 from .sources import BOX_LIST_LINES
 from .status_bar import StatusBar
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, WorkbenchMark
-from .wording import period_words
 
 if TYPE_CHECKING:
     from .header import StatusLine

@@ -30,6 +30,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormOrigin,
     ModeloFormValueSource,
 )
+from ......application.modelo.work_form_wording import period_words
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -51,7 +52,6 @@ from ..editor import (
 from ..editor_explanations import where_from_text
 from ..ports import WorkbenchChangeKind
 from ..sources import OpenSourceSurface
-from ..wording import period_words
 from .workbench_fixture import FakeActions, fed_by, form_field, status_line_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

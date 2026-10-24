@@ -31,6 +31,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormTextDisclosure,
     ModeloWorkForm,
 )
+from ......application.modelo.work_form_wording import origin_words
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
@@ -59,7 +60,6 @@ from ..vocabulary import (
     ORIGIN_MARKS,
     WORKBENCH_MARKS,
     WorkbenchMark,
-    origin_words,
     require_one_meaning_per_glyph,
 )
 from .workbench_fixture import form_field, synthetic_form

@@ -35,6 +35,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormOrigin,
     confirmable,
 )
+from ......application.modelo.work_form_wording import origin_words
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......domain.calculations.registry.ids import BindingId
@@ -47,7 +48,6 @@ from ..factory import InstalledModeloWorkbench
 from ..ports import WorkbenchChangeKind
 from ..screen import ModeloWorkbenchScreen
 from ..session import WorkbenchEditSession
-from ..vocabulary import origin_words
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

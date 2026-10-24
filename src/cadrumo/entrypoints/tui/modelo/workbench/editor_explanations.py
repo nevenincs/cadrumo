@@ -15,19 +15,19 @@ from .....application.modelo.work_form_models import (
     ModeloFormValueSource,
     ModeloWorkForm,
 )
-from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import tr
-from .vocabulary import (
+from .....application.modelo.work_form_wording import (
     SOURCE_WORDED_ORIGINS,
-    TYPED_EDITABILITIES,
     holds_nothing,
     no_earlier_filing,
     origin_explanation,
     origin_source_words_key,
     origin_words,
+    period_words,
     set_by_form,
 )
-from .wording import period_words
+from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import tr
+from .vocabulary import TYPED_EDITABILITIES
 
 if TYPE_CHECKING:
     from .header import ResultView

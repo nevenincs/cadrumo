@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:8ac47f24d423faac934198ba96dacc6b90a07e7838a7e504163edf5112966739'
+body_hash: 'sha256:2c3ce666b9a4c14ac1302d6794dd40d0d8737c07f062e0fc38b7b2921eed45e3'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -37,7 +37,7 @@ Move every classification and wording decision the prototype had to make into th
 
 - [x] `P01.S01` - Add per-field standing and asks-the-filer to the form read model and public projection, folding in recorded state, page applicability and blockers, with a parity test against the TUI rule; `src/cadrumo/application/modelo/work_form_models.py`.
 - [x] `P01.S02` - Add confirmable, edit address and held-zero to each form field and its public mirror, with tests over the builder forms for 111, 130, 303, 347 and 390; `src/cadrumo/application/modelo/workbench_projection.py`.
-- [ ] `P01.S03` - Move origin wording selection (origin by source family, named earlier filing, no earlier filing, AEAT import date, held zero) into an application wording module and switch the TUI to it; `src/cadrumo/application/modelo/work_form_wording.py`.
+- [x] `P01.S03` - Move origin wording selection (origin by source family, named earlier filing, no earlier filing, AEAT import date, held zero) into an application wording module and switch the TUI to it; `src/cadrumo/application/modelo/work_form_wording.py`.
 - [ ] `P01.S04` - Carry per-field display text from the value presentation (ratio units, masked IBAN, booleans, dates) for the requested language; `src/cadrumo/application/modelo/value_presentation.py`.
 - [ ] `P01.S05` - Add a form-level next action on the export, filing and calculation-note gates, halting only on a registry-grade admission refusal, with a state table and a gate-agreement test; `src/cadrumo/application/modelo/work_form.py`.
 - [ ] `P01.S06` - Move period words and modelo titles into the application wording module and use them in the form and list projections; `src/cadrumo/application/modelo/work_form_wording.py`.

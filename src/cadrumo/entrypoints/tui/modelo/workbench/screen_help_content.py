@@ -10,6 +10,12 @@ from .....application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormTextDisclosure,
 )
+from .....application.modelo.work_form_wording import (
+    SOURCE_WORDED_ORIGINS,
+    aeat_imported_on,
+    editability_text,
+    origin_explanation,
+)
 from .....core.i18n.render import lookup_translation, tr
 from .casilla_list_models import CasillaListEntry
 from .casilla_list_values import description_text, grid_cell_title, rate_note
@@ -24,15 +30,7 @@ from .screen_constants import (
     _HELP_ONLY_KEYS,
     _SCREEN_LOCALE_KEYS,
 )
-from .vocabulary import (
-    ATTENTION_MARKS,
-    SOURCE_WORDED_ORIGINS,
-    aeat_imported_on,
-    attention_words_key,
-    editability_text,
-    origin_explanation,
-    origin_text,
-)
+from .vocabulary import ATTENTION_MARKS, attention_words_key, origin_text
 
 if TYPE_CHECKING:
     from .screen import ModeloWorkbenchScreen

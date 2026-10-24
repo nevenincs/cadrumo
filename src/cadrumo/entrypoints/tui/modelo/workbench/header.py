@@ -53,6 +53,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormResultDirection,
     ModeloWorkForm,
 )
+from .....application.modelo.work_form_wording import date_text, day_text, period_words
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from ...components.cell_text import ellipsize
@@ -62,7 +63,7 @@ from .issue_projection import issue_lines
 from .issue_scale import IssueLevel, levels_marked
 from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, MISSING_MARK, STALE_MARK, WorkbenchMark
-from .wording import date_text, day_text, modelo_number, modelo_title, period_words
+from .wording import modelo_number, modelo_title
 
 _MONEY: Final[str] = "money"
 _PART_GAP: Final[str] = "   "

@@ -33,6 +33,7 @@ from ......application.modelo.work_form_models import (
     address_key,
 )
 from ......application.modelo.work_form_service import modelo_form_snapshot
+from ......application.modelo.work_form_wording import origin_words
 from ......application.modelo.work_review import (
     ModeloWorkProgress,
     ModeloWorkReview,
@@ -65,7 +66,7 @@ from ..casilla_list_values import (
 )
 from ..navigator import NavigatorState, navigator_rows
 from ..page_items import WorkbenchFilter, page_items, workbench_pages
-from ..vocabulary import DONE_MARK, NOT_IMPORTED_MARK, origin_words
+from ..vocabulary import DONE_MARK, NOT_IMPORTED_MARK
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -44,19 +44,13 @@ from .....application.modelo.work_form_models import (
     address_key,
     field_needs_filer,
 )
+from .....application.modelo.work_form_wording import origin_words
 from .grid import (
     CasillaListRecords,
     GridRowPlace,
     TableGeometry,
 )
-from .vocabulary import (
-    ORIGIN_ROLES,
-    Attention,
-    ColourRole,
-    WorkbenchMark,
-    origin_glyph,
-    origin_words,
-)
+from .vocabulary import ORIGIN_ROLES, Attention, ColourRole, WorkbenchMark, origin_glyph
 
 type AddressKey = tuple[str, str]
 

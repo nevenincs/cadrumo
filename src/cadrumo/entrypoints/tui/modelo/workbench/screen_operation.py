@@ -16,6 +16,7 @@ from .....application.modelo.operation_definitions import (
 )
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_work_form_changes
+from .....application.modelo.work_form_wording import day_text
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
@@ -41,7 +42,6 @@ from .screen_constants import (
     _VALUE_CHANGING_OPERATIONS,
     _WITHHELD_LOCALE_KEY,
 )
-from .wording import day_text
 
 if TYPE_CHECKING:
     from .....application.operations.frontend_projection import OperationPublicProjectionV1

@@ -24,6 +24,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormText,
     ModeloFormTextDisclosure,
 )
+from ......application.modelo.work_form_wording import origin_words
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -32,7 +33,6 @@ from ....components.theme import install_cadrumo_themes
 from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry, CasillaListHeading, CasillaListItem, CasillaListNote
-from ..vocabulary import origin_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

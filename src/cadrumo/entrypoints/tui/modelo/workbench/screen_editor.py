@@ -9,6 +9,7 @@ from textual.await_remove import AwaitRemove
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from .....application.modelo.work_form_models import ModeloWorkForm
+from .....application.modelo.work_form_wording import aeat_imported_on
 from .....core.i18n.render import tr
 from .casilla_list import CasillaList
 from .casilla_list_models import CasillaListEntry
@@ -28,7 +29,6 @@ from .screen_constants import (
 )
 from .session import StagedChange, StageRefusal, WorkbenchEditSession
 from .sources import OpenSourceSurface
-from .vocabulary import aeat_imported_on
 
 if TYPE_CHECKING:
     from .screen import ModeloWorkbenchScreen

@@ -21,6 +21,7 @@ from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
 from ......application.modelo.work_form_models import ModeloFormCasillaAddressV1, ModeloFormField, ModeloWorkForm
+from ......application.modelo.work_form_wording import SOURCE_WORDED_ORIGINS
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation, tr
@@ -32,7 +33,7 @@ from ..casilla_list_values import description_text
 from ..factory import InstalledModeloWorkbench
 from ..navigator import heading_groups
 from ..screen import ModeloWorkbenchScreen
-from ..vocabulary import SOURCE_WORDED_ORIGINS, origin_text
+from ..vocabulary import origin_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

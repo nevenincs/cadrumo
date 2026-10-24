@@ -64,6 +64,7 @@ from .....application.modelo.work_form_models import (
     ModeloWorkForm,
     address_key,
 )
+from .....application.modelo.work_form_wording import aeat_imported_on, date_text, no_earlier_filing, period_words
 from .....core.aggregation import BindingSourceKind
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
@@ -91,10 +92,8 @@ from .vocabulary import (
     MISSING_MARK,
     ORIGIN_MARKS,
     WorkbenchMark,
-    aeat_imported_on,
-    no_earlier_filing,
 )
-from .wording import date_text, modelo_number, period_words
+from .wording import modelo_number
 
 if TYPE_CHECKING:
     from .header import StatusLine

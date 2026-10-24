@@ -511,6 +511,11 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         ModeloFormOrigin,
         ModeloFormTextDisclosure,
     )
+    from cadrumo.application.modelo.work_form_wording import (
+        NOT_WRITABLE_REASONS,
+        PERIOD_WORD_NAMES,
+        SOURCE_WORDED_ORIGINS,
+    )
     from cadrumo.entrypoints.tui.modelo.workbench.editor import EDITOR_HINT_KINDS
     from cadrumo.entrypoints.tui.modelo.workbench.factory import WORDED_FINDING_CODES
     from cadrumo.entrypoints.tui.modelo.workbench.page_items import WorkbenchFilter
@@ -518,11 +523,6 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.entrypoints.tui.modelo.workbench.result import ResultGroup
     from cadrumo.entrypoints.tui.modelo.workbench.review import REVIEW_EFFECTS
     from cadrumo.entrypoints.tui.modelo.workbench.session import StageRefusal
-    from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import (
-        NOT_WRITABLE_REASONS,
-        SOURCE_WORDED_ORIGINS,
-    )
-    from cadrumo.entrypoints.tui.modelo.workbench.wording import PERIOD_WORD_NAMES
 
     root = "tui.modelo.workbench"
     vocabularies: tuple[tuple[str, tuple[str, ...]], ...] = (

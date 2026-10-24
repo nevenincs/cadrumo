@@ -159,6 +159,9 @@ class PublicModeloFormField(BaseModel):
     edit_address: ModeloFormAddressV1
     confirmable: bool
     held_zero: bool
+    origin_words: str | None
+    origin_explanation: str | None
+    editability_words: str | None
 
 
 class PublicModeloFormFieldBlock(BaseModel):

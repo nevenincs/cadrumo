@@ -37,6 +37,7 @@ from ......application.modelo.work_form_models import (
     edit_address,
 )
 from ......application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_work_form_changes
+from ......application.modelo.work_form_wording import editability_text
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -57,7 +58,6 @@ from ..result import ResultGroup, result_lines
 from ..review import EditReviewScreen, UnattributedBoxes, at_risk_text
 from ..screen import ModeloWorkbenchScreen
 from ..session import WorkbenchEditSession
-from ..vocabulary import editability_text
 from .form_edits import replace_fields
 from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
 

@@ -40,6 +40,13 @@ from ......application.modelo.work_form_models import (
     address_key,
 )
 from ......application.modelo.work_form_service import modelo_form_snapshot
+from ......application.modelo.work_form_wording import (
+    aeat_imported_on,
+    date_text,
+    no_earlier_filing,
+    origin_explanation,
+    origin_words,
+)
 from ......application.modelo.work_review import (
     ModeloWorkProgress,
     ModeloWorkReview,
@@ -91,17 +98,7 @@ from ..sources import (
     source_group_kind,
     source_groups,
 )
-from ..vocabulary import (
-    FORM_SET_MARK,
-    ORIGIN_MARKS,
-    aeat_imported_on,
-    no_earlier_filing,
-    origin_explanation,
-    origin_glyph,
-    origin_text,
-    origin_words,
-)
-from ..wording import date_text
+from ..vocabulary import FORM_SET_MARK, ORIGIN_MARKS, origin_glyph, origin_text
 from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

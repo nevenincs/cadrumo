@@ -7,10 +7,11 @@ from decimal import Decimal
 from ....application.modelo.declarations_list import DeclarationListRow
 from ....application.modelo.value_presentation import format_casilla_value
 from ....application.modelo.work_form_models import ModeloFormResult, ModeloFormResultDirection
+from ....application.modelo.work_form_wording import date_text, period_words
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.schema_base import CasillaDataType
-from ..modelo.workbench.wording import date_text, modelo_title, period_words
+from ..modelo.workbench.wording import modelo_title
 
 _DIRECTION_WORDS = {
     ModeloFormResultDirection.TO_PAY: "to_pay",

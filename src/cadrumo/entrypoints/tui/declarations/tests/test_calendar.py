@@ -386,7 +386,7 @@ async def test_real_locales_change_copy_but_not_natural_semantics(locale: Output
             rendered = _rendered(screen)
             for expected in _EXPECTED[locale]:
                 assert expected in rendered
-            from ...modelo.workbench.wording import period_words
+            from .....application.modelo.work_form_wording import period_words
 
             assert "Modelo 130 · " + period_words(screen.controller.projection.entries[0].period) in rendered
             assert tr("tui.declarations.list.not_openable.help") in rendered

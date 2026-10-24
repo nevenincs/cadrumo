@@ -26,6 +26,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormTextDisclosure,
     ModeloFormValueSource,
 )
+from ......application.modelo.work_form_wording import origin_words
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.period import Period
@@ -45,7 +46,7 @@ from ..casilla_list_models import (
 from ..casilla_list_values import (
     description_text,
 )
-from ..vocabulary import EARLIER_FILING_GLYPH, ORIGIN_GLYPHS, origin_text, origin_words
+from ..vocabulary import EARLIER_FILING_GLYPH, ORIGIN_GLYPHS, origin_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

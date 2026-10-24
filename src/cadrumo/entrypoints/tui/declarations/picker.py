@@ -11,11 +11,12 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Static
 
 from ....application.modelo.declaration_targets import DeclarationTarget
+from ....application.modelo.work_form_wording import period_words
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language, tr
 from ..components.language import localized, refresh_localized_widgets, repaint_tables
 from ..components.theme import tokenised
-from ..modelo.workbench.wording import modelo_title, period_words
+from ..modelo.workbench.wording import modelo_title
 
 
 class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):

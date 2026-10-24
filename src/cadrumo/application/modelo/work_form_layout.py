@@ -51,6 +51,7 @@ from .work_form_models import (
     ModeloFormText,
     ModeloFormTextDisclosure,
     field_standing,
+    map_section_fields,
     revised_field,
     section_fields,
 )
@@ -325,27 +326,4 @@ def _asking_no_value(field: ModeloFormField) -> ModeloFormField:
 
 def _asking_nothing(section: ModeloFormSection) -> ModeloFormSection:
     """A section of a page that does not apply: its boxes ask the filer for no value."""
-    blocks: list[ModeloFormBlock] = []
-    for block in section.blocks:
-        if isinstance(block, ModeloFormFieldBlock):
-            blocks.append(block.model_copy(update={"field": _asking_no_value(block.field)}))
-        elif isinstance(block, ModeloFormGridBlock):
-            rows = tuple(
-                row.model_copy(
-                    update={
-                        "cells": tuple(
-                            cell
-                            if cell.field is None
-                            else cell.model_copy(update={"field": _asking_no_value(cell.field)})
-                            for cell in row.cells
-                        )
-                    }
-                )
-                for row in block.rows
-            )
-            blocks.append(block.model_copy(update={"rows": rows}))
-        elif isinstance(block, ModeloFormBindingInputsBlock):
-            blocks.append(block.model_copy(update={"fields": tuple(_asking_no_value(f) for f in block.fields)}))
-        else:
-            blocks.append(block)
-    return section.model_copy(update={"blocks": tuple(blocks)})
+    return map_section_fields(section, _asking_no_value)

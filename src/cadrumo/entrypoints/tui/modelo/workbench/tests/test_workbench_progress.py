@@ -24,6 +24,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormIssue,
     ModeloWorkForm,
 )
+from ......application.modelo.work_form_wording import day_text
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
@@ -49,7 +50,6 @@ from ..progress import (
 )
 from ..screen import ModeloWorkbenchScreen
 from ..vocabulary import DONE_MARK, HERE_MARK
-from ..wording import day_text
 from .declaration_states import with_findings
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 

@@ -53,7 +53,9 @@ from .....application.modelo.work_form_models import (
     ModeloFormRate,
     ModeloFormRateUnit,
     ModeloFormTextDisclosure,
+    holds_zero,
 )
+from .....application.modelo.work_form_wording import holds_nothing
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from ...components.cell_text import ellipsize
@@ -68,8 +70,6 @@ from .vocabulary import (
     ColourRole,
     WorkbenchMark,
     field_counts,
-    holds_nothing,
-    holds_zero,
 )
 
 #: The cursor mark, the attention mark and the space after them.

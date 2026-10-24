@@ -33,7 +33,7 @@ facts, so a frontend only renders it.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -387,7 +387,8 @@ def _confirmable_of(data: dict[str, Any]) -> bool:
     )
 
 
-def _holds_zero(value: ModeloFormScalar) -> bool:
+def holds_zero(value: ModeloFormScalar) -> bool:
+    """Whether a value is an amount of exactly zero: a figure the form holds, which is not the same as nothing."""
     return isinstance(value, Decimal | int) and not isinstance(value, bool) and value == 0
 
 
@@ -396,7 +397,7 @@ def _default_edit_address(data: dict[str, Any]) -> ModeloFormAddressV1:
 
 
 def _default_held_zero(data: dict[str, Any]) -> bool:
-    return _holds_zero(data.get("value"))
+    return holds_zero(data.get("value"))
 
 
 class ModeloFormField(_FormModel):
@@ -444,6 +445,13 @@ class ModeloFormField(_FormModel):
     confirmable: bool = Field(default_factory=_confirmable_of)
     #: Whether the box holds an amount of exactly zero: a figure the form holds, never the same as nothing.
     held_zero: bool = Field(default_factory=_default_held_zero)
+    #: Where the box's value stands, in the few words every frontend shows beside it, in the
+    #: form's language; ``None`` until the builder words the form.
+    origin_words: str | None = None
+    #: A sentence explaining an origin its few words cannot; ``None`` when the words suffice.
+    origin_explanation: str | None = None
+    #: What may be done about the box, or why it cannot be edited here, in the form's language.
+    editability_words: str | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -459,7 +467,7 @@ class ModeloFormField(_FormModel):
             raise ValueError("a field's edit address is the one its own address, editability and bindings give")
         if self.confirmable is not _confirmable_of(dict(self)):
             raise ValueError("a field is confirmable exactly when its own state makes it so")
-        if self.held_zero is not _holds_zero(self.value):
+        if self.held_zero is not holds_zero(self.value):
             raise ValueError("a field holds zero exactly when its value is an amount of zero")
         return self
 
@@ -1128,6 +1136,48 @@ class ModeloWorkForm(_FormModel):
         return tuple(collected)
 
 
+def map_section_fields(
+    section: ModeloFormSection, change: Callable[[ModeloFormField], ModeloFormField]
+) -> ModeloFormSection:
+    """Return ``section`` with ``change`` applied to every field it shows, in every kind of block."""
+    blocks: list[ModeloFormBlock] = []
+    for block in section.blocks:
+        if isinstance(block, ModeloFormFieldBlock):
+            blocks.append(block.model_copy(update={"field": change(block.field)}))
+        elif isinstance(block, ModeloFormGridBlock):
+            rows = tuple(
+                row.model_copy(
+                    update={
+                        "cells": tuple(
+                            cell if cell.field is None else cell.model_copy(update={"field": change(cell.field)})
+                            for cell in row.cells
+                        )
+                    }
+                )
+                for row in block.rows
+            )
+            blocks.append(block.model_copy(update={"rows": rows}))
+        elif isinstance(block, ModeloFormBindingInputsBlock):
+            blocks.append(block.model_copy(update={"fields": tuple(change(field) for field in block.fields)}))
+        else:
+            blocks.append(block)
+    return section.model_copy(update={"blocks": tuple(blocks)})
+
+
+def map_form_fields(form: ModeloWorkForm, change: Callable[[ModeloFormField], ModeloFormField]) -> ModeloWorkForm:
+    """Return ``form`` with ``change`` applied to every field: on its pages, its working figures and unplaced."""
+    return form.model_copy(
+        update={
+            "pages": tuple(
+                page.model_copy(update={"sections": tuple(map_section_fields(s, change) for s in page.sections)})
+                for page in form.pages
+            ),
+            "working_figures": tuple(change(field) for field in form.working_figures),
+            "unplaced": tuple(item.model_copy(update={"field": change(item.field)}) for item in form.unplaced),
+        }
+    )
+
+
 def section_fields(section: ModeloFormSection) -> tuple[ModeloFormField, ...]:
     """Return a section's fields in reading order, grid rows left to right."""
     collected: list[ModeloFormField] = []
@@ -1200,6 +1250,9 @@ __all__ = [
     "field_standing",
     "finding_action_locale_key",
     "finding_attention",
+    "holds_zero",
+    "map_form_fields",
+    "map_section_fields",
     "revised_field",
     "section_fields",
     "typed_by_the_filer",

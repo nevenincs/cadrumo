@@ -24,6 +24,7 @@ from ......application.modelo.work_form_models import (
     ModeloWorkForm,
     address_key,
 )
+from ......application.modelo.work_form_wording import aeat_imported_on, date_text
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -33,8 +34,6 @@ from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..screen import ModeloWorkbenchScreen
 from ..search import WorkbenchSearchPanel
-from ..vocabulary import aeat_imported_on
-from ..wording import date_text
 from .editor_panel import open_panel
 from .form_edits import replace_fields
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form

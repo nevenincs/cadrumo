@@ -63,6 +63,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormOrigin,
     ModeloFormScalar,
 )
+from .....application.modelo.work_form_wording import editability_text
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from .....core.logging import get_logger
@@ -75,11 +76,7 @@ from .dialog_width import fit_dialog_width
 from .ports import WorkbenchChangeKind, WorkbenchParsed, WorkbenchParseOutcome, WorkbenchRefused
 from .sources import OpenSourceSurface, surface_target
 from .status_bar import StatusBar
-from .vocabulary import (
-    TYPED_EDITABILITIES,
-    editability_text,
-    origin_text,
-)
+from .vocabulary import TYPED_EDITABILITIES, origin_text
 
 if TYPE_CHECKING:
     from .header import StatusLine
