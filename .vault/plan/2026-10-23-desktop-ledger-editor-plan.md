@@ -19,7 +19,7 @@ related:
   - '[[2026-10-09-desktop-titlebar-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:831cd08d44b998b33dcffa28707c0e599fb167db931693ff0beda2bcc97be538'
+body_hash: 'sha256:5a7a712b9a1d0ce78bb054905ce49776b4768e83cfaa28b075926e7c792cd457'
 ---
 
 # `desktop-ledger-editor` plan
@@ -59,7 +59,7 @@ Build the Ledger page and its sections from the reviewed prototype, at parity wi
 - [ ] `P03.S10` - Add the movement inspector for one row and for a selection, with classification, documents, invoice link, history, declarations and actions; `native/desktop/frontend/src/components/ledger/`.
 - [x] `P03.S11` - Add the import and export dialogs; `native/desktop/frontend/src/components/ledger/`.
 - [x] `P03.S12` - Add the Invoices section with catalogue grid and invoice editor; `native/desktop/frontend/src/components/ledger/`.
-- [ ] `P03.S13` - Add the Documents and Matching sections; `native/desktop/frontend/src/components/ledger/`.
+- [x] `P03.S13` - Add the Documents and Matching sections; `native/desktop/frontend/src/components/ledger/`.
 - [x] `P03.S14` - Add the Rules, Registers and Health sections; `native/desktop/frontend/src/components/ledger/`.
 
 ### Phase `P04` - Strings, accessibility and verification

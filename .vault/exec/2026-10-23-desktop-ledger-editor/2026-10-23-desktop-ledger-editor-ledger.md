@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:df3e5ac9763811c886a8455cdec4cef593b06c4a36f670ce6ac1287a47bba04a'
+body_hash: 'sha256:02834aea9c4742e2a7ce2c902aefa1df28b3a80832ad023d7304cd605bc162ad'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -343,6 +343,46 @@ related:
 - `S14` `verify:` `python -m dev.locales.desktop_chrome --output` -> `pass`
 - `S14` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `fail`
 - `S14` `by:` `vaultspec-high-executor`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/DocumentsSection.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/EvidenceRecords.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/OffHostDialog.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/documentWords.ts`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/documentsModel.ts`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/useLedgerRead.ts`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/matching/MatchQueue.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/matching/matchingModel.ts`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/matching/matchingWords.ts`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/matching/useMatchingFacts.ts`
+- `S13` `A` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S13` `A` `native/desktop/frontend/tests/ledger-matching.spec.ts`
+- `S13` `A` `native/desktop/frontend/tests/ledger-documents-model.spec.ts`
+- `S13` `A` `native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`
+- `S13` `A` `native/desktop/frontend/tests/scenarios/ledger-matching.spec.ts`
+- `S13` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S13` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S13` `M` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S13` `M` `dev/locales/desktop_chrome.py`
+- `S13` `M` `src/cadrumo/locales/en/common.yml`
+- `S13` `M` `src/cadrumo/locales/es/common.yml`
+- `S13` `M` `src/cadrumo/locales/ca/common.yml`
+- `S13` `M` `src/cadrumo/locales/hu/common.yml`
+- `S13` `verify:` `npx tsc --noEmit (S13 files)` -> `pass`
+- `S13` `verify:` `npx eslint and prettier --check on S13 files` -> `pass`
+- `S13` `verify:` `playwright pure specs tests/ledger-matching.spec.ts tests/ledger-documents-model.spec.ts (14)` -> `pass`
+- `S13` `verify:` `playwright --project=scenarios ledger-documents, ledger-matching, ledger-transfer (26)` -> `pass`
+- `S13` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `fail`
+- `S13` `by:` `implementation-engineer-high`
+- `S05` `M` `native/desktop/frontend/src/components/ui/data-grid.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ui/dataGridModel.ts`
+- `S05` `M` `native/desktop/frontend/src/components/ui/combobox.tsx`
+- `S05` `verify:` `npx tsc --noEmit` -> `pass`
+- `S06` `M` `native/desktop/frontend/tests/data-grid.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/data-grid.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/ledger-editing.spec.ts`
+- `S06` `verify:` `playwright data-grid.spec.ts scenarios/data-grid.spec.ts scenarios/ledger-editing.spec.ts` -> `pass`
 
 ## Notes
 
@@ -365,3 +405,7 @@ related:
 - `S02` 993f39151f fixes P01 highs 1-3; the one failing host test is the unrelated `sign_in` admission timing test (539 passed); high 4, the native relay secret wipe, waits on the native application owner
 - `S14` `test_desktop_chrome` fails only on S13 documents and S10 inspector keys not yet declared; no Setup drift.
 - `S14` Rule counterparty and amount-range matching and stored rule names need a product contract change, deferred by the orchestrator; closing-authority file pick needs a host .json purpose, an orchestrator follow-up; a JSON paste field ships now.
+- `S13` `test_desktop_chrome` drift test fails only on CADRUMO-UX-MODELO's undeclared `desktop.declarations.*` and `desktop.modelo.*` keys in the shared working tree; S13 keys are declared and consumed.
+- `S13` Commits 3f8439a34f, 1af741c564, ec6a40e5b0, bc1b6a3eb3, 16cbd0f2aa.
+- `S05` 9fe5eef35d fixes the P02 mediums (shell chord copy, AltGr, select-all) and lows (combobox enter, position count); tsc is clean on these files, the only errors are CADRUMO-UX-MODELO's untracked workspace files
+- `S01` 434aaab711 reduced `provider_locator` and file: URIs in results; recorded here as the review asked
