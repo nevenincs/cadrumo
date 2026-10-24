@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:2517bebb1cc6e4d6d282194892c1ba2833a8ab890556eee9d6af2dd54aefd0a7'
+body_hash: 'sha256:281927f9dde19b03e5ffda119747921271feee98daea6014c8ad0e6ae6339239'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -224,6 +224,19 @@ related:
 - `S07` `verify:` `rustfmt --edition 2024 --check through stdin on the touched files` -> `pass`
 - `S07` `verify:` `cargo deny --locked check advisories bans licenses sources (application, desktop, manager)` -> `pass`
 - `S07` `by:` `implementation-engineer-high`
+- `S08` `A` `native/application/src/provisioning/local_ai/models.rs`
+- `S08` `A` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S08` `A` `native/application/src/provisioning/local_ai/hardware.rs`
+- `S08` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S08` `M` `native/application/src/provisioning/local_ai/loopback.rs`
+- `S08` `M` `native/application/src/provisioning/local_ai/program.rs`
+- `S08` `M` `native/application/src/provisioning/local_ai/fake_ollama.rs`
+- `S08` `verify:` `cargo test --lib --test application (lib 143, application 25)` -> `pass`
+- `S08` `verify:` `cargo clippy --all-targets -- -D warnings` -> `pass`
+- `S08` `verify:` `cargo clippy --all-targets --features platform -- -D warnings` -> `pass`
+- `S08` `verify:` `rustfmt --edition 2024 --check through stdin on the touched files` -> `pass`
+- `S08` `verify:` `WSL Linux: cargo clippy --locked --lib --tests -D warnings and cargo test --lib local_ai, component, proxy (31)` -> `pass`
+- `S08` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -247,3 +260,4 @@ related:
 - `S07` S07 archive bounds measured on the 0.40.10 archives by streaming each through its decompressor (zip central directory by range request) and summing members, links counted at their target's size: win 2230768655 B/80, linux-x64 5001030082 B/80, linux-arm64 3819535364 B/51, mac 610445869 B/59; bound is 6x the pinned download and 1024 members
 - `S07` S07 the Linux and macOS archives carry 28, 17 and 10 symbolic links for versioned libraries; extraction creates no link: each link that resolves inside the archive to a regular file is placed as a hard link of that file, and any other link is refused
 - `S07` S07 the server inherits the engine's containment: a crash ends it only where the owner hosts the engine in a kill-on-close job (the crate forbids unsafe and has no job API); an orderly stop unloads models, then ends the server
+- `S08` S08 total memory comes from /proc/meminfo on Linux, sysctl hw.memsize on macOS and a PowerShell CIM query on Windows (0.44 s measured here), NVIDIA VRAM from nvidia-smi; each is a separate bounded program with no console window, since the crate forbids unsafe; macOS code paths are compiled only on a macOS host

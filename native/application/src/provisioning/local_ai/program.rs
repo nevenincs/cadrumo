@@ -176,6 +176,19 @@ impl Server {
         self.loopback
     }
 
+    /// A server the test process answers for itself at `address`, with no child.
+    #[cfg(test)]
+    pub(crate) fn attached(address: SocketAddr, version: &str) -> Self {
+        Self {
+            child: None,
+            stdin: None,
+            loopback: Loopback::new(address).unwrap(),
+            version: version.to_owned(),
+            executable: PathBuf::new(),
+            record: PathBuf::new(),
+        }
+    }
+
     /// Starts `command` and waits for the program to announce that it listens, then for
     /// it to answer with `version`. A program that exits, stays silent past
     /// [`START_BUDGET`] or answers otherwise is ended and reads `program_not_running`.

@@ -2,20 +2,23 @@
 //!
 //! The program answers plain HTTP on this computer, so nothing here crosses the network
 //! and no proxy applies. Requests and answers use the same bounded codec as the
-//! transfers, and an answer is read whole up to a bound.
+//! transfers. A JSON answer is read whole up to a bound; a streamed answer is read one
+//! line at a time, each line bounded, and ends early when the caller's stop says so.
 
 use crate::{
     error::Error,
     provisioning::http::{self, Body, Framing, Stop},
 };
 use std::{
-    io::{self, BufReader, Read},
+    io::{self, BufRead, BufReader, Read},
     net::{SocketAddr, TcpStream},
     time::Duration,
 };
 
 /// The largest whole answer read.
 const ANSWER_BYTES_LIMIT: u64 = 1024 * 1024;
+/// The longest line of a streamed answer.
+const LINE_BYTES_LIMIT: u64 = 64 * 1024;
 
 /// One loopback address and the bounds of each exchange with it.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -44,6 +47,13 @@ impl Loopback {
 
     pub fn address(&self) -> SocketAddr {
         self.address
+    }
+
+    /// The same address with a longer bound for each read, for an answer the program
+    /// takes a while to start, such as a model it first loads.
+    pub fn with_io_timeout(mut self, io_timeout: Duration) -> Self {
+        self.io_timeout = io_timeout;
+        self
     }
 
     fn exchange<'a>(
@@ -85,6 +95,42 @@ impl Loopback {
     pub fn post(&self, path: &str, json: &[u8]) -> io::Result<(u16, Vec<u8>)> {
         let (status, body) = self.exchange("POST", path, Some(json), &http::never)?;
         Ok((status, whole(body)?))
+    }
+    /// `POST path` with a JSON body, handing each non-empty line of a successful answer
+    /// to `line` as it arrives, and asking `stop` before each line. An unsuccessful
+    /// answer is read whole and returned instead.
+    pub fn post_lines(
+        &self,
+        path: &str,
+        json: &[u8],
+        stop: &dyn Fn() -> bool,
+        line: &mut dyn FnMut(&[u8]) -> io::Result<()>,
+    ) -> io::Result<(u16, Vec<u8>)> {
+        let (status, body) = self.exchange("POST", path, Some(json), stop)?;
+        if !(200..300).contains(&status) {
+            return Ok((status, whole(body)?));
+        }
+        let mut reader = BufReader::new(body);
+        let mut buffer = Vec::new();
+        loop {
+            if stop() {
+                return Err(io::Error::from(io::ErrorKind::Interrupted));
+            }
+            buffer.clear();
+            let read = (&mut reader)
+                .take(LINE_BYTES_LIMIT + 1)
+                .read_until(b'\n', &mut buffer)?;
+            if read == 0 {
+                return Ok((status, Vec::new()));
+            }
+            if buffer.len() as u64 > LINE_BYTES_LIMIT {
+                return Err(io::Error::new(io::ErrorKind::InvalidData, "answer line"));
+            }
+            let text = buffer.trim_ascii();
+            if !text.is_empty() {
+                line(text)?;
+            }
+        }
     }
 }
 

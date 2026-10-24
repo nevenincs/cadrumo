@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:3de1c1235890f0b02e24983c3975cf724fb06d6ff4bdc34400779cb92dd77b32'
+body_hash: 'sha256:1cf32da016c4868453f8ce2c2068fa7fa6911ed22cfc2ae471a7d69974edf1d2'
 ---
 
 # `rust-component-provisioning` plan
@@ -60,7 +60,7 @@ The engine installs pinned Chromium archives straight into the bundled driver's 
 The engine installs a pinned portable Ollama, runs it as its own child, pulls and checks each role's model, and decides the hardware floor; Python only locates and uses it.
 
 - [x] `P03.S07` - Install the pinned portable Ollama archive into components/ollama/<version>, start and stop it as the engine's child with the existing models root and home, and detect but never modify a system install; `native/application/src/provisioning/local_ai/program.rs, native/application/Cargo.toml (archive crates through cargo-deny), native/deny.toml and tests`.
-- [ ] `P03.S08` - Pull each role's model through the started server with byte progress, compare its manifest digest with the pin for stale, run the one-token generation check, and decide the hardware floor from memory and NVIDIA VRAM; `native/application/src/provisioning/local_ai/models.rs, native/application/src/provisioning/local_ai/hardware.rs and tests against a local fake pull server`.
+- [x] `P03.S08` - Pull each role's model through the started server with byte progress, compare its manifest digest with the pin for stale, run the one-token generation check, and decide the hardware floor from memory and NVIDIA VRAM; `native/application/src/provisioning/local_ai/models.rs, native/application/src/provisioning/local_ai/hardware.rs and tests against a local fake pull server`.
 - [ ] `P03.S09` - Make the Python readers locate the program, server and models from the Rust component record, and move role fitness to consumer admission outside component state; `src/cadrumo/application/local_reader.py, src/cadrumo/application/provisioning_host.py (locate only), src/cadrumo/application/provisioning_fitness.py, src/cadrumo/adapters/outbound/llm/providers/local.py and tests`.
 
 ### Phase `P04` - Role and surfaces

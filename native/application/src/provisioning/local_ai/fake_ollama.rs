@@ -8,13 +8,15 @@
 
 use serde_json::{Value, json};
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, VecDeque},
     io::{BufRead, BufReader, Read, Write},
-    net::{TcpListener, TcpStream},
+    net::{SocketAddr, TcpListener, TcpStream},
+    path::PathBuf,
     sync::{
         Arc, Mutex,
         atomic::{AtomicBool, Ordering},
     },
+    thread::JoinHandle,
 };
 
 /// The environment variable that selects the helper mode in a child test binary.
@@ -42,6 +44,16 @@ pub(crate) struct FakeState {
     /// Where the helper also appends every request line, for a test to read after the
     /// helper has ended.
     pub log: Option<std::path::PathBuf>,
+    /// Every request body, in order.
+    pub bodies: Vec<Value>,
+    /// The lines each pull answers with, one list per pull in turn; the answer then ends.
+    pub pulls: VecDeque<Vec<Value>>,
+    /// The files a pull of a model writes once it answers `success`.
+    pub installs: BTreeMap<String, Vec<(PathBuf, Vec<u8>)>>,
+    /// The models `/api/tags` reports, by name, with their digests.
+    pub tags: BTreeMap<String, String>,
+    /// The status and body a generation answers with instead of one token.
+    pub generation: Option<(String, Value)>,
 }
 
 pub(crate) type Shared = Arc<Mutex<FakeState>>;
@@ -106,6 +118,7 @@ fn answer(state: &Shared, mut stream: TcpStream) {
         .unwrap();
     }
     let body: Value = serde_json::from_slice(&request.body).unwrap_or(Value::Null);
+    guard.bodies.push(body.clone());
     let target = request
         .line
         .split(' ')
@@ -134,6 +147,53 @@ fn answer(state: &Shared, mut stream: TcpStream) {
             let environment = json!(guard.environment);
             drop(guard);
             respond(&mut stream, "200 OK", &environment);
+        }
+        ("GET", "/api/tags") => {
+            let models: Vec<Value> = guard
+                .tags
+                .iter()
+                .map(|(name, digest)| json!({ "name": name, "model": name, "digest": digest }))
+                .collect();
+            drop(guard);
+            respond(&mut stream, "200 OK", &json!({ "models": models }));
+        }
+        ("POST", "/api/pull") => {
+            let model = body["model"].as_str().unwrap_or_default().to_owned();
+            let lines = guard.pulls.pop_front().unwrap_or_default();
+            let succeeds = lines.iter().any(|line| line["status"] == "success");
+            if succeeds {
+                for (path, bytes) in guard.installs.get(&model).into_iter().flatten() {
+                    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+                    std::fs::write(path, bytes).unwrap();
+                }
+            }
+            drop(guard);
+            let _ = write!(
+                stream,
+                "HTTP/1.1 200 OK
+Content-Type: application/x-ndjson
+Connection: close
+
+"
+            );
+            for line in lines {
+                let _ = writeln!(stream, "{line}");
+            }
+            let _ = stream.flush();
+        }
+        ("POST", "/api/generate")
+            if body["keep_alive"] == json!(0) && body["prompt"].is_string() =>
+        {
+            let generation = guard.generation.clone();
+            drop(guard);
+            match generation {
+                Some((status, answer)) => respond(&mut stream, &status, &answer),
+                None => respond(
+                    &mut stream,
+                    "200 OK",
+                    &json!({ "model": body["model"], "response": "Yes", "done": true }),
+                ),
+            }
         }
         ("POST", "/api/generate") => {
             let model = body["model"].as_str().unwrap_or_default().to_owned();
@@ -164,6 +224,51 @@ fn answer(state: &Shared, mut stream: TcpStream) {
                 "404 Not Found",
                 &json!({ "error": "not found" }),
             );
+        }
+    }
+}
+
+/// A fake answering on a loopback port of the test process until dropped.
+pub(crate) struct FakeOllama {
+    pub state: Shared,
+    address: SocketAddr,
+    stop: Arc<AtomicBool>,
+    accept: Option<JoinHandle<()>>,
+}
+
+impl FakeOllama {
+    pub fn start(version: &str) -> Self {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let state: Shared = Arc::new(Mutex::new(FakeState {
+            version: version.to_owned(),
+            ..FakeState::default()
+        }));
+        let address = listener.local_addr().unwrap();
+        let stop = Arc::new(AtomicBool::new(false));
+        let accept = {
+            let state = state.clone();
+            let stop = stop.clone();
+            std::thread::spawn(move || accept_until(&listener, &state, &stop))
+        };
+        Self {
+            state,
+            address,
+            stop,
+            accept: Some(accept),
+        }
+    }
+
+    pub fn address(&self) -> SocketAddr {
+        self.address
+    }
+}
+
+impl Drop for FakeOllama {
+    fn drop(&mut self) {
+        self.stop.store(true, Ordering::Release);
+        let _ = TcpStream::connect(self.address);
+        if let Some(accept) = self.accept.take() {
+            let _ = accept.join();
         }
     }
 }
