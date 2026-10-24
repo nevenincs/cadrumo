@@ -117,7 +117,7 @@ test("a rule made from a selection is prefilled, saved, and its run staged", asy
     field(dialog, "desktop.ledger.rules.classification"),
   ).toHaveValue("");
   await expect(dialog.locator(".ledger-rule-matches")).toContainText(
-    label("desktop.ledger.rules.matches", { count: 1 }),
+    label("desktop.ledger.rules.matches_split", { count: 2, pending: 1 }),
   );
   // Saving waits for a classification.
   const save = button(dialog, "desktop.ledger.rules.save");
@@ -125,8 +125,17 @@ test("a rule made from a selection is prefilled, saved, and its run staged", asy
   await field(dialog, "desktop.ledger.rules.classification").selectOption(
     "BUSINESS",
   );
-  await field(dialog, "desktop.ledger.rules.category").selectOption(
-    "suministros_cliente_directos",
+  // The category is the grouped, searchable list used everywhere else.
+  await dialog.locator(".ledger-rule-category button").click();
+  const list = target.locator("[data-slot=combobox]");
+  await expect(list).toBeVisible();
+  await target.keyboard.type(
+    label("desktop.ledger.category.suministros_cliente_directos"),
+  );
+  await target.keyboard.press("Enter");
+  await expect(list).toBeHidden();
+  await expect(dialog.locator(".ledger-rule-category button")).toHaveText(
+    label("desktop.ledger.category.suministros_cliente_directos"),
   );
   await dialog
     .getByLabel(label("desktop.ledger.rules.classify_now"), { exact: true })
@@ -428,25 +437,119 @@ test("a closing authority or a purchase's cost is read from a file the person pi
   await expect(cost).toHaveCount(0);
 });
 
-test("what is missing opens the movements each reason names", async ({
+/** What a readiness strip shows, pill by pill and chip by chip. */
+const stripOf = (scope: Locator) =>
+  scope
+    .locator(
+      ".ledger-readiness [data-readiness], .ledger-reasons [data-reason]",
+    )
+    .evaluateAll((items) =>
+      items.map(
+        (item) =>
+          `${item.getAttribute("data-readiness") ?? item.getAttribute("data-reason")}:${item.textContent}`,
+      ),
+    );
+
+test("what is missing opens on the strip's check and says it the same way", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const strip = page(target).locator(".ledger-movements");
+  await expect(
+    strip.locator(".ledger-readiness [data-readiness]"),
+  ).not.toHaveCount(0);
+  await expect(strip.locator("[data-readiness=unknown]")).toHaveCount(0);
+  const onMovements = await stripOf(strip);
+  await openSetup(target, "health");
+  const health = target.locator(".ledger-setup-health");
+  // The page's last check, without checking again: the same pills and chips.
+  await expect.poll(() => stripOf(health)).toEqual(onMovements);
+  const recheck = health.locator(".ledger-health-preflight");
+  await expect(recheck).toHaveText(label("desktop.ledger.health.check_again"));
+  await recheck.hover();
+  await expect(target.locator(".ledger-health-checked-at")).toBeVisible();
+  // Checking again measures the same stored rows the same way.
+  await recheck.click();
+  await expect.poll(() => stripOf(health)).toEqual(onMovements);
+});
+
+test("a readiness reason in Health opens the movements it counts", async ({
   page: target,
 }) => {
   await openLedger(target);
   await openSetup(target, "health");
-  await button(target, "desktop.ledger.health.check").click();
-  const reasons = target.locator(".ledger-health-reasons li");
-  await expect(reasons.first()).toBeVisible();
-  const first = reasons.first();
+  const chip = target
+    .locator(".ledger-setup-health .ledger-reasons [data-reason] button")
+    .first();
+  await expect(chip).toBeVisible();
   const counted = Number(
-    (await first.locator(".tabular-nums").textContent())?.replace(/\D/g, ""),
+    (await chip.locator(".tabular-nums").textContent())?.replace(/\D/g, ""),
   );
-  await first.locator(".ledger-health-show").click();
+  await chip.click();
   await expect(
     head(target).getByRole("tab", {
       name: new RegExp(`^${label("desktop.ledger.section.movements")}`),
     }),
   ).toHaveAttribute("aria-selected", "true");
   await expect(dataRows(target)).toHaveCount(counted);
+});
+
+test("the to-classify pill in Health opens the movements to classify", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await openSetup(target, "health");
+  const pill = target.locator(
+    ".ledger-setup-health .ledger-readiness [data-readiness=to_classify] button",
+  );
+  // The count is what is drawn; the sentence is for the screen reader.
+  const counted = Number(
+    (
+      await pill.locator("span[aria-hidden=true]").first().textContent()
+    )?.replace(/\D/g, ""),
+  );
+  expect(counted).toBeGreaterThan(0);
+  await pill.click();
+  await expect(dataRows(target)).toHaveCount(counted);
+});
+
+test("Health's status says each count beside its label and names what the states leave", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await openSetup(target, "health");
+  const status = target.locator(".ledger-health-status");
+  await expect(status).toBeVisible();
+  const value = async (name: string) =>
+    Number(
+      (
+        await status
+          .locator("dt", { hasText: new RegExp(`^${name}$`) })
+          .locator("xpath=following-sibling::dd[1]")
+          .textContent()
+      )?.replace(/\D/g, ""),
+    );
+  const active = await value(label("desktop.ledger.health.count.active"));
+  const states =
+    (await value(label("desktop.ledger.health.count.pending"))) +
+    (await value(label("desktop.ledger.health.count.reviewed"))) +
+    (await value(label("desktop.ledger.health.count.skipped")));
+  const excluded = status.locator("[data-count=excluded] dd");
+  if (active === states) await expect(excluded).toHaveCount(0);
+  else await expect(excluded).toHaveText(String(active - states));
+  // Each number sits beside its label, not across the panel.
+  const gaps = await status.locator("dl").evaluateAll((lists) =>
+    lists.flatMap((list) =>
+      [...list.querySelectorAll("dt")].map((term) => {
+        const number = term.nextElementSibling as HTMLElement;
+        return (
+          number.getBoundingClientRect().left -
+          term.getBoundingClientRect().right
+        );
+      }),
+    ),
+  );
+  for (const gap of gaps) expect(gap).toBeLessThan(160);
 });
 
 test("a reset is previewed first and blocked by sealed declarations", async ({

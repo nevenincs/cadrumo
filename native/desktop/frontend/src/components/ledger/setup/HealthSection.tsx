@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -7,23 +7,30 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type {
-  LedgerCheckResult,
-  LedgerPreflightResult,
-} from "../../../shell/ledger";
+import type { LedgerCheckResult } from "../../../shell/ledger";
 import { publicPeriod } from "../../../shell/ledgerGrammar";
 import type {
   LedgerParticipationRebuildResult,
   LedgerResetResult,
 } from "../../../shell/ledgerSetup";
+import {
+  checkReadiness,
+  readinessSnapshot,
+  type Readiness,
+} from "../../../shell/ledgerWindow";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
+import { stageTally } from "../editing/editingModel";
 import { periodText } from "../ledgerWords";
 import {
-  amountText,
-  reasonDetail,
-  reasonShort,
-} from "../movements/movementWords";
+  NO_FILTERS,
+  TO_CLASSIFY_REASON,
+  readinessSets,
+  stagedClassifyCount,
+  type ReadinessFilter,
+} from "../movements/movementsModel";
+import { amountText, reasonShort } from "../movements/movementWords";
+import { ReadinessStrip } from "../movements/ReadinessStrip";
 import {
   CallLine,
   Panel,
@@ -36,6 +43,17 @@ import type { SetupProps } from "./setupProps";
 import { setupCall, type SetupCall } from "./setupModel";
 
 const RESET_REASON_LIMIT = 500;
+const NOT_CHECKED: Readiness = { kind: "not_checked" };
+/** A group of counts: each label sits beside its number. */
+const COUNTS = "grid grid-cols-[max-content_max-content] gap-x-4 gap-y-1";
+
+/** The later of two readiness checks; one still running wins. */
+function later(own: Readiness, page: Readiness): Readiness {
+  if (own.kind === "checking") return own;
+  const at = (readiness: Readiness) =>
+    readinessSnapshot(readiness)?.checkedAt ?? -Infinity;
+  return at(own) >= at(page) ? own : page;
+}
 
 /** How many issues name each reason, most first. */
 function byReason(issues: readonly { reason: string }[]): [string, number][] {
@@ -46,23 +64,36 @@ function byReason(issues: readonly { reason: string }[]): [string, number][] {
 }
 
 /**
- * Setup › Health for the page's period: its counts and totals, what is
- * still missing before it can be calculated, with each reason opening the
- * movements it names; a check of the whole ledger; the declarations
- * calculated before their movements changed; rebuilding the declaration
- * links; and, set apart, resetting the ledger after a dry run.
+ * Setup › Health for the page's period: its counts and totals; what is
+ * still missing before it can be calculated, said as the readiness strip
+ * says it and opening on the page's last check, each pill and reason
+ * opening the movements it counts; a check of the whole ledger; the
+ * declarations calculated before their movements changed; rebuilding the
+ * declaration links; and, set apart, resetting the ledger after a dry run.
  */
 export function HealthSection({
   port,
   reader,
   locale,
+  rows,
+  stage,
   period,
+  readiness,
+  partial,
   onShowReason,
+  onShowReadiness,
   onShowInvoices,
   onReset,
 }: SetupProps & {
+  /** The page's readiness, as its strip shows it. */
+  readiness?: Readiness;
+  /** Whether the page holds only some of the period's movements; unknown
+   * is taken as some. */
+  partial?: boolean;
   /** Opens Movements on the movements a readiness reason names. */
   onShowReason(reason: string): void;
+  /** Opens Movements on the movements a readiness pill counts. */
+  onShowReadiness?(filter: ReadinessFilter): void;
   onShowInvoices(): void;
   /** The ledger was reset, or may have been: the page reads it again. */
   onReset(): void;
@@ -79,9 +110,10 @@ export function HealthSection({
     { period: period ? publicPeriod(period) : null },
     key,
   );
-  const [preflight, setPreflight] =
-    useState<SetupCall<LedgerPreflightResult> | null>(null);
-  const [preflighting, setPreflighting] = useState(false);
+  // A check asked for here, for this reader and period.
+  const [own, setOwn] = useState<{ key: string; readiness: Readiness } | null>(
+    null,
+  );
   const [check, setCheck] = useState<SetupCall<LedgerCheckResult> | null>(null);
   const [checking, setChecking] = useState(false);
   const rebuild = useSetupWrite(
@@ -102,18 +134,33 @@ export function HealthSection({
     "ledger/health",
   );
 
-  const runPreflight = async () => {
-    if (!period) return;
-    setPreflighting(true);
-    setPreflight(
-      await setupCall(
-        port,
-        "ledger.preflight",
-        { period: publicPeriod(period) },
-        false,
-      ),
+  const ownKey = `${reader}:${key}`;
+  const shownReadiness = later(
+    own?.key === ownKey ? own.readiness : NOT_CHECKED,
+    readiness ?? NOT_CHECKED,
+  );
+  const snapshot = readinessSnapshot(shownReadiness);
+  const sets = useMemo(
+    () => readinessSets(rows ?? [], snapshot),
+    [rows, snapshot],
+  );
+  const checkingNow = shownReadiness.kind === "checking";
+  const runReadiness = async () => {
+    const asked = ownKey;
+    const held = snapshot;
+    setOwn({ key: asked, readiness: { kind: "checking", held } });
+    const answer = await checkReadiness(port, period, Date.now);
+    setOwn((current) =>
+      current?.key !== asked
+        ? current
+        : {
+            key: asked,
+            readiness:
+              answer.kind === "checked"
+                ? answer
+                : { kind: "failed", failure: answer.failure, held },
+          },
     );
-    setPreflighting(false);
   };
   const runCheck = async () => {
     setChecking(true);
@@ -154,7 +201,14 @@ export function HealthSection({
   };
 
   const read = status.read?.kind === "done" ? status.read.result : null;
-  const missing = preflight?.kind === "done" ? preflight.result : null;
+  // The review states count the active movements; the state the status
+  // does not count on its own is what they leave.
+  const excluded = read
+    ? read.active_count -
+      read.pending_review_count -
+      read.reviewed_count -
+      read.skipped_count
+    : 0;
   const whole = check?.kind === "done" ? check.result : null;
   const report =
     dryRun?.call.kind === "done" ? dryRun.call.result.report : null;
@@ -174,120 +228,120 @@ export function HealthSection({
               {t("desktop.ledger.health.no_movements", { period: shown })}
             </p>
           ) : (
-            <dl className="ledger-health-status grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
-              {(
-                [
-                  ["active", read.active_count],
-                  ["archived", read.archived_count],
-                  ["stashed", read.stashed_count],
-                  ["split", read.split_count],
-                  ["pending", read.pending_review_count],
-                  ["reviewed", read.reviewed_count],
-                  ["skipped", read.skipped_count],
-                ] as const
-              ).map(([name, value]) => (
-                <div key={name} className="contents">
-                  <dt>{t(`desktop.ledger.health.count.${name}`)}</dt>
-                  <dd className="text-right tabular-nums">{count(value)}</dd>
-                </div>
-              ))}
-              <dt>{t("desktop.ledger.health.income")}</dt>
-              <dd className="text-right tabular-nums">
-                {amountText(locale, read.business_income_total)}
-              </dd>
-              <dt>{t("desktop.ledger.health.expense")}</dt>
-              <dd className="text-right tabular-nums">
-                {amountText(locale, read.business_expense_total)}
-              </dd>
-              <dt>{t("desktop.ledger.health.net")}</dt>
-              <dd className="text-right font-medium tabular-nums">
-                {amountText(locale, read.business_net_total)}
-              </dd>
-              <dt>{t("desktop.ledger.health.unconverted")}</dt>
-              <dd className="text-right tabular-nums">
-                {count(read.unconverted_currency_count)}
-              </dd>
-            </dl>
+            <div className="ledger-health-status flex flex-wrap items-start gap-x-10 gap-y-3 text-sm">
+              <dl className={COUNTS}>
+                {(
+                  [
+                    ["active", read.active_count],
+                    ["archived", read.archived_count],
+                    ["stashed", read.stashed_count],
+                    ["split", read.split_count],
+                  ] as const
+                ).map(([name, value]) => (
+                  <div key={name} className="contents">
+                    <dt>{t(`desktop.ledger.health.count.${name}`)}</dt>
+                    <dd className="text-right tabular-nums">{count(value)}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="grid gap-1">
+                <p className="text-xs text-muted-foreground">
+                  {t("desktop.ledger.health.of_active")}
+                </p>
+                <dl className={COUNTS}>
+                  {(
+                    [
+                      ["pending", read.pending_review_count],
+                      ["reviewed", read.reviewed_count],
+                      ["skipped", read.skipped_count],
+                    ] as const
+                  ).map(([name, value]) => (
+                    <div key={name} className="contents">
+                      <dt>{t(`desktop.ledger.health.count.${name}`)}</dt>
+                      <dd className="text-right tabular-nums">
+                        {count(value)}
+                      </dd>
+                    </div>
+                  ))}
+                  {excluded > 0 && (
+                    <div className="contents" data-count="excluded">
+                      <dt>{t("desktop.ledger.status.excluded")}</dt>
+                      <dd className="text-right tabular-nums">
+                        {count(excluded)}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+              <dl className={COUNTS}>
+                <dt>{t("desktop.ledger.health.income")}</dt>
+                <dd className="text-right tabular-nums">
+                  {amountText(locale, read.business_income_total)}
+                </dd>
+                <dt>{t("desktop.ledger.health.expense")}</dt>
+                <dd className="text-right tabular-nums">
+                  {amountText(locale, read.business_expense_total)}
+                </dd>
+                <dt>{t("desktop.ledger.health.net")}</dt>
+                <dd className="text-right font-medium tabular-nums">
+                  {amountText(locale, read.business_net_total)}
+                </dd>
+                <dt>{t("desktop.ledger.health.unconverted")}</dt>
+                <dd className="text-right tabular-nums">
+                  {count(read.unconverted_currency_count)}
+                </dd>
+              </dl>
+            </div>
           )}
         </Panel>
         <Panel
           title={t("desktop.ledger.health.missing", { period: shown })}
           actions={
-            <Button
-              size="xs"
-              variant="outline"
-              className="ledger-health-preflight"
-              aria-disabled={!period || preflighting || undefined}
-              onClick={() => period && !preflighting && void runPreflight()}
-            >
-              <Icon name="sync" />
-              {preflight
-                ? t("desktop.ledger.health.check_again")
-                : t("desktop.ledger.health.check")}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  className="ledger-health-preflight"
+                  aria-disabled={checkingNow || undefined}
+                  onClick={() => !checkingNow && void runReadiness()}
+                >
+                  <Icon name="sync" />
+                  {snapshot
+                    ? t("desktop.ledger.health.check_again")
+                    : t("desktop.ledger.health.check")}
+                </Button>
+              </TooltipTrigger>
+              {snapshot && (
+                <TooltipContent className="ledger-health-checked-at">
+                  {t("desktop.ledger.health.checked_at", {
+                    time: new Intl.DateTimeFormat(locale, {
+                      timeStyle: "short",
+                    }).format(new Date(snapshot.checkedAt)),
+                  })}
+                </TooltipContent>
+              )}
+            </Tooltip>
           }
         >
-          {!period ? (
-            <p className="text-sm text-muted-foreground">
-              {t("desktop.ledger.health.choose_period")}
-            </p>
-          ) : preflighting ? (
-            <Reading label={t("desktop.ledger.form.reading")} />
-          ) : missing ? (
-            missing.issues.length === 0 ? (
-              <Alert tone="success" icon={<Icon name="check" />}>
-                {t("desktop.ledger.health.ready", {
-                  count: missing.checked_transaction_count,
-                })}
-              </Alert>
-            ) : (
-              <ul className="ledger-health-reasons flex flex-col">
-                {byReason(missing.issues).map(([found, n]) => (
-                  <li
-                    key={found}
-                    className="flex items-center gap-2 border-t border-border py-1 first:border-t-0"
-                  >
-                    <Icon name="alert" size="sm" className="text-warning" />
-                    <span className="flex-1">
-                      {reasonShort(t, found)}
-                      <span className="sr-only">
-                        {" · "}
-                        {reasonDetail(t, found)}
-                      </span>
-                    </span>
-                    <span className="font-medium tabular-nums">{count(n)}</span>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          className="ledger-health-show"
-                          onClick={() => onShowReason(found)}
-                        >
-                          {t("desktop.ledger.health.show_short")}
-                          <span className="sr-only">
-                            {" "}
-                            {reasonShort(t, found)}
-                          </span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {t("desktop.ledger.health.show", {
-                          reason: reasonShort(t, found),
-                          count: n,
-                        })}
-                      </TooltipContent>
-                    </Tooltip>
-                  </li>
-                ))}
-              </ul>
-            )
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              {t("desktop.ledger.health.not_checked")}
-            </p>
-          )}
-          <CallLine call={preflight} />
+          <ReadinessStrip
+            readiness={shownReadiness}
+            sets={sets}
+            filters={NO_FILTERS}
+            locale={locale}
+            unsaved={stageTally(stage).units}
+            stagedClassify={stagedClassifyCount(sets.toClassify, stage)}
+            partial={partial ?? true}
+            onPill={(filter) => {
+              if (filter === null) return;
+              if (onShowReadiness) onShowReadiness(filter);
+              else if (filter === "to_classify")
+                onShowReason(TO_CLASSIFY_REASON);
+            }}
+            onReason={(reason) => {
+              if (reason !== null) onShowReason(reason);
+            }}
+          />
         </Panel>
       </div>
       <Panel
