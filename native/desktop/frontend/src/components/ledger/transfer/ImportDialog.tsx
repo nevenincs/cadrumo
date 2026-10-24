@@ -149,14 +149,14 @@ function FileRow({
 }) {
   return (
     <li
-      className={cn(
-        "flex items-start gap-2 rounded-md border px-2.5 py-2",
-        refused ? "border-destructive" : "border-border",
-      )}
+      data-refused={refused || undefined}
+      className="flex items-start gap-2 rounded-md border border-border px-2.5 py-2"
     >
+      {/* A file that cannot be read is a refusal, not a danger: its glyph
+          says so, in the ink of the rest. */}
       <Icon
         name={icon ?? (refused ? "refused" : fileIcon(name))}
-        className={cn("mt-0.5", refused && "text-destructive")}
+        className={cn("mt-0.5", refused && "text-muted-foreground")}
       />
       <div className="grid min-w-0 flex-1 gap-1">
         <span className="font-medium [overflow-wrap:anywhere]">{name}</span>
@@ -253,6 +253,47 @@ function DuplicateCompare({
         </div>
         <p className="text-xs text-muted-foreground">
           {t("desktop.ledger.import.compare_note")}
+        </p>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** A preview's likely duplicates as a glyph and a count, opening what
+ * happens to them. The preview names no row of its own, so the comparison
+ * with the movement already stored waits for the import. */
+function DuplicatesChip({
+  t,
+  count,
+  shown,
+}: {
+  t: Translate;
+  count: number;
+  shown: string;
+}) {
+  const name = t("desktop.ledger.import.duplicates_chip", { count: shown });
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="pill"
+          size="xs"
+          className="ledger-import-duplicates-chip w-fit tabular-nums"
+          aria-label={name}
+          data-count={count}
+        >
+          <Icon name="alert" size="xs" className="text-warning" />
+          <span aria-hidden="true">{shown}</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        aria-label={name}
+        className="ledger-import-duplicates-note grid w-dialog gap-1"
+      >
+        <p className="font-medium">{name}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("desktop.ledger.import.duplicates_note")}
         </p>
       </PopoverContent>
     </Popover>
@@ -846,15 +887,26 @@ export function ImportDialog({
           </DialogDescription>
         </DialogHeader>
         <StepList step={step} />
-        <h3
-          ref={heading}
-          tabIndex={-1}
-          className="ledger-import-step font-medium text-foreground"
-        >
-          {t(`desktop.ledger.import.heading.${step}`)}
-        </h3>
+        <div className="flex items-center gap-1">
+          <h3
+            ref={heading}
+            tabIndex={-1}
+            className="ledger-import-step font-medium text-foreground"
+          >
+            {t(`desktop.ledger.import.heading.${step}`)}
+          </h3>
+          {step === "preview" && kind === "bank" && (
+            <IconButton
+              label={t("desktop.ledger.import.bound_note")}
+              size="xs"
+              className="ledger-import-bound size-control-xs"
+            >
+              <Icon name="info" size="xs" />
+            </IconButton>
+          )}
+        </div>
         <div className="grid gap-3">{body}</div>
-        <DialogFooter>{footer}</DialogFooter>
+        <DialogFooter sticky>{footer}</DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -1182,9 +1234,6 @@ function BankPreview({
   };
   return (
     <>
-      <Alert icon={<Icon name="info" />}>
-        {t("desktop.ledger.import.bound_note")}
-      </Alert>
       {nothingNew && (
         <Alert tone="success" icon={<Icon name="check" />}>
           <AlertTitle>{t("desktop.ledger.import.nothing_new")}</AlertTitle>
@@ -1256,17 +1305,26 @@ function BankPreview({
                 <label htmlFor={select} className="text-muted-foreground">
                   {t("desktop.ledger.import.account")}
                 </label>
-                {fact.kind === "choose" ? (
+                {fact.kind === "choose" || fact.kind === "detected" ? (
                   <NativeSelect
                     id={select}
                     controlSize="sm"
                     required
+                    aria-describedby={
+                      fact.kind === "detected" ? `${select}-hint` : undefined
+                    }
                     aria-invalid={
-                      (choices[preview.file.token] === undefined &&
+                      (fact.kind === "choose" &&
+                        choices[preview.file.token] === undefined &&
                         result.imported > 0) ||
                       undefined
                     }
-                    value={choices[preview.file.token] ?? ""}
+                    // A detected account is the choice already made, and
+                    // stays changeable.
+                    value={
+                      choices[preview.file.token] ??
+                      (fact.kind === "detected" ? fact.account : "")
+                    }
                     onChange={(event) => onChoose(preview, event.target.value)}
                   >
                     <option value="" disabled>
@@ -1287,26 +1345,27 @@ function BankPreview({
                   </NativeSelect>
                 ) : (
                   <span id={select} className="font-medium">
-                    {fact.kind === "detected"
-                      ? accountName(fact.account)
-                      : t("desktop.ledger.import.no_account")}
+                    {t("desktop.ledger.import.no_account")}
                     <span className="ml-2 text-xs font-normal text-muted-foreground">
                       {t(`desktop.ledger.import.account_${fact.kind}`)}
                     </span>
                   </span>
                 )}
+                {fact.kind === "detected" && (
+                  <span
+                    id={`${select}-hint`}
+                    className="text-xs text-muted-foreground"
+                  >
+                    {t("desktop.ledger.import.account_detected")}
+                  </span>
+                )}
               </div>
               {result.likely_duplicates > 0 && (
-                <span className="flex items-start gap-1.5 text-sm">
-                  <Icon
-                    name="alert"
-                    size="xs"
-                    className="mt-0.5 text-warning"
-                  />
-                  {t("desktop.ledger.import.duplicates_note", {
-                    count: result.likely_duplicates,
-                  })}
-                </span>
+                <DuplicatesChip
+                  t={t}
+                  count={result.likely_duplicates}
+                  shown={count(result.likely_duplicates)}
+                />
               )}
               {result.diagnostics.map((diagnostic, at) => (
                 <span key={at} className="text-sm text-muted-foreground">

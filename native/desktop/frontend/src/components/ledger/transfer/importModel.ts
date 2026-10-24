@@ -284,13 +284,14 @@ export function accountFact(
   return { kind: "choose" };
 }
 
-/** The account a file imports with: the one its rows name, the only one
- * possible, or the person's choice, which may still be missing. */
+/** The account a file imports with: the person's choice, else the one its
+ * rows name; the only one possible; or nothing yet, where the person must
+ * choose. */
 export function accountFor(
   fact: AccountFact,
   choice: AccountKey | undefined,
 ): AccountKey | undefined {
-  if (fact.kind === "detected") return fact.account;
+  if (fact.kind === "detected") return choice ?? fact.account;
   if (fact.kind === "choose") return choice;
   return NO_ACCOUNT;
 }

@@ -1,16 +1,23 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
+import { IconButton } from "@/components/ui/icon-button";
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -43,6 +50,13 @@ import {
 import { exportFileName } from "./transferWords";
 
 const FORMATS: readonly LedgerExportFormat[] = ["csv", "jsonl", "xlsx"];
+
+const samePeriod = (left: LedgerPeriod | null, right: LedgerPeriod | null) =>
+  left === right ||
+  (left !== null &&
+    right !== null &&
+    left.year === right.year &&
+    left.code === right.code);
 
 type Status =
   | { kind: "reading" }
@@ -77,6 +91,7 @@ export function ExportDialog({
   copy,
   onClose,
   onCloseAutoFocus,
+  readiness,
 }: {
   port: LedgerPort;
   locale: string;
@@ -96,6 +111,9 @@ export function ExportDialog({
   onClose(): void;
   /** Where the focus goes once the dialog has gone. */
   onCloseAutoFocus?: (event: Event) => void;
+  /** The page's readiness pills, which count the page's period: shown
+   * while the export takes that period, so both say the same. */
+  readiness?: ReactNode;
 }) {
   const t = useStrings();
   const ids = useId();
@@ -284,12 +302,19 @@ export function ExportDialog({
           heading.current?.focus();
         }}
         onCloseAutoFocus={onCloseAutoFocus}
+        aria-describedby={undefined}
       >
         <DialogHeader>
-          <DialogTitle>{t("desktop.ledger.export.title")}</DialogTitle>
-          <DialogDescription>
-            {t("desktop.ledger.export.description")}
-          </DialogDescription>
+          <div className="flex items-center gap-1">
+            <DialogTitle>{t("desktop.ledger.export.title")}</DialogTitle>
+            <IconButton
+              label={t("desktop.ledger.export.description")}
+              size="xs"
+              className="ledger-export-about size-control-xs"
+            >
+              <Icon name="info" size="xs" />
+            </IconButton>
+          </div>
         </DialogHeader>
         <h3
           ref={heading}
@@ -370,7 +395,7 @@ export function ExportDialog({
               {t("desktop.ledger.export.inactive")}
             </label>
             <p
-              className="ledger-export-count text-sm text-muted-foreground"
+              className="ledger-export-count text-sm text-muted-foreground empty:hidden"
               aria-live="polite"
             >
               {status.kind === "reading" ? (
@@ -381,33 +406,73 @@ export function ExportDialog({
               ) : exported === null ? (
                 t("desktop.ledger.export.count_unknown")
               ) : (
-                <>
-                  {t("desktop.ledger.export.count", {
-                    count: exported,
-                    shown: count(exported),
-                  })}
-                  {leftOut > 0 &&
-                    read &&
-                    ` ${t("desktop.ledger.export.left_out", {
-                      archived: count(read.archived_count),
-                      aside: count(read.stashed_count),
-                      split: count(read.split_count),
-                    })}`}
-                </>
+                leftOut > 0 &&
+                read &&
+                t("desktop.ledger.export.left_out", {
+                  archived: count(read.archived_count),
+                  aside: count(read.stashed_count),
+                  split: count(read.split_count),
+                })
               )}
             </p>
-            {read?.ready === false && (
-              <Alert tone="warning" icon={<Icon name="alert" />}>
-                <AlertTitle>{t("desktop.ledger.export.not_ready")}</AlertTitle>
-                <AlertDescription>
-                  {t("desktop.ledger.export.not_ready_note", {
-                    count: read.readiness_issue_count,
-                  })}
-                </AlertDescription>
+            {readiness && samePeriod(period, pagePeriod) ? (
+              <div className="ledger-export-readiness">{readiness}</div>
+            ) : (
+              read?.ready === false && (
+                <Alert tone="warning" icon={<Icon name="alert" />}>
+                  <AlertTitle>
+                    {t("desktop.ledger.export.not_ready")}
+                  </AlertTitle>
+                  <AlertDescription>
+                    {t("desktop.ledger.export.not_ready_note", {
+                      count: read.readiness_issue_count,
+                    })}
+                  </AlertDescription>
+                </Alert>
+              )
+            )}
+            {staged > 0 && without && (
+              <Alert
+                icon={<Icon name="alert" />}
+                className="ledger-export-staged"
+              >
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="min-w-0 flex-1">
+                    {t("desktop.ledger.export.staged_short", {
+                      count: staged,
+                    })}
+                  </span>
+                  {onReviewStaged && (
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      className="shrink-0"
+                      onClick={() => {
+                        onClose();
+                        onReviewStaged();
+                      }}
+                    >
+                      {t("desktop.ledger.export.review_staged")}
+                    </Button>
+                  )}
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    className="shrink-0"
+                    aria-pressed
+                    onClick={() => setWithout(false)}
+                  >
+                    {t("desktop.ledger.export.without_staged")}
+                  </Button>
+                </div>
               </Alert>
             )}
-            {staged > 0 && (
-              <Alert tone="warning" icon={<Icon name="alert" />}>
+            {staged > 0 && !without && (
+              <Alert
+                tone="warning"
+                icon={<Icon name="alert" />}
+                className="ledger-export-staged"
+              >
                 <AlertTitle>
                   {t("desktop.ledger.export.staged", { count: staged })}
                 </AlertTitle>
@@ -429,8 +494,8 @@ export function ExportDialog({
                   <Button
                     size="xs"
                     variant="outline"
-                    aria-pressed={without}
-                    onClick={() => setWithout(!without)}
+                    aria-pressed={false}
+                    onClick={() => setWithout(true)}
                   >
                     {t("desktop.ledger.export.without_staged")}
                   </Button>
@@ -453,9 +518,18 @@ export function ExportDialog({
               )}
             </div>
             <Field>
-              <FieldLabel id={`${ids}-file`}>
-                {t("desktop.ledger.export.file")}
-              </FieldLabel>
+              <div className="flex items-center gap-1">
+                <FieldLabel id={`${ids}-file`}>
+                  {t("desktop.ledger.export.file")}
+                </FieldLabel>
+                <IconButton
+                  label={t("desktop.ledger.export.file_hint")}
+                  size="xs"
+                  className="size-control-xs"
+                >
+                  <Icon name="info" size="xs" />
+                </IconButton>
+              </div>
               <div className="flex flex-wrap items-center gap-2">
                 <span
                   aria-labelledby={`${ids}-file`}
@@ -480,11 +554,11 @@ export function ExportDialog({
                   )}
                 </Button>
               </div>
-              <FieldDescription>
-                {saveRefused
-                  ? t("desktop.ledger.export.save_refused", { format })
-                  : t("desktop.ledger.export.file_hint")}
-              </FieldDescription>
+              {saveRefused && (
+                <FieldDescription>
+                  {t("desktop.ledger.export.save_refused", { format })}
+                </FieldDescription>
+              )}
             </Field>
             {sent.kind === "refused" && (
               <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
@@ -504,7 +578,7 @@ export function ExportDialog({
             )}
           </div>
         )}
-        <DialogFooter>
+        <DialogFooter sticky>
           {done ? (
             <Button onClick={onClose}>
               {t("desktop.ledger.export.close")}

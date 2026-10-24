@@ -32,6 +32,7 @@ import {
 } from "../../shell/ledgerImports";
 import { useLedgerReadiness } from "../../shell/ledgerReadiness";
 import {
+  readinessSnapshot,
   shownRows,
   useLedgerWindow,
   windowProgress,
@@ -79,7 +80,12 @@ import { RegistersSection } from "./setup/RegistersSection";
 import { RuleDialog, type RuleDialogTarget } from "./setup/RuleDialog";
 import { RulesSection } from "./setup/RulesSection";
 import type { SetupProps } from "./setup/setupProps";
-import { NO_FILTERS, TO_CLASSIFY_REASON } from "./movements/movementsModel";
+import {
+  NO_FILTERS,
+  TO_CLASSIFY_REASON,
+  readinessSets,
+} from "./movements/movementsModel";
+import { ReadinessStrip } from "./movements/ReadinessStrip";
 import { exactly } from "@/components/ui/dataGridModel";
 import type { SectionInspectorContext } from "./inspector/inspectorContext";
 import type { InspectorSection } from "./inspector/inspectorModel";
@@ -343,6 +349,11 @@ export function LedgerPage({
     locale,
     pause,
     sealedOf,
+    returnFocus: () => {
+      if (section !== "movements" || !inspectorContext) return false;
+      inspectorContext.focusActive();
+      return true;
+    },
   });
   // The rule dialog opens over whatever section is shown: from Rules, or
   // from a selection or a group of movements.
@@ -535,6 +546,19 @@ export function LedgerPage({
     body = (
       <HealthSection
         {...setupProps}
+        readiness={readiness}
+        partial={
+          periodWindow
+            ? (() => {
+                const held = shownRows(periodWindow);
+                return held ? held.rows.length < held.total : true;
+              })()
+            : true
+        }
+        onShowReadiness={(filter) => {
+          movements.setFilters({ ...NO_FILTERS, readiness: filter });
+          setSection("movements");
+        }}
         onShowReason={(reason) => {
           // A movement still to classify is its own filter, not a reason.
           movements.setFilters(
@@ -677,6 +701,7 @@ export function LedgerPage({
             locale={locale}
             onPeriod={setPeriod}
             register={registerMovements}
+            onMakeRule={openRuleFromSelection}
             onOpenInspector={(at) => openInspector(at)}
             onInspector={setInspectorContext}
             shownImport={shownImport}
@@ -728,6 +753,37 @@ export function LedgerPage({
     }
     if (section !== "invoices") invoiceDone();
   }, [section, movementDone, invoiceDone]);
+
+  // Export shows the page's own pills for the page's period, so that both
+  // count the same movements; a pill there filters the grid to them.
+  const exportReadiness =
+    transfer === "export" && shownWindow ? (
+      <ReadinessStrip
+        readiness={readiness}
+        sets={readinessSets(shownWindow.rows, readinessSnapshot(readiness))}
+        filters={movements.filters}
+        locale={locale}
+        unsaved={editing.tally.units}
+        stagedClassify={0}
+        partial={shownWindow.rows.length < shownWindow.total}
+        onPill={(filter) => {
+          if (!filter) return;
+          movements.setFilters({ ...NO_FILTERS, readiness: filter });
+          setSection("movements");
+          setTransfer(null);
+        }}
+        onReason={(reason) => {
+          if (!reason) return;
+          movements.setFilters(
+            reason === TO_CLASSIFY_REASON
+              ? { ...NO_FILTERS, readiness: "to_classify" }
+              : { ...NO_FILTERS, reason },
+          );
+          setSection("movements");
+          setTransfer(null);
+        }}
+      />
+    ) : undefined;
 
   return (
     <WritePauseContext.Provider value={pause}>
@@ -905,6 +961,7 @@ export function LedgerPage({
           }
           staged={editing.tally.units}
           onReviewStaged={editing.openReview}
+          readiness={exportReadiness}
           copy={copy}
           onClose={() => setTransfer(null)}
           onCloseAutoFocus={returnTransferFocus}

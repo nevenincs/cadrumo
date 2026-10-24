@@ -140,16 +140,31 @@ test("a bank statement is previewed per file, applied as previewed, and a change
     name: label("desktop.ledger.import.account"),
   });
   await expect(studioAccount).toHaveValue("");
-  await expect(fileRow(dialog, PERSONAL)).toContainText(
+  // A detected account is the same choice, made already and changeable.
+  const personalAccount = fileRow(dialog, PERSONAL).getByRole("combobox", {
+    name: label("desktop.ledger.import.account"),
+  });
+  await expect(personalAccount).toHaveAccessibleDescription(
     label("desktop.ledger.import.account_detected"),
   );
-  await expect(fileRow(dialog, PERSONAL)).toContainText("Cuenta personal");
+  await expect(personalAccount.locator("option:checked")).toHaveText(
+    /Cuenta personal/,
+  );
   await expect(fileRow(dialog, CARD)).toContainText(
     label("desktop.ledger.import.refusal.transaction_validation"),
   );
-  await expect(fileRow(dialog, STUDIO)).toContainText(
-    label("desktop.ledger.import.duplicates_note", { count: 2 }),
-  );
+  // Likely duplicates are a glyph and a count, their words in a popover.
+  const duplicates = fileRow(dialog, STUDIO).getByRole("button", {
+    name: label("desktop.ledger.import.duplicates_chip", { count: 2 }),
+  });
+  await duplicates.click();
+  await expect(
+    target.getByRole("dialog", {
+      name: label("desktop.ledger.import.duplicates_chip", { count: 2 }),
+    }),
+  ).toContainText(label("desktop.ledger.import.duplicates_note"));
+  await target.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
   const apply = button(dialog, "desktop.ledger.import.apply_files", {
     count: 2,
   });
@@ -372,10 +387,11 @@ test("the export file is chosen last and cleared when the format or period chang
   const file = dialog.locator(".ledger-export-file");
   const noFile = label("desktop.ledger.export.no_file");
   await expect(file).toHaveText(noFile);
-  await expect(dialog.locator(".ledger-export-count")).toContainText(/\d/);
   const send = dialog.getByRole("button", {
     name: SEND,
   });
+  // The count is the button's own.
+  await expect(send).toHaveText(/\(\d+\)/);
   await expect(send).toBeDisabled();
 
   await button(dialog, "desktop.ledger.export.choose_file").click();
@@ -424,6 +440,42 @@ test("the export file is chosen last and cleared when the format or period chang
   expect(stored).not.toMatch(/-3T|\.xlsx/);
 });
 
+test("the export counts readiness with the page's own pills and keeps its button in view", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1280, height: 800 });
+  await openLedger(target);
+  const strip = target.locator(".ledger-movements .ledger-readiness");
+  await expect(strip.locator("[data-readiness]").first()).toBeVisible();
+  const pills = async (scope: Locator) =>
+    scope.evaluate((list) =>
+      [...list.querySelectorAll("[data-readiness]")].map(
+        (pill) =>
+          `${pill.getAttribute("data-readiness")}:${pill.textContent ?? ""}`,
+      ),
+    );
+  const onPage = await pills(strip);
+  await button(head(target), "desktop.ledger.action.export").click();
+  const dialog = exportDialog(target);
+  const shown = dialog.locator(".ledger-export-readiness .ledger-readiness");
+  await expect(shown).toBeVisible();
+  expect(await pills(shown)).toEqual(onPage);
+  // The footer stays in view however long the dialog is.
+  await button(dialog, "desktop.ledger.export.choose_file").click();
+  const send = dialog.getByRole("button", { name: SEND });
+  await expect(send).toBeInViewport();
+  // The help sits behind the info glyph, not inline.
+  await expect(dialog).not.toContainText(
+    label("desktop.ledger.export.file_hint"),
+  );
+  // A pill there filters the grid to what it counts.
+  await shown.locator("[data-readiness] button").first().click();
+  await expect(dialog).toBeHidden();
+  await expect(
+    strip.locator("[data-readiness] button[aria-pressed=true]"),
+  ).toHaveCount(1);
+});
+
 test("staged changes hold the export until the person reviews them or exports without them", async ({
   page: target,
 }) => {
@@ -441,6 +493,10 @@ test("staged changes hold the export until the person reviews them or exports wi
   await without.click();
   await expect(without).toHaveAttribute("aria-pressed", "true");
   await expect(send).toBeEnabled();
+  // Exporting without them folds the warning to one line.
+  await expect(dialog.locator(".ledger-export-staged")).toHaveText(
+    new RegExp(`^${label("desktop.ledger.export.staged_short", { count: 3 })}`),
+  );
   await button(dialog, "desktop.ledger.export.copy_invoices").click();
   await expect(dialog).toContainText(/Invoices copied: \d+/);
   await button(dialog, "desktop.ledger.export.review_staged").click();
