@@ -1230,6 +1230,102 @@ export interface HostCommands {
     args: Authorized;
     result: import("../shell/ledger").LedgerOutcome;
   };
+  /** Every row of the signed-in profile's declarations list. */
+  modelo_declarations: {
+    args: Authorized<{
+      outputLanguage: import("../shell/modeloContract").OutputLanguage;
+    }>;
+    result: import("../shell/modeloContract").ModeloDeclarationsListProjectionV1;
+  };
+  /** One declaration's form, with its admitted edit baseline or refusal. */
+  modelo_form: {
+    args: Authorized<{
+      workUnitId: string;
+      outputLanguage: import("../shell/modeloContract").OutputLanguage;
+    }>;
+    result: import("../shell/modeloContract").ModeloWorkbenchFormProjectionV1;
+  };
+  modelo_casilla_help: {
+    args: Authorized<{
+      workUnitId: string;
+      casillaId: string;
+      registryRevisionId: string;
+      calculationRevisionId: string | null;
+      outputLanguage: import("../shell/modeloContract").OutputLanguage;
+    }>;
+    result: import("../shell/modeloContract").ModeloCasillaHelpProjectionV1;
+  };
+  /** Submits one admitted modelo operation with its request, without the
+   * profile. `workUnit` names the form's declaration for a definition whose
+   * subject is a stored record, and is absent for every other. A failure
+   * rejects with `LedgerFailure`. */
+  modelo_submit: {
+    args: Authorized<{
+      definition: import("../shell/modelo").ModeloDefinitionId;
+      /** A JSON object: the definition's registered request. */
+      payload: object;
+      workUnit?: string;
+    }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  /** Raw body only, one command per definition: the bytes of
+   * `modeloEditBody`, at most `MODELO_EDIT_BODY_LIMIT`. */
+  modelo_edit_preflight: {
+    args: Authorized;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  modelo_edit_apply: {
+    args: Authorized;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  modelo_observe: {
+    args: Authorized<{ operation: string }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  modelo_review: {
+    args: Authorized<{ operation: string }>;
+    result: import("../shell/ledger").LedgerReview;
+  };
+  /** Refused with `review_changed` unless `reviewDigest` is the digest of
+   * the review the window read last for that operation. */
+  modelo_answer: {
+    args: Authorized<{
+      operation: string;
+      reviewDigest: string;
+      decision: import("../shell/ledger").LedgerDecision;
+    }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  modelo_cancel: {
+    args: Authorized<{ operation: string; revision: number }>;
+    result: import("../shell/ledger").LedgerOutcome;
+  };
+  /** A token for the one file picked in the native dialog; never a path. */
+  modelo_files_pick: {
+    args: Authorized<{
+      purpose: import("../shell/modelo").ModeloFilePurpose;
+      filterLabel: string;
+    }>;
+    result: import("../shell/ledger").FilePicks;
+  };
+  modelo_files_save: {
+    args: Authorized<{
+      format: import("../shell/modelo").ModeloSaveFormat;
+      filterLabel: string;
+      suggestedName: string | null;
+    }>;
+    result: import("../shell/ledger").FilePicks;
+  };
+  modelo_files_forget: {
+    args: Authorized<{ tokens: import("../shell/ledger").FileToken[] }>;
+    result: null;
+  };
+  /** Shows a saved file in the system file manager; the path never reaches
+   * the window. */
+  modelo_files_reveal: {
+    args: Authorized<{ token: import("../shell/ledger").FileToken }>;
+    result: null;
+  };
   startup_begin: { args: Authorized; result: void };
   startup_status: { args: Authorized; result: StartupProgress };
 

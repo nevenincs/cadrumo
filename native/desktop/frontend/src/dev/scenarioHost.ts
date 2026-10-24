@@ -20,6 +20,7 @@ import type {
 } from "../ipc/contract";
 import { censoFixture } from "./censoFixture";
 import { ledgerFixture, type LedgerShape } from "./ledgerFixture";
+import { modeloFixture, type ModeloShape } from "./modeloFixture";
 import { SCENARIO_PASSWORD } from "./fixtures/password";
 import { userProfileFixture } from "./userProfileFixture";
 import type { Host } from "../shell/host";
@@ -106,6 +107,8 @@ export type ScenarioHostOptions = {
   setup?: SetupShape | null;
   /** How the made-up ledger answers, over the scenario's own shape. */
   ledger?: LedgerShape | null;
+  /** How the made-up declarations answer. */
+  modelo?: ModeloShape | null;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
 };
@@ -361,6 +364,12 @@ export function scenarioHost(
     signedIn,
     shape: options.ledger ?? scenario.ledger ?? "fixture",
   });
+  const modelo = modeloFixture({
+    say,
+    wait: () => wait(options.latencyMs),
+    signedIn,
+    shape: options.modelo ?? "fixture",
+  });
 
   const providerFixture = providerSettingsFixture({
     say,
@@ -542,7 +551,15 @@ export function scenarioHost(
     available: true,
     ...(scenario.views === "none"
       ? {}
-      : { views, ledger, agent, agentSession, providerSettings, agentAccess }),
+      : {
+          views,
+          ledger,
+          modelo,
+          agent,
+          agentSession,
+          providerSettings,
+          agentAccess,
+        }),
     ...(setup ? { setup } : {}),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,

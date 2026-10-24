@@ -37,19 +37,22 @@
                   "kind": "context_field",
                   "id": "nif",
                   "label": { "text": "NIF", "disclosure": "localized" },
-                  "value": { "kind": "null", "text": "" }
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "sin dato"
                 },
                 {
                   "kind": "context_field",
                   "id": "nombre",
                   "label": { "text": "Nombre", "disclosure": "localized" },
-                  "value": { "kind": "null", "text": "" }
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "sin dato"
                 },
                 {
                   "kind": "context_field",
                   "id": "apellidos",
                   "label": { "text": "Apellidos", "disclosure": "localized" },
-                  "value": { "kind": "null", "text": "" }
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "sin dato"
                 }
               ],
               "counts": {
@@ -73,13 +76,15 @@
                   "kind": "context_field",
                   "id": "ejercicio",
                   "label": { "text": "Ejercicio", "disclosure": "localized" },
-                  "value": { "kind": "integer", "text": "2026" }
+                  "value": { "kind": "integer", "text": "2026" },
+                  "value_text": "2026"
                 },
                 {
                   "kind": "context_field",
                   "id": "periodo",
                   "label": { "text": "Período", "disclosure": "localized" },
-                  "value": { "kind": "string", "text": "1T" }
+                  "value": { "kind": "string", "text": "1T" },
+                  "value_text": "1.er trimestre 2026"
                 }
               ],
               "counts": {
@@ -150,7 +155,18 @@
                       "ley-35-2006:art-27",
                       "ley-35-2006:art-28"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "01" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "De tus registros",
+                    "origin_explanation": null,
+                    "editability_words": "Sale de tus registros; corrígelo allí y vuelve a calcular.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -201,7 +217,18 @@
                       "ley-35-2006:art-28",
                       "ley-35-2006:art-30"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "02" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "De tus registros",
+                    "origin_explanation": null,
+                    "editability_words": "Sale de tus registros; corrígelo allí y vuelve a calcular.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -239,7 +266,18 @@
                       "ley-35-2006:art-28",
                       "ley-35-2006:art-30"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "03" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Calculada",
+                    "origin_explanation": null,
+                    "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -285,7 +323,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "04" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Calculada",
+                    "origin_explanation": null,
+                    "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -355,7 +404,21 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "binding",
+                      "binding_id": "modelo-130-pagos-fraccionados-anteriores"
+                    },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "No aplica",
+                    "origin_explanation": null,
+                    "editability_words": "Viene de una declaración anterior; puedes sustituirlo, y se muestra como sustituido hasta que restaures el origen.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -409,7 +472,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "06" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Opcional, se queda en 0",
+                    "origin_explanation": null,
+                    "editability_words": "Escribe el importe o el dato de esta casilla.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -445,7 +519,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "07" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Calculada",
+                    "origin_explanation": null,
+                    "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 }
               ],
@@ -502,7 +587,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "08" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Opcional, se queda en 0",
+                    "origin_explanation": null,
+                    "editability_words": "Escribe el importe o el dato de esta casilla.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -556,7 +652,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "09" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Calculada",
+                    "origin_explanation": null,
+                    "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -610,7 +717,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "10" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Opcional, se queda en 0",
+                    "origin_explanation": null,
+                    "editability_words": "Escribe el importe o el dato de esta casilla.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -646,7 +764,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "11" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Calculada",
+                    "origin_explanation": null,
+                    "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 }
               ],
@@ -703,7 +832,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "12" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Calculada",
+                    "origin_explanation": null,
+                    "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -741,7 +881,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "needs_you",
+                    "edit_address": { "kind": "casilla", "casilla_id": "13" },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "No se pudo calcular",
+                    "origin_explanation": null,
+                    "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -777,7 +928,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "needs_you",
+                    "edit_address": { "kind": "casilla", "casilla_id": "14" },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "No se pudo calcular",
+                    "origin_explanation": null,
+                    "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -826,7 +988,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "needs_you",
+                    "edit_address": { "kind": "casilla", "casilla_id": "15" },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "No se pudo calcular",
+                    "origin_explanation": null,
+                    "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -862,7 +1035,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "16" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Opcional, se queda en 0",
+                    "origin_explanation": null,
+                    "editability_words": "Escribe el importe o el dato de esta casilla.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -898,7 +1082,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "needs_you",
+                    "edit_address": { "kind": "casilla", "casilla_id": "17" },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "No se pudo calcular",
+                    "origin_explanation": null,
+                    "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -934,7 +1129,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "18" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Opcional, se queda en 0",
+                    "origin_explanation": null,
+                    "editability_words": "Escribe el importe o el dato de esta casilla.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -970,7 +1176,18 @@
                       "ley-35-2006:art-99",
                       "rd-439-2007:art-95"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "needs_you",
+                    "edit_address": { "kind": "casilla", "casilla_id": "19" },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "No se pudo calcular",
+                    "origin_explanation": null,
+                    "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 }
               ],
@@ -995,7 +1212,8 @@
                   "kind": "context_field",
                   "id": "iban",
                   "label": { "text": "Código IBAN", "disclosure": "localized" },
-                  "value": { "kind": "null", "text": "" }
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "sin dato"
                 }
               ],
               "counts": {
@@ -1025,7 +1243,8 @@
                     "text": "Autoliquidación complementaria",
                     "disclosure": "localized"
                   },
-                  "value": { "kind": "null", "text": "" }
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "sin dato"
                 },
                 {
                   "kind": "context_field",
@@ -1034,7 +1253,8 @@
                     "text": "N.º de justificante de la autoliquidación anterior",
                     "disclosure": "localized"
                   },
-                  "value": { "kind": "null", "text": "" }
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "sin dato"
                 }
               ],
               "counts": {
@@ -1060,7 +1280,8 @@
             "default_to_confirm": 0,
             "not_applicable": 1,
             "blocked": 0
-          }
+          },
+          "applicability_words": null
         }
       ],
       "working_figures": [
@@ -1107,7 +1328,21 @@
             "ley-35-2006:art-99",
             "rd-439-2007:art-95"
           ],
-          "also_appears_on": []
+          "also_appears_on": [],
+          "standing": "needs_you",
+          "edit_address": {
+            "kind": "casilla",
+            "casilla_id": "saldo-negativo-fin-periodo"
+          },
+          "confirmable": false,
+          "held_zero": false,
+          "origin_words": "No se pudo calcular",
+          "origin_explanation": null,
+          "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+          "value_text": null,
+          "restorable": false,
+          "filers_own": false,
+          "confirm_value": null
         }
       ],
       "unplaced": [],
@@ -1146,6 +1381,73 @@
         }
       ],
       "calculation_notes_held": true,
+      "source_groups": [
+        {
+          "kind": "records",
+          "name": "Tus registros",
+          "summary": "Registros de ingresos · Registros de gastos",
+          "boxes": [],
+          "recorded": false,
+          "addresses": [
+            { "kind": "casilla", "casilla_id": "01" },
+            { "kind": "casilla", "casilla_id": "02" }
+          ],
+          "readings": [
+            {
+              "source_kind": "ledger_renta_income_aggregation",
+              "surface": "ledger",
+              "state": "produced",
+              "words": "Registros de ingresos",
+              "addresses": [{ "kind": "casilla", "casilla_id": "01" }]
+            },
+            {
+              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "surface": "ledger",
+              "state": "produced",
+              "words": "Registros de gastos",
+              "addresses": [{ "kind": "casilla", "casilla_id": "02" }]
+            }
+          ]
+        },
+        {
+          "kind": "calculated",
+          "name": "Calculados",
+          "summary": "",
+          "boxes": [],
+          "recorded": false,
+          "addresses": [
+            { "kind": "casilla", "casilla_id": "03" },
+            { "kind": "casilla", "casilla_id": "04" },
+            { "kind": "casilla", "casilla_id": "07" },
+            { "kind": "casilla", "casilla_id": "09" },
+            { "kind": "casilla", "casilla_id": "11" },
+            { "kind": "casilla", "casilla_id": "12" },
+            { "kind": "casilla", "casilla_id": "13" },
+            { "kind": "casilla", "casilla_id": "14" },
+            { "kind": "casilla", "casilla_id": "15" },
+            { "kind": "casilla", "casilla_id": "17" },
+            { "kind": "casilla", "casilla_id": "19" },
+            { "kind": "casilla", "casilla_id": "saldo-negativo-fin-periodo" }
+          ],
+          "readings": []
+        },
+        {
+          "kind": "blank",
+          "name": "En blanco o no aplican",
+          "summary": "",
+          "boxes": [],
+          "recorded": false,
+          "addresses": [
+            { "kind": "casilla", "casilla_id": "05" },
+            { "kind": "casilla", "casilla_id": "06" },
+            { "kind": "casilla", "casilla_id": "08" },
+            { "kind": "casilla", "casilla_id": "10" },
+            { "kind": "casilla", "casilla_id": "16" },
+            { "kind": "casilla", "casilla_id": "18" }
+          ],
+          "readings": []
+        }
+      ],
       "result": {
         "casilla_id": "19",
         "box": "19",
@@ -1158,14 +1460,18 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-23",
+        "reference_on": "2026-10-24",
         "days_remaining": null,
-        "days_overdue": 186
+        "days_overdue": 187
       },
       "aeat_data": null,
       "filing": null,
       "last_export": null,
-      "edit_closure": null
+      "edit_closure": null,
+      "modelo_title": "Modelo 130 · IRPF pago fraccionado estimación directa",
+      "modelo_name": "IRPF pago fraccionado estimación directa",
+      "modelo_number": "Modelo 130",
+      "period_words": "1.er trimestre 2026"
     },
     "verified": false,
     "filed": false
@@ -1175,9 +1481,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "c73cee199d2cb9ae0a181ce198b15531b378ae096d96ea99b15750c9c2b27726",
+      "contract_set_digest": "3545b018ca9827f743172c81b684174b8bd5da086b6093cbb1ce2e07ee8dc971",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "2aea250421be128dde2235ef420f6d8339d5cf05d1bffd9c22050880a16c1c8f",
+      "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1201,7 +1507,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "c5c862189731ce5611e6d45a374922a33ff1a672fa92827d018f79046024142d"
+        "schema_fingerprint": "50137af3e279c85b63ea26b32b31e5328124cb0cac8b56a67c724112946f18f9"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1210,8 +1516,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "3ce7279684c0e7d982d7c66a689caa1a4cc8afbfe5666c667a801b19f4bf0678",
-    "calculation_head_digest": "4fab893f8712176b146906a6548e0b80b7face1b15b064502dc880fbc160cb76",
+    "work_unit_record_digest": "abd84fe89ff276fdee18ad762fc7e616ed5d5c9532b881c8f37d1960588be743",
+    "calculation_head_digest": "6311def2403aa5cfeb37d37677a996b070e900c411e5775129e8806916edee1a",
     "current_calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1515,11 +1821,86 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-23T21:08:36.622232Z",
-    "expires_at": "2026-10-23T21:13:36.622232Z",
-    "baseline_id": "7e50b3b1e2841a1ccaed58b18a52e7cf9d8aad88ee25788a78e79cc7768fadea"
+    "issued_at": "2026-10-24T12:51:57.815844Z",
+    "expires_at": "2026-10-24T12:56:57.815844Z",
+    "baseline_id": "ecb15db0388376f69f5dfe1948d8cf941ae904e3d28c5798af29a6e4b4ee920d"
   },
   "admission_refusal": null,
+  "next_step": {
+    "action": "resolve",
+    "count": 1,
+    "findings_lead": false,
+    "recorded_at": null,
+    "file_created_at": null,
+    "receipt_to_add": false
+  },
+  "header": {
+    "attention": [
+      { "level": "blocks", "count": 1, "words": "impiden presentar: 1" },
+      { "level": "check", "count": 1, "words": "para revisar: 1" }
+    ],
+    "result": {
+      "state": "failed",
+      "casilla_id": "19",
+      "box": "19",
+      "settles": true,
+      "direction": "unknown",
+      "words": null,
+      "amount_text": null,
+      "text": "Resultado: no se pudo calcular",
+      "short_text": "Resultado: no se pudo calcular",
+      "brief_text": "Resultado: no se pudo calcular",
+      "help": ["Cálculo de Cadrumo. La AEAT no lo ha visto."],
+      "out_of_date_words": null
+    },
+    "deadline": {
+      "text": "El plazo terminó el 20/04/2026: presentar ahora es fuera de plazo",
+      "short_text": "El plazo terminó el 20/04/2026: presentar ahora es fuera de plazo",
+      "tone": "urgent",
+      "help": null
+    },
+    "file": null,
+    "export_hold": {
+      "reason": "blocks",
+      "count": 1,
+      "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 1)."
+    }
+  },
+  "issue_lines": [
+    {
+      "level": "blocks",
+      "box": "19",
+      "where": "[19] Resultado final",
+      "message": "El cálculo no pudo obtener esta casilla, así que la declaración aún no tiene resultado.",
+      "action": "Qué hacer: Indica los valores que piden las notas del cálculo y vuelve a calcular.",
+      "detail": "Hasta que se pueda calcular esta casilla, no se puede registrar la presentación.",
+      "technical": "Detalles técnicos: calculation_failed · 19",
+      "address": { "kind": "casilla", "casilla_id": "19" },
+      "in_records": false,
+      "surface": null,
+      "from_calculation": false,
+      "recalculates": false
+    },
+    {
+      "level": "check",
+      "box": null,
+      "where": "Toda la declaración",
+      "message": "Cadrumo no ha podido sacar una cifra de tus datos y habría mostrado un cero sin avisar.",
+      "action": "Qué hacer: Añade los registros o los datos de perfil que falten, o escribe tú el valor, y vuelve a calcular.",
+      "detail": null,
+      "technical": "Detalles técnicos: unresolved_binding",
+      "address": null,
+      "in_records": false,
+      "surface": null,
+      "from_calculation": true,
+      "recalculates": false
+    }
+  ],
+  "verdict": {
+    "status": null,
+    "words": "La declaración aún no se ha comprobado.",
+    "unapplied_words": null
+  },
   "calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
   "verification_report_id": null,
   "asks_m303_evidence": false,
@@ -1542,5 +1923,62 @@
     "cif_digit_only_kinds": "ABEH",
     "cif_letter_only_kinds": "PQRSNW",
     "cif_letter_table": "JABCDEFGHI"
-  }
+  },
+  "typing_effects": [
+    {
+      "address": { "kind": "casilla", "casilla_id": "05" },
+      "displaces": "nothing",
+      "words": "valor nuevo"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "06" },
+      "displaces": "nothing",
+      "words": "valor nuevo"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "08" },
+      "displaces": "nothing",
+      "words": "valor nuevo"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "10" },
+      "displaces": "nothing",
+      "words": "valor nuevo"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "16" },
+      "displaces": "nothing",
+      "words": "valor nuevo"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "18" },
+      "displaces": "nothing",
+      "words": "valor nuevo"
+    }
+  ],
+  "export_offer": {
+    "artefacts": [
+      {
+        "artefact": "fichero_boe",
+        "words": "Fichero BOE para presentar en la AEAT"
+      },
+      {
+        "artefact": "calculation_report_csv",
+        "words": "Informe de cálculo (CSV), solo registro local"
+      },
+      {
+        "artefact": "calculation_report_pdf",
+        "words": "Resumen del cálculo firmado (PDF), solo registro local"
+      },
+      {
+        "artefact": "calculation_review_xlsx",
+        "words": "Revisión del cálculo guardado (XLSX)"
+      }
+    ],
+    "asks_elections": false,
+    "elections": [],
+    "file_format": "fixed_width",
+    "file_format_words": "Fichero de la AEAT con el diseño de registro BOE de ancho fijo"
+  },
+  "receipt": null
 }

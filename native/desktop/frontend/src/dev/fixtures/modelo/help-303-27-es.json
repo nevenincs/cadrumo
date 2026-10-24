@@ -1,0 +1,56 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "b650ba021eda8c3082ea9d66d8be078c7c6247610af8772ddd48d75b604198f6",
+  "card": {
+    "casilla_id": "27",
+    "formula": {
+      "text": "[27] = cifra intermedia",
+      "complete": true,
+      "values_text": null
+    },
+    "quotes": [
+      {
+        "fragments": ["modelo 303"],
+        "source": "Instrucciones del modelo de la AEAT",
+        "source_url": "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.shtml",
+        "retrieved_at": "2026-05-06"
+      }
+    ],
+    "legal_basis": [
+      {
+        "text": "Ley 37/1992, art. 88",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a88"
+      },
+      {
+        "text": "Ley 37/1992, art. 90",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a90"
+      },
+      {
+        "text": "Ley 37/1992, art. 91",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a91"
+      },
+      {
+        "text": "Real Decreto 1624/1992, art. 71",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a71"
+      },
+      {
+        "text": "Orden EHA/3786/2008, art. 1",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953#a1"
+      }
+    ],
+    "constraints": [],
+    "origins": [],
+    "feeds": [],
+    "reach": { "path": [], "others": [] },
+    "is_result": false,
+    "outside_figures": [
+      {
+        "label": "Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido en adquisiciones intracomunitarias)",
+        "surface": "none",
+        "casilla_id": "iva.cuota-devengada-total",
+        "binding_id": null
+      }
+    ]
+  }
+}

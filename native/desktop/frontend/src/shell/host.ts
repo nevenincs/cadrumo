@@ -192,6 +192,11 @@ export interface Host {
    * the person picks for them and the reviews they pause for, where this
    * host offers them. Without it the shell shows no Ledger page. */
   readonly ledger?: import("./ledger").LedgerPort;
+  /** The signed-in profile's declarations: the list, each one's form and
+   * help, its registered modelo operations and the files they read and
+   * write, where this host offers them. Without it the shell shows no
+   * Declarations page. */
+  readonly modelo?: import("./modelo").ModeloPort;
   /** What the agent column reads, where this host serves the agent.
    * Without it each of the column's views says it is not available yet. */
   readonly agent?: AgentViews;

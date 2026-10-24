@@ -37,7 +37,8 @@
                     "text": "NIF del declarante",
                     "disclosure": "localized"
                   },
-                  "value": { "kind": "null", "text": "" }
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "sin dato"
                 },
                 {
                   "kind": "context_field",
@@ -46,7 +47,8 @@
                     "text": "Apellidos y nombre o razón social",
                     "disclosure": "localized"
                   },
-                  "value": { "kind": "null", "text": "" }
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "sin dato"
                 },
                 {
                   "kind": "field",
@@ -85,7 +87,21 @@
                       "rd-1065-2007:art-31",
                       "ley-58-2003:art-93"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.representante-legal-nif"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Opcional, vacía",
+                    "origin_explanation": null,
+                    "editability_words": "Escribe el importe o el dato de esta casilla.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 }
               ],
@@ -146,7 +162,21 @@
                       "rd-1065-2007:art-31",
                       "ley-58-2003:art-93"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.persona-relacion"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Opcional, vacía",
+                    "origin_explanation": null,
+                    "editability_words": "Escribe el importe o el dato de esta casilla.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -186,7 +216,21 @@
                       "rd-1065-2007:art-31",
                       "ley-58-2003:art-93"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.persona-relacion-telefono"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Opcional, vacía",
+                    "origin_explanation": null,
+                    "editability_words": "Escribe el importe o el dato de esta casilla.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 }
               ],
@@ -244,7 +288,21 @@
                       "orden-eha-3012-2008:art-1",
                       "ley-58-2003:art-93"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.ejercicio"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Valor de referencia",
+                    "origin_explanation": null,
+                    "editability_words": "Se muestra como información; no se declara aquí.",
+                    "value_text": "2026",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -284,7 +342,21 @@
                       "rd-1065-2007:art-31",
                       "ley-58-2003:art-93"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.numero-justificante"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Opcional, vacía",
+                    "origin_explanation": null,
+                    "editability_words": "Escribe el importe o el dato de esta casilla.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -324,7 +396,21 @@
                       "rd-1065-2007:art-31",
                       "ley-58-2003:art-93"
                     ],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.complementaria-sustitutiva"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Opcional, vacía",
+                    "origin_explanation": null,
+                    "editability_words": "Escribe el importe o el dato de esta casilla.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -334,7 +420,8 @@
                     "text": "Número de justificante de la declaración anterior",
                     "disclosure": "localized"
                   },
-                  "value": { "kind": "null", "text": "" }
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "sin dato"
                 }
               ],
               "counts": {
@@ -364,7 +451,8 @@
                     "text": "[01] Número total de personas y entidades",
                     "disclosure": "localized"
                   },
-                  "value": { "kind": "decimal", "text": "0" }
+                  "value": { "kind": "decimal", "text": "0" },
+                  "value_text": "0"
                 },
                 {
                   "kind": "context_field",
@@ -373,7 +461,8 @@
                     "text": "[02] Importe total anual de las operaciones",
                     "disclosure": "localized"
                   },
-                  "value": { "kind": "decimal", "text": "0" }
+                  "value": { "kind": "decimal", "text": "0" },
+                  "value_text": "0"
                 },
                 {
                   "kind": "context_field",
@@ -382,7 +471,8 @@
                     "text": "[03] Número total de inmuebles",
                     "disclosure": "localized"
                   },
-                  "value": { "kind": "decimal", "text": "0" }
+                  "value": { "kind": "decimal", "text": "0" },
+                  "value_text": "0"
                 },
                 {
                   "kind": "context_field",
@@ -391,7 +481,8 @@
                     "text": "[04] Importe total de arrendamientos de locales de negocio",
                     "disclosure": "localized"
                   },
-                  "value": { "kind": "decimal", "text": "0" }
+                  "value": { "kind": "decimal", "text": "0" },
+                  "value_text": "0"
                 }
               ],
               "counts": {
@@ -439,7 +530,21 @@
                     "blockers": [],
                     "constraints": null,
                     "legal_refs": ["orden-eha-3012-2008:art-1"],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "firma-fecha"
+                    },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Valor de referencia",
+                    "origin_explanation": null,
+                    "editability_words": "Se muestra como información; no se declara aquí.",
+                    "value_text": "0",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -473,7 +578,21 @@
                     "blockers": [],
                     "constraints": null,
                     "legal_refs": ["orden-eha-3012-2008:art-1"],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "firma-nombre"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Valor de referencia",
+                    "origin_explanation": null,
+                    "editability_words": "Se muestra como información; no se declara aquí.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -507,7 +626,21 @@
                     "blockers": [],
                     "constraints": null,
                     "legal_refs": ["orden-eha-3012-2008:art-1"],
-                    "also_appears_on": []
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "firma-cargo"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Valor de referencia",
+                    "origin_explanation": null,
+                    "editability_words": "Se muestra como información; no se declara aquí.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
                   }
                 },
                 {
@@ -567,7 +700,8 @@
             "default_to_confirm": 0,
             "not_applicable": 0,
             "blocked": 0
-          }
+          },
+          "applicability_words": null
         },
         {
           "id": "m347-declarado",
@@ -856,7 +990,8 @@
             "default_to_confirm": 0,
             "not_applicable": 0,
             "blocked": 0
-          }
+          },
+          "applicability_words": null
         },
         {
           "id": "m347-inmueble",
@@ -974,7 +1109,8 @@
             "default_to_confirm": 0,
             "not_applicable": 0,
             "blocked": 0
-          }
+          },
+          "applicability_words": null
         }
       ],
       "working_figures": [
@@ -1006,7 +1142,21 @@
           "blockers": [],
           "constraints": null,
           "legal_refs": ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"],
-          "also_appears_on": []
+          "also_appears_on": [],
+          "standing": "done",
+          "edit_address": {
+            "kind": "casilla",
+            "casilla_id": "decl.tipo-declaracion"
+          },
+          "confirmable": false,
+          "held_zero": false,
+          "origin_words": "Valor de referencia",
+          "origin_explanation": null,
+          "editability_words": "Se muestra como información; no se declara aquí.",
+          "value_text": "original",
+          "restorable": false,
+          "filers_own": false,
+          "confirm_value": null
         }
       ],
       "unplaced": [],
@@ -1038,19 +1188,61 @@
       "issues": [],
       "calculation_notes": [],
       "calculation_notes_held": true,
+      "source_groups": [
+        {
+          "kind": "information",
+          "name": "Solo informativos",
+          "summary": "",
+          "boxes": [],
+          "recorded": false,
+          "addresses": [
+            { "kind": "casilla", "casilla_id": "decl.ejercicio" },
+            { "kind": "casilla", "casilla_id": "firma-fecha" },
+            { "kind": "casilla", "casilla_id": "firma-nombre" },
+            { "kind": "casilla", "casilla_id": "firma-cargo" },
+            { "kind": "casilla", "casilla_id": "decl.tipo-declaracion" }
+          ],
+          "readings": []
+        },
+        {
+          "kind": "blank",
+          "name": "En blanco o no aplican",
+          "summary": "",
+          "boxes": [],
+          "recorded": false,
+          "addresses": [
+            { "kind": "casilla", "casilla_id": "decl.representante-legal-nif" },
+            { "kind": "casilla", "casilla_id": "decl.persona-relacion" },
+            {
+              "kind": "casilla",
+              "casilla_id": "decl.persona-relacion-telefono"
+            },
+            { "kind": "casilla", "casilla_id": "decl.numero-justificante" },
+            {
+              "kind": "casilla",
+              "casilla_id": "decl.complementaria-sustitutiva"
+            }
+          ],
+          "readings": []
+        }
+      ],
       "result": null,
       "deadline": {
         "closes_on": "2027-02-28",
         "nominal_closes_on": "2027-02-28",
         "holiday_coverage": "calendar_unavailable",
-        "reference_on": "2026-10-23",
-        "days_remaining": 128,
+        "reference_on": "2026-10-24",
+        "days_remaining": 127,
         "days_overdue": null
       },
       "aeat_data": null,
       "filing": null,
       "last_export": null,
-      "edit_closure": null
+      "edit_closure": null,
+      "modelo_title": "Modelo 347 · Operaciones con terceras personas (informativa anual)",
+      "modelo_name": "Operaciones con terceras personas (informativa anual)",
+      "modelo_number": "Modelo 347",
+      "period_words": "Anual 2026"
     },
     "verified": false,
     "filed": false
@@ -1060,9 +1252,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "c73cee199d2cb9ae0a181ce198b15531b378ae096d96ea99b15750c9c2b27726",
+      "contract_set_digest": "3545b018ca9827f743172c81b684174b8bd5da086b6093cbb1ce2e07ee8dc971",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "2aea250421be128dde2235ef420f6d8339d5cf05d1bffd9c22050880a16c1c8f",
+      "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1086,7 +1278,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "c5c862189731ce5611e6d45a374922a33ff1a672fa92827d018f79046024142d"
+        "schema_fingerprint": "50137af3e279c85b63ea26b32b31e5328124cb0cac8b56a67c724112946f18f9"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1095,8 +1287,8 @@
     "period_filing_year": 2026,
     "period_code": "0A",
     "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-    "work_unit_record_digest": "f585d283397bdce5de2dac48407118712a006cfaab3247492d20188ef3cb2f99",
-    "calculation_head_digest": "200e2306170d6686476e23175c8256702e39e073b564980ae080210f3ca309db",
+    "work_unit_record_digest": "78ef69110e6c846e6344883089f353904d1ee8455d62d52d8c68644f120c233f",
+    "calculation_head_digest": "e1aa79083b3ddf948e0531d79577e05acb781b28f6926ddd1b243e1193da8fe2",
     "current_calculation_revision_id": "dc9237336b941c64608900d0cfeef932ad43e214dc01145e517c49747bd42353",
     "law_selected_revision_id": "2025-y-siguientes",
     "schema_identity": {
@@ -1818,11 +2010,41 @@
     ],
     "permitted_surface_digest": "c258bc8ca1f53449315c27e6a6e73d340ff63f1c625609083c5d48dde37106ae",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-23T21:09:05.970564Z",
-    "expires_at": "2026-10-23T21:14:05.970564Z",
-    "baseline_id": "b1d9d5337fde1307bbc12bee6676f6f93b14ec8da6aefa1d0794ea8d71b1a5b1"
+    "issued_at": "2026-10-24T12:52:12.737500Z",
+    "expires_at": "2026-10-24T12:57:12.737500Z",
+    "baseline_id": "6da06ac18a6f8c3c1594490c322bdc83131914c33cf9dba6061d814b6c62f896"
   },
   "admission_refusal": null,
+  "next_step": {
+    "action": "verify",
+    "count": 0,
+    "findings_lead": false,
+    "recorded_at": null,
+    "file_created_at": null,
+    "receipt_to_add": false
+  },
+  "header": {
+    "attention": [],
+    "result": null,
+    "deadline": {
+      "text": "Plazo hasta el 28/02/2027 · días restantes: 127",
+      "short_text": "Plazo hasta el 28/02/2027 · días restantes: 127",
+      "tone": "normal",
+      "help": null
+    },
+    "file": null,
+    "export_hold": {
+      "reason": "verify",
+      "count": 0,
+      "words": "Comprueba la declaración antes de exportarla."
+    }
+  },
+  "issue_lines": [],
+  "verdict": {
+    "status": null,
+    "words": "La declaración aún no se ha comprobado.",
+    "unapplied_words": null
+  },
   "calculation_revision_id": "dc9237336b941c64608900d0cfeef932ad43e214dc01145e517c49747bd42353",
   "verification_report_id": null,
   "asks_m303_evidence": false,
@@ -1845,5 +2067,69 @@
     "cif_digit_only_kinds": "ABEH",
     "cif_letter_only_kinds": "PQRSNW",
     "cif_letter_table": "JABCDEFGHI"
-  }
+  },
+  "typing_effects": [
+    {
+      "address": {
+        "kind": "casilla",
+        "casilla_id": "decl.representante-legal-nif"
+      },
+      "displaces": "nothing",
+      "words": "valor nuevo"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "decl.persona-relacion" },
+      "displaces": "nothing",
+      "words": "valor nuevo"
+    },
+    {
+      "address": {
+        "kind": "casilla",
+        "casilla_id": "decl.persona-relacion-telefono"
+      },
+      "displaces": "nothing",
+      "words": "valor nuevo"
+    },
+    {
+      "address": {
+        "kind": "casilla",
+        "casilla_id": "decl.numero-justificante"
+      },
+      "displaces": "nothing",
+      "words": "valor nuevo"
+    },
+    {
+      "address": {
+        "kind": "casilla",
+        "casilla_id": "decl.complementaria-sustitutiva"
+      },
+      "displaces": "nothing",
+      "words": "valor nuevo"
+    }
+  ],
+  "export_offer": {
+    "artefacts": [
+      {
+        "artefact": "fichero_boe",
+        "words": "Fichero BOE para presentar en la AEAT"
+      },
+      {
+        "artefact": "calculation_report_csv",
+        "words": "Informe de cálculo (CSV), solo registro local"
+      },
+      {
+        "artefact": "calculation_report_pdf",
+        "words": "Resumen del cálculo firmado (PDF), solo registro local"
+      },
+      {
+        "artefact": "calculation_review_xlsx",
+        "words": "Revisión del cálculo guardado (XLSX)"
+      }
+    ],
+    "asks_elections": false,
+    "elections": [],
+    "file_format": "fixed_width",
+    "file_format_words": "Fichero de la AEAT con el diseño de registro BOE de ancho fijo"
+  },
+  "receipt": null
 }
