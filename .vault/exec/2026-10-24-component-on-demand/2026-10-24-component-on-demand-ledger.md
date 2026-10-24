@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:b36a09be9b9c6989ac4bb455c99fb2e22e6965f463d1a124c22598dab1b3b83d'
+body_hash: 'sha256:e9486e693ab637c18e296178082baf6b23d80a78994eb92d0ff653f1582f3a94'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -343,6 +343,18 @@ related:
 - `S04` `M` `src/cadrumo/core/errors/registry/_adapters_part1.py`
 - `S04` `M` `src/cadrumo/entrypoints/tests/test_dependency_consumer_gating.py`
 - `S04` `verify:` `browser refusal and setup refusal text suites (87, 186; 2 live-only AEAT tests need CADRUMO_LIVE_TESTS_ENABLED)` -> `pass`
+- `S14` `M` `src/cadrumo/application/operations/error_detail.py`
+- `S14` `M` `src/cadrumo/core/errors/hierarchy.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_draft.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_review.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_records.py`
+- `S14` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_refusal_and_review_setup_offer.py`
+- `S14` `M` `src/cadrumo_client/commands/errors.py`
+- `S14` `M` `src/cadrumo_runtime/host/frontend/tui/operations/runtime_profile_session.py`
+- `S14` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_evidence.py`
+- `S14` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_evidence.py`
+- `S14` `verify:` `new TUI pilot tests (6), runtime evidence door (10), TUI ledger evidence suites (159)` -> `pass`
+- `S14` `verify:` `ruff, ty, pyrefly, check-operation-contract-manifest` -> `pass`
 
 ## Notes
 
@@ -367,3 +379,4 @@ related:
 - `S02` review corrections off-host-read-misattributed and confirm-detail-unpublished: blocker explanations stay in process
 - `S09` review correction gate-stops-at-consumer and the supply-nature row flake: operation drives through the real supervisor, a declared operation set with coverage checks, and an operator supply-nature model setting the gate pins
 - `S04` review corrections verdict-paths-published and browser-code-key-mismatch: `REFUSED_BROWSER_NOT_USABLE`
+- `S14` The recorded error dropped the verdict, so the fix carries it through RecordedRegisteredError and `OperationErrorDetailV1.recorded_error();` every door using `explain_failure` now keeps the verdict

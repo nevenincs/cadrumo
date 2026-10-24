@@ -9,7 +9,7 @@ related:
   - '[[2026-10-24-rust-component-provisioning-reference]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:05d2c6423d36e854ae9a6f8650a912c48c7168706373a84540b9d081b7aa4a8e'
+body_hash: 'sha256:baa64b075e027837a91d52099b3aafe930f399b439e6e7d9a053bffdc61b8fb9'
 ---
 
 # `component-on-demand` plan
@@ -44,7 +44,7 @@ The work is independent of the proposed `2026-10-24-rust-component-provisioning-
 - [x] `S11` - Keep the reader verdict on the outer evidence extraction refusal so it routes to setup, and carry the local AI recovery action on the reader readiness projections; `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py, src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py, src/cadrumo/_data/operations/contract_manifest.json and tests`.
 - [x] `S12` - Repair the label-reading notice tests the reader pre-check broke, publish the error detail of the ledger classification and evidence ingestion operations so their reader verdicts reach every surface, and make the desktop Readers tab read each role's recovery action; `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_label_reading_notice.py and its loopback runtime, the ledger classification and evidence ingestion operation definitions, native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx and shell/ledger.ts, and tests`.
 - [x] `S13` - Check the local AI before the statement reader dispatches a text or scanned page, refusing with the setup verdict instead of a transport error, and keep the supply-nature verdict through the extraction composition instead of discarding it; `src/cadrumo/adapters/outbound/llm/statement_reading.py, src/cadrumo/adapters/inbound/financial/providers/pdf_statement.py, the supply-nature step of src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py, and tests`.
-- [ ] `S14` - Offer the component setup from the TUI evidence review screen and from an extraction refusal raised through the Evidence door, under the same quick-status rule; `src/cadrumo/entrypoints/tui/ledger/evidence_files_review.py, src/cadrumo/entrypoints/tui/ledger/evidence_records.py and tests`.
+- [x] `S14` - Offer the component setup from the TUI evidence review screen and from an extraction refusal raised through the Evidence door, under the same quick-status rule; `src/cadrumo/entrypoints/tui/ledger/evidence_files_review.py, evidence_records.py, evidence_draft.py, the recorded error's verdict in src/cadrumo/core/errors/hierarchy.py, src/cadrumo/application/operations/error_detail.py and src/cadrumo_client/commands/errors.py, the runtime TUI evidence door, and tests`.
 
 ## Parallelization
 
