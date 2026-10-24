@@ -139,8 +139,9 @@ declare global {
        * loses its answer, `refused` refuses it whole and writes nothing. */
       nextWrites(outcomes: ("unknown" | "saved_unread" | "refused")[]): void;
       /** Answers the next `count` reads of `definition` as unavailable,
-       * as a runtime that did not answer them. */
-      nextReads(definition: string, count: number): void;
+       * as a runtime that did not answer them; with `where`, only reads
+       * whose request carries each of its values. */
+      nextReads(definition: string, count: number, where?: JsonObject): void;
       /** Changes a stored movement's field, as another window saving it
        * would. */
       editElsewhere(id: string, field: string, value: string | null): void;
@@ -593,11 +594,22 @@ function issues(ledger: FixtureLedger, period: JsonValue | undefined) {
       t.business_classification === "BUSINESS" ||
       t.business_classification === "MIXED"
     ) {
-      if (t.direction === "OUTGOING" && !t.category_id)
+      // The product's rule: an expense, or an income that refunds one,
+      // carrying a purchase invoice, takes a spending category.
+      const takesCategory =
+        t.direction === "OUTGOING" ||
+        (t.direction === "INCOMING" && t.purchase_invoice_evidence_id !== null);
+      if (takesCategory && !t.category_id)
         found.push({
           transaction_id: id,
           reason: "missing_category",
           detail: "No expense category.",
+        });
+      if (t.business_classification === "MIXED" && !t.usage_ratio_id)
+        found.push({
+          transaction_id: id,
+          reason: "missing_proportionality_reference",
+          detail: "Mixed without a usage ratio.",
         });
       if (t.currency !== "EUR" && !t.value_in_eur)
         found.push({
@@ -644,6 +656,12 @@ export function ledgerFixture(options: Options): LedgerPort {
   const queued: ("unknown" | "saved_unread" | "refused")[] = [];
   // How many of the next reads of a definition answer nothing.
   const failingReads = new Map<string, number>();
+  // Reads that fail only where their request carries these values.
+  const failingWhere: {
+    definition: string;
+    where: JsonObject;
+    count: number;
+  }[] = [];
   const files = new Map<FileToken, { name: string; purpose: FilePurpose }>();
   const bytesOf = (name: string) =>
     hex64(`bytes:${name}:${edits.get(name) ?? 0}`);
@@ -718,8 +736,13 @@ export function ledgerFixture(options: Options): LedgerPort {
     nextWrites(next) {
       queued.push(...next);
     },
-    nextReads(definition, count) {
-      failingReads.set(definition, (failingReads.get(definition) ?? 0) + count);
+    nextReads(definition, count, where) {
+      if (where) failingWhere.push({ definition, where, count });
+      else
+        failingReads.set(
+          definition,
+          (failingReads.get(definition) ?? 0) + count,
+        );
     },
     editElsewhere(id, field, value) {
       const movement = transactionOf(id);
@@ -734,8 +757,8 @@ export function ledgerFixture(options: Options): LedgerPort {
     drop: (names) => ledgers.forEach((made) => made.drop(names)),
     changeReviews: () => ledgers.forEach((made) => made.changeReviews()),
     nextWrites: (next) => ledgers.forEach((made) => made.nextWrites(next)),
-    nextReads: (definition, count) =>
-      ledgers.forEach((made) => made.nextReads(definition, count)),
+    nextReads: (definition, count, where) =>
+      ledgers.forEach((made) => made.nextReads(definition, count, where)),
     editElsewhere: (id, field, value) =>
       ledgers.forEach((made) => made.editElsewhere(id, field, value)),
     changeFile(name) {
@@ -1929,6 +1952,21 @@ export function ledgerFixture(options: Options): LedgerPort {
     const mutation = changes(definition);
     if (mutation && shape === "refused")
       return reject("refused", { reason: "operation_unavailable" });
+    const narrowed = mutation
+      ? undefined
+      : failingWhere.find(
+          (found) =>
+            found.definition === definition &&
+            found.count > 0 &&
+            Object.entries(found.where).every(
+              ([key, value]) =>
+                JSON.stringify(request[key]) === JSON.stringify(value),
+            ),
+        );
+    if (narrowed) {
+      narrowed.count -= 1;
+      return reject("unavailable");
+    }
     const failing = mutation ? 0 : (failingReads.get(definition) ?? 0);
     if (failing > 0) {
       failingReads.set(definition, failing - 1);

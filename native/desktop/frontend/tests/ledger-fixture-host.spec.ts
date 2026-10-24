@@ -68,3 +68,63 @@ test("a write whose settlement was not seen can be observed, and a read is never
   const read = await port.submit("ledger.rule.list", {});
   expect(read.kind).toBe("settled");
 });
+
+test("the scenario's readiness check asks what the product's does: a usage ratio of Mixed, and a category of a refund", async () => {
+  const port = ledgerFixture({
+    say: () => undefined,
+    wait: async () => undefined,
+    signedIn: () => true,
+    shape: "fixture",
+  });
+  // A quarter of its own, which no seeded movement reaches.
+  const period = { filing_year: 2031, code: "1T" };
+  const added = async (key: string, facts: Record<string, string>) => {
+    const outcome = await port.submit("ledger.add", {
+      booked_date: "2031-02-03",
+      amount: "36.30",
+      currency: "EUR",
+      description: `MOVEMENT ${key}`,
+      idempotency_key: key.padEnd(32, "0"),
+      direction: "OUTGOING",
+      ...facts,
+    });
+    if (outcome.kind !== "settled") throw new Error("not added");
+    return outcome.result.transaction!.transaction_id;
+  };
+  const mixed = await added("mixed", {
+    business_classification: "MIXED",
+    business_pct: "0.3",
+    category_id: "telefonia_movil",
+  });
+  const refund = await added("refund", {
+    direction: "INCOMING",
+    business_classification: "BUSINESS",
+    purchase_invoice_evidence_id: "e".repeat(64),
+  });
+  const income = await added("income", {
+    direction: "INCOMING",
+    business_classification: "BUSINESS",
+  });
+  const reasons = async () => {
+    const outcome = await port.submit("ledger.preflight", { period });
+    if (outcome.kind !== "settled") throw new Error("not checked");
+    return outcome.result.issues.map(
+      (issue) => `${issue.transaction_id}:${issue.reason}`,
+    );
+  };
+  expect((await reasons()).sort()).toEqual(
+    [
+      `${mixed}:missing_proportionality_reference`,
+      `${refund}:missing_category`,
+    ].sort(),
+  );
+  expect((await reasons()).some((found) => found.startsWith(income))).toBe(
+    false,
+  );
+  // Mixed naming its configured ratio is ready.
+  const bulk = await port.submit("ledger.classify.bulk", {
+    csv_text: `transaction_id,classification,business_pct,usage_ratio_id\n${mixed},MIXED,0.3,telefonia_movil\n`,
+  });
+  expect(bulk.kind).toBe("settled");
+  expect(await reasons()).toEqual([`${refund}:missing_category`]);
+});

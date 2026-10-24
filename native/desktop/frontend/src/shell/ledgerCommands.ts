@@ -127,14 +127,48 @@ export function classifyAvailability(
   };
 }
 
+/** The categories with a business-use ratio configured, by year, as
+ * `ledger.ratios.list` answers them: a configured category is the usage
+ * ratio a Mixed movement of that year names. A year absent was not read
+ * yet; null where its ratios could not be read or the censo withholds
+ * them. */
+export type ConfiguredRatios = ReadonlyMap<number, ReadonlySet<string> | null>;
+
+/** The movement's year, which its usage ratio is configured for. */
+const yearOf = (row: LedgerRow) => Number(row.transaction.date.slice(0, 4));
+
+/** How Mixed with `category` stands on the movements that take one: those
+ * whose year has a ratio configured for it, those whose year has none,
+ * and those whose year's ratios were not read. */
+export type RatioCoverage = { staged: number; missing: number; unread: number };
+export function ratioCoverage(
+  ids: readonly string[],
+  rows: ReadonlyMap<string, LedgerRow>,
+  category: string,
+  ratios: ConfiguredRatios | undefined,
+): RatioCoverage {
+  const out: RatioCoverage = { staged: 0, missing: 0, unread: 0 };
+  for (const id of ids) {
+    const row = rows.get(id);
+    if (!row || !takesExpenseCategory(row)) continue;
+    const configured = ratios?.get(yearOf(row));
+    if (configured === undefined || configured === null) out.unread += 1;
+    else if (configured.has(category)) out.staged += 1;
+    else out.missing += 1;
+  }
+  return out;
+}
+
 /** What the person supplied with the command: Business names a category
  * where a movement takes one, Mixed a business share, typed as a
- * percentage, and the category where a movement takes one. */
+ * percentage, and the category where a movement takes one. `ratios` are
+ * the configured usage ratios Mixed names with its category. */
 export type ClassifyRequest = {
   kind: ClassifyKind;
   ids: readonly string[];
   category?: string | null;
   share?: string | null;
+  ratios?: ConfiguredRatios;
 };
 
 export type ClassifyOutcome =
@@ -156,8 +190,11 @@ export type ClassifyOutcome =
  * that take a spending category; income takes none. Mixed takes only a
  * category a share applies to. Where a movement takes a category and none
  * was given, the category is asked for. A category already stored is left
- * as it is for Personal, and for income. Movements the rows do not hold
- * are left out.
+ * as it is for Personal, and for income. Mixed names the category as its
+ * usage ratio where the movement's year has a ratio configured for it, as
+ * the product's readiness check asks of every Mixed movement; elsewhere
+ * none is staged, and the step says so. Movements the rows do not hold are
+ * left out.
  */
 export function classifyCells(
   request: ClassifyRequest,
@@ -209,13 +246,24 @@ export function classifyCells(
         value: { kind: "clear" },
         stored: storedShare,
       });
-    if (category !== null && takesExpenseCategory(row))
+    if (category !== null && takesExpenseCategory(row)) {
       cells.push({
         id,
         field: "category_id",
         value: { kind: "set", value: category },
         stored: storedFieldValue(row, "category_id"),
       });
+      if (
+        request.kind === "mixed" &&
+        request.ratios?.get(yearOf(row))?.has(category)
+      )
+        cells.push({
+          id,
+          field: "usage_ratio_id",
+          value: { kind: "set", value: category },
+          stored: storedFieldValue(row, "usage_ratio_id"),
+        });
+    }
   }
   return {
     kind: "staged",

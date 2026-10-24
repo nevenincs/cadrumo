@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { LEDGER_PAYLOAD_LIMIT, type LedgerRow } from "../src/shell/ledger";
-import { classifyCells } from "../src/shell/ledgerCommands";
+import { classifyCells, ratioCoverage } from "../src/shell/ledgerCommands";
 import {
   bulkCsv,
   payloadSize,
@@ -820,4 +820,92 @@ test("the bound counts bytes, and a row too large to send alone is held", () => 
   );
   expect(blockersOf(plan, A)).toEqual(["too_large"]);
   expect(plan.steps).toEqual([]);
+});
+
+test("Mixed names the category's configured usage ratio, through the bulk, and says where none is configured", () => {
+  const phone = movement(hexId("r201"), { date: "2026-03-02" });
+  const old = movement(hexId("r202"), { date: "2025-11-20" });
+  const unread = movement(hexId("r203"), { date: "2024-06-01" });
+  const income = movement(hexId("r204"), { direction: "INCOMING" });
+  const rows = contextOf(phone, old, unread, income);
+  const ids = [phone, old, unread, income].map(
+    (row) => row.transaction.transaction_id,
+  );
+  // 2026 has a ratio for mobile phones, 2025 has none, 2024 was not read.
+  const ratios = new Map<number, ReadonlySet<string> | null>([
+    [2026, new Set(["telefonia_movil"])],
+    [2025, new Set(["suministros_home_office_luz"])],
+    [2024, null],
+  ]);
+  expect(ratioCoverage(ids, rows.rows, "telefonia_movil", ratios)).toEqual({
+    staged: 1,
+    missing: 1,
+    unread: 1,
+  });
+  const outcome = classifyCells(
+    {
+      kind: "mixed",
+      ids,
+      share: "30",
+      category: "telefonia_movil",
+      ratios,
+    },
+    rows.rows,
+  );
+  expect(outcome.kind).toBe("staged");
+  if (outcome.kind !== "staged") return;
+  const ratioCells = outcome.event.cells.filter(
+    (cell) => cell.field === "usage_ratio_id",
+  );
+  expect(ratioCells.map((cell) => [cell.id, cell.value])).toEqual([
+    [phone.transaction.transaction_id, set("telefonia_movil")],
+  ]);
+  // The usage ratio goes in the bulk, beside the classification it needs.
+  const plan = planApply(reduceStage(EMPTY_STAGE, outcome.event).content, rows);
+  const bulk = plan.steps.find(
+    (step): step is Extract<PlanStep, { kind: "bulk" }> => step.kind === "bulk",
+  )!;
+  const [header, ...lines] = bulk.request.csv_text.trim().split("\n");
+  const column = header!.split(",").indexOf("usage_ratio_id");
+  expect(column).toBeGreaterThan(0);
+  const named = lines
+    .map((line) => line.split(","))
+    .filter((cells) => cells[column] !== "")
+    .map((cells) => [cells[0], cells[column]]);
+  expect(named).toEqual([
+    [phone.transaction.transaction_id, "telefonia_movil"],
+  ]);
+  // Without the ratios read, Mixed names none and stages the rest.
+  const unseen = classifyCells(
+    { kind: "mixed", ids, share: "30", category: "telefonia_movil" },
+    rows.rows,
+  );
+  expect(
+    unseen.kind === "staged" &&
+      unseen.event.cells.some((cell) => cell.field === "usage_ratio_id"),
+  ).toBe(false);
+});
+
+test("a movement whose sealed state was not read is held, neither sealed nor savable", () => {
+  const read = business(hexId("r211"));
+  const unread = business(hexId("r212"));
+  const sealed = business(hexId("r213"));
+  const id = (row: LedgerRow) => row.transaction.transaction_id;
+  const content = staged({
+    [id(read)]: { notes: set("Read") },
+    [id(unread)]: { notes: set("Unread") },
+    [id(sealed)]: { notes: set("Sealed") },
+  });
+  const plan = planApply(content, {
+    ...contextOf(read, unread, sealed),
+    sealed: new Set([id(sealed)]),
+    unread: new Set([id(unread), id(sealed)]),
+  });
+  expect(blockersOf(plan, id(read))).toEqual([]);
+  expect(blockersOf(plan, id(unread))).toEqual(["sealed_unread"]);
+  // Read as sealed, it is sealed, whatever an older read left unread.
+  expect(blockersOf(plan, id(sealed))).toEqual(["sealed"]);
+  expect(plan.summary.blockers).toMatchObject({ sealed_unread: 1, sealed: 1 });
+  expect(plan.summary.together).toBe(1);
+  expect(plan.held.rows.sort()).toEqual([id(unread), id(sealed)].sort());
 });

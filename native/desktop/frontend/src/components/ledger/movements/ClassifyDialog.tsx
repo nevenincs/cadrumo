@@ -11,7 +11,10 @@ import {
 } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
-import type { ClassifyKind } from "../../../shell/ledgerCommands";
+import type {
+  ClassifyKind,
+  RatioCoverage,
+} from "../../../shell/ledgerCommands";
 import {
   SHARE_CATEGORY_FAMILIES,
   SPENDING_CATEGORY_FAMILIES,
@@ -24,7 +27,9 @@ import { categoryLabel, familyLabel } from "./movementWords";
  * for the movements that take one, and a business share for Mixed. Income
  * takes no spending category, so a selection of income alone is never
  * asked for one, and Mixed offers only the categories a share applies to.
- * Nothing is saved: staging is the next step, and Escape leaves everything
+ * Mixed says, for the category chosen, on how many movements it names the
+ * configured usage ratio and on how many none is configured, with the way
+ * to Business-use ratios. Nothing is saved: staging is the next step, and Escape leaves everything
  * as it was.
  */
 export function ClassifyDialog({
@@ -36,6 +41,8 @@ export function ClassifyDialog({
   error,
   initialShare = "",
   range,
+  ratioOf,
+  onOpenRatios,
   onStage,
   onCancel,
   onClosed,
@@ -58,6 +65,11 @@ export function ClassifyDialog({
   /** A cell range over other rows than the selection, which the person can
    * make the selection instead. */
   range?: { count: number; onSelect: () => void };
+  /** For Mixed, how the category chosen stands against the configured
+   * usage ratios of the movements' years. */
+  ratioOf?: (category: string) => RatioCoverage;
+  /** Opens Setup › Business-use ratios. */
+  onOpenRatios?: () => void;
   onStage: (answer: { category?: string; share?: string }) => void;
   onCancel: () => void;
   /** Called as the dialog closes, to hand focus back. */
@@ -216,6 +228,12 @@ export function ClassifyDialog({
               </Combobox>
             </div>
           )}
+          {mixed && category !== null && ratioOf && (
+            <RatioLine
+              coverage={ratioOf(category)}
+              onOpenRatios={onOpenRatios}
+            />
+          )}
           {kind !== "category" && split.income > 0 && (
             <p className="ledger-classify-income text-sm text-muted-foreground">
               {t("desktop.ledger.classify.income_no_category", {
@@ -238,5 +256,54 @@ export function ClassifyDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Where Mixed names a usage ratio with the category, and where it cannot:
+ * none configured for the movement's year, or not read. */
+function RatioLine({
+  coverage,
+  onOpenRatios,
+}: {
+  coverage: RatioCoverage;
+  onOpenRatios?: () => void;
+}) {
+  const t = useStrings();
+  if (coverage.staged + coverage.missing + coverage.unread === 0) return null;
+  return (
+    <div className="ledger-classify-ratio grid gap-1 text-sm">
+      {coverage.staged > 0 && (
+        <p className="ledger-classify-ratio-staged text-muted-foreground">
+          {t("desktop.ledger.classify.ratio_staged", {
+            count: coverage.staged,
+          })}
+        </p>
+      )}
+      {coverage.missing > 0 && (
+        <p className="ledger-classify-ratio-missing flex flex-wrap items-center gap-2">
+          <Icon name="alert" size="xs" className="text-warning" />
+          {t("desktop.ledger.classify.ratio_missing", {
+            count: coverage.missing,
+          })}
+          {onOpenRatios && (
+            <Button
+              type="button"
+              variant="link"
+              size="xs"
+              className="ledger-classify-open-ratios"
+              onClick={onOpenRatios}
+            >
+              {t("desktop.ledger.ratios.title")}
+            </Button>
+          )}
+        </p>
+      )}
+      {coverage.unread > 0 && (
+        <p className="ledger-classify-ratio-unread flex items-center gap-2 text-muted-foreground">
+          <Icon name="unknown" size="xs" />
+          {t("desktop.ledger.classify.ratio_unread")}
+        </p>
+      )}
+    </div>
   );
 }
