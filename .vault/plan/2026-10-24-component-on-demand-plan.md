@@ -9,7 +9,7 @@ related:
   - '[[2026-10-24-rust-component-provisioning-reference]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:34fad19044033451282dc30e7420a302e5cc22afffac232f3fe84d22ef1e65ad'
+body_hash: 'sha256:47a5209d355c7202a513d007b60321ce84f656a11d584287343ca3a853f145d1'
 ---
 
 # `component-on-demand` plan
@@ -39,11 +39,11 @@ The work is independent of the proposed `2026-10-24-rust-component-provisioning-
 - [x] `S06` - Render a provisioning verdict on the CLI as the sentence plus the exact setup command instead of raw precondition action lines; `src/cadrumo/entrypoints/cli/config/status_rendering.py, the shared CLI refusal renderer and tests`.
 - [x] `S07` - Route a provisioning verdict from the TUI operation modal to the Setup screen on that item; `src/cadrumo/entrypoints/tui/operations/run_result.py, src/cadrumo/entrypoints/tui/operations/refusal_explanation.py, src/cadrumo/entrypoints/tui/setup/ and tests`.
 - [x] `S08` - Route every desktop refusal whose verdict names operator.provision to the setup prompt on that item, and give the Readers tab a set-up action; `native/desktop/frontend/src/shell/ledger.ts, native/desktop/frontend/src/App.tsx, native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx, native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx, scenarios and stories`.
-- [ ] `S09` - Add the consumer gating gate: every browser and model-role consumer declares its item and refuses with operator.provision.<item> before any effect; `src/cadrumo/application/tests/test_dependency_consumer_gating.py`.
+- [x] `S09` - Add the consumer gating gate: every browser and model-role consumer declares its item and refuses with operator.provision.<item> before any effect; `src/cadrumo/application/tests/test_dependency_consumer_gating.py`.
 - [x] `S10` - Carry the column reader refusal through invoice bulk intake instead of turning every error into a silent decline, and make the reader probe check the model the mapper actually sends; `src/cadrumo/entrypoints/invoice_intake_operation_composition.py, src/cadrumo/adapters/outbound/llm/column_role_mapping.py, src/cadrumo/application/local_reader.py and tests`.
 - [x] `S11` - Keep the reader verdict on the outer evidence extraction refusal so it routes to setup, and carry the local AI recovery action on the reader readiness projections; `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py, src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py, src/cadrumo/_data/operations/contract_manifest.json and tests`.
 - [ ] `S12` - Repair the label-reading notice tests the reader pre-check broke, publish the error detail of the ledger classification and evidence ingestion operations so their reader verdicts reach every surface, and make the desktop Readers tab read each role's recovery action; `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_label_reading_notice.py and its loopback runtime, the ledger classification and evidence ingestion operation definitions, native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx and shell/ledger.ts, and tests`.
-- [ ] `S13` - Check the local AI before the statement reader dispatches a text or scanned page, refusing with the setup verdict instead of a transport error, and keep the supply-nature verdict through the extraction composition instead of discarding it; `src/cadrumo/adapters/outbound/llm/statement_reading.py, src/cadrumo/adapters/inbound/financial/providers/pdf_statement.py, the supply-nature step of src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py, and tests`.
+- [x] `S13` - Check the local AI before the statement reader dispatches a text or scanned page, refusing with the setup verdict instead of a transport error, and keep the supply-nature verdict through the extraction composition instead of discarding it; `src/cadrumo/adapters/outbound/llm/statement_reading.py, src/cadrumo/adapters/inbound/financial/providers/pdf_statement.py, the supply-nature step of src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py, and tests`.
 
 ## Parallelization
 

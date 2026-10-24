@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:bae4b883e560f8b565891382f6c38f530a156121d5472aaecf2d678fc741427d'
+body_hash: 'sha256:63947a8a7201ecfcd23a163b96a29c8b90fb3e31b9f49719d0e1e4c91d1605cf'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -191,6 +191,38 @@ related:
 - `S11` `verify:` `executor conformance and operations suites (857)` -> `pass`
 - `S11` `verify:` `ruff, ty, pyrefly, basedpyright, lint-imports, check-operation-contract-manifest` -> `pass`
 - `S11` `verify:` `caller suites: 3109 passed, 25 failed not from S11 (18 TUI catalogue from modelo work, 1 flaky) and 6 label-reading notice tests broken by S02's pre-check` -> `fail`
+- `S13` `M` `src/cadrumo/adapters/inbound/einvoice/tests/test_structured_evidence_draft_projection.py`
+- `S13` `M` `src/cadrumo/adapters/inbound/financial/providers/pdf_statement.py`
+- `S13` `M` `src/cadrumo/adapters/outbound/llm/statement_reading.py`
+- `S13` `M` `src/cadrumo/adapters/outbound/llm/tests/load_headroom_support.py`
+- `S13` `A` `src/cadrumo/adapters/outbound/llm/tests/test_statement_reader_setup_refusal.py`
+- `S13` `M` `src/cadrumo/adapters/outbound/llm/tests/test_statement_reading.py`
+- `S13` `M` `src/cadrumo/adapters/persistence/profile/tests/_invoice_confirmation_test_support.py`
+- `S13` `M` `src/cadrumo/application/dependency_wording.py`
+- `S13` `M` `src/cadrumo/application/ledger/invoice_draft_extraction.py`
+- `S13` `M` `src/cadrumo/application/ledger/invoice_draft_extraction_ports.py`
+- `S13` `M` `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py`
+- `S13` `M` `src/cadrumo/locales/ca/application.yml`
+- `S13` `M` `src/cadrumo/locales/en/application.yml`
+- `S13` `M` `src/cadrumo/locales/es/application.yml`
+- `S13` `M` `src/cadrumo/locales/hu/application.yml`
+- `S13` `verify:` `consumer gating gate (25)` -> `pass`
+- `S13` `verify:` `statement reader and PDF statement pytest (27), covering suites (2471)` -> `pass`
+- `S13` `verify:` `ruff, ty, lint-imports, check-operation-contract-manifest` -> `pass`
+- `S09` `A` `src/cadrumo/entrypoints/tests/test_dependency_consumer_gating.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_draft.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_evidence_draft_label_reading.py`
+- `S09` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S09` `M` `src/cadrumo/locales/ca/common.yml`
+- `S09` `M` `src/cadrumo/locales/en/cli.yml`
+- `S09` `M` `src/cadrumo/locales/en/common.yml`
+- `S09` `M` `src/cadrumo/locales/es/cli.yml`
+- `S09` `M` `src/cadrumo/locales/es/common.yml`
+- `S09` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S09` `M` `src/cadrumo/locales/hu/common.yml`
+- `S09` `verify:` `consumer gating gate after S13 (25)` -> `pass`
+- `S09` `verify:` `every structural row falsified in isolated fixtures` -> `pass`
+- `S09` `verify:` `TUI ledger and CLI evidence notice pytest (742)` -> `pass`
 
 ## Notes
 
@@ -203,3 +235,5 @@ related:
 - `S10` Mapping model resolves through `select_role_model` for both probe and dispatch; `map_column_roles` removed for `resolve_header_roles;` text and vision readers still send their raw settings (out of scope)
 - `S05` Missing browser now settles `REFUSED_BROWSER_NOT_READY` with a message key and no internal context lines; unused cli.yml key `cli.app.ledger.evidence.label_reading_reader_unavailable` and the TUI's own label-reading wording are left for S09 cleanup
 - `S11` The verdict was lost to a doubled refusal and to ledger.evidence.extract not publishing its error detail; `recovery_action_id` rides on role rows only because the host probe names no action
+- `S13` Supply-nature proposals have no production caller `(propose_supply_nature` is never requested), so their verdict is kept through the port but reaches no surface; accepted as a gap until a caller asks for a proposal
+- `S09` Gate lives in entrypoints/tests because it drives composed consumers; scope stops at setup's own traffic, `cadrumo_agent_service,` the desktop, and dispatches reached only through self attributes, dynamic imports or mapping lookups
