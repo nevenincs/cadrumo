@@ -1020,7 +1020,6 @@
     }
   },
   "relay": {
-    "payload_text_limit": 12288,
     "request_line_limit": 16384
   }
 }

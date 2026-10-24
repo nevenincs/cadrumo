@@ -228,6 +228,17 @@ impl Files {
         Ok(entry.path.clone())
     }
 
+    /// The file a save token names, once the host has written it: for this
+    /// session only, never a file the person picked to read, and only while
+    /// it is still there.
+    pub(super) fn saved(&self, identity: &Value, token: &str) -> Result<PathBuf> {
+        let path = self.path(identity, token, Purpose::Export, true)?;
+        if !path.is_file() {
+            return Err(Failure::new("file_unavailable"));
+        }
+        Ok(path)
+    }
+
     pub(super) fn forget(&self, tokens: &[String]) {
         lock(&self.0).retain(|entry| !tokens.contains(&entry.token));
     }
@@ -375,5 +386,79 @@ mod tests {
                 .path(&one, &saved.files[0].token, Purpose::Export, true)
                 .is_err()
         );
+    }
+
+    #[test]
+    fn only_a_saved_file_that_is_still_there_is_shown() {
+        let root = scratch("saved");
+        let files = Files::default();
+        let one = json!({"session_id":"one"});
+        let target = root.join("modelo-303-2026-3T.boe");
+        let token = files
+            .issue_save(&one, Format::Boe, target.clone())
+            .unwrap()
+            .files[0]
+            .token
+            .clone();
+        assert_eq!(
+            files.saved(&one, &token).unwrap_err().code,
+            "file_unavailable",
+            "nothing was written there yet"
+        );
+        std::fs::write(&target, b"x").unwrap();
+        assert_eq!(files.saved(&one, &token).unwrap(), target);
+        let picked = files
+            .issue_all(&one, Purpose::Package, vec![root.join("review.zip")])
+            .unwrap()
+            .files[0]
+            .token
+            .clone();
+        assert_eq!(
+            files.saved(&one, &picked).unwrap_err().code,
+            "invalid",
+            "a file picked to read is not one the host saved"
+        );
+        assert_eq!(
+            files
+                .saved(&one, &target.to_string_lossy())
+                .unwrap_err()
+                .code,
+            "invalid",
+            "a path is never a token"
+        );
+        assert_eq!(
+            files
+                .saved(&one, "file-00000000000000000000000000000000")
+                .unwrap_err()
+                .code,
+            "file_unavailable"
+        );
+        std::fs::remove_file(&target).unwrap();
+        assert_eq!(
+            files.saved(&one, &token).unwrap_err().code,
+            "file_unavailable",
+            "a file removed since it was saved"
+        );
+        std::fs::write(&target, b"x").unwrap();
+        files.forget(std::slice::from_ref(&token));
+        assert_eq!(
+            files.saved(&one, &token).unwrap_err().code,
+            "file_unavailable"
+        );
+        let token = files
+            .issue_save(&one, Format::Boe, target.clone())
+            .unwrap()
+            .files[0]
+            .token
+            .clone();
+        assert_eq!(
+            files
+                .saved(&json!({"session_id":"two"}), &token)
+                .unwrap_err()
+                .code,
+            "file_unavailable",
+            "another session's save names nothing"
+        );
+        std::fs::remove_dir_all(root).unwrap();
     }
 }

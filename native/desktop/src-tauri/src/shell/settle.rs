@@ -1,10 +1,12 @@
-//! Following an operation the window submitted over the held person's relay,
+//! Following an operation a window submitted over the held person's relay,
 //! until it settles or waits on the person: the outcome the window is told,
 //! the review it reads and answers by digest, cancellation at an observed
 //! revision, and the bounded record of which operations this window may still
-//! follow. No family's meaning lives here: a caller names the definition, says
-//! whether it may write, and which result fields name a file.
-use super::super::relay::{self, Failure, Relayed, Result, lock, protocol};
+//! follow. Shared by the host families; no family's meaning lives here: a
+//! caller names the definition, says whether it may write, which result
+//! fields name a file, and which folders its payload put files from.
+use super::relay::{self, Failure, Relayed, Result, lock, protocol};
+use super::user_profile::ProfileHost;
 use crate::agent::person::{HeldPerson, PersonEvent};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -12,7 +14,7 @@ use std::{collections::VecDeque, sync::Mutex};
 use tokio::sync::broadcast::Receiver;
 
 /// How many submitted operations the window may still follow.
-pub(crate) const TRACKED_LIMIT: usize = 64;
+const TRACKED_LIMIT: usize = 64;
 
 fn failure(code: &'static str) -> Failure {
     Failure::new(code)
@@ -20,12 +22,12 @@ fn failure(code: &'static str) -> Failure {
 
 /// What the settle loop needs to know of one admitted definition.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct Settling {
-    pub(crate) id: &'static str,
+pub(super) struct Settling {
+    pub(super) id: &'static str,
     /// May change records: an outcome that was not observed is unknown.
-    pub(crate) mutation: bool,
+    pub(super) mutation: bool,
     /// Result fields that name a file the worker read or wrote.
-    pub(crate) result_paths: &'static [&'static str],
+    pub(super) result_paths: &'static [&'static str],
 }
 
 /// Where an operation the window submitted stands. A refusal the runtime
@@ -57,15 +59,25 @@ pub enum Outcome {
         cancellable: bool,
     },
 }
+impl Outcome {
+    fn operation_id(&self) -> &str {
+        match self {
+            Self::Settled { operation_id, .. }
+            | Self::Refused { operation_id, .. }
+            | Self::Review { operation_id, .. }
+            | Self::Running { operation_id, .. } => operation_id,
+        }
+    }
+}
 
 /// The review a paused operation shows, with the digest an answer must name.
 #[derive(Debug, Serialize)]
 pub struct ReviewDocument {
     operation_id: String,
     revision: u64,
-    review_digest: String,
+    pub(super) review_digest: String,
     expires_at: Option<String>,
-    review: Value,
+    pub(super) review: Value,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -116,26 +128,29 @@ fn waits_on_person(p: &Value) -> bool {
 
 /// The review this window read for an operation: an answer binds to it.
 #[derive(Clone, Debug)]
-struct Shown {
+pub(super) struct Shown {
     interaction_id: Value,
     revision: Value,
     digest: String,
 }
 /// One operation this window submitted, for the session that submitted it.
 #[derive(Clone, Debug)]
-pub(crate) struct Tracked {
-    pub(crate) operation: String,
-    pub(crate) definition: Settling,
-    pub(crate) subject: String,
-    pub(crate) identity: Value,
-    shown: Option<Shown>,
+pub(super) struct Tracked {
+    pub(super) operation: String,
+    pub(super) definition: Settling,
+    pub(super) subject: String,
+    pub(super) identity: Value,
+    pub(super) shown: Option<Shown>,
+    /// The folders of the files the host put in its payload.
+    folders: Vec<String>,
 }
 impl Tracked {
-    pub(crate) fn new(
+    pub(super) fn new(
         operation: String,
         definition: Settling,
         subject: String,
         identity: Value,
+        folders: Vec<String>,
     ) -> Self {
         Self {
             operation,
@@ -143,6 +158,7 @@ impl Tracked {
             subject,
             identity,
             shown: None,
+            folders,
         }
     }
     fn relayed<'a>(&'a self, person: &'a HeldPerson) -> Relayed<'a> {
@@ -153,13 +169,17 @@ impl Tracked {
             subject: self.subject.clone(),
         }
     }
+    /// What the window is shown of a document the runtime answered for it.
+    fn reduced(&self, document: &Value) -> Value {
+        reduced(document, self.definition.result_paths, &self.folders)
+    }
 }
 
 /// The operations this window submitted, for the session that submitted them.
 #[derive(Default)]
-pub(crate) struct Operations(Mutex<VecDeque<Tracked>>);
+pub(super) struct Operations(Mutex<VecDeque<Tracked>>);
 impl Operations {
-    pub(crate) fn track(&self, tracked: Tracked) {
+    pub(super) fn track(&self, tracked: Tracked) {
         let mut operations = lock(&self.0);
         // A new session's window follows none of the previous session's.
         operations.retain(|other| other.identity == tracked.identity);
@@ -168,7 +188,7 @@ impl Operations {
         }
         operations.push_back(tracked);
     }
-    pub(crate) fn find(&self, operation: &str) -> Result<Tracked> {
+    pub(super) fn find(&self, operation: &str) -> Result<Tracked> {
         lock(&self.0)
             .iter()
             .find(|tracked| tracked.operation == operation)
@@ -183,7 +203,7 @@ impl Operations {
             tracked.shown = shown;
         }
     }
-    pub(crate) fn clear(&self) {
+    pub(super) fn clear(&self) {
         lock(&self.0).clear();
     }
 }
@@ -191,7 +211,7 @@ impl Operations {
 /// Reduces every absolute path a result names under one of `keys` to its
 /// file name. The window names files and never holds where they are, and a
 /// folder can carry the person's own name.
-pub(crate) fn file_names(value: &mut Value, keys: &[&str]) {
+fn file_names(value: &mut Value, keys: &[&str]) {
     // Split on both separators: the worker's platform decides the spelling,
     // not the host's.
     fn named(text: &mut String) {
@@ -200,7 +220,11 @@ pub(crate) fn file_names(value: &mut Value, keys: &[&str]) {
             && bytes[0].is_ascii_alphabetic()
             && bytes[1] == b':'
             && matches!(bytes[2], b'\\' | b'/');
-        if drive || text.starts_with(['/', '\\']) {
+        // A local attachment's locator can also be a file URI.
+        let uri = text
+            .get(..5)
+            .is_some_and(|scheme| scheme.eq_ignore_ascii_case("file:"));
+        if drive || uri || text.starts_with(['/', '\\']) {
             let name = text
                 .rsplit(['/', '\\'])
                 .next()
@@ -231,9 +255,54 @@ pub(crate) fn file_names(value: &mut Value, keys: &[&str]) {
     }
 }
 
+/// What the window is shown of a document the runtime answered for an
+/// operation: every path reduced to its file name, wherever the worker
+/// quoted it, as in a message, a review line or a row's source.
+fn reduced(document: &Value, keys: &[&str], folders: &[String]) -> Value {
+    fn strip(value: &mut Value, folders: &[(String, String)]) {
+        match value {
+            Value::String(text) => {
+                for (folder, name) in folders {
+                    if text.contains(folder.as_str()) {
+                        *text = text
+                            .replace(&format!("{folder}\\"), "")
+                            .replace(&format!("{folder}/"), "")
+                            .replace(folder.as_str(), name);
+                    }
+                }
+            }
+            Value::Array(items) => items.iter_mut().for_each(|item| strip(item, folders)),
+            Value::Object(fields) => fields.values_mut().for_each(|field| strip(field, folders)),
+            _ => {}
+        }
+    }
+    let mut document = document.clone();
+    file_names(&mut document, keys);
+    // The worker may spell a folder with either separator; the deepest
+    // folder goes first so a nested one is not cut at its parent.
+    let mut spellings: Vec<(String, String)> = folders
+        .iter()
+        .flat_map(|folder| {
+            let name = folder
+                .rsplit(['/', '\\'])
+                .next()
+                .unwrap_or_default()
+                .to_owned();
+            [
+                (folder.clone(), name.clone()),
+                (folder.replace('\\', "/"), name),
+            ]
+        })
+        .collect();
+    spellings.sort_by_key(|(folder, _)| std::cmp::Reverse(folder.len()));
+    spellings.dedup();
+    strip(&mut document, &spellings);
+    document
+}
+
 /// The outcome a projection settles to, reading the result where there is one.
-async fn outcome(relayed: &Relayed<'_>, p: &Value, definition: Settling) -> Result<Outcome> {
-    let mutation = definition.mutation;
+async fn outcome(relayed: &Relayed<'_>, p: &Value, tracked: &Tracked) -> Result<Outcome> {
+    let mutation = tracked.definition.mutation;
     let operation_id = relayed.operation.clone();
     let revision = p["revision"].as_u64().ok_or_else(protocol)?;
     let cancellable = p["cancellable_now"] == true;
@@ -247,8 +316,7 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, definition: Settling) -> Resu
                 })
             };
             let document = relay::result(relayed).await.map_err(|_| unread())?;
-            let mut result = document["projection"].clone();
-            file_names(&mut result, definition.result_paths);
+            let result = tracked.reduced(&document["projection"]);
             if !result.is_object() {
                 return Err(unread());
             }
@@ -266,11 +334,7 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, definition: Settling) -> Resu
                 relay::result(relayed)
                     .await
                     .ok()
-                    .map(|document| {
-                        let mut detail = document["projection"].clone();
-                        file_names(&mut detail, definition.result_paths);
-                        detail
-                    })
+                    .map(|document| tracked.reduced(&document["projection"]))
                     .filter(Value::is_object)
             } else {
                 None
@@ -307,7 +371,7 @@ fn attributed(mut failure: Failure, tracked: &Tracked) -> Failure {
 /// Follows a submitted or answered operation until it settles or waits on
 /// the person, within the relay's bound. An outcome not observed in time is
 /// unknown for a mutation, which is never sent again.
-pub(crate) async fn settle(
+pub(super) async fn settle(
     events: &mut Receiver<PersonEvent>,
     tracked: &Tracked,
     person: &HeldPerson,
@@ -316,7 +380,7 @@ pub(crate) async fn settle(
     let mutation = tracked.definition.mutation;
     let settled = tokio::time::timeout(relay::SETTLE_LIMIT, async {
         let p = relay::follow(events, &relayed, waits_on_person).await?;
-        outcome(&relayed, &p, tracked.definition).await
+        outcome(&relayed, &p, tracked).await
     })
     .await
     .unwrap_or_else(|_| Err(failure(if mutation { "unknown" } else { "unavailable" })));
@@ -324,10 +388,10 @@ pub(crate) async fn settle(
 }
 
 /// Where a tracked operation stands now, without waiting.
-pub(crate) async fn observe_on(tracked: &Tracked, person: &HeldPerson) -> Result<Outcome> {
+pub(super) async fn observe_on(tracked: &Tracked, person: &HeldPerson) -> Result<Outcome> {
     let relayed = tracked.relayed(person);
     let observed = match relay::observe(&relayed).await {
-        Ok(p) => outcome(&relayed, &p, tracked.definition).await,
+        Ok(p) => outcome(&relayed, &p, tracked).await,
         Err(failure) => Err(failure),
     };
     observed.map_err(|failure| attributed(failure, tracked))
@@ -345,7 +409,7 @@ fn review_refusal(reply: &Value) -> Failure {
 
 /// Reads the review a tracked operation shows and remembers its digest, the
 /// one an answer must name.
-pub(crate) async fn review_on(
+pub(super) async fn review_on(
     operations: &Operations,
     tracked: &Tracked,
     person: &HeldPerson,
@@ -361,7 +425,7 @@ pub(crate) async fn review_on(
     }
     let digest = reply["review_digest"]
         .as_str()
-        .filter(|digest| super::super::setup::wire::is_hex64(digest));
+        .filter(|digest| super::setup::wire::is_hex64(digest));
     let revision = reply["revision"].as_u64();
     let review = &reply["document"]["projection"];
     let (Some(digest), Some(revision), true, true, true) = (
@@ -386,13 +450,13 @@ pub(crate) async fn review_on(
         revision,
         review_digest: digest.to_owned(),
         expires_at: reply["expires_at"].as_str().map(str::to_owned),
-        review: review.clone(),
+        review: tracked.reduced(review),
     })
 }
 
 /// Answers the review the window read, bound to the digest it showed. The
 /// relay reads the review again and refuses an answer to a changed one.
-pub(crate) async fn answer_on(
+pub(super) async fn answer_on(
     operations: &Operations,
     tracked: &Tracked,
     person: &HeldPerson,
@@ -421,6 +485,11 @@ pub(crate) async fn answer_on(
     .map_err(|_| unknown())?;
     operations.show(&tracked.operation, None);
     if reply["kind"] == "operation_refused" {
+        // The relay answers "unavailable" when the runtime's reply was lost
+        // after the answer may have been taken.
+        if reply["code"] == "unavailable" {
+            return Err(unknown());
+        }
         return Err(review_refusal(&reply));
     }
     if reply["kind"] != "operation_responded" || reply["operation_id"] != tracked.operation {
@@ -431,7 +500,7 @@ pub(crate) async fn answer_on(
 
 /// Asks the runtime to cancel at the revision the window observed, then
 /// reports where the operation stands.
-pub(crate) async fn cancel_on(
+pub(super) async fn cancel_on(
     tracked: &Tracked,
     person: &HeldPerson,
     revision: u64,
@@ -456,11 +525,59 @@ pub(crate) async fn cancel_on(
     observe_on(tracked, person).await
 }
 
+/// The held person, only while it is the session that submitted `tracked`.
+pub(super) async fn holding(profile: &ProfileHost, tracked: &Tracked) -> Result<HeldPerson> {
+    let person = profile
+        .person(tracked.identity["profile_id"].as_str())
+        .await?;
+    if relay::identity(&person).await? != tracked.identity {
+        return Err(failure("not_signed_in"));
+    }
+    Ok(person)
+}
+
+/// Rejects an answer read while the window's account changed underneath.
+pub(super) async fn still_holding(profile: &ProfileHost, person: &HeldPerson) -> Result<()> {
+    let identity = relay::identity(person).await?;
+    let current = profile.person(identity["profile_id"].as_str()).await?;
+    if relay::identity(&current).await? != identity {
+        return Err(failure("not_signed_in"));
+    }
+    Ok(())
+}
+
+/// The outcome of an operation submitted for `person`, while that is still
+/// the session the window holds. An account that changed after a write was
+/// sent leaves the write unknown, never "not sent": it may have committed.
+pub(super) async fn still_held(
+    profile: &ProfileHost,
+    person: &HeldPerson,
+    outcome: Outcome,
+    mutation: bool,
+) -> Result<Outcome> {
+    if let Err(changed) = still_holding(profile, person).await {
+        if !mutation {
+            return Err(changed);
+        }
+        let mut unknown = failure("unknown");
+        unknown.operation_id = Some(outcome.operation_id().to_owned());
+        return Err(unknown);
+    }
+    Ok(outcome)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const PATHS: &[&str] = &["output_path", "path", "source_path"];
+    const PATHS: &[&str] = &[
+        "files",
+        "output_path",
+        "path",
+        "provider_locator",
+        "source_name",
+        "source_path",
+    ];
     const READ: Settling = Settling {
         id: "family.example-read",
         mutation: false,
@@ -478,7 +595,13 @@ mod tests {
             "sources": [{"path": r"C:\Users\alba\AEAT\justificante.pdf", "sha256": "ab"}],
             "rows": [{"source_path": "/home/alba/modelos/303.txt", "holder": r"C:\Users\alba"}],
             "output_path": r"\\server\share\modelo-303.txt",
+            "files": [r"D:\export\a.ofx", "b.ofx"],
             "review": {"path": "casillas[0].value"},
+            "queue": [
+                {"provider_locator": r"C:\Users\alba\Facturas\gasolina.pdf"},
+                {"provider_locator": "file:///home/alba/facturas/luz.pdf"},
+                {"provider_locator": "drive:1AbCdEf"},
+            ],
         });
         file_names(&mut result, PATHS);
         assert_eq!(result["sources"][0]["path"], "justificante.pdf");
@@ -486,7 +609,36 @@ mod tests {
         assert_eq!(result["rows"][0]["source_path"], "303.txt");
         assert_eq!(result["rows"][0]["holder"], r"C:\Users\alba");
         assert_eq!(result["output_path"], "modelo-303.txt");
+        assert_eq!(result["files"], json!(["a.ofx", "b.ofx"]));
         assert_eq!(result["review"]["path"], "casillas[0].value");
+        assert_eq!(result["queue"][0]["provider_locator"], "gasolina.pdf");
+        assert_eq!(result["queue"][1]["provider_locator"], "luz.pdf");
+        assert_eq!(result["queue"][2]["provider_locator"], "drive:1AbCdEf");
+    }
+
+    #[test]
+    fn a_folder_the_host_filled_in_is_never_shown_wherever_the_worker_quotes_it() {
+        let folders = [
+            r"C:\Users\alba\Bancos".to_owned(),
+            r"C:\Users\alba\Bancos\2026".to_owned(),
+        ];
+        let document = json!({
+            "unresolved": [{"source_name": r"C:\Users\alba\Bancos\2026\n26.csv", "reason": "duplicate"}],
+            "message": r"could not read C:/Users/alba/Bancos/ing.csv",
+            "context": [{"value": r"in C:\Users\alba\Bancos"}],
+            "lines": [r"C:\Users\alba\Bancos\2026\abril\bbva.csv: 3 rows"],
+            "supplier": "C:\\Users\\albacete",
+            "amount": 12,
+        });
+        let shown = reduced(&document, PATHS, &folders);
+        assert_eq!(shown["unresolved"][0]["source_name"], "n26.csv");
+        assert_eq!(shown["unresolved"][0]["reason"], "duplicate");
+        assert_eq!(shown["message"], "could not read ing.csv");
+        assert_eq!(shown["context"][0]["value"], "in Bancos");
+        assert_eq!(shown["lines"][0], r"abril\bbva.csv: 3 rows");
+        assert_eq!(shown["supplier"], "C:\\Users\\albacete");
+        assert_eq!(shown["amount"], 12);
+        assert!(!shown.to_string().contains("alba\\"));
     }
 
     fn projection(lifecycle: &str) -> Value {
@@ -537,6 +689,7 @@ mod tests {
                 READ,
                 "profile:p".into(),
                 json!({"profile_id":"p","session_id":session}),
+                Vec::new(),
             )
         };
         operations.track(tracked("a", "one"));
@@ -579,6 +732,23 @@ mod tests {
             serde_json::to_value(&running).unwrap(),
             json!({"kind":"running","operation_id":"op","revision":2,"cancellable":true})
         );
+        let review = Outcome::Review {
+            operation_id: "op".into(),
+            revision: 2,
+            cancellable: false,
+        };
+        assert_eq!(serde_json::to_value(&review).unwrap()["kind"], "review");
+        let mut failure = Failure::new("refused");
+        assert_eq!(
+            serde_json::to_value(&failure).unwrap(),
+            json!({"code":"refused","operation_id":null}),
+            "a failure without a reason keeps the profile pages' shape"
+        );
+        failure.reason = Some("subject_busy".into());
+        assert_eq!(
+            serde_json::to_value(&failure).unwrap()["reason"],
+            "subject_busy"
+        );
         assert_eq!(
             review_refusal(&json!({"kind":"operation_refused","code":"not_pending"})).code,
             "review_changed"
@@ -589,7 +759,7 @@ mod tests {
         );
         let lost = attributed(
             Failure::new("unavailable"),
-            &Tracked::new("op".into(), REVIEWED, "s".into(), json!({})),
+            &Tracked::new("op".into(), REVIEWED, "s".into(), json!({}), Vec::new()),
         );
         assert_eq!(
             (lost.code, lost.operation_id.as_deref()),
@@ -598,7 +768,7 @@ mod tests {
         );
         let read = attributed(
             Failure::new("unavailable"),
-            &Tracked::new("op".into(), READ, "s".into(), json!({})),
+            &Tracked::new("op".into(), READ, "s".into(), json!({}), Vec::new()),
         );
         assert_eq!(read.code, "unavailable");
     }
@@ -609,10 +779,21 @@ mod tests {
         use super::*;
 
         fn subject() -> String {
-            format!("profile:{PROFILE}")
+            relay::subject(PROFILE)
         }
         fn tracked(definition: Settling, identity: &Value) -> Tracked {
-            Tracked::new(OPERATION.into(), definition, subject(), identity.clone())
+            Tracked::new(
+                OPERATION.into(),
+                definition,
+                subject(),
+                identity.clone(),
+                Vec::new(),
+            )
+        }
+        fn review(digest: &str, projection: Value) -> Value {
+            json!({"kind":"operation_review","operation_id":OPERATION,
+                "interaction_id":"i-1","revision":5,"expires_at":null,
+                "review_digest":digest, "document":{"projection":projection}})
         }
 
         #[tokio::test]
@@ -722,10 +903,11 @@ mod tests {
                     step(
                         "operation_review",
                         json!([["operation_id", OPERATION]]),
-                        json!({"kind":"operation_review","operation_id":OPERATION,
-                            "interaction_id":"i-1","revision":5,"expires_at":null,
-                            "review_digest":"c".repeat(64),
-                            "document":{"projection":{"proposal":{"value":"1"}}}}),
+                        review(
+                            &"c".repeat(64),
+                            json!({"proposal":{"value":"1"},
+                                "source_path": r"C:\Users\alba\303.txt"}),
+                        ),
                         false,
                     ),
                     step(
@@ -781,6 +963,10 @@ mod tests {
                 .await
                 .unwrap();
             assert_eq!(shown.review_digest, digest);
+            assert_eq!(
+                shown.review["source_path"], "303.txt",
+                "a review names files and never where they are"
+            );
             let tracked = operations.find(OPERATION).unwrap();
             assert_eq!(
                 answer_on(
@@ -816,6 +1002,54 @@ mod tests {
                 }
             );
             assert!(operations.find(OPERATION).unwrap().shown.is_none());
+        }
+
+        #[tokio::test]
+        async fn an_answer_is_unknown_when_its_reply_was_lost_and_changed_when_refused_so() {
+            for (code, expected) in [
+                ("unavailable", "unknown"),
+                ("review_changed", "review_changed"),
+            ] {
+                let held = holder(|_| {
+                    vec![
+                        step(
+                            "operation_review",
+                            json!([]),
+                            review(&"c".repeat(64), json!({"proposal":{}})),
+                            false,
+                        ),
+                        step(
+                            "operation_respond",
+                            json!([]),
+                            json!({"kind":"operation_refused","code":code,"holder_operation_id":null}),
+                            false,
+                        ),
+                    ]
+                });
+                let operations = Operations::default();
+                operations.track(tracked(REVIEWED, &held.identity));
+                let tracked = operations.find(OPERATION).unwrap();
+                review_on(&operations, &tracked, &held.person)
+                    .await
+                    .unwrap();
+                let tracked = operations.find(OPERATION).unwrap();
+                let mut events = held.events.subscribe();
+                let failed = answer_on(
+                    &operations,
+                    &tracked,
+                    &held.person,
+                    &mut events,
+                    &"c".repeat(64),
+                    Decision::Reject,
+                )
+                .await
+                .unwrap_err();
+                assert_eq!(failed.code, expected, "{code}");
+                if expected == "unknown" {
+                    assert_eq!(failed.operation_id.as_deref(), Some(OPERATION));
+                }
+                assert!(operations.find(OPERATION).unwrap().shown.is_none());
+            }
         }
 
         #[tokio::test]

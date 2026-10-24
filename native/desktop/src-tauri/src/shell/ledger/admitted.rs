@@ -3,6 +3,8 @@
 //! the TUI ledger workspace. Any other definition is refused before it
 //! reaches the relay.
 
+use super::super::settle::Settling;
+
 /// What settling an admitted definition can mean for the profile's records.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Kind {
@@ -22,6 +24,13 @@ pub(super) struct Definition {
 impl Definition {
     pub(super) fn mutation(self) -> bool {
         self.kind != Kind::Read
+    }
+    pub(super) fn settling(self) -> Settling {
+        Settling {
+            id: self.id,
+            mutation: self.mutation(),
+            result_paths: &super::RESULT_PATH_KEYS,
+        }
     }
 }
 

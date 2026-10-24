@@ -8,7 +8,7 @@
 //! request: where its subject comes from, and whether its request names the
 //! profile at all. Both are read from the registered contract by
 //! `relay_contracts.py` and pinned by the tests below.
-use super::settle::Settling;
+use super::super::settle::Settling;
 
 /// What settling an admitted definition can mean for the profile's records.
 /// No Modelo definition pauses for a review: the shared settle loop answers
@@ -318,12 +318,6 @@ pub(super) mod tests {
             relay["request_line_limit"].as_u64(),
             Some(crate::agent::person::REQUEST_LIMIT as u64 + 1),
             "the line limit counts its newline"
-        );
-        let relay_payload = relay["payload_text_limit"].as_u64().unwrap();
-        assert_eq!(
-            super::super::PAYLOAD_LIMIT as u64 + super::super::PAYLOAD_HEADROOM as u64,
-            relay_payload,
-            "the host bound keeps room below the relay's"
         );
     }
 }

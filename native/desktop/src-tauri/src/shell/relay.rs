@@ -122,6 +122,26 @@ pub(crate) fn submission(definition: &str, subject: &str, payload: Value) -> Wip
     request
 }
 
+/// The relay ends the held session for a payload over its own bound, so the
+/// host refuses one well before it: number spellings can differ between the
+/// two JSON encoders by a character or two.
+const PAYLOAD_HEADROOM: usize = 256;
+/// The longest payload, in characters of compact JSON, the host sends: the
+/// native relay's own bound, less the headroom.
+pub(crate) const PAYLOAD_LIMIT: usize =
+    cadrumo_application::person_operations::MAX_PAYLOAD_TEXT - PAYLOAD_HEADROOM;
+
+/// Refuses a submission the relay could not take, before anything is written
+/// to it. A request that is too large is the window's to make smaller; the
+/// host never splits one.
+pub(crate) fn admit_size(document: &Value) -> Result<()> {
+    let fits_payload = crate::agent::person::encoded(&document["payload"]).chars <= PAYLOAD_LIMIT;
+    if !fits_payload || !crate::agent::person::request_fits(document) {
+        return Err(Failure::new("too_large"));
+    }
+    Ok(())
+}
+
 /// As [`submit`], for a request built by [`submission`]: its text is
 /// overwritten once it is sent.
 pub(crate) async fn submit_wiping(
@@ -210,4 +230,37 @@ pub(crate) async fn result(relayed: &Relayed<'_>) -> Result<Value> {
         return Err(protocol());
     }
     Ok(result["document"].clone())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_request_the_relay_cannot_take_is_refused_before_it_is_written() {
+        let request = |payload: Value| {
+            submission(
+                "family.example",
+                "profile:00000000-0000-4000-8000-000000000000",
+                payload,
+            )
+        };
+        let near = "a".repeat(PAYLOAD_LIMIT - r#"{"csv_text":""}"#.len());
+        assert!(admit_size(&request(json!({ "csv_text": near })).0).is_ok());
+        let over = format!("{near}a");
+        assert_eq!(
+            admit_size(&request(json!({ "csv_text": over })).0)
+                .unwrap_err()
+                .code,
+            "too_large"
+        );
+        // Within the payload's characters, but not within the line's bytes.
+        let wide = "\u{20ac}".repeat(6_000);
+        assert_eq!(
+            admit_size(&request(json!({ "csv_text": wide })).0)
+                .unwrap_err()
+                .code,
+            "too_large"
+        );
+    }
 }

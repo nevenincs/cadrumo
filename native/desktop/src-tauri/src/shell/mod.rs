@@ -12,6 +12,9 @@ pub mod navigation;
 pub mod presentation;
 pub mod provider_settings;
 pub(crate) mod relay;
+#[cfg(all(test, windows))]
+mod scripted;
+mod settle;
 pub mod setup;
 pub mod sign_in;
 pub mod single_instance;

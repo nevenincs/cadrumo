@@ -5,7 +5,7 @@ manifest with what the host must know to submit it without restating its
 request: whether it may write, whether it pauses for a review, whether it takes
 a transient financial operand, which form its subject takes, whether its
 request names the profile, and which of its request fields name a local file.
-It also records the bounds the held person's relay applies to one request.
+It also records the request line bound of the held person's relay.
 Request fields are read from the registered request models through the eager
 production registry, so a field that starts naming a file cannot reach the
 window unnoticed. Run with the repository Python environment; --check detects
@@ -16,7 +16,6 @@ import argparse
 import ast
 import importlib.util
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -27,9 +26,6 @@ from cadrumo.entrypoints.operation_composition import build_production_operation
 
 _WRITING_EFFECTS = frozenset({"updated", "partial"})
 _FAMILY = "modelo."
-# The relay that answers the window's person session, which applies its own payload bound.
-_RUST_RELAY = Path(__file__).resolve().parents[5] / "application" / "src" / "person_operations.rs"
-_RUST_PAYLOAD_LIMIT = re.compile(r"^(?:pub )?const MAX_PAYLOAD_TEXT: usize = (?P<limit>[0-9_]+);$", re.MULTILINE)
 
 
 def _module_constant(module: str, name: str) -> int:
@@ -51,13 +47,6 @@ def _module_constant(module: str, name: str) -> int:
         ):
             return value.value
     raise SystemExit(f"{name} is not a module-level integer")
-
-
-def _rust_payload_limit() -> int:
-    found = _RUST_PAYLOAD_LIMIT.search(_RUST_RELAY.read_text(encoding="utf-8"))
-    if found is None:
-        raise SystemExit(f"{_RUST_RELAY} declares no MAX_PAYLOAD_TEXT")
-    return int(found.group("limit").replace("_", ""))
 
 
 def _names_file(schema: dict[str, object]) -> bool:
@@ -89,7 +78,7 @@ def _request_facts(request_type: type[BaseModel]) -> dict[str, object]:
 
 
 def documents() -> dict[str, object]:
-    """The Modelo family's contract facts and the relay's request bounds."""
+    """The Modelo family's contract facts and the relay's request line bound."""
     manifest = load_operation_contract_manifest()
     requests = {
         definition.definition_id: definition.request_type
@@ -110,13 +99,9 @@ def documents() -> dict[str, object]:
             "subject": {"kind": subject.kind.value, "path": list(subject.payload_path)},
             **_request_facts(requests[contract.definition_id]),
         }
-    payload_limit = _module_constant("cadrumo_runtime.host.session_hold_operations", "_MAX_PAYLOAD_TEXT")
-    if _rust_payload_limit() != payload_limit:
-        raise SystemExit("The Rust relay and the runtime's held session bound a payload differently")
     return {
         "operations": operations,
         "relay": {
-            "payload_text_limit": payload_limit,
             "request_line_limit": _module_constant("cadrumo_runtime.host.session_hold", "_MAXIMUM_REQUEST_LINE_BYTES"),
         },
     }

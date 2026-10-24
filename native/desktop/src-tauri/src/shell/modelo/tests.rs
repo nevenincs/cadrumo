@@ -136,7 +136,7 @@ fn the_profile_is_filled_only_where_the_request_names_it() {
     let refused = plain_submission(
         definition("modelo.work.rename"),
         PROFILE_ID,
-        Wiped(json!({"work_unit_id":unit, "label":"a".repeat(PAYLOAD_LIMIT)})),
+        Wiped(json!({"work_unit_id":unit, "label":"a".repeat(relay::PAYLOAD_LIMIT)})),
         None,
     )
     .unwrap_err();
@@ -434,7 +434,7 @@ fn dialog_words_and_read_references_are_bounded() {
 
 #[cfg(windows)]
 mod relayed {
-    use super::super::scripted::{OPERATION, PROFILE, holder, observed, resulted, step};
+    use super::super::super::scripted::{OPERATION, PROFILE, holder, observed, resulted, step};
     use super::*;
 
     #[tokio::test]

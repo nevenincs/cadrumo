@@ -16,17 +16,14 @@
 //! locally.
 mod admitted;
 mod files;
-#[cfg(all(test, windows))]
-mod scripted;
-mod settle;
 
 use super::relay::{self, Failure, Result, Wiped, protocol};
+use super::settle::{self, Decision, Operations, Outcome, ReviewDocument, Tracked};
 use super::user_profile::ProfileHost;
 use crate::agent::person::{self, HeldPerson, PersonEvent};
 use admitted::{Definition, Subject, admitted};
 use files::{Files, Format, Picks, Purpose};
 use serde_json::{Map, Value, json};
-use settle::{Decision, Operations, Outcome, ReviewDocument, Tracked};
 use std::{path::Path, sync::Arc, time::Duration};
 use tauri::{
     State,
@@ -34,12 +31,6 @@ use tauri::{
 };
 use tokio::sync::broadcast::Receiver;
 
-/// The relay ends the held session for a payload over its own bound, so the
-/// host refuses one well before it: number spellings can differ between the
-/// two JSON encoders by a character or two.
-const PAYLOAD_HEADROOM: usize = 256;
-/// The longest payload, in characters of compact JSON, the host sends.
-const PAYLOAD_LIMIT: usize = 12_288 - PAYLOAD_HEADROOM;
 /// Bounds a whole read, including admission and queueing, beyond following.
 const READ_LIMIT: Duration = Duration::from_secs(140);
 /// A dialog's filter name or a suggested file name, as the window words it.
@@ -213,16 +204,6 @@ fn failure(code: &'static str) -> Failure {
 fn admit_fields(definition: Definition, payload: &Map<String, Value>) -> Result<()> {
     if definition.financial() || HOST_FIELDS.iter().any(|field| payload.contains_key(*field)) {
         return Err(failure("invalid"));
-    }
-    Ok(())
-}
-
-/// Refuses a request the relay could not take, before anything is written to
-/// it. A request too large for one line is the window's to make smaller.
-fn admit_size(document: &Value) -> Result<()> {
-    let fits_payload = person::encoded(&document["payload"]).chars <= PAYLOAD_LIMIT;
-    if !fits_payload || !person::request_fits(document) {
-        return Err(failure("too_large"));
     }
     Ok(())
 }
@@ -407,7 +388,13 @@ async fn submit_on(
     request: Wiped,
 ) -> Result<Outcome> {
     let operation = relay::submit_wiping(person, request, definition.mutation()).await?;
-    let tracked = Tracked::new(operation, definition.settling(), subject, identity);
+    let tracked = Tracked::new(
+        operation,
+        definition.settling(),
+        subject,
+        identity,
+        Vec::new(),
+    );
     operations.track(tracked.clone());
     settle::settle(events, &tracked, person).await
 }
@@ -429,7 +416,7 @@ fn plain_submission(
     }
     let subject = subject(definition, profile, fields, work_unit)?;
     let request = relay::submission(definition.id, &subject, std::mem::take(&mut payload.0));
-    admit_size(&request.0)?;
+    relay::admit_size(&request.0)?;
     Ok((request, subject))
 }
 
@@ -454,26 +441,6 @@ impl ModeloHost {
     async fn identity(&self) -> Result<Value> {
         let person = self.profile.person(None).await?;
         relay::identity(&person).await
-    }
-    /// The held person, only while it is the session that submitted `tracked`.
-    async fn holding(&self, tracked: &Tracked) -> Result<HeldPerson> {
-        let person = self
-            .profile
-            .person(tracked.identity["profile_id"].as_str())
-            .await?;
-        if relay::identity(&person).await? != tracked.identity {
-            return Err(failure("not_signed_in"));
-        }
-        Ok(person)
-    }
-    /// Rejects an answer read while the window's account changed underneath.
-    async fn still_holding(&self, person: &HeldPerson) -> Result<()> {
-        let identity = relay::identity(person).await?;
-        let current = self.profile.person(identity["profile_id"].as_str()).await?;
-        if relay::identity(&current).await? != identity {
-            return Err(failure("not_signed_in"));
-        }
-        Ok(())
     }
     /// The held person and its identity, for one serialised exchange.
     async fn held(&self) -> Result<(HeldPerson, Value, String)> {
@@ -524,8 +491,7 @@ impl ModeloHost {
             request,
         )
         .await?;
-        self.still_holding(&person).await?;
-        Ok(outcome)
+        settle::still_held(&self.profile, &person, outcome, definition.mutation()).await
     }
     /// Submits an edit's amounts as the relay's financial operand.
     async fn submit_financial(&self, definition: &str, body: &InvokeBody) -> Result<Outcome> {
@@ -547,8 +513,7 @@ impl ModeloHost {
             request,
         )
         .await?;
-        self.still_holding(&person).await?;
-        Ok(outcome)
+        settle::still_held(&self.profile, &person, outcome, definition.mutation()).await
     }
     /// Runs one of the workspace's named reads to its answer.
     async fn read(
@@ -569,9 +534,15 @@ impl ModeloHost {
             let mut events = self.profile.sign_in().person_events();
             let operation = relay::submit_wiping(&person, request, false).await?;
             // A named read is followed here, never by the window.
-            let tracked = Tracked::new(operation, definition.settling(), subject, identity);
+            let tracked = Tracked::new(
+                operation,
+                definition.settling(),
+                subject,
+                identity,
+                Vec::new(),
+            );
             let answered = settle::settle(&mut events, &tracked, &person).await?;
-            self.still_holding(&person).await?;
+            settle::still_holding(&self.profile, &person).await?;
             match answered {
                 Outcome::Settled { result, .. } => {
                     let list = definition.id == "modelo.declarations.list";
@@ -590,14 +561,14 @@ impl ModeloHost {
     }
     async fn observe(&self, operation: &str) -> Result<Outcome> {
         let tracked = self.operations.find(operation)?;
-        let person = self.holding(&tracked).await?;
+        let person = settle::holding(&self.profile, &tracked).await?;
         settle::observe_on(&tracked, &person).await
     }
     async fn review(&self, operation: &str) -> Result<ReviewDocument> {
         let tracked = self.operations.find(operation)?;
-        let person = self.holding(&tracked).await?;
+        let person = settle::holding(&self.profile, &tracked).await?;
         let document = settle::review_on(&self.operations, &tracked, &person).await?;
-        self.still_holding(&person).await?;
+        settle::still_holding(&self.profile, &person).await?;
         Ok(document)
     }
     async fn answer(
@@ -608,7 +579,7 @@ impl ModeloHost {
     ) -> Result<Outcome> {
         let _serial = self.profile.serial().await;
         let tracked = self.operations.find(operation)?;
-        let person = self.holding(&tracked).await?;
+        let person = settle::holding(&self.profile, &tracked).await?;
         let mut events = self.profile.sign_in().person_events();
         settle::answer_on(
             &self.operations,
@@ -623,7 +594,7 @@ impl ModeloHost {
     async fn cancel(&self, operation: &str, revision: u64) -> Result<Outcome> {
         let _serial = self.profile.serial().await;
         let tracked = self.operations.find(operation)?;
-        let person = self.holding(&tracked).await?;
+        let person = settle::holding(&self.profile, &tracked).await?;
         settle::cancel_on(&tracked, &person, revision).await
     }
 }
@@ -828,6 +799,33 @@ async fn modelo_files_save<R: tauri::Runtime>(
         None => Ok(Picks::none(0)),
     }
 }
+/// Shows a file the host saved for the window, selected in the system file
+/// manager. The window names it by its save token; the path never reaches it.
+#[tauri::command]
+async fn modelo_files_reveal(host: State<'_, Arc<ModeloHost>>, token: String) -> Result<()> {
+    let identity = host.identity().await?;
+    let path = host.files.saved(&identity, &token)?;
+    super::blocking(move || Ok(reveal(&path)))
+        .await?
+        .map_err(|_| failure("unavailable"))
+}
+#[cfg(windows)]
+fn reveal(path: &Path) -> std::io::Result<()> {
+    use std::os::windows::process::CommandExt;
+    // Explorer reads its own command line: the path is quoted after the
+    // switch, never as one argument with it. It can answer a failing status
+    // even when it showed the file, so only a failure to start it counts.
+    std::process::Command::new("explorer.exe")
+        .raw_arg(format!("/select,\"{}\"", path.display()))
+        .spawn()
+        .map(drop)
+}
+/// No portable call selects a file, so the folder holding it is opened.
+#[cfg(not(windows))]
+fn reveal(path: &Path) -> std::io::Result<()> {
+    let folder = path.parent().ok_or(std::io::ErrorKind::NotFound)?;
+    opener::open(folder).map_err(std::io::Error::other)
+}
 /// Forgets tokens the page no longer shows.
 #[tauri::command]
 fn modelo_files_forget(host: State<'_, Arc<ModeloHost>>, tokens: Vec<String>) {
@@ -848,6 +846,7 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         modelo_cancel,
         modelo_files_pick,
         modelo_files_save,
+        modelo_files_reveal,
         modelo_files_forget
     ]
 }

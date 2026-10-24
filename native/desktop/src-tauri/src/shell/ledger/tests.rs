@@ -270,283 +270,13 @@ fn dialog_words_are_bounded_and_a_suggested_name_names_no_folder() {
     }
 }
 
-#[test]
-fn a_request_the_relay_cannot_take_is_refused_before_it_is_written() {
-    let request = |payload: Value| {
-        json!({"action":"operation_submit", "definition_id":"ledger.classify.bulk",
-            "subject_ref":"profile:00000000-0000-4000-8000-000000000000", "payload":payload})
-    };
-    let near = "a".repeat(PAYLOAD_LIMIT - r#"{"csv_text":""}"#.len());
-    assert!(admit_size(&request(json!({ "csv_text": near }))).is_ok());
-    let over = format!("{near}a");
-    assert_eq!(
-        admit_size(&request(json!({ "csv_text": over })))
-            .unwrap_err()
-            .code,
-        "too_large"
-    );
-    // Within the payload's characters, but not within the line's bytes.
-    let wide = "\u{20ac}".repeat(6_000);
-    assert_eq!(
-        admit_size(&request(json!({ "csv_text": wide })))
-            .unwrap_err()
-            .code,
-        "too_large"
-    );
-}
-
-#[test]
-fn results_name_files_and_never_where_they_are() {
-    let mut result = json!({
-        "sources": [{"path": r"C:\Users\alba\Bancos\n26-2026.csv", "sha256": "ab"}],
-        "rows": [{"source_path": "/home/alba/facturas/f-019.pdf", "supplier": r"C:\Users\alba"}],
-        "output_path": r"\\server\share\ledger.xlsx",
-        "files": [r"D:\export\a.ofx", "b.ofx"],
-        "review": {"path": "lines[0].iva_amount"},
-        "queue": [
-            {"provider_locator": r"C:\Users\alba\Facturas\gasolina.pdf"},
-            {"provider_locator": "file:///home/alba/facturas/luz.pdf"},
-            {"provider_locator": "drive:1AbCdEf"},
-        ],
-    });
-    super::file_names(&mut result);
-    assert_eq!(result["sources"][0]["path"], "n26-2026.csv");
-    assert_eq!(result["sources"][0]["sha256"], "ab");
-    assert_eq!(result["rows"][0]["source_path"], "f-019.pdf");
-    assert_eq!(result["rows"][0]["supplier"], r"C:\Users\alba");
-    assert_eq!(result["output_path"], "ledger.xlsx");
-    assert_eq!(result["files"], json!(["a.ofx", "b.ofx"]));
-    assert_eq!(result["review"]["path"], "lines[0].iva_amount");
-    assert_eq!(result["queue"][0]["provider_locator"], "gasolina.pdf");
-    assert_eq!(result["queue"][1]["provider_locator"], "luz.pdf");
-    assert_eq!(result["queue"][2]["provider_locator"], "drive:1AbCdEf");
-}
-
-#[test]
-fn a_folder_the_host_filled_in_is_never_shown_wherever_the_worker_quotes_it() {
-    let folders = [
-        r"C:\Users\alba\Bancos".to_owned(),
-        r"C:\Users\alba\Bancos\2026".to_owned(),
-    ];
-    let document = json!({
-        "unresolved": [{"source_name": r"C:\Users\alba\Bancos\2026\n26.csv", "reason": "duplicate"}],
-        "message": r"could not read C:/Users/alba/Bancos/ing.csv",
-        "context": [{"value": r"in C:\Users\alba\Bancos"}],
-        "lines": [r"C:\Users\alba\Bancos\2026\abril\bbva.csv: 3 rows"],
-        "supplier": "C:\\Users\\albacete",
-        "amount": 12,
-    });
-    let shown = super::reduced(&document, &folders);
-    assert_eq!(shown["unresolved"][0]["source_name"], "n26.csv");
-    assert_eq!(shown["unresolved"][0]["reason"], "duplicate");
-    assert_eq!(shown["message"], "could not read ing.csv");
-    assert_eq!(shown["context"][0]["value"], "in Bancos");
-    assert_eq!(shown["lines"][0], r"abril\bbva.csv: 3 rows");
-    assert_eq!(shown["supplier"], "C:\\Users\\albacete");
-    assert_eq!(shown["amount"], 12);
-    assert!(!shown.to_string().contains("alba\\"));
-}
-
-fn projection(lifecycle: &str) -> Value {
-    json!({"lifecycle":lifecycle, "terminal_condition":null, "effect":"none",
-        "refusal_ref":null, "failure_error_code":null, "revision":3, "cancellable_now":false,
-        "pending_interaction":{"disposition":"none"}})
-}
-
-#[test]
-fn only_a_settled_no_effect_stop_is_a_refusal_and_any_other_effect_is_unknown() {
-    let mut p = projection("terminal");
-    p["terminal_condition"] = json!("succeeded");
-    p["effect"] = json!("updated");
-    assert_eq!(phase(&p), Phase::Succeeded);
-    p["terminal_condition"] = json!("refused");
-    p["effect"] = json!("none");
-    p["refusal_ref"] = json!("REFUSED_CLI_VALIDATION_BOUNDARY");
-    assert_eq!(
-        phase(&p),
-        Phase::Stopped(Some("REFUSED_CLI_VALIDATION_BOUNDARY".into()))
-    );
-    p["terminal_condition"] = json!("failed");
-    p["refusal_ref"] = Value::Null;
-    p["failure_error_code"] = json!("FAIL_LEDGER_SEALED");
-    assert_eq!(phase(&p), Phase::Stopped(Some("FAIL_LEDGER_SEALED".into())));
-    for effect in ["unknown", "partial", "updated"] {
-        p["effect"] = json!(effect);
-        assert_eq!(phase(&p), Phase::Unknown, "{effect}");
-    }
-    let mut paused = projection("running");
-    assert_eq!(phase(&paused), Phase::Running);
-    assert!(!waits_on_person(&paused));
-    paused["pending_interaction"] = json!({"disposition":"review_available"});
-    assert_eq!(phase(&paused), Phase::Review);
-    assert!(waits_on_person(&paused));
-    paused["pending_interaction"] = json!({"disposition":"unsupported"});
-    assert_eq!(phase(&paused), Phase::Running);
-    assert!(waits_on_person(&paused));
-}
-
-#[test]
-fn a_window_follows_only_its_own_sessions_operations() {
-    let operations = Operations::default();
-    let tracked = |operation: &str, session: &str| Tracked {
-        operation: operation.into(),
-        definition: definition("ledger.list"),
-        subject: "profile:p".into(),
-        identity: json!({"profile_id":"p","session_id":session}),
-        shown: None,
-        folders: Vec::new(),
-    };
-    operations.track(tracked("a", "one"));
-    assert!(operations.find("a").is_ok());
-    assert_eq!(operations.find("b").unwrap_err().code, "not_admitted");
-    operations.track(tracked("b", "two"));
-    assert!(
-        operations.find("a").is_err(),
-        "a new session forgets the last"
-    );
-    for at in 0..TRACKED_LIMIT {
-        operations.track(tracked(&format!("n{at}"), "two"));
-    }
-    assert!(
-        operations.find("b").is_err(),
-        "the oldest is forgotten first"
-    );
-    assert!(operations.find(&format!("n{}", TRACKED_LIMIT - 1)).is_ok());
-    operations.clear();
-    assert!(operations.find("n0").is_err());
-}
-
-#[test]
-fn outcomes_and_reviews_reach_the_window_in_the_contracts_shape() {
-    let settled = Outcome::Settled {
-        operation_id: "op".into(),
-        revision: 4,
-        result: json!({"rows":[]}),
-    };
-    assert_eq!(
-        serde_json::to_value(&settled).unwrap(),
-        json!({"kind":"settled","operation_id":"op","revision":4,"result":{"rows":[]}})
-    );
-    let review = Outcome::Review {
-        operation_id: "op".into(),
-        revision: 2,
-        cancellable: false,
-    };
-    assert_eq!(serde_json::to_value(&review).unwrap()["kind"], "review");
-    let mut failure = Failure::new("refused");
-    assert_eq!(
-        serde_json::to_value(&failure).unwrap(),
-        json!({"code":"refused","operation_id":null}),
-        "a failure without a reason keeps the profile pages' shape"
-    );
-    failure.reason = Some("subject_busy".into());
-    assert_eq!(
-        serde_json::to_value(&failure).unwrap()["reason"],
-        "subject_busy"
-    );
-    assert_eq!(
-        review_refusal(&json!({"kind":"operation_refused","code":"not_pending"})).code,
-        "review_changed"
-    );
-    assert_eq!(
-        review_refusal(&json!({"kind":"operation_refused","code":"unavailable"})).code,
-        "refused"
-    );
-}
-
-/// A stand-in for the session hold: it answers each request with the next
-/// scripted reply, after checking the request's action and named fields,
-/// and stops at anything else. A step may first push an operation change.
 #[cfg(windows)]
 mod relayed {
+    use super::super::super::scripted::{OPERATION, PROFILE, holder, observed, step};
     use super::*;
-    use crate::agent::person::{Person, request_id};
-    use std::time::Duration;
 
-    const PROFILE: &str = "11111111-1111-4111-8111-111111111111";
-    const OPERATION: &str = "abababababababababababababababababababababababababababababababab";
-
-    struct Holder {
-        person: HeldPerson,
-        identity: Value,
-        events: tokio::sync::broadcast::Sender<PersonEvent>,
-    }
-
-    fn step(action: &str, expect: Value, reply: Value, push: bool) -> Value {
-        json!({"action":action, "expect":expect, "reply":reply, "push":push})
-    }
-
-    fn holder(steps: impl Fn(&Value) -> Vec<Value>) -> Holder {
-        let identity = json!({
-            "kind": "session_held",
-            "profile_id": PROFILE,
-            "session_id": request_id().unwrap(),
-            "runtime_boot_id": request_id().unwrap(),
-            "connection_id": request_id().unwrap(),
-        });
-        let mut all = vec![step(
-            "observe_events",
-            json!([]),
-            json!({"kind":"events_observed", "runtime_boot_id":identity["runtime_boot_id"],
-                "connection_id":identity["connection_id"]}),
-            false,
-        )];
-        for mut scripted in steps(&identity) {
-            for key in [
-                "profile_id",
-                "session_id",
-                "runtime_boot_id",
-                "connection_id",
-            ] {
-                scripted["reply"][key] = identity[key].clone();
-            }
-            all.push(scripted);
-        }
-        let script = String::from("& { [Console]::Out.WriteLine('")
-            + &identity.to_string()
-            + "'); [Console]::Out.Flush(); $steps = '"
-            + &Value::Array(all).to_string().replace('\'', "''")
-            + "' | ConvertFrom-Json; $i = 0; \
-               while (($line = [Console]::In.ReadLine()) -ne $null) { \
-                 $request = $line | ConvertFrom-Json; \
-                 if ($i -ge $steps.Count) { exit 7 }; \
-                 $step = $steps[$i]; $i++; \
-                 if ($request.action -ne $step.action) { exit 7 }; \
-                 foreach ($pair in $step.expect) { \
-                   $value = $request; \
-                   foreach ($key in $pair[0].Split('.')) { $value = $value.$key }; \
-                   if ([string]$value -ne [string]$pair[1]) { exit 8 } }; \
-                 if ($step.push) { [Console]::Out.WriteLine('{\"kind\":\"runtime_event\",\"event\":\"operation_changed\"}') }; \
-                 $reply = $step.reply; \
-                 $reply | Add-Member -NotePropertyName request_id -NotePropertyValue $request.request_id -Force; \
-                 [Console]::Out.WriteLine(($reply | ConvertTo-Json -Compress -Depth 20)); \
-                 [Console]::Out.Flush(); \
-               } }";
-        let mut person = Person::hold_answering_within(
-            crate::agent::runner::tests::powershell(&script),
-            PROFILE,
-            Duration::from_secs(60),
-        )
-        .unwrap();
-        let (events, _) = tokio::sync::broadcast::channel(16);
-        person.observe_events(events.clone()).unwrap();
-        Holder {
-            person: Arc::new(Mutex::new(person)),
-            identity,
-            events,
-        }
-    }
-
-    fn observed(definition: &str, lifecycle: &str, extra: Value) -> Value {
-        let mut p = json!({"operation_id":OPERATION, "definition_id":definition,
-            "subject_ref":format!("profile:{PROFILE}"), "lifecycle":lifecycle,
-            "terminal_condition":null, "effect":"none", "refusal_ref":null,
-            "failure_error_code":null, "revision":1, "cancellable_now":false,
-            "pending_interaction":{"disposition":"none"}});
-        for (key, value) in extra.as_object().unwrap() {
-            p[key] = value.clone();
-        }
-        json!({"kind":"operation_observed", "observation":{"projection":p}})
+    fn subject() -> String {
+        relay::subject(PROFILE)
     }
 
     #[tokio::test]
@@ -567,7 +297,7 @@ mod relayed {
                 step(
                     "operation_observe",
                     json!([["operation_id", OPERATION]]),
-                    observed("ledger.list", "running", json!({})),
+                    observed("ledger.list", &subject(), "running", json!({})),
                     true,
                 ),
                 step(
@@ -575,6 +305,7 @@ mod relayed {
                     json!([]),
                     observed(
                         "ledger.list",
+                        &subject(),
                         "terminal",
                         json!({"terminal_condition":"succeeded","revision":2}),
                     ),
@@ -631,6 +362,7 @@ mod relayed {
                     json!([]),
                     observed(
                         "ledger.update",
+                        &subject(),
                         "terminal",
                         json!({"terminal_condition":"refused",
                         "refusal_ref":"REFUSED_CLI_VALIDATION_BOUNDARY"}),
@@ -691,6 +423,7 @@ mod relayed {
                     json!([]),
                     observed(
                         "ledger.own_account",
+                        &subject(),
                         "terminal",
                         json!({"terminal_condition":"succeeded","effect":"updated"}),
                     ),
@@ -793,56 +526,6 @@ mod relayed {
     }
 
     #[tokio::test]
-    async fn an_answer_whose_reply_was_lost_is_unknown_for_its_operation() {
-        let digest = "c".repeat(64);
-        let held = holder(|_| {
-            vec![
-                step(
-                    "operation_review",
-                    json!([]),
-                    json!({"kind":"operation_review","operation_id":OPERATION,"interaction_id":"i-1",
-                        "revision":5,"expires_at":null,"review_digest":"c".repeat(64),
-                        "document":{"projection":{"proposal":{}}}}),
-                    false,
-                ),
-                step(
-                    "operation_respond",
-                    json!([]),
-                    json!({"kind":"operation_refused","code":"unavailable","holder_operation_id":null}),
-                    false,
-                ),
-            ]
-        });
-        let operations = Operations::default();
-        operations.track(Tracked {
-            operation: OPERATION.into(),
-            definition: definition("ledger.classify.review"),
-            subject: format!("profile:{PROFILE}"),
-            identity: held.identity.clone(),
-            shown: None,
-            folders: Vec::new(),
-        });
-        let tracked = operations.find(OPERATION).unwrap();
-        review_on(&operations, &tracked, &held.person)
-            .await
-            .unwrap();
-        let tracked = operations.find(OPERATION).unwrap();
-        let mut events = held.events.subscribe();
-        let lost = answer_on(
-            &operations,
-            &tracked,
-            &held.person,
-            &mut events,
-            &digest,
-            Decision::Apply,
-        )
-        .await
-        .unwrap_err();
-        assert_eq!(lost.code, "unknown");
-        assert_eq!(lost.operation_id.as_deref(), Some(OPERATION));
-    }
-
-    #[tokio::test]
     async fn an_oversize_request_never_reaches_the_relay() {
         // The holder stops at any request: an oversize one must not be sent.
         let held = holder(|_| vec![]);
@@ -854,7 +537,7 @@ mod relayed {
             held.identity.clone(),
             &mut events,
             definition("ledger.classify.bulk"),
-            Wiped(json!({"csv_text":"a".repeat(PAYLOAD_LIMIT)})),
+            Wiped(json!({"csv_text":"a".repeat(relay::PAYLOAD_LIMIT)})),
             Vec::new(),
         )
         .await
@@ -884,6 +567,7 @@ mod relayed {
                     json!([]),
                     observed(
                         "ledger.classify.review",
+                        &subject(),
                         "running",
                         json!({"pending_interaction":{"disposition":"review_available"},"revision":5}),
                     ),
@@ -911,6 +595,7 @@ mod relayed {
                     json!([]),
                     observed(
                         "ledger.classify.review",
+                        &subject(),
                         "terminal",
                         json!({"terminal_condition":"succeeded","effect":"updated","revision":7}),
                     ),
@@ -942,7 +627,7 @@ mod relayed {
         let tracked = operations.find(OPERATION).unwrap();
         // Nothing was shown yet: no answer is sent.
         assert_eq!(
-            answer_on(
+            settle::answer_on(
                 &operations,
                 &tracked,
                 &held.person,
@@ -955,7 +640,7 @@ mod relayed {
             .code,
             "review_changed"
         );
-        let shown = review_on(&operations, &tracked, &held.person)
+        let shown = settle::review_on(&operations, &tracked, &held.person)
             .await
             .unwrap();
         assert_eq!(shown.review_digest, digest);
@@ -963,7 +648,7 @@ mod relayed {
         let tracked = operations.find(OPERATION).unwrap();
         // Another digest than the one shown is refused here, without an exchange.
         assert_eq!(
-            answer_on(
+            settle::answer_on(
                 &operations,
                 &tracked,
                 &held.person,
@@ -976,7 +661,7 @@ mod relayed {
             .code,
             "review_changed"
         );
-        let settled = answer_on(
+        let settled = settle::answer_on(
             &operations,
             &tracked,
             &held.person,
@@ -995,78 +680,5 @@ mod relayed {
             }
         );
         assert!(operations.find(OPERATION).unwrap().shown.is_none());
-    }
-
-    #[tokio::test]
-    async fn an_answer_to_a_review_that_changed_is_refused_as_changed() {
-        let held = holder(|_| {
-            vec![
-                step(
-                    "operation_review",
-                    json!([]),
-                    json!({"kind":"operation_review","operation_id":OPERATION,"interaction_id":"i-1",
-                        "revision":5,"expires_at":null,"review_digest":"c".repeat(64),
-                        "document":{"projection":{}}}),
-                    false,
-                ),
-                step(
-                    "operation_respond",
-                    json!([]),
-                    json!({"kind":"operation_refused","code":"review_changed","holder_operation_id":null}),
-                    false,
-                ),
-            ]
-        });
-        let operations = Operations::default();
-        operations.track(Tracked {
-            operation: OPERATION.into(),
-            definition: definition("ledger.split.review"),
-            subject: format!("profile:{PROFILE}"),
-            identity: held.identity.clone(),
-            shown: None,
-            folders: Vec::new(),
-        });
-        let tracked = operations.find(OPERATION).unwrap();
-        review_on(&operations, &tracked, &held.person)
-            .await
-            .unwrap();
-        let tracked = operations.find(OPERATION).unwrap();
-        let mut events = held.events.subscribe();
-        let refused = answer_on(
-            &operations,
-            &tracked,
-            &held.person,
-            &mut events,
-            &"c".repeat(64),
-            Decision::Reject,
-        )
-        .await
-        .unwrap_err();
-        assert_eq!(refused.code, "review_changed");
-        assert!(operations.find(OPERATION).unwrap().shown.is_none());
-    }
-
-    #[tokio::test]
-    async fn a_cancel_names_the_observed_revision_and_a_refusal_keeps_its_code() {
-        let held = holder(|_| {
-            vec![step(
-                "operation_cancel",
-                json!([["operation_id", OPERATION], ["expected_revision", 9]]),
-                json!({"kind":"operation_refused","code":"cancellation_unsupported","holder_operation_id":null}),
-                false,
-            )]
-        });
-        let tracked = Tracked {
-            operation: OPERATION.into(),
-            definition: definition("ledger.import"),
-            subject: format!("profile:{PROFILE}"),
-            identity: held.identity.clone(),
-            shown: None,
-            folders: Vec::new(),
-        };
-        let refused = cancel_on(&tracked, &held.person, 9).await.unwrap_err();
-        assert_eq!(refused.code, "refused");
-        assert_eq!(refused.reason.as_deref(), Some("cancellation_unsupported"));
-        assert_eq!(refused.operation_id.as_deref(), Some(OPERATION));
     }
 }

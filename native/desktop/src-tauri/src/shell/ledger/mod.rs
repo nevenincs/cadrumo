@@ -13,15 +13,15 @@
 mod admitted;
 mod files;
 
-use super::relay::{self, Failure, Relayed, Result, Wiped, lock, protocol};
+use super::relay::{self, Failure, Result, Wiped, lock, protocol};
+use super::settle::{self, Decision, Operations, Outcome, ReviewDocument, Tracked};
 use super::user_profile::ProfileHost;
-use crate::agent::person::{self, HeldPerson, PersonEvent};
+use crate::agent::person::{HeldPerson, PersonEvent};
 use admitted::{Definition, admitted};
 use files::{Files, Pick, Picks, Purpose};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 use std::{
-    collections::VecDeque,
     path::Path,
     sync::{
         Arc, Mutex,
@@ -33,17 +33,6 @@ use tauri::{
     ipc::{Channel, InvokeBody, Request},
 };
 use tokio::sync::broadcast::Receiver;
-
-/// The relay ends the held session for a payload over its own bound, so the
-/// host refuses one well before it: number spellings can differ between the
-/// two JSON encoders by a character or two.
-const PAYLOAD_HEADROOM: usize = 256;
-/// The longest payload, in characters of compact JSON, the host sends: the
-/// native relay's own bound, less the headroom.
-pub(crate) const PAYLOAD_LIMIT: usize =
-    cadrumo_application::person_operations::MAX_PAYLOAD_TEXT - PAYLOAD_HEADROOM;
-/// How many submitted operations the window may still follow.
-const TRACKED_LIMIT: usize = 64;
 
 /// Fields the host fills itself. The window never names a profile or a
 /// directory.
@@ -124,164 +113,6 @@ fn failure(code: &'static str) -> Failure {
     Failure::new(code)
 }
 
-/// Where an operation the window submitted stands. A refusal the runtime
-/// settled carries its closed code and, where the definition declares one,
-/// its detail document.
-#[derive(Debug, PartialEq, Serialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-pub enum Outcome {
-    Settled {
-        operation_id: String,
-        revision: u64,
-        result: Value,
-    },
-    Refused {
-        operation_id: String,
-        revision: u64,
-        reason: Option<String>,
-        detail: Option<Value>,
-    },
-    /// Paused until the person answers the review it shows.
-    Review {
-        operation_id: String,
-        revision: u64,
-        cancellable: bool,
-    },
-    Running {
-        operation_id: String,
-        revision: u64,
-        cancellable: bool,
-    },
-}
-
-impl Outcome {
-    fn operation_id(&self) -> &str {
-        match self {
-            Self::Settled { operation_id, .. }
-            | Self::Refused { operation_id, .. }
-            | Self::Review { operation_id, .. }
-            | Self::Running { operation_id, .. } => operation_id,
-        }
-    }
-}
-
-/// The review a paused operation shows, with the digest an answer must name.
-#[derive(Debug, Serialize)]
-pub struct ReviewDocument {
-    operation_id: String,
-    revision: u64,
-    review_digest: String,
-    expires_at: Option<String>,
-    review: Value,
-}
-
-#[derive(Clone, Copy, Debug, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum Decision {
-    Apply,
-    Reject,
-}
-
-/// What a projection says to do next.
-#[derive(Debug, PartialEq)]
-enum Phase {
-    Succeeded,
-    /// Settled without changing anything: refused, failed or cancelled.
-    Stopped(Option<String>),
-    /// Settled with an effect the projection does not name.
-    Unknown,
-    Review,
-    Running,
-}
-fn phase(p: &Value) -> Phase {
-    if p["lifecycle"] == "terminal" {
-        if p["terminal_condition"] == "succeeded" {
-            Phase::Succeeded
-        } else if p["effect"] != "none" {
-            Phase::Unknown
-        } else {
-            Phase::Stopped(
-                p["refusal_ref"]
-                    .as_str()
-                    .or_else(|| p["failure_error_code"].as_str())
-                    .map(str::to_owned),
-            )
-        }
-    } else if p["pending_interaction"]["disposition"] == "review_available" {
-        Phase::Review
-    } else {
-        Phase::Running
-    }
-}
-/// Whether following can stop before settlement: the person must act.
-fn waits_on_person(p: &Value) -> bool {
-    !matches!(
-        p["pending_interaction"]["disposition"].as_str(),
-        Some("none") | None
-    )
-}
-
-/// The review this window read for an operation: an answer binds to it.
-#[derive(Clone, Debug)]
-struct Shown {
-    interaction_id: Value,
-    revision: Value,
-    digest: String,
-}
-#[derive(Clone, Debug)]
-struct Tracked {
-    operation: String,
-    definition: Definition,
-    subject: String,
-    identity: Value,
-    shown: Option<Shown>,
-    /// The folders of the files the host put in its payload.
-    folders: Vec<String>,
-}
-impl Tracked {
-    fn relayed<'a>(&'a self, person: &'a HeldPerson) -> Relayed<'a> {
-        Relayed {
-            person,
-            operation: self.operation.clone(),
-            definition: self.definition.id,
-            subject: self.subject.clone(),
-        }
-    }
-}
-
-/// The operations this window submitted, for the session that submitted them.
-#[derive(Default)]
-struct Operations(Mutex<VecDeque<Tracked>>);
-impl Operations {
-    fn track(&self, tracked: Tracked) {
-        let mut operations = lock(&self.0);
-        // A new session's window follows none of the previous session's.
-        operations.retain(|other| other.identity == tracked.identity);
-        if operations.len() >= TRACKED_LIMIT {
-            operations.pop_front();
-        }
-        operations.push_back(tracked);
-    }
-    fn find(&self, operation: &str) -> Result<Tracked> {
-        lock(&self.0)
-            .iter()
-            .find(|tracked| tracked.operation == operation)
-            .cloned()
-            .ok_or_else(|| failure("not_admitted"))
-    }
-    fn show(&self, operation: &str, shown: Option<Shown>) {
-        if let Some(tracked) = lock(&self.0)
-            .iter_mut()
-            .find(|tracked| tracked.operation == operation)
-        {
-            tracked.shown = shown;
-        }
-    }
-    fn clear(&self) {
-        lock(&self.0).clear();
-    }
-}
-
 /// Refuses a payload the host must not pass on: one that names a field the
 /// host fills, or carries an own account's secret outside its raw body.
 fn admit_fields(definition: Definition, payload: &Map<String, Value>) -> Result<()> {
@@ -292,16 +123,6 @@ fn admit_fields(definition: Definition, payload: &Map<String, Value>) -> Result<
                 .any(|field| payload.contains_key(*field)));
     if refused {
         return Err(failure("invalid"));
-    }
-    Ok(())
-}
-
-/// Refuses a request the relay could not take, before anything is written to
-/// it. The window splits a batch that is too large; the host never does.
-fn admit_size(document: &Value) -> Result<()> {
-    let fits_payload = person::encoded(&document["payload"]).chars <= PAYLOAD_LIMIT;
-    if !fits_payload || !person::request_fits(document) {
-        return Err(failure("too_large"));
     }
     Ok(())
 }
@@ -401,189 +222,6 @@ const RESULT_PATH_KEYS: [&str; 9] = [
     "verify_source",
 ];
 
-/// Reduces every absolute path a result names to its file name. The window
-/// names files and never holds where they are, and a folder can carry the
-/// person's own name.
-fn file_names(value: &mut Value) {
-    // Split on both separators: the worker's platform decides the spelling,
-    // not the host's.
-    fn named(text: &mut String) {
-        let bytes = text.as_bytes();
-        let drive = bytes.len() > 2
-            && bytes[0].is_ascii_alphabetic()
-            && bytes[1] == b':'
-            && matches!(bytes[2], b'\\' | b'/');
-        // A local attachment's locator can also be a file URI.
-        let uri = text
-            .get(..5)
-            .is_some_and(|scheme| scheme.eq_ignore_ascii_case("file:"));
-        if drive || uri || text.starts_with(['/', '\\']) {
-            let name = text
-                .rsplit(['/', '\\'])
-                .next()
-                .unwrap_or_default()
-                .to_owned();
-            *text = name;
-        }
-    }
-    match value {
-        Value::Object(fields) => {
-            for (key, field) in fields.iter_mut() {
-                match field {
-                    Value::String(text) if RESULT_PATH_KEYS.contains(&key.as_str()) => named(text),
-                    Value::Array(items) if RESULT_PATH_KEYS.contains(&key.as_str()) => {
-                        for item in items.iter_mut() {
-                            match item {
-                                Value::String(text) => named(text),
-                                other => file_names(other),
-                            }
-                        }
-                    }
-                    other => file_names(other),
-                }
-            }
-        }
-        Value::Array(items) => items.iter_mut().for_each(file_names),
-        _ => {}
-    }
-}
-
-/// What the window is shown of a document the runtime answered for an
-/// operation: every path reduced to its file name, wherever the worker
-/// quoted it, as in a message, a review line or a row's source.
-fn reduced(document: &Value, folders: &[String]) -> Value {
-    fn strip(value: &mut Value, folders: &[(String, String)]) {
-        match value {
-            Value::String(text) => {
-                for (folder, name) in folders {
-                    if text.contains(folder.as_str()) {
-                        *text = text
-                            .replace(&format!("{folder}\\"), "")
-                            .replace(&format!("{folder}/"), "")
-                            .replace(folder.as_str(), name);
-                    }
-                }
-            }
-            Value::Array(items) => items.iter_mut().for_each(|item| strip(item, folders)),
-            Value::Object(fields) => fields.values_mut().for_each(|field| strip(field, folders)),
-            _ => {}
-        }
-    }
-    let mut document = document.clone();
-    file_names(&mut document);
-    // The worker may spell a folder with either separator; the deepest
-    // folder goes first so a nested one is not cut at its parent.
-    let mut spellings: Vec<(String, String)> = folders
-        .iter()
-        .flat_map(|folder| {
-            let name = folder
-                .rsplit(['/', '\\'])
-                .next()
-                .unwrap_or_default()
-                .to_owned();
-            [
-                (folder.clone(), name.clone()),
-                (folder.replace('\\', "/"), name),
-            ]
-        })
-        .collect();
-    spellings.sort_by_key(|(folder, _)| std::cmp::Reverse(folder.len()));
-    spellings.dedup();
-    strip(&mut document, &spellings);
-    document
-}
-
-/// The outcome a projection settles to, reading the result where there is one.
-async fn outcome(
-    relayed: &Relayed<'_>,
-    p: &Value,
-    mutation: bool,
-    folders: &[String],
-) -> Result<Outcome> {
-    let operation_id = relayed.operation.clone();
-    let revision = p["revision"].as_u64().ok_or_else(protocol)?;
-    let cancellable = p["cancellable_now"] == true;
-    Ok(match phase(p) {
-        Phase::Succeeded => {
-            let document = relay::result(relayed).await.map_err(|_| {
-                failure(if mutation {
-                    "saved_unread"
-                } else {
-                    "unavailable"
-                })
-            })?;
-            let result = reduced(&document["projection"], folders);
-            if !result.is_object() {
-                return Err(failure(if mutation {
-                    "saved_unread"
-                } else {
-                    "unavailable"
-                }));
-            }
-            Outcome::Settled {
-                operation_id,
-                revision,
-                result,
-            }
-        }
-        Phase::Unknown => return Err(failure("unknown")),
-        Phase::Stopped(reason) => {
-            // The relay reads a refusal's detail only where its definition
-            // declares one, and refuses the read otherwise.
-            let detail = if p["terminal_condition"] == "refused" {
-                relay::result(relayed)
-                    .await
-                    .ok()
-                    .map(|document| reduced(&document["projection"], folders))
-                    .filter(Value::is_object)
-            } else {
-                None
-            };
-            Outcome::Refused {
-                operation_id,
-                revision,
-                reason,
-                detail,
-            }
-        }
-        Phase::Review => Outcome::Review {
-            operation_id,
-            revision,
-            cancellable,
-        },
-        Phase::Running => Outcome::Running {
-            operation_id,
-            revision,
-            cancellable,
-        },
-    })
-}
-
-/// Follows a submitted or answered operation until it settles or waits on
-/// the person, within the relay's bound. An outcome not observed in time is
-/// unknown for a mutation, which is never sent again.
-async fn settle(
-    events: &mut Receiver<PersonEvent>,
-    tracked: &Tracked,
-    person: &HeldPerson,
-) -> Result<Outcome> {
-    let relayed = &tracked.relayed(person);
-    let mutation = tracked.definition.mutation();
-    let settled = tokio::time::timeout(relay::SETTLE_LIMIT, async {
-        let p = relay::follow(events, relayed, waits_on_person).await?;
-        outcome(relayed, &p, mutation, &tracked.folders).await
-    })
-    .await
-    .unwrap_or_else(|_| Err(failure(if mutation { "unknown" } else { "unavailable" })));
-    settled.map_err(|mut failure| {
-        if mutation && failure.code == "unavailable" {
-            failure.code = "unknown";
-        }
-        failure.operation_id = Some(relayed.operation.clone());
-        failure
-    })
-}
-
 /// Submits a payload the host already admitted, for the profile of the held
 /// session `identity` names, and follows it. `events` must be subscribed
 /// before this is called. The request's text is overwritten once it is sent,
@@ -608,156 +246,11 @@ async fn submit_on(
         .insert("profile_id".into(), json!(profile));
     let subject = relay::subject(&profile);
     let request = relay::submission(definition.id, &subject, std::mem::take(&mut payload.0));
-    admit_size(&request.0)?;
+    relay::admit_size(&request.0)?;
     let operation = relay::submit_wiping(person, request, definition.mutation()).await?;
-    let tracked = Tracked {
-        operation,
-        definition,
-        subject,
-        identity,
-        shown: None,
-        folders,
-    };
+    let tracked = Tracked::new(operation, definition.settling(), subject, identity, folders);
     operations.track(tracked.clone());
-    settle(events, &tracked, person).await
-}
-
-async fn observe_on(tracked: &Tracked, person: &HeldPerson) -> Result<Outcome> {
-    let relayed = tracked.relayed(person);
-    let mutation = tracked.definition.mutation();
-    let observed = match relay::observe(&relayed).await {
-        Ok(p) => outcome(&relayed, &p, mutation, &tracked.folders).await,
-        Err(failure) => Err(failure),
-    };
-    observed.map_err(|mut failure| {
-        if mutation && failure.code == "unavailable" {
-            failure.code = "unknown";
-        }
-        failure.operation_id = Some(tracked.operation.clone());
-        failure
-    })
-}
-
-fn review_refusal(reply: &Value) -> Failure {
-    let mut refused = failure(match reply["code"].as_str() {
-        // The review moved on, or its document changed: read it again.
-        Some("not_pending" | "review_changed") => "review_changed",
-        _ => "refused",
-    });
-    refused.reason = reply["code"].as_str().map(str::to_owned);
-    refused
-}
-
-async fn review_on(
-    operations: &Operations,
-    tracked: &Tracked,
-    person: &HeldPerson,
-) -> Result<ReviewDocument> {
-    let reply = relay::call(
-        person,
-        json!({"action":"operation_review", "operation_id":tracked.operation}),
-    )
-    .await?;
-    if reply["kind"] == "operation_refused" {
-        operations.show(&tracked.operation, None);
-        return Err(review_refusal(&reply));
-    }
-    let digest = reply["review_digest"]
-        .as_str()
-        .filter(|digest| super::setup::wire::is_hex64(digest));
-    let revision = reply["revision"].as_u64();
-    let review = &reply["document"]["projection"];
-    let (Some(digest), Some(revision), true, true, true) = (
-        digest,
-        revision,
-        reply["kind"] == "operation_review" && reply["operation_id"] == tracked.operation,
-        reply["interaction_id"].is_string(),
-        review.is_object(),
-    ) else {
-        return Err(protocol());
-    };
-    operations.show(
-        &tracked.operation,
-        Some(Shown {
-            interaction_id: reply["interaction_id"].clone(),
-            revision: reply["revision"].clone(),
-            digest: digest.to_owned(),
-        }),
-    );
-    Ok(ReviewDocument {
-        operation_id: tracked.operation.clone(),
-        revision,
-        review_digest: digest.to_owned(),
-        expires_at: reply["expires_at"].as_str().map(str::to_owned),
-        review: reduced(review, &tracked.folders),
-    })
-}
-
-/// Answers the review the window read, bound to the digest it showed. The
-/// relay reads the review again and refuses an answer to a changed one.
-async fn answer_on(
-    operations: &Operations,
-    tracked: &Tracked,
-    person: &HeldPerson,
-    events: &mut Receiver<PersonEvent>,
-    review_digest: &str,
-    decision: Decision,
-) -> Result<Outcome> {
-    let shown = tracked
-        .shown
-        .as_ref()
-        .filter(|shown| shown.digest == review_digest)
-        .ok_or_else(|| failure("review_changed"))?;
-    let unknown = || {
-        let mut unknown = failure("unknown");
-        unknown.operation_id = Some(tracked.operation.clone());
-        unknown
-    };
-    let reply = relay::call(
-        person,
-        json!({"action":"operation_respond", "operation_id":tracked.operation,
-            "interaction_id":shown.interaction_id, "revision":shown.revision,
-            "review_digest":shown.digest,
-            "decision": match decision { Decision::Apply => "apply", Decision::Reject => "reject" }}),
-    )
-    .await
-    .map_err(|_| unknown())?;
-    operations.show(&tracked.operation, None);
-    if reply["kind"] == "operation_refused" {
-        // The relay answers "unavailable" when the runtime's reply was lost
-        // after the answer may have been taken.
-        if reply["code"] == "unavailable" {
-            return Err(unknown());
-        }
-        return Err(review_refusal(&reply));
-    }
-    if reply["kind"] != "operation_responded" || reply["operation_id"] != tracked.operation {
-        return Err(unknown());
-    }
-    settle(events, tracked, person).await
-}
-
-/// Asks the runtime to cancel at the revision the window observed, then
-/// reports where the operation stands.
-async fn cancel_on(tracked: &Tracked, person: &HeldPerson, revision: u64) -> Result<Outcome> {
-    let reply = relay::call(
-        person,
-        json!({"action":"operation_cancel", "operation_id":tracked.operation,
-            "expected_revision":revision}),
-    )
-    .await
-    .map_err(|_| {
-        let mut unknown = failure("unknown");
-        unknown.operation_id = Some(tracked.operation.clone());
-        unknown
-    })?;
-    if reply["kind"] == "operation_refused" {
-        let mut refused = failure("refused");
-        refused.reason = reply["code"].as_str().map(str::to_owned);
-        refused.operation_id = Some(tracked.operation.clone());
-        return Err(refused);
-    }
-    observe_on(tracked, person).await
+    settle::settle(events, &tracked, person).await
 }
 
 /// Where a drop on the window goes: the Ledger page's current drop target.
@@ -852,26 +345,6 @@ impl LedgerHost {
         let person = self.profile.person(None).await?;
         relay::identity(&person).await
     }
-    /// The held person, only while it is the session that submitted `tracked`.
-    async fn holding(&self, tracked: &Tracked) -> Result<HeldPerson> {
-        let person = self
-            .profile
-            .person(tracked.identity["profile_id"].as_str())
-            .await?;
-        if relay::identity(&person).await? != tracked.identity {
-            return Err(failure("not_signed_in"));
-        }
-        Ok(person)
-    }
-    /// Rejects an answer read while the window's account changed underneath.
-    async fn still_holding(&self, person: &HeldPerson) -> Result<()> {
-        let identity = relay::identity(person).await?;
-        let current = self.profile.person(identity["profile_id"].as_str()).await?;
-        if relay::identity(&current).await? != identity {
-            return Err(failure("not_signed_in"));
-        }
-        Ok(())
-    }
     async fn submit(&self, definition: &str, payload: Value) -> Result<Outcome> {
         let payload = Wiped(payload);
         let definition = admitted(definition).ok_or_else(|| failure("not_admitted"))?;
@@ -910,17 +383,7 @@ impl LedgerHost {
             folders,
         )
         .await?;
-        if let Err(changed) = self.still_holding(&person).await {
-            // The account changed after the write was sent: the write may
-            // have committed, so it is unknown, never "not sent".
-            if !definition.mutation() {
-                return Err(changed);
-            }
-            let mut unknown = failure("unknown");
-            unknown.operation_id = Some(outcome.operation_id().to_owned());
-            return Err(unknown);
-        }
-        Ok(outcome)
+        settle::still_held(&self.profile, &person, outcome, definition.mutation()).await
     }
     /// Tokens for what the person dropped on the page that takes drops.
     fn dropped(self: &Arc<Self>, event: &tauri::DragDropEvent) {
@@ -957,14 +420,14 @@ impl LedgerHost {
     }
     async fn observe(&self, operation: &str) -> Result<Outcome> {
         let tracked = self.operations.find(operation)?;
-        let person = self.holding(&tracked).await?;
-        observe_on(&tracked, &person).await
+        let person = settle::holding(&self.profile, &tracked).await?;
+        settle::observe_on(&tracked, &person).await
     }
     async fn review(&self, operation: &str) -> Result<ReviewDocument> {
         let tracked = self.operations.find(operation)?;
-        let person = self.holding(&tracked).await?;
-        let document = review_on(&self.operations, &tracked, &person).await?;
-        self.still_holding(&person).await?;
+        let person = settle::holding(&self.profile, &tracked).await?;
+        let document = settle::review_on(&self.operations, &tracked, &person).await?;
+        settle::still_holding(&self.profile, &person).await?;
         Ok(document)
     }
     async fn answer(
@@ -975,9 +438,9 @@ impl LedgerHost {
     ) -> Result<Outcome> {
         let _serial = self.profile.serial().await;
         let tracked = self.operations.find(operation)?;
-        let person = self.holding(&tracked).await?;
+        let person = settle::holding(&self.profile, &tracked).await?;
         let mut events = self.profile.sign_in().person_events();
-        answer_on(
+        settle::answer_on(
             &self.operations,
             &tracked,
             &person,
@@ -990,8 +453,8 @@ impl LedgerHost {
     async fn cancel(&self, operation: &str, revision: u64) -> Result<Outcome> {
         let _serial = self.profile.serial().await;
         let tracked = self.operations.find(operation)?;
-        let person = self.holding(&tracked).await?;
-        cancel_on(&tracked, &person, revision).await
+        let person = settle::holding(&self.profile, &tracked).await?;
+        settle::cancel_on(&tracked, &person, revision).await
     }
 }
 
