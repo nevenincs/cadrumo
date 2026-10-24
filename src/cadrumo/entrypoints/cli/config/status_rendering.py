@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 
 from cadrumo_client.commands.payloads import ConfigStatusResult
 
+from .._component_setup_rendering import component_setup_line
+
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
@@ -50,9 +52,17 @@ def blocked_readiness_status(
 
 
 def precondition_action_lines(action: ResolvedPreconditionAction | None) -> tuple[str, ...]:
-    """Render the exact resolved action DTO without synthesising recovery prose."""
+    """Render the exact resolved action DTO without synthesising recovery prose.
+
+    An action that sets up a missing component renders as one
+    ``precondition_action`` row carrying the exact setup command the action
+    resolved to, instead of the DTO's condition and evidence fields.
+    """
     if action is None:
         return ()
+    setup_line = component_setup_line(action)
+    if setup_line is not None:
+        return (f"precondition_action\t{setup_line}",)
     document = action.model_dump(mode="json")
     fields = (
         "failed_condition_id",

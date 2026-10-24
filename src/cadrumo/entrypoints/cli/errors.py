@@ -64,6 +64,7 @@ from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.redaction.rules import redact_for_cli_output
 from ...core.terminal_encoding import encode_terminal_field, encode_terminal_text
 from ...domain.user_profile.errors import StoredProfileDriftError
+from ._component_setup_rendering import component_setup_line
 
 _log = logging.getLogger(__name__)
 
@@ -479,8 +480,16 @@ def _render_precondition_action_text(
     :class:`ResolvedPreconditionAction` schema names, not independently authored
     recovery labels, and nested values use deterministic JSON so condition
     evidence and binding provenance cannot be flattened into ambiguous prose.
+
+    A refusal for a component that is not set up is the exception: the person
+    reads the error's sentence and the exact setup command the action resolved
+    to, never condition identifiers or evidence. JSON still carries the DTO.
     """
     lines = [text.rstrip("\n")]
+    setup_line = component_setup_line(action)
+    if setup_line is not None:
+        lines.append(f"  {setup_line}")
+        return "\n".join(lines) + "\n"
     if command is not None:
         lines.append(f"  command: {command}")
     action_document = action.model_dump(mode="json")
@@ -523,7 +532,8 @@ def render_error_payload(
     across success and failure. A supplied ``action`` is the already-resolved
     application verdict projection: JSON places it in the canonical error
     member, while text serializes that exact DTO beneath the localized error
-    line without reconstructing a command or recovery sentence.
+    line without reconstructing a command or recovery sentence, or, for a
+    component setup action, prints the command the DTO resolved.
     """
     notice = sandbox_notice_for_error(error)
     from cadrumo_client.commands.profile_authentication_notice import drain_profile_authentication_notices
