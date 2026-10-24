@@ -10,7 +10,7 @@ use std::sync::{Arc, Mutex};
 use tauri::State;
 
 /// The pages a link may name, as the runtime's closed vocabulary spells them.
-const DESTINATIONS: [&str; 11] = [
+pub(crate) const DESTINATIONS: [&str; 11] = [
     "home",
     "ledger",
     "withholding",

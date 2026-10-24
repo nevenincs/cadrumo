@@ -440,7 +440,7 @@ mod tests {
             "-Command",
             &script,
         ]);
-        let held = Arc::new(Mutex::new(Person::hold(command, &profile).unwrap()));
+        let held = Arc::new(Mutex::new(Person::scripted(command, &profile).unwrap()));
         let mut relay = PersonRelay(held.clone());
         relay
             .call(serde_json::json!({"action":"language_observe"}))

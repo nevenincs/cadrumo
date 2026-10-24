@@ -1,24 +1,20 @@
-//! Bounded bridge to the verified installed desktop runtime session.
+//! The person's runtime session the window holds, and the one request protocol
+//! every consumer speaks to it.
 use cadrumo_application::error::application::{
     ApplicationError, ChildRefusal, ErrorCode, Operation, Result,
 };
 use serde_json::{Value, json};
+#[cfg(test)]
+use std::time::Duration;
 use std::{
-    io::{BufRead, BufReader, Read, Write},
-    process::{Child, ChildStdin, Command, Stdio},
-    sync::{Arc, Mutex, mpsc},
-    thread,
-    time::Duration,
+    io::Write,
+    sync::{Arc, Mutex},
 };
 
-/// Diagnostic standard error kept from the bridge child; its registered error
-/// document is the only part ever read back.
-const STDERR_LIMIT: usize = 64 * 1024;
-/// The runtime permits a 120 s exchange. Service admission first checks status
-/// and then has its own 10 s exchange. Leave time for the holder to serialize
-/// their answer; cutting it off at 12 s used to retire valid person authority
-/// (and every agent child) while the runtime was still handling the request.
-const REPLY_LIMIT: Duration = Duration::from_secs(140);
+#[cfg(windows)]
+mod native;
+#[cfg(test)]
+mod scripted;
 
 /// The longest request line the holder reads, before its newline.
 pub const REQUEST_LIMIT: usize = 16_383;
@@ -108,195 +104,126 @@ pub enum PersonEvent {
 
 pub type PersonEvents = tokio::sync::broadcast::Sender<PersonEvent>;
 
-/// The event a pushed line names, or none for a reply.
-fn pushed(value: &Value) -> Option<Option<PersonEvent>> {
-    match value["kind"].as_str() {
-        Some("runtime_event") => Some(match value["event"].as_str() {
-            Some("profile_language_changed") => Some(PersonEvent::LanguageChanged),
-            Some("profile_records_changed") => Some(PersonEvent::RecordsChanged),
-            Some("attendance_changed") => Some(PersonEvent::AttendanceChanged),
-            Some("operation_changed") => Some(PersonEvent::OperationChanged),
-            _ => None,
-        }),
-        Some("session_retired") => Some(Some(PersonEvent::Retired)),
-        _ => None,
+/// The events slot a bridge routes the runtime's pushes into, once the window observes them.
+type EventSlot = Arc<Mutex<Option<PersonEvents>>>;
+
+/// What a sign-out through the held session left behind.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SignedOut {
+    /// The profile's persisted automation setting, which a sign-out keeps; not access.
+    pub automation_enabled: Option<bool>,
+    /// Whether an issued key can still admit; `None` when the runtime could not say.
+    pub automation_access_remains: Option<bool>,
+}
+
+/// What answers a held person's requests, in the document protocol the
+/// runtime's `session hold` command speaks: the window's own runtime session,
+/// or a test's scripted holder. Pushes reach the events slot it was given.
+trait Bridge: Send {
+    /// Sends `request`, which carries its request id, and returns its reply,
+    /// or why no reply arrived.
+    fn exchange(&mut self, request: &Value) -> Result<Value>;
+    /// Whether the bridge can still carry a request.
+    fn is_open(&mut self) -> bool;
+    /// Gives the session up after an exchange lost step with it.
+    fn fence(&mut self);
+    /// Signs the person out of the profile everywhere through this session.
+    fn sign_out(&mut self) -> Result<SignedOut>;
+    #[cfg(test)]
+    fn scripted(&self) -> Option<&scripted::ScriptedHold> {
+        None
+    }
+    #[cfg(test)]
+    fn scripted_mut(&mut self) -> Option<&mut scripted::ScriptedHold> {
+        None
     }
 }
 
-/// Why a window sign-in through a hold did not hold the person.
-#[derive(Debug)]
-pub enum SignInFailure {
-    /// The runtime refused the password, as the command line would report it.
-    Refused(crate::shell::sign_in::wire::Refusal),
-    Failed(ApplicationError),
-}
-
-impl From<ApplicationError> for SignInFailure {
-    fn from(error: ApplicationError) -> Self {
-        Self::Failed(error)
-    }
-}
-
-/// A sign-in hold started before the password is known. The window starts it
-/// while the sign-in form shows, so the password reaches a process that has
-/// already started and connected to the runtime. Dropping it closes its input,
-/// which ends the hold without signing in.
-pub struct PreparedSignIn {
-    person: Person,
-    profile: String,
-    // Set once the hold answered or ended before its password: it never waits again.
-    ended: bool,
-}
-
-impl PreparedSignIn {
-    pub fn profile(&self) -> &str {
-        &self.profile
-    }
-
-    /// Whether the hold still waits for the password: it has said nothing and
-    /// still runs. A hold that could not connect has already answered.
-    pub fn waiting(&mut self) -> bool {
-        self.ended = self.ended
-            || !matches!(
-                self.person.received.try_recv(),
-                Err(mpsc::TryRecvError::Empty)
-            )
-            || !matches!(self.person.child.try_wait(), Ok(None));
-        !self.ended
-    }
-
-    /// Resumes, through this hold, the sign-in the window stored on its own
-    /// connection: the hold reads an empty password frame and presents the
-    /// stored proof instead.
-    pub fn resume(self) -> std::result::Result<Person, SignInFailure> {
-        let Self {
-            mut person,
-            profile,
-            ..
-        } = self;
-        person.send_frame(&0u32.to_be_bytes())?;
-        person.identity = person.read()?;
-        Person::signed_in(person, &profile)
-    }
-
-    /// Signs the person in with `password` through this hold, as
-    /// [`Person::sign_in`] does through a new one.
-    pub fn sign_in(self, password: &[u8]) -> std::result::Result<Person, SignInFailure> {
-        let Self {
-            mut person,
-            profile,
-            ..
-        } = self;
-        person.send_password(password)?;
-        person.identity = person.read()?;
-        Person::signed_in(person, &profile)
-    }
-}
-
+/// The person's runtime session the window holds, shared by every consumer.
 pub struct Person {
-    child: Child,
-    stdin: Option<ChildStdin>,
-    received: mpsc::Receiver<Option<Value>>,
-    stderr: Arc<Mutex<Vec<u8>>>,
-    stderr_closed: mpsc::Receiver<()>,
-    events: Arc<Mutex<Option<PersonEvents>>>,
+    bridge: Box<dyn Bridge>,
+    events: EventSlot,
     // Whether the last exchange's error was a refusal of that very request.
     refused_in_step: bool,
     failure: tokio::sync::watch::Sender<Option<ApplicationError>>,
-    reply_limit: Duration,
     pub identity: Value,
 }
 
 impl Person {
-    #[cfg(test)]
-    pub(crate) fn child_id(&self) -> u32 {
-        self.child.id()
+    /// Holds the session the window's own connection admitted for its profile.
+    #[cfg(windows)]
+    pub(crate) fn native(
+        connection: Arc<dyn cadrumo_application::runtime_client::SessionExchange>,
+        admitted: cadrumo_application::runtime_client::Admitted,
+        persisted: Option<bool>,
+    ) -> Result<Self> {
+        let events = EventSlot::default();
+        let (session, identity) =
+            native::NativeSession::start(connection, admitted, persisted, events.clone())?;
+        let profile = identity["profile_id"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned();
+        Self::held(
+            Box::new(session),
+            events,
+            identity,
+            &profile,
+            5 + usize::from(persisted.is_some()),
+        )
     }
 
-    pub fn hold(command: Command, profile: &str) -> Result<Self> {
-        Self::hold_within(command, profile, REPLY_LIMIT)
-    }
-
-    /// A fixture child's speed is not under test; its replies are awaited
-    /// within `reply_limit` instead.
+    /// A scripted holder's person, whose replies are awaited within `reply_limit`.
     #[cfg(test)]
     pub(crate) fn hold_answering_within(
-        command: Command,
+        command: std::process::Command,
         profile: &str,
         reply_limit: Duration,
     ) -> Result<Self> {
-        Self::hold_within(command, profile, reply_limit)
+        let events = EventSlot::default();
+        let (hold, identity) = scripted::ScriptedHold::start(command, reply_limit, events.clone())?;
+        Self::held(Box::new(hold), events, identity, profile, 5)
     }
 
-    fn hold_within(command: Command, profile: &str, reply_limit: Duration) -> Result<Self> {
-        let person = Self::spawn(command, profile, reply_limit)?;
+    #[cfg(test)]
+    pub(crate) fn scripted(command: std::process::Command, profile: &str) -> Result<Self> {
+        Self::hold_answering_within(command, profile, Duration::from_secs(140))
+    }
+
+    #[cfg(test)]
+    pub(crate) fn child_id(&self) -> u32 {
+        self.bridge.scripted().map_or(0, |hold| hold.child.id())
+    }
+
+    #[cfg(test)]
+    fn scripted_mut(&mut self) -> &mut scripted::ScriptedHold {
+        self.bridge
+            .scripted_mut()
+            .expect("a scripted holder's person")
+    }
+
+    fn held(
+        bridge: Box<dyn Bridge>,
+        events: EventSlot,
+        identity: Value,
+        profile: &str,
+        members: usize,
+    ) -> Result<Self> {
+        let person = Self {
+            bridge,
+            events,
+            refused_in_step: false,
+            failure: tokio::sync::watch::Sender::new(None),
+            identity,
+        };
         if person.identity["kind"] == "session_refused" {
             return Err(person.refused("person_hold_refused", &person.identity.clone()));
         }
-        person.require_held(profile, 5)?;
-        Ok(person)
-    }
-
-    /// Signs the person in to `profile` with `password` through a new hold that
-    /// keeps the sign-in for the other frontends, and holds it for the window.
-    /// A refused password ends that hold and comes back as its refusal.
-    pub fn sign_in(
-        command: Command,
-        profile: &str,
-        password: &[u8],
-    ) -> std::result::Result<Self, SignInFailure> {
-        Self::sign_in_within(command, profile, password, REPLY_LIMIT)
-    }
-
-    pub(crate) fn sign_in_within(
-        command: Command,
-        profile: &str,
-        password: &[u8],
-        reply_limit: Duration,
-    ) -> std::result::Result<Self, SignInFailure> {
-        Self::prepare_sign_in_within(command, profile, reply_limit)?.sign_in(password)
-    }
-
-    /// Starts the hold a sign-in to `profile` will use, before its password is known.
-    pub fn prepare_sign_in(command: Command, profile: &str) -> Result<PreparedSignIn> {
-        Self::prepare_sign_in_within(command, profile, REPLY_LIMIT)
-    }
-
-    pub(crate) fn prepare_sign_in_within(
-        command: Command,
-        profile: &str,
-        reply_limit: Duration,
-    ) -> Result<PreparedSignIn> {
-        Ok(PreparedSignIn {
-            person: Self::start(command, profile, true, reply_limit)?,
-            profile: profile.to_owned(),
-            ended: false,
-        })
-    }
-
-    /// The person a sign-in's answer holds, or why it holds none.
-    fn signed_in(person: Self, profile: &str) -> std::result::Result<Self, SignInFailure> {
-        match person.identity["kind"].as_str() {
-            Some("sign_in_refused") => {
-                let refused = &person.identity;
-                let refusal = crate::shell::sign_in::wire::sign_in_refusal(
-                    refused["code"].as_str().unwrap_or_default(),
-                    refused["sign_in_reason"].as_str(),
-                    refused["seconds"].as_u64(),
-                )?;
-                Err(SignInFailure::Refused(refusal))
-            }
-            Some("session_refused") => Err(person
-                .refused("person_sign_in_refused", &person.identity.clone())
-                .into()),
-            _ => {
-                person.require_held(profile, 6)?;
-                if !person.identity["session_persisted"].is_boolean() {
-                    return Err(failed("person_hold_identity_shape").into());
-                }
-                Ok(person)
-            }
+        person.require_held(profile, members)?;
+        if members == 6 && !person.identity["session_persisted"].is_boolean() {
+            return Err(failed("person_hold_identity_shape"));
         }
+        Ok(person)
     }
 
     /// Whether the window's sign-in left a stored receipt for the other frontends.
@@ -324,178 +251,6 @@ impl Person {
         Ok(())
     }
 
-    fn spawn(command: Command, profile: &str, reply_limit: Duration) -> Result<Self> {
-        let mut person = Self::start(command, profile, false, reply_limit)?;
-        person.identity = person.read()?;
-        Ok(person)
-    }
-
-    /// Starts a hold without reading its first line; a sign-in hold then waits
-    /// for its password frame.
-    fn start(
-        mut command: Command,
-        profile: &str,
-        sign_in: bool,
-        reply_limit: Duration,
-    ) -> Result<Self> {
-        command.args(["session", "hold", "--profile-id", profile]);
-        if sign_in {
-            command.args(["--password-stdin", "--persist-receipt"]);
-        }
-        command
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
-        #[cfg(windows)]
-        {
-            use std::os::windows::process::CommandExt;
-            command.creation_flags(0x0800_0000);
-        }
-        let mut child =
-            cadrumo_application::process::creation::run(|| command.spawn()).map_err(|error| {
-                ApplicationError::new(ErrorCode::SpawnFailed, Operation::Cli)
-                    .with_reason("person_hold_spawn")
-                    .caused_by(error)
-            })?;
-        let stdin = child
-            .stdin
-            .take()
-            .ok_or_else(|| failed("person_hold_stdin_missing"))?;
-        let stdout = child
-            .stdout
-            .take()
-            .ok_or_else(|| failed("person_hold_stdout_missing"))?;
-        let child_stderr = child
-            .stderr
-            .take()
-            .ok_or_else(|| failed("person_hold_stderr_missing"))?;
-        let stderr = Arc::new(Mutex::new(Vec::new()));
-        let (stderr_done, stderr_closed) = mpsc::sync_channel(1);
-        let collected = stderr.clone();
-        thread::spawn(move || {
-            let mut reader = child_stderr;
-            let mut chunk = [0u8; 4096];
-            while let Ok(count @ 1..) = reader.read(&mut chunk) {
-                let mut kept = collected.lock().unwrap_or_else(|e| e.into_inner());
-                // The newest bytes hold the final error document.
-                kept.extend_from_slice(&chunk[..count]);
-                if kept.len() > STDERR_LIMIT {
-                    let excess = kept.len() - STDERR_LIMIT;
-                    kept.drain(..excess);
-                }
-            }
-            let _ = stderr_done.send(());
-        });
-        let (sender, received) = mpsc::sync_channel(2);
-        let events: Arc<Mutex<Option<PersonEvents>>> = Arc::new(Mutex::new(None));
-        let routed = events.clone();
-        thread::spawn(move || {
-            let mut reader = BufReader::new(stdout);
-            loop {
-                let mut line = Vec::with_capacity(1024);
-                let count = reader
-                    .by_ref()
-                    .take(1024 * 1024 + 1)
-                    .read_until(b'\n', &mut line);
-                let value = match count {
-                    Ok(1..=1_048_576) if line.last() == Some(&b'\n') => {
-                        serde_json::from_slice::<Value>(&line).ok()
-                    }
-                    _ => None,
-                };
-                if let Some(push) = value.as_ref().and_then(pushed) {
-                    if let Some(event) = push
-                        && let Some(events) =
-                            routed.lock().unwrap_or_else(|e| e.into_inner()).as_ref()
-                    {
-                        let _ = events.send(event);
-                    }
-                    // A push is never a reply; a retirement still ends the stream as before.
-                    if push != Some(PersonEvent::Retired) {
-                        continue;
-                    }
-                }
-                let ended = value.is_none();
-                if sender.send(value).is_err() || ended {
-                    break;
-                }
-            }
-        });
-        Ok(Self {
-            child,
-            stdin: Some(stdin),
-            received,
-            stderr,
-            stderr_closed,
-            events,
-            refused_in_step: false,
-            failure: tokio::sync::watch::Sender::new(None),
-            reply_limit,
-            identity: Value::Null,
-        })
-    }
-
-    fn send_password(&mut self, password: &[u8]) -> Result<()> {
-        // The hold reads one length-prefixed frame and wipes it; the window's copy is the caller's.
-        let length = u32::try_from(password.len())
-            .ok()
-            .filter(|length| (1..=4096).contains(length))
-            .ok_or_else(|| failed("person_password_length"))?;
-        let mut frame = zeroize::Zeroizing::new(Vec::with_capacity(4 + password.len()));
-        frame.extend_from_slice(&length.to_be_bytes());
-        frame.extend_from_slice(password);
-        self.send_frame(&frame)
-    }
-
-    fn send_frame(&mut self, frame: &[u8]) -> Result<()> {
-        let stdin = self
-            .stdin
-            .as_mut()
-            .ok_or_else(|| failed("person_hold_stdin_missing"))?;
-        stdin
-            .write_all(frame)
-            .and_then(|()| stdin.flush())
-            .map_err(|error| {
-                ApplicationError::new(ErrorCode::WriteFailed, Operation::Cli)
-                    .with_reason("person_password_write")
-                    .caused_by(error)
-            })
-    }
-
-    fn read(&mut self) -> Result<Value> {
-        match self.received.recv_timeout(self.reply_limit) {
-            Ok(Some(value)) => Ok(value),
-            Ok(None) => Err(self.with_child_report(failed("person_reply_unreadable"))),
-            Err(error @ mpsc::RecvTimeoutError::Timeout) => {
-                Err(ApplicationError::new(ErrorCode::TimedOut, Operation::Cli)
-                    .with_reason("person_reply_timeout")
-                    .caused_by(error))
-            }
-            Err(error) => {
-                Err(self.with_child_report(failed("person_reply_stream_ended").caused_by(error)))
-            }
-        }
-    }
-
-    /// The child's own registered error document, for a reply stream that
-    /// ended without a refusal line to carry it.
-    ///
-    /// The holder closes standard error only by exiting, so its close is the
-    /// event this waits for; the deadline only bounds a child that ended its
-    /// replies but hangs instead of exiting.
-    fn child_report(&self) -> Option<ChildRefusal> {
-        let _ = self.stderr_closed.recv_timeout(Duration::from_secs(2));
-        let kept = self.stderr.lock().unwrap_or_else(|e| e.into_inner());
-        ChildRefusal::reported(&kept)
-    }
-
-    fn with_child_report(&self, error: ApplicationError) -> ApplicationError {
-        match self.child_report() {
-            Some(report) if error.causes.is_empty() => error.caused_by(report),
-            _ => error,
-        }
-    }
-
     fn refused(&self, reason: &'static str, answer: &Value) -> ApplicationError {
         // The refusal line carries its own report: nothing waits on standard error.
         failed(reason).caused_by(ChildRefusal::answered(answer))
@@ -509,16 +264,21 @@ impl Person {
             .map(|_| ())
     }
 
-    /// Whether the bridge can still carry a request: no earlier exchange lost
-    /// it and the holder has not ended.
+    /// Whether the session can still carry a request: no earlier exchange lost
+    /// it and it has not ended.
     pub fn is_open(&mut self) -> bool {
-        self.stdin.is_some() && matches!(self.child.try_wait(), Ok(None))
+        self.failure.borrow().is_none() && self.bridge.is_open()
     }
 
     /// Shared consumers must stop using a failed exchange even while the
-    /// bridge child is still finishing its last request.
+    /// session is still finishing its last request.
     pub fn failures(&self) -> tokio::sync::watch::Receiver<Option<ApplicationError>> {
         self.failure.subscribe()
+    }
+
+    /// Signs the person out of the profile everywhere through this session.
+    pub fn sign_out(&mut self) -> Result<SignedOut> {
+        self.bridge.sign_out()
     }
 
     pub fn exchange(&mut self, mut document: Value) -> Result<Value> {
@@ -543,17 +303,16 @@ impl Person {
         if let Err(error) = &reply
             && !self.refused_in_step
         {
-            // A missed or malformed reply loses this half-duplex bridge. No
+            // A missed or malformed reply loses this half-duplex session. No
             // later call may replay a decision or consume its delayed reply.
-            // A refusal of this very request leaves it in step: a hold that
-            // survives one, as for an uncertain OS observation, keeps the
-            // person's session, and one that ends is seen closed.
-            drop(self.stdin.take());
+            // A refusal of this very request leaves it in step: a session that
+            // survives one, as for an uncertain OS observation, stays held,
+            // and one that ends is seen closed.
+            self.bridge.fence();
             self.failure.send_replace(Some(error.clone()));
         }
         reply
     }
-
     fn exchange_once(&mut self, document: &mut Value) -> Result<Value> {
         let id = request_id()?;
         document["request_id"] = json!(id);
@@ -561,25 +320,7 @@ impl Person {
         if length > REQUEST_LIMIT {
             return Err(failed("person_request_too_large"));
         }
-        // Sized up front, so the line is never reallocated and its one copy
-        // of the request is overwritten when it is dropped.
-        let mut bytes = zeroize::Zeroizing::new(Vec::with_capacity(length + 1));
-        serde_json::to_writer(&mut *bytes, document)
-            .map_err(|error| failed("person_request_encode").caused_by(error))?;
-        bytes.push(b'\n');
-        let stdin = self
-            .stdin
-            .as_mut()
-            .ok_or_else(|| failed("person_bridge_closed"))?;
-        stdin
-            .write_all(&bytes)
-            .and_then(|()| stdin.flush())
-            .map_err(|error| {
-                ApplicationError::new(ErrorCode::WriteFailed, Operation::Cli)
-                    .with_reason("person_request_write")
-                    .caused_by(error)
-            })?;
-        let reply = self.read().map_err(|error| {
+        let reply = self.bridge.exchange(document).map_err(|error| {
             // Name only the closed protocol action, never arguments or profile
             // data, so a timeout identifies which runtime path was waiting.
             let action = document["action"].as_str().unwrap_or("unknown");
@@ -705,21 +446,6 @@ impl Person {
     }
 }
 
-impl Drop for Person {
-    fn drop(&mut self) {
-        drop(self.stdin.take());
-        // Closed input ends the holder, and it closes standard error only by
-        // exiting: that close wakes this, never a polling interval.
-        if let Err(mpsc::RecvTimeoutError::Timeout) =
-            self.stderr_closed.recv_timeout(Duration::from_secs(2))
-        {
-            // A stuck bridge cannot keep person authority after its native owner closes.
-            let _ = self.child.kill();
-        }
-        let _ = self.child.wait();
-    }
-}
-
 pub type HeldPerson = std::sync::Arc<Mutex<Person>>;
 
 /// The generic relay actions of the held session and the reply each answers with.
@@ -804,45 +530,6 @@ mod language_tests {
     }
 
     #[test]
-    fn pushed_lines_are_events_and_never_replies() {
-        assert_eq!(
-            pushed(&json!({"kind":"runtime_event","event":"profile_language_changed"})),
-            Some(Some(PersonEvent::LanguageChanged))
-        );
-        assert_eq!(
-            pushed(&json!({"kind":"runtime_event","event":"attendance_changed"})),
-            Some(Some(PersonEvent::AttendanceChanged))
-        );
-        assert_eq!(
-            pushed(&json!({"kind":"runtime_event","event":"operation_changed"})),
-            Some(Some(PersonEvent::OperationChanged))
-        );
-        // The bridge names no sign-in of its own: a sign-in is an operation like any other.
-        assert_eq!(
-            pushed(&json!({"kind":"runtime_event","event":"authentication_changed"})),
-            Some(None)
-        );
-        // A relayed answer is a reply, never a push.
-        assert_eq!(
-            pushed(&json!({"kind":"operation_observed","request_id":"id"})),
-            None
-        );
-        // A push this window does not know is still never taken for a reply.
-        assert_eq!(
-            pushed(&json!({"kind":"runtime_event","event":"later"})),
-            Some(None)
-        );
-        assert_eq!(
-            pushed(&json!({"kind":"session_retired","profile_id":"profile"})),
-            Some(Some(PersonEvent::Retired))
-        );
-        assert_eq!(
-            pushed(&json!({"kind":"profile_language","request_id":"id"})),
-            None
-        );
-    }
-
-    #[test]
     fn relay_replies_bind_their_action_profile_and_session() {
         let identity = json!({"profile_id":"profile", "session_id":"session"});
         let reply =
@@ -908,120 +595,6 @@ mod language_tests {
 }
 
 #[cfg(all(test, windows))]
-mod sign_in_tests {
-    use super::*;
-    use crate::agent::runner::tests::powershell;
-
-    const PROFILE: &str = "12345678-1234-4234-8234-123456789abc";
-    const PASSWORD: &str = "window-password-1";
-
-    /// A fake hold that reads the password frame, refuses unless it is `PASSWORD`,
-    /// answers `line` and then waits for its input to close.
-    fn holding(line: &Value) -> Command {
-        powershell(&format!(
-            "& {{ $in = [Console]::OpenStandardInput(); \
-             $h = New-Object byte[] 4; $n = 0; while ($n -lt 4) {{ $n += $in.Read($h, $n, 4 - $n) }}; \
-             [Array]::Reverse($h); $len = [BitConverter]::ToInt32($h, 0); \
-             $p = New-Object byte[] $len; $n = 0; while ($n -lt $len) {{ $n += $in.Read($p, $n, $len - $n) }}; \
-             if ([Text.Encoding]::UTF8.GetString($p) -ne '{PASSWORD}') {{ exit 8 }}; \
-             [Console]::Out.WriteLine('{line}'); [Console]::Out.Flush(); \
-             $in.ReadByte() | Out-Null }}"
-        ))
-    }
-
-    fn held(persisted: Value) -> Value {
-        json!({
-            "kind": "session_held",
-            "profile_id": PROFILE,
-            "session_id": request_id().unwrap(),
-            "runtime_boot_id": request_id().unwrap(),
-            "connection_id": request_id().unwrap(),
-            "session_persisted": persisted,
-        })
-    }
-
-    fn refused(failure: SignInFailure) -> crate::shell::sign_in::wire::Refusal {
-        match failure {
-            SignInFailure::Refused(refusal) => refusal,
-            SignInFailure::Failed(error) => panic!("expected a refusal, got {error:?}"),
-        }
-    }
-
-    #[test]
-    fn a_window_sign_in_sends_the_password_frame_and_holds_the_signed_in_session() {
-        let person =
-            Person::sign_in(holding(&held(json!(true))), PROFILE, PASSWORD.as_bytes()).unwrap();
-        assert!(person.session_persisted());
-        assert_eq!(person.identity["profile_id"], PROFILE);
-        let unpersisted =
-            Person::sign_in(holding(&held(json!(false))), PROFILE, PASSWORD.as_bytes()).unwrap();
-        assert!(!unpersisted.session_persisted());
-    }
-
-    #[test]
-    fn a_refused_password_comes_back_as_the_refusal_the_command_line_shows() {
-        let throttled = json!({"kind":"sign_in_refused","code":"authentication_required","sign_in_reason":"throttled","seconds":30});
-        let refusal = refused(
-            Person::sign_in(holding(&throttled), PROFILE, PASSWORD.as_bytes())
-                .err()
-                .unwrap(),
-        );
-        assert_eq!(refusal.code, "THROTTLED");
-        assert_eq!(refusal.retry_after_seconds, Some(30));
-        let rejected = json!({"kind":"sign_in_refused","code":"credential_rejected","sign_in_reason":"credential_rejected","seconds":null});
-        let refusal = refused(
-            Person::sign_in(holding(&rejected), PROFILE, PASSWORD.as_bytes())
-                .err()
-                .unwrap(),
-        );
-        assert_eq!(refusal.code, "CREDENTIAL_REJECTED");
-        assert_eq!(refusal.retry_after_seconds, None);
-    }
-
-    #[test]
-    fn a_prepared_hold_waits_for_the_password_and_then_signs_in() {
-        let mut prepared = Person::prepare_sign_in(holding(&held(json!(true))), PROFILE).unwrap();
-        assert_eq!(prepared.profile(), PROFILE);
-        std::thread::sleep(Duration::from_millis(300));
-        assert!(prepared.waiting());
-        let person = prepared.sign_in(PASSWORD.as_bytes()).unwrap();
-        assert!(person.session_persisted());
-        assert_eq!(person.identity["profile_id"], PROFILE);
-    }
-
-    #[test]
-    fn a_prepared_hold_that_answered_or_ended_no_longer_waits() {
-        let refused = json!({"kind":"session_refused","code":"runtime_unavailable"});
-        let mut answered = Person::prepare_sign_in(
-            powershell(&format!(
-                "& {{ [Console]::Out.WriteLine('{refused}'); [Console]::Out.Flush(); \
-                 [Console]::OpenStandardInput().ReadByte() | Out-Null }}"
-            )),
-            PROFILE,
-        )
-        .unwrap();
-        let mut ended = Person::prepare_sign_in(powershell("exit 3"), PROFILE).unwrap();
-        let deadline = std::time::Instant::now() + Duration::from_secs(20);
-        while (answered.waiting() || ended.waiting()) && std::time::Instant::now() < deadline {
-            std::thread::sleep(Duration::from_millis(50));
-        }
-        assert!(!answered.waiting());
-        assert!(!ended.waiting());
-    }
-
-    #[test]
-    fn a_held_line_that_does_not_say_whether_the_sign_in_was_kept_is_refused() {
-        let mut line = held(json!(true));
-        line.as_object_mut().unwrap().remove("session_persisted");
-        line["extra"] = json!(true);
-        match Person::sign_in(holding(&line), PROFILE, PASSWORD.as_bytes()) {
-            Err(SignInFailure::Failed(error)) => assert_eq!(error.code, ErrorCode::ReadFailed),
-            _ => panic!("a held line without the persisted flag must not hold the person"),
-        }
-    }
-}
-
-#[cfg(all(test, windows))]
 mod event_tests {
     use super::*;
     use crate::agent::runner::tests::powershell;
@@ -1065,7 +638,7 @@ mod event_tests {
              [Console]::Out.WriteLine(($reply | ConvertTo-Json -Compress)); [Console]::Out.Flush(); \
              [Console]::In.ReadLine() | Out-Null }}"
         );
-        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
+        let mut person = Person::scripted(powershell(&script), PROFILE).unwrap();
         let (events, mut heard) = tokio::sync::broadcast::channel(4);
         person.observe_events(events).unwrap();
         let reply = person.exchange(json!({"action": "language_read"})).unwrap();
@@ -1116,7 +689,7 @@ mod event_tests {
             answer(&own),
             answer(&other)
         );
-        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
+        let mut person = Person::scripted(powershell(&script), PROFILE).unwrap();
         let reply = person.exchange(json!({"action": "activity"})).unwrap();
         assert_eq!(reply["status"]["session_id"], identity["session_id"]);
         let error = person.exchange(json!({"action": "activity"})).unwrap_err();
@@ -1162,7 +735,7 @@ mod event_tests {
             answer(&refused),
             answer(&status)
         );
-        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
+        let mut person = Person::scripted(powershell(&script), PROFILE).unwrap();
         // As when the runtime cannot observe the login for a moment: the hold refuses and keeps holding.
         person.exchange(json!({"action": "activity"})).unwrap_err();
         assert!(person.is_open());
@@ -1176,6 +749,7 @@ mod failure_tests {
     use super::*;
     use crate::agent::runner::tests::powershell;
     use cadrumo_application::error::application::Cause;
+    use std::process::Command;
 
     const PROFILE: &str = "12345678-1234-4234-8234-123456789abc";
 
@@ -1195,7 +769,7 @@ mod failure_tests {
              [Console]::Out.WriteLine('{retired}'); [Console]::Out.Flush(); \
              if ($null -ne [Console]::In.ReadLine()) {{ exit 9 }}; exit 0 }}"
         );
-        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
+        let mut person = Person::scripted(powershell(&script), PROFILE).unwrap();
         let (events, mut heard) = tokio::sync::broadcast::channel(4);
         *person.events.lock().unwrap() = Some(events);
         let failure = person.failures();
@@ -1208,7 +782,7 @@ mod failure_tests {
         let later = person.exchange(json!({"action": "status"})).unwrap_err();
         assert_eq!(later.reason.as_deref(), Some("person_bridge_closed"));
         assert!(
-            person.child.wait().unwrap().success(),
+            person.scripted_mut().child.wait().unwrap().success(),
             "no request was replayed"
         );
     }
@@ -1221,7 +795,7 @@ mod failure_tests {
             "& {{ [Console]::Out.WriteLine('{{\"kind\":\"session_refused\",\"request_id\":\"{PROFILE}\",\"code\":\"unavailable\",\"report\":{report}}}'); \
              [Console]::Out.Flush(); [Console]::In.ReadLine() | Out-Null; exit 1 }}"
         );
-        let error = Person::hold(powershell(&script), PROFILE)
+        let error = Person::scripted(powershell(&script), PROFILE)
             .err()
             .expect("the refused hold fails");
         assert_eq!(error.code, ErrorCode::ReadFailed);
@@ -1257,7 +831,7 @@ mod failure_tests {
              [Console]::Out.WriteLine((@{{kind='session_refused'; request_id=$request.request_id; code='unavailable'}} | ConvertTo-Json -Compress)); \
              [Console]::Out.Flush(); [Console]::In.ReadLine() | Out-Null }}"
         );
-        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
+        let mut person = Person::scripted(powershell(&script), PROFILE).unwrap();
         let started = std::time::Instant::now();
         let error = person.exchange(json!({"action": "activity"})).unwrap_err();
         // No refusal waits on standard error, which this hold keeps open.
@@ -1300,7 +874,7 @@ mod failure_tests {
                [Console]::Out.WriteLine(($reply | ConvertTo-Json -Compress)); [Console]::Out.Flush(); \
              }}; [Console]::In.ReadLine() | Out-Null }}"
         );
-        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
+        let mut person = Person::scripted(powershell(&script), PROFILE).unwrap();
         for _ in 0..2 {
             assert_eq!(
                 person
@@ -1326,8 +900,8 @@ mod failure_tests {
              $null = [Console]::In.ReadLine(); \
              if ($null -ne [Console]::In.ReadLine()) {{ exit 9 }}; exit 0 }}"
         );
-        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
-        person.reply_limit = Duration::from_millis(50);
+        let mut person = Person::scripted(powershell(&script), PROFILE).unwrap();
+        person.scripted_mut().reply_limit = Duration::from_millis(50);
         let failure = person.failures();
         assert!(failure.borrow().is_none());
         let error = person
@@ -1346,18 +920,18 @@ mod failure_tests {
                 if action == "person_action_language_read" && reason == "person_reply_timeout"
         ));
         assert!(
-            person.child.wait().unwrap().success(),
+            person.scripted_mut().child.wait().unwrap().success(),
             "no request was replayed"
         );
     }
 
     #[test]
     fn distinct_bridge_failures_have_distinct_reasons() {
-        let ended = Person::hold(powershell("& { exit 3 }"), PROFILE)
+        let ended = Person::scripted(powershell("& { exit 3 }"), PROFILE)
             .err()
             .unwrap();
         assert_eq!(ended.reason.as_deref(), Some("person_reply_unreadable"));
-        let shaped = Person::hold(
+        let shaped = Person::scripted(
             powershell(
                 "& { [Console]::Out.WriteLine((@{kind='session_held'} | ConvertTo-Json -Compress)) }",
             ),
@@ -1368,7 +942,7 @@ mod failure_tests {
         assert_eq!(shaped.reason.as_deref(), Some("person_hold_identity_shape"));
         let mut missing = Command::new("cadrumo-test-executable-that-does-not-exist");
         missing.arg("--");
-        let spawn = Person::hold(missing, PROFILE).err().unwrap();
+        let spawn = Person::scripted(missing, PROFILE).err().unwrap();
         assert_eq!(spawn.code, ErrorCode::SpawnFailed);
         assert_eq!(spawn.reason.as_deref(), Some("person_hold_spawn"));
         assert!(matches!(

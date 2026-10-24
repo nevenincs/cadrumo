@@ -1175,21 +1175,40 @@ impl Connection {
     /// Signs the person out of the profile everywhere: the stored sign-in is
     /// revoked and every human session of the profile ends.
     pub fn sign_out(&self, session: &Admitted, deadline: Instant) -> Result<SignedOut, Refusal> {
-        let reply = self.session("human_sign_out", session, deadline)?;
-        if text(&reply, "kind") != Some("human_signed_out") {
-            return Err(self.fail(Refusal::InvalidFrame));
-        }
-        let flag = |key: &str| reply.get(key).and_then(Value::as_bool).unwrap_or(false);
-        Ok(SignedOut {
-            session_ids: uuid_list(reply.get("session_ids")),
-            receipt_removed: flag("receipt_removed"),
-            keychain_removed: flag("keychain_removed"),
-            automation_enabled: reply.get("automation_enabled").and_then(Value::as_bool),
-            automation_access_remains: reply
-                .get("automation_access_remains")
-                .and_then(Value::as_bool),
-        })
+        human_sign_out(self, session, deadline).map_err(|refusal| self.fail(refusal))
     }
+}
+
+/// Signs the person out of `session`'s profile everywhere, through whatever
+/// carries that session's exchanges: the stored sign-in is revoked and every
+/// human session of the profile ends.
+pub fn human_sign_out(
+    exchange: &dyn SessionExchange,
+    session: &Admitted,
+    deadline: Instant,
+) -> Result<SignedOut, Refusal> {
+    let reply = exchange.exchange(
+        &json!({
+            "action": "human_sign_out",
+            "request_id": request_id(),
+            "profile_id": session.profile_id,
+            "session_id": session.session_id,
+        }),
+        deadline,
+    )?;
+    if text(&reply, "kind") != Some("human_signed_out") {
+        return Err(Refusal::InvalidFrame);
+    }
+    let flag = |key: &str| reply.get(key).and_then(Value::as_bool).unwrap_or(false);
+    Ok(SignedOut {
+        session_ids: uuid_list(reply.get("session_ids")),
+        receipt_removed: flag("receipt_removed"),
+        keychain_removed: flag("keychain_removed"),
+        automation_enabled: reply.get("automation_enabled").and_then(Value::as_bool),
+        automation_access_remains: reply
+            .get("automation_access_remains")
+            .and_then(Value::as_bool),
+    })
 }
 
 /// Presentations of one resume; each after the first needs a proof that
@@ -1863,23 +1882,54 @@ mod live_tests {
         assert_eq!(status["session_id"], json!(session.session_id));
         resumed.note_activity(&session, soon()).unwrap();
 
-        // The window's own password sign-in, on a development root.
+        // The window's own password sign-in, on a development root, stored for
+        // the other frontends as the desktop stores it; timed from connecting.
+        let started = Instant::now();
         let window = Connection::open(&endpoint, &live.cohort, soon()).unwrap();
+        let connected = started.elapsed();
         let retirements = resumed.subscribe();
         let held = window
             .login_password(
                 &live.profile_id,
                 Frontend::Desktop,
                 &live.password,
-                false,
+                true,
                 soon(),
             )
             .unwrap();
+        let signed_in = started.elapsed();
+        assert_eq!(held.session_persisted, Some(true));
+        // The window's later sessions resume the sign-in it stored.
+        let started_resume = Instant::now();
+        let again = Connection::open(&endpoint, &live.cohort, soon()).unwrap();
+        let rejoined = again
+            .resume_receipt(&live.root, &live.profile_id, Frontend::Desktop, soon())
+            .unwrap();
+        let resumed_in = started_resume.elapsed();
+        assert_eq!(rejoined.profile_id, live.profile_id);
+        println!(
+            "native sign-in: connect {} ms, password sign-in {} ms; resume {} ms",
+            connected.as_millis(),
+            signed_in.as_millis(),
+            resumed_in.as_millis()
+        );
         assert_eq!(held.profile_id, live.profile_id);
         assert!(
             window.status(&held, soon()).unwrap()["credential_authenticated"]
                 .as_bool()
                 .unwrap()
+        );
+        // A registered operation runs through the window's session: the
+        // profile's language, as the desktop reads it.
+        let language =
+            crate::person_operations::read_profile_language(&window, &held, soon()).unwrap();
+        assert!(
+            language
+                .language
+                .as_deref()
+                .is_none_or(|language| ["es", "en", "ca", "hu"].contains(&language)),
+            "{:?}",
+            language.language
         );
 
         // Signing out ends every human session and revokes the stored sign-in.
@@ -1887,6 +1937,7 @@ mod live_tests {
         assert!(out.automation_enabled.is_some() || out.automation_access_remains.is_none());
         assert!(out.session_ids.contains(&held.session_id));
         assert!(out.session_ids.contains(&session.session_id));
+        assert!(out.session_ids.contains(&rejoined.session_id));
         assert!(out.receipt_removed);
         let retired = retirements.recv_timeout(Duration::from_secs(10)).unwrap();
         assert!(
@@ -1908,6 +1959,7 @@ mod live_tests {
             matches!(refused, Refusal::Denied { .. } | Refusal::ConnectionClosed),
             "{refused}"
         );
+        again.close();
         window.close();
         watcher.close();
     }
