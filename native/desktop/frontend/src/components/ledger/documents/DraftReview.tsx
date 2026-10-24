@@ -56,6 +56,7 @@ import { invoiceLine } from "../matching/matchingWords";
 import { dayText } from "../transfer/transferWords";
 import {
   CORRECTION_SHAPES,
+  DERIVED_FIELDS,
   confirmation,
   countryAdmitted,
   duplicateOf,
@@ -255,6 +256,7 @@ function Finding({
   blocker,
   answer,
   onAnswer,
+  printed,
 }: {
   /** Where a flagged field's glyph goes. */
   id: string;
@@ -262,11 +264,56 @@ function Finding({
   blocker: ConfirmationBlocker;
   answer: FindingAnswer | undefined;
   onAnswer(answer: FindingAnswer): void;
+  /** The value printed for a field the catalogue works out itself, as
+   * shown; null for any other finding. */
+  printed: string | null;
 }) {
   const group = useId();
   const answered = resolutionOf(blocker, answer) !== null;
   const candidates = blocker.candidates ?? [];
   const current = answer ?? { action: "attest", value: "", note: "" };
+  // A figure the catalogue works out is saved as worked out whatever is
+  // answered: the finding says so, and only takes the reason it is accepted.
+  const worked =
+    blocker.field !== null && blocker.field !== undefined
+      ? DERIVED_FIELDS.has(blocker.field as ReadingField)
+      : false;
+  if (worked)
+    return (
+      <li
+        id={id}
+        tabIndex={-1}
+        className="ledger-finding grid scroll-m-3 gap-2 rounded-md bg-muted p-3"
+        data-answered={answered || undefined}
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <Icon
+            name={answered ? "check" : "alert"}
+            size="sm"
+            className={answered ? "text-success" : "text-warning"}
+          />
+          <span className="font-medium">{reasonLabel(t, blocker.reason)}</span>
+          {blocker.field && <Badge>{fieldLabel(t, blocker.field)}</Badge>}
+        </div>
+        <p className="ledger-finding-worked text-sm">
+          {t("desktop.ledger.documents.worked_out", {
+            field: fieldLabel(t, blocker.field!),
+            printed: printed ?? "—",
+          })}
+        </p>
+        <Input
+          controlSize="sm"
+          className="ledger-finding-note"
+          aria-label={t("desktop.ledger.documents.why_right")}
+          placeholder={t("desktop.ledger.documents.why_right")}
+          maxLength={2048}
+          value={answer?.action === "attest" ? answer.note : ""}
+          onChange={(event) =>
+            onAnswer({ action: "attest", value: "", note: event.target.value })
+          }
+        />
+      </li>
+    );
   return (
     <li
       id={id}
@@ -1079,6 +1126,16 @@ export function DraftReview({
                 t={t}
                 blocker={blocker}
                 answer={answers[blocker.blocker_id]}
+                printed={
+                  blocker.field &&
+                  DERIVED_FIELDS.has(blocker.field as ReadingField)
+                    ? shownValue(
+                        locale,
+                        blocker.field as ReadingField,
+                        readValue(draft, blocker.field as ReadingField),
+                      )
+                    : null
+                }
                 onAnswer={(answer) =>
                   setAnswers((held) => ({
                     ...held,

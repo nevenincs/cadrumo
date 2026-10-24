@@ -244,18 +244,16 @@ test("findings are answered by choosing a reading or attesting with a reason", a
   await expect(identity).toHaveAttribute("data-answered", "true");
 
   const closure = findings.nth(1);
-  // A reading to choose from exists only where the reader offered some.
-  await expect(
-    closure.getByRole("radio", {
-      name: label("desktop.ledger.documents.action.choose_candidate"),
+  // The total is worked out from the base and the IVA whatever the ticket
+  // prints: the finding says what is saved, and asks only for the reason
+  // it is accepted.
+  await expect(closure.locator(".ledger-finding-worked")).toHaveText(
+    label("desktop.ledger.documents.worked_out", {
+      field: label("desktop.ledger.documents.field.grand_total"),
+      printed: "58.40",
     }),
-  ).toBeDisabled();
-  await closure
-    .getByRole("radio", {
-      name: label("desktop.ledger.documents.action.attest"),
-    })
-    .click();
-  // An attestation needs its reason.
+  );
+  await expect(closure.getByRole("radio")).toHaveCount(0);
   await expect(closure).not.toHaveAttribute("data-answered", "true");
   await closure
     .getByLabel(label("desktop.ledger.documents.why_right"))
@@ -702,12 +700,6 @@ test("the ticket stays on screen beside the question it is needed for, and after
     .nth(0)
     .getByRole("radio", { name: /B87000001/ })
     .check();
-  await findings
-    .nth(1)
-    .getByRole("radio", {
-      name: label("desktop.ledger.documents.action.attest"),
-    })
-    .click();
   await findings
     .nth(1)
     .getByLabel(label("desktop.ledger.documents.why_right"))

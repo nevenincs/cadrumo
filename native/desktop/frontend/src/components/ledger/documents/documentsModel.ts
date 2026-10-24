@@ -277,6 +277,13 @@ export function correctionValues(
 // ---- Findings -------------------------------------------------------------------
 
 /** How the person answers one finding, as far as typed. */
+/** The reading fields the catalogue works out rather than keeps as read:
+ * an invoice's total is its base plus its IVA, any recargo and any suplido,
+ * whatever the document prints. */
+export const DERIVED_FIELDS: ReadonlySet<ReadingField> = new Set<ReadingField>([
+  "grand_total",
+]);
+
 export type FindingAnswer = {
   action: FindingResolutionAction;
   value: string;
