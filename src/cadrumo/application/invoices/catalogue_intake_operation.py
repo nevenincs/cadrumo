@@ -50,6 +50,12 @@ def _definition(
         refusal_detail_codes=frozenset({INVOICE_WIZARD_VALIDATION_REFUSAL_CODE})
         if definition_id == INVOICE_WIZARD_OPERATION_DEFINITION_ID
         else frozenset(),
+        # A book only the column-naming model reads refuses with the reader
+        # verdict naming the local AI setup; a frontend in another process
+        # learns it only from the recorded detail. Its context is the scrubbed
+        # envelope context: file names, header names and row numbers, never
+        # cell values.
+        public_error_detail=definition_id == INVOICE_IMPORT_OPERATION_DEFINITION_ID,
     )
 
 
