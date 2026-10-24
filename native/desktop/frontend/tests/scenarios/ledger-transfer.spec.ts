@@ -157,6 +157,8 @@ test("a bank statement is previewed per file, applied as previewed, and a change
   const duplicates = fileRow(dialog, STUDIO).getByRole("button", {
     name: label("desktop.ledger.import.duplicates_chip", { count: 2 }),
   });
+  // Marked with the copy glyph the grid and the strip use, not readiness's.
+  await expect(duplicates.locator("[data-icon=copy]")).toHaveCount(1);
   await duplicates.click();
   await expect(
     target.getByRole("dialog", {

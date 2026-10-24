@@ -248,6 +248,7 @@ export function Icon({
   return (
     <Glyph
       data-slot="icon"
+      data-icon={name}
       aria-hidden="true"
       className={cn("shrink-0", SIZES[size], className)}
       {...props}

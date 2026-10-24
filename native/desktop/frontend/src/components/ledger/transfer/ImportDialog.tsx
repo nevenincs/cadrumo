@@ -284,7 +284,9 @@ function DuplicatesChip({
           aria-label={name}
           data-count={count}
         >
-          <Icon name="alert" size="xs" className="text-warning" />
+          {/* The grid and the strip mark a likely duplicate with the copy
+              glyph; the warning glyph is readiness's. */}
+          <Icon name="copy" size="xs" className="text-warning" />
           <span aria-hidden="true">{shown}</span>
         </Button>
       </PopoverTrigger>
