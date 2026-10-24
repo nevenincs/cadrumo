@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:0b92e75bb982888bf45cf87829e0761ef1187daab3a34e27b9806da73bb30822'
+body_hash: 'sha256:b199bf83b109e8e5b8bfda300d909ed2270c0eef379c71d12b31ee6d7b07aaf4'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -235,6 +235,62 @@ related:
 - `S12` `verify:` `related operation suites (188), caller suites (137)` -> `pass`
 - `S12` `verify:` `ruff, ty, lint-imports, check-operation-contract-manifest` -> `pass`
 - `S12` `verify:` `frontend tsc, eslint, provisioning-recovery (4), ledger-provisioning (6), ledger-documents (13)` -> `pass`
+- `S07` `M` `src/cadrumo/application/dependency_contracts.py`
+- `S07` `M` `src/cadrumo/application/dependency_wording.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_component_setup_rendering.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/provision_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/status_rendering.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/errors.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_component_setup_refusal_text.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_setup_offer.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/setup/door.py`
+- `S07` `A` `src/cadrumo/entrypoints/tui/setup/offer.py`
+- `S07` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py`
+- `S07` `M` `dev/locales/desktop_chrome.py`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/transfer/importModel.ts`
+- `S07` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S07` `M` `native/desktop/frontend/src/shell/provisioningRecovery.ts`
+- `S07` `M` `native/desktop/frontend/tests/provisioning-recovery.spec.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/ledger-provisioning.spec.ts`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_batch.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_write.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/tests/evidence_files_fixtures.py`
+- `S07` `A` `src/cadrumo/entrypoints/tui/ledger/tests/setup_status_fixtures.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_batch.py`
+- `S07` `M` `src/cadrumo/locales/ca/common.yml`
+- `S07` `M` `src/cadrumo/locales/en/common.yml`
+- `S07` `M` `src/cadrumo/locales/es/common.yml`
+- `S07` `M` `src/cadrumo/locales/hu/common.yml`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/evidence.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_records.py`
+- `S07` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_draft_setup_offer.py`
+- `S07` `verify:` `TUI batch and tools (80), draft and ingestion (23), modal setup offer and CLI suites` -> `pass`
+- `S07` `verify:` `ruff, ty, pyrefly, lint-imports` -> `pass`
+- `S08` `M` `native/desktop/frontend/src/components/setup/SetupPrompt.tsx`
+- `S08` `M` `native/desktop/frontend/tests/scenarios/ledger-provisioning.spec.ts`
+- `S08` `M` `native/desktop/frontend/tests/scenarios/setup.spec.ts`
+- `S08` `M` `dev/locales/desktop_chrome.py`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/transfer/importModel.ts`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/transfer/transferWords.ts`
+- `S08` `M` `native/desktop/frontend/tests/scenarios/ledger-provisioning.spec.ts`
+- `S08` `M` `src/cadrumo/locales/ca/common.yml`
+- `S08` `M` `src/cadrumo/locales/en/common.yml`
+- `S08` `M` `src/cadrumo/locales/es/common.yml`
+- `S08` `M` `src/cadrumo/locales/hu/common.yml`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/transfer/importModel.ts`
+- `S08` `M` `native/desktop/frontend/src/shell/provisioningRecovery.ts`
+- `S08` `verify:` `provisioning-recovery unit (5), ledger-provisioning and ledger-transfer scenarios (20), setup.spec rerun (3)` -> `pass`
+- `S08` `verify:` `tsc, eslint, prettier on touched files` -> `pass`
+- `S06` `M` `src/cadrumo/entrypoints/cli/ledger_evidence_batch_commands.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_batch_cli.py`
+- `S06` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S06` `M` `src/cadrumo/locales/en/cli.yml`
+- `S06` `M` `src/cadrumo/locales/es/cli.yml`
+- `S06` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S06` `verify:` `CLI batch suites (10, 8)` -> `pass`
 
 ## Notes
 
@@ -250,3 +306,6 @@ related:
 - `S13` Supply-nature proposals have no production caller `(propose_supply_nature` is never requested), so their verdict is kept through the port but reaches no surface; accepted as a gap until a caller asks for a proposal
 - `S09` Gate lives in entrypoints/tests because it drives composed consumers; scope stops at setup's own traffic, `cadrumo_agent_service,` the desktop, and dispatches reached only through self attributes, dynamic imports or mapping lookups
 - `S12` Notice test lives under `cadrumo_runtime` host tests; ledger.evidence.batch is not opted in because it pauses with the verdict in its successful result; Readers tab now offers setup per role recovery action
+- `S07` review corrections batch-pause-not-routed, setup-offered-when-blocked and tui-label-fallback-no-action: setup is offered only when the item's quick-status row can act; a blocked row shows its own sentence
+- `S08` review corrections batch-pause-not-routed and setup-offered-when-blocked, plus the `reader_unavailable` import refusal; the blocked-row prompt shows only Close
+- `S06` review correction batch-cli-raw-facts: batch-pause text prints the local AI sentence and the row-gated setup line, JSON unchanged
