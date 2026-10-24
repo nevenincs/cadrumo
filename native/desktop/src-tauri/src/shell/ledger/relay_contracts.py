@@ -1,7 +1,8 @@
 """Produce the Rust test input that pins the ledger host to the shipped contracts.
 
 It lists every ``ledger.*`` definition in the shipped operation contract
-manifest, with whether it may write and whether it pauses for a review. The
+manifest, with whether it may write, whether it pauses for a review and which
+form its subject takes. The
 request bounds are the native relay's own constants, which the host reads
 directly. It also checks that the window's mirror of the admitted list,
 ``LEDGER_DEFINITIONS`` in the frontend's ``src/shell/ledger.ts``, names the
@@ -32,9 +33,11 @@ def documents() -> dict[str, object]:
         if not contract.definition_id.startswith("ledger."):
             continue
         effects = {effect.value for effect in contract.permitted_effects}
+        subject = contract.subject_reference
         operations[contract.definition_id] = {
             "may_write": bool(effects & _WRITING_EFFECTS),
             "review": any(kind.value == "review" for kind in contract.interaction_kinds),
+            "subject": {"kind": subject.kind.value, "path": list(subject.payload_path)},
         }
     return {"operations": operations}
 

@@ -2,8 +2,8 @@
 //! operations, over the held person's relay. The window names one admitted
 //! definition and a JSON object; the runtime decodes it against the
 //! definition's registered contract, which this host does not restate. The
-//! host fills the profile, keeps paths and secrets away from the window, and
-//! bounds the request. It keeps no ledger data: a result is passed on and
+//! host fills the profile and the subject the contract declares, keeps paths
+//! and secrets away from the window, and bounds the request. It keeps no ledger data: a result is passed on and
 //! dropped. It remembers only which operations this window submitted, so the
 //! window can follow, answer and cancel those and no other.
 //!
@@ -17,7 +17,7 @@ use super::relay::{self, Failure, Result, Wiped, lock, protocol};
 use super::settle::{self, Decision, Operations, Outcome, ReviewDocument, Tracked};
 use super::user_profile::ProfileHost;
 use crate::agent::person::{HeldPerson, PersonEvent};
-use admitted::{Definition, admitted};
+use admitted::{Definition, Subject, admitted};
 use files::{Files, Pick, Picks, Purpose};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
@@ -223,6 +223,28 @@ const RESULT_PATH_KEYS: [&str; 10] = [
     "verify_source",
 ];
 
+/// The subject the definition's contract declares for this request: the
+/// profile, or the value of the request field the contract names.
+fn subject(definition: Definition, profile: &str, payload: &Map<String, Value>) -> Result<String> {
+    let Subject::Field(path) = definition.subject else {
+        return Ok(relay::subject(profile));
+    };
+    let (last, outer) = path.split_last().ok_or_else(protocol)?;
+    let mut fields = payload;
+    for name in outer {
+        fields = fields
+            .get(*name)
+            .and_then(Value::as_object)
+            .ok_or_else(|| failure("invalid"))?;
+    }
+    fields
+        .get(*last)
+        .and_then(Value::as_str)
+        .filter(|text| !text.trim().is_empty())
+        .map(str::to_owned)
+        .ok_or_else(|| failure("invalid"))
+}
+
 /// Submits a payload the host already admitted, for the profile of the held
 /// session `identity` names, and follows it. `events` must be subscribed
 /// before this is called. The request's text is overwritten once it is sent,
@@ -240,14 +262,15 @@ async fn submit_on(
         .as_str()
         .ok_or_else(protocol)?
         .to_owned();
-    payload
+    let fields = payload
         .0
         .as_object_mut()
-        .ok_or_else(|| failure("invalid"))?
-        .insert("profile_id".into(), json!(profile));
-    let subject = relay::subject(&profile);
+        .ok_or_else(|| failure("invalid"))?;
+    fields.insert("profile_id".into(), json!(profile));
+    let subject = subject(definition, &profile, fields)?;
     let request = relay::submission(definition.id, &subject, std::mem::take(&mut payload.0));
     relay::admit_size(&request.0)?;
+    operations.room(&identity)?;
     let operation = relay::submit_wiping(person, request, definition.mutation()).await?;
     let tracked = Tracked::new(operation, definition.settling(), subject, identity, folders);
     operations.track(tracked.clone());
@@ -436,6 +459,7 @@ impl LedgerHost {
         let person = settle::holding(&self.profile, &tracked).await?;
         let mut events = self.profile.sign_in().person_events();
         settle::answer_on(
+            self.profile.as_ref(),
             &self.operations,
             &tracked,
             &person,

@@ -381,6 +381,7 @@ async fn submit_on(
     subject: String,
     request: Wiped,
 ) -> Result<Outcome> {
+    operations.room(&identity)?;
     let operation = relay::submit_wiping(person, request, definition.mutation()).await?;
     let tracked = Tracked::new(
         operation,
@@ -576,6 +577,7 @@ impl ModeloHost {
         let person = settle::holding(&self.profile, &tracked).await?;
         let mut events = self.profile.sign_in().person_events();
         settle::answer_on(
+            self.profile.as_ref(),
             &self.operations,
             &tracked,
             &person,

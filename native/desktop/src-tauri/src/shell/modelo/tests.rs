@@ -642,4 +642,71 @@ mod relayed {
         assert_eq!(refused.reason.as_deref(), Some("subject_busy"));
         assert!(operations.find(OPERATION).is_err());
     }
+
+    #[tokio::test]
+    async fn a_submission_the_window_could_not_follow_is_refused_before_it_is_sent() {
+        // The relay answers nothing: a request that reached it would be lost.
+        let held = holder(|_| Vec::new());
+        let operations = Operations::default();
+        for at in 0..settle::FOLLOWED_CEILING {
+            let write = Tracked::new(
+                format!("{at:064x}"),
+                definition("modelo.work.calculate").settling(),
+                hex('a'),
+                held.identity.clone(),
+                Vec::new(),
+            );
+            operations.track(write.clone());
+            if at % 2 == 0 {
+                write.record(&Ok(Outcome::Review {
+                    operation_id: write.operation.clone(),
+                    revision: 2,
+                    cancellable: true,
+                }));
+            }
+        }
+        let mut events = held.events.subscribe();
+        let export = definition("modelo.export");
+        let (request, subject) = plain_submission(
+            export,
+            PROFILE,
+            Wiped(json!({"calculation_revision_id":"r-1"})),
+            Some(&hex('c')),
+        )
+        .unwrap();
+        let plain = submit_on(
+            &operations,
+            &held.person,
+            held.identity.clone(),
+            &mut events,
+            export,
+            subject,
+            request,
+        )
+        .await
+        .unwrap_err();
+        let body = InvokeBody::Raw(edit_input(PROFILE, &hex('a')).into_bytes());
+        let (input, work_unit) = financial_body(&body, PROFILE).unwrap();
+        let preflight = definition("modelo.edit.preflight");
+        let request = financial_submission(preflight.id, &work_unit, input).unwrap();
+        let financial = submit_on(
+            &operations,
+            &held.person,
+            held.identity.clone(),
+            &mut events,
+            preflight,
+            work_unit,
+            request,
+        )
+        .await
+        .unwrap_err();
+        for refused in [plain, financial] {
+            assert_eq!((refused.code, refused.operation_id), ("unavailable", None));
+        }
+        assert!(
+            held.person.lock().unwrap().is_open(),
+            "nothing reached the relay"
+        );
+        assert!(operations.find(&format!("{:064x}", 0)).is_ok());
+    }
 }

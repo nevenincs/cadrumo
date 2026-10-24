@@ -270,6 +270,46 @@ fn dialog_words_are_bounded_and_a_suggested_name_names_no_folder() {
     }
 }
 
+#[test]
+fn a_classification_review_holds_its_movement_and_every_other_definition_the_profile() {
+    let profile = "11111111-1111-4111-8111-111111111111";
+    let review = definition("ledger.classify.review");
+    assert_eq!(
+        subject(
+            review,
+            profile,
+            &object(json!({"transaction_id":"ab12cd34"}))
+        )
+        .unwrap(),
+        "ab12cd34"
+    );
+    for refused in [
+        json!({}),
+        json!({"transaction_id":""}),
+        json!({"transaction_id":7}),
+    ] {
+        assert_eq!(
+            subject(review, profile, &object(refused.clone()))
+                .unwrap_err()
+                .code,
+            "invalid",
+            "{refused}"
+        );
+    }
+    for id in ["ledger.split.review", "ledger.list", "ledger.update"] {
+        assert_eq!(
+            subject(
+                definition(id),
+                profile,
+                &object(json!({"transaction_id":"ab12cd34"}))
+            )
+            .unwrap(),
+            relay::subject(profile),
+            "{id}"
+        );
+    }
+}
+
 #[cfg(windows)]
 mod relayed {
     use super::super::super::scripted::{OPERATION, PROFILE, holder, observed, step};
@@ -277,6 +317,14 @@ mod relayed {
 
     fn subject() -> String {
         relay::subject(PROFILE)
+    }
+
+    /// The session the window still holds.
+    struct Held;
+    impl settle::Session for Held {
+        async fn holds(&self, _person: &HeldPerson) -> Result<()> {
+            Ok(())
+        }
     }
 
     #[tokio::test]
@@ -557,6 +605,37 @@ mod relayed {
     }
 
     #[tokio::test]
+    async fn a_submission_the_window_could_not_follow_is_refused_before_it_is_sent() {
+        // The relay answers nothing: a request that reached it would be lost.
+        let held = holder(|_| Vec::new());
+        let operations = Operations::default();
+        for at in 0..settle::FOLLOWED_CEILING {
+            operations.track(Tracked::new(
+                format!("{at:064x}"),
+                definition("ledger.update").settling(),
+                subject(),
+                held.identity.clone(),
+                Vec::new(),
+            ));
+        }
+        let mut events = held.events.subscribe();
+        let refused = submit_on(
+            &operations,
+            &held.person,
+            held.identity.clone(),
+            &mut events,
+            definition("ledger.add"),
+            Wiped(json!({})),
+            Vec::new(),
+        )
+        .await
+        .unwrap_err();
+        assert_eq!((refused.code, refused.operation_id), ("unavailable", None));
+        assert!(lock(&held.person).is_open(), "nothing reached the relay");
+        assert!(operations.find(&format!("{:064x}", 0)).is_ok());
+    }
+
+    #[tokio::test]
     async fn a_write_whose_submission_reply_was_lost_is_unknown_and_a_read_stays_refused() {
         for (id, code, reason) in [
             ("ledger.add", "unknown", None),
@@ -621,7 +700,11 @@ mod relayed {
             vec![
                 step(
                     "operation_submit",
-                    json!([["definition_id", "ledger.classify.review"]]),
+                    json!([
+                        ["definition_id", "ledger.classify.review"],
+                        ["subject_ref", "t1"],
+                        ["payload.transaction_id", "t1"]
+                    ]),
                     json!({"kind":"operation_submitted","operation_id":OPERATION}),
                     false,
                 ),
@@ -630,7 +713,7 @@ mod relayed {
                     json!([]),
                     observed(
                         "ledger.classify.review",
-                        &subject(),
+                        "t1",
                         "running",
                         json!({"pending_interaction":{"disposition":"review_available"},"revision":5}),
                     ),
@@ -658,7 +741,7 @@ mod relayed {
                     json!([]),
                     observed(
                         "ledger.classify.review",
-                        &subject(),
+                        "t1",
                         "terminal",
                         json!({"terminal_condition":"succeeded","effect":"updated","revision":7}),
                     ),
@@ -691,6 +774,7 @@ mod relayed {
         // Nothing was shown yet: no answer is sent.
         assert_eq!(
             settle::answer_on(
+                &Held,
                 &operations,
                 &tracked,
                 &held.person,
@@ -712,6 +796,7 @@ mod relayed {
         // Another digest than the one shown is refused here, without an exchange.
         assert_eq!(
             settle::answer_on(
+                &Held,
                 &operations,
                 &tracked,
                 &held.person,
@@ -725,6 +810,7 @@ mod relayed {
             "review_changed"
         );
         let settled = settle::answer_on(
+            &Held,
             &operations,
             &tracked,
             &held.person,

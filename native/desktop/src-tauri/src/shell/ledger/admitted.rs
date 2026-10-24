@@ -2,6 +2,9 @@
 //! These are the `ledger.*` operations reached by `aeat app ledger` and by
 //! the TUI ledger workspace. Any other definition is refused before it
 //! reaches the relay.
+//!
+//! Each one carries where its subject comes from, read from the registered
+//! contract by `relay_contracts.py` and pinned by the tests below.
 
 use super::super::settle::Settling;
 
@@ -16,10 +19,20 @@ pub(super) enum Kind {
     Review,
 }
 
+/// The form a definition's subject reference takes in its contract.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Subject {
+    /// The signed-in profile.
+    Profile,
+    /// The value of one request field, outermost name first.
+    Field(&'static [&'static str]),
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Definition {
     pub(super) id: &'static str,
     pub(super) kind: Kind,
+    pub(super) subject: Subject,
 }
 impl Definition {
     pub(super) fn mutation(self) -> bool {
@@ -35,6 +48,10 @@ impl Definition {
 }
 
 use Kind::{Read, Review, Write};
+
+/// The definitions whose subject is not the profile: a classification review
+/// holds only the movement it asks about.
+const FIELD_SUBJECTS: [(&str, &[&str]); 1] = [("ledger.classify.review", &["transaction_id"])];
 
 const ADMITTED: [(&str, Kind); 88] = [
     ("ledger.actividad-asset.claim", Write),
@@ -132,9 +149,17 @@ pub(super) fn admitted(id: &str) -> Option<Definition> {
     ADMITTED
         .binary_search_by(|(admitted, _)| admitted.cmp(&id))
         .ok()
-        .map(|at| Definition {
-            id: ADMITTED[at].0,
-            kind: ADMITTED[at].1,
+        .map(|at| {
+            let id = ADMITTED[at].0;
+            let subject = FIELD_SUBJECTS
+                .iter()
+                .find(|(named, _)| *named == id)
+                .map_or(Subject::Profile, |(_, path)| Subject::Field(path));
+            Definition {
+                id,
+                kind: ADMITTED[at].1,
+                subject,
+            }
         })
 }
 
@@ -181,7 +206,22 @@ mod tests {
                 (true, false) => panic!("{id} pauses for a review but writes nothing"),
             };
             assert_eq!(kind, expected, "{id}");
+            let (subject, path): (&str, &[&str]) = match super::admitted(id).unwrap().subject {
+                Subject::Profile => ("profile", &[]),
+                Subject::Field(path) => ("payload_field", path),
+            };
+            assert_eq!(
+                facts["subject"],
+                serde_json::json!({"kind": subject, "path": path}),
+                "{id}"
+            );
         }
+        assert!(
+            FIELD_SUBJECTS
+                .iter()
+                .all(|(id, _)| ADMITTED.iter().any(|(admitted, _)| admitted == id)),
+            "a field subject names an admitted definition"
+        );
     }
 
     #[test]
@@ -189,6 +229,11 @@ mod tests {
         let found = admitted("ledger.classify.review").unwrap();
         assert_eq!(found.kind, Review);
         assert!(found.mutation());
+        assert_eq!(found.subject, Subject::Field(&["transaction_id"]));
+        assert_eq!(
+            admitted("ledger.split.review").unwrap().subject,
+            Subject::Profile
+        );
         assert!(!admitted("ledger.list").unwrap().mutation());
         for refused in [
             "",

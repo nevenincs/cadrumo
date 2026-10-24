@@ -1,7 +1,7 @@
 //! Following an operation a window submitted over the held person's relay,
 //! until it settles or waits on the person: the outcome the window is told,
 //! the review it reads and answers by digest, cancellation at an observed
-//! revision, and the bounded record of which operations this window may still
+//! revision, and the record of which operations this window may still
 //! follow. Shared by the host families; no family's meaning lives here: a
 //! caller names the definition, says whether it may write, which result
 //! fields name a file, and which folders its payload put files from.
@@ -10,11 +10,27 @@ use super::user_profile::ProfileHost;
 use crate::agent::person::{HeldPerson, PersonEvent};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use std::{collections::VecDeque, sync::Mutex};
+use std::{
+    collections::VecDeque,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicU8, Ordering},
+    },
+};
 use tokio::sync::broadcast::Receiver;
 
-/// How many submitted operations the window may still follow.
+/// How many settled operations the window keeps after it has their outcome.
+/// One it can still answer or observe is never dropped for room.
 const TRACKED_LIMIT: usize = 64;
+/// How many operations the window follows at all. At the ceiling a settled
+/// one makes room first, then a read still running; a write or a review
+/// waiting for its answer never does, and a new submission is refused.
+pub(super) const FOLLOWED_CEILING: usize = 4 * TRACKED_LIMIT;
+
+/// Where following an operation stands for the window.
+const OPEN: u8 = 0;
+const REVIEW: u8 = 1;
+const DONE: u8 = 2;
 
 fn failure(code: &'static str) -> Failure {
     Failure::new(code)
@@ -143,6 +159,12 @@ pub(super) struct Tracked {
     pub(super) shown: Option<Shown>,
     /// The folders of the files the host put in its payload.
     folders: Vec<String>,
+    /// Where following the operation stands: still open, waiting at a
+    /// review, or done, when the window has all it can learn of it because
+    /// it settled or was a read whose outcome was lost and is read again
+    /// instead. Shared by every copy of this record, so a copy that follows
+    /// the operation tells the window's record.
+    state: Arc<AtomicU8>,
 }
 impl Tracked {
     pub(super) fn new(
@@ -159,7 +181,27 @@ impl Tracked {
             identity,
             shown: None,
             folders,
+            state: Arc::new(AtomicU8::new(OPEN)),
         }
+    }
+    /// Notes what following the operation answered. A review, a running
+    /// operation and a write of unknown outcome stay to be followed.
+    pub(super) fn record(&self, followed: &Result<Outcome>) {
+        let state = match followed {
+            Ok(Outcome::Settled { .. } | Outcome::Refused { .. }) => DONE,
+            Ok(Outcome::Review { .. }) => REVIEW,
+            Ok(Outcome::Running { .. }) => OPEN,
+            Err(_) if self.definition.mutation => OPEN,
+            Err(_) => DONE,
+        };
+        self.state.store(state, Ordering::Release);
+    }
+    fn is_done(&self) -> bool {
+        self.state.load(Ordering::Acquire) == DONE
+    }
+    /// A read still running: one the window can read again.
+    fn is_open_read(&self) -> bool {
+        !self.definition.mutation && self.state.load(Ordering::Acquire) == OPEN
     }
     fn relayed<'a>(&'a self, person: &'a HeldPerson) -> Relayed<'a> {
         Relayed {
@@ -179,12 +221,38 @@ impl Tracked {
 #[derive(Default)]
 pub(super) struct Operations(Mutex<VecDeque<Tracked>>);
 impl Operations {
+    /// Makes room for one more operation of the session `identity`, before
+    /// it is submitted: at the ceiling the oldest settled operation goes,
+    /// else the oldest read still running. Refuses when every one left is a
+    /// write or a review the window must still be able to follow.
+    pub(super) fn room(&self, identity: &Value) -> Result<()> {
+        let mut operations = lock(&self.0);
+        operations.retain(|other| &other.identity == identity);
+        if operations.len() < FOLLOWED_CEILING {
+            return Ok(());
+        }
+        let oldest = operations
+            .iter()
+            .position(Tracked::is_done)
+            .or_else(|| operations.iter().position(Tracked::is_open_read))
+            .ok_or_else(|| failure("unavailable"))?;
+        operations.remove(oldest);
+        Ok(())
+    }
     pub(super) fn track(&self, tracked: Tracked) {
         let mut operations = lock(&self.0);
         // A new session's window follows none of the previous session's.
         operations.retain(|other| other.identity == tracked.identity);
-        if operations.len() >= TRACKED_LIMIT {
-            operations.pop_front();
+        // Only an operation the window has all of makes room, oldest first:
+        // reads never push out a review waiting for its answer. Room is made
+        // before the new one, which settles only once it has been followed.
+        let mut done = operations.iter().filter(|other| other.is_done()).count();
+        while done >= TRACKED_LIMIT {
+            let Some(oldest) = operations.iter().position(Tracked::is_done) else {
+                break;
+            };
+            operations.remove(oldest);
+            done -= 1;
         }
         operations.push_back(tracked);
     }
@@ -384,7 +452,9 @@ pub(super) async fn settle(
     })
     .await
     .unwrap_or_else(|_| Err(failure(if mutation { "unknown" } else { "unavailable" })));
-    settled.map_err(|failure| attributed(failure, tracked))
+    let settled = settled.map_err(|failure| attributed(failure, tracked));
+    tracked.record(&settled);
+    settled
 }
 
 /// Where a tracked operation stands now, without waiting.
@@ -394,7 +464,9 @@ pub(super) async fn observe_on(tracked: &Tracked, person: &HeldPerson) -> Result
         Ok(p) => outcome(&relayed, &p, tracked).await,
         Err(failure) => Err(failure),
     };
-    observed.map_err(|failure| attributed(failure, tracked))
+    let observed = observed.map_err(|failure| attributed(failure, tracked));
+    tracked.record(&observed);
+    observed
 }
 
 fn review_refusal(reply: &Value) -> Failure {
@@ -455,8 +527,11 @@ pub(super) async fn review_on(
 }
 
 /// Answers the review the window read, bound to the digest it showed. The
-/// relay reads the review again and refuses an answer to a changed one.
+/// relay reads the review again and refuses an answer to a changed one. As
+/// for a submission, an account that changed while the answer settled leaves
+/// it unknown: the answer may have been taken.
 pub(super) async fn answer_on(
+    session: &impl Session,
     operations: &Operations,
     tracked: &Tracked,
     person: &HeldPerson,
@@ -495,7 +570,8 @@ pub(super) async fn answer_on(
     if reply["kind"] != "operation_responded" || reply["operation_id"] != tracked.operation {
         return Err(unknown());
     }
-    settle(events, tracked, person).await
+    let outcome = settle(events, tracked, person).await?;
+    held_by(session, person, outcome, tracked.definition.mutation).await
 }
 
 /// Asks the runtime to cancel at the revision the window observed, then
@@ -546,6 +622,18 @@ pub(super) async fn still_holding(profile: &ProfileHost, person: &HeldPerson) ->
     Ok(())
 }
 
+/// The window's hold on its signed-in session, which a settled outcome is
+/// checked against before the window is told it.
+pub(super) trait Session {
+    /// Fails when the window no longer holds `person`'s session.
+    fn holds(&self, person: &HeldPerson) -> impl Future<Output = Result<()>> + Send;
+}
+impl Session for ProfileHost {
+    fn holds(&self, person: &HeldPerson) -> impl Future<Output = Result<()>> + Send {
+        still_holding(self, person)
+    }
+}
+
 /// The outcome of an operation submitted for `person`, while that is still
 /// the session the window holds. An account that changed after a write was
 /// sent leaves the write unknown, never "not sent": it may have committed.
@@ -555,7 +643,15 @@ pub(super) async fn still_held(
     outcome: Outcome,
     mutation: bool,
 ) -> Result<Outcome> {
-    if let Err(changed) = still_holding(profile, person).await {
+    held_by(profile, person, outcome, mutation).await
+}
+async fn held_by(
+    session: &impl Session,
+    person: &HeldPerson,
+    outcome: Outcome,
+    mutation: bool,
+) -> Result<Outcome> {
+    if let Err(changed) = session.holds(person).await {
         if !mutation {
             return Err(changed);
         }
@@ -700,16 +796,185 @@ mod tests {
             operations.find("a").is_err(),
             "a new session forgets the last"
         );
-        for at in 0..TRACKED_LIMIT {
-            operations.track(tracked(&format!("n{at}"), "two"));
+        operations.clear();
+        assert!(operations.find("b").is_err());
+    }
+
+    fn settled(operation: &str) -> Result<Outcome> {
+        Ok(Outcome::Settled {
+            operation_id: operation.into(),
+            revision: 2,
+            result: json!({}),
+        })
+    }
+
+    #[test]
+    fn reads_never_push_out_an_operation_the_window_can_still_answer_or_observe() {
+        let operations = Operations::default();
+        let identity = json!({"profile_id":"p","session_id":"one"});
+        let track = |operation: &str, definition: Settling| {
+            let tracked = Tracked::new(
+                operation.into(),
+                definition,
+                "profile:p".into(),
+                identity.clone(),
+                Vec::new(),
+            );
+            operations.track(tracked.clone());
+            tracked
+        };
+        let review = track("review", REVIEWED);
+        review.record(&Ok(Outcome::Review {
+            operation_id: "review".into(),
+            revision: 2,
+            cancellable: true,
+        }));
+        let unknown = track("unknown", REVIEWED);
+        unknown.record(&Err(Failure::new("unknown")));
+        track("running", READ);
+        for at in 0..4 * TRACKED_LIMIT {
+            let read = track(&format!("read{at}"), READ);
+            read.record(&settled(&read.operation));
+        }
+        for kept in ["review", "unknown", "running"] {
+            assert!(operations.find(kept).is_ok(), "{kept} is still followed");
         }
         assert!(
-            operations.find("b").is_err(),
-            "the oldest is forgotten first"
+            operations.find("read0").is_err(),
+            "the oldest settled read makes room first"
         );
-        assert!(operations.find(&format!("n{}", TRACKED_LIMIT - 1)).is_ok());
-        operations.clear();
-        assert!(operations.find("n0").is_err());
+        let newest = format!("read{}", 4 * TRACKED_LIMIT - 1);
+        assert!(operations.find(&newest).is_ok());
+        let kept = lock(&operations.0).len();
+        assert_eq!(
+            kept,
+            TRACKED_LIMIT + 3,
+            "settled ones stay within the bound"
+        );
+        // A copy that followed the operation tells the window's record.
+        let found = operations.find("running").unwrap();
+        found.record(&Err(Failure::new("unavailable")));
+        let review = operations.find("review").unwrap();
+        review.record(&settled("review"));
+        track("last", READ).record(&settled("last"));
+        assert!(
+            operations.find("running").is_err(),
+            "a lost read is read again"
+        );
+        assert!(operations.find("unknown").is_ok());
+        assert_eq!(lock(&operations.0).len(), TRACKED_LIMIT + 1);
+    }
+
+    /// A window following `operations` of one session, as `(id, definition,
+    /// what following it answered)`.
+    fn following(
+        operations: &[(String, Settling, Option<Result<Outcome>>)],
+    ) -> (Operations, Value) {
+        let identity = json!({"profile_id":"p","session_id":"one"});
+        let window = Operations::default();
+        for (operation, definition, followed) in operations {
+            let tracked = Tracked::new(
+                operation.clone(),
+                *definition,
+                "profile:p".into(),
+                identity.clone(),
+                Vec::new(),
+            );
+            window.track(tracked.clone());
+            if let Some(followed) = followed {
+                tracked.record(followed);
+            }
+        }
+        (window, identity)
+    }
+    fn waiting(operation: &str) -> Option<Result<Outcome>> {
+        Some(Ok(Outcome::Review {
+            operation_id: operation.into(),
+            revision: 2,
+            cancellable: true,
+        }))
+    }
+
+    #[test]
+    fn at_the_ceiling_a_settled_operation_makes_room_first() {
+        let mut operations: Vec<_> = (0..FOLLOWED_CEILING - 2)
+            .map(|at| (format!("write{at}"), REVIEWED, None))
+            .collect();
+        operations.insert(1, ("read".into(), READ, None));
+        operations.insert(2, ("settled".into(), READ, Some(settled("settled"))));
+        let (window, identity) = following(&operations);
+        assert_eq!(lock(&window.0).len(), FOLLOWED_CEILING);
+        window.room(&identity).unwrap();
+        assert!(window.find("settled").is_err());
+        assert!(
+            window.find("read").is_ok(),
+            "a running read waits for no settled one"
+        );
+        assert_eq!(lock(&window.0).len(), FOLLOWED_CEILING - 1);
+    }
+
+    #[test]
+    fn at_the_ceiling_with_nothing_settled_the_oldest_running_read_makes_room() {
+        let mut operations: Vec<_> = (0..FOLLOWED_CEILING - 3)
+            .map(|at| {
+                (
+                    format!("write{at}"),
+                    REVIEWED,
+                    waiting(&format!("write{at}")),
+                )
+            })
+            .collect();
+        // A read paused at a review is followed like any review.
+        operations.insert(0, ("paused".into(), READ, waiting("paused")));
+        operations.insert(1, ("read".into(), READ, None));
+        operations.push(("later".into(), READ, None));
+        let (window, identity) = following(&operations);
+        window.room(&identity).unwrap();
+        assert!(window.find("read").is_err(), "the oldest running read goes");
+        for kept in ["paused", "later", "write0"] {
+            assert!(window.find(kept).is_ok(), "{kept}");
+        }
+    }
+
+    #[test]
+    fn at_the_ceiling_of_writes_and_waiting_reviews_a_new_submission_is_refused() {
+        let operations: Vec<_> = (0..FOLLOWED_CEILING)
+            .map(|at| {
+                let operation = format!("write{at}");
+                let followed = if at % 2 == 0 {
+                    waiting(&operation)
+                } else {
+                    None
+                };
+                (operation, REVIEWED, followed)
+            })
+            .collect();
+        let (window, identity) = following(&operations);
+        let refused = window.room(&identity).unwrap_err();
+        assert_eq!((refused.code, refused.operation_id), ("unavailable", None));
+        assert_eq!(
+            lock(&window.0).len(),
+            FOLLOWED_CEILING,
+            "nothing was dropped"
+        );
+        // Another session's window starts with room.
+        assert!(
+            window
+                .room(&json!({"profile_id":"p","session_id":"two"}))
+                .is_ok()
+        );
+    }
+
+    /// A session the window still holds, or one it lost.
+    struct Holding(bool);
+    impl Session for Holding {
+        async fn holds(&self, _person: &HeldPerson) -> Result<()> {
+            if self.0 {
+                Ok(())
+            } else {
+                Err(failure("not_signed_in"))
+            }
+        }
     }
 
     #[test]
@@ -777,6 +1042,8 @@ mod tests {
     mod relayed {
         use super::super::super::scripted::{OPERATION, PROFILE, holder, observed, resulted, step};
         use super::*;
+
+        const HELD: Holding = Holding(true);
 
         fn subject() -> String {
             relay::subject(PROFILE)
@@ -946,6 +1213,7 @@ mod tests {
             let unshown = operations.find(OPERATION).unwrap();
             assert_eq!(
                 answer_on(
+                    &HELD,
                     &operations,
                     &unshown,
                     &held.person,
@@ -970,6 +1238,7 @@ mod tests {
             let tracked = operations.find(OPERATION).unwrap();
             assert_eq!(
                 answer_on(
+                    &HELD,
                     &operations,
                     &tracked,
                     &held.person,
@@ -984,6 +1253,7 @@ mod tests {
                 "another digest is refused here, without an exchange"
             );
             let settled = answer_on(
+                &HELD,
                 &operations,
                 &tracked,
                 &held.person,
@@ -1002,6 +1272,110 @@ mod tests {
                 }
             );
             assert!(operations.find(OPERATION).unwrap().shown.is_none());
+        }
+
+        /// The review, its answer and its settlement, as the relay replies.
+        fn answered(digest: &str) -> Vec<Value> {
+            vec![
+                step(
+                    "operation_review",
+                    json!([["operation_id", OPERATION]]),
+                    review(digest, json!({"proposal":{}})),
+                    false,
+                ),
+                step(
+                    "operation_respond",
+                    json!([["review_digest", digest], ["decision", "apply"]]),
+                    json!({"kind":"operation_responded","operation_id":OPERATION,"decision":"apply"}),
+                    true,
+                ),
+                step(
+                    "operation_observe",
+                    json!([]),
+                    observed(
+                        REVIEWED.id,
+                        &subject(),
+                        "terminal",
+                        json!({"terminal_condition":"succeeded","effect":"updated","revision":7}),
+                    ),
+                    false,
+                ),
+                step(
+                    "operation_result",
+                    json!([]),
+                    resulted(REVIEWED.id, json!({"outcome":"classified"})),
+                    false,
+                ),
+            ]
+        }
+
+        #[tokio::test]
+        async fn a_review_is_answered_after_many_more_reads_than_the_window_keeps() {
+            let digest = "c".repeat(64);
+            let held = holder(|_| answered(&"c".repeat(64)));
+            let operations = Operations::default();
+            let waiting = tracked(REVIEWED, &held.identity);
+            operations.track(waiting.clone());
+            waiting.record(&Ok(Outcome::Review {
+                operation_id: OPERATION.into(),
+                revision: 5,
+                cancellable: true,
+            }));
+            for at in 0..2 * TRACKED_LIMIT {
+                let read = Tracked::new(
+                    format!("{at:064x}"),
+                    READ,
+                    subject(),
+                    held.identity.clone(),
+                    Vec::new(),
+                );
+                operations.track(read.clone());
+                read.record(&settled(&read.operation));
+            }
+            let found = operations.find(OPERATION).unwrap();
+            review_on(&operations, &found, &held.person).await.unwrap();
+            let found = operations.find(OPERATION).unwrap();
+            let mut events = held.events.subscribe();
+            let outcome = answer_on(
+                &HELD,
+                &operations,
+                &found,
+                &held.person,
+                &mut events,
+                &digest,
+                Decision::Apply,
+            )
+            .await
+            .unwrap();
+            assert!(matches!(outcome, Outcome::Settled { revision: 7, .. }));
+        }
+
+        #[tokio::test]
+        async fn an_answer_that_settled_after_the_account_changed_is_unknown() {
+            let digest = "c".repeat(64);
+            let held = holder(|_| answered(&"c".repeat(64)));
+            let operations = Operations::default();
+            operations.track(tracked(REVIEWED, &held.identity));
+            let found = operations.find(OPERATION).unwrap();
+            review_on(&operations, &found, &held.person).await.unwrap();
+            let found = operations.find(OPERATION).unwrap();
+            let mut events = held.events.subscribe();
+            let lost = answer_on(
+                &Holding(false),
+                &operations,
+                &found,
+                &held.person,
+                &mut events,
+                &digest,
+                Decision::Apply,
+            )
+            .await
+            .unwrap_err();
+            assert_eq!(
+                (lost.code, lost.operation_id.as_deref()),
+                ("unknown", Some(OPERATION)),
+                "the answer may have been taken"
+            );
         }
 
         #[tokio::test]
@@ -1035,6 +1409,7 @@ mod tests {
                 let tracked = operations.find(OPERATION).unwrap();
                 let mut events = held.events.subscribe();
                 let failed = answer_on(
+                    &HELD,
                     &operations,
                     &tracked,
                     &held.person,
