@@ -24,6 +24,7 @@ from cadrumo.application.modelo.tests.verification_substance_fixtures import (
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
+from ....domain.calculations.registry import schema_verification
 from ....domain.calculations.registry.schema_verification import (
     ParsedVerificationPredicate,
     VerificationPredicateDefinition,
@@ -431,6 +432,47 @@ def test_unknown_expression_does_not_block() -> None:
     values: dict[CasillaId, Decimal] = {}
     # Passes through — unknown DSL extensions do not block existing registry data.
     assert evaluate_predicate_expression('threshold(["01"], 100)', values, workflow_profile()) is True
+
+
+def test_repeated_evaluation_keeps_unknown_and_malformed_outcomes() -> None:
+    """Every evaluation repeats the unknown pass-through and the hostile-token refusal."""
+    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
+    profile = workflow_profile()
+
+    for _ in range(3):
+        assert evaluate_predicate_expression('threshold(["01"], 100)', values, profile) is True
+        with pytest.raises(ModeloError):
+            evaluate_predicate_expression('all_nonzero(["01", "bad key"])', values, profile)
+
+
+def test_repeated_evaluation_reuses_the_parse_and_keeps_its_verdicts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A second evaluation of the same expression runs no grammar and reaches the same verdicts."""
+    expression = 'implies_nonzero(["01", "07"])'
+    violated = _casilla_values((_CASILLA_01, "100"))
+    satisfied = _casilla_values((_CASILLA_01, "100"), (_CASILLA_07, "5"))
+    profile = workflow_profile()
+    first_verdicts = (
+        evaluate_predicate_expression(expression, violated, profile),
+        evaluate_predicate_expression(expression, satisfied, profile),
+    )
+    grammar_calls: list[str] = []
+    real_operator_name = schema_verification.verification_predicate_operator_name
+
+    def counting_operator_name(text: str) -> str | None:
+        grammar_calls.append(text)
+        return real_operator_name(text)
+
+    monkeypatch.setattr(schema_verification, "verification_predicate_operator_name", counting_operator_name)
+
+    second_verdicts = (
+        evaluate_predicate_expression(expression, violated, profile),
+        evaluate_predicate_expression(expression, satisfied, profile),
+    )
+
+    assert grammar_calls == []
+    assert first_verdicts == second_verdicts == (False, True)
 
 
 # ---------------------------------------------------------------------------

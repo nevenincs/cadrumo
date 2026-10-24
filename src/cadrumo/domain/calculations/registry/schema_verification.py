@@ -51,6 +51,7 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
+from functools import lru_cache
 from types import MappingProxyType
 from typing import Annotated, Final
 
@@ -1225,13 +1226,25 @@ _PREDICATE_EXPRESSION_PARSERS: Mapping[VerificationPredicateSyntax, _PredicateEx
 )
 
 
+_PARSED_PREDICATE_CACHE_SIZE: Final[int] = 4096
+
+
 def parse_verification_predicate_expression(expression: str) -> ParsedVerificationPredicate | None:
     """Parse one runtime-supported verification-predicate DSL expression.
 
     ``None`` means the expression is unknown or malformed. Registry validation
     turns that state into an authoring-time refusal; the runtime retains its
     defensive fallback for anything that bypasses registry validation.
+
+    The parse reads only ``expression`` and immutable module grammar, and the
+    result is a frozen value of strings and tuples, so repeated verification
+    runs share one bounded memo per distinct expression text.
     """
+    return _parse_verification_predicate_expression_memo(expression)
+
+
+@lru_cache(maxsize=_PARSED_PREDICATE_CACHE_SIZE)
+def _parse_verification_predicate_expression_memo(expression: str) -> ParsedVerificationPredicate | None:
     operator_name = verification_predicate_operator_name(expression)
     if operator_name is None:
         return None
