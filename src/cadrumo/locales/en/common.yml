@@ -779,7 +779,238 @@ desktop:
       to_classify: '{count} to classify'
     empty: No movements in {period}
     empty_all: No movements yet
+    export:
+      cancel: Cancel
+      change_file: Change…
+      choose_file: Choose…
+      close: Close
+      copied_invoices: 'Invoices copied: {count}'
+      copied_movements: 'Movements copied: {count}'
+      copy_failed: Couldn't copy. Try again.
+      copy_invoices: Also copy invoices (TSV)
+      copy_selection: Copy as TSV
+      count: 'Movements to export: {shown}.'
+      count_unknown: The number of movements couldn't be read.
+      counting: Counting…
+      description: A local file for you or your gestor. Nothing is sent to the AEAT.
+      done: The file is written
+      done_note: 'Movements written to {name}: {count}.'
+      file: Save as
+      file_hint: Chosen last, in the system's save dialog, which asks before replacing
+        a file. Changing the format or period clears it.
+      file_stem: ledger
+      filter:
+        csv: CSV file
+        jsonl: JSON Lines file
+        xlsx: Excel workbook
+      format: Format
+      format_csv: CSV
+      format_jsonl: JSONL
+      format_xlsx: XLSX
+      heading: What to export
+      heading_done: Exported
+      inactive: Include archived and set-aside movements
+      left_out: 'Left out: {archived} archived, {aside} set aside, {split} split.'
+      no_file: No file chosen
+      not_ready: Not ready for calculation
+      not_ready_note: 'Readiness issues: {count}. The file shows what the ledger holds
+        now.'
+      period: Export period
+      refused: Not exported
+      review_staged: Review and save
+      save_refused: Choose a file name ending in .{format}.
+      selection: 'Selected movements: {count}'
+      selection_note: The export takes whole periods. To take just the selection to
+        a spreadsheet, copy it.
+      send: Export ({shown})
+      send_unknown: Export
+      staged: 'Unsaved changes not in this file: {count}'
+      staged_note: The export reads what is saved.
+      title: Export the ledger
+      tsv:
+        amount: Amount
+        base: Taxable base
+        category: Category
+        classification: Classification
+        counterparty: Counterparty
+        country: Country
+        currency: Currency
+        date: Date
+        description: Description
+        direction: Direction
+        group: Group
+        id: ID
+        iva: IVA
+        kind: Kind
+        number: Number
+        payment: Payment
+        series: Series
+        tax_id: Tax ID
+        total: Total
+      unknown: Outcome unknown
+      unknown_note: 'The file may have been written. Nothing is sent again: check
+        the file before exporting once more.'
+      without_staged: Export without them
     failed: Couldn't read the ledger.
+    import:
+      accepts:
+        bank: CSV, XLSX, XLS, OFX, QFX or an N26 PDF · up to 128 files · folders inside
+          a folder are not read
+        book: CSV, TSV, XLSX, XLSM or XLS
+        documents: PDF, PNG, JPG, TIFF, WEBP, HEIC, or Facturae, UBL or CII XML ·
+          folders inside a folder are not read
+      account: Account
+      account_choose: Choose the account…
+      account_detected: detected from the file
+      account_later: You choose each file's account in the preview.
+      account_no_accounts: no accounts registered
+      account_unregistered: the file names an account that isn't registered
+      any_date: Any date. Rows outside a chosen period are left out.
+      apply_book: Import the book
+      apply_documents: Add the documents ({count})
+      apply_files: Import exactly these files ({count})
+      applying: Importing {done} of {total}
+      back: Back
+      book_created: 'Invoices created: {count}'
+      book_kind: Invoices in the book
+      book_no_preview: Invoice books have no preview
+      book_no_preview_note: Rows are checked as they are created. Refused rows are
+        listed afterwards with their row number and reason; the rest are kept. {kind};
+        country {country}.
+      book_note: 'Rows: {rows} · already in the catalogue: {skipped} · refused: {refused}'
+      book_refused: The book was not imported
+      bound_note: Importing uses exactly these files. A file changed after this preview
+        is refused.
+      cancel: Cancel
+      choose_accounts: Choose the account for each file.
+      choose_file: Choose a file…
+      choose_files: Choose files…
+      choose_folder: Choose a folder…
+      chosen: Chosen files
+      close: Close the import
+      compare: Compare
+      compare_existing: Already in the ledger
+      compare_failed: Couldn't read the ledger for this day.
+      compare_imported: In this import
+      compare_none: No other movement on this day with this amount now.
+      compare_note: Both stay. The new one is marked as a possible duplicate, to archive
+        or keep.
+      compare_reading: Reading the ledger
+      compare_title: Possible duplicate
+      count:
+        duplicates: Possible duplicates
+        new: New
+        refused: Refused files
+        rows: Rows
+        skipped: Already in the ledger
+      country: Counterparty country
+      country_hint: Two letters, used where the book has no country column. Optional.
+      country_invalid: “{value}” is not a two-letter country code.
+      country_none: not stated
+      description: Bank statements, invoice books and documents, from files on this
+        computer. A preview writes nothing.
+      diagnostic:
+        already_in_ledger: Some rows are already in the ledger and are skipped.
+        gap: More than 35 days between two movements.
+        no_rows: The file holds no valid movements.
+        repeated: Two rows look the same; both are imported. Check for a double count.
+        same_identity: A row repeats another row's identity and is skipped.
+        unreadable: Unreadable file or format not supported.
+        verified: Checked against the original file.
+      direction:
+        incoming: In
+        internal_transfer: Transfer
+        outgoing: Out
+      documents_added: 'Documents added: {count}'
+      documents_kind: These documents are
+      documents_note: '{kind}. Each document is added as evidence and read on this
+        computer; images wait in Documents to be read.'
+      documents_refused: The documents were not added
+      documents_result: 'Waiting to be read: {waiting} · already added: {held} · paused:
+        {paused}'
+      done: Done
+      drop:
+        bank: Drop statement files or a folder here
+        book: Drop one invoice book here
+        documents: Drop PDFs, images, e-invoices or a folder here
+      duplicates: Possible duplicates
+      duplicates_more: And {count} more.
+      duplicates_note: 'Possible duplicates: {count}. They are imported and flagged;
+        compare them after importing.'
+      field: Field
+      file_counts: '{rows} rows · {fresh} new · {skipped} already in the ledger'
+      file_imported: '{fresh} imported · {skipped} already in the ledger'
+      file_not_sent: Not sent.
+      file_unknown: 'Outcome unknown: it may have been imported.'
+      files: Files
+      filter:
+        bank: Bank statements
+        book: Invoice books
+        documents: Invoices and receipts
+      heading:
+        preview: Preview · nothing is written yet
+        result: Result
+        what: What to import
+      imported: 'Imported: {count}'
+      imported_note: 'Already in the ledger and skipped: {skipped}. Possible duplicates,
+        imported and flagged: {flagged}.'
+      kind:
+        bank: Bank statement
+        book: Invoice book
+        documents: Documents
+      kind_issued: Invoices I issued
+      kind_received: Invoices I received
+      left_out: 'Left out, not of these kinds: {count}'
+      no_account: No account
+      nothing_new: Nothing new to import
+      nothing_new_note: Every row is already in the ledger.
+      only_period: Only movements dated in a period
+      period: Import period
+      pick_failed: The file dialog didn't open. Try again.
+      preview: Preview
+      preview_again: Preview again
+      preview_failed: 'Couldn''t be previewed:'
+      provider:
+        auto: Detect from the file
+        csv: CSV
+        ofx: OFX
+        pdf_n26: N26 PDF
+        qfx: QFX
+        xls: XLS
+        xlsx: XLSX
+      provider_label: Format
+      reading: Reading {done} of {total}
+      reading_start: Reading…
+      reason: Reason
+      refusal:
+        empty_directory: The folder holds no statement.
+        file_limit: More than 128 files at once.
+        other: 'Not imported: {code}'
+        own_account_mismatch: Its rows name a different account.
+        result_limit: 'More than 4,096 rows: import it in parts.'
+        source_changed: 'Changed after the preview: preview it again.'
+        transaction_validation: Couldn't be read as a bank statement.
+      refused_rows: Refused rows
+      remove: Remove {name}
+      row: Row
+      show_documents: Review in Documents
+      show_failed: Couldn't read the imported movements. Try again.
+      show_imported: Show imported movements
+      shown: 'Showing the period of your import: {from} to {to}.'
+      shown_clear: Dismiss
+      step:
+        preview: Preview
+        result: Result
+        what: What
+      steps: Steps
+      technical: Technical details
+      title: Import
+      unknown: Outcome unknown
+      unknown_note: '{names} may have been imported. Nothing is sent again: read the
+        ledger again before importing it once more.'
+      unmapped: 'Columns not used: {columns}'
+      verify: Check for gaps and repeated rows
+      what: What to import
     loaded_of: '{loaded} of {total} loaded'
     loading: Reading the ledger…
     maximize: Maximize the ledger

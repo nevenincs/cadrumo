@@ -2516,6 +2516,7 @@ export function App({ host }: { host: Host }) {
           onViewChange={changeLedgerView}
           memory={ledgerKept.memory}
           contribute={contribute}
+          copy={(text) => host.writeClipboard(text)}
           pane={{
             title: t("desktop.ledger.title"),
             onToggleMaximize: () => toggleMaximize("docs"),

@@ -807,7 +807,239 @@ desktop:
       to_classify: '{count} per classificar'
     empty: No hi ha moviments a {period}
     empty_all: Encara no hi ha moviments
+    export:
+      cancel: Cancel·la
+      change_file: Canvia…
+      choose_file: Tria…
+      close: Tanca
+      copied_invoices: 'Factures copiades: {count}'
+      copied_movements: 'Moviments copiats: {count}'
+      copy_failed: No s'ha pogut copiar. Torna-ho a provar.
+      copy_invoices: Copia també les factures (TSV)
+      copy_selection: Copia com a TSV
+      count: 'Moviments a exportar: {shown}.'
+      count_unknown: No s'ha pogut llegir el nombre de moviments.
+      counting: S'està comptant…
+      description: Un fitxer local per a tu o el teu gestor. No s'envia res a l'AEAT.
+      done: El fitxer s'ha desat
+      done_note: 'Moviments escrits a {name}: {count}.'
+      file: Desa com a
+      file_hint: Es tria al final, al diàleg de desar del sistema, que pregunta abans
+        de substituir un fitxer. Canviar el format o el període l'esborra.
+      file_stem: llibre
+      filter:
+        csv: Fitxer CSV
+        jsonl: Fitxer JSON Lines
+        xlsx: Llibre d'Excel
+      format: Format
+      format_csv: CSV
+      format_jsonl: JSONL
+      format_xlsx: XLSX
+      heading: Què exportar
+      heading_done: Exportat
+      inactive: Inclou moviments arxivats i apartats
+      left_out: 'Es deixen fora: {archived} arxivats, {aside} apartats, {split} dividits.'
+      no_file: Cap fitxer triat
+      not_ready: No llest per calcular
+      not_ready_note: 'Problemes de preparació: {count}. El fitxer mostra el que el
+        llibre conté ara.'
+      period: Període d'exportació
+      refused: No exportat
+      review_staged: Revisa i desa
+      save_refused: Tria un nom de fitxer que acabi en .{format}.
+      selection: 'Moviments seleccionats: {count}'
+      selection_note: L'exportació pren períodes sencers. Per portar només la selecció
+        a un full de càlcul, copia-la.
+      send: Exporta ({shown})
+      send_unknown: Exporta
+      staged: 'Canvis sense desar que no van en aquest fitxer: {count}'
+      staged_note: L'exportació llegeix el que s'ha desat.
+      title: Exporta el llibre
+      tsv:
+        amount: Import
+        base: Base imposable
+        category: Categoria
+        classification: Classificació
+        counterparty: Contrapart
+        country: País
+        currency: Moneda
+        date: Data
+        description: Descripció
+        direction: Sentit
+        group: Grup
+        id: ID
+        iva: IVA
+        kind: Tipus
+        number: Número
+        payment: Pagament
+        series: Sèrie
+        tax_id: NIF
+        total: Total
+      unknown: Resultat desconegut
+      unknown_note: 'Pot ser que el fitxer s''hagi escrit. No es torna a enviar res:
+        revisa el fitxer abans d''exportar un altre cop.'
+      without_staged: Exporta sense ells
     failed: No s'ha pogut llegir el llibre.
+    import:
+      accepts:
+        bank: CSV, XLSX, XLS, OFX, QFX o un PDF d'N26 · fins a 128 fitxers · no es
+          llegeixen les carpetes de dins
+        book: CSV, TSV, XLSX, XLSM o XLS
+        documents: PDF, PNG, JPG, TIFF, WEBP, HEIC o XML Facturae, UBL o CII · no
+          es llegeixen les carpetes de dins
+      account: Compte
+      account_choose: Tria el compte…
+      account_detected: detectat al fitxer
+      account_later: Tries el compte de cada fitxer a la previsualització.
+      account_no_accounts: no hi ha comptes registrats
+      account_unregistered: el fitxer indica un compte no registrat
+      any_date: Qualsevol data. Les files fora del període triat s'ometen.
+      apply_book: Importa el llibre
+      apply_documents: Afegeix els documents ({count})
+      apply_files: Importa exactament aquests fitxers ({count})
+      applying: S'està important {done} de {total}
+      back: Enrere
+      book_created: 'Factures creades: {count}'
+      book_kind: Factures del llibre
+      book_no_preview: Els llibres de factures no tenen previsualització
+      book_no_preview_note: Les files es comproven en crear-se. Les rebutjades es
+        llisten després amb el número de fila i el motiu; la resta es conserva. {kind};
+        país {country}.
+      book_note: 'Files: {rows} · ja al catàleg: {skipped} · rebutjades: {refused}'
+      book_refused: El llibre no s'ha importat
+      bound_note: La importació fa servir exactament aquests fitxers. Si un canvia
+        després d'aquesta previsualització, es rebutja.
+      cancel: Cancel·la
+      choose_accounts: Tria el compte de cada fitxer.
+      choose_file: Tria un fitxer…
+      choose_files: Tria fitxers…
+      choose_folder: Tria una carpeta…
+      chosen: Fitxers triats
+      close: Tanca la importació
+      compare: Compara
+      compare_existing: Ja al llibre
+      compare_failed: No s'ha pogut llegir el llibre d'aquest dia.
+      compare_imported: En aquesta importació
+      compare_none: Ara no hi ha cap altre moviment d'aquest dia amb aquest import.
+      compare_note: Es queden tots dos. El nou es marca com a possible duplicat, per
+        arxivar-lo o conservar-lo.
+      compare_reading: S'està llegint el llibre
+      compare_title: Possible duplicat
+      count:
+        duplicates: Possibles duplicats
+        new: Noves
+        refused: Fitxers rebutjats
+        rows: Files
+        skipped: Ja al llibre
+      country: País de la contrapart
+      country_hint: Dues lletres, per a un llibre sense columna de país. Opcional.
+      country_invalid: «{value}» no és un codi de país de dues lletres.
+      country_none: sense indicar
+      description: Extractes bancaris, llibres de factures i documents, des de fitxers
+        d'aquest ordinador. La previsualització no desa res.
+      diagnostic:
+        already_in_ledger: Algunes files ja són al llibre i s'ometen.
+        gap: Més de 35 dies entre dos moviments.
+        no_rows: El fitxer no conté moviments vàlids.
+        repeated: Dues files semblen iguals; s'importen totes dues. Revisa si es compten
+          dues vegades.
+        same_identity: Una fila repeteix la identitat d'una altra i s'omet.
+        unreadable: Fitxer il·legible o format no admès.
+        verified: Comprovat amb el fitxer original.
+      direction:
+        incoming: Entrada
+        internal_transfer: Traspàs
+        outgoing: Sortida
+      documents_added: 'Documents afegits: {count}'
+      documents_kind: Aquests documents són
+      documents_note: '{kind}. Cada document s''afegeix com a justificant i es llegeix
+        en aquest ordinador; les imatges esperen a Documents per llegir-se.'
+      documents_refused: Els documents no s'han afegit
+      documents_result: 'Esperant lectura: {waiting} · ja afegits: {held} · en pausa:
+        {paused}'
+      done: Fet
+      drop:
+        bank: Deixa anar aquí fitxers d'extracte o una carpeta
+        book: Deixa anar aquí un llibre de factures
+        documents: Deixa anar aquí PDF, imatges, factures electròniques o una carpeta
+      duplicates: Possibles duplicats
+      duplicates_more: I {count} més.
+      duplicates_note: 'Possibles duplicats: {count}. S''importen i es marquen; compara''ls
+        després d''importar.'
+      field: Camp
+      file_counts: '{rows} files · {fresh} noves · {skipped} ja al llibre'
+      file_imported: '{fresh} importats · {skipped} ja al llibre'
+      file_not_sent: No enviat.
+      file_unknown: 'Resultat desconegut: pot haver-se importat.'
+      files: Fitxers
+      filter:
+        bank: Extractes bancaris
+        book: Llibres de factures
+        documents: Factures i tiquets
+      heading:
+        preview: Previsualització · encara no es desa res
+        result: Resultat
+        what: Què importar
+      imported: 'Importats: {count}'
+      imported_note: 'Ja al llibre i omesos: {skipped}. Possibles duplicats, importats
+        i marcats: {flagged}.'
+      kind:
+        bank: Extracte bancari
+        book: Llibre de factures
+        documents: Documents
+      kind_issued: Factures que vaig emetre
+      kind_received: Factures que vaig rebre
+      left_out: 'Omesos per no ser d''aquests tipus: {count}'
+      no_account: Sense compte
+      nothing_new: Res de nou per importar
+      nothing_new_note: Totes les files ja són al llibre.
+      only_period: Només moviments amb data dins d'un període
+      period: Període d'importació
+      pick_failed: No s'ha obert el selector de fitxers. Torna-ho a provar.
+      preview: Previsualitza
+      preview_again: Torna a previsualitzar
+      preview_failed: 'No s''ha pogut previsualitzar:'
+      provider:
+        auto: Detecta-ho del fitxer
+        csv: CSV
+        ofx: OFX
+        pdf_n26: PDF d'N26
+        qfx: QFX
+        xls: XLS
+        xlsx: XLSX
+      provider_label: Format
+      reading: S'està llegint {done} de {total}
+      reading_start: S'està llegint…
+      reason: Motiu
+      refusal:
+        empty_directory: La carpeta no conté cap extracte.
+        file_limit: Més de 128 fitxers alhora.
+        other: 'No importat: {code}'
+        own_account_mismatch: Les seves files indiquen un altre compte.
+        result_limit: 'Més de 4.096 files: importa''l per parts.'
+        source_changed: 'Ha canviat després de la previsualització: torna a previsualitzar-lo.'
+        transaction_validation: No s'ha pogut llegir com a extracte bancari.
+      refused_rows: Files rebutjades
+      remove: Treu {name}
+      row: Fila
+      show_documents: Revisa a Documents
+      show_failed: No s'han pogut llegir els moviments importats. Torna-ho a provar.
+      show_imported: Mostra els moviments importats
+      shown: 'Es mostra el període de la teva importació: del {from} al {to}.'
+      shown_clear: Descarta
+      step:
+        preview: Previsualització
+        result: Resultat
+        what: Què
+      steps: Passos
+      technical: Detalls tècnics
+      title: Importa
+      unknown: Resultat desconegut
+      unknown_note: '{names} pot haver-se importat. No es torna a enviar res: torna
+        a llegir el llibre abans d''importar-lo un altre cop.'
+      unmapped: 'Columnes no utilitzades: {columns}'
+      verify: Comprova buits i files repetides
+      what: Què importar
     loaded_of: '{loaded} de {total} carregats'
     loading: S'està llegint el llibre…
     maximize: Maximitza el llibre

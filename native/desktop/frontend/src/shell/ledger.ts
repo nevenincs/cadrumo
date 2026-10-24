@@ -359,17 +359,12 @@ export type LedgerUpdateRequest = {
 export type LedgerUpdateResult = {
   outcome: "updated" | "validation_error";
   profile_id: string;
-  result: {
-    outcome: "updated" | "validation_error";
-    profile_id: string;
-    source_transaction_id: string | null;
-    transaction: LedgerTransaction | null;
-    review_status: LedgerReviewStatus | null;
-    bucket_event_ids: string[];
-    group_label: string | null;
-    own_account_id: string | null;
-    validation_messages: string[];
-  } | null;
+  source_transaction_id: string | null;
+  transaction: LedgerTransaction | null;
+  review_status: LedgerReviewStatus | null;
+  bucket_event_ids: string[];
+  group_label: string | null;
+  own_account_id: string | null;
   validation_messages: string[];
 };
 
@@ -415,17 +410,11 @@ export type LedgerClassifyValidation =
 export type LedgerClassifyResult = {
   outcome: "classified" | "validation_error";
   profile_id: string;
-  result: {
-    outcome: "classified" | "validation_error";
-    profile_id: string;
-    transaction: LedgerTransaction | null;
-    deduction_fact_kind: string | null;
-    investment_asset_id: string | null;
-    review_status: LedgerReviewStatus | null;
-    bucket_event_ids: string[];
-    validation_kind: LedgerClassifyValidation;
-    validation_messages: string[];
-  } | null;
+  transaction: LedgerTransaction | null;
+  deduction_fact_kind: string | null;
+  investment_asset_id: string | null;
+  review_status: LedgerReviewStatus | null;
+  bucket_event_ids: string[];
   validation_kind: LedgerClassifyValidation;
   validation_messages: string[];
 };
@@ -451,18 +440,16 @@ export type LedgerBulkClassifyRequest = {
   output_language?: OutputLanguage;
 };
 export type LedgerBulkClassifyResult = {
-  projection: {
-    profile_id: string;
-    outcome: "classified" | "validation_error";
-    result: {
-      total: number;
-      applied: number;
-      skipped: number;
-      failures: { row_index: number; transaction_id: string; reason: string }[];
-      bucket_event_ids: string[];
-    } | null;
-    validation_messages: string[];
-  };
+  profile_id: string;
+  outcome: "classified" | "validation_error";
+  result: {
+    total: number;
+    applied: number;
+    skipped: number;
+    failures: { row_index: number; transaction_id: string; reason: string }[];
+    bucket_event_ids: string[];
+  } | null;
+  validation_messages: string[];
 };
 
 /** One manual movement. A retry with the same `idempotency_key` and the same
@@ -508,19 +495,13 @@ export type LedgerAddValidation =
 export type LedgerAddResult = {
   outcome: "created" | "validation_error";
   profile_id: string;
-  result: {
-    outcome: "created" | "validation_error";
-    profile_id: string;
-    transaction: LedgerTransaction | null;
-    review_status: LedgerReviewStatus | null;
-    bucket_event_ids: string[];
-    advisory_input_classification: string | null;
-    advisory_input_classification_inert: boolean;
-    advisory_sector_id: string | null;
-    advisory_sector_unmatched: boolean;
-    validation_code: LedgerAddValidation | null;
-    validation_messages: string[];
-  } | null;
+  transaction: LedgerTransaction | null;
+  review_status: LedgerReviewStatus | null;
+  bucket_event_ids: string[];
+  advisory_input_classification: string | null;
+  advisory_input_classification_inert: boolean;
+  advisory_sector_id: string | null;
+  advisory_sector_unmatched: boolean;
   validation_code: LedgerAddValidation | null;
   validation_messages: string[];
 };
@@ -678,7 +659,30 @@ export type LedgerTransactionRef = {
   bucket_id: string;
   transaction_id: string;
 };
-export type LedgerImportFileResult = {
+export type LedgerImportRefusalCode =
+  | "transaction_validation"
+  | "own_account_mismatch"
+  | "result_limit"
+  | "source_changed"
+  | "empty_directory"
+  | "file_limit";
+export type LedgerImportDiagnosticKind =
+  "original-file" | "gap" | "duplicate" | "parser";
+/** The translation keys a diagnostic names, from the product's closed set. */
+export type LedgerImportDiagnosticMessage =
+  | "transactions.import.message_185962"
+  | "transactions.import.message_082074"
+  | "transactions.import.batch_id_collision"
+  | "transactions.import.message_053465"
+  | "transactions.import.message_829073"
+  | "transactions.import.verified"
+  | "transactions.import.unreadable";
+/** One import's outcome over every file it planned, without paths or
+ * provider prose. A likely duplicate is imported and listed, never skipped;
+ * `skipped` rows were already in the ledger. Each planned file's digest is
+ * named by its position in the plan, for an apply to bind to. */
+export type LedgerImportResult = {
+  profile_id: string;
   rows: number;
   imported: number;
   skipped: number;
@@ -686,7 +690,9 @@ export type LedgerImportFileResult = {
   dry_run: boolean;
   verify: boolean;
   period: PublicPeriod | null;
-  bucket_id: string | null;
+  bucket_id: string;
+  /** Set where one file's rows were imported; a request of several files
+   * that each import has no single batch. */
   import_batch_id: string | null;
   bucket_event_ids: string[];
   imported_transaction_refs: LedgerTransactionRef[];
@@ -694,41 +700,18 @@ export type LedgerImportFileResult = {
   likely_duplicate_transaction_refs: LedgerTransactionRef[];
   validations: {
     valid: boolean;
-    warnings: string[];
+    warning_count: number;
     encoding: string | null;
-    dialect: string | null;
   }[];
-  sources: { requested: boolean; path: string | null; sha256: string | null }[];
+  sources: { requested: boolean; sha256: string | null }[];
   diagnostics: {
-    kind: string;
-    severity: string;
-    message: string;
-    source_path: string | null;
-    source_locator: string | null;
+    kind: LedgerImportDiagnosticKind;
+    severity: "info" | "warning" | "error";
+    message: LedgerImportDiagnosticMessage;
     affected_transaction_ids: string[];
   }[];
-};
-export type LedgerImportResult = {
-  profile_id: string;
-  dry_run: boolean;
-  verify: boolean;
-  period: PublicPeriod | null;
-  files: {
-    file_name: string;
-    file_index: number;
-    source_sha256: string | null;
-    result: LedgerImportFileResult;
-  }[];
-  refused_files: {
-    file_name: string;
-    reason_code:
-      | "transaction_validation"
-      | "own_account_mismatch"
-      | "result_limit"
-      | "source_changed"
-      | "empty_directory"
-      | "file_limit";
-  }[];
+  refused_files: { file_name: string; reason_code: LedgerImportRefusalCode }[];
+  source_digests: { file_index: number; sha256: string }[];
 };
 
 export type LedgerExportFormat = "csv" | "jsonl" | "xlsx";
@@ -742,20 +725,68 @@ export type LedgerExportRequest = {
   actor?: string | null;
 };
 export type LedgerExportResult = {
-  projection: {
-    profile_id: string;
-    bucket_id: string;
-    export_id: string;
-    export_format: LedgerExportFormat;
-    media_type: string;
-    filename_extension: string;
-    row_count: number;
-    byte_size: number;
-    sha256: string;
-    fieldnames: string[];
-    rows: Record<string, string>[];
-    bucket_event_ids: string[];
-    output_path: string;
+  profile_id: string;
+  bucket_id: string;
+  export_id: string;
+  export_format: LedgerExportFormat;
+  media_type: string;
+  filename_extension: string;
+  row_count: number;
+  byte_size: number;
+  sha256: string;
+  fieldnames: string[];
+  rows: Record<string, string>[];
+  bucket_event_ids: string[];
+  /** The file's name; the host keeps where it is. */
+  output_path: string;
+};
+
+/** An invoice book, imported row by row: it has no dry run, and a refused
+ * row leaves the others created. */
+export type InvoiceImportRequest = {
+  kind: InvoiceKind;
+  source_path: FileToken;
+  source_sha256?: string | null;
+  /** Two letters, for a book that has no country column. */
+  country?: string | null;
+};
+export type InvoiceImportResult = {
+  profile_id: string;
+  /** The digest of the bytes the import read. */
+  source_sha256: string;
+  rows: number;
+  created: number;
+  skipped_duplicate: number;
+  refused: { row_number: number; field: string; reason: string }[];
+  created_invoice_ids: string[];
+  unmapped_column_headers: string[];
+  mapping_reasons: string[];
+};
+
+/** Documents added as evidence in one direction, read on this computer. */
+export type EvidenceBatchRequest = {
+  sources: FileToken[];
+  direction: InvoiceKind;
+};
+export type EvidenceBatchItemStatus =
+  "ingested" | "no_op" | "refused" | "pending_review" | "paused";
+export type EvidenceBatchResult = {
+  profile_id: string;
+  write_count: number;
+  effect: "none" | "updated" | "partial" | "unknown";
+  direction: InvoiceKind;
+  run: {
+    items: {
+      content_address: string;
+      identity: string;
+      direction: InvoiceKind;
+      source_name: string;
+      status: EvidenceBatchItemStatus;
+      refusal_code: string | null;
+      needed_inference: boolean;
+    }[];
+    unresolved: { source_name: string; refusal_code: string }[];
+    inference_pause: JsonObject | null;
   };
 };
 
@@ -831,6 +862,8 @@ export interface LedgerRequests {
   "ledger.preflight": LedgerPreflightRequest;
   "ledger.import": LedgerImportRequest;
   "ledger.export": LedgerExportRequest;
+  "ledger.invoice.import": InvoiceImportRequest;
+  "ledger.evidence.batch": EvidenceBatchRequest;
 }
 export interface LedgerResults {
   "ledger.list": LedgerListResult;
@@ -844,6 +877,8 @@ export interface LedgerResults {
   "ledger.preflight": LedgerPreflightResult;
   "ledger.import": LedgerImportResult;
   "ledger.export": LedgerExportResult;
+  "ledger.invoice.import": InvoiceImportResult;
+  "ledger.evidence.batch": EvidenceBatchResult;
 }
 export type LedgerRequest<D extends LedgerDefinitionId> =
   D extends keyof LedgerRequests ? LedgerRequests[D] : JsonObject;

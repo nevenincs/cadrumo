@@ -814,7 +814,240 @@ desktop:
       to_classify: '{count} por clasificar'
     empty: No hay movimientos en {period}
     empty_all: Aún no hay movimientos
+    export:
+      cancel: Cancelar
+      change_file: Cambiar…
+      choose_file: Elegir…
+      close: Cerrar
+      copied_invoices: 'Facturas copiadas: {count}'
+      copied_movements: 'Movimientos copiados: {count}'
+      copy_failed: No se ha podido copiar. Vuelve a intentarlo.
+      copy_invoices: Copiar también las facturas (TSV)
+      copy_selection: Copiar como TSV
+      count: 'Movimientos a exportar: {shown}.'
+      count_unknown: No se ha podido leer el número de movimientos.
+      counting: Contando…
+      description: Un archivo local para ti o tu gestor. No se envía nada a la AEAT.
+      done: El archivo está guardado
+      done_note: 'Movimientos escritos en {name}: {count}.'
+      file: Guardar como
+      file_hint: Se elige al final, en el diálogo de guardado del sistema, que pregunta
+        antes de sustituir un archivo. Cambiar el formato o el periodo lo borra.
+      file_stem: libro
+      filter:
+        csv: Archivo CSV
+        jsonl: Archivo JSON Lines
+        xlsx: Libro de Excel
+      format: Formato
+      format_csv: CSV
+      format_jsonl: JSONL
+      format_xlsx: XLSX
+      heading: Qué exportar
+      heading_done: Exportado
+      inactive: Incluir movimientos archivados y apartados
+      left_out: 'Se dejan fuera: {archived} archivados, {aside} apartados, {split}
+        divididos.'
+      no_file: Ningún archivo elegido
+      not_ready: No listo para calcular
+      not_ready_note: 'Problemas de preparación: {count}. El archivo muestra lo que
+        el libro contiene ahora.'
+      period: Periodo de exportación
+      refused: No exportado
+      review_staged: Revisar y guardar
+      save_refused: Elige un nombre de archivo que acabe en .{format}.
+      selection: 'Movimientos seleccionados: {count}'
+      selection_note: La exportación toma periodos completos. Para llevar solo la
+        selección a una hoja de cálculo, cópiala.
+      send: Exportar ({shown})
+      send_unknown: Exportar
+      staged: 'Cambios sin guardar que no van en este archivo: {count}'
+      staged_note: La exportación lee lo guardado.
+      title: Exportar el libro
+      tsv:
+        amount: Importe
+        base: Base imponible
+        category: Categoría
+        classification: Clasificación
+        counterparty: Contraparte
+        country: País
+        currency: Moneda
+        date: Fecha
+        description: Descripción
+        direction: Sentido
+        group: Grupo
+        id: ID
+        iva: IVA
+        kind: Tipo
+        number: Número
+        payment: Pago
+        series: Serie
+        tax_id: NIF
+        total: Total
+      unknown: Resultado desconocido
+      unknown_note: 'Puede que el archivo se haya escrito. No se vuelve a enviar nada:
+        revisa el archivo antes de exportar otra vez.'
+      without_staged: Exportar sin ellos
     failed: No se ha podido leer el libro.
+    import:
+      accepts:
+        bank: CSV, XLSX, XLS, OFX, QFX o un PDF de N26 · hasta 128 archivos · no se
+          leen las carpetas de dentro
+        book: CSV, TSV, XLSX, XLSM o XLS
+        documents: PDF, PNG, JPG, TIFF, WEBP, HEIC o XML Facturae, UBL o CII · no
+          se leen las carpetas de dentro
+      account: Cuenta
+      account_choose: Elige la cuenta…
+      account_detected: detectada en el archivo
+      account_later: Eliges la cuenta de cada archivo en la vista previa.
+      account_no_accounts: no hay cuentas registradas
+      account_unregistered: el archivo indica una cuenta no registrada
+      any_date: Cualquier fecha. Las filas fuera del periodo elegido se omiten.
+      apply_book: Importar el libro
+      apply_documents: Añadir los documentos ({count})
+      apply_files: Importar exactamente estos archivos ({count})
+      applying: Importando {done} de {total}
+      back: Atrás
+      book_created: 'Facturas creadas: {count}'
+      book_kind: Facturas del libro
+      book_no_preview: Los libros de facturas no tienen vista previa
+      book_no_preview_note: Las filas se comprueban al crearse. Las rechazadas se
+        listan después con su número de fila y motivo; el resto se conserva. {kind};
+        país {country}.
+      book_note: 'Filas: {rows} · ya en el catálogo: {skipped} · rechazadas: {refused}'
+      book_refused: El libro no se ha importado
+      bound_note: La importación usa exactamente estos archivos. Si uno cambia tras
+        esta vista previa, se rechaza.
+      cancel: Cancelar
+      choose_accounts: Elige la cuenta de cada archivo.
+      choose_file: Elegir un archivo…
+      choose_files: Elegir archivos…
+      choose_folder: Elegir una carpeta…
+      chosen: Archivos elegidos
+      close: Cerrar la importación
+      compare: Comparar
+      compare_existing: Ya en el libro
+      compare_failed: No se ha podido leer el libro de este día.
+      compare_imported: En esta importación
+      compare_none: Ahora no hay otro movimiento de este día con este importe.
+      compare_note: Se quedan ambos. El nuevo se marca como posible duplicado, para
+        archivarlo o conservarlo.
+      compare_reading: Leyendo el libro
+      compare_title: Posible duplicado
+      count:
+        duplicates: Posibles duplicados
+        new: Nuevas
+        refused: Archivos rechazados
+        rows: Filas
+        skipped: Ya en el libro
+      country: País de la contraparte
+      country_hint: Dos letras, para un libro sin columna de país. Opcional.
+      country_invalid: «{value}» no es un código de país de dos letras.
+      country_none: sin indicar
+      description: Extractos bancarios, libros de facturas y documentos, desde archivos
+        de este equipo. La vista previa no guarda nada.
+      diagnostic:
+        already_in_ledger: Algunas filas ya están en el libro y se omiten.
+        gap: Más de 35 días entre dos movimientos.
+        no_rows: El archivo no contiene movimientos válidos.
+        repeated: Dos filas parecen iguales; se importan ambas. Revisa si se cuentan
+          dos veces.
+        same_identity: Una fila repite la identidad de otra y se omite.
+        unreadable: Archivo ilegible o formato no admitido.
+        verified: Comprobado con el archivo original.
+      direction:
+        incoming: Entrada
+        internal_transfer: Traspaso
+        outgoing: Salida
+      documents_added: 'Documentos añadidos: {count}'
+      documents_kind: Estos documentos son
+      documents_note: '{kind}. Cada documento se añade como justificante y se lee
+        en este equipo; las imágenes esperan en Documentos para leerse.'
+      documents_refused: Los documentos no se han añadido
+      documents_result: 'Esperando lectura: {waiting} · ya añadidos: {held} · en pausa:
+        {paused}'
+      done: Hecho
+      drop:
+        bank: Suelta aquí archivos de extracto o una carpeta
+        book: Suelta aquí un libro de facturas
+        documents: Suelta aquí PDF, imágenes, facturas electrónicas o una carpeta
+      duplicates: Posibles duplicados
+      duplicates_more: Y {count} más.
+      duplicates_note: 'Posibles duplicados: {count}. Se importan y se marcan; compáralos
+        después de importar.'
+      field: Campo
+      file_counts: '{rows} filas · {fresh} nuevas · {skipped} ya en el libro'
+      file_imported: '{fresh} importados · {skipped} ya en el libro'
+      file_not_sent: No enviado.
+      file_unknown: 'Resultado desconocido: puede haberse importado.'
+      files: Archivos
+      filter:
+        bank: Extractos bancarios
+        book: Libros de facturas
+        documents: Facturas y tiques
+      heading:
+        preview: Vista previa · aún no se guarda nada
+        result: Resultado
+        what: Qué importar
+      imported: 'Importados: {count}'
+      imported_note: 'Ya en el libro y omitidos: {skipped}. Posibles duplicados, importados
+        y marcados: {flagged}.'
+      kind:
+        bank: Extracto bancario
+        book: Libro de facturas
+        documents: Documentos
+      kind_issued: Facturas que emití
+      kind_received: Facturas que recibí
+      left_out: 'Omitidos por no ser de estos tipos: {count}'
+      no_account: Sin cuenta
+      nothing_new: Nada nuevo que importar
+      nothing_new_note: Todas las filas ya están en el libro.
+      only_period: Solo movimientos con fecha en un periodo
+      period: Periodo de importación
+      pick_failed: No se ha abierto el selector de archivos. Vuelve a intentarlo.
+      preview: Vista previa
+      preview_again: Volver a previsualizar
+      preview_failed: 'No se ha podido previsualizar:'
+      provider:
+        auto: Detectar del archivo
+        csv: CSV
+        ofx: OFX
+        pdf_n26: PDF de N26
+        qfx: QFX
+        xls: XLS
+        xlsx: XLSX
+      provider_label: Formato
+      reading: Leyendo {done} de {total}
+      reading_start: Leyendo…
+      reason: Motivo
+      refusal:
+        empty_directory: La carpeta no contiene ningún extracto.
+        file_limit: Más de 128 archivos a la vez.
+        other: 'No importado: {code}'
+        own_account_mismatch: Sus filas indican otra cuenta.
+        result_limit: 'Más de 4.096 filas: impórtalo por partes.'
+        source_changed: 'Ha cambiado tras la vista previa: vuelve a previsualizarlo.'
+        transaction_validation: No se ha podido leer como extracto bancario.
+      refused_rows: Filas rechazadas
+      remove: Quitar {name}
+      row: Fila
+      show_documents: Revisar en Documentos
+      show_failed: No se han podido leer los movimientos importados. Vuelve a intentarlo.
+      show_imported: Ver movimientos importados
+      shown: 'Mostrando el periodo de tu importación: del {from} al {to}.'
+      shown_clear: Descartar
+      step:
+        preview: Vista previa
+        result: Resultado
+        what: Qué
+      steps: Pasos
+      technical: Detalles técnicos
+      title: Importar
+      unknown: Resultado desconocido
+      unknown_note: '{names} puede haberse importado. No se vuelve a enviar nada:
+        vuelve a leer el libro antes de importarlo otra vez.'
+      unmapped: 'Columnas no usadas: {columns}'
+      verify: Comprobar huecos y filas repetidas
+      what: Qué importar
     loaded_of: '{loaded} de {total} cargados'
     loading: Leyendo el libro…
     maximize: Maximizar el libro

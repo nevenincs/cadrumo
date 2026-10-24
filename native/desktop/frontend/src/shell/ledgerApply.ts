@@ -120,11 +120,7 @@ const texts = (value: JsonValue | undefined): string[] =>
 
 /** The refusal a settled result carries in its own outcome, if any. */
 function validationOf(result: JsonObject): StepOutcome | null {
-  for (const candidate of [
-    result,
-    object(result.result),
-    object(result.projection),
-  ]) {
+  for (const candidate of [result, object(result.result)]) {
     if (candidate?.outcome !== "validation_error") continue;
     const validation = object(candidate.validation);
     const messages = [
@@ -156,8 +152,7 @@ function settledOutcome(
   if (validation) return each(validation);
   switch (step.kind) {
     case "bulk": {
-      const batch = (result as unknown as LedgerBulkClassifyResult).projection
-        .result;
+      const batch = (result as unknown as LedgerBulkClassifyResult).result;
       if (!batch) return each(refused("validation_error"));
       const failed = new Map(
         batch.failures.map((failure) => [failure.row_index, failure.reason]),
@@ -178,16 +173,16 @@ function settledOutcome(
       };
     }
     case "classify": {
-      const written = (result as unknown as LedgerClassifyResult).result;
+      const written = result as unknown as LedgerClassifyResult;
       return each(
-        written?.bucket_event_ids.length
+        written.bucket_event_ids.length
           ? { kind: "applied", newId: null }
           : { kind: "unchanged" },
       );
     }
     case "update": {
-      const written = (result as unknown as LedgerUpdateResult).result;
-      if (!written?.bucket_event_ids.length) return each({ kind: "unchanged" });
+      const written = result as unknown as LedgerUpdateResult;
+      if (!written.bucket_event_ids.length) return each({ kind: "unchanged" });
       const after = written.transaction?.transaction_id ?? null;
       return each({
         kind: "applied",
@@ -195,11 +190,11 @@ function settledOutcome(
       });
     }
     case "add": {
-      const written = (result as unknown as LedgerAddResult).result;
+      const written = result as unknown as LedgerAddResult;
       // A replay of the same add returns the row it stored and writes
       // nothing.
       return each(
-        written?.bucket_event_ids.length
+        written.bucket_event_ids.length
           ? {
               kind: "applied",
               newId: written.transaction?.transaction_id ?? null,

@@ -73,6 +73,8 @@ export type LedgerView = {
   inspectorOpen: boolean;
   /** The inspector's width in CSS pixels; null keeps the token's. */
   inspectorWidth: number | null;
+  /** The format the last export was written in. */
+  exportFormat: "csv" | "jsonl" | "xlsx";
 };
 
 export type Layout = {
@@ -125,6 +127,7 @@ export const DEFAULT_LAYOUT: Layout = {
     savedView: null,
     inspectorOpen: false,
     inspectorWidth: null,
+    exportFormat: "csv",
   },
   agentShown: true,
   agentRatio: 0.24,
@@ -219,6 +222,11 @@ function ledgerViewOf(value: unknown): LedgerView {
     inspectorOpen:
       typeof stored.inspectorOpen === "boolean" ? stored.inspectorOpen : false,
     inspectorWidth: width(stored.inspectorWidth),
+    exportFormat: pick(
+      stored.exportFormat,
+      ["csv", "jsonl", "xlsx"] as const,
+      "csv",
+    ),
   };
 }
 

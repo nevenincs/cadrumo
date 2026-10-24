@@ -29,6 +29,10 @@ import {
   stepPeriod,
   type LedgerPeriod,
 } from "../../shell/ledgerGrammar";
+import {
+  periodCovering,
+  type ImportedBatches,
+} from "../../shell/ledgerImports";
 import { useLedgerReadiness } from "../../shell/ledgerReadiness";
 import {
   readinessSnapshot,
@@ -56,6 +60,9 @@ import {
   sectionTabId,
 } from "./ledgerWords";
 import { PeriodSelector } from "./PeriodSelector";
+import { ExportDialog } from "./transfer/ExportDialog";
+import { ImportDialog } from "./transfer/ImportDialog";
+import { dayText } from "./transfer/transferWords";
 
 /** What the page keeps of itself while it is put away, for one profile:
  * the period it showed. Held in memory only. */
@@ -197,6 +204,7 @@ export function LedgerPage({
   memory,
   pane,
   contribute,
+  copy,
 }: {
   port: LedgerPort;
   /** Whose ledger, or null while the account withholds it. */
@@ -217,6 +225,8 @@ export function LedgerPage({
   };
   /** Hands the window's palette what the page offers, read when it opens. */
   contribute(actions: (() => Action[]) | null): void;
+  /** Puts text on the clipboard through the host. */
+  copy(text: string): Promise<void>;
 }) {
   const t = useStrings();
   const panel = useId();
@@ -253,7 +263,14 @@ export function LedgerPage({
     periodWindow?.phase === "ready" ? periodWindow.generation : null,
   );
   const [periodOpen, setPeriodOpen] = useState(false);
-  const { years } = useLedgerYears(port, reader, periodOpen);
+  const [transfer, setTransfer] = useState<"import" | "export" | null>(null);
+  // What an import brought in, as the person asked to see it.
+  const [shownImport, setShownImport] = useState<ImportedBatches | null>(null);
+  const { years, refresh: refreshYears } = useLedgerYears(
+    port,
+    reader,
+    periodOpen || transfer !== null,
+  );
   const numbers = useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const fallbackYear = Number(today.slice(0, 4));
   const shownPeriod = periodText(t, locale, period);
@@ -263,8 +280,12 @@ export function LedgerPage({
   const unavailable = (): LedgerHeaderAction => ({
     reason: t("desktop.ledger.unavailable"),
   });
-  const importAction = unavailable();
-  const exportAction = unavailable();
+  const importAction: LedgerHeaderAction = readable
+    ? { run: () => setTransfer("import") }
+    : unavailable();
+  const exportAction: LedgerHeaderAction = readable
+    ? { run: () => setTransfer("export") }
+    : unavailable();
   const addAction = unavailable();
 
   const snapshot = readinessSnapshot(readiness);
@@ -465,6 +486,21 @@ export function LedgerPage({
                   count: numbers.format(rows.total),
                 })}
           </p>
+          {shownImport && (
+            <p className="ledger-shown-import flex flex-wrap items-center gap-2 text-sm">
+              {t("desktop.ledger.import.shown", {
+                from: dayText(locale, shownImport.span.from),
+                to: dayText(locale, shownImport.span.to),
+              })}
+              <Button
+                variant="link"
+                size="xs"
+                onClick={() => setShownImport(null)}
+              >
+                {t("desktop.ledger.import.shown_clear")}
+              </Button>
+            </p>
+          )}
           {periodWindow.phase === "reading" && (
             <p role="status" className="text-xs text-muted-foreground">
               {reading}
@@ -523,6 +559,42 @@ export function LedgerPage({
           {body}
         </div>
       </section>
+      {readable && transfer === "import" && (
+        <ImportDialog
+          port={port}
+          locale={locale}
+          period={period}
+          years={years}
+          fallbackYear={fallbackYear}
+          onClose={() => setTransfer(null)}
+          onWritten={() => {
+            reread();
+            refreshYears();
+          }}
+          onShowImported={(shown) => {
+            setShownImport(shown);
+            setPeriod(periodCovering(shown.span));
+            setSection("movements");
+          }}
+          onShowDocuments={() => setSection("documents")}
+        />
+      )}
+      {readable && transfer === "export" && (
+        <ExportDialog
+          port={port}
+          locale={locale}
+          period={period}
+          years={years}
+          fallbackYear={fallbackYear}
+          format={view.exportFormat}
+          onFormat={(exportFormat) =>
+            onViewChange((current) => ({ ...current, exportFormat }))
+          }
+          staged={0}
+          copy={copy}
+          onClose={() => setTransfer(null)}
+        />
+      )}
     </>
   );
 }

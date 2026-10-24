@@ -56,29 +56,24 @@ const bulkResult = (
   }[] = [],
 ): FakeAnswer => ({
   settle: {
-    projection: {
-      profile_id: PROFILE,
-      outcome: "classified",
-      result: {
-        total,
-        applied,
-        skipped: total - applied - failures.length,
-        failures,
-        bucket_event_ids: applied ? ["ev"] : [],
-      },
-      validation_messages: [],
+    profile_id: PROFILE,
+    outcome: "classified",
+    result: {
+      total,
+      applied,
+      skipped: total - applied - failures.length,
+      failures,
+      bucket_event_ids: applied ? ["ev"] : [],
     },
+    validation_messages: [],
   },
 });
 const classified = (written: boolean): FakeAnswer => ({
   settle: {
     outcome: "classified",
     profile_id: PROFILE,
-    result: {
-      outcome: "classified",
-      bucket_event_ids: written ? ["ev"] : [],
-      transaction: null,
-    },
+    transaction: null,
+    bucket_event_ids: written ? ["ev"] : [],
     validation_kind: "none",
     validation_messages: [],
   },
@@ -87,12 +82,9 @@ const updated = (from: string, to: string): FakeAnswer => ({
   settle: {
     outcome: "updated",
     profile_id: PROFILE,
-    result: {
-      outcome: "updated",
-      source_transaction_id: from,
-      transaction: { transaction_id: to } as JsonObject,
-      bucket_event_ids: ["ev"],
-    },
+    source_transaction_id: from,
+    transaction: { transaction_id: to } as JsonObject,
+    bucket_event_ids: ["ev"],
     validation_messages: [],
   },
 });
@@ -100,7 +92,8 @@ const updateRefused: FakeAnswer = {
   settle: {
     outcome: "validation_error",
     profile_id: PROFILE,
-    result: null,
+    transaction: null,
+    bucket_event_ids: [],
     validation_messages: ["A finalized revision cites this movement."],
   },
 };
@@ -108,11 +101,8 @@ const added = (id: string, written = true): FakeAnswer => ({
   settle: {
     outcome: "created",
     profile_id: PROFILE,
-    result: {
-      outcome: "created",
-      transaction: { transaction_id: id } as JsonObject,
-      bucket_event_ids: written ? ["ev"] : [],
-    },
+    transaction: { transaction_id: id } as JsonObject,
+    bucket_event_ids: written ? ["ev"] : [],
     validation_code: null,
     validation_messages: [],
   },

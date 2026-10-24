@@ -795,7 +795,239 @@ desktop:
       to_classify: '{count} besorolandó'
     empty: 'Nincs tétel ebben az időszakban: {period}'
     empty_all: Még nincs tétel
+    export:
+      cancel: Mégse
+      change_file: Módosítás…
+      choose_file: Kiválasztás…
+      close: Bezárás
+      copied_invoices: 'Kimásolt számlák: {count}'
+      copied_movements: 'Kimásolt tételek: {count}'
+      copy_failed: Nem sikerült másolni. Próbáld újra.
+      copy_invoices: Számlák másolása is (TSV)
+      copy_selection: Másolás TSV-ként
+      count: 'Exportálandó tételek: {shown}.'
+      count_unknown: A tételek számát nem sikerült beolvasni.
+      counting: Számolás…
+      description: Helyi fájl neked vagy a gestorodnak. Semmi sem megy az AEAT-nek.
+      done: A fájl elkészült
+      done_note: 'Kiírt tételek ({name}): {count}.'
+      file: Mentés másként
+      file_hint: Utoljára választod ki, a rendszer mentési ablakában, amely rákérdez,
+        mielőtt felülír egy fájlt. A formátum vagy az időszak módosítása törli.
+      file_stem: naplo
+      filter:
+        csv: CSV-fájl
+        jsonl: JSON Lines-fájl
+        xlsx: Excel-munkafüzet
+      format: Formátum
+      format_csv: CSV
+      format_jsonl: JSONL
+      format_xlsx: XLSX
+      heading: Mit exportálsz
+      heading_done: Exportálva
+      inactive: Archivált és félretett tételekkel együtt
+      left_out: 'Kimarad: {archived} archivált, {aside} félretett, {split} felosztott.'
+      no_file: Nincs kiválasztott fájl
+      not_ready: Nem kész a számításra
+      not_ready_note: 'Készültségi problémák: {count}. A fájl azt mutatja, ami most
+        a naplóban van.'
+      period: Exportálási időszak
+      refused: Nincs exportálva
+      review_staged: Áttekintés és mentés
+      save_refused: Válassz .{format} végű fájlnevet.
+      selection: 'Kijelölt tételek: {count}'
+      selection_note: Az exportálás teljes időszakokat visz. Ha csak a kijelölést
+        vinnéd táblázatba, másold ki.
+      send: Exportálás ({shown})
+      send_unknown: Exportálás
+      staged: 'Mentetlen változások, amelyek nincsenek a fájlban: {count}'
+      staged_note: Az exportálás a mentett adatokat olvassa.
+      title: Napló exportálása
+      tsv:
+        amount: Összeg
+        base: Adóalap
+        category: Kategória
+        classification: Besorolás
+        counterparty: Partner
+        country: Ország
+        currency: Pénznem
+        date: Dátum
+        description: Leírás
+        direction: Irány
+        group: Csoport
+        id: Azonosító
+        iva: IVA
+        kind: Típus
+        number: Szám
+        payment: Fizetés
+        series: Sorozat
+        tax_id: Adószám
+        total: Végösszeg
+      unknown: Ismeretlen eredmény
+      unknown_note: 'Lehet, hogy a fájl már elkészült. Semmi sem megy el újra: ellenőrizd
+        a fájlt, mielőtt ismét exportálsz.'
+      without_staged: Exportálás nélkülük
     failed: A naplót nem sikerült beolvasni.
+    import:
+      accepts:
+        bank: CSV, XLSX, XLS, OFX, QFX vagy N26 PDF · legfeljebb 128 fájl · a mappán
+          belüli mappákat nem olvassa
+        book: CSV, TSV, XLSX, XLSM vagy XLS
+        documents: PDF, PNG, JPG, TIFF, WEBP, HEIC vagy Facturae, UBL, CII XML · a
+          mappán belüli mappákat nem olvassa
+      account: Számla
+      account_choose: Válaszd ki a számlát…
+      account_detected: a fájlból felismerve
+      account_later: Az egyes fájlok számláját az előnézetben választod ki.
+      account_no_accounts: nincs nyilvántartott számla
+      account_unregistered: a fájl nem nyilvántartott számlát nevez meg
+      any_date: Bármilyen dátum. A választott időszakon kívüli sorok kimaradnak.
+      apply_book: Könyv importálása
+      apply_documents: Dokumentumok hozzáadása ({count})
+      apply_files: Pontosan ezek importálása ({count})
+      applying: 'Importálás: {done}/{total}'
+      back: Vissza
+      book_created: 'Létrehozott számlák: {count}'
+      book_kind: A könyv számlái
+      book_no_preview: A számlakönyveknek nincs előnézete
+      book_no_preview_note: 'A sorokat létrehozáskor ellenőrzi. Az elutasított sorok
+        utána sorszámmal és okkal jelennek meg; a többi megmarad. {kind}; ország:
+        {country}.'
+      book_note: 'Sorok: {rows} · már a katalógusban: {skipped} · elutasítva: {refused}'
+      book_refused: A könyv nem lett importálva
+      bound_note: Az importálás pontosan ezeket a fájlokat használja. Az előnézet
+        után módosult fájlt elutasítja.
+      cancel: Mégse
+      choose_accounts: Válaszd ki minden fájl számláját.
+      choose_file: Fájl kiválasztása…
+      choose_files: Fájlok kiválasztása…
+      choose_folder: Mappa kiválasztása…
+      chosen: Kiválasztott fájlok
+      close: Importálás bezárása
+      compare: Összehasonlítás
+      compare_existing: Már a naplóban
+      compare_failed: Erre a napra nem sikerült beolvasni a naplót.
+      compare_imported: Ebben az importálásban
+      compare_none: Most nincs más tétel ezen a napon ezzel az összeggel.
+      compare_note: Mindkettő megmarad. Az újat lehetséges ismétlésként jelöli, archiválhatod
+        vagy megtarthatod.
+      compare_reading: A napló beolvasása
+      compare_title: Lehetséges ismétlés
+      count:
+        duplicates: Lehetséges ismétlések
+        new: Új
+        refused: Elutasított fájlok
+        rows: Sorok
+        skipped: Már a naplóban
+      country: A partner országa
+      country_hint: Két betű, ha a könyvben nincs országoszlop. Nem kötelező.
+      country_invalid: „{value}” nem kétbetűs országkód.
+      country_none: nincs megadva
+      description: Bankszámlakivonatok, számlakönyvek és dokumentumok a gép fájljaiból.
+        Az előnézet semmit sem ment.
+      diagnostic:
+        already_in_ledger: Néhány sor már szerepel a naplóban, ezek kimaradnak.
+        gap: Két tétel között több mint 35 nap telt el.
+        no_rows: A fájl nem tartalmaz érvényes tételt.
+        repeated: Két sor egyformának tűnik; mindkettő importálódik. Ellenőrizd, nincs-e
+          kétszer számolva.
+        same_identity: Egy sor egy másik sor azonosítóját ismétli, ezért kimarad.
+        unreadable: Olvashatatlan fájl vagy nem támogatott formátum.
+        verified: Az eredeti fájllal ellenőrizve.
+      direction:
+        incoming: Bejövő
+        internal_transfer: Átvezetés
+        outgoing: Kimenő
+      documents_added: 'Hozzáadott dokumentumok: {count}'
+      documents_kind: Ezek a dokumentumok
+      documents_note: '{kind}. Minden dokumentum bizonylatként kerül be, és ezen a
+        gépen olvassa be; a képek a Dokumentumokban várnak beolvasásra.'
+      documents_refused: A dokumentumok nem lettek hozzáadva
+      documents_result: 'Beolvasásra vár: {waiting} · már hozzáadva: {held} · szüneteltetve:
+        {paused}'
+      done: Kész
+      drop:
+        bank: Húzd ide a kivonatfájlokat vagy egy mappát
+        book: Húzz ide egy számlakönyvet
+        documents: Húzz ide PDF-eket, képeket, e-számlákat vagy egy mappát
+      duplicates: Lehetséges ismétlések
+      duplicates_more: És még {count}.
+      duplicates_note: 'Lehetséges ismétlések: {count}. Importálódnak és megjelölődnek;
+        importálás után hasonlítsd össze őket.'
+      field: Mező
+      file_counts: '{rows} sor · {fresh} új · {skipped} már a naplóban'
+      file_imported: '{fresh} importálva · {skipped} már a naplóban'
+      file_not_sent: Nincs elküldve.
+      file_unknown: 'Ismeretlen eredmény: lehet, hogy importálódott.'
+      files: Fájlok
+      filter:
+        bank: Bankszámlakivonatok
+        book: Számlakönyvek
+        documents: Számlák és nyugták
+      heading:
+        preview: Előnézet · még semmi sem íródik
+        result: Eredmény
+        what: Mit importálsz
+      imported: 'Importálva: {count}'
+      imported_note: 'Már a naplóban, kihagyva: {skipped}. Lehetséges ismétlések,
+        importálva és megjelölve: {flagged}.'
+      kind:
+        bank: Bankszámlakivonat
+        book: Számlakönyv
+        documents: Dokumentumok
+      kind_issued: Kiállított számlák
+      kind_received: Kapott számlák
+      left_out: 'Kihagyva, mert nem ilyen típusú: {count}'
+      no_account: Számla nélkül
+      nothing_new: Nincs új importálnivaló
+      nothing_new_note: Minden sor már szerepel a naplóban.
+      only_period: Csak egy időszakra datált tételek
+      period: Importálási időszak
+      pick_failed: A fájlválasztó nem nyílt meg. Próbáld újra.
+      preview: Előnézet
+      preview_again: Új előnézet
+      preview_failed: 'Nem sikerült az előnézet:'
+      provider:
+        auto: Felismerés a fájlból
+        csv: CSV
+        ofx: OFX
+        pdf_n26: N26 PDF
+        qfx: QFX
+        xls: XLS
+        xlsx: XLSX
+      provider_label: Formátum
+      reading: 'Beolvasás: {done}/{total}'
+      reading_start: Beolvasás…
+      reason: Ok
+      refusal:
+        empty_directory: A mappában nincs kivonat.
+        file_limit: Egyszerre több mint 128 fájl.
+        other: 'Nincs importálva: {code}'
+        own_account_mismatch: A sorai másik számlát neveznek meg.
+        result_limit: 'Több mint 4096 sor: importáld részletekben.'
+        source_changed: 'Az előnézet óta megváltozott: nézd meg újra.'
+        transaction_validation: Nem olvasható be bankszámlakivonatként.
+      refused_rows: Elutasított sorok
+      remove: '{name} eltávolítása'
+      row: Sor
+      show_documents: Áttekintés a Dokumentumokban
+      show_failed: Az importált tételeket nem sikerült beolvasni. Próbáld újra.
+      show_imported: Importált tételek megjelenítése
+      shown: 'Az importálásod időszaka látható: {from} – {to}.'
+      shown_clear: Elvetés
+      step:
+        preview: Előnézet
+        result: Eredmény
+        what: Mit
+      steps: Lépések
+      technical: Technikai részletek
+      title: Importálás
+      unknown: Ismeretlen eredmény
+      unknown_note: 'Lehet, hogy {names} már importálódott. Semmi sem megy el újra:
+        olvasd be újra a naplót, mielőtt ismét importálod.'
+      unmapped: 'Nem használt oszlopok: {columns}'
+      verify: Hézagok és ismétlődő sorok ellenőrzése
+      what: Mit importálsz
     loaded_of: '{loaded} / {total} betöltve'
     loading: A napló beolvasása…
     maximize: Napló teljes méretben

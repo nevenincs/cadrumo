@@ -69,6 +69,9 @@ declare global {
       drop(names: string[]): void;
       /** Changes every pending review, as a model reading again would. */
       changeReviews(): void;
+      /** Changes a file's bytes, as editing it on disk between a preview
+       * and an import would. */
+      changeFile(name: string): void;
     };
   }
 }
@@ -102,10 +105,69 @@ const PICKABLE: Record<Exclude<FilePurpose, "export">, string[]> = {
   bank_statements: [
     "extracto-cuenta-estudio-2026-10.csv",
     "extracto-cuenta-personal-2026-10.ofx",
+    "movimientos-tarjeta.pdf",
     "notas-del-banco.docx",
   ],
   invoice_books: ["libro-facturas-recibidas-2026.xlsx"],
-  documents: ["ticket-gasolinera-ruta7.jpg", "factura-papeleria-trazo.pdf"],
+  documents: [
+    "ticket-gasolinera-ruta7.jpg",
+    "factura-papeleria-trazo.pdf",
+    "factura-estudio-lumen.xml",
+  ],
+};
+/** What each made-up statement holds: the own account its rows name, if
+ * any, how many rows it has, how many fall on the day and amount of a
+ * movement already in the ledger, and whether its dates leave a gap. A name
+ * not listed reads as a short statement that names no account. */
+type Statement = {
+  names: string | null;
+  rows: number;
+  duplicates: number;
+  gap: boolean;
+  readable: boolean;
+};
+const STATEMENTS: Record<string, Statement> = {
+  "extracto-cuenta-estudio-2026-10.csv": {
+    names: null,
+    rows: 14,
+    duplicates: 2,
+    gap: false,
+    readable: true,
+  },
+  "extracto-cuenta-personal-2026-10.ofx": {
+    names: "acc-02",
+    rows: 9,
+    duplicates: 0,
+    gap: true,
+    readable: true,
+  },
+  "movimientos-tarjeta.pdf": {
+    names: null,
+    rows: 0,
+    duplicates: 0,
+    gap: false,
+    readable: false,
+  },
+};
+const STATEMENT: Statement = {
+  names: null,
+  rows: 6,
+  duplicates: 0,
+  gap: false,
+  readable: true,
+};
+/** The rows of each made-up invoice book that its import refuses. */
+const BOOK_REFUSALS: Record<
+  string,
+  { row_number: number; field: string; reason: string }[]
+> = {
+  "libro-facturas-recibidas-2026.xlsx": [
+    {
+      row_number: 5,
+      field: "counterparty_nif",
+      reason: "B0000004 is not a valid tax identification number.",
+    },
+  ],
 };
 const UPDATE_REQUIRED: readonly LedgerUpdateField[] = [
   "booked_date",
@@ -477,6 +539,10 @@ export function ledgerFixture(options: Options): LedgerPort {
   };
   const reviews = new Map<string, Pending>();
   const files = new Map<FileToken, { name: string; purpose: FilePurpose }>();
+  /** How often each made-up file was changed since the scenario began. */
+  const edits = new Map<string, number>();
+  const bytesOf = (name: string) =>
+    hex64(`bytes:${name}:${edits.get(name) ?? 0}`);
   const drops = new Set<(signal: LedgerDropSignal) => void>();
   let dropPurpose: Exclude<FilePurpose, "export"> = "bank_statements";
 
@@ -544,6 +610,9 @@ export function ledgerFixture(options: Options): LedgerPort {
         pending.version += 1;
       });
     },
+    changeFile(name) {
+      edits.set(name, (edits.get(name) ?? 0) + 1);
+    },
   };
 
   const transactionOf = (id: string) =>
@@ -581,7 +650,12 @@ export function ledgerFixture(options: Options): LedgerPort {
     const refused = (message: string): JsonObject => ({
       outcome: "validation_error",
       profile_id: LEDGER_FIXTURE_PROFILE_ID,
-      result: null,
+      source_transaction_id: null,
+      transaction: null,
+      review_status: null,
+      bucket_event_ids: [],
+      group_label: null,
+      own_account_id: null,
       validation_messages: [message],
     });
     if (movement.transaction.lifecycle_state !== "ACTIVE")
@@ -656,17 +730,12 @@ export function ledgerFixture(options: Options): LedgerPort {
     return {
       outcome: "updated",
       profile_id: LEDGER_FIXTURE_PROFILE_ID,
-      result: {
-        outcome: "updated",
-        profile_id: LEDGER_FIXTURE_PROFILE_ID,
-        source_transaction_id: source,
-        transaction: { ...next } as unknown as JsonValue,
-        review_status: reviewStatus(next.business_classification),
-        bucket_event_ids: events(),
-        group_label: group,
-        own_account_id: account,
-        validation_messages: [],
-      },
+      source_transaction_id: source,
+      transaction: { ...next } as unknown as JsonValue,
+      review_status: reviewStatus(next.business_classification),
+      bucket_event_ids: events(),
+      group_label: group,
+      own_account_id: account,
       validation_messages: [],
     };
   }
@@ -725,7 +794,11 @@ export function ledgerFixture(options: Options): LedgerPort {
       return {
         outcome: "validation_error",
         profile_id: LEDGER_FIXTURE_PROFILE_ID,
-        result: null,
+        transaction: null,
+        deduction_fact_kind: null,
+        investment_asset_id: null,
+        review_status: null,
+        bucket_event_ids: [],
         validation_kind: "input",
         validation_messages: [
           movement.sealed
@@ -744,17 +817,11 @@ export function ledgerFixture(options: Options): LedgerPort {
     return {
       outcome: "classified",
       profile_id: LEDGER_FIXTURE_PROFILE_ID,
-      result: {
-        outcome: "classified",
-        profile_id: LEDGER_FIXTURE_PROFILE_ID,
-        transaction: { ...transaction } as unknown as JsonValue,
-        deduction_fact_kind: null,
-        investment_asset_id: null,
-        review_status: reviewStatus(transaction.business_classification),
-        bucket_event_ids: events(),
-        validation_kind: "none",
-        validation_messages: [],
-      },
+      transaction: { ...transaction } as unknown as JsonValue,
+      deduction_fact_kind: null,
+      investment_asset_id: null,
+      review_status: reviewStatus(transaction.business_classification),
+      bucket_event_ids: events(),
       validation_kind: "none",
       validation_messages: [],
     };
@@ -764,12 +831,10 @@ export function ledgerFixture(options: Options): LedgerPort {
     const csv = text(request.csv_text);
     if (csv === null) return invalid();
     const refused = (message: string): JsonObject => ({
-      projection: {
-        profile_id: LEDGER_FIXTURE_PROFILE_ID,
-        outcome: "validation_error",
-        result: null,
-        validation_messages: [message],
-      },
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      outcome: "validation_error",
+      result: null,
+      validation_messages: [message],
     });
     const lines = parseCsv(csv);
     const header = lines.shift() ?? [];
@@ -830,18 +895,16 @@ export function ledgerFixture(options: Options): LedgerPort {
       else skipped += 1;
     });
     return {
-      projection: {
-        profile_id: LEDGER_FIXTURE_PROFILE_ID,
-        outcome: "classified",
-        result: {
-          total: lines.length,
-          applied,
-          skipped,
-          failures,
-          bucket_event_ids: applied ? events() : [],
-        },
-        validation_messages: [],
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      outcome: "classified",
+      result: {
+        total: lines.length,
+        applied,
+        skipped,
+        failures,
+        bucket_event_ids: applied ? events() : [],
       },
+      validation_messages: [],
     };
   }
 
@@ -855,7 +918,13 @@ export function ledgerFixture(options: Options): LedgerPort {
     const refused = (message: string): JsonObject => ({
       outcome: "validation_error",
       profile_id: LEDGER_FIXTURE_PROFILE_ID,
-      result: null,
+      transaction: null,
+      review_status: null,
+      bucket_event_ids: [],
+      advisory_input_classification: null,
+      advisory_input_classification_inert: false,
+      advisory_sector_id: null,
+      advisory_sector_unmatched: false,
       validation_code: "invalid_command",
       validation_messages: [message],
     });
@@ -913,19 +982,13 @@ export function ledgerFixture(options: Options): LedgerPort {
     ): JsonObject => ({
       outcome: "created",
       profile_id: LEDGER_FIXTURE_PROFILE_ID,
-      result: {
-        outcome: "created",
-        profile_id: LEDGER_FIXTURE_PROFILE_ID,
-        transaction: { ...transaction } as unknown as JsonValue,
-        review_status: reviewStatus(transaction.business_classification),
-        bucket_event_ids: written ? events() : [],
-        advisory_input_classification: null,
-        advisory_input_classification_inert: false,
-        advisory_sector_id: null,
-        advisory_sector_unmatched: false,
-        validation_code: null,
-        validation_messages: [],
-      },
+      transaction: { ...transaction } as unknown as JsonValue,
+      review_status: reviewStatus(transaction.business_classification),
+      bucket_event_ids: written ? events() : [],
+      advisory_input_classification: null,
+      advisory_input_classification_inert: false,
+      advisory_sector_id: null,
+      advisory_sector_unmatched: false,
       validation_code: null,
       validation_messages: [],
     });
@@ -1068,103 +1131,340 @@ export function ledgerFixture(options: Options): LedgerPort {
     };
   }
 
+  /** The movements already in the ledger that a statement's first rows fall
+   * on the day and amount of, chosen once from October 2026. */
+  let duplicateTargets: FixtureMovement[] | null = null;
+  const targets = () =>
+    (duplicateTargets ??= ledger.movements
+      .filter(
+        (movement) =>
+          movement.transaction.date.startsWith("2026-10-") &&
+          movement.transaction.lifecycle_state === "ACTIVE" &&
+          movement.import_batch_id === null,
+      )
+      .sort((left, right) =>
+        compare(left.transaction.date, right.transaction.date),
+      )
+      .slice(0, 4));
+
+  /** One statement's rows as the product reads them, each bound to `bound`. */
+  function statementRows(name: string, bound: string | null) {
+    const spec = STATEMENTS[name] ?? STATEMENT;
+    const stem = name.replace(/\.[a-z0-9]+$/i, "").toUpperCase();
+    return Array.from({ length: spec.rows }, (_, at) => {
+      const target = at < spec.duplicates ? targets()[at] : undefined;
+      const dayOfMonth = spec.gap && at > 3 ? 18 + (at % 9) : 1 + (at % 9);
+      const date = target
+        ? target.transaction.date
+        : `2026-10-${String(dayOfMonth).padStart(2, "0")}`;
+      const amount = target
+        ? target.transaction.amount
+        : money(1500 + at * 731 + stem.length * 13);
+      const description = `${target ? "CARGO" : "MOVIMIENTO"} ${stem.slice(0, 18)} ${String(at + 1).padStart(2, "0")}`;
+      const direction = target
+        ? target.transaction.direction
+        : at % 4 === 0
+          ? "INCOMING"
+          : "OUTGOING";
+      return {
+        id: movementId({
+          date,
+          amount,
+          description,
+          own_account_id: bound,
+          salt: name,
+        }),
+        date,
+        amount,
+        description,
+        direction,
+      };
+    });
+  }
+
+  /** A bank statement import, as the product's public result tells it: a
+   * row already in the ledger is skipped, a row on the day and amount of
+   * another is imported and listed as a likely duplicate, and each file
+   * read names its digest by its place in the request. */
   function importStatement(request: JsonObject): JsonObject {
     const tokens = request.files;
     if (!Array.isArray(tokens) || tokens.length === 0) return invalid();
-    const chosen = tokens.map((token) => ({
-      token: token as string,
-      ...fileOf(token, "bank_statements"),
-    }));
-    const dryRun = request.dry_run === true;
+    const chosen = tokens.map((token) => fileOf(token, "bank_statements"));
     const expected = request.expected_source_sha256 ?? null;
-    const digest = (token: string) => hex64(`bytes:${token}`);
-    const refused: JsonValue[] = [];
-    const results: JsonValue[] = [];
+    if (
+      expected !== null &&
+      (!Array.isArray(expected) || expected.length !== chosen.length)
+    )
+      return invalid();
+    const account = text(request.own_account_id);
+    if (
+      account !== null &&
+      !ledger.accounts.some((known) => known.own_account_id === account)
+    )
+      throw new Stopped("ERROR_TRANSACTION_VALIDATION");
+    const period = (request.period ?? null) as PublicPeriod | null;
+    const span = period ? periodSpan(period.filing_year, period.code) : null;
+    if (period && !span) return invalid();
+    const dryRun = request.dry_run === true;
+    const verify = request.verify === true;
+    const profile = LEDGER_FIXTURE_PROFILE_ID;
+    const ref = (id: string): JsonObject => ({
+      bucket_id: profile,
+      transaction_id: id,
+    });
+    const refused: JsonObject[] = [];
+    const digests: JsonObject[] = [];
+    const imported: JsonObject[] = [];
+    const skipped: JsonObject[] = [];
+    const duplicates: JsonObject[] = [];
+    const diagnostics: JsonObject[] = [];
+    const validations: JsonObject[] = [];
+    const batches: string[] = [];
+    let rows = 0;
     chosen.forEach((file, index) => {
-      const sha = digest(file.token);
+      const spec = STATEMENTS[file.name] ?? STATEMENT;
+      const sha = bytesOf(file.name);
       // Apply takes exactly the files the preview read, unchanged since.
-      if (!dryRun && Array.isArray(expected) && expected[index] !== sha) {
+      if (Array.isArray(expected) && expected[index] !== sha) {
         refused.push({ file_name: file.name, reason_code: "source_changed" });
         return;
       }
-      const rows = 12 + (file.name.length % 9);
-      const duplicates = 2;
-      const batch = `import-${sha.slice(0, 8)}`;
-      const imported: JsonValue[] = [];
-      if (!dryRun) {
-        for (let at = 0; at < rows - duplicates; at += 1) {
-          const amount = money(1500 + at * 731);
-          const date = `2026-10-${String(1 + (at % 22)).padStart(2, "0")}`;
-          const description = `MOVIMIENTO IMPORTADO ${String(at + 1).padStart(2, "0")}`;
-          const id = movementId({
-            date,
-            amount,
-            description,
-            own_account_id: text(request.own_account_id),
-            salt: batch,
-          });
-          if (transactionOf(id)) continue;
-          const created = now();
-          ledger.movements.push({
-            transaction: {
-              ...fixtureTemplate(),
-              transaction_id: id,
-              date,
-              booked_date: date,
-              value_date: date,
-              amount,
-              direction: at % 4 === 0 ? "INCOMING" : "OUTGOING",
-              description,
-              created_at: created,
-              modified_at: created,
-            },
-            group_label: null,
-            own_account_id: text(request.own_account_id),
-            import_batch_id: batch,
-            issue: null,
-            sealed: false,
-            llm_rejected: false,
-            idempotency_key: null,
-          });
-          imported.push({
-            bucket_id: LEDGER_FIXTURE_PROFILE_ID,
-            transaction_id: id,
-          });
-        }
+      if (!spec.readable) {
+        refused.push({
+          file_name: file.name,
+          reason_code: "transaction_validation",
+        });
+        return;
       }
-      results.push({
-        file_name: file.name,
-        file_index: index,
-        source_sha256: sha,
-        result: {
-          rows,
-          imported: dryRun ? rows - duplicates : imported.length,
-          skipped: duplicates,
-          likely_duplicates: duplicates,
-          dry_run: dryRun,
-          verify: request.verify === true,
-          period: null,
-          bucket_id: LEDGER_FIXTURE_PROFILE_ID,
-          import_batch_id: dryRun ? null : batch,
-          bucket_event_ids: dryRun ? [] : events(),
-          imported_transaction_refs: imported,
-          skipped_transaction_refs: [],
-          likely_duplicate_transaction_refs: [],
-          validations: [
-            { valid: true, warnings: [], encoding: "utf-8", dialect: "excel" },
-          ],
-          sources: [{ requested: false, path: null, sha256: sha }],
-          diagnostics: [],
-        },
-      });
+      // A chosen account that the file's own rows contradict refuses it.
+      if (account !== null && spec.names !== null && spec.names !== account) {
+        refused.push({
+          file_name: file.name,
+          reason_code: "own_account_mismatch",
+        });
+        return;
+      }
+      const named = ledger.accounts.some(
+        (known) => known.own_account_id === spec.names,
+      )
+        ? spec.names
+        : null;
+      const bound = account ?? named;
+      const read = statementRows(file.name, bound).filter(
+        (row) => !span || (row.date >= span[0] && row.date <= span[1]),
+      );
+      digests.push({ file_index: index, sha256: sha });
+      validations.push({ valid: true, warning_count: 0, encoding: "utf-8" });
+      rows += read.length;
+      const days = new Set<string>();
+      const fresh: string[] = [];
+      for (const row of read) {
+        const day = `${row.date}:${row.amount}`;
+        if (transactionOf(row.id)) {
+          skipped.push(ref(row.id));
+          if (verify)
+            diagnostics.push({
+              kind: "duplicate",
+              severity: "info",
+              message: "transactions.import.message_082074",
+              affected_transaction_ids: [row.id],
+            });
+          continue;
+        }
+        const likely =
+          days.has(day) ||
+          ledger.movements.some(
+            (movement) =>
+              `${movement.transaction.date}:${movement.transaction.amount}` ===
+              day,
+          );
+        days.add(day);
+        imported.push(ref(row.id));
+        fresh.push(row.id);
+        if (likely) duplicates.push(ref(row.id));
+        if (dryRun) continue;
+        const created = now();
+        ledger.movements.push({
+          transaction: {
+            ...fixtureTemplate(),
+            transaction_id: row.id,
+            date: row.date,
+            booked_date: row.date,
+            value_date: row.date,
+            amount: row.amount,
+            direction: row.direction,
+            description: row.description,
+            created_at: created,
+            modified_at: created,
+          },
+          group_label: null,
+          own_account_id: bound,
+          import_batch_id: null,
+          issue: likely ? "duplicate" : null,
+          sealed: false,
+          llm_rejected: false,
+          idempotency_key: null,
+        });
+      }
+      if (verify && spec.gap && read.length > 0)
+        diagnostics.push({
+          kind: "gap",
+          severity: "warning",
+          message: "transactions.import.message_829073",
+          affected_transaction_ids: [],
+        });
+      if (!dryRun && fresh.length > 0) {
+        const batch = hex64(`batch:${fresh.join(",")}`);
+        batches.push(batch);
+        for (const id of fresh) transactionOf(id)!.import_batch_id = batch;
+      }
     });
     return {
-      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      profile_id: profile,
+      rows,
+      imported: imported.length,
+      skipped: skipped.length,
+      likely_duplicates: duplicates.length,
       dry_run: dryRun,
-      verify: request.verify === true,
-      period: null,
-      files: results,
+      verify,
+      period: period as unknown as JsonValue,
+      bucket_id: profile,
+      // Files that each import have no single batch between them.
+      import_batch_id: batches.length === 1 ? batches[0]! : null,
+      bucket_event_ids: dryRun || imported.length === 0 ? [] : events(),
+      imported_transaction_refs: imported,
+      skipped_transaction_refs: skipped,
+      likely_duplicate_transaction_refs: duplicates,
+      validations,
+      sources: chosen.map(() => ({ requested: false, sha256: null })),
+      diagnostics,
       refused_files: refused,
+      source_digests: digests,
+    };
+  }
+
+  /** An invoice book, row by row: no dry run, a refused row leaves the
+   * others, and a row the catalogue already holds is skipped. */
+  function importInvoiceBook(request: JsonObject): JsonObject {
+    const file = fileOf(request.source_path, "invoice_books");
+    const kind = request.kind;
+    if (kind !== "issued" && kind !== "received") return invalid();
+    const country = text(request.country);
+    if (country !== null && !/^[A-Z]{2}$/.test(country)) return invalid();
+    const sha = bytesOf(file.name);
+    const expected = text(request.source_sha256);
+    if (expected !== null && expected !== sha)
+      throw new Stopped("ERROR_INVOICE_IMPORT_SOURCE_CHANGED");
+    const refusals = BOOK_REFUSALS[file.name] ?? [];
+    const rows = 6;
+    const created: string[] = [];
+    let skippedDuplicate = 0;
+    const template = ledger.invoices.find((invoice) => invoice.kind === kind);
+    for (let row = 2; row < rows + 2; row += 1) {
+      if (refusals.some((refusal) => refusal.row_number === row)) continue;
+      // The book's first row repeats an invoice the catalogue holds.
+      const id =
+        row === 2 && template
+          ? template.invoice_id
+          : hex64(`book:${file.name}:${kind}:${row}`);
+      if (ledger.invoices.some((invoice) => invoice.invoice_id === id)) {
+        skippedDuplicate += 1;
+        continue;
+      }
+      const baseCents = 4000 + row * 1250;
+      const ivaCents = Math.round(baseCents * 0.21);
+      const issued = `2026-${String(1 + (row % 9)).padStart(2, "0")}-1${row % 9}`;
+      ledger.invoices.push({
+        ...(template ?? ledger.invoices[0]!),
+        invoice_id: id,
+        kind,
+        invoice_number: `LIB-2026-${String(row).padStart(3, "0")}`,
+        issued_at: issued,
+        operation_date: issued,
+        counterparty_name: `Proveedor del libro ${row}, S.L.`,
+        counterparty_tax_id: `B0000${String(row).padStart(4, "0")}`,
+        counterparty_country: country ?? "ES",
+        base_total: { decimal: money(baseCents) },
+        iva_total: { decimal: money(ivaCents) },
+        grand_total: { decimal: money(baseCents + ivaCents) },
+        payment_status: "PENDING",
+        linked_transaction_ids: [],
+        source_filename: file.name,
+        source_sha256: sha,
+        source_row_index: row,
+        lines: [],
+      });
+      created.push(id);
+    }
+    return {
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      source_sha256: sha,
+      rows,
+      created: created.length,
+      skipped_duplicate: skippedDuplicate,
+      refused: refusals as unknown as JsonValue,
+      created_invoice_ids: created,
+      unmapped_column_headers: ["Observaciones"],
+      mapping_reasons: [],
+    };
+  }
+
+  /** Documents added as evidence: a PDF or an XML is read at once, an image
+   * waits for its reading, and a document already held is left as it is. */
+  function addDocuments(request: JsonObject): JsonObject {
+    const sources = request.sources;
+    const direction = request.direction;
+    if (!Array.isArray(sources) || sources.length === 0) return invalid();
+    if (direction !== "issued" && direction !== "received") return invalid();
+    const items: JsonObject[] = [];
+    let writes = 0;
+    for (const token of sources) {
+      const file = fileOf(token, "documents");
+      const address = hex64(`document:${bytesOf(file.name)}`);
+      const kind = file.name.split(".").pop()?.toLowerCase() ?? "";
+      const image = kind !== "pdf" && kind !== "xml";
+      const held = ledger.evidence.some(
+        (record) => record.source_sha256 === address,
+      );
+      if (!held) {
+        writes += 1;
+        const at = now();
+        ledger.evidence.push({
+          evidence_id: hex64(`evidence:${address}`),
+          bucket_id: LEDGER_FIXTURE_PROFILE_ID,
+          source_sha256: address,
+          attachment_id: `att-${address.slice(0, 12)}`,
+          media_kind: image ? "image" : "pdf",
+          supplier: null,
+          invoice_number: null,
+          invoice_date: null,
+          taxable_base: null,
+          iva_rate: null,
+          iva_amount: null,
+          notes: "",
+          created_at: at,
+          updated_at: at,
+          source_path: file.name,
+        });
+      }
+      items.push({
+        content_address: address,
+        identity: `${address}:${direction}`,
+        direction,
+        source_name: file.name,
+        status: held ? "no_op" : image ? "pending_review" : "ingested",
+        refusal_code: null,
+        refusal_verdict: null,
+        needed_inference: image,
+        label_reading_fallback: null,
+      });
+    }
+    return {
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      write_count: writes,
+      effect: writes > 0 ? "updated" : "none",
+      direction,
+      run: { items, unresolved: [], inference_pause: null },
     };
   }
 
@@ -1179,32 +1479,30 @@ export function ledgerFixture(options: Options): LedgerPort {
         inPeriod(movement, request.period),
     );
     return {
-      projection: {
-        profile_id: LEDGER_FIXTURE_PROFILE_ID,
-        bucket_id: LEDGER_FIXTURE_PROFILE_ID,
-        export_id: hex64(`export:${now()}`),
-        export_format: format,
-        media_type:
-          format === "csv"
-            ? "text/csv"
-            : format === "jsonl"
-              ? "application/x-ndjson"
-              : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        filename_extension: format,
-        row_count: rows.length,
-        byte_size: rows.length * 312,
-        sha256: hex64(`export-bytes:${rows.length}`),
-        fieldnames: [
-          "transaction_id",
-          "booked_date",
-          "amount",
-          "direction",
-          "description",
-        ],
-        rows: [],
-        bucket_event_ids: events(),
-        output_path: target.name,
-      },
+      profile_id: LEDGER_FIXTURE_PROFILE_ID,
+      bucket_id: LEDGER_FIXTURE_PROFILE_ID,
+      export_id: hex64(`export:${now()}`),
+      export_format: format,
+      media_type:
+        format === "csv"
+          ? "text/csv"
+          : format === "jsonl"
+            ? "application/x-ndjson"
+            : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      filename_extension: format,
+      row_count: rows.length,
+      byte_size: rows.length * 312,
+      sha256: hex64(`export-bytes:${rows.length}`),
+      fieldnames: [
+        "transaction_id",
+        "booked_date",
+        "amount",
+        "direction",
+        "description",
+      ],
+      rows: [],
+      bucket_event_ids: events(),
+      output_path: target.name,
     };
   }
 
@@ -1336,6 +1634,8 @@ export function ledgerFixture(options: Options): LedgerPort {
     "ledger.add": add,
     "ledger.import": importStatement,
     "ledger.export": exportLedger,
+    "ledger.invoice.import": importInvoiceBook,
+    "ledger.evidence.batch": addDocuments,
   };
 
   function suggestion(pending: Pending, operation: string) {
@@ -1374,7 +1674,8 @@ export function ledgerFixture(options: Options): LedgerPort {
 
   /** Whether settling `definition` with `request` may change records. */
   const changes = (definition: LedgerDefinitionId, request: JsonObject) =>
-    definition in writes ||
+    (definition in writes &&
+      !(definition === "ledger.import" && request.dry_run === true)) ||
     definition === "ledger.classify.review" ||
     (definition === "ledger.own_account" &&
       request.action !== "list" &&
