@@ -588,15 +588,18 @@ def test_selected_models_are_exactly_the_configured_roles() -> None:
     """The unload boundary is the configured selection, nothing wider and nothing missed.
 
     Every role gets a distinct value so an omitted role is visible: a set built
-    from only two of the three would still match if the third shared a default
-    with one of them, which is exactly the state the shipped defaults are in.
+    from only some of the roles would still match if an omitted one shared a
+    default with another, which is exactly the state the shipped defaults are in.
     """
     with override_settings(
         cadrumo_llm_ollama_vision_model="vision-model",
         cadrumo_llm_ollama_text_model="text-model",
         cadrumo_llm_ollama_mapping_model="mapping-model",
+        cadrumo_llm_ollama_supply_nature_model="supply-nature-model",
     ):
-        assert cadrumo_selected_models() == frozenset({"vision-model", "text-model", "mapping-model"})
+        assert cadrumo_selected_models() == frozenset(
+            {"vision-model", "text-model", "mapping-model", "supply-nature-model"}
+        )
 
 
 # ---------------------------------------------------------------------------

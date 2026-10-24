@@ -94,6 +94,18 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
             "the closed column-role vocabulary"
         ),
     )
+    cadrumo_llm_ollama_supply_nature_model: str = Field(
+        default=default_model_runtime_id(ModelRole.SUPPLY_NATURE_PROPOSAL),
+        description=(
+            "Local Ollama model used to propose whether an invoice's lines describe "
+            "goods or services, for the person to confirm. Its own setting for the "
+            "same reason as the mapping one: the proposal is a choice between two "
+            "values from a few short lines, so it must be sizeable DOWN independently "
+            "of the text read. Left at its default, the catalogue picks the smallest "
+            "candidate this computer can run; a different value names the model "
+            "outright. The proposal is advisory and never emits a regulated number"
+        ),
+    )
     cadrumo_llm_model_runtime_memory_floor_bytes: int = Field(
         default=8 * 1024**3,
         gt=0,

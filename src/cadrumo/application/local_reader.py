@@ -338,15 +338,15 @@ def local_reader_service(role: ModelRole) -> str:
     return f"local-reader:{role.value}"
 
 
-def _role_setting(role: ModelRole, settings: Settings) -> str | None:
-    """Return the model setting an operator can set for ``role``, or ``None`` when it has none."""
+def _role_setting(role: ModelRole, settings: Settings) -> str:
+    """Return the model setting an operator can set for ``role``; every role has one."""
     if role is ModelRole.VISION_TRANSCRIPTION:
         return settings.cadrumo_llm_ollama_vision_model
     if role is ModelRole.TEXT_EXTRACTION:
         return settings.cadrumo_llm_ollama_text_model
     if role is ModelRole.COLUMN_ROLE_MAPPING:
         return settings.cadrumo_llm_ollama_mapping_model
-    return None
+    return settings.cadrumo_llm_ollama_supply_nature_model
 
 
 def configured_role_model(role: ModelRole, settings: Settings | None = None) -> str | None:
@@ -411,7 +411,7 @@ def select_role_model(
     configured = explicit
     if configured is None:
         setting = _role_setting(role, settings)
-        configured = setting if setting is not None and setting != default_model_runtime_id(role) else None
+        configured = setting if setting != default_model_runtime_id(role) else None
     return select_model_for_role(role, profile=profile, settings=settings, override=configured)
 
 

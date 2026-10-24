@@ -171,6 +171,7 @@ def cadrumo_selected_models(settings: Settings | None = None) -> frozenset[str]:
             resolved.cadrumo_llm_ollama_vision_model,
             resolved.cadrumo_llm_ollama_text_model,
             resolved.cadrumo_llm_ollama_mapping_model,
+            resolved.cadrumo_llm_ollama_supply_nature_model,
         }
     )
 

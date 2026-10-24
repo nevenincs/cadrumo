@@ -573,15 +573,23 @@ def _operation_browser_preflights(modules: Mapping[str, _Module]) -> tuple[froze
 # -- Shared runtime and outcomes -------------------------------------------------
 
 
-#: An operator-named mapping model. The catalogue's own choice is sized to the
-#: free memory measured now, and on a busy host it refuses with a verdict setup
-#: cannot repair; a named model is honoured, so the column rows do not depend on
-#: what else is running.
-_OPERATOR_MAPPING_MODEL = next(
-    candidate.runtime_id
-    for candidate in candidates_for_role(ModelRole.COLUMN_ROLE_MAPPING)
-    if candidate.runtime_id != default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING)
-)
+def _operator_named_model(role: ModelRole) -> str:
+    """Return a catalogued model for ``role`` other than its default, as an operator would name one.
+
+    The catalogue's own choice is sized to the free memory measured now, and on
+    a busy host it refuses with a verdict setup cannot repair; a named model is
+    honoured, so the rows of the selected roles do not depend on what else is
+    running.
+    """
+    return next(
+        candidate.runtime_id
+        for candidate in candidates_for_role(role)
+        if candidate.runtime_id != default_model_runtime_id(role)
+    )
+
+
+_OPERATOR_MAPPING_MODEL = _operator_named_model(ModelRole.COLUMN_ROLE_MAPPING)
+_OPERATOR_SUPPLY_NATURE_MODEL = _operator_named_model(ModelRole.SUPPLY_NATURE_PROPOSAL)
 
 
 @dataclass(frozen=True)
@@ -612,6 +620,7 @@ def _runtime_holding_nothing(tmp_path: Path) -> Generator[_Runtime]:
         override_settings(
             cadrumo_llm_ollama_chat_url=chat_url,
             cadrumo_llm_ollama_mapping_model=_OPERATOR_MAPPING_MODEL,
+            cadrumo_llm_ollama_supply_nature_model=_OPERATOR_SUPPLY_NATURE_MODEL,
             cadrumo_llm_cache_dir=tmp_path / "llm-cache",
             cadrumo_llm_usage_dir=tmp_path / "llm-usage",
             cadrumo_llm_run_record_dir=tmp_path / "llm-runs",

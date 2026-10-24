@@ -320,6 +320,10 @@ class SupplyNatureProposer:
     def _role_model(settings: Settings) -> str:
         """Resolve the proposal role to a runtime id on this machine.
 
+        Resolved through the same selection as the reader probe, so the model
+        the probe checks is the model a proposal is sent to, and an operator's
+        model setting is honoured by both.
+
         Deferred import: the selection surface sits in the application tier,
         which reaches back into this package, so an eager binding would close
         that loop at import time.
@@ -327,9 +331,9 @@ class SupplyNatureProposer:
         Raises:
             LLMConfigError: When no catalogued candidate clears the bars here.
         """
-        from ....application.provisioning import select_model_for_role
+        from ....application.local_reader import select_role_model
 
-        selection = select_model_for_role(ModelRole.SUPPLY_NATURE_PROPOSAL, settings=settings)
+        selection = select_role_model(ModelRole.SUPPLY_NATURE_PROPOSAL, settings)
         if not selection.selected or selection.runtime_id is None:
             raise LLMConfigError(
                 context=selection.facts,
