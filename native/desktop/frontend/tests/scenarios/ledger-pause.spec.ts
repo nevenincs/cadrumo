@@ -452,7 +452,7 @@ test("a rule save whose outcome is unknown stays held until the rule list answer
   );
 });
 
-test("an export whose outcome is unknown holds the page's writes, a new Export too, until a re-read", async ({
+test("an export whose outcome is unknown holds the page's writes, a new Export too, until the person checks the file", async ({
   page: target,
 }) => {
   await openLedger(target);
@@ -490,8 +490,9 @@ test("an export whose outcome is unknown holds the page's writes, a new Export t
   await expect(exportDialog).toContainText(
     label("desktop.ledger.export.unknown"),
   );
+  // Said for the file, with the way to release it.
   await expect(banner(target)).toContainText(
-    `${label("desktop.ledger.paused.title")} · ${name}`,
+    `${label("desktop.ledger.export.unknown_title")} · ${name}`,
   );
   await cancel();
   await expect(exportDialog).toBeHidden();
@@ -508,11 +509,35 @@ test("an export whose outcome is unknown holds the page's writes, a new Export t
     label("desktop.ledger.export.heading_done"),
   );
   await cancel();
-  // The re-read settles it in words, and the export may run again.
+  // A re-read cannot tell whether the file was written: it stays held.
   await banner(target).locator(".ledger-paused-reread").click();
-  await expect(findings(target)).toContainText(
-    label("desktop.ledger.paused.repeatable", { movement: name }),
+  await expect(banner(target)).toContainText(
+    label("desktop.ledger.export.unknown_untold", { file: name }),
   );
+  // The file can be looked at where it was saved.
+  const hostCalls = () =>
+    target.evaluate(
+      () =>
+        (window as unknown as { __scenarioHostCalls?: string[] })
+          .__scenarioHostCalls ?? [],
+    );
+  await banner(target).locator(".ledger-paused-look").click();
+  await expect.poll(hostCalls).toContain("ledger revealFile");
+  await expect(banner(target).locator(".ledger-paused-looked")).toHaveCount(0);
+  // The person checked the file: the export may run again, and the token
+  // the hold kept is forgotten.
+  const forgotten = (await hostCalls()).filter(
+    (call) => call === "ledger forgetFiles",
+  ).length;
+  await banner(target).locator(".ledger-paused-checked").click();
+  await expect(banner(target)).toHaveCount(0);
+  await expect
+    .poll(
+      async () =>
+        (await hostCalls()).filter((call) => call === "ledger forgetFiles")
+          .length,
+    )
+    .toBeGreaterThan(forgotten);
   await openExport();
   await choose();
   await expect(exportDialog.locator(".ledger-export-send")).not.toHaveAttribute(

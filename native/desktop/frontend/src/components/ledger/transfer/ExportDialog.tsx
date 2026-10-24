@@ -50,7 +50,7 @@ import { periodText } from "../ledgerWords";
 import { NO_FILTERS, readinessSets } from "../movements/movementsModel";
 import { ReadinessStrip } from "../movements/ReadinessStrip";
 import { PeriodSelector } from "../PeriodSelector";
-import { landingSettle, useWritePause, WriteHold } from "../WritePause";
+import { useWritePause, WriteHold } from "../WritePause";
 import {
   INVOICE_TSV_COLUMNS,
   MOVEMENT_TSV_COLUMNS,
@@ -291,23 +291,40 @@ export function ExportDialog({
 
   const pause = useWritePause();
   /** An export not seen to settle holds every write on the page, this
-   * export too, until the page's re-read. No read shows the file; the
-   * export replaces the chosen file whole, so sent again it writes the
-   * same file, and the re-read settles it once the ledger it reads from
-   * answers. */
+   * export too. No read of the ledger shows the file, so a re-read cannot
+   * settle it: the person checks the file and releases it. */
   const unseen = (file: PickedFile) => {
     setSent({ kind: "unknown" });
+    // The hold keeps the file's token to show the file, and forgets it
+    // once released: closing the dialog no longer does.
+    held.current.delete(file.token);
     pause.hold({
       what: file.name,
       outcome: "unknown",
-      settle: landingSettle(t, file.name, async () => {
-        const read = await port
-          .submit("ledger.status", {
-            period: period ? publicPeriod(period) : null,
-          })
-          .catch(() => null);
-        return read?.kind === "settled" ? "repeatable" : null;
+      settle: async () => ({
+        held: [t("desktop.ledger.export.unknown_untold", { file: file.name })],
       }),
+      checked: {
+        title: t("desktop.ledger.export.unknown_title"),
+        release: t("desktop.ledger.export.checked"),
+        look: {
+          label: t("desktop.ledger.export.show_in_folder"),
+          run: async () => {
+            try {
+              await port.revealFile(file.token);
+              return null;
+            } catch (error) {
+              // Not there is itself an answer: the export did not write it.
+              return ledgerFailure(error).code === "file_unavailable"
+                ? t("desktop.ledger.export.not_there", { file: file.name })
+                : t("desktop.ledger.export.show_failed");
+            }
+          },
+        },
+      },
+      onReleased: () => {
+        void port.forgetFiles([file.token]).catch(() => {});
+      },
     });
   };
   const send = async () => {

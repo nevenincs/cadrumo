@@ -52,6 +52,18 @@ export type HeldWrite = {
   settle: () => Promise<Finding[] | StillHeld | null>;
   /** Called once the re-read settled it. */
   onSettled?: () => void;
+  /** A write no read can settle, such as a file written outside the
+   * ledger: the banner says it in these words, offers a way to look at it,
+   * and the person releases it once they have checked it. */
+  checked?: {
+    title: string;
+    release: string;
+    /** A way to look, such as showing the file: its answer, if any, is
+     * said beside it. */
+    look?: { label: string; run: () => Promise<string | null> };
+  };
+  /** Called once the person released it, or the profile went. */
+  onReleased?: () => void;
 };
 
 /** What a read of the register a write touched says about it: there,
@@ -98,6 +110,8 @@ export type WritePause = {
   hold(write: HeldWrite): void;
   /** Reads the ledger again and settles what it can. */
   reread(): void;
+  /** Releases a write the person checked themselves. */
+  release(write: HeldWrite): void;
   rereading: boolean;
   /** What the last re-read found, one line each, until dismissed. */
   findings: readonly Finding[] | null;
@@ -111,6 +125,7 @@ const NOT_PAUSED: WritePause = {
   writes: [],
   hold: () => {},
   reread: () => {},
+  release: () => {},
   rereading: false,
   findings: null,
   dismissFindings: () => {},
@@ -142,6 +157,8 @@ export function usePagePause({
   const latest = useRef(writes);
   latest.current = writes;
   useEffect(() => {
+    // What a write held goes with it.
+    for (const write of latest.current) write.onReleased?.();
     setWrites([]);
     setFindings(null);
   }, [reader]);
@@ -151,6 +168,11 @@ export function usePagePause({
     const id = next.current;
     setFindings(null);
     setWrites((held) => [...held, { ...write, id }]);
+  }, []);
+
+  const release = useCallback((write: HeldWrite) => {
+    write.onReleased?.();
+    setWrites((held) => held.filter((found) => found !== write));
   }, []);
 
   const busy = useRef(false);
@@ -193,6 +215,7 @@ export function usePagePause({
     writes,
     hold,
     reread,
+    release,
     rereading,
     findings,
     dismissFindings: () => setFindings(null),
@@ -212,6 +235,11 @@ export function PausedBanner({
   onShow?: (ids: string[]) => void;
 }) {
   const t = useStrings();
+  // What looking at a held write answered, for the write it answered.
+  const [looked, setLooked] = useState<{
+    write: HeldWrite;
+    said: string;
+  } | null>(null);
   if (pause.writes.length === 0 && !pause.findings) return null;
   const said = (pause.findings ?? []).map(findingText).join(" · ");
   const counted = [
@@ -236,6 +264,10 @@ export function PausedBanner({
   const names = [...new Set(pause.writes.map((write) => write.what))];
   // The banner names the first; the rest are counted.
   const named = names.length > 1 ? [names[0]!, `+${names.length - 1}`] : names;
+  // A write only the person can settle is said in its own words, with the
+  // way to release it.
+  const own =
+    pause.writes.length === 1 ? (pause.writes[0]!.checked ?? null) : null;
   return (
     <div className="ledger-paused px-3 pt-3">
       {pause.writes.length > 0 ? (
@@ -243,14 +275,44 @@ export function PausedBanner({
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="min-w-0 flex-1" title={names.join(" · ")}>
               {[
-                t(
-                  unknown
-                    ? "desktop.ledger.paused.title"
-                    : "desktop.ledger.paused.saved_unread",
-                ),
+                own
+                  ? own.title
+                  : t(
+                      unknown
+                        ? "desktop.ledger.paused.title"
+                        : "desktop.ledger.paused.saved_unread",
+                    ),
                 ...named,
               ].join(" · ")}
             </span>
+            {own?.look && (
+              <Button
+                size="xs"
+                variant="outline"
+                className="ledger-paused-look shrink-0"
+                onClick={() => {
+                  const write = pause.writes[0]!;
+                  setLooked(null);
+                  void own.look!.run().then((said) => {
+                    if (said) setLooked({ write, said });
+                  });
+                }}
+              >
+                <Icon name="folder" />
+                {own.look.label}
+              </Button>
+            )}
+            {own && (
+              <Button
+                size="xs"
+                variant="outline"
+                className="ledger-paused-checked shrink-0"
+                onClick={() => pause.release(pause.writes[0]!)}
+              >
+                <Icon name="check" />
+                {own.release}
+              </Button>
+            )}
             <Button
               size="xs"
               variant="outline"
@@ -264,6 +326,11 @@ export function PausedBanner({
               {t("desktop.ledger.paused.reread")}
             </Button>
           </div>
+          {looked && looked.write === pause.writes[0] && (
+            <p role="status" className="ledger-paused-looked mt-1 text-sm">
+              {looked.said}
+            </p>
+          )}
           {pause.findings && (
             <p className="ledger-findings-held mt-1 flex flex-wrap items-center gap-x-2 text-sm">
               {said}
