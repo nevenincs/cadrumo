@@ -53,10 +53,10 @@ Browser rows:
 
 Where it stops:
 
-- The local AI transport (``llm.client``) and setup's own measurements
-  (``llm.role_fitness``, ``browser_runtime.launch_check``) dispatch or launch on
-  purpose and are exempt by name; an exemption that no longer matches a
-  discovered site fails.
+- The local AI transport (``llm.client``), consumer admission's fitness
+  measurement (``llm.role_fitness``) and setup's launch check
+  (``browser_runtime.launch_check``) dispatch or launch on purpose and are
+  exempt by name; an exemption that no longer matches a discovered site fails.
 - Setup's runtime traffic (pull, load, keep-alive under
   ``application.provisioning_*``) does not build a request and is not a
   consumer. ``src/cadrumo_agent_service`` and the desktop are not scanned.
@@ -336,7 +336,7 @@ _MODEL_ROLE = "cadrumo.core.model_catalogue.ModelRole"
 #: Modules that dispatch to the local AI on purpose, and why that is not a feature consuming it.
 _EXEMPT_DISPATCH_MODULES: Mapping[str, str] = {
     "cadrumo.adapters.outbound.llm.client": "the transport every consumer dispatches through",
-    "cadrumo.adapters.outbound.llm.role_fitness": "setup's own fitness measurement of an installed model",
+    "cadrumo.adapters.outbound.llm.role_fitness": "consumer admission's fitness measurement of an installed model",
 }
 
 
