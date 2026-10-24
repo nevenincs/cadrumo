@@ -75,10 +75,11 @@ const GENERAL_SETUP_ACTIONS: ReadonlySet<string> = new Set([
 ]);
 
 /** Where an operator action named as a recovery leads in this window: the
- * row of the item it sets up, setup as a whole (`"general"`), or nowhere
- * (`null`) for an action that is not about setup. A kind with several rows
- * leads to the first that is not ready; a kind the snapshot has no row of
- * leads to setup as a whole. */
+ * row of the item it sets up, setup as a whole (`"general"`) for an action
+ * about setup as a whole, or nowhere (`null`). A kind with several rows
+ * leads to the first that is not ready. A kind the snapshot has no row of
+ * leads nowhere: while the status is loading or cannot be read, nothing
+ * says whether setup could act, so nothing is offered. */
 export function setupTargetOf(
   action: string,
   rows: readonly SetupRow[],
@@ -87,7 +88,7 @@ export function setupTargetOf(
   const kind = SETUP_ACTION_KINDS.get(action);
   if (kind === undefined) return null;
   const ofKind = rows.filter((row) => row.kind === kind);
-  return ofKind.find((row) => row.state !== "ready") ?? ofKind[0] ?? "general";
+  return ofKind.find((row) => row.state !== "ready") ?? ofKind[0] ?? null;
 }
 
 /** A host answer that is a setup state at all; anything else is treated as

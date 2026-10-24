@@ -14,7 +14,8 @@ import { SetupPrompt } from "./SetupPrompt";
 // What a feature that could not run offers beside its refusal, over the
 // scenario host's synthetic setup: the component by name and the way into
 // the window's one setup prompt. Where setup cannot change what is missing,
-// nothing is offered.
+// the component's name and its row's sentence say why, and nothing is
+// offered.
 const noop = () => undefined;
 
 function Screen({ shape, action }: { shape: SetupShape; action: string }) {
@@ -72,5 +73,6 @@ export const BrowserNotSetUp: Story = {
   args: { action: "operator.provision.browser" },
 };
 export const LocalAiDamaged: Story = { args: { shape: "partial" } };
-/** The computer is below what the local AI needs: nothing is offered. */
+/** The computer is below what the local AI needs: it says so, and nothing
+ * is offered. */
 export const BelowHardware: Story = { args: { shape: "hardware" } };

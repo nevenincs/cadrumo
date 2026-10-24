@@ -6,6 +6,8 @@ import {
   routeProvisioningRefusals,
 } from "../src/shell/provisioningRecovery";
 import type { LedgerPort } from "../src/shell/ledger";
+import { setupTargetOf } from "../src/shell/setup";
+import type { SetupRow } from "../src/ipc/contract";
 
 // The setup action a refusal names, wherever its shape carries it: an agent
 // tool's refusal, a settled operation's error detail with the verdict as its
@@ -205,4 +207,39 @@ test("a ledger refusal that names no setup offers nothing", async () => {
   });
   expect(missing.kind).toBe("refused");
   expect(offered).toEqual([]);
+});
+
+/** A local AI row as the host sends it, in `state`. */
+const localAiRow = (
+  state: SetupRow["state"],
+  blocked: SetupRow["blocked_reason"] = null,
+): SetupRow => ({
+  item: "local_ai",
+  kind: "local_ai",
+  mode: "quick",
+  state,
+  stale_reason: null,
+  blocked_reason: blocked,
+  failure: null,
+  recovery: state === "absent" ? "set_up" : null,
+  recovery_action_id: state === "absent" ? LOCAL_AI_SETUP_ACTION : null,
+  version: null,
+  size_bytes: null,
+  note: null,
+});
+
+test("an item's setup leads to its row, and nowhere while the status has no row", () => {
+  const absent = localAiRow("absent");
+  const blocked = localAiRow("blocked", "hardware");
+  expect(setupTargetOf(LOCAL_AI_SETUP_ACTION, [absent])).toBe(absent);
+  // A blocked row is still the target: the surface says its sentence and
+  // offers nothing to press.
+  expect(setupTargetOf(LOCAL_AI_SETUP_ACTION, [blocked])).toBe(blocked);
+  // Loading or unreadable: no row says whether setup could act, so the
+  // item's setup leads nowhere, never to setup as a whole.
+  expect(setupTargetOf(LOCAL_AI_SETUP_ACTION, [])).toBeNull();
+  expect(setupTargetOf("operator.provision.browser", [absent])).toBeNull();
+  // Setup as a whole still leads there, and other actions nowhere.
+  expect(setupTargetOf("operator.provision.setup", [])).toBe("general");
+  expect(setupTargetOf("operator.ledger.classify", [absent])).toBeNull();
 });

@@ -241,10 +241,13 @@ async function previewStatements(target: Page, setup: string) {
   await target.goto(
     `/scenarios.html?scenario=ledger&latency=0&bar=off&ledger=reader_missing&setup=${setup}`,
   );
-  await setupDialog(target)
-    .getByRole("button", { name: label("desktop.setup.not_now") })
-    .click();
-  await expect(setupDialog(target)).toBeHidden();
+  // A status that cannot be read opens no setup dialog to put away.
+  if (setup !== "unavailable") {
+    await setupDialog(target)
+      .getByRole("button", { name: label("desktop.setup.not_now") })
+      .click();
+    await expect(setupDialog(target)).toBeHidden();
+  }
   await target.locator("[data-rail=ledger]").click();
   await expect(target.locator(".ledger-movements")).toBeVisible();
   await target
@@ -288,14 +291,34 @@ test("a PDF statement only the local AI reads names it and offers its setup", as
   await promptSaysOnce(target);
 });
 
-test("a PDF statement for a local AI this computer cannot set up offers no setup", async ({
+test("a PDF statement for a local AI this computer cannot set up says why and offers no setup", async ({
   page: target,
 }) => {
   const card = await previewStatements(target, "hardware");
   await expect(card).toContainText(
     label("desktop.ledger.import.refusal.reader_unavailable"),
   );
+  // The import settles, so no prompt opens: the card itself says why.
+  await expect(card.locator(".setup-held")).toHaveText(
+    `${LOCAL_AI}: This computer does not have enough memory for this.`,
+  );
   await expect(card.locator(".setup-offer")).toHaveCount(0);
+  await expect(card.getByRole("button")).toHaveCount(0);
+  await expect(prompt(target)).toHaveCount(0);
+});
+
+test("a PDF statement while the setup status cannot be read offers nothing", async ({
+  page: target,
+}) => {
+  const card = await previewStatements(target, "unavailable");
+  await expect(card).toContainText(
+    label("desktop.ledger.import.refusal.reader_unavailable"),
+  );
+  await expect(card.locator(".setup-offer")).toHaveCount(0);
+  await expect(card.locator(".setup-held")).toHaveCount(0);
+  await expect(card.getByRole("button")).toHaveCount(0);
+  await expect(prompt(target)).toHaveCount(0);
+  await expect(setupDialog(target)).toHaveCount(0);
 });
 
 test("a reader held back by memory offers no setup, though the local AI is not set up", async ({

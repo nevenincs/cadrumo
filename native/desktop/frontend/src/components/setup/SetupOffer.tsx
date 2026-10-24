@@ -4,13 +4,15 @@ import { Icon } from "@/components/ui/icon";
 import { useProvisioningRecovery } from "../../shell/provisioningRecovery";
 import { needsSetup } from "../../shell/setup";
 import { useStrings } from "../../shell/strings";
-import { actionWords, itemName } from "./setupWords";
+import { actionWords, itemName, rowSentence } from "./setupWords";
 
-/** Beside something that could not run for a component this computer can
- * set up: the component by its name and the way into the window's setup
- * prompt on it. Its state is the prompt's to say. Nothing is shown for an
- * action that is not about setup, for a component setup cannot change, or
- * while the window offers no setup. */
+/** Beside something that could not run for a component: the component by
+ * its name and the way into the window's setup prompt on it, when its row
+ * says setup can act now. A row setup cannot change from here says so
+ * instead, as the component's name and the row's own sentence, with nothing
+ * to press. Nothing is shown for an action that is not about setup, while
+ * the setup status is loading or cannot be read, or while the window offers
+ * no setup. */
 export function SetupOffer({
   action,
   className,
@@ -23,8 +25,16 @@ export function SetupOffer({
   const recovery = useProvisioningRecovery();
   if (action === null) return null;
   const target = recovery.targetOf(action);
-  if (target === null || (target !== "general" && !needsSetup(target)))
-    return null;
+  if (target === null) return null;
+  if (target !== "general" && !needsSetup(target))
+    return (
+      <span
+        className={cn("setup-held text-sm text-muted-foreground", className)}
+        data-setup-held={target.item}
+      >
+        {`${itemName(t, target.kind)}: ${rowSentence(t, target)}`}
+      </span>
+    );
   return (
     <span
       className={cn(
