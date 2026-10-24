@@ -10,8 +10,6 @@ import {
   LEDGER_PAGE_SIZE,
   nextPageRequest,
   openWindow,
-  readinessAfterSave,
-  readinessCurrency,
   readWindow,
   reduceWindow,
   shownRows,
@@ -283,7 +281,7 @@ const status = (ready: boolean | null): LedgerStatusResult => ({
   stale_filings: [],
 });
 
-test("readiness is frozen at its check and goes out of date with every change", async () => {
+test("readiness is read through status and preflight and frozen at its check", async () => {
   const { port, calls } = fakePort((call) => {
     if (call.kind === "submit" && call.definition === "ledger.status")
       return { settle: status(false) };
@@ -306,25 +304,8 @@ test("readiness is frozen at its check and goes out of date with every change", 
   if (checked.kind !== "checked") return;
   const snapshot = checked.snapshot;
   expect(snapshot.checkedAt).toBe(1_000);
-  expect(readinessCurrency(snapshot, Q3, 0)).toEqual({
-    kind: "current",
-    since: 1_000,
-  });
-  // Staged changes and saved ones both make it out of date; nothing is
-  // recounted here.
-  expect(readinessCurrency(snapshot, Q3, 4)).toEqual({
-    kind: "out_of_date",
-    changes: 4,
-    since: 1_000,
-  });
-  const after = readinessAfterSave({ kind: "checked", snapshot }, 12);
-  expect(after.kind === "checked" && after.snapshot.status.ready).toBe(false);
-  expect(
-    after.kind === "checked" && readinessCurrency(after.snapshot, Q3, 0),
-  ).toEqual({ kind: "out_of_date", changes: 12, since: 1_000 });
-  expect(readinessCurrency(snapshot, { year: 2026, code: "4T" }, 0).kind).toBe(
-    "other_period",
-  );
+  expect(snapshot.status.ready).toBe(false);
+  expect(snapshot.savedSince).toBe(0);
 
   // All periods has no preflight.
   const open = fakePort(() => ({ settle: status(null) }));

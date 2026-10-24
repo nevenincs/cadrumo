@@ -530,37 +530,3 @@ export function readinessSnapshot(
   if (readiness.kind === "not_checked") return null;
   return readiness.held;
 }
-
-/** Counts saved changes against the checks that ran before them. */
-export function readinessAfterSave(
-  readiness: Readiness,
-  saved: number,
-): Readiness {
-  if (saved <= 0) return readiness;
-  const bump = (snapshot: ReadinessSnapshot | null) =>
-    snapshot && { ...snapshot, savedSince: snapshot.savedSince + saved };
-  if (readiness.kind === "checked")
-    return { kind: "checked", snapshot: bump(readiness.snapshot)! };
-  if (readiness.kind === "not_checked") return readiness;
-  return { ...readiness, held: bump(readiness.held) };
-}
-
-/** Whether the frozen checks still describe the ledger: "Out of date · 12
- * changes since 10:41". Staged changes count, since the checks did not see
- * them either. */
-export type ReadinessCurrency =
-  | { kind: "current"; since: number }
-  | { kind: "out_of_date"; changes: number; since: number }
-  | { kind: "other_period"; since: number };
-export function readinessCurrency(
-  snapshot: ReadinessSnapshot,
-  period: LedgerPeriod | null,
-  staged: number,
-): ReadinessCurrency {
-  if (!samePeriod(snapshot.period, period))
-    return { kind: "other_period", since: snapshot.checkedAt };
-  const changes = snapshot.savedSince + staged;
-  return changes > 0
-    ? { kind: "out_of_date", changes, since: snapshot.checkedAt }
-    : { kind: "current", since: snapshot.checkedAt };
-}
