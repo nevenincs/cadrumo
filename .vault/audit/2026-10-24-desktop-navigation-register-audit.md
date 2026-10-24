@@ -50,6 +50,30 @@ Plan-close integrated review of `2026-10-24-desktop-navigation-register-plan` St
 
 The log-error badge depends on `HostRecordList.onErrors`; 09122b11bd, another session's commit before this plan, moved reporting to a timer whose StrictMode replay cleanup leaves `pending.current` set (`HostRecordList.tsx:41,49`). None of the reviewed commits touches it. The rail-order failure at `scenarios.spec.ts:2137` follows the Declarations rail item from e2f4030f14, outside this plan.
 
+### re-review | info | the fixes pass; close-guard, tui-select-drop, suppression and dead-reference are resolved
+
+Re-review of 60919dd504, 4b72c60404, acf769b08f, af1a2ae3b3, 28a0e4e726, 7753bd61c8 and fa21f00c36: verdict pass with findings, no critical or high. A dialog no longer holds the close, a close during a waiting question is left unanswered so the host's second close closes, and normal navigation still stands down for a dialog; the six `window-close.spec.ts` scenarios drive the real navigator and fail three of six on the old guard. All four catalogues parse from af1a2ae3b3 on, and the only key-level change across acf769b08f^..af1a2ae3b3 is the added `tui.ledger.overview.selection_dropped`; acf769b08f alone does not parse. `resolve_view` now has a production consumer in the MCP link check. The palette half of register-duplication is fixed; the host test half is a parked patch that cannot compile while another session's uncommitted `native/application` Cargo change breaks `--locked`.
+
+### retired-reuse | medium | an id removed from `retired` can be declared again without a test failing
+
+The shipped-id baseline (`src/cadrumo_client/contracts/tests/navigation_shipped_views.json`) records shipped ids but not which are retired, so un-retiring and re-declaring passes (`test_navigation_register.py:230-245`). Fix in progress: a retired list in the baseline that only grows.
+
+### adr-wording | medium | the amendment's guard bullet still let a dialog hold the window's close
+
+Reconciled in the amendment the same day: `modal` stands down every navigation except the close, and the close sentence states that a dialog never holds it.
+
+### tui-select-drop-area | low | the dropped-selection notice can name the wrong area and does not follow a language switch
+
+`routes.py:217-220` adds it for any refused area, including one chosen by an action id; `overview.py:95` writes it into an unlocalized widget. Fix in progress, with the whole-ledger-unavailable placeholder also mentioning the dropped selection and the fixture literal at `workspace_fixtures.py:127` using the constant.
+
+### locale-process | low | acf769b08f inserted a key by line offset and broke all four catalogues at that commit
+
+af1a2ae3b3 repaired it; a bisect landing on acf769b08f fails at startup. Keys go through the `dev.locales` set-batch workflow.
+
+### window-controls-spec | info | `tests/window-controls.spec.ts:136` expects `close` from the titlebar button
+
+The button has sent `close_now` through the close guard since fa2ece7b7f, before this plan; not caused or fixed here. The `product` Playwright project has not run since the fixes because its build writes the shared `dist/` from a working tree holding other sessions' unfinished frontend edits.
+
 ## Recommendations
 
 - close-guard: decide a close before the modal rule and never refuse it for a dialog; leave a close that arrives while a prompt is pending unanswered so the host's second-close rule applies; add scenarios for a close over the sign-in dialog and two closes over a leave prompt. Fixed under reopened `S10`.
