@@ -747,11 +747,27 @@ export function LedgerPage({
   useLayoutEffect(() => {
     const column = row.current?.firstElementChild;
     const drawn = column?.querySelector<HTMLElement>("[data-slot=data-grid]");
-    setColumnFloor(
-      inspectorShown && gridLeast !== null && column && drawn
-        ? gridLeast + Math.max(0, column.clientWidth - drawn.offsetWidth)
-        : null,
-    );
+    if (!inspectorShown || gridLeast === null || !column || !drawn) {
+      setColumnFloor(null);
+      return;
+    }
+    // What the column draws around the grid, read from its styles: a
+    // measured difference of widths is wrong while the panel opening is
+    // still being laid out.
+    let frame = 0;
+    for (
+      let around = drawn.parentElement;
+      around && around !== column.parentElement;
+      around = around.parentElement
+    ) {
+      const style = getComputedStyle(around);
+      frame +=
+        parseFloat(style.paddingLeft) +
+        parseFloat(style.paddingRight) +
+        parseFloat(style.borderLeftWidth) +
+        parseFloat(style.borderRightWidth);
+    }
+    setColumnFloor(Math.ceil(gridLeast + frame));
   }, [inspectorShown, gridLeast]);
   const gridRoom = useMemo(
     () => ({ columnFloor, onLeast: setGridLeast }),

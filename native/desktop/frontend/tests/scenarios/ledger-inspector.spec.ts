@@ -994,6 +994,29 @@ test("at 1280 with the agent open, the inspector narrows the agent so the grid k
     .locator("xpath=ancestor::*[@data-slot='data-grid']/..")
     .boundingBox())!;
   expect(column.width).toBeGreaterThanOrEqual(40 * rem - 1);
+  // And the band between the pinned groups shows the widest scrolling
+  // column whole.
+  const band = await target.evaluate(() => {
+    const heads = [
+      ...document.querySelectorAll<HTMLElement>(
+        ".ledger-grid [data-header-column]",
+      ),
+    ];
+    const pinned = heads.filter(
+      (head) => getComputedStyle(head).position === "sticky",
+    );
+    const widest = Math.max(
+      ...heads
+        .filter((head) => !pinned.includes(head))
+        .map((head) => head.offsetWidth),
+    );
+    const scroller = document.querySelector<HTMLElement>(
+      ".ledger-grid [role=grid]",
+    )!;
+    const covered = pinned.reduce((sum, head) => sum + head.offsetWidth, 0);
+    return { room: scroller.clientWidth - covered, widest };
+  });
+  expect(band.room).toBeGreaterThanOrEqual(band.widest - 1);
   // Moving to Classification shows the whole cell between the pinned
   // groups, and Description stays pinned beside it.
   const row = rowOf(target, "PAPELERIA TRAZO");
