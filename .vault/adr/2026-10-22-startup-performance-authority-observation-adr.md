@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#startup-performance'
 date: '2026-10-22'
-modified: '2026-10-22'
+modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee4735f9f75b8382f8e563803fc1d8a3fc91708f67c53f470d4e0ec6e6003eb0'
+body_hash: 'sha256:ccbe9d6cc2847ebe17490103aa99a7afe69aa063836b54e6fd382140d436b2e5'
 related:
   - "[[2026-10-22-startup-performance-request-path-audit]]"
   - "[[2026-10-16-idle-churn-adr]]"

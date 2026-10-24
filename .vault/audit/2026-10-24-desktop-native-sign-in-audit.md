@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:591a139e8c6bb0f6ca579aced7a5d40c23138f38602510b0a2ab6f22d8f88e9f'
+body_hash: 'sha256:2114f13fd7e01fb887f987516608f19cb18109cd0068eff04440a86078d93fd2'
 related:
   - "[[2026-10-24-desktop-native-sign-in-plan]]"
 ---
@@ -57,6 +57,6 @@ Resolved in 2c3de72773, verified by `desktop-host-unit-test` (509 passed; one un
 - test-coverage: session tests added for a relayed operation and its cue, kept and ending relay refusals, a malformed relayed request, and the language paths. The live run through `Person::native` is not added: a stored desktop sign-in is admitted only from the installed desktop image, so it belongs with the packaged desktop proof, which remains open.
 - relay-parity: fixed; `person_action_operation_financial_submit` named.
 - event-subscription: fixed; `SignIn` subscribes before `login_password` and `resume_receipt` and hands the receiver to the session.
-- diagnostics: deferred; the desktop's diagnostics are typed events with no slow-request kind, so a slow-request record needs a diagnostics schema decision.
+- diagnostics: closed without a change, on the user's delegation of 2026-10-24 to judge it. The hold's warning timed a Python child and its pipe, which no longer exist; the work it timed runs in the runtime, which already warns on slow worker dispatch at 0.5 s (`src/cadrumo_runtime/host/worker_service.py`, `profile_worker_control_dispatch_slow`) and on slow worker exchanges. A desktop-side record would repeat those with less detail. The startup-performance plan's S10 criterion, which named the retired warning, now names the runtime's.
 - test-stability: fixed; the tests wait on the router with a deadline.
 - non-windows-build: fixed; the Windows-only constructor helpers are gated to Windows and tests. No CI lane builds the desktop off Windows.

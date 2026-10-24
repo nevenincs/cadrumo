@@ -11,9 +11,9 @@ related:
   - '[[2026-10-22-startup-performance-worker-before-sign-in-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
   - '[[2026-10-04-desktop-shell-adr]]'
-modified: '2026-10-22'
+modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:602bbf2ac2f47f97ce5784b8096421e10199ceeb0d9196c609be8db75dea7ce3'
+body_hash: 'sha256:7b6bb7720241d4774a942a624a4708d335797a96665f85b53373045cedcfbb3c'
 ---
 
 # `startup-performance` plan
@@ -52,4 +52,4 @@ Sequential by default: S02 precedes S03 and S04, and S05 measures S01-S04. S07's
 - Each Step's owning tests pass, including a test that fails against the previous code for each behaviour change: an out-of-process custody publication invalidates the observation before the next check, an unwatchable directory reads per check, a raising read is not cached, and a memoized gate answers like the unmemoized one.
 - Ruff, format, `just check-types`, import contracts and `dev/quality/tests/test_no_git_cli.py` pass on touched files.
 - The disposable-root harness shows, against the same package copy, a `user-profile.view` page and the login and hold admissions faster than the audit's baseline, with the numbers recorded in the audit.
-- S10: on the rebuilt stage, the operator's launch reaches Home with no `session_hold_request_slow` warning.
+- S10: on the rebuilt stage, the operator's launch reaches Home with no runtime slow-request warning (`profile_worker_control_dispatch_slow` and the worker's other slow-call warnings). Since 2026-10-24 (`2026-10-24-desktop-native-sign-in-plan`) the desktop starts no `session hold`, so `session_hold_request_slow` no longer appears; the runtime's warnings time the same work where it runs.
