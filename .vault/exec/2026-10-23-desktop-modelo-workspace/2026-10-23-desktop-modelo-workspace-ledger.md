@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:fa447961e7c35b0b56617aace6e5e1a82ecd1719815da5afed1ebd322d843ce9'
+body_hash: 'sha256:8919a1dfe0b6dfba14ea702bdf4f305f1884db7d870765523c198e448f51899f'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -824,6 +824,24 @@ related:
 - `S52` `verify:` `pytest test_modelo_workbench_operations` -> `pass`
 - `S52` `verify:` `operation_contract_manifest --check` -> `pass`
 - `S52` `by:` `opus-p01-lane-2`
+- `S53` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S53` `M` `native/desktop/frontend/src/components/modelo/dialogs/ReviewDialog.tsx`
+- `S53` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S53` `M` `native/desktop/frontend/src/components/modelo/form/session.ts`
+- `S53` `verify:` `tsc --noEmit` -> `pass`
+- `S53` `verify:` `playwright modelo, form-model, workspace and declarations specs` -> `pass`
+- `S53` `by:` `opus-p04-lane-b`
+- `S54` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S54` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S54` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S54` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S54` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S54` `M` `native/application/tests/data/modelo-303-admitted-baseline.json`
+- `S54` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S54` `verify:` `playwright full modelo suite` -> `pass`
+- `S54` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
+- `S54` `verify:` `native_client_live` -> `pass`
+- `S54` `by:` `opus-p05-lane`
 
 ## Notes
 
@@ -877,3 +895,5 @@ related:
 - `S50` committed in 7f2a1fd88b
 - `S51` committed in 7f2a1fd88b; the renewal-notice defect it caught was fixed in S50 before commit
 - `S52` committed in 9a503d410f
+- `S53` committed in 790d21f36f; the review package title key's desktop declaration was removed and landed in the ledger session's 6650242b18
+- `S54` committed in 790d21f36f; a Hungarian failure traced to a fixture rewritten by a concurrent regeneration, not to the window
