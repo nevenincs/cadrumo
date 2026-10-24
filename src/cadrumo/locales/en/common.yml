@@ -1279,7 +1279,222 @@ desktop:
       internal_transfer: Transfer
       outgoing: Out
     documents:
+      action:
+        attest: It is right as read
+        choose_candidate: Choose a reading
+        supply_value: Type the value
+      add_count: Add {count}
+      add_documents: Add documents
+      add_one: Add a document…
+      added_on: '{kind} · added {date}'
+      adding: Adding {done} of {total}
+      already_confirmed: Already confirmed as invoice {number}
+      answer: Answer
+      as_read: 'As read: {value}'
+      attach_staged: Attachment staged · not saved
+      attach_to: Attach to {number}
+      attached_to: Attached to {description} · {amount}
+      attachment_linked: 'Invoices linked: {count}'
+      attachment_named: Attachment {id}
+      attachment_waiting: Waiting for review
+      attachments_none: No attachments waiting
+      batch_results: Results by document
+      batch_status:
+        ingested: Read, ready to review
+        no_op: Already in the ledger
+        paused: 'Paused: the reader is busy'
+        pending_review: Waiting for your review
+        refused: Refused
+      cancel: Cancel
+      check: Check
+      checked_not_saved: It was not saved.
+      checked_saved: It was saved.
+      choose_files: Choose files…
+      choose_folder: Choose a folder…
+      choose_record: Choose a record
+      chosen: Chosen documents
+      close: Close
+      column:
+        action: Action
+        captured: Received
+        document: Document
+        field: Field
+        kind: Type
+        model: Model
+        outcome: Outcome
+        provider: Read by
+        size: Size
+        source: Source
+        stamp: Stamp
+        state: State
+        value: Value
+        when: When
+      confirm: Confirm as invoice
+      confirm_anyway: Confirm anyway
+      confirm_heading: Confirm as an invoice
+      confirm_note: Confirms exactly this reading. The document is read again on this
+        computer first; if the reading changed, you review it again.
+      confirmed: Confirmed as invoice {number}
+      confirmed_short: Confirmed
+      confirmed_toast: Invoice {number} confirmed
+      consent_none: Nothing has left this computer to be read.
+      consent_note: Each read off this computer needs your acknowledgement and is
+        recorded before the document leaves. What was sent cannot be recalled.
       count: '{count} documents'
+      country: Counterparty country
+      currency_not_read: 'Not on the document: say which'
+      derived: Made from a read off this computer
+      duplicate: 'Already in the catalogue: {number}'
+      entered_by_you: Entered by you
+      field:
+        counterparty_name: Counterparty
+        counterparty_tax_id: Counterparty NIF
+        currency: Currency
+        customer_name: Customer
+        customer_tax_id: Customer NIF
+        grand_total: Total
+        invoice_date: Invoice date
+        invoice_number: Invoice number
+        invoice_series: Series
+        iva_amount: IVA amount
+        iva_rate: IVA rate
+        recargo_amount: Recargo de equivalencia
+        retencion_amount: Retención
+        retencion_rate: Retención rate
+        retention_amount: Retención
+        retention_rate: Retención rate
+        series: Series
+        supplier_name: Supplier
+        supplier_tax_id: Supplier NIF
+        taxable_base: Taxable base
+      findings: Questions to answer
+      findings_open: 'Open questions: {count}'
+      grounding:
+        ambiguous: several readings
+        anchored: found on the page
+        contradicted: the page disagrees
+        reconciled: totals agree
+        unanchored: not found on the page
+      hold:
+        choose_kind: Say whether you received or issued it
+        corrections: Fix the marked values
+        country: Give the country in two letters
+        currency: Say the currency
+        duplicate: It may already be in the catalogue
+        findings: Answer every question first
+      in_review: In review
+      keep: Keep it
+      left_out: 'Left out, not a document: {count}'
+      link_offer: Link it to its movement?
+      link_offer_note: '{description} · {date} · {amount} settles it. A link is permanent
+        once saved.'
+      media:
+        image: Image
+        pdf: PDF
+      no_default: There is no default
+      no_movement_to_attach: It has no movement to attach this to.
+      no_provenance: Source not stated
+      no_records: No evidence records yet
+      not_attached: Not attached to a movement
+      not_done: Not done
+      not_read: Not read
+      not_recursive: Folders inside it are not read
+      not_sent: Not sent
+      nothing_stated: Nothing stated
+      nothing_to_review: Nothing to review
+      off_host:
+        agree: Send {file} to {provider} for this one read
+        body: '{file} goes to {provider}, off this computer, to be read. It is recorded
+          before it leaves.'
+        send: Send to {provider} and read
+        title: Read off this computer?
+        unrecallable: What is sent cannot be recalled.
+      open_review: Open its reading
+      origin:
+        derived: Worked out
+        exact_structured: Read from the e-invoice data
+        operator: Entered by you
+        tabular_mapped: Read from a table
+        text_layer: Read from the PDF
+        text_rules: Read from the text
+        vision: Read from the image
+      printed_differs: The document prints {printed}; the invoice records {recorded}.
+      provenance: '{origin}, {grounding}'
+      queue: Readings to review
+      read_again: Read again
+      read_by: '{extractor} · {date}'
+      read_failed: Could not read
+      read_here: Read on this computer
+      read_off_host: Read off this computer…
+      reader:
+        all_documents: Every document
+        available: Available
+        extraction: Reading documents
+        host: Local model host
+        not_ready: Not ready
+        off_host: Reading off this computer
+        off_host_note: Only with your acknowledgement, each time
+        ready: Ready
+        text_only: Documents with a text layer only
+        unavailable: Not available
+        version: Version {version}
+      reading_changed: The reading changed. Review it again.
+      reading_digest: Reading digest
+      readings: Readings
+      reads_as: 'The document reads as: {kind}'
+      ready_to_confirm: Ready to confirm
+      reason:
+        ambiguous_identity: Two possible identities
+        closure_discrepancy: The totals do not add up
+        contradicted_invoice_class: The invoice class disagrees
+        contradicted_regime: The regime disagrees
+        undetermined_establishment: Establishment not known
+        unmodelled_invoice_class: Invoice class not supported
+        unresolved_direction: Received or issued is unclear
+      record:
+        invoice_date: Invoice date
+        invoice_number: Invoice number
+        iva_amount: IVA amount
+        iva_rate: IVA rate
+        notes: Notes
+        supplier: Supplier
+        taxable_base: Taxable base
+      record_added: Document added
+      record_refused: Write it as 2026-10-15, 60.50 or 21
+      record_removed: Record removed
+      record_saved: Record saved
+      records: Evidence records
+      remove: Remove
+      remove_attached: Detach it from its movement first
+      remove_note: The record and its stored copy leave the ledger.
+      remove_title: Remove this record?
+      save: Save
+      say_direction: Say whether you received or issued them
+      source:
+        gmail: Gmail
+        google_drive: Google Drive
+        inline: Embedded
+        local_file: This computer
+        url: Web address
+      source_digest: Source digest
+      tab:
+        attachments: Attachments
+        folder: Folder intake
+        readers: Readers
+        records: All evidence
+        review: To review
+        sent: Sent off this computer
+      tabs: Documents
+      technical: Technical details
+      the_value: The correct value
+      these_are: These documents are
+      this_is: This is
+      to_review: 'To review: {count}'
+      unknown: Outcome unknown
+      unknown_note: It may have been saved. Nothing is sent again.
+      unread: Some fields were not read
+      what_was_read: What was read
+      why_right: Why the value as read is right
     draft:
       describe: New movement, not saved
       new: New
@@ -2431,7 +2646,6 @@ desktop:
         not_loaded: The movement is outside this period
       one_sided: One-sided links
       one_sided_none: None
-      open_named: Open {description} · {amount} · {number}
       others: Other candidates ({count})
       partial: Usually one movement settles one invoice. Link both only for partial
         payments.

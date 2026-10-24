@@ -1293,7 +1293,223 @@ desktop:
       internal_transfer: Átvezetés
       outgoing: Kimenő
     documents:
+      action:
+        attest: Így helyes, ahogy beolvasták
+        choose_candidate: Válassz egy olvasatot
+        supply_value: Írd be az értéket
+      add_count: '{count} hozzáadása'
+      add_documents: Dokumentumok hozzáadása
+      add_one: Dokumentum hozzáadása…
+      added_on: '{kind} · hozzáadva: {date}'
+      adding: 'Hozzáadás: {done} / {total}'
+      already_confirmed: Már megerősítve {number} számlaként
+      answer: Válasz
+      as_read: 'Beolvasva: {value}'
+      attach_staged: Csatolás előkészítve · nincs mentve
+      attach_to: 'Csatolás ehhez: {number}'
+      attached_to: 'Csatolva ehhez: {description} · {amount}'
+      attachment_linked: 'Kapcsolt számlák: {count}'
+      attachment_named: 'Melléklet: {id}'
+      attachment_waiting: Ellenőrzésre vár
+      attachments_none: Nincs váró melléklet
+      batch_results: Eredmény dokumentumonként
+      batch_status:
+        ingested: Beolvasva, ellenőrizhető
+        no_op: Már a nyilvántartásban van
+        paused: 'Szünetel: az olvasó foglalt'
+        pending_review: A te ellenőrzésedre vár
+        refused: Elutasítva
+      cancel: Mégse
+      check: Ellenőrzés
+      checked_not_saved: Nem lett mentve.
+      checked_saved: Mentve lett.
+      choose_files: Fájlok kiválasztása…
+      choose_folder: Mappa kiválasztása…
+      choose_record: Válassz egy bejegyzést
+      chosen: Kiválasztott dokumentumok
+      close: Bezárás
+      column:
+        action: Művelet
+        captured: Beérkezett
+        document: Dokumentum
+        field: Mező
+        kind: Típus
+        model: Modell
+        outcome: Eredmény
+        provider: Olvasta
+        size: Méret
+        source: Forrás
+        stamp: Jelölés
+        state: Állapot
+        value: Érték
+        when: Mikor
+      confirm: Megerősítés számlaként
+      confirm_anyway: Megerősítés mégis
+      confirm_heading: Megerősítés számlaként
+      confirm_note: Pontosan ezt az olvasatot erősíti meg. Előbb újra beolvassuk a
+        dokumentumot ezen a gépen; ha az olvasat változott, újra ellenőrzöd.
+      confirmed: Megerősítve {number} számlaként
+      confirmed_short: Megerősítve
+      confirmed_toast: '{number} számla megerősítve'
+      consent_none: Semmi sem hagyta el ezt a gépet beolvasásra.
+      consent_note: Minden gépen kívüli beolvasáshoz a jóváhagyásod kell, és rögzítjük,
+        mielőtt a dokumentum elmegy. Az elküldöttet nem lehet visszahívni.
       count: '{count} dokumentum'
+      country: Partner országa
+      currency_not_read: 'Nincs a dokumentumon: add meg'
+      derived: Gépen kívüli beolvasásból készült
+      duplicate: 'Már a katalógusban: {number}'
+      entered_by_you: Te adtad meg
+      field:
+        counterparty_name: Partner
+        counterparty_tax_id: Partner NIF
+        currency: Pénznem
+        customer_name: Vevő
+        customer_tax_id: Vevő NIF
+        grand_total: Végösszeg
+        invoice_date: Számla kelte
+        invoice_number: Számlaszám
+        invoice_series: Sorozat
+        iva_amount: IVA összege
+        iva_rate: IVA kulcs
+        recargo_amount: Recargo de equivalencia
+        retencion_amount: Retención
+        retencion_rate: Retención kulcs
+        retention_amount: Retención
+        retention_rate: Retención kulcs
+        series: Sorozat
+        supplier_name: Szállító
+        supplier_tax_id: Szállító NIF
+        taxable_base: Adóalap
+      findings: Megválaszolandó kérdések
+      findings_open: 'Nyitott kérdések: {count}'
+      grounding:
+        ambiguous: több lehetséges olvasat
+        anchored: megtalálva az oldalon
+        contradicted: az oldal ellentmond
+        reconciled: az összegek egyeznek
+        unanchored: nem található az oldalon
+      hold:
+        choose_kind: Add meg, hogy kaptad vagy kiállítottad
+        corrections: Javítsd a jelölt értékeket
+        country: Add meg az országot két betűvel
+        currency: Add meg a pénznemet
+        duplicate: Lehet, hogy már a katalógusban van
+        findings: Előbb válaszolj minden kérdésre
+      in_review: Ellenőrzés alatt
+      keep: Megtartás
+      left_out: 'Kihagyva, nem dokumentum: {count}'
+      link_offer: Összekapcsolod a tételével?
+      link_offer_note: '{description} · {date} · {amount} kiegyenlíti. A kapcsolás
+        mentés után végleges.'
+      media:
+        image: Kép
+        pdf: PDF
+      no_default: Nincs alapértelmezés
+      no_movement_to_attach: Nincs tétele, amelyhez csatolni lehetne.
+      no_provenance: Forrás nincs megadva
+      no_records: Még nincsenek bizonylatok
+      not_attached: Nincs tételhez csatolva
+      not_done: Nem történt meg
+      not_read: Nem olvasta be
+      not_recursive: Az almappákat nem olvassuk be
+      not_sent: Nincs elküldve
+      nothing_stated: Nincs adat
+      nothing_to_review: Nincs mit ellenőrizni
+      off_host:
+        agree: '{file} elküldése a(z) {provider} szolgáltatónak csak ehhez a beolvasáshoz'
+        body: '{file} a(z) {provider} szolgáltatóhoz kerül, ezen a gépen kívülre,
+          beolvasásra. Elküldés előtt rögzítjük.'
+        send: Küldés a(z) {provider} részére és beolvasás
+        title: Beolvasás ezen a gépen kívül?
+        unrecallable: Az elküldöttet nem lehet visszahívni.
+      open_review: Olvasat megnyitása
+      origin:
+        derived: Számított
+        exact_structured: Az e-számla adataiból
+        operator: Te adtad meg
+        tabular_mapped: Táblázatból olvasva
+        text_layer: A PDF-ből olvasva
+        text_rules: A szövegből olvasva
+        vision: A képről olvasva
+      printed_differs: A dokumentumon {printed} áll; a számla {recorded} összeget
+        rögzít.
+      provenance: '{origin}, {grounding}'
+      queue: Ellenőrizendő olvasatok
+      read_again: Újraolvasás
+      read_by: '{extractor} · {date}'
+      read_failed: Nem sikerült beolvasni
+      read_here: Beolvasás ezen a gépen
+      read_off_host: Beolvasás a gépen kívül…
+      reader:
+        all_documents: Minden dokumentum
+        available: Elérhető
+        extraction: Dokumentumok beolvasása
+        host: Helyi modellkiszolgáló
+        not_ready: Nem kész
+        off_host: Beolvasás a gépen kívül
+        off_host_note: Csak a jóváhagyásoddal, minden alkalommal
+        ready: Kész
+        text_only: Csak szövegréteggel rendelkező dokumentumok
+        unavailable: Nem elérhető
+        version: '{version} verzió'
+      reading_changed: Az olvasat megváltozott. Ellenőrizd újra.
+      reading_digest: Olvasat lenyomata
+      readings: Olvasatok
+      reads_as: 'A dokumentum alapján: {kind}'
+      ready_to_confirm: Megerősíthető
+      reason:
+        ambiguous_identity: Két lehetséges azonosító
+        closure_discrepancy: Az összegek nem egyeznek
+        contradicted_invoice_class: A számlatípus ellentmondásos
+        contradicted_regime: Az adózási rend ellentmondásos
+        undetermined_establishment: Telephely nem ismert
+        unmodelled_invoice_class: Nem támogatott számlatípus
+        unresolved_direction: Nem egyértelmű, hogy kapott vagy kiállított
+      record:
+        invoice_date: Számla kelte
+        invoice_number: Számlaszám
+        iva_amount: IVA összege
+        iva_rate: IVA kulcs
+        notes: Megjegyzések
+        supplier: Szállító
+        taxable_base: Adóalap
+      record_added: Dokumentum hozzáadva
+      record_refused: 'Így írd: 2026-10-15, 60.50 vagy 21'
+      record_removed: Bejegyzés törölve
+      record_saved: Bejegyzés mentve
+      records: Bizonylatok
+      remove: Törlés
+      remove_attached: Előbb válaszd le a tételéről
+      remove_note: A bejegyzés és tárolt másolata törlődik a nyilvántartásból.
+      remove_title: Törlöd ezt a bejegyzést?
+      save: Mentés
+      say_direction: Add meg, hogy kaptad vagy kiállítottad őket
+      source:
+        gmail: Gmail
+        google_drive: Google Drive
+        inline: Beágyazott
+        local_file: Ez a gép
+        url: Webcím
+      source_digest: Forrás lenyomata
+      tab:
+        attachments: Mellékletek
+        folder: Mappa beolvasása
+        readers: Olvasók
+        records: Minden bizonylat
+        review: Ellenőrizendő
+        sent: Gépen kívülre küldve
+      tabs: Dokumentumok
+      technical: Technikai részletek
+      the_value: A helyes érték
+      these_are: Ezek a dokumentumok
+      this_is: Ez egy
+      to_review: 'Ellenőrizendő: {count}'
+      unknown: Ismeretlen eredmény
+      unknown_note: Lehet, hogy mentésre került. Semmit nem küldünk újra.
+      unread: Néhány mezőt nem olvastunk be
+      what_was_read: Mit olvastunk be
+      why_right: Miért helyes a beolvasott érték
     draft:
       describe: Új tétel, nincs mentve
       new: Új
@@ -2446,7 +2662,6 @@ desktop:
         not_loaded: A tétel ezen az időszakon kívül esik
       one_sided: Egyoldalú kapcsolatok
       one_sided_none: Nincs
-      open_named: 'Megnyitás: {description} · {amount} · {number}'
       others: További jelöltek ({count})
       partial: Általában egy tétel egy számlát egyenlít ki. Csak részfizetésnél kapcsold
         össze mindkettőt.

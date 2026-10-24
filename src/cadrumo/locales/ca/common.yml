@@ -1309,7 +1309,222 @@ desktop:
       internal_transfer: Traspàs
       outgoing: Sortida
     documents:
+      action:
+        attest: És correcte tal com s'ha llegit
+        choose_candidate: Tria una lectura
+        supply_value: Escriu el valor
+      add_count: Afegeix {count}
+      add_documents: Afegeix documents
+      add_one: Afegeix un document…
+      added_on: '{kind} · afegit el {date}'
+      adding: S'estan afegint {done} de {total}
+      already_confirmed: Ja confirmada com a factura {number}
+      answer: Resposta
+      as_read: 'Segons la lectura: {value}'
+      attach_staged: Adjunt preparat · sense desar
+      attach_to: Adjunta a {number}
+      attached_to: Adjunt a {description} · {amount}
+      attachment_linked: 'Factures vinculades: {count}'
+      attachment_named: Adjunt {id}
+      attachment_waiting: Pendent de revisió
+      attachments_none: Cap adjunt pendent
+      batch_results: Resultat per document
+      batch_status:
+        ingested: Llegit, a punt per revisar
+        no_op: Ja és al llibre
+        paused: 'En pausa: el lector està ocupat'
+        pending_review: Pendent de la teva revisió
+        refused: Rebutjat
+      cancel: Cancel·la
+      check: Comprova
+      checked_not_saved: No s'ha desat.
+      checked_saved: S'ha desat.
+      choose_files: Tria fitxers…
+      choose_folder: Tria una carpeta…
+      choose_record: Tria un registre
+      chosen: Documents triats
+      close: Tanca
+      column:
+        action: Acció
+        captured: Rebut
+        document: Document
+        field: Camp
+        kind: Tipus
+        model: Model de llenguatge
+        outcome: Resultat
+        provider: Llegit per
+        size: Mida
+        source: Origen
+        stamp: Segell
+        state: Estat
+        value: Valor
+        when: Quan
+      confirm: Confirma com a factura
+      confirm_anyway: Confirma igualment
+      confirm_heading: Confirmar com a factura
+      confirm_note: Confirma exactament aquesta lectura. Abans es torna a llegir el
+        document en aquest ordinador; si la lectura ha canviat, la tornes a revisar.
+      confirmed: Confirmada com a factura {number}
+      confirmed_short: Confirmada
+      confirmed_toast: Factura {number} confirmada
+      consent_none: Res no ha sortit d'aquest ordinador per llegir-se.
+      consent_note: Cada lectura fora d'aquest ordinador necessita la teva conformitat
+        i es registra abans que surti el document. El que s'ha enviat no es pot recuperar.
       count: '{count} documents'
+      country: País de la contrapart
+      currency_not_read: 'No consta al document: indica quina'
+      derived: Generat a partir d'una lectura externa
+      duplicate: 'Ja és al catàleg: {number}'
+      entered_by_you: Introduït per tu
+      field:
+        counterparty_name: Contrapart
+        counterparty_tax_id: NIF de la contrapart
+        currency: Moneda
+        customer_name: Client
+        customer_tax_id: NIF del client
+        grand_total: Total
+        invoice_date: Data de la factura
+        invoice_number: Número de factura
+        invoice_series: Sèrie
+        iva_amount: Quota d'IVA
+        iva_rate: Tipus d'IVA
+        recargo_amount: Recàrrec d'equivalència
+        retencion_amount: Retenció
+        retencion_rate: Tipus de retenció
+        retention_amount: Retenció
+        retention_rate: Tipus de retenció
+        series: Sèrie
+        supplier_name: Proveïdor
+        supplier_tax_id: NIF del proveïdor
+        taxable_base: Base imposable
+      findings: Preguntes per respondre
+      findings_open: 'Preguntes obertes: {count}'
+      grounding:
+        ambiguous: diverses lectures possibles
+        anchored: trobat a la pàgina
+        contradicted: la pàgina no hi coincideix
+        reconciled: els totals quadren
+        unanchored: no trobat a la pàgina
+      hold:
+        choose_kind: Indica si la vas rebre o emetre
+        corrections: Corregeix els valors marcats
+        country: Indica el país amb dues lletres
+        currency: Indica la moneda
+        duplicate: Pot ser que ja sigui al catàleg
+        findings: Respon abans totes les preguntes
+      in_review: En revisió
+      keep: Conserva'l
+      left_out: 'Omesos per no ser documents: {count}'
+      link_offer: La vincules al seu moviment?
+      link_offer_note: '{description} · {date} · {amount} la liquida. Un vincle és
+        permanent un cop desat.'
+      media:
+        image: Imatge
+        pdf: PDF
+      no_default: No hi ha valor per defecte
+      no_movement_to_attach: No té cap moviment on adjuntar-lo.
+      no_provenance: Origen no indicat
+      no_records: Encara no hi ha registres de justificants
+      not_attached: No adjunt a cap moviment
+      not_done: No s'ha fet
+      not_read: No llegit
+      not_recursive: No es llegeixen les subcarpetes
+      not_sent: No enviat
+      nothing_stated: Sense dades
+      nothing_to_review: Res per revisar
+      off_host:
+        agree: Envia {file} a {provider} només per a aquesta lectura
+        body: '{file} s''envia a {provider}, fora d''aquest ordinador, per llegir-se.
+          Es registra abans de sortir.'
+        send: Envia a {provider} i llegeix
+        title: Llegir fora d'aquest ordinador?
+        unrecallable: El que s'envia no es pot recuperar.
+      open_review: Obre'n la lectura
+      origin:
+        derived: Calculat
+        exact_structured: Llegit de les dades de la factura electrònica
+        operator: Introduït per tu
+        tabular_mapped: Llegit d'una taula
+        text_layer: Llegit del PDF
+        text_rules: Llegit del text
+        vision: Llegit de la imatge
+      printed_differs: El document indica {printed}; la factura registra {recorded}.
+      provenance: '{origin}, {grounding}'
+      queue: Lectures per revisar
+      read_again: Torna a llegir
+      read_by: '{extractor} · {date}'
+      read_failed: No s'ha pogut llegir
+      read_here: Llegeix en aquest ordinador
+      read_off_host: Llegeix fora d'aquest ordinador…
+      reader:
+        all_documents: Tots els documents
+        available: Disponible
+        extraction: Lectura de documents
+        host: Servidor local de models
+        not_ready: No disponible
+        off_host: Lectura fora d'aquest ordinador
+        off_host_note: Només amb la teva conformitat, cada vegada
+        ready: A punt
+        text_only: Només documents amb capa de text
+        unavailable: No disponible
+        version: Versió {version}
+      reading_changed: La lectura ha canviat. Torna-la a revisar.
+      reading_digest: Empremta de la lectura
+      readings: Lectures
+      reads_as: 'El document sembla: {kind}'
+      ready_to_confirm: A punt per confirmar
+      reason:
+        ambiguous_identity: Dues identitats possibles
+        closure_discrepancy: Els totals no quadren
+        contradicted_invoice_class: La classe de factura no coincideix
+        contradicted_regime: El règim no coincideix
+        undetermined_establishment: Establiment desconegut
+        unmodelled_invoice_class: Classe de factura no admesa
+        unresolved_direction: No és clar si és rebuda o emesa
+      record:
+        invoice_date: Data de la factura
+        invoice_number: Número de factura
+        iva_amount: Quota d'IVA
+        iva_rate: Tipus d'IVA
+        notes: Notes
+        supplier: Proveïdor
+        taxable_base: Base imposable
+      record_added: Document afegit
+      record_refused: Escriu-ho com 2026-10-15, 60.50 o 21
+      record_removed: Registre eliminat
+      record_saved: Registre desat
+      records: Registres de justificants
+      remove: Elimina
+      remove_attached: Primer separa'l del seu moviment
+      remove_note: El registre i la seva còpia desada surten del llibre.
+      remove_title: Vols eliminar aquest registre?
+      save: Desa
+      say_direction: Indica si els vas rebre o emetre
+      source:
+        gmail: Gmail
+        google_drive: Google Drive
+        inline: Incrustat
+        local_file: Aquest ordinador
+        url: Adreça web
+      source_digest: Empremta de l'origen
+      tab:
+        attachments: Adjunts
+        folder: Entrada per carpeta
+        readers: Lectors
+        records: Tots els justificants
+        review: Per revisar
+        sent: Enviat fora de l'ordinador
+      tabs: Documents
+      technical: Detalls tècnics
+      the_value: El valor correcte
+      these_are: Aquests documents són
+      this_is: Això és
+      to_review: 'Per revisar: {count}'
+      unknown: Resultat desconegut
+      unknown_note: Pot ser que s'hagi desat. No es torna a enviar res.
+      unread: Alguns camps no s'han llegit
+      what_was_read: Què s'ha llegit
+      why_right: Per què és correcte el valor llegit
     draft:
       describe: Moviment nou, sense desar
       new: Nou
@@ -2464,7 +2679,6 @@ desktop:
         not_loaded: El moviment és fora d'aquest període
       one_sided: Vincles d'un sol costat
       one_sided_none: Cap
-      open_named: Obre {description} · {amount} · {number}
       others: Altres candidates ({count})
       partial: Normalment un moviment liquida una factura. Vincula'ls tots dos només
         si són pagaments parcials.

@@ -1315,7 +1315,222 @@ desktop:
       internal_transfer: Traspaso
       outgoing: Salida
     documents:
+      action:
+        attest: Es correcto tal como se leyó
+        choose_candidate: Elige una lectura
+        supply_value: Escribe el valor
+      add_count: Añadir {count}
+      add_documents: Añadir documentos
+      add_one: Añadir un documento…
+      added_on: '{kind} · añadido el {date}'
+      adding: Añadiendo {done} de {total}
+      already_confirmed: Ya confirmada como factura {number}
+      answer: Respuesta
+      as_read: 'Según la lectura: {value}'
+      attach_staged: Adjunto preparado · sin guardar
+      attach_to: Adjuntar a {number}
+      attached_to: Adjunto a {description} · {amount}
+      attachment_linked: 'Facturas vinculadas: {count}'
+      attachment_named: Adjunto {id}
+      attachment_waiting: Pendiente de revisión
+      attachments_none: Ningún adjunto pendiente
+      batch_results: Resultado por documento
+      batch_status:
+        ingested: Leído, listo para revisar
+        no_op: Ya está en el libro
+        paused: 'En pausa: el lector está ocupado'
+        pending_review: Pendiente de tu revisión
+        refused: Rechazado
+      cancel: Cancelar
+      check: Comprobar
+      checked_not_saved: No se guardó.
+      checked_saved: Se guardó.
+      choose_files: Elegir archivos…
+      choose_folder: Elegir una carpeta…
+      choose_record: Elige un registro
+      chosen: Documentos elegidos
+      close: Cerrar
+      column:
+        action: Acción
+        captured: Recibido
+        document: Documento
+        field: Campo
+        kind: Tipo
+        model: Modelo de lenguaje
+        outcome: Resultado
+        provider: Leído por
+        size: Tamaño
+        source: Origen
+        stamp: Sello
+        state: Estado
+        value: Valor
+        when: Cuándo
+      confirm: Confirmar como factura
+      confirm_anyway: Confirmar igualmente
+      confirm_heading: Confirmar como factura
+      confirm_note: Confirma exactamente esta lectura. Antes se vuelve a leer el documento
+        en este equipo; si la lectura cambió, la revisas de nuevo.
+      confirmed: Confirmada como factura {number}
+      confirmed_short: Confirmada
+      confirmed_toast: Factura {number} confirmada
+      consent_none: Nada ha salido de este equipo para leerse.
+      consent_note: Cada lectura fuera de este equipo necesita tu conformidad y se
+        registra antes de que salga el documento. Lo enviado no se puede recuperar.
       count: '{count} documentos'
+      country: País de la contraparte
+      currency_not_read: 'No figura en el documento: indica cuál'
+      derived: Generado a partir de una lectura externa
+      duplicate: 'Ya está en el catálogo: {number}'
+      entered_by_you: Introducido por ti
+      field:
+        counterparty_name: Contraparte
+        counterparty_tax_id: NIF de la contraparte
+        currency: Moneda
+        customer_name: Cliente
+        customer_tax_id: NIF del cliente
+        grand_total: Total
+        invoice_date: Fecha de factura
+        invoice_number: Número de factura
+        invoice_series: Serie
+        iva_amount: Cuota de IVA
+        iva_rate: Tipo de IVA
+        recargo_amount: Recargo de equivalencia
+        retencion_amount: Retención
+        retencion_rate: Tipo de retención
+        retention_amount: Retención
+        retention_rate: Tipo de retención
+        series: Serie
+        supplier_name: Proveedor
+        supplier_tax_id: NIF del proveedor
+        taxable_base: Base imponible
+      findings: Preguntas por responder
+      findings_open: 'Preguntas abiertas: {count}'
+      grounding:
+        ambiguous: varias lecturas posibles
+        anchored: encontrado en la página
+        contradicted: la página no coincide
+        reconciled: los totales cuadran
+        unanchored: no encontrado en la página
+      hold:
+        choose_kind: Indica si la recibiste o la emitiste
+        corrections: Corrige los valores marcados
+        country: Indica el país con dos letras
+        currency: Indica la moneda
+        duplicate: Puede que ya esté en el catálogo
+        findings: Responde antes a todas las preguntas
+      in_review: En revisión
+      keep: Conservarlo
+      left_out: 'Omitidos por no ser documentos: {count}'
+      link_offer: ¿Vincularla a su movimiento?
+      link_offer_note: '{description} · {date} · {amount} la liquida. Un vínculo es
+        permanente una vez guardado.'
+      media:
+        image: Imagen
+        pdf: PDF
+      no_default: No hay valor por defecto
+      no_movement_to_attach: No tiene ningún movimiento al que adjuntarlo.
+      no_provenance: Origen no indicado
+      no_records: Aún no hay registros de justificantes
+      not_attached: No adjunto a ningún movimiento
+      not_done: No se hizo
+      not_read: No leído
+      not_recursive: No se leen las subcarpetas
+      not_sent: No enviado
+      nothing_stated: Sin datos
+      nothing_to_review: Nada por revisar
+      off_host:
+        agree: Enviar {file} a {provider} solo para esta lectura
+        body: '{file} se envía a {provider}, fuera de este equipo, para leerse. Se
+          registra antes de salir.'
+        send: Enviar a {provider} y leer
+        title: ¿Leer fuera de este equipo?
+        unrecallable: Lo enviado no se puede recuperar.
+      open_review: Abrir su lectura
+      origin:
+        derived: Calculado
+        exact_structured: Leído de los datos de la factura electrónica
+        operator: Introducido por ti
+        tabular_mapped: Leído de una tabla
+        text_layer: Leído del PDF
+        text_rules: Leído del texto
+        vision: Leído de la imagen
+      printed_differs: El documento indica {printed}; la factura registra {recorded}.
+      provenance: '{origin}, {grounding}'
+      queue: Lecturas por revisar
+      read_again: Volver a leer
+      read_by: '{extractor} · {date}'
+      read_failed: No se pudo leer
+      read_here: Leer en este equipo
+      read_off_host: Leer fuera de este equipo…
+      reader:
+        all_documents: Todos los documentos
+        available: Disponible
+        extraction: Lectura de documentos
+        host: Servidor local de modelos
+        not_ready: No disponible
+        off_host: Lectura fuera de este equipo
+        off_host_note: Solo con tu conformidad, cada vez
+        ready: Listo
+        text_only: Solo documentos con capa de texto
+        unavailable: No disponible
+        version: Versión {version}
+      reading_changed: La lectura cambió. Revísala de nuevo.
+      reading_digest: Huella de la lectura
+      readings: Lecturas
+      reads_as: 'El documento parece: {kind}'
+      ready_to_confirm: Lista para confirmar
+      reason:
+        ambiguous_identity: Dos identidades posibles
+        closure_discrepancy: Los totales no cuadran
+        contradicted_invoice_class: La clase de factura no coincide
+        contradicted_regime: El régimen no coincide
+        undetermined_establishment: Establecimiento desconocido
+        unmodelled_invoice_class: Clase de factura no admitida
+        unresolved_direction: No está claro si es recibida o emitida
+      record:
+        invoice_date: Fecha de factura
+        invoice_number: Número de factura
+        iva_amount: Cuota de IVA
+        iva_rate: Tipo de IVA
+        notes: Notas
+        supplier: Proveedor
+        taxable_base: Base imponible
+      record_added: Documento añadido
+      record_refused: Escríbelo como 2026-10-15, 60.50 o 21
+      record_removed: Registro eliminado
+      record_saved: Registro guardado
+      records: Registros de justificantes
+      remove: Eliminar
+      remove_attached: Primero sepáralo de su movimiento
+      remove_note: El registro y su copia guardada salen del libro.
+      remove_title: ¿Eliminar este registro?
+      save: Guardar
+      say_direction: Indica si los recibiste o los emitiste
+      source:
+        gmail: Gmail
+        google_drive: Google Drive
+        inline: Incrustado
+        local_file: Este equipo
+        url: Dirección web
+      source_digest: Huella del origen
+      tab:
+        attachments: Adjuntos
+        folder: Entrada por carpeta
+        readers: Lectores
+        records: Todos los justificantes
+        review: Por revisar
+        sent: Enviado fuera del equipo
+      tabs: Documentos
+      technical: Detalles técnicos
+      the_value: El valor correcto
+      these_are: Estos documentos son
+      this_is: Esto es
+      to_review: 'Por revisar: {count}'
+      unknown: Resultado desconocido
+      unknown_note: Puede que se haya guardado. No se vuelve a enviar nada.
+      unread: Algunos campos no se leyeron
+      what_was_read: Qué se leyó
+      why_right: Por qué es correcto el valor leído
     draft:
       describe: Movimiento nuevo, sin guardar
       new: Nuevo
@@ -2474,7 +2689,6 @@ desktop:
         not_loaded: El movimiento está fuera de este periodo
       one_sided: Vínculos de un solo lado
       one_sided_none: Ninguno
-      open_named: Abrir {description} · {amount} · {number}
       others: Otros candidatos ({count})
       partial: Normalmente un movimiento liquida una factura. Vincula ambos solo si
         son pagos parciales.
