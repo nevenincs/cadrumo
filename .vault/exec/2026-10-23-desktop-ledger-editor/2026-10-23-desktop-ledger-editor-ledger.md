@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:01e44f2b14c0c27d8d66a8ec6166552ecafa1aff60db86efb763034f4a1c000e'
+body_hash: 'sha256:2d7630c9e1ec3998969d06fc6c4a3e39c7ec1adbf04d8f59f7a66032676ce308'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -255,6 +255,51 @@ related:
 - `S12` `verify:` `npx playwright test tests/scenarios/ledger-invoices.spec.ts` -> `pass`
 - `S12` `verify:` `python -m dev.locales.desktop_chrome --output <tmp>` -> `pass`
 - `S12` `by:` `implementation-engineer-high`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/CellEditor.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/ChangesTray.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/EditedCells.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/LeaveDialog.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/LedgerEditing.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/MovementEditing.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/PasteDialog.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/ReviewDialog.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/WindowedList.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/editingModel.ts`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/editingWords.ts`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/useLedgerApply.ts`
+- `S09` `A` `native/desktop/frontend/tests/ledger-editing.spec.ts`
+- `S09` `A` `native/desktop/frontend/tests/scenarios/ledger-editing.spec.ts`
+- `S09` `M` `dev/locales/desktop_chrome.py`
+- `S09` `M` `native/desktop/frontend/src/App.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/Titlebar.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsGrid.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/movements/movementWords.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/movements/movementsModel.ts`
+- `S09` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/ledgerApply.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/ledgerStage.ts`
+- `S09` `M` `native/desktop/frontend/tests/ledger-apply.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/ledger-movements.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/ledger-plan.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/ledger-stage.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/ledger-movements.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/ledger-shell.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/support/ledger.ts`
+- `S09` `M` `src/cadrumo/locales/ca/common.yml`
+- `S09` `M` `src/cadrumo/locales/en/common.yml`
+- `S09` `M` `src/cadrumo/locales/es/common.yml`
+- `S09` `M` `src/cadrumo/locales/hu/common.yml`
+- `S09` `verify:` `npx tsc --noEmit (index of fa2ece7b7f)` -> `pass`
+- `S09` `verify:` `eslint + prettier --check on S09 files` -> `pass`
+- `S09` `verify:` `playwright pure specs ledger-*.spec.ts (81)` -> `pass`
+- `S09` `verify:` `playwright tests/scenarios/ledger-editing.spec.ts (19)` -> `pass`
+- `S09` `verify:` `playwright scenarios ledger-movements/shell/transfer` -> `pass`
+- `S09` `verify:` `python -m dev.locales.desktop_chrome --output <tmp>` -> `pass`
+- `S09` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -271,3 +316,5 @@ related:
 - `S08` Follow-up: list rows carry the own-account register id so the desktop grid can show and group by account
 - `S12` `dev/locales/tests/test_desktop_chrome.py` drift check fails in the working tree only on S09's uncommitted desktop.ledger.apply/edit/tray keys; no invoices key drifts.
 - `S12` ledger.invoice.wizard and the per-line OSS rate kind are not offered; the structured add covers creation.
+- `S09` Native window close (Alt+F4 or the OS close) is not guarded: the host closes without asking the page; the titlebar close button, shell navigation, sign-out and profile switch are guarded.
+- `S09` M1 permanent links and M5 model approvals are covered by pure specs and review rendering; their scenario paths wait for the S10/S13 staging routes.
