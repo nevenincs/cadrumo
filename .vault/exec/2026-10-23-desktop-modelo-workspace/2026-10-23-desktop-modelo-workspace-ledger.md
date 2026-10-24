@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:4de0e21a63e155d1f5dbf5a38ed696515d48054ebbcd4f72701dbbdbd7011f56'
+body_hash: 'sha256:01ad73317781f719c941ecbaf3dda33e780d09323ba2bf971a225a990a56b118'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -232,6 +232,11 @@ related:
 - `S13` `M` `src/cadrumo_runtime/host/tests/test_submission_stream_native.py`
 - `S13` `verify:` `pytest held relay, bridge and product-neutral gate (27), native submission stream incl. no-operand refusal (3)` -> `pass`
 - `S13` `verify:` `ty session_hold_operations` -> `pass`
+- `S13` `M` `native/application/src/person_operations.rs`
+- `S13` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S13` `verify:` `ctest application.rust (74)` -> `pass`
+- `S13` `verify:` `desktop-host-unit-test (502)` -> `pass`
+- `S13` `verify:` `desktop-host-unit-clippy` -> `pass`
 
 ## Notes
 
@@ -244,3 +249,4 @@ related:
 - `S09` Citation text already reached the card's legal basis; this step proves it and adds the off-form figures. lint-imports shows one broken contract from another session's `cadrumo/tests/statement_reader_fixtures.py,` not from this step
 - `S10` The native disconnect/session-lock test failed once under concurrent load and passed on rerun with all three native tests; lint-imports' one broken contract is another session's `cadrumo/tests/statement_reader_fixtures.py`
 - `S13` The relay names no definition: it forwards `operation_financial_submit` as the runtime's financial input and the runtime refuses any definition whose contract takes no financial operand, so the product-neutral bridge gate still holds. Python strings cannot be zeroed; the relay drops its references to the input after transfer
+- `S13` The desktop's person session now relays in Rust (another session's 4e256a9e95/8821a09cfe); the same `operation_financial_submit` action is added there, with the encoded input and its request zeroized after sending

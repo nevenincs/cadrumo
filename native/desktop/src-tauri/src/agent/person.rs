@@ -449,8 +449,9 @@ impl Person {
 pub type HeldPerson = std::sync::Arc<Mutex<Person>>;
 
 /// The generic relay actions of the held session and the reply each answers with.
-const RELAY_REPLIES: [(&str, &str); 6] = [
+const RELAY_REPLIES: [(&str, &str); 7] = [
     ("operation_submit", "operation_submitted"),
+    ("operation_financial_submit", "operation_submitted"),
     ("operation_observe", "operation_observed"),
     ("operation_result", "operation_result"),
     ("operation_review", "operation_review"),

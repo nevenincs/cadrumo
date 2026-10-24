@@ -33,7 +33,7 @@ use std::{
     sync::mpsc,
     time::{Duration, Instant, SystemTime},
 };
-use zeroize::Zeroizing;
+use zeroize::{Zeroize, Zeroizing};
 
 /// One budget for a whole relay action, every exchange included.
 const RELAY_BUDGET: Duration = Duration::from_secs(120);
@@ -301,10 +301,14 @@ const PROFILE_VIEW_PAGE_REQUIRED: [&str; 10] = [
 ];
 
 /// Each relay action and the request members it takes beside `request_id` and `action`.
-pub const RELAY_ACTION_KEYS: [(&str, &[&str]); 6] = [
+pub const RELAY_ACTION_KEYS: [(&str, &[&str]); 7] = [
     (
         "operation_submit",
         &["definition_id", "subject_ref", "payload"],
+    ),
+    (
+        "operation_financial_submit",
+        &["definition_id", "subject_ref", "input"],
     ),
     ("operation_observe", &["operation_id", "after_cursor"]),
     ("operation_result", &["operation_id"]),
@@ -470,6 +474,9 @@ impl OperationRelay {
         if action == "operation_submit" {
             return self.submit(held, request, deadline);
         }
+        if action == "operation_financial_submit" {
+            return self.submit_financial(held, request, deadline);
+        }
         let operation_id = argument_text(request, "operation_id")?;
         match action {
             "operation_observe" => {
@@ -530,6 +537,51 @@ impl OperationRelay {
         let definition_id = argument_text(request, "definition_id")?;
         let subject_ref = argument_text(request, "subject_ref")?;
         let operation_id = submit(held, definition_id, subject_ref, &payload_json, deadline)?.0;
+        self.started(held, operation_id, deadline)
+    }
+
+    /// Hands the parent's input to the runtime once, as its financial input,
+    /// and starts the operation. The runtime refuses a definition whose
+    /// contract takes no financial operand, so the relay names none; the
+    /// encoded input and the request that carried it are overwritten once sent.
+    fn submit_financial(
+        &mut self,
+        held: &Held,
+        request: &Map<String, Value>,
+        deadline: Instant,
+    ) -> Outcome<Map<String, Value>> {
+        let input = request.get("input").ok_or(Failure::Invalid)?;
+        if !input.is_object() {
+            return Err(Failure::Invalid);
+        }
+        let definition = argument_text(request, "definition_id")?;
+        let subject_ref = argument_text(request, "subject_ref")?;
+        let subject_length = subject_ref.chars().count();
+        if !definition_id(definition) || !(1..=SUBJECT_REF_MAX_CHARS).contains(&subject_length) {
+            return Err(Failure::frame());
+        }
+        let input_json = Zeroizing::new(compact_json(input));
+        let reply = held.exchange_wiping(
+            "operation_financial_input",
+            json!({
+                "definition_id": definition,
+                "subject_ref": subject_ref,
+                "payload_json": input_json.as_str(),
+                "idempotency_key": null,
+            }),
+            deadline,
+        )?;
+        drop(input_json);
+        let operation_id = submitted_receipt(&reply)?.0;
+        self.started(held, operation_id, deadline)
+    }
+
+    fn started(
+        &mut self,
+        held: &Held,
+        operation_id: String,
+        deadline: Instant,
+    ) -> Outcome<Map<String, Value>> {
         start(held, &operation_id, deadline)?;
         if self.watched.len() < MAX_WATCHED {
             self.watched.insert(operation_id.clone());
@@ -755,6 +807,25 @@ impl Held<'_> {
         fields: Value,
         deadline: Instant,
     ) -> Outcome<Map<String, Value>> {
+        let request = self.request(action, fields, deadline)?;
+        self.send(&request, deadline)
+    }
+
+    /// As [`Held::exchange`], for a request carrying financial input: every
+    /// text the request held is overwritten once it is sent, sent or not.
+    fn exchange_wiping(
+        &self,
+        action: &str,
+        fields: Value,
+        deadline: Instant,
+    ) -> Outcome<Map<String, Value>> {
+        let mut request = self.request(action, fields, deadline)?;
+        let reply = self.send(&request, deadline);
+        wipe(&mut request);
+        reply
+    }
+
+    fn request(&self, action: &str, fields: Value, deadline: Instant) -> Outcome<Value> {
         remaining(deadline)?;
         let mut request = members(json!({
             "action": action,
@@ -763,11 +834,16 @@ impl Held<'_> {
             "session_id": self.session.session_id,
         }));
         request.extend(members(fields));
-        let request = Value::Object(request);
-        if canonical_json(&request).len() > MAXIMUM_FRAME_BYTES {
+        Ok(Value::Object(request))
+    }
+
+    fn send(&self, request: &Value, deadline: Instant) -> Outcome<Map<String, Value>> {
+        let encoded = Zeroizing::new(canonical_json(request));
+        if encoded.len() > MAXIMUM_FRAME_BYTES {
             return Err(Failure::frame());
         }
-        let reply = self.connection.exchange(&request, deadline)?;
+        drop(encoded);
+        let reply = self.connection.exchange(request, deadline)?;
         match text(&reply, "kind") {
             Some(kind) if REPLY_KINDS.contains(&kind) => Ok(reply),
             _ => Err(Failure::frame()),
@@ -1431,7 +1507,13 @@ fn submit(
         }),
         deadline,
     )?;
-    envelope(&reply, "operation_submitted", &["receipt"])?;
+    submitted_receipt(&reply)
+}
+
+/// The operation id of an `operation_submitted` reply, and whether its receipt
+/// asks for no secret.
+fn submitted_receipt(reply: &Map<String, Value>) -> Outcome<(String, bool)> {
+    envelope(reply, "operation_submitted", &["receipt"])?;
     let receipt = reply
         .get("receipt")
         .and_then(Value::as_object)
@@ -2183,6 +2265,17 @@ fn content_hash(value: &Value) -> String {
 
 /// The product's canonical JSON: sorted keys, compact separators, unescaped
 /// UTF-8, numbers as Python spells them.
+/// Overwrites every text of `value` in place, then leaves it null.
+fn wipe(value: &mut Value) {
+    match value {
+        Value::String(text) => text.zeroize(),
+        Value::Array(items) => items.iter_mut().for_each(wipe),
+        Value::Object(members) => members.values_mut().for_each(wipe),
+        _ => {}
+    }
+    *value = Value::Null;
+}
+
 fn canonical_json(value: &Value) -> String {
     let mut out = String::new();
     write_json(value, true, &mut out);
@@ -2990,6 +3083,93 @@ mod tests {
             )
             .is_ok()
         );
+    }
+
+    #[test]
+    fn financial_input_travels_once_as_the_runtimes_financial_input() {
+        let fake = Fake::new(vec![
+            reply(submitted(&operation())),
+            reply(acknowledged(&operation())),
+        ]);
+        let mut relay = OperationRelay::new();
+        let answered = handle(
+            &fake,
+            &mut relay,
+            "operation_financial_submit",
+            json!({
+                "definition_id": "ledger.example-review",
+                "subject_ref": format!("profile:{PROFILE}"),
+                "input": {"input_version": 2, "amount": "1.234,56"},
+            }),
+        )
+        .unwrap();
+        assert_eq!(
+            Value::Object(answered),
+            json!({"kind": "operation_submitted", "operation_id": operation()})
+        );
+        assert!(relay.watching());
+        // Never as an ordinary submission: the runtime's own financial input, then the start.
+        assert_eq!(
+            fake.sent(),
+            vec![
+                target(json!({
+                    "action": "operation_financial_input",
+                    "definition_id": "ledger.example-review",
+                    "idempotency_key": null,
+                    "payload_json": "{\"amount\":\"1.234,56\",\"input_version\":2}",
+                    "subject_ref": format!("profile:{PROFILE}"),
+                })),
+                target(json!({"action": "operation_start", "operation_id": operation()})),
+            ]
+        );
+    }
+
+    #[test]
+    fn financial_input_for_a_definition_that_takes_none_is_the_runtimes_closed_refusal() {
+        // The relay names no definition: the runtime refuses one whose contract takes no operand.
+        let fake = Fake::new(vec![refuse(Refusal::denied("operation_denied"))]);
+        let mut relay = OperationRelay::new();
+        refused_with(
+            handle(
+                &fake,
+                &mut relay,
+                "operation_financial_submit",
+                json!({
+                    "definition_id": "ledger.example-review",
+                    "subject_ref": format!("profile:{PROFILE}"),
+                    "input": {"a": 1},
+                }),
+            ),
+            "operation_denied",
+        );
+        assert!(!relay.watching());
+        assert_eq!(fake.sent().len(), 1);
+    }
+
+    #[test]
+    fn financial_input_that_is_not_an_object_never_reaches_the_runtime() {
+        for input in [json!([1]), json!("1.234,56"), Value::Null] {
+            let fake = Fake::new(Vec::new());
+            let refused = handle(
+                &fake,
+                &mut OperationRelay::new(),
+                "operation_financial_submit",
+                json!({
+                    "definition_id": "ledger.example-review",
+                    "subject_ref": format!("profile:{PROFILE}"),
+                    "input": input,
+                }),
+            );
+            assert!(matches!(refused, Err(RelayFailure::Invalid)), "{refused:?}");
+            assert!(fake.sent().is_empty());
+        }
+    }
+
+    #[test]
+    fn a_wiped_request_keeps_no_text() {
+        let mut request = json!({"payload_json": "{\"amount\":\"9876.54\"}", "nested": ["x", {"y": "z"}], "n": 1});
+        wipe(&mut request);
+        assert_eq!(request, Value::Null);
     }
 
     #[test]
