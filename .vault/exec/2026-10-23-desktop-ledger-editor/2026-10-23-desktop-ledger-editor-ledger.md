@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d7630c9e1ec3998969d06fc6c4a3e39c7ec1adbf04d8f59f7a66032676ce308'
+body_hash: 'sha256:df3e5ac9763811c886a8455cdec4cef593b06c4a36f670ce6ac1287a47bba04a'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -300,6 +300,49 @@ related:
 - `S09` `verify:` `playwright scenarios ledger-movements/shell/transfer` -> `pass`
 - `S09` `verify:` `python -m dev.locales.desktop_chrome --output <tmp>` -> `pass`
 - `S09` `by:` `vaultspec-high-executor`
+- `S01` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S01` `verify:` `desktop-host-unit-test` -> `fail`
+- `S02` `verify:` `desktop-host-unit-test` -> `fail`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/AccountsPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/AssetsPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/CapitalGoodsPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/CounterpartiesPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/DiagnosticsPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/HealthSection.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/InventoryPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/ProrrataPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/RatiosPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/RegistersSection.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/RuleDialog.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/RulesSection.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/SetupParts.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/setupProps.ts`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/setupWords.ts`
+- `S14` `A` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S14` `A` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S14` `A` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S14` `A` `native/desktop/frontend/tests/ledger-setup-model.spec.ts`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S14` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S14` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S14` `M` `native/desktop/frontend/src/shell/ledgerStage.ts`
+- `S14` `M` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S14` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S14` `M` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S14` `M` `dev/locales/desktop_chrome.py`
+- `S14` `M` `src/cadrumo/locales/en/common.yml`
+- `S14` `M` `src/cadrumo/locales/es/common.yml`
+- `S14` `M` `src/cadrumo/locales/ca/common.yml`
+- `S14` `M` `src/cadrumo/locales/hu/common.yml`
+- `S14` `verify:` `npx tsc --noEmit` -> `pass`
+- `S14` `verify:` `npx eslint (touched files)` -> `pass`
+- `S14` `verify:` `npx prettier --check (touched files)` -> `pass`
+- `S14` `verify:` `playwright tests/ledger-setup-model.spec.ts` -> `pass`
+- `S14` `verify:` `playwright tests/scenarios/ledger-setup.spec.ts ledger-shell.spec.ts` -> `pass`
+- `S14` `verify:` `python -m dev.locales.desktop_chrome --output` -> `pass`
+- `S14` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `fail`
+- `S14` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -318,3 +361,7 @@ related:
 - `S12` ledger.invoice.wizard and the per-line OSS rate kind are not offered; the structured add covers creation.
 - `S09` Native window close (Alt+F4 or the OS close) is not guarded: the host closes without asking the page; the titlebar close button, shell navigation, sign-out and profile switch are guarded.
 - `S09` M1 permanent links and M5 model approvals are covered by pure specs and review rendering; their scenario paths wait for the S10/S13 staging routes.
+- `S01` 993f39151f fixes P01 highs 1-3; the one failing host test is the unrelated `sign_in` admission timing test (539 passed); high 4, the native relay secret wipe, waits on the native application owner
+- `S02` 993f39151f fixes P01 highs 1-3; the one failing host test is the unrelated `sign_in` admission timing test (539 passed); high 4, the native relay secret wipe, waits on the native application owner
+- `S14` `test_desktop_chrome` fails only on S13 documents and S10 inspector keys not yet declared; no Setup drift.
+- `S14` Rule counterparty and amount-range matching and stored rule names need a product contract change, deferred by the orchestrator; closing-authority file pick needs a host .json purpose, an orchestrator follow-up; a JSON paste field ships now.

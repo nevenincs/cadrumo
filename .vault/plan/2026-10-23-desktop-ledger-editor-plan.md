@@ -7,9 +7,19 @@ tier: L2
 related:
   - '[[2026-10-23-desktop-ledger-editor-adr]]'
   - '[[2026-10-24-desktop-ledger-editor-audit]]'
+  - '[[2026-10-05-desktop-design-system-adr]]'
+  - '[[2026-10-04-desktop-shell-adr]]'
+  - '[[2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr]]'
+  - '[[2026-06-10-ledger-interface-contract-adr]]'
+  - '[[2026-06-10-ledger-amount-direction-adr]]'
+  - '[[2026-06-10-ledger-input-localization-adr]]'
+  - '[[2026-06-10-ledger-filter-period-adr]]'
+  - '[[2026-06-30-ledger-add-idempotency-adr]]'
+  - '[[2026-07-05-ledger-latency-budget-adr]]'
+  - '[[2026-10-09-desktop-titlebar-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:3c4061b173e43fd87755f8c2dc77f0079bfe2a2234edb201e316ad2a2ee25691'
+body_hash: 'sha256:831cd08d44b998b33dcffa28707c0e599fb167db931693ff0beda2bcc97be538'
 ---
 
 # `desktop-ledger-editor` plan
@@ -26,8 +36,8 @@ The work adds a Ledger page to the desktop shell and a host channel for the ledg
 
 Give the window a closed, typed way to run the ledger family's registered operations over the held person relay, with file tokens and secret bodies, and a scenario host that answers it from synthetic data.
 
-- [x] `P01.S01` - Add the ledger host module: admitted ledger definition list checked against the contract manifest, submit and settle, review read and digest-bound answer, cancel, and registration in the command list; `native/desktop/src-tauri/src/shell/ledger/`.
-- [x] `P01.S02` - Add native file and save dialogs and window drag-drop that issue session-bound file tokens, and the own-account secret raw body; `native/desktop/src-tauri/src/shell/ledger/`.
+- [ ] `P01.S01` - Add the ledger host module: admitted ledger definition list checked against the contract manifest, submit and settle, review read and digest-bound answer, cancel, and registration in the command list; `native/desktop/src-tauri/src/shell/ledger/`.
+- [ ] `P01.S02` - Add native file and save dialogs and window drag-drop that issue session-bound file tokens, and the own-account secret raw body; `native/desktop/src-tauri/src/shell/ledger/`.
 - [x] `P01.S03` - Add the ledger contract types, the optional ledger Host port and its Tauri wiring; `native/desktop/frontend/src/ipc/contract.ts`.
 - [x] `P01.S04` - Answer the ledger port in the scenario host from an in-memory synthetic ledger with refusal, unknown and review cases; `native/desktop/frontend/src/dev/`.
 
@@ -50,7 +60,7 @@ Build the Ledger page and its sections from the reviewed prototype, at parity wi
 - [x] `P03.S11` - Add the import and export dialogs; `native/desktop/frontend/src/components/ledger/`.
 - [x] `P03.S12` - Add the Invoices section with catalogue grid and invoice editor; `native/desktop/frontend/src/components/ledger/`.
 - [ ] `P03.S13` - Add the Documents and Matching sections; `native/desktop/frontend/src/components/ledger/`.
-- [ ] `P03.S14` - Add the Rules, Registers and Health sections; `native/desktop/frontend/src/components/ledger/`.
+- [x] `P03.S14` - Add the Rules, Registers and Health sections; `native/desktop/frontend/src/components/ledger/`.
 
 ### Phase `P04` - Strings, accessibility and verification
 

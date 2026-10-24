@@ -450,3 +450,76 @@ The owner's R22 example decides: glyph and count, no visible label. The full sen
 - V-27: the date editor gets enough width.
 - V-28: accessible names contain no glyphs; tooltips give the value and shortcut; badges say what they count.
 - V-33: copy fixes.
+
+## Phase-close review: P01 (host channel) and P02 (grid primitive), 2026-10-24
+
+The review covered commits a573a74940..434aaab711 and d2dc93f4b2 (P01), and 17bb7ce7d8..39bb1d1cd9 (P02). It checked them against `2026-10-23-desktop-ledger-editor-adr`, the shell, capabilities and design-system ADRs, and the rulings above. **Verdict: P01 fails, so P01.S01 and P01.S02 are reopened. P02 passes with medium findings.**
+
+### P01 · unknown-relay-unavailable | high | a mutation the runtime may have taken is reported as refused when the relay answers "unavailable"
+
+- **Where:** `native/desktop/src-tauri/src/shell/relay.rs:135-148` and `native/desktop/src-tauri/src/shell/ledger/mod.rs:563-571, 648-650`.
+- **What happens:** the native relay turns a lost or late reply after submit, start or respond into `operation_refused` with code `unavailable` (`native/application/src/person_operations.rs:381-396`). The host treats that refusal as final, and the page shows a refusal without pausing writes.
+- **Fix:** for mutations, map relay `unavailable` to `unknown` and carry the operation id. Add tests for submit and for respond.
+
+### P01 · unknown-after-settle | high | a settled write is reported as never sent when the post-settle session recheck fails
+
+- **Where:** `native/desktop/src-tauri/src/shell/ledger/mod.rs:829` (`still_holding` after settle).
+- **What happens:** the post-settle recheck can fail with `not_signed_in` or `unavailable`. These codes carry no operation id, and the page maps them to "not sent".
+- **Fix:** for mutations, a failed recheck becomes `unknown` with the operation id, and the result is dropped. Reads keep the disclosure guard.
+
+### P01 · result-path-source-name | high | `ledger.evidence.batch` results can pass the full local path to the window
+
+- **Where:** `native/desktop/src-tauri/src/shell/ledger/mod.rs:363-419`. The path comes from `unresolved[].source_name`, built with `str(path)` at `src/cadrumo/application/ledger/batch_ingest.py:787`.
+- **What happens:** the key-based reduction does not list `source_name`. It also does not cover refusal-detail `context` values, `precondition_verdict_json`, or review documents.
+- **Fix:** replace each path substituted for the submission, and its parent folder, with its file name in every string of the result, the refusal detail and the review document. Add `source_name` to the reduced keys.
+
+### P01 · own-account-wipe-native | high | the own account's IBAN and bank block are copied unwiped inside the host process by the native relay
+
+- **Where:** `native/application/src/person_operations.rs:533` builds a plain `String`, and `:1500-1509` sends it with `exchange`, not `exchange_wiping`.
+- **Owner:** the native sign-in feature, CADRUMO-RUST-NATIVE, which has been asked to apply the fix.
+- **Fix:** hold the payload in `Zeroizing<String>` and send it with `exchange_wiping`. Add a test that asserts the overwrite.
+
+### P01 · relay-bound-pin | medium | the host's payload bound is pinned to the retired Python relay, not the native one it now feeds
+
+- **Fix:** assert `PAYLOAD_LIMIT + PAYLOAD_HEADROOM == person_operations::MAX_PAYLOAD_TEXT` in Rust.
+
+### Plan · plan-coverage-links | medium | the plan's `related:` omits the ADRs its Description names as governing
+
+- **Fix:** link the design-system, shell, capabilities and ledger data-contract ADRs.
+
+### P02 · grid-shell-chords-copy | medium | the grid keeps its own frozen copy of the shell's chords, and its test asserts that copy
+
+- **Fix:** the shell supplies the shell-chord predicate from its action registry, and the test uses the real registry.
+
+### P02 · grid-altgr-chords | medium | Ctrl+Alt+letter opens an editor on Windows, swallowing Revert cell (R11)
+
+- **Fix:** treat Ctrl+Alt as text only when it produces a character other than the key's own letter, or when AltGraph is held.
+
+### P02 · grid-select-all-r7 | medium | the header checkbox cannot add the visible rows to the selection
+
+- **Fix:** without a modifier, replace the selection; with a modifier, add to it. Test both.
+
+### P01 · scenario-host-fidelity | low | the scenario ledger is looser than the host in three places
+
+- It does not use the host's write/read classes.
+- It does not apply the host's character and line-byte bounds.
+- It refuses to observe a write whose outcome is unknown.
+
+### P02 · lower-points | low | four smaller items
+
+- No test checks that shell chords still work while a cell editor is open.
+- The combobox keeps a stale `enter` press.
+- The position phrase counts section rows.
+- 434aaab711 has no ledger row.
+
+**Verified by the review:**
+- Admission of the closed 87-id list.
+- Digest-bound review answers.
+- Unknown on lost replies and timeouts.
+- Size bounds.
+- Session-bound file tokens.
+- Secret-only raw bodies on the host side.
+- No values in logs.
+- Matching TS and Rust shapes.
+- The product bundle boundary.
+- Grid keyboard, ARIA, windowing, sticky columns, forced colours and tokens, per R16 and R17.
