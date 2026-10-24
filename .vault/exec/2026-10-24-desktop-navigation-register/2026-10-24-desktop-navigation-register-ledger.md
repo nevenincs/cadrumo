@@ -5,40 +5,14 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:04aaa078e57e3fc767e34c615147450104add2cf24ca1ddd792d7d47efeaee97'
+body_hash: 'sha256:cfcbb37645c68dbeb50124795855321715037167879ec209356401ccb3fd7c29'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `desktop-navigation-register` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S06` `A` `src/cadrumo_client/contracts/navigation.toml`
 - `S06` `A` `src/cadrumo_client/contracts/navigation.py`
@@ -237,6 +211,15 @@ related:
 - `S12` `M` `native/desktop/frontend/tests/scenarios/palette.spec.ts`
 - `S12` `M` `native/desktop/frontend/tests/scenarios/keyboard.spec.ts`
 - `S12` `verify:` `npx playwright test --project=scenarios tests/scenarios/palette.spec.ts tests/scenarios/keyboard.spec.ts tests/scenarios/columns.spec.ts` -> `pass`
+- `S10` `M` `native/desktop/frontend/src/shell/navigation/guards.ts`
+- `S10` `M` `native/desktop/frontend/src/shell/navigation/useNavigator.ts`
+- `S10` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S10` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S10` `A` `native/desktop/frontend/tests/scenarios/window-close.spec.ts`
+- `S10` `M` `native/desktop/frontend/tests/scenarios/navigation-register.spec.ts`
+- `S10` `verify:` `tsc --noEmit` -> `pass`
+- `S10` `verify:` `eslint+prettier touched files` -> `pass`
+- `S10` `verify:` `playwright scenarios window-close navigation-register navigation-guards palette keyboard agent-page-links` -> `pass`
 
 ## Notes
 
@@ -249,3 +232,4 @@ related:
 - `S12` panel.spec.ts:5 and scenarios.spec.ts:2137 (rail order now has Declarations) fail independently of S12; eslint/prettier fail only on an untracked .ux-a-lib.mjs
 - `S11` Follow-up b780f0120e: a select link no longer waits silently when the Ledger draws no grid; the page holds the ask and says not found once the read settles empty or fails. A 3-worker run beside other sessions timed out 5 scenarios that pass alone. Commit 8e41b1bc2b carried the S12 rows instead of these.
 - `S12` Follow-up on owner requirement: pane and panel entries toggle again (Show/Hide {view}, same id and chord); commits 42298ef117 and 6e83e8bb24 (CR fix in the two new strings)
+- `S10` review fix: close-guard; window-close fails 3 of 6 on the prior guard
