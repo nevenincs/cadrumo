@@ -48,7 +48,8 @@ const MAX_PAYLOAD_TEXT: usize = 12_288;
 const MAXIMUM_FRAME_BYTES: usize = 64 * 1024;
 const PROJECTION_PAGE_BYTES: usize = 32_768;
 const PROJECTION_PAGE_MAX_ENCODED: usize = 4 * PROJECTION_PAGE_BYTES.div_ceil(3);
-const PROJECTION_DOCUMENT_MAX_BYTES: usize = 16_777_216;
+/// The longest settled document the relay assembles from result pages.
+pub const PROJECTION_DOCUMENT_MAX_BYTES: usize = 16_777_216;
 const SUBJECT_REF_MAX_CHARS: usize = 256;
 const PROFILE_VIEW: &str = "user-profile.view";
 const PROFILE_FIELD_MUTATION: &str = "user-profile.field-mutation";

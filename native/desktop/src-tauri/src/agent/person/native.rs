@@ -11,8 +11,8 @@ use super::{Bridge, EventSlot, PersonEvent, SignedOut, failed};
 use cadrumo_application::{
     error::application::{ApplicationError, ErrorCode, Operation, Result},
     person_operations::{
-        OperationRelay, ProfileLanguage, RELAY_ACTION_KEYS, RelayFailure, read_profile_language,
-        set_profile_language,
+        OperationRelay, PROJECTION_DOCUMENT_MAX_BYTES, ProfileLanguage, RELAY_ACTION_KEYS,
+        RelayFailure, read_profile_language, set_profile_language,
     },
     runtime_client::{Admitted, Event, Pushed, Refusal, SessionExchange, human_sign_out},
 };
@@ -31,8 +31,9 @@ use std::{
 const EXCHANGE: Duration = Duration::from_secs(120);
 /// The runtime's bound on admitting a service under the person's session.
 const ADMISSION: Duration = Duration::from_secs(10);
-/// The longest reply, as one line with its newline: one runtime frame and the newline.
-const REPLY_LINE_LIMIT: usize = 64 * 1024 + 1;
+/// The longest reply: the longest document the relay assembles, and one
+/// runtime frame for the reply around it.
+const REPLY_LIMIT: usize = PROJECTION_DOCUMENT_MAX_BYTES + 64 * 1024;
 /// The denial of an uncertain OS observation: it refuses the request but keeps the session.
 const OS_SESSION_UNAVAILABLE: &str = "os_session_unavailable";
 
@@ -487,9 +488,8 @@ impl Bridge for NativeSession {
             return Err(failed("person_bridge_closed"));
         }
         let reply = self.answer(request);
-        // The hold ended rather than write a reply line longer than one
-        // runtime frame; consumers page their reads within that bound.
-        if super::encoded(&reply).bytes + 1 > REPLY_LINE_LIMIT {
+        // No pipe bounds a reply any more; the relay's own document bound does.
+        if super::encoded(&reply).bytes > REPLY_LIMIT {
             self.end();
             return Err(failed("person_reply_too_large"));
         }
@@ -865,16 +865,25 @@ mod tests {
     }
 
     #[test]
-    fn a_reply_longer_than_one_frame_ends_the_session_as_the_hold_did() {
-        let oversized = Answer::Reply(json!({
-            "kind": "attendance_inventory",
-            "profile_id": PROFILE,
-            "session_expires_at": "2026-10-24T12:00:00Z",
-            "candidates": [],
-            "padding": "a".repeat(64 * 1024),
-        }));
-        let runtime = Runtime::answering([oversized]);
+    fn a_reply_beyond_the_relays_document_bound_ends_the_session() {
+        let padded = |length: usize| {
+            Answer::Reply(json!({
+                "kind": "attendance_inventory",
+                "profile_id": PROFILE,
+                "session_expires_at": "2026-10-24T12:00:00Z",
+                "candidates": [],
+                "padding": "a".repeat(length),
+            }))
+        };
+        // A settled ledger period's list is some hundreds of kilobytes, far
+        // past the one frame the Python hold could write.
+        let runtime = Runtime::answering([padded(300 * 1024), padded(REPLY_LIMIT)]);
         let mut held = person(&runtime);
+        let reply = held
+            .exchange(json!({"action": "attendance_inventory"}))
+            .unwrap();
+        assert_eq!(reply["padding"].as_str().map(str::len), Some(300 * 1024));
+        assert!(held.is_open());
         let error = held
             .exchange(json!({"action": "attendance_inventory"}))
             .unwrap_err();

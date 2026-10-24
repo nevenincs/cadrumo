@@ -319,3 +319,4 @@ Accepted under the user's instruction of 2026-10-24 to implement native desktop 
 - A sign-in that names another profile still runs `aeat config login`, because selecting a profile is the product's act. Profile creation and listing are unchanged.
 - Non-Windows desktops are unchanged: sign-in stays unavailable where no positive login and lock observer exists, as **Constraints** already states.
 - The host's password buffers are zeroized as before; the password now reaches the runtime in one secret frame instead of a child's standard input.
+- A reply to the window is bounded by the relay's assembled-document bound (16 MiB, `native/application/src/person_operations.rs`), not by the 64 KiB line the hold could write to its pipe; ruled by the user on 2026-10-24 ("lift") so that a settled ledger period or form read reaches the window in one reply.
