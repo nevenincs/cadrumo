@@ -130,8 +130,21 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         repaint_tables(self, self._populate_view)
 
     def on_mount(self) -> None:
-        """Populate the initially mounted projection."""
+        """Populate the initially mounted projection.
+
+        Opened on a transaction the entries do not show, as a link may ask,
+        the page stays open and says so, without saying whether that
+        transaction exists anywhere else.
+        """
         self._populate_view()
+        focus = self.controller.context.focus
+        if (
+            focus is not None
+            and focus.semantic_key == "ledger.transaction"
+            and focus.restore_token is not None
+            and self.controller.restored_transaction_id() is None
+        ):
+            self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.entries.selection_absent"))
 
     def _populate_view(self) -> None:
         """Populate the safe entry index using semantic row identities."""

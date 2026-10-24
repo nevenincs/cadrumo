@@ -20,6 +20,7 @@ def test_only_the_bare_and_self_test_invocations_are_admitted() -> None:
         ["--destination", "workbench.ledger"],
         [TUI_SELF_TEST_FLAG, TUI_SELF_TEST_FLAG],
         [f"cadrumo://profiles/{_PROFILE}/ledger"],
+        ["cadrumo://view/ledger"],
     ],
 )
 def test_a_page_or_profile_on_the_command_line_is_refused(arguments: list[str]) -> None:

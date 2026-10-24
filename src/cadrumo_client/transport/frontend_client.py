@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import hmac
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from threading import RLock
 from typing import TYPE_CHECKING, Final, Literal, Self, override
 from uuid import UUID, uuid4
@@ -59,8 +59,9 @@ from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, deadline_after
 from ..contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared, EnrollmentReconcile, EnrollmentRecorded
 from ..contracts.model_runs import ModelRunRequested
+from ..contracts.navigation import ViewLink
 from ..contracts.operation_access import OperationAcknowledged, OperationSecret
-from ..contracts.presentation import PresentationDelivered, PresentationDestination, PresentationRequest
+from ..contracts.presentation import PresentationDelivered, PresentationRequest
 from ..contracts.profile_access import (
     PROFILE_ADMISSION_TIMEOUT_SECONDS,
     ProfileDisclosurePage,
@@ -159,7 +160,7 @@ class FrontendClient(ProfileViewFrontend):
         self._attendance_receivers: list[Callable[[], None]] = []
         self._answer_receivers: list[Callable[[], None]] = []
         self._operation_receivers: list[Callable[[], None]] = []
-        self._presentation_receivers: list[Callable[[PresentationDestination], None]] = []
+        self._presentation_receivers: list[Callable[[ViewLink], None]] = []
 
     def _session_retired(self, event: ConnectionEvent) -> None:
         if isinstance(event, LifecycleNotice):
@@ -208,8 +209,9 @@ class FrontendClient(ProfileViewFrontend):
                 receivers_presentation = (
                     tuple(self._presentation_receivers) if event.session_id == self._session_id else ()
                 )
+            view = ViewLink(view_id=event.destination, params=tuple(sorted(event.params.items())))
             for receive_presentation in receivers_presentation:
-                receive_presentation(event.destination)
+                receive_presentation(view)
             return
         if isinstance(event, ProfileLanguageChanged):
             with self._event_guard:
@@ -749,8 +751,8 @@ class FrontendClient(ProfileViewFrontend):
 
         return unsubscribe
 
-    def subscribe_presentation_requests(self, receive: Callable[[PresentationDestination], None]) -> Callable[[], None]:
-        """Hear the pages the person asks this exact session to show; each grants nothing and may be refused."""
+    def subscribe_presentation_requests(self, receive: Callable[[ViewLink], None]) -> Callable[[], None]:
+        """Hear the views the person asks this exact session to show; each grants nothing and may be refused."""
         self._observe_events()
         with self._event_guard:
             self._presentation_receivers.append(receive)
@@ -763,13 +765,21 @@ class FrontendClient(ProfileViewFrontend):
         return unsubscribe
 
     def present_destination(
-        self, destination: PresentationDestination, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+        self,
+        destination: str,
+        params: Mapping[str, str] | None = None,
+        *,
+        timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
     ) -> PresentationDelivered:
-        """Ask the person's own signed-in TUI on this profile to show `destination`."""
+        """Ask the person's own signed-in TUI on this profile to show register view `destination`."""
         reply = self._reply(
             self._connection.present(
                 PresentationRequest(
-                    request_id=uuid4(), profile_id=self.profile_id, session_id=self._session(), destination=destination
+                    request_id=uuid4(),
+                    profile_id=self.profile_id,
+                    session_id=self._session(),
+                    destination=destination,
+                    params=dict(params or {}),
                 ),
                 deadline=deadline_after(timeout),
             ),

@@ -12,7 +12,7 @@ import time
 from collections.abc import Mapping
 from queue import Queue
 from threading import Event, Semaphore, Thread
-from typing import Literal, get_args
+from typing import Literal
 from uuid import UUID, uuid4
 
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
@@ -21,7 +21,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import reject_duplicate_json_members
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.presentation import PresentationDestination
+from cadrumo_client.contracts.presentation import presentation_refusal
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
@@ -277,7 +277,9 @@ async def _hold(
                 "present_destination": {"destination"},
                 **RELAY_ACTION_KEYS,
             }
-            if set(request) != {"request_id", "action"} | action_keys.get(action, set()):
+            # A view request may omit its parameters; it names no other optional key.
+            optional = {"params"} if action == "present_destination" else set()
+            if set(request) - optional != {"request_id", "action"} | action_keys.get(action, set()):
                 _emit_refusal("invalid", request_id)
                 return 1
             started = time.monotonic()
@@ -335,12 +337,17 @@ async def _hold(
                         continue
                     _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
                 elif action == "present_destination":
-                    destination = request["destination"]
-                    if destination not in get_args(PresentationDestination.__value__):
+                    destination, params = request["destination"], request.get("params", {})
+                    if (
+                        not isinstance(destination, str)
+                        or not isinstance(params, dict)
+                        or not all(isinstance(value, str) for value in params.values())
+                        or presentation_refusal(destination, params) is not None
+                    ):
                         _emit_refusal("invalid", request_id)
                         return 1
                     try:
-                        presented = client.present_destination(destination)
+                        presented = client.present_destination(destination, params)
                     except FrontendRefusedError as error:
                         if error.reason != AccessDenialCode.OS_SESSION_UNAVAILABLE.value:
                             _emit({"kind": "session_refused", "request_id": str(request_id), "code": "inactive"})

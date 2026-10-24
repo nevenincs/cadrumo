@@ -342,6 +342,18 @@ def _param_refusal(register: NavigationRegister, view_id: str, params: ViewParam
     return None
 
 
+def view_request_refusal(
+    view_id: str, params: Mapping[str, str], *, register: NavigationRegister | None = None
+) -> ViewLinkRefusal | None:
+    """Return the first rule a request for ``view_id`` with ``params`` breaks, as a parsed link is checked.
+
+    The element must be registered, and each parameter, in name order, must
+    be one some element declares, one this element takes, and a value of its
+    kind. ``None`` means the register admits the request.
+    """
+    return _param_refusal(register or load_navigation_register(), view_id, tuple(sorted(params.items())))
+
+
 def view_link(
     view_id: str,
     params: Mapping[str, str] | None = None,

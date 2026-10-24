@@ -24,7 +24,7 @@ from textual.pilot import Pilot
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Input, Static
 
-from cadrumo_client.contracts.presentation import PresentationDestination
+from cadrumo_client.contracts.navigation import ViewLink
 
 from ....application.ledger.models import ManualLedgerTransactionResult
 from ....application.operator_actions.catalogue import lookup_action
@@ -237,9 +237,9 @@ async def _choose_in_palette(pilot: _AppPilot, text: str) -> None:
     await settle(pilot, workers=False)
 
 
-async def _post_desktop_request(pilot: _AppPilot, destination: PresentationDestination) -> None:
+async def _post_desktop_request(pilot: _AppPilot, view_id: str) -> None:
     """Deliver a page request from the desktop exactly as the presentation subscription posts it."""
-    pilot.app.post_message(PagePresentationRequested(destination))
+    pilot.app.post_message(PagePresentationRequested(ViewLink(view_id=view_id)))
     await settle(pilot, workers=False)
 
 

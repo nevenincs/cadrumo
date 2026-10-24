@@ -291,7 +291,7 @@ async def test_aeat_setup_handoff_through_admitted_mcp_measures_calls_and_keeps_
                     projection = completion["document"]["projection"]
                     timings.append(time.perf_counter() - started)
                     assert projection["kind"] == "setup"
-                    assert projection["setup"]["url"] == f"cadrumo://profiles/{runtime.profile_id}/aeat-auth"
+                    assert projection["setup"]["url"] == "cadrumo://view/profile/aeat-access"
                     assert projection["sync_readiness"]["ready"] is False
                     assert any(item["field"] == "auth.provider" for item in projection["setup"]["missing"])
                 denied = await sdk.call_tool(

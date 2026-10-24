@@ -1,22 +1,24 @@
-"""A page the person picks at their desktop opens in the running TUI as a palette choice would."""
+"""A register view the person picks at their desktop opens in the running TUI as a palette choice would."""
 
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from typing import get_args
 
 import pytest
 from textual.screen import ModalScreen
-from textual.widgets import Static
+from textual.widgets import DataTable, Static
 
-from cadrumo_client.contracts.presentation import PresentationDestination
+from cadrumo_client.contracts.navigation import NavigationSurface, ViewLink, load_navigation_register
 
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
 from ....core.i18n.render import tr
 from ..app import CadrumoTuiApp
 from ..components.account_chrome import AccountChromeScreen
 from ..home import HomeScreen
+from ..ledger.entries import LedgerEntriesScreen
+from ..ledger.routes import ledger_screen_factory
+from ..ledger.tests.workspace_fixtures import LEDGER_TX_B, ledger_projection, ledger_review_action
 from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
     TuiDestinationAdmissionV1,
@@ -26,14 +28,20 @@ from ..navigation import (
     build_destination_catalogue,
     declared_destination_ids,
 )
-from ..presentation import PROFILE_AEAT_AUTH_FOCUS, opens_aeat_auth, presentation_target
+from ..presentation import (
+    LEDGER_TRANSACTION_FOCUS,
+    PROFILE_AEAT_AUTH_FOCUS,
+    TUI_VIEWS,
+    opens_aeat_auth,
+    presentation_target,
+)
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from .settling import settle
 from .test_app import _account_factories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-type _Receiver = Callable[[PresentationDestination], None]
+type _Receiver = Callable[[ViewLink], None]
 
 
 class _Subscription:
@@ -51,11 +59,11 @@ class _Subscription:
 
         return unsubscribe
 
-    async def deliver(self, destination: PresentationDestination) -> None:
+    async def deliver(self, view_id: str, **params: str) -> None:
         receiver = self.receiver
         assert receiver is not None
         # The transport delivers on its own thread, never on the UI loop.
-        await asyncio.to_thread(receiver, destination)
+        await asyncio.to_thread(receiver, ViewLink(view_id=view_id, params=tuple(sorted(params.items()))))
 
 
 class _Destination(AccountChromeScreen):
@@ -67,7 +75,10 @@ class _Destination(AccountChromeScreen):
 
 
 def _catalogue(
-    contexts: list[TuiScreenContextV1], ledger_state: WorkbenchDestinationAdmissionState
+    contexts: list[TuiScreenContextV1],
+    ledger_state: WorkbenchDestinationAdmissionState,
+    *,
+    real_ledger: bool = False,
 ) -> TuiDestinationCatalogueV1:
     def factory(context: TuiScreenContextV1) -> _Destination:
         contexts.append(context)
@@ -87,6 +98,8 @@ def _catalogue(
             destination="workbench.ledger", state=ledger_state, reason_code="workbench.destination.unavailable"
         )
         del factories["workbench.ledger"]
+    elif real_ledger:
+        factories["workbench.ledger"] = ledger_screen_factory(ledger_projection(), review_action=ledger_review_action())
     return build_destination_catalogue(admissions=admissions, factories=factories)
 
 
@@ -95,23 +108,42 @@ def _app(
     subscription: _Subscription,
     *,
     ledger_state: WorkbenchDestinationAdmissionState = WorkbenchDestinationAdmissionState.AVAILABLE,
+    real_ledger: bool = False,
 ) -> CadrumoTuiApp:
     factories = _account_factories()
     object.__setattr__(factories, "subscribe_presentation", subscription)
     return CadrumoTuiApp(
-        destination_catalogue=_catalogue(contexts, ledger_state),
+        destination_catalogue=_catalogue(contexts, ledger_state, real_ledger=real_ledger),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         account_factories=factories,
     )
 
 
-def test_every_requestable_page_is_a_declared_destination_and_every_destination_is_requestable() -> None:
-    targets = {token: presentation_target(token) for token in get_args(PresentationDestination.__value__)}
+def test_the_tui_table_covers_exactly_the_registers_tui_views_and_their_parameters() -> None:
+    register = load_navigation_register()
+    tui_views = register.ids_for(NavigationSurface.TUI)
+    assert TUI_VIEWS.views == tui_views
+    assert set(TUI_VIEWS.params) <= tui_views
+    for view_id in tui_views:
+        element = register.element(view_id)
+        assert element is not None
+        assert TUI_VIEWS.params.get(view_id, frozenset()) == frozenset(element.params), view_id
+
+
+def test_every_tui_view_opens_a_declared_destination_and_every_destination_is_requestable() -> None:
+    targets = {view_id: presentation_target(ViewLink(view_id=view_id)) for view_id in TUI_VIEWS.views}
     assert {target.destination for target in targets.values()} == declared_destination_ids()
     for target in targets.values():
         assert target.focus.destination == target.destination
-    assert targets["aeat_auth"].destination == "workbench.profile"
-    assert targets["aeat_auth"].focus.semantic_key == PROFILE_AEAT_AUTH_FOCUS
+        assert target.focus.restore_token is None
+    assert targets["profile/aeat-access"].destination == "workbench.profile"
+    assert targets["profile/aeat-access"].focus.semantic_key == PROFILE_AEAT_AUTH_FOCUS
+
+
+def test_a_selected_transaction_becomes_the_ledger_focus() -> None:
+    target = presentation_target(ViewLink(view_id="ledger", params=(("select", LEDGER_TX_B),)))
+    assert target.destination == "workbench.ledger"
+    assert (target.focus.semantic_key, target.focus.restore_token) == (LEDGER_TRANSACTION_FOCUS, LEDGER_TX_B)
 
 
 @pytest.mark.asyncio
@@ -131,7 +163,7 @@ async def test_a_requested_page_opens_with_its_focus_and_releases_the_subscripti
         assert app.screen.context.focus.semantic_key == "presentation.declarations"
 
         # A second request replaces the page the first one opened.
-        await subscription.deliver("aeat_auth")
+        await subscription.deliver("profile/aeat-access")
         await settle(pilot)
         assert isinstance(app.screen, _Destination)
         assert app.screen.context.destination == "workbench.profile"
@@ -184,3 +216,36 @@ async def test_over_an_open_form_the_request_stands_down_and_keeps_the_form() ->
         assert isinstance(app.screen, _Destination)
         assert app.screen.context.destination == "workbench.ledger"
         assert str(app.query_one("#root-navigation-refusal", Static).render()) == ""
+
+
+@pytest.mark.asyncio
+async def test_a_ledger_link_selecting_a_transaction_opens_the_entries_with_it_selected() -> None:
+    contexts: list[TuiScreenContextV1] = []
+    subscription = _Subscription()
+    app = _app(contexts, subscription, real_ledger=True)
+    async with app.run_test() as pilot:
+        await settle(pilot)
+
+        await subscription.deliver("ledger", select=LEDGER_TX_B)
+        await settle(pilot)
+        assert isinstance(app.screen, LedgerEntriesScreen)
+        table = app.screen.query_one("#ledger-entries", DataTable)
+        assert table.ordered_rows[table.cursor_row].key.value == LEDGER_TX_B
+        assert app.focused is table
+        assert str(app.screen.query_one("#ledger-refusal", Static).render()) == ""
+
+
+@pytest.mark.asyncio
+async def test_a_ledger_link_selecting_a_transaction_not_shown_keeps_the_page_and_says_so() -> None:
+    contexts: list[TuiScreenContextV1] = []
+    subscription = _Subscription()
+    app = _app(contexts, subscription, real_ledger=True)
+    async with app.run_test() as pilot:
+        await settle(pilot)
+
+        await subscription.deliver("ledger", select="f" * 64)
+        await settle(pilot)
+        assert isinstance(app.screen, LedgerEntriesScreen)
+        notice = str(app.screen.query_one("#ledger-refusal", Static).render())
+        assert notice == tr("tui.ledger.entries.selection_absent")
+        assert notice != "tui.ledger.entries.selection_absent"

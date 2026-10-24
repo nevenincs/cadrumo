@@ -29,8 +29,9 @@ def test_setup_explains_only_missing_requirements_and_preserves_readiness_roundt
             AuthSyncRequirement(field="auth.numero_soporte", satisfied=False, reason="nie_support_required"),
         ),
     )
-    handoff = auth_setup_handoff(_PROFILE, readiness)
-    assert handoff.url == f"cadrumo://profiles/{_PROFILE}/aeat-auth"
+    handoff = auth_setup_handoff(readiness)
+    assert handoff.url == "cadrumo://view/profile/aeat-access"
+    assert str(_PROFILE) not in handoff.url
     assert len(handoff.missing) == 1
     assert handoff.missing[0].field == "auth.numero_soporte"
     assert handoff.missing[0].explanation not in {
@@ -52,4 +53,4 @@ def test_ready_setup_does_not_invent_missing_fields() -> None:
         ready=True,
         requirements=(AuthSyncRequirement(field="auth.provider", satisfied=True, reason="auth_method_required"),),
     )
-    assert auth_setup_handoff(_PROFILE, readiness).missing == ()
+    assert auth_setup_handoff(readiness).missing == ()

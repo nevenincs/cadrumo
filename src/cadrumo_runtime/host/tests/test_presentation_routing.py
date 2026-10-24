@@ -1,7 +1,8 @@
-"""A page the person picks reaches only their own signed-in page surfaces on that profile."""
+"""A register view the person picks reaches only their own signed-in page surfaces on that profile."""
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -10,6 +11,7 @@ from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied, ProfileAccessStatus
@@ -17,6 +19,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability
 from cadrumo_client.contracts.contracts import Peer
 from cadrumo_client.contracts.login import LoginEvidence
 from cadrumo_client.contracts.presentation import PresentationDelivered, PresentationRequest
+from cadrumo_client.contracts.profile_access import Request
 from cadrumo_client.contracts.session_events import PresentationRequested
 from cadrumo_client.contracts.transport import ConnectionContext
 
@@ -24,6 +27,8 @@ from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import ProfileConnection, RuntimeProfileHost
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_TRANSACTION = "0123456789abcdef" * 4
 
 
 @dataclass(frozen=True)
@@ -112,7 +117,12 @@ def _join(
     return context
 
 
-def _ask(profiles: RuntimeProfileConnections, asker: ConnectionContext, destination: str = "ledger") -> object:
+def _ask(
+    profiles: RuntimeProfileConnections,
+    asker: ConnectionContext,
+    destination: str = "ledger",
+    params: dict[str, str] | None = None,
+) -> object:
     connection = profiles._connections[asker.connection_id]
     assert connection.session_id is not None
     profiles._profiles[connection.profile_id] = cast(RuntimeProfileHost, _Host(_Authority(connection.session_id)))
@@ -122,6 +132,7 @@ def _ask(profiles: RuntimeProfileConnections, asker: ConnectionContext, destinat
             "profile_id": connection.profile_id,
             "session_id": connection.session_id,
             "destination": destination,
+            "params": params or {},
         }
     )
     return profiles._present(asker, request)
@@ -140,11 +151,11 @@ def test_the_page_reaches_only_the_same_persons_signed_in_page_surfaces_on_that_
         _join(profiles, profile_id, OperationFrontendProjection.CLI),
     )
 
-    delivered = _ask(profiles, desktop, "aeat_auth")
+    delivered = _ask(profiles, desktop, "profile/aeat-access")
 
     assert isinstance(delivered, PresentationDelivered)
     assert (delivered.destination, delivered.delivered, delivered.connection_id) == (
-        "aeat_auth",
+        "profile/aeat-access",
         1,
         desktop.connection_id,
     )
@@ -156,7 +167,7 @@ def test_the_page_reaches_only_the_same_persons_signed_in_page_surfaces_on_that_
             connection_id=tui.connection_id,
             profile_id=profile_id,
             session_id=tui_session,
-            destination="aeat_auth",
+            destination="profile/aeat-access",
         ),
     )
     assert profiles.take_events(desktop) == ()
@@ -228,8 +239,51 @@ def test_a_denied_or_foreign_session_sends_nothing(tmp_path: Path) -> None:
     assert profiles.take_events(tui) == ()
 
 
-def test_the_page_vocabulary_is_closed() -> None:
-    with pytest.raises(ValueError, match="destination"):
-        PresentationRequest.model_validate(
-            {"request_id": uuid4(), "profile_id": uuid4(), "session_id": uuid4(), "destination": "workbench.ledger"}
-        )
+def test_a_selected_record_is_relayed_with_the_view(tmp_path: Path) -> None:
+    profiles = _runtime(tmp_path)
+    profile_id = uuid4()
+    desktop = _join(profiles, profile_id, OperationFrontendProjection.DESKTOP)
+    tui = _join(profiles, profile_id, OperationFrontendProjection.TUI)
+
+    delivered = _ask(profiles, desktop, "ledger", {"select": _TRANSACTION})
+
+    assert isinstance(delivered, PresentationDelivered)
+    assert delivered.delivered == 1
+    events = [event for event in profiles.take_events(tui) if isinstance(event, PresentationRequested)]
+    assert [(event.destination, event.params) for event in events] == [("ledger", {"select": _TRANSACTION})]
+
+
+@pytest.mark.parametrize(
+    ("destination", "params"),
+    [
+        # An element only the window implements.
+        ("ledger/invoices", {}),
+        ("calendar", {}),
+        # An id the register does not declare, and the retired closed-vocabulary spellings.
+        ("nowhere", {}),
+        ("aeat_auth", {}),
+        ("workbench.ledger", {}),
+        # A parameter no element declares, and one this element does not take.
+        ("ledger", {"focus": _TRANSACTION}),
+        ("home", {"select": _TRANSACTION}),
+        # A value that is not of the parameter's kind.
+        ("ledger", {"select": "A" * 64}),
+        ("ledger", {"select": "0042"}),
+    ],
+)
+def test_the_runtime_refuses_a_view_no_tui_implements_or_a_parameter_the_element_refuses(
+    destination: str, params: dict[str, str]
+) -> None:
+    # The runtime's one request door decodes every frame before any handler runs.
+    frame = {
+        "action": "present_destination",
+        "request_id": str(uuid4()),
+        "profile_id": str(uuid4()),
+        "session_id": str(uuid4()),
+        "destination": destination,
+        "params": params,
+    }
+    with pytest.raises(ValidationError, match="TUI view request"):
+        Request.model_validate_json(json.dumps(frame))
+    admitted = Request.model_validate_json(json.dumps(frame | {"destination": "ledger", "params": {}}))
+    assert isinstance(admitted.root, PresentationRequest)

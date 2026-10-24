@@ -1,4 +1,4 @@
-"""A page the desktop asks its TUI to show, through the session hold, and which refusals end the hold."""
+"""A register view the desktop asks its TUI to show, through the session hold, and which refusals end the hold."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ from pathlib import Path
 import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_TRANSACTION = "0123456789abcdef" * 4
 
 _SCRIPT = r"""
 import contextlib
@@ -36,9 +38,10 @@ class FakeClient:
     def resume_receipt(self):
         return self.status_snapshot
 
-    def present_destination(self, destination):
+    def present_destination(self, destination, params=None):
         if refusals:
             raise FrontendRefusedError(refusals.pop(0))
+        print(f"presented {destination} {sorted((params or {}).items())}", file=sys.stderr)
         return SimpleNamespace(destination=destination, delivered=1)
 
     def subscribe_session_retirement(self, callback):
@@ -71,6 +74,13 @@ sys.exit(session_hold.main(["--profile-id", str(profile_id)]))
 async def _converse(
     tmp_path: Path, refusals: str, requests: list[dict[str, object]]
 ) -> tuple[int, list[dict[str, object]]]:
+    exit_code, replies, _ = await _converse_logged(tmp_path, refusals, requests)
+    return exit_code, replies
+
+
+async def _converse_logged(
+    tmp_path: Path, refusals: str, requests: list[dict[str, object]]
+) -> tuple[int, list[dict[str, object]], str]:
     source_root = Path(__file__).resolve().parents[3]
     environment = os.environ.copy()
     existing = environment.get("PYTHONPATH")
@@ -103,17 +113,19 @@ async def _converse(
                 break
             replies.append(json.loads(line))
         exit_code = await asyncio.wait_for(process.wait(), timeout=10)
+        assert process.stderr is not None
+        stderr = (await process.stderr.read()).decode(errors="replace")
     finally:
         if process.returncode is None:
             process.kill()
             await process.wait()
-    return exit_code, replies
+    return exit_code, replies, stderr
 
 
 @pytest.mark.asyncio
 async def test_a_presented_page_reports_how_many_tuis_were_asked(tmp_path: Path) -> None:
     exit_code, replies = await _converse(
-        tmp_path, "", [{"action": "present_destination", "destination": "aeat_auth"}, {"action": "close"}]
+        tmp_path, "", [{"action": "present_destination", "destination": "profile/aeat-access"}, {"action": "close"}]
     )
     assert exit_code == 0, replies
     assert replies[0] == {
@@ -123,7 +135,7 @@ async def test_a_presented_page_reports_how_many_tuis_were_asked(tmp_path: Path)
         "session_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
         "runtime_boot_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
         "connection_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
-        "destination": "aeat_auth",
+        "destination": "profile/aeat-access",
         "delivered": 1,
     }
     assert replies[1]["kind"] == "session_closed"
@@ -134,12 +146,22 @@ async def test_a_presented_page_reports_how_many_tuis_were_asked(tmp_path: Path)
     [
         {"action": "present_destination", "destination": "workbench.ledger"},
         {"action": "present_destination", "destination": "../ledger"},
+        {"action": "present_destination", "destination": "aeat_auth"},
         {"action": "present_destination"},
         {"action": "present_destination", "destination": "ledger", "profile_id": "aaaaaaaa"},
+        # Only the window implements these elements.
+        {"action": "present_destination", "destination": "ledger/invoices"},
+        {"action": "present_destination", "destination": "calendar"},
+        # A parameter no element declares, one the element does not take, and values not of its kind.
+        {"action": "present_destination", "destination": "ledger", "params": {"focus": _TRANSACTION}},
+        {"action": "present_destination", "destination": "home", "params": {"select": _TRANSACTION}},
+        {"action": "present_destination", "destination": "ledger", "params": {"select": "A" * 64}},
+        {"action": "present_destination", "destination": "ledger", "params": {"select": 42}},
+        {"action": "present_destination", "destination": "ledger", "params": "select"},
     ],
 )
 @pytest.mark.asyncio
-async def test_a_page_outside_the_closed_vocabulary_is_refused(
+async def test_a_view_no_tui_implements_or_a_parameter_the_element_refuses_is_refused(
     tmp_path: Path, request_fields: dict[str, object]
 ) -> None:
     exit_code, replies = await _converse(tmp_path, "", [request_fields])
@@ -147,6 +169,22 @@ async def test_a_page_outside_the_closed_vocabulary_is_refused(
     assert replies == [
         {"kind": "session_refused", "code": "invalid", "request_id": "eeeeeeee-eeee-4eee-8eee-000000000000"}
     ]
+
+
+@pytest.mark.asyncio
+async def test_a_selected_record_is_passed_with_its_view(tmp_path: Path) -> None:
+    exit_code, replies, stderr = await _converse_logged(
+        tmp_path,
+        "",
+        [
+            {"action": "present_destination", "destination": "ledger", "params": {"select": _TRANSACTION}},
+            {"action": "close"},
+        ],
+    )
+    assert exit_code == 0, replies
+    assert replies[0]["kind"] == "destination_presented"
+    assert replies[0]["destination"] == "ledger"
+    assert f"presented ledger [('select', '{_TRANSACTION}')]" in stderr
 
 
 @pytest.mark.asyncio

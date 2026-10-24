@@ -1,8 +1,10 @@
-"""Pages the person asks this TUI to show from their desktop, as the root's own navigation targets.
+"""Register views the person asks this TUI to show from their desktop, as the root's own navigation targets.
 
-A request names a page and nothing else. The root admits it exactly as it
-admits a palette choice, against the destinations its current session can
-open, so a request never reaches a page the root would refuse.
+A request names one register view whose surfaces include the TUI, and the
+parameters that element declares. The root admits it exactly as it admits a
+palette choice, against the destinations its current session can open, so a
+request never reaches a page the root would refuse. How the TUI implements
+each register id is this module's table, never the register's.
 """
 
 from __future__ import annotations
@@ -13,44 +15,73 @@ from typing import Final
 
 from textual.message import Message
 
-from cadrumo_client.contracts.presentation import PresentationDestination
+from cadrumo_client.contracts.navigation import SurfaceImplementation, ViewLink
 
 from .navigation import TuiDestinationIdV1, TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
 
 PROFILE_AEAT_AUTH_FOCUS: Final = "profile.aeat_auth"
 """The profile page's focus that opens its AEAT access editor once the page is up."""
 
-_ROUTES: Final[Mapping[PresentationDestination, tuple[TuiDestinationIdV1, str]]] = MappingProxyType(
+LEDGER_TRANSACTION_FOCUS: Final = "ledger.transaction"
+"""The Ledger focus that opens its entries with one transaction selected, by its id."""
+
+_ROUTES: Final[Mapping[str, tuple[TuiDestinationIdV1, str]]] = MappingProxyType(
     {
         "home": ("workbench.home", "presentation.home"),
         "ledger": ("workbench.ledger", "presentation.ledger"),
         "withholding": ("workbench.withholding", "presentation.withholding"),
         "declarations": ("workbench.declarations", "presentation.declarations"),
-        "aeat_sync": ("workbench.aeat_sync", "presentation.aeat_sync"),
+        "aeat-sync": ("workbench.aeat_sync", "presentation.aeat_sync"),
         "operations": ("workbench.operations", "presentation.operations"),
         "installation": ("workbench.installation", "presentation.installation"),
         "setup": ("workbench.setup", "presentation.setup"),
         "reference": ("workbench.reference", "presentation.reference"),
         "profile": ("workbench.profile", "profile.overview"),
-        "aeat_auth": ("workbench.profile", PROFILE_AEAT_AUTH_FOCUS),
+        "profile/aeat-access": ("workbench.profile", PROFILE_AEAT_AUTH_FOCUS),
     }
 )
+"""Each register id the TUI implements, with the destination and focus it opens."""
+
+_PARAM_FOCUS: Final[Mapping[str, Mapping[str, str]]] = MappingProxyType(
+    {"ledger": MappingProxyType({"select": LEDGER_TRANSACTION_FOCUS})}
+)
+"""Per register id, each link parameter the TUI honours and the focus that restores its value."""
+
+TUI_VIEWS: Final = SurfaceImplementation(
+    views=frozenset(_ROUTES),
+    params=MappingProxyType({view_id: frozenset(params) for view_id, params in _PARAM_FOCUS.items()}),
+)
+"""What the TUI opens: the register ids it implements and, per id, the parameters it honours."""
 
 
 class PagePresentationRequested(Message):
-    """The person asked, from their desktop, that this session show one page."""
+    """The person asked, from their desktop, that this session show one register view."""
 
-    def __init__(self, destination: PresentationDestination) -> None:
-        """Carry only the requested page."""
+    def __init__(self, view: ViewLink) -> None:
+        """Carry only the requested view and its parameters."""
         super().__init__()
-        self.destination: PresentationDestination = destination
+        self.view: ViewLink = view
 
 
-def presentation_target(destination: PresentationDestination) -> TuiNavigationTargetV1:
-    """Return the navigation target the root admits for one requested page."""
-    route, semantic_key = _ROUTES[destination]
+def presentation_target(view: ViewLink) -> TuiNavigationTargetV1:
+    """Return the navigation target the root admits for one requested view.
+
+    A parameter the TUI honours replaces the page's own focus with the focus
+    that restores its value, such as one Ledger transaction selected by id.
+
+    Raises:
+        KeyError: The TUI does not implement the view.
+    """
+    route, semantic_key = _ROUTES[view.view_id]
+    restore_token: str | None = None
+    honoured = _PARAM_FOCUS.get(view.view_id, {})
+    for name, value in view.params:
+        focus = honoured.get(name)
+        if focus is not None:
+            semantic_key, restore_token = focus, value
     return TuiNavigationTargetV1(
-        destination=route, focus=TuiFocusIdentityV1(destination=route, semantic_key=semantic_key)
+        destination=route,
+        focus=TuiFocusIdentityV1(destination=route, semantic_key=semantic_key, restore_token=restore_token),
     )
 
 

@@ -181,7 +181,7 @@ async def test_execute_on_a_read_operation_is_submitted_and_started_for_a_handsh
     assert submitted.subject_ref == f"profile:{modern_lease.profile_id}"
     assert [type(item) for item in legacy_lease.exchanges] == [OperationSubmit, OperationControl]
     assert _without_identities(document) == _without_identities(executed_after_handshake.structured_content)
-    assert document["page"]["url"] == f"cadrumo://profiles/{modern_lease.profile_id}/aeat-auth"
+    assert document["page"]["url"] == "cadrumo://view/profile/aeat-access"
     assert unfit.is_error is True
     # No tool takes a secret, so a call that gives one is refused at the wire, before anything is sent.
     assert unfit.structured_content == {"outcome": "refused", "code": "invalid_request"}

@@ -1,39 +1,51 @@
-"""A person's request that their own TUI show one page; it carries no facts and grants nothing."""
+"""A person's request that their own TUI show one register view; it carries no facts and grants nothing."""
 
 from __future__ import annotations
 
-from typing import Annotated, Final, Literal
+from collections.abc import Mapping
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-type PresentationDestination = Literal[
-    "home",
-    "ledger",
-    "withholding",
-    "declarations",
-    "aeat_sync",
-    "operations",
-    "installation",
-    "setup",
-    "reference",
-    "profile",
-    "aeat_auth",
-]
-"""The closed pages a desktop link may ask the TUI to show; the TUI alone resolves and admits them."""
+from .navigation import NavigationSurface, ViewLinkRefusal, load_navigation_register, view_request_refusal
+
+type PresentationRefusal = Literal["not_a_tui_view"] | ViewLinkRefusal
+"""Why a view cannot be asked of a TUI: no TUI implements it, or the register refuses the request."""
+
+
+def presentation_refusal(destination: str, params: Mapping[str, str]) -> PresentationRefusal | None:
+    """Return why a TUI may not be asked to show ``destination`` with ``params``, or ``None`` when it may.
+
+    The destination is a register id whose surfaces include the TUI, and the
+    parameters are only those the element declares, each a value of its kind.
+    Every relay and receiver checks a request through this one function.
+    """
+    register = load_navigation_register()
+    if destination not in register.ids_for(NavigationSurface.TUI):
+        return "not_a_tui_view"
+    return view_request_refusal(destination, params, register=register)
 
 
 class PresentationRequest(BaseModel):
-    """Ask the runtime to tell this person's TUI on the same profile to show ``destination``."""
+    """Ask the runtime to tell this person's TUI on the same profile to show register view ``destination``."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     action: Literal["present_destination"] = "present_destination"
     request_id: UUID
     profile_id: UUID
     session_id: UUID
-    destination: PresentationDestination
+    destination: str
+    params: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _a_tui_view(self) -> Self:
+        refusal = presentation_refusal(self.destination, self.params)
+        if refusal is not None:
+            raise ValueError(f"destination is not a TUI view request: {refusal}")
+        return self
 
 
 class PresentationDelivered(BaseModel):
@@ -48,19 +60,5 @@ class PresentationDelivered(BaseModel):
     request_id: UUID
     runtime_boot_id: UUID
     connection_id: UUID
-    destination: PresentationDestination
+    destination: str
     delivered: Annotated[int, Field(ge=0)]
-
-
-_NIL_PROFILE: Final = UUID(int=0)
-
-
-def destination_link(profile_id: UUID, destination: PresentationDestination) -> str:
-    """Spell the desktop link that asks this profile's TUI to show ``destination``.
-
-    The link grammar is exact: a lowercase, non-nil profile UUID and the page
-    word, which writes the destination's underscores as hyphens.
-    """
-    if profile_id == _NIL_PROFILE:
-        raise ValueError("a page link names a real profile")
-    return f"cadrumo://profiles/{profile_id}/{destination.replace('_', '-')}"

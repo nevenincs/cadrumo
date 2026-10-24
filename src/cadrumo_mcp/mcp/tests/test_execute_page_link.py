@@ -28,8 +28,8 @@ async def test_a_submitted_profile_operation_links_its_page_even_when_its_outcom
     # The submission may have committed, so the person is still shown where to look.
     assert result["outcome"] == "unresolved"
     assert result["page"] == {
-        "destination": "aeat_auth",
-        "url": "cadrumo://profiles/5aa00000-0000-4000-8000-0000000000aa/aeat-auth",
+        "destination": "profile/aeat-access",
+        "url": "cadrumo://view/profile/aeat-access",
     }
 
 
@@ -46,7 +46,7 @@ async def test_a_declaration_operation_links_the_declarations_page() -> None:
         },
     )
 
-    assert result["page"]["url"] == "cadrumo://profiles/5aa00000-0000-4000-8000-0000000000aa/declarations"
+    assert result["page"] == {"destination": "declarations", "url": "cadrumo://view/declarations"}
 
 
 @pytest.mark.anyio

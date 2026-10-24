@@ -208,7 +208,14 @@ def ledger_screen_factory(
 
     def create(context: TuiScreenContextV1) -> LedgerWorkspaceScreen:
         controller = LedgerWorkspaceController(context, projection, injection)
-        area = area_by_action.get(context.action_candidate_id or "", LedgerWorkspaceArea.OVERVIEW)
+        # A Ledger opened on one transaction, as a link selecting it asks, lands
+        # on the entries where that transaction is selected.
+        landing = (
+            LedgerWorkspaceArea.ENTRIES
+            if context.focus is not None and context.focus.semantic_key == "ledger.transaction"
+            else LedgerWorkspaceArea.OVERVIEW
+        )
+        area = area_by_action.get(context.action_candidate_id or "", landing)
         if controller.refusal_for(area) is not None:
             area = LedgerWorkspaceArea.OVERVIEW
         return resolve_ledger_screen(controller, controller.route_target(area))

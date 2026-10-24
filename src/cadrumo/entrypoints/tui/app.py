@@ -77,7 +77,7 @@ if TYPE_CHECKING:
     from textual.timer import Timer
     from textual.worker import Worker
 
-    from cadrumo_client.contracts.presentation import PresentationDestination
+    from cadrumo_client.contracts.navigation import ViewLink
 
     from ...application.overview.home import HomeAccountSession, HomeProjectionV1
     from .secret.passphrase import PassphraseScreen
@@ -442,8 +442,8 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         # The callback also covers a disconnected transport; no expiry was proven.
         self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.UNAVAILABLE))
 
-    def _post_presentation_requested(self, destination: PresentationDestination) -> None:
-        self.post_message(PagePresentationRequested(destination))
+    def _post_presentation_requested(self, view: ViewLink) -> None:
+        self.post_message(PagePresentationRequested(view))
 
     def on_page_presentation_requested(self, message: PagePresentationRequested) -> None:
         """Open the page the person chose at their desktop, as a palette choice would.
@@ -459,7 +459,7 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
             self.notify(notice, severity="warning")
             return
         self.query_one("#root-navigation-refusal", Static).update("")
-        self.navigate_to(presentation_target(message.destination))
+        self.navigate_to(presentation_target(message.view))
 
     def on_runtime_upgrade_pending(self, _: RuntimeUpgradePending) -> None:
         """Render a manager upgrade notice on the existing UI thread."""

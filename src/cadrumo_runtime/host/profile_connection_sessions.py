@@ -377,7 +377,9 @@ class ProfileConnectionSessionMixin:
         asking session is checked as a status read is. The request reaches each
         connection of the profile that declared it shows pages and holds a
         session under the same native login, and names a page and nothing
-        else; the receiving surface admits it.
+        else; the receiving surface admits it. The request itself is a TUI view
+        of the register with only that element's parameters, or it never
+        decodes, so a relayed view is always one some TUI implements.
         """
         connection = self._connected(context.connection_id)
         if connection.context != context or connection.profile_id != request.profile_id:
@@ -406,6 +408,7 @@ class ProfileConnectionSessionMixin:
                     profile_id=recipient.profile_id,
                     session_id=recipient.session_id,
                     destination=request.destination,
+                    params=request.params,
                 )
                 for recipient in self._connections.values()
                 if recipient.context.presentation

@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from typing import Literal
-from uuid import UUID
 
 from pydantic import BaseModel
 
-from cadrumo_client.contracts.presentation import destination_link
+from cadrumo_client.contracts.navigation import view_link
 
 from ...core.auth_provider import AuthProviderKind
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -37,10 +36,10 @@ class AuthSetupHandoff(BaseModel):
     resume_kind: Literal["setup"] = "setup"
 
 
-def auth_setup_handoff(profile_id: UUID, readiness: AuthSyncReadiness) -> AuthSetupHandoff:
+def auth_setup_handoff(readiness: AuthSyncReadiness) -> AuthSetupHandoff:
     """Build a bounded handoff from the saved method's actual requirements."""
     return AuthSetupHandoff(
-        url=destination_link(profile_id, "aeat_auth"),
+        url=view_link("profile/aeat-access"),
         supported_methods=tuple(AuthProviderKind),
         missing=tuple(
             AuthSetupRequirement(field=item.field, explanation=sync_requirement_reason(item.reason), secret=item.secret)

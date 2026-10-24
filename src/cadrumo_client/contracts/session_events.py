@@ -1,6 +1,6 @@
 """Nonsecret retirement frames on the connection that owned the retired lease."""
 
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, RootModel, model_validator
@@ -10,7 +10,7 @@ from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 from .access_refusals import AccessDenialCode
 from .model_runs import ModelRunRequested
-from .presentation import PresentationDestination
+from .presentation import presentation_refusal
 
 
 class SessionEvent(BaseModel):
@@ -129,8 +129,9 @@ class OperationChanged(BaseModel):
 class PresentationRequested(BaseModel):
     """The person asked, from another of their frontends, that this exact session show a page.
 
-    It names a page and nothing else: the receiver admits it against its own
-    current projection, and it extends neither the session nor its authority.
+    It names a register view and the parameters that element declares, and
+    nothing else: the receiver admits it against its own current projection,
+    and it extends neither the session nor its authority.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -140,7 +141,15 @@ class PresentationRequested(BaseModel):
     connection_id: UUID
     profile_id: UUID
     session_id: UUID
-    destination: PresentationDestination
+    destination: str
+    params: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _a_tui_view(self) -> Self:
+        refusal = presentation_refusal(self.destination, self.params)
+        if refusal is not None:
+            raise ValueError(f"destination is not a TUI view request: {refusal}")
+        return self
 
 
 type ConnectionEvent = (
