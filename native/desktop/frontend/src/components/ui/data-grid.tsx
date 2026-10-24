@@ -154,6 +154,9 @@ type DataGridHandle = {
   scrollToKey: (key: string, align?: "nearest" | "start" | "center") => void;
   /** The active cell; `key` is null on the header row. */
   activeCell: () => { key: string | null; column: string } | null;
+  /** The cell range drawn from an anchor, or null where only the active
+   * cell is chosen. */
+  cellRange: () => CellRange | null;
   edit: (key: string, column: string, initial?: string) => void;
 };
 
@@ -205,6 +208,9 @@ type DataGridProps<R> = {
   empty?: React.ReactNode;
   overscan?: number;
   className?: string;
+  /** Names the header's cue for columns scrolled out of view under the
+   * pinned end group; without it no cue is drawn. */
+  moreColumnsLabel?: (count: number) => string;
 };
 
 type Active = { key: string | null; column: string };
@@ -334,6 +340,7 @@ function DataGrid<R>({
   empty,
   overscan = 6,
   className,
+  moreColumnsLabel,
 }: DataGridProps<R>) {
   const gridId = React.useId();
   const scroller = React.useRef<HTMLDivElement>(null);
@@ -357,6 +364,9 @@ function DataGrid<R>({
   const measured = React.useRef(new Map<string, number>());
   const preferred = React.useRef(0);
   const selectionAnchor = React.useRef<string | null>(null);
+  // After Shift+Space, Shift with a vertical move extends the row
+  // selection as well as the range, as a spreadsheet does in row mode.
+  const rowMode = React.useRef(false);
   const suppressClick = React.useRef(false);
 
   const ordered = React.useMemo(() => displayOrder(columns), [columns]);
@@ -589,7 +599,10 @@ function DataGrid<R>({
     if (at === undefined) return;
     if (how.extend && next.key !== null) {
       if (!anchor && resolved && resolved.key !== null) setAnchor(resolved);
-    } else setAnchor(null);
+    } else {
+      setAnchor(null);
+      rowMode.current = false;
+    }
     const row = next.key === null ? null : (rows[at] ?? null);
     if (
       next.key === null ||
@@ -703,8 +716,20 @@ function DataGrid<R>({
       return;
     }
     selectionAnchor.current = key;
+    rowMode.current = false;
     if (how.toggle) changeSelection(toggleKey(selection, key), "toggle");
     else changeSelection(selectOnly(key), "select");
+  };
+  /** In row mode, the rows from the selection anchor to `key` become the
+   * selection. */
+  const extendRows = (key: string) => {
+    if (!rowMode.current || !selection) return;
+    const target = rows[index.get(key) ?? -1];
+    if (target?.kind !== "data") return;
+    changeSelection(
+      selectRange(dataKeys, selectionAnchor.current, key),
+      "range",
+    );
   };
 
   const selectionContext = React.useMemo(
@@ -929,11 +954,12 @@ function DataGrid<R>({
     const cell = cellIndexOf(row, column);
     const vertical = (to: number, extend: boolean) => {
       const target = rows[to];
-      if (target)
-        moveTo(
-          { key: target.key, column: columnAt(target, preferred.current) },
-          { keyboard: true, extend },
-        );
+      if (!target) return;
+      moveTo(
+        { key: target.key, column: columnAt(target, preferred.current) },
+        { keyboard: true, extend },
+      );
+      if (extend) extendRows(target.key);
     };
     if (plain && (key === "ArrowDown" || key === "ArrowUp")) {
       if (
@@ -979,7 +1005,7 @@ function DataGrid<R>({
           navigable,
         );
         const target = rows[to];
-        if (target)
+        if (target) {
           moveTo(
             {
               key: target.key,
@@ -987,6 +1013,8 @@ function DataGrid<R>({
             },
             { keyboard: true, extend: shift },
           );
+          if (shift) extendRows(target.key);
+        }
         return true;
       }
       moveTo(
@@ -1006,9 +1034,11 @@ function DataGrid<R>({
     }
     if (key === " " && row.kind === "data" && selection) {
       if (exactly(event)) pickRow(row.key, { toggle: true });
-      else if (exactly(event, { shift: true }))
+      else if (exactly(event, { shift: true })) {
         pickRow(row.key, { range: true });
-      else return false;
+        selectionAnchor.current ??= row.key;
+        rowMode.current = true;
+      } else return false;
       return true;
     }
     if (
@@ -1062,6 +1092,7 @@ function DataGrid<R>({
     }
     if (key === "Escape" && anchor) {
       setAnchor(null);
+      rowMode.current = false;
       return true;
     }
     if (isPrintable(event) && row.kind !== "section")
@@ -1111,6 +1142,7 @@ function DataGrid<R>({
       syncView();
     },
     activeCell: () => (resolved ? { ...resolved } : null),
+    cellRange: () => (box ? currentRange() : null),
     edit: (key, column, initial) => {
       const row = rows[index.get(key) ?? -1];
       if (!row) return;
@@ -1240,6 +1272,43 @@ function DataGrid<R>({
   };
   const isStop = (at: number, column: string) =>
     resolvedIndex === at && resolved?.column === column;
+  // Columns scrolled out of view under the pinned end group, which the
+  // header names with a cue that scrolls to the first of them.
+  const shownRight = view.left + view.width - layout.endCover;
+  const beyond = layout.boxes.filter(
+    (placed) => !placed.sticky && placed.left + placed.width > shownRight + 1,
+  );
+  const revealBeyond = () => {
+    const element = scroller.current;
+    const first = beyond[0];
+    if (!element || !first) return;
+    element.scrollLeft =
+      first.left + first.width - element.clientWidth + layout.endCover;
+    syncView();
+  };
+  const moreCue =
+    moreColumnsLabel && beyond.length > 0 && view.width > 0 ? (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            tabIndex={-1}
+            data-slot="data-grid-more-columns"
+            aria-label={moreColumnsLabel(beyond.length)}
+            className="absolute inset-y-0 end-full inline-flex items-center gap-0.5 border-s border-border bg-background px-1.5 text-xs font-medium text-muted-foreground tabular-nums hover:text-foreground"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation();
+              revealBeyond();
+            }}
+          >
+            <span aria-hidden="true">+{beyond.length}</span>
+            <Icon name="forward" size="xs" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{moreColumnsLabel(beyond.length)}</TooltipContent>
+      </Tooltip>
+    ) : null;
 
   const headerRow = (
     <div
@@ -1302,6 +1371,7 @@ function DataGrid<R>({
                 if (column.sortable) onSort?.(column.id);
               }}
             >
+              {column.id === firstEnd && moreCue}
               <span className="min-w-0 truncate">{column.header}</span>
               {sorted && (
                 <Icon

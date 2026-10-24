@@ -282,6 +282,31 @@ test("rows are selected by Space, Shift+Space, Ctrl+A and the pointer", async ({
   expect(log).toContain("select select 1");
 });
 
+test("after Shift+Space, Shift with an arrow extends the row selection", async ({
+  page,
+}) => {
+  await open(page);
+  await enter(page);
+  const row = (index: number) =>
+    grid(page).locator(`[aria-rowindex="${index}"]`);
+  await page.keyboard.press("Shift+Space");
+  await expect(row(2)).toHaveAttribute("aria-selected", "true");
+  for (let step = 0; step < 3; step += 1)
+    await page.keyboard.press("Shift+ArrowDown");
+  for (const index of [2, 3, 4, 5])
+    await expect(row(index)).toHaveAttribute("aria-selected", "true");
+  await expect(row(6)).toHaveAttribute("aria-selected", "false");
+  await page.keyboard.press("Shift+ArrowUp");
+  await expect(row(5)).toHaveAttribute("aria-selected", "false");
+  await expect(row(4)).toHaveAttribute("aria-selected", "true");
+  // A plain move leaves row mode: Shift with an arrow is a cell range again.
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Shift+ArrowDown");
+  await expect(row(6)).toHaveAttribute("aria-selected", "false");
+  for (const index of [2, 3, 4])
+    await expect(row(index)).toHaveAttribute("aria-selected", "true");
+});
+
 test("a range is drawn, copied, filled and offered to the menu", async ({
   page,
 }) => {
