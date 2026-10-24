@@ -156,11 +156,14 @@ setup-browser:
 pin-browser-archives *args:
     uv run --no-sync python -m dev.env.browser_archive_pins {{args}}
 
-# Regenerate the local AI program pins: the address, format, executable, size
-# and SHA-256 of the official standalone archive per platform of one release,
-# each downloaded once. The component engine accepts no other bytes.
-# `--check` validates the committed table without downloading.
-[doc('Pin the local AI program archives the component engine installs.')]
+# Regenerate the local AI pins: the address, format, executable, size and
+# SHA-256 of the official standalone archive per platform of one release, each
+# downloaded once, and each pinned model's manifest digest and download size
+# from the model registry. The component engine accepts no other bytes.
+# `--only program|models` limits it to one table. `--check` validates both
+# committed tables and their declared hosts without downloading, and fails on
+# drift.
+[doc('Pin the local AI program archives and model manifests the component engine installs.')]
 [group('setup')]
 pin-local-ai *args:
     uv run --no-sync python -m dev.env.local_ai_pins {{args}}

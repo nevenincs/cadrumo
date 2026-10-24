@@ -137,6 +137,7 @@ impl BrowserArchivePins {
                 let parsed = HttpsUrl::parse(url)?;
                 if !url.starts_with("https://")
                     || !url.ends_with(&format!("/{}", archive.path))
+                    || !hosts.contains(parsed.host())
                     || urls.contains(&parsed)
                 {
                     return Err(invalid("browser archive source"));
@@ -592,6 +593,10 @@ mod tests {
             ("path = \"builds/", "path = \"builds/../"),
             ("platform = \"linux-arm64\"", "platform = \"win-arm64\""),
             ("hosts = [\n", "hosts = [\n  \"cdn.playwright.dev\",\n"),
+            (
+                "\"https://cdn.playwright.dev/",
+                "\"https://mirror.example.com/",
+            ),
             (
                 "playwright_driver = ",
                 "unexpected = 1\nplaywright_driver = ",

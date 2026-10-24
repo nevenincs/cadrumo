@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:631c42ad651b225a1484354e1e76d2919748f613518784a8477e255b525e4e3e'
+body_hash: 'sha256:a8497d69af87dbb00355bdff7100e7f7c6e251f3e4a3ec9672838342e3a6858b'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -170,6 +170,28 @@ related:
 - `S04` `verify:` `cargo clippy --all-targets --features platform -- -D warnings` -> `pass`
 - `S04` `verify:` `rustfmt --edition 2024 --check src/provisioning/*.rs` -> `pass`
 - `S04` `by:` `implementation-engineer-high`
+- `S01` `A` `dev/env/local_ai_model_pins.py`
+- `S01` `M` `dev/env/local_ai_pins.py`
+- `S01` `A` `dev/env/tests/test_local_ai_model_pins.py`
+- `S01` `A` `dev/env/tests/data/ollama_manifests/moondream_1.8b.json`
+- `S01` `A` `dev/env/tests/data/ollama_manifests/qwen2.5_3b.json`
+- `S01` `A` `dev/env/tests/data/ollama_manifests/qwen2.5vl_3b.json`
+- `S01` `A` `dev/env/tests/data/ollama_manifests/qwen2.5vl_7b.json`
+- `S01` `A` `dev/env/tests/data/ollama_manifests/qwen3-vl_2b.json`
+- `S01` `A` `dev/env/tests/data/ollama_manifests/qwen3_1.7b.json`
+- `S01` `M` `src/cadrumo/_data/dependencies/local_ai_models.toml`
+- `S01` `M` `native/application/src/provisioning/pins.rs`
+- `S01` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S01` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S01` `M` `dev/quality/metadata/import_load_targets.json`
+- `S01` `verify:` `just pin-local-ai --check` -> `pass`
+- `S01` `verify:` `uv run --no-sync python -m dev.env.local_ai_pins --only models (registry manifests re-derived every committed digest and size unchanged)` -> `pass`
+- `S01` `verify:` `pytest dev/env/tests/test_local_ai_model_pins.py dev/env/tests/test_local_ai_pins.py src/cadrumo/core/tests/test_local_ai_pins.py src/cadrumo/core/tests/test_model_catalogue.py dev/packaging/tests/test_native_layout_entrypoints.py (76 passed)` -> `pass`
+- `S01` `verify:` `pytest dev/quality/tests/test_import_load_worker.py (cadrumo target set stale on cadrumo.application.dependency_withdrawal, committed in c002a7769a outside this Step)` -> `fail`
+- `S01` `verify:` `ruff check, ruff format --check, ty check on the touched dev files` -> `pass`
+- `S01` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S01` `verify:` `cargo test --lib provisioning::pins (5 passed), cargo clippy --all-targets with and without --features platform -D warnings, rustfmt --check` -> `pass`
+- `S01` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -187,3 +209,4 @@ related:
 - `S16` review correction withdrawn-full-check-relabelled: a registry without full checks answers a full request with its quick check and labels the rows quick; review correction runtime-owner-start-residual: the runtime admits no operation's request to start the local model program
 - `S02` review correction: transfer-source-fallback, retry-first-wait, http-unbounded-loops
 - `S04` review correction: activity-finish-race, interrupted-hidden-by-observation, receipt-timestamp-interop, setup-selection-vs-button; a `not_in_this_build` block also outranks an interruption beside the hardware block, because Resume cannot change either
+- `S01` review correction: model-pins-without-generator, browser-pin-source-hosts; the load-target inventories gain only this Step's modules `(dev.env.local_ai_model_pins,` plus `dev.env.local_ai_pins` and `cadrumo.core.local_ai_pins` that S01 left out); other sessions' uncommitted inventory lines stay uncommitted
