@@ -1,0 +1,31 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+  "outcome": {
+    "outcome": "evaluated",
+    "baseline_id": "f86f714323741f1ef9b48990e5e61cb21363be9eb0797dfdad58eb3f633cf3c5",
+    "findings": []
+  },
+  "parsed": [],
+  "findings": [],
+  "operator_entries_unknown": false,
+  "refusal_words": null,
+  "rebase": [
+    {
+      "address": { "kind": "scalar", "casilla_id": "06" },
+      "kind": "clear",
+      "outcome": "dropped"
+    },
+    {
+      "address": { "kind": "scalar", "casilla_id": "08" },
+      "kind": "set",
+      "outcome": "changed"
+    },
+    {
+      "address": { "kind": "scalar", "casilla_id": "10" },
+      "kind": "set",
+      "outcome": "kept"
+    }
+  ]
+}

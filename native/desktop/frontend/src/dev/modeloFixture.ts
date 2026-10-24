@@ -27,8 +27,8 @@ import {
   type ModeloResult,
   type ModeloSaveFormat,
 } from "../shell/modelo";
+import { RELAY_PAYLOAD_LIMIT } from "../shell/relayBounds";
 import {
-  MODELO_EDIT_BODY_LIMIT,
   type ModeloCasillaHelpProjectionV1,
   type ModeloDeclarationsListProjectionV1,
   type ModeloEditOperatorInputV2,
@@ -53,6 +53,9 @@ import { hex64 } from "./fixtures/ledger";
  * `exported` is the checked declaration with its file made, which exports
  * and records, `export-unverified` exports a file whose design carries no
  * completeness manifest, and `export-unknown` loses the export's settlement;
+ * `rebase` stages on a read the declaration then moves under, so the
+ * review after the renewal reports each staged change kept, changed or
+ * dropped, as the application judged the changes it was sent;
  * the `receipt` declaration is corrected, and `correction-refused` and
  * `correction-unknown` refuse the correction or lose its settlement. */
 export const MODELO_SHAPES = [
@@ -70,6 +73,7 @@ export const MODELO_SHAPES = [
   "export-unknown",
   "correction-refused",
   "correction-unknown",
+  "rebase",
   "refused",
   "unknown",
   "unavailable",
@@ -221,6 +225,8 @@ export function modeloFixture(options: Options): ModeloPort {
       case "edit":
       case "renewal":
         return applied ? "130-1T-applied" : LATER_STATES;
+      case "rebase":
+        return renewed ? "130-1T-rebased" : "130-1T-rebase";
       case "prerequisite":
         return "130-3T-prerequisite";
       default:
@@ -309,10 +315,13 @@ export function modeloFixture(options: Options): ModeloPort {
               work_unit_id?: unknown;
             } | null;
             const name = await formName(String(baseline?.work_unit_id));
+            const modelo =
+              (baseline as { modelo?: string } | null)?.modelo ??
+              name?.split("-")[0];
             const renewal =
-              name &&
+              modelo &&
               (await envelope<ModeloEditRenewalProjectionV1>(
-                `renew-${name.split("-")[0]}`,
+                `renew-${modelo}`,
               ));
             if (!renewal) return unserved();
             renewed = renewal.renewed_baseline?.baseline_id ?? null;
@@ -362,7 +371,7 @@ export function modeloFixture(options: Options): ModeloPort {
       try {
         say(`modelo edit ${definition}`);
         await answer();
-        if (body.byteLength > MODELO_EDIT_BODY_LIMIT) reject("invalid");
+        if (body.byteLength > RELAY_PAYLOAD_LIMIT) reject("invalid");
         let input: ModeloEditOperatorInputV2;
         try {
           input = JSON.parse(
@@ -384,8 +393,10 @@ export function modeloFixture(options: Options): ModeloPort {
           const correction = entries.find(
             (entry) => entry.address.kind === "correction",
           );
+          // The baseline the review first sends has run out of its lifetime;
+          // once renewed, every baseline the window holds is current.
           const stale =
-            shape === "renewal" && renewed !== submission.baseline.baseline_id;
+            (shape === "renewal" || shape === "rebase") && renewed === null;
           const read = correction
             ? /^[-+\d.,\s]+$/.test(correction.lexeme)
               ? `preflight-${modelo}-correction`
@@ -394,14 +405,28 @@ export function modeloFixture(options: Options): ModeloPort {
               ? `preflight-${modelo}`
               : stale
                 ? `preflight-${modelo}-stale`
-                : `preflight-${modelo}-review`;
+                : shape === "rebase"
+                  ? `preflight-${modelo}-rebase-review`
+                  : `preflight-${modelo}-review`;
           const preflight =
             await envelope<ModeloEditPreflightProjectionV1>(read);
-          if (preflight)
-            return settle(preflight) as LedgerOutcome<
-              ModeloResult<typeof definition>
-            >;
-          return unserved();
+          if (!preflight) return unserved();
+          // The application judged each change it was sent as held; the
+          // answer reports the changes this window holds, as it named them.
+          const held = new Set(
+            (submission.held ?? []).map(
+              (change) => `${JSON.stringify(change.address)}|${change.kind}`,
+            ),
+          );
+          const answered: ModeloEditPreflightProjectionV1 = {
+            ...preflight,
+            rebase: preflight.rebase.filter((entry) =>
+              held.has(`${JSON.stringify(entry.address)}|${entry.kind}`),
+            ),
+          };
+          return settle(answered) as LedgerOutcome<
+            ModeloResult<typeof definition>
+          >;
         }
         if (shape === "prerequisite")
           reject("refused", { operation_id: nextOperation() });

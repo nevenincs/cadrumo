@@ -173,6 +173,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "3857746d964868b8e4b0973c9763f89c55b35e18b781ddbcaecf16af845ae55e"
                   }
                 },
@@ -239,6 +240,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "26f32cb7d29df130e8fd740bb4ebe49e99b6c577404d3a364110735683bfa903"
                   }
                 },
@@ -292,6 +294,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "e1331da9df525c1a8cbd4419fbe5b48383a8473a15848cdd1e2c3e3a44dc2c0b"
                   }
                 },
@@ -353,6 +356,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 },
@@ -441,6 +445,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": "0",
+                    "confirm_comparable": null,
                     "state_digest": "77a4f098fe52b84822f9683c9b677510a74cd09ea6ba808de64f5cb7f3917375"
                   }
                 },
@@ -510,6 +515,7 @@
                     "takes_typed_value": true,
                     "clearable": true,
                     "own_value": "1234.56",
+                    "confirm_comparable": null,
                     "state_digest": "fac1a092461a71db964047fdd8b944c1d427c1a67df2cff5da95b826bd2a19e6"
                   }
                 },
@@ -561,6 +567,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "942f5571a3529002561294bea7b8ade8574850a568344d579b9fac5fc0e86f97"
                   }
                 }
@@ -633,6 +640,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -702,6 +710,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
@@ -771,6 +780,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -822,6 +832,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 }
@@ -894,6 +905,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "942f5571a3529002561294bea7b8ade8574850a568344d579b9fac5fc0e86f97"
                   }
                 },
@@ -947,6 +959,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
@@ -998,6 +1011,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "942f5571a3529002561294bea7b8ade8574850a568344d579b9fac5fc0e86f97"
                   }
                 },
@@ -1062,6 +1076,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
@@ -1113,6 +1128,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -1164,6 +1180,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "942f5571a3529002561294bea7b8ade8574850a568344d579b9fac5fc0e86f97"
                   }
                 },
@@ -1215,6 +1232,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -1266,6 +1284,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "942f5571a3529002561294bea7b8ade8574850a568344d579b9fac5fc0e86f97"
                   }
                 }
@@ -1425,6 +1444,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
         }
       ],
@@ -1574,7 +1594,7 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-10-24T18:35:46.309756Z",
+        "exported_at": "2026-10-24T20:27:26.341117Z",
         "calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
         "current": false
       },
@@ -1592,9 +1612,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "dacb2026b840053b1fee12afc93c522daa02204340dd7b501e3cfc58675ea93a",
+      "contract_set_digest": "83be9fba7d75f8a7e927b93e40593289414ef82c8cd3d44495307c74cf1a7bb0",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
+      "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1618,7 +1638,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "50137af3e279c85b63ea26b32b31e5328124cb0cac8b56a67c724112946f18f9"
+        "schema_fingerprint": "207803c795cd324d67b0c181c1e575755354ef23733b5450214c0c861992b4aa"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1627,8 +1647,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "5afffeb9ea329ed1e735fbd95aaa24399f9e6287a373f3f6a93e643e223dd385",
-    "calculation_head_digest": "cfb81bdbb3a27799966f5dc77af38ada8b728799f65c5efa5eea6f788f6b6cce",
+    "work_unit_record_digest": "6050e73e14059317838445408bffbfc227b260db202b272a0114b6a1d384a216",
+    "calculation_head_digest": "2a2ed694c02045c207b6e2bf0f4c438c500f1c7424caefd1aa40fa606ae17691",
     "current_calculation_revision_id": "f750b77d07a9d8ece9ecf2939bdede9bc70b159d7ff18c7ee1477c27e9c389fe",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1932,9 +1952,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T18:36:18.245080Z",
-    "expires_at": "2026-10-24T18:41:18.245080Z",
-    "baseline_id": "5f50b8cd6485bf2659d8f32a3d26b43d76fa58ed9647e6e8db19a6157e0b4724"
+    "issued_at": "2026-10-24T20:27:46.391435Z",
+    "expires_at": "2026-10-24T20:32:46.391435Z",
+    "baseline_id": "4d553bd97c157762a8bfb87d3bcda4c8013aa9bab38094db1b2b55ce8fd47d78"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1944,7 +1964,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-10-24T18:35:46.309756Z",
+    "file_created_at": "2026-10-24T20:27:26.341117Z",
     "receipt_to_add": false
   },
   "header": {
@@ -1970,7 +1990,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-10-24T18:35:46.309756Z",
+      "exported_at": "2026-10-24T20:27:26.341117Z",
       "created_on": "2026. 10. 24.",
       "current": false,
       "words": "A(z) 2026. 10. 24. napi fájl elavult. Hozd létre újra."
@@ -2110,6 +2130,14 @@
       "available": false,
       "reason": "not_verified",
       "words": "Exportálás előtt ellenőrizd a bevallást."
+    },
+    "review_package": {
+      "words": "Csomag a könyvelődnek",
+      "availability": {
+        "available": false,
+        "reason": "not_verified",
+        "words": "Exportálás előtt ellenőrizd a bevallást."
+      }
     },
     "asks_elections": false,
     "elections": [],

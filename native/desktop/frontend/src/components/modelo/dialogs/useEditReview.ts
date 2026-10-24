@@ -6,23 +6,16 @@ import type {
   ModeloEditApplyPrerequisiteV1,
   ModeloEditReviewFindingV1,
   ModeloFormRebaseEntryV1,
-  ModeloFormStagedChangeV1,
-  ModeloFormStagedKind,
   ModeloWorkbenchFormProjectionV1,
   OutputLanguage,
 } from "../../../shell/modeloContract";
-import {
-  addressKey,
-  editKey,
-  editSubmission,
-  type FormSession,
-  type StagedIntent,
-} from "../form/session";
+import { editKey, editSubmission, type FormSession } from "../form/session";
 import { runOperation } from "./operationRun";
 
 // The review's run: the staged edits are checked by a preflight on the
 // admitted baseline, applied once, and followed until the apply settles. A
-// stale baseline is renewed and the edits checked again, kept as staged. An
+// stale baseline is renewed once: the edits it keeps are staged again on the
+// declaration as it is read next, and checked again on the renewed baseline. An
 // apply whose settlement was not observed is unknown: it may have committed,
 // so it is never sent again, and nothing more is applied until the
 // declaration is read again. Staged edits are cleared only by an apply the
@@ -37,9 +30,6 @@ export type ReviewPhase =
       /** Whether the declaration does not record which values the filer
        * typed, so applying returns the others to their source. */
       operatorEntriesUnknown: boolean;
-      /** What the renewal did to each staged edit, as the application
-       * reports it; empty when the baseline was not renewed. */
-      rebase: ModeloFormRebaseEntryV1[];
     }
   /** The application refused the edits as they stand, and why. */
   | { kind: "refused"; words: string | null }
@@ -53,56 +43,40 @@ export type ReviewPhase =
   /** The apply was sent and its settlement was not seen. */
   | { kind: "unknown"; operationId: string | null };
 
-/** The kind of change each staged intent is, as a renewal is told it. */
-const STAGED_KIND: Record<StagedIntent["kind"], ModeloFormStagedKind> = {
-  set_typed_value: "set",
-  set_override_value: "set",
-  clear_declared_value: "clear",
-  restore_source_value: "restore",
-  remove_override: "restore",
-};
-
-/** The staged edits as a renewal is told them: each box's address, the
- * kind of change and the box's state when it was staged. */
-const heldChanges = (session: FormSession): ModeloFormStagedChangeV1[] =>
-  [...session.staged.values()].map((edit) => ({
-    address: edit.field.address,
-    kind: STAGED_KIND[edit.intent.kind],
-    held_state: edit.field.state_digest,
-  }));
-
-/** The preflight of `edits` on `baseline`, renewing a stale baseline once.
- * `rebase` is what an earlier renewal in this run reported, or null. */
+/** The preflight of `edits` on `baseline`. A stale baseline not renewed
+ * before is renewed, and the check waits for the edits to be staged again
+ * on the renewed declaration. */
 async function preflight(
   port: ModeloPort,
   session: FormSession,
   baseline: ModeloEditApplyBaselineV1,
   language: OutputLanguage,
-  rebase: ModeloFormRebaseEntryV1[] | null,
-  onRenewed: (
-    baseline: ModeloEditApplyBaselineV1,
-    rebase: ModeloFormRebaseEntryV1[],
-  ) => Promise<void>,
+  renewedBefore: boolean,
+  onRenewed: (baseline: ModeloEditApplyBaselineV1) => Promise<void>,
+  onRebase: (report: ModeloFormRebaseEntryV1[]) => void,
 ): Promise<ReviewPhase> {
   try {
     const outcome = await port.edit(
       "modelo.edit.preflight",
       modeloEditBody(
-        editSubmission(baseline, session.staged.values(), language),
+        editSubmission(baseline, session.staged.values(), language, true),
       ),
     );
     if (outcome.kind !== "settled")
       return { kind: "check_failed", code: "refused" };
     const read = outcome.result;
     const answer = read.outcome;
+    // What became of each held change: a box that moved under it marks it,
+    // and one that no longer takes it drops it.
+    if (read.rebase.some((entry) => entry.outcome !== "kept"))
+      onRebase(read.rebase);
     if (answer.outcome === "evaluated")
       return {
         kind: "checked",
         findings: read.findings,
         operatorEntriesUnknown: read.operator_entries_unknown,
-        rebase: rebase ?? [],
       };
-    if (answer.refusal.kind !== "stale_edit_baseline" || rebase !== null)
+    if (answer.refusal.kind !== "stale_edit_baseline" || renewedBefore)
       return { kind: "refused", words: read.refusal_words };
   } catch (error) {
     return { kind: "check_failed", code: ledgerFailure(error).code };
@@ -111,15 +85,13 @@ async function preflight(
     const outcome = await port.submit("modelo.edit.renew", {
       baseline,
       output_language: language,
-      staged: heldChanges(session),
     });
     if (outcome.kind !== "settled")
       return { kind: "check_failed", code: "refused" };
     const next = outcome.result.renewed_baseline;
     if (!next) return { kind: "refused", words: outcome.result.refusal_words };
-    const report = outcome.result.rebase;
-    await onRenewed(next, report);
-    return preflight(port, session, next, language, report, onRenewed);
+    await onRenewed(next);
+    return { kind: "checking" };
   } catch (error) {
     return { kind: "check_failed", code: ledgerFailure(error).code };
   }
@@ -153,6 +125,9 @@ export function useEditReview({
     read: ModeloWorkbenchFormProjectionV1;
   } | null>(null);
   const alive = useRef(true);
+  const checks = useRef(0);
+  // The declaration as read before the last renewal, until its report.
+  const renewedFrom = useRef<ModeloWorkbenchFormProjectionV1 | null>(null);
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -174,31 +149,28 @@ export function useEditReview({
       return;
     }
     setPhase({ kind: "checking" });
+    // Only the latest check speaks: a renewal starts another.
+    const ticket = ++checks.current;
     const answer = await preflight(
       port,
       session,
       baseline,
       language,
-      null,
-      async (next, report) => {
+      renewed !== null && baseline === renewed,
+      async (next) => {
+        // The declaration is read again; the renewed baseline then starts a
+        // new check, whose report is applied to that read.
+        renewedFrom.current = envelope;
         setRenewed(next);
-        // A change whose box no longer takes it is dropped, as the
-        // application reports; the others stay staged.
-        const dropped = new Set(
-          report
-            .filter((entry) => entry.outcome === "dropped")
-            .map((entry) => addressKey(entry.address)),
-        );
-        for (const edit of session.staged.values())
-          if (dropped.has(addressKey(edit.field.address)))
-            session.unstage(edit.key);
-        // The edits stay staged; the form is read again so changed boxes
-        // show against what the filer staged.
         await onReread();
       },
+      (report) => {
+        session.rebase(report, renewedFrom.current);
+        renewedFrom.current = null;
+      },
     );
-    if (alive.current) setPhase(answer);
-  }, [baseline, port, session, language, onReread]);
+    if (alive.current && ticket === checks.current) setPhase(answer);
+  }, [baseline, port, session, language, renewed, onReread, envelope]);
 
   // Each opening checks the edits as they now stand; a re-read after an
   // unknown apply releases the hold.

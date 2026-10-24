@@ -11,6 +11,7 @@ import {
   entrySubmission,
   fieldKey,
   placedFields,
+  restaged,
   restoreIntent,
   UNPLACED_PAGE,
   valueIntent,
@@ -56,6 +57,7 @@ const staged = (
   intent,
   entry: null,
   normalisations: [],
+  beforeChanged: false,
 });
 
 test("every box of every page is placed once, in reading order", () => {
@@ -126,8 +128,8 @@ test("the staged edits make one submission of typed values only", () => {
   const input = editSubmission(
     baseline,
     [
-      staged(own, { kind: "set_typed_value", value: "1234.56" }),
-      staged(fed, { kind: "remove_override" }),
+      staged(own, valueIntent(own, "1234.56")),
+      staged(fed, { kind: "remove_override", change: "restore" }),
     ],
     "es",
   );
@@ -165,4 +167,95 @@ test("a declaration whose edits were refused takes none", () => {
   expect(editsAdmitted(m130)).toBe(true);
   expect(m390.admitted_baseline).toBeNull();
   expect(editsAdmitted(m390)).toBe(false);
+});
+
+test("a preflight's report keeps a set value only where the box still takes it as a change", () => {
+  const own = box(m130, "06");
+  const typed = staged(own, valueIntent(own, "150.00", "150"));
+  // The box still takes a typed value: the edit is staged on it as it is now.
+  expect(restaged(typed, { ...own, takes_typed_value: true })).toEqual(
+    valueIntent(own, "150.00", "150"),
+  );
+  // The box no longer takes typing: the edit is dropped.
+  expect(restaged(typed, { ...own, takes_typed_value: false })).toBeNull();
+  // The box already holds the same figure as the filer's own: nothing to change.
+  expect(
+    restaged(typed, { ...own, takes_typed_value: true, own_value: "150" }),
+  ).toBeNull();
+  // A figure the application did not compare is never assumed equal.
+  expect(
+    restaged(staged(own, valueIntent(own, "150")), {
+      ...own,
+      takes_typed_value: true,
+      own_value: "150",
+    }),
+  ).not.toBeNull();
+});
+
+test("a confirmed value is dropped once the box holds it as the filer's own", () => {
+  const own = box(m130, "06");
+  const assumed = {
+    ...own,
+    confirmable: true,
+    confirm_value: "80",
+    confirm_comparable: "80",
+  };
+  const confirm = confirmIntent(assumed);
+  if (!confirm) throw new Error("the assumed box offers no confirmation");
+  expect(confirm).toEqual(valueIntent(assumed, "80", "80"));
+  const held = staged(assumed, confirm);
+  expect(
+    restaged(held, { ...own, takes_typed_value: true, own_value: "80" }),
+  ).toBeNull();
+  expect(
+    restaged(held, { ...own, takes_typed_value: true, own_value: null }),
+  ).not.toBeNull();
+});
+
+test("a preflight is told each held change at its edit address, an apply none", () => {
+  const baseline = m130.admitted_baseline!;
+  const own = box(m130, "06");
+  const fed = box(m130, "05");
+  const edits = [
+    staged(own, valueIntent(own, "1")),
+    staged(fed, { kind: "remove_override", change: "restore" }),
+  ];
+  const checked = editSubmission(baseline, edits, "en", true).submission;
+  expect(checked.held).toEqual([
+    {
+      address: editAddress(own),
+      kind: "set",
+      held_state: own.state_digest,
+    },
+    {
+      address: editAddress(fed),
+      kind: "restore",
+      held_state: fed.state_digest,
+    },
+  ]);
+  expect(editSubmission(baseline, edits, "en").submission.held).toBeUndefined();
+});
+
+test("a renewal keeps a clear or a restore only where the box still offers it", () => {
+  const own = box(m130, "06");
+  const clear = staged(own, clearIntent(own));
+  expect(restaged(clear, { ...own, clearable: true })).toEqual(
+    clearIntent(own),
+  );
+  expect(restaged(clear, { ...own, clearable: false })).toBeNull();
+  const fed = box(m130, "05");
+  const restore = staged(fed, { kind: "remove_override", change: "restore" });
+  expect(restaged(restore, { ...fed, restorable: false })).toBeNull();
+  expect(restaged(restore, { ...fed, restorable: true })).toEqual(
+    restoreIntent({ ...fed, restorable: true }),
+  );
+});
+
+test("a staged intent says the kind of change a renewal is told", () => {
+  const own = box(m130, "06");
+  const fed = box(m130, "05");
+  expect(valueIntent(own, "1").change).toBe("set");
+  expect(clearIntent(own).change).toBe("clear");
+  expect(clearIntent(fed).change).toBe("clear");
+  expect(restoreIntent({ ...fed, restorable: true })?.change).toBe("restore");
 });

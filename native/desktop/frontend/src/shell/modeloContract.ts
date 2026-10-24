@@ -2979,6 +2979,7 @@ export type ModeloEditApplySubmissionV1 = {
   row_intents?: ModeloEditApplyRowIntentV1[];
   detail_row_intents?: ModeloEditApplyDetailRowIntentV1[];
   lexemes?: ModeloEditParseRequestV1[];
+  held?: ModeloEditHeldChangeV1[];
 };
 
 export type ModeloEditBaselineId = string;
@@ -3155,6 +3156,29 @@ export type ModeloEditFindingV1 = {
   message_arguments: string[];
   evidence: string[];
 };
+
+export type ModeloEditHeldAddressV1 =
+  ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1;
+
+/**
+ * One change a frontend holds since it read the form, for a preflight to say
+ * what became of it.
+ *
+ * `held_state` is the box's state digest when the change was staged. It is
+ * derived from the box's value, so it travels only inside the transient
+ * submission, in process memory, and never reaches a request, a journal or a
+ * result; the preflight answers with what became of the change alone.
+ */
+export type ModeloEditHeldChangeV1 = {
+  address: ModeloEditHeldAddressV1;
+  kind: ModeloEditHeldKind;
+  held_state: string;
+};
+
+/**
+ * The kind of change a frontend holds on a box.
+ */
+export type ModeloEditHeldKind = "set" | "clear" | "restore";
 
 /**
  * The closed set of edit-executed effects this V1 contract covers.
@@ -3340,7 +3364,9 @@ export type ModeloEditPreflightEvaluatedV1 = {
  * `findings` are the check's findings the review lists, in the request's
  * language, and `refusal_words` says why the whole check was refused;
  * `operator_entries_unknown` says whether the filer's earlier entries could
- * not be read, which the review says in its own sentence.
+ * not be read, which the review says in its own sentence. `rebase` says what
+ * became of each change the submission held, on the declaration as a fresh
+ * read of its form shows it; it carries nothing derived from a value.
  */
 export type ModeloEditPreflightProjectionV1 = {
   result_version: 1;
@@ -3351,6 +3377,7 @@ export type ModeloEditPreflightProjectionV1 = {
   findings: ModeloEditReviewFindingV1[];
   operator_entries_unknown: boolean;
   refusal_words: string | null;
+  rebase: ModeloFormRebaseEntryV1[];
 };
 
 /**
@@ -3418,15 +3445,12 @@ export type ModeloEditRefusedV1 = {
 /**
  * The baseline an edit session holds, to renew before review or submission.
  *
- * `output_language` is the language a refusal is said in. `staged` are the
- * changes the session holds, by box, kind and the box's state when each was
- * staged, never a value; the result says what becomes of each.
+ * `output_language` is the language a refusal is said in.
  */
 export type ModeloEditRenewRequest = {
   profile_id: string;
   baseline: ModeloEditApplyBaselineV1;
   output_language: OutputLanguage;
-  staged?: ModeloFormStagedChangeV1[];
 };
 
 /**
@@ -3440,7 +3464,6 @@ export type ModeloEditRenewalProjectionV1 = {
   renewed_baseline: ModeloEditApplyBaselineV1 | null;
   refusal: ModeloEditRefusedV1 | null;
   refusal_words: string | null;
-  rebase: ModeloFormRebaseEntryV1[];
 };
 
 /**
@@ -4361,6 +4384,7 @@ export type ModeloFormExportHoldReason = "blocks" | "confirm" | "verify";
 export type ModeloFormExportOffer = {
   artefacts: ModeloFormArtefactOption[];
   record: ModeloFormAvailability;
+  review_package: ModeloFormReviewPackageOffer;
   asks_elections: boolean;
   elections: ModeloFormElectionQuestion[];
   file_format: ExportLayoutFormat | null;
@@ -4497,16 +4521,16 @@ export type ModeloFormOrigin =
 export type ModeloFormRateUnit = "fraction";
 
 /**
- * One held change and what the renewal did to it.
+ * One held change, by its edit address and kind, and what became of it.
  */
 export type ModeloFormRebaseEntryV1 = {
-  address: ModeloFormAddressV1;
-  kind: ModeloFormStagedKind;
+  address: ModeloEditHeldAddressV1;
+  kind: ModeloEditHeldKind;
   outcome: ModeloFormRebaseOutcome;
 };
 
 /**
- * What a renewal did to one held change.
+ * What the declaration's move did to one held change.
  */
 export type ModeloFormRebaseOutcome = "kept" | "changed" | "dropped";
 
@@ -4566,6 +4590,15 @@ export type ModeloFormResultView = {
 };
 
 /**
+ * The package for the filer's accountant, in the filer's words, and whether it
+ * can be built now.
+ */
+export type ModeloFormReviewPackageOffer = {
+  words: string;
+  availability: ModeloFormAvailability;
+};
+
+/**
  * One group of where the form's values come from: its boxes, its sources, and
  * its words.
  *
@@ -4618,21 +4651,6 @@ export type ModeloFormSourceReading = {
  * What a source gave this declaration.
  */
 export type ModeloFormSourceState = "produced" | "none_found" | "not_yet";
-
-/**
- * One change a frontend holds: its box, its kind and the box's state digest
- * when it was staged.
- */
-export type ModeloFormStagedChangeV1 = {
-  address: ModeloFormAddressV1;
-  kind: ModeloFormStagedKind;
-  held_state: string;
-};
-
-/**
- * The kind of change a frontend holds on a box.
- */
-export type ModeloFormStagedKind = "set" | "clear" | "restore";
 
 /**
  * Where one box stands on the filing journey, as every frontend that counts
@@ -7447,6 +7465,7 @@ export type PublicModeloFormField = {
   takes_typed_value: boolean;
   clearable: boolean;
   own_value: ModeloEditWireScalar;
+  confirm_comparable: ModeloEditWireScalar;
   state_digest: string;
 };
 
@@ -8200,11 +8219,6 @@ export const MODELO_STORED_SUBJECT_DEFINITIONS = [
   "modelo.work.revision_snapshot",
   "modelo.work.verify",
 ] as const;
-
-/** The longest edit body, in bytes, the host sends on: its relay's request
- * bound. A longer one is refused with `invalid` before anything is sent;
- * the page splits the edit. */
-export const MODELO_EDIT_BODY_LIMIT = 16842752;
 
 /** Each admitted definition's registered request, result and review, as the
  * runtime's contract names them; a request names the profile the host fills. */

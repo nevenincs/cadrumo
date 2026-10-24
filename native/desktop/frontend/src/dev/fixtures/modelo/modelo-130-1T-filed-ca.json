@@ -167,6 +167,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "3857746d964868b8e4b0973c9763f89c55b35e18b781ddbcaecf16af845ae55e"
                   }
                 },
@@ -233,6 +234,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "26f32cb7d29df130e8fd740bb4ebe49e99b6c577404d3a364110735683bfa903"
                   }
                 },
@@ -286,6 +288,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "e1331da9df525c1a8cbd4419fbe5b48383a8473a15848cdd1e2c3e3a44dc2c0b"
                   }
                 },
@@ -347,6 +350,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 },
@@ -432,6 +436,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": "0",
+                    "confirm_comparable": null,
                     "state_digest": "77a4f098fe52b84822f9683c9b677510a74cd09ea6ba808de64f5cb7f3917375"
                   }
                 },
@@ -501,6 +506,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -552,6 +558,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 }
@@ -624,6 +631,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -693,6 +701,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
@@ -762,6 +771,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -813,6 +823,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 }
@@ -885,6 +896,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 },
@@ -938,6 +950,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
@@ -989,6 +1002,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 },
@@ -1053,6 +1067,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
@@ -1104,6 +1119,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -1155,6 +1171,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 },
@@ -1206,6 +1223,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -1257,6 +1275,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 }
@@ -1416,6 +1435,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
         }
       ],
@@ -1548,7 +1568,7 @@
         "days_overdue": 187
       },
       "aeat_data": null,
-      "filing": { "recorded_at": "2026-10-24T18:35:04.637480Z" },
+      "filing": { "recorded_at": "2026-10-24T20:27:00.394371Z" },
       "last_export": null,
       "edit_closure": "recorded_as_filed",
       "modelo_title": "Modelo 130 · IRPF pagament fraccionat estimació directa",
@@ -1564,9 +1584,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "dacb2026b840053b1fee12afc93c522daa02204340dd7b501e3cfc58675ea93a",
+      "contract_set_digest": "83be9fba7d75f8a7e927b93e40593289414ef82c8cd3d44495307c74cf1a7bb0",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
+      "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1590,7 +1610,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "50137af3e279c85b63ea26b32b31e5328124cb0cac8b56a67c724112946f18f9"
+        "schema_fingerprint": "207803c795cd324d67b0c181c1e575755354ef23733b5450214c0c861992b4aa"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1599,8 +1619,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "9c959f32b25e3ab3ce95d46ada87553a5402e46bbe459b73b465ef2dda59ca06",
-    "calculation_head_digest": "9cd9dcbf31622840f743e8bdbabb7109489974ea28bab94703bf62774c6aa574",
+    "work_unit_record_digest": "cef5b31c8d2f0567a7fa1b541844a9de39d7283a82ba4cc1631c688fb282425c",
+    "calculation_head_digest": "fdffe5385fe118a8c0b695b9a303fd476220ee10b12c9e7bac20bf5b86b11efc",
     "current_calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1904,9 +1924,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T18:35:17.621412Z",
-    "expires_at": "2026-10-24T18:40:17.621412Z",
-    "baseline_id": "b40f746070682dc9b94795ad34a7e514000be7385c8e3b57f85a139f936bae3f"
+    "issued_at": "2026-10-24T20:27:05.245130Z",
+    "expires_at": "2026-10-24T20:32:05.245130Z",
+    "baseline_id": "0f276e7b71a71f2dbb1b2ddbb07fe779b13907d9aa9891db60e18a9a41dc5c9c"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1915,7 +1935,7 @@
     "action": "recorded",
     "count": 0,
     "findings_lead": false,
-    "recorded_at": "2026-10-24T18:35:04.637480Z",
+    "recorded_at": "2026-10-24T20:27:00.394371Z",
     "file_created_at": null,
     "receipt_to_add": true
   },
@@ -2012,13 +2032,17 @@
       "reason": "recorded",
       "words": "Registrada com a presentada: la pots consultar, però no canviar. Per canviar-la, inicia una correcció d'aquesta declaració."
     },
+    "review_package": {
+      "words": "Paquet per al teu gestor",
+      "availability": { "available": true, "reason": null, "words": null }
+    },
     "asks_elections": false,
     "elections": [],
     "file_format": "fixed_width",
     "file_format_words": "Fitxer de l'AEAT amb el disseny de registre BOE d'amplada fixa"
   },
   "receipt": {
-    "recorded_at": "2026-10-24T18:35:04.637480Z",
+    "recorded_at": "2026-10-24T20:27:00.394371Z",
     "verified": false,
     "verified_at": null,
     "words": "Encara no s'ha verificat cap justificant de l'AEAT per a aquesta presentació."

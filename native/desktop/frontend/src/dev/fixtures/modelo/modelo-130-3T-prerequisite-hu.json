@@ -173,6 +173,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
@@ -239,6 +240,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
@@ -292,6 +294,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -353,6 +356,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -450,6 +454,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
@@ -519,6 +524,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -570,6 +576,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 }
@@ -642,6 +649,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -711,6 +719,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -780,6 +789,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -831,6 +841,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 }
@@ -903,6 +914,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -956,6 +968,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -1007,6 +1020,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -1071,6 +1085,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -1122,6 +1137,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -1173,6 +1189,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -1224,6 +1241,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -1275,6 +1293,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 }
@@ -1434,6 +1453,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         }
       ],
@@ -1582,9 +1602,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "dacb2026b840053b1fee12afc93c522daa02204340dd7b501e3cfc58675ea93a",
+      "contract_set_digest": "83be9fba7d75f8a7e927b93e40593289414ef82c8cd3d44495307c74cf1a7bb0",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
+      "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1608,7 +1628,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "50137af3e279c85b63ea26b32b31e5328124cb0cac8b56a67c724112946f18f9"
+        "schema_fingerprint": "207803c795cd324d67b0c181c1e575755354ef23733b5450214c0c861992b4aa"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1922,9 +1942,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T18:34:38.734144Z",
-    "expires_at": "2026-10-24T18:39:38.734144Z",
-    "baseline_id": "8b7fcb90ac80201c5f85542b39945f11ece2050b483c59cde598018482c36c35"
+    "issued_at": "2026-10-24T20:26:34.913477Z",
+    "expires_at": "2026-10-24T20:31:34.913477Z",
+    "baseline_id": "96c0b37429f4fb756d95eafebb33202206d96b07d77ebf0ce39adb9e92ecb61a"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2070,6 +2090,14 @@
       "available": false,
       "reason": "not_calculated",
       "words": "Számítsd ki a bevallást"
+    },
+    "review_package": {
+      "words": "Csomag a könyvelődnek",
+      "availability": {
+        "available": false,
+        "reason": "not_calculated",
+        "words": "Számítsd ki a bevallást"
+      }
     },
     "asks_elections": false,
     "elections": [],

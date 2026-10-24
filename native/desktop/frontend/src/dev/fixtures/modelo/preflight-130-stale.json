@@ -7,7 +7,7 @@
     "refusal": {
       "kind": "stale_edit_baseline",
       "edit_contract_version": 1,
-      "baseline_id": "b96b49c16ada2e34b046e860d4cbf67ad27ae733bfdaf948e4f55516a6887c44",
+      "baseline_id": "7cf287434e6a373bbfba5a7eefbe42bf47bca7190a20a92262260e6d4d567ee0",
       "mismatching_coordinates": ["baseline_expiry"],
       "responsible_owner": "modelo.edit",
       "reconsideration_condition": "admit a fresh baseline and resubmit",
@@ -17,5 +17,6 @@
   "parsed": [],
   "findings": [],
   "operator_entries_unknown": false,
-  "refusal_words": "The declaration changed since it was opened, so the edit was not applied. Reopen it and edit again."
+  "refusal_words": "The declaration changed since it was opened, so the edit was not applied. Reopen it and edit again.",
+  "rebase": []
 }

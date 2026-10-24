@@ -4,11 +4,12 @@
   "work_unit_id": "b650ba021eda8c3082ea9d66d8be078c7c6247610af8772ddd48d75b604198f6",
   "outcome": {
     "outcome": "evaluated",
-    "baseline_id": "2328be73d4a51f32e03e4ef9de6731f6340b319727230ea227f7b921db7dfb6e",
+    "baseline_id": "63c8fa9376fc069d1dfc3e11c270d6cd16be94e7d651ada478135040b085071a",
     "findings": []
   },
   "parsed": [],
   "findings": [],
   "operator_entries_unknown": false,
-  "refusal_words": null
+  "refusal_words": null,
+  "rebase": []
 }

@@ -1186,7 +1186,7 @@ mod tests {
                 "baseline": baseline, "mutation_family": "scalar",
                 "scalar_intents": [{"value": "1234.56"}]}});
             let renewal = json!({"profile_id": PROFILE, "baseline": baseline,
-                "output_language": "en", "staged": []});
+                "output_language": "en"});
             let steps = [
                 ("modelo.edit.preflight", "input", &input),
                 ("modelo.edit.renew", "payload", &renewal),

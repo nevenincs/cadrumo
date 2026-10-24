@@ -11,13 +11,15 @@ driver arranges exactly that and runs the test:
 2. starts ``cadrumo-runtime --configured-root`` from the current environment
    and waits for its readiness line;
 3. signs the profile in through ``aeat config login``, which stores the
-   sign-in the native client then resumes;
+   sign-in the native client then resumes, and creates a Modelo 303 work unit
+   through ``aeat app modelo work create``;
 4. runs ``cargo test`` for the application crate's ignored live test with the
-   root, version, profile and password handed over in the environment; the test
-   resumes the stored sign-in, signs a window in with the password (not stored:
-   only the installed desktop image may store it), reads the profile's language
-   through a registered operation, and prints how long the resume and the
-   native sign-in took;
+   root, version, profile, password and work unit handed over in the
+   environment; the test resumes the stored sign-in, signs a window in with the
+   password (not stored: only the installed desktop image may store it), reads
+   the profile's language through a registered operation, submits edits of the
+   work unit and a large plain request through the runtime's streamed upload,
+   and prints how long the resume and the native sign-in took;
 5. stops the runtime by closing its standard input and removes the root.
 
 The password exists only in this process, the CLI's standard input and one
@@ -103,6 +105,23 @@ def run(contract: Path, keep: bool) -> int:
             "create",
             _PROFILE_NAME,
             "--quiet",
+            # Synthetic facts a Modelo 303 work unit needs, so the test can create one.
+            "--entity-type",
+            "natural_person",
+            "--tax-id",
+            "12345678Z",
+            "--activity",
+            "software services",
+            "--tax-residence-jurisdiction-scope",
+            "common_regime",
+            "--iva-regime",
+            "GENERAL",
+            "--iva-m303-regime-composition",
+            "general",
+            "--no-iva-redeme-enrolled",
+            "--no-iva-cash-accounting-regime-enrolled",
+            "--no-iva-voluntary-sii-enrolled",
+            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
             "--secrets-stdin",
             secret={"passphrase": password, "passphrase_confirmation": password},
         )
@@ -122,6 +141,31 @@ def run(contract: Path, keep: bool) -> int:
                 secret={"passphrase": password},
             )
             require(code == 0, f"stored sign-in through the command line: {code} {envelope}")
+            # A Modelo 303 work unit for the live test's edits to name; the
+            # runtime admits an edit operand only for a work unit the profile holds.
+            code, envelope = run_cli(programs, environment, "config", "profile", "complete-setup")
+            require(code == 0, f"profile setup: {code} {envelope}")
+            code, envelope = run_cli(
+                programs,
+                environment,
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "303",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--allow-not-applicable",
+                "--quiet",
+            )
+            created = envelope.get("result")
+            require(
+                code == 0 and isinstance(created, dict) and isinstance(created.get("work_unit_id"), str),
+                f"work unit create: {code} {envelope}",
+            )
             password_file = scratch / "password"
             password_file.write_bytes(password.encode("utf-8"))
             cargo_environment = {
@@ -131,6 +175,7 @@ def run(contract: Path, keep: bool) -> int:
                 "CADRUMO_RUNTIME_LIVE_VERSION": str(announcement["product_version"]),
                 "CADRUMO_RUNTIME_LIVE_PROFILE_ID": profile_id,
                 "CADRUMO_RUNTIME_LIVE_PASSWORD_FILE": str(password_file),
+                "CADRUMO_RUNTIME_LIVE_WORK_UNIT": created["work_unit_id"],
             }
             cargo = shutil.which("cargo")
             require(cargo is not None, "cargo is not on PATH")

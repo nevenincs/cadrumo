@@ -1,7 +1,9 @@
 // Regenerates the desktop's Modelo wire types and scenario envelopes from the
-// Python models, through scripts/modelo_fixtures.py, and formats what it
-// writes as the frontend's formatter does. `--check` writes nothing: it fails
-// when src/shell/modeloContract.ts differs from fresh output, when the host's
+// Python models, and the relay bounds from the host's Rust sources, through
+// scripts/modelo_fixtures.py, and formats what it writes as the frontend's
+// formatter does. `--check` writes nothing: it fails when
+// src/shell/modeloContract.ts or src/shell/relayBounds.ts differs from fresh
+// output, when the host's
 // admitted list differs from the registered family, or when a stored
 // envelope no longer validates against its model. The envelopes are read for
 // a synthetic taxpayer over the published authority under
@@ -31,6 +33,7 @@ const { values } = parseArgs({
 const frontend = fileURLToPath(new URL("..", import.meta.url));
 const repository = resolve(frontend, "../../..");
 const contract = resolve(frontend, "src/shell/modeloContract.ts");
+const bounds = resolve(frontend, "src/shell/relayBounds.ts");
 const fixtures = resolve(frontend, "src/dev/fixtures/modelo");
 const producer = resolve(frontend, "scripts/modelo_fixtures.py");
 // Every envelope the producer wrote into its own scratch directory.
@@ -78,6 +81,9 @@ async function formatted(source, path) {
 const generated = python("contract");
 if (generated.status !== 0) process.exit(generated.status);
 const fresh = await formatted(generated.output, contract);
+const measured = python("bounds");
+if (measured.status !== 0) process.exit(measured.status);
+const freshBounds = await formatted(measured.output, bounds);
 
 if (values.check) {
   let failed = false;
@@ -87,6 +93,15 @@ if (values.check) {
   if (stored !== fresh) {
     console.error(
       "src/shell/modeloContract.ts is stale; run node scripts/modelo-fixtures.mjs --contract",
+    );
+    failed = true;
+  }
+  const storedBounds = existsSync(bounds)
+    ? readFileSync(bounds, "utf8").replaceAll("\r\n", "\n")
+    : "";
+  if (storedBounds !== freshBounds) {
+    console.error(
+      "src/shell/relayBounds.ts is stale; run node scripts/modelo-fixtures.mjs --contract",
     );
     failed = true;
   }
@@ -101,6 +116,8 @@ if (values.check) {
 
 writeFileSync(contract, fresh);
 console.log("wrote src/shell/modeloContract.ts");
+writeFileSync(bounds, freshBounds);
+console.log("wrote src/shell/relayBounds.ts");
 if (!values.contract) {
   // Read into a scratch directory, then write each envelope once, formatted:
   // a development server watching the fixtures may hold one open briefly.

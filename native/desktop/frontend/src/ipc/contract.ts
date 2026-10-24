@@ -1266,7 +1266,7 @@ export interface HostCommands {
     result: import("../shell/ledger").LedgerOutcome;
   };
   /** Raw body only, one command per definition: the bytes of
-   * `modeloEditBody`, at most `MODELO_EDIT_BODY_LIMIT`. */
+   * `modeloEditBody`, at most `RELAY_PAYLOAD_LIMIT`. */
   modelo_edit_preflight: {
     args: Authorized;
     result: import("../shell/ledger").LedgerOutcome;

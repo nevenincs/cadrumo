@@ -4,7 +4,7 @@
   "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
   "outcome": {
     "outcome": "evaluated",
-    "baseline_id": "bf5d30225aa3e4d7686d49c1d804bcee2fd98c5e3fa3a1e9ccf75b0bb20c87c9",
+    "baseline_id": "844eb8f92a5288af50fe4e790cb7ccc42396f70c39f6b8375a4ff2cd4995529f",
     "findings": []
   },
   "parsed": [
@@ -26,5 +26,6 @@
   ],
   "findings": [],
   "operator_entries_unknown": false,
-  "refusal_words": null
+  "refusal_words": null,
+  "rebase": []
 }

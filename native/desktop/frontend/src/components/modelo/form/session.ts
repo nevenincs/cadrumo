@@ -9,6 +9,10 @@ import type {
   ModeloEditValueAddressV1,
   ModeloEditWireScalar,
   ModeloFormAddressV1,
+  ModeloEditHeldAddressV1,
+  ModeloEditHeldChangeV1,
+  ModeloEditHeldKind,
+  ModeloFormRebaseEntryV1,
   ModeloWorkbenchFormProjectionV1,
   OutputLanguage,
   PublicModeloFormField,
@@ -46,15 +50,29 @@ export function editAddress(
     : { kind: "binding", binding_id: address.binding_id };
 }
 
+/** A value set on a box, and the same value as the application compares
+ * entries of it (for a value read from what the filer typed, or an assumed
+ * value confirmed); null when it gave none. */
+type SetValue = {
+  value: ModeloEditWireScalar;
+  change: "set";
+  comparable: ModeloEditWireScalar;
+};
+
 /** One staged edit as the edit contract names it: a box takes a typed
  * value, a clear or a restore; a binding that feeds a box takes an override
- * or its removal. */
+ * or its removal. `change` is the kind of change the filer made, as a
+ * preflight is told it: removing an override clears a value the filer gave,
+ * or gives the box back to its source. */
 export type StagedIntent =
-  | { kind: "set_typed_value"; value: ModeloEditWireScalar }
-  | { kind: "clear_declared_value" }
-  | { kind: "restore_source_value" }
-  | { kind: "set_override_value"; value: ModeloEditWireScalar }
-  | { kind: "remove_override" };
+  | ({ kind: "set_typed_value" } & SetValue)
+  | { kind: "clear_declared_value"; change: "clear" }
+  | { kind: "restore_source_value"; change: "restore" }
+  | ({ kind: "set_override_value" } & SetValue)
+  | {
+      kind: "remove_override";
+      change: Exclude<ModeloEditHeldKind, "set">;
+    };
 
 export type StagedEdit = {
   /** `editKey` of the box. */
@@ -68,7 +86,14 @@ export type StagedEdit = {
   entry: string | null;
   /** What the application did to read the entry. */
   normalisations: ModeloEditNormalisation[];
+  /** The box changed under the edit when the baseline was renewed; the
+   * filer looks at it again before applying. */
+  beforeChanged: boolean;
 };
+
+/** What the last renewal did to the staged edits, until the filer
+ * acknowledges it. */
+export type Rebased = { changed: number; dropped: number };
 
 const atBinding = (field: PublicModeloFormField) =>
   field.edit_address.kind === "binding";
@@ -77,16 +102,17 @@ const atBinding = (field: PublicModeloFormField) =>
 export const valueIntent = (
   field: PublicModeloFormField,
   value: ModeloEditWireScalar,
+  comparable: ModeloEditWireScalar = null,
 ): StagedIntent =>
   atBinding(field)
-    ? { kind: "set_override_value", value }
-    : { kind: "set_typed_value", value };
+    ? { kind: "set_override_value", value, change: "set", comparable }
+    : { kind: "set_typed_value", value, change: "set", comparable };
 
 /** The intent that takes the filer's value out of a box. */
 export const clearIntent = (field: PublicModeloFormField): StagedIntent =>
   atBinding(field)
-    ? { kind: "remove_override" }
-    : { kind: "clear_declared_value" };
+    ? { kind: "remove_override", change: "clear" }
+    : { kind: "clear_declared_value", change: "clear" };
 
 /** The intent that gives a box back to its source, or null where the box
  * offers none. */
@@ -95,8 +121,8 @@ export function restoreIntent(
 ): StagedIntent | null {
   if (!field.restorable) return null;
   return atBinding(field)
-    ? { kind: "remove_override" }
-    : { kind: "restore_source_value" };
+    ? { kind: "remove_override", change: "restore" }
+    : { kind: "restore_source_value", change: "restore" };
 }
 
 /** The intent that confirms an assumed value as the filer's own, or null
@@ -105,24 +131,46 @@ export function confirmIntent(
   field: PublicModeloFormField,
 ): StagedIntent | null {
   if (!field.confirmable || field.confirm_value === null) return null;
-  return valueIntent(field, field.confirm_value);
+  return valueIntent(field, field.confirm_value, field.confirm_comparable);
+}
+
+/** An edit address as one string, as a preflight's report names it. */
+const heldKey = (address: ModeloEditHeldAddressV1) =>
+  address.kind === "scalar"
+    ? `s:${address.casilla_id}`
+    : `b:${address.binding_id}`;
+
+/** A staged edit as a preflight is told it was held: its edit address, the
+ * kind of change and the box's state when it was staged, so the preflight
+ * says what became of it. */
+function held(edit: StagedEdit): ModeloEditHeldChangeV1 | null {
+  const { address } = edit;
+  if (address.kind !== "scalar" && address.kind !== "binding") return null;
+  return {
+    address,
+    kind: edit.intent.change,
+    held_state: edit.field.state_digest,
+  };
 }
 
 /** The staged edits as one submission, valid for a preflight and for an
  * apply: typed values only, never entries as typed. Findings and refusals
- * come back said in `language`. */
+ * come back said in `language`. A preflight is also told the changes held,
+ * `heldChanges`, and reports what became of each. */
 export function editSubmission(
   baseline: ModeloEditApplyBaselineV1,
   edits: Iterable<StagedEdit>,
   language: OutputLanguage,
+  heldChanges = false,
 ): ModeloEditOperatorInputV2 {
+  const all = [...edits];
   const scalar: NonNullable<
     ModeloEditOperatorInputV2["submission"]["scalar_intents"]
   > = [];
   const binding: NonNullable<
     ModeloEditOperatorInputV2["submission"]["binding_intents"]
   > = [];
-  for (const edit of edits) {
+  for (const edit of all) {
     const { address, intent } = edit;
     const value = "value" in intent ? { value: intent.value } : {};
     if (address.kind === "scalar") {
@@ -147,6 +195,14 @@ export function editSubmission(
       mutation_family: baseline.mutation_family,
       scalar_intents: scalar,
       binding_intents: binding,
+      ...(heldChanges
+        ? {
+            held: all.flatMap((edit) => {
+              const change = held(edit);
+              return change ? [change] : [];
+            }),
+          }
+        : {}),
     },
   };
 }
@@ -209,6 +265,30 @@ export function placedFields(form: PublicModeloWorkForm): PlacedField[] {
   return out;
 }
 
+/** The intent an edit takes when it is staged again on `field`, as the
+ * box now stands, or null when the box no longer takes it: a value the box
+ * already holds as the filer's own changes nothing, a clear needs a value
+ * of the filer's to remove, and a restore needs a source to go back to. */
+export function restaged(
+  edit: StagedEdit,
+  field: PublicModeloFormField,
+): StagedIntent | null {
+  const { intent } = edit;
+  if (intent.change === "set") {
+    if (!field.takes_typed_value) return null;
+    if (
+      field.own_value !== null &&
+      intent.comparable !== null &&
+      intent.comparable === field.own_value
+    )
+      return null;
+    return valueIntent(field, intent.value, intent.comparable);
+  }
+  if (intent.change === "clear")
+    return field.clearable ? clearIntent(field) : null;
+  return restoreIntent(field);
+}
+
 /** Whether a box can be typed into here: the form admits edits and the
  * application says the box takes a typed value. */
 export function editableHere(
@@ -241,6 +321,18 @@ export type FormSession = {
   stage(field: PublicModeloFormField, intent: StagedIntent): void;
   unstage(editKey: string): void;
   discardAll(): void;
+  /** Keeps the staged edits a preflight's `report` keeps, staged again
+   * against the declaration as it stands, and drops the others. After a
+   * renewal, `after` is the declaration read before it: the report waits for
+   * the next read. */
+  rebase(
+    report: ModeloFormRebaseEntryV1[],
+    after: ModeloWorkbenchFormProjectionV1 | null,
+  ): void;
+  /** What the last renewal did, until acknowledged; null when nothing. */
+  rebased: Rebased | null;
+  /** Takes the renewal's marks off the edits the filer has looked at. */
+  acknowledge(): void;
   /** Reads what the filer typed into a box through the application and
    * stages the value it reads. An empty entry takes back a value typed here,
    * or else takes the filer's value out of the box. */
@@ -319,6 +411,7 @@ export function useFormSession({
           intent,
           entry,
           normalisations,
+          beforeChanged: now.get(key)?.beforeChanged ?? false,
         });
         return next;
       });
@@ -333,7 +426,83 @@ export function useFormSession({
       return next;
     });
   }, []);
-  const discardAll = useCallback(() => setStaged(new Map()), []);
+  const [rebased, setRebased] = useState<Rebased | null>(null);
+  const discardAll = useCallback(() => {
+    setStaged(new Map());
+    setRebased(null);
+  }, []);
+
+  // A renewal's report is applied once the declaration is read again: each
+  // kept edit is staged again against its box as it now stands, as the
+  // TUI's rebase does, and a box that changed under its edit is marked.
+  const [pendingRebase, setPendingRebase] = useState<{
+    report: ModeloFormRebaseEntryV1[];
+    after: ModeloWorkbenchFormProjectionV1 | null;
+  } | null>(null);
+  const rebase = useCallback(
+    (
+      report: ModeloFormRebaseEntryV1[],
+      after: ModeloWorkbenchFormProjectionV1 | null,
+    ) => setPendingRebase({ report, after }),
+    [],
+  );
+  useEffect(() => {
+    if (!pendingRebase || pendingRebase.after === envelope) return;
+    const outcomes = new Map(
+      pendingRebase.report.map((entry) => [
+        heldKey(entry.address),
+        entry.outcome,
+      ]),
+    );
+    setPendingRebase(null);
+    const now = new Map<string, PublicModeloFormField>(
+      placed.map((p) => [p.key, p.field]),
+    );
+    const next = new Map<string, StagedEdit>();
+    let changed = 0;
+    let dropped = 0;
+    for (const edit of staged.values()) {
+      const change = held(edit);
+      const outcome =
+        (change && outcomes.get(heldKey(change.address))) ?? "kept";
+      const field = now.get(addressKey(edit.field.address));
+      const intent = field && outcome !== "dropped" && restaged(edit, field);
+      if (!field || !intent) {
+        dropped += 1;
+        continue;
+      }
+      if (outcome === "changed") changed += 1;
+      const key = editKey(field);
+      next.set(key, {
+        ...edit,
+        key,
+        address: editAddress(field),
+        field,
+        intent,
+        beforeChanged: outcome === "changed" || edit.beforeChanged,
+      });
+    }
+    setStaged(next);
+    // A renewal's report is the notice until the filer acknowledges it or
+    // the next renewal: a later check is told only the changes still held,
+    // so it cannot say what this one dropped.
+    if (pendingRebase.after !== null)
+      setRebased(changed || dropped ? { changed, dropped } : null);
+    else if (changed || dropped)
+      setRebased((shown) => shown ?? { changed, dropped });
+  }, [pendingRebase, envelope, placed, staged]);
+  const acknowledge = useCallback(() => {
+    setRebased(null);
+    setStaged((held) => {
+      if (![...held.values()].some((edit) => edit.beforeChanged)) return held;
+      return new Map(
+        [...held].map(([key, edit]) => [
+          key,
+          { ...edit, beforeChanged: false },
+        ]),
+      );
+    });
+  }, []);
 
   const baseline = envelope.admitted_baseline;
   const enter = useCallback(
@@ -384,7 +553,7 @@ export function useFormSession({
         }
         stage(
           field,
-          valueIntent(field, entry.value),
+          valueIntent(field, entry.value, entry.comparable_value),
           lexeme,
           entry.normalisations,
         );
@@ -459,6 +628,9 @@ export function useFormSession({
     stage,
     unstage,
     discardAll,
+    rebase,
+    rebased,
+    acknowledge,
     enter,
     selectedKey,
     selected: selectedKey ? (byKey.get(selectedKey)?.field ?? null) : null,

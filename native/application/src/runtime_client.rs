@@ -1904,7 +1904,8 @@ mod tests {
 /// Against a running runtime: `CADRUMO_RUNTIME_LIVE_ROOT` names the storage
 /// root it serves, `CADRUMO_RUNTIME_LIVE_VERSION` its product version,
 /// `CADRUMO_RUNTIME_LIVE_PROFILE_ID` a profile on that root and
-/// `CADRUMO_RUNTIME_LIVE_PASSWORD_FILE` a file holding that profile's password.
+/// `CADRUMO_RUNTIME_LIVE_PASSWORD_FILE` a file holding that profile's password
+/// and `CADRUMO_RUNTIME_LIVE_WORK_UNIT` a Modelo 303 work unit it holds.
 /// `dev/runtime_lifecycle/native_client_live.py` arranges all of it.
 #[cfg(test)]
 mod live_tests {
@@ -1915,6 +1916,8 @@ mod live_tests {
         cohort: Cohort,
         profile_id: String,
         password: Zeroizing<Vec<u8>>,
+        /// A Modelo 303 work unit the profile holds.
+        work_unit: String,
     }
 
     fn live() -> Option<Live> {
@@ -1928,6 +1931,7 @@ mod live_tests {
             },
             profile_id: std::env::var("CADRUMO_RUNTIME_LIVE_PROFILE_ID").ok()?,
             password: Zeroizing::new(std::fs::read(password_file).ok()?),
+            work_unit: std::env::var("CADRUMO_RUNTIME_LIVE_WORK_UNIT").ok()?,
         })
     }
 
@@ -1935,7 +1939,8 @@ mod live_tests {
         Instant::now() + Duration::from_secs(30)
     }
 
-    /// The real connection, noting which definitions it streamed.
+    /// The real connection, noting each definition whose streamed upload the
+    /// runtime took and answered with an admitted operation.
     struct Streams<'a> {
         connection: &'a Connection,
         streamed: Mutex<Vec<String>>,
@@ -1956,13 +1961,17 @@ mod live_tests {
             payload: &[u8],
             deadline: Instant,
         ) -> Result<Map<String, Value>, Refusal> {
-            let definition = text(request.as_object().unwrap(), "definition_id");
-            self.streamed
-                .lock()
-                .unwrap()
-                .push(definition.unwrap_or_default().to_owned());
-            self.connection
-                .exchange_streamed(request, payload, deadline)
+            let answered = self
+                .connection
+                .exchange_streamed(request, payload, deadline)?;
+            if text(&answered, "kind") == Some("operation_submitted") {
+                let definition = text(request.as_object().unwrap(), "definition_id");
+                self.streamed
+                    .lock()
+                    .unwrap()
+                    .push(definition.unwrap_or_default().to_owned());
+            }
+            Ok(answered)
         }
 
         fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
@@ -2070,19 +2079,18 @@ mod live_tests {
         // A real Modelo 303 edit's preflight and apply operands, its renewal
         // and a plain submission too large for one frame all reach the
         // runtime's staging streamed: the runtime reads each upload's header,
-        // says it is ready for exactly that upload, and takes its bytes. The
-        // plain one is admitted as an operation. The edits name this profile
-        // but a work unit the disposable profile does not hold, so the runtime
-        // decodes each, which it can do only once every byte has arrived, and
-        // refuses it with the operation's closed `invalid`, never a broken frame.
-        // The baseline is the one the form read admitted in the desktop
-        // frontend's committed `modelo-303-1T-en.json` envelope, extracted whole.
+        // says it is ready for exactly that upload, takes its bytes, decodes
+        // them and answers with the operation it admitted. The baseline is the
+        // one the form read admitted in the desktop frontend's committed
+        // `modelo-303-1T-en.json` envelope, extracted whole, here naming this
+        // profile and the work unit the harness created for it.
         let mut baseline: Value = serde_json::from_str(include_str!(
             "../tests/data/modelo-303-admitted-baseline.json"
         ))
         .unwrap();
         baseline["bucket_id"] = json!(live.profile_id);
-        let unit = baseline["work_unit_id"].as_str().unwrap().to_owned();
+        baseline["work_unit_id"] = json!(live.work_unit);
+        let unit = live.work_unit.clone();
         let operand = json!({"input_version": 2, "output_language": "en",
             "submission": {"edit_contract_version": 1, "baseline": baseline,
             "mutation_family": baseline["mutation_family"], "scalar_intents": []}});
@@ -2101,7 +2109,7 @@ mod live_tests {
             relay.handle(&recording, &held, action, &request)
         };
         let renewal = json!({"profile_id": live.profile_id, "baseline": baseline,
-            "output_language": "en", "staged": []});
+            "output_language": "en"});
         for (action, definition, member, body) in [
             (
                 "operation_financial_submit",
@@ -2118,13 +2126,10 @@ mod live_tests {
             ("operation_submit", "modelo.edit.renew", "payload", renewal),
         ] {
             let answered = submit(action, definition, unit.clone(), member, body);
-            assert!(
-                matches!(
-                    &answered,
-                    Err(crate::person_operations::RelayFailure::Refused { code, .. }) if code == "invalid"
-                ),
-                "{definition}: {answered:?}"
-            );
+            let Ok(reply) = answered else {
+                panic!("{definition}: {answered:?}");
+            };
+            assert_eq!(reply["kind"], "operation_submitted", "{definition}");
         }
         let classified = submit(
             "operation_submit",

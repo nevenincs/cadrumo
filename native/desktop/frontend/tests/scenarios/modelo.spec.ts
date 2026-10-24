@@ -970,3 +970,125 @@ test("the real Modelo 303 takes a typed value and checks it as staged", async ({
     dialog.getByText(label("workspace.modelo.review.check_failed")),
   ).toHaveCount(0);
 });
+
+// -- a renewal under moved boxes -------------------------------------------
+
+type RebaseEntry = {
+  address: { kind: string; casilla_id?: string };
+  kind: string;
+  outcome: "kept" | "changed" | "dropped";
+};
+
+/** What the review after the renewal found of the change held on the box
+ * printed `box`, as the application judged it. */
+function rebaseOf(box: string): RebaseEntry["outcome"] {
+  const entry = envelope<{ rebase: RebaseEntry[] }>(
+    "preflight-130-rebase-review",
+  ).rebase.find((item) => item.address.casilla_id === box);
+  if (!entry) throw new Error(`the review says nothing of box ${box}`);
+  return entry.outcome;
+}
+
+/** Stages, on the read the declaration then moves under, a clear of box 06
+ * and typed values in boxes 08 and 10, and opens their review. */
+async function stageUnderRebase(target: Page) {
+  await openDeclaration(target, "130", { shape: "rebase" });
+  // The filer's own value comes out of a box with Delete on its row.
+  await boxRow(target, "06").getByRole("gridcell").nth(1).click();
+  await target.keyboard.press("Delete");
+  await expect(boxRow(target, "06")).toContainText(
+    label("workspace.modelo.staged.clear"),
+  );
+  await stage(target, "08", "250");
+  await stage(target, "10", "75");
+  return review(target, 3);
+}
+
+test("a renewal under moved boxes says what it did to the staged edits", async ({
+  page: target,
+}) => {
+  expect([rebaseOf("06"), rebaseOf("08"), rebaseOf("10")]).toEqual([
+    "dropped",
+    "changed",
+    "kept",
+  ]);
+  const dialog = await stageUnderRebase(target);
+  await expect(
+    dialog
+      .getByRole("alert")
+      .or(dialog.getByRole("status"))
+      .filter({
+        hasText: label("workspace.modelo.rebase.moved"),
+      }),
+  ).toContainText(
+    [
+      label("workspace.modelo.rebase.moved"),
+      label("workspace.modelo.rebase.changed", { count: 1 }),
+      label("workspace.modelo.rebase.dropped", { count: 1 }),
+    ].join(" "),
+  );
+  expect(await calls(target, "modelo submit modelo.edit.renew")).toHaveLength(
+    1,
+  );
+});
+
+test("a staged edit the renewal dropped is no longer staged", async ({
+  page: target,
+}) => {
+  const dialog = await stageUnderRebase(target);
+  // Two of the three changes are left to apply.
+  await expect(dialog.getByRole("listitem")).toHaveCount(2);
+  await expect(
+    dialog.getByRole("listitem").filter({ hasText: "06" }),
+  ).toHaveCount(0);
+  await dialog
+    .getByRole("button", { name: label("workspace.modelo.review.back") })
+    .click();
+  await expect(boxRow(target, "06")).not.toContainText(
+    label("workspace.modelo.staged.clear"),
+  );
+});
+
+test("a staged edit the renewal kept is staged again against the box as it now stands", async ({
+  page: target,
+}) => {
+  const now = fields(form("130-1T-rebased").form.form.pages).find(
+    (field) => field.box === "10",
+  );
+  if (!now) throw new Error("the moved 130 holds no box 10");
+  const dialog = await stageUnderRebase(target);
+  await dialog
+    .getByRole("button", { name: label("workspace.modelo.review.back") })
+    .click();
+  const row = boxRow(target, "10");
+  await expect(row).toContainText(label("workspace.modelo.attention.staged"));
+  await expect(row).toContainText(
+    label("workspace.modelo.was", { value: now.value_text ?? "—" }),
+  );
+});
+
+test("a changed edit stays marked until the filer acknowledges it", async ({
+  page: target,
+}) => {
+  const dialog = await stageUnderRebase(target);
+  const changed = dialog.getByRole("listitem").filter({ hasText: "08" });
+  await expect(changed).toContainText(
+    label("workspace.modelo.review.before_changed"),
+  );
+  await expect(applyButton(dialog)).toBeDisabled();
+  // Looking again keeps the mark: it holds until it is acknowledged.
+  await dialog
+    .getByRole("button", { name: label("workspace.modelo.review.back") })
+    .click();
+  const again = await review(target, 2);
+  await expect(
+    again.getByRole("listitem").filter({ hasText: "08" }),
+  ).toContainText(label("workspace.modelo.review.before_changed"));
+  await expect(applyButton(again)).toBeDisabled();
+  await again
+    .getByRole("checkbox", {
+      name: label("workspace.modelo.review.acknowledge"),
+    })
+    .check();
+  await expect(applyButton(again)).toBeEnabled();
+});

@@ -369,7 +369,7 @@ fn an_edits_amounts_come_only_as_a_raw_input_for_this_profiles_baseline() {
         InvokeBody::Raw(with_profile.to_string().into_bytes()),
         InvokeBody::Raw(versionless.to_string().into_bytes()),
         InvokeBody::Raw(b"[]".to_vec()),
-        InvokeBody::Raw(vec![b' '; person::REQUEST_LIMIT + 1]),
+        InvokeBody::Raw(vec![b' '; relay::PAYLOAD_LIMIT + 1]),
     ] {
         assert_eq!(
             financial_body(&refused, PROFILE_ID).unwrap_err().code,
@@ -410,12 +410,61 @@ fn a_real_baseline_is_admitted_whole_for_preflight_renewal_and_apply() {
         let (request, subject) = plain_submission(
             definition("modelo.edit.renew"),
             &profile,
-            Wiped(json!({"baseline":baseline, "output_language":"en", "staged":[]})),
+            Wiped(json!({"baseline":baseline, "output_language":"en"})),
             None,
         )
         .unwrap();
         assert_eq!(subject, unit);
         assert_eq!(request.0["payload"]["baseline"], baseline);
+    }
+}
+
+/// Puts every file a document names under one of the host's path keys back
+/// in `folder`, as the worker named it before the host reduced it.
+fn placed(value: &mut Value, folder: &str, named: &mut usize) {
+    match value {
+        Value::Object(fields) => {
+            for (key, field) in fields.iter_mut() {
+                match field {
+                    Value::String(text) if RESULT_PATH_KEYS.contains(&key.as_str()) => {
+                        *text = format!(r"{folder}\{text}");
+                        *named += 1;
+                    }
+                    other => placed(other, folder, named),
+                }
+            }
+        }
+        Value::Array(items) => items
+            .iter_mut()
+            .for_each(|item| placed(item, folder, named)),
+        _ => {}
+    }
+}
+
+#[test]
+fn the_committed_write_envelopes_are_what_the_host_hands_the_window() {
+    let folder = r"C:\Users\alba\Modelos 2026";
+    for envelope in [
+        include_str!("../../../../frontend/src/dev/fixtures/modelo/export-130.json"),
+        include_str!("../../../../frontend/src/dev/fixtures/modelo/export-165-unverified.json"),
+        include_str!("../../../../frontend/src/dev/fixtures/modelo/reconcile-130.json"),
+    ] {
+        let committed: Value = serde_json::from_str(envelope).unwrap();
+        // Nothing in it is still a place the host would reduce.
+        assert_eq!(
+            super::super::settle::reduced(&committed, &RESULT_PATH_KEYS, &[]),
+            committed
+        );
+        // Each file it names, back in a folder of the person's, is shown as
+        // the very name committed, and nothing else changes.
+        let mut worker = committed.clone();
+        let mut named = 0;
+        placed(&mut worker, folder, &mut named);
+        assert!(named > 0, "a write envelope names its file");
+        assert_eq!(
+            super::super::settle::reduced(&worker, &RESULT_PATH_KEYS, &[folder.to_owned()]),
+            committed
+        );
     }
 }
 

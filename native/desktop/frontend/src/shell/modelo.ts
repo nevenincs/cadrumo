@@ -84,7 +84,8 @@ export type ModeloSaveFormat =
 
 /** The operator input of one preflight or apply, as UTF-8 bytes: the edit
  * session's admitted baseline and its staged intents, and for a preflight
- * the entries as the filer typed them. */
+ * the entries as the filer typed them. The host takes at most
+ * `RELAY_PAYLOAD_LIMIT` bytes, from `./relayBounds`. */
 export function modeloEditBody(input: ModeloEditOperatorInputV2): Uint8Array {
   return new TextEncoder().encode(JSON.stringify(input));
 }

@@ -167,6 +167,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "26f32cb7d29df130e8fd740bb4ebe49e99b6c577404d3a364110735683bfa903"
                   }
                 },
@@ -233,6 +234,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "26f32cb7d29df130e8fd740bb4ebe49e99b6c577404d3a364110735683bfa903"
                   }
                 },
@@ -286,6 +288,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
@@ -347,6 +350,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
@@ -435,6 +439,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "d1e9be461c167b5360985fc74fa6f5643abde1ba41c85f01b3807d6bba338ad0"
                   }
                 },
@@ -504,6 +509,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -555,6 +561,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 }
@@ -627,6 +634,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -696,6 +704,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
@@ -765,6 +774,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -816,6 +826,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 }
@@ -888,6 +899,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
@@ -941,6 +953,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
                   }
                 },
@@ -992,6 +1005,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
                   }
                 },
@@ -1056,6 +1070,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
                   }
                 },
@@ -1107,6 +1122,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -1158,6 +1174,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
                   }
                 },
@@ -1209,6 +1226,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
@@ -1260,6 +1278,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
                   }
                 }
@@ -1419,6 +1438,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
         }
       ],
@@ -1608,9 +1628,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "dacb2026b840053b1fee12afc93c522daa02204340dd7b501e3cfc58675ea93a",
+      "contract_set_digest": "83be9fba7d75f8a7e927b93e40593289414ef82c8cd3d44495307c74cf1a7bb0",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
+      "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1634,7 +1654,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "50137af3e279c85b63ea26b32b31e5328124cb0cac8b56a67c724112946f18f9"
+        "schema_fingerprint": "207803c795cd324d67b0c181c1e575755354ef23733b5450214c0c861992b4aa"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1643,8 +1663,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "06ffe4adfd0e2009f9a04ff95d04139bf191e18c483a1520d1151502a3c818e1",
-    "calculation_head_digest": "c8142df03d6337aa718903f5690e48bac83d779b6d72cf64b4bc4b4da80fe407",
+    "work_unit_record_digest": "63f0ef23b54ef86d95471d2248acb8609126a1d48b6c6efbee69639e8cc7483d",
+    "calculation_head_digest": "186a1679591d549cf628c01bb52831348d19e5bdc086c2726d87e4f99ecdbabb",
     "current_calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1948,9 +1968,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T18:34:23.187301Z",
-    "expires_at": "2026-10-24T18:39:23.187301Z",
-    "baseline_id": "9d0bcff165fd322b68d2ae20ae6f483b01d34e6398fb151fe381dd03355d24a2"
+    "issued_at": "2026-10-24T20:26:24.461714Z",
+    "expires_at": "2026-10-24T20:31:24.461714Z",
+    "baseline_id": "6ddaa0a27bfd244ef3e9154bb451ce9844099cf92bdc536489ee79fb9c7c288b"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2137,6 +2157,14 @@
       "available": false,
       "reason": "blocks",
       "words": "Resol el que impedeix presentar abans de generar el fitxer o registrar la presentació (impedeixen presentar: 3)."
+    },
+    "review_package": {
+      "words": "Paquet per al teu gestor",
+      "availability": {
+        "available": false,
+        "reason": "blocks",
+        "words": "Resol el que impedeix presentar abans de generar el fitxer o registrar la presentació (impedeixen presentar: 3)."
+      }
     },
     "asks_elections": false,
     "elections": [],

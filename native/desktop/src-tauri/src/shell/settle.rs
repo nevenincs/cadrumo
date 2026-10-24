@@ -326,7 +326,7 @@ fn file_names(value: &mut Value, keys: &[&str]) {
 /// What the window is shown of a document the runtime answered for an
 /// operation: every path reduced to its file name, wherever the worker
 /// quoted it, as in a message, a review line or a row's source.
-fn reduced(document: &Value, keys: &[&str], folders: &[String]) -> Value {
+pub(super) fn reduced(document: &Value, keys: &[&str], folders: &[String]) -> Value {
     fn strip(value: &mut Value, folders: &[(String, String)]) {
         match value {
             Value::String(text) => {

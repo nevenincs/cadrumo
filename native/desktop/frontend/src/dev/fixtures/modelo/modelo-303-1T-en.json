@@ -263,6 +263,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 },
@@ -318,6 +319,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 }
@@ -424,6 +426,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -487,6 +490,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": "00000"
@@ -545,6 +549,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -628,6 +633,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -690,6 +696,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -750,6 +757,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -820,6 +828,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -897,6 +906,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "0f6de34e68dad08fb2184713f1d41270b728f60cb5281a063929a3e6308c773f"
                           },
                           "literal": "00400"
@@ -957,6 +967,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -1040,6 +1051,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -1098,6 +1110,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -1158,6 +1171,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -1228,6 +1242,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -1305,6 +1320,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "7fab9e5afa336a5a8dff18aca209ad36b78c135b697670c08078a748491a2b4b"
                           },
                           "literal": "01000"
@@ -1365,6 +1381,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -1435,6 +1452,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -1512,6 +1530,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "975c357d82b208910abfa1a02f8e241af01a17ffdedc75e1bae56705a3911780"
                           },
                           "literal": "02100"
@@ -1570,6 +1589,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -1641,6 +1661,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -1702,6 +1723,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -1769,6 +1791,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -1830,6 +1853,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -1897,6 +1921,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -1956,6 +1981,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -2023,6 +2049,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -2100,6 +2127,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "58b9678e442ac0a137e2c80bd387c0a0284adeaba8060311410fd33730478b18"
                           },
                           "literal": "00175"
@@ -2159,6 +2187,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -2226,6 +2255,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -2284,6 +2314,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -2359,6 +2390,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -2426,6 +2458,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -2489,6 +2522,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": "00000"
@@ -2547,6 +2581,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -2614,6 +2649,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -2691,6 +2727,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "0d7a507ce56f4eea2e746081d2e88e51a14ecf53048ee59204fcf90e0f339d04"
                           },
                           "literal": "00140"
@@ -2766,6 +2803,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -2833,6 +2871,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -2910,6 +2949,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "454b95ec9651493452e58ad1e1bde0bc6a9507ff2b075545220d4bd617db869d"
                           },
                           "literal": "00520"
@@ -2985,6 +3025,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -3052,6 +3093,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -3111,6 +3153,7 @@
                             "takes_typed_value": true,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
@@ -3189,6 +3232,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 }
@@ -3297,6 +3341,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -3358,6 +3403,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -3429,6 +3475,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -3491,6 +3538,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -3575,6 +3623,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -3633,6 +3682,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -3717,6 +3767,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -3792,6 +3843,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -3880,6 +3932,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -3940,6 +3993,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -4024,6 +4078,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -4099,6 +4154,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -4172,6 +4228,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -4236,6 +4293,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
@@ -4293,6 +4351,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -4362,6 +4421,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
@@ -4435,6 +4495,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
@@ -4487,6 +4548,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -4547,6 +4609,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 }
@@ -5399,6 +5462,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
@@ -5472,6 +5536,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -5524,6 +5589,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -5576,6 +5642,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
@@ -5646,6 +5713,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -5698,6 +5766,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -5750,6 +5819,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -5802,6 +5872,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
@@ -5875,6 +5946,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -5927,6 +5999,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -5979,6 +6052,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
@@ -6052,6 +6126,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
@@ -6163,6 +6238,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
@@ -6230,6 +6306,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
@@ -6296,6 +6373,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
@@ -6362,6 +6440,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
@@ -6413,6 +6492,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -6464,6 +6544,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -6566,6 +6647,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -6642,6 +6724,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
@@ -6717,6 +6800,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
@@ -6787,6 +6871,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 }
@@ -6857,6 +6942,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -6914,6 +7000,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -6982,6 +7069,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
@@ -7028,6 +7116,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -7080,6 +7169,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -7171,6 +7261,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
@@ -7244,6 +7335,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -7317,6 +7409,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -7369,6 +7462,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -7421,6 +7515,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -7486,6 +7581,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
@@ -7538,6 +7634,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -7590,6 +7687,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -7643,6 +7741,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 }
@@ -8082,6 +8181,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8144,6 +8244,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8206,6 +8307,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8268,6 +8370,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8330,6 +8433,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
@@ -8413,6 +8517,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8475,6 +8580,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8537,6 +8643,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8599,6 +8706,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8661,6 +8769,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8723,6 +8832,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8785,6 +8895,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8847,6 +8958,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8909,6 +9021,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -8971,6 +9084,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -9033,6 +9147,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -9095,6 +9210,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -9157,6 +9273,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -9219,6 +9336,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -9281,6 +9399,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -9343,6 +9462,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -9405,6 +9525,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
@@ -9485,6 +9606,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 }
@@ -9640,6 +9762,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -9710,6 +9833,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -9780,6 +9904,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -9850,6 +9975,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -9920,6 +10046,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -9995,6 +10122,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10065,6 +10193,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10135,6 +10264,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10205,6 +10335,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10275,6 +10406,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10350,6 +10482,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10420,6 +10553,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10490,6 +10624,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10560,6 +10695,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10630,6 +10766,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10705,6 +10842,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10775,6 +10913,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10845,6 +10984,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10915,6 +11055,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -10985,6 +11126,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11060,6 +11202,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11130,6 +11273,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11200,6 +11344,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11270,6 +11415,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11340,6 +11486,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11461,6 +11608,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11530,6 +11678,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11608,6 +11757,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11677,6 +11827,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11755,6 +11906,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11824,6 +11976,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11902,6 +12055,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -11971,6 +12125,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -12049,6 +12204,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -12118,6 +12274,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -12196,6 +12353,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -12265,6 +12423,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -12343,6 +12502,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -12412,6 +12572,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -12477,6 +12638,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -12533,6 +12695,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -12588,6 +12751,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 },
@@ -12638,6 +12802,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 }
@@ -12754,6 +12919,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -12823,6 +12989,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -12901,6 +13068,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -12970,6 +13138,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13048,6 +13217,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13117,6 +13287,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13195,6 +13366,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13264,6 +13436,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13342,6 +13515,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13411,6 +13585,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13489,6 +13664,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13558,6 +13734,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13636,6 +13813,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13705,6 +13883,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13770,6 +13949,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13826,6 +14006,7 @@
                             "takes_typed_value": false,
                             "clearable": false,
                             "own_value": null,
+                            "confirm_comparable": null,
                             "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
@@ -13881,6 +14062,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 },
@@ -13931,6 +14113,7 @@
                     "takes_typed_value": false,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 }
@@ -14028,6 +14211,7 @@
                     "takes_typed_value": true,
                     "clearable": false,
                     "own_value": null,
+                    "confirm_comparable": null,
                     "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
@@ -14199,6 +14383,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -14256,6 +14441,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
@@ -14311,6 +14497,7 @@
           "takes_typed_value": true,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
         },
         {
@@ -14366,6 +14553,7 @@
           "takes_typed_value": true,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
         },
         {
@@ -14421,6 +14609,7 @@
           "takes_typed_value": true,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
         },
         {
@@ -14490,6 +14679,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -14559,6 +14749,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -14629,6 +14820,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -14699,6 +14891,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -14767,6 +14960,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -14837,6 +15031,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -14910,6 +15105,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -14982,6 +15178,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -15054,6 +15251,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -15123,6 +15321,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
@@ -15189,6 +15388,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
@@ -15252,6 +15452,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
@@ -15320,6 +15521,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
@@ -15378,6 +15580,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
@@ -15436,6 +15639,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
@@ -15494,6 +15698,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
@@ -15560,6 +15765,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
@@ -15623,6 +15829,7 @@
           "takes_typed_value": true,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
         },
         {
@@ -15686,6 +15893,7 @@
           "takes_typed_value": true,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
         },
         {
@@ -15756,6 +15964,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -15826,6 +16035,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -15896,6 +16106,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -15966,6 +16177,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16036,6 +16248,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16106,6 +16319,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16161,6 +16375,7 @@
           "takes_typed_value": true,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
         },
         {
@@ -16229,6 +16444,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16299,6 +16515,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16367,6 +16584,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16437,6 +16655,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16506,6 +16725,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16574,6 +16794,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16644,6 +16865,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16713,6 +16935,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16782,6 +17005,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16850,6 +17074,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16918,6 +17143,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -16987,6 +17213,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
@@ -17056,6 +17283,7 @@
           "takes_typed_value": false,
           "clearable": false,
           "own_value": null,
+          "confirm_comparable": null,
           "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         }
       ],
@@ -17120,6 +17348,7 @@
             "takes_typed_value": true,
             "clearable": false,
             "own_value": null,
+            "confirm_comparable": null,
             "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
           },
           "reason": "no_official_anchor"
@@ -17778,9 +18007,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "dacb2026b840053b1fee12afc93c522daa02204340dd7b501e3cfc58675ea93a",
+      "contract_set_digest": "83be9fba7d75f8a7e927b93e40593289414ef82c8cd3d44495307c74cf1a7bb0",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
+      "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -17804,7 +18033,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "50137af3e279c85b63ea26b32b31e5328124cb0cac8b56a67c724112946f18f9"
+        "schema_fingerprint": "207803c795cd324d67b0c181c1e575755354ef23733b5450214c0c861992b4aa"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -20894,9 +21123,9 @@
     ],
     "permitted_surface_digest": "55e1f327f6ef11017b79b42e78ea5e991f50ab537a901307c3c3b3b06b6f049a",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T18:33:30.682679Z",
-    "expires_at": "2026-10-24T18:38:30.682679Z",
-    "baseline_id": "546c99c03a3e09c6ebee5e724fcb33b6ce20515f876848ccdf530fd4a6ac5bcf"
+    "issued_at": "2026-10-24T20:25:50.348819Z",
+    "expires_at": "2026-10-24T20:30:50.348819Z",
+    "baseline_id": "c244e51f0caafd2b98d6c17547156623862648196c9d5c7b16648ad76bb06d2a"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -21373,6 +21602,14 @@
       "available": false,
       "reason": "not_calculated",
       "words": "Calculate the declaration"
+    },
+    "review_package": {
+      "words": "Package for your accountant",
+      "availability": {
+        "available": false,
+        "reason": "not_calculated",
+        "words": "Calculate the declaration"
+      }
     },
     "asks_elections": true,
     "elections": [

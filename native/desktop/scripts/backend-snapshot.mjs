@@ -33,11 +33,15 @@ const INTERPRETER_SOURCES = [
   "interpreter/launch_profile.h",
 ];
 // The host's tests carry real Modelo forms' admitted edit baselines through
-// the bridge and the relay: committed envelopes the product's own form read
-// produced. Only a snapshot for the host's tests copies them.
+// the bridge and the relay, and check the committed write envelopes against
+// the host's own reduction: envelopes the product's own producers wrote. Only
+// a snapshot for the host's tests copies them.
 export const HOST_TEST_INPUTS = [
   "desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json",
   "desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json",
+  "desktop/frontend/src/dev/fixtures/modelo/export-130.json",
+  "desktop/frontend/src/dev/fixtures/modelo/export-165-unverified.json",
+  "desktop/frontend/src/dev/fixtures/modelo/reconcile-130.json",
 ];
 
 export function hostSnapshot(root) {

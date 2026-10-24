@@ -2462,19 +2462,19 @@
     {
       "zone": "declarations",
       "availability": "available",
-      "observed_at": "2026-10-24T18:33:51.976533Z",
+      "observed_at": "2026-10-24T20:26:03.996326Z",
       "words": "Available"
     },
     {
       "zone": "calculation_revisions",
       "availability": "available",
-      "observed_at": "2026-10-24T18:33:51.976533Z",
+      "observed_at": "2026-10-24T20:26:03.996326Z",
       "words": "Available"
     },
     {
       "zone": "filing_history",
       "availability": "available",
-      "observed_at": "2026-10-24T18:33:51.976533Z",
+      "observed_at": "2026-10-24T20:26:03.996326Z",
       "words": "Available"
     }
   ],
@@ -2482,14 +2482,14 @@
     {
       "source": "schedule",
       "availability": "available",
-      "observed_at": "2026-10-24T18:33:51.976533Z",
-      "words": "Legal schedule: Available · Observed: 24/10/2026 18:33 UTC"
+      "observed_at": "2026-10-24T20:26:03.996326Z",
+      "words": "Legal schedule: Available · Observed: 24/10/2026 20:26 UTC"
     },
     {
       "source": "local.filing",
       "availability": "available",
-      "observed_at": "2026-10-24T18:33:51.976533Z",
-      "words": "Local filing: Available · Observed: 24/10/2026 18:33 UTC"
+      "observed_at": "2026-10-24T20:26:03.996326Z",
+      "words": "Local filing: Available · Observed: 24/10/2026 20:26 UTC"
     },
     {
       "source": "aeat.evidence",

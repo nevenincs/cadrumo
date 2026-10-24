@@ -2,15 +2,18 @@
 
 ``src/shell/modeloContract.ts`` is generated from the JSON schema of every
 request and result the desktop's admitted ``modelo.*`` definitions register,
-plus the edit operator input the financial body carries. The envelopes under
+plus the edit operator input the financial body carries.
+``src/shell/relayBounds.ts`` is generated from the host's relay bounds, as the
+Rust sources state them. The envelopes under
 ``src/dev/fixtures/modelo/`` are read through the application's own read path
 for a synthetic taxpayer in a throwaway profile over the published authority.
 
 ``scripts/modelo-fixtures.mjs`` drives this module and formats what it writes;
 run that, not this. ``contract`` writes the unformatted module to standard
-output; ``envelopes`` writes the envelopes; ``validate`` fails when the host's
-admitted list differs from the registered family or a stored envelope no
-longer validates against its model. The envelopes carry the day they were
+output; ``bounds`` writes the unformatted relay bounds module; ``envelopes``
+writes the envelopes; ``validate`` fails when the host's admitted list differs
+from the registered family or a stored envelope no longer validates against
+its model. The envelopes carry the day they were
 read, so they are validated rather than compared byte for byte.
 """
 
@@ -48,8 +51,9 @@ ADMITTED = FRONTEND.parent / "src-tauri" / "src" / "shell" / "modelo" / "admitte
 MODELO_SHELL = ADMITTED.with_name("mod.rs")
 #: What the host records about each admitted definition, generated from the shipped contracts.
 HOST_FACTS = ADMITTED.with_name("relay_contracts.json")
-#: The held person's relay, whose request bound an edit body is held to, and where its constants come from.
+#: The host's relay and held session, whose bounds the window keeps to, and where their constants come from.
 RELAY_SOURCES: tuple[Path, ...] = (
+    FRONTEND.parent / "src-tauri" / "src" / "shell" / "relay.rs",
     FRONTEND.parent / "src-tauri" / "src" / "agent" / "person.rs",
     FRONTEND.parents[1] / "application" / "src" / "person_operations.rs",
 )
@@ -88,6 +92,13 @@ CORRECTED_130 = ("06", "150.00")
 #: The Modelo 303 box the edit scenarios type over, as the filer types it and as the desktop stages it.
 TYPED_303: tuple[tuple[str, str], ...] = (("42", "1.234,56"),)
 EDIT_303: tuple[tuple[str, str], ...] = (("42", "1234.56"),)
+#: The changes the filer stages on the rebase scenario's earlier read: a clear, and two typed values.
+REBASE_STAGED: tuple[tuple[str, str], ...] = (("06", "clear"), ("08", "set"), ("10", "set"))
+#: The typed values the filer stages there, as the desktop sends them.
+REBASE_TYPED: tuple[tuple[str, str], ...] = (("08", "250"), ("10", "75"))
+#: How the declaration moves under them: box 06's typed value is taken back and a figure typed into box 08.
+REBASE_RESTORED: tuple[str, ...] = ("06",)
+REBASE_MOVE: tuple[tuple[str, str], ...] = (("08", "500"),)
 #: The declaration whose apply waits on filings this profile does not hold.
 PREREQUISITE_130 = ("130", "3T")
 #: A declaration whose file design carries no completeness manifest, and which checks cleanly when empty.
@@ -115,7 +126,7 @@ def host_operations() -> dict[str, Any]:
     return json.loads(HOST_FACTS.read_text("utf-8"))["operations"]
 
 
-_RUST_CONSTANT = re.compile(r"pub(?:\([a-z]+\))? const ([A-Z_][A-Z0-9_]*): usize =\s*([^;]+);")
+_RUST_CONSTANT = re.compile(r"(?:pub(?:\([a-z]+\))? )?const ([A-Z_][A-Z0-9_]*): usize =\s*([^;]+);")
 
 
 def _usize(expression: str, constants: Mapping[str, str]) -> int:
@@ -135,9 +146,11 @@ def _usize(expression: str, constants: Mapping[str, str]) -> int:
                 if isinstance(node.op, ast.Sub)
                 else left * right
             )
-        raise SystemExit(f"the relay's request bound is no longer a plain constant expression: {expression!r}")
+        raise SystemExit(f"the relay's payload bound is no longer a plain constant expression: {expression!r}")
 
-    return value(ast.parse(_digits(expression), mode="eval").body)
+    # A constant another module defines is named by its path; its name alone resolves it.
+    unqualified = re.sub(r"\b(?:[a-z_][a-z0-9_]*::)+", "", expression)
+    return value(ast.parse(_digits(unqualified), mode="eval").body)
 
 
 def _digits(expression: str) -> str:
@@ -145,15 +158,41 @@ def _digits(expression: str) -> str:
     return re.sub(r"(?<![A-Za-z_])(\d[\d_]*)", lambda found: found.group(1).replace("_", ""), expression)
 
 
-def request_limit() -> int:
-    """The bound the host holds an edit body to: its relay's ``REQUEST_LIMIT``, evaluated from the Rust sources."""
+def relay_bound(name: str) -> int:
+    """One of the host's relay bounds, evaluated from the Rust sources that state it."""
     constants: dict[str, str] = {}
     for source in RELAY_SOURCES:
-        for name, expression in _RUST_CONSTANT.findall(source.read_text("utf-8")):
-            constants.setdefault(name, expression.strip())
-    if "REQUEST_LIMIT" not in constants:
-        raise SystemExit(f"{RELAY_SOURCES[0]} no longer declares REQUEST_LIMIT")
-    return _usize(constants["REQUEST_LIMIT"], constants)
+        for constant, expression in _RUST_CONSTANT.findall(source.read_text("utf-8")):
+            constants.setdefault(constant, expression.strip())
+    if name not in constants:
+        raise SystemExit(f"no relay source declares {name}")
+    return _usize(constants[name], constants)
+
+
+_BOUNDS_HEADER = """\
+// Generated by scripts/modelo_fixtures.py from the host's Rust relay sources;
+// do not edit. Regenerate with `node scripts/modelo-fixtures.mjs --contract`;
+// `--check` fails when it is stale.
+"""
+
+
+def render_bounds() -> str:
+    """The generated relay bounds module, before the frontend's formatter writes it."""
+    return "\n".join(
+        (
+            _BOUNDS_HEADER,
+            "/** The longest payload or edit body, in bytes of compact JSON, the host\n"
+            " * sends to the relay: the document the relay carries, less a margin for\n"
+            " * number spellings. A longer one is refused before anything is sent; the\n"
+            " * page splits it. */",
+            f"export const RELAY_PAYLOAD_LIMIT = {relay_bound('PAYLOAD_LIMIT')};",
+            "",
+            "/** The longest request, in bytes, the host's held session takes: the\n"
+            " * relay's document and one runtime frame around it. */",
+            f"export const RELAY_REQUEST_LIMIT = {relay_bound('REQUEST_LIMIT')};",
+            "",
+        )
+    )
 
 
 def _constant_list(doc: str, name: str, items: Iterable[str]) -> str:
@@ -345,12 +384,6 @@ def render_contract() -> str:
             sorted(key for key, facts in operations.items() if facts["subject"]["kind"] == "stored_work_unit"),
         )
     )
-    blocks.append(
-        "/** The longest edit body, in bytes, the host sends on: its relay's request\n"
-        " * bound. A longer one is refused with `invalid` before anything is sent;\n"
-        " * the page splits the edit. */\n"
-        f"export const MODELO_EDIT_BODY_LIMIT = {request_limit()};"
-    )
     by_definition: dict[str, list[str]] = {}
     for definition_id, role, model in roots:
         by_definition.setdefault(definition_id, []).append(f"{role}: {_ts_name(model.__name__)};")
@@ -535,7 +568,8 @@ def _preflight(work: Any, baseline: Any, typed: tuple[tuple[str, str], ...]) -> 
         input_json=json.dumps(document),
     )
     identity = OperationIdentity(operation_id="f" * 64, definition_id=definition, subject_ref=work.work_unit_id)
-    executor = ModeloEditPreflightExecutor(ports_factory=_read_ports)
+    contracts = build_production_operation_registry().public_contract_set
+    executor = ModeloEditPreflightExecutor(ports_factory=_read_ports, contracts=lambda: contracts)
     results: list[BaseModel] = []
 
     async def run() -> None:
@@ -938,7 +972,12 @@ def _profile_subject(work: Any) -> str:
 
 
 def _edit_document(
-    baseline: Any, *, typed: tuple[tuple[str, str], ...] = (), intents: tuple[tuple[str, str], ...] = ()
+    baseline: Any,
+    *,
+    typed: tuple[tuple[str, str], ...] = (),
+    intents: tuple[tuple[str, str], ...] = (),
+    restored: tuple[str, ...] = (),
+    held: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """An edit's operator input as the desktop sends it: entries as typed, or scalar intents setting typed values.
 
@@ -959,9 +998,17 @@ def _edit_document(
             "baseline": sent,
             "mutation_family": sent["mutation_family"],
             "scalar_intents": [
-                {"address": {"kind": "scalar", "casilla_id": box}, "kind": "set_typed_value", "value": value}
-                for box, value in intents
+                *(
+                    {"address": {"kind": "scalar", "casilla_id": box}, "kind": "set_typed_value", "value": value}
+                    for box, value in intents
+                ),
+                *(
+                    {"address": {"kind": "scalar", "casilla_id": box}, "kind": "restore_source_value"}
+                    for box in restored
+                ),
             ],
+            # The changes the review holds, as each box stood when it was staged.
+            **({"held": held} if held is not None else {}),
             "binding_intents": [],
             "lexemes": [
                 {"address": {"kind": "scalar", "casilla_id": box}, "entry_locale": "es", "lexeme": text}
@@ -1314,6 +1361,70 @@ def _paths_in(path: Path) -> list[str]:
     return found
 
 
+def _write_rebase(directory: Path, work: Any) -> None:
+    """Check changes staged on an earlier read against the declaration they now stand on, and write the report.
+
+    The form is read as the filer staged on it: clearing the value typed into
+    one box and typing into two others. The declaration then moves under
+    those changes, as another session's apply would move it: the cleared
+    box's typed value is taken back, so it no longer takes a clear, and a figure is
+    typed into one of the typed boxes. The review's preflight, on a fresh
+    baseline, carries the changes as they were held, and reports one
+    dropped, one changed and one kept.
+    """
+    from cadrumo.application.modelo.operation_definitions import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
+    from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
+
+    modelo = str(work.work_unit.modelo)
+    _write_form(directory, work, f"modelo-{modelo}-1T-rebase")
+    staged_on = json.loads((directory / f"modelo-{modelo}-1T-rebase-en.json").read_text("utf-8"))
+    fields = {field["box"]: field for field in _form_fields(staged_on) if field.get("box")}
+    held = [
+        {
+            "address": {"kind": "scalar", "casilla_id": fields[box]["address"]["casilla_id"]},
+            "kind": kind,
+            "held_state": fields[box]["state_digest"],
+        }
+        for box, kind in REBASE_STAGED
+    ]
+    moved = _edit(
+        work,
+        MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+        _edit_document(_admitted(work), intents=REBASE_MOVE, restored=REBASE_RESTORED),
+    )
+    _expect_model(moved)
+    _write_form(directory, work, f"modelo-{modelo}-1T-rebased")
+    reviewed = _expect_model(
+        _edit(
+            work,
+            MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
+            _edit_document(_admitted(work), intents=REBASE_TYPED, held=held),
+        )
+    )
+    outcomes = sorted(entry.outcome.value for entry in getattr(reviewed, "rebase", ()))
+    if outcomes != ["changed", "dropped", "kept"]:
+        raise SystemExit(f"the review did not keep, change and drop one held change each: {outcomes}")
+    _write(directory, f"preflight-{modelo}-rebase-review.json", reviewed)
+
+
+def _form_fields(envelope: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Every field of a written form envelope, in the order its pages hold them."""
+    found: list[dict[str, Any]] = []
+
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            if "held_zero" in node and "address" in node:
+                found.append(node)
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+
+    walk(envelope["form"]["form"]["pages"])
+    return found
+
+
 def write_envelopes(directory: Path) -> None:
     """Read every envelope the scenario host answers through the application's read path."""
     from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
@@ -1369,6 +1480,7 @@ def write_envelopes(directory: Path) -> None:
         _write_edits(directory, stale)
         _verify(stale)
         _write_form(directory, stale, "modelo-130-1T-stale")
+        _write_rebase(directory, stale)
 
 
 # -- check --------------------------------------------------------------------
@@ -1443,11 +1555,14 @@ def validate() -> int:
 def main() -> int:
     """Run one step for scripts/modelo-fixtures.mjs."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("step", choices=("contract", "envelopes", "validate"))
+    parser.add_argument("step", choices=("contract", "bounds", "envelopes", "validate"))
     parser.add_argument("directory", nargs="?", type=Path, default=FIXTURES, help="Where `envelopes` writes.")
     args = parser.parse_args()
     if args.step == "contract":
         sys.stdout.write(render_contract())
+        return 0
+    if args.step == "bounds":
+        sys.stdout.write(render_bounds())
         return 0
     if args.step == "envelopes":
         write_envelopes(args.directory)

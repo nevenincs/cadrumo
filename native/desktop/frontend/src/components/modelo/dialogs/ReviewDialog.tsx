@@ -252,21 +252,12 @@ export function ReviewDialog({
   const edits = [...session.staged.values()].sort(
     (a, b) => Number(replacing(b)) - Number(replacing(a)),
   );
-  // What a renewal did to the staged edits is the application's report: a
-  // box that changed under its edit is looked at again before applying, and
-  // one that no longer takes it was dropped.
-  const rebase = phase.kind === "checked" ? phase.rebase : [];
-  const moved = new Set(
-    rebase
-      .filter((entry) => entry.outcome === "changed")
-      .map((entry) => addressKey(entry.address)),
-  );
+  // A box that changed under its edit when the baseline was renewed is
+  // marked until the filer applies, having looked at it again.
   const changed = new Set(
-    edits
-      .filter((edit) => moved.has(addressKey(edit.field.address)))
-      .map((edit) => edit.key),
+    edits.filter((edit) => edit.beforeChanged).map((edit) => edit.key),
   );
-  const dropped = rebase.filter((entry) => entry.outcome === "dropped").length;
+  const rebased = session.rebased;
   const displacing = edits.filter(replacing).length;
   const findings = phase.kind === "checked" ? phase.findings : [];
   const blocked = findings.some((finding) => finding.blocking);
@@ -324,14 +315,18 @@ export function ReviewDialog({
             {t("workspace.modelo.review.displacing", { count: displacing })}
           </Alert>
         )}
-        {(changed.size > 0 || dropped > 0) && (
+        {rebased && (
           <Alert tone="warning" icon={<Icon name="alert" />}>
             {[
               t("workspace.modelo.rebase.moved"),
-              changed.size > 0 &&
-                t("workspace.modelo.rebase.changed", { count: changed.size }),
-              dropped > 0 &&
-                t("workspace.modelo.rebase.dropped", { count: dropped }),
+              rebased.changed > 0 &&
+                t("workspace.modelo.rebase.changed", {
+                  count: rebased.changed,
+                }),
+              rebased.dropped > 0 &&
+                t("workspace.modelo.rebase.dropped", {
+                  count: rebased.dropped,
+                }),
             ]
               .filter(Boolean)
               .join(" ")}
@@ -458,6 +453,9 @@ export function ReviewDialog({
                 <Button
                   disabled={!mayApply}
                   onClick={() => {
+                    // Applying is the filer's word that the marked boxes
+                    // were looked at again.
+                    session.acknowledge();
                     void apply();
                   }}
                 >
