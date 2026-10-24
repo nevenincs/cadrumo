@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:b6857560a83397ab4eb087af31a611da8ddba90f6502db034b34ba232444880e'
+body_hash: 'sha256:5305dac9e179eb111310e63f6a9c245ed4b27edca1d539d245ae29cdcfc0b438'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -765,6 +765,26 @@ related:
 - `S47` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
 - `S47` `verify:` `tsc --noEmit` -> `pass`
 - `S47` `by:` `opus-p05-lane`
+- `S48` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S48` `M` `src/cadrumo/application/modelo/edit_apply_contracts.py`
+- `S48` `M` `src/cadrumo/application/modelo/edit_operator_input.py`
+- `S48` `M` `src/cadrumo/application/modelo/work_form_rebase.py`
+- `S48` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S48` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S48` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S48` `M` `src/cadrumo/application/modelo/work_form_export_offer.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_work_form_export_offer.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_work_form_rebase.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_work_form_field_words.py`
+- `S48` `M` `src/cadrumo/entrypoints/tests/test_modelo_workbench_operations.py`
+- `S48` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/session.py`
+- `S48` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S48` `verify:` `ruff check and format` -> `pass`
+- `S48` `verify:` `basedpyright touched files` -> `pass`
+- `S48` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S48` `verify:` `pytest application modelo suites` -> `pass`
+- `S48` `verify:` `pytest full TUI modelo tree` -> `pass`
+- `S48` `by:` `opus-p01-lanes-1-and-2`
 
 ## Notes
 
@@ -813,3 +833,4 @@ related:
 - `S45` committed in 5da639c4ba against HEAD 788d9231f0
 - `S46` committed in ddecebc18e with S47; my `saved_unread` key and chrome declarations were wiped once by another writer and re-applied before commit
 - `S47` committed in ddecebc18e; no history envelope is written because a reduced receipt path fails the history model's validator; hu 347 navigation failure seen by lane B not reproduced in 27 runs
+- `S48` committed in 5ccbb347f8; held changes ride the preflight's transient operand rather than a value-free token, keeping the exact rebase; lint-imports breaks only through another session's uncommitted diagnostics.py
