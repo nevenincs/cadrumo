@@ -6,7 +6,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:16277d0e98c80165b75828bb0036cf4c52ea41b412a101eb49d8c9e2974153a4'
+body_hash: 'sha256:6369528d0a6082ef6043120a8112733d300efce12a26c814452e232e1a414b7f'
 related:
   - '[[2026-09-10-registry-authority-artifact-boundary-adr]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-artifact-contract-audit]]'
@@ -65,7 +65,7 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 
 - `2026-09-10-registry-authority-artifact-boundary-adr` - `registry-authority-artifact-boundary` adr: immutable runtime publication | (**status:** `superseded`)
 - `2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr` - `registry-authority-artifact-boundary` adr: indexed authority and complete source enrollment | (**status:** `accepted`)
-- `2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr` - `registry-authority-artifact-boundary` adr: `snapshot cross-checks proven at publication` | (**status:** `proposed`)
+- `2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr` - `registry-authority-artifact-boundary` adr: `snapshot cross-checks proven at publication` | (**status:** `accepted`)
 
 ### audit
 

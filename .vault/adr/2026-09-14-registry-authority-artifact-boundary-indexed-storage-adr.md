@@ -11,13 +11,13 @@ related:
   - "[[2026-09-09-facts-registry-governed-fact-catalogue-adr]]"
   - "[[2026-08-04-profile-derived-selectors-adr]]"
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
+  - '[[2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr]]'
 supersedes:
   - '2026-09-10-registry-authority-artifact-boundary-adr'
-modified: '2026-10-22'
+modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:7391616bc86918e5e934994f38efe1119188891a4fe3b74a33536acca1a9c10c'
+body_hash: 'sha256:252851af107321d1e7429f9c03c3ab908af961c14b3d44a5507fc56d14c85790'
 ---
-
 # `registry-authority-artifact-boundary` adr: indexed authority and complete source enrollment | (**status:** `accepted`)
 
 ## Problem Statement
@@ -141,3 +141,11 @@ A compiler or dependency change that alters the compiled content is a code chang
 This replaces the persisted compiler and component-dependency receipts of the first 2026-09-23 amendment and the compiler-identity decision of the second. Publication still compiles in the canonical child interpreter, which keeps the compile isolated from its launcher, but nothing about that interpreter is recorded.
 
 Amended 2026-10-22 under the operator's instruction to fix the root causes of a 40-50 s desktop start (`2026-10-22-startup-performance-request-path-audit`, finding authority-full-hash-per-process): every process hashed the whole 118 MB database before its first read, and a desktop sign-in starts several. The digest is now proved once per file object and recorded in a per-user receipt under the storage root's cache. The admission paragraph also no longer names runtime quick_check, foreign-key and closure scans, which publication performs and admission had already stopped repeating.
+
+## Amendment 2026-10-24: snapshot cross-check proofs
+
+Accepted 2026-10-24 by the operator together with `2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr`, which owns the decision. This amendment records only its effect on storage and admission.
+
+Publication also proves the registry snapshot cross-checks for the generation's declared selector set. It records the passing cells, the validator closure digest and the fact-date window in the database. Admission of the physical digest admits those records. Runtime snapshot construction relies on them only inside their recorded contract and otherwise validates in full. This is reliance on a publication proof, not a claim that runtime revalidated the corpus.
+
+The proof tables change the published schema, so the store format advances to `cadrumo-authority-sqlite-v5`. Unlike the v2, v3 and v4 advances, runtime keeps admitting the preceding `cadrumo-authority-sqlite-v4` format. A v4 database carries no proofs, so it is served with full snapshot validation until republication, and no record or digest is inferred for it. Formats older than v4 remain refused. Publication writes only v5. The descriptor format is unchanged.
