@@ -124,13 +124,14 @@ class SetupScreen(AccountChromeScreen):
         """
     )
 
-    def __init__(self, door: SetupDoorPort) -> None:
-        """Bind the door every read and setup goes through."""
+    def __init__(self, door: SetupDoorPort, *, focus_item: str | None = None) -> None:
+        """Bind the door every read and setup goes through, and the item whose row is selected once it is read."""
         super().__init__()
         self._door = door
         self._rows: tuple[DependencyStatusRow, ...] = ()
         self._status: str = ""
         self._busy = False
+        self._focus_item = focus_item
 
     @property
     def rows(self) -> tuple[DependencyStatusRow, ...]:
@@ -189,6 +190,16 @@ class SetupScreen(AccountChromeScreen):
             sentence = wording.sentence if wording.note is None else f"{wording.sentence} {wording.note}"
             table.add_row(wording.name, sentence, wording.action or "", key=row.item_id)
 
+    def _select_focus_item(self) -> None:
+        """Select the row of the item this screen was opened on, once, so Enter runs its action."""
+        item_id, self._focus_item = self._focus_item, None
+        index = next((index for index, row in enumerate(self._rows) if row.item_id == item_id), None)
+        if index is None:
+            return
+        table = cast("DataTable[str]", self.query_one("#setup-items", DataTable))
+        table.move_cursor(row=index)
+        table.focus()
+
     def _set_status(self, text: str) -> None:
         self._status = text
         self.query_one("#setup-status", Static).update(text)
@@ -202,6 +213,7 @@ class SetupScreen(AccountChromeScreen):
     def _show_status(self, status: DependencyStatusResultV1) -> None:
         self._rows = status.rows
         self._show_rows()
+        self._select_focus_item()
         lines = [tr("tui.setup.complete" if status.complete else "tui.setup.incomplete")]
         if status.hardware_limited:
             lines.append(tr("tui.setup.hardware_limited"))

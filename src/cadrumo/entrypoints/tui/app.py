@@ -72,6 +72,7 @@ from .navigation import (
 from .operations.palette import WorkbenchOperationProviderV1
 from .presentation import PagePresentationRequested, presentation_target
 from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, WorkbenchSearchProviderV1
+from .setup.focus import SetupItemRequested, setup_item_target
 
 if TYPE_CHECKING:
     from textual.timer import Timer
@@ -460,6 +461,17 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
             return
         self.query_one("#root-navigation-refusal", Static).update("")
         self.navigate_to(presentation_target(message.view))
+
+    def on_setup_item_requested(self, message: SetupItemRequested) -> None:
+        """Open the setup page on the item a refused operation needs, as any other navigation.
+
+        The person chose it from the settled operation's own offer, so it is
+        admitted like a palette choice: refused while the page shown must not
+        be left, or when this session cannot open the setup page.
+        """
+        if self._recomposition_pending or self._active_destination_catalogue is None:
+            return
+        self.navigate_to(setup_item_target(message.item_id))
 
     def on_runtime_upgrade_pending(self, _: RuntimeUpgradePending) -> None:
         """Render a manager upgrade notice on the existing UI thread."""

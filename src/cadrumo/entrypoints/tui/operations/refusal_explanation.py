@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ....application.dependency_registry import dependency_item_declarations
 from ....application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
 from ....application.operator_surface.action_targets import resolve_recorded_precondition_action
 from ....core.errors.error_codes import declared_error_codes_by_qualname, resolve_error_message
@@ -59,4 +60,30 @@ def recorded_remedy_line(detail: OperationErrorDetailV1 | None) -> str | None:
     return tr("tui.operations.stopped.remedy_command", command=command)
 
 
-__all__ = ["operation_error_explanation", "public_refusal_explanation", "recorded_remedy_line"]
+def recorded_setup_item(detail: OperationErrorDetailV1 | None) -> str | None:
+    """Name the setup item whose setup the stopped operation's recorded verdict asks for.
+
+    Each setup item declares the one recovery action that sets it up. A
+    verdict naming that action needs that item; a verdict naming any other
+    action, or none, names no item.
+    """
+    verdict = None if detail is None else detail.precondition_verdict()
+    if verdict is None or verdict.action is None:
+        return None
+    action_id = verdict.action.action_id
+    return next(
+        (
+            declaration.item_id
+            for declaration in dependency_item_declarations()
+            if declaration.recovery_action_id == action_id
+        ),
+        None,
+    )
+
+
+__all__ = [
+    "operation_error_explanation",
+    "public_refusal_explanation",
+    "recorded_remedy_line",
+    "recorded_setup_item",
+]

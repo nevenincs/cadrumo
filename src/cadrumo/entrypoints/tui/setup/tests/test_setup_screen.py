@@ -46,8 +46,10 @@ from .....application.operations.models import OperationIdentity
 from .....core.config import override_settings
 from .....core.storage_taxonomy import StorageCategory
 from ...components.host import ScreenHostApp
+from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...operations.controller_port import OperationControllerPort
 from ...tests.settling import settle, settle_until
+from ..focus import setup_item_focus, setup_item_target
 from ..screen import SetupScreen, setup_review_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -170,6 +172,25 @@ async def test_an_absent_item_row_starts_setup_for_that_item_only() -> None:
 
 
 @pytest.mark.asyncio
+async def test_a_screen_opened_on_an_item_selects_its_row_so_enter_sets_up_that_item() -> None:
+    door = _Door(absent={"browser", "local_ai"})
+    screen = SetupScreen(door, focus_item="local_ai")
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp(screen).run_test(size=_SIZE) as pilot:
+            await _settled(pilot, screen)
+            table = screen.query_one("#setup-items", DataTable)
+
+            assert table.ordered_rows[table.cursor_row].key.value == "local_ai"
+            assert screen.focused is table
+
+            await pilot.press("enter")
+            await settle(pilot)
+            await _settled(pilot, screen)
+            assert ("setup", ("local_ai",)) in door.calls
+            assert ("setup", ("browser",)) not in door.calls
+
+
+@pytest.mark.asyncio
 async def test_an_unreachable_runtime_is_reported_and_nothing_is_set_up() -> None:
     door = _Door(absent={"browser"}, unreachable=True)
     screen = SetupScreen(door)
@@ -241,3 +262,23 @@ def test_the_review_words_the_plan_and_shows_a_licence_notice_before_approval() 
         f"  {notice}",
         "Total download: at least 3.0 GB. Some sizes are only known once the download starts.",
     ]
+
+
+def test_only_a_declared_item_is_a_setup_page_focus() -> None:
+    for declaration in dependency_item_declarations():
+        target = setup_item_target(declaration.item_id)
+        context = TuiScreenContextV1(destination=target.destination, focus=target.focus)
+        assert setup_item_focus(context) == declaration.item_id
+    with pytest.raises(ValueError, match="unknown setup item"):
+        setup_item_target("google")
+    page = TuiScreenContextV1(
+        destination="workbench.setup",
+        focus=TuiFocusIdentityV1(destination="workbench.setup", semantic_key="presentation.setup"),
+    )
+    undeclared = TuiScreenContextV1(
+        destination="workbench.setup",
+        focus=TuiFocusIdentityV1(destination="workbench.setup", semantic_key="setup.item.google"),
+    )
+    assert setup_item_focus(page) is None
+    assert setup_item_focus(undeclared) is None
+    assert setup_item_focus(TuiScreenContextV1(destination="workbench.setup")) is None

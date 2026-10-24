@@ -31,6 +31,10 @@ from textual.worker import Worker, WorkerCancelled, WorkerFailed
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
+from ....application.dependency_contracts import DependencyRecoveryAction
+from ....application.dependency_registry import dependency_item_declarations
+from ....application.dependency_wording import dependency_action_key, dependency_name_key
+from ....application.operations.error_detail import OperationErrorDetailV1
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.frontend_requests import (
     OperationCancellationRefusalCode,
@@ -55,6 +59,7 @@ from ....core.operator_notice_messages import operation_notice_message
 from ....core.time.clock import now
 from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import tokenised
+from ..setup.focus import SetupItemRequested
 from .controller_port import (
     OperationChangeSourcePort,
     OperationChangeWaiterPort,
@@ -70,7 +75,7 @@ from .interactions import (
 )
 from .logs import OperationModalLogRowV1, OperationModalLogViewV1, build_initial_log_view, fold_event_page
 from .projection import OperationModalViewModelV1, build_operation_modal_view_model
-from .refusal_explanation import operation_error_explanation, public_refusal_explanation
+from .refusal_explanation import operation_error_explanation, public_refusal_explanation, recorded_setup_item
 
 # A refused observation is not watched, so no cue follows it: retry with backoff.
 _REFUSED_RETRY_FIRST = timedelta(milliseconds=200)
@@ -136,7 +141,13 @@ the grid collapses back to a single row wherever the body is wide enough.
 
 
 class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
-    """Generic modal presenting one supervised operation until it settles."""
+    """Generic modal presenting one supervised operation until it settles.
+
+    A settled operation closes the modal at once, unless its recorded verdict
+    asks for one setup item: then the modal stays, says why, and offers to
+    open the setup page on that item. Opening it only asks the root to
+    navigate; the setup page reads the item and asks before setting anything up.
+    """
 
     DEFAULT_CSS = tokenised("""
     OperationModal {
@@ -190,6 +201,10 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         # removed and app shutdown waited on it forever.
         self._observation_stopped = False
         self._poll_worker: Worker[None] | None = None
+        # A settled refusal that needs a setup item, held open so the person can go and set it up.
+        self._held_outcome: OperationModalSettledOutcomeV1 | None = None
+        self._setup_detail: OperationErrorDetailV1 | None = None
+        self._setup_item: str | None = None
 
     @override
     def compose(self) -> ComposeResult:
@@ -205,9 +220,13 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 yield Static("", id="operation-modal-diagnostic")
                 yield Static("", id="operation-modal-action-refusal")
                 yield Static("", id="operation-modal-receipt")
+                yield Static("", id="operation-modal-setup")
                 yield Static("", id="operation-modal-review")
                 yield Static("", id="operation-modal-log")
             with ItemGrid(id="operation-modal-actions", min_column_width=_ACTION_MIN_COLUMN_WIDTH):
+                setup = Button("", id="btn-operation-setup", classes="-primary")
+                setup.display = False
+                yield setup
                 yield localized(
                     Button(tr("operation.modal.action.reject"), id="btn-operation-reject", disabled=True),
                     "operation.modal.action.reject",
@@ -289,8 +308,15 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 return
             self._refresh_view_state()
             if observed.projection.lifecycle is OperationLifecycle.TERMINAL:
-                explanation = await self._settled_error_explanation(observed.projection)
-                self.dismiss(OperationModalSettledOutcomeV1(view_model=self._view_model, error_explanation=explanation))
+                detail = await self._settled_error_detail(observed.projection)
+                outcome = OperationModalSettledOutcomeV1(
+                    view_model=self._view_model, error_explanation=operation_error_explanation(detail)
+                )
+                setup_item = recorded_setup_item(detail)
+                if setup_item is None:
+                    self.dismiss(outcome)
+                else:
+                    self._hold_for_setup(outcome, detail, setup_item)
                 return
             if not changes.armed:
                 # Subscribed only now; observe once more so nothing between the two reads is missed.
@@ -302,12 +328,41 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         """Read the current state, which another action may change across an await."""
         return not self._observation_stopped
 
-    async def _settled_error_explanation(self, projection: OperationPublicProjectionV1) -> str | None:
-        """Read the stopped executor's own message when the bound controller can supply its detail."""
+    async def _settled_error_detail(self, projection: OperationPublicProjectionV1) -> OperationErrorDetailV1 | None:
+        """Read the stopped executor's recorded detail when the bound controller can supply it."""
         controller = self._controller
         if not isinstance(controller, OperationErrorDetailPort):
             return None
-        return operation_error_explanation(await controller.settled_error_detail(projection))
+        return await controller.settled_error_detail(projection)
+
+    def _hold_for_setup(
+        self, outcome: OperationModalSettledOutcomeV1, detail: OperationErrorDetailV1 | None, item_id: str
+    ) -> None:
+        """Keep the settled modal open with its one offer: set up the item the refusal needs."""
+        self._observation_stopped = True
+        self._held_outcome = outcome
+        self._setup_detail = detail
+        self._setup_item = item_id
+        self._render_setup_offer()
+        self.query_one("#btn-operation-setup", Button).focus()
+
+    def _render_setup_offer(self) -> None:
+        """Say why the operation stopped and name the item the offer sets up, in the current language."""
+        item_id = self._setup_item
+        button = self.query_one("#btn-operation-setup", Button)
+        reason = self.query_one("#operation-modal-setup", Static)
+        if item_id is None:
+            button.display = False
+            reason.update("")
+            return
+        declaration = next(row for row in dependency_item_declarations() if row.item_id == item_id)
+        action = tr(dependency_action_key(DependencyRecoveryAction.SET_UP))
+        button.label = f"{action}: {tr(dependency_name_key(declaration))}"
+        button.display = True
+        explanation = operation_error_explanation(self._setup_detail)
+        view_model = self._view_model
+        shown = None if view_model is None else public_refusal_explanation(view_model.receipt_ref)
+        reason.update("" if explanation is None or explanation == shown else explanation)
 
     def _runtime_access_lost(self, error: FrontendRefusedError | RefusalError) -> None:
         self._observation_stopped = True
@@ -389,6 +444,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         self.query_one("#btn-operation-apply", Button).disabled = not apply_enabled
         self.query_one("#btn-operation-reject", Button).disabled = not reject_enabled
         self.query_one("#btn-operation-close", Button).disabled = view_model.spinner_visible
+        self._render_setup_offer()
 
     def _refresh_detail_rows(self, view_model: OperationModalViewModelV1) -> None:
         """Draw the phase, deadline, diagnostic and receipt facts.
@@ -445,9 +501,24 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             await self._respond(intent=OperationResponseIntent.REJECT)
         elif event.button.id == "btn-operation-close":
             await self.action_request_close()
+        elif event.button.id == "btn-operation-setup":
+            await self._open_setup()
+
+    async def _open_setup(self) -> None:
+        """Close with the settled outcome, then ask the root to open the setup page on the needed item."""
+        outcome, item_id = self._held_outcome, self._setup_item
+        if outcome is None or item_id is None:
+            return
+        await self._stop_poll_worker()
+        self.dismiss(outcome)
+        self.app.post_message(SetupItemRequested(item_id))
 
     async def action_request_close(self) -> None:
         """Close the modal, detaching first if the operation is still live."""
+        if self._held_outcome is not None:
+            await self._stop_poll_worker()
+            self.dismiss(self._held_outcome)
+            return
         view_model = self._view_model
         if view_model is None:
             # No observation has ever succeeded, so there is no revision to
