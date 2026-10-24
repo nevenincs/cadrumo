@@ -14,6 +14,7 @@ from .....application.modelo.value_presentation import (
 from .....application.modelo.work_form_models import (
     ModeloFormScalar,
 )
+from .....application.modelo.work_form_wording import rate_text
 from .....core.i18n.render import tr
 from ...components.cell_text import wrap_words
 from . import casilla_list_models as _models
@@ -114,7 +115,7 @@ class CasillaListLayoutMixin:
     def _rated_label(self: CasillaList, place: GridRowPlace) -> str:
         """A row's heading with the rate its row is taxed at, when it has one."""
         if place.rate is not None:
-            return _values._SEPARATOR.join((place.heading, _values.rate_text(place.rate, self._language)))
+            return _values._SEPARATOR.join((place.heading, rate_text(place.rate, self._language)))
         return place.heading
 
     def _stacked_label(self: CasillaList, place: GridRowPlace) -> str:

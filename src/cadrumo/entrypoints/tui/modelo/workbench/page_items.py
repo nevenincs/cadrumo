@@ -49,7 +49,7 @@ from .....application.modelo.work_form_models import (
     holds_zero,
     section_fields,
 )
-from .....application.modelo.work_form_wording import holds_nothing
+from .....application.modelo.work_form_wording import holds_nothing, shown_rate
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from .casilla_list_models import (
@@ -58,9 +58,6 @@ from .casilla_list_models import (
     CasillaListHeading,
     CasillaListItem,
     CasillaListNote,
-)
-from .casilla_list_values import (
-    shown_rate,
 )
 from .grid import CasillaListRecords, GridRowPlace, GridShape, GridSlot
 from .vocabulary import DONE_MARK, AttentionCounts, WorkbenchMark, field_counts

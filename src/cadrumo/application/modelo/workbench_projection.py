@@ -162,6 +162,7 @@ class PublicModeloFormField(BaseModel):
     origin_words: str | None
     origin_explanation: str | None
     editability_words: str | None
+    value_text: str | None
 
 
 class PublicModeloFormFieldBlock(BaseModel):

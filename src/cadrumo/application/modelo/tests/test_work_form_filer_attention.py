@@ -74,7 +74,7 @@ from ..work_form_models import (
     section_fields,
 )
 from ..work_form_service import modelo_form_snapshot
-from ..work_form_wording import origin_explanation, origin_words
+from ..work_form_wording import field_value_text, origin_explanation, origin_words
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -413,6 +413,51 @@ def test_the_carried_words_are_the_ones_the_rule_gives_for_the_box(operation: Pi
     for field in form.fields():
         assert field.origin_words == origin_words(field, recorded=False, language=OutputLanguage.EN)
         assert field.origin_explanation == origin_explanation(field, OutputLanguage.EN)
+
+
+@pytest.mark.parametrize(
+    ("language", "amount", "zero"),
+    [
+        (OutputLanguage.EN, "1,234.56\u00a0€", "0.00\u00a0€"),
+        (OutputLanguage.ES, "1.234,56\u00a0€", "0,00\u00a0€"),
+    ],
+)
+def test_every_box_carries_the_figure_it_shows_in_the_forms_language(
+    operation: PinnedAuthorityOperation, language: OutputLanguage, amount: str, zero: str
+) -> None:
+    """A Modelo 210 amount held, an optional box left at zero, and the required box still empty."""
+    optional = _optional_money_box(operation)
+    form = _form(
+        operation,
+        "210",
+        2025,
+        "0A",
+        held={"rendimientos_integros": Decimal("1234.56"), optional: Decimal("0")},
+        language=language,
+    )
+
+    assert _casilla(form, "rendimientos_integros").value_text == amount
+    # A held zero is a figure, never shown as missing.
+    assert _casilla(form, optional).value_text == zero
+    assert _casilla(_form(operation, "210", 2025, "0A", language=language), "rendimientos_integros").value_text is None
+
+
+def test_a_printed_rate_shows_as_the_form_prints_it_and_a_waiting_box_shows_no_figure(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    form = _form(operation, "303", 2026, "1T")
+    printed = [cell.field for cell in _rate_cells(form).values() if cell.field is not None and cell.field.printed_rate]
+    assert printed
+    for field in printed:
+        assert field.value_text is not None
+        assert field.value_text.endswith("%")
+    # A box whose calculation waits or failed shows no figure, whatever it still holds.
+    held = _casilla(
+        _form(operation, "210", 2025, "0A", held={"rendimientos_integros": Decimal("1234.56")}), "rendimientos_integros"
+    )
+    assert field_value_text(held, OutputLanguage.EN) is not None
+    for origin in (ModeloFormOrigin.NOT_CALCULATED_YET, ModeloFormOrigin.CALCULATION_FAILED):
+        assert field_value_text(held.model_copy(update={"origin": origin}), OutputLanguage.EN) is None
 
 
 # -- what to do about each finding -------------------------------------------

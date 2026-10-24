@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:140e737e956a40abf5dce2982ac9f7e712a040818dd1f0ec273ad3c7774ebf7a'
+body_hash: 'sha256:2c99ba5c811ef34e4c643ff16ce0fb2524170a6f09bf64d5a82eb8d0d21f6d86'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -116,6 +116,18 @@ related:
 - `S03` `verify:` `pytest -n0 application form, loading, projection, every-revision, manifest (78)` -> `pass`
 - `S03` `verify:` `ruff, format, lint-imports (30 kept), dev.quality.types (0), operation contract manifest regenerated` -> `pass`
 - `S03` `verify:` `dev.locales status: no moved key family became catalogue-only` -> `pass`
+- `S04` `M` `src/cadrumo/application/modelo/work_form_wording.py`
+- `S04` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S04` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S04` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_values.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_layout.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S04` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S04` `verify:` `pytest work_form_filer_attention, TUI casilla_list/grid/rate/held/formula, workbench operations and form loading` -> `pass`
+- `S04` `verify:` `dev.quality.types --count` -> `pass`
+- `S04` `verify:` `lint-imports` -> `pass`
+- `S04` `verify:` `operation_contract_manifest.generate --check` -> `pass`
 
 ## Notes
 

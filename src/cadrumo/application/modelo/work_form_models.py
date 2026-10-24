@@ -452,6 +452,9 @@ class ModeloFormField(_FormModel):
     origin_explanation: str | None = None
     #: What may be done about the box, or why it cannot be edited here, in the form's language.
     editability_words: str | None = None
+    #: The figure the box shows in the form's language; ``None`` when it shows none, which every
+    #: frontend says from the box's origin.
+    value_text: str | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

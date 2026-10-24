@@ -34,28 +34,28 @@ edit session answers it.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import Decimal
 from types import MappingProxyType
 from typing import Final
 
 from rich.cells import cell_len
 
-from .....application.modelo.edit_value_grammar import ModeloEditRatioUnit, ratio_unit
 from .....application.modelo.value_presentation import (
     absent_value_text,
-    format_casilla_value,
 )
 from .....application.modelo.work_form_models import (
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
-    ModeloFormPrintedRate,
-    ModeloFormRate,
-    ModeloFormRateUnit,
     ModeloFormTextDisclosure,
-    holds_zero,
 )
-from .....application.modelo.work_form_wording import holds_nothing
+from .....application.modelo.work_form_wording import (
+    bare_rate,
+    field_value_text,
+    holds_nothing,
+    rate_is_value,
+    rate_text,
+    shown_rate,
+)
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from ...components.cell_text import ellipsize
@@ -113,14 +113,6 @@ _RATE_PRINTED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.rate.printed_by_for
 _RATE_ROW_LOCALE_KEY: Final[str] = "tui.modelo.workbench.rate.of_row"
 _RATE_ROW_PRINTED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.rate.of_row_printed"
 _ROW_BOXES_LOCALE_KEY: Final[str] = "tui.modelo.workbench.grid.row_boxes"
-_RATE_UNITS: Final[Mapping[ModeloFormRateUnit, ModeloEditRatioUnit]] = MappingProxyType(
-    {ModeloFormRateUnit.FRACTION: ModeloEditRatioUnit.FRACTION}
-)
-"""How each unit a grounded rate is stated in reads as a percentage."""
-_RATE_READINGS: Final[frozenset[ModeloEditRatioUnit]] = frozenset(
-    {ModeloEditRatioUnit.PERCENT, ModeloEditRatioUnit.FRACTION}
-)
-"""The units a ratio's own figure can be read in as a percentage."""
 _SPANISH_DISCLOSURES: Final[frozenset[ModeloFormTextDisclosure]] = frozenset(
     {ModeloFormTextDisclosure.SPANISH_FALLBACK, ModeloFormTextDisclosure.OFFICIAL_SPANISH}
 )
@@ -165,55 +157,6 @@ def _box_mark(field: ModeloFormField) -> str:
     return f"[{field.box}]" if (field.box is not None and field.box) else _NO_BOX
 
 
-def shown_rate(field: ModeloFormField) -> ModeloFormRate | ModeloFormPrintedRate | None:
-    """The rate a rate box's row is taxed at: the grounded one, else the one the design prints; ``None`` else."""
-    if field.origin is ModeloFormOrigin.NOT_APPLICABLE:
-        return None
-    return field.grounded_rate or field.printed_rate
-
-
-def rate_is_value(field: ModeloFormField) -> bool:
-    """Whether a box shows its row's rate as its value, as the official form prints it.
-
-    A box the design fixes holds nothing of its own, so it shows its row's
-    rate. A calculated rate box in a row grounded on one rate shows that rate
-    whatever the base, never a figure worked out from an empty base. Any other
-    rate box, typed, failed or empty, or calculated in a row with no grounded
-    rate, shows its own value, and its row's rate is said beside it.
-    """
-    if field.editability is ModeloFormEditability.DESIGN_CONSTANT:
-        return shown_rate(field) is not None
-    return field.origin is ModeloFormOrigin.CALCULATED and field.grounded_rate is not None
-
-
-def own_ratio_unit(field: ModeloFormField) -> ModeloEditRatioUnit | None:
-    """How a box's own figure reads as a rate: its declared unit, else what its figure and its row's rate establish.
-
-    A ratio whose bounds declare no unit is still read as a rate when the
-    figure leaves no doubt: a zero reads the same at any scale, and a figure
-    equal to its row's grounded or printed rate at exactly one scale is at that
-    scale. Any other undeclared figure keeps its unit undeclared, never guessed.
-    ``None`` for a box that is not a ratio.
-    """
-    maximum = field.constraints.max_value if field.constraints is not None else None
-    unit = ratio_unit(field.data_type, maximum)
-    if unit is not ModeloEditRatioUnit.UNDECLARED:
-        return unit
-    value = field.value
-    if not isinstance(value, Decimal | int) or isinstance(value, bool):
-        return unit
-    if holds_zero(value):
-        return ModeloEditRatioUnit.PERCENT
-    rate = field.grounded_rate or field.printed_rate
-    if rate is None:
-        return unit
-    if value == rate.ratio:
-        return ModeloEditRatioUnit.FRACTION
-    if value == rate.ratio.scaleb(2):
-        return ModeloEditRatioUnit.PERCENT
-    return unit
-
-
 def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     """Return the text of a field's value cell, with absence spoken in words.
 
@@ -233,9 +176,9 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
 def _special_value_text(field: ModeloFormField, language: OutputLanguage) -> str | None:
     if field.origin is ModeloFormOrigin.NOT_APPLICABLE:
         return tr(_NOT_APPLICABLE_VALUE_LOCALE_KEY)
-    rate = shown_rate(field)
-    if rate is not None and rate_is_value(field):
-        return rate_text(rate, language)
+    figure = field_value_text(field, language)
+    if figure is not None:
+        return figure
     if field.editability is ModeloFormEditability.DESIGN_CONSTANT and field.value is None:
         return _EMPTY_VALUE
     if field.origin in {ModeloFormOrigin.NOT_CALCULATED_YET, ModeloFormOrigin.CALCULATION_FAILED}:
@@ -246,38 +189,8 @@ def _special_value_text(field: ModeloFormField, language: OutputLanguage) -> str
 def _ordinary_value_text(field: ModeloFormField, language: OutputLanguage) -> str:
     if field.value is None or field.origin in {ModeloFormOrigin.CLEARED, ModeloFormOrigin.NOT_IMPORTED_YET}:
         return absent_value_text(language)
-    unit = own_ratio_unit(field)
-    if _bare_rate(field):
-        return _EMPTY_VALUE
-    value = field.value
-    if unit in _RATE_READINGS and isinstance(value, Decimal):
-        # A rate reads as the printed form writes one, "2 %" rather than "2.00 %"; dropping zeros rounds nothing.
-        value = _without_trailing_zeros(value)
-    return format_casilla_value(value, data_type=field.data_type, language=language, ratio_unit=unit)
-
-
-def _without_trailing_zeros(value: Decimal) -> Decimal:
-    """The same figure without the zeros that end its fraction, and a zero without a sign."""
-    if value == 0:
-        return Decimal(0)
-    return value.quantize(Decimal(1)) if value == value.to_integral_value() else value.normalize()
-
-
-def rate_text(rate: ModeloFormRate | ModeloFormPrintedRate, language: OutputLanguage) -> str:
-    """Return a rate as the printed form states it, a percentage in the filer's language."""
-    return format_casilla_value(
-        rate.ratio, data_type=_RATIO_DATA_TYPE, language=language, ratio_unit=_RATE_UNITS[rate.unit]
-    )
-
-
-def _bare_rate(field: ModeloFormField) -> bool:
-    """Whether a rate box holds a figure that no declared or grounded unit lets be read as a percentage."""
-    return (
-        field.data_type == _RATIO_DATA_TYPE
-        and field.value is not None
-        and not rate_is_value(field)
-        and own_ratio_unit(field) not in _RATE_READINGS
-    )
+    # What is left is a rate whose unit nothing establishes: shown as a dot, never a bare figure.
+    return _EMPTY_VALUE
 
 
 def _ungrounded_rate(entry: CasillaListEntry) -> bool:
@@ -305,7 +218,7 @@ def rate_note(entry: CasillaListEntry, language: OutputLanguage | None = None) -
     field = entry.field
     rate = shown_rate(field)
     if rate is None:
-        return tr(_RATE_NOT_GROUNDED_LOCALE_KEY) if _ungrounded_rate(entry) or _bare_rate(field) else None
+        return tr(_RATE_NOT_GROUNDED_LOCALE_KEY) if _ungrounded_rate(entry) or bare_rate(field) else None
     printed = field.grounded_rate is None
     if rate_is_value(field):
         return tr(_RATE_PRINTED_LOCALE_KEY) if printed else None
