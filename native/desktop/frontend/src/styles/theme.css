@@ -74,6 +74,12 @@
       0 0 0 var(--hairline) rgb(0 0 0 / 5%),
       0 var(--elevation-overlay-offset) var(--elevation-overlay-blur)
         var(--elevation-overlay-spread) rgb(0 0 0 / 30%);
+    /* A surface docked to the foot of its area, such as a tray of pending
+       changes: it casts upward. */
+    --elevation-docked:
+      0 0 0 var(--hairline) var(--border),
+      0 calc(-1 * var(--elevation-docked-offset)) var(--elevation-docked-blur)
+        rgb(0 0 0 / 18%);
 
     color: var(--foreground);
   }
@@ -92,6 +98,10 @@
       0 0 0 var(--hairline) rgb(255 255 255 / 6%),
       0 var(--elevation-overlay-offset) var(--elevation-overlay-blur)
         var(--elevation-overlay-spread) rgb(0 0 0 / 60%);
+    --elevation-docked:
+      0 0 0 var(--hairline) var(--border),
+      0 calc(-1 * var(--elevation-docked-offset)) var(--elevation-docked-blur)
+        rgb(0 0 0 / 50%);
     color-scheme: dark;
   }
 }
@@ -127,6 +137,7 @@
 
   --shadow-raised: var(--elevation-raised);
   --shadow-overlay: var(--elevation-overlay);
+  --shadow-docked: var(--elevation-docked);
 
   /* The documentation's own type stacks, from the generated palette. */
   --font-sans: var(--font-stack);

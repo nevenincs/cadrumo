@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:ecd6bb2dd95289875a79f30fc861c595f81b6cb7f1576fbf704b12eafd237264'
+body_hash: 'sha256:7b76e1e39550e2e5173ec0661885641fb46da8c4ae2f8797133c99f8fe7f5c2d'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -75,6 +75,34 @@ related:
 - `S01` `M` `.vault/adr/2026-10-23-desktop-ledger-editor-adr.md`
 - `S01` `verify:` `desktop-host-unit-test` -> `pass`
 - `S01` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S05` `A` `native/desktop/frontend/src/components/ui/data-grid.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/dataGridModel.ts`
+- `S05` `A` `native/desktop/frontend/src/components/ui/combobox.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/sheet.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/filter-chip.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/data-grid.stories.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/combobox.stories.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/sheet.stories.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/filter-chip.stories.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ui/cn.ts`
+- `S05` `M` `native/desktop/frontend/src/components/ui/popover.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ui/dialog.tsx`
+- `S05` `M` `native/desktop/frontend/src/styles/tokens.css`
+- `S05` `M` `native/desktop/frontend/src/styles/theme.css`
+- `S05` `M` `native/desktop/frontend/src/components/calendar/calendarMarks.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/catalogue/Foundations.stories.tsx`
+- `S05` `A` `native/desktop/frontend/primitives.html`
+- `S05` `A` `native/desktop/frontend/src/dev/primitives/main.tsx`
+- `S05` `A` `native/desktop/frontend/src/dev/primitives/DataGridHarness.tsx`
+- `S05` `A` `native/desktop/frontend/src/dev/primitives/CompanionsHarness.tsx`
+- `S05` `A` `native/desktop/frontend/src/dev/primitives/gridSample.ts`
+- `S05` `M` `native/desktop/frontend/README.md`
+- `S05` `verify:` `npx tsc --noEmit` -> `pass`
+- `S05` `verify:` `npx eslint <touched files>` -> `pass`
+- `S05` `verify:` `npx prettier --check <touched files>` -> `pass`
+- `S05` `verify:` `node --test dev/eslint/tests/` -> `pass`
+- `S05` `by:` `vaultspec-high-executor`
 
 ## Notes
 

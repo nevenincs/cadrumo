@@ -81,6 +81,18 @@
   --spacing-menu: 13.75rem;
   --spacing-field: 13.75rem;
   --spacing-badge: 1rem;
+  /* Wider dialogs, for a review or a form with a table in it. */
+  --spacing-dialog-md: 32rem;
+  --spacing-dialog-lg: 46rem;
+  --spacing-dialog-xl: 60rem;
+  /* A sheet that slides in from the side. */
+  --spacing-sheet: 44rem;
+
+  /* ── The height of a row in a data grid: the density of a toolbar
+     control when compact, of a tab row when comfortable, so rows grow with
+     the controls under a coarse pointer. ────────────────────────────── */
+  --spacing-row-compact: var(--spacing-control-sm);
+  --spacing-row-comfortable: var(--spacing-control-lg);
 
   /* Filing windows keep their text only when the bar has room for it. */
   --container-calendar-bar: 4.5rem;
@@ -131,6 +143,9 @@
   --elevation-overlay-offset: 1rem;
   --elevation-overlay-blur: 3rem;
   --elevation-overlay-spread: -0.75rem;
+  /* A surface docked to the bottom of its area casts upward. */
+  --elevation-docked-offset: 0.25rem;
+  --elevation-docked-blur: 1rem;
 
   /* Content grids: em tracks follow the log's type size. */
   --log-time-width: 7.5em;
@@ -146,20 +161,28 @@
   --layer-separator: 5;
   /* A row of controls that stays while its page scrolls under it. */
   --layer-pinned: 10;
-  --layer-popover: 40;
   --layer-modal: 50;
+  /* Above a modal: a popover opened from a dialog stays over it, and the
+     foundation dismisses an open popover when a modal opens. */
+  --layer-popover: 55;
   --layer-menu: 60;
   --layer-tooltip: 70;
   --layer-toast: 80;
+  /* Inside a data grid, which isolates its own stacking: the sticky
+     columns, the header over the rows, the header's sticky cells over both,
+     and an open cell editor over all of them. */
+  --layer-grid-sticky: 1;
+  --layer-grid-head: 2;
+  --layer-grid-head-sticky: 3;
+  --layer-grid-editor: 4;
 
   /* ── Motion. Every transition and animation takes one of these; the base
      layer in src/styles/base.css removes them under reduced motion. ─────── */
-  --motion-spin: 800ms;
+  --motion-spin: 1s;
   --motion-spin-reduced: 2000ms;
   --motion-fast: 120ms;
   --motion-base: 200ms;
   --motion-slow: 320ms;
-  --motion-spin: 1s;
   --motion-pulse: 2s;
   --motion-reduced: 0.01ms;
   --motion-ease: cubic-bezier(0.2, 0, 0, 1);
@@ -168,8 +191,8 @@
   --hairline: 1px;
   --focus-ring: 2px;
   --selection-edge: 2px;
-  /* The edge of a hollow event mark on a day. */
-  --calendar-mark-edge: 2px;
+  /* The edge of a mark drawn hollow, such as a message on a calendar day. */
+  --mark-edge: 2px;
 
   /* ── Terminal font-size steps: pixel numbers for xterm's canvas, behind
      the named "small"/"medium"/"large"/"x-large" preference

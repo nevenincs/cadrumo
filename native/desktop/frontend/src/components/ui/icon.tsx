@@ -2,6 +2,7 @@ import * as React from "react";
 import {
   Archive,
   ArchiveRestore,
+  ArrowDown,
   ArrowLeftRight,
   ArrowRight,
   ArrowUp,
@@ -162,6 +163,8 @@ const ICONS = {
   sheet: FileSpreadsheet,
   shield: ShieldCheck,
   signOut: LogOut,
+  sortAsc: ArrowUp,
+  sortDesc: ArrowDown,
   splitColumn: Rows2,
   splitRow: Columns2,
   stop: Square,

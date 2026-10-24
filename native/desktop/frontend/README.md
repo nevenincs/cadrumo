@@ -64,7 +64,7 @@ export CADRUMO_CMAKE_BINARY_DIR='<absolute path to the build directory>'
 just dev
 ```
 
-The server offers two pages.
+The server offers three pages.
 
 - `/` is the production entry. Without a desktop host it uses the browser host,
   which fabricates nothing: every backend capability reports itself
@@ -72,6 +72,10 @@ The server offers two pages.
 - `/scenarios.html` is the development entry. It mounts the same application on
   the scenario host and shows a **Simulated host** control in the bottom
   corner for switching scenario and language.
+- `/primitives.html` mounts one primitive over made-up rows, for the browser
+  tests: the data grid (`?rows=10000`, `&grouped` for month sections) or the
+  plain table (`?harness=table`), or the sheet and filter chips
+  (`?harness=companions`), in either scheme (`&scheme=dark`).
 
 Edit a component and the open page updates in place.
 
@@ -261,6 +265,17 @@ under `ui/`. Stories stay beside their component. Non-component helpers use
 camelCase `.ts` files, and host subscriptions live in `src/shell/use*.ts`.
 Import the defining module directly; do not add barrel exports or forwarding
 components.
+
+Tables of records compose `ui/data-grid.tsx`. `DataGrid` is the windowed,
+editable grid: one tab stop with a roving active cell, rows by stable key,
+sticky header and edge columns, resizable and reorderable columns, row and
+cell-range selection, and editors that commit with Enter, Tab or Shift+Tab.
+It holds no words: the caller passes its accessible name, the position
+phrase it announces, row and cell descriptions, and the editors (a
+`DataGridTextEditor` or a `Combobox`). `DataTable` is the plain sortable
+table for short lists that are read and opened. Neither takes a shell chord,
+and controls inside a cell take `tabIndex={-1}`. A modal editor beside a
+table is a `Sheet`; a filter in force is a `FilterChip`.
 
 Pane placeholders compose `EmptyState` from `ui/empty.tsx`; product components
 do not reconstruct its icon, heading and description layout. Workspace headers
