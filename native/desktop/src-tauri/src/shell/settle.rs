@@ -185,12 +185,14 @@ impl Tracked {
         }
     }
     /// Notes what following the operation answered. A review, a running
-    /// operation and a write of unknown outcome stay to be followed.
+    /// operation and a write of unknown outcome stay to be followed; one the
+    /// runtime no longer knows leaves nothing to follow.
     pub(super) fn record(&self, followed: &Result<Outcome>) {
         let state = match followed {
             Ok(Outcome::Settled { .. } | Outcome::Refused { .. }) => DONE,
             Ok(Outcome::Review { .. }) => REVIEW,
             Ok(Outcome::Running { .. }) => OPEN,
+            Err(failure) if failure.code == "not_admitted" => DONE,
             Err(_) if self.definition.mutation => OPEN,
             Err(_) => DONE,
         };
@@ -255,6 +257,19 @@ impl Operations {
             done -= 1;
         }
         operations.push_back(tracked);
+        // Submissions made side by side each found room before any was
+        // tracked; the ceiling is kept here too, as `room` keeps it, short of
+        // a write or a review the window must still follow.
+        while operations.len() > FOLLOWED_CEILING {
+            let Some(oldest) = operations
+                .iter()
+                .position(Tracked::is_done)
+                .or_else(|| operations.iter().position(Tracked::is_open_read))
+            else {
+                break;
+            };
+            operations.remove(oldest);
+        }
     }
     pub(super) fn find(&self, operation: &str) -> Result<Tracked> {
         lock(&self.0)
@@ -893,6 +908,54 @@ mod tests {
             revision: 2,
             cancellable: true,
         }))
+    }
+
+    #[test]
+    fn a_write_the_runtime_no_longer_knows_leaves_nothing_to_follow() {
+        let operations: Vec<_> = (0..FOLLOWED_CEILING)
+            .map(|at| (format!("write{at}"), REVIEWED, None))
+            .collect();
+        let (window, identity) = following(&operations);
+        assert!(window.room(&identity).is_err());
+        // Following one of them again finds the runtime has none such: it
+        // is done, and makes room.
+        window
+            .find("write7")
+            .unwrap()
+            .record(&Err(Failure::new("not_admitted")));
+        window.room(&identity).unwrap();
+        assert!(window.find("write7").is_err());
+        // An unknown outcome still keeps a write followed.
+        let unknown = window.find("write8").unwrap();
+        unknown.record(&Err(Failure::new("unknown")));
+        assert!(!unknown.is_done());
+    }
+
+    #[test]
+    fn tracking_past_the_ceiling_drops_what_room_would_have() {
+        let mut operations: Vec<_> = (0..FOLLOWED_CEILING - 1)
+            .map(|at| (format!("write{at}"), REVIEWED, None))
+            .collect();
+        operations.insert(0, ("settled".into(), READ, Some(settled("settled"))));
+        let (window, identity) = following(&operations);
+        assert_eq!(lock(&window.0).len(), FOLLOWED_CEILING);
+        // Two submissions found room side by side before either was tracked.
+        for late in ["late0", "late1"] {
+            window.track(Tracked::new(
+                late.into(),
+                REVIEWED,
+                "profile:p".into(),
+                identity.clone(),
+                Vec::new(),
+            ));
+        }
+        assert!(window.find("settled").is_err(), "the settled one went");
+        assert_eq!(
+            lock(&window.0).len(),
+            FOLLOWED_CEILING + 1,
+            "writes the window must follow are never dropped"
+        );
+        assert!(window.find("late1").is_ok());
     }
 
     #[test]

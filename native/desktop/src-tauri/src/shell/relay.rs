@@ -200,6 +200,11 @@ pub(crate) async fn observe(relayed: &Relayed<'_>) -> Result<Value> {
         json!({"action":"operation_observe", "operation_id":relayed.operation, "after_cursor":0}),
     )
     .await?;
+    // The runtime no longer knows the operation: there is nothing more to
+    // observe of it.
+    if reply["kind"] == "operation_refused" && reply["code"] == "unknown_operation" {
+        return Err(Failure::new("not_admitted"));
+    }
     let p = &reply["observation"]["projection"];
     if reply["kind"] != "operation_observed"
         || p["operation_id"] != relayed.operation
