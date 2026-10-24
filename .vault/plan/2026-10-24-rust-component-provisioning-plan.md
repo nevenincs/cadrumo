@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:c4b7fb973d1ff226edbaa37c95e69216437401cbce2696c54a0fd411e4a9c936'
+body_hash: 'sha256:9857e3212adc183c798b9397d5e6874f6190510fa53700bd9a2f0178bc675855'
 ---
 
 # `rust-component-provisioning` plan
@@ -78,6 +78,7 @@ The single binary gains the components role; the desktop calls the engine in pro
 - [x] `P04.S21` - Contain the manager's local AI server on Linux and macOS as the Windows job does, so a crashed or killed manager leaves no server behind; `native/manager/src/supervision/local_ai.rs, native/platform process scope and tests`.
 - [ ] `P04.S23` - Let a second setup of an item that is already being set up follow the running one instead of refusing busy, on the role, the desktop host and the Python client, and cover the busy path in tests; `native/application/src/provisioning/engine.rs, protocol.rs, native/desktop/src-tauri/src/shell/setup/components.rs, src/cadrumo/adapters/outbound/components/ and tests`.
 - [x] `P04.S24` - Word the licence notice of a pinned role model for what it is and show the licence's display name from the pins instead of its SPDX id; `src/cadrumo/_data/dependencies/local_ai_models.toml, dev/env/local_ai_model_pins.py, native/application/src/provisioning/pins.rs and plan.rs, the desktop.setup licence keys, and tests`.
+- [ ] `P04.S25` - Point config provision remove at the components role and retire config provision start, whose server the manager now owns; pass the CADRUMO_PROXY settings to the role from every packaged profile that starts it; find and fix the cause of the intermittent refusing-proxy real-role test; and bring the workstation setup guide in line with the Rust setup; `src/cadrumo/entrypoints/cli/config/provision_cli.py, _provision_command_specs.py, the CLI command policy declarations, native/application-environment.toml, src/cadrumo/adapters/outbound/components/ tests, docs/workstation-setup.md and its translations, and tests`.
 
 ### Phase `P05` - Removal and gates
 
