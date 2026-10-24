@@ -6679,6 +6679,7 @@ tui:
     tools:
       heading: Herramientas
     unavailable:
+      selection_dropped: No se muestra el apunte que selecciona este enlace.
       title: Registros no disponibles
   local_reader:
     card:

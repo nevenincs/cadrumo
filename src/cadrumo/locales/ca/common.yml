@@ -6660,6 +6660,7 @@ tui:
     tools:
       heading: Eines
     unavailable:
+      selection_dropped: No es mostra l'apunt que selecciona aquest enllaç.
       title: Registres no disponibles
   local_reader:
     card:

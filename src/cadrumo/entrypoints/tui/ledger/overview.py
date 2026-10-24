@@ -80,7 +80,21 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
                     Button(tr("tui.ledger.activity_asset.title"), id="ledger-activity-assets"),
                     "tui.ledger.activity_asset.title",
                 )
-            yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
+            yield self._refusal_notice()
+
+    def _refusal_notice(self) -> Static:
+        """The page's notice line, carrying the dropped-selection notice when one applies.
+
+        The notice is kept as a localized widget so a language switch rewords it,
+        while any later message written over it is left alone.
+        """
+        if not self._selection_dropped:
+            return Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
+        key = "tui.ledger.overview.selection_dropped"
+        return localized(
+            Static(tr(key), id="ledger-refusal", classes="ledger-refusal", markup=False),
+            key,
+        )
 
     @override
     async def refresh_language(self) -> None:
@@ -89,10 +103,8 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
         repaint_tables(self, self._populate_view)
 
     def on_mount(self) -> None:
-        """Populate the initially mounted projection, and say what the opening could not do."""
+        """Populate the initially mounted projection."""
         self._populate_view()
-        if self._selection_dropped:
-            self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.overview.selection_dropped"))
 
     def _populate_view(self) -> None:
         """Populate the complete navigation and quality-first summary."""

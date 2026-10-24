@@ -6628,6 +6628,7 @@ tui:
     tools:
       heading: Eszközök
     unavailable:
+      selection_dropped: A hivatkozás által kijelölt tétel nem jelenik meg.
       title: A Nyilvántartás nem érhető el
   local_reader:
     card:

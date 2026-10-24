@@ -50,11 +50,22 @@ type LedgerInternalScreenFactoryV1 = Callable[[LedgerWorkspaceController], Ledge
 class LedgerUnavailableScreen(LedgerWorkspaceScreen):
     """Typed placeholder for an area unavailable in application state."""
 
-    def __init__(self, controller: LedgerWorkspaceController, refusal: LedgerRouteRefusalV1) -> None:
-        """Retain the typed refusal without resolving its protected reason code."""
+    def __init__(
+        self,
+        controller: LedgerWorkspaceController,
+        refusal: LedgerRouteRefusalV1,
+        *,
+        selection_dropped: bool = False,
+    ) -> None:
+        """Retain the typed refusal without resolving its protected reason code.
+
+        ``selection_dropped`` says the page opened with one transaction selected
+        and shows no entry at all, so it says that beside the refusal.
+        """
         super().__init__(controller, id="ledger-unavailable-screen")
         self.refusal = refusal
         self._route_refusal = refusal
+        self._selection_dropped = selection_dropped
 
     @override
     def compose(self) -> ComposeResult:
@@ -77,6 +88,16 @@ class LedgerUnavailableScreen(LedgerWorkspaceScreen):
                 ),
                 self._route_refusal.reason_key,
             )
+            if self._selection_dropped:
+                yield localized(
+                    Static(
+                        tr("tui.ledger.unavailable.selection_dropped"),
+                        id="ledger-selection-dropped",
+                        classes="ledger-refusal",
+                        markup=False,
+                    ),
+                    "tui.ledger.unavailable.selection_dropped",
+                )
 
     def on_mount(self) -> None:
         """Keep the entire workspace vocabulary reachable beside the refusal."""
@@ -136,14 +157,20 @@ _require_total_routes()
 def resolve_ledger_screen(
     controller: LedgerWorkspaceController,
     target: LedgerRouteTargetV1,
+    *,
+    selection_dropped: bool = False,
 ) -> LedgerWorkspaceScreen:
-    """Resolve one internal route without reading state or invoking an action."""
+    """Resolve one internal route without reading state or invoking an action.
+
+    ``selection_dropped`` is carried only to the unavailable page, the one
+    screen that shows no entry whatever was selected.
+    """
     route = _ROUTES_BY_ID[target.destination]
     if route.area is not target.area:
         raise ValueError("Ledger target destination and area disagree")
     refusal = controller.refusal_for(route.area)
     if refusal is not None:
-        return LedgerUnavailableScreen(controller, refusal)
+        return LedgerUnavailableScreen(controller, refusal, selection_dropped=selection_dropped)
     return route.factory(controller)
 
 
@@ -214,12 +241,18 @@ def ledger_screen_factory(
         landing = LedgerWorkspaceArea.ENTRIES if selects_transaction else LedgerWorkspaceArea.OVERVIEW
         area = area_by_action.get(context.action_candidate_id or "", landing)
         if controller.refusal_for(area) is not None:
-            # The overview shows no entry, so the selection is dropped there
-            # and the page says so.
-            if selects_transaction and controller.refusal_for(LedgerWorkspaceArea.OVERVIEW) is None:
+            # The overview shows no entry, so a selection is dropped there and
+            # the page says so. Only the entries were asked for by the
+            # selection; another area picked by an action is not the selection's
+            # landing, and the overview's notice names the entries.
+            if (
+                selects_transaction
+                and area is LedgerWorkspaceArea.ENTRIES
+                and controller.refusal_for(LedgerWorkspaceArea.OVERVIEW) is None
+            ):
                 return LedgerOverviewScreen(controller, selection_dropped=True)
             area = LedgerWorkspaceArea.OVERVIEW
-        return resolve_ledger_screen(controller, controller.route_target(area))
+        return resolve_ledger_screen(controller, controller.route_target(area), selection_dropped=selects_transaction)
 
     return create
 

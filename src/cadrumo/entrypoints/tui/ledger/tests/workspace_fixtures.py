@@ -30,7 +30,7 @@ from .....core.period import Period
 from .....domain.transactions.models import BucketTransactionRef
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
-from ..controller import LedgerWorkspaceController
+from ..controller import LEDGER_TRANSACTION_FOCUS, LedgerWorkspaceController
 from ..models import LedgerClassificationSubmissionV1
 from ..workspace_injection import LedgerWorkspaceInjection
 from .review_door_fixtures import MemoryLedgerReviewDoor, projection_review_rows
@@ -124,7 +124,7 @@ def ledger_focused_context(transaction_id: TransactionId) -> TuiScreenContextV1:
         destination="workbench.ledger",
         focus=TuiFocusIdentityV1(
             destination="workbench.ledger",
-            semantic_key="ledger.transaction",
+            semantic_key=LEDGER_TRANSACTION_FOCUS,
             restore_token=transaction_id,
         ),
     )

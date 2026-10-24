@@ -6547,6 +6547,7 @@ tui:
     tools:
       heading: Tools
     unavailable:
+      selection_dropped: The entry this link selects is not shown.
       title: Records unavailable
   local_reader:
     card:
