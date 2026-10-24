@@ -135,6 +135,7 @@ def test_request_json_roundtrip_keeps_decimal_meaning_and_refuses_incomplete_lin
         ),
         pytest.param({"iva_category": "UNDECLARED_CATEGORY"}, id="iva-category"),
         pytest.param({"invoice_class": "UNDECLARED_CLASS"}, id="invoice-class"),
+        pytest.param({"invoice_class": "ordinaria"}, id="invoice-class-not-spelled-as-its-token"),
     ),
 )
 def test_undeclared_registry_tokens_are_validation_refusals(overrides: dict[str, object], monkeypatch) -> None:

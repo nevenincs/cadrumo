@@ -305,11 +305,14 @@ class LedgerImportDoorV1(Protocol):
 
 
 class LedgerInvoiceClassChoice(StrEnum):
-    """The invoice classes an operator may state; the registry resolves each token."""
+    """The invoice classes an operator may state, spelled as the registry's tokens.
 
-    ORDINARIA = "ordinaria"
-    SIMPLIFICADA = "simplificada"
-    RECTIFICATIVA = "rectificativa"
+    The add path matches the token exactly, so a lowercase spelling is refused.
+    """
+
+    ORDINARIA = "ORDINARIA"
+    SIMPLIFICADA = "SIMPLIFICADA"
+    RECTIFICATIVA = "RECTIFICATIVA"
 
 
 class LedgerInvoiceLineEntryV1(BaseModel):
