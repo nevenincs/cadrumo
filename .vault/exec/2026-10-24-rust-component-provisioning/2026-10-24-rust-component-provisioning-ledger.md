@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:7ba80bb324a0cc1a9df9d402688f22dff842187cfdf1095bf0b4e5306d1008ba'
+body_hash: 'sha256:a72615e64c80ec8f1ef2f3a2a8663d20b60a8ea0b2740c1808b8d66ff3981b03'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -437,6 +437,41 @@ related:
 - `S19` `verify:` `ruff check, ruff format --check, ty check on the 15 touched Python files` -> `pass`
 - `S19` `verify:` `lint-imports (28 kept; 2 broken through uncommitted application/diagnostics.py, no chain touches this Step's modules)` -> `pass`
 - `S19` `by:` `implementation-engineer-high`
+- `S24` `M` `src/cadrumo/_data/dependencies/local_ai_models.toml`
+- `S24` `M` `dev/env/local_ai_model_pins.py`
+- `S24` `M` `src/cadrumo/core/local_ai_pins.py`
+- `S24` `M` `src/cadrumo/core/model_catalogue.py`
+- `S24` `M` `src/cadrumo/core/tests/test_local_ai_pins.py`
+- `S24` `M` `src/cadrumo/application/provisioning.py`
+- `S24` `M` `src/cadrumo/application/tests/test_model_selection.py`
+- `S24` `M` `src/cadrumo/locales/en/common.yml`
+- `S24` `M` `src/cadrumo/locales/es/common.yml`
+- `S24` `M` `src/cadrumo/locales/ca/common.yml`
+- `S24` `M` `src/cadrumo/locales/hu/common.yml`
+- `S24` `M` `native/application/src/provisioning/pins.rs`
+- `S24` `M` `native/application/src/provisioning/plan.rs`
+- `S24` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S24` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S24` `M` `native/application/src/provisioning/local_ai/program.rs`
+- `S24` `M` `native/application/src/provisioning/protocol/tests.rs`
+- `S24` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S24` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S24` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S24` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S24` `M` `native/desktop/frontend/tests/scenarios/setup.spec.ts`
+- `S24` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S24` `verify:` `cargo test --offline --lib provisioning:: on native/application (124 passed)` -> `pass`
+- `S24` `verify:` `cargo clippy --all-targets -D warnings on native/application, without features and --all-features` -> `pass`
+- `S24` `verify:` `cargo fmt --check on native/application; desktop crate diffs only in foreign files shell/mod.rs and shell/modelo/tests.rs` -> `pass`
+- `S24` `verify:` `plan digest df1b8e83f91043fa9cda0b79ccba1ce340951139939674203b964efe1884a824 recomputed by hand-written document through Python content_hash_hex; the same method reproduces the former df55d305 value` -> `pass`
+- `S24` `verify:` `pytest test_local_ai_pins.py test_model_catalogue.py dev/env test_local_ai_model_pins.py test_local_ai_pins.py test_model_selection.py (91 passed)` -> `pass`
+- `S24` `verify:` `python -m dev.env.local_ai_pins --check` -> `pass`
+- `S24` `verify:` `ruff check, ruff format --check, ty check on the touched Python` -> `pass`
+- `S24` `verify:` `dev.locales.desktop_chrome generation with --shell-source` -> `pass`
+- `S24` `verify:` `prettier --check on the touched frontend files` -> `pass`
+- `S24` `verify:` `just check-locales (blocking findings are 15295 inventory violations and 17 desktop keys of other work; the S24 keys are defined in four locales)` -> `fail`
+- `S24` `verify:` `desktop cargo test --bin cadrumo shell::setup and clippy (not run: the crate needs the CMake identity projection and prepared tauri host, which this worker may not build)` -> `fail`
+- `S24` `by:` `implementation-engineer-standard`
 
 ## Notes
 
@@ -489,3 +524,4 @@ related:
 - `S19` S19 the shared browser cache's record is registered once per test run by the root conftest and written into each real-browser test's storage root by `open_real_browser_session` and three explicit call sites; the widely shared storage-root helpers in `secure_sql.py` are left unchanged so no unrelated storage inventory sees an extra file
 - `S19` S19 the consumer gate's `shared_playwright_runtime` driver sets `PLAYWRIGHT_BROWSERS_PATH` to its empty root before the page factory refuses, and nothing restores it outside adapters/outbound/aeat, so later Chromium docs tests on the same xdist worker fail; they pass alone; the gate file belongs to the on-demand lane
 - `S19` S19 this checkout's dev storage var/storage holds browser builds but no engine record, so product browser work there refuses until cadrumo --role components setup adopts them (0 bytes)
+- `S24` Plan contract version 1 -> 2: every plan part gains licence (null for the program, `spdx_id` and name for a model). The P04.S12 Python decoder must follow.

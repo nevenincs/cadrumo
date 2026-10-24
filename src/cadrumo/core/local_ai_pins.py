@@ -42,7 +42,11 @@ type _HostName = Annotated[str, StringConstraints(pattern=r"^[a-z0-9](?:[a-z0-9.
 
 
 class LocalAiModelPin(BaseModel):
-    """One local model: its tested manifest digest, download size, memory floor and licence."""
+    """One local model: its tested manifest digest, download size, memory floor and licence.
+
+    ``licence`` is the licence's SPDX identifier and ``licence_name`` its own
+    title, the words a licence notice names it by.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -51,6 +55,7 @@ class LocalAiModelPin(BaseModel):
     download_bytes: PositiveInt
     memory_bytes: PositiveInt
     licence: str = Field(min_length=1, max_length=128)
+    licence_name: str = Field(min_length=1, max_length=128, pattern=r"^\S(?:[^\x00-\x1f\x7f-\x9f]*\S)?$")
     commercial_use_permitted: bool
 
 

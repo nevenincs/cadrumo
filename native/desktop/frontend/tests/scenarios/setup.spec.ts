@@ -227,7 +227,7 @@ test("the plan is summed up, its detail stays closed, and approving runs every c
   await expect(shown.locator("[data-setup-licence]")).toHaveText(
     label("desktop.setup.licence_non_commercial", {
       model: "qwen2.5vl:3b",
-      licence: "LicenseRef-Qwen-Research",
+      licence: "Qwen RESEARCH LICENSE AGREEMENT",
     }),
   );
   await expect(shown.locator("[data-setup-plan]").first()).toBeHidden();

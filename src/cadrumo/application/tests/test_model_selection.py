@@ -39,6 +39,7 @@ from ..provisioning import (
     HardwareProfile,
     SystemMemoryReading,
     binding_free_bytes,
+    model_licence_notice,
     probe_hardware_profile,
     select_model_for_role,
 )
@@ -303,6 +304,38 @@ def test_the_licence_advisory_renders_in_every_shipped_locale() -> None:
         assert research.runtime_id in advisory
         rendered.add(advisory)
     assert len(rendered) == 4, "two locales render identically; one is untranslated"
+
+
+def test_a_planned_barred_model_is_noticed_by_its_licence_title_not_as_a_chosen_override() -> None:
+    """The plan notice names the licence by its title and is not the override advisory's sentence."""
+    research = next(
+        candidate
+        for candidate in candidates_for_role(ModelRole.VISION_TRANSCRIPTION)
+        if not candidate.licence.commercial_use_permitted
+    )
+    target = f"{research.runtime_id}@{'a' * 64}"
+    barred = (ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED,)
+    rendered: set[str] = set()
+    for language in ("en", "es", "ca", "hu"):
+        notice = model_licence_notice(target, barred, locale=language)
+        with override_settings(cadrumo_output_language=language):
+            advisory = select_model_for_role(
+                ModelRole.VISION_TRANSCRIPTION, profile=_cuda_profile(14 * _GIB), override=research.runtime_id
+            ).licence_advisory
+        assert notice is not None, f"{language} has no plan notice"
+        assert "%{" not in notice, f"{language} left a placeholder un-interpolated"
+        assert research.runtime_id in notice
+        assert research.licence.name in notice
+        assert research.licence.spdx_id not in notice
+        assert notice != advisory, f"{language} words a planned model as one the person named"
+        rendered.add(notice)
+    assert len(rendered) == 4, "two locales render identically; one is untranslated"
+    assert model_licence_notice(target, ()) is None
+    assert model_licence_notice(None, barred) is None
+    permitted = model_candidate(default_model_runtime_id(ModelRole.TEXT_EXTRACTION))
+    assert permitted is not None
+    assert permitted.licence.commercial_use_permitted
+    assert model_licence_notice(f"{permitted.runtime_id}@{'a' * 64}", ()) is None
 
 
 def test_an_uncatalogued_override_is_honoured_but_makes_no_licence_claim() -> None:

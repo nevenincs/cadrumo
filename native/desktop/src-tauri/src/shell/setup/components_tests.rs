@@ -217,10 +217,8 @@ impl Fixture {
                 }),
                 policy: RetryPolicy::default(),
             };
-            let models = config.pins.models.clone();
             Ok(Installation {
                 engine: Engine::new(config)?,
-                models,
             })
         })
     }
@@ -574,10 +572,7 @@ async fn a_full_check_replaces_the_rows_it_read() {
 #[test]
 fn a_shared_download_is_counted_once_and_a_barred_licence_is_named() {
     use cadrumo_application::{
-        provisioning::{
-            pins::ModelPins,
-            plan::{PlanEntry, PlanPart},
-        },
+        provisioning::plan::{PartLicence, PlanEntry, PlanPart},
         value::HostName,
     };
     let host = || vec![HostName::new("registry.ollama.ai").unwrap()];
@@ -589,6 +584,10 @@ fn a_shared_download_is_counted_once_and_a_barred_licence_is_named() {
         installs_outside_program: false,
         target_version: Some(format!("{model}@{}", "a".repeat(64))),
         advisories,
+        licence: Some(PartLicence {
+            spdx_id: "LicenseRef-Qwen-Research".into(),
+            name: "Qwen RESEARCH LICENSE AGREEMENT".into(),
+        }),
     };
     let entry = PlanEntry::of_parts(
         ItemId::LocalAi,
@@ -608,14 +607,7 @@ fn a_shared_download_is_counted_once_and_a_barred_licence_is_named() {
     )
     .unwrap();
     let plan = SetupPlan::new(vec![entry], Some(512 * GIB)).unwrap();
-    let models = ModelPins::parse(
-        "hosts = [\"registry.ollama.ai\"]\n[roles]\ntext_extraction = \"qwen2.5:3b\"\n\
-         [[models]]\nname = \"qwen2.5:3b\"\nmanifest_digest = \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\n\
-         download_bytes = 100\nmemory_bytes = 100\nlicence = \"LicenseRef-Qwen-Research\"\n\
-         commercial_use_permitted = false\n",
-    )
-    .unwrap();
-    let shown = review_view(&plan, &Locations::under(Path::new("/state")), Some(&models));
+    let shown = review_view(&plan, &Locations::under(Path::new("/state")));
     let entry = &shown.entries[0];
     assert_eq!(
         entry
@@ -629,7 +621,7 @@ fn a_shared_download_is_counted_once_and_a_barred_licence_is_named() {
         entry.licences,
         [wire::Licence {
             model: "qwen2.5:3b".into(),
-            licence: "LicenseRef-Qwen-Research".into(),
+            licence: "Qwen RESEARCH LICENSE AGREEMENT".into(),
         }]
     );
     assert_eq!(

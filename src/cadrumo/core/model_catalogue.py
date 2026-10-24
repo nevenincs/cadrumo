@@ -466,15 +466,20 @@ def _local_candidate(
 ) -> ModelCandidate:
     """Return a local candidate whose memory floor and tested weights come from the model pin table.
 
-    The table also states each model's licence for the native engine, which
-    shows licence notices before a download; it must say what this catalogue
-    verified, so a disagreement refuses the import rather than drifting.
+    The table also states each model's licence, by identifier and display
+    name, for the native engine, which shows licence notices before a download;
+    it must say what this catalogue verified, so a disagreement refuses the
+    import rather than drifting.
     """
     pin = _MODEL_PINS.model(runtime_id)
     if pin is None:
         msg = f"local candidate {runtime_id!r} has no entry in the model pin table"
         raise ValueError(msg)
-    if pin.licence != licence.spdx_id or pin.commercial_use_permitted != licence.commercial_use_permitted:
+    if (pin.licence, pin.licence_name, pin.commercial_use_permitted) != (
+        licence.spdx_id,
+        licence.name,
+        licence.commercial_use_permitted,
+    ):
         msg = f"the model pin table states another licence for {runtime_id!r} than the catalogue verified"
         raise ValueError(msg)
     return ModelCandidate(

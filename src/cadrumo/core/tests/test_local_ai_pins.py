@@ -19,10 +19,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _DIGEST = "ab" * 32
 
 
-def _model(name: str = "qwen3:1.7b", *, digest: str = _DIGEST, size: int = 10) -> str:
+def _model(
+    name: str = "qwen3:1.7b", *, digest: str = _DIGEST, size: int = 10, licence_name: str = "Apache License 2.0"
+) -> str:
     return (
         f'\n[[models]]\nname = "{name}"\nmanifest_digest = "{digest}"\ndownload_bytes = {size}\n'
-        'memory_bytes = 20\nlicence = "Apache-2.0"\ncommercial_use_permitted = true\n'
+        f'memory_bytes = 20\nlicence = "Apache-2.0"\nlicence_name = "{licence_name}"\n'
+        "commercial_use_permitted = true\n"
     )
 
 
@@ -50,6 +53,9 @@ def test_a_well_formed_table_loads() -> None:
         _table(_model("Qwen3")),
         _table(_model(), hosts="[]"),
         _table(_model(), hosts='["registry.ollama.ai", "registry.ollama.ai"]'),
+        _table(_model(licence_name="")),
+        _table(_model(licence_name=" Apache License 2.0")),
+        _table(_model(licence_name="Apache\\nLicense 2.0")),
     ),
 )
 def test_a_table_that_could_admit_other_weights_or_roles_is_refused(text: str) -> None:
@@ -76,7 +82,8 @@ def test_the_catalogue_reads_its_local_defaults_floors_and_weights_from_the_bund
             pin.download_bytes,
         )
         assert candidate.memory_requirement_bytes == pin.memory_bytes
-        assert (candidate.licence.spdx_id, candidate.licence.commercial_use_permitted) == (
+        assert (candidate.licence.spdx_id, candidate.licence.name, candidate.licence.commercial_use_permitted) == (
             pin.licence,
+            pin.licence_name,
             pin.commercial_use_permitted,
         )

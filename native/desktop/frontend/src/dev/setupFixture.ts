@@ -119,7 +119,7 @@ function seeds(): Seed[] {
         shares_download_with: null,
         advisories: ["licence_commercial_use_barred"],
         licences: [
-          { model: "qwen2.5vl:3b", licence: "LicenseRef-Qwen-Research" },
+          { model: "qwen2.5vl:3b", licence: "Qwen RESEARCH LICENSE AGREEMENT" },
         ],
         parts: [
           { part: "program", download_bytes: null },

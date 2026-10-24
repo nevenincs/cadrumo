@@ -1247,6 +1247,7 @@ desktop:
       status: Státusz
       taxable_base: Adóalap
     columns:
+      earlier_name: 'Előző oszlopok: {count} · görgess vissza'
       list: Megjelenített oszlopok
       more_name: 'További oszlopok: {count} · görgess oda'
       move_down: '{column} lejjebb'
@@ -3541,9 +3542,8 @@ desktop:
     lead_running: Ezt bezárhatod; a beállítás folytatódik, és a Beállításokban látod,
       hogy áll.
     licence_non_commercial: A(z) {model} modellre a(z) {licence} vonatkozik, amely
-      nem engedélyezi a kereskedelmi felhasználást. Ezt kifejezetten te adtad meg,
-      ezért a Cadrumo használni fogja, de kereskedelmi könyvelői tevékenységhez külön
-      licencet kell kérni a kiadótól.
+      nem engedélyezi a kereskedelmi felhasználást. Ha kereskedelmi könyvelői tevékenységhez
+      használod, külön licencet kell kérned a kiadótól.
     not_now: Most nem
     note:
       downloaded_not_loaded: Letöltve, még nincs betöltve.
@@ -4158,6 +4158,9 @@ provisioning:
         amely nem engedélyezi a kereskedelmi felhasználást. Ezt kifejezetten te adtad
         meg, ezért a Cadrumo használni fogja, de kereskedelmi könyvelői tevékenységhez
         külön licencet kell kérni a kiadótól.
+      plan_non_commercial: A(z) %{model} modellre a(z) %{licence} vonatkozik, amely
+        nem engedélyezi a kereskedelmi felhasználást. Ha kereskedelmi könyvelői tevékenységhez
+        használod, külön licencet kell kérned a kiadótól.
   role:
     column_role_mapping: táblázatoszlopokhoz
     supply_nature_proposal: az eladás vagy vásárlás típusához

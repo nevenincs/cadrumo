@@ -9,7 +9,7 @@
 //! - `local_ai_program.toml`: the local AI program's official standalone archive per
 //!   platform, with its format, executable, size and SHA-256.
 //! - `local_ai_models.toml`: the model each role reads with, and every pinned model's
-//!   manifest digest, size, memory floor and licence.
+//!   manifest digest, size, memory floor and licence, with the licence's display name.
 //!
 //! A table this build does not carry reads as `None`: the item it pins is not in this
 //! build. A table that is present but malformed is refused rather than read partly.
@@ -295,6 +295,7 @@ struct RawModel {
     download_bytes: u64,
     memory_bytes: u64,
     licence: String,
+    licence_name: String,
     commercial_use_permitted: bool,
 }
 
@@ -314,7 +315,10 @@ pub struct ModelPin {
     pub download_bytes: u64,
     /// The publisher's stated weight size: the requirement before any safety margin.
     pub memory_bytes: u64,
+    /// The licence's SPDX identifier, or its `LicenseRef-` identifier when unlisted.
     pub licence: String,
+    /// The licence's own title, as a notice names it to a person.
+    pub licence_name: String,
     pub commercial_use_permitted: bool,
 }
 
@@ -338,6 +342,7 @@ impl ModelPins {
                 || model.memory_bytes == 0
                 || model.licence.is_empty()
                 || model.licence.len() > 128
+                || !display_name(&model.licence_name)
                 || !names.insert(model.name.clone())
             {
                 return Err(invalid("model pin"));
@@ -348,6 +353,7 @@ impl ModelPins {
                 download_bytes: model.download_bytes,
                 memory_bytes: model.memory_bytes,
                 licence: model.licence,
+                licence_name: model.licence_name,
                 commercial_use_permitted: model.commercial_use_permitted,
             });
         }
@@ -460,6 +466,14 @@ fn archive_path(value: &str) -> bool {
         && value.split('/').count() > 1
 }
 
+/// A name shown to a person as it is written: one trimmed line of at most 128 bytes.
+fn display_name(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 128
+        && value.trim() == value
+        && !value.chars().any(char::is_control)
+}
+
 fn model_name(value: &str) -> bool {
     let part = |text: &str| {
         text.bytes()
@@ -526,6 +540,15 @@ mod tests {
         for model in models.roles.values() {
             assert!(models.model(model).unwrap().commercial_use_permitted);
         }
+        let research = models.model("qwen2.5:3b").unwrap();
+        assert_eq!(
+            (research.licence.as_str(), research.licence_name.as_str()),
+            (
+                "LicenseRef-Qwen-Research",
+                "Qwen RESEARCH LICENSE AGREEMENT"
+            )
+        );
+        assert!(!research.commercial_use_permitted);
     }
 
     #[test]
@@ -639,6 +662,19 @@ mod tests {
             ("name = \"moondream:1.8b\"", "name = \"qwen3:1.7b\""),
             ("memory_bytes = 1700000000", "memory_bytes = 0"),
             ("name = \"moondream:1.8b\"", "name = \"Moondream\""),
+            (
+                "licence_name = \"Apache License 2.0\"",
+                "licence_name = \"\"",
+            ),
+            (
+                "licence_name = \"Apache License 2.0\"",
+                "licence_name = \" Apache License 2.0\"",
+            ),
+            (
+                "licence_name = \"Apache License 2.0\"",
+                "licence_name = \"Apache\\u0007License 2.0\"",
+            ),
+            ("licence_name = \"Apache License 2.0\"\n", ""),
         ];
         for (old, new) in models {
             assert!(

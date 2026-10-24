@@ -1265,6 +1265,7 @@ desktop:
       status: Estat
       taxable_base: Base imposable
     columns:
+      earlier_name: 'Columnes anteriors: {count} · torna-hi'
       list: Columnes mostrades
       more_name: 'Més columnes: {count} · desplaça''t fins a elles'
       move_down: Baixa {column}
@@ -3565,9 +3566,8 @@ desktop:
     lead_running: Pots tancar això; la configuració continua i Configuració mostra
       com va.
     licence_non_commercial: El model {model} està subjecte a la {licence}, que no
-      permet l'ús comercial. L'has indicat tu de manera explícita, així que Cadrumo
-      l'utilitzarà, però una gestoria comercial necessita una llicència a part de
-      l'editor.
+      permet l'ús comercial. Si l'utilitzes en una gestoria comercial, necessites
+      una llicència a part de l'editor.
     not_now: Ara no
     note:
       downloaded_not_loaded: Baixat, encara sense carregar.
@@ -4181,6 +4181,9 @@ provisioning:
         no permet l'ús comercial. L'has indicat tu de manera explícita, així que Cadrumo
         l'utilitzarà, però una gestoria comercial necessita una llicència a part de
         l'editor.
+      plan_non_commercial: El model %{model} està subjecte a la %{licence}, que no
+        permet l'ús comercial. Si l'utilitzes en una gestoria comercial, necessites
+        una llicència a part de l'editor.
   role:
     column_role_mapping: per a columnes de taules
     supply_nature_proposal: per al tipus de venda o compra

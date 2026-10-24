@@ -1233,6 +1233,7 @@ desktop:
       status: Status
       taxable_base: Taxable base
     columns:
+      earlier_name: 'Earlier columns: {count} · scroll back to them'
       list: Columns shown
       more_name: 'More columns: {count} · scroll to them'
       move_down: Move {column} down
@@ -3508,8 +3509,8 @@ desktop:
     lead_running: You can close this; setup keeps going and Settings shows how it's
       doing.
     licence_non_commercial: Model {model} is covered by the {licence}, which does
-      not permit commercial use. You named it explicitly, so Cadrumo will use it,
-      but a commercial filing practice needs a separate licence from the publisher.
+      not permit commercial use. Using it in a commercial filing practice needs a
+      separate licence from its publisher.
     not_now: Not now
     note:
       downloaded_not_loaded: Downloaded, not loaded yet.
@@ -4107,6 +4108,9 @@ provisioning:
       non_commercial_advisory: Model %{model} is covered by the %{licence}, which
         does not permit commercial use. You named it explicitly, so Cadrumo will use
         it, but a commercial filing practice needs a separate licence from the publisher.
+      plan_non_commercial: Model %{model} is covered by the %{licence}, which does
+        not permit commercial use. Using it in a commercial filing practice needs
+        a separate licence from its publisher.
   role:
     column_role_mapping: for table columns
     supply_nature_proposal: for the kind of sale or purchase

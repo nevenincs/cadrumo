@@ -27,7 +27,6 @@ use cadrumo_application::{
         failure::FailureCategory,
         items::{Destination, ItemId, Locations},
         local_ai::hardware::Hardware,
-        pins::ModelPins,
         plan::{Advisory, PlanEntry, SetupPlan},
         role_host,
         state::{
@@ -44,10 +43,9 @@ use std::{
 };
 use tokio::sync::watch;
 
-/// One engine of this installation, with the model pins its plans name.
+/// One engine of this installation.
 pub struct Installation {
     pub engine: Engine,
-    pub models: Option<ModelPins>,
 }
 
 /// Builds an engine for one command.
@@ -66,10 +64,8 @@ pub fn installation() -> Arc<Engines> {
         let mut config = role_host::installation_config()?;
         let measured = *hardware.get_or_init(|| Hardware::measure(&*config.ambient));
         config.hardware = Some(measured);
-        let models = config.pins.models.clone();
         Ok(Installation {
             engine: Engine::new(config)?,
-            models,
         })
     })
 }
@@ -535,7 +531,7 @@ fn run_setup(
     resume: bool,
     cancellation: &Cancellation,
 ) {
-    let Installation { mut engine, models } = match engines() {
+    let Installation { mut engine } = match engines() {
         Ok(installation) => installation,
         Err(_) => {
             shared.update(|window| {
@@ -569,10 +565,7 @@ fn run_setup(
                     track.answered = true;
                     return Some(Answer::Approve(digest.clone()));
                 }
-                track.review = Some((
-                    digest.as_str().to_owned(),
-                    review_view(plan, &locations, models.as_ref()),
-                ));
+                track.review = Some((digest.as_str().to_owned(), review_view(plan, &locations)));
                 track.answers = Some(answers);
                 track.answered = false;
                 track.stage = RunStage::Review;
@@ -734,42 +727,28 @@ fn download_key(destination: Option<Destination>, version: Option<&String>) -> O
     Some((destination?, version?.clone()))
 }
 
-fn licences(entry: &PlanEntry, models: Option<&ModelPins>) -> Vec<wire::Licence> {
-    let barred =
-        |advisories: &[Advisory]| advisories.contains(&Advisory::LicenceCommercialUseBarred);
-    let targets: Vec<&String> = if entry.parts.is_empty() {
-        entry
-            .target_version
-            .iter()
-            .filter(|_| barred(&entry.advisories))
-            .collect()
-    } else {
-        entry
-            .parts
-            .iter()
-            .filter(|part| barred(&part.advisories))
-            .filter_map(|part| part.target_version.as_ref())
-            .collect()
-    };
-    let found: BTreeSet<wire::Licence> = targets
-        .into_iter()
-        .filter_map(|target| {
-            let model = target.split('@').next()?;
-            let pin = models?.models.iter().find(|pin| pin.name == model)?;
+/// Each planned model whose licence bars commercial use, with the licence's display name
+/// as the plan carries it; roles sharing a model name it once.
+fn licences(entry: &PlanEntry) -> Vec<wire::Licence> {
+    let found: BTreeSet<wire::Licence> = entry
+        .parts
+        .iter()
+        .filter(|part| {
+            part.advisories
+                .contains(&Advisory::LicenceCommercialUseBarred)
+        })
+        .filter_map(|part| {
+            let model = part.target_version.as_deref()?.split('@').next()?;
             Some(wire::Licence {
                 model: model.to_owned(),
-                licence: pin.licence.clone(),
+                licence: part.licence.as_ref()?.name.clone(),
             })
         })
         .collect();
     found.into_iter().collect()
 }
 
-fn review_view(
-    plan: &SetupPlan,
-    locations: &Locations,
-    models: Option<&ModelPins>,
-) -> wire::Review {
+fn review_view(plan: &SetupPlan, locations: &Locations) -> wire::Review {
     let mut first_by_download: BTreeMap<DownloadKey, ItemId> = BTreeMap::new();
     let entries = plan
         .entries
@@ -813,7 +792,7 @@ fn review_view(
                     .iter()
                     .map(|advisory| advice(*advisory))
                     .collect(),
-                licences: licences(entry, models),
+                licences: licences(entry),
                 parts,
             }
         })

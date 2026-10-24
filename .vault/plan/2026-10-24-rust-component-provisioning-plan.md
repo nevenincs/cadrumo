@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:e0569d2741addfe3210c70066066b01f6e39ffa04e723adfcad523c7824d7849'
+body_hash: 'sha256:946b24780ecd71889c45eb9d7d5de8935816d544e02564887ed9a603edcf6bea'
 ---
 
 # `rust-component-provisioning` plan
@@ -77,7 +77,7 @@ The single binary gains the components role; the desktop calls the engine in pro
 - [x] `P04.S19` - Let the components role adopt browser builds already installed without downloading, then point the Python launch guard at the Rust component record, with test support writing the engine's fixture record into each test storage root; `native/application/src/provisioning/browser.rs, src/cadrumo/application/provisioning_browser.py (locate only), src/cadrumo/adapters/outbound/aeat/browser/session.py, the real-browser test support and conftest, and tests`.
 - [x] `P04.S21` - Contain the manager's local AI server on Linux and macOS as the Windows job does, so a crashed or killed manager leaves no server behind; `native/manager/src/supervision/local_ai.rs, native/platform process scope and tests`.
 - [ ] `P04.S23` - Let a second setup of an item that is already being set up follow the running one instead of refusing busy, on the role, the desktop host and the Python client, and cover the busy path in tests; `native/application/src/provisioning/engine.rs, protocol.rs, native/desktop/src-tauri/src/shell/setup/components.rs, src/cadrumo/adapters/outbound/components/ and tests`.
-- [ ] `P04.S24` - Word the licence notice of a pinned role model for what it is and show the licence's display name from the pins instead of its SPDX id; `src/cadrumo/_data/dependencies/local_ai_models.toml, dev/env/local_ai_model_pins.py, native/application/src/provisioning/pins.rs and plan.rs, the desktop.setup licence keys, and tests`.
+- [x] `P04.S24` - Word the licence notice of a pinned role model for what it is and show the licence's display name from the pins instead of its SPDX id; `src/cadrumo/_data/dependencies/local_ai_models.toml, dev/env/local_ai_model_pins.py, native/application/src/provisioning/pins.rs and plan.rs, the desktop.setup licence keys, and tests`.
 
 ### Phase `P05` - Removal and gates
 

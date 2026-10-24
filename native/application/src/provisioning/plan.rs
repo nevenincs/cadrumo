@@ -4,10 +4,11 @@
 //! A plan lists, per item, how much it downloads, from which hosts, to where, and the
 //! licence notices that come with it. The local AI's entry is made of ordered parts, the
 //! program and then each role's model, and is exactly their sum; roles that share one
-//! model count its download once. The digest covers the contract version and every entry
-//! in order, spelled as the product's canonical JSON, so a changed size, host,
-//! destination, version or item set needs a new approval while a re-measured free space
-//! does not.
+//! model count its download once. Each model part names its licence, by identifier and
+//! display name, so a notice can be worded from the plan alone. The digest covers the
+//! contract version and every entry in order, spelled as the product's canonical JSON, so
+//! a changed size, host, destination, version, licence or item set needs a new approval
+//! while a re-measured free space does not.
 
 use super::items::{Destination, ItemId};
 use crate::{
@@ -20,7 +21,7 @@ use serde_json::{Value, json};
 use std::collections::BTreeSet;
 
 /// Folded into every digest so a plan-shape change can never reuse an approval.
-pub const PLAN_CONTRACT_VERSION: u32 = 1;
+pub const PLAN_CONTRACT_VERSION: u32 = 2;
 
 /// Fixed free space kept beyond the planned download, on top of the 20 % margin.
 pub const SPACE_HEADROOM_BYTES: u64 = 1024 * 1024 * 1024;
@@ -46,8 +47,19 @@ pub enum Advisory {
     OverrideNotInCatalogue,
 }
 
+/// The licence a planned model comes under, as the pins state it: locale-neutral facts a
+/// surface words its notice from.
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize)]
+pub struct PartLicence {
+    /// The SPDX identifier, or the `LicenseRef-` identifier of an unlisted licence.
+    pub spdx_id: String,
+    /// The licence's own title, which a notice names it by.
+    pub name: String,
+}
+
 /// One piece of an item's plan: the local AI program, or the model one role reads with.
-/// `download_bytes` is `None` when the source does not say in advance.
+/// `download_bytes` is `None` when the source does not say in advance, and `licence` is
+/// `None` for anything but a model.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PlanPart {
     pub part_id: String,
@@ -57,6 +69,7 @@ pub struct PlanPart {
     pub installs_outside_program: bool,
     pub target_version: Option<String>,
     pub advisories: Vec<Advisory>,
+    pub licence: Option<PartLicence>,
 }
 
 impl PlanPart {
@@ -73,7 +86,17 @@ impl PlanPart {
             "installs_outside_program": self.installs_outside_program,
             "target_version": self.target_version,
             "advisories": self.advisories,
+            "licence": self.licence,
         })
+    }
+
+    /// Whether the part carries a licence notice it cannot word: a commercial-use bar
+    /// without the licence it comes from.
+    fn bars_unnamed_licence(&self) -> bool {
+        self.licence.is_none()
+            && self
+                .advisories
+                .contains(&Advisory::LicenceCommercialUseBarred)
     }
 }
 
@@ -139,6 +162,9 @@ impl PlanEntry {
                 || (part.destination.is_none() && !part.installs_outside_program)
             {
                 return Err(invalid("a part names its id, hosts and destination once"));
+            }
+            if part.bars_unnamed_licence() {
+                return Err(invalid("a licence notice names the licence it is about"));
             }
         }
         if parts.is_empty() {
@@ -305,6 +331,10 @@ mod tests {
             installs_outside_program: false,
             target_version: version.map(str::to_owned),
             advisories,
+            licence: Some(PartLicence {
+                spdx_id: "Apache-2.0".into(),
+                name: "Apache License 2.0".into(),
+            }),
         }
     }
 
@@ -320,8 +350,6 @@ mod tests {
             Some("chromium-1248".into()),
         )
         .unwrap();
-        // The program part as the former plan spelled it, so the digest can be compared
-        // with one the product computed for the same plan.
         let program = PlanPart {
             part_id: "program".into(),
             download_bytes: Some(1_586_229_413),
@@ -330,6 +358,7 @@ mod tests {
             installs_outside_program: true,
             target_version: Some("0.40.10".into()),
             advisories: Vec::new(),
+            licence: None,
         };
         let local = PlanEntry::of_parts(
             ItemId::LocalAi,
@@ -354,10 +383,11 @@ mod tests {
     #[test]
     fn the_digest_is_the_products_digest_of_the_same_plan() {
         let plan = sample();
-        // Computed by the product's `dependency_plan_digest` for this plan.
+        // The SHA-256 of this plan's document, written out by hand and serialised by the
+        // product's Python canonical JSON (`content_hash_hex`), not by this crate.
         assert_eq!(
             plan.digest().as_str(),
-            "df55d305a9b2a358112c7eb955cd3a8927cbeaa081a74a54dc3f06f553a22c08"
+            "df1b8e83f91043fa9cda0b79ccba1ce340951139939674203b964efe1884a824"
         );
         assert_eq!(plan.entries[1].download_bytes, Some(4_835_042_544));
         assert_eq!(plan.space.required_bytes, 7_266_346_760);
@@ -381,6 +411,12 @@ mod tests {
         let mut retargeted = plan.clone();
         retargeted.entries[1].parts[2].target_version = Some("qwen3:1.7b@other".into());
         assert_ne!(retargeted.digest(), plan.digest());
+        let mut relicensed = plan.clone();
+        relicensed.entries[1].parts[1].licence = Some(PartLicence {
+            spdx_id: "Apache-2.0".into(),
+            name: "Apache Licence, Version 2.0".into(),
+        });
+        assert_ne!(relicensed.digest(), plan.digest());
         let browser_only = SetupPlan::new(vec![plan.entries[0].clone()], None).unwrap();
         assert_ne!(browser_only.digest(), plan.digest());
         assert!(
@@ -435,6 +471,11 @@ mod tests {
                 Destination::OllamaModels,
             )
             .is_err()
+        );
+        let mut unnamed = model("a", None, None, vec![Advisory::LicenceCommercialUseBarred]);
+        unnamed.licence = None;
+        assert!(
+            PlanEntry::of_parts(ItemId::LocalAi, vec![unnamed], Destination::OllamaModels).is_err()
         );
         let mut nowhere = model("a", None, None, Vec::new());
         nowhere.destination = None;

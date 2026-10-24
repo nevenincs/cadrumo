@@ -294,7 +294,8 @@ pub struct PlanPart {
 }
 
 /// A planned model whose licence bars commercial use: the model and the
-/// licence the window names in its notice.
+/// licence's display name, as the pins state it, which the window's notice
+/// names.
 #[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Licence {
@@ -907,7 +908,8 @@ mod tests {
             {"part": "text_extraction", "download_bytes": 100},
         ]);
         entry["advisories"] = json!(["licence_commercial_use_barred", "fit_unverified"]);
-        entry["licences"] = json!([{"model": "qwen2.5:3b", "licence": "LicenseRef-Qwen-Research"}]);
+        entry["licences"] =
+            json!([{"model": "qwen2.5:3b", "licence": "Qwen RESEARCH LICENSE AGREEMENT"}]);
         licensed
     }
 

@@ -25,7 +25,7 @@ use crate::{
         failure::FailureCategory,
         items::{Destination, FULL_CHECK_BUDGET, MODEL_ROLES},
         pins::{ModelPin, ModelPins},
-        plan::{Advisory, PlanPart},
+        plan::{Advisory, PartLicence, PlanPart},
         state::{BlockedReason, Observation, StaleReason},
         transfer::{Pacing, RetryPolicy, TransferEvent},
     },
@@ -92,8 +92,8 @@ impl Models {
     }
 
     /// One plan part per catalogue role, in role order: the role's pinned model, from the
-    /// pinned registry, into the models folder. Roles that share a model share its
-    /// target, so the plan counts the download once.
+    /// pinned registry, into the models folder, under the licence the pins name. Roles
+    /// that share a model share its target, so the plan counts the download once.
     pub fn plan_parts(&self) -> Vec<PlanPart> {
         MODEL_ROLES
             .iter()
@@ -111,6 +111,10 @@ impl Models {
                     } else {
                         vec![Advisory::LicenceCommercialUseBarred]
                     },
+                    licence: Some(PartLicence {
+                        spdx_id: pin.licence.clone(),
+                        name: pin.licence_name.clone(),
+                    }),
                 })
             })
             .collect()

@@ -707,7 +707,9 @@ def model_licence_notice(
     ``target`` is the model a setup plan names, optionally followed by
     ``@`` and its pinned digest. Only a catalogued model whose licence bars
     commercial use has a notice: its publisher's text is the evidence the
-    notice repeats.
+    notice repeats. The plan names the model the pins set up for a role, so the
+    notice names the licence by its own title and says what using the model
+    commercially needs, unlike the advisory for a model a person chose.
     """
     if target is None or ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED not in set(advisories):
         return None
@@ -715,7 +717,7 @@ def model_licence_notice(
     if candidate is None:
         return None
     return tr(
-        "provisioning.model.licence.non_commercial_advisory",
+        "provisioning.model.licence.plan_non_commercial",
         model=candidate.runtime_id,
         licence=candidate.licence.name,
         locale=locale,

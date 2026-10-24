@@ -949,6 +949,7 @@ export type SetupPlanPart = {
 /** A planned model whose licence bars commercial use. */
 export type SetupLicence = {
   model: string;
+  /** The licence's display name, as the pins state it. */
   licence: string;
 };
 

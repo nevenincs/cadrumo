@@ -1270,6 +1270,7 @@ desktop:
       status: Estado
       taxable_base: Base imponible
     columns:
+      earlier_name: 'Columnas anteriores: {count} · vuelve a ellas'
       list: Columnas mostradas
       more_name: 'Más columnas: {count} · desplázate hasta ellas'
       move_down: Baja {column}
@@ -3565,8 +3566,8 @@ desktop:
     lead_running: Puedes cerrar esto; la configuración sigue y Ajustes muestra cómo
       va.
     licence_non_commercial: El modelo {model} está sujeto a la {licence}, que no permite
-      el uso comercial. Lo has indicado tú de forma explícita, así que Cadrumo lo
-      utilizará, pero una gestoría comercial necesita una licencia aparte del editor.
+      el uso comercial. Si lo usas en una gestoría comercial, necesitas una licencia
+      aparte del editor.
     not_now: Ahora no
     note:
       downloaded_not_loaded: Descargado, aún sin cargar.
@@ -4185,6 +4186,9 @@ provisioning:
         no permite el uso comercial. Lo has indicado tú de forma explícita, así que
         Cadrumo lo utilizará, pero una gestoría comercial necesita una licencia aparte
         del editor.
+      plan_non_commercial: El modelo %{model} está sujeto a la %{licence}, que no
+        permite el uso comercial. Si lo usas en una gestoría comercial, necesitas
+        una licencia aparte del editor.
   role:
     column_role_mapping: para columnas de tablas
     supply_nature_proposal: para el tipo de venta o compra

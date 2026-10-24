@@ -80,9 +80,11 @@ fn pins(text: &Stored, vision: &Stored) -> ModelPins {
          vision_transcription = \"qwen3-vl:2b\"\ntext_extraction = \"qwen3:1.7b\"\n\
          column_role_mapping = \"qwen3:1.7b\"\nsupply_nature_proposal = \"qwen3:1.7b\"\n\n\
          [[models]]\nname = \"qwen3:1.7b\"\nmanifest_digest = \"{}\"\ndownload_bytes = {}\n\
-         memory_bytes = {}\nlicence = \"Apache-2.0\"\ncommercial_use_permitted = true\n\n\
+         memory_bytes = {}\nlicence = \"Apache-2.0\"\nlicence_name = \"Apache License 2.0\"\n\
+         commercial_use_permitted = true\n\n\
          [[models]]\nname = \"qwen3-vl:2b\"\nmanifest_digest = \"{}\"\ndownload_bytes = {}\n\
-         memory_bytes = {}\nlicence = \"Apache-2.0\"\ncommercial_use_permitted = true\n",
+         memory_bytes = {}\nlicence = \"Apache-2.0\"\nlicence_name = \"Apache License 2.0\"\n\
+         commercial_use_permitted = true\n",
         text.digest(),
         text.size(),
         2 * GIB,
@@ -159,6 +161,7 @@ fn the_plan_has_a_part_per_role_and_counts_a_shared_model_once() {
         installs_outside_program: false,
         target_version: Some("1.0.0".into()),
         advisories: Vec::new(),
+        licence: None,
     };
     let entry = PlanEntry::of_parts(
         ItemId::LocalAi,

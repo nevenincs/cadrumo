@@ -308,9 +308,11 @@ impl World {
                  vision_transcription = \"qwen3-vl:2b\"\ntext_extraction = \"qwen3:1.7b\"\n\
                  column_role_mapping = \"qwen3:1.7b\"\nsupply_nature_proposal = \"qwen3:1.7b\"\n\n\
                  [[models]]\nname = \"qwen3:1.7b\"\nmanifest_digest = \"{}\"\ndownload_bytes = {}\n\
-                 memory_bytes = {}\nlicence = \"Apache-2.0\"\ncommercial_use_permitted = true\n\n\
+                 memory_bytes = {}\nlicence = \"Apache-2.0\"\nlicence_name = \"Apache License 2.0\"\n\
+                 commercial_use_permitted = true\n\n\
                  [[models]]\nname = \"qwen3-vl:2b\"\nmanifest_digest = \"{}\"\ndownload_bytes = {}\n\
-                 memory_bytes = {}\nlicence = \"Apache-2.0\"\ncommercial_use_permitted = true\n",
+                 memory_bytes = {}\nlicence = \"Apache-2.0\"\nlicence_name = \"Apache License 2.0\"\n\
+                 commercial_use_permitted = true\n",
                 text.digest(),
                 text.size(),
                 2 * GIB,
@@ -552,12 +554,24 @@ impl Role {
 }
 
 /// No line carries words: every string is a code, an id, a version, a host, a path or
-/// a digest, none of which holds a space.
+/// a digest, none of which holds a space. The one exception is a licence's own title,
+/// a proper name that reads the same in every locale.
 fn assert_locale_neutral(value: &Value) {
     match value {
         Value::String(text) => assert!(!text.contains(char::is_whitespace), "{text:?}"),
         Value::Array(values) => values.iter().for_each(assert_locale_neutral),
-        Value::Object(map) => map.values().for_each(assert_locale_neutral),
+        Value::Object(map) => {
+            for (key, value) in map {
+                match (key.as_str(), value) {
+                    ("licence", Value::Object(licence)) => {
+                        assert_eq!(licence.len(), 2, "{licence:?}");
+                        assert!(licence["name"].is_string(), "{licence:?}");
+                        assert_locale_neutral(&licence["spdx_id"]);
+                    }
+                    _ => assert_locale_neutral(value),
+                }
+            }
+        }
         _ => {}
     }
 }
@@ -969,6 +983,15 @@ fn the_local_ai_installs_its_program_pulls_each_model_once_and_checks_every_role
             "supply_nature_proposal"
         ]
     );
+    assert_eq!(review["plan"]["contract_version"], 2);
+    let parts = entry["parts"].as_array().unwrap();
+    assert_eq!(parts[0]["licence"], Value::Null);
+    for part in &parts[1..] {
+        assert_eq!(
+            part["licence"],
+            json!({"spdx_id": "Apache-2.0", "name": "Apache License 2.0"})
+        );
+    }
     let total = entry["download_bytes"].as_u64().unwrap();
     assert_eq!(
         total,
