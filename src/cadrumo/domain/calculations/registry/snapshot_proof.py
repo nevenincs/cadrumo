@@ -406,14 +406,21 @@ def _intersect_windows(
 
 
 def _is_expected_ladder_refusal(error: CadrumoError, grade: RegistryAuthorityGrade) -> bool:
-    """Say whether ``error`` is the grade ceiling refusing a grade above the revision's declaration."""
+    """Say whether ``error`` is the grade ceiling refusing a grade above the revision's declaration.
+
+    A revision that declares no grade claims nothing, so no grade lies at or
+    below its declaration and the ceiling refusing it is always expected.
+    """
     if not isinstance(error, RegistryValidationError):
         return False
     failure = error.registry_failure
     if failure is None or failure.condition is not RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT:
         return False
+    graded = failure.facts.get("authority_grade_declared")
+    if graded is False:
+        return True
     declared = failure.facts.get("declared_authority_grade")
-    if failure.facts.get("authority_grade_declared") is not True or not isinstance(declared, str):
+    if graded is not True or not isinstance(declared, str):
         return False
     ladder = tuple(RegistryAuthorityGrade)
     try:

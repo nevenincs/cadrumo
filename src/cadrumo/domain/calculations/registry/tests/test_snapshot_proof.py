@@ -349,10 +349,18 @@ def test_the_published_proofless_generation_reports_no_proofs_and_validates_full
 class _OneModeloOperation:
     """The real pinned operation with its modelo enumeration narrowed to one declared modelo."""
 
-    def __init__(self, operation: PinnedAuthorityOperation, modelo_id: str, *, failing_period: str | None = None):
+    def __init__(
+        self,
+        operation: PinnedAuthorityOperation,
+        modelo_id: str,
+        *,
+        failing_period: str | None = None,
+        ungraded: tuple[str, RegistrySnapshot] | None = None,
+    ):
         self._operation = operation
         self._modelo_id = modelo_id
         self._failing_period = failing_period
+        self._ungraded = ungraded
 
     def modelo_ids(self) -> tuple[str, ...]:
         return (self._modelo_id,)
@@ -384,6 +392,10 @@ class _OneModeloOperation:
     ) -> RegistrySnapshot:
         if period == self._failing_period:
             raise RegistryValidationError(f"declared cell {modelo_id} {filing_year} {period} is broken")
+        if self._ungraded is not None and period == self._ungraded[0]:
+            built = self._ungraded[1]
+            ungraded_revision = built.revision.model_copy(update={"authority_grade": None})
+            snapshot_module._check_snapshot_authority_grade(built.modelo, ungraded_revision, requested_grade=grade)
         return self._operation.build_unretained_snapshot(
             modelo_id, filing_year=filing_year, period=period, grade=grade, governed_facts=governed_facts
         )
@@ -434,3 +446,16 @@ def test_a_failing_declared_cell_blocks_the_sweep(
     expected = f"declared cell {re.escape(modelo_id)} .* {re.escape(period)} is broken"
     with pytest.raises(SnapshotProofPublicationError, match=expected):
         prove_snapshot_selectors(_OneModeloOperation(operation, modelo_id, failing_period=period))
+
+
+def test_a_revision_declaring_no_grade_does_not_block_the_sweep(
+    operation: PinnedAuthorityOperation,
+    passing_cell: tuple[str, int, str, RegistryAuthorityGrade],
+) -> None:
+    modelo_id, filing_year, period, grade = passing_cell
+    built = operation.build_unretained_snapshot(modelo_id, filing_year=filing_year, period=period, grade=grade)
+
+    proven = prove_snapshot_selectors(_OneModeloOperation(operation, modelo_id, ungraded=(period, built)))
+
+    assert proven.proofs
+    assert all(proof.key.period != period for proof in proven.proofs)
