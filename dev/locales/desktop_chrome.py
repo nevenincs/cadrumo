@@ -35,7 +35,6 @@ from typing import Final
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.i18n.render import extract_placeholders
-from cadrumo_client.contracts.navigation import load_navigation_register
 
 from ._paths import LOCALES_DIR, RUNTIME_SRC_DIR, SRC_DIR
 from ._status import CatalogueLeafState, classify_catalogue_leaf
@@ -4061,9 +4060,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
 #: check holds the rest of the declaration to an exact match with the shell
 #: source and refuses any key here once the shell names it, so a key leaves
 #: this set when its view lands and the set only shrinks.
-DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset(
-    {"desktop.signin.unsupported", "desktop.ledger.apply.fix.drop_rules"}
-)
+DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.signin.unsupported"})
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
@@ -4144,15 +4141,6 @@ def _catalogue_leaves(locales_dir: Path, locale: str) -> dict[str, object]:
     return _flatten_raw_locale_leaves(LocaleManager(SRC_DIR, locales_dir).load_locale(source))
 
 
-#: The navigation register's label keys, read through its validating loader.
-#: The shell reads them by key from its generated navigation projection, never
-#: by name in its source, so they are generated beside the declared keys rather
-#: than declared with them; a missing translation refuses generation the same way.
-DESKTOP_NAVIGATION_LABEL_KEYS: Final[frozenset[str]] = frozenset(
-    element.label for element in load_navigation_register().elements
-)
-
-
 def _shell_placeholders(key: str, locale: str, value: str) -> frozenset[str]:
     """Return the ``{name}`` placeholders of ``value``, refusing any other form."""
     shell = frozenset(str(match.group(1)) for match in _SHELL_PLACEHOLDER.finditer(value))
@@ -4166,7 +4154,7 @@ def _shell_placeholders(key: str, locale: str, value: str) -> frozenset[str]:
 def desktop_chrome_strings(
     locales_dir: Path = LOCALES_DIR,
     *,
-    keys: frozenset[str] = DESKTOP_CHROME_KEYS | DESKTOP_NAVIGATION_LABEL_KEYS,
+    keys: frozenset[str] = DESKTOP_CHROME_KEYS,
     locales: Sequence[str] = DESKTOP_LOCALES,
 ) -> dict[str, dict[str, str]]:
     """Project the declared keys out of every locale catalogue.
