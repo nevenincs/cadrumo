@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:1cd0acd4a11cf45455bf5754580e2a56f0b97bcb5381d08ea15a80abe36264f6'
+body_hash: 'sha256:fbfc145ba05a1a91e600bfbc5f16e2aef8a01db9d98c2d55c423184f6ad33156'
 ---
 
 # `rust-component-provisioning` plan
@@ -70,7 +70,7 @@ The engine installs a pinned portable Ollama, runs it as its own child, pulls an
 The single binary gains the components role; the desktop calls the engine in process, and the CLI, TUI and MCP become thin clients of the role.
 
 - [x] `P04.S10` - Add the components role to the single binary with its line-delimited JSON protocol for status, plan, setup, verify, cancel and remove, and document it in the package contract; `native/application/src/role.rs, native/application/src/provisioning/protocol.rs, the binary entry, native/CONTRACT.md and tests`.
-- [ ] `P04.S11` - Point the desktop setup host at the in-process engine and drop its relay of dependencies operations, keeping the window contract unchanged; `native/desktop/src-tauri/src/shell/setup/, native/desktop/src-tauri/src/app.rs and Rust tests`.
+- [x] `P04.S11` - Point the desktop setup host at the in-process engine and drop its relay of dependencies operations, keeping the window contract unchanged; `native/desktop/src-tauri/src/shell/setup/, native/desktop/src-tauri/src/app.rs and Rust tests`.
 - [ ] `P04.S12` - Add a Python client that starts the components role and decodes its protocol, and make config provision, config check and the health report thin clients of it with words from the canonical catalogues; `src/cadrumo/adapters/outbound/components/, src/cadrumo/entrypoints/cli/config/provision_cli.py, src/cadrumo/entrypoints/cli/config/check_cli.py, src/cadrumo/application/preflight.py, src/cadrumo/application/diagnostics.py, src/cadrumo/entrypoints/cli/command_operation_table.py and tests`.
 - [ ] `P04.S13` - Make the TUI setup screen and the MCP service clients of the same role, with MCP approval bound to the plan digest and progress relayed as notifications; `src/cadrumo/entrypoints/tui/setup/, src/cadrumo_mcp/ and tests`.
 - [x] `P04.S17` - Have the runtime manager supervise the engine's local AI server on one fixed Cadrumo loopback address declared in the canonical environment definition: start it while the local AI is set up, restart it after a crash, stop it on exit, at session end and before the engine replaces or removes the program, contain it, and record the address in the local AI component record; `native/manager/src/supervision/, native/application/src/provisioning/local_ai/, native/application-environment.toml, src/cadrumo/core/config_runtime_fields.py (default derived from the declaration) and tests`.

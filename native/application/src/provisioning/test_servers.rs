@@ -53,7 +53,7 @@ const COMMON_NAME: &[u8] = &[0x06, 0x03, 0x55, 0x04, 0x03];
 const SUBJECT_ALT_NAME: &[u8] = &[0x06, 0x03, 0x55, 0x1d, 0x11];
 
 /// A self-signed P-256 certificate for `hosts`, generated in the test, with its key.
-pub(crate) struct TestCertificate {
+pub struct TestCertificate {
     pub der: Vec<u8>,
     pkcs8: Vec<u8>,
 }
@@ -135,7 +135,7 @@ impl TestCertificate {
 
 /// One request a server received.
 #[derive(Clone, Debug)]
-pub(crate) struct Request {
+pub struct Request {
     pub line: String,
     pub headers: BTreeMap<String, String>,
 }
@@ -153,7 +153,7 @@ impl Request {
 }
 
 /// How a server answers one request.
-pub(crate) enum Reply {
+pub enum Reply {
     /// These bytes, then an orderly close.
     Bytes(Vec<u8>),
     /// These bytes, then the connection is dropped without a TLS close.
@@ -169,7 +169,7 @@ pub(crate) enum Reply {
     },
 }
 
-pub(crate) fn response(status: &str, headers: &[(&str, String)], body: &[u8]) -> Vec<u8> {
+pub fn response(status: &str, headers: &[(&str, String)], body: &[u8]) -> Vec<u8> {
     let mut out = format!("HTTP/1.1 {status}\r\n").into_bytes();
     for (name, value) in headers {
         out.extend_from_slice(format!("{name}: {value}\r\n").as_bytes());
@@ -202,20 +202,20 @@ fn read_request(reader: &mut impl BufRead) -> io::Result<Request> {
 
 /// Set once the server is dropped; a held reply waits for it.
 #[derive(Default)]
-pub(crate) struct Released {
+pub struct Released {
     done: Mutex<bool>,
     signal: Condvar,
 }
 
 impl Released {
-    pub(crate) fn wait(&self) {
+    pub fn wait(&self) {
         let mut done = self.done.lock().unwrap();
         while !*done {
             done = self.signal.wait(done).unwrap();
         }
     }
 
-    pub(crate) fn release(&self) {
+    pub fn release(&self) {
         *self.done.lock().unwrap() = true;
         self.signal.notify_all();
     }
@@ -282,7 +282,7 @@ impl Drop for Listening {
 }
 
 /// A TLS server answering every request through its handler, recording each request.
-pub(crate) struct TlsServer {
+pub struct TlsServer {
     listening: Listening,
     pub requests: Arc<Mutex<Vec<Request>>>,
 }
@@ -357,7 +357,7 @@ impl TlsServer {
 
 /// How the proxy answers a `CONNECT`.
 #[derive(Clone, Copy)]
-pub(crate) enum ProxyAnswer {
+pub enum ProxyAnswer {
     /// Tunnel to the given address.
     Tunnel(SocketAddr),
     /// Refuse with this status.
@@ -365,7 +365,7 @@ pub(crate) enum ProxyAnswer {
 }
 
 /// A plain `CONNECT` proxy recording each tunnel request.
-pub(crate) struct ProxyServer {
+pub struct ProxyServer {
     listening: Listening,
     pub requests: Arc<Mutex<Vec<Request>>>,
 }
@@ -432,7 +432,7 @@ impl ProxyServer {
 }
 
 /// A network that trusts `roots` and resolves every name to `address`.
-pub(crate) fn network_to(
+pub fn network_to(
     roots: RootCertStore,
     address: SocketAddr,
     proxy: Option<ProxySettings>,
@@ -447,7 +447,7 @@ pub(crate) fn network_to(
 }
 
 /// A network whose resolver finds no name at all.
-pub(crate) fn network_nowhere(roots: RootCertStore) -> Network {
+pub fn network_nowhere(roots: RootCertStore) -> Network {
     let resolve: Arc<Resolve> =
         Arc::new(|_: &str, _: u16| Err(io::Error::new(io::ErrorKind::NotFound, "no such name")));
     Network::with_parts(roots, resolve, None)

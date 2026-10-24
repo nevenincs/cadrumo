@@ -736,7 +736,7 @@ function watchReviews() {
   scan();
 }
 
-/** The closed fields of each row that a run records, with its wording. */
+/** The closed fields of each row that a run records. */
 export function compactRows(rows) {
   return rows.map((row) => ({
     item: row.item,
@@ -746,7 +746,6 @@ export function compactRows(rows) {
     recovery: row.recovery,
     size_bytes: row.size_bytes,
     version: row.version,
-    sentence: row.sentence,
     note: row.note,
   }));
 }

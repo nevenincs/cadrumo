@@ -44,6 +44,9 @@ ureq = { version = "3", default-features = false }
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
+# The setup host's tests drive a real engine against the local servers the engine's own
+# tests use.
+cadrumo-application = { path = "../../application", features = ["platform", "test-support"] }
 tokio = { version = "1", features = ["test-util"] }
 
 [target.'cfg(windows)'.dependencies]

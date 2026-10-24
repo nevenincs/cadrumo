@@ -3511,6 +3511,12 @@ desktop:
     title: Ajustes
     window: Ventana
   setup:
+    action:
+      check_again: Volver a comprobar
+      resume: Reanudar
+      set_up: Configurar
+      try_again: Volver a intentarlo
+      update: Actualizar
     advisory_incomplete: La configuración de Cadrumo no está completa. Haz clic aquí
       para completarla.
     advisory_running: La configuración de Cadrumo está en curso. Haz clic aquí para
@@ -3518,18 +3524,51 @@ desktop:
     approve: Descargar y configurar
     approve_at_least: Descargar al menos {size} y configurar
     approve_size: Descargar {size} y configurar
+    blocked:
+      hardware: Este ordenador no tiene memoria suficiente para esto.
+      needs_person: Espera a que lo apruebes o lo instales tú.
+      not_in_this_build: Esta versión de Cadrumo no lo incluye.
+      offline: No tienes conexión. Conéctate a internet para configurarlo.
     cancel: Cancelar la configuración
     cancelling: Se detendrá tras el paso actual…
     checking: Comprobando los componentes…
     close: Cerrar
     copy_details: Copiar detalles
     details: Detalles
+    failure:
+      blocked_by_network: Tu red ha bloqueado la descarga.
+      cancelled: Has cancelado la configuración.
+      damaged_download: La descarga estaba dañada y no se ha podido usar.
+      disk_full: No hay suficiente espacio libre en el disco.
+      host_unreachable: No se ha podido contactar con el servidor de descarga.
+      interrupted: La configuración se interrumpió antes de terminar.
+      memory_busy: Hay demasiada memoria en uso ahora mismo. Cierra otros programas
+        y vuelve a intentarlo.
+      needs_sign_in: Tienes que iniciar sesión en Google.
+      no_permission: Cadrumo no ha tenido permiso para escribir los archivos.
+      not_enough_memory: Este ordenador no tiene memoria suficiente para esto.
+      not_in_this_build: Esta versión de Cadrumo no lo incluye.
+      offline: No tienes conexión.
+      program_missing: El programa de IA local no está instalado.
+      program_not_running: El programa de IA local no está en marcha.
+      secure_connection_failed: No se ha podido establecer una conexión segura. Puede
+        que un filtro de red lo impida.
+      unexpected: Algo ha salido mal.
     hide: Ocultar
+    item:
+      browser: Navegador para la web de la Agencia Tributaria
+      local_ai: IA local
     lead: Cadrumo necesita estos componentes para funcionar.
     lead_review: Revisa qué se va a descargar y dónde se guarda, y después apruébalo.
     lead_running: Puedes cerrar esto; la configuración sigue y Ajustes muestra cómo
       va.
+    licence_non_commercial: El modelo {model} está sujeto a la {licence}, que no permite
+      el uso comercial. Lo has indicado tú de forma explícita, así que Cadrumo lo
+      utilizará, pero una gestoría comercial necesita una licencia aparte del editor.
     not_now: Ahora no
+    note:
+      downloaded_not_loaded: Descargado, aún sin cargar.
+      own_network_settings: Usa su propia configuración de red.
     open: Abrir la configuración
     outcome_cancelled: Se ha cancelado la configuración. Lo ya descargado se conserva.
     outcome_completed: Todo está configurado.
@@ -3549,6 +3588,8 @@ desktop:
     palette_local_ai: Configurar la IA local
     palette_open: Configurar los componentes
     palette_retry: Reintentar la configuración
+    part_model: Modelo {role}
+    part_program: El programa que ejecuta los modelos
     plan_destination: 'Se guarda en: {folder}'
     plan_from: 'Desde: {hosts}'
     plan_nothing: No hay nada que descargar.
@@ -3579,13 +3620,34 @@ desktop:
     result_done: Configurado
     result_not_finished: No ha terminado
     resume: Reanudar
+    retry: Problema de conexión. Se volverá a intentar en {seconds} segundos (intento
+      {attempt}).
+    role:
+      column_role_mapping: para columnas de tablas
+      supply_nature_proposal: para el tipo de venta o compra
+      text_extraction: para el texto de documentos
+      vision_transcription: para páginas escaneadas
     show_new_plan: Ver el nuevo plan
     size_unknown: Tamaño conocido al empezar
     space: Necesita {required} de espacio libre; hay {free} libres.
     space_short: No hay suficiente espacio libre. Libera algo y vuelve a intentarlo.
     space_unread: Necesita {required} de espacio libre; no se ha podido leer el espacio
       libre.
+    stale:
+      different_model_version: Funciona, pero es una versión distinta de la que se
+        probó con Cadrumo.
+      older_revision: Funciona, pero hace falta una versión más reciente.
+      program_too_old: Funciona, pero esta versión es demasiado antigua para Cadrumo.
     start: Configurar
+    state:
+      absent: Aún no está configurado.
+      blocked: Ahora mismo no se puede configurar.
+      failed: La configuración no ha terminado.
+      provisioning: Configurándose ahora.
+      ready: Listo.
+      stale: Funciona, pero necesita una actualización.
+      unknown: Cadrumo no ha podido comprobarlo ahora.
+      verifying: Comprobando que funciona.
     step_checking: Comprobando
     step_connecting: Conectando
     step_downloading: Descargando

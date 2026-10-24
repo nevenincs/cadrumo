@@ -838,15 +838,16 @@ export type PasswordChangeResult =
 // ---------------------------------------------------------------------------
 //
 // The software Cadrumo needs on this computer -- the browser and the local AI
-// (its program and every model it runs, as one item) -- read and set up
-// through the held person session. The profile's Google account travels in
-// the same snapshot because it rides the same session, but it is not setup:
-// it is the profile's own sign-in, read and changed on its own. The host
-// pushes a fresh `DesktopSetup` on the observe channel whenever an observed
-// setup, check or Google act changes; nothing polls. Every closed value below
-// is for choosing what to show; the words to show are the `name`, `sentence`,
-// `note` and `action_label` fields, already in the profile's language. Never
-// render a closed value itself.
+// (its program and every model it runs, as one item) -- read and set up by
+// the window's own component engine. The profile's Google account travels in
+// the same snapshot, but it is not setup: it is the profile's own sign-in,
+// read and changed on its own through the held person session. The host
+// pushes a fresh `DesktopSetup` on the observe channel whenever the engine or
+// a Google act changes it; nothing polls. The snapshot carries codes and
+// locale-neutral facts only. The window words every item name, state,
+// failure, action, note, retry notice, plan part and licence from its own
+// setup strings (`components/setup/setupWords.ts`). Never render a closed
+// value itself.
 
 /** `browser` or `local_ai`. */
 export type SetupItemId = string;
@@ -887,7 +888,7 @@ export type SetupFailureCategory =
   | "cancelled"
   | "unexpected";
 
-/** The one button a row offers; its words are the row's `action_label`. */
+/** The one button a row offers, worded by the window. */
 export type SetupRecovery =
   "set_up" | "update" | "try_again" | "resume" | "check_again";
 
@@ -905,7 +906,10 @@ export type SetupAdvisory =
 export type SetupStep =
   "plan" | "preflight" | "download" | "install" | "verify" | "cleanup";
 
-/** One item's derived state and its plain wording. */
+/** A secondary fact a usable item carries without changing its state. */
+export type SetupNote = "downloaded_not_loaded" | "own_network_settings";
+
+/** One item's derived state, with exactly the reason it needs. */
 export type SetupRow = {
   item: SetupItemId;
   kind: SetupItemKind;
@@ -922,14 +926,8 @@ export type SetupRow = {
   recovery_action_id: string | null;
   version: string | null;
   size_bytes: number | null;
-  /** The item's plain name, such as "Local AI". */
-  name: string;
-  /** One sentence stating the state and its reason. */
-  sentence: string;
-  /** For example "downloaded, not loaded yet"; null when there is none. */
-  note: string | null;
-  /** The button's words for `recovery`; null exactly when it is null. */
-  action_label: string | null;
+  /** Present only while the item is usable. */
+  note: SetupNote | null;
 };
 
 /** A status read or a full check this window started. A settled check has
@@ -940,20 +938,24 @@ export type SetupCheck = {
   stage: "running" | "done" | "failed";
 };
 
-/** One part of the local AI's plan: its program, or the model one role
- * reads with. A part sharing an earlier part's download has size 0. */
+/** One part of the local AI's plan: `program`, or the catalogue role whose
+ * model it is. A part sharing an earlier part's download has size 0. */
 export type SetupPlanPart = {
   part: string;
-  name: string;
   /** Null when the size is not known before the download starts. */
   download_bytes: number | null;
+};
+
+/** A planned model whose licence bars commercial use. */
+export type SetupLicence = {
+  model: string;
+  licence: string;
 };
 
 /** One entry of the plan a person approves: what, how large, from where and
  * where it is stored. Shown, never sent back. */
 export type SetupPlanEntry = {
   item: SetupItemId;
-  name: string;
   /** Null when the size is not known before the download starts. */
   download_bytes: number | null;
   source_hosts: string[];
@@ -962,14 +964,13 @@ export type SetupPlanEntry = {
   installs_outside_program: boolean;
   /** Another entry of this plan that downloads the same files. */
   shares_download_with: SetupItemId | null;
-  /** A model's licence notice, such as a non-commercial use limit, in the
-   * profile's language; null when there is none. Approving the plan
-   * approves it too. */
-  licence_notice: string | null;
   /** Empty except on the local AI's entry; approving the plan approves
-   * them too. `licence_notice` is present exactly when one is
-   * "licence_commercial_use_barred". */
+   * them too. */
   advisories: SetupAdvisory[];
+  /** The planned models whose licence bars commercial use; not empty
+   * exactly when `advisories` holds "licence_commercial_use_barred".
+   * Approving the plan approves their notice too. */
+  licences: SetupLicence[];
   /** The local AI's parts in the order setup carries them out; empty for
    * any other item. */
   parts: SetupPlanPart[];
@@ -978,7 +979,6 @@ export type SetupPlanEntry = {
 /** The plan awaiting approval. `plan_digest` is what an answer binds. */
 export type SetupReview = {
   plan_digest: string;
-  expires_at: string | null;
   entries: SetupPlanEntry[];
   known_download_bytes: number;
   has_unknown_size: boolean;
@@ -992,15 +992,12 @@ export type SetupReview = {
 export type SetupRetry = {
   attempt: number;
   delay_s: number;
-  /** "Trying again in N seconds (attempt M)", in the profile's language. */
-  sentence: string;
 };
 
 export type SetupItemResult = {
   changed: boolean;
+  /** Null when the item ended usable. */
   failure: SetupFailureCategory | null;
-  /** The failure's sentence; null when the item ended usable. */
-  sentence: string | null;
   transferred_bytes: number;
 };
 
@@ -1008,7 +1005,6 @@ export type SetupItemResult = {
  * last retry notice, then its result once setup settles. */
 export type SetupItemProgress = {
   item: SetupItemId;
-  name: string;
   step: SetupStep | null;
   /** Both null while the size is unknown: show an indeterminate bar. */
   completed: number | null;
@@ -1025,7 +1021,7 @@ export type SetupOutcome =
   | "not_enough_space"
   | "interrupted"
   | "cancelled"
-  /** The setup ended without a result of its own; see `failure_sentence`. */
+  /** The setup did not finish; see `failure`. */
   | "failed";
 
 /** The setup this window started or joined. */
@@ -1040,8 +1036,8 @@ export type SetupRun = {
   cancel_requested: boolean;
   /** Present exactly once `stage` is "settled". */
   outcome: SetupOutcome | null;
-  /** Present when `outcome` is "failed". */
-  failure_sentence: string | null;
+  /** Present exactly when `outcome` is "failed". */
+  failure: SetupFailureCategory | null;
 };
 
 /** The profile's stored Google sign-in, as the product reads it. */
@@ -1060,9 +1056,8 @@ export type GoogleAccount = {
   /** The profile's saved folder, present only with a stored Drive grant. */
   drive_folder_id: string | null;
   stage: GoogleActStage;
+  /** Present exactly when `stage` is "failed". */
   failure: SetupFailureCategory | null;
-  /** The failure's sentence; present exactly when `stage` is "failed". */
-  sentence: string | null;
 };
 
 export type SetupSnapshot = {
@@ -1083,7 +1078,8 @@ export type SetupSnapshot = {
 
 /** What the observe channel carries and every setup command answers.
  * `revision` grows with every change; `snapshot` is present exactly when
- * `state` is "ready", which needs a signed-in profile and its runtime. */
+ * `state` is "ready", which the window offers only to a signed-in profile
+ * whose runtime answers. */
 export type DesktopSetup = {
   revision: number;
   state: "signed_out" | "unavailable" | "ready";
@@ -1460,8 +1456,9 @@ export interface HostCommands {
     result: DesktopSetup;
   };
   /** Plans setup of `items`, or of every item not ready when null; the plan
-   * then awaits an answer in `setup.review`. `model` picks one catalogue
-   * model for every role of the local AI. A setup already running is joined.
+   * then awaits an answer in `setup.review`. `model` is always null: this
+   * build pins every role's model, and the host refuses any other. A setup
+   * already running is joined.
    * `resume` is the person's Resume click after an interruption: when the
    * new plan is exactly the one approved before, it is approved again
    * without a second review; any other plan awaits an answer as usual. */

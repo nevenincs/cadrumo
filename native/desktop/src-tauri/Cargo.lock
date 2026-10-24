@@ -253,6 +253,7 @@ dependencies = [
  "cadrumo-platform",
  "flate2",
  "object",
+ "ring",
  "rustls",
  "ruzstd",
  "serde",

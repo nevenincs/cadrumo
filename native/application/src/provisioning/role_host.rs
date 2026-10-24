@@ -1,13 +1,15 @@
 //! The `components` role's host: resolves this installation for the engine from the
 //! process's own image and environment, then serves the role's protocol on standard
-//! input and output.
+//! input and output. The desktop builds its in-process engines from the same
+//! resolution ([`installation_config`]).
 //!
 //! The image's package names the pins and the bundled browser driver; the storage root
 //! and its relocatable members come from the package's storage rules, the same ones every
 //! other process of the installation reads. The free space comes from the platform's
 //! volume query, and the local AI server's fixed address from the package's contract. The
-//! owner contains the process: the role runs inside a kill-on-close job on Windows, so a
-//! browser check the engine starts ends with it.
+//! owner contains the process before the engine starts anything: a kill-on-close job on
+//! Windows, and on Linux and macOS a process scope every browser check and hardware query
+//! is created into, so whatever the engine starts ends with its owner.
 
 use super::{
     browser::{self, DRIVER_PACKAGE, DriverManifest},
@@ -79,7 +81,13 @@ fn member(
 }
 
 /// The engine for this process's installation.
-fn engine() -> Result<Engine, Error> {
+pub fn engine() -> Result<Engine, Error> {
+    Engine::new(installation_config()?)
+}
+
+/// What the engine of this process's installation is built from, for an owner that
+/// keeps facts across engines, such as a window that measures the hardware once.
+pub fn installation_config() -> Result<EngineConfig, Error> {
     let lookup = |name: &str| std::env::var_os(name);
     let text = |name: &str| std::env::var(name).ok();
     let executable = std::env::current_exe()?;
@@ -110,7 +118,7 @@ fn engine() -> Result<Engine, Error> {
     for name in ["TEMP", "TMP", "TMPDIR"] {
         browser_environment.insert(name.into(), scratch.clone().into_os_string());
     }
-    Engine::new(EngineConfig {
+    Ok(EngineConfig {
         storage_root: root,
         locations,
         pins,

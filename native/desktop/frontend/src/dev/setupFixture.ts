@@ -15,10 +15,8 @@ import type { Setup } from "../shell/host";
 // The scenario host's component setup: a made-up computer with the browser
 // and the local AI (its program and its models, one item), each in the state
 // a shape gives it, and the profile's Google account beside them -- not a
-// setup item. Its sentences stand for the host's own, which come already
-// worded; they are English here because the fixture has no catalogue of its
-// own. Nothing is downloaded: every plan, byte count and receipt is
-// synthetic. With a latency the fixture runs a setup by itself; with none it
+// setup item. Like the host, it sends codes only, which the window words.
+// Nothing is downloaded: every plan, byte count and receipt is synthetic. With a latency the fixture runs a setup by itself; with none it
 // waits for the scenario tests to move it on through `window.__scenarioSetup`.
 
 export const SETUP_SHAPES = [
@@ -63,9 +61,8 @@ const MB = 1_000_000;
 
 type Seed = {
   row: SetupRow;
-  // What the plan says of the entry; its advisories are for the host's
-  // logic and are never shown.
-  plan: Omit<SetupPlanEntry, "item" | "name"> & { advisories?: string[] };
+  // What the plan says of the entry.
+  plan: Omit<SetupPlanEntry, "item">;
 };
 
 /** The operator action the product names as each kind's recovery. */
@@ -79,7 +76,6 @@ const GOOGLE_EMAIL = "persona@example.com";
 const row = (
   item: SetupItemId,
   kind: SetupRow["kind"],
-  name: string,
   size: number | null,
 ): SetupRow => ({
   item,
@@ -93,21 +89,13 @@ const row = (
   recovery_action_id: RECOVERY_ACTION[kind],
   version: null,
   size_bytes: size,
-  name,
-  sentence: "Not set up yet.",
   note: null,
-  action_label: "Set up",
 });
 
 function seeds(): Seed[] {
   return [
     {
-      row: row(
-        "browser",
-        "browser",
-        "Browser for the tax agency website",
-        180 * MB,
-      ),
+      row: row("browser", "browser", 180 * MB),
       plan: {
         download_bytes: 180 * MB,
         source_hosts: ["cdn.playwright.dev"],
@@ -115,59 +103,35 @@ function seeds(): Seed[] {
         installs_outside_program: false,
         shares_download_with: null,
         advisories: [],
-        licence_notice: null,
+        licences: [],
         parts: [],
       },
     },
     {
       // One item: the program that runs the models, then each role's model.
       // Two roles read with the same model, so only the first downloads it.
-      row: row("local_ai", "local_ai", "Local AI", 3.4 * GB),
+      row: row("local_ai", "local_ai", 3.4 * GB),
       plan: {
         download_bytes: 3.4 * GB,
         source_hosts: ["github.com", "registry.ollama.ai"],
         destination: "models",
-        licence_notice:
-          "This model is shared under its maker's licence, which lets you use it on this computer.",
         installs_outside_program: true,
         shares_download_with: null,
-        advisories: [],
+        advisories: ["licence_commercial_use_barred"],
+        licences: [
+          { model: "qwen2.5vl:3b", licence: "LicenseRef-Qwen-Research" },
+        ],
         parts: [
-          {
-            part: "program",
-            name: "The program that runs the models",
-            download_bytes: null,
-          },
-          {
-            part: "vision_transcription",
-            name: "Model for scanned pages",
-            download_bytes: 2.4 * GB,
-          },
-          {
-            part: "text_extraction",
-            name: "Model for document text",
-            download_bytes: 1 * GB,
-          },
-          {
-            part: "column_role_mapping",
-            name: "Model for table columns",
-            download_bytes: 0,
-          },
-          {
-            part: "supply_nature_proposal",
-            name: "Model for the kind of sale or purchase",
-            download_bytes: 0,
-          },
+          { part: "program", download_bytes: null },
+          { part: "vision_transcription", download_bytes: 2.4 * GB },
+          { part: "text_extraction", download_bytes: 1 * GB },
+          { part: "column_role_mapping", download_bytes: 0 },
+          { part: "supply_nature_proposal", download_bytes: 0 },
         ],
       },
     },
   ];
 }
-
-const READY: Record<SetupRow["kind"], string> = {
-  browser: "Ready.",
-  local_ai: "Ready.",
-};
 
 function readied(held: SetupRow): SetupRow {
   return {
@@ -179,93 +143,32 @@ function readied(held: SetupRow): SetupRow {
     recovery: null,
     recovery_action_id: null,
     version: "1.0",
-    sentence: READY[held.kind],
-    note: held.kind === "local_ai" ? "Downloaded, not loaded yet." : null,
-    action_label: null,
+    note: held.kind === "local_ai" ? "downloaded_not_loaded" : null,
   };
 }
 
-/** The sentence and button the host words each failure with. */
-const FAILURE: Record<
-  SetupFailureCategory,
-  { sentence: string; recovery: SetupRow["recovery"] }
-> = {
-  offline: {
-    sentence: "You're offline. Connect to the internet, then check again.",
-    recovery: "check_again",
-  },
-  host_unreachable: {
-    sentence: "The download site can't be reached right now.",
-    recovery: "try_again",
-  },
-  secure_connection_failed: {
-    sentence: "A secure connection to the download site couldn't be made.",
-    recovery: "try_again",
-  },
-  blocked_by_network: {
-    sentence: "Your network blocked the download.",
-    recovery: "try_again",
-  },
-  disk_full: {
-    sentence: "There isn't enough free space on this computer.",
-    recovery: "try_again",
-  },
-  no_permission: {
-    sentence: "Cadrumo isn't allowed to write to its storage folder.",
-    recovery: "try_again",
-  },
-  damaged_download: {
-    sentence: "The download arrived damaged. Setting it up again fixes it.",
-    recovery: "try_again",
-  },
-  not_enough_memory: {
-    sentence: "This computer doesn't have enough memory for the local AI.",
-    recovery: null,
-  },
-  memory_busy: {
-    sentence: "Other programs are using the memory the local AI needs.",
-    recovery: "try_again",
-  },
-  program_missing: {
-    sentence: "The local AI program isn't installed.",
-    recovery: "set_up",
-  },
-  program_not_running: {
-    sentence: "The local AI program isn't running.",
-    recovery: "try_again",
-  },
-  interrupted: {
-    sentence: "Setup stopped before it finished.",
-    recovery: "resume",
-  },
-  needs_sign_in: {
-    sentence: "Sign in to Google again to keep using it.",
-    recovery: "try_again",
-  },
-  not_in_this_build: {
-    sentence: "This version of Cadrumo does not include this.",
-    recovery: null,
-  },
-  cancelled: {
-    sentence: "Setup was cancelled.",
-    recovery: "set_up",
-  },
-  unexpected: {
-    sentence: "Something unexpected went wrong.",
-    recovery: "try_again",
-  },
-};
-
-const ACTION: Record<NonNullable<SetupRow["recovery"]>, string> = {
-  set_up: "Set up",
-  update: "Update",
-  try_again: "Try again",
-  resume: "Resume",
-  check_again: "Check again",
+/** The button the engine offers after each failure. */
+const RECOVERY: Record<SetupFailureCategory, SetupRow["recovery"]> = {
+  offline: "check_again",
+  host_unreachable: "try_again",
+  secure_connection_failed: "try_again",
+  blocked_by_network: "try_again",
+  disk_full: "try_again",
+  no_permission: "try_again",
+  damaged_download: "try_again",
+  not_enough_memory: null,
+  memory_busy: "try_again",
+  program_missing: "try_again",
+  program_not_running: "try_again",
+  interrupted: "resume",
+  needs_sign_in: "try_again",
+  not_in_this_build: null,
+  cancelled: "try_again",
+  unexpected: "try_again",
 };
 
 function failed(held: SetupRow, failure: SetupFailureCategory): SetupRow {
-  const { sentence, recovery } = FAILURE[failure];
+  const recovery = RECOVERY[failure];
   return {
     ...held,
     state: failure === "offline" ? "blocked" : "failed",
@@ -273,8 +176,6 @@ function failed(held: SetupRow, failure: SetupFailureCategory): SetupRow {
     failure: failure === "offline" ? null : failure,
     recovery,
     recovery_action_id: recovery ? RECOVERY_ACTION[held.kind] : null,
-    sentence,
-    action_label: recovery ? ACTION[recovery] : null,
   };
 }
 
@@ -311,8 +212,6 @@ function shaped(shape: SetupShape): Seed[] {
         blocked_reason: "hardware",
         recovery: null,
         recovery_action_id: null,
-        sentence: "This computer does not have enough memory for this.",
-        action_label: null,
       }));
       break;
     default:
@@ -354,7 +253,6 @@ export function setupFixture({
     drive_folder_id: signedIn ? "profile-drive-folder" : null,
     stage: "idle",
     failure: null,
-    sentence: null,
   };
   let check: SetupSnapshot["check"] = null;
   let mode: SetupSnapshot["rows_mode"] = "quick";
@@ -428,7 +326,6 @@ export function setupFixture({
         : 0;
     const entries = wanted.map((seed): SetupPlanEntry => ({
       item: seed.row.item,
-      name: seed.row.name,
       ...seed.plan,
       download_bytes:
         seed.plan.download_bytes === null
@@ -447,7 +344,6 @@ export function setupFixture({
       plan_digest: `plan-${entries
         .map((entry) => `${entry.item}:${entry.download_bytes ?? "?"}`)
         .join("|")}`,
-      expires_at: null,
       entries,
       known_download_bytes: known,
       // A part of unknown size, such as the program's installer, leaves the
@@ -468,7 +364,6 @@ export function setupFixture({
 
   const progress = (seed: Seed): SetupItemProgress => ({
     item: seed.row.item,
-    name: seed.row.name,
     step: null,
     completed: null,
     total: null,
@@ -491,7 +386,7 @@ export function setupFixture({
       review: null,
       cancellable: false,
       outcome,
-      failure_sentence: null,
+      failure: null,
     };
   };
 
@@ -553,7 +448,6 @@ export function setupFixture({
         result: {
           changed: true,
           failure: null,
-          sentence: null,
           transferred_bytes: total ?? 0,
         },
       };
@@ -579,8 +473,7 @@ export function setupFixture({
         state: "provisioning",
         recovery: null,
         recovery_action_id: null,
-        sentence: "Being set up now.",
-        action_label: null,
+        note: null,
       };
     }
     run = { ...run, stage: "running", review: null };
@@ -600,11 +493,7 @@ export function setupFixture({
           held.item === entry.item
             ? {
                 ...held,
-                retry: {
-                  attempt,
-                  delay_s: delaySeconds,
-                  sentence: `Trying again in ${delaySeconds} seconds (attempt ${attempt}).`,
-                },
+                retry: { attempt, delay_s: delaySeconds },
               }
             : held,
         ),
@@ -629,7 +518,6 @@ export function setupFixture({
                 result: {
                   changed: false,
                   failure: category,
-                  sentence: FAILURE[category].sentence,
                   transferred_bytes: held.completed ?? 0,
                 },
               }
@@ -637,7 +525,7 @@ export function setupFixture({
         ),
       };
       settle("failed");
-      run = { ...run, failure_sentence: FAILURE[category].sentence };
+      run = { ...run, failure: category };
       publish();
     },
     interrupt() {
@@ -664,13 +552,11 @@ export function setupFixture({
             drive_folder_id: "profile-drive-folder",
             stage: "idle",
             failure: null,
-            sentence: null,
           }
         : {
             ...google,
             stage: "failed",
             failure: "needs_sign_in",
-            sentence: "Google sign-in didn't finish. Try again.",
           };
       publish();
     },
@@ -734,7 +620,7 @@ export function setupFixture({
         cancellable: chosen.length > 0,
         cancel_requested: false,
         outcome: chosen.length === 0 ? "nothing_to_do" : null,
-        failure_sentence: null,
+        failure: null,
       };
       // Resuming the plan this window approved before is approved already.
       if (options?.resume && plan && approved.has(plan.plan_digest))
@@ -797,7 +683,6 @@ export function setupFixture({
         ...google,
         stage: "signing_in",
         failure: null,
-        sentence: null,
       };
       const next = publish();
       later(() => controls.finishGoogle(true));
@@ -814,7 +699,6 @@ export function setupFixture({
         drive_folder_id: null,
         stage: "idle",
         failure: null,
-        sentence: null,
       };
       return Promise.resolve(publish());
     },

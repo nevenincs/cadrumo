@@ -10,6 +10,9 @@ live-python-tests = []
 live-package-tests = ["platform"]
 live-release-tests = ["live-package-tests"]
 platform = ["dep:cadrumo-platform"]
+# The local test servers the provisioning tests use, for owners whose own tests drive the
+# engine against them.
+test-support = ["dep:ring"]
 
 [dependencies]
 cadrumo-platform = { path = "../platform", optional = true }
@@ -28,6 +31,7 @@ webpki-roots = "1"
 object = { version = "0.40", default-features = false, features = ["read", "std"] }
 tokio = { version = "1", features = ["process", "io-util", "time", "rt", "macros"] }
 toml = { version = "1", default-features = false, features = ["std", "serde", "parse"] }
+ring = { version = "0.17", optional = true }
 
 [dev-dependencies]
 ring = "0.17"

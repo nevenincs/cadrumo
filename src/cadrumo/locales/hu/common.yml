@@ -3488,24 +3488,64 @@ desktop:
     title: Beállítások
     window: Ablak
   setup:
+    action:
+      check_again: Újraellenőrzés
+      resume: Folytatás
+      set_up: Beállítás
+      try_again: Újrapróbálás
+      update: Frissítés
     advisory_incomplete: A Cadrumo beállítása nem teljes. Kattints ide a befejezéséhez.
     advisory_running: A Cadrumo beállítása folyamatban van. Kattints ide, hogy lásd,
       hol tart.
     approve: Letöltés és beállítás
     approve_at_least: Legalább {size} letöltése és beállítás
     approve_size: '{size} letöltése és beállítás'
+    blocked:
+      hardware: Ebben a számítógépben nincs elég memória ehhez.
+      needs_person: Arra vár, hogy jóváhagyd, vagy magad telepítsd.
+      not_in_this_build: A Cadrumo ezen verziója ezt nem tartalmazza.
+      offline: Nincs internetkapcsolatod. Csatlakozz az internethez a beállításhoz.
     cancel: Beállítás megszakítása
     cancelling: Leáll a mostani lépés után…
     checking: Az összetevők ellenőrzése…
     close: Bezárás
     copy_details: Részletek másolása
     details: Részletek
+    failure:
+      blocked_by_network: A hálózatod letiltotta a letöltést.
+      cancelled: Leállítottad a beállítást.
+      damaged_download: A letöltés sérült volt, ezért nem használható.
+      disk_full: Nincs elég szabad hely a lemezen.
+      host_unreachable: A letöltési kiszolgáló nem érhető el.
+      interrupted: A beállítás a befejezés előtt megszakadt.
+      memory_busy: Most túl sok memória van használatban. Zárj be más programokat,
+        és próbáld újra.
+      needs_sign_in: Be kell jelentkezned a Google-fiókodba.
+      no_permission: A Cadrumo nem kapott engedélyt a fájlok írására.
+      not_enough_memory: Ebben a számítógépben nincs elég memória ehhez.
+      not_in_this_build: A Cadrumo ezen verziója ezt nem tartalmazza.
+      offline: Nincs internetkapcsolatod.
+      program_missing: A helyi MI-program nincs telepítve.
+      program_not_running: A helyi MI-program nem fut.
+      secure_connection_failed: Nem sikerült biztonságos kapcsolatot létesíteni. Lehet,
+        hogy egy hálózati szűrő akadályozza.
+      unexpected: Valami hiba történt.
     hide: Elrejtés
+    item:
+      browser: Böngésző az adóhivatal webhelyéhez
+      local_ai: Helyi MI
     lead: A Cadrumo működéséhez ezekre az összetevőkre van szükség.
     lead_review: Nézd át, mi töltődik le és hová kerül, majd hagyd jóvá.
     lead_running: Ezt bezárhatod; a beállítás folytatódik, és a Beállításokban látod,
       hogy áll.
+    licence_non_commercial: A(z) {model} modellre a(z) {licence} vonatkozik, amely
+      nem engedélyezi a kereskedelmi felhasználást. Ezt kifejezetten te adtad meg,
+      ezért a Cadrumo használni fogja, de kereskedelmi könyvelői tevékenységhez külön
+      licencet kell kérni a kiadótól.
     not_now: Most nem
+    note:
+      downloaded_not_loaded: Letöltve, még nincs betöltve.
+      own_network_settings: A saját hálózati beállításait használja.
     open: Beállítás megnyitása
     outcome_cancelled: A beállítás megszakadt. Ami már letöltődött, megmarad.
     outcome_completed: Minden be van állítva.
@@ -3525,6 +3565,8 @@ desktop:
     palette_local_ai: A helyi MI beállítása
     palette_open: Összetevők beállítása
     palette_retry: Beállítás újrapróbálása
+    part_model: Modell {role}
+    part_program: A modelleket futtató program
     plan_destination: 'Hely: {folder}'
     plan_from: 'Forrás: {hosts}'
     plan_nothing: Nincs mit letölteni.
@@ -3553,13 +3595,34 @@ desktop:
     result_done: Beállítva
     result_not_finished: Nem fejeződött be
     resume: Folytatás
+    retry: Kapcsolati hiba. Újrapróbálkozás {seconds} másodperc múlva ({attempt}.
+      próbálkozás).
+    role:
+      column_role_mapping: táblázatoszlopokhoz
+      supply_nature_proposal: az eladás vagy vásárlás típusához
+      text_extraction: dokumentumszöveghez
+      vision_transcription: beolvasott oldalakhoz
     show_new_plan: Az új terv megjelenítése
     size_unknown: A méret induláskor derül ki
     space: '{required} szabad hely kell hozzá; {free} szabad.'
     space_short: Nincs elég szabad hely. Szabadíts fel valamennyit, majd próbáld újra.
     space_unread: '{required} szabad hely kell hozzá; a szabad helyet nem sikerült
       kiolvasni.'
+    stale:
+      different_model_version: Működik, de más verzió, mint amelyikkel a Cadrumót
+        tesztelték.
+      older_revision: Működik, de újabb verzióra van szükség.
+      program_too_old: Működik, de ez a verzió túl régi a Cadrumóhoz.
     start: Beállítás
+    state:
+      absent: Még nincs beállítva.
+      blocked: Most nem lehet beállítani.
+      failed: A beállítás nem fejeződött be.
+      provisioning: Beállítás folyamatban.
+      ready: Kész.
+      stale: Működik, de frissítésre szorul.
+      unknown: A Cadrumo most nem tudta ellenőrizni.
+      verifying: Működés ellenőrzése folyamatban.
     step_checking: Ellenőrzés
     step_connecting: Kapcsolódás
     step_downloading: Letöltés

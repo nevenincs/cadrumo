@@ -3511,6 +3511,12 @@ desktop:
     title: Configuració
     window: Finestra
   setup:
+    action:
+      check_again: Torna a comprovar
+      resume: Reprèn
+      set_up: Configura
+      try_again: Torna-ho a provar
+      update: Actualitza
     advisory_incomplete: La configuració de Cadrumo no és completa. Fes clic aquí
       per completar-la.
     advisory_running: La configuració de Cadrumo està en curs. Fes clic aquí per veure
@@ -3518,18 +3524,52 @@ desktop:
     approve: Baixa i configura
     approve_at_least: Baixa almenys {size} i configura
     approve_size: Baixa {size} i configura
+    blocked:
+      hardware: Aquest ordinador no té prou memòria per a això.
+      needs_person: Espera que ho aprovis o que ho instal·lis tu.
+      not_in_this_build: Aquesta versió de Cadrumo no ho inclou.
+      offline: No tens connexió. Connecta't a internet per configurar-ho.
     cancel: Cancel·la la configuració
     cancelling: S'aturarà després del pas actual…
     checking: S'estan comprovant els components…
     close: Tanca
     copy_details: Copia els detalls
     details: Detalls
+    failure:
+      blocked_by_network: La teva xarxa ha bloquejat la baixada.
+      cancelled: Has cancel·lat la configuració.
+      damaged_download: La baixada estava malmesa i no s'ha pogut fer servir.
+      disk_full: No hi ha prou espai lliure al disc.
+      host_unreachable: No s'ha pogut contactar amb el servidor de baixada.
+      interrupted: La configuració es va interrompre abans d'acabar.
+      memory_busy: Ara mateix hi ha massa memòria en ús. Tanca altres programes i
+        torna-ho a provar.
+      needs_sign_in: Has d'iniciar la sessió a Google.
+      no_permission: Cadrumo no ha tingut permís per escriure els fitxers.
+      not_enough_memory: Aquest ordinador no té prou memòria per a això.
+      not_in_this_build: Aquesta versió de Cadrumo no ho inclou.
+      offline: No tens connexió.
+      program_missing: El programa d'IA local no està instal·lat.
+      program_not_running: El programa d'IA local no està en marxa.
+      secure_connection_failed: No s'ha pogut establir una connexió segura. Potser
+        un filtre de xarxa ho impedeix.
+      unexpected: Alguna cosa ha anat malament.
     hide: Amaga
+    item:
+      browser: Navegador per al web de l'Agència Tributària
+      local_ai: IA local
     lead: Cadrumo necessita aquests components per funcionar.
     lead_review: Revisa què es baixarà i on es desa, i després aprova-ho.
     lead_running: Pots tancar això; la configuració continua i Configuració mostra
       com va.
+    licence_non_commercial: El model {model} està subjecte a la {licence}, que no
+      permet l'ús comercial. L'has indicat tu de manera explícita, així que Cadrumo
+      l'utilitzarà, però una gestoria comercial necessita una llicència a part de
+      l'editor.
     not_now: Ara no
+    note:
+      downloaded_not_loaded: Baixat, encara sense carregar.
+      own_network_settings: Fa servir la seva pròpia configuració de xarxa.
     open: Obre la configuració
     outcome_cancelled: S'ha cancel·lat la configuració. El que ja s'havia baixat es
       conserva.
@@ -3550,6 +3590,8 @@ desktop:
     palette_local_ai: Configura la IA local
     palette_open: Configura els components
     palette_retry: Torna a provar la configuració
+    part_model: Model {role}
+    part_program: El programa que executa els models
     plan_destination: 'Es desa a: {folder}'
     plan_from: 'Des de: {hosts}'
     plan_nothing: No hi ha res per baixar.
@@ -3578,13 +3620,34 @@ desktop:
     result_done: Configurat
     result_not_finished: No ha acabat
     resume: Reprèn
+    retry: Problema de connexió. Es tornarà a provar d'aquí a {seconds} segons (intent
+      {attempt}).
+    role:
+      column_role_mapping: per a columnes de taules
+      supply_nature_proposal: per al tipus de venda o compra
+      text_extraction: per al text de documents
+      vision_transcription: per a pàgines escanejades
     show_new_plan: Mostra el nou pla
     size_unknown: Mida coneguda en començar
     space: Necessita {required} d'espai lliure; n'hi ha {free} de lliures.
     space_short: No hi ha prou espai lliure. Allibera'n una mica i torna-ho a provar.
     space_unread: Necessita {required} d'espai lliure; no s'ha pogut llegir l'espai
       lliure.
+    stale:
+      different_model_version: Funciona, però és una versió diferent de la que es
+        va provar amb Cadrumo.
+      older_revision: Funciona, però cal una versió més recent.
+      program_too_old: Funciona, però aquesta versió és massa antiga per a Cadrumo.
     start: Configura
+    state:
+      absent: Encara no està configurat.
+      blocked: Ara mateix no es pot configurar.
+      failed: La configuració no ha acabat.
+      provisioning: S'està configurant ara.
+      ready: A punt.
+      stale: Funciona, però necessita una actualització.
+      unknown: Cadrumo no ho ha pogut comprovar ara.
+      verifying: S'està comprovant que funciona.
     step_checking: Comprovant
     step_connecting: Connectant
     step_downloading: Baixant

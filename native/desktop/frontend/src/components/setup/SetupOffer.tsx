@@ -4,6 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import { useProvisioningRecovery } from "../../shell/provisioningRecovery";
 import { needsSetup } from "../../shell/setup";
 import { useStrings } from "../../shell/strings";
+import { actionWords, itemName } from "./setupWords";
 
 /** Beside something that could not run for a component this computer can
  * set up: the component by its name and the way into the window's setup
@@ -33,7 +34,9 @@ export function SetupOffer({
       data-setup-offer={target === "general" ? "general" : target.item}
     >
       {target !== "general" && (
-        <span className="font-medium text-foreground">{target.name}</span>
+        <span className="font-medium text-foreground">
+          {itemName(t, target.kind)}
+        </span>
       )}
       <Button
         size="xs"
@@ -43,7 +46,7 @@ export function SetupOffer({
         <Icon name="download" />
         {target === "general"
           ? t("desktop.setup.open")
-          : (target.action_label ?? t("desktop.setup.open"))}
+          : (actionWords(t, target.recovery) ?? t("desktop.setup.open"))}
       </Button>
     </span>
   );

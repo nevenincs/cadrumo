@@ -9,9 +9,10 @@ import {
 } from "@/components/ui/dialog";
 import type { SetupRow } from "../../ipc/contract";
 import { useStrings } from "../../shell/strings";
+import { actionWords, itemName, rowSentence } from "./setupWords";
 
 /** What a feature that could not run needs: the item by name, its state said
- * once by the host's sentence, and the row's own action when it has one. A
+ * once by its sentence, and the row's own action when it has one. A
  * row with none, such as one this build or this computer cannot set up, says
  * its sentence and offers only to close: no button leads to a setup that
  * would refuse. */
@@ -39,8 +40,8 @@ export function SetupPrompt({
           }}
         >
           <DialogHeader>
-            <DialogTitle>{row.name}</DialogTitle>
-            <DialogDescription>{row.sentence}</DialogDescription>
+            <DialogTitle>{itemName(t, row.kind)}</DialogTitle>
+            <DialogDescription>{rowSentence(t, row)}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             {row.recovery === null ? (
@@ -53,7 +54,7 @@ export function SetupPrompt({
                   {t("desktop.setup.not_now")}
                 </Button>
                 <Button size="sm" onClick={() => onSetUp(row)}>
-                  {row.action_label ?? t("desktop.setup.open")}
+                  {actionWords(t, row.recovery) ?? t("desktop.setup.open")}
                 </Button>
               </>
             )}

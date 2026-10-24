@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:6cafa954f29caccdedc349581e280165c07e2cba4bf88e744cac9ed72b5504fc'
+body_hash: 'sha256:cc78cd8642210dc43ddb45ee27573d156ed404223312bab4cdf98ceb79e4ee7b'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -375,6 +375,46 @@ related:
 - `S21` `verify:` `WSL Linux: mutation checks: a guardian that does not kill, and a browser not created into the scope, each hang the kill tests (timeout 124)` -> `pass`
 - `S21` `verify:` `rustfmt --edition 2024 --check on the touched Rust files` -> `pass`
 - `S21` `by:` `implementation-engineer-high`
+- `S11` `A` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S11` `A` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S11` `A` `native/desktop/src-tauri/src/shell/setup/google.rs`
+- `S11` `A` `native/desktop/src-tauri/src/shell/setup/google_tests.rs`
+- `S11` `D` `native/desktop/src-tauri/src/shell/setup/track.rs`
+- `S11` `D` `native/desktop/src-tauri/src/shell/setup/track_tests.rs`
+- `S11` `M` `native/desktop/src-tauri/src/shell/setup/mod.rs`
+- `S11` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S11` `M` `native/desktop/src-tauri/Cargo.toml`
+- `S11` `M` `native/desktop/src-tauri/Cargo.lock`
+- `S11` `M` `native/application/Cargo.toml`
+- `S11` `M` `native/application/src/provisioning/mod.rs`
+- `S11` `M` `native/application/src/provisioning/role_host.rs`
+- `S11` `M` `native/application/src/provisioning/test_servers.rs`
+- `S11` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S11` `M` `native/desktop/frontend/src/components/setup/setupWords.ts`
+- `S11` `M` `native/desktop/frontend/src/components/setup/SetupDialog.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/setup/SetupOffer.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/setup/SetupPrompt.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/setup/SetupRowItem.tsx`
+- `S11` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S11` `M` `native/desktop/frontend/tests/scenarios/setup.spec.ts`
+- `S11` `M` `native/desktop/tests/packaged/setup.mjs`
+- `S11` `M` `dev/locales/desktop_chrome.py`
+- `S11` `M` `src/cadrumo/locales/en/common.yml`
+- `S11` `M` `src/cadrumo/locales/es/common.yml`
+- `S11` `M` `src/cadrumo/locales/ca/common.yml`
+- `S11` `M` `src/cadrumo/locales/hu/common.yml`
+- `S11` `verify:` `desktop cargo test --offline --bin cadrumo shell::setup on an export of HEAD plus this Step (31: 11 against a real engine with a local TLS publisher, 9 account, 7 wire, 4 host), twice` -> `pass`
+- `S11` `verify:` `desktop cargo test --offline --bin cadrumo, whole binary (542 passed, 1 ignored; docs::tests::generated_shell_policy_frames_the_runtime_docs_origin needs TAURI_CONFIG from the host test runner, pre-existing outside this Step)` -> `fail`
+- `S11` `verify:` `application cargo test --offline --lib --features platform provisioning:: (124)` -> `pass`
+- `S11` `verify:` `cargo clippy --all-targets -D warnings: desktop; application with platform,test-support, without features` -> `pass`
+- `S11` `verify:` `rustfmt --edition 2024 --check through stdin on the touched Rust` -> `pass`
+- `S11` `verify:` `cargo deny check: desktop; application --features platform,test-support` -> `pass`
+- `S11` `verify:` `frontend tsc --noEmit and eslint on the touched files; prettier --check (only src/components/ledger/useSealedMovements.ts from other work fails)` -> `pass`
+- `S11` `verify:` `playwright scenarios setup.spec.ts and ledger-provisioning.spec.ts on a scratch dev server with this Step's generated strings (36)` -> `pass`
+- `S11` `verify:` `playwright unit provisioning-recovery.spec.ts (5)` -> `pass`
+- `S11` `verify:` `pytest test_dependency_registry_conformance.py and dev/locales/tests/test_desktop_chrome.py (60; the shell drift failure is uncommitted workspace keys of other work, and the drift on HEAD plus this Step is empty)` -> `pass`
+- `S11` `verify:` `dev.locales status --check (blocking backlog is desktop.attendance.* and inventory violations from other work; the new desktop.setup keys exist in all four locales)` -> `fail`
+- `S11` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -417,3 +457,9 @@ related:
 - `S21` S21 POSIX containment is a guardian /bin/sh in a process group of its own that kills that group when its stdin lifeline from the owner ends; the manager's server and the components role's browser checks and hardware queries are created into the group; descendants that leave the group, and a killed guardian, are not covered
 - `S21` S21 pre-existing on WSL Linux, unrelated to this Step: manager clippy fails on dead code in startup.rs and successor.rs (passes with -A `dead_code` on the command line); four platform launch-profile tests and the application `local_ai` record-fixture test fail because the Linux contract cannot be generated (stale Linux desktop dependency evidence) and the fixture is Windows-derived
 - `S21` S21 the desktop binary is not compiled on Linux here: its build needs the CMake-generated tauri configuration; macOS code paths are not compiled: no macOS Rust target is installed on this host
+- `S11` S11 wording ruling (reading B, 2026-10-24, desktop-shell amendment revised in 2566c0803b): the setup snapshot carries codes; the window words them from new desktop.setup keys whose text is the application.provisioning and provisioning.role/model.licence translations
+- `S11` S11 the reused licence notice says 'You named it explicitly'; no pinned role model bars commercial use today, so it is unreachable, but its wording no longer fits a pinned model
+- `S11` S11 the window's licence notice names the pin's SPDX identifier (for example LicenseRef-Qwen-Research), not the model catalogue's display name, which the engine does not carry
+- `S11` S11 `desktop_setup_start` keeps its model argument but refuses any value: the engine pins every role's model
+- `S11` S11 application gains a test-support feature exposing the local TLS test servers; the desktop enables it only as a dev-dependency, so its Cargo.lock adds ring to the application's dependencies; the Linux desktop dependency evidence digests (already stale since S01) drift further
+- `S11` S11 on Linux and macOS the window keeps a process scope for its engines' browser checks and hardware queries; those paths compile only on those hosts and were not built here

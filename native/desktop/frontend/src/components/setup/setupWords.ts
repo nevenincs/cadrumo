@@ -1,18 +1,89 @@
 import type {
   GoogleAccount,
+  SetupFailureCategory,
+  SetupItemId,
+  SetupItemKind,
+  SetupLicence,
+  SetupNote,
   SetupOutcome,
+  SetupRecovery,
+  SetupRetry,
   SetupRow,
   SetupRun,
   SetupStep,
 } from "../../ipc/contract";
 import type { Translate } from "../../shell/strings";
 
-// The window's own words for setup and the Google account. Each item's name,
-// state sentence, note and button come from the host already in the
-// profile's language, and the sentence is the one place a row's state is
-// said; what is worded here is only what the shell itself says: a step, an
-// outcome, a refusal and the Google account's line. No closed value is ever
-// shown as it is.
+// The window's words for setup and the Google account. The host sends codes
+// only, and every one is worded here from the setup strings: an item's name,
+// the one sentence that states a row's state, its note and its button, a
+// failure, a retry notice, a plan part and a licence notice, and what the
+// shell itself says of a step, an outcome, a refusal and the Google account.
+// A row's sentence is the one place its state is said. No closed value is
+// ever shown as it is.
+
+/** An item's plain name, such as "Local AI"; an item's id is its kind. */
+export function itemName(
+  t: Translate,
+  item: SetupItemKind | SetupItemId,
+): string {
+  return t(`desktop.setup.item.${item}`);
+}
+
+/** The one sentence stating a row's state and its reason. */
+export function rowSentence(t: Translate, row: SetupRow): string {
+  if (row.state === "stale" && row.stale_reason)
+    return t(`desktop.setup.stale.${row.stale_reason}`);
+  if (row.state === "blocked" && row.blocked_reason)
+    return t(`desktop.setup.blocked.${row.blocked_reason}`);
+  if (row.state === "failed" && row.failure)
+    return failureWords(t, row.failure);
+  return t(`desktop.setup.state.${row.state}`);
+}
+
+/** A usable item's secondary fact, such as "Downloaded, not loaded yet." */
+export function noteWords(t: Translate, note: SetupNote): string {
+  return t(`desktop.setup.note.${note}`);
+}
+
+/** The words of a row's one button; null when it offers none. */
+export function actionWords(
+  t: Translate,
+  recovery: SetupRecovery | null,
+): string | null {
+  return recovery === null ? null : t(`desktop.setup.action.${recovery}`);
+}
+
+/** The one sentence a failure is told by. */
+export function failureWords(
+  t: Translate,
+  failure: SetupFailureCategory,
+): string {
+  return t(`desktop.setup.failure.${failure}`);
+}
+
+/** The notice shown before a retry's wait. */
+export function retryWords(t: Translate, retry: SetupRetry): string {
+  return t("desktop.setup.retry", {
+    attempt: retry.attempt,
+    seconds: retry.delay_s,
+  });
+}
+
+/** One part of the local AI's plan: its program, or one role's model. */
+export function partName(t: Translate, part: string): string {
+  return part === "program"
+    ? t("desktop.setup.part_program")
+    : t("desktop.setup.part_model", { role: t(`desktop.setup.role.${part}`) });
+}
+
+/** What approving a model whose licence bars commercial use agrees to. */
+export function licenceWords(t: Translate, licence: SetupLicence): string {
+  return t("desktop.setup.licence_non_commercial", {
+    model: licence.model,
+    licence: licence.licence,
+  });
+}
 
 /** How a row's state is marked beside its sentence, which says it in words. */
 export type RowTone = "ready" | "working" | "attention";
@@ -65,7 +136,7 @@ export function overallShare(run: SetupRun): number {
 export function outcomeWords(
   t: Translate,
   outcome: SetupOutcome,
-  failureSentence: string | null,
+  failure: SetupFailureCategory | null,
 ): string {
   switch (outcome) {
     case "completed":
@@ -83,7 +154,9 @@ export function outcomeWords(
     case "cancelled":
       return t("desktop.setup.outcome_cancelled");
     case "failed":
-      return failureSentence ?? t("desktop.setup.outcome_failed");
+      return failure
+        ? failureWords(t, failure)
+        : t("desktop.setup.outcome_failed");
   }
 }
 
@@ -131,11 +204,12 @@ export function refusalWords(t: Translate, code: string): string {
 }
 
 /** The Google account's one line: what is happening now, else how the
- * profile's sign-in reads. A failed act says its own sentence instead. */
+ * profile's sign-in reads. A failed act says its failure instead. */
 export function googleWords(t: Translate, google: GoogleAccount): string {
   if (google.stage === "signing_in") return t("desktop.google.waiting");
   if (google.stage === "signing_out") return t("desktop.google.signing_out");
-  if (google.stage === "failed" && google.sentence) return google.sentence;
+  if (google.stage === "failed" && google.failure)
+    return failureWords(t, google.failure);
   switch (google.state) {
     case null:
       return t("desktop.google.checking");

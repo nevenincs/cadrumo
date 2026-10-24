@@ -1,17 +1,21 @@
-//! Component setup through the held person session: status reads, setup and
-//! its plan review and cancellation; and, riding the same session but apart
-//! from setup, the profile's Google account: its stored sign-in, sign-in and
-//! sign-out. The window names items and choices only. This host submits the product's registered operations
-//! through the session's generic relay and keeps what only this window knows
-//! (`track`). An observed operation pushes a cue on the bridge; this host then
-//! reads the setup again and pushes the typed snapshot on the window's
-//! channel. Nothing polls.
-pub mod track;
+//! Component setup through this window's own engine: status reads, full
+//! checks, setup with its plan review, and cancellation, each run by the
+//! component engine in this process (`components`). Riding the held person
+//! session but apart from setup, the profile's Google account: its stored
+//! sign-in, sign-in and sign-out (`google`). The window names items and
+//! choices only, and words every code the snapshot carries from its own
+//! catalogue. Engine progress and the session's cues each push the typed
+//! snapshot on the window's channel. Nothing polls.
+pub mod components;
+pub mod google;
 pub mod wire;
 
 use super::sign_in::{Presence, SignIn};
 use crate::agent::person::{HeldPerson, PersonEvent};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
+use cadrumo_application::provisioning::items::ItemId;
+use components::Components;
+use google::{Act, Relay, Stop, Tracker};
 use serde::Serialize;
 use serde_json::Value;
 use std::sync::{
@@ -19,11 +23,14 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 use tauri::{State, ipc::Channel};
-use track::{Relay, Stop, Tracker};
-use wire::{Action, CommandFailure, Refusal, Snapshot};
+use wire::{Action, CommandFailure, Google, Refusal, Snapshot};
 
 fn failed() -> ApplicationError {
     ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+}
+
+fn protocol() -> ApplicationError {
+    ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli).with_reason("setup_reply_shape")
 }
 
 fn lock<T>(value: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -82,21 +89,49 @@ impl Current {
     }
 }
 
-/// The held person bridge as the tracker's relay.
+/// The held person bridge as the account tracker's relay.
 struct PersonRelay(HeldPerson);
 
 impl Relay for PersonRelay {
     fn call(&mut self, request: Value) -> Result<Value> {
         // Each exchange retains correlation and session authority. Do not hold
-        // the bridge across an entire setup snapshot: service admission and
+        // the bridge across an entire account read: service admission and
         // person activity must be able to run between its independent reads.
         lock(&self.0).exchange(request)
     }
 }
 
+/// The window's snapshot: the engine's side and the account beside it, or a
+/// host failure when a value falls outside its closed set.
+fn compose(engine: components::View, google: Google) -> Option<Snapshot> {
+    let snapshot = Snapshot {
+        rows: engine.rows,
+        rows_mode: engine.rows_mode,
+        complete: engine.complete,
+        hardware_limited: engine.hardware_limited,
+        check: engine.check,
+        setup: engine.setup,
+        google,
+        details: engine.details,
+    };
+    snapshot.valid().then_some(snapshot)
+}
+
+fn item_ids(items: Option<Vec<String>>) -> Option<Vec<ItemId>> {
+    items.map(|items| {
+        items
+            .iter()
+            .filter_map(|item| ItemId::parse(item))
+            .collect()
+    })
+}
+
 pub struct SetupHost {
     sign_in: Arc<SignIn>,
+    components: Components,
     current: Mutex<Current>,
+    /// The account as last read, which the engine's own changes are shown beside.
+    google: Mutex<Option<Google>>,
     person: Arc<Mutex<Option<HeldPerson>>>,
     tracker: Arc<Mutex<Option<Tracker>>>,
     operation: tokio::sync::Mutex<()>,
@@ -109,6 +144,7 @@ impl SetupHost {
     pub fn new(sign_in: Arc<SignIn>) -> Self {
         Self {
             sign_in,
+            components: Components::new(components::installation()),
             current: Mutex::new(Current {
                 value: DesktopSetup {
                     revision: 0,
@@ -117,6 +153,7 @@ impl SetupHost {
                 },
                 listener: None,
             }),
+            google: Mutex::new(None),
             person: Arc::new(Mutex::new(None)),
             tracker: Arc::new(Mutex::new(None)),
             operation: tokio::sync::Mutex::new(()),
@@ -130,15 +167,64 @@ impl SetupHost {
         lock(&self.current).update(state, snapshot)
     }
 
-    /// Carry one setup action to the held session of the signed-in profile and
-    /// publish the snapshot after it. Signed out, an action is refused and a
-    /// read answers the signed-out state.
+    /// Publishes what the engine changed beside the account as last read; a
+    /// window that shows no setup now has nothing to update.
+    fn refresh(&self) {
+        let shown = lock(&self.current).value.state == Availability::Ready;
+        let google = lock(&self.google).clone();
+        if let (true, Some(google)) = (shown, google) {
+            match compose(self.components.view(), google) {
+                Some(snapshot) => self.publish(Availability::Ready, Some(snapshot)),
+                None => self.publish(Availability::Unavailable, None),
+            };
+        }
+    }
+
+    /// The engine's part of one window action. A setup waits for its review or
+    /// its network check here, apart from the held session, so the session and
+    /// a cancel stay free meanwhile.
+    async fn act(&self, request: &Action) -> std::result::Result<(), Refusal> {
+        match request {
+            Action::Observe | Action::GoogleSignIn | Action::GoogleSignOut => {
+                self.components.observe();
+                Ok(())
+            }
+            Action::Check(mode) => {
+                self.components.check(*mode);
+                Ok(())
+            }
+            Action::Verify(items) => {
+                self.components
+                    .verify(item_ids(items.clone()).unwrap_or_default());
+                Ok(())
+            }
+            Action::Start { items, resume } => {
+                self.components
+                    .start(item_ids(items.clone()), *resume)
+                    .await
+            }
+            Action::Answer {
+                operation_id,
+                plan_digest,
+                decision,
+            } => {
+                self.components
+                    .answer(operation_id, plan_digest, *decision)
+                    .await
+            }
+            Action::Cancel { operation_id } => self.components.cancel(operation_id),
+        }
+    }
+
+    /// Carry one setup action to the engine and the account's part of it to
+    /// the held session of the signed-in profile, then publish the snapshot
+    /// after it. Signed out, an action is refused and a read answers the
+    /// signed-out state.
     async fn exchange(
         &self,
         request: Action,
         action: bool,
     ) -> std::result::Result<DesktopSetup, CommandFailure> {
-        let _operation = self.operation.lock().await;
         if self.closed.load(Ordering::Acquire) {
             return Err(failed().into());
         }
@@ -164,6 +250,16 @@ impl SetupHost {
                 Ok(value)
             };
         }
+        let refused = self.act(&request).await.err();
+        let account = match request {
+            Action::GoogleSignIn => Act::SignIn,
+            Action::GoogleSignOut => Act::SignOut,
+            _ => Act::Observe,
+        };
+        let _operation = self.operation.lock().await;
+        if self.closed.load(Ordering::Acquire) {
+            return Err(failed().into());
+        }
         let sign_in = self.sign_in.clone();
         let bridge = self.person.clone();
         let tracker = self.tracker.clone();
@@ -176,13 +272,13 @@ impl SetupHost {
             *held = Some(person.clone());
             let identity = lock(&person).identity.clone();
             let mut followed = lock(&tracker);
-            // Another held session's operations are not this window's to follow.
+            // Another held session's account is not this window's to follow.
             let tracked = match followed.take() {
                 Some(tracked) if tracked.follows(&identity) => tracked,
                 _ => Tracker::new(identity),
             };
             let tracked = followed.insert(tracked);
-            let answered = tracked.handle(&mut PersonRelay(person.clone()), request);
+            let answered = tracked.handle(&mut PersonRelay(person.clone()), account);
             if matches!(answered, Err(Stop::Host(_))) && !lock(&person).is_open() {
                 *held = None;
             }
@@ -202,18 +298,33 @@ impl SetupHost {
             self.publish(Availability::Unavailable, None);
             return Err(failed().into());
         }
-        match answered {
-            Ok(snapshot) => Ok(self.publish(Availability::Ready, Some(snapshot))),
-            Err(Stop::Refused(code)) => Err(code.into()),
+        let google = match answered {
+            Ok(google) => google,
+            Err(Stop::Refused(code)) => return Err(code.into()),
             Err(Stop::Host(error)) => {
                 // A lost bridge keeps no setup on display as if it were current.
+                *lock(&self.google) = None;
                 self.publish(Availability::Unavailable, None);
-                if action {
+                return if action {
                     Err(error.into())
                 } else {
                     Ok(lock(&self.current).value.clone())
-                }
+                };
             }
+        };
+        *lock(&self.google) = Some(google.clone());
+        let Some(snapshot) = compose(self.components.view(), google) else {
+            self.publish(Availability::Unavailable, None);
+            return if action {
+                Err(protocol().into())
+            } else {
+                Ok(lock(&self.current).value.clone())
+            };
+        };
+        let value = self.publish(Availability::Ready, Some(snapshot));
+        match refused {
+            Some(code) => Err(code.into()),
+            None => Ok(value),
         }
     }
 
@@ -240,6 +351,8 @@ impl SetupHost {
             let owner = self.clone();
             *worker = Some(tokio::spawn(async move {
                 let mut events = owner.sign_in.person_events();
+                let mut changes = owner.components.changes();
+                let mut read = true;
                 loop {
                     // Register every wake before reading, so none arriving meanwhile is lost.
                     let wake = owner.wake.notified();
@@ -250,14 +363,20 @@ impl SetupHost {
                     if owner.closed.load(Ordering::Acquire) {
                         break;
                     }
-                    if lock(&owner.current).listener.is_some() {
+                    if read && lock(&owner.current).listener.is_some() {
                         // A failed read publishes the unavailable state; the next cue reads again.
                         let _ = owner.exchange(Action::Observe, false).await;
                     }
+                    read = true;
                     tokio::select! {
                         _ = &mut wake => {},
                         () = &mut signed_in => {},
                         () = setup_pushed(&mut events) => {},
+                        () = engine_changed(&mut changes) => {
+                            // The engine moved on: its part is shown again without a session read.
+                            owner.refresh();
+                            read = false;
+                        },
                     }
                 }
             }));
@@ -275,8 +394,17 @@ impl SetupHost {
         if let Some(worker) = worker {
             worker.await.map_err(|_| failed())?;
         }
+        self.components.close().await;
         let _operation = self.operation.lock().await;
         self.release_person().await
+    }
+}
+
+/// Resolves when the engine changed what the window shows.
+async fn engine_changed(changes: &mut tokio::sync::watch::Receiver<u64>) {
+    if changes.changed().await.is_err() {
+        // The engine is gone with its host; nothing more will change.
+        std::future::pending::<()>().await;
     }
 }
 
@@ -463,7 +591,7 @@ mod tests {
         serde_json::from_value(json!({
             "rows": [], "rows_mode": null, "complete": null, "hardware_limited": null,
             "check": null, "setup": null,
-            "google": {"state": null, "email": null, "drive_folder_id": null, "stage": "idle", "failure": null, "sentence": null},
+            "google": {"state": null, "email": null, "drive_folder_id": null, "stage": "idle", "failure": null},
             "details": details,
         }))
         .unwrap()
@@ -544,5 +672,29 @@ mod tests {
         setup_pushed(&mut events).await;
         sender.send(PersonEvent::Retired).unwrap();
         setup_pushed(&mut events).await;
+    }
+
+    #[test]
+    fn a_snapshot_outside_its_closed_sets_is_not_composed() {
+        let view = || components::View {
+            rows: Vec::new(),
+            rows_mode: None,
+            complete: None,
+            hardware_limited: None,
+            check: None,
+            setup: None,
+            details: "Cadrumo setup details\n".into(),
+        };
+        let unread = || Google {
+            state: None,
+            email: None,
+            drive_folder_id: None,
+            stage: wire::GoogleStage::Idle,
+            failure: None,
+        };
+        assert!(compose(view(), unread()).is_some());
+        let mut failed = unread();
+        failed.failure = Some(wire::Failure::Unexpected);
+        assert!(compose(view(), failed).is_none());
     }
 }

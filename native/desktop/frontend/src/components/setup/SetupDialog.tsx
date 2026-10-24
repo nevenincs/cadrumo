@@ -25,9 +25,14 @@ import { useStrings, type Translate } from "../../shell/strings";
 import { formatSize } from "../agent/files";
 import { SetupRowItem } from "./SetupRowItem";
 import {
+  failureWords,
+  itemName,
+  licenceWords,
   outcomeWords,
   overallShare,
+  partName,
   refusalWords,
+  retryWords,
   stepWords,
 } from "./setupWords";
 
@@ -83,9 +88,9 @@ function PlanSummary({
   // What an approval also agrees to is said here, never only in the detail.
   const notices = [
     ...new Set(
-      review.entries
-        .map((entry) => entry.licence_notice)
-        .filter((notice): notice is string => notice !== null),
+      review.entries.flatMap((entry) =>
+        entry.licences.map((licence) => licenceWords(t, licence)),
+      ),
     ),
   ];
   return (
@@ -119,11 +124,9 @@ function PlanSummary({
 function PlanDetail({
   review,
   locale,
-  names,
 }: {
   review: SetupReview;
   locale: string;
-  names: Map<SetupItemId, string>;
 }) {
   const t = useStrings();
   const size = (bytes: number | null) =>
@@ -139,7 +142,9 @@ function PlanDetail({
           className="grid gap-0.5 rounded-lg bg-accent p-3 text-sm"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-            <span className="font-medium text-foreground">{entry.name}</span>
+            <span className="font-medium text-foreground">
+              {itemName(t, entry.item)}
+            </span>
             <span className="text-muted-foreground">
               {size(entry.download_bytes)}
             </span>
@@ -152,7 +157,7 @@ function PlanDetail({
                   data-setup-part={part.part}
                   className="flex flex-wrap justify-between gap-x-2"
                 >
-                  <span>{part.name}</span>
+                  <span>{partName(t, part.part)}</span>
                   {part.download_bytes !== 0 && (
                     <span>{size(part.download_bytes)}</span>
                   )}
@@ -177,9 +182,7 @@ function PlanDetail({
           {entry.shares_download_with !== null && (
             <p className="text-muted-foreground">
               {t("desktop.setup.plan_shared", {
-                name:
-                  names.get(entry.shares_download_with) ??
-                  entry.shares_download_with,
+                name: itemName(t, entry.shares_download_with),
               })}
             </p>
           )}
@@ -205,7 +208,9 @@ function ItemProgress({
       className="grid gap-1.5 rounded-lg bg-accent p-3 text-sm"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-        <span className="font-medium text-foreground">{progress.name}</span>
+        <span className="font-medium text-foreground">
+          {itemName(t, progress.item)}
+        </span>
         <span className="text-muted-foreground">
           {result
             ? result.failure
@@ -222,7 +227,7 @@ function ItemProgress({
             value={completed}
             max={total}
             aria-label={t("desktop.setup.progress_label", {
-              name: progress.name,
+              name: itemName(t, progress.item),
             })}
           />
           <span className="text-muted-foreground">
@@ -235,12 +240,12 @@ function ItemProgress({
       )}
       {retry && !result && (
         <p role="status" className="text-foreground">
-          {retry.sentence}
+          {retryWords(t, retry)}
         </p>
       )}
-      {result?.sentence && (
+      {result?.failure && (
         <p role="alert" className="text-foreground">
-          {result.sentence}
+          {failureWords(t, result.failure)}
         </p>
       )}
     </li>
@@ -262,7 +267,7 @@ function Overall({ run }: { run: SetupRun }) {
           ? t("desktop.setup.progress_item", {
               index: index + 1,
               count: run.items.length,
-              name: current.name,
+              name: itemName(t, current.item),
               step: stepWords(t, current.step),
             })
           : t("desktop.setup.summary_running")}
@@ -274,7 +279,7 @@ function Overall({ run }: { run: SetupRun }) {
       />
       {current?.retry && (
         <p role="status" className="text-foreground">
-          {current.retry.sentence}
+          {retryWords(t, current.retry)}
         </p>
       )}
     </div>
@@ -352,9 +357,6 @@ export function SetupDialog({
   const rows = (snapshot?.rows ?? []).filter(
     (row) => focus === null || row.item === focus,
   );
-  const names = new Map(
-    (snapshot?.rows ?? []).map((row) => [row.item, row.name] as const),
-  );
   const main = snapshot ? mainAction(t, run, rows) : null;
   const description =
     stage === "review"
@@ -408,7 +410,7 @@ export function SetupDialog({
           <>
             <PlanSummary review={run.review} locale={locale} />
             <Details>
-              <PlanDetail review={run.review} locale={locale} names={names} />
+              <PlanDetail review={run.review} locale={locale} />
             </Details>
           </>
         ) : stage === "running" && run ? (
@@ -435,7 +437,7 @@ export function SetupDialog({
           <>
             {stage === "settled" && run?.outcome ? (
               <Alert role={run.outcome === "completed" ? "status" : "alert"}>
-                {outcomeWords(t, run.outcome, run.failure_sentence)}
+                {outcomeWords(t, run.outcome, run.failure)}
               </Alert>
             ) : (
               <p data-setup-summary className="text-sm text-foreground">

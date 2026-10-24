@@ -8,8 +8,8 @@ import { label } from "../support/strings";
 // test moves a setup on itself through `window.__scenarioSetup`. The dialog
 // opens once per launch while setup is unfinished, never holds the window,
 // leads with one summary and one action, keeps each component's detail in a
-// closed disclosure, and shows only the host's sentences and the window's own
-// words: no closed value, code or internal name.
+// closed disclosure, and words every code the host sends from its own
+// strings: no closed value, code or internal name reaches the screen.
 
 type Controls = {
   step(): void;
@@ -224,8 +224,11 @@ test("the plan is summed up, its detail stays closed, and approving runs every c
   await expect(shown).toContainText(
     label("desktop.setup.plan_outside_program"),
   );
-  await expect(shown.locator("[data-setup-licence]")).toContainText(
-    "This model is shared under its maker's licence",
+  await expect(shown.locator("[data-setup-licence]")).toHaveText(
+    label("desktop.setup.licence_non_commercial", {
+      model: "qwen2.5vl:3b",
+      licence: "LicenseRef-Qwen-Research",
+    }),
   );
   await expect(shown.locator("[data-setup-plan]").first()).toBeHidden();
   const disclosure = await details(shown);
@@ -264,7 +267,9 @@ test("the plan is summed up, its detail stays closed, and approving runs every c
     }),
   );
   await act(target, "retry", 2, 8);
-  await expect(overall).toContainText("Trying again in 8 seconds (attempt 2).");
+  await expect(overall).toContainText(
+    label("desktop.setup.retry", { attempt: 2, seconds: 8 }),
+  );
   const running = await details(shown);
   const browser = running.locator("[data-setup-progress=browser]");
   await expect(browser.getByRole("progressbar")).toBeVisible();
@@ -386,8 +391,10 @@ test("offline, the items that need the network say so and offer a check", async 
   const shown = dialog(target);
   const disclosure = await details(shown);
   const browser = disclosure.locator("[data-setup-row=browser]");
-  await expect(browser).toContainText("You're offline.");
-  await browser.getByRole("button", { name: "Check again" }).click();
+  await expect(browser).toContainText(label("desktop.setup.blocked.offline"));
+  await browser
+    .getByRole("button", { name: label("desktop.setup.action.check_again") })
+    .click();
   expect(
     await target.evaluate(() => window.__scenarioHostCalls ?? []),
   ).toContain("setup.verify browser");
@@ -481,7 +488,9 @@ test("a Google sign-in that does not finish says so on the account's row", async
     .getByRole("menuitem", { name: label("desktop.google.sign_in_label") })
     .click();
   await act(target, "finishGoogle", false);
-  await expect(google).toContainText("Google sign-in didn't finish.");
+  await expect(google).toContainText(
+    label("desktop.setup.failure.needs_sign_in"),
+  );
   await expect(
     google.getByRole("menuitem", {
       name: label("desktop.google.sign_in_label"),
@@ -757,7 +766,6 @@ test("Drive stays hidden without a usable folder and while Google authentication
           ...google,
           email: null,
           failure: null,
-          sentence: null,
         }),
       google,
     );

@@ -3456,23 +3456,62 @@ desktop:
     title: Settings
     window: Window
   setup:
+    action:
+      check_again: Check again
+      resume: Resume
+      set_up: Set up
+      try_again: Try again
+      update: Update
     advisory_incomplete: Cadrumo setup is not complete. Click here to complete it.
     advisory_running: Cadrumo setup is running. Click here to see how it's going.
     approve: Download and set up
     approve_at_least: Download at least {size} and set up
     approve_size: Download {size} and set up
+    blocked:
+      hardware: This computer does not have enough memory for this.
+      needs_person: Waiting for you to approve it, or to install it yourself.
+      not_in_this_build: This version of Cadrumo does not include this.
+      offline: You are offline. Connect to the internet to set this up.
     cancel: Cancel setup
     cancelling: Stopping after the current step…
     checking: Checking components…
     close: Close
     copy_details: Copy details
     details: Details
+    failure:
+      blocked_by_network: Your network blocked the download.
+      cancelled: You cancelled the setup.
+      damaged_download: The download was damaged and could not be used.
+      disk_full: There is not enough free disk space.
+      host_unreachable: The download server could not be reached.
+      interrupted: Setup was interrupted before it finished.
+      memory_busy: Too much memory is in use right now. Close other programs and try
+        again.
+      needs_sign_in: You need to sign in to Google.
+      no_permission: Cadrumo was not allowed to write the files.
+      not_enough_memory: This computer does not have enough memory for this.
+      not_in_this_build: This version of Cadrumo does not include this.
+      offline: You are offline.
+      program_missing: The local AI program is not installed.
+      program_not_running: The local AI program is not running.
+      secure_connection_failed: A secure connection could not be made. A network filter
+        may be in the way.
+      unexpected: Something went wrong.
     hide: Hide
+    item:
+      browser: Browser for the tax agency website
+      local_ai: Local AI
     lead: Cadrumo needs these components to work.
     lead_review: Check what will be downloaded and where it goes, then approve it.
     lead_running: You can close this; setup keeps going and Settings shows how it's
       doing.
+    licence_non_commercial: Model {model} is covered by the {licence}, which does
+      not permit commercial use. You named it explicitly, so Cadrumo will use it,
+      but a commercial filing practice needs a separate licence from the publisher.
     not_now: Not now
+    note:
+      downloaded_not_loaded: Downloaded, not loaded yet.
+      own_network_settings: Uses its own network settings.
     open: Open setup
     outcome_cancelled: Setup was cancelled. What was already downloaded is kept.
     outcome_completed: Everything is set up.
@@ -3491,6 +3530,8 @@ desktop:
     palette_local_ai: Set up the local AI
     palette_open: Set up components
     palette_retry: Retry setup
+    part_model: Model {role}
+    part_program: The program that runs the models
     plan_destination: 'Saved in: {folder}'
     plan_from: 'From: {hosts}'
     plan_nothing: Nothing to download.
@@ -3518,12 +3559,32 @@ desktop:
     result_done: Set up
     result_not_finished: Didn't finish
     resume: Resume
+    retry: Connection problem. Trying again in {seconds} seconds (attempt {attempt}).
+    role:
+      column_role_mapping: for table columns
+      supply_nature_proposal: for the kind of sale or purchase
+      text_extraction: for document text
+      vision_transcription: for scanned pages
     show_new_plan: Show the new plan
     size_unknown: Size known once it starts
     space: Needs {required} of free space; {free} is free.
     space_short: There isn't enough free space. Free some up, then try again.
     space_unread: Needs {required} of free space; the free space couldn't be read.
+    stale:
+      different_model_version: Works, but it is a different version from the one Cadrumo
+        was tested with.
+      older_revision: Works, but a newer version is needed.
+      program_too_old: Works, but this version is too old for Cadrumo.
     start: Set up
+    state:
+      absent: Not set up yet.
+      blocked: This cannot be set up right now.
+      failed: Setup did not finish.
+      provisioning: Setting up now.
+      ready: Ready.
+      stale: Works, but needs an update.
+      unknown: Cadrumo could not check this right now.
+      verifying: Checking that it works.
     step_checking: Checking
     step_connecting: Connecting
     step_downloading: Downloading
