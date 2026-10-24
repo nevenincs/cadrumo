@@ -2762,6 +2762,9 @@ desktop:
       single_writes: Saves one at a time
       title_into: Paste into {columns}?
     paused:
+      counted_not_saved: '{count} staged again'
+      counted_saved: '{count} saved'
+      counted_undetermined: '{count} can''t tell, still staged'
       dismiss: Dismiss
       found_not_saved: '{movement} was not saved, staged again'
       found_saved: '{movement} was saved'
@@ -2771,10 +2774,10 @@ desktop:
       reread: Re-read
       saved_unread: 'Saved, answer not read: writes paused'
       saved_unread_reason: 'Re-read first: a save''s answer was not read'
-      staged: Staged changes
       title: 'Outcome unknown: writes paused'
       unsaved: '{movement} was not saved'
       untold: '{movement}: can''t tell if it saved; still paused'
+      what_movements: 'Movements: {count}'
     period:
       all: All periods
       choose: Choose a period

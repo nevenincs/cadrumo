@@ -2806,6 +2806,9 @@ desktop:
       single_writes: Guardados uno a uno
       title_into: ¿Pegar en {columns}?
     paused:
+      counted_not_saved: 'Preparado de nuevo: {count}'
+      counted_saved: 'Guardado: {count}'
+      counted_undetermined: 'Sin aclarar, sigue preparado: {count}'
       dismiss: Cerrar
       found_not_saved: '{movement} no se guardó; sigue preparado'
       found_saved: '{movement} se guardó'
@@ -2815,10 +2818,10 @@ desktop:
       reread: Volver a leer
       saved_unread: 'Guardado, respuesta sin leer: escrituras en pausa'
       saved_unread_reason: 'Vuelve a leer primero: no se leyó la respuesta de un guardado'
-      staged: Cambios preparados
       title: 'Resultado desconocido: escrituras en pausa'
       unsaved: '{movement} no se guardó'
       untold: '{movement}: no se sabe si se guardó; sigue en pausa'
+      what_movements: 'Movimientos: {count}'
     period:
       all: Todos los periodos
       choose: Elige un periodo

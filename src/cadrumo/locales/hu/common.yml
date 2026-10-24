@@ -2784,6 +2784,9 @@ desktop:
       single_writes: Egyenként mentve
       title_into: 'Beillesztés ide: {columns}?'
     paused:
+      counted_not_saved: 'Újra előkészítve: {count}'
+      counted_saved: 'Mentve: {count}'
+      counted_undetermined: 'Nem derül ki, előkészítve marad: {count}'
       dismiss: Bezárás
       found_not_saved: '{movement} nem lett mentve, újra előkészítve'
       found_saved: '{movement} mentve lett'
@@ -2793,10 +2796,10 @@ desktop:
       reread: Újraolvasás
       saved_unread: 'Mentve, a válasz nem olvasható: írás szüneteltetve'
       saved_unread_reason: 'Előbb olvasd be újra: egy mentés válasza nem olvasható'
-      staged: Előkészített változások
       title: 'Ismeretlen eredmény: írás szüneteltetve'
       unsaved: '{movement} nem lett mentve'
       untold: '{movement}: nem tudni, mentve lett-e; a szünet marad'
+      what_movements: 'Tételek: {count}'
     period:
       all: Minden időszak
       choose: Válassz időszakot

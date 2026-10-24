@@ -2800,6 +2800,9 @@ desktop:
       single_writes: Desats un a un
       title_into: Enganxar a {columns}?
     paused:
+      counted_not_saved: 'Preparat de nou: {count}'
+      counted_saved: 'Desat: {count}'
+      counted_undetermined: 'Sense aclarir, continua preparat: {count}'
       dismiss: Tanca
       found_not_saved: '{movement} no es va desar; continua preparat'
       found_saved: '{movement} es va desar'
@@ -2810,10 +2813,10 @@ desktop:
       saved_unread: 'Desat, resposta sense llegir: escriptures en pausa'
       saved_unread_reason: 'Torna a llegir primer: no es va llegir la resposta d''un
         desament'
-      staged: Canvis preparats
       title: 'Resultat desconegut: escriptures en pausa'
       unsaved: '{movement} no es va desar'
       untold: '{movement}: no se sap si s''ha desat; continua en pausa'
+      what_movements: 'Moviments: {count}'
     period:
       all: Tots els períodes
       choose: Tria un període
