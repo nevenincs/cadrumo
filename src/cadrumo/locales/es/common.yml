@@ -1804,6 +1804,51 @@ desktop:
       stashed: Apartado
     loaded_of: '{loaded} de {total} cargados'
     loading: Leyendo el libro…
+    matching:
+      affected: Declaraciones afectadas
+      affected_none: Ninguna declaración afectada
+      ambiguous: Ambigua
+      chip:
+        after: Pagada {count} d tras la emisión
+        amount: El importe cuadra
+        before: Pagada {count} d antes de la emisión
+        counterparty: Misma contraparte
+        number: Número en la descripción
+        same_day: Pagada el día de emisión
+      choose: Elige…
+      choose_legend: Factura para {description}
+      choose_note: Estas facturas encajan igual de bien. Elige la correcta; un vínculo
+        no se puede deshacer.
+      count: 'Parejas sugeridas: {count}'
+      declaration: Modelo {modelo} · {period} {year}
+      declaration_changes: '{changed} cambiados · {removed} eliminados'
+      direction:
+        invoice_only: La factura incluye el movimiento; el movimiento no la cita
+        transaction_only: El movimiento cita la factura; la factura no lo incluye
+      empty: Nada por conciliar
+      invoice_line: '{number} · {counterparty} · {date} · {payment}'
+      link: Vincular · permanente
+      link_named: Vincular {number} a {description} · permanente
+      no_repair:
+        cites_another: El movimiento cita otra factura
+        invoice_missing: La factura no está en el catálogo
+        not_loaded: El movimiento está fuera de este periodo
+      one_sided: Vínculos de un solo lado
+      one_sided_none: Ninguno
+      open_named: Abrir {description} · {amount} · {number}
+      others: Otros candidatos ({count})
+      partial: Normalmente un movimiento liquida una factura. Vincula ambos solo si
+        son pagos parciales.
+      read_failed: No se pudo leer
+      repair: Reparar · permanente
+      repair_staged: Reparación preparada · sin guardar
+      settles: Liquida {amount}
+      settles_withheld: Liquida {amount} ({total} − {withheld} de retención)
+      show_other: Mostrar {description}
+      staged: 'Vínculos preparados sin guardar: {count}'
+      staged_toast: Vínculo preparado · permanente al guardar
+      suggestions: Parejas sugeridas
+      title: Por conciliar
     maximize: Maximizar el libro
     menu: Acciones del movimiento
     missing: Falta

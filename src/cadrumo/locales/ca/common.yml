@@ -1792,6 +1792,51 @@ desktop:
       stashed: Apartat
     loaded_of: '{loaded} de {total} carregats'
     loading: S'està llegint el llibre…
+    matching:
+      affected: Declaracions afectades
+      affected_none: Cap declaració afectada
+      ambiguous: Ambigua
+      chip:
+        after: Pagada {count} d després de l'emissió
+        amount: L'import quadra
+        before: Pagada {count} d abans de l'emissió
+        counterparty: Mateixa contrapart
+        number: Número a la descripció
+        same_day: Pagada el dia de l'emissió
+      choose: Tria…
+      choose_legend: Factura per a {description}
+      choose_note: Aquestes factures encaixen igual de bé. Tria la correcta; un vincle
+        no es pot desfer.
+      count: 'Parelles suggerides: {count}'
+      declaration: Modelo {modelo} · {period} {year}
+      declaration_changes: '{changed} canviats · {removed} eliminats'
+      direction:
+        invoice_only: La factura inclou el moviment; el moviment no la cita
+        transaction_only: El moviment cita la factura; la factura no l'inclou
+      empty: Res per conciliar
+      invoice_line: '{number} · {counterparty} · {date} · {payment}'
+      link: Vincula · permanent
+      link_named: Vincula {number} a {description} · permanent
+      no_repair:
+        cites_another: El moviment cita una altra factura
+        invoice_missing: La factura no és al catàleg
+        not_loaded: El moviment és fora d'aquest període
+      one_sided: Vincles d'un sol costat
+      one_sided_none: Cap
+      open_named: Obre {description} · {amount} · {number}
+      others: Altres candidates ({count})
+      partial: Normalment un moviment liquida una factura. Vincula'ls tots dos només
+        si són pagaments parcials.
+      read_failed: No s'ha pogut llegir
+      repair: Repara · permanent
+      repair_staged: Reparació preparada · sense desar
+      settles: Liquida {amount}
+      settles_withheld: Liquida {amount} ({total} − {withheld} de retenció)
+      show_other: Mostra {description}
+      staged: 'Vincles preparats sense desar: {count}'
+      staged_toast: Vincle preparat · permanent en desar
+      suggestions: Parelles suggerides
+      title: Per conciliar
     maximize: Maximitza el llibre
     menu: Accions del moviment
     missing: Falta

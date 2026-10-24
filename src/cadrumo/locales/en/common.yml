@@ -1759,6 +1759,52 @@ desktop:
       stashed: Set aside
     loaded_of: '{loaded} of {total} loaded'
     loading: Reading the ledger…
+    matching:
+      affected: Affected declarations
+      affected_none: No declaration affected
+      ambiguous: Ambiguous
+      chip:
+        after: Paid {count} d after issue
+        amount: Amount settles
+        before: Paid {count} d before issue
+        counterparty: Same counterparty
+        number: Number in description
+        same_day: Paid on issue day
+      choose: Choose…
+      choose_legend: Invoice for {description}
+      choose_note: These invoices fit equally well. Pick the right one; a link cannot
+        be undone.
+      count: 'Suggested pairs: {count}'
+      declaration: Modelo {modelo} · {period} {year}
+      declaration_changes: '{changed} changed · {removed} removed'
+      direction:
+        invoice_only: The invoice lists the movement; the movement does not cite it
+        transaction_only: The movement cites the invoice; the invoice does not list
+          it
+      empty: Nothing to match
+      invoice_line: '{number} · {counterparty} · {date} · {payment}'
+      link: Link · permanent
+      link_named: Link {number} to {description} · permanent
+      no_repair:
+        cites_another: The movement cites another invoice
+        invoice_missing: The invoice is not in the catalogue
+        not_loaded: The movement is outside this period
+      one_sided: One-sided links
+      one_sided_none: None
+      open_named: Open {description} · {amount} · {number}
+      others: Other candidates ({count})
+      partial: Usually one movement settles one invoice. Link both only for partial
+        payments.
+      read_failed: Could not read
+      repair: Repair · permanent
+      repair_staged: Repair staged · not saved
+      settles: Settles {amount}
+      settles_withheld: Settles {amount} ({total} − {withheld} retención)
+      show_other: Show {description}
+      staged: 'Links staged, not saved: {count}'
+      staged_toast: Link staged · permanent once saved
+      suggestions: Suggested pairs
+      title: To match
     maximize: Maximize the ledger
     menu: Movement actions
     missing: Missing

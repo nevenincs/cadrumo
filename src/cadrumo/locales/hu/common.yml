@@ -1772,6 +1772,51 @@ desktop:
       stashed: Félretéve
     loaded_of: '{loaded} / {total} betöltve'
     loading: A napló beolvasása…
+    matching:
+      affected: Érintett bevallások
+      affected_none: Nincs érintett bevallás
+      ambiguous: Nem egyértelmű
+      chip:
+        after: Kiállítás után {count} nappal fizetve
+        amount: Az összeg egyezik
+        before: Kiállítás előtt {count} nappal fizetve
+        counterparty: Azonos partner
+        number: Szám a leírásban
+        same_day: A kiállítás napján fizetve
+      choose: Válassz…
+      choose_legend: 'Számla ehhez: {description}'
+      choose_note: Ezek a számlák egyformán illenek. Válaszd ki a helyeset; az összekapcsolás
+        nem vonható vissza.
+      count: 'Javasolt párok: {count}'
+      declaration: Modelo {modelo} · {period} {year}
+      declaration_changes: '{changed} módosult · {removed} törölve'
+      direction:
+        invoice_only: A számla hivatkozik a tételre, a tétel nem a számlára
+        transaction_only: A tétel hivatkozik a számlára, a számla nem a tételre
+      empty: Nincs párosítandó tétel
+      invoice_line: '{number} · {counterparty} · {date} · {payment}'
+      link: Összekapcsolás · végleges
+      link_named: '{number} összekapcsolása ezzel: {description} · végleges'
+      no_repair:
+        cites_another: A tétel másik számlára hivatkozik
+        invoice_missing: A számla nincs a katalógusban
+        not_loaded: A tétel ezen az időszakon kívül esik
+      one_sided: Egyoldalú kapcsolatok
+      one_sided_none: Nincs
+      open_named: 'Megnyitás: {description} · {amount} · {number}'
+      others: További jelöltek ({count})
+      partial: Általában egy tétel egy számlát egyenlít ki. Csak részfizetésnél kapcsold
+        össze mindkettőt.
+      read_failed: Nem sikerült beolvasni
+      repair: Javítás · végleges
+      repair_staged: Javítás előkészítve · nincs mentve
+      settles: 'Kiegyenlít: {amount}'
+      settles_withheld: 'Kiegyenlít: {amount} ({total} − {withheld} retención)'
+      show_other: 'Megjelenítés: {description}'
+      staged: 'Előkészített, nem mentett összekapcsolások: {count}'
+      staged_toast: Összekapcsolás előkészítve · mentés után végleges
+      suggestions: Javasolt párok
+      title: Párosítandó
     maximize: Napló teljes méretben
     menu: Tételműveletek
     missing: Hiányzik
