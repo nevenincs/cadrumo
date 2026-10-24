@@ -20,16 +20,20 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.hierarchy import CadrumoError
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.schema_verification import VerificationPredicateOperator
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ..action_errors import WorkUnitRevisionDivergenceError
-from ..verification_predicates import evaluate_advisory_predicate_fires
+from ..action_errors import ModeloVerificationPredicateMalformedError, WorkUnitRevisionDivergenceError
+from ..verification_predicates import (
+    VerificationPredicateRefusal,
+    VerificationPredicateRoute,
+    evaluate_advisory_predicate_fires,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -99,13 +103,13 @@ class TestAdvisoryPredicateDecimalNarrowing:
     def test_a_non_numeric_threshold_is_refused_not_read_as_silent(self) -> None:
         values = {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")}
         for _ in range(3):
-            with pytest.raises(ModeloError) as raised:
+            with pytest.raises(ModeloVerificationPredicateMalformedError) as raised:
                 evaluate_advisory_predicate_fires(self._INVALID_THR_EXPR, values)
             assert raised.value.context == {
                 "predicate_expression_recognised": False,
-                "predicate_operator": "advisory_when_ratio_ge",
-                "predicate_refusal": "literal",
-                "predicate_route": "advisory",
+                "predicate_operator": VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE.value,
+                "predicate_refusal": VerificationPredicateRefusal.LITERAL.value,
+                "predicate_route": VerificationPredicateRoute.ADVISORY.value,
             }
 
 

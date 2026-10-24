@@ -328,7 +328,13 @@ export function ImportDialog({
   const issued = useRef(new Set<string>());
   const [step, setStep] = useState<Step>("what");
   const [kind, setKind] = useState<ImportKind>("bank");
-  const [files, setFiles] = useState<PickedFile[]>([]);
+  const [files, setFilesNow] = useState<PickedFile[]>([]);
+  // The files as last set, for a pick or a drop that answers after another.
+  const held = useRef<PickedFile[]>([]);
+  const setFiles = (next: PickedFile[]) => {
+    held.current = next;
+    setFilesNow(next);
+  };
   const [leftOut, setLeftOut] = useState(0);
   const [over, setOver] = useState(false);
   const [picking, setPicking] = useState(false);
@@ -385,17 +391,18 @@ export function ImportDialog({
   const take = (picked: PickedFile[], refused: number) => {
     picked.forEach((file) => issued.current.add(file.token));
     setLeftOut(refused);
+    const current = held.current;
     if (kind === "book") {
-      forget([...files, ...picked.slice(1)].map((file) => file.token));
+      forget([...current, ...picked.slice(1)].map((file) => file.token));
       setFiles(picked.slice(0, 1));
       return;
     }
-    const known = new Set(files.map((file) => file.name));
+    const known = new Set(current.map((file) => file.name));
     const fresh = picked.filter((file) => !known.has(file.name));
     forget(
       picked.filter((file) => known.has(file.name)).map((file) => file.token),
     );
-    setFiles([...files, ...fresh]);
+    setFiles([...current, ...fresh]);
   };
   const latestTake = useRef(take);
   latestTake.current = take;
@@ -637,7 +644,7 @@ export function ImportDialog({
         onPick={pick}
         onRemove={(file) => {
           forget([file.token]);
-          setFiles(files.filter((held) => held.token !== file.token));
+          setFiles(files.filter((kept) => kept.token !== file.token));
         }}
         provider={provider}
         onProvider={setProvider}

@@ -1251,6 +1251,9 @@ errors:
       változat egyetlen bemeneti értéket tárol a(z) {casilla_ids} mezőkhöz, amelyek
       minden részletsorban külön értéket kapnak. Számítsd újra a(z) {work_unit_id}
       munkaegységet a lecseréléséhez.
+    refused_modelo_verification_predicate_malformed: A nyilvántartás egyik ellenőrzési
+      feltétele hibásan van megfogalmazva, ezért az ellenőrzést kiértékelés helyett
+      elutasítottuk. Ez nyilvántartás-szerzői hiba; javítsd a feltételt a nyilvántartásban.
     refused_modeloprior_domiciliation_election: A korábbi csoportos beszedés törlését
       vagy módosítását elutasítottuk, mert hiányzik vagy érvénytelen a 303-as helyesbítő
       bevallás, illetve az U alapbevallás hivatalos igazolása.

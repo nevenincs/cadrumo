@@ -7,8 +7,9 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date as _date
 from decimal import Decimal
+from enum import StrEnum
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.money.rounding import CENT
@@ -31,17 +32,36 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from .action_errors import ModeloApplicabilityFilterError
+from .action_errors import ModeloApplicabilityFilterError, ModeloVerificationPredicateMalformedError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 """Predicate operator mechanics; all predicate instances come from the registry."""
 
-type _PredicateRoute = Literal["blocking", "advisory"]
 
-_BLOCKING_ROUTE: _PredicateRoute = "blocking"
-_ADVISORY_ROUTE: _PredicateRoute = "advisory"
+class VerificationPredicateRoute(StrEnum):
+    """The evaluation route a registry predicate is admitted to."""
+
+    BLOCKING = "blocking"
+    ADVISORY = "advisory"
+
+
+class VerificationPredicateRefusal(StrEnum):
+    """Why a registry predicate was refused at admission to its route."""
+
+    #: The expression does not parse as any predicate of the vocabulary.
+    UNPARSEABLE = "unparseable"
+    #: The casilla count is outside the operator's specification.
+    ARITY = "arity"
+    #: The route has no evaluator for the operator.
+    OPERATOR_FAMILY = "operator_family"
+    #: A registry-authored literal of the operator is unreadable.
+    LITERAL = "literal"
+
+
+_BLOCKING_ROUTE = VerificationPredicateRoute.BLOCKING
+_ADVISORY_ROUTE = VerificationPredicateRoute.ADVISORY
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,16 +96,16 @@ def _validated_predicate_casilla_id(token: str) -> CasillaId:
 
 def _predicate_refusal(
     operator: VerificationPredicateOperator | None,
-    refusal: str,
-    route: _PredicateRoute,
-) -> ModeloError:
-    return ModeloError(
-        translated_message="errors.error.error_modelos",
+    refusal: VerificationPredicateRefusal,
+    route: VerificationPredicateRoute,
+) -> ModeloVerificationPredicateMalformedError:
+    return ModeloVerificationPredicateMalformedError(
+        translated_message="errors.refused.refused_modelo_verification_predicate_malformed",
         context={
             "predicate_expression_recognised": False,
             "predicate_operator": None if operator is None else operator.value,
-            "predicate_refusal": refusal,
-            "predicate_route": route,
+            "predicate_refusal": refusal.value,
+            "predicate_route": route.value,
         },
     )
 
@@ -131,43 +151,44 @@ _PROFILE_FLAG_OPERATORS: frozenset[VerificationPredicateOperator] = frozenset(
 )
 
 
-def _required_parsed_predicate(expression: str, *, route: _PredicateRoute) -> _AdmittedPredicate:
+def _required_parsed_predicate(expression: str, *, route: VerificationPredicateRoute) -> _AdmittedPredicate:
     """Admit one registry predicate to its route, refusing it before any evaluation.
 
     An unparseable expression, an operator the route has no evaluator for, a
-    casilla count outside the operator's specification, a non-canonical
-    casilla token, or an unreadable registry-authored literal is a malformed
-    registry predicate. Each raises :class:`ModeloError` on every call; none is
-    read as holding or as not firing.
+    casilla count outside the operator's specification, or an unreadable
+    registry-authored literal is a malformed registry predicate and raises the
+    registered refusal :class:`ModeloVerificationPredicateMalformedError`; a
+    non-canonical casilla token raises :class:`ModeloError`. Each refuses on
+    every call; none is read as holding or as not firing.
     """
     parsed = parse_verification_predicate_expression(expression)
     if parsed is None:
-        raise _predicate_refusal(_vocabulary_operator(expression), "unparseable", route)
+        raise _predicate_refusal(_vocabulary_operator(expression), VerificationPredicateRefusal.UNPARSEABLE, route)
     operator = parsed.operator
-    route_operators = _BLOCKING_PREDICATE_EVALUATORS if route == _BLOCKING_ROUTE else _ADVISORY_PREDICATE_EVALUATORS
+    route_operators = _BLOCKING_PREDICATE_EVALUATORS if route is _BLOCKING_ROUTE else _ADVISORY_PREDICATE_EVALUATORS
     if operator not in route_operators:
-        raise _predicate_refusal(operator, "operator_family", route)
+        raise _predicate_refusal(operator, VerificationPredicateRefusal.OPERATOR_FAMILY, route)
     specification = VERIFICATION_PREDICATE_SPECIFICATIONS[operator]
     casilla_count = len(parsed.casilla_ids)
     if casilla_count < specification.minimum_casilla_ids or (
         specification.maximum_casilla_ids is not None and casilla_count > specification.maximum_casilla_ids
     ):
-        raise _predicate_refusal(operator, "arity", route)
+        raise _predicate_refusal(operator, VerificationPredicateRefusal.ARITY, route)
     casilla_ids = tuple(_predicate_casilla_ids(parsed))
     threshold: Decimal | None = None
     cutoff: _date | None = None
     if operator is VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE:
         threshold = _registry_threshold(parsed.threshold)
         if threshold is None:
-            raise _predicate_refusal(operator, "literal", route)
+            raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
     elif operator is VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE:
         cutoff = _parse_predicate_date(parsed.cutoff)
         if cutoff is None:
-            raise _predicate_refusal(operator, "literal", route)
+            raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
     if operator in _LITERAL_OPERATORS and not parsed.literal:
-        raise _predicate_refusal(operator, "literal", route)
+        raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
     if operator in _PROFILE_FLAG_OPERATORS and parsed.profile_field not in KNOWN_PROFILE_FLAG_ADVISORY_FIELDS:
-        raise _predicate_refusal(operator, "literal", route)
+        raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
     return _AdmittedPredicate(parsed=parsed, casilla_ids=casilla_ids, threshold=threshold, cutoff=cutoff)
 
 
@@ -179,7 +200,7 @@ def required_advisory_predicate(expression: str) -> ParsedVerificationPredicate:
 def _unique_predicate_casilla_id(
     predicate: VerificationPredicateDefinition,
     *,
-    route: _PredicateRoute,
+    route: VerificationPredicateRoute,
 ) -> CasillaId | None:
     """Return the predicate's sole casilla, preserving cross-casilla findings at record grain."""
     casilla_ids = _required_parsed_predicate(predicate.expression, route=route).casilla_ids
@@ -496,10 +517,11 @@ def evaluate_predicate_expression(
       carry-forward closing balance reconciles to its roll-forward.
 
     An unparseable expression, an operator with no blocking evaluator, a
-    casilla count outside the operator's specification, a non-canonical
-    casilla token or an unreadable comparison literal raises
-    :class:`ModeloError` before any evaluation, on every call. A malformed
-    registry predicate never reads as holding.
+    casilla count outside the operator's specification or an unreadable
+    comparison literal raises :class:`ModeloVerificationPredicateMalformedError`,
+    and a non-canonical casilla token :class:`ModeloError`, before any
+    evaluation, on every call. A malformed registry predicate never reads as
+    holding.
 
     Core types:
     :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
@@ -736,10 +758,11 @@ def evaluate_advisory_predicate_fires(
     """Return True when a registered ADVISORY predicate condition fires.
 
     An unparseable expression, an operator with no advisory evaluator, a
-    casilla count outside the operator's specification, a non-canonical
-    casilla token, or an unreadable registry-authored literal (ratio
-    threshold, deduction cutoff, comparison literal, profile-flag field)
-    raises :class:`ModeloError` before any evaluation, on every call. A
+    casilla count outside the operator's specification, or an unreadable
+    registry-authored literal (ratio threshold, deduction cutoff, comparison
+    literal, profile-flag field) raises
+    :class:`ModeloVerificationPredicateMalformedError`, and a non-canonical
+    casilla token :class:`ModeloError`, before any evaluation, on every call. A
     malformed registry predicate never reads as not firing. Unreadable
     operator-entered values remain taxpayer input and follow each operator's
     own reading.

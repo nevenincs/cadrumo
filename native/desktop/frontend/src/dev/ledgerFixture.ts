@@ -76,6 +76,14 @@ declare global {
   }
 }
 
+/** How often each made-up file was changed since the page loaded: the
+ * made-up computer's, shared by every ledger the page makes. */
+const edits = new Map<string, number>();
+type Controls = NonNullable<Window["__scenarioLedger"]>;
+/** Every ledger the page made. The development entry may make more than one
+ * for one run, and the controls reach the one the page uses among them. */
+const ledgers = new Set<Omit<Controls, "changeFile">>();
+
 type Options = {
   say: (call: string) => void;
   wait: () => Promise<void>;
@@ -539,8 +547,6 @@ export function ledgerFixture(options: Options): LedgerPort {
   };
   const reviews = new Map<string, Pending>();
   const files = new Map<FileToken, { name: string; purpose: FilePurpose }>();
-  /** How often each made-up file was changed since the scenario began. */
-  const edits = new Map<string, number>();
   const bytesOf = (name: string) =>
     hex64(`bytes:${name}:${edits.get(name) ?? 0}`);
   const drops = new Set<(signal: LedgerDropSignal) => void>();
@@ -597,8 +603,9 @@ export function ledgerFixture(options: Options): LedgerPort {
     return found;
   };
 
-  window.__scenarioLedger = {
+  ledgers.add({
     drop(names) {
+      if (drops.size === 0) return;
       const picks = take(names, dropPurpose);
       drops.forEach((listener) => {
         listener({ kind: "over" });
@@ -610,6 +617,10 @@ export function ledgerFixture(options: Options): LedgerPort {
         pending.version += 1;
       });
     },
+  });
+  window.__scenarioLedger = {
+    drop: (names) => ledgers.forEach((made) => made.drop(names)),
+    changeReviews: () => ledgers.forEach((made) => made.changeReviews()),
     changeFile(name) {
       edits.set(name, (edits.get(name) ?? 0) + 1);
     },
@@ -1139,8 +1150,7 @@ export function ledgerFixture(options: Options): LedgerPort {
       .filter(
         (movement) =>
           movement.transaction.date.startsWith("2026-10-") &&
-          movement.transaction.lifecycle_state === "ACTIVE" &&
-          movement.import_batch_id === null,
+          movement.transaction.lifecycle_state === "ACTIVE",
       )
       .sort((left, right) =>
         compare(left.transaction.date, right.transaction.date),

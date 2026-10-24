@@ -262,6 +262,10 @@ export function ExportDialog({
   const leftOut = read && !inactive ? read.total_count - read.active_count : 0;
   const blockedByStaged = staged > 0 && !without;
   const done = sent.kind === "done";
+  // The result is a step of its own: focus moves to its heading.
+  useEffect(() => {
+    if (done) heading.current?.focus();
+  }, [done]);
 
   return (
     <Dialog

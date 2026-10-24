@@ -30,6 +30,8 @@ pub mod diagnostics;
 pub mod error;
 pub mod installation;
 pub mod package;
+#[cfg(all(windows, feature = "platform"))]
+pub mod person_operations;
 pub mod process;
 pub mod python;
 pub mod role;

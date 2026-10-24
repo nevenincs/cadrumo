@@ -24,6 +24,7 @@ from cadrumo.application.modelo.tests.verification_substance_fixtures import (
 )
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.errors.error_codes import get_registered_error_code
 from ....core.modelo import Modelo
 from ....domain.calculations.registry import schema_verification
 from ....domain.calculations.registry.schema_verification import (
@@ -35,7 +36,10 @@ from ....domain.calculations.registry.schema_verification import (
 from ....domain.calculations.registry.tests.published_authority import published_revision_definitions
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
+from ..action_errors import ModeloVerificationPredicateMalformedError
 from ..verification_predicates import (
+    VerificationPredicateRefusal,
+    VerificationPredicateRoute,
     evaluate_advisory_predicate_fires,
     evaluate_predicate_expression,
     evaluate_verification_predicates,
@@ -380,19 +384,20 @@ def test_roll_forward_balances_tolerates_one_cent_but_not_euros() -> None:
 def _assert_predicate_refused(
     evaluate: Callable[[], object],
     *,
-    refusal: str,
-    operator: str | None,
-    route: str,
+    refusal: VerificationPredicateRefusal,
+    operator: VerificationPredicateOperator | None,
+    route: VerificationPredicateRoute,
 ) -> None:
     """Assert that every one of three evaluations refuses with the same machine context."""
     for _ in range(3):
-        with pytest.raises(ModeloError) as raised:
+        with pytest.raises(ModeloVerificationPredicateMalformedError) as raised:
             evaluate()
+        assert get_registered_error_code(raised.value).code == "REFUSED_MODELO_VERIFICATION_PREDICATE_MALFORMED"
         assert raised.value.context == {
             "predicate_expression_recognised": False,
-            "predicate_operator": operator,
-            "predicate_refusal": refusal,
-            "predicate_route": route,
+            "predicate_operator": None if operator is None else operator.value,
+            "predicate_refusal": refusal.value,
+            "predicate_route": route.value,
         }
 
 
@@ -406,15 +411,15 @@ def test_roll_forward_balances_bad_arity_refuses_on_both_routes() -> None:
     profile = workflow_profile()
     _assert_predicate_refused(
         lambda: evaluate_predicate_expression(expr, values, profile),
-        refusal="arity",
-        operator="roll_forward_balances",
-        route="blocking",
+        refusal=VerificationPredicateRefusal.ARITY,
+        operator=VerificationPredicateOperator.ROLL_FORWARD_BALANCES,
+        route=VerificationPredicateRoute.BLOCKING,
     )
     _assert_predicate_refused(
         lambda: evaluate_advisory_predicate_fires(expr, values),
-        refusal="arity",
-        operator="roll_forward_balances",
-        route="advisory",
+        refusal=VerificationPredicateRefusal.ARITY,
+        operator=VerificationPredicateOperator.ROLL_FORWARD_BALANCES,
+        route=VerificationPredicateRoute.ADVISORY,
     )
 
 
@@ -464,15 +469,15 @@ def test_unknown_expression_refuses_on_both_routes() -> None:
     profile = workflow_profile()
     _assert_predicate_refused(
         lambda: evaluate_predicate_expression('threshold(["01"], 100)', values, profile),
-        refusal="unparseable",
+        refusal=VerificationPredicateRefusal.UNPARSEABLE,
         operator=None,
-        route="blocking",
+        route=VerificationPredicateRoute.BLOCKING,
     )
     _assert_predicate_refused(
         lambda: evaluate_advisory_predicate_fires('threshold(["01"], 100)', values),
-        refusal="unparseable",
+        refusal=VerificationPredicateRefusal.UNPARSEABLE,
         operator=None,
-        route="advisory",
+        route=VerificationPredicateRoute.ADVISORY,
     )
 
 
@@ -481,9 +486,9 @@ def test_known_operator_with_broken_syntax_refuses_naming_its_operator() -> None
     values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
     _assert_predicate_refused(
         lambda: evaluate_predicate_expression('all_nonzero("01", "02")', values, workflow_profile()),
-        refusal="unparseable",
-        operator="all_nonzero",
-        route="blocking",
+        refusal=VerificationPredicateRefusal.UNPARSEABLE,
+        operator=VerificationPredicateOperator.ALL_NONZERO,
+        route=VerificationPredicateRoute.BLOCKING,
     )
 
 
@@ -493,9 +498,9 @@ def test_repeated_evaluation_keeps_unknown_and_hostile_token_refusals() -> None:
     profile = workflow_profile()
     _assert_predicate_refused(
         lambda: evaluate_predicate_expression('threshold(["01"], 100)', values, profile),
-        refusal="unparseable",
+        refusal=VerificationPredicateRefusal.UNPARSEABLE,
         operator=None,
-        route="blocking",
+        route=VerificationPredicateRoute.BLOCKING,
     )
     for evaluate in (
         lambda: evaluate_predicate_expression('all_nonzero(["01", "bad key"])', values, profile),
@@ -512,15 +517,15 @@ def test_an_operator_on_the_wrong_route_refuses() -> None:
     values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
     _assert_predicate_refused(
         lambda: evaluate_predicate_expression('advisory_when_positive(["01"])', values, workflow_profile()),
-        refusal="operator_family",
-        operator="advisory_when_positive",
-        route="blocking",
+        refusal=VerificationPredicateRefusal.OPERATOR_FAMILY,
+        operator=VerificationPredicateOperator.ADVISORY_WHEN_POSITIVE,
+        route=VerificationPredicateRoute.BLOCKING,
     )
     _assert_predicate_refused(
         lambda: evaluate_advisory_predicate_fires('all_nonzero(["01"])', values),
-        refusal="operator_family",
-        operator="all_nonzero",
-        route="advisory",
+        refusal=VerificationPredicateRefusal.OPERATOR_FAMILY,
+        operator=VerificationPredicateOperator.ALL_NONZERO,
+        route=VerificationPredicateRoute.ADVISORY,
     )
 
 
@@ -529,45 +534,49 @@ def test_an_operator_on_the_wrong_route_refuses() -> None:
     (
         pytest.param(
             'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "not-a-date"])',
-            "deduccion_requires_adquisicion_before",
-            "advisory",
+            VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE,
+            VerificationPredicateRoute.ADVISORY,
             id="cutoff",
         ),
         pytest.param(
             'profile_flag_enabled("not_a_known_profile_flag")',
-            "profile_flag_enabled",
-            "advisory",
+            VerificationPredicateOperator.PROFILE_FLAG_ENABLED,
+            VerificationPredicateRoute.ADVISORY,
             id="profile-flag-field",
         ),
         pytest.param(
             'casilla_equals_implies_nonzero(["01", "", "07"])',
-            "casilla_equals_implies_nonzero",
-            "advisory",
+            VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO,
+            VerificationPredicateRoute.ADVISORY,
             id="empty-literal-advisory",
         ),
         pytest.param(
             'casilla_equals_implies_zero(["01", "", "07"])',
-            "casilla_equals_implies_zero",
-            "blocking",
+            VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO,
+            VerificationPredicateRoute.BLOCKING,
             id="empty-literal-blocking",
         ),
     ),
 )
-def test_an_unreadable_registry_literal_refuses(expression: str, operator: str, route: str) -> None:
+def test_an_unreadable_registry_literal_refuses(
+    expression: str,
+    operator: VerificationPredicateOperator,
+    route: VerificationPredicateRoute,
+) -> None:
     """A registry-authored cutoff, flag field or comparison literal that cannot be read is refused."""
     values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
     profile = workflow_profile()
-    if route == "blocking":
+    if route is VerificationPredicateRoute.BLOCKING:
         _assert_predicate_refused(
             lambda: evaluate_predicate_expression(expression, values, profile),
-            refusal="literal",
+            refusal=VerificationPredicateRefusal.LITERAL,
             operator=operator,
             route=route,
         )
     else:
         _assert_predicate_refused(
             lambda: evaluate_advisory_predicate_fires(expression, values, {}, profile),
-            refusal="literal",
+            refusal=VerificationPredicateRefusal.LITERAL,
             operator=operator,
             route=route,
         )
@@ -593,15 +602,15 @@ def test_each_verification_route_refuses_its_own_malformed_predicate() -> None:
     )
     _assert_predicate_refused(
         lambda: evaluate_verification_predicates((advisory,), values, profile),
-        refusal="operator_family",
-        operator="all_nonzero",
-        route="advisory",
+        refusal=VerificationPredicateRefusal.OPERATOR_FAMILY,
+        operator=VerificationPredicateOperator.ALL_NONZERO,
+        route=VerificationPredicateRoute.ADVISORY,
     )
     _assert_predicate_refused(
         lambda: evaluate_verification_predicates((blocking,), values, profile),
-        refusal="operator_family",
-        operator="advisory_when_positive",
-        route="blocking",
+        refusal=VerificationPredicateRefusal.OPERATOR_FAMILY,
+        operator=VerificationPredicateOperator.ADVISORY_WHEN_POSITIVE,
+        route=VerificationPredicateRoute.BLOCKING,
     )
 
 
@@ -719,15 +728,15 @@ def test_casilla_equals_implies_nonzero_bad_arity_refuses_on_both_routes() -> No
     text_values = {_CASILLA_01: "literal-value"}
     _assert_predicate_refused(
         lambda: evaluate_advisory_predicate_fires(expr, values, text_values),
-        refusal="arity",
-        operator="casilla_equals_implies_nonzero",
-        route="advisory",
+        refusal=VerificationPredicateRefusal.ARITY,
+        operator=VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO,
+        route=VerificationPredicateRoute.ADVISORY,
     )
     _assert_predicate_refused(
         lambda: evaluate_predicate_expression(expr, values, workflow_profile(), text_values),
-        refusal="arity",
-        operator="casilla_equals_implies_nonzero",
-        route="blocking",
+        refusal=VerificationPredicateRefusal.ARITY,
+        operator=VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO,
+        route=VerificationPredicateRoute.BLOCKING,
     )
 
 

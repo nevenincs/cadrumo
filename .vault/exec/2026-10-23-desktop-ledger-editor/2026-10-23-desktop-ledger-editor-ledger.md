@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:7b90de4dc946e200370d3f150410c6431103e98ce8331425fa9b9754d8ce7829'
+body_hash: 'sha256:b284fe8bb8b5222c8ccdc31006594e2afb9d554cf55e8c7c08520ba836c2b406'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -156,9 +156,41 @@ related:
 - `S07` `verify:` `playwright scenarios scenarios.spec view-preferences columns touch panel (174)` -> `pass`
 - `S07` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `pass`
 - `S07` `by:` `vaultspec-high-executor`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/transfer/ExportDialog.tsx`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/transfer/importModel.ts`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/transfer/tsv.ts`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/transfer/transferWords.ts`
+- `S11` `A` `native/desktop/frontend/src/shell/ledgerImports.ts`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S11` `M` `native/desktop/frontend/src/App.tsx`
+- `S11` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/ledgerApply.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/layout.ts`
+- `S11` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S11` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S11` `A` `native/desktop/frontend/src/dev/primitives/LedgerExportHarness.tsx`
+- `S11` `M` `native/desktop/frontend/src/dev/primitives/main.tsx`
+- `S11` `M` `native/desktop/frontend/tests/ledger-apply.spec.ts`
+- `S11` `A` `native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts`
+- `S11` `M` `native/desktop/frontend/tests/scenarios/ledger-shell.spec.ts`
+- `S11` `M` `dev/locales/desktop_chrome.py`
+- `S11` `M` `src/cadrumo/locales/en/common.yml`
+- `S11` `M` `src/cadrumo/locales/es/common.yml`
+- `S11` `M` `src/cadrumo/locales/ca/common.yml`
+- `S11` `M` `src/cadrumo/locales/hu/common.yml`
+- `S11` `verify:` `npx tsc --noEmit (files of this Step)` -> `pass`
+- `S11` `verify:` `npx eslint and prettier --check on the Step's files` -> `pass`
+- `S11` `verify:` `playwright ledger-apply/grammar/plan/stage/window pure specs (54)` -> `pass`
+- `S11` `verify:` `playwright scenarios ledger-transfer (8), ledger-shell, accessibility` -> `pass`
+- `S11` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (19 of 20; the drift test fails only on another Step's undeclared keys)` -> `pass`
+- `S11` `by:` `implementation-engineer-high`
 
 ## Notes
 
 - `S04` Playwright scenario suite not run here: it starts the fixed-port development and preview servers; the Ledger page's scenario tests belong to P04.S16.
 - `S01` Follow-up correction: results reach the window with file names, not paths (ADR amendment 2026-10-24)
 - `S07` Pre-existing, not from this Step: a 'Maximum update depth exceeded' console error in scenarios.spec 'a reader far from the end is never given the whole log to draw', reproduced with the committed App.tsx; dev/locales test failures on provenance.source and TUI registries come from concurrent Modelo work.
+- `S11` Likely duplicates are compared in the result step, after import: the dry-run projection names neither the incoming row's fields nor the existing movement.
+- `S11` The invoice-book preview shows file name and size only; the host offers no digest before apply, so the digest is shown from the result.
+- `S11` Export receives staged=0 from the page until staged editing lands; the warning is verified through the primitives harness.

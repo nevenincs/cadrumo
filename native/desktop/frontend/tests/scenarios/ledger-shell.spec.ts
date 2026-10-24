@@ -290,13 +290,18 @@ test("an empty period says so in one line with its ways in", async ({
   await expect(empty).toContainText(
     label("desktop.ledger.empty", { period: shown }),
   );
-  for (const key of [
-    "desktop.ledger.action.import",
-    "desktop.ledger.action.add_movement",
-  ])
-    await expect(
-      empty.getByRole("button", { name: new RegExp(`^${label(key)}`) }),
-    ).toHaveAttribute("aria-disabled", "true");
+  // Importing is offered; adding a movement is not yet.
+  await expect(
+    empty.getByRole("button", {
+      name: label("desktop.ledger.action.import"),
+      exact: true,
+    }),
+  ).not.toHaveAttribute("aria-disabled", "true");
+  await expect(
+    empty.getByRole("button", {
+      name: new RegExp(`^${label("desktop.ledger.action.add_movement")}`),
+    }),
+  ).toHaveAttribute("aria-disabled", "true");
 });
 
 test("a failed read says so with its code and reads again only when asked", async ({
@@ -371,6 +376,7 @@ test("reading a period keeps no taxpayer value in the window's storage", async (
   expect(Object.keys(layout.ledgerView).sort()).toEqual([
     "columns",
     "density",
+    "exportFormat",
     "groupBy",
     "inspectorOpen",
     "inspectorWidth",

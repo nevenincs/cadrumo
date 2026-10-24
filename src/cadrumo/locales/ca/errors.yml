@@ -1334,6 +1334,9 @@ errors:
       desa un únic valor d'entrada per a les caselles {casilla_ids}, que prenen un
       valor per cada fila de detall. Torna a calcular la unitat de treball {work_unit_id}
       per substituir-la.
+    refused_modelo_verification_predicate_malformed: Un predicat de verificació del
+      registre està mal format, així que la verificació s'ha rebutjat en lloc d'avaluar-se.
+      Es tracta d'un error d'autoria del registre; corregeix el predicat al registre.
     refused_modeloprior_domiciliation_election: S'ha rebutjat la baixa o modificació
       de la domiciliació prèvia perquè manca o no és vàlida la rectificativa del model
       303 o la prova oficial de la presentació base U.

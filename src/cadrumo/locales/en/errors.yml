@@ -1229,6 +1229,9 @@ errors:
     refused_modelo_stored_row_field_input: Calculation revision {calculation_revision_id}
       stores a single input value for casillas {casilla_ids}, which take one value
       per detail row. Recalculate work unit {work_unit_id} to replace it.
+    refused_modelo_verification_predicate_malformed: A verification predicate in the
+      registry is malformed, so verification was refused rather than evaluated. This
+      is a registry-authoring error; correct the predicate in the registry.
     refused_modeloprior_domiciliation_election: The prior-direct-debit cancellation
       or modification was refused because the required Modelo 303 rectificativa and
       official baseline U evidence are incomplete or unavailable.

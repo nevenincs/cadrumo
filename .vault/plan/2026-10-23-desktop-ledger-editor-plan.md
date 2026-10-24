@@ -9,7 +9,7 @@ related:
   - '[[2026-10-24-desktop-ledger-editor-audit]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:6c9399bc2a9eb196f9c74a6d9476253b609a14175c36eaf267d05818c3071052'
+body_hash: 'sha256:9f13f0d91b4907e95b9373efcdeed7ee9047dac32a12eeeba1e4f3004ffc5fcc'
 ---
 
 # `desktop-ledger-editor` plan
@@ -47,7 +47,7 @@ Build the Ledger page and its sections from the reviewed prototype, at parity wi
 - [ ] `P03.S08` - Build the Movements grid with readiness strip, toolbar, filters, sort, grouping, columns and saved views; `native/desktop/frontend/src/components/ledger/`.
 - [ ] `P03.S09` - Add staged editing: cell editors, paste and fill, undo and redo, changes tray, review and apply with per-row outcomes; `native/desktop/frontend/src/components/ledger/`.
 - [ ] `P03.S10` - Add the movement inspector for one row and for a selection, with classification, documents, invoice link, history, declarations and actions; `native/desktop/frontend/src/components/ledger/`.
-- [ ] `P03.S11` - Add the import and export dialogs; `native/desktop/frontend/src/components/ledger/`.
+- [x] `P03.S11` - Add the import and export dialogs; `native/desktop/frontend/src/components/ledger/`.
 - [ ] `P03.S12` - Add the Invoices section with catalogue grid and invoice editor; `native/desktop/frontend/src/components/ledger/`.
 - [ ] `P03.S13` - Add the Documents and Matching sections; `native/desktop/frontend/src/components/ledger/`.
 - [ ] `P03.S14` - Add the Rules, Registers and Health sections; `native/desktop/frontend/src/components/ledger/`.

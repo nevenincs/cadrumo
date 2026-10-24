@@ -1096,6 +1096,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.ModeloVerificationPredicateMalformedError",
+        ErrorCode(
+            code="REFUSED_MODELO_VERIFICATION_PREDICATE_MALFORMED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_verification_predicate_malformed",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.M303FilingEvidenceError",
         ErrorCode(
             code="REFUSED_MODELO_M303_FILING_EVIDENCE",

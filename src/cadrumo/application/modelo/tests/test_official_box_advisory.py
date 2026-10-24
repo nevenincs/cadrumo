@@ -8,10 +8,14 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.schema_verification import (
+    VerificationPredicateDefinition,
+    VerificationPredicateOperator,
+)
 from ....domain.calculations.registry.tests.published_authority import published_authored_revision
-from ....domain.modelos.errors import ModeloError
 from .._official_box_advisory import collect_official_box_unpopulated_diagnostics
+from ..action_errors import ModeloVerificationPredicateMalformedError
+from ..verification_predicates import VerificationPredicateRefusal, VerificationPredicateRoute
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -46,28 +50,40 @@ def test_a_well_formed_official_box_advisory_still_reports_the_unpopulated_boxes
 @pytest.mark.parametrize(
     ("expression", "operator", "refusal"),
     (
-        pytest.param('implies_any_nonzero("iva.cuota-devengada-total")', "implies_any_nonzero", "unparseable"),
-        pytest.param('implies_any_nonzero(["iva.cuota-devengada-total"])', "implies_any_nonzero", "arity"),
-        pytest.param('all_nonzero(["03", "09"])', "all_nonzero", "operator_family"),
-        pytest.param('mystery_operator(["03", "09"])', None, "unparseable"),
+        pytest.param(
+            'implies_any_nonzero("iva.cuota-devengada-total")',
+            VerificationPredicateOperator.IMPLIES_ANY_NONZERO,
+            VerificationPredicateRefusal.UNPARSEABLE,
+        ),
+        pytest.param(
+            'implies_any_nonzero(["iva.cuota-devengada-total"])',
+            VerificationPredicateOperator.IMPLIES_ANY_NONZERO,
+            VerificationPredicateRefusal.ARITY,
+        ),
+        pytest.param(
+            'all_nonzero(["03", "09"])',
+            VerificationPredicateOperator.ALL_NONZERO,
+            VerificationPredicateRefusal.OPERATOR_FAMILY,
+        ),
+        pytest.param('mystery_operator(["03", "09"])', None, VerificationPredicateRefusal.UNPARSEABLE),
     ),
 )
 def test_a_malformed_advisory_predicate_is_refused_rather_than_skipped(
     expression: str,
-    operator: str | None,
-    refusal: str,
+    operator: VerificationPredicateOperator | None,
+    refusal: VerificationPredicateRefusal,
 ) -> None:
     revision = _revision_with(expression)
     values = {_TOTAL: Decimal("210.00")}
 
     for _ in range(3):
-        with pytest.raises(ModeloError) as raised:
+        with pytest.raises(ModeloVerificationPredicateMalformedError) as raised:
             collect_official_box_unpopulated_diagnostics(revision, values)
         assert raised.value.context == {
             "predicate_expression_recognised": False,
-            "predicate_operator": operator,
-            "predicate_refusal": refusal,
-            "predicate_route": "advisory",
+            "predicate_operator": None if operator is None else operator.value,
+            "predicate_refusal": refusal.value,
+            "predicate_route": VerificationPredicateRoute.ADVISORY.value,
         }
 
 

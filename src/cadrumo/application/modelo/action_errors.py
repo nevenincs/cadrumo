@@ -426,6 +426,17 @@ class ModeloApplicabilityFilterError(ModeloError):
     """Raised when an unknown applicability filter name is encountered."""
 
 
+class ModeloVerificationPredicateMalformedError(ModeloError):
+    """Raised when a registry verification predicate cannot be admitted to its route.
+
+    An unparseable expression, an operator without an evaluator on the route,
+    a casilla count outside the operator's specification, or an unreadable
+    registry-authored literal is a registry-authoring defect. Verification
+    refuses rather than reading the predicate as holding or as not firing;
+    the context names the operator, the refusal kind and the route.
+    """
+
+
 class ModeloRefundElectionNotEligibleError(ModeloError):
     """Raised when an operator elects a Modelo 303 refund for an ineligible period.
 

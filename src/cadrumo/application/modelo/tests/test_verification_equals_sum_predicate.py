@@ -15,13 +15,18 @@ import pytest
 from cadrumo.application.modelo.tests.verification_substance_fixtures import workflow_profile
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.modelos.errors import ModeloError
+from ....domain.calculations.registry.schema_verification import (
+    VerificationPredicateDefinition,
+    VerificationPredicateOperator,
+)
 from ....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ..action_errors import ModeloVerificationPredicateMalformedError
 from ..verification_predicates import (
+    VerificationPredicateRefusal,
+    VerificationPredicateRoute,
     evaluate_advisory_predicate_fires,
     evaluate_predicate_expression,
     evaluate_verification_predicates,
@@ -92,17 +97,17 @@ def test_fewer_than_two_addends_refuses_on_both_routes() -> None:
     profile = workflow_profile()
 
     for route, evaluate in (
-        ("blocking", lambda: evaluate_predicate_expression(malformed, values, profile)),
-        ("advisory", lambda: evaluate_advisory_predicate_fires(malformed, values)),
+        (VerificationPredicateRoute.BLOCKING, lambda: evaluate_predicate_expression(malformed, values, profile)),
+        (VerificationPredicateRoute.ADVISORY, lambda: evaluate_advisory_predicate_fires(malformed, values)),
     ):
         for _ in range(3):
-            with pytest.raises(ModeloError) as raised:
+            with pytest.raises(ModeloVerificationPredicateMalformedError) as raised:
                 evaluate()
             assert raised.value.context == {
                 "predicate_expression_recognised": False,
-                "predicate_operator": "equals_sum",
-                "predicate_refusal": "arity",
-                "predicate_route": route,
+                "predicate_operator": VerificationPredicateOperator.EQUALS_SUM.value,
+                "predicate_refusal": VerificationPredicateRefusal.ARITY.value,
+                "predicate_route": route.value,
             }
 
 

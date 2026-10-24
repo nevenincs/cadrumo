@@ -1324,6 +1324,10 @@ errors:
       guarda un único valor de entrada para las casillas {casilla_ids}, que toman
       un valor por cada fila de detalle. Vuelve a calcular la unidad de trabajo {work_unit_id}
       para sustituirla.
+    refused_modelo_verification_predicate_malformed: Un predicado de verificación
+      del registro está mal formado, así que la verificación se ha rechazado en lugar
+      de evaluarse. Se trata de un error de autoría del registro; corrige el predicado
+      en el registro.
     refused_modeloprior_domiciliation_election: Se ha rechazado la baja o modificación
       de la domiciliacion previa porque falta o no es valida la rectificativa del
       modelo 303 o la prueba oficial de la presentación base U.

@@ -16,10 +16,19 @@ from cadrumo.application.modelo.tests.verification_substance_fixtures import (
 )
 
 from ....core.casilla_id import CasillaId
-from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.schema_verification import (
+    VerificationPredicateDefinition,
+    VerificationPredicateOperator,
+)
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_verification_predicates
+from ..action_errors import ModeloVerificationPredicateMalformedError
+from ..verification_predicates import (
+    VerificationPredicateRefusal,
+    VerificationPredicateRoute,
+    evaluate_advisory_predicate_fires,
+    evaluate_verification_predicates,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -156,18 +165,18 @@ def test_advisory_when_ratio_ge_refuses_a_non_finite_threshold(threshold: str, h
 
     ``Decimal`` builds each of these without raising, and each would corrupt the
     comparison in its own way, so admission refuses them as typed
-    :class:`ModeloError` refusals on every call rather than leaving the
+    :class:`ModeloVerificationPredicateMalformedError` refusals on every call rather than leaving the
     advisory silent or letting ``InvalidOperation`` escape.
     """
     values = _casilla_values((_CASILLA_00501, "10500"), (_M200_BIN_GENERATED_CASILLA, "15000"))
     expression = f'advisory_when_ratio_ge(["DP200012:00501", "DP200014:00552", "{threshold}"])'
 
     for _ in range(3):
-        with pytest.raises(ModeloError) as raised:
+        with pytest.raises(ModeloVerificationPredicateMalformedError) as raised:
             evaluate_advisory_predicate_fires(expression, values)
         assert raised.value.context == {
             "predicate_expression_recognised": False,
-            "predicate_operator": "advisory_when_ratio_ge",
-            "predicate_refusal": "literal",
-            "predicate_route": "advisory",
+            "predicate_operator": VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE.value,
+            "predicate_refusal": VerificationPredicateRefusal.LITERAL.value,
+            "predicate_route": VerificationPredicateRoute.ADVISORY.value,
         }, hazard

@@ -1,6 +1,7 @@
 // The development entry for one primitive at a time: the data grid, the
-// plain table or the grid's companions over made-up rows, on the shell's own theme, in the scheme the
-// address asks for. Only primitives.html loads this module.
+// plain table or the grid's companions over made-up rows, or the ledger's
+// export dialog over the scenario ledger, on the shell's own theme, in the
+// scheme the address asks for. Only primitives.html loads this module.
 
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
@@ -8,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "../index.css";
 import { CompanionsHarness } from "./CompanionsHarness";
 import { DataGridHarness, DataTableHarness } from "./DataGridHarness";
+import { LedgerExportHarness } from "./LedgerExportHarness";
 
 import "virtual:desktop-palette.css";
 
@@ -26,6 +28,10 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
           <DataTableHarness />
         ) : harness === "companions" ? (
           <CompanionsHarness />
+        ) : harness === "ledger-export" ? (
+          <LedgerExportHarness
+            staged={Math.max(0, Math.trunc(Number(params.get("staged")) || 0))}
+          />
         ) : (
           <DataGridHarness count={count} grouped={params.has("grouped")} />
         )}
