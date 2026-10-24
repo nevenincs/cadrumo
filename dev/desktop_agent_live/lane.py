@@ -32,9 +32,11 @@ Exit 0 means every step held and every spec passed. Exit 1 names what failed.
 Exit 3 means a prerequisite is absent: the test host, the package, an
 interactive desktop, a closed desktop, a profile, the person's sign-in, or a
 provider lane the agent reports ready. ``--attach-only`` runs only the
-attachment check and always ends incomplete. ``--served`` loads the shell from
-the development server (``just dev``) for iterating on it; the host, launcher
-and agent stay real.
+attachment check and always ends incomplete. ``--ledger-privacy`` runs the
+Ledger page's privacy check in place of the agent specs, needs no provider
+lane, and is refused while its Playwright project would trace, screenshot or
+film the window. ``--served`` loads the shell from the development server
+(``just dev``) for iterating on it; the host, launcher and agent stay real.
 """
 
 from __future__ import annotations
@@ -98,6 +100,15 @@ _ATTACH_VARIABLE: Final = "CADRUMO_DEV_DESKTOP_LIVE_ATTACH_DIR"
 """Where the packaged test host's attach button takes its files from, in place of its dialog."""
 _AMBIENT_EXCLUDED: Final = ("CADRUMO_", "PYTHON", "VIRTUAL_ENV", "UV_", "WEBVIEW2_")
 """Settings of this checkout's own environment that the packaged desktop must not inherit."""
+_LIVE_CONFIGURATION: Final = _FRONTEND / "tests" / "live" / "playwright.config.ts"
+AGENT_PROJECT: Final = "live"
+"""The live project of the shared agent specs."""
+PRIVACY_PROJECT: Final = "ledger-privacy"
+"""The live project that looks for the person's ledger values where the window must not keep them."""
+RECORDINGS: Final = ("trace", "screenshot", "video")
+"""The Playwright settings that record the window's content, each of which the privacy project keeps off."""
+_DEBUG_VARIABLES: Final = ("DEBUG", "PWDEBUG")
+"""Playwright's debug logging, which prints protocol traffic and with it the page's values."""
 
 LANE_ATTACHMENTS: Final[Mapping[str, bytes]] = {
     # Stored, and read by the agent: the word is what its reply must name.
@@ -683,6 +694,98 @@ def write_lane_attachments(directory: Path) -> Path:
     return directory
 
 
+def written_directories(root: Path) -> tuple[Path, ...]:
+    """Where the desktop, the runtime and the agent write logs and files; those written during a run are the run's."""
+    return (root / "logs", root / "agent")
+
+
+#: Prints the live configuration's top-level and per-project ``use`` as JSON.
+_CONFIGURATION_READER: Final = """
+const configuration = (await import(process.argv[1])).default;
+const projects = (configuration.projects ?? []).map((project) => ({name: project.name, use: project.use ?? {}}));
+process.stdout.write(JSON.stringify({use: configuration.use ?? {}, projects}));
+"""
+
+
+def live_configuration(results: Path) -> dict[str, Any]:
+    """The live Playwright configuration as Node evaluates it: its ``use`` and each project's name and ``use``."""
+    node = shutil.which("node")
+    if node is None:
+        raise UnavailableError("node is not on PATH")
+    environment = {name: value for name, value in os.environ.items() if not name.upper().startswith(_AMBIENT_EXCLUDED)}
+    environment["CADRUMO_DEV_DESKTOP_LIVE_RESULTS"] = str(results)
+    outcome = run_command(
+        [node, "--input-type=module", "-e", _CONFIGURATION_READER, _LIVE_CONFIGURATION.as_uri()],
+        cwd=_FRONTEND,
+        environment=environment,
+        timeout_seconds=120,
+    )
+    require(outcome.returncode == 0, f"the live configuration did not load: {outcome.stderr.strip()[-2000:]}")
+    return json.loads(outcome.stdout)
+
+
+def recording_problems(configuration: Mapping[str, Any], project: str) -> list[str]:
+    """What would let ``project`` record the window: each recording setting it does not turn off.
+
+    A project's ``use`` overrides the configuration's, so a setting the
+    project leaves out falls back to the top level, and only an explicit
+    ``"off"`` counts as off.
+    """
+    found = [entry for entry in configuration.get("projects") or () if entry.get("name") == project]
+    if len(found) != 1:
+        return [f"the live configuration declares {len(found)} projects named {project}"]
+    use = {**(configuration.get("use") or {}), **(found[0].get("use") or {})}
+    return [f"{name} is {json.dumps(use.get(name))}" for name in RECORDINGS if use.get(name) != "off"]
+
+
+def playwright_arguments(arguments: Sequence[str], *, attach_only: bool, ledger_privacy: bool) -> list[str]:
+    """The Playwright arguments of a run: the one project it runs, the caller's arguments, and its files."""
+    if ledger_privacy:
+        return ["--project", PRIVACY_PROJECT, *arguments]
+    if attach_only:
+        return ["--project", AGENT_PROJECT, *arguments, "tests/live/attach.live.ts"]
+    return ["--project", AGENT_PROJECT, *arguments]
+
+
+@dataclass(frozen=True, slots=True)
+class PrivacyScope:
+    """What the privacy check scans: the run's directory, and what was written below ``written`` since the start."""
+
+    run_directory: Path
+    written: tuple[Path, ...]
+    started_at: float
+
+
+def playwright_environment(
+    entry: str, endpoint: str, results: Path, language: str, privacy: PrivacyScope | None = None
+) -> dict[str, str]:
+    """The live project's environment: the ambient one without this checkout's settings, and the run's coordinates.
+
+    The privacy check also gets what it scans, keeps Playwright from writing
+    the page's accessibility snapshot beside a failure, and runs without
+    Playwright's debug logging.
+    """
+    environment = {name: value for name, value in os.environ.items() if not name.upper().startswith(_AMBIENT_EXCLUDED)}
+    environment |= {
+        "CADRUMO_CMAKE_BINARY_DIR": str(_BUILD),
+        "CADRUMO_DEV_DESKTOP_LIVE_ENDPOINT": endpoint,
+        "CADRUMO_DEV_DESKTOP_LIVE_ENTRY": entry,
+        "CADRUMO_DEV_DESKTOP_LIVE_RESULTS": str(results),
+        # The window speaks the profile's language, so the specs read its words.
+        "CADRUMO_DEV_DESKTOP_LIVE_LANGUAGE": language,
+    }
+    if privacy is not None:
+        for name in [name for name in environment if name.upper() in _DEBUG_VARIABLES]:
+            del environment[name]
+        environment |= {
+            "CADRUMO_DEV_DESKTOP_LIVE_RUN_DIRECTORY": str(privacy.run_directory),
+            "CADRUMO_DEV_DESKTOP_LIVE_WRITTEN": json.dumps([str(directory) for directory in privacy.written]),
+            "CADRUMO_DEV_DESKTOP_LIVE_STARTED_AT": repr(privacy.started_at),
+            "PLAYWRIGHT_NO_COPY_PROMPT": "1",
+        }
+    return environment
+
+
 def free_port() -> int:
     """A loopback TCP port that was free a moment ago."""
     import socket
@@ -760,24 +863,15 @@ def close_windows(pid: int) -> int:
     return len(windows)
 
 
-def playwright(entry: str, endpoint: str, results: Path, language: str, arguments: list[str]) -> int:
+def playwright(environment: Mapping[str, str], arguments: list[str]) -> int:
     """Run the live project as a child of this lane and return its exit status."""
-    environment = {name: value for name, value in os.environ.items() if not name.upper().startswith(_AMBIENT_EXCLUDED)}
-    environment |= {
-        "CADRUMO_CMAKE_BINARY_DIR": str(_BUILD),
-        "CADRUMO_DEV_DESKTOP_LIVE_ENDPOINT": endpoint,
-        "CADRUMO_DEV_DESKTOP_LIVE_ENTRY": entry,
-        "CADRUMO_DEV_DESKTOP_LIVE_RESULTS": str(results),
-        # The window speaks the profile's language, so the specs read its words.
-        "CADRUMO_DEV_DESKTOP_LIVE_LANGUAGE": language,
-    }
     npx = shutil.which("npx.cmd") or shutil.which("npx")
     if npx is None:
         raise UnavailableError("npx is not on PATH")
     return run_command(
         [npx, "playwright", "test", "-c", "tests/live/playwright.config.ts", *arguments],
         cwd=_FRONTEND,
-        environment=environment,
+        environment=dict(environment),
         inherit_output=True,
     ).returncode
 
@@ -886,11 +980,18 @@ def scan_written_since(directories: Sequence[Path], since: float) -> ScanResult:
     return merge(*results, ScanResult((), tuple(unreadable)))
 
 
-def run(run_directory: Path, *, served: bool, attach_only: bool, arguments: list[str]) -> list[str]:
+def run(
+    run_directory: Path, *, served: bool, attach_only: bool, arguments: list[str], ledger_privacy: bool = False
+) -> list[str]:
     """Run the lane in ``run_directory``; return what it could not prove."""
     if sys.platform != "win32":
         raise UnavailableError("the lane drives the Windows desktop")
     unproven: list[str] = []
+    results = run_directory / "playwright"
+    if ledger_privacy:
+        recording = recording_problems(live_configuration(results), PRIVACY_PROJECT)
+        if recording:
+            raise AcceptanceError(f"the {PRIVACY_PROJECT} project would record the window: {'; '.join(recording)}")
     host = test_host(served)
     if served:
         require_served_shell(host.entry)
@@ -905,7 +1006,6 @@ def run(run_directory: Path, *, served: bool, attach_only: bool, arguments: list
     root = person_storage_root()
     package = host.lane_package
     desktop_image = stage_package(host, package)
-    results = run_directory / "playwright"
     results.mkdir(parents=True)
     attachments = write_lane_attachments(run_directory / "attach")
     environment = person_environment(root, package)
@@ -933,11 +1033,14 @@ def run(run_directory: Path, *, served: bool, attach_only: bool, arguments: list
                 language = str((invoke(page, "desktop_language_read") or {}).get("language") or "en")
                 if attach_only:
                     unproven.append("agent specs: --attach-only ran only the attachment check")
-                    arguments = [*arguments, "tests/live/attach.live.ts"]
-                else:
+                elif not ledger_privacy:
                     require_ready_lane(page)
                 before = conversation_ids(page)
-            status = playwright(host.entry, endpoint, results, language, arguments)
+            privacy = PrivacyScope(run_directory, written_directories(root), started_at) if ledger_privacy else None
+            status = playwright(
+                playwright_environment(host.entry, endpoint, results, language, privacy),
+                playwright_arguments(arguments, attach_only=attach_only, ledger_privacy=ledger_privacy),
+            )
             print(json.dumps({"step": "playwright", "exit_code": status}), flush=True)
             if status != 0:
                 failures.append(f"the live project failed with exit {status}; report: {results / 'results.json'}")
@@ -962,7 +1065,7 @@ def run(run_directory: Path, *, served: bool, attach_only: bool, arguments: list
     scan = merge(
         *watch.command_lines,
         scan_tree([run_directory]),
-        scan_written_since([root / "logs", root / "agent"], started_at),
+        scan_written_since(written_directories(root), started_at),
     )
     failures.extend(f"provider key prefix in the {finding.location} ({finding.encoding})" for finding in scan.findings)
     failures.extend(f"not scanned, unreadable: {place}" for place in scan.unreadable)
@@ -1033,7 +1136,13 @@ def _main(argv: list[str] | None) -> int:
     """Run the lane; exit 0 on pass, 1 on a failure, 3 when a prerequisite is absent."""
     parser = argparse.ArgumentParser(prog="desktop-agent-live", description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--served", action="store_true", help="Load the shell from the development server.")
-    parser.add_argument("--attach-only", action="store_true", help="Run only the attachment check.")
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument("--attach-only", action="store_true", help="Run only the attachment check.")
+    selection.add_argument(
+        "--ledger-privacy",
+        action="store_true",
+        help="Run the Ledger page's privacy check on the person's own ledger in place of the agent specs.",
+    )
     parser.add_argument("--keep", action="store_true", help="Keep the run directory after a pass.")
     parser.add_argument("playwright", nargs="*", help="Arguments after -- go to Playwright, such as -g PATTERN.")
     options = parser.parse_args(argv)
@@ -1049,6 +1158,7 @@ def _main(argv: list[str] | None) -> int:
             served=options.served,
             attach_only=options.attach_only,
             arguments=options.playwright,
+            ledger_privacy=options.ledger_privacy,
         )
     except UnavailableError as absent:
         # Nothing ran that a kept directory would explain, so only --keep keeps it.

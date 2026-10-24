@@ -2,9 +2,10 @@
 
 The live project runs the shared agent specs, `tests/scenarios/agent.spec.ts`
 and `tests/scenarios/agent-prompts.spec.ts`, against the packaged desktop's
-own window and the real agent backend. Playwright attaches to the window's
-WebView2 over a DevTools port on the loopback address. It launches no browser
-and starts no server.
+own window and the real agent backend. The `ledger-privacy` project checks
+the Ledger page against your own ledger; see below. Playwright attaches to the
+window's WebView2 over a DevTools port on the loopback address. It launches no
+browser and starts no server.
 
 ## Run it
 
@@ -51,12 +52,13 @@ The specs read the window's words in your profile's language.
 
 Options, passed as `just desktop-agent-live <options>`:
 
-| Option          | Meaning                                                      |
-| --------------- | ------------------------------------------------------------ |
-| `--attach-only` | Run only the attachment check, `attach.live.ts`              |
-| `--served`      | Load the shell from `just dev`, with hot reload              |
-| `--keep`        | Keep the run directory after a pass                          |
-| `-- <args>`     | Pass the remaining arguments to Playwright, such as `-g ...` |
+| Option             | Meaning                                                      |
+| ------------------ | ------------------------------------------------------------ |
+| `--attach-only`    | Run only the attachment check, `attach.live.ts`              |
+| `--ledger-privacy` | Run the Ledger privacy check in place of the agent specs     |
+| `--served`         | Load the shell from `just dev`, with hot reload              |
+| `--keep`           | Keep the run directory after a pass                          |
+| `-- <args>`        | Pass the remaining arguments to Playwright, such as `-g ...` |
 
 `--served` uses a second test host. Its shell is the development server's
 address, so a change to the shell needs no rebuild while the Rust host, the
@@ -66,6 +68,59 @@ launcher and the agent stay real. Build it once with
 set as the `desktop-packaged-host` target sets them. Run `just dev` in this
 checkout first. The lane refuses a development server that another checkout
 started.
+
+## The Ledger privacy check
+
+`just desktop-agent-live --ledger-privacy` runs `ledger-privacy.live.ts`, the
+`ledger-privacy` project, instead of the agent specs. It needs no provider
+lane. It runs on your own ledger, because only real values show whether the
+window keeps them.
+
+In the window, the spec:
+
+- opens the Ledger page for the current quarter, or every period when the
+  quarter has no movements, and waits for the movements to be read;
+- reads the descriptions, counterparties and amounts the first rows show, and
+  a category, and keeps the stored text of the movements the page's list
+  reads return;
+- opens and cancels the Import and Export dialogs;
+- stages a counterparty edit holding a marker it makes up, and types a shown
+  description into a second movement;
+- opens the inspector and searches for a shown description;
+- discards the staged edits through the tray's Discard.
+
+It then checks that none of those values, and not the marker, is in:
+
+- local storage, session storage, every IndexedDB database and store, Cache
+  Storage, or the cookies, both with the edits staged and after the discard;
+- the console messages or page errors of the run;
+- any file under the run's directory, or any file below the profile's `logs`
+  and `agent` directories written during the run, as UTF-8 and UTF-16LE and
+  JSON-escaped.
+
+It also checks that the page submitted no ledger definition whose contract
+permits a change, sent no review answer, own-account change or file dialog,
+and opened no review or apply. The host calls are read from the window's
+network events; the check fails if it sees no `ledger.list` read, since then
+it saw nothing.
+
+The values stay in the spec's memory. A failure names a place, such as a
+storage key or a file, and counts, never a value. The project records no
+trace, screenshot or video, and the lane refuses to run it if its
+configuration turns one on. The lane also sets `PLAYWRIGHT_NO_COPY_PROMPT`,
+so a failure does not write the page's accessibility snapshot, and removes
+`DEBUG` and `PWDEBUG`, whose protocol log would print the page's values.
+
+The spec saves, applies, imports and exports nothing. It does not cover files
+written after it ends, such as at the window's close, the WebView2 profile
+folder, or the contents of compressed files. The lane's provider key scan
+runs after it as on every run.
+
+The scanning helpers have their own unit test, which needs no window:
+
+```sh
+node --test tests/live/privacy.unit.ts
+```
 
 ## How the specs reach the window
 

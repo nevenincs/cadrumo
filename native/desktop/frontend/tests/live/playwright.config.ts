@@ -6,7 +6,9 @@ import { fileURLToPath } from "node:url";
 // The live project: the shared agent specs, unchanged, against the packaged
 // desktop. The lane (`just desktop-agent-live`) starts the desktop with a
 // loopback DevTools port and names it in CADRUMO_DEV_DESKTOP_LIVE_ENDPOINT. This
-// configuration starts no server and no browser; it only attaches.
+// configuration starts no server and no browser; it only attaches. The lane
+// runs one project per run: `live`, or `ledger-privacy` with its
+// `--ledger-privacy` option.
 //
 // The tsconfig beside this file resolves "@playwright/test" to the live
 // fixture, so the specs receive the desktop's window as their page. Checks
@@ -32,7 +34,6 @@ export default defineConfig({
   fullyParallel: false,
   // A real model answers; replies take far longer than the scenario host's.
   timeout: 10 * 60_000,
-  use: { trace: "retain-on-failure", screenshot: "only-on-failure" },
   projects: [
     {
       name: "live",
@@ -46,6 +47,26 @@ export default defineConfig({
       ],
       metadata: { agentHost: "live" },
       expect: { timeout: 3 * 60_000 },
+      use: { trace: "retain-on-failure", screenshot: "only-on-failure" },
+    },
+    {
+      // The Ledger page on the person's own ledger: nothing of the window may
+      // be recorded, so this project keeps no trace, screenshot or video,
+      // and the lane refuses to run it if any of them is turned on. Its
+      // actions time out well inside the test, so their errors, which can
+      // quote the page, reach the spec's own handling first.
+      name: "ledger-privacy",
+      testMatch: /live\/ledger-privacy\.live\.ts$/,
+      metadata: { agentHost: "live" },
+      timeout: 10 * 60_000,
+      expect: { timeout: 30_000 },
+      use: {
+        trace: "off",
+        screenshot: "off",
+        video: "off",
+        actionTimeout: 30_000,
+        navigationTimeout: 60_000,
+      },
     },
   ],
 });
