@@ -898,7 +898,7 @@ desktop:
         merge: Unir partes
         remove: Eliminar
         restore: Restaurar
-        rule_apply: Aplicar reglas · {count} movimientos
+        rule_apply: 'Aplicar reglas · movimientos: {count}'
         split: Dividir
         stash: Apartar
         suggestion: Aprobación del modelo
@@ -906,25 +906,24 @@ desktop:
       approve: aprobado por ti
       back: Atrás
       blocker:
-        action_and_edits: '{count} con una acción y ediciones a la vez'
-        actions_conflict: '{count} con acciones incompatibles'
-        cannot_clear: '{count} con un valor que ninguna operación vacía'
-        draft_incomplete: '{count} movimientos nuevos aún necesitan datos'
-        exclude_and_classification: '{count} excluidos y clasificados a la vez'
-        gone: '{count} eliminados o movidos desde que los leíste'
-        mixed_needs_share: '{count} Mixtos sin parte profesional'
-        needs_classification: '{count} necesitan una clasificación'
-        not_active: '{count} no activos: solo cambian los activos'
-        sealed: '{count} sellados por una declaración finalizada'
-        share_needs_mixed: '{count} con parte pero no Mixtos'
-        suggestion_and_edits: '{count} con una aprobación del modelo y ediciones a
-          la vez'
-        suggestion_and_rules: '{count} con una aprobación del modelo y una aplicación
-          de reglas que los incluye'
-        suggestion_needs_share: '{count} aprobaciones Mixtas: indica una parte para
-          aprobar'
-        too_large: '{count} demasiado grandes para enviar'
-        transfer_with_tax: '{count} traspasos con datos fiscales'
+        action_and_edits: 'Una acción y ediciones a la vez: {count}'
+        actions_conflict: 'Acciones incompatibles: {count}'
+        cannot_clear: 'Valor que ninguna operación vacía: {count}'
+        draft_incomplete: 'Movimientos nuevos con datos pendientes: {count}'
+        exclude_and_classification: 'Excluidos y clasificados a la vez: {count}'
+        gone: 'Eliminados o movidos desde que los leíste: {count}'
+        mixed_needs_share: 'Mixto sin parte profesional: {count}'
+        needs_classification: 'Sin clasificación: {count}'
+        not_active: 'No activos, y solo cambian los activos: {count}'
+        sealed: 'Sellados por una declaración finalizada: {count}'
+        share_needs_mixed: 'Con parte pero no Mixto: {count}'
+        suggestion_and_edits: 'Aprobación del modelo y ediciones a la vez: {count}'
+        suggestion_and_rules: 'Aprobación del modelo y una aplicación de reglas que
+          los incluye: {count}'
+        suggestion_needs_share: 'Aprobaciones Mixtas, indica una parte para aprobar:
+          {count}'
+        too_large: 'Demasiado grandes para enviar: {count}'
+        transfer_with_tax: 'Traspasos con datos fiscales: {count}'
       blocker_fields: 'Campos: {fields}'
       checked_again: La preparación se vuelve a comprobar.
       close: Hecho
@@ -959,23 +958,26 @@ desktop:
       gone_mine: Mantenerlo preparado
       gone_movement: Un movimiento que ya no se lee
       gone_theirs: Quitar los cambios
-      held: '{count} retenidos'
-      held_note: '{count} retenidos por los problemas de arriba; siguen preparados.'
+      held: 'Retenidos: {count}'
+      held_note: 'Retenidos por los problemas de arriba, siguen preparados: {count}'
       keep_editing: Seguir editando
       link:
         amount_differs: El importe difiere en {amount}
         counterparty_differs: Contraparte distinta
         currency_differs: 'Moneda distinta: {movement} ↔ {invoice}'
         differ: Sé que difieren
-        linked_elsewhere: Factura ya vinculada a {count} movimientos
+        linked_elsewhere: 'Factura ya vinculada · movimientos: {count}'
         sure: Vincular estos · permanente
         unread: No se ha podido leer la factura
       mine: Conservar el mío
+      mismatch:
+        income_category: Categoría de gasto en un ingreso · {count}
       more: '{count} más'
       needs_you: Primero necesita tu atención
-      new: '{count} nuevos'
+      new: 'Nuevos: {count}'
       now_stored: Ahora en el libro
-      one_by_one: '{count} uno a uno (unos {minutes} min)'
+      one_by_one: 'Uno a uno: {count} (unos {minutes} min)'
+      one_by_one_quick: 'Uno a uno: {count}'
       outcome:
         applied: Guardado
         applied_new_id: Guardado con una nueva referencia
@@ -988,7 +990,7 @@ desktop:
         not_sent_paused: 'No enviado: escrituras en pausa tras un resultado desconocido.
           Sigue preparado.'
         not_sent_stopped: 'No enviado: la sesión se cerró. Sigue preparado.'
-        refused: 'Rechazado: {reason}. Sigue preparado.'
+        refused: 'No guardado: {reason} · sigue preparado'
         saved_unread: Guardado, pero no se leyó la respuesta. Vuelve a leer para verlo.
         settled: Guardado o ya estaba así
         settled_value: 'Guardado o ya estaba así: {field} es {value}'
@@ -1010,10 +1012,13 @@ desktop:
       progress_count: '{done} de {total} guardados'
       read_failed: 'No se ha podido volver a leer el libro: no se ha guardado nada'
       reading: Leyendo el libro de nuevo…
+      refusal:
+        changed_elsewhere: cambiado en otro sitio
+        other: el libro lo rechazó
       reject: 'rechazado: {reason}'
       rows: Cambios por movimiento
       save: Guardar {count}
-      save_held: Guardar {count} · {held} retenidos
+      save_held: 'Guardar {count} · retenidos: {held}'
       saving: Guardando
       saving_description: Cada cambio se envía una vez, en orden.
       show_all: Mostrar todo
@@ -1021,7 +1026,7 @@ desktop:
       shown: '{shown} de {total}'
       step:
         add: Movimiento nuevo · {movement}
-        bulk: Parte {part} de {parts} · {count} guardados juntos
+        bulk: 'Parte {part} de {parts} · guardados juntos: {count}'
       stopped: 'La sesión se cerró: lo que no se envió sigue preparado'
       summary: Resumen
       summary_change: Cambio
@@ -1039,7 +1044,7 @@ desktop:
       theirs: Tomar el guardado
       tick_links: Marca cada vínculo permanente para guardar.
       title: Revisar y guardar · {count}
-      together: '{count} guardados juntos'
+      together: 'Guardados juntos: {count}'
       unknown_note: 'Puede que se haya guardado o no. No se reintenta nada: las escrituras
         esperan a que vuelvas a leer.'
       unknown_title: Un guardado tiene un resultado desconocido
@@ -1217,24 +1222,30 @@ desktop:
       category: Categoría
       category_needs_classification: Clasifícalos antes como empresariales o mixtos
       choose_category: Elige una categoría
+      expense_category: Categoría de gasto · {count}
       inactive_only: Solo cambian los movimientos activos
+      income_no_category: Ingresos {count} · sin categoría
       no_category_match: Ninguna categoría coincide
       not_saved: Preparado, sin guardar
       nothing: Selecciona movimientos primero
       partial: solo las filas cargadas
+      range_differs: 'Seleccionados: {selected} · rango: {range}'
       search_category: Busca en las categorías
+      select_range: Selecciona el rango
       share: Parte empresarial
+      share_categories: Solo categorías que admiten una parte de uso empresarial
       share_hint: 'Porcentaje de uso empresarial: 50 para el 50 %.'
       share_refused: '«{raw}» no es una parte: escribe un porcentaje, como 50 para
         el 50 %.'
-      skipped: '{count} se quedan como están'
+      skipped: 'Se quedan como están: {count}'
       stage: Prepara para {count}
-      staged: '{classification} · {count} movimientos preparados'
-      staged_category: '{category} · {count} movimientos preparados'
-      staged_detail: '{classification} · {detail} · {count} movimientos preparados'
-      title_business: Empresarial · {count} movimientos
-      title_category: Categoría · {count} movimientos
-      title_mixed: Mixto · {count} movimientos
+      staged: '{classification} · Preparados: {count}'
+      staged_category: '{category} · Preparados: {count}'
+      staged_detail: '{classification} · {detail} · Preparados: {count}'
+      title_business: 'Empresarial · Movimientos: {count}'
+      title_business_split: Empresarial · Gastos {expenses} · Ingresos {income}
+      title_category: 'Categoría · Movimientos: {count}'
+      title_mixed: 'Mixto · Movimientos: {count}'
       transfers_only: Los traspasos solo pueden ser personales o quedar sin clasificar
     close: Cerrar el libro
     column:
@@ -1263,6 +1274,7 @@ desktop:
       taxable_base: Base imponible
     columns:
       list: Columnas mostradas
+      more_name: 'Más columnas: {count} · desplázate hasta ellas'
       move_down: Baja {column}
       move_up: Sube {column}
       preset:
@@ -1278,7 +1290,7 @@ desktop:
       cancel: Cancelar
       description: 'Cada uno carga y guarda todo el libro: unos {minutes} min al guardar.'
       stage: Preparar igualmente
-      title: '{count} guardados uno a uno'
+      title: 'Guardados uno a uno: {count}'
     count:
       to_classify: '{count} por clasificar'
     counterparty:
@@ -1327,7 +1339,7 @@ desktop:
       threshold: Confianza baja por debajo de
       title: Diagnóstico del modelo
       tokens: Tokens
-      unpriced: '{count} llamadas sin precio'
+      unpriced: 'Llamadas sin precio: {count}'
       until: Hasta
       usage: Uso por proveedor
     direction:
@@ -1396,7 +1408,7 @@ desktop:
       consent_none: Nada ha salido de este equipo para leerse.
       consent_note: Cada lectura fuera de este equipo necesita tu conformidad y se
         registra antes de que salga el documento. Lo enviado no se puede recuperar.
-      count: '{count} documentos'
+      count: 'Documentos: {count}'
       country: País de la contraparte
       currency_not_read: 'No figura en el documento: indica cuál'
       derived: Generado a partir de una lectura externa
@@ -1425,6 +1437,7 @@ desktop:
         taxable_base: Base imponible
       findings: Preguntas por responder
       findings_open: 'Preguntas abiertas: {count}'
+      go_to_question: Ir a la pregunta · {reason}
       grounding:
         ambiguous: varias lecturas posibles
         anchored: encontrado en la página
@@ -1557,6 +1570,10 @@ desktop:
       remove: Quitar movimiento nuevo
       required: Obligatorio
       untitled: Movimiento nuevo
+    duplicate:
+      archive: Archivar como duplicado
+      chip: Duplicados
+      chip_name: 'Posibles duplicados: {count} · muéstralos'
     edit:
       changed_was: cambiado, sin guardar, antes {was}
       cleared: vaciado
@@ -1607,6 +1624,7 @@ desktop:
         too_long: '«{raw}» es demasiado largo: como mucho {limit} caracteres.'
         too_many_decimals: «{raw}» tiene más de {limit} decimales.
         unknown_choice: «{raw}» no es una de las opciones.
+        use: Usar {suggestion}
         year_not_a_number: «{raw}» no es un año.
         year_out_of_range: «{raw}» está fuera de los años que admite Cadrumo.
         zero: '«{raw}» es cero: un importe es mayor que cero.'
@@ -1614,7 +1632,7 @@ desktop:
       revert_movement: Revertir movimiento
       reverted_cell: '{field} revertido'
       reverted_movement: Movimiento revertido
-      row_changes: '{count} cambios sin guardar'
+      row_changes: 'Cambios sin guardar: {count}'
       row_unsaved: Tiene cambios sin guardar
       search: Buscar en {column}
       step:
@@ -1631,14 +1649,14 @@ desktop:
         revert_movement: movimiento revertido
         set: edición
         stage_action: acción
-      undo_applied: Los cambios guardados no se deshacen aquí
+      undo_applied: Los cambios guardados no se deshacen aquí · edita la celda para
+        revertirlo
       undo_nothing: Nada que deshacer
       undone: 'Deshecho: {what}'
     empty: No hay movimientos en {period}
     empty_all: Aún no hay movimientos
     empty_filtered: Ningún movimiento coincide
-    empty_filtered_detail: La búsqueda o los filtros ocultan {count} movimientos de
-      {period}.
+    empty_filtered_detail: 'Ocultos por la búsqueda o los filtros en {period}: {count}'
     export:
       cancel: Cancelar
       change_file: Cambiar…
@@ -1670,8 +1688,7 @@ desktop:
       heading: Qué exportar
       heading_done: Exportado
       inactive: Incluir movimientos archivados y apartados
-      left_out: 'Se dejan fuera: {archived} archivados, {aside} apartados, {split}
-        divididos.'
+      left_out: Fuera · archivados {archived} · apartados {aside} · divididos {split}
       no_file: Ningún archivo elegido
       not_ready: No listo para calcular
       not_ready_note: 'Problemas de preparación: {count}. El archivo muestra lo que
@@ -1687,6 +1704,7 @@ desktop:
       send_unknown: Exportar
       staged: 'Cambios sin guardar que no van en este archivo: {count}'
       staged_note: La exportación lee lo guardado.
+      staged_short: 'Sin guardar: {count} · no van en este archivo'
       title: Exportar el libro
       tsv:
         amount: Importe
@@ -1727,8 +1745,8 @@ desktop:
       usage_ratio_id: Ratio de uso
       value_date: Fecha valor
     fill:
-      done: '{count} celdas rellenadas · sin guardar'
-      done_kept: '{count} celdas rellenadas · {kept} sin cambios'
+      done: 'Celdas rellenadas: {count} · sin guardar'
+      done_kept: 'Celdas rellenadas: {count} · sin cambios: {kept}'
       down: Rellenar hacia abajo
       too_short: Selecciona primero dos filas o más y rellena hacia abajo
     filters:
@@ -1786,8 +1804,9 @@ desktop:
       category: Categoría
       category_family: Familia de categoría
       classification: Clasificación
+      classify: Clasifica
       collapse_all: Pliega todos los grupos
-      count: '{count} movimientos'
+      count: 'Movimientos: {count}'
       counterparty: Contraparte
       description: Descripción, sin referencias
       direction: Sentido
@@ -1806,8 +1825,10 @@ desktop:
       expand_all: Despliega todos los grupos
       group_label: Etiqueta de grupo
       iva_category: Categoría de IVA
+      make_rule: Crea una regla con este grupo
       mixed: Mixto…
       month: Mes
+      more: Más acciones del grupo
       none: Sin agrupar
       personal: Personal
       select: Selecciona {count}
@@ -1817,6 +1838,7 @@ desktop:
     health:
       check: Comprobar
       check_again: Volver a comprobar
+      checked_at: 'Última comprobación: {time}'
       choose_period: Elige un periodo que comprobar.
       count:
         active: Activos
@@ -1837,27 +1859,28 @@ desktop:
       no_movements: No hay movimientos en {period}. No es lo mismo que no deber nada.
       not_checked: Aún no comprobado en esta ventana.
       not_run: 'Aún no hecha: nada se muestra como cero hasta medirlo.'
+      of_active: De los activos
       one_sided: Enlaces de factura de un solo lado
       ready: Listo para calcular · {count} comprobados
       rebuild: Reconstruir los enlaces
-      rebuilt: 'Reconstruidos: {links} enlaces en {revisions} revisiones · {removed}
-        obsoletos quitados'
+      rebuilt: 'Reconstruido · enlaces: {links} · revisiones: {revisions} · obsoletos
+        quitados: {removed}'
       reset: Zona de peligro · reiniciar el libro
       reset_blocked: El reinicio está bloqueado
       reset_blocker: Modelo {modelo} · {year} {period} · {state} cita movimientos
-      reset_confirm: Reiniciar · quitar {movements} movimientos
+      reset_confirm: 'Reiniciar y quitar · movimientos: {movements}'
       reset_reason: Motivo
       reset_reason_hint: Queda en el registro de auditoría · hasta {limit} caracteres
       reset_what: Quita todos los movimientos y los documentos adjuntos. Primero va
         una prueba.
-      reset_would: Quitaría {movements} movimientos y {documents} documentos.
+      reset_would: 'Quitaría · movimientos: {movements} · documentos: {documents}'
       run_check: Hacer la comprobación
       show: 'Mostrar los {count} movimientos: {reason}'
       show_short: Mostrar
       stale: Declaraciones por recalcular
       stale_none: 'Ninguna: cada cálculo cubre los movimientos tal como están.'
-      stale_row: 'Modelo {modelo} · {year} {period}: {changed} cambiados y {removed}
-        quitados desde el cálculo'
+      stale_row: 'Modelo {modelo} · {year} {period} · desde el cálculo, cambiados:
+        {changed}, quitados: {removed}'
       status: Estado · {period}
       unconverted: Extranjeros sin cambio
       whole: Comprobar todo el libro
@@ -1917,7 +1940,7 @@ desktop:
       country_invalid: «{value}» no es un código de país de dos letras.
       country_none: sin indicar
       description: Extractos bancarios, libros de facturas y documentos, desde archivos
-        de este equipo. La vista previa no guarda nada.
+        de este equipo.
       diagnostic:
         already_in_ledger: Algunas filas ya están en el libro y se omiten.
         gap: Más de 35 días entre dos movimientos.
@@ -1944,12 +1967,12 @@ desktop:
         book: Suelta aquí un libro de facturas
         documents: Suelta aquí PDF, imágenes, facturas electrónicas o una carpeta
       duplicates: Posibles duplicados
+      duplicates_chip: 'Posibles duplicados: {count}'
       duplicates_more: Y {count} más.
-      duplicates_note: 'Posibles duplicados: {count}. Se importan y se marcan; compáralos
-        después de importar.'
+      duplicates_note: Se importan y se marcan; compáralos después de importar.
       field: Campo
-      file_counts: '{rows} filas · {fresh} nuevas · {skipped} ya en el libro'
-      file_imported: '{fresh} importados · {skipped} ya en el libro'
+      file_counts: Filas {rows} · nuevas {fresh} · ya en el libro {skipped}
+      file_imported: Importados {fresh} · ya en el libro {skipped}
       file_not_sent: No enviado.
       file_unknown: 'Resultado desconocido: puede haberse importado.'
       files: Archivos
@@ -2006,7 +2029,7 @@ desktop:
       show_documents: Revisar en Documentos
       show_failed: No se han podido leer los movimientos importados. Vuelve a intentarlo.
       show_imported: Ver movimientos importados
-      shown: 'Mostrando el periodo de tu importación: del {from} al {to}.'
+      shown: Tu importación · {from} – {to}
       shown_clear: Descartar
       step:
         preview: Vista previa
@@ -2124,7 +2147,7 @@ desktop:
       from_value_date: la fecha valor
       fx_rate: Tipo {rate}
       history:
-        parts: '{count} partes'
+        parts: 'Partes: {count}'
         reason_withheld: No se muestra el motivo del modelo
         split_parts: Partes
         split_siblings: Divididas del mismo movimiento
@@ -2133,7 +2156,7 @@ desktop:
       index: Ir a una sección
       invoice:
         active_only: Solo se pueden vincular movimientos activos.
-        already_linked: Ya vinculada a {count} movimientos
+        already_linked: 'Ya vinculada · Movimientos: {count}'
         ambiguous: 'Varias facturas liquidan este movimiento igual de bien. Elige
           una: un vínculo no se puede deshacer.'
         candidates: Facturas candidatas
@@ -2167,8 +2190,8 @@ desktop:
       lifecycle:
         description: Un motivo para todos. No se guarda nada hasta que revises tus
           cambios.
-        skipped: '{count} no lo admiten y se quedan como están'
-        title: '{action} · {count} movimientos'
+        skipped: 'No lo admiten, se quedan como están: {count}'
+        title: '{action} · Movimientos: {count}'
       m210:
         applicable_rate: Tipo aplicable
         asset_or_right_id: Bien o derecho
@@ -2261,32 +2284,33 @@ desktop:
       selection:
         actions: Acciones
         approve_all: Aprobar las {count} leídas
-        approved_all: '{count} aprobaciones preparadas'
+        approved_all: 'Aprobaciones preparadas: {count}'
         ask_each: Preguntar al modelo por cada uno
         asked: 'Sugerencias para leer: {count}'
         body: Movimientos seleccionados
         classification: Clasificación para todos
         classify_first: Clasificar primero
+        classify_first_hint: Clasifica primero · Empresarial… fija una categoría
         clear: Quitar la selección
         common: Valores comunes
-        copied: '{count} movimientos copiados como TSV'
+        copied: 'Copiados como TSV: {count}'
         copy: Copiar como TSV
         cost: '{count} se guardarían uno a uno, unos {minutes} min. Si clasificas
           primero, se guardan juntos.'
         in: Entradas · {currency}
         make_rule: Crear una regla
         merge_hint: Selecciona todas las partes de un movimiento dividido para unirlas.
-        mixed_values: Varios · {count} valores
+        mixed_values: 'Valores distintos: {count}'
         nothing: Ninguno lo admite
         out: Salidas · {currency}
         partial: Solo los movimientos cargados
         set_for: Aplicar a {count}
         set_hidden: Aplicar a {visible} visibles + {hidden} ocultos
         set_title: Para todos · se aplica al elegir
-        skipped: '{count} omitidos'
-        skipped_reason: '{count} omitidos: {reason}'
+        skipped: 'Omitidos: {count}'
+        skipped_reason: 'Omitidos, {reason}: {count}'
         stage_anyway: Preparar igualmente
-        staged: '{count} movimientos preparados · sin guardar'
+        staged: 'Preparados: {count} · sin guardar'
         title: '{count} seleccionados'
         totals: Totales
         transfer: Transferencias · {currency}
@@ -2327,7 +2351,7 @@ desktop:
       stage: Preparar
       technical: Detalles técnicos
       unread: No se pudo leer
-      unsaved: '{count} cambios · sin guardar'
+      unsaved: 'Cambios: {count} · sin guardar'
       unsaved_classification: → {classification} · sin guardar
       used:
         discarded: Descartado
@@ -2673,7 +2697,8 @@ desktop:
       unknown: Desconocida
     leave:
       cancel: Cancelar
-      description: '{count} cambios están solo en esta ventana. Si sales, se pierden.'
+      description: 'Cambios sin guardar: {count} · solo están en esta ventana. Si
+        sales, se pierden.'
       discard: Descartar y salir
       review: Revisar y guardar
       title: ¿Salir con cambios sin guardar?
@@ -2736,16 +2761,16 @@ desktop:
     no_rate_detail: 'No hay tipo de cambio para esta fecha: el valor en EUR no se
       conoce y no es cero.'
     paste:
-      apply: Pegar {count} celdas
+      apply: Pegar {count}
       blanks: Celdas en blanco
       blanks_note: Una celda en blanco no cambia nada; solo Suprimir vacía.
       cancel: Cancelar
       changes: Celdas que cambian
-      description: '{rows} filas en {columns}. No se prepara nada hasta que pegues.'
-      done: '{count} celdas pegadas · sin guardar'
-      done_refused: '{count} celdas pegadas · {refused} rechazadas, marcadas en la
-        tabla'
+      description: 'Filas: {rows} · no se prepara nada hasta que pegues.'
+      done: 'Celdas pegadas: {count} · sin guardar'
+      done_refused: 'Celdas pegadas: {count} · rechazadas, marcadas en la tabla: {refused}'
       dropped: Más allá de la última fila o columna
+      first_refusal: '{column}: {reason}'
       identity_note: Cambiar la descripción, el importe, la fecha o la cuenta da al
         movimiento una nueva referencia al guardarlo.
       new_identity: Nueva referencia
@@ -2754,6 +2779,7 @@ desktop:
       refused_unclosed_quote: 'No pegado: hay unas comillas sin cerrar'
       single_writes: Guardados uno a uno
       title: ¿Pegar en la tabla?
+      title_into: ¿Pegar en {columns}?
     paused:
       dismiss: Cerrar
       found_not_saved: '{movement} no se guardó; sigue preparado'
@@ -2882,7 +2908,7 @@ desktop:
       title: Porcentajes de afectación
       unset: Quitar
       unset_named: Quitar el porcentaje de {category}
-      valid: Los {count} porcentajes fijados son válidos.
+      valid: 'Porcentajes fijados, todos válidos: {count}'
       validate: Comprobarlos
       year: Año del porcentaje
     readiness:
@@ -2891,18 +2917,18 @@ desktop:
       fewer: Menos
       loaded_only: solo las filas cargadas
       more: +{count}
-      more_name: '{count} motivos más'
-      no_rate: '{count} sin tipo de cambio a euros'
+      more_name: 'Más motivos: {count}'
+      no_rate: 'Sin tipo de cambio a euros: {count}'
       not_checked: Aún sin comprobar
       not_measured: Preparación sin medir
       not_ready: No listo para calcular · {count} por corregir
-      out_of_date: Sin comprobar desde {count} cambios guardados
+      out_of_date: 'Sin comprobar desde que guardaste · Cambios: {count}'
       ready: Listo para calcular · comprobado a las {time}
       reason_name: '{reason}: {count}. Muéstralos y cómo corregirlos'
       reasons: Motivos de preparación
       staged: '{count} preparados'
       title: Preparación
-      unsaved: '{count} cambios sin guardar no incluidos'
+      unsaved: 'Cambios sin guardar no incluidos: {count}'
     readiness_filter:
       issues: Por corregir
       no_rate: Sin tipo de cambio
@@ -3004,6 +3030,7 @@ desktop:
       expression_unread: Esta ventana no puede leer esa expresión.
       from_selection: Crear regla a partir de la selección
       matches: Coincide con {count} cargados
+      matches_split: Coincide con {count} · {pending} por clasificar
       matches_unknown: No contado aquí
       move_down: 'Bajar: {rule}'
       move_up: 'Subir: {rule}'
@@ -3026,7 +3053,7 @@ desktop:
         invalid_pattern: El libro no puede leer esa expresión.
       run_note: La vista previa no escribe nada; aplicarlas queda pendiente como cualquier
         cambio.
-      run_staged: Aplicación de reglas pendiente · {count} movimientos · sin guardar
+      run_staged: 'Aplicación de reglas pendiente · Movimientos: {count} · sin guardar'
       run_title: Aplicar las reglas
       save: Guardar regla
       stage_run: Dejar pendiente
@@ -3034,9 +3061,9 @@ desktop:
       what: Busca palabras en la descripción del movimiento y decide su clasificación.
       words: La descripción contiene
       words_hint: Palabras en este orden; da igual mayúsculas o minúsculas.
-      would_classify: Se clasificarían {count}
+      would_classify: 'Se clasificarían: {count}'
     search:
-      elsewhere: '{count} más en otros periodos'
+      elsewhere: 'Más en otros periodos: {count}'
       label: Buscar movimientos
       load_all: Carga los {total}
       loaded: '{found} encontrados en los {loaded} cargados'
@@ -3055,8 +3082,9 @@ desktop:
       shown: Selecciona los movimientos mostrados · Ctrl+clic los añade
     selected: '{count} seleccionados'
     selection:
-      all_shown: Los {count} mostrados están seleccionados.
-      hidden: '{hidden} de {selected} seleccionados están ocultos'
+      actions: Acciones de la selección
+      all_shown: 'Todos los mostrados están seleccionados: {count}.'
+      hidden: 'Ocultos: {hidden} de {selected} seleccionados'
       keep_visible: Deja solo los visibles
       select_all: Selecciona los {count} de {period}
       show: Muéstralos
@@ -3112,17 +3140,17 @@ desktop:
     title: Libro
     toolbar: Vista de movimientos
     tray:
-      actions: '{count} acciones'
+      actions: 'Acciones: {count}'
       discard: Descartar
-      edits: '{edits} cambios en {movements} movimientos'
+      edits: 'Cambios: {edits} · movimientos: {movements}'
       in_parts: se guarda por partes
       name: '{count} sin guardar: {what}'
-      new: '{count} nuevos'
+      new: 'Nuevos: {count}'
       paused: escrituras en pausa
       paused_reason: 'Vuelve a leer primero: un guardado tiene un resultado desconocido'
       region: Cambios sin guardar
       review: Revisar
-      review_count: Revisar y guardar {count} cambios
+      review_count: Revisar y guardar · {count}
       undo: Deshacer
       window_only: solo en esta ventana
     unavailable: Aún no disponible

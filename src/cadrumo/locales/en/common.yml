@@ -863,7 +863,7 @@ desktop:
         merge: Merge parts
         remove: Remove
         restore: Restore
-        rule_apply: Apply rules · {count} movements
+        rule_apply: 'Apply rules · movements: {count}'
         split: Split
         stash: Set aside
         suggestion: Model approval
@@ -871,23 +871,23 @@ desktop:
       approve: approved by you
       back: Back
       blocker:
-        action_and_edits: '{count} with an action and edits together'
-        actions_conflict: '{count} with actions that cannot go together'
-        cannot_clear: '{count} with a value no operation clears'
-        draft_incomplete: '{count} new movements still need facts'
-        exclude_and_classification: '{count} excluded and classified together'
-        gone: '{count} removed or moved since you read them'
-        mixed_needs_share: '{count} Mixed without a business share'
-        needs_classification: '{count} need a classification'
-        not_active: '{count} not active: only active movements change'
-        sealed: '{count} sealed by a finalised declaration'
-        share_needs_mixed: '{count} with a share but not Mixed'
-        suggestion_and_edits: '{count} with a model approval and edits together'
-        suggestion_and_rules: '{count} with a model approval and a rules apply that
-          names them'
-        suggestion_needs_share: '{count} Mixed approvals: enter a share to approve'
-        too_large: '{count} too large to send'
-        transfer_with_tax: '{count} transfers with tax fields'
+        action_and_edits: 'An action and edits together: {count}'
+        actions_conflict: 'Actions that cannot go together: {count}'
+        cannot_clear: 'A value no operation clears: {count}'
+        draft_incomplete: 'New movements still missing facts: {count}'
+        exclude_and_classification: 'Excluded and classified together: {count}'
+        gone: 'Removed or moved since you read them: {count}'
+        mixed_needs_share: 'Mixed without a business share: {count}'
+        needs_classification: 'Classification missing: {count}'
+        not_active: 'Not active, and only active movements change: {count}'
+        sealed: 'Sealed by a finalised declaration: {count}'
+        share_needs_mixed: 'A share but not Mixed: {count}'
+        suggestion_and_edits: 'A model approval and edits together: {count}'
+        suggestion_and_rules: 'A model approval and a rules apply that names them:
+          {count}'
+        suggestion_needs_share: 'Mixed approvals, enter a share to approve: {count}'
+        too_large: 'Too large to send: {count}'
+        transfer_with_tax: 'Transfers with tax fields: {count}'
       blocker_fields: 'Fields: {fields}'
       checked_again: Readiness is checked again.
       close: Done
@@ -922,23 +922,26 @@ desktop:
       gone_mine: Keep it staged
       gone_movement: A movement no longer read
       gone_theirs: Drop the changes
-      held: '{count} held back'
-      held_note: '{count} held back by the problems above; they stay staged.'
+      held: 'Held back: {count}'
+      held_note: 'Held back by the problems above, still staged: {count}'
       keep_editing: Keep editing
       link:
         amount_differs: Amount differs by {amount}
         counterparty_differs: Different counterparty
         currency_differs: 'Different currency: {movement} ↔ {invoice}'
         differ: I know they differ
-        linked_elsewhere: Invoice also linked to {count} movements
+        linked_elsewhere: 'Invoice also linked · movements: {count}'
         sure: Link these · permanent
         unread: Invoice could not be read
       mine: Keep mine
+      mismatch:
+        income_category: Expense category on income · {count}
       more: '{count} more'
       needs_you: Needs you first
-      new: '{count} new'
+      new: 'New: {count}'
       now_stored: Now in the ledger
-      one_by_one: '{count} one by one (about {minutes} min)'
+      one_by_one: 'One by one: {count} (about {minutes} min)'
+      one_by_one_quick: 'One by one: {count}'
       outcome:
         applied: Saved
         applied_new_id: Saved under a new reference
@@ -950,7 +953,7 @@ desktop:
         not_sent_paused: 'Not sent: writes paused after an unknown outcome. It stays
           staged.'
         not_sent_stopped: 'Not sent: the session went away. It stays staged.'
-        refused: 'Refused: {reason}. It stays staged.'
+        refused: 'Not saved: {reason} · stays staged'
         saved_unread: Saved, but its answer was not read. Re-read to see it.
         settled: Saved or already so
         settled_value: 'Saved or already so: {field} is {value}'
@@ -971,10 +974,13 @@ desktop:
       progress_count: '{done} of {total} saves'
       read_failed: 'The ledger could not be read again: nothing was saved'
       reading: Reading the ledger again…
+      refusal:
+        changed_elsewhere: changed elsewhere
+        other: the ledger refused it
       reject: 'rejected: {reason}'
       rows: Changes by movement
       save: Save {count}
-      save_held: Save {count} · {held} held back
+      save_held: 'Save {count} · held back: {held}'
       saving: Saving
       saving_description: Each change is sent once, in order.
       show_all: Show all
@@ -982,7 +988,7 @@ desktop:
       shown: '{shown} of {total}'
       step:
         add: New movement · {movement}
-        bulk: Part {part} of {parts} · {count} saved together
+        bulk: 'Part {part} of {parts} · saved together: {count}'
       stopped: 'The session went away: what was not sent stays staged'
       summary: Summary
       summary_change: Change
@@ -1000,7 +1006,7 @@ desktop:
       theirs: Take theirs
       tick_links: Tick each permanent link to save.
       title: Review and save · {count}
-      together: '{count} saved together'
+      together: 'Saved together: {count}'
       unknown_note: 'It may or may not have saved. Nothing is retried: writes pause
         until you re-read.'
       unknown_title: One save has an unknown outcome
@@ -1180,23 +1186,29 @@ desktop:
       category: Category
       category_needs_classification: Classify them as Business or Mixed first
       choose_category: Choose a category
+      expense_category: Expense category · {count}
       inactive_only: Only active movements change
+      income_no_category: Income {count} · no category needed
       no_category_match: No category matches
       not_saved: Staged, not saved
       nothing: Select movements first
       partial: loaded rows only
+      range_differs: 'Selected: {selected} · range: {range}'
       search_category: Search the categories
+      select_range: Select range
       share: Business share
+      share_categories: Only categories that take a business-use share
       share_hint: 'Percent of business use: 50 for 50%.'
       share_refused: '“{raw}” is not a share: write a percentage, such as 50 for 50%.'
-      skipped: '{count} left as they are'
+      skipped: 'Left as is: {count}'
       stage: Stage for {count}
-      staged: '{classification} · {count} movements staged'
-      staged_category: '{category} · {count} movements staged'
-      staged_detail: '{classification} · {detail} · {count} movements staged'
-      title_business: Business · {count} movements
-      title_category: Category · {count} movements
-      title_mixed: Mixed · {count} movements
+      staged: '{classification} · Staged: {count}'
+      staged_category: '{category} · Staged: {count}'
+      staged_detail: '{classification} · {detail} · Staged: {count}'
+      title_business: 'Business · Movements: {count}'
+      title_business_split: Business · Expenses {expenses} · Income {income}
+      title_category: 'Category · Movements: {count}'
+      title_mixed: 'Mixed · Movements: {count}'
       transfers_only: Transfers are Personal or unclassified only
     close: Close the ledger
     column:
@@ -1225,6 +1237,7 @@ desktop:
       taxable_base: Taxable base
     columns:
       list: Columns shown
+      more_name: 'More columns: {count} · scroll to them'
       move_down: Move {column} down
       move_up: Move {column} up
       preset:
@@ -1241,7 +1254,7 @@ desktop:
       description: 'Each loads and saves the whole ledger: about {minutes} min when
         you save.'
       stage: Stage anyway
-      title: '{count} saves one at a time'
+      title: 'Saves one at a time: {count}'
     count:
       to_classify: '{count} to classify'
     counterparty:
@@ -1290,7 +1303,7 @@ desktop:
       threshold: Low confidence below
       title: Model diagnostics
       tokens: Tokens
-      unpriced: '{count} calls without a price'
+      unpriced: 'Calls without a price: {count}'
       until: Until
       usage: Use by provider
     direction:
@@ -1359,7 +1372,7 @@ desktop:
       consent_none: Nothing has left this computer to be read.
       consent_note: Each read off this computer needs your acknowledgement and is
         recorded before the document leaves. What was sent cannot be recalled.
-      count: '{count} documents'
+      count: 'Documents: {count}'
       country: Counterparty country
       currency_not_read: 'Not on the document: say which'
       derived: Made from a read off this computer
@@ -1388,6 +1401,7 @@ desktop:
         taxable_base: Taxable base
       findings: Questions to answer
       findings_open: 'Open questions: {count}'
+      go_to_question: Go to the question · {reason}
       grounding:
         ambiguous: several readings
         anchored: found on the page
@@ -1520,6 +1534,10 @@ desktop:
       remove: Remove new movement
       required: Required
       untitled: New movement
+    duplicate:
+      archive: Archive as duplicate
+      chip: Duplicates
+      chip_name: 'Possible duplicates: {count} · show them'
     edit:
       changed_was: changed, not saved, was {was}
       cleared: cleared
@@ -1568,6 +1586,7 @@ desktop:
         too_long: '“{raw}” is too long: at most {limit} characters.'
         too_many_decimals: “{raw}” has more than {limit} decimals.
         unknown_choice: “{raw}” is not one of the choices.
+        use: Use {suggestion}
         year_not_a_number: “{raw}” is not a year.
         year_out_of_range: “{raw}” is outside the years Cadrumo takes.
         zero: '“{raw}” is zero: an amount is above zero.'
@@ -1575,7 +1594,7 @@ desktop:
       revert_movement: Revert movement
       reverted_cell: '{field} reverted'
       reverted_movement: Movement reverted
-      row_changes: '{count} changes not saved'
+      row_changes: 'Unsaved changes: {count}'
       row_unsaved: Has unsaved changes
       search: Search {column}
       step:
@@ -1592,14 +1611,14 @@ desktop:
         revert_movement: movement reverted
         set: edit
         stage_action: action
-      undo_applied: Saved changes can't be undone here
+      undo_applied: Saved changes can't be undone here · edit the cell to change it
+        back
       undo_nothing: Nothing to undo
       undone: 'Undone: {what}'
     empty: No movements in {period}
     empty_all: No movements yet
     empty_filtered: No movements match
-    empty_filtered_detail: '{count} movements in {period} are hidden by the search
-      or filters.'
+    empty_filtered_detail: 'Hidden by the search or filters in {period}: {count}'
     export:
       cancel: Cancel
       change_file: Change…
@@ -1631,7 +1650,7 @@ desktop:
       heading: What to export
       heading_done: Exported
       inactive: Include archived and set-aside movements
-      left_out: 'Left out: {archived} archived, {aside} set aside, {split} split.'
+      left_out: Left out · archived {archived} · set aside {aside} · split {split}
       no_file: No file chosen
       not_ready: Not ready for calculation
       not_ready_note: 'Readiness issues: {count}. The file shows what the ledger holds
@@ -1647,6 +1666,7 @@ desktop:
       send_unknown: Export
       staged: 'Unsaved changes not in this file: {count}'
       staged_note: The export reads what is saved.
+      staged_short: 'Unsaved: {count} · not in this file'
       title: Export the ledger
       tsv:
         amount: Amount
@@ -1687,8 +1707,8 @@ desktop:
       usage_ratio_id: Usage ratio
       value_date: Value date
     fill:
-      done: Filled {count} cells · not saved
-      done_kept: Filled {count} cells · {kept} kept as they were
+      done: 'Cells filled: {count} · not saved'
+      done_kept: 'Cells filled: {count} · kept as they were: {kept}'
       down: Fill down
       too_short: Select two or more rows first, then fill down
     filters:
@@ -1746,8 +1766,9 @@ desktop:
       category: Category
       category_family: Category family
       classification: Classification
+      classify: Classify
       collapse_all: Collapse all groups
-      count: '{count} movements'
+      count: 'Movements: {count}'
       counterparty: Counterparty
       description: Description, without references
       direction: Direction
@@ -1766,8 +1787,10 @@ desktop:
       expand_all: Expand all groups
       group_label: Group label
       iva_category: IVA category
+      make_rule: Make a rule from this group
       mixed: Mixed…
       month: Month
+      more: More group actions
       none: No grouping
       personal: Personal
       select: Select {count}
@@ -1777,6 +1800,7 @@ desktop:
     health:
       check: Check
       check_again: Check again
+      checked_at: Last checked {time}
       choose_period: Choose a period to check.
       count:
         active: Active
@@ -1797,27 +1821,28 @@ desktop:
       no_movements: No movements in {period}. That isn't the same as nothing owed.
       not_checked: Not checked in this window yet.
       not_run: 'Not run yet: nothing is shown as zero until it''s measured.'
+      of_active: Of the active
       one_sided: One-sided invoice links
       ready: Ready for calculation · {count} checked
       rebuild: Rebuild the links
-      rebuilt: 'Rebuilt: {links} links over {revisions} revisions · {removed} stale
-        removed'
+      rebuilt: 'Rebuilt · links: {links} · revisions: {revisions} · stale removed:
+        {removed}'
       reset: Danger zone · reset the ledger
       reset_blocked: Reset is blocked
       reset_blocker: Modelo {modelo} · {year} {period} · {state} cites movements
-      reset_confirm: Reset · remove {movements} movements
+      reset_confirm: 'Reset and remove · movements: {movements}'
       reset_reason: Reason
       reset_reason_hint: Kept in the audit trail · up to {limit} characters
       reset_what: Removes every movement and the documents attached to them. A dry
         run comes first.
-      reset_would: It would remove {movements} movements and {documents} documents.
+      reset_would: 'It would remove · movements: {movements} · documents: {documents}'
       run_check: Run the check
       show: 'Show the {count} movements: {reason}'
       show_short: Show
       stale: Declarations to recalculate
       stale_none: 'None: every calculation covers the movements as they are.'
-      stale_row: 'Modelo {modelo} · {year} {period}: {changed} changed, {removed}
-        removed since it was calculated'
+      stale_row: 'Modelo {modelo} · {year} {period} · since it was calculated, changed:
+        {changed}, removed: {removed}'
       status: Status · {period}
       unconverted: Foreign without a rate
       whole: Check the whole ledger
@@ -1877,7 +1902,7 @@ desktop:
       country_invalid: “{value}” is not a two-letter country code.
       country_none: not stated
       description: Bank statements, invoice books and documents, from files on this
-        computer. A preview writes nothing.
+        computer.
       diagnostic:
         already_in_ledger: Some rows are already in the ledger and are skipped.
         gap: More than 35 days between two movements.
@@ -1903,12 +1928,12 @@ desktop:
         book: Drop one invoice book here
         documents: Drop PDFs, images, e-invoices or a folder here
       duplicates: Possible duplicates
+      duplicates_chip: 'Possible duplicates: {count}'
       duplicates_more: And {count} more.
-      duplicates_note: 'Possible duplicates: {count}. They are imported and flagged;
-        compare them after importing.'
+      duplicates_note: Imported and flagged; compare them after importing.
       field: Field
-      file_counts: '{rows} rows · {fresh} new · {skipped} already in the ledger'
-      file_imported: '{fresh} imported · {skipped} already in the ledger'
+      file_counts: Rows {rows} · new {fresh} · already in the ledger {skipped}
+      file_imported: Imported {fresh} · already in the ledger {skipped}
       file_not_sent: Not sent.
       file_unknown: 'Outcome unknown: it may have been imported.'
       files: Files
@@ -1965,7 +1990,7 @@ desktop:
       show_documents: Review in Documents
       show_failed: Couldn't read the imported movements. Try again.
       show_imported: Show imported movements
-      shown: 'Showing the period of your import: {from} to {to}.'
+      shown: Your import · {from} – {to}
       shown_clear: Dismiss
       step:
         preview: Preview
@@ -2083,7 +2108,7 @@ desktop:
       from_value_date: the value date
       fx_rate: Rate {rate}
       history:
-        parts: '{count} parts'
+        parts: 'Parts: {count}'
         reason_withheld: The model's reason is not shown
         split_parts: Parts
         split_siblings: Split from the same movement
@@ -2092,7 +2117,7 @@ desktop:
       index: Jump to a section
       invoice:
         active_only: Only active movements can be linked.
-        already_linked: Already linked to {count} movements
+        already_linked: 'Already linked · Movements: {count}'
         ambiguous: 'Several invoices settle this movement equally well. Choose one:
           a link cannot be undone.'
         candidates: Candidate invoices
@@ -2125,8 +2150,8 @@ desktop:
       last_saved: Last saved
       lifecycle:
         description: One reason for all. Nothing is saved until you review your changes.
-        skipped: '{count} cannot take it and are left as they are'
-        title: '{action} · {count} movements'
+        skipped: 'Cannot take it, left as is: {count}'
+        title: '{action} · Movements: {count}'
       m210:
         applicable_rate: Applicable rate
         asset_or_right_id: Asset or right
@@ -2219,32 +2244,33 @@ desktop:
       selection:
         actions: Actions
         approve_all: Approve {count} read
-        approved_all: '{count} approvals staged'
+        approved_all: 'Approvals staged: {count}'
         ask_each: Ask the model for each
         asked: 'Suggestions to read: {count}'
         body: Selected movements
         classification: Classification for all
         classify_first: Classify first
+        classify_first_hint: Classify first · Business… sets a category
         clear: Clear selection
         common: Common values
-        copied: '{count} movements copied as TSV'
+        copied: 'Copied as TSV: {count}'
         copy: Copy as TSV
         cost: '{count} would be saved one at a time, about {minutes} min. Classifying
           first saves them together.'
         in: In · {currency}
         make_rule: Make a rule
         merge_hint: Select every part of one split movement to merge them.
-        mixed_values: Mixed · {count} values
+        mixed_values: 'Different values: {count}'
         nothing: None of them takes it
         out: Out · {currency}
         partial: Loaded movements only
         set_for: Set for {count}
         set_hidden: Set for {visible} visible + {hidden} hidden
         set_title: Set for all · applies as you choose
-        skipped: '{count} skipped'
-        skipped_reason: '{count} skipped: {reason}'
+        skipped: 'Skipped: {count}'
+        skipped_reason: 'Skipped, {reason}: {count}'
         stage_anyway: Stage anyway
-        staged: '{count} movements staged · not saved'
+        staged: 'Staged: {count} · not saved'
         title: '{count} selected'
         totals: Totals
         transfer: Transfers · {currency}
@@ -2285,7 +2311,7 @@ desktop:
       stage: Stage
       technical: Technical details
       unread: Could not be read
-      unsaved: '{count} changes · not saved'
+      unsaved: 'Changes: {count} · not saved'
       unsaved_classification: → {classification} · not saved
       used:
         discarded: Discarded
@@ -2628,7 +2654,8 @@ desktop:
       unknown: Unknown
     leave:
       cancel: Cancel
-      description: '{count} changes are kept only in this window. Leaving drops them.'
+      description: 'Unsaved changes: {count} · kept only in this window. Leaving drops
+        them.'
       discard: Discard and leave
       review: Review and save
       title: Leave with unsaved changes?
@@ -2692,15 +2719,16 @@ desktop:
     no_rate_detail: 'No exchange rate for this date: the EUR value is not known, and
       it is not zero.'
     paste:
-      apply: Paste {count} cells
+      apply: Paste {count}
       blanks: Blank cells
       blanks_note: A blank cell leaves the cell as it is; only Delete clears.
       cancel: Cancel
       changes: Cells that change
-      description: '{rows} rows into {columns}. Nothing is staged until you paste.'
-      done: Pasted {count} cells · not saved
-      done_refused: Pasted {count} cells · {refused} refused, marked in the grid
+      description: 'Rows: {rows} · nothing is staged until you paste.'
+      done: 'Cells pasted: {count} · not saved'
+      done_refused: 'Cells pasted: {count} · refused, marked in the grid: {refused}'
       dropped: Past the last row or column
+      first_refusal: '{column}: {reason}'
       identity_note: Changing the description, amount, date or account gives a movement
         a new reference when saved.
       new_identity: New reference
@@ -2709,6 +2737,7 @@ desktop:
       refused_unclosed_quote: 'Not pasted: a quote is left open'
       single_writes: Saves one at a time
       title: Paste into the grid?
+      title_into: Paste into {columns}?
     paused:
       dismiss: Dismiss
       found_not_saved: '{movement} was not saved, staged again'
@@ -2834,7 +2863,7 @@ desktop:
       title: Business-use ratios
       unset: Unset
       unset_named: Unset the ratio for {category}
-      valid: All {count} set ratios are valid.
+      valid: 'Set ratios, all valid: {count}'
       validate: Check them
       year: Ratio year
     readiness:
@@ -2843,18 +2872,18 @@ desktop:
       fewer: Fewer
       loaded_only: loaded rows only
       more: +{count}
-      more_name: '{count} more reasons'
-      no_rate: '{count} without an EUR rate'
+      more_name: 'More reasons: {count}'
+      no_rate: 'Without an EUR rate: {count}'
       not_checked: Not checked yet
       not_measured: Readiness not measured
       not_ready: Not ready for calculation · {count} to fix
-      out_of_date: Not checked since {count} saved changes
+      out_of_date: 'Not checked since saving · Changes: {count}'
       ready: Ready for calculation · checked {time}
       reason_name: '{reason}: {count}. Show them and how to fix them'
       reasons: Readiness reasons
       staged: '{count} staged'
       title: Readiness
-      unsaved: '{count} unsaved changes not included'
+      unsaved: 'Unsaved changes not included: {count}'
     readiness_filter:
       issues: To fix
       no_rate: No rate
@@ -2952,6 +2981,7 @@ desktop:
       expression_unread: This window can't read that expression.
       from_selection: Make a rule from the selection
       matches: Matches {count} loaded
+      matches_split: Matches {count} · {pending} to classify
       matches_unknown: Not counted here
       move_down: 'Move down: {rule}'
       move_up: 'Move up: {rule}'
@@ -2973,7 +3003,7 @@ desktop:
         invalid_command: The ledger refused the rule.
         invalid_pattern: The ledger can't read that expression.
       run_note: A preview writes nothing; running them is staged like any change.
-      run_staged: Rules run staged · {count} movements · not saved
+      run_staged: 'Rules run staged · Movements: {count} · not saved'
       run_title: Run the rules
       save: Save rule
       stage_run: Stage the run
@@ -2981,9 +3011,9 @@ desktop:
       what: Matches words in a movement's description and decides its classification.
       words: Description contains
       words_hint: Words in this order; capitals don't matter.
-      would_classify: '{count} would be classified'
+      would_classify: 'Would be classified: {count}'
     search:
-      elsewhere: '{count} more in other periods'
+      elsewhere: 'More in other periods: {count}'
       label: Search movements
       load_all: Load all {total}
       loaded: '{found} found in the {loaded} loaded'
@@ -3002,8 +3032,9 @@ desktop:
       shown: Select the shown movements · Ctrl-click adds them
     selected: '{count} selected'
     selection:
-      all_shown: All {count} shown are selected.
-      hidden: '{hidden} of {selected} selected are hidden'
+      actions: Selection actions
+      all_shown: 'All shown are selected: {count}.'
+      hidden: 'Hidden: {hidden} of {selected} selected'
       keep_visible: Keep only visible
       select_all: Select all {count} in {period}
       show: Show them
@@ -3059,17 +3090,17 @@ desktop:
     title: Ledger
     toolbar: Movements view
     tray:
-      actions: '{count} actions'
+      actions: 'Actions: {count}'
       discard: Discard
-      edits: '{edits} edits on {movements} movements'
+      edits: 'Edits: {edits} · movements: {movements}'
       in_parts: saves in parts
       name: '{count} unsaved: {what}'
-      new: '{count} new'
+      new: 'New: {count}'
       paused: writes paused
       paused_reason: 'Re-read first: a save has an unknown outcome'
       region: Unsaved changes
       review: Review
-      review_count: Review and save {count} changes
+      review_count: Review and save · {count}
       undo: Undo
       window_only: kept only in this window
     unavailable: Not available yet

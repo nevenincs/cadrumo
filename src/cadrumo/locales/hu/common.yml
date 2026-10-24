@@ -879,7 +879,7 @@ desktop:
         merge: Részek egyesítése
         remove: Eltávolítás
         restore: Visszaállítás
-        rule_apply: Szabályok alkalmazása · {count} tétel
+        rule_apply: 'Szabályok alkalmazása · tételek: {count}'
         split: Felosztás
         stash: Félretevés
         suggestion: Modell-jóváhagyás
@@ -887,23 +887,23 @@ desktop:
       approve: általad jóváhagyva
       back: Vissza
       blocker:
-        action_and_edits: '{count} művelettel és szerkesztéssel együtt'
-        actions_conflict: '{count} össze nem illő műveletekkel'
-        cannot_clear: '{count} olyan értékkel, amelyet semmi sem töröl'
-        draft_incomplete: '{count} új tételhez még adat kell'
-        exclude_and_classification: '{count} egyszerre kizárva és besorolva'
-        gone: '{count} törölve vagy áthelyezve beolvasás óta'
-        mixed_needs_share: '{count} Vegyes üzleti arány nélkül'
-        needs_classification: '{count} besorolást igényel'
-        not_active: '{count} nem aktív: csak aktív tétel módosítható'
-        sealed: '{count} lezárva véglegesített bevallás miatt'
-        share_needs_mixed: '{count} aránnyal, de nem Vegyes'
-        suggestion_and_edits: '{count} modell-jóváhagyással és szerkesztéssel együtt'
-        suggestion_and_rules: '{count} modell-jóváhagyással és egy rájuk is kiterjedő
-          szabályalkalmazással'
-        suggestion_needs_share: '{count} Vegyes jóváhagyás: add meg az arányt'
-        too_large: '{count} túl nagy a küldéshez'
-        transfer_with_tax: '{count} átvezetés adóadattal'
+        action_and_edits: 'Művelet és szerkesztés együtt: {count}'
+        actions_conflict: 'Össze nem illő műveletek: {count}'
+        cannot_clear: 'Semmivel sem törölhető érték: {count}'
+        draft_incomplete: 'Új tétel hiányzó adattal: {count}'
+        exclude_and_classification: 'Egyszerre kizárva és besorolva: {count}'
+        gone: 'Beolvasás óta törölve vagy áthelyezve: {count}'
+        mixed_needs_share: 'Vegyes üzleti arány nélkül: {count}'
+        needs_classification: 'Besorolás hiányzik: {count}'
+        not_active: 'Nem aktív, csak aktív tétel módosítható: {count}'
+        sealed: 'Véglegesített bevallás miatt lezárva: {count}'
+        share_needs_mixed: 'Arány, de nem Vegyes: {count}'
+        suggestion_and_edits: 'Modell-jóváhagyás és szerkesztés együtt: {count}'
+        suggestion_and_rules: 'Modell-jóváhagyás és rájuk is kiterjedő szabályalkalmazás:
+          {count}'
+        suggestion_needs_share: 'Vegyes jóváhagyás, add meg az arányt: {count}'
+        too_large: 'Túl nagy a küldéshez: {count}'
+        transfer_with_tax: 'Átvezetés adóadattal: {count}'
       blocker_fields: 'Mezők: {fields}'
       checked_again: Az készültség újra ellenőrizve.
       close: Kész
@@ -938,23 +938,26 @@ desktop:
       gone_mine: Előkészítve marad
       gone_movement: Már nem olvasható tétel
       gone_theirs: Változások elvetése
-      held: '{count} visszatartva'
-      held_note: '{count} visszatartva a fenti problémák miatt; előkészítve maradnak.'
+      held: 'Visszatartva: {count}'
+      held_note: 'A fenti problémák miatt visszatartva, előkészítve marad: {count}'
       keep_editing: Szerkesztés folytatása
       link:
         amount_differs: 'Az összeg eltérése: {amount}'
         counterparty_differs: Eltérő partner
         currency_differs: 'Eltérő pénznem: {movement} ↔ {invoice}'
         differ: Tudom, hogy eltérnek
-        linked_elsewhere: A számla már {count} tételhez kapcsolódik
+        linked_elsewhere: 'A számla már kapcsolódik · tételek: {count}'
         sure: Összekapcsolás · végleges
         unread: A számla nem olvasható
       mine: Az enyém marad
+      mismatch:
+        income_category: Kiadási kategória bevételen · {count}
       more: további {count}
       needs_you: Előbb a te döntésed kell
-      new: '{count} új'
+      new: 'Új: {count}'
       now_stored: Most a könyvben
-      one_by_one: '{count} egyenként (kb. {minutes} perc)'
+      one_by_one: 'Egyenként: {count} (kb. {minutes} perc)'
+      one_by_one_quick: 'Egyenként: {count}'
       outcome:
         applied: Mentve
         applied_new_id: Új hivatkozással mentve
@@ -966,7 +969,7 @@ desktop:
         not_sent_paused: 'Nem ment el: ismeretlen eredmény után szünetel az írás.
           Előkészítve marad.'
         not_sent_stopped: 'Nem ment el: a munkamenet megszakadt. Előkészítve marad.'
-        refused: 'Elutasítva: {reason}. Előkészítve marad.'
+        refused: 'Nincs mentve: {reason} · előkészítve marad'
         saved_unread: Mentve, de a válasz nem olvasható. Olvasd be újra.
         settled: Mentve, vagy már így volt
         settled_value: 'Mentve, vagy már így volt: {field} = {value}'
@@ -986,10 +989,13 @@ desktop:
       progress_count: '{done} / {total} mentés'
       read_failed: 'A könyvet nem sikerült újraolvasni: semmi sem lett mentve'
       reading: A könyv újraolvasása…
+      refusal:
+        changed_elsewhere: máshol módosult
+        other: a napló elutasította
       reject: 'elutasítva: {reason}'
       rows: Változások tételenként
       save: '{count} mentése'
-      save_held: '{count} mentése · {held} visszatartva'
+      save_held: '{count} mentése · visszatartva: {held}'
       saving: Mentés
       saving_description: Minden változás egyszer, sorrendben megy el.
       show_all: Mind mutatása
@@ -997,7 +1003,7 @@ desktop:
       shown: '{shown} / {total}'
       step:
         add: Új tétel · {movement}
-        bulk: '{part}/{parts}. rész · {count} együtt mentve'
+        bulk: '{part}/{parts}. rész · együtt mentve: {count}'
       stopped: 'A munkamenet megszakadt: ami nem ment el, előkészítve marad'
       summary: Összegzés
       summary_change: Változás
@@ -1015,7 +1021,7 @@ desktop:
       theirs: A mentettet veszem
       tick_links: Mentéshez jelöld be az összes végleges kapcsolatot.
       title: Áttekintés és mentés · {count}
-      together: '{count} együtt mentve'
+      together: 'Együtt mentve: {count}'
       unknown_note: 'Lehet, hogy mentődött, lehet, hogy nem. Semmi sem ismétlődik:
         az írás az újraolvasásig szünetel.'
       unknown_title: Egy mentés eredménye ismeretlen
@@ -1194,23 +1200,29 @@ desktop:
       category: Kategória
       category_needs_classification: Előbb sorold be őket üzletiként vagy vegyesként
       choose_category: Válassz kategóriát
+      expense_category: Kiadási kategória · {count}
       inactive_only: Csak az aktív tételek módosíthatók
+      income_no_category: Bevétel {count} · kategória nélkül
       no_category_match: Nincs egyező kategória
       not_saved: Előkészítve, nincs mentve
       nothing: Előbb jelölj ki tételeket
       partial: csak a betöltött sorok
+      range_differs: 'Kijelölve: {selected} · tartomány: {range}'
       search_category: Keress a kategóriák között
+      select_range: Tartomány kijelölése
       share: Üzleti rész
+      share_categories: Csak üzleti használati arányt elfogadó kategóriák
       share_hint: 'Üzleti használat százaléka: 50 az 50%-hoz.'
       share_refused: '„{raw}” nem arány: írj százalékot, például 50-et az 50%-hoz.'
-      skipped: '{count} változatlan marad'
+      skipped: 'Változatlan marad: {count}'
       stage: 'Előkészítés: {count}'
-      staged: '{classification} · {count} tétel előkészítve'
-      staged_category: '{category} · {count} tétel előkészítve'
-      staged_detail: '{classification} · {detail} · {count} tétel előkészítve'
-      title_business: Üzleti · {count} tétel
-      title_category: Kategória · {count} tétel
-      title_mixed: Vegyes · {count} tétel
+      staged: '{classification} · Előkészítve: {count}'
+      staged_category: '{category} · Előkészítve: {count}'
+      staged_detail: '{classification} · {detail} · Előkészítve: {count}'
+      title_business: 'Üzleti · Tételek: {count}'
+      title_business_split: Üzleti · Kiadás {expenses} · Bevétel {income}
+      title_category: 'Kategória · Tételek: {count}'
+      title_mixed: 'Vegyes · Tételek: {count}'
       transfers_only: Az átvezetés csak magán lehet vagy besorolatlan
     close: Napló bezárása
     column:
@@ -1239,6 +1251,7 @@ desktop:
       taxable_base: Adóalap
     columns:
       list: Megjelenített oszlopok
+      more_name: 'További oszlopok: {count} · görgess oda'
       move_down: '{column} lejjebb'
       move_up: '{column} feljebb'
       preset:
@@ -1255,7 +1268,7 @@ desktop:
       description: 'Mindegyik a teljes könyvet tölti be és menti: mentéskor kb. {minutes}
         perc.'
       stage: Előkészítés mégis
-      title: '{count} egyenkénti mentés'
+      title: 'Egyenkénti mentések: {count}'
     count:
       to_classify: '{count} besorolandó'
     counterparty:
@@ -1305,7 +1318,7 @@ desktop:
       threshold: Alacsony bizonyosság határa
       title: Modelldiagnosztika
       tokens: Tokenek
-      unpriced: '{count} hívás ár nélkül'
+      unpriced: 'Ár nélküli hívások: {count}'
       until: Eddig
       usage: Használat szolgáltatónként
     direction:
@@ -1374,7 +1387,7 @@ desktop:
       consent_none: Semmi sem hagyta el ezt a gépet beolvasásra.
       consent_note: Minden gépen kívüli beolvasáshoz a jóváhagyásod kell, és rögzítjük,
         mielőtt a dokumentum elmegy. Az elküldöttet nem lehet visszahívni.
-      count: '{count} dokumentum'
+      count: 'Dokumentumok: {count}'
       country: Partner országa
       currency_not_read: 'Nincs a dokumentumon: add meg'
       derived: Gépen kívüli beolvasásból készült
@@ -1403,6 +1416,7 @@ desktop:
         taxable_base: Adóalap
       findings: Megválaszolandó kérdések
       findings_open: 'Nyitott kérdések: {count}'
+      go_to_question: Ugrás a kérdéshez · {reason}
       grounding:
         ambiguous: több lehetséges olvasat
         anchored: megtalálva az oldalon
@@ -1536,6 +1550,10 @@ desktop:
       remove: Új tétel eltávolítása
       required: Kötelező
       untitled: Új tétel
+    duplicate:
+      archive: Archiválás ismétlődésként
+      chip: Ismétlődések
+      chip_name: 'Lehetséges ismétlődések: {count} · megjelenítés'
     edit:
       changed_was: 'módosítva, nincs mentve, korábban: {was}'
       cleared: törölve
@@ -1583,6 +1601,7 @@ desktop:
         too_long: '„{raw}” túl hosszú: legfeljebb {limit} karakter.'
         too_many_decimals: „{raw}” több mint {limit} tizedesjegyet tartalmaz.
         unknown_choice: „{raw}” nem a választható értékek egyike.
+        use: '{suggestion} használata'
         year_not_a_number: „{raw}” nem évszám.
         year_out_of_range: „{raw}” kívül esik a Cadrumo által kezelt éveken.
         zero: '„{raw}” nulla: az összeg nullánál nagyobb.'
@@ -1590,7 +1609,7 @@ desktop:
       revert_movement: Tétel visszaállítása
       reverted_cell: '{field} visszaállítva'
       reverted_movement: Tétel visszaállítva
-      row_changes: '{count} mentetlen változás'
+      row_changes: 'Mentetlen változások: {count}'
       row_unsaved: Mentetlen változások
       search: 'Keresés: {column}'
       step:
@@ -1607,13 +1626,14 @@ desktop:
         revert_movement: tétel visszaállítása
         set: szerkesztés
         stage_action: művelet
-      undo_applied: A mentett változások itt nem vonhatók vissza
+      undo_applied: A mentett változások itt nem vonhatók vissza · a cella szerkesztésével
+        állíthatod vissza
       undo_nothing: Nincs mit visszavonni
       undone: 'Visszavonva: {what}'
     empty: 'Nincs tétel ebben az időszakban: {period}'
     empty_all: Még nincs tétel
     empty_filtered: Nincs egyező tétel
-    empty_filtered_detail: 'A keresés vagy a szűrők {count} tételt rejtenek el: {period}.'
+    empty_filtered_detail: 'A keresés vagy a szűrők elrejtik ({period}): {count}'
     export:
       cancel: Mégse
       change_file: Módosítás…
@@ -1645,7 +1665,7 @@ desktop:
       heading: Mit exportálsz
       heading_done: Exportálva
       inactive: Archivált és félretett tételekkel együtt
-      left_out: 'Kimarad: {archived} archivált, {aside} félretett, {split} felosztott.'
+      left_out: Kimarad · archivált {archived} · félretett {aside} · felosztott {split}
       no_file: Nincs kiválasztott fájl
       not_ready: Nem kész a számításra
       not_ready_note: 'Készültségi problémák: {count}. A fájl azt mutatja, ami most
@@ -1661,6 +1681,7 @@ desktop:
       send_unknown: Exportálás
       staged: 'Mentetlen változások, amelyek nincsenek a fájlban: {count}'
       staged_note: Az exportálás a mentett adatokat olvassa.
+      staged_short: 'Mentetlen: {count} · nincs a fájlban'
       title: Napló exportálása
       tsv:
         amount: Összeg
@@ -1701,8 +1722,8 @@ desktop:
       usage_ratio_id: Használati arány
       value_date: Értéknap
     fill:
-      done: '{count} cella kitöltve · nincs mentve'
-      done_kept: '{count} cella kitöltve · {kept} változatlan'
+      done: 'Kitöltött cellák: {count} · nincs mentve'
+      done_kept: 'Kitöltött cellák: {count} · változatlan: {kept}'
       down: Kitöltés lefelé
       too_short: Előbb jelölj ki legalább két sort, aztán tölts ki lefelé
     filters:
@@ -1760,8 +1781,9 @@ desktop:
       category: Kategória
       category_family: Kategóriacsalád
       classification: Besorolás
+      classify: Besorolás
       collapse_all: Minden csoport összecsukása
-      count: '{count} tétel'
+      count: 'Tételek: {count}'
       counterparty: Partner
       description: Leírás hivatkozások nélkül
       direction: Irány
@@ -1780,8 +1802,10 @@ desktop:
       expand_all: Minden csoport kinyitása
       group_label: Csoportcímke
       iva_category: IVA-kategória
+      make_rule: Szabály ebből a csoportból
       mixed: Vegyes…
       month: Hónap
+      more: További csoportműveletek
       none: Nincs csoportosítás
       personal: Magán
       select: '{count} kijelölése'
@@ -1791,6 +1815,7 @@ desktop:
     health:
       check: Ellenőrzés
       check_again: Újraellenőrzés
+      checked_at: 'Utolsó ellenőrzés: {time}'
       choose_period: Válassz ellenőrzendő időszakot.
       count:
         active: Aktív
@@ -1811,28 +1836,29 @@ desktop:
       no_movements: '{period} időszakban nincs tétel. Ez nem jelenti, hogy nincs fizetnivaló.'
       not_checked: Ebben az ablakban még nincs ellenőrizve.
       not_run: 'Még nem futott: amíg nincs mérve, semmi sem jelenik meg nullaként.'
+      of_active: Az aktívak közül
       one_sided: Egyoldalú számlakapcsolatok
       ready: Számításra kész · {count} ellenőrizve
       rebuild: Kapcsolatok újraépítése
-      rebuilt: 'Újraépítve: {links} kapcsolat {revisions} változatban · {removed}
-        elavult törölve'
+      rebuilt: 'Újraépítve · kapcsolatok: {links} · változatok: {revisions} · törölt
+        elavultak: {removed}'
       reset: Veszélyzóna · a napló alaphelyzetbe állítása
       reset_blocked: Az alaphelyzetbe állítás tiltott
       reset_blocker: '{modelo}-s nyomtatvány · {year} {period} · {state} tételekre
         hivatkozik'
-      reset_confirm: Alaphelyzet · {movements} tétel eltávolítása
+      reset_confirm: 'Alaphelyzet és eltávolítás · tételek: {movements}'
       reset_reason: Indok
       reset_reason_hint: A naplóban megmarad · legfeljebb {limit} karakter
       reset_what: Eltávolít minden tételt és a hozzájuk csatolt dokumentumokat. Előbb
         próbafuttatás jön.
-      reset_would: '{movements} tételt és {documents} dokumentumot távolítana el.'
+      reset_would: 'Eltávolítaná · tételek: {movements} · dokumentumok: {documents}'
       run_check: Ellenőrzés futtatása
       show: 'A(z) {count} tétel megjelenítése: {reason}'
       show_short: Mutasd
       stale: Újraszámolandó bevallások
       stale_none: 'Nincs: minden számítás a jelenlegi tételekre épül.'
-      stale_row: '{modelo}-s nyomtatvány · {year} {period}: a számítás óta {changed}
-        módosult, {removed} törlődött'
+      stale_row: '{modelo}-s nyomtatvány · {year} {period} · a számítás óta módosult:
+        {changed}, törlődött: {removed}'
       status: Állapot · {period}
       unconverted: Árfolyam nélküli devizás
       whole: A teljes napló ellenőrzése
@@ -1892,7 +1918,6 @@ desktop:
       country_invalid: „{value}” nem kétbetűs országkód.
       country_none: nincs megadva
       description: Bankszámlakivonatok, számlakönyvek és dokumentumok a gép fájljaiból.
-        Az előnézet semmit sem ment.
       diagnostic:
         already_in_ledger: Néhány sor már szerepel a naplóban, ezek kimaradnak.
         gap: Két tétel között több mint 35 nap telt el.
@@ -1919,12 +1944,13 @@ desktop:
         book: Húzz ide egy számlakönyvet
         documents: Húzz ide PDF-eket, képeket, e-számlákat vagy egy mappát
       duplicates: Lehetséges ismétlések
+      duplicates_chip: 'Lehetséges ismétlések: {count}'
       duplicates_more: És még {count}.
-      duplicates_note: 'Lehetséges ismétlések: {count}. Importálódnak és megjelölődnek;
-        importálás után hasonlítsd össze őket.'
+      duplicates_note: Importálódnak és megjelölődnek; importálás után hasonlítsd
+        össze őket.
       field: Mező
-      file_counts: '{rows} sor · {fresh} új · {skipped} már a naplóban'
-      file_imported: '{fresh} importálva · {skipped} már a naplóban'
+      file_counts: Sorok {rows} · új {fresh} · már a naplóban {skipped}
+      file_imported: Importálva {fresh} · már a naplóban {skipped}
       file_not_sent: Nincs elküldve.
       file_unknown: 'Ismeretlen eredmény: lehet, hogy importálódott.'
       files: Fájlok
@@ -1981,7 +2007,7 @@ desktop:
       show_documents: Áttekintés a Dokumentumokban
       show_failed: Az importált tételeket nem sikerült beolvasni. Próbáld újra.
       show_imported: Importált tételek megjelenítése
-      shown: 'Az importálásod időszaka látható: {from} – {to}.'
+      shown: Az importálásod · {from} – {to}
       shown_clear: Elvetés
       step:
         preview: Előnézet
@@ -2099,7 +2125,7 @@ desktop:
       from_value_date: az értéknap
       fx_rate: 'Árfolyam: {rate}'
       history:
-        parts: '{count} rész'
+        parts: 'Részek: {count}'
         reason_withheld: A modell indoklása nem látható
         split_parts: Részek
         split_siblings: Ugyanabból a tételből felosztva
@@ -2108,7 +2134,7 @@ desktop:
       index: Ugrás szakaszra
       invoice:
         active_only: Csak aktív tétel kapcsolható össze.
-        already_linked: Már {count} tételhez kapcsolva
+        already_linked: 'Már kapcsolva · Tételek: {count}'
         ambiguous: 'Több számla is ugyanúgy rendezi ezt a tételt. Válassz egyet: az
           összekapcsolás nem vonható vissza.'
         candidates: Lehetséges számlák
@@ -2142,8 +2168,8 @@ desktop:
       lifecycle:
         description: Egy indoklás mindhez. Semmi sem mentődik, amíg át nem nézed a
           változásokat.
-        skipped: '{count} tételre nem alkalmazható, változatlan marad'
-        title: '{action} · {count} tétel'
+        skipped: 'Nem alkalmazható, változatlan marad: {count}'
+        title: '{action} · Tételek: {count}'
       m210:
         applicable_rate: Alkalmazandó kulcs
         asset_or_right_id: Vagyon vagy jog
@@ -2236,32 +2262,33 @@ desktop:
       selection:
         actions: Műveletek
         approve_all: '{count} elolvasott jóváhagyása'
-        approved_all: '{count} jóváhagyás előkészítve'
+        approved_all: 'Előkészített jóváhagyások: {count}'
         ask_each: Kérdezd a modellt egyenként
         asked: 'Elolvasandó javaslatok: {count}'
         body: Kijelölt tételek
         classification: Besorolás mindegyiknek
         classify_first: Előbb besorolás
+        classify_first_hint: Előbb sorold be · az Üzleti… kategóriát is ad
         clear: Kijelölés törlése
         common: Közös értékek
-        copied: '{count} tétel TSV-ként másolva'
+        copied: 'TSV-ként másolva: {count}'
         copy: Másolás TSV-ként
         cost: '{count} tétel egyenként mentődne, kb. {minutes} perc. Előbb besorolva
           együtt mentődnek.'
         in: Bevétel · {currency}
         make_rule: Szabály létrehozása
         merge_hint: Az egyesítéshez jelöld ki egy felosztott tétel összes részét.
-        mixed_values: Vegyes · {count} érték
+        mixed_values: 'Eltérő értékek: {count}'
         nothing: Egyikre sem alkalmazható
         out: Kiadás · {currency}
         partial: Csak a betöltött tételek
         set_for: Beállítás {count} tételre
         set_hidden: Beállítás {visible} látható + {hidden} rejtett tételre
         set_title: Mindegyiknek · választáskor érvényes
-        skipped: '{count} kihagyva'
-        skipped_reason: '{count} kihagyva: {reason}'
+        skipped: 'Kihagyva: {count}'
+        skipped_reason: 'Kihagyva, {reason}: {count}'
         stage_anyway: Előkészítés mégis
-        staged: '{count} tétel előkészítve · nincs mentve'
+        staged: 'Előkészítve: {count} · nincs mentve'
         title: '{count} kijelölve'
         totals: Összesen
         transfer: Átvezetések · {currency}
@@ -2303,7 +2330,7 @@ desktop:
       stage: Előkészítés
       technical: Technikai részletek
       unread: Nem olvasható
-      unsaved: '{count} változás · nincs mentve'
+      unsaved: 'Változások: {count} · nincs mentve'
       unsaved_classification: → {classification} · nincs mentve
       used:
         discarded: Elvetve
@@ -2646,7 +2673,8 @@ desktop:
       unknown: Ismeretlen
     leave:
       cancel: Mégse
-      description: '{count} változás csak ebben az ablakban van. Ha kilépsz, elvesznek.'
+      description: 'Mentetlen változások: {count} · csak ebben az ablakban vannak.
+        Ha kilépsz, elvesznek.'
       discard: Elvetés és kilépés
       review: Áttekintés és mentés
       title: Kilépsz mentetlen változásokkal?
@@ -2709,15 +2737,17 @@ desktop:
     no_rate_detail: 'Erre a napra nincs árfolyam: az EUR-érték nem ismert, és nem
       nulla.'
     paste:
-      apply: '{count} cella beillesztése'
+      apply: Beillesztés · {count}
       blanks: Üres cellák
       blanks_note: Az üres cella nem változtat semmit; csak a Delete töröl.
       cancel: Mégse
       changes: Változó cellák
-      description: '{rows} sor ide: {columns}. Beillesztésig semmi sem kerül előkészítésre.'
-      done: '{count} cella beillesztve · nincs mentve'
-      done_refused: '{count} cella beillesztve · {refused} elutasítva, jelölve a táblázatban'
+      description: 'Sorok: {rows} · beillesztésig semmi sem kerül előkészítésre.'
+      done: 'Beillesztett cellák: {count} · nincs mentve'
+      done_refused: 'Beillesztett cellák: {count} · elutasítva, jelölve a táblázatban:
+        {refused}'
       dropped: Az utolsó soron vagy oszlopon túl
+      first_refusal: '{column}: {reason}'
       identity_note: A leírás, az összeg, a dátum vagy a számla módosítása mentéskor
         új hivatkozást ad a tételnek.
       new_identity: Új hivatkozás
@@ -2726,6 +2756,7 @@ desktop:
       refused_unclosed_quote: 'Nincs beillesztve: egy idézőjel nincs lezárva'
       single_writes: Egyenként mentve
       title: Beilleszted a táblázatba?
+      title_into: 'Beillesztés ide: {columns}?'
     paused:
       dismiss: Bezárás
       found_not_saved: '{movement} nem lett mentve, újra előkészítve'
@@ -2855,7 +2886,7 @@ desktop:
       title: Üzleti használati arányok
       unset: Törlés
       unset_named: 'Arány törlése: {category}'
-      valid: Mind a(z) {count} beállított arány érvényes.
+      valid: 'Beállított arányok, mind érvényes: {count}'
       validate: Ellenőrzés
       year: Arány éve
     readiness:
@@ -2864,18 +2895,18 @@ desktop:
       fewer: Kevesebb
       loaded_only: csak a betöltött sorok
       more: +{count}
-      more_name: Még {count} ok
-      no_rate: '{count} euróárfolyam nélkül'
+      more_name: 'További okok: {count}'
+      no_rate: 'Euróárfolyam nélkül: {count}'
       not_checked: Még nincs ellenőrizve
       not_measured: A készültség nincs felmérve
       not_ready: Nem kész a számításra · {count} javítandó
-      out_of_date: '{count} mentett változás óta nincs ellenőrizve'
+      out_of_date: 'Mentés óta nincs ellenőrizve · Változások: {count}'
       ready: 'Számításra kész · ellenőrizve: {time}'
       reason_name: '{reason}: {count}. Mutasd őket és a javításuk módját'
       reasons: Készültségi okok
       staged: '{count} előkészítve'
       title: Készültség
-      unsaved: '{count} mentetlen változás nincs benne'
+      unsaved: 'Mentetlen változások, nincsenek benne: {count}'
     readiness_filter:
       issues: Javítandó
       no_rate: Nincs árfolyam
@@ -2973,6 +3004,7 @@ desktop:
       expression_unread: Ez az ablak nem tudja értelmezni a kifejezést.
       from_selection: Szabály a kijelölésből
       matches: '{count} betöltött tételre illik'
+      matches_split: 'Egyezés: {count} · besorolandó: {pending}'
       matches_unknown: Itt nem számolható
       move_down: 'Lejjebb: {rule}'
       move_up: 'Feljebb: {rule}'
@@ -2994,7 +3026,7 @@ desktop:
         invalid_pattern: A napló nem tudja értelmezni a kifejezést.
       run_note: Az előnézet nem ír semmit; a futtatás a többi változáshoz hasonlóan
         előkészítve vár.
-      run_staged: Szabályfuttatás előkészítve · {count} tétel · nincs mentve
+      run_staged: 'Szabályfuttatás előkészítve · Tételek: {count} · nincs mentve'
       run_title: Szabályok futtatása
       save: Szabály mentése
       stage_run: Futtatás előkészítése
@@ -3002,9 +3034,9 @@ desktop:
       what: Szavakat keres a tétel leírásában, és eldönti a besorolását.
       words: A leírás tartalmazza
       words_hint: Szavak ebben a sorrendben; a kis- és nagybetű mindegy.
-      would_classify: '{count} kerülne besorolásra'
+      would_classify: 'Besorolásra kerülne: {count}'
     search:
-      elsewhere: Még {count} más időszakokban
+      elsewhere: 'Más időszakokban még: {count}'
       label: Tételek keresése
       load_all: Mind a {total} betöltése
       loaded: '{found} találat a {loaded} betöltöttből'
@@ -3023,8 +3055,9 @@ desktop:
       shown: Jelöld ki a látható tételeket · Ctrl+kattintás hozzáadja őket
     selected: '{count} kijelölve'
     selection:
-      all_shown: Mind a {count} látható ki van jelölve.
-      hidden: '{selected} kijelöltből {hidden} rejtett'
+      actions: Kijelölés műveletei
+      all_shown: 'Minden látható ki van jelölve: {count}.'
+      hidden: 'Rejtett: {hidden} a(z) {selected} kijelöltből'
       keep_visible: Csak a láthatók maradjanak
       select_all: 'Mind a {count} kijelölése: {period}'
       show: Mutasd őket
@@ -3080,17 +3113,17 @@ desktop:
     title: Napló
     toolbar: Tételnézet
     tray:
-      actions: '{count} művelet'
+      actions: 'Műveletek: {count}'
       discard: Elvetés
-      edits: '{edits} módosítás {movements} tételen'
+      edits: 'Módosítások: {edits} · tételek: {movements}'
       in_parts: részletekben mentődik
       name: '{count} mentetlen: {what}'
-      new: '{count} új'
+      new: 'Új: {count}'
       paused: írás szüneteltetve
       paused_reason: 'Előbb olvasd be újra: egy mentés eredménye ismeretlen'
       region: Mentetlen változások
       review: Áttekintés
-      review_count: '{count} változás áttekintése és mentése'
+      review_count: Áttekintés és mentés · {count}
       undo: Visszavonás
       window_only: csak ebben az ablakban
     unavailable: Még nem érhető el
