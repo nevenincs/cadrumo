@@ -49,7 +49,7 @@ type Column = {
   width: number;
   grow?: number;
   minWidth?: number;
-  sticky?: "start";
+  sticky?: "start" | "end";
   align?: "end";
   cell: (invoice: CatalogueInvoice) => ReactNode;
 };
@@ -161,6 +161,8 @@ function catalogueColumns(t: Translate, locale: string): Column[] {
     {
       id: "total",
       width: 7.5,
+      // As a movement's amount does, the total stays in view.
+      sticky: "end",
       align: "end",
       cell: (invoice) => (
         <span className="font-medium tabular-nums">

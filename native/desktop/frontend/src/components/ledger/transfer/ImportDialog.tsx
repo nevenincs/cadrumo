@@ -915,7 +915,11 @@ function WhatStep({
   return (
     <>
       <Field>
-        <FieldLabel id={kindName}>{t("desktop.ledger.import.what")}</FieldLabel>
+        {/* The step's heading already says this on screen; the control
+            keeps its name. */}
+        <FieldLabel id={kindName} className="sr-only">
+          {t("desktop.ledger.import.what")}
+        </FieldLabel>
         <SegmentedControl
           aria-labelledby={kindName}
           value={kind}
