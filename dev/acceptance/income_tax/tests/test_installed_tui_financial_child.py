@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from ..financial_artifacts import _validate_annual_artifact
-from ..financial_contracts import _N26_HEADER
+from ..financial_contracts import _STATEMENT_CSV_HEADER
 from ..financial_navigation import _open_destination
 from ..financial_profile import required_profile_facts
 from ..financial_transactions import _transaction_csv
@@ -32,11 +32,11 @@ def test_profile_configuration_uses_canonical_manager_row_paths() -> None:
     assert all((fact.value is None) != (fact.option_index is None) for fact in facts)
 
 
-def test_transaction_csv_is_n26_compatible_transient_scenario_input(tmp_path: Path) -> None:
+def test_transaction_csv_is_a_generic_header_transient_scenario_input(tmp_path: Path) -> None:
     path = _transaction_csv(scenario=build_scenario(2025), directory=tmp_path)
     assert path.parent == tmp_path
     lines = path.read_text(encoding="utf-8").splitlines()
-    assert lines[0] == _N26_HEADER
+    assert lines[0] == _STATEMENT_CSV_HEADER
     assert len(lines) == 9
     assert all(line.endswith(",EUR," + line.rsplit(",", 1)[-1]) for line in lines[1:])
 

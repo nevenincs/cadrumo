@@ -15,7 +15,8 @@ from cadrumo.adapters.inbound.financial.providers.base import FinancialProvider
 from cadrumo.adapters.inbound.financial.providers.csv import CsvProvider
 from cadrumo.adapters.inbound.financial.providers.detection import detect_provider
 from cadrumo.adapters.inbound.financial.providers.ofx import OfxProvider
-from cadrumo.adapters.inbound.financial.providers.pdf_n26 import PdfN26Provider
+from cadrumo.adapters.inbound.financial.providers.pdf_statement import PdfStatementProvider
+from cadrumo.adapters.inbound.financial.providers.tests.statement_reader_support import LinePatternStatementReader
 from cadrumo.adapters.inbound.financial.providers.xlsx import XlsxProvider
 from cadrumo.application.invoices.bulk_import import read_bulk_invoice_import_source
 
@@ -28,7 +29,6 @@ _EXPLICIT_PROVIDERS: dict[str, type[FinancialProvider]] = {
     "csv": CsvProvider,
     "xlsx": XlsxProvider,
     "ofx": OfxProvider,
-    "pdf-n26": PdfN26Provider,
 }
 
 
@@ -38,6 +38,11 @@ def _provider(case: ProvenanceCase, path: Path) -> FinancialProvider:
         assert detected is not None
         return detected
     assert case.provider is not None
+    if case.provider == "pdf":
+        # The model behind the PDF reader is replaced by a deterministic line
+        # reader; the provider's own extraction and grounding still run.
+        reader = LinePatternStatementReader()
+        return PdfStatementProvider(reader_factory=lambda: reader)
     return _EXPLICIT_PROVIDERS[case.provider]()
 
 

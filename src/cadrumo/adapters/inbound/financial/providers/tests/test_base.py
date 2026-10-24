@@ -18,6 +18,7 @@ from ......core.decimal.grammar import DecimalSeparator
 from ......core.tabular import coerce_cell_text
 from ......domain.transactions.raw_transaction import RawTransaction, SourceFormat
 from ......tests.inventory import FIXTURES_DIR
+from .._mapped_tabular import MappedTabularProvider
 from ..base import (
     BankStatementParseError,
     FinancialValidationError,
@@ -29,7 +30,8 @@ from ..base import (
 from ..csv import CsvProvider
 from ..detection import detect_provider
 from ..ofx import OfxProvider
-from ..pdf_n26 import PdfN26Provider
+from ..pdf_statement import PdfStatementProvider
+from ..xls import XlsProvider
 from ..xlsx import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -78,7 +80,6 @@ def test_detect_provider_uses_extension_and_validation() -> None:
         ("synthetic-transactions.csv", "CSV provider"),
         ("synthetic-transactions.xlsx", "XLSX provider"),
         ("synthetic-transactions.ofx", "OFX provider"),
-        ("n26/n26-savings-2025-01.pdf", "n26-pdf"),
     ):
         provider = detect_provider(_FIXTURES / fixture_name)
         assert provider is not None, fixture_name
@@ -172,7 +173,14 @@ def test_parse_amount_value_tolerance_is_unchanged(raw: str, expected: Decimal) 
 # Corpus discipline: all registered providers must declare class-level attrs
 # ---------------------------------------------------------------------------
 
-_ALL_PROVIDERS = [CsvProvider(), OfxProvider(), XlsxProvider(), PdfN26Provider()]
+_ALL_PROVIDERS = [
+    CsvProvider(),
+    OfxProvider(),
+    XlsxProvider(),
+    XlsProvider(),
+    PdfStatementProvider(),
+    MappedTabularProvider(),
+]
 _VALID_VERIFICATION_SOURCES = frozenset({"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"})
 
 

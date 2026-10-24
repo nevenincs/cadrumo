@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from .financial_contracts import _N26_HEADER
+from .financial_contracts import _STATEMENT_CSV_HEADER
 from .financial_navigation import _activate_button, _open_destination
 from .installed_tui_child import (
     InstalledTuiChildError,
@@ -20,10 +20,10 @@ if TYPE_CHECKING:
 
 
 def _transaction_csv(*, scenario: IncomeTaxScenario, directory: Path) -> Path:
-    """Build one transient N26-compatible statement from the independent scenario."""
+    """Build one transient generic-header CSV statement from the independent scenario."""
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / "income-m130-transactions.csv"
-    rows = [_N26_HEADER]
+    rows = [_STATEMENT_CSV_HEADER]
     for item in (*scenario.income, *scenario.expenses):
         amount = item.net_receipt if isinstance(item, IssuedInvoice) else -item.bank_payment
         rows.append(

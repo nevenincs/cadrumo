@@ -119,9 +119,9 @@ adapters:
         year_conflict: --año {year} entra en conflicto con el año detectado {detected}.
     financial:
       providers:
-        pdf_n26:
+        pdf_statement:
           errors:
-            parse_failed: No se pudo analizar el extracto PDF de N26. La ruta de origen
+            parse_failed: No se pudo analizar el extracto en PDF. La ruta de origen
               se ha ocultado en los diagnósticos.
     justificante:
       errors:

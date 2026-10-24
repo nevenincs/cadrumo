@@ -44,7 +44,9 @@ stock inventory for the year, calculation warns and the boxes stay 0.
   - CSV or TXT containing supported delimited bank data
   - XLSX, but not legacy XLS
   - OFX or QFX when the optional OFX dependency is installed
-  - Recognized German-language N26 monthly statement PDFs
+  - PDF statements from any bank, read on your computer by the local language
+    model when the `llm` extra is installed; only movements whose date and
+    amount are printed on one line are kept, and printed balances must add up
 
   These become normalized transactions in your records, not tax-return values
   directly. File detection also uses content signatures to avoid trusting

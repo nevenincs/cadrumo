@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
-from .iva_tui_contracts import _N26_HEADER
+from .iva_tui_contracts import _STATEMENT_CSV_HEADER
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,7 +50,7 @@ def _write_synthetic_statement(scratch: Path, synthetic_rows: tuple[_SyntheticIv
     """Create the private, transient two-row synthetic bank statement."""
     scratch.mkdir(parents=True, exist_ok=True)
     statement = scratch / "iva-installed-tui.csv"
-    rows = [_N26_HEADER]
+    rows = [_STATEMENT_CSV_HEADER]
     for item in synthetic_rows:
         rows.append(
             ",".join(

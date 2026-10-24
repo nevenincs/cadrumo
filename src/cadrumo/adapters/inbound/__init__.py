@@ -17,7 +17,7 @@ See Also:
         Parent infrastructure boundary that explains the adapter layer's place
         in the architecture.
     :mod:`financial.providers`
-        Provider registry for CSV, OFX, XLSX, and N26 PDF bank statements.
+        Provider registry for CSV, OFX, XLSX, XLS and PDF bank statements.
     :mod:`notificacion`
         Typed notification-document records read from already-custodied AEAT
         artefact bytes.

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 16:49+0200\n"
+"POT-Creation-Date: 2026-10-24 10:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -256,10 +256,17 @@ msgid "OFX or QFX when the optional OFX dependency is installed"
 msgstr "OFX o QFX quan la dependència opcional OFX està instal·lada"
 
 #: ../../reference/import-export-and-evidence.md:47
-msgid "Recognized German-language N26 monthly statement PDFs"
-msgstr "PDF d'extractes mensuals N26 en alemany reconeguts"
+msgid ""
+"PDF statements from any bank, read on your computer by the local language"
+" model when the `llm` extra is installed; only movements whose date and "
+"amount are printed on one line are kept, and printed balances must add up"
+msgstr ""
+"Extractes PDF de qualsevol banc, llegits al teu ordinador pel model de "
+"llenguatge local quan l'extra `llm` està instal·lat; només es conserven "
+"els moviments amb la data i l'import impresos en una mateixa línia, i els"
+" saldos impresos han de quadrar"
 
-#: ../../reference/import-export-and-evidence.md:49
+#: ../../reference/import-export-and-evidence.md:51
 msgid ""
 "These become normalized transactions in your records, not tax-return "
 "values directly. File detection also uses content signatures to avoid "
@@ -277,23 +284,23 @@ msgstr ""
 "Físicas (IRPF). Consulta [Importa i gestiona els moviments](../how-to"
 "/import-bank-statements.md)."
 
-#: ../../reference/import-export-and-evidence.md:56
+#: ../../reference/import-export-and-evidence.md:58
 msgid "**Purchase invoices and receipts:**"
 msgstr "**Factures de compra i tiquets:**"
 
-#: ../../reference/import-export-and-evidence.md:58
+#: ../../reference/import-export-and-evidence.md:60
 msgid "PDF"
 msgstr "PDF"
 
-#: ../../reference/import-export-and-evidence.md:59
+#: ../../reference/import-export-and-evidence.md:61
 msgid "PNG or JPEG images of supporting documents"
 msgstr "Imatges PNG o JPEG de justificants"
 
-#: ../../reference/import-export-and-evidence.md:60
+#: ../../reference/import-export-and-evidence.md:62
 msgid "CSV or XLSX for structured invoice-catalogue rows"
 msgstr "CSV o XLSX per a files estructurades de catàleg de factures"
 
-#: ../../reference/import-export-and-evidence.md:62
+#: ../../reference/import-export-and-evidence.md:64
 msgid ""
 "Document bytes are stored as supporting documents and can then be linked "
 "to your records. Structured invoice rows, supporting documents, and bank "
@@ -312,11 +319,11 @@ msgstr ""
 "](../how-to/ledger-evidence.md) i [Gestionar les factures de l'activitat"
 "](../how-to/manage-invoices.md)."
 
-#: ../../reference/import-export-and-evidence.md:69
+#: ../../reference/import-export-and-evidence.md:71
 msgid "**AEAT declaration copies:**"
 msgstr "**Còpies de declaracions de l'AEAT:**"
 
-#: ../../reference/import-export-and-evidence.md:71
+#: ../../reference/import-export-and-evidence.md:73
 msgid ""
 "PDF, but only where the relevant Modelo and revision have an exact "
 "extraction profile"
@@ -324,7 +331,7 @@ msgstr ""
 "PDF, però només allà on el model i la revisió corresponents tenen un "
 "perfil d'extracció exacte"
 
-#: ../../reference/import-export-and-evidence.md:74
+#: ../../reference/import-export-and-evidence.md:76
 msgid ""
 "These produce observed box values with the document digest and the "
 "version of the tax rules they came from. They are observations, not "
@@ -337,19 +344,19 @@ msgstr ""
 "conciliació de caselles actualment cobreix els models 100, 111, 130, 190,"
 " 303 i 390."
 
-#: ../../reference/import-export-and-evidence.md:79
+#: ../../reference/import-export-and-evidence.md:81
 msgid "**AEAT submitted-data files:**"
 msgstr "**Fitxers de dades trameses a l'AEAT:**"
 
-#: ../../reference/import-export-and-evidence.md:81
+#: ../../reference/import-export-and-evidence.md:83
 msgid "Fixed-width “Diseño de Registros” files"
 msgstr "Fitxers d'amplada fixa «Diseño de Registros»"
 
-#: ../../reference/import-export-and-evidence.md:82
+#: ../../reference/import-export-and-evidence.md:84
 msgid "XML-dictionary layouts"
 msgstr "Disposicions de diccionari XML"
 
-#: ../../reference/import-export-and-evidence.md:84
+#: ../../reference/import-export-and-evidence.md:86
 msgid ""
 "These can be parsed into box observations where the tax rules hold a "
 "complete layout. Support is revision-specific, not universal. This "
@@ -362,15 +369,15 @@ msgstr ""
 "l'AEAT; l'importador de dades trameses no és un importador de CSV "
 "general."
 
-#: ../../reference/import-export-and-evidence.md:88
+#: ../../reference/import-export-and-evidence.md:90
 msgid "**AEAT receipts (justificantes):**"
 msgstr "**Justificants de l'AEAT:**"
 
-#: ../../reference/import-export-and-evidence.md:90
+#: ../../reference/import-export-and-evidence.md:92
 msgid "AEAT receipt (justificante) PDF, or a receipt read from AEAT"
 msgstr "PDF del justificant de l'AEAT o un justificant llegit de l'AEAT"
 
-#: ../../reference/import-export-and-evidence.md:92
+#: ../../reference/import-export-and-evidence.md:94
 msgid ""
 "The parser extracts receipt metadata such as Modelo, period, taxpayer, "
 "submission time, verification code, and totals. An AEAT receipt supports "
@@ -387,11 +394,11 @@ msgstr ""
 "resposta tributària sigui correcta. Consulta [Concilia un model presentat"
 " amb el teu justificant de l'AEAT](../how-to/reconcile.md)."
 
-#: ../../reference/import-export-and-evidence.md:98
+#: ../../reference/import-export-and-evidence.md:100
 msgid "**Google Drive and Sheets:**"
 msgstr "**Google Drive i Sheets:**"
 
-#: ../../reference/import-export-and-evidence.md:100
+#: ../../reference/import-export-and-evidence.md:102
 msgid ""
 "Drive links and folder pulls acquire supported PDF, PNG, and JPEG bytes "
 "through the normal encrypted attachment path."
@@ -399,7 +406,7 @@ msgstr ""
 "Els enllaços de Drive i les descàrregues de carpetes adquireixen bytes "
 "admesos de PDF, PNG i JPEG a través del camí normal d'adjunts xifrats."
 
-#: ../../reference/import-export-and-evidence.md:102
+#: ../../reference/import-export-and-evidence.md:104
 msgid ""
 "Sheets can provide typed edits to user values, to the rules that fill "
 "each box, and to relations for calculation. Pull can also assemble row-"
@@ -410,7 +417,7 @@ msgstr ""
 "descàrrega també pot assemblar observacions de conjunts de files a la "
 "seva sortida."
 
-#: ../../reference/import-export-and-evidence.md:104
+#: ../../reference/import-export-and-evidence.md:106
 msgid ""
 "Sheet-based computation uses the canonical local calculation engine and "
 "is explicitly non-persistent until another canonical workflow accepts the"
@@ -420,7 +427,7 @@ msgstr ""
 "explícitament no persistent fins que un altre flux de treball canònic "
 "accepta el resultat."
 
-#: ../../reference/import-export-and-evidence.md:108
+#: ../../reference/import-export-and-evidence.md:110
 msgid ""
 "Google is an optional acquisition and review adapter, not the tax "
 "database, the authority for your records, the authority for calculations,"
@@ -432,7 +439,7 @@ msgstr ""
 "càlcul ni el sistema de recuperació. Consulta [Revisar càlculs amb Google"
 " Sheets](../how-to/review-with-google-sheets.md)."
 
-#: ../../reference/import-export-and-evidence.md:113
+#: ../../reference/import-export-and-evidence.md:115
 msgid "What each export actually means"
 msgstr "Què significa realment cada exportació"
 
@@ -531,7 +538,7 @@ msgstr "Còpia de seguretat i recuperació completa del perfil protegit"
 msgid "It is not the same thing as an audit or accountant package"
 msgstr "No és el mateix que un paquet d'auditoria o de l'assessor"
 
-#: ../../reference/import-export-and-evidence.md:123
+#: ../../reference/import-export-and-evidence.md:125
 msgid ""
 "The filing exporter explicitly writes a local file and never contacts "
 "AEAT. It refuses to overwrite an existing file unless you pass "
@@ -552,7 +559,7 @@ msgstr ""
 "Segueix [Presenta el teu model al portal de l'AEAT](../how-to/file-at-"
 "aeat.md) per completar els passos de presentació, que controles tu."
 
-#: ../../reference/import-export-and-evidence.md:131
+#: ../../reference/import-export-and-evidence.md:133
 msgid ""
 "The application labels local exports as "
 "`local_export_not_official_aeat_filing_evidence`. Official proof must "
@@ -564,7 +571,7 @@ msgstr ""
 "tornar de l'AEAT com a justificant de l'AEAT, historial de declaració "
 "presentada, registre de verificació o còpia presentada llegida de l'AEAT."
 
-#: ../../reference/import-export-and-evidence.md:136
+#: ../../reference/import-export-and-evidence.md:138
 msgid ""
 "The base accountant review ZIP is plaintext and checksum-verifiable. "
 "Separate operations can add an Ed25519 signature envelope or encrypt the "
@@ -581,7 +588,7 @@ msgstr ""
 "diferents. Un lliurament només de revisió no comporta cap autoritat de "
 "presentació."
 
-#: ../../reference/import-export-and-evidence.md:142
+#: ../../reference/import-export-and-evidence.md:144
 msgid ""
 "Signing and counter-signing leave the ZIP plaintext. Creating a counter-"
 "signature does not verify the original signature or archive; receipt "
@@ -597,7 +604,7 @@ msgstr ""
 "primer la verificació del checksum ni de la signatura. Després de "
 "desxifrar, verifica el paquet recuperat i les signatures per separat."
 
-#: ../../reference/import-export-and-evidence.md:148
+#: ../../reference/import-export-and-evidence.md:150
 msgid ""
 "No command writes a portable profile bundle or a data-subject right-of-"
 "access response in this version. The commands that produced them were "
@@ -608,7 +615,7 @@ msgstr ""
 "van retirar quan l'emmagatzematge del perfil va passar a la càpsula "
 "segellada."
 
-#: ../../reference/import-export-and-evidence.md:152
+#: ../../reference/import-export-and-evidence.md:154
 msgid ""
 "The profile manager can still write a portable bundle: run `aeat config "
 "profile edit` with no other arguments to open it, then choose the export "
@@ -627,7 +634,7 @@ msgstr ""
 "amb aquesta versió. Tracta el fitxer com a opac fins que torni una "
 "superfície d'importació."
 
-#: ../../reference/import-export-and-evidence.md:159
+#: ../../reference/import-export-and-evidence.md:161
 msgid ""
 "This is a portability gap, not a recovery one. Backup and recovery are "
 "unaffected and run through `aeat config profile archive export` and `aeat"
@@ -647,7 +654,7 @@ msgstr ""
 "connectat per MCP mai no importa cap arxiu: requereix la frase de pas del"
 " perfil i treballa fora de qualsevol perfil."
 
-#: ../../reference/import-export-and-evidence.md:167
+#: ../../reference/import-export-and-evidence.md:169
 msgid ""
 "The sealed custody archive is an encrypted profile backup, not a "
 "structured, readable copy of one profile's records. It excludes recovery "
@@ -662,11 +669,11 @@ msgstr ""
 " del perfil. Un perfil restaurat comença sense codi de recuperació; "
 "torna'l a activar després si vols."
 
-#: ../../reference/import-export-and-evidence.md:173
+#: ../../reference/import-export-and-evidence.md:175
 msgid "What an audit export is for"
 msgstr "Per a què serveix una exportació d'auditoria"
 
-#: ../../reference/import-export-and-evidence.md:175
+#: ../../reference/import-export-and-evidence.md:177
 msgid ""
 "When an audit or professional review is requested, the audit evidence "
 "bundle is intended to let the recipient establish:"
@@ -674,33 +681,33 @@ msgstr ""
 "Quan es demana una auditoria o una revisió professional, el paquet de "
 "proves d'auditoria està pensat perquè el destinatari pugui establir:"
 
-#: ../../reference/import-export-and-evidence.md:178
+#: ../../reference/import-export-and-evidence.md:180
 msgid "Which original records supported the return."
 msgstr "Quins registres originals van donar suport a la declaració."
 
-#: ../../reference/import-export-and-evidence.md:179
+#: ../../reference/import-export-and-evidence.md:181
 msgid "Whether those bytes still match their recorded SHA-256 digests."
 msgstr ""
 "Si aquells bytes encara coincideixen amb els seus resums SHA-256 "
 "registrats."
 
-#: ../../reference/import-export-and-evidence.md:180
+#: ../../reference/import-export-and-evidence.md:182
 msgid "Which entries in your records contributed to which boxes (casillas)."
 msgstr "Quins apunts dels teus registres van contribuir a quines caselles."
 
-#: ../../reference/import-export-and-evidence.md:181
+#: ../../reference/import-export-and-evidence.md:183
 msgid "Which tax rules and legal references governed the calculation."
 msgstr "Quines regles fiscals i referències legals van regir el càlcul."
 
-#: ../../reference/import-export-and-evidence.md:182
+#: ../../reference/import-export-and-evidence.md:184
 msgid "Which calculation revision and filing record were involved."
 msgstr "Quina revisió de càlcul i quin registre de presentació hi van intervenir."
 
-#: ../../reference/import-export-and-evidence.md:183
+#: ../../reference/import-export-and-evidence.md:185
 msgid "Whether later revisions superseded the original position."
 msgstr "Si revisions posteriors van substituir la posició original."
 
-#: ../../reference/import-export-and-evidence.md:185
+#: ../../reference/import-export-and-evidence.md:187
 msgid ""
 "The audit evidence bundle ZIP file contains reachable record bytes "
 "followed by `manifest.json`. The command line resolves a relative "
@@ -724,7 +731,7 @@ msgstr ""
 "verificar els bytes dels registres referenciats perquè no es proporciona "
 "cap carregador de càrrega útil."
 
-#: ../../reference/import-export-and-evidence.md:195
+#: ../../reference/import-export-and-evidence.md:197
 msgid ""
 "The current audit commands do not yet provide a complete one-command "
 "audit handoff. The command-line audit surface has no payload-loader "
@@ -742,23 +749,23 @@ msgstr ""
 "pot contenir només el manifest. No tractis aquella sortida com un paquet "
 "de proves complet."
 
-#: ../../reference/import-export-and-evidence.md:202
+#: ../../reference/import-export-and-evidence.md:204
 msgid "What a complete audit handoff means"
 msgstr "Què significa un lliurament d'auditoria complet"
 
-#: ../../reference/import-export-and-evidence.md:204
+#: ../../reference/import-export-and-evidence.md:206
 msgid "A genuinely complete audit handoff would normally combine:"
 msgstr "Un lliurament d'auditoria realment complet normalment combinaria:"
 
-#: ../../reference/import-export-and-evidence.md:206
+#: ../../reference/import-export-and-evidence.md:208
 msgid "Official AEAT receipt proving submission."
 msgstr "Justificant oficial de l'AEAT que demostra la presentació."
 
-#: ../../reference/import-export-and-evidence.md:207
+#: ../../reference/import-export-and-evidence.md:209
 msgid "The exact submitted-file digest or captured filed copy."
 msgstr "El resum exacte del fitxer tramès o la còpia presentada capturada."
 
-#: ../../reference/import-export-and-evidence.md:208
+#: ../../reference/import-export-and-evidence.md:210
 msgid ""
 "A verified audit evidence bundle containing every referenced supporting "
 "record."
@@ -766,7 +773,7 @@ msgstr ""
 "Un paquet de proves d'auditoria verificat que contingui cada registre de "
 "suport referenciat."
 
-#: ../../reference/import-export-and-evidence.md:209
+#: ../../reference/import-export-and-evidence.md:211
 msgid ""
 "The calculation or review package explaining how those records produced "
 "the declared boxes."
@@ -774,7 +781,7 @@ msgstr ""
 "El paquet de càlcul o de revisió que expliqui com aquells registres van "
 "produir les caselles declarades."
 
-#: ../../reference/import-export-and-evidence.md:212
+#: ../../reference/import-export-and-evidence.md:214
 msgid ""
 "That combination supports both halves of the audit question: “Was this "
 "actually filed?” and “What facts, rules, and calculations produced it?”"
@@ -783,7 +790,7 @@ msgstr ""
 "d'auditoria: «Es va presentar això realment?» i «Quines dades, regles i "
 "càlculs el van produir?»."
 
-#: ../../reference/import-export-and-evidence.md:215
+#: ../../reference/import-export-and-evidence.md:217
 msgid ""
 "The audit evidence bundle does not currently include every item in that "
 "combination. Assemble and verify the missing items separately; a bundle "
@@ -795,11 +802,11 @@ msgstr ""
 "falten; un paquet només és complet quan cada registre de suport i cada "
 "càrrega útil referenciats hi són presents."
 
-#: ../../reference/import-export-and-evidence.md:219
+#: ../../reference/import-export-and-evidence.md:221
 msgid "Important limitations"
 msgstr "Limitacions importants"
 
-#: ../../reference/import-export-and-evidence.md:221
+#: ../../reference/import-export-and-evidence.md:223
 msgid ""
 "Support is limited to Modelo and revision combinations backed by "
 "registered, authoritative layouts and real evidence. Consequently:"
@@ -808,7 +815,7 @@ msgstr ""
 "disposicions registrades i autoritzades i per prova real. En "
 "conseqüència:"
 
-#: ../../reference/import-export-and-evidence.md:224
+#: ../../reference/import-export-and-evidence.md:226
 msgid ""
 "Import and export support must not be described as universal across all "
 "Modelos and periods."
@@ -816,13 +823,13 @@ msgstr ""
 "El suport d'importació i exportació no s'ha de descriure com a universal "
 "per a tots els models i períodes."
 
-#: ../../reference/import-export-and-evidence.md:226
+#: ../../reference/import-export-and-evidence.md:228
 msgid "Filed declaración-PDF extraction requires an exact registered profile."
 msgstr ""
 "L'extracció de PDF de declaració presentada requereix un perfil registrat"
 " exacte."
 
-#: ../../reference/import-export-and-evidence.md:227
+#: ../../reference/import-export-and-evidence.md:229
 msgid ""
 "A local observation you supplied, local export, checksum, Google Sheet, "
 "or review ZIP cannot prove AEAT acceptance. A locally held AEAT receipt "
@@ -834,7 +841,7 @@ msgstr ""
 "l'AEAT. Un justificant de l'AEAT que tinguis localment pot esdevenir "
 "prova oficial. Importa'l a través del flux de justificants de l'AEAT."
 
-#: ../../reference/import-export-and-evidence.md:231
+#: ../../reference/import-export-and-evidence.md:233
 msgid ""
 "Integrity proves that bytes have not changed; it does not establish "
 "signer identity or independent legal authenticity. Use the separate "
@@ -845,7 +852,7 @@ msgstr ""
 "flux separat de signatura del paquet de revisió quan la identitat de "
 "l'autor sigui important."
 
-#: ../../reference/import-export-and-evidence.md:234
+#: ../../reference/import-export-and-evidence.md:236
 msgid ""
 "Supporting documents are encrypted in normal custody. Base review and "
 "audit ZIPs are deliberate plaintext exports, so secure delivery becomes "
@@ -855,7 +862,7 @@ msgstr ""
 " i d'auditoria són exportacions de text pla deliberades, de manera que el"
 " lliurament segur passa a ser responsabilitat teva."
 
-#: ../../reference/import-export-and-evidence.md:237
+#: ../../reference/import-export-and-evidence.md:239
 msgid ""
 "A forced incomplete audit evidence bundle export is not a complete "
 "handoff."
@@ -863,7 +870,7 @@ msgstr ""
 "Una exportació incompleta forçada del paquet de proves d'auditoria no és "
 "un lliurament complet."
 
-#: ../../reference/import-export-and-evidence.md:238
+#: ../../reference/import-export-and-evidence.md:240
 msgid ""
 "`audit check` reruns bundle checks. Through the current command-line "
 "interface, it cannot verify referenced bytes, and it does not reproduce "
@@ -873,7 +880,7 @@ msgstr ""
 "la interfície de línia d'ordres actual, no pot verificar els bytes "
 "referenciats, i no reprodueix ni recalcula la decisió tributària."
 
-#: ../../reference/import-export-and-evidence.md:242
+#: ../../reference/import-export-and-evidence.md:244
 msgid ""
 "For storage, recovery, and external-access boundaries, see [Protect "
 "access to taxpayer data](../how-to/protect-data-access.md) and "

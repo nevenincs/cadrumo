@@ -4132,7 +4132,7 @@ tui:
         auto: Detectar automáticamente
         csv: Fichero CSV
         ofx: Fichero OFX o QFX
-        pdf_n26: Extracto PDF de N26
+        pdf: Extracto en PDF
         xlsx: Libro de Excel
       provider_label: Formato del extracto
       refusal:

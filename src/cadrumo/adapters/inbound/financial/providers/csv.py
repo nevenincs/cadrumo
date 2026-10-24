@@ -2,10 +2,12 @@
 
 Provides :class:`CsvProvider`, an implementation of
 :class:`~adapters.inbound.financial.providers.base.FinancialProvider`
-that ingests bank CSV exports for the BBVA, Santander, CaixaBank and
-Revolut layouts. Each layout is described by a frozen
+that ingests bank CSV exports whose headers match a known layout: the
+generic English and German header vocabulary, or the BBVA, Santander,
+CaixaBank and Revolut layouts. Each layout is described by a frozen
 :class:`CsvBankLayout` carrying the header aliases, date-format
-hint, and decimal-separator hint the parser needs.
+hint, and decimal-separator hint the parser needs. An export matching none
+of them is left to the column-role mapping lane.
 
 Successful rows become :class:`~adapters.inbound.financial.providers.base.ParsedLedgerRow`
 objects: the stored :class:`~domain.transactions.raw_transaction.RawTransaction` carries
@@ -89,11 +91,12 @@ class CsvColumnMap(BaseModel):
 
 
 class CsvBankLayout(BaseModel):
-    """Named bank CSV layout supported by the provider.
+    """Named CSV layout supported by the provider.
 
     Attributes:
-        bank_name: Human-readable bank identifier embedded in
-            synthetic transaction ids and detection diagnostics.
+        bank_name: Human-readable layout identifier embedded in
+            synthetic transaction ids and detection diagnostics; ``Generic``
+            for the vocabulary no single bank owns.
         columns: Header aliases for every logical column.
         day_first_dates: Whether the bank prints dates in
             ``DD/MM/YYYY`` (the European default) or ``YYYY-MM-DD``.
@@ -159,8 +162,8 @@ REVOLUT_LAYOUT = CsvBankLayout(
     day_first_dates=False,
     decimal_separator=DecimalSeparator.PERIOD,
 )
-N26_LAYOUT = CsvBankLayout(
-    bank_name="N26",
+GENERIC_LAYOUT = CsvBankLayout(
+    bank_name="Generic",
     columns=CsvColumnMap(
         booked_date=("date", "datum", "booking date", "transaction date"),
         value_date=("value date", "valuta", "wertstellung"),
@@ -174,13 +177,13 @@ N26_LAYOUT = CsvBankLayout(
     decimal_separator=DecimalSeparator.PERIOD,
 )
 CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
-    N26_LAYOUT,
+    GENERIC_LAYOUT,
     BBVA_LAYOUT,
     SANTANDER_LAYOUT,
     CAIXABANK_LAYOUT,
     REVOLUT_LAYOUT,
 )
-"""Ordered tuple of bank layouts the CSV provider will try to match."""
+"""Ordered tuple of layouts the CSV provider will try to match; the generic vocabulary wins ties."""
 
 _AEAT_LEDGER_EXPORT_HEADERS = frozenset(
     normalize_header(header)
@@ -282,8 +285,7 @@ class CsvProvider(FinancialProvider):
         lookup = header_lookup(rows[header_index])
         if not bool(find_column(lookup, layout.columns.currency)):
             warnings.append(
-                f"{_currency_warning_subject(layout, lookup)} has no currency column; "
-                f"falling back to {default_currency()}",
+                f"{_currency_warning_subject(layout)} has no currency column; falling back to {default_currency()}",
             )
         return ProviderValidation(
             is_valid=True,
@@ -439,35 +441,13 @@ def find_column(lookup: Mapping[str, str], aliases: tuple[str, ...]) -> str | No
     return None
 
 
-_GENERIC_CSV_WARNING_ALIASES = frozenset({"date", "description", "amount", "direction"})
-
-
-def _currency_warning_subject(layout: CsvBankLayout, lookup: Mapping[str, str]) -> str:
+def _currency_warning_subject(layout: CsvBankLayout) -> str:
     """Return the provider label for a missing-currency warning.
 
-    A generic CSV with headers like ``Date,Description,Amount`` scores against
-    the N26 layout because those are valid N26 aliases, but it does not carry
-    any bank-specific signal. Keep that warning provider-neutral while preserving
-    provider-specific wording for real N26 and other bank exports.
+    The generic vocabulary names no bank, so its warning names only the
+    format; a bank-named layout keeps its bank in the label.
     """
-    matched_aliases: set[str] = set()
-    alias_groups = (
-        layout.columns.booked_date,
-        layout.columns.value_date,
-        layout.columns.amount,
-        layout.columns.direction,
-        layout.columns.description,
-        layout.columns.counterparty,
-        layout.columns.external_id,
-    )
-    for aliases in alias_groups:
-        for alias in aliases:
-            normalized = normalize_header(alias)
-            if normalized in lookup:
-                matched_aliases.add(normalized)
-    if matched_aliases and matched_aliases <= _GENERIC_CSV_WARNING_ALIASES:
-        return "CSV"
-    return f"{layout.bank_name} CSV"
+    return "CSV" if layout is GENERIC_LAYOUT else f"{layout.bank_name} CSV"
 
 
 def _row_to_mapping(headers: list[str], row: list[str]) -> dict[str, str]:

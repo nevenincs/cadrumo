@@ -4109,7 +4109,7 @@ tui:
         auto: Detectar automàticament
         csv: Fitxer CSV
         ofx: Fitxer OFX o QFX
-        pdf_n26: Extracte PDF d'N26
+        pdf: Extracte en PDF
         xlsx: Llibre d'Excel
       provider_label: Format de l'extracte
       refusal:

@@ -88,6 +88,7 @@ def test_the_scan_finds_the_known_request_builders() -> None:
         "adapters/outbound/llm/column_role_mapping.py",
         "adapters/outbound/llm/evidence_draft_text.py",
         "adapters/outbound/llm/evidence_draft_vision.py",
+        "adapters/outbound/llm/statement_reading.py",
         "adapters/outbound/llm/text_classifier.py",
         "adapters/outbound/llm/vision_classifier.py",
     ):

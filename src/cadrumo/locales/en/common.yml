@@ -4018,7 +4018,7 @@ tui:
         auto: Detect automatically
         csv: CSV file
         ofx: OFX or QFX file
-        pdf_n26: N26 PDF statement
+        pdf: PDF statement
         xlsx: Excel workbook
       provider_label: Statement format
       refusal:

@@ -113,9 +113,9 @@ adapters:
         year_conflict: A --año {year} ütközik az észlelt {detected} értékkel.
     financial:
       providers:
-        pdf_n26:
+        pdf_statement:
           errors:
-            parse_failed: Nem sikerült elemezni az N26 PDF-kivonatot. A forrás elérési
+            parse_failed: Nem sikerült elemezni a PDF-kivonatot. A forrás elérési
               útja ki lett takarva a diagnosztikából.
     justificante:
       errors:

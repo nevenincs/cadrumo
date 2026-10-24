@@ -32,7 +32,7 @@ IMPORT_PROVIDERS: Final[tuple[LedgerProviderID, ...]] = (
     LedgerProviderID.CSV,
     LedgerProviderID.OFX,
     LedgerProviderID.XLSX,
-    LedgerProviderID.PDF_N26,
+    LedgerProviderID.PDF,
 )
 
 _SOURCE_KIND_LOCALE_KEYS: Final[dict[LedgerImportSourceKind, str]] = {
@@ -45,7 +45,7 @@ _PROVIDER_LOCALE_KEYS: Final[dict[LedgerProviderID, str]] = {
     LedgerProviderID.CSV: "tui.ledger.import.provider.csv",
     LedgerProviderID.OFX: "tui.ledger.import.provider.ofx",
     LedgerProviderID.XLSX: "tui.ledger.import.provider.xlsx",
-    LedgerProviderID.PDF_N26: "tui.ledger.import.provider.pdf_n26",
+    LedgerProviderID.PDF: "tui.ledger.import.provider.pdf",
 }
 
 _EDITABLE_CONTROLS: Final = (

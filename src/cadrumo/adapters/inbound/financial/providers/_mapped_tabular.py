@@ -1,13 +1,13 @@
 """Statement ingest for tabular exports of no recognised fixed layout.
 
 :class:`MappedTabularProvider` is the last provider detection tries. Every
-exact fixed-layout parser — the bank CSV layouts, the spreadsheet, OFX, the N26
-statement PDF — is offered the file first, and this lane sees it only when none
-of them claimed it. That ordering is load-bearing: a known bank export must
-keep taking its exact parser, because an exact layout match is a deterministic
-read of a known structure, while this lane's read depends on a column-role
-mapping decided per file. Letting the fallback shadow an exact provider would
-silently turn the deterministic parse into an inferred one.
+exact fixed-layout parser — the CSV layouts, the spreadsheets, OFX — is offered
+the file first, and this lane sees it only when none of them claimed it. That
+ordering is load-bearing: a known bank export must keep taking its exact
+parser, because an exact layout match is a deterministic read of a known
+structure, while this lane's read depends on a column-role mapping decided per
+file. Letting the fallback shadow an exact provider would silently turn the
+deterministic parse into an inferred one.
 
 The lane itself is deterministic end to end. :mod:`core.tabular` resolves
 the file's shape, a mapping supplies one :class:`~core.field_role.FieldRole` per column,
@@ -61,12 +61,21 @@ _logger = get_logger(__name__)
 #: Extensions this lane will consider. A delimited text export can arrive under
 #: any of them; content normalization decides whether it is really tabular.
 
-#: Roles a bank-movement row cannot do without. ``FieldRole`` is shared with
-#: the invoice-book lane and carries no statement-specific date or movement
-#: amount member, so a statement's booked date reads under
-#: :attr:`~core.field_role.INVOICE_DATE` and its amount under
-#: :attr:`~core.field_role.GRAND_TOTAL`.
-REQUIRED_STATEMENT_ROLES: frozenset[FieldRole] = frozenset({FieldRole.INVOICE_DATE, FieldRole.GRAND_TOTAL})
+#: Roles that can carry a bank movement's booked date, the statement role
+#: first. The column-role mapper is shared with the invoice-book lane and may
+#: label a statement's date column with either member, so both are read and the
+#: statement role wins when a mapping names both.
+STATEMENT_DATE_ROLES: tuple[FieldRole, ...] = (FieldRole.BOOKED_DATE, FieldRole.INVOICE_DATE)
+
+#: Roles that can carry a bank movement's amount, the statement role first, for
+#: the same reason.
+STATEMENT_AMOUNT_ROLES: tuple[FieldRole, ...] = (FieldRole.MOVEMENT_AMOUNT, FieldRole.GRAND_TOTAL)
+
+
+def _first_value(row: ProjectedRow, roles: tuple[FieldRole, ...]) -> str | None:
+    """Return the value carried under the first of ``roles`` the row maps."""
+    return next((value for role in roles if (value := row.value_for(role)) is not None), None)
+
 
 TabularMappingResolver = Callable[[NormalizedTable], ColumnRoleMapping | None]
 """Supplies one role per column for a normalized table, or ``None`` when it cannot."""
@@ -156,13 +165,14 @@ class MappedTabularProvider(FinancialProvider):
                 detected_encoding=table.dialect.encoding,
                 detected_dialect=dialect_note,
             )
-        missing = REQUIRED_STATEMENT_ROLES - set(mapping.roles)
+        mapped = set(mapping.roles)
+        missing = [roles[0] for roles in (STATEMENT_DATE_ROLES, STATEMENT_AMOUNT_ROLES) if mapped.isdisjoint(roles)]
         if missing:
             return ProviderValidation(
                 is_valid=False,
                 warnings=(
                     "mapped table carries no column for "
-                    f"{', '.join(sorted(role.value for role in missing))}; a bank movement needs both",
+                    f"{', '.join(role.value for role in missing)}; a bank movement needs both",
                 ),
                 detected_encoding=table.dialect.encoding,
                 detected_dialect=dialect_note,
@@ -287,8 +297,8 @@ class MappedTabularProvider(FinancialProvider):
         the printed forms verbatim, and the *detected* dialect decides how the
         amount reads.
         """
-        raw_date = row.value_for(FieldRole.INVOICE_DATE)
-        raw_amount = row.value_for(FieldRole.GRAND_TOTAL)
+        raw_date = _first_value(row, STATEMENT_DATE_ROLES)
+        raw_amount = _first_value(row, STATEMENT_AMOUNT_ROLES)
         if raw_date is None or raw_amount is None:
             raise InvalidFinancialSourceError(
                 f"row at line {row.source_line_number} is missing a date or an amount",

@@ -21,7 +21,11 @@ Major declarations:
 * :class:`ParsedLedgerRow` — one parsed raw transaction paired with its
   authoritative flow direction.
 * :class:`CsvProvider`, :class:`OfxProvider`, :class:`XlsxProvider`, and
-  :class:`PdfN26Provider` — the concrete per-format parsers.
+  :class:`XlsProvider` — the concrete per-format parsers.
+* :class:`MappedTabularProvider` and :class:`PdfStatementProvider` — the
+  inferred lanes for a tabular export of no known layout and for a PDF
+  statement of any bank's layout, both read by a local model and checked
+  deterministically.
 * :func:`detect_provider` — resolve the provider for a given source through
   extension-prioritised content validation.
 * :class:`FinancialProviderError` and its subclasses

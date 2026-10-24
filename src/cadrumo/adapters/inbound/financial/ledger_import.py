@@ -26,7 +26,7 @@ from .providers.base import FinancialProvider, FinancialProviderError
 from .providers.csv import CsvProvider
 from .providers.detection import detect_provider
 from .providers.ofx import OfxProvider
-from .providers.pdf_n26 import PdfN26Provider
+from .providers.pdf_statement import PdfStatementProvider
 from .providers.xls import XlsProvider
 from .providers.xlsx import XlsxProvider
 
@@ -88,8 +88,8 @@ class FinancialProviderResolverAdapter:
             return XlsxProvider()
         if provider_id == "xls":
             return XlsProvider()
-        if provider_id == "pdf-n26":
-            return PdfN26Provider()
+        if provider_id == "pdf":
+            return PdfStatementProvider()
         raise TransactionValidationError(
             translated_message="errors.transaction.unknown_ledger_provider",
             context={"provider": provider_id},

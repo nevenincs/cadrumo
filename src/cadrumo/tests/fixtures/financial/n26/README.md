@@ -17,11 +17,16 @@ Upstream location:
 
 Why this exists:
 
-- no raw N26 statement PDF was available in the local operator environment
-- the user still required the feature to be grounded in a real, existing N26
-  statement template
-- the upstream corpus provides sanitized text extracted from real N26 PDFs plus
-  manually asserted expected transactions
+- the product reads PDF bank statements of any bank through one bank-agnostic
+  reader: a local model proposes the movements and deterministic anchoring and
+  balance checks decide what is imported
+- these statements are its test data, one real template family with a
+  movement page, a summary page that prints balances and totals, and a notes
+  page, which is exactly the shape that tempts a model into listing balances
+  as movements
+- no raw operator statement PDF is held; the upstream corpus provides
+  sanitized text extracted from real statements plus manually asserted
+  expected transactions
 
 How these fixtures are built:
 
@@ -35,9 +40,9 @@ How these fixtures are built:
 How the goldens are maintained:
 
 - each `*.expected.json` file is hand-written from the fixture content
-- the parser tests compare PDF-derived `RawTransaction` rows against those
-  hand-maintained expectations
-- expected payloads are not generated from parser output
+- the PDF statement provider tests compare the imported rows' dates, signed
+  amounts and currency against those hand-maintained expectations
+- expected payloads are not generated from provider or model output
 
 Regeneration:
 

@@ -4088,7 +4088,7 @@ tui:
         auto: Automatikus felismerés
         csv: CSV-fájl
         ofx: OFX- vagy QFX-fájl
-        pdf_n26: N26 PDF-kivonat
+        pdf: PDF-kivonat
         xlsx: Excel-munkafüzet
       provider_label: Kivonat formátuma
       refusal:

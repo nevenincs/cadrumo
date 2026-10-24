@@ -229,7 +229,29 @@ def test_a_mapping_missing_a_required_role_is_refused_with_the_role_named() -> N
     lane = MappedTabularProvider(mapping_resolver=_resolver(roles))
     validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)
     assert not validation.is_valid
-    assert any("grand_total" in warning for warning in validation.warnings)
+    assert any("movement_amount" in warning for warning in validation.warnings)
+
+
+def test_the_statement_roles_are_read_as_a_movement_date_and_amount() -> None:
+    """A mapping naming the bank-statement roles imports, as one naming the invoice roles does."""
+    statement_roles = tuple(
+        {FieldRole.INVOICE_DATE: FieldRole.BOOKED_DATE, FieldRole.GRAND_TOTAL: FieldRole.MOVEMENT_AMOUNT}.get(
+            role, role
+        )
+        for role in _NEOBANK_ROLES
+    )
+    by_statement_roles = MappedTabularProvider(mapping_resolver=_resolver(statement_roles))
+    by_invoice_roles = MappedTabularProvider(mapping_resolver=_resolver(_NEOBANK_ROLES))
+
+    validation = by_statement_roles.validate_source(_UNKNOWN_FORMAT_FIXTURE)
+    statement_rows = list(by_statement_roles.ingest(_UNKNOWN_FORMAT_FIXTURE))
+    invoice_rows = list(by_invoice_roles.ingest(_UNKNOWN_FORMAT_FIXTURE))
+
+    assert validation.is_valid, validation.warnings
+    assert statement_rows
+    assert [(row.raw.booked_date, row.raw.amount, row.direction) for row in statement_rows] == [
+        (row.raw.booked_date, row.raw.amount, row.direction) for row in invoice_rows
+    ]
 
 
 def test_one_unparseable_row_does_not_refuse_the_whole_file(tmp_path: Path) -> None:

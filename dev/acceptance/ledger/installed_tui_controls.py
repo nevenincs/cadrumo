@@ -10,7 +10,7 @@ from dev.acceptance.income_tax.installed_tui_child import (
     wait_for_public_selector,
 )
 
-from .installed_tui_contracts import _COUNTERPARTY_NIF, _INVOICE_BASE, _N26_HEADER, LedgerInstalledTuiError
+from .installed_tui_contracts import _COUNTERPARTY_NIF, _INVOICE_BASE, _STATEMENT_CSV_HEADER, LedgerInstalledTuiError
 
 
 async def _activate_button(pilot: Any, selector: str) -> None:
@@ -144,7 +144,7 @@ def _write_tui_only_statement(*, scratch: Path, year: int, description: str) -> 
     statement.write_text(
         "\n".join(
             (
-                _N26_HEADER,
+                _STATEMENT_CSV_HEADER,
                 f"{year}-03-16,Ledger acceptance counterparty,{description},10.00,EUR,ledger-tui-entry-{year}",
                 "",
             )

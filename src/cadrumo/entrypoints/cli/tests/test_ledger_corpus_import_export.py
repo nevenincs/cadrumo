@@ -100,8 +100,8 @@ def test_cross_format_reimport_dedups_by_fingerprint(tmp_path: Path, invoke_cli:
     assert len(_list_rows()) == before
 
 
-def test_ofx_and_pdf_providers_import_real_transactions(invoke_cli: Callable[..., Result]) -> None:
-    """The OFX and PDF providers ingest real bank exports."""
+def test_ofx_provider_imports_real_transactions(invoke_cli: Callable[..., Result]) -> None:
+    """The OFX provider ingests a real bank export."""
     ofx = FINANCIAL_FIXTURE_ROOT / "synthetic-transactions.ofx"
     ofx_res = invoke_corpus_cli(
         ["--format", "json", "app", "ledger", "import", "--file", str(ofx), "--provider", "ofx"],
@@ -110,14 +110,16 @@ def test_ofx_and_pdf_providers_import_real_transactions(invoke_cli: Callable[...
     assert ofx_res.exit_code == 0, ofx_res.output
     assert len(_list_rows()) > 0
 
-    invoke_corpus_cli(["app", "ledger", "reset", "--yes"], invoke_cli=invoke_cli)
+
+def test_the_retired_bank_named_pdf_token_is_refused(invoke_cli: Callable[..., Result]) -> None:
+    """No provider token names a bank; the former bank-named PDF token imports nothing."""
     pdf = FINANCIAL_FIXTURE_ROOT / "n26" / "n26-savings-2025-01.pdf"
-    pdf_res = invoke_corpus_cli(
+    refused = invoke_corpus_cli(
         ["--format", "json", "app", "ledger", "import", "--file", str(pdf), "--provider", "pdf-n26"],
         invoke_cli=invoke_cli,
     )
-    assert pdf_res.exit_code == 0, pdf_res.output
-    assert len(_list_rows()) > 0
+    assert refused.exit_code != 0
+    assert len(_list_rows()) == 0
 
 
 def test_jsonl_export_roundtrips_back_through_import(tmp_path: Path, invoke_cli: Callable[..., Result]) -> None:

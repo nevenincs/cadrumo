@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 _SCHEMA_VERSION = "income-01-installed-tui-financial-v2"
 
 
-_N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
+_STATEMENT_CSV_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
 
 
 _SYNTHETIC_COUNTERPARTY_NIF = "A58818501"

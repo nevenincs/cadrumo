@@ -35,7 +35,7 @@ class-level corpus attributes:
     set this ``True``; providers with a confirmed corpus round-trip set
     it ``False``.
 
-The test suite in ``test_pdf_n26.py`` and the detection-invariant test
+The provider-contract tests in ``test_base.py`` and the detection-invariant test
 enforce these attributes at collection time so a newly enrolled provider
 cannot silently ship without the declaration.
 """
@@ -586,18 +586,27 @@ def _already_numeric_amount(value: object) -> Decimal | None:
 # because no digit follows the ``E``.
 _EXPONENT_RE = re.compile(r"\d\s*[eE]\s*[+-]?\s*\d")
 
+#: A currency code or symbol printed before the sign or after a trailing sign.
+#: Only the characters that cannot belong to a signed amount are set aside, and
+#: only at the two ends, so an amount's own digits and markers are untouched.
+_OUTER_AMOUNT_NOISE_RE = re.compile(r"^[^\d()+\-.,]+|[^\d()+\-.,]+$")
+
 
 def _sanitise_amount_text(raw: str) -> tuple[str, bool]:
     """Strip whitespace and sign markers from ``raw``; return ``(digits-and-separators, negative_flag)``.
 
     Three negativity conventions are recognised: leading minus
     (``-123.45``), trailing minus (``123.45-``), and accounting
-    parentheses (``(123.45)``). After the sign markers are
-    removed, only digits and ``,`` / ``.`` survive \u2014 anything else
-    (currency symbols, stray operators) is dropped before
+    parentheses (``(123.45)``). The typographic minus sign (U+2212) that
+    PDF text layers print is read as a minus, and a currency code or symbol
+    printed outside the sign (``EUR -123.45``, ``123.45- \u20ac``) is set aside
+    before the sign is read, so it cannot hide a negative amount. After the
+    sign markers are removed, only digits and ``,`` / ``.`` survive \u2014
+    anything else (currency symbols, stray operators) is dropped before
     separator inference.
     """
-    sanitized = raw.replace(" ", "").replace("\u202f", "")
+    sanitized = raw.replace(" ", "").replace("\u202f", "").replace("\u00a0", "").replace("\u2212", "-")
+    sanitized = _OUTER_AMOUNT_NOISE_RE.sub("", sanitized)
     negative = (
         sanitized.startswith("-") or sanitized.endswith("-") or (sanitized.startswith("(") and sanitized.endswith(")"))
     )

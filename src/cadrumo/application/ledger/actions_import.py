@@ -88,7 +88,8 @@ class LedgerProviderID(StrEnum):
     """Canonical provider ID strings accepted by the ledger import dispatch.
 
     Each token names the parser it selects: ``auto`` is the only token that
-    runs detection, and a format token never stands for another format.
+    runs detection, and a format token never stands for another format. No
+    token names a bank: ``pdf`` reads a PDF statement of any bank's layout.
     """
 
     AUTO = "auto"
@@ -97,7 +98,7 @@ class LedgerProviderID(StrEnum):
     QFX = "qfx"
     XLSX = "xlsx"
     XLS = "xls"
-    PDF_N26 = "pdf-n26"
+    PDF = "pdf"
 
 
 class _ImportRowPlan(NamedTuple):

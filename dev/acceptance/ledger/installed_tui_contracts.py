@@ -33,7 +33,7 @@ _TUI_IMPORTED_TRANSACTION_DIRECTION = "INCOMING"
 _LINKED_IDENTITY_REFUSAL = "linked transaction identity cannot change without updating its invoice link"
 
 
-_N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
+_STATEMENT_CSV_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
 
 
 type ChildMode = Literal[

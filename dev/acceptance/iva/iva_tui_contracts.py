@@ -11,7 +11,7 @@ _SCHEMA_VERSION: Final = "iva-01-installed-tui-capture-reopen-v2"
 _PERIOD: Final = "1T"
 
 
-_N26_HEADER: Final = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
+_STATEMENT_CSV_HEADER: Final = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
 
 
 _SOURCE_MODULES: Final[tuple[tuple[str, str], ...]] = (

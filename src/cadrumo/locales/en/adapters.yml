@@ -108,10 +108,10 @@ adapters:
         year_conflict: --año {year} conflicts with detected {detected}.
     financial:
       providers:
-        pdf_n26:
+        pdf_statement:
           errors:
-            parse_failed: Could not parse the N26 PDF statement. The source path has
-              been redacted from diagnostics.
+            parse_failed: Could not parse the PDF statement. The source path has been
+              redacted from diagnostics.
     justificante:
       errors:
         parse_failed: Could not parse the justificante PDF. The source path has been

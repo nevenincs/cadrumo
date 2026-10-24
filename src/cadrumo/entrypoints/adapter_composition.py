@@ -65,6 +65,7 @@ if TYPE_CHECKING:
     from ..application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryFactory
     from ..application.ledger.evidence_ports import LedgerEvidencePorts, LedgerEvidencePortsFactory
     from ..application.ledger.invoice_confirmation_ports import InvoiceConfirmationPortsFactory
+    from ..application.ledger.statement_reading import StatementReaderPort
     from ..application.live.borrador_100 import (
         Borrador100SnapshotRepository,
     )
@@ -1633,6 +1634,12 @@ def _resolve_column_roles(table: NormalizedTable) -> ColumnRoleMappingPort | Non
     return resolve_column_roles(table)
 
 
+def _statement_reader() -> StatementReaderPort:
+    from ..adapters.outbound.llm.statement_reading import LocalStatementReader
+
+    return LocalStatementReader()
+
+
 @contextmanager
 def profile_free_adapter_composition() -> Generator[None]:
     """Bind only what a command that reads no profile still touches.
@@ -1695,6 +1702,7 @@ def profile_adapter_composition(
     from ..application.ledger.extraction_draft_repository import bind_extraction_draft_repository_factory
     from ..application.ledger.participation_read import bind_transaction_participation_index_repository_factory
     from ..application.ledger.rule_repository import bind_ledger_classification_rule_repository_factory
+    from ..application.ledger.statement_reading import bind_statement_reader_factory
     from ..application.ledger.transaction_repository import bind_transaction_catalogue_repository_factory
     from ..application.ledger.usage_ratio_repository import (
         bind_usage_ratio_censo_guard_loader,
@@ -1717,6 +1725,7 @@ def profile_adapter_composition(
         composition.enter_context(bind_bucket_event_history_repository_factory(_bucket_event_history_repository))
         composition.enter_context(bind_confirmation_record_repository_factory(_confirmation_record_repository))
         composition.enter_context(bind_column_role_mapping_resolver(_resolve_column_roles))
+        composition.enter_context(bind_statement_reader_factory(_statement_reader))
         composition.enter_context(bind_extraction_draft_repository_factory(_extraction_draft_repository))
         composition.enter_context(
             bind_transaction_participation_index_repository_factory(_transaction_participation_index_repository)

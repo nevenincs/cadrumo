@@ -30,11 +30,13 @@ Confirm the active profile before you write transaction data:
 
 ## Statement file format
 
-`--provider csv` reads bank exports in the BBVA, Santander, CaixaBank, Revolut,
-and N26 layouts. `aeat` detects the delimiter and matches the header row to a
-layout. The Spanish layouts use comma decimals; Revolut and N26 use period
-decimals. The first line is the column header; each later line is one movement.
-A BBVA-style file looks like this:
+`--provider csv` reads bank exports whose header row matches a known layout:
+the generic English and German header vocabulary (`Date`, `Amount`,
+`Description`, `Datum`, `Betrag` and similar), or the BBVA, Santander, CaixaBank
+and Revolut layouts. `aeat` detects the delimiter and matches the header row to
+a layout. The Spanish layouts use comma decimals; Revolut and the generic
+vocabulary use period decimals. The first line is the column header; each later
+line is one movement. A BBVA-style file looks like this:
 
 ```text
 Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda
@@ -58,9 +60,21 @@ row:
 
 `--provider csv` names the statement format. `--provider auto` asks `aeat` to
 detect it. The recognized providers are `auto`, `csv`, `ofx`, `qfx`, `xlsx`,
-`xls`, and `pdf-n26` (an N26 PDF statement). If detection picks the wrong format,
-replace `auto` with the exact provider - run `aeat app ledger import --help` or
-see the [CLI reference](../cli/index.rst) for the current provider list.
+`xls`, and `pdf` (a PDF statement from any bank). If detection picks the wrong
+format, replace `auto` with the exact provider - run
+`aeat app ledger import --help` or see the [CLI reference](../cli/index.rst) for
+the current provider list.
+
+`--provider pdf` reads a PDF statement in any bank's layout and language. A
+local language model proposes the movements it finds on each page, and `aeat`
+keeps only the movements whose date and amount are printed together on one
+line of the statement. When the statement prints an opening and closing
+balance, or a running balance on each line, the kept movements must add up to
+it, or the import is refused. Run a dry run first: it lists every proposal that
+was not kept and says when the statement prints no balance to check against.
+Reading a PDF statement needs the `llm` extra and a local model runtime; a page
+without a text layer is transcribed by the local vision model, and the
+statement never leaves your computer.
 
 If the path does not exist or is not readable, the command refuses cleanly and
 names the path (`Invalid value for '--file': the path ... does not exist or is
