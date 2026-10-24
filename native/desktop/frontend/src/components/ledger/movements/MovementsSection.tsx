@@ -912,7 +912,10 @@ export function MovementsSection({
     ids: readonly string[],
     answer: { category?: string; share?: string },
   ): string | null {
-    const outcome = classifyCells({ kind, ids, ...answer, ratios }, byId);
+    const outcome = classifyCells(
+      { kind, ids, ...answer, ratios, staged: stage.content },
+      byId,
+    );
     if (outcome.kind === "refused")
       return t("desktop.ledger.classify.share_refused", {
         raw: outcome.refusal.raw,
@@ -928,7 +931,7 @@ export function MovementsSection({
     );
     const detail = [
       answer.share ? `${answer.share.trim().replace(/\s*%$/, "")}%` : "",
-      answer.category && categorySplit(ids, byId).expenses > 0
+      answer.category && categorySplit(ids, byId, stage.content).expenses > 0
         ? categoryLabel(t, answer.category)
         : "",
     ]
@@ -967,9 +970,9 @@ export function MovementsSection({
       return;
     }
     const answer = scope?.answer ?? {};
-    const split = categorySplit(availability.ids, byId);
+    const split = categorySplit(availability.ids, byId, stage.content);
     const outcome = classifyCells(
-      { kind, ids: availability.ids, ...answer, ratios },
+      { kind, ids: availability.ids, ...answer, ratios, staged: stage.content },
       byId,
     );
     // What the control already asked for is not asked again, and nothing
@@ -1023,7 +1026,7 @@ export function MovementsSection({
       skipped: ids.length - takes.length,
       partial,
       error: null,
-      split: categorySplit(takes, byId),
+      split: categorySplit(takes, byId, stage.content),
     });
   }
 
@@ -1712,7 +1715,14 @@ export function MovementsSection({
           kind={asking.kind}
           ratioOf={
             asking.kind === "mixed"
-              ? (category) => ratioCoverage(asking.ids, byId, category, ratios)
+              ? (category) =>
+                  ratioCoverage(
+                    asking.ids,
+                    byId,
+                    category,
+                    ratios,
+                    stage.content,
+                  )
               : undefined
           }
           onOpenRatios={onOpenRatios}
@@ -1774,6 +1784,7 @@ export function MovementsSection({
                 asking.ids,
                 answer.category ?? "",
                 byId,
+                stage.content,
               );
               if (outcome.kind === "staged") {
                 onStage(outcome.event);

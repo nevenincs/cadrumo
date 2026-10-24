@@ -252,7 +252,9 @@ function incomeWithCategory(
     const classified =
       after.business_classification === "BUSINESS" ||
       after.business_classification === "MIXED";
-    return classified && after.category_id && !takesExpenseCategory(row)
+    return classified &&
+      after.category_id &&
+      !takesExpenseCategory(row, content)
       ? [id]
       : [];
   });
@@ -326,7 +328,10 @@ function BlockerFixes({
         onStage({ type: "drop_action", id: action });
   };
   const classifyAll = (kind: "business" | "personal", category?: string) => {
-    const outcome = classifyCells({ kind, ids, category }, rows);
+    const outcome = classifyCells(
+      { kind, ids, category, staged: content },
+      rows,
+    );
     if (outcome.kind === "staged") onStage(outcome.event);
   };
   const show = ids.length

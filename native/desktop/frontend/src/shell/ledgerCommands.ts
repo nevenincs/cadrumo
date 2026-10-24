@@ -7,9 +7,11 @@
 import type { LedgerRow } from "./ledger";
 import { parsePercent, type GrammarRefusal } from "./ledgerGrammar";
 import {
+  effectiveFacts,
   storedFieldValue,
   type StageCell,
   type StageEvent,
+  type StagedContent,
 } from "./ledgerStage";
 import { isSpendingCategory, takesShare } from "./ledgerVocabulary";
 
@@ -64,13 +66,29 @@ const TRANSFER = "INTERNAL_TRANSFER";
  * Whether a movement takes a spending category: an expense, or an income
  * that refunds one, carrying a purchase invoice. A spending category says
  * what a business expense is; pure income is classified by its direction
- * alone and never reads one, as the product's readiness check holds.
+ * alone and never reads one, as the product's readiness check holds. With
+ * `staged`, the movement is read as it would be once saved: its staged
+ * direction, and a purchase invoice staged to be attached.
  */
-export function takesExpenseCategory(row: LedgerRow): boolean {
-  const { direction, purchase_invoice_evidence_id: evidence } = row.transaction;
-  return (
-    direction === "OUTGOING" || (direction === "INCOMING" && evidence !== null)
-  );
+export function takesExpenseCategory(
+  row: LedgerRow,
+  staged?: StagedContent,
+): boolean {
+  const id = row.transaction.transaction_id;
+  const direction = staged
+    ? effectiveFacts(row, staged.rows[id]).direction
+    : row.transaction.direction;
+  const evidence =
+    row.transaction.purchase_invoice_evidence_id !== null ||
+    (staged?.actions.some(
+      (action) =>
+        (action.kind === "attach" &&
+          action.transactionId === id &&
+          action.evidenceId !== null) ||
+        (action.kind === "attach_file" && action.transactionId === id),
+    ) ??
+      false);
+  return direction === "OUTGOING" || (direction === "INCOMING" && evidence);
 }
 
 /** How the movements a classify command stages split by what they take: a
@@ -78,13 +96,14 @@ export function takesExpenseCategory(row: LedgerRow): boolean {
 export function categorySplit(
   ids: readonly string[],
   rows: ReadonlyMap<string, LedgerRow>,
+  staged?: StagedContent,
 ): { expenses: number; income: number } {
   let expenses = 0;
   let income = 0;
   for (const id of ids) {
     const row = rows.get(id);
     if (!row) continue;
-    if (takesExpenseCategory(row)) expenses += 1;
+    if (takesExpenseCategory(row, staged)) expenses += 1;
     else income += 1;
   }
   return { expenses, income };
@@ -146,11 +165,12 @@ export function ratioCoverage(
   rows: ReadonlyMap<string, LedgerRow>,
   category: string,
   ratios: ConfiguredRatios | undefined,
+  staged?: StagedContent,
 ): RatioCoverage {
   const out: RatioCoverage = { staged: 0, missing: 0, unread: 0 };
   for (const id of ids) {
     const row = rows.get(id);
-    if (!row || !takesExpenseCategory(row)) continue;
+    if (!row || !takesExpenseCategory(row, staged)) continue;
     const configured = ratios?.get(yearOf(row));
     if (configured === undefined || configured === null) out.unread += 1;
     else if (configured.has(category)) out.staged += 1;
@@ -169,6 +189,8 @@ export type ClassifyRequest = {
   category?: string | null;
   share?: string | null;
   ratios?: ConfiguredRatios;
+  /** What is staged already: a movement is read as it would be saved. */
+  staged?: StagedContent;
 };
 
 export type ClassifyOutcome =
@@ -210,7 +232,7 @@ export function classifyCells(
     share = parsed.value;
   }
   if (request.kind !== "personal") {
-    const expenses = categorySplit(request.ids, rows).expenses;
+    const expenses = categorySplit(request.ids, rows, request.staged).expenses;
     const given = request.category ?? null;
     const fits =
       given !== null &&
@@ -246,7 +268,7 @@ export function classifyCells(
         value: { kind: "clear" },
         stored: storedShare,
       });
-    if (category !== null && takesExpenseCategory(row)) {
+    if (category !== null && takesExpenseCategory(row, request.staged)) {
       cells.push({
         id,
         field: "category_id",
@@ -306,6 +328,7 @@ export function categoryCells(
   ids: readonly string[],
   category: string,
   rows: ReadonlyMap<string, LedgerRow>,
+  staged?: StagedContent,
 ):
   | {
       kind: "staged";
@@ -322,7 +345,7 @@ export function categoryCells(
       !row ||
       row.transaction.lifecycle_state !== "ACTIVE" ||
       !TAKES_CATEGORY.includes(row.transaction.business_classification) ||
-      !takesExpenseCategory(row) ||
+      !takesExpenseCategory(row, staged) ||
       !isSpendingCategory(category)
     ) {
       skipped += 1;

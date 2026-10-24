@@ -39,6 +39,7 @@ import {
   SPENDING_CATEGORY_FAMILIES,
   USAGE_RATIO_CATEGORIES,
 } from "../src/shell/ledgerVocabulary";
+import type { StagedContent } from "../src/shell/ledgerStage";
 import type { ReadinessSnapshot } from "../src/shell/ledgerWindow";
 import { hexId, movement } from "./support/ledger";
 
@@ -538,6 +539,55 @@ test("income takes no spending category, and Mixed only one a share applies to",
   expect(
     categoryCells([OUT, IN, REFUND], "material_oficina", classified),
   ).toMatchObject({ kind: "staged", movements: 2, skipped: 1 });
+});
+
+test("whether a movement takes a spending category is read as staged, not as stored", () => {
+  const OUT = hexId("20");
+  const IN = hexId("21");
+  const rows = new Map(
+    [
+      movement(OUT),
+      movement(IN, { direction: "INCOMING", description: "TALLERES ONDARA" }),
+    ].map((row) => [row.transaction.transaction_id, row]),
+  );
+  // The expense is staged to become income, and the income to carry a
+  // purchase invoice it refunds.
+  const staged: StagedContent = {
+    rows: { [OUT]: { direction: { kind: "set", value: "INCOMING" } } },
+    drafts: [],
+    actions: [
+      {
+        id: "attach",
+        kind: "attach",
+        transactionId: IN,
+        evidenceId: "evidence-1",
+        attachmentIds: [],
+      },
+    ],
+  };
+  expect(takesExpenseCategory(rows.get(OUT)!)).toBe(true);
+  expect(takesExpenseCategory(rows.get(OUT)!, staged)).toBe(false);
+  expect(takesExpenseCategory(rows.get(IN)!)).toBe(false);
+  expect(takesExpenseCategory(rows.get(IN)!, staged)).toBe(true);
+  expect(categorySplit([OUT, IN], rows, staged)).toEqual({
+    expenses: 1,
+    income: 1,
+  });
+  const business = classifyCells(
+    {
+      kind: "business",
+      ids: [OUT, IN],
+      category: "material_oficina",
+      staged,
+    },
+    rows,
+  );
+  expect(
+    business.kind === "staged" &&
+      business.event.cells
+        .filter((cell) => cell.field === "category_id")
+        .map((cell) => cell.id),
+  ).toEqual([IN]);
 });
 
 test("the categories a share applies to are the registry's usage-ratio ones", () => {
