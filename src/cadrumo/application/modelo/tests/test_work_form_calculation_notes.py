@@ -158,6 +158,7 @@ def test_a_printed_box_that_could_not_be_worked_out_blocks_filing_and_never_read
         attention=ModeloFormAttention.BLOCKS,
         casilla_id=_PRINTED,
         box=_PRINTED,
+        withholds_filing=True,
     )
     assert form.calculation_notes == (note,)
     assert form.blocking_calculation_notes == (note,)
@@ -174,16 +175,17 @@ def test_the_same_box_without_a_note_keeps_its_value(operation: PinnedAuthorityO
     assert field.value == Decimal("0")
 
 
-def test_a_working_figure_that_could_not_be_worked_out_is_worth_checking(
+def test_a_working_figure_that_could_not_be_worked_out_is_worth_checking_yet_withholds_filing(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Teeth for the rule above: the same reason on a box the form does not print withholds nothing."""
+    """The same reason on a box the form does not print reads as worth checking, and the filing gate still refuses it."""
     working = _working_figure(operation)
     form = _form(operation, diagnostics=(_unresolved(working),))
     (note,) = form.calculation_notes
 
     assert note.attention is ModeloFormAttention.CHECK
-    assert form.blocking_calculation_notes == ()
+    assert note.withholds_filing
+    assert form.blocking_calculation_notes == (note,)
     assert note.box is None
 
 

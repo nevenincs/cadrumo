@@ -36,13 +36,20 @@ class ModeloCalculationBlockedError(ModeloPreconditionErrorMixin, ModeloError):
     """The current calculation carries a note that withholds this action until a recalculation clears it."""
 
 
-def _refused_here(issue: CalculationSourceIssue) -> bool:
-    """Whether the gate refuses on ``issue``; an unrouted one-stop-shop row is the Modelo 369 check's to decide."""
-    if issue.reason not in GATE_REFUSED_REASONS:
+def gate_refuses(reason: str, binding_source: BindingSourceKind | None) -> bool:
+    """Whether the gate refuses on a note of ``reason`` from ``binding_source``, wherever the note names.
+
+    It is the one condition the gate, the form's hold on the file and its next
+    step all decide with. An unrouted one-stop-shop row is the Modelo 369
+    check's to decide.
+    """
+    if reason not in GATE_REFUSED_REASONS:
         return False
-    return not (
-        issue.reason == "unrouted_observation" and issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
-    )
+    return not (reason == "unrouted_observation" and binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION)
+
+
+def _refused_here(issue: CalculationSourceIssue) -> bool:
+    return gate_refuses(issue.reason, issue.binding_source)
 
 
 def blocking_calculation_issues(revision: CalculationRevision) -> tuple[CalculationSourceIssue, ...]:
@@ -114,6 +121,7 @@ def require_work_unit_calculation_unblocked(
 __all__ = [
     "ModeloCalculationBlockedError",
     "blocking_calculation_issues",
+    "gate_refuses",
     "require_no_blocking_calculation_notes",
     "require_work_unit_calculation_unblocked",
 ]

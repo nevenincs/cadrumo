@@ -8,7 +8,7 @@ from textual.containers import Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 
-from ....application.modelo.declarations_list import DeclarationListRow
+from ....application.modelo.declarations_list import DeclarationListRow, aeat_filing_notes
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language, tr
 from ..components.language import localized, refresh_localized_widgets
@@ -45,18 +45,7 @@ class ExternalFilingDetailsScreen(ModalScreen[None]):
         with Vertical(id="external-filing-dialog"):
             with ContentScroll(id="external-filing-body"):
                 yield Static("\n".join(left + right), id="external-filing-summary", markup=False)
-                yield localized(
-                    Static(tr("workspace.declarations.list.aeat_unlinked.help.confirmed"), markup=False),
-                    "workspace.declarations.list.aeat_unlinked.help.confirmed",
-                )
-                yield localized(
-                    Static(tr("workspace.declarations.list.aeat_unlinked.help.no_refile"), markup=False),
-                    "workspace.declarations.list.aeat_unlinked.help.no_refile",
-                )
-                yield localized(
-                    Static(tr("workspace.declarations.list.aeat_unlinked.help.unavailable"), markup=False),
-                    "workspace.declarations.list.aeat_unlinked.help.unavailable",
-                )
+                yield Static(self._notes_text(language), id="external-filing-notes", markup=False)
                 yield Static(id="external-filing-technical", markup=False)
             yield localized(
                 Button(tr("workspace.modelo.issues.technical"), id="external-filing-more"),
@@ -66,6 +55,10 @@ class ExternalFilingDetailsScreen(ModalScreen[None]):
                 Button(tr("workspace.modelo.key.close"), id="external-filing-close"),
                 "workspace.modelo.key.close",
             )
+
+    def _notes_text(self, language: OutputLanguage) -> str:
+        """What the application says about a return the AEAT holds, one note to a line."""
+        return "\n".join(aeat_filing_notes(self.row, language) or ())
 
     def on_mount(self) -> None:
         """Make closing the primary keyboard action."""
@@ -92,5 +85,7 @@ class ExternalFilingDetailsScreen(ModalScreen[None]):
     async def refresh_language(self) -> None:
         """Reword the open dialog without changing its inputs or decision."""
         refresh_localized_widgets(self)
-        left, right = row_lines(self.row, OutputLanguage(output_language()), can_open=False, can_create=False)
+        language = OutputLanguage(output_language())
+        left, right = row_lines(self.row, language, can_open=False, can_create=False)
         self.query_one("#external-filing-summary", Static).update("\n".join(left + right))
+        self.query_one("#external-filing-notes", Static).update(self._notes_text(language))

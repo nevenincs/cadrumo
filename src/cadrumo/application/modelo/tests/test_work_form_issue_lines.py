@@ -26,7 +26,13 @@ from ....domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
-from ..calculation_notes import CALCULATION_NOTE_ATTENTION, RECORDS_REASONS, note_attention, what_locale_key
+from ..calculation_notes import (
+    CALCULATION_NOTE_ATTENTION,
+    PRINTED_BOX_REASONS,
+    RECORDS_REASONS,
+    note_attention,
+    what_locale_key,
+)
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..finding_message_text import finding_message_text
@@ -266,6 +272,10 @@ def _checked_notes() -> tuple[ModeloFormCalculationNote, ...]:
     return (
         ModeloFormCalculationNote(reason=check, attention=ModeloFormAttention.CHECK),
         ModeloFormCalculationNote(reason=blocking, attention=ModeloFormAttention.BLOCKS),
+        # A working figure's unresolved binding: worth checking on the scale, yet the filing gate refuses on it.
+        ModeloFormCalculationNote(
+            reason=next(iter(PRINTED_BOX_REASONS)), attention=ModeloFormAttention.CHECK, withholds_filing=True
+        ),
     )
 
 

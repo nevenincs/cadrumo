@@ -37,7 +37,7 @@ from .work_form_models import (
     ModeloWorkForm,
     revised_field,
 )
-from .work_form_notes import project_calculation_notes, project_verification_issues
+from .work_form_notes import NoteSource, project_calculation_notes, project_verification_issues
 from .work_form_result import settlement_result
 
 _INSPECTION_PAGE_ID: Final[str] = "inspection"
@@ -101,7 +101,7 @@ def build_inspection_only_form(
     *,
     deadline: ModeloFormDeadline | None,
     aeat_data_imported_at: datetime | None,
-    notes: tuple[tuple[tuple[str, str | None], ...], bool],
+    notes: tuple[tuple[NoteSource, ...], bool],
 ) -> ModeloWorkForm:
     """Show every casilla read-only in official box order when no usable layout exists.
 

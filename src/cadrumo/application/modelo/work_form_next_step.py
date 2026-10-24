@@ -204,9 +204,17 @@ def confirm_count(form: ModeloWorkForm) -> int:
 
 
 def check_count(form: ModeloWorkForm) -> int:
-    """How many things are worth checking: the check's warnings and the calculation's notes at that level."""
+    """How many things are worth checking: the check's warnings and the calculation's notes at that level.
+
+    A note the gate withholds filing on counts with what blocks, never here as well.
+    """
     findings = sum(1 for issue in form.issues if issue.attention is ModeloFormAttention.CHECK)
-    return findings + sum(1 for note in form.calculation_notes if note.attention is ModeloFormAttention.CHECK)
+    notes = sum(
+        1
+        for note in form.calculation_notes
+        if note.attention is ModeloFormAttention.CHECK and not note.withholds_filing
+    )
+    return findings + notes
 
 
 def _record_casillas(form: ModeloWorkForm) -> frozenset[str]:

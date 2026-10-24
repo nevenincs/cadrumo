@@ -413,6 +413,30 @@ def opens_aeat_filing(row: DeclarationListRow) -> bool:
     return row.state == "aeat_unlinked"
 
 
+_AEAT_FILING_NOTE_LOCALE_KEYS: Final[tuple[str, ...]] = (
+    "workspace.declarations.list.aeat_unlinked.help.confirmed",
+    "workspace.declarations.list.aeat_unlinked.help.no_refile",
+    "workspace.declarations.list.aeat_unlinked.help.unavailable",
+)
+"""What the details of a return the AEAT holds say, in reading order."""
+
+
+def aeat_filing_notes(row: DeclarationListRow, language: OutputLanguage) -> tuple[str, ...] | None:
+    """What opening a return the AEAT holds says about it, in order; ``None`` for a row that opens none."""
+    if not opens_aeat_filing(row):
+        return None
+    return tuple(tr(key, locale=language.value) for key in _AEAT_FILING_NOTE_LOCALE_KEYS)
+
+
+class ModeloDeclarationAeatFilingV1(BaseModel):
+    """The details a row opens of a return the AEAT holds with no local work linked."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    #: That the AEAT confirms the filing, that it need not be filed again, and what cannot be done here yet.
+    notes: tuple[str, ...] = Field(min_length=1)
+
+
 def row_help_words(row: DeclarationListRow, language: OutputLanguage) -> str | None:
     """What choosing a row that opens no local work says, or ``None`` for a row whose step says it all."""
     key = _HELP_LOCALE_KEYS.get(row.state)
@@ -459,6 +483,8 @@ class ModeloDeclarationListRowV1(BaseModel):
     opens_aeat_filing: bool = False
     #: What choosing a row with no step of its own says, such as why it cannot be opened.
     help_words: str | None = None
+    #: The details the row opens of a return the AEAT holds; set exactly when ``opens_aeat_filing`` is.
+    aeat_filing: ModeloDeclarationAeatFilingV1 | None = None
     advice: CoverageAdviceReason | None = None
     advice_words: str | None = None
     #: Original local work beside a return the AEAT already holds.
@@ -486,6 +512,7 @@ def worded_list_row(row: DeclarationListRow, language: OutputLanguage) -> Modelo
     deadline = row.deadline if row.state != "aeat_unlinked" else None
     remaining, overdue = row_days(row)
     due = deadline is not None and (remaining is not None or overdue is not None)
+    notes = aeat_filing_notes(row, language)
     return ModeloDeclarationListRowV1(
         key=row.key,
         group=row.group,
@@ -512,6 +539,7 @@ def worded_list_row(row: DeclarationListRow, language: OutputLanguage) -> Modelo
         blocking_count=blocking_count(row),
         opens_aeat_filing=opens_aeat_filing(row),
         help_words=row_help_words(row, language),
+        aeat_filing=None if notes is None else ModeloDeclarationAeatFilingV1(notes=notes),
         advice=row.advice,
         advice_words=None
         if row.advice is None
@@ -768,19 +796,41 @@ def deadline_note_words(rows: tuple[DeclarationListRow, ...], language: OutputLa
 
 
 __all__ = [
+    "DECLARATION_GROUP_LOCALE_KEYS",
     "DeclarationListGroup",
     "DeclarationListInputs",
     "DeclarationListNextStep",
     "DeclarationListRow",
+    "ModeloDeclarationAeatFilingV1",
+    "ModeloDeclarationCreationTargetV1",
+    "ModeloDeclarationExistingV1",
     "ModeloDeclarationListRowV1",
+    "ModeloDeclarationsListSourceV1",
+    "ModeloDeclarationsListZoneV1",
+    "aeat_filing_notes",
+    "applicable_modelos",
     "blocking_count",
+    "calendar_sources",
+    "creation_targets",
+    "deadline_note_words",
     "declaration_list_rows",
+    "existing_declaration",
+    "group_words",
     "is_unlinked_local_draft",
     "next_step",
     "next_step_words",
+    "observed_text",
+    "opens_aeat_filing",
     "opens_local_work",
+    "preferred_creation_target",
     "result_words",
+    "row_days",
+    "row_help_words",
+    "source_notices",
+    "source_words",
     "state_words",
+    "worded_creation_targets",
     "worded_declaration_list",
     "worded_list_row",
+    "zone_states",
 ]

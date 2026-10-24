@@ -96,7 +96,12 @@ from .work_form_models import (
     ModeloWorkForm,
     section_fields,
 )
-from .work_form_notes import collect_note_sources, project_calculation_notes, project_verification_issues
+from .work_form_notes import (
+    NoteSource,
+    collect_note_sources,
+    project_calculation_notes,
+    project_verification_issues,
+)
 from .work_form_source_groups import worded_source_groups
 from .work_form_wording import worded_form
 from .work_review import ModeloWorkReview
@@ -154,7 +159,7 @@ def build_modelo_work_form(
         overridden_binding_ids=overridden_binding_ids,
         language=language,
         unworked_casilla_ids=frozenset(
-            casilla_id for reason, casilla_id in sources if reason in UNWORKED_BOX_REASONS and casilla_id is not None
+            casilla_id for reason, casilla_id, _ in sources if reason in UNWORKED_BOX_REASONS and casilla_id is not None
         ),
     )
     held = calculation_diagnostics is not None
@@ -198,7 +203,7 @@ def _inspection_only_for_unusable_layout(
     *,
     deadline: ModeloFormDeadline | None,
     aeat_data_imported_at: datetime | None,
-    notes: tuple[tuple[tuple[str, str | None], ...], bool],
+    notes: tuple[tuple[NoteSource, ...], bool],
 ) -> ModeloWorkForm | None:
     if layout is None:
         reason = ModeloFormInspectionReason.LAYOUT_ABSENT
@@ -282,7 +287,7 @@ def _assemble_work_form(
     entered_casilla_ids: frozenset[CasillaId] | None,
     deadline: ModeloFormDeadline | None,
     aeat_data_imported_at: datetime | None,
-    sources: tuple[tuple[str, str | None], ...],
+    sources: tuple[NoteSource, ...],
     held: bool,
 ) -> ModeloWorkForm:
     provenance = (

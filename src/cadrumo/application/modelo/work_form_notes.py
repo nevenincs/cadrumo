@@ -10,10 +10,12 @@ if TYPE_CHECKING:
 from collections.abc import Iterable, Mapping
 from typing import Final
 
+from ...core.aggregation import BindingSourceKind
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from .calculation_notes import CHECK_REFUSED_REASONS, note_attention
+from .calculation_note_gate import gate_refuses
+from .calculation_notes import CHECK_REFUSED_REASONS, durable_binding_source, note_attention
 from .work_form_models import (
     ModeloFormAttention,
     ModeloFormCalculationNote,
@@ -65,18 +67,24 @@ _FINDINGS_OF_THE_SAME_CAUSE: Final[Mapping[str, frozenset[str]]] = {
 _ATTENTION_ORDER: Final[tuple[ModeloFormAttention, ...]] = tuple(ModeloFormAttention)
 
 
+type NoteSource = tuple[str, str | None, BindingSourceKind | None]
+"""One latest-calculation reason, the box it names, and the binding source that raised it."""
+
+
 def collect_note_sources(
     revision: CalculationRevision | None, diagnostics: tuple[CalculationSourceDiagnostic, ...] | None
-) -> tuple[tuple[str, str | None], ...]:
+) -> tuple[NoteSource, ...]:
     """Each latest-calculation reason with the box it names: every diagnostic when held, else the durable ones.
 
     Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     if diagnostics is not None:
-        return tuple((diagnostic.reason, diagnostic.casilla_id) for diagnostic in diagnostics)
+        return tuple(
+            (diagnostic.reason, diagnostic.casilla_id, durable_binding_source(diagnostic)) for diagnostic in diagnostics
+        )
     if revision is None:
         return ()
-    return tuple((issue.reason, issue.casilla_id) for issue in revision.source_issues)
+    return tuple((issue.reason, issue.casilla_id, issue.binding_source) for issue in revision.source_issues)
 
 
 def _said_by_a_finding(reason: str, casilla_id: str | None, findings: Iterable[ModeloVerificationFinding]) -> bool:
@@ -86,7 +94,7 @@ def _said_by_a_finding(reason: str, casilla_id: str | None, findings: Iterable[M
 
 
 def project_calculation_notes(
-    context: WorkFormContext, sources: tuple[tuple[str, str | None], ...], fields: Iterable[ModeloFormField]
+    context: WorkFormContext, sources: tuple[NoteSource, ...], fields: Iterable[ModeloFormField]
 ) -> tuple[ModeloFormCalculationNote, ...]:
     """The latest calculation's notes on the filer's scale, once each, leaving out what a finding already says.
 
@@ -100,7 +108,7 @@ def project_calculation_notes(
         field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
     }
     notes: dict[tuple[str, str | None], ModeloFormCalculationNote] = {}
-    for reason, casilla_id in sources:
+    for reason, casilla_id, binding_source in sources:
         if (reason, casilla_id) in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
             continue
         if checked and reason in CHECK_REFUSED_REASONS:
@@ -112,6 +120,7 @@ def project_calculation_notes(
             attention=attention,
             casilla_id=casilla_id,
             box=box,
+            withholds_filing=gate_refuses(reason, binding_source),
         )
     return tuple(sorted(notes.values(), key=lambda note: _ATTENTION_ORDER.index(note.attention)))
 

@@ -381,7 +381,8 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
     box_text = named or context.tr(_UNNUMBERED_BOX_LOCALE_KEY)
     codes = [note.reason, *([] if casilla_id is None else [casilla_id])]
     return ModeloFormIssueLine(
-        level=note.attention,
+        # A note the filing gate refuses on is listed with what blocks filing, as the counts count it.
+        level=ModeloFormAttention.BLOCKS if note.withholds_filing else note.attention,
         box=note.box or None,
         where=_note_where(note, field, context),
         message=context.tr(what_locale_key(note.reason), box=box_text),

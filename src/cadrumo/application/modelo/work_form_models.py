@@ -545,13 +545,6 @@ def revised_field(field: ModeloFormField, **update: Any) -> ModeloFormField:
     return type(field).model_validate(data)
 
 
-def field_needs_filer(field: ModeloFormField, *, recorded: bool = False, applies: bool = True) -> bool:
-    """Whether the filer can act on a box now: a blocker, a value to give or confirm, or a failure to resolve."""
-    return (
-        field_standing(field.origin, field.blockers, recorded=recorded, applies=applies) is ModeloFormStanding.NEEDS_YOU
-    )
-
-
 def edit_address(field: ModeloFormField) -> ModeloFormAddressV1:
     """Return the address a change to ``field`` is submitted to.
 
@@ -1071,15 +1064,18 @@ class ModeloFormCalculationNote(_FormModel):
 
     ``reason`` is the calculation's own reason code, which the frontend words
     from the catalogue; ``box`` is the printed box number when the note names a
-    box the form prints. A note at the blocking level withholds filing in the
-    editor (:attr:`ModeloWorkForm.blocking_calculation_notes`); which entrypoint
-    refuses it, and how, is the application's calculation-note gate's to say.
+    box the form prints. ``withholds_filing`` is the application's
+    calculation-note gate's own answer: the gate refuses the file and the
+    recording while such a note stands, whatever its attention says, so the
+    editor withholds them too (:attr:`ModeloWorkForm.blocking_calculation_notes`),
+    as it does for a note at the blocking level.
     """
 
     reason: str = Field(min_length=1, max_length=64)
     attention: ModeloFormAttention
     casilla_id: CasillaId | None = None
     box: str | None = None
+    withholds_filing: bool = False
 
 
 class ModeloFormAeatData(_FormModel):
@@ -1258,8 +1254,12 @@ class ModeloWorkForm(_FormModel):
 
     @property
     def blocking_calculation_notes(self) -> tuple[ModeloFormCalculationNote, ...]:
-        """The latest calculation's notes that withhold filing, as blocking findings do."""
-        return tuple(note for note in self.calculation_notes if note.attention is ModeloFormAttention.BLOCKS)
+        """The latest calculation's notes that withhold filing, as blocking findings do: at that level or gated."""
+        return tuple(
+            note
+            for note in self.calculation_notes
+            if note.attention is ModeloFormAttention.BLOCKS or note.withholds_filing
+        )
 
     def fields(self) -> tuple[ModeloFormField, ...]:
         """Return every field once, in reading order: pages, then working figures, then unplaced."""
@@ -1386,7 +1386,6 @@ __all__ = [
     "address_key",
     "confirmable",
     "edit_address",
-    "field_needs_filer",
     "field_standing",
     "finding_action_locale_key",
     "finding_attention",

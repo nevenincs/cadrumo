@@ -64,7 +64,6 @@ from ..work_form_models import (
     ModeloFormRateUnit,
     ModeloFormStanding,
     ModeloWorkForm,
-    field_needs_filer,
     finding_action_locale_key,
     section_fields,
 )
@@ -268,8 +267,6 @@ def test_a_page_that_does_not_apply_asks_for_no_value(operation: PinnedAuthority
     assert form_casilla(fourth, page_box).origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
     assert form_casilla(first, page_box).standing is ModeloFormStanding.DONE
     assert form_casilla(fourth, page_box).standing is ModeloFormStanding.NEEDS_YOU
-    assert not field_needs_filer(form_casilla(first, page_box), applies=False)
-    assert field_needs_filer(form_casilla(fourth, page_box))
 
 
 def test_a_box_the_design_fixes_stands_done_and_is_never_confirmed(operation: PinnedAuthorityOperation) -> None:

@@ -461,3 +461,26 @@ def test_the_public_list_carries_what_it_could_read_and_the_dialogs_addresses_an
     assert all(row.group_words for row in projection.rows)
     restored = ModeloDeclarationsListProjectionV1.model_validate_json(projection.model_dump_json())
     assert restored == projection
+
+
+def test_a_return_the_aeat_holds_opens_its_notes_in_the_rows_language_and_no_other_row_does() -> None:
+    request = ModeloDeclarationsListRequest(
+        profile_id=UUID("13000000-0000-4000-8000-000000000450"), output_language=OutputLanguage.ES
+    )
+    later = _entry(external=False, period=Period.from_year_and_code(2025, "2T"), close=date(2025, 7, 21))
+
+    projection = project_declarations_list(
+        request, _workspace(_local(DeclarationSummaryState.DRAFT)), _calendar(_entry(external=True), later)
+    )
+
+    keys = ("confirmed", "no_refile", "unavailable")
+    for row in projection.rows:
+        if row.opens_aeat_filing:
+            assert row.aeat_filing is not None
+            assert row.aeat_filing.notes == tuple(
+                tr(f"workspace.declarations.list.aeat_unlinked.help.{key}", locale="es") for key in keys
+            )
+        else:
+            assert row.aeat_filing is None, row.key
+    assert any(row.opens_aeat_filing for row in projection.rows)
+    assert not any(hasattr(row.aeat_filing, "reference_id") for row in projection.rows)
