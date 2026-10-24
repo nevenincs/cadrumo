@@ -59,7 +59,12 @@ def _refusal_message(refusal: LedgerImportFileRefusal) -> str:
         return tr("cli.ledger.import.file_refused_account_mismatch", file=refusal.file_name)
     verdict = _reader_verdict(refusal)
     if verdict is not None:
-        return tr(_reader_refusal_key(verdict), file=refusal.file_name)
+        return tr(
+            "cli.ledger.import.file_reader_not_ready"
+            if _setup_readies_reader(verdict)
+            else "cli.ledger.import.file_reader_unavailable",
+            file=refusal.file_name,
+        )
     return tr("cli.ledger.import.file_refused", file=refusal.file_name)
 
 
@@ -69,11 +74,9 @@ def _reader_verdict(refusal: LedgerImportFileRefusal) -> PreconditionVerdict | N
     return None if snapshot is None else snapshot.to_verdict()
 
 
-def _reader_refusal_key(verdict: PreconditionVerdict) -> str:
-    """Say the local AI is not ready only when its setup can make it ready; else that it cannot run here."""
-    if verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID:
-        return "cli.ledger.import.file_reader_not_ready"
-    return "cli.ledger.import.file_reader_unavailable"
+def _setup_readies_reader(verdict: PreconditionVerdict) -> bool:
+    """Whether setting the local AI up readies the reader; otherwise this computer cannot run it."""
+    return verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
 
 
 def _reader_setup_lines(refusals: Sequence[LedgerImportFileRefusal]) -> tuple[str, ...]:
@@ -196,8 +199,14 @@ def ledger_import(
             # The one statement named needs a reader that could not be asked.
             # The refusal carries the probe's verdict, so the error boundary
             # offers the local AI setup as far as the item's current row allows.
+            if _setup_readies_reader(verdict):
+                raise LedgerImportReaderUnavailableError(
+                    translated_message="cli.ledger.import.file_reader_not_ready",
+                    context={"file": refusal.file_name},
+                    precondition_verdict=verdict,
+                )
             raise LedgerImportReaderUnavailableError(
-                translated_message=_reader_refusal_key(verdict),
+                translated_message="cli.ledger.import.file_reader_unavailable",
                 context={"file": refusal.file_name},
                 precondition_verdict=verdict,
             )
