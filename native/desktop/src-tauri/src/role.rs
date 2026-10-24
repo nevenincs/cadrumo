@@ -24,12 +24,20 @@ pub fn dispatch() -> Option<i32> {
     })
 }
 
-/// The component engine's role. On Windows it first places itself in a kill-on-close job,
-/// so a browser check it starts never outlives it, however the role ends.
+/// The component engine's role. It first contains what it will start: on Windows it
+/// places itself in a kill-on-close job, on Linux and macOS it keeps a process scope that
+/// every browser check and query it starts is created into. Either way nothing it starts
+/// outlives it, however the role ends.
 fn components(forwarded: &[OsString]) -> i32 {
     #[cfg(windows)]
     {
         if super::contain_application().is_err() {
+            return refuse(ErrorCode::SpawnFailed);
+        }
+    }
+    #[cfg(unix)]
+    {
+        if cadrumo_platform::process_scope::contain_current().is_err() {
             return refuse(ErrorCode::SpawnFailed);
         }
     }

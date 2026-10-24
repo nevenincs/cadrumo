@@ -409,6 +409,87 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
     assert!(locations.ollama_home.exists(), "the program's home is kept");
 }
 
+/// Says when the guard of the group it opened is let go.
+#[cfg(unix)]
+struct Released(std::sync::mpsc::Sender<()>);
+
+#[cfg(unix)]
+impl Drop for Released {
+    fn drop(&mut self) {
+        let _ = self.0.send(());
+    }
+}
+
+/// Opens a group of the server's own, or fails to open any.
+#[cfg(unix)]
+struct GroupOpening(Option<std::sync::mpsc::Sender<()>>);
+
+#[cfg(unix)]
+impl Containment for GroupOpening {
+    fn open_group(&self) -> std::io::Result<Option<ProcessGroup>> {
+        let released = self.0.clone().ok_or(std::io::ErrorKind::Unsupported)?;
+        Ok(Some(ProcessGroup {
+            id: 0,
+            guard: Box::new(Released(released)),
+        }))
+    }
+
+    fn contain(&self, _: &Child) -> std::io::Result<Box<dyn Send>> {
+        Ok(Box::new(()))
+    }
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn the_server_runs_in_the_group_its_containment_opens_which_is_kept_until_it_ends() {
+    let directory = tempfile::tempdir().unwrap();
+    let locations = Locations::under(directory.path());
+    let (mut program, _) = installed(&locations, "9.8.7");
+    stand_in(&mut program, "9.8.7");
+    let (released, release) = std::sync::mpsc::channel();
+    let server = program
+        .start(
+            free_address(),
+            &GroupOpening(Some(released)),
+            &ambient,
+            None,
+        )
+        .unwrap();
+    let process = server.process_id().unwrap();
+    let address = server.address();
+    // The fields after the command name in parentheses: state, parent, process group.
+    let stat = fs::read_to_string(format!("/proc/{process}/stat")).unwrap();
+    let (_, fields) = stat.rsplit_once(") ").unwrap();
+    let group: u32 = fields.split_whitespace().nth(2).unwrap().parse().unwrap();
+    assert_eq!(
+        group, process,
+        "a group of its own, as the containment opened"
+    );
+    assert!(release.try_recv().is_err(), "kept while the server runs");
+    program.stop();
+    assert!(!answers(address));
+    release
+        .try_recv()
+        .expect("let go once the server has ended");
+}
+
+#[cfg(unix)]
+#[test]
+fn a_group_that_cannot_be_opened_starts_no_server() {
+    let directory = tempfile::tempdir().unwrap();
+    let locations = Locations::under(directory.path());
+    let (mut program, _) = installed(&locations, "9.8.7");
+    stand_in(&mut program, "9.8.7");
+    let address = free_address();
+    assert!(matches!(
+        program.start(address, &GroupOpening(None), &ambient, None),
+        Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning))
+    ));
+    assert!(program.server().is_none());
+    assert!(ServerRecord::read(&locations.programs).is_none());
+    assert!(!answers(address));
+}
+
 #[test]
 fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() {
     let bytes = archive(b"only");

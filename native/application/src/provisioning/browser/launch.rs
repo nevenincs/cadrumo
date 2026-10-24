@@ -5,11 +5,11 @@
 //! connects to that endpoint, asks for the browser's version over the DevTools protocol,
 //! and then asks it to close, which also ends every process it started. The browser runs
 //! without a console window, with only the environment the owner supplies, and on Unix in
-//! a process group of its own. The engine waits for the browser's standard error to end,
-//! which on Unix also waits for every process that inherited it. A browser that does not
-//! answer or close within the budget is killed and reaped; that a kill also ends what the
-//! browser started rests on the owner's process containment, a kill-on-close job on
-//! Windows.
+//! the owner's process scope or else a process group of its own. The engine waits for the
+//! browser's standard error to end, which on Unix also waits for every process that
+//! inherited it. A browser that does not answer or close within the budget is killed and
+//! reaped; that a kill also ends what the browser started rests on the owner's process
+//! containment, a kill-on-close job on Windows and a process scope on Linux and macOS.
 
 use crate::component::Cancellation;
 use std::{
@@ -115,10 +115,7 @@ pub(super) fn browser_version(
         command.creation_flags(CREATE_NO_WINDOW);
     }
     #[cfg(unix)]
-    {
-        use std::os::unix::process::CommandExt;
-        command.process_group(0);
-    }
+    crate::process::group::place(&mut command).map_err(|_| LaunchFailure::Unrunnable)?;
     let child = crate::process::creation::run(|| command.spawn()).map_err(|error| {
         if error.kind() == io::ErrorKind::PermissionDenied {
             LaunchFailure::NotPermitted
@@ -539,6 +536,9 @@ pub(crate) mod tests {
             return;
         };
         let behaviour = behaviour.into_string().unwrap();
+        if let Some(observer) = behaviour.strip_prefix("descendant=") {
+            hold_until_killed(observer, "descendant", None);
+        }
         let arguments: Vec<String> = std::env::args().collect();
         let profile = arguments
             .iter()
@@ -553,6 +553,18 @@ pub(crate) mod tests {
         assert_eq!(arguments.last().map(String::as_str), Some("about:blank"));
         if behaviour == "silent" {
             return;
+        }
+        if let Some(observer) = behaviour.strip_prefix("hang=") {
+            // A process of its own, as a browser starts them, in the browser's group.
+            let descendant = Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", FAKE_TEST, "--nocapture", "--test-threads=1"])
+                .env(FAKE_BROWSER, format!("descendant={observer}"))
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+                .unwrap();
+            hold_until_killed(observer, "browser", Some(descendant));
         }
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
@@ -609,6 +621,17 @@ pub(crate) mod tests {
         }
     }
 
+    /// Tells the observer at `observer` that `name` runs, over a connection only this
+    /// process holds, and never ends by itself, holding the `descendant` it started; the
+    /// connection's end is the observer's evidence that the process ended.
+    fn hold_until_killed(observer: &str, name: &str, _descendant: Option<Child>) -> ! {
+        let mut connection = TcpStream::connect(observer).unwrap();
+        writeln!(connection, "{name}").unwrap();
+        loop {
+            thread::park();
+        }
+    }
+
     fn read_client_frame(reader: &mut BufReader<TcpStream>) -> Vec<u8> {
         let mut head = [0u8; 2];
         reader.read_exact(&mut head).unwrap();
@@ -653,6 +676,66 @@ pub(crate) mod tests {
             budget,
             &Cancellation::default(),
         )
+    }
+
+    #[cfg(all(unix, feature = "platform"))]
+    const CHECK_OWNER: &str = "CADRUMO_TEST_BROWSER_CHECK_OWNER";
+
+    /// The child-process mode: an owner that contains itself as the `components` role does
+    /// and runs a check of a browser that never answers.
+    #[cfg(all(unix, feature = "platform"))]
+    #[test]
+    fn browser_check_owner() {
+        let Some(observer) = std::env::var_os(CHECK_OWNER) else {
+            return;
+        };
+        cadrumo_platform::process_scope::contain_current().unwrap();
+        let scratch = tempfile::tempdir().unwrap();
+        let behaviour = format!("hang={}", observer.into_string().unwrap());
+        let _ = launch(
+            &behaviour,
+            scratch.path(),
+            Duration::from_secs(24 * 60 * 60),
+        );
+        unreachable!("the check outlived its budget");
+    }
+
+    #[cfg(all(unix, feature = "platform"))]
+    #[test]
+    fn a_browser_check_and_what_the_browser_started_end_when_their_owner_is_killed() {
+        let observer = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let mut owner = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "provisioning::browser::launch::tests::browser_check_owner",
+                "--nocapture",
+                "--test-threads=1",
+            ])
+            .env(CHECK_OWNER, observer.local_addr().unwrap().to_string())
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap();
+        let mut running = BTreeMap::new();
+        while running.len() < 2 {
+            let (connection, _) = observer.accept().unwrap();
+            let mut connection = BufReader::new(connection);
+            let mut name = String::new();
+            connection.read_line(&mut name).unwrap();
+            running.insert(name.trim_end().to_owned(), connection);
+        }
+        assert_eq!(
+            running.keys().map(String::as_str).collect::<Vec<_>>(),
+            ["browser", "descendant"]
+        );
+        owner.kill().unwrap();
+        owner.wait().unwrap();
+        for (name, mut connection) in running {
+            let mut rest = Vec::new();
+            connection.read_to_end(&mut rest).unwrap();
+            assert!(rest.is_empty(), "{name} said more than it runs");
+        }
     }
 
     #[test]

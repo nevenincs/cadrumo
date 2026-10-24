@@ -7,18 +7,24 @@
 //! program, and is stopped when the manager quits, closes, is uninstalled or its session
 //! ends. On Windows each server process is created suspended and placed in a
 //! kill-on-close job of its own before any of its code runs, so nothing it starts
-//! outlives its stop.
+//! outlives its stop. On Linux and macOS each server is created into a process group of
+//! its own whose guardian ends the whole group once the server has stopped or the manager
+//! has ended (see `cadrumo_platform::process_scope`); what the server starts stays in that
+//! group unless it moves itself out.
 //!
 //! The supervision runs on a thread of its own, because starting or stopping a server
 //! can take seconds that the manager's own events must not wait for. The manager only
 //! asks it to stop, resume or retry; dropping the host stops the server and waits for the
-//! thread, and should the manager end without that, the job ends the server with it.
+//! thread, and should the manager end without that, crashing or killed, the job or the
+//! group's guardian ends the server with it.
 //!
 //! The server is installation-wide public software outside custody: the manager hands it
 //! no profile, credential or tax data. A copy of the program installed outside Cadrumo is
 //! never started, stopped or changed.
 
 use crate::contract::{COMPONENT_PINS, LOCAL_AI_ADDRESS};
+#[cfg(unix)]
+use cadrumo_application::provisioning::local_ai::program::ProcessGroup;
 use cadrumo_application::provisioning::{
     items::Locations,
     local_ai::{
@@ -234,11 +240,9 @@ fn containment() -> Box<dyn Containment + Send> {
     Box::new(JobContainment)
 }
 
-/// Outside Windows the server runs in the manager's own process group until the
-/// platform crate provides containment there.
-#[cfg(not(windows))]
+#[cfg(unix)]
 fn containment() -> Box<dyn Containment + Send> {
-    Box::new(cadrumo_application::provisioning::local_ai::program::Uncontained)
+    Box::new(GroupContainment)
 }
 
 /// One kill-on-close job per server process, entered before the process runs.
@@ -255,6 +259,25 @@ impl Containment for JobContainment {
         let job = crate::process_job::ProcessJob::new()?;
         job.adopt_suspended(child)?;
         Ok(Box::new(job))
+    }
+}
+
+/// One process group per server process, whose guardian ends it with its owner.
+#[cfg(unix)]
+pub struct GroupContainment;
+
+#[cfg(unix)]
+impl Containment for GroupContainment {
+    fn open_group(&self) -> std::io::Result<Option<ProcessGroup>> {
+        let scope = cadrumo_platform::process_scope::ProcessScope::new()?;
+        Ok(Some(ProcessGroup {
+            id: scope.group(),
+            guard: Box::new(scope),
+        }))
+    }
+
+    fn contain(&self, _: &std::process::Child) -> std::io::Result<Box<dyn Send>> {
+        Ok(Box::new(()))
     }
 }
 
@@ -406,5 +429,132 @@ mod tests {
         // It never ends by itself, so its end is the job's doing.
         drop(guard);
         child.wait().unwrap();
+    }
+
+    /// A stand-in for a hung server that also started a runner: each stops itself again
+    /// whenever it is resumed and ignores the hangup an orphaned group is sent, so only a
+    /// kill ends either. Each says which it is on its standard output.
+    #[cfg(unix)]
+    const UNENDING: &str = "trap '' HUP\n\
+                            if [ \"$1\" = server ]; then /bin/sh -c \"$0\" \"$0\" runner & fi\n\
+                            echo \"$1\"\n\
+                            while :; do kill -s STOP $$; done\n";
+
+    #[cfg(unix)]
+    fn unending_server(group: i32, stdout: std::process::Stdio) -> std::process::Command {
+        use std::os::unix::process::CommandExt;
+        let mut command = std::process::Command::new("/bin/sh");
+        command
+            .args(["-c", UNENDING, UNENDING, "server"])
+            .stdin(std::process::Stdio::null())
+            .stdout(stdout)
+            .stderr(std::process::Stdio::null())
+            .process_group(group);
+        command
+    }
+
+    /// Reads `stdout` until both the server and its runner have said they run.
+    #[cfg(unix)]
+    fn both_running(stdout: &mut impl std::io::BufRead) {
+        let mut seen = String::new();
+        while !(seen.contains("server\n") && seen.contains("runner\n")) {
+            let mut line = String::new();
+            assert_ne!(
+                stdout.read_line(&mut line).unwrap(),
+                0,
+                "the stand-ins ended before they ran: {seen}"
+            );
+            seen.push_str(&line);
+        }
+    }
+
+    /// Reads `stdout` to its end, which comes only once every process holding it ended.
+    #[cfg(unix)]
+    fn every_holder_ended(stdout: &mut impl std::io::BufRead) {
+        let mut rest = Vec::new();
+        std::io::Read::read_to_end(stdout, &mut rest).unwrap();
+    }
+
+    #[cfg(unix)]
+    const OWNER_HELPER: &str = "CADRUMO_MANAGER_GROUP_OWNER";
+
+    /// The child-process mode: a manager that contains a server as the supervision does,
+    /// holds it until its standard input closes, then exits without letting it go.
+    #[cfg(unix)]
+    #[test]
+    fn group_owner_helper() {
+        if std::env::var_os(OWNER_HELPER).is_none() {
+            return;
+        }
+        let containment = GroupContainment;
+        let group = containment.open_group().unwrap().unwrap();
+        let server = unending_server(group.id, std::process::Stdio::inherit())
+            .spawn()
+            .unwrap();
+        let _guard = containment.contain(&server).unwrap();
+        let mut sink = Vec::new();
+        let _ = std::io::Read::read_to_end(&mut std::io::stdin(), &mut sink);
+        // Exiting runs no destructor, so neither the server nor its group is let go.
+        std::process::exit(0);
+    }
+
+    /// Starts the owner helper, whose standard output the stand-ins it starts share.
+    #[cfg(unix)]
+    fn owner() -> std::process::Child {
+        use std::process::{Command, Stdio};
+        Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "supervision::local_ai::tests::group_owner_helper",
+                "--nocapture",
+                "--test-threads=1",
+            ])
+            .env(OWNER_HELPER, "1")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap()
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_contained_server_and_its_runner_end_when_the_manager_is_killed() {
+        let mut manager = owner();
+        let mut stdout = std::io::BufReader::new(manager.stdout.take().unwrap());
+        both_running(&mut stdout);
+        manager.kill().unwrap();
+        manager.wait().unwrap();
+        every_holder_ended(&mut stdout);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_contained_server_and_its_runner_end_when_the_manager_exits_without_stopping_it() {
+        let mut manager = owner();
+        let mut stdout = std::io::BufReader::new(manager.stdout.take().unwrap());
+        both_running(&mut stdout);
+        drop(manager.stdin.take());
+        assert!(manager.wait().unwrap().success());
+        every_holder_ended(&mut stdout);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn what_a_stopped_server_started_ends_when_its_group_is_let_go() {
+        let containment = GroupContainment;
+        let group = containment.open_group().unwrap().unwrap();
+        let (reader, writer) = std::io::pipe().unwrap();
+        let mut server = unending_server(group.id, writer.into()).spawn().unwrap();
+        let guard = containment.contain(&server).unwrap();
+        let mut stdout = std::io::BufReader::new(reader);
+        both_running(&mut stdout);
+        // The supervision ends and reaps the server first, as its stop does; the runner
+        // outlives it until the group is let go.
+        server.kill().unwrap();
+        server.wait().unwrap();
+        drop(guard);
+        drop(group);
+        every_holder_ended(&mut stdout);
     }
 }

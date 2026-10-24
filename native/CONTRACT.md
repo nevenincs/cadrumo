@@ -712,12 +712,17 @@ The role resolves the installation from its own image: the package's pin tables 
 bundled browser driver, and the storage root with its relocatable browsers, models and
 server-home members, by the same rules every other Cadrumo process uses. It honours the
 `CADRUMO_PROXY_*` settings. On Windows the role places itself in a kill-on-close job
-before it starts anything, so a browser it launches for a check ends with it, however
-the role ends. The role never runs the local AI server: the runtime manager runs it on
-the fixed local AI address while the program is set up. A local AI setup installs the
-program, records it with that address, and waits up to 35 s for the manager's server
-before it pulls the models through it; without a manager the setup fails with
-`program_not_running`.
+before it starts anything; on Linux and macOS it first starts a guardian process whose
+process group every browser check and hardware query it starts is created into, and
+the guardian kills that group once the role ends. Either way a browser it launches for
+a check ends with it, however the role ends; on Linux and macOS a process that moves
+itself out of the group is not reached. The role never runs the local AI server: the
+runtime manager runs it on the fixed local AI address while the program is set up, and
+contains it the same way, in a kill-on-close job on Windows and in a guarded process
+group of its own on Linux and macOS, so the server and what it starts end when the
+manager ends. A local AI setup installs the program, records it with that address, and
+waits up to 35 s for the manager's server before it pulls the models through it;
+without a manager the setup fails with `program_not_running`.
 
 ## Mutable data and reconciliation
 

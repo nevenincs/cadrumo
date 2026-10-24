@@ -200,6 +200,8 @@ fn run_query(program: &Path, arguments: &[&str]) -> Option<String> {
         use std::os::windows::process::CommandExt;
         command.creation_flags(CREATE_NO_WINDOW);
     }
+    #[cfg(unix)]
+    crate::process::group::place(&mut command).ok()?;
     let mut child = crate::process::creation::run(|| command.spawn()).ok()?;
     let mut stdout = child.stdout.take()?;
     let (sender, receiver) = mpsc::channel();

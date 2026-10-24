@@ -16,8 +16,9 @@
 //! lease up.
 //!
 //! The owner contains the server: it supplies a [`Containment`] that places the process
-//! in a kill-on-close job before any of its code runs, so nothing the server starts
-//! outlives its stop. The server gets no console window. On an orderly stop the
+//! in a kill-on-close job on Windows, or in a process group that ends with the owner on
+//! Linux and macOS, before any of its code runs, so nothing the server starts outlives
+//! its stop. The server gets no console window. On an orderly stop the
 //! supervisor unloads any model the server holds, which ends its runner processes, and
 //! then ends the server. A copy installed outside Cadrumo is found and reported, never
 //! started, changed or removed.
@@ -123,18 +124,34 @@ pub fn archive_limits(download_bytes: u64) -> (u64, usize) {
 }
 
 /// How the owner contains each server process: the creation flags the process is created
-/// with, and the step that places it before any of its code runs. The guard `contain`
-/// returns lives as long as the server and is dropped once it has ended, which is where a
-/// kill-on-close job ends anything the server left behind.
+/// with, the process group it is created in, and the step that places it before any of
+/// its code runs. The guards `open_group` and `contain` return live as long as the server
+/// and are dropped once it has ended, which is where a kill-on-close job or a group's
+/// guardian ends anything the server left behind.
 pub trait Containment {
     /// Windows process creation flags added to the server's own.
     fn creation_flags(&self) -> u32 {
         0
     }
 
+    /// Opens the process group the server is created in on Linux and macOS, before the
+    /// process exists; `None` leaves it in its owner's group. On an error nothing starts.
+    #[cfg(unix)]
+    fn open_group(&self) -> std::io::Result<Option<ProcessGroup>> {
+        Ok(None)
+    }
+
     /// Contains `child`, created with [`Self::creation_flags`], and lets it run. On an
     /// error the child is ended without having run.
     fn contain(&self, child: &Child) -> std::io::Result<Box<dyn Send>>;
+}
+
+/// The process group a server is created in, and what keeps the group until the server
+/// has ended.
+pub struct ProcessGroup {
+    /// The group id; 0 makes a new group of the server's own.
+    pub id: i32,
+    pub guard: Box<dyn Send>,
 }
 
 /// No containment of its own, for an owner already contained as a whole.
@@ -308,6 +325,17 @@ impl Server {
             use std::os::windows::process::CommandExt;
             process.creation_flags(CREATE_NO_WINDOW | containment.creation_flags());
         }
+        #[cfg(unix)]
+        let group = {
+            let group = containment
+                .open_group()
+                .map_err(|_| LocalAiError::Failed(FailureCategory::ProgramNotRunning))?;
+            if let Some(group) = &group {
+                use std::os::unix::process::CommandExt;
+                process.process_group(group.id);
+            }
+            group.map(|group| group.guard)
+        };
         let loopback = Loopback::new(command.address)?;
         let mut child = crate::process::creation::run(|| process.spawn())
             .map_err(|_| LocalAiError::Failed(FailureCategory::ProgramNotRunning))?;
@@ -319,6 +347,9 @@ impl Server {
                 return Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning));
             }
         };
+        // The group's guard is dropped after the job's, once the server has ended.
+        #[cfg(unix)]
+        let guard: Box<dyn Send> = Box::new((guard, group));
         let stdin = child.stdin.take();
         let mut server = Self {
             child: Some(child),

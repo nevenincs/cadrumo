@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:82b263e29462e22f8fda5344ac855e6f48c746bf5b89c7453f05dacd50e7c19c'
+body_hash: 'sha256:8062d85f1a75d7e4019b3e8dce068811fbb710c323d5623e8112c8515f51e74c'
 ---
 
 # `rust-component-provisioning` plan
@@ -75,7 +75,7 @@ The single binary gains the components role; the desktop calls the engine in pro
 - [ ] `P04.S13` - Make the TUI setup screen and the MCP service clients of the same role, with MCP approval bound to the plan digest and progress relayed as notifications; `src/cadrumo/entrypoints/tui/setup/, src/cadrumo_mcp/ and tests`.
 - [x] `P04.S17` - Have the runtime manager supervise the engine's local AI server on one fixed Cadrumo loopback address declared in the canonical environment definition: start it while the local AI is set up, restart it after a crash, stop it on exit, at session end and before the engine replaces or removes the program, contain it, and record the address in the local AI component record; `native/manager/src/supervision/, native/application/src/provisioning/local_ai/, native/application-environment.toml, src/cadrumo/core/config_runtime_fields.py (default derived from the declaration) and tests`.
 - [ ] `P04.S19` - Let the components role adopt browser builds already installed without downloading, then point the Python launch guard at the Rust component record, with test support writing the engine's fixture record into each test storage root; `native/application/src/provisioning/browser.rs, src/cadrumo/application/provisioning_browser.py (locate only), src/cadrumo/adapters/outbound/aeat/browser/session.py, the real-browser test support and conftest, and tests`.
-- [ ] `P04.S21` - Contain the manager's local AI server on Linux and macOS as the Windows job does, so a crashed or killed manager leaves no server behind; `native/manager/src/supervision/local_ai.rs, native/platform process scope and tests`.
+- [x] `P04.S21` - Contain the manager's local AI server on Linux and macOS as the Windows job does, so a crashed or killed manager leaves no server behind; `native/manager/src/supervision/local_ai.rs, native/platform process scope and tests`.
 
 ### Phase `P05` - Removal and gates
 

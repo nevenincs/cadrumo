@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:678c094296f36e83fecb75cc3332d5f40bdb8d05abae39016ff5349792d621f2'
+body_hash: 'sha256:6cafa954f29caccdedc349581e280165c07e2cba4bf88e744cac9ed72b5504fc'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -357,6 +357,24 @@ related:
 - `S18` `verify:` `rustfmt --edition 2024 through stdin, byte-compared on the six Rust files` -> `pass`
 - `S18` `verify:` `pytest -m '' src/cadrumo/core/tests/test_component_records.py (19), ruff check, ruff format --check, ty check` -> `pass`
 - `S18` `by:` `implementation-engineer-high`
+- `S21` `A` `native/platform/src/process_scope.rs`
+- `S21` `M` `native/platform/src/lib.rs`
+- `S21` `M` `native/manager/src/supervision/local_ai.rs`
+- `S21` `M` `native/application/src/provisioning/local_ai/program.rs`
+- `S21` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S21` `A` `native/application/src/process/group.rs`
+- `S21` `M` `native/application/src/process/mod.rs`
+- `S21` `M` `native/application/src/provisioning/browser/launch.rs`
+- `S21` `M` `native/application/src/provisioning/local_ai/hardware.rs`
+- `S21` `M` `native/desktop/src-tauri/src/role.rs`
+- `S21` `M` `native/CONTRACT.md`
+- `S21` `verify:` `Windows: cargo clippy --all-targets -D warnings on platform, application, application --features platform, manager, manager --features fixture-test-mode` -> `pass`
+- `S21` `verify:` `Windows: cargo test platform (74), application --lib (167), application --lib --features platform (211, 1 ignored), manager --lib (145, 1 ignored), manager --features fixture-test-mode --test supervision (42)` -> `pass`
+- `S21` `verify:` `WSL Linux: cargo clippy --locked --all-targets -D warnings on platform, application, application --features platform` -> `pass`
+- `S21` `verify:` `WSL Linux: cargo test --locked process_scope and volume (6), application --lib --features platform browser::launch, the new program group tests and hardware (12), manager --lib (113, incl. the 3 new containment tests)` -> `pass`
+- `S21` `verify:` `WSL Linux: mutation checks: a guardian that does not kill, and a browser not created into the scope, each hang the kill tests (timeout 124)` -> `pass`
+- `S21` `verify:` `rustfmt --edition 2024 --check on the touched Rust files` -> `pass`
+- `S21` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -396,3 +414,6 @@ related:
 - `S18` S18 link inventory of every pinned browser archive, read by range request: only the mac-x64 and mac-arm64 Chromium zips carry links, 5 each, all inside the build (Versions/Current -> 156.0.8078.4 and Resources, Libraries, Helpers and the framework binary through it), with three listed before Versions/Current; Linux and Windows archives carry none
 - `S18` S18 the component store keeps hard links of files on every platform (its own check refuses any link on disk, and the local AI archives need only file links); hard links create no pointer that can later be retargeted, so symbolic links are not strictly safer there; the browser uses symbolic links on Unix because macOS framework bundles need Versions/Current as a link, and on Windows places file links as hard links and refuses folder links
 - `S18` S18 receipts gain an optional links list (path and target), omitted when empty so linkless receipts and both record fixtures are unchanged; the Python record reader accepts it
+- `S21` S21 POSIX containment is a guardian /bin/sh in a process group of its own that kills that group when its stdin lifeline from the owner ends; the manager's server and the components role's browser checks and hardware queries are created into the group; descendants that leave the group, and a killed guardian, are not covered
+- `S21` S21 pre-existing on WSL Linux, unrelated to this Step: manager clippy fails on dead code in startup.rs and successor.rs (passes with -A `dead_code` on the command line); four platform launch-profile tests and the application `local_ai` record-fixture test fail because the Linux contract cannot be generated (stale Linux desktop dependency evidence) and the fixture is Windows-derived
+- `S21` S21 the desktop binary is not compiled on Linux here: its build needs the CMake-generated tauri configuration; macOS code paths are not compiled: no macOS Rust target is installed on this host
