@@ -1700,6 +1700,11 @@ export type ReaderRole = {
   fit_for_role?: boolean | null;
   ready: boolean;
   failed_condition_id?: string | null;
+  /** The operator action the reader check named for `failed_condition_id`,
+   * such as the local AI setup for a runtime that does not answer or a
+   * model that is not installed; absent where setup cannot change what is
+   * missing. An identifier for routing, never shown. */
+  recovery_action_id?: string | null;
 };
 /** What can read documents on this computer. */
 export type ReaderReadinessResult = {

@@ -24,9 +24,13 @@ const setupDialog = (target: Page) =>
   target.getByRole("dialog", { name: label("desktop.setup.title") });
 const prompt = (target: Page) => target.getByRole("dialog", { name: LOCAL_AI });
 
-async function openDocuments(target: Page, setup: string | null) {
+async function openDocuments(
+  target: Page,
+  setup: string | null,
+  ledger = "reader_missing",
+) {
   await target.goto(
-    `/scenarios.html?scenario=ledger&latency=0&bar=off&ledger=reader_missing${
+    `/scenarios.html?scenario=ledger&latency=0&bar=off&ledger=${ledger}${
       setup ? `&setup=${setup}` : ""
     }`,
   );
@@ -144,6 +148,22 @@ test("where setup cannot change what is missing, nothing is offered", async ({
   await tab(target, "readers").click();
   await expect(section(target).locator(".ledger-reader-role")).toHaveCount(2);
   await expect(section(target).locator(".setup-offer")).toHaveCount(0);
+});
+
+test("a reader held back by memory offers no setup, though the local AI is not set up", async ({
+  page: target,
+}) => {
+  // The vision role is not ready because this computer lacks the memory to
+  // load it now; its row names no setup, so none is offered even while the
+  // local AI's setup is unfinished.
+  await openDocuments(target, "fresh", "documents");
+  await tab(target, "readers").click();
+  const readers = section(target).locator(".ledger-readers");
+  await expect(readers.locator(".ledger-reader-role")).toHaveCount(2);
+  await expect(readers.locator(".ledger-reader-role").nth(1)).toContainText(
+    label("desktop.ledger.documents.reader.not_ready"),
+  );
+  await expect(readers.locator(".setup-offer")).toHaveCount(0);
 });
 
 test("a window that offers no setup offers nothing and opens nothing", async ({

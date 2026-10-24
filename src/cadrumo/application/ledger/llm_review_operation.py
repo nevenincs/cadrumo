@@ -169,6 +169,11 @@ def build_ledger_llm_review_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+        # A reader refusal's verdict names the local AI setup that lets the
+        # suggestion run; a frontend in another process learns it only from the
+        # recorded detail. Its context is the scrubbed envelope context, which
+        # names records, never transaction text or amounts.
+        public_error_detail=True,
     )
 
 

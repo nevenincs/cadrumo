@@ -10,10 +10,7 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  LOCAL_AI_SETUP_ACTION,
-  provisionActionOf,
-} from "../../../shell/provisioningRecovery";
+import { provisionActionOf } from "../../../shell/provisioningRecovery";
 import type {
   AttachmentReviewItem,
   EvidenceConsentListResult,
@@ -590,10 +587,17 @@ export function ReaderReadiness({
     return <Failed t={t} read={read} onRetry={onRetry} />;
   if (!read.value) return <Reading t={t} />;
   const ready = read.value;
-  // A reader that is not ready offers the local AI's setup, where setup
-  // can change what it lacks.
-  const lacking =
-    !ready.host.available || ready.roles.some((role) => !role.ready);
+  // Each role that is not ready says which setup, if any, supplies what it
+  // lacks; a role held back by memory or this computer's hardware names
+  // none. One offer per distinct setup.
+  const setups = [
+    ...new Set(
+      ready.roles
+        .filter((role) => !role.ready)
+        .map((role) => provisionActionOf(role.recovery_action_id))
+        .filter((action): action is string => action !== null),
+    ),
+  ];
   const line = (ok: boolean, label: string, detail: string) => (
     <li className="flex items-start gap-2 border-b border-border py-2">
       <Icon
@@ -607,12 +611,13 @@ export function ReaderReadiness({
   );
   return (
     <div className="ledger-readers grid gap-3 p-3">
-      {lacking && (
+      {setups.map((action) => (
         <SetupOffer
-          action={LOCAL_AI_SETUP_ACTION}
+          key={action}
+          action={action}
           className="ledger-readers-set-up justify-self-start"
         />
-      )}
+      ))}
       <ul aria-label={t("desktop.ledger.documents.tab.readers")}>
         {line(
           ready.extraction_ready,

@@ -1327,6 +1327,8 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
           fit_for_role: null,
           ready: false,
           failed_condition_id: "inference.load_headroom",
+          // Memory headroom is not something setup supplies.
+          recovery_action_id: null,
         },
       ],
       last_pull: {
@@ -1356,6 +1358,8 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       fit_for_role: null,
       ready: false,
       failed_condition_id: RUNTIME_REACHABLE,
+      // The probe names the local AI setup for a runtime that does not answer.
+      recovery_action_id: LOCAL_AI_SETUP,
     });
     return {
       profile_id: profileId,

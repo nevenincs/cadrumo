@@ -116,10 +116,35 @@ _UNSATISFIABLE_MARGIN_BYTES = 1 << 60
 
 @contextmanager
 def _recording_runtime() -> Generator[tuple[str, list[str]]]:
-    """Serve a runtime that answers the fill and records every request that reaches it."""
+    """Serve a runtime that answers the fill and records every read that reaches it.
+
+    It holds both text models these cases configure -- the catalogued default
+    admission control assesses and the uncatalogued one it does not -- so the
+    reader check before the fill finds the model installed, as on a set-up
+    computer, and each case meets only the condition it is about. It answers
+    its version, inventory and resident set as a real runtime does: the reader
+    check and admission control both ask, and an unanswered question marks the
+    whole runtime unreachable for later reads. Those requests are answered but
+    not recorded, because they load nothing.
+    """
     arrivals: list[str] = []
+    installed = (load_settings().cadrumo_llm_ollama_text_model, _UNASSESSED_MODEL)
 
     class _Runtime(SilentLoopbackHandler):
+        @override
+        def do_GET(self) -> None:
+            if self.path == "/api/version":
+                write_json_response(self, {"version": "0.9.0"}, status=HTTPStatus.OK)
+            elif self.path == "/api/tags":
+                write_json_response(
+                    self, {"models": [{"name": name, "size": 1} for name in installed]}, status=HTTPStatus.OK
+                )
+            elif self.path == "/api/ps":
+                # Nothing is loaded yet.
+                write_json_response(self, {"models": []}, status=HTTPStatus.OK)
+            else:
+                self.send_error(HTTPStatus.NOT_FOUND)
+
         @override
         def do_POST(self) -> None:
             read_json_body(self)
@@ -324,7 +349,9 @@ def test_an_unreachable_runtime_leaves_the_label_reading_standing_with_a_warning
     assert notice["severity"] == "warning"
     assert notice["context"]["reason"] == "reader_unavailable"
     assert notice["context"]["unread_fields"] == "supplier_name"
-    assert "failed_condition_id" not in notice["context"]
+    # The reader check found the runtime silent before any read was attempted,
+    # and the notice names that condition, which the local AI setup supplies.
+    assert notice["context"]["failed_condition_id"] == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
 
 
 def test_a_headroom_refusal_of_the_whole_read_is_unchanged(tmp_path: Path) -> None:
@@ -543,6 +570,8 @@ def test_a_batch_item_degraded_by_a_busy_fill_is_stored_and_reported_with_its_re
         "unread_fields": ["supplier_name"],
         "reader_error_type": "LLMBusyError",
         "failed_condition_id": _SLOT_AVAILABLE,
+        # An occupied slot frees itself; there is no setup to offer.
+        "recovery_action_id": None,
     }
     assert rows[_STRUCTURED]["label_reading_fallback"] is None
     (degraded,) = [notice for notice in first["notices"] if notice["code"] == _BATCH_LABEL_READING_DEGRADED]
