@@ -9,7 +9,7 @@ related:
   - '[[2026-10-24-rust-component-provisioning-reference]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:9022f5f02602dc19e63838e431a8dbdb56a4920328a4171069d2360285f95d35'
+body_hash: 'sha256:fb8ea710634d94cfd6469ca81af21ba6dc9ef2168bf4bee4b4992fcded96d93e'
 ---
 
 # `component-on-demand` plan
@@ -18,7 +18,7 @@ When a feature needs the browser or the local AI and it is not ready, every surf
 
 ## Description
 
-Draft, awaiting the owner's approval. No Step runs before that.
+Approved 2026-10-24. Basis: the owner's reply "all approved, implemnet" to the presented plans and `2026-10-24-rust-component-provisioning-adr`.
 
 The owner requires the application to be on demand: calling a feature that needs a provisioned component must show the person that the component is needed. `2026-10-24-rust-component-provisioning-reference` verified the state on 2026-10-24.
 
@@ -31,7 +31,7 @@ The work is independent of the proposed `2026-10-24-rust-component-provisioning-
 
 ## Steps
 
-- [ ] `S01` - Name operator.provision.local_ai in the reader probe verdicts for runtime unreachable, no model selected and role model not installed; `src/cadrumo/application/local_reader.py, src/cadrumo/application/provisioning_contracts.py and tests`.
+- [x] `S01` - Name operator.provision.local_ai in the reader probe verdicts for runtime unreachable and role model not installed; a role the catalogue cannot serve on this hardware keeps its no-action verdict; `src/cadrumo/application/local_reader.py, src/cadrumo/application/provisioning_contracts.py and tests`.
 - [ ] `S02` - Check the role's reader before the first effect in evidence draft extraction and ledger classification, refusing with that verdict instead of a generic classifier error; `src/cadrumo/application/ledger/invoice_draft_extraction.py, src/cadrumo/entrypoints/ledger_llm_composition.py, src/cadrumo/application/ledger/batch_ingest.py and tests`.
 - [ ] `S03` - Turn a missing column-mapping or supply-nature model into a typed advisory naming the local AI item instead of a silent decline; `src/cadrumo/adapters/outbound/llm/column_role_mapping.py, src/cadrumo/application/ledger/column_roles.py, src/cadrumo/adapters/outbound/llm/supply_nature_proposal.py and tests`.
 - [ ] `S04` - Check the browser item at the start of every tax agency read and sign-in operation, before any certificate or secret loads; `src/cadrumo/adapters/outbound/aeat/browser/session.py, src/cadrumo/adapters/outbound/aeat/browser/factory.py, the live capture operation preflights under src/cadrumo/application/live/ and tests`.

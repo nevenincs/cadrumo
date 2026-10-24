@@ -31,10 +31,12 @@ from ..core.time.clock import now
 from .operator_actions.models import PreconditionVerdict
 from .provisioning import DependencyStatus, ModelSelection, select_model_for_role
 from .provisioning_contracts import (
+    LOCAL_AI_PROVISION_ACTION_ID,
     ProvisioningFactValue,
     ProvisioningOutcome,
     ProvisioningPreconditionCondition,
     provisioning_no_recovery_verdict,
+    provisioning_setup_verdict,
     require_provisioning_verdict,
 )
 from .provisioning_fitness import (
@@ -432,6 +434,9 @@ def probe_local_reader(
     role, so a missing vision model never stops text-layer reads and a missing
     text model is not hidden behind an installed vision model.
 
+    Both refusals name the local AI setup; a role the catalogue cannot serve
+    on this computer names none, because setup cannot change the hardware.
+
     Args:
         role: The reader role a document needs.
         settings: Settings carrying the endpoint and role models.
@@ -454,8 +459,8 @@ def probe_local_reader(
             service=service,
             available=False,
             facts=facts,
-            precondition_verdict=provisioning_no_recovery_verdict(
-                ProvisioningPreconditionCondition.RUNTIME_REACHABLE, facts=facts
+            precondition_verdict=provisioning_setup_verdict(
+                ProvisioningPreconditionCondition.RUNTIME_REACHABLE, facts=facts, action_id=LOCAL_AI_PROVISION_ACTION_ID
             ),
         )
     if model is None:
@@ -474,8 +479,10 @@ def probe_local_reader(
             service=service,
             available=False,
             facts=facts,
-            precondition_verdict=provisioning_no_recovery_verdict(
-                ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED, facts=facts
+            precondition_verdict=provisioning_setup_verdict(
+                ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+                facts=facts,
+                action_id=LOCAL_AI_PROVISION_ACTION_ID,
             ),
         )
     return DependencyStatus(

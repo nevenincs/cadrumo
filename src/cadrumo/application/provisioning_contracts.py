@@ -8,10 +8,11 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from ..core.models import STRICT_FROZEN_CONFIG
-from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from .operator_actions.models import PreconditionVerdict
+from ..core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .operator_actions.models import ActionReference, ConditionEvidence, PreconditionVerdict
 
 __all__ = [
+    "LOCAL_AI_PROVISION_ACTION_ID",
     "OLLAMA_INSTALL_TIMEOUT_S",
     "OLLAMA_LOAD_KEEP_ALIVE",
     "OLLAMA_PROBE_CACHE_TTL_S",
@@ -25,8 +26,12 @@ __all__ = [
     "ProvisioningOutcome",
     "ProvisioningPreconditionCondition",
     "provisioning_no_recovery_verdict",
+    "provisioning_setup_verdict",
     "require_provisioning_verdict",
 ]
+
+LOCAL_AI_PROVISION_ACTION_ID = "operator.provision.local_ai"
+"""The operator action that sets up the local AI program and every role's model."""
 
 OLLAMA_PROBE_TIMEOUT_S = 2.0
 
@@ -133,6 +138,28 @@ def provisioning_no_recovery_verdict(
         facts=facts,
         provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+
+
+def provisioning_setup_verdict(
+    condition: ProvisioningPreconditionCondition,
+    *,
+    facts: Mapping[str, ProvisioningFactValue],
+    action_id: str,
+) -> PreconditionVerdict:
+    """Return the refusal for a component that setup can supply, recovered by ``action_id``."""
+    return PreconditionVerdict(
+        failed_condition_id=condition.value,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition.value,
+                evidence_id=f"{condition.value}.observation",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values=facts,
+            ),
+        ),
+        action=ActionReference(action_id=action_id),
+        conditionality=ActionConditionality.IMMEDIATE,
     )
 
 

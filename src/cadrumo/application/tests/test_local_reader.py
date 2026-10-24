@@ -27,7 +27,11 @@ from ..local_reader import (
     role_model_targets,
     verify_role_target,
 )
-from ..provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
+from ..provisioning_contracts import (
+    LOCAL_AI_PROVISION_ACTION_ID,
+    ProvisioningPreconditionCondition,
+    provisioning_no_recovery_verdict,
+)
 from ..provisioning_runtime import InstalledModel, runtime_model_names_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -146,6 +150,8 @@ def test_probe_refuses_an_unreachable_runtime() -> None:
     assert status.service == "local-reader:text_extraction"
     assert status.precondition_verdict is not None
     assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE
+    assert status.precondition_verdict.action is not None
+    assert status.precondition_verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
 
 
 def test_probe_is_per_role_so_one_missing_model_does_not_close_the_other() -> None:
@@ -157,6 +163,18 @@ def test_probe_is_per_role_so_one_missing_model_does_not_close_the_other() -> No
     assert vision.available is False
     assert vision.precondition_verdict is not None
     assert vision.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED
+    assert vision.precondition_verdict.action is not None
+    assert vision.precondition_verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+
+
+def test_a_role_the_catalogue_cannot_serve_offers_no_setup() -> None:
+    """Setup cannot change the hardware, so the refusal names no action."""
+    with _runtime(installed=[_TEXT]), override_settings(cadrumo_llm_ollama_num_ctx=1_000_000):
+        status = probe_local_reader(ModelRole.SUPPLY_NATURE_PROPOSAL)
+    assert status.available is False
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE
+    assert status.precondition_verdict.action is None
 
 
 def test_a_different_size_of_the_same_family_does_not_satisfy_the_probe() -> None:
