@@ -299,6 +299,7 @@ function movementColumns(
         ? { grow: spec.grow }
         : {}),
       ...(spec.sticky ? { sticky: spec.sticky } : {}),
+      ...(spec.yields ? { yields: true } : {}),
       ...(spec.align ? { align: spec.align } : {}),
       sortable: spec.sortable && context.sortable(column),
       resizable: column !== "select",

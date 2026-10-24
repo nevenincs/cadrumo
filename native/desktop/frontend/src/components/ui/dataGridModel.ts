@@ -11,6 +11,10 @@ export type ColumnMeasure = {
   /** A share of the room left over once every column has its width. */
   grow?: number;
   sticky?: "start" | "end";
+  /** A start column that stops being pinned, and scrolls with the rest,
+   * where pinning it would leave the scrolling columns too narrow a band to
+   * show the widest of them whole. */
+  yields?: boolean;
 };
 
 /** Where a column is drawn, in pixels from the inline start of the row. */
@@ -52,7 +56,10 @@ export function displayOrder<C extends { sticky?: "start" | "end" }>(
 /**
  * Lays columns out at `remPx` pixels to the rem across `available` pixels.
  * Growing columns share what is left over by their `grow`; nothing shrinks
- * below its width, so a narrow viewport scrolls instead.
+ * below its width, so a narrow viewport scrolls instead. Where it scrolls,
+ * the pinned groups leave a band for the rest; a yielding start column at
+ * the group's inner edge is unpinned while that band is narrower than the
+ * widest scrolling column, so any one of them can be shown whole.
  */
 export function columnLayout(
   columns: readonly ColumnMeasure[],
@@ -78,6 +85,27 @@ export function columnLayout(
     boxes.push({ id: column.id, left, width, sticky: column.sticky, inset: 0 });
     left += width;
   });
+  if (left > available) {
+    const cover = (edge: "start" | "end") =>
+      boxes.reduce(
+        (sum, box) => sum + (box.sticky === edge ? box.width : 0),
+        0,
+      );
+    const widest = () =>
+      boxes.reduce(
+        (most, box) => (box.sticky ? most : Math.max(most, box.width)),
+        0,
+      );
+    // The start group's inner edge is its last box; unpinning it keeps
+    // every column where it was drawn.
+    for (let at = ordered.length - 1; at >= 0; at -= 1) {
+      const box = boxes[at];
+      if (box?.sticky !== "start") continue;
+      if (available - cover("start") - cover("end") >= widest()) break;
+      if (!ordered[at]?.yields) break;
+      box.sticky = undefined;
+    }
+  }
   let startCover = 0;
   for (const box of boxes) {
     if (box.sticky !== "start") continue;

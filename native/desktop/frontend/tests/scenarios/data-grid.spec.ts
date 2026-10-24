@@ -258,9 +258,11 @@ test("rows are selected by Space, Shift+Space, Ctrl+A and the pointer", async ({
   await expect(row(2)).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("ArrowDown");
+  // Shift+Space selects the active row alone, as a spreadsheet does.
   await page.keyboard.press("Shift+Space");
-  for (const index of [2, 3, 4])
-    await expect(row(index)).toHaveAttribute("aria-selected", "true");
+  await expect(row(4)).toHaveAttribute("aria-selected", "true");
+  for (const index of [2, 3])
+    await expect(row(index)).toHaveAttribute("aria-selected", "false");
   await page.keyboard.press(`${primary}+a`);
   expect(await events(page)).toContain("select all 40");
   await row(6).locator('[data-column="counterparty"]').click();
@@ -278,7 +280,6 @@ test("rows are selected by Space, Shift+Space, Ctrl+A and the pointer", async ({
   await expect(row(6)).toHaveAttribute("aria-selected", "true");
   const log = await events(page);
   expect(log).toContain("select toggle 1");
-  expect(log).toContain("select range 3");
   expect(log).toContain("select select 1");
 });
 
@@ -305,6 +306,35 @@ test("after Shift+Space, Shift with an arrow extends the row selection", async (
   await expect(row(6)).toHaveAttribute("aria-selected", "false");
   for (const index of [2, 3, 4])
     await expect(row(index)).toHaveAttribute("aria-selected", "true");
+});
+
+test("after moving away from the anchor, Shift+Space and Shift+arrows select what the range draws", async ({
+  page,
+}) => {
+  await open(page);
+  await enter(page);
+  const row = (index: number) =>
+    grid(page).locator(`[aria-rowindex="${index}"]`);
+  await page.keyboard.press("Space");
+  for (let step = 0; step < 5; step += 1)
+    await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Shift+Space");
+  await page.keyboard.press("Shift+ArrowDown");
+  await page.keyboard.press("Shift+ArrowDown");
+  // The rows the range covers are the rows selected, and no others.
+  const ranged = await grid(page)
+    .locator("[role=row]:has([data-in-range])")
+    .evaluateAll((rows) =>
+      rows.map((row) => row.getAttribute("aria-rowindex")),
+    );
+  const selected = await grid(page)
+    .locator("[role=row][aria-selected=true]")
+    .evaluateAll((rows) =>
+      rows.map((row) => row.getAttribute("aria-rowindex")),
+    );
+  expect(ranged).toEqual(["7", "8", "9"]);
+  expect(selected).toEqual(ranged);
+  await expect(row(2)).toHaveAttribute("aria-selected", "false");
 });
 
 test("a range is drawn, copied, filled and offered to the menu", async ({

@@ -1,4 +1,11 @@
-import { useRef, type KeyboardEvent, type ReactNode, type Ref } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type Ref,
+} from "react";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import {
   SegmentedControl,
@@ -22,12 +29,30 @@ const MAX_SHARE = 0.6;
 const remPx = () =>
   parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
 
+/** The width the panel is drawn at, in CSS pixels: the person's, or the
+ * token's, narrowed toward its least where the row would otherwise leave the
+ * grid less than its own. Null keeps the token's width. */
+export function fittedPanelWidth(
+  width: number | null,
+  room: number | null,
+  rem: number,
+): number | null {
+  const wanted = width ?? DEFAULT_REM * rem;
+  if (room === null) return width;
+  const fitted = Math.max(
+    MIN_REM * rem,
+    Math.min(wanted, room - GRID_MIN_REM * rem),
+  );
+  return fitted === wanted ? width : Math.round(fitted);
+}
+
 /**
  * The one panel beside the ledger's grid, in two modes: "To match" and
  * "Movement", so only one side panel is ever open. It is resized by its
  * separator, with a pointer or the arrow keys, between its least width and
  * what leaves the grid its own; the width is the person's presentation,
- * kept with the layout.
+ * kept with the layout. Where the row is short it opens narrower, down to
+ * its least, so the grid keeps its own width as far as it can.
  */
 export function RightPanel({
   mode,
@@ -53,6 +78,25 @@ export function RightPanel({
 }) {
   const t = useStrings();
   const aside = useRef<HTMLElement | null>(null);
+  // What the row leaves the grid and the panel: its width less the
+  // separator's.
+  const [room, setRoom] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const element = aside.current;
+    const row = element?.parentElement;
+    if (!element || !row) return;
+    const measure = () => {
+      const separator = element.previousElementSibling;
+      setRoom(
+        row.clientWidth -
+          (separator instanceof HTMLElement ? separator.offsetWidth : 0),
+      );
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(row);
+    measure();
+    return () => observer.disconnect();
+  }, []);
   const limits = () => {
     const rem = remPx();
     const row = aside.current?.parentElement?.clientWidth ?? window.innerWidth;
@@ -75,7 +119,8 @@ export function RightPanel({
   const rem = remPx();
   const least = MIN_REM * rem;
   const most = Math.max(least, window.innerWidth * MAX_SHARE);
-  const drawn = width ?? DEFAULT_REM * rem;
+  const fitted = fittedPanelWidth(width, room, rem);
+  const drawn = fitted ?? DEFAULT_REM * rem;
   const value = Math.max(
     0,
     Math.min(100, ((drawn - least) / (most - least || 1)) * 100),
@@ -114,7 +159,7 @@ export function RightPanel({
         }
         data-mode={shown}
         className="ledger-panel flex min-h-0 w-inspector min-w-inspector-min shrink-0 flex-col bg-background"
-        style={width === null ? undefined : { width: `${width}px` }}
+        style={fitted === null ? undefined : { width: `${fitted}px` }}
         onKeyDown={onKeyDown}
       >
         {matchPanel !== undefined && (

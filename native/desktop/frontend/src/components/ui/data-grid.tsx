@@ -72,6 +72,9 @@ type GridColumn<R> = {
   grow?: number;
   /** Pinned at an inline edge while the rest scrolls. */
   sticky?: "start" | "end";
+  /** A start column that scrolls with the rest where pinning it would leave
+   * too narrow a band to show a scrolling cell whole. */
+  yields?: boolean;
   /** `end` for figures, which also take tabular numerals. */
   align?: "start" | "end";
   sortable?: boolean;
@@ -244,7 +247,15 @@ const TextTipContext = React.createContext<TextTips>({
   hide: () => undefined,
 });
 
-function GridTextTip({ children }: { children: React.ReactNode }) {
+function GridTextTip({
+  clearRef,
+  children,
+}: {
+  /** Takes the tip away without dismissing it, as when the grid scrolls
+   * and the box it was laid over moves. */
+  clearRef: React.RefObject<(() => void) | null>;
+  children: React.ReactNode;
+}) {
   const [tip, setTip] = React.useState<{
     element: HTMLElement;
     text: string;
@@ -264,6 +275,7 @@ function GridTextTip({ children }: { children: React.ReactNode }) {
     }),
     [],
   );
+  React.useImperativeHandle(clearRef, () => () => setTip(null), []);
   const box = tip?.element.getBoundingClientRect();
   return (
     <TextTipContext.Provider value={tips}>
@@ -493,7 +505,10 @@ function DataGrid<R>({
   }, [readMetrics, syncView]);
 
   const frame = React.useRef(0);
+  // The tooltip for cut-short text is laid over its cell where it opened.
+  const clearTip = React.useRef<(() => void) | null>(null);
   const onScroll = () => {
+    clearTip.current?.();
     cancelAnimationFrame(frame.current);
     frame.current = requestAnimationFrame(syncView);
   };
@@ -1105,8 +1120,11 @@ function DataGrid<R>({
     if (key === " " && row.kind === "data" && selection) {
       if (exactly(event)) pickRow(row.key, { toggle: true });
       else if (exactly(event, { shift: true })) {
-        pickRow(row.key, { range: true });
-        selectionAnchor.current ??= row.key;
+        // As a spreadsheet does: the active row alone, which row mode then
+        // extends from, so the range and the selection grow together.
+        selectionAnchor.current = row.key;
+        setAnchor(null);
+        changeSelection(selectOnly(row.key), "select");
         rowMode.current = true;
       } else return false;
       return true;
@@ -1322,10 +1340,12 @@ function DataGrid<R>({
   // ── Drawing ───────────────────────────────────────────────────────────
   // Where columns scroll under a pinned group, the group's inner edge shows,
   // so nothing seems to begin mid-word.
-  const lastStart = ordered
-    .filter((column) => column.sticky === "start")
+  // Pinned as laid out: a yielding column may scroll in a narrow grid.
+  const pinned = (id: string) => layout.byId.get(id)?.sticky;
+  const lastStart = layout.boxes
+    .filter((placed) => placed.sticky === "start")
     .at(-1)?.id;
-  const firstEnd = ordered.find((column) => column.sticky === "end")?.id;
+  const firstEnd = layout.boxes.find((placed) => placed.sticky === "end")?.id;
   const pinnedEdge = (id: string) =>
     cn(
       id === lastStart && view.left > 0 && "border-e border-border",
@@ -1423,7 +1443,7 @@ function DataGrid<R>({
                 column.sortable &&
                   onSort &&
                   "cursor-pointer hover:text-foreground",
-                column.sticky &&
+                pinned(column.id) &&
                   "sticky z-(--layer-grid-head-sticky) bg-background",
                 pinnedEdge(column.id),
                 "data-[drop]:shadow-[inset_var(--selection-edge)_0_0_0_var(--ring)] forced-colors:data-[drop]:outline-[Highlight] forced-colors:data-[drop]:outline-solid",
@@ -1580,7 +1600,7 @@ function DataGrid<R>({
                   CELL,
                   position === 0 && LEADING_EDGE,
                   column.align === "end" && "justify-end text-end tabular-nums",
-                  column.sticky && STICKY_CELL,
+                  pinned(column.id) && STICKY_CELL,
                   pinnedEdge(column.id),
                 )}
                 style={{
@@ -1759,7 +1779,7 @@ function DataGrid<R>({
 
   return (
     <GridSelectionContext.Provider value={selectionContext}>
-      <GridTextTip>
+      <GridTextTip clearRef={clearTip}>
         <div
           data-slot="data-grid"
           data-density={density}

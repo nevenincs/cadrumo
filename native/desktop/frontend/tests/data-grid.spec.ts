@@ -166,6 +166,45 @@ test("sticky columns know how far from their edge they stick", () => {
   expect(layout.byId.get("body")?.left).toBe(70);
 });
 
+test("a yielding pinned column scrolls where pinning it leaves no band for the widest scrolling column", () => {
+  const columns = [
+    { id: "select", width: 2, sticky: "start" as const },
+    { id: "date", width: 4, sticky: "start" as const },
+    {
+      id: "description",
+      width: 12,
+      grow: 2,
+      sticky: "start" as const,
+      yields: true,
+    },
+    { id: "party", width: 9 },
+    { id: "classification", width: 8 },
+    { id: "amount", width: 6, sticky: "end" as const },
+  ];
+  // Pinned: 18 rem at the start and 6 at the end, 384 px. At 560 px that
+  // leaves a 176-px band, room for the widest scrolling column, 144 px.
+  const roomy = columnLayout(columns, 16, 560);
+  expect(roomy.byId.get("description")?.sticky).toBe("start");
+  expect(roomy.startCover).toBe(18 * 16);
+  // At 500 px the band is 116, under the party's 144: Description scrolls,
+  // where it was drawn, and the band grows to 308.
+  const narrow = columnLayout(columns, 16, 500);
+  expect(narrow.byId.get("description")?.sticky).toBeUndefined();
+  expect(narrow.byId.get("description")?.left).toBe(6 * 16);
+  expect(narrow.startCover).toBe(6 * 16);
+  expect(narrow.byId.get("date")?.sticky).toBe("start");
+  // A column that does not yield stays pinned however narrow the grid.
+  const fixed = columnLayout(
+    columns.map((column) => ({ ...column, yields: false })),
+    16,
+    500,
+  );
+  expect(fixed.byId.get("description")?.sticky).toBe("start");
+  // Where nothing scrolls, nothing needs a band.
+  const wide = columnLayout(columns, 16, 2000);
+  expect(wide.byId.get("description")?.sticky).toBe("start");
+});
+
 test("row selection: one alone, one toggled, a span from the anchor, or all", () => {
   const order = ["a", "b", "c", "d", "e"];
   expect([...selectOnly("c")]).toEqual(["c"]);

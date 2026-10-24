@@ -761,6 +761,51 @@ test("while readiness is not measured, neither inspector draws a reviewed moveme
   await expect(statuses.first()).toHaveText(/2/);
 });
 
+test("at 1280 with the agent open, the inspector opens narrower so the grid keeps 40rem, and a revealed cell is shown whole", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1280, height: 800 });
+  await openLedger(target);
+  await expect(target.locator("[data-rail=agent]")).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await inspect(target, "PAPELERIA TRAZO");
+  const rem = await target.evaluate(() =>
+    parseFloat(getComputedStyle(document.documentElement).fontSize),
+  );
+  const panelBox = (await panel(target).boundingBox())!;
+  expect(panelBox.width).toBeGreaterThanOrEqual(17.5 * rem - 0.5);
+  expect(panelBox.width).toBeLessThan(20 * rem);
+  // The grid's column of the row keeps its own 40rem.
+  const column = (await grid(target)
+    .locator("xpath=ancestor::*[@data-slot='data-grid']/..")
+    .boundingBox())!;
+  expect(column.width).toBeGreaterThanOrEqual(40 * rem - 1);
+  // Moving to Classification shows the whole cell between the pinned
+  // groups: Description scrolls rather than covering it.
+  const row = rowOf(target, "PAPELERIA TRAZO");
+  await cellOf(row, "description").click();
+  for (let step = 0; step < 3; step += 1)
+    await target.keyboard.press("ArrowRight");
+  const classification = cellOf(row, "classification");
+  await expect(classification).toBeFocused();
+  const cell = (await classification.boundingBox())!;
+  const date = (await cellOf(row, "date").boundingBox())!;
+  const amount = (await cellOf(row, "amount").boundingBox())!;
+  expect(cell.x).toBeGreaterThanOrEqual(date.x + date.width - 1);
+  expect(cell.x + cell.width).toBeLessThanOrEqual(amount.x + 1);
+  const covering = await target.evaluate(
+    ([x, y]) =>
+      document
+        .elementFromPoint(x!, y!)
+        ?.closest("[data-column]")
+        ?.getAttribute("data-column"),
+    [cell.x + 4, cell.y + cell.height / 2],
+  );
+  expect(covering).toBe("classification");
+});
+
 test("the inspector is resized by its separator within its limits", async ({
   page: target,
 }) => {
