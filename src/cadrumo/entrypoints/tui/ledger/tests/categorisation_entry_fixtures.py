@@ -150,7 +150,9 @@ class MemoryLedger:
         return LedgerListProjection(
             profile_id=request.profile_id,
             rows=tuple(
-                LedgerTransactionReviewProjection(transaction=row, review_status=self._status(row), group_label=None)
+                LedgerTransactionReviewProjection(
+                    transaction=row, review_status=self._status(row), group_label=None, own_account_id=None
+                )
                 for row in window
             ),
             total=len(rows),

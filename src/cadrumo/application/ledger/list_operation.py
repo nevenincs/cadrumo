@@ -10,6 +10,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.transactions.models import Transaction
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import OperationRequest
@@ -28,6 +29,17 @@ from .read_access import resolve_ledger_read_access
 from .read_ports import LedgerReadPortsFactory
 from .review_projection import ledger_transaction_review_status
 from .transaction_projection import LedgerTransactionProjection, LedgerTransactionReviewProjection
+
+
+def ledger_list_row(transaction: Transaction) -> LedgerTransactionReviewProjection:
+    """One listed row: the canonical payload plus the list's own facts."""
+    return LedgerTransactionReviewProjection(
+        transaction=LedgerTransactionProjection.from_payload(ledger_transaction_payload(transaction)),
+        review_status=ledger_transaction_review_status(transaction),
+        group_label=transaction.group_label,
+        own_account_id=transaction.own_account_id,
+    )
+
 
 LEDGER_LIST_OPERATION_DEFINITION_ID = "ledger.list"
 
@@ -128,16 +140,7 @@ class LedgerListExecutor:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             return LedgerListProjection(
                 profile_id=payload.profile_id,
-                rows=tuple(
-                    LedgerTransactionReviewProjection(
-                        transaction=LedgerTransactionProjection.from_payload(
-                            ledger_transaction_payload(item.transaction)
-                        ),
-                        review_status=ledger_transaction_review_status(item.transaction),
-                        group_label=item.transaction.group_label,
-                    )
-                    for item in page.results
-                ),
+                rows=tuple(ledger_list_row(item.transaction) for item in page.results),
                 total=page.total,
                 truncated=page.truncated,
                 offset=payload.offset,

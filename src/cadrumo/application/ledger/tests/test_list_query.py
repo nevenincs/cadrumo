@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, TypedDict, Unpack, cast, override
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -36,7 +37,9 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ...review.filter import LedgerReviewFilterSpec
 from ..action_ports import LedgerActionPorts
+from ..list_operation import ledger_list_row
 from ..list_query import LedgerTransactionListQuery, query_ledger_transaction_list, sort_ledger_results
+from ..transaction_projection import LedgerTransactionReviewProjection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -474,3 +477,19 @@ def test_a_listing_without_a_period_reads_the_whole_catalogue() -> None:
     with pytest.raises(AssertionError, match="whole catalogue"):
         _page(repository, _query())
     assert repository.windows == []
+
+
+def test_a_listed_row_names_the_own_account_it_is_bound_to_and_never_its_number() -> None:
+    bound = ledger_list_row(_transaction(provider_id="a", amount=Decimal("10.00"), own_account_id="acc-01"))
+    unbound = ledger_list_row(_transaction(provider_id="b", amount=Decimal("20.00")))
+
+    assert bound.own_account_id == "acc-01"
+    assert unbound.own_account_id is None
+    assert "acc-01" not in bound.transaction.model_dump_json()
+    with pytest.raises(ValidationError):
+        LedgerTransactionReviewProjection(
+            transaction=bound.transaction,
+            review_status=bound.review_status,
+            group_label=None,
+            own_account_id="ES9121000418450200051332",
+        )

@@ -20,16 +20,11 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.ledger.actions_manual import ledger_transaction_payload
 from ....application.ledger.list_operation import LedgerListProjection as LedgerListSnapshot
+from ....application.ledger.list_operation import ledger_list_row
 from ....application.ledger.list_query import LedgerTransactionListQuery, query_ledger_transaction_list
 from ....application.ledger.list_query import sort_ledger_results as _sort_results
 from ....application.ledger.models import ManualLedgerTransactionResult
-from ....application.ledger.review_projection import ledger_transaction_review_status
-from ....application.ledger.transaction_projection import (
-    LedgerTransactionProjection,
-    LedgerTransactionReviewProjection,
-)
 from ....application.review.filter import LedgerReviewFilterSpec
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....core.output_rendering import render_command_output
@@ -245,14 +240,7 @@ def test_project_ledger_list_renders_canonical_sort_from_real_encrypted_reposito
         )
         snapshot = LedgerListSnapshot(
             profile_id=UUID(profile.bucket_id),
-            rows=tuple(
-                LedgerTransactionReviewProjection(
-                    transaction=LedgerTransactionProjection.from_payload(ledger_transaction_payload(item.transaction)),
-                    review_status=ledger_transaction_review_status(item.transaction),
-                    group_label=item.transaction.group_label,
-                )
-                for item in canonical_page.results
-            ),
+            rows=tuple(ledger_list_row(item.transaction) for item in canonical_page.results),
             total=canonical_page.total,
             truncated=canonical_page.truncated,
             offset=0,
@@ -307,16 +295,7 @@ def test_project_ledger_list_renders_imported_terminal_controls_inert(
         projection = project_ledger_list(
             LedgerListSnapshot(
                 profile_id=UUID(profile.bucket_id),
-                rows=tuple(
-                    LedgerTransactionReviewProjection(
-                        transaction=LedgerTransactionProjection.from_payload(
-                            ledger_transaction_payload(item.transaction),
-                        ),
-                        review_status=ledger_transaction_review_status(item.transaction),
-                        group_label=item.transaction.group_label,
-                    )
-                    for item in canonical_page.results
-                ),
+                rows=tuple(ledger_list_row(item.transaction) for item in canonical_page.results),
                 total=canonical_page.total,
                 truncated=canonical_page.truncated,
                 offset=0,

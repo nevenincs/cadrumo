@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.transactions.own_accounts import OwnAccountId
 from ..review.filter import LedgerReviewStatus
 from .models import LedgerTransactionPayload
 
@@ -90,10 +91,15 @@ class LedgerTransactionProjection(BaseModel):
 
 
 class LedgerTransactionReviewProjection(BaseModel):
-    """A reviewed transaction with the group used by canonical list ordering."""
+    """A reviewed transaction with the group used by canonical list ordering.
+
+    The own account is the register id the row is bound to, never its account
+    number, so a listing can show and group by account without a second read.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     transaction: LedgerTransactionProjection
     review_status: LedgerReviewStatus
     group_label: str | None
+    own_account_id: OwnAccountId | None

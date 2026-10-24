@@ -144,7 +144,9 @@ def synthetic_entry(
         if classification == BusinessClassification.REVIEWED_EXCLUDED.value
         else LedgerReviewStatus.REVIEWED
     )
-    return LedgerTransactionReviewProjection(transaction=transaction, review_status=status, group_label=None)
+    return LedgerTransactionReviewProjection(
+        transaction=transaction, review_status=status, group_label=None, own_account_id=None
+    )
 
 
 class _Door[RequestT, ResultT]:

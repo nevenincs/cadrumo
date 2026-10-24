@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:d7cf4eaa6c628d502300d2b24834f9ff6ba40ef6c331c000025fd1ceef50ec39'
+body_hash: 'sha256:fe89a0c238a4fdd25656282f99f3fac347f3460dcd9377ecda130e2c312af921'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -219,6 +219,15 @@ related:
 - `S08` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (20)` -> `pass`
 - `S08` `verify:` `ledger benchmark section on the scenario build: 5,040 movements read 255-328 ms, scroll frame p95 33.4 ms, select-all 1-5 ms, sort 24-29 ms, 39 rows drawn` -> `pass`
 - `S08` `by:` `implementation-engineer-high`
+- `S08` `M` `src/cadrumo/application/ledger/transaction_projection.py`
+- `S08` `M` `src/cadrumo/application/ledger/list_operation.py`
+- `S08` `M` `src/cadrumo/application/ledger/tests/test_list_query.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_list_sort.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_entry_fixtures.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/ledger/tests/entries_door_fixtures.py`
+- `S08` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S08` `verify:` `pytest ledger list + TUI ledger (717)` -> `pass`
+- `S08` `verify:` `operation_contract_manifest --check` -> `pass`
 
 ## Notes
 
@@ -232,3 +241,4 @@ related:
 - `S08` S08 Under four Playwright workers on the loaded host, three tests timed out (an accessibility calendar surface, keyboard F6, the column chooser test); each passed when rerun with one worker.
 - `S08` S08 The list projection carries no own account id, import batch or import note: the account, import and import-note filters are product list reads whose ids the grid keeps, and the grid has no Account column.
 - `S08` S08 Staging is held in the page (reduceStage) and the classify command stages through it; the unsaved marker, tray and review land with S09.
+- `S08` Follow-up: list rows carry the own-account register id so the desktop grid can show and group by account
