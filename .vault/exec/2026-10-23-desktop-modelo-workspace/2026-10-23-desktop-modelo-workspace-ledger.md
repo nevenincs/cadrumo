@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-modelo-workspace'
 date: '2026-10-23'
-modified: '2026-10-24'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:8919a1dfe0b6dfba14ea702bdf4f305f1884db7d870765523c198e448f51899f'
+body_hash: 'sha256:65b906b25c88ce3fd3ce70500d30bb56b21975e09c9481cb56c5be7a57d8d71a'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -842,6 +842,23 @@ related:
 - `S54` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
 - `S54` `verify:` `native_client_live` -> `pass`
 - `S54` `by:` `opus-p05-lane`
+- `S55` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S55` `M` `native/desktop/frontend/src/components/modelo/dialogs/ReviewDialog.tsx`
+- `S55` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S55` `M` `native/desktop/frontend/src/components/modelo/form/session.ts`
+- `S55` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S55` `M` `native/desktop/frontend/tests/modelo-form-model.spec.ts`
+- `S55` `verify:` `tsc --noEmit` -> `pass`
+- `S55` `verify:` `playwright modelo, form-model, workspace and declarations specs` -> `pass`
+- `S55` `by:` `opus-p04-lane-b`
+- `S56` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S56` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S56` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S56` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S56` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S56` `verify:` `playwright full modelo suite` -> `pass`
+- `S56` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
+- `S56` `by:` `opus-p05-lane`
 
 ## Notes
 
@@ -897,3 +914,5 @@ related:
 - `S52` committed in 9a503d410f
 - `S53` committed in 790d21f36f; the review package title key's desktop declaration was removed and landed in the ledger session's 6650242b18
 - `S54` committed in 790d21f36f; a Hungarian failure traced to a fixture rewritten by a concurrent regeneration, not to the window
+- `S55` committed in 4c1b5c81da with S56
+- `S56` committed in 4c1b5c81da; write specs run in English only, every edit envelope being read on the English form's baseline
