@@ -8,6 +8,8 @@
 //! platform-projected environment and creates commands with ambient inheritance disabled.
 //! `component` verifies pinned ZIP bytes before extracting into a private staging tree,
 //! then activates an immutable version by replacing one pointer under an OS file lock.
+//! `provisioning` is the component engine: package pins, the pinned HTTPS transfer with its
+//! hop, proxy, retry and resume rules, and the closed failure categories it reports.
 //! `binary` checks pinned executable bytes and target headers. `python` explicitly probes
 //! interpreter identity and existing Python browser policy with bounded time and output.
 //! The probe never launches a browser or downloads components. Its timeout covers child

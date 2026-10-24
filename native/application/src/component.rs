@@ -2,6 +2,10 @@ use crate::{
     error::Error,
     filesystem,
     package::Readiness,
+    provisioning::{
+        transfer::{Pinned, Transfer},
+        url::HttpsUrl,
+    },
     value::{RelativePath, Sha256Digest},
 };
 use serde::{Deserialize, Serialize};
@@ -12,7 +16,6 @@ use std::{
     io::{Read, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicBool, Ordering},
-    time::Duration,
 };
 
 /// Supplied by trusted release metadata. A digest checks integrity, not publisher identity.
@@ -197,6 +200,20 @@ impl ComponentStore {
         source: impl FnOnce() -> Result<R, Error>,
         cancellation: &Cancellation,
     ) -> Result<ActiveComponent, Error> {
+        self.acquire(artifact, cancellation, |archive, _| {
+            write_archive(artifact, source()?, archive, cancellation)
+        })
+    }
+
+    /// Admits the target, takes the writer lock and activates `artifact`, calling `fill` to
+    /// place its verified archive bytes at the staging path only when no stored version
+    /// can be reused.
+    fn acquire(
+        &self,
+        artifact: &Artifact,
+        cancellation: &Cancellation,
+        fill: impl FnOnce(&Path, &Path) -> Result<(), Error>,
+    ) -> Result<ActiveComponent, Error> {
         artifact.validate(&self.target)?;
         cancellation.check()?;
         filesystem::absolute_root(&self.root)?;
@@ -235,7 +252,9 @@ impl ComponentStore {
         let version = reusable_or_fresh_version(&versions, artifact)?;
         if !version.exists() {
             fs::create_dir(&stage)?;
-            let result = self.stage(artifact, source, cancellation, &stage, &version);
+            let archive = stage.join("download.zip");
+            let result = fill(&archive, &directory)
+                .and_then(|()| self.stage(artifact, &archive, cancellation, &stage, &version));
             let cleanup = remove_staging(&stage, &directory);
             result?;
             cleanup?;
@@ -261,48 +280,20 @@ impl ComponentStore {
         Ok(active(&version, artifact))
     }
 
-    fn stage<R: Read>(
+    /// Extracts the verified archive at `archive` into a candidate and moves it to `version`.
+    fn stage(
         &self,
         artifact: &Artifact,
-        source: impl FnOnce() -> Result<R, Error>,
+        archive: &Path,
         cancellation: &Cancellation,
         stage: &Path,
         version: &Path,
     ) -> Result<(), Error> {
-        let archive = stage.join("download.zip");
-        let mut source = source()?;
-        let mut file = File::options()
-            .write(true)
-            .create_new(true)
-            .open(&archive)?;
-        let mut hash = Sha256::new();
-        let mut count = 0u64;
-        let mut buffer = [0u8; 65536];
-        loop {
-            cancellation.check()?;
-            let n = source.read(&mut buffer)?;
-            if n == 0 {
-                break;
-            }
-            count += n as u64;
-            if count > artifact.archive_bytes {
-                return Err(Error::LimitExceeded);
-            }
-            hash.update(&buffer[..n]);
-            file.write_all(&buffer[..n])?;
-        }
-        file.sync_all()?;
-        drop(file);
-        if count != artifact.archive_bytes
-            || Sha256Digest::from_hash(hash.finalize())? != artifact.sha256
-        {
-            return Err(Error::Integrity("component archive".into()));
-        }
         let candidate = stage.join("candidate");
         fs::create_dir(&candidate)?;
         let payload = candidate.join("payload");
         fs::create_dir(&payload)?;
-        let (files, archive_entries) = extract(&archive, &payload, artifact, cancellation)?;
+        let (files, archive_entries) = extract(archive, &payload, artifact, cancellation)?;
         if !files.contains_key(&artifact.executable) {
             return Err(Error::Integrity("component executable missing".into()));
         }
@@ -321,33 +312,83 @@ impl ComponentStore {
         Ok(())
     }
 
-    /// HTTPS-only transport; callers must obtain pins independently from trusted release metadata.
+    /// Downloads the artifact through the pinned transfer and activates it.
+    ///
+    /// The address must be HTTPS; nothing is created before that is known. The partial
+    /// download lives beside the versions, under the writer lock, so an interrupted
+    /// download resumes from its bytes; partial downloads of other revisions are removed.
+    /// Callers obtain pins independently from trusted release metadata.
     pub fn download_and_activate(
         &self,
         artifact: &Artifact,
-        cancellation: &Cancellation,
+        transfer: &mut Transfer<'_>,
     ) -> Result<ActiveComponent, Error> {
         let url = artifact
             .url
             .as_ref()
             .ok_or_else(|| Error::Invalid("no download metadata".into()))?;
-        if !url.starts_with("https://") {
-            return Err(Error::Invalid("download requires HTTPS".into()));
-        }
-        self.provision(
-            artifact,
-            || {
-                let agent: ureq::Agent = ureq::Agent::config_builder()
-                    .https_only(true)
-                    .timeout_global(Some(Duration::from_secs(300)))
-                    .build()
-                    .into();
-                let response = agent.get(url).call().map_err(|_| Error::Download)?;
-                Ok(response.into_body().into_reader())
-            },
-            cancellation,
-        )
+        let source = HttpsUrl::parse(url)?;
+        let cancellation = transfer.cancellation;
+        self.acquire(artifact, cancellation, |archive, directory| {
+            let downloads = directory.join("downloads");
+            filesystem::refuse_links(&downloads)?;
+            fs::create_dir_all(&downloads)?;
+            let name = format!("{}.part", artifact.sha256);
+            for entry in fs::read_dir(&downloads)? {
+                let entry = entry?;
+                filesystem::refuse_metadata_links(&entry.metadata()?)?;
+                if entry.file_name().to_str() != Some(name.as_str()) {
+                    fs::remove_file(entry.path())?;
+                }
+            }
+            let partial = downloads.join(name);
+            transfer.fetch(
+                Pinned {
+                    sources: std::slice::from_ref(&source),
+                    size: artifact.archive_bytes,
+                    sha256: &artifact.sha256,
+                },
+                &partial,
+            )?;
+            fs::rename(&partial, archive)?;
+            Ok(())
+        })
     }
+}
+
+/// Streams `source` into `archive`, refusing bytes beyond or short of the pinned size and
+/// any digest but the pinned one.
+fn write_archive(
+    artifact: &Artifact,
+    mut source: impl Read,
+    archive: &Path,
+    cancellation: &Cancellation,
+) -> Result<(), Error> {
+    let mut file = File::options().write(true).create_new(true).open(archive)?;
+    let mut hash = Sha256::new();
+    let mut count = 0u64;
+    let mut buffer = [0u8; 65536];
+    loop {
+        cancellation.check()?;
+        let n = source.read(&mut buffer)?;
+        if n == 0 {
+            break;
+        }
+        count += n as u64;
+        if count > artifact.archive_bytes {
+            return Err(Error::LimitExceeded);
+        }
+        hash.update(&buffer[..n]);
+        file.write_all(&buffer[..n])?;
+    }
+    file.sync_all()?;
+    drop(file);
+    if count != artifact.archive_bytes
+        || Sha256Digest::from_hash(hash.finalize())? != artifact.sha256
+    {
+        return Err(Error::Integrity("component archive".into()));
+    }
+    Ok(())
 }
 
 fn active(version: &Path, artifact: &Artifact) -> ActiveComponent {
@@ -564,5 +605,97 @@ mod tests {
         next.try_lock()
             .expect("completed writer left its lock held through a duplicate descriptor");
         drop(duplicate);
+    }
+
+    #[test]
+    fn a_pinned_download_resumes_its_partial_bytes_and_activates_once() {
+        use crate::provisioning::{
+            test_servers::{Reply, Request, TestCertificate, TlsServer, network_to, response},
+            transfer::{RetryPolicy, SystemPacing, Transfer},
+        };
+        use crate::value::HostName;
+        use std::io::Cursor;
+
+        let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
+        zip.start_file(
+            "bin/tool",
+            zip::write::SimpleFileOptions::default().unix_permissions(0o755),
+        )
+        .unwrap();
+        zip.write_all(&vec![7u8; 100_000]).unwrap();
+        let bytes = zip.finish().unwrap().into_inner();
+        let served = bytes.clone();
+        let certificate = TestCertificate::new(&["cdn.example.com"]);
+        let server = TlsServer::start(&certificate, move |request: &Request| {
+            let start = request
+                .header("range")
+                .and_then(|range| range.strip_prefix("bytes="))
+                .and_then(|range| range.strip_suffix("-"))
+                .and_then(|start| start.parse::<usize>().ok())
+                .unwrap_or(0);
+            let status = if start > 0 { "206 Partial" } else { "200 OK" };
+            let range = format!("bytes {start}-{}/{}", served.len() - 1, served.len());
+            Reply::Bytes(response(
+                status,
+                &[
+                    ("Content-Length", (served.len() - start).to_string()),
+                    ("Content-Range", range),
+                ],
+                &served[start..],
+            ))
+        });
+        let network = network_to(certificate.roots(), server.address(), None);
+        let directory = tempfile::tempdir().unwrap();
+        let store = ComponentStore::new(directory.path().into(), "fixture-target".into()).unwrap();
+        let artifact = Artifact {
+            id: "tool".into(),
+            revision: "1".into(),
+            target: "fixture-target".into(),
+            sha256: Sha256Digest::of(&bytes),
+            archive_bytes: bytes.len() as u64,
+            max_unpacked_bytes: 1_000_000,
+            max_entries: 10,
+            executable: RelativePath::new("bin/tool").unwrap(),
+            url: Some("https://cdn.example.com/tool.zip".into()),
+        };
+        let downloads = directory.path().join("tool/downloads");
+        fs::create_dir_all(&downloads).unwrap();
+        fs::write(downloads.join("stale-revision.part"), b"old").unwrap();
+        fs::write(
+            downloads.join(format!("{}.part", artifact.sha256)),
+            &bytes[..100],
+        )
+        .unwrap();
+        let hosts = [HostName::new("cdn.example.com").unwrap()].into();
+        let mut pacing = SystemPacing::default();
+        let cancellation = Cancellation::default();
+        let progress = std::cell::Cell::new(0);
+        let mut events = |_| progress.set(progress.get() + 1);
+        let mut transfer = Transfer {
+            network: &network,
+            hosts: &hosts,
+            policy: RetryPolicy::default(),
+            pacing: &mut pacing,
+            events: &mut events,
+            cancellation: &cancellation,
+        };
+        let active = store
+            .download_and_activate(&artifact, &mut transfer)
+            .unwrap();
+        assert_eq!(fs::read(&active.executable).unwrap(), vec![7u8; 100_000]);
+        assert_eq!(fs::read_dir(&downloads).unwrap().count(), 0);
+        assert_eq!(
+            server.requests.lock().unwrap()[0].header("range"),
+            Some("bytes=100-")
+        );
+        store
+            .download_and_activate(&artifact, &mut transfer)
+            .unwrap();
+        assert_eq!(server.targets().len(), 1, "an active version is reused");
+        assert!(matches!(
+            store.inspect(&artifact).unwrap().readiness,
+            Readiness::Ready
+        ));
+        assert!(progress.get() > 0);
     }
 }

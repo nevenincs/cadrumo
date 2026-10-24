@@ -79,7 +79,7 @@ impl CandidateFailure {
             Error::Busy => CandidateKind::Busy,
             Error::Cancelled => CandidateKind::Cancelled,
             Error::LimitExceeded => CandidateKind::LimitExceeded,
-            Error::Download => CandidateKind::Download,
+            Error::Download(_) => CandidateKind::Download,
             Error::TimedOut => CandidateKind::TimedOut,
             Error::ProbeFailed => CandidateKind::ProbeFailed,
         };

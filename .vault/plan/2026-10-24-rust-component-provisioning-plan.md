@@ -9,7 +9,7 @@ related:
   - '[[2026-10-18-dependency-provisioning-unified-setup-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:09a538eb0a944c5a9ce7c6189ee1145e7a204913fe479f652e3d015982e5110c'
+body_hash: 'sha256:c50a6e953eb4df68579d72856ba257c99ee8a702ecd110e1241125a45f2e447a'
 ---
 
 # `rust-component-provisioning` plan
@@ -42,7 +42,7 @@ New dependencies (tar plus gzip or zstd crates for the Ollama archives on Linux 
 The Rust engine gains declarative pins, a proxy-aware pinned transfer with retry and resume, network preflight, item states, the plan digest and a crash-surviving activity record.
 
 - [x] `P01.S01` - Move the browser pins and new local AI pins (program archive per platform; each role's model with manifest digest, size, licence and hardware floor) into declarative package data that Rust and Python both read, and drop the pin copy from the model catalogue; `src/cadrumo/_data/dependencies/, src/cadrumo/core/model_catalogue.py, dev/env/browser_archive_pins.py, a dev/env local AI pin tool, native/cmake/PackageInputs.cmake, native/package-layout.json and tests`.
-- [ ] `P01.S02` - Give the component store a pinned transfer: CADRUMO_PROXY settings, the HTTPS hop and redirect-host policy, pinned size and SHA-256, transient retry with backoff and jitter, resume of partial bytes, byte progress and cancellation between chunks; `native/application/src/component.rs, native/application/src/provisioning/transfer.rs and Rust tests against local HTTP and TLS servers`.
+- [x] `P01.S02` - Give the component store a pinned transfer: CADRUMO_PROXY settings, the HTTPS hop and redirect-host policy, pinned size and SHA-256, transient retry with backoff and jitter, resume of partial bytes, byte progress and cancellation between chunks; `native/application/src/component.rs, native/application/src/provisioning/transfer.rs and Rust tests against local HTTP and TLS servers`.
 - [ ] `P01.S03` - Add the network preflight with per-item hosts and the offline, unreachable, secure-connection, blocked-by-network and reachable classification; `native/application/src/provisioning/network.rs, native/application-environment.toml and tests`.
 - [ ] `P01.S04` - Add item declarations, derived states with blocked reasons and failure categories, the plan and its digest, the free-space rule, the per-item writer lock, the activity record with interrupted detection, and receipts; `native/application/src/provisioning/items.rs, state.rs, plan.rs, activity.rs and tests`.
 

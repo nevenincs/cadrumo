@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:56f85fe672e477b6df6b5a7f8767e19e6f711575ab9bb29df3c31f0942c081fa'
+body_hash: 'sha256:2a74b757071993ef34126947be4836e75877ffaf2db507c2e34a397dfd58c17c'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -81,9 +81,37 @@ related:
 - `S01` `verify:` `just check-operation-contract-manifest` -> `pass`
 - `S01` `verify:` `python -m dev.env.local_ai_pins --check` -> `pass`
 - `S01` `by:` `high-implementation-engineer`
+- `S02` `M` `native/application/src/component.rs`
+- `S02` `A` `native/application/src/provisioning/transfer.rs`
+- `S02` `A` `native/application/src/provisioning/connection.rs`
+- `S02` `A` `native/application/src/provisioning/http.rs`
+- `S02` `A` `native/application/src/provisioning/proxy.rs`
+- `S02` `A` `native/application/src/provisioning/failure.rs`
+- `S02` `A` `native/application/src/provisioning/test_servers.rs`
+- `S02` `M` `native/application/src/provisioning/mod.rs`
+- `S02` `M` `native/application/src/error/mod.rs`
+- `S02` `M` `native/application/src/installation.rs`
+- `S02` `M` `native/application/src/lib.rs`
+- `S02` `M` `native/application/tests/application.rs`
+- `S02` `M` `native/application/Cargo.toml`
+- `S02` `M` `native/application/Cargo.lock`
+- `S02` `M` `native/desktop/src-tauri/Cargo.lock`
+- `S02` `M` `native/installer/Cargo.lock`
+- `S02` `M` `native/launch_guard/Cargo.lock`
+- `S02` `M` `native/manager/Cargo.lock`
+- `S02` `M` `native/interpreter_host/Cargo.lock`
+- `S02` `verify:` `cargo test --offline --no-fail-fast --manifest-path native/application/Cargo.toml (lib 68, application 25)` -> `pass`
+- `S02` `verify:` `cargo test --test package_inspection linked_root_and_deep_root_ancestor_are_refused` -> `fail`
+- `S02` `verify:` `cargo clippy --all-targets -- -D warnings` -> `pass`
+- `S02` `verify:` `cargo clippy --all-targets --features platform -- -D warnings` -> `pass`
+- `S02` `verify:` `cargo fmt -- --check` -> `pass`
+- `S02` `verify:` `cargo deny check advisories bans licenses sources` -> `pass`
+- `S02` `by:` `high-implementation-engineer`
 
 ## Notes
 
 - `S01` `package_inspection` junction fixture fails creating a junction whose path holds non-ASCII text through cmd.exe; unrelated to this change
 - `S01` PackageInputs.cmake unchanged: the pins live under src/, which `cadrumo_source_inputs` already globs into the wheel inputs; the layout's `component_pins` path locates them for Rust
 - `S01` lint-imports: 1 broken contract from a concurrent session's `cadrumo.tests.llm_vision_evidence_support` edit, unrelated
+- `S02` `package_inspection` junction fixture failure is the same pre-existing non-ASCII junction path issue as S01
+- `S02` ureq removed: the transfer and preflight need stage-exact classification and a proxy address that never reaches a third-party Debug or log, so the engine speaks HTTP/1.1 over rustls itself; rustls and webpki-roots were already in the graph and ring is a dev-dependency for the in-test certificate
