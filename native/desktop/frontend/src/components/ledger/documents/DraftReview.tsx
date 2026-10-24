@@ -38,6 +38,7 @@ import { seriesAndNumber } from "../invoices/invoiceModel";
 import { figureText, kindChoice, problemText } from "../invoices/invoiceWords";
 import { write } from "../invoices/invoiceWrites";
 import { failureCode } from "../ledgerWords";
+import { useWritePause, WriteHold } from "../WritePause";
 import { reconcile, stageLink, stagedLinks } from "../matching/matchingModel";
 import { invoiceLine } from "../matching/matchingWords";
 import { dayText } from "../transfer/transferWords";
@@ -313,6 +314,7 @@ export function DraftReview({
   say(text: string): void;
 }) {
   const t = useStrings();
+  const pause = useWritePause();
   const { read, reread } = useLedgerRead(
     port,
     reader,
@@ -371,7 +373,13 @@ export function DraftReview({
             ? { kind: "refused", code: sent.reason ?? "refused" }
             : { kind: "failed", code: sent.code },
       );
-      if (sent.kind === "unknown") onWritten();
+      if (sent.kind === "unknown") {
+        pause.hold({
+          what: t("desktop.ledger.section.documents"),
+          outcome: sent.saved ? "saved_unread" : "unknown",
+        });
+        onWritten();
+      }
       return null;
     }
     const result = sent.result;
@@ -455,6 +463,10 @@ export function DraftReview({
     }
     if (sent.kind === "unknown") {
       setNotice({ kind: "unknown" });
+      pause.hold({
+        what: t("desktop.ledger.section.documents"),
+        outcome: sent.saved ? "saved_unread" : "unknown",
+      });
       return;
     }
     // A refused confirmation wrote nothing; the reading may have changed.
@@ -658,17 +670,19 @@ export function DraftReview({
             </TooltipContent>
           </Tooltip>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="ledger-draft-reread"
-          disabled={busy !== null}
-          aria-busy={busy === "reading" || undefined}
-          onClick={() => void readAgain(null)}
-        >
-          {busy === "reading" ? <Spinner /> : <Icon name="sync" />}
-          {t("desktop.ledger.documents.read_again")}
-        </Button>
+        <WriteHold>
+          <Button
+            size="sm"
+            variant="outline"
+            className="ledger-draft-reread"
+            disabled={busy !== null}
+            aria-busy={busy === "reading" || undefined}
+            onClick={() => void readAgain(null)}
+          >
+            {busy === "reading" ? <Spinner /> : <Icon name="sync" />}
+            {t("desktop.ledger.documents.read_again")}
+          </Button>
+        </WriteHold>
         {reference.kind === "evidence" && (
           <Button
             size="sm"
@@ -705,7 +719,10 @@ export function DraftReview({
               variant="outline"
               className="ledger-draft-check"
               disabled={busy !== null}
-              onClick={() => void check()}
+              onClick={() => {
+                void check();
+                if (!pause.rereading) pause.reread();
+              }}
             >
               {t("desktop.ledger.documents.check")}
             </Button>
@@ -1000,16 +1017,18 @@ export function DraftReview({
           {t("desktop.ledger.documents.confirm_note")}
         </p>
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            className="ledger-draft-confirm"
-            aria-disabled={holds.length > 0 || busy !== null || undefined}
-            aria-busy={busy === "confirming" || undefined}
-            aria-describedby={holds.length ? `${countryId}-holds` : undefined}
-            onClick={() => void confirm()}
-          >
-            {busy === "confirming" && <Spinner />}
-            {t("desktop.ledger.documents.confirm")}
-          </Button>
+          <WriteHold>
+            <Button
+              className="ledger-draft-confirm"
+              aria-disabled={holds.length > 0 || busy !== null || undefined}
+              aria-busy={busy === "confirming" || undefined}
+              aria-describedby={holds.length ? `${countryId}-holds` : undefined}
+              onClick={() => void confirm()}
+            >
+              {busy === "confirming" && <Spinner />}
+              {t("desktop.ledger.documents.confirm")}
+            </Button>
+          </WriteHold>
           {holds.length > 0 && (
             <span
               id={`${countryId}-holds`}

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,6 +32,7 @@ import { IVA_CATEGORIES, isIvaCategory } from "../../../shell/ledgerVocabulary";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
 import { amountText, dayText } from "../transfer/transferWords";
+import { useWritePause, WriteHold } from "../WritePause";
 import {
   EditorSection,
   FixedField,
@@ -154,6 +155,15 @@ export function InvoiceEditor({
   const [tried, setTried] = useState(false);
   const [touched, setTouched] = useState<ReadonlySet<string>>(new Set());
   const [duplicate, setDuplicate] = useState<string | null>(null);
+  const pause = useWritePause();
+  // A write the page settles after this editor closed says nothing here.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const isNew = target.kind === "new";
   const check = useMemo(() => checkDraft(draft), [draft]);
@@ -236,6 +246,43 @@ export function InvoiceEditor({
     onClose();
   };
 
+  /** Reads whether `pending` landed. */
+  const landedOf = (pending: Pending): Promise<Landed> =>
+    pending.what === "add"
+      ? addLanded(port, pending.request)
+      : pending.what === "update"
+        ? updateLanded(port, pending.request)
+        : removeLanded(port, pending.invoiceId);
+
+  /** A write not seen to settle: the editor says so, and every write on
+   * the page waits until the page's re-read reads whether it landed. */
+  const undetermined = (pending: Pending, saved: boolean) => {
+    setOutcome({ kind: "unknown", pending, checked: false });
+    const what = t("desktop.ledger.invoices.title", {
+      number:
+        pending.what === "add"
+          ? pending.request.invoice_number
+          : numberOf(stored),
+    });
+    pause.hold({
+      what,
+      outcome: saved ? "saved_unread" : "unknown",
+      settle: async () => {
+        const landed = await landedOf(pending);
+        if (mounted.current) settled(landed, pending);
+        if (landed.kind === "unreadable") return null;
+        return [
+          t(
+            landed.kind === "saved"
+              ? "desktop.ledger.paused.found_saved"
+              : "desktop.ledger.paused.unsaved",
+            { movement: what },
+          ),
+        ];
+      },
+    });
+  };
+
   const refusedText = (reason: string | null) =>
     t("desktop.ledger.invoices.refused", { code: reason ?? "refused" });
 
@@ -271,11 +318,7 @@ export function InvoiceEditor({
       return;
     }
     if (answer.kind === "unknown")
-      setOutcome({
-        kind: "unknown",
-        pending: { what: "add", request },
-        checked: false,
-      });
+      undetermined({ what: "add", request }, answer.saved);
     else setOutcome({ kind: "failed", code: answer.code });
   };
   const refuseAdd = (
@@ -308,11 +351,7 @@ export function InvoiceEditor({
       setOutcome({ kind: "refused", text: refusedText(answer.reason) });
       setStage("edit");
     } else if (answer.kind === "unknown")
-      setOutcome({
-        kind: "unknown",
-        pending: { what: "update", request },
-        checked: false,
-      });
+      undetermined({ what: "update", request }, answer.saved);
     else setOutcome({ kind: "failed", code: answer.code });
   };
 
@@ -330,24 +369,14 @@ export function InvoiceEditor({
       setOutcome({ kind: "refused", text: refusedText(answer.reason) });
       setStage("edit");
     } else if (answer.kind === "unknown")
-      setOutcome({
-        kind: "unknown",
-        pending: { what: "remove", invoiceId },
-        checked: false,
-      });
+      undetermined({ what: "remove", invoiceId }, answer.saved);
     else setOutcome({ kind: "failed", code: answer.code });
   };
 
-  const checkPending = async (pending: Pending) => {
-    setSending(true);
-    const landed =
-      pending.what === "add"
-        ? await addLanded(port, pending.request)
-        : pending.what === "update"
-          ? await updateLanded(port, pending.request)
-          : await removeLanded(port, pending.invoiceId);
-    setSending(false);
-    settled(landed, pending);
+  // Checking is the page's one re-read: it settles this write and every
+  // other one the page holds.
+  const checkPending = () => {
+    if (!pause.rereading) pause.reread();
   };
 
   // ---- What the editor shows ---------------------------------------------------
@@ -399,13 +428,15 @@ export function InvoiceEditor({
     if (isNew) {
       if (stage === "confirm" && check.request)
         return (
-          <Button
-            size="sm"
-            pending={sending}
-            onClick={() => void add(check.request!)}
-          >
-            {t("desktop.ledger.invoices.add")}
-          </Button>
+          <WriteHold>
+            <Button
+              size="sm"
+              pending={sending}
+              onClick={() => void add(check.request!)}
+            >
+              {t("desktop.ledger.invoices.add")}
+            </Button>
+          </WriteHold>
         );
       return (
         <Button
@@ -422,13 +453,15 @@ export function InvoiceEditor({
     if (!stored || !corrected) return null;
     if (stage === "confirm" && corrected.request)
       return (
-        <Button
-          size="sm"
-          pending={sending}
-          onClick={() => void update(corrected.request!)}
-        >
-          {t("desktop.ledger.invoices.save")}
-        </Button>
+        <WriteHold>
+          <Button
+            size="sm"
+            pending={sending}
+            onClick={() => void update(corrected.request!)}
+          >
+            {t("desktop.ledger.invoices.save")}
+          </Button>
+        </WriteHold>
       );
     if (stage === "remove") return null;
     return (
@@ -504,8 +537,8 @@ export function InvoiceEditor({
 
         <OutcomeAlert
           outcome={outcome}
-          sending={sending}
-          onCheck={(pending) => void checkPending(pending)}
+          sending={sending || pause.rereading}
+          onCheck={checkPending}
         />
 
         <div className="flex flex-col gap-6">{body}</div>
@@ -549,14 +582,16 @@ export function InvoiceEditor({
                 {t("desktop.ledger.invoices.keep_it")}
               </Button>
               {stored.linked_transaction_ids.length === 0 && !unknown && (
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  pending={sending}
-                  onClick={() => void remove(stored.invoice_id)}
-                >
-                  {t("desktop.ledger.invoices.remove_confirm")}
-                </Button>
+                <WriteHold>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    pending={sending}
+                    onClick={() => void remove(stored.invoice_id)}
+                  >
+                    {t("desktop.ledger.invoices.remove_confirm")}
+                  </Button>
+                </WriteHold>
               )}
             </>
           )}
@@ -591,7 +626,7 @@ function OutcomeAlert({
 }: {
   outcome: Outcome | null;
   sending: boolean;
-  onCheck(pending: Pending): void;
+  onCheck(): void;
 }) {
   const t = useStrings();
   if (!outcome) return null;
@@ -616,7 +651,7 @@ function OutcomeAlert({
             size="xs"
             variant="outline"
             pending={sending}
-            onClick={() => onCheck(outcome.pending)}
+            onClick={onCheck}
           >
             {t("desktop.ledger.invoices.check")}
           </Button>

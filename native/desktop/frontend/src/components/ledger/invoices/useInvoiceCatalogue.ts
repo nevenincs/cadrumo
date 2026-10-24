@@ -10,6 +10,7 @@ import {
   readFailure,
   type LedgerReadFailure,
 } from "../../../shell/ledgerWindow";
+import { useWritePause } from "../WritePause";
 
 export type CatalogueRead =
   | { phase: "reading"; invoices: CatalogueInvoice[] | null }
@@ -28,6 +29,8 @@ export function useInvoiceCatalogue(
   const generation = useRef(0);
   const lastReader = useRef(reader);
   const [wanted, setWanted] = useState(0);
+  // The page's re-read after a write it could not settle reads this again.
+  const { round } = useWritePause();
 
   useEffect(() => {
     if (lastReader.current !== reader) {
@@ -60,7 +63,7 @@ export function useInvoiceCatalogue(
           invoices: null,
         });
       });
-  }, [port, reader, shown, wanted]);
+  }, [port, reader, shown, wanted, round]);
 
   /** Reads the catalogue again; what was read stays shown meanwhile. */
   const reread = useCallback(() => setWanted((count) => count + 1), []);

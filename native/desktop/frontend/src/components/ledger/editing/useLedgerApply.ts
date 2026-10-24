@@ -2,7 +2,8 @@
 // read again and every staged movement compared with how the page read it,
 // the plan is built from that read, the apply runs once, and whatever did
 // not save stays staged. A write whose outcome was not observed pauses
-// every write until the person reads the ledger again; nothing is retried.
+// every write on the page until the person reads the ledger again; nothing
+// is retried.
 
 import { useCallback, useRef, useState } from "react";
 import type {
@@ -17,11 +18,11 @@ import {
   stageAfterApply,
   type ApplyReport,
   type StepReport,
-  type UnknownResolution,
 } from "../../../shell/ledgerApply";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import type { LedgerPlan, PlanStep } from "../../../shell/ledgerPlan";
 import {
+  actionRows,
   stagedMovements,
   type StageEvent,
   type StageField,
@@ -34,7 +35,10 @@ import {
   rowsById,
   type LedgerReadFailure,
 } from "../../../shell/ledgerWindow";
+import { useStrings, type Translate } from "../../../shell/strings";
+import type { WritePause } from "../WritePause";
 import { askedConflicts, type AskedConflict } from "./editingModel";
+import { actionText } from "./ReviewDialog";
 
 export type ReviewState =
   | { phase: "closed" }
@@ -47,8 +51,11 @@ export type ReviewState =
       /** Movements changed elsewhere in a field the person changed, or
        * gone, still to be looked at. */
       conflicts: AskedConflict[];
-      /** The invoices staged links name, read for the review. */
+      /** The invoices staged links name, read for the review; null where
+       * the catalogue could not be read. */
       invoices: CatalogueInvoice[] | null;
+      /** The staged movements a finalized declaration cites, as read. */
+      sealed: ReadonlySet<string>;
     }
   | {
       phase: "applying";
@@ -67,11 +74,52 @@ export type ReviewState =
       checkedAt: number;
     };
 
-/** A write whose outcome is unknown, and what was staged when it ran. */
-export type Paused = { step: PlanStep; content: StagedContent };
+/** The name of a movement or new movement, as the page shows it. */
+function movementName(
+  id: string,
+  rows: ReadonlyMap<string, LedgerRow>,
+  content: StagedContent,
+): string {
+  return (
+    rows.get(id)?.transaction.description ||
+    content.drafts.find((draft) => draft.key === id)?.fields.description ||
+    id.slice(0, 12)
+  );
+}
 
-/** What a re-read found of a paused write, movement by movement. */
-export type UnknownFinding = { id: string; resolution: UnknownResolution };
+/** What a step whose outcome is unknown wrote, in words: its movement
+ * where it names one. */
+function stepName(
+  t: Translate,
+  step: PlanStep,
+  rows: ReadonlyMap<string, LedgerRow>,
+  content: StagedContent,
+): string {
+  const ids =
+    step.kind === "bulk"
+      ? step.rows.map((row) => row.transactionId)
+      : step.kind === "classify" || step.kind === "update"
+        ? [step.transactionId]
+        : step.kind === "add"
+          ? [step.draftKey]
+          : actionRows(step.action);
+  return ids.length === 1
+    ? movementName(ids[0]!, rows, content)
+    : t("desktop.ledger.paused.staged");
+}
+
+/** Reads the catalogue for the invoices staged links name; null where it
+ * could not be read. */
+async function readInvoices(
+  port: LedgerPort,
+): Promise<CatalogueInvoice[] | null> {
+  try {
+    const listed = readAnswer(await port.submit("ledger.invoice.list", {}));
+    return listed.kind === "answer" ? listed.result.invoices : null;
+  } catch {
+    return null;
+  }
+}
 
 /** Reads the rows of `ids` not in `rows` one by one, as the movements
  * staged outside the period shown. */
@@ -148,6 +196,10 @@ export function useLedgerApply({
   read,
   dispatch,
   afterApply,
+  rebase,
+  pause,
+  sealedOf,
+  locale,
 }: {
   port: LedgerPort;
   period: LedgerPeriod | null;
@@ -161,11 +213,17 @@ export function useLedgerApply({
     report: ApplyReport,
     rows: ReadonlyMap<string, LedgerRow>,
   ) => void;
+  /** Compares what stays staged with the rows a re-read found. */
+  rebase: (rows: ReadonlyMap<string, LedgerRow>) => void;
+  /** The page's one write pause. */
+  pause: WritePause;
+  /** Which of `ids` a finalized declaration cites, read where not known. */
+  sealedOf: (ids: readonly string[]) => Promise<ReadonlySet<string>>;
+  locale: string;
 }) {
+  const t = useStrings();
   const [state, setState] = useState<ReviewState>({ phase: "closed" });
-  const [paused, setPaused] = useState<Paused | null>(null);
-  const [findings, setFindings] = useState<UnknownFinding[] | null>(null);
-  const [rereading, setRereading] = useState(false);
+  const paused = pause.held;
   const latest = useRef(content);
   latest.current = content;
   const asked = useRef(0);
@@ -186,18 +244,29 @@ export function useLedgerApply({
       changedSinceRead(staged, before, answer.rows),
       staged,
     );
-    let invoices: CatalogueInvoice[] | null = null;
-    if (staged.actions.some((action) => action.kind === "link")) {
-      try {
-        const listed = readAnswer(await port.submit("ledger.invoice.list", {}));
-        invoices = listed.kind === "answer" ? listed.result.invoices : null;
-      } catch {
-        invoices = null;
-      }
-    }
+    const invoices = staged.actions.some((action) => action.kind === "link")
+      ? await readInvoices(port)
+      : [];
+    const sealed = await sealedOf([...stagedMovements(staged)]);
     if (asked.current !== mine) return;
-    setState({ phase: "ready", rows: answer.rows, conflicts, invoices });
-  }, [port, period, read]);
+    setState({
+      phase: "ready",
+      rows: answer.rows,
+      conflicts,
+      invoices,
+      sealed,
+    });
+  }, [port, period, read, sealedOf]);
+
+  /** Reads the catalogue again where the review could not read it. */
+  const rereadInvoices = useCallback(async () => {
+    const mine = asked.current;
+    const invoices = await readInvoices(port);
+    if (asked.current !== mine) return;
+    setState((current) =>
+      current.phase === "ready" ? { ...current, invoices } : current,
+    );
+  }, [port]);
 
   const close = useCallback(() => {
     asked.current += 1;
@@ -232,6 +301,39 @@ export function useLedgerApply({
     );
   }, []);
 
+  /** Reads the ledger after an unknown outcome and says, movement by
+   * movement, whether the write saved. What saved leaves the stage; the
+   * rest stays staged. Null while the ledger could not be read. */
+  const settle = useCallback(
+    async (step: PlanStep, staged: StagedContent): Promise<string[] | null> => {
+      const answer = await readStaged(port, period, staged, read());
+      if (answer.kind === "failed") return null;
+      const found = resolveUnknown(step, staged, answer.rows);
+      const saved = stepFields(step);
+      for (const [id, resolution] of found) {
+        if (resolution !== "saved") continue;
+        for (const field of saved.get(id) ?? [])
+          dispatch({ type: "revert_cell", id, field });
+        if (step.kind === "action" || step.kind === "answer")
+          dispatch({ type: "drop_action", id: step.action.id });
+      }
+      rebase(answer.rows);
+      // A rules apply is keyed by its action, which is worded.
+      const nameOf = (id: string) => {
+        const action = staged.actions.find((found) => found.id === id);
+        return action
+          ? actionText(t, locale, action)
+          : movementName(id, answer.rows, staged);
+      };
+      return [...found].map(([id, resolution]) =>
+        t(`desktop.ledger.paused.found_${resolution}`, {
+          movement: nameOf(id),
+        }),
+      );
+    },
+    [port, period, read, dispatch, rebase, t, locale],
+  );
+
   const apply = useCallback(
     async (plan: LedgerPlan) => {
       if (state.phase !== "ready" || paused) return;
@@ -254,8 +356,17 @@ export function useLedgerApply({
           step.outcome.kind === "unknown" ||
           step.outcome.kind === "saved_unread",
       );
-      if (report.paused && unobserved)
-        setPaused({ step: unobserved.step, content: staged });
+      if (report.paused && unobserved) {
+        const step = unobserved.step;
+        pause.hold({
+          what: stepName(t, step, rows, staged),
+          outcome:
+            unobserved.outcome.kind === "saved_unread"
+              ? "saved_unread"
+              : "unknown",
+          settle: () => settle(step, staged),
+        });
+      }
       // What was unchanged is shown as stored, read again.
       const after = await readWindow(port, period);
       const fresh = after.kind === "read" ? rowsById(after.rows) : null;
@@ -270,42 +381,8 @@ export function useLedgerApply({
       });
       afterApply(report, fresh ?? rows);
     },
-    [state, paused, port, period, dispatch, afterApply],
+    [state, paused, port, period, dispatch, afterApply, pause, t, settle],
   );
-
-  /** Reads the ledger after an unknown outcome and says, movement by
-   * movement, whether the write saved. What saved leaves the stage; the
-   * rest stays staged. */
-  const reread = useCallback(async () => {
-    if (!paused) return;
-    setRereading(true);
-    const answer = await readStaged(port, period, paused.content, read());
-    setRereading(false);
-    if (answer.kind === "failed") return;
-    const found = resolveUnknown(paused.step, paused.content, answer.rows);
-    const saved = stepFields(paused.step);
-    for (const [id, resolution] of found) {
-      if (resolution !== "saved") continue;
-      for (const field of saved.get(id) ?? [])
-        dispatch({ type: "revert_cell", id, field });
-      const step = paused.step;
-      if (step.kind === "action" || step.kind === "answer")
-        dispatch({ type: "drop_action", id: step.action.id });
-    }
-    setFindings([...found].map(([id, resolution]) => ({ id, resolution })));
-    setPaused(null);
-    afterApply(
-      {
-        steps: [],
-        paused: null,
-        stopped: null,
-        rekeys: [],
-        reread: [],
-        saved: 0,
-      },
-      answer.rows,
-    );
-  }, [paused, port, period, read, dispatch, afterApply]);
 
   return {
     state,
@@ -315,9 +392,6 @@ export function useLedgerApply({
     resolveAll,
     apply,
     paused,
-    reread,
-    rereading,
-    findings,
-    dismissFindings: () => setFindings(null),
+    rereadInvoices,
   };
 }

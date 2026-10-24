@@ -907,6 +907,8 @@ export function askedConflicts(
  * tick for any of them. */
 export type LinkMismatch =
   | { kind: "amount"; difference: string }
+  /** The movement is in one currency and the invoice in another. */
+  | { kind: "currency"; movement: string; invoice: string }
   | { kind: "counterparty" }
   | { kind: "linked_elsewhere"; count: number };
 
@@ -946,7 +948,16 @@ export function linkMismatches(
 ): LinkMismatch[] {
   const found: LinkMismatch[] = [];
   const total = invoice.grand_total.decimal;
-  if (compareDecimal(row.transaction.amount, total) !== 0) {
+  const movementCurrency = row.transaction.currency.trim().toUpperCase();
+  const invoiceCurrency = invoice.currency.trim().toUpperCase();
+  // Amounts in two currencies have no difference to state.
+  if (movementCurrency !== invoiceCurrency)
+    found.push({
+      kind: "currency",
+      movement: movementCurrency,
+      invoice: invoiceCurrency,
+    });
+  else if (compareDecimal(row.transaction.amount, total) !== 0) {
     const difference = decimalDistance(row.transaction.amount, total);
     if (difference !== null) found.push({ kind: "amount", difference });
   }

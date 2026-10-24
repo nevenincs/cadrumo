@@ -17,7 +17,11 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
-import type { CatalogueInvoice, LedgerRow } from "../../../shell/ledger";
+import type {
+  CatalogueInvoice,
+  LedgerRow,
+  OutputLanguage,
+} from "../../../shell/ledger";
 import type { StepOutcome, StepReport } from "../../../shell/ledgerApply";
 import { classifyCells } from "../../../shell/ledgerCommands";
 import { parsePercent } from "../../../shell/ledgerGrammar";
@@ -58,6 +62,7 @@ import {
 } from "./editingModel";
 import { fieldName, valueText } from "./editingWords";
 import type { useLedgerApply } from "./useLedgerApply";
+import { useWritePause } from "../WritePause";
 import { WindowedList } from "./WindowedList";
 
 type Apply = ReturnType<typeof useLedgerApply>;
@@ -392,9 +397,48 @@ function BlockerFixes({
         ),
         "keep-stored",
       );
+    case "suggestion_and_edits":
+      return (
+        <>
+          {button(
+            t("desktop.ledger.apply.fix.drop_edits"),
+            dropEdits(true),
+            "drop-edits",
+          )}
+          {button(
+            t("desktop.ledger.apply.fix.drop_approval"),
+            dropActions((entry) =>
+              "action" in entry.blocker ? [entry.blocker.action] : [],
+            ),
+            "drop-approval",
+          )}
+        </>
+      );
+    case "suggestion_and_rules":
+      return (
+        <>
+          {button(
+            t("desktop.ledger.apply.fix.drop_rules"),
+            dropActions((entry) =>
+              entry.blocker.kind === "suggestion_and_rules"
+                ? entry.blocker.rules
+                : [],
+            ),
+            "drop-rules",
+          )}
+          {button(
+            t("desktop.ledger.apply.fix.drop_approval"),
+            dropActions((entry) =>
+              entry.blocker.kind === "suggestion_and_rules"
+                ? [entry.blocker.action]
+                : [],
+            ),
+            "drop-approval",
+          )}
+        </>
+      );
     case "action_and_edits":
     case "exclude_and_classification":
-    case "suggestion_and_edits":
       return (
         <>
           {button(
@@ -609,6 +653,11 @@ function mismatchText(t: Translate, locale: string, mismatch: LinkMismatch) {
       });
     case "counterparty":
       return t("desktop.ledger.apply.link.counterparty_differs");
+    case "currency":
+      return t("desktop.ledger.apply.link.currency_differs", {
+        movement: mismatch.movement,
+        invoice: mismatch.invoice,
+      });
     case "linked_elsewhere":
       return t("desktop.ledger.apply.link.linked_elsewhere", {
         count: mismatch.count,
@@ -621,6 +670,7 @@ function PermanentLinks({
   locale,
   ticks,
   onTicks,
+  onRereadInvoices,
 }: {
   links: {
     id: string;
@@ -632,6 +682,8 @@ function PermanentLinks({
   locale: string;
   ticks: LinkTicks;
   onTicks: (ticks: LinkTicks) => void;
+  /** Reads the catalogue again where an invoice could not be read. */
+  onRereadInvoices: () => void;
 }) {
   const t = useStrings();
   if (!links.length) return null;
@@ -678,6 +730,23 @@ function PermanentLinks({
                   ])
                 : link.invoiceId}
             </p>
+            {!link.invoice && (
+              <p
+                role="alert"
+                className="ledger-link-unread flex flex-wrap items-center gap-1.5 text-sm"
+              >
+                <Icon name="unknown" size="xs" className="text-warning" />
+                {t("desktop.ledger.apply.link.unread")}
+                <Button
+                  variant="link"
+                  size="xs"
+                  className="ledger-link-reread"
+                  onClick={onRereadInvoices}
+                >
+                  {t("desktop.ledger.paused.reread")}
+                </Button>
+              </p>
+            )}
             {link.mismatches.length > 0 && (
               <ul className="flex flex-wrap gap-1.5">
                 {link.mismatches.map((mismatch) => (
@@ -693,6 +762,7 @@ function PermanentLinks({
               <Checkbox
                 className="ledger-link-sure"
                 checked={tick.sure}
+                disabled={!link.invoice}
                 onChange={(event) =>
                   onTicks({
                     ...ticks,
@@ -1187,6 +1257,7 @@ export function ReviewDialog({
   onGoToDraft: (key: string) => void;
 }) {
   const t = useStrings();
+  const pause = useWritePause();
   const state = apply.state;
   const heading = useRef<HTMLHeadingElement>(null);
   // Each step of the review, and its result, starts at its heading.
@@ -1205,8 +1276,14 @@ export function ReviewDialog({
       : state.rows;
   const plan = useMemo(
     () =>
-      state.phase === "ready" ? planApply(content, { rows: state.rows }) : null,
-    [state, content],
+      state.phase === "ready"
+        ? planApply(content, {
+            rows: state.rows,
+            sealed: state.sealed,
+            outputLanguage: locale as OutputLanguage,
+          })
+        : null,
+    [state, content, locale],
   );
   if (state.phase === "closed") return null;
   const busy = state.phase === "applying";
@@ -1314,7 +1391,9 @@ export function ReviewDialog({
         mismatches: row && invoice ? linkMismatches(row, invoice) : [],
       };
     });
-    const ready = linksReady(links, ticks);
+    // A link whose invoice could not be read is held until it is read.
+    const unread = links.some((link) => !link.invoice);
+    const ready = !unread && linksReady(links, ticks);
     const approvals = content.actions.filter(
       (action): action is Extract<StagedAction, { kind: "suggestion" }> =>
         action.kind === "suggestion",
@@ -1337,6 +1416,7 @@ export function ReviewDialog({
           locale={locale}
           ticks={ticks}
           onTicks={setTicks}
+          onRereadInvoices={() => void apply.rereadInvoices()}
         />
         <Approvals approvals={approvals} rows={rows} locale={locale} />
         {groups.length > 0 && (
@@ -1439,12 +1519,14 @@ export function ReviewDialog({
       <>
         <span className="me-auto text-sm text-muted-foreground">
           {apply.paused
-            ? t("desktop.ledger.tray.paused_reason")
-            : !ready
-              ? t("desktop.ledger.apply.tick_links")
-              : held
-                ? t("desktop.ledger.apply.held_note", { count: held })
-                : ""}
+            ? apply.paused
+            : unread
+              ? t("desktop.ledger.apply.link.unread")
+              : !ready
+                ? t("desktop.ledger.apply.tick_links")
+                : held
+                  ? t("desktop.ledger.apply.held_note", { count: held })
+                  : ""}
         </span>
         <Button variant="ghost" onClick={close}>
           {t("desktop.ledger.apply.keep_editing")}
@@ -1530,10 +1612,22 @@ export function ReviewDialog({
             icon={<Icon name="unknown" />}
             className="ledger-apply-unknown"
           >
-            <AlertTitle>{t("desktop.ledger.apply.unknown_title")}</AlertTitle>
-            <AlertDescription>
-              {t("desktop.ledger.apply.unknown_note")}
-            </AlertDescription>
+            {state.report.steps.some(
+              (step) => step.outcome.kind === "unknown",
+            ) ? (
+              <>
+                <AlertTitle>
+                  {t("desktop.ledger.apply.unknown_title")}
+                </AlertTitle>
+                <AlertDescription>
+                  {t("desktop.ledger.apply.unknown_note")}
+                </AlertDescription>
+              </>
+            ) : (
+              <AlertTitle>
+                {t("desktop.ledger.apply.outcome.saved_unread")}
+              </AlertTitle>
+            )}
           </Alert>
         )}
         {state.report.stopped && (
@@ -1561,8 +1655,10 @@ export function ReviewDialog({
           <Button
             variant="outline"
             className="ledger-apply-reread"
-            onClick={() => void apply.reread()}
-            aria-disabled={apply.rereading || undefined}
+            onClick={() => {
+              if (!pause.rereading) pause.reread();
+            }}
+            aria-disabled={pause.rereading || undefined}
           >
             <Icon name="sync" />
             {t("desktop.ledger.paused.reread")}

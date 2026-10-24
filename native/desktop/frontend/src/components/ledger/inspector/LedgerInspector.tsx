@@ -15,7 +15,6 @@ import { SplitDialog } from "./SplitDialog";
 
 /** How long a confirmation stays on screen. */
 const TOAST_MS = 4000;
-const NO_SEALED: ReadonlySet<string> = new Set();
 
 /**
  * The panel beside the Movements grid: the To match pair queue, or the
@@ -30,6 +29,7 @@ export function LedgerInspector({
   generation,
   stage,
   onStage,
+  sealed,
   selection,
   onSelection,
   context,
@@ -54,6 +54,8 @@ export function LedgerInspector({
   generation: number | string;
   stage: StageState;
   onStage: (event: StageEvent) => void;
+  /** Movements a finalized declaration cites, as far as the page read. */
+  sealed: ReadonlySet<string>;
   selection: ReadonlySet<string>;
   onSelection: (next: Set<string>) => void;
   context: SectionInspectorContext | null;
@@ -138,7 +140,7 @@ export function LedgerInspector({
         generation={generation}
         stage={stage}
         onStage={onStage}
-        sealed={NO_SEALED}
+        sealed={sealed}
         locale={locale}
         onClearSelection={() => onSelection(new Set())}
         onKeepVisible={() =>
@@ -191,7 +193,7 @@ export function LedgerInspector({
           port={port}
           request={action}
           rows={byId}
-          sealed={NO_SEALED}
+          sealed={sealed}
           onStage={onStage}
           onClose={() => setAction(null)}
           say={setToast}

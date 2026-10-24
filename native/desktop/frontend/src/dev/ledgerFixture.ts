@@ -133,9 +133,12 @@ declare global {
        * and an import would. */
       changeFile(name: string): void;
       /** Answers the next writes so, one each: `unknown` lands the write
-       * and leaves its settlement unobserved, `refused` refuses it whole
-       * and writes nothing. */
-      nextWrites(outcomes: ("unknown" | "refused")[]): void;
+       * and leaves its settlement unobserved, `saved_unread` lands it and
+       * loses its answer, `refused` refuses it whole and writes nothing. */
+      nextWrites(outcomes: ("unknown" | "saved_unread" | "refused")[]): void;
+      /** Answers the next `count` reads of `definition` as unavailable,
+       * as a runtime that did not answer them. */
+      nextReads(definition: string, count: number): void;
       /** Changes a stored movement's field, as another window saving it
        * would. */
       editElsewhere(id: string, field: string, value: string | null): void;
@@ -636,7 +639,9 @@ export function ledgerFixture(options: Options): LedgerPort {
   };
   const reviews = new Map<string, Pending>();
   // How the next writes are answered, where a scenario asked.
-  const queued: ("unknown" | "refused")[] = [];
+  const queued: ("unknown" | "saved_unread" | "refused")[] = [];
+  // How many of the next reads of a definition answer nothing.
+  const failingReads = new Map<string, number>();
   const files = new Map<FileToken, { name: string; purpose: FilePurpose }>();
   const bytesOf = (name: string) =>
     hex64(`bytes:${name}:${edits.get(name) ?? 0}`);
@@ -711,6 +716,9 @@ export function ledgerFixture(options: Options): LedgerPort {
     nextWrites(next) {
       queued.push(...next);
     },
+    nextReads(definition, count) {
+      failingReads.set(definition, (failingReads.get(definition) ?? 0) + count);
+    },
     editElsewhere(id, field, value) {
       const movement = transactionOf(id);
       if (!movement) return;
@@ -724,6 +732,8 @@ export function ledgerFixture(options: Options): LedgerPort {
     drop: (names) => ledgers.forEach((made) => made.drop(names)),
     changeReviews: () => ledgers.forEach((made) => made.changeReviews()),
     nextWrites: (next) => ledgers.forEach((made) => made.nextWrites(next)),
+    nextReads: (definition, count) =>
+      ledgers.forEach((made) => made.nextReads(definition, count)),
     editElsewhere: (id, field, value) =>
       ledgers.forEach((made) => made.editElsewhere(id, field, value)),
     changeFile(name) {
@@ -1877,6 +1887,11 @@ export function ledgerFixture(options: Options): LedgerPort {
     const mutation = changes(definition);
     if (mutation && shape === "refused")
       return reject("refused", { reason: "operation_unavailable" });
+    const failing = mutation ? 0 : (failingReads.get(definition) ?? 0);
+    if (failing > 0) {
+      failingReads.set(definition, failing - 1);
+      return reject("unavailable");
+    }
     const operation = nextOperation();
     try {
       if (ledgerClassOf(definition) === "review") {
@@ -1922,6 +1937,11 @@ export function ledgerFixture(options: Options): LedgerPort {
       if (mutation && (shape === "unknown" || asked === "unknown")) {
         settle(operation, result);
         return reject("unknown", { operation_id: operation });
+      }
+      // The write landed and its answer was lost after it settled.
+      if (mutation && asked === "saved_unread") {
+        settle(operation, result);
+        return reject("saved_unread", { operation_id: operation });
       }
       // A reply over the bound is lost: a write may have landed, a read
       // answered nothing.

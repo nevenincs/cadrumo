@@ -16,6 +16,7 @@ import {
   readFailure,
   type LedgerReadFailure,
 } from "../../../shell/ledgerWindow";
+import { useWritePause } from "../WritePause";
 
 export type Read<T> =
   | { phase: "reading"; value: T | null }
@@ -37,6 +38,8 @@ export function useLedgerRead<D extends LedgerDefinitionId>(
     value: null,
   });
   const [wanted, setWanted] = useState(0);
+  // The page's re-read after a write it could not settle reads this again.
+  const { round } = useWritePause();
   const asked = useRef(0);
   const held = useRef({ reader, key });
   const latest = useRef(payload);
@@ -70,7 +73,7 @@ export function useLedgerRead<D extends LedgerDefinitionId>(
         if (mine !== asked.current) return;
         setRead({ phase: "failed", failure: readFailure(error), value: null });
       });
-  }, [port, reader, shown, definition, key, wanted]);
+  }, [port, reader, shown, definition, key, wanted, round]);
 
   const reread = useCallback(() => setWanted((count) => count + 1), []);
   return { read, reread };

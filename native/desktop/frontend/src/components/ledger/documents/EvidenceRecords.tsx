@@ -20,6 +20,7 @@ import { useStrings } from "../../../shell/strings";
 import { figureText } from "../invoices/invoiceWords";
 import { write } from "../invoices/invoiceWrites";
 import { dayText } from "../transfer/transferWords";
+import { useWritePause, WriteHold } from "../WritePause";
 import {
   fileName,
   holdsUpdate,
@@ -67,6 +68,10 @@ function RecordDetail({
   const [notice, setNotice] = useState<Notice | null>(null);
   const [asked, setAsked] = useState<EvidenceUpdateRequest | null>(null);
   const planned = recordUpdate(record, typed);
+  const pause = useWritePause();
+  const name = fileName(record.source_path);
+  const undetermined = (saved: boolean) =>
+    pause.hold({ what: name, outcome: saved ? "saved_unread" : "unknown" });
   const refused = new Set(planned.kind === "refused" ? planned.fields : []);
   const shown = (field: EvidenceUpdateField) =>
     typed[field] ?? recordValue(record, field) ?? "";
@@ -85,6 +90,7 @@ function RecordDetail({
     } else if (sent.kind === "unknown") {
       setAsked(planned.request);
       setNotice({ kind: "unknown", asked: "update" });
+      undetermined(sent.saved);
     } else
       setNotice({
         kind: "refused",
@@ -102,9 +108,10 @@ function RecordDetail({
     if (sent.kind === "done") {
       say(t("desktop.ledger.documents.record_removed"));
       onRemoved();
-    } else if (sent.kind === "unknown")
+    } else if (sent.kind === "unknown") {
       setNotice({ kind: "unknown", asked: "remove" });
-    else
+      undetermined(sent.saved);
+    } else
       setNotice({
         kind: "refused",
         code: sent.kind === "refused" ? (sent.reason ?? "refused") : sent.code,
@@ -118,9 +125,10 @@ function RecordDetail({
     });
     setBusy(null);
     if (sent.kind === "done") onReview(record.evidence_id);
-    else if (sent.kind === "unknown")
+    else if (sent.kind === "unknown") {
       setNotice({ kind: "unknown", asked: "read" });
-    else
+      undetermined(sent.saved);
+    } else
       setNotice({
         kind: "refused",
         code: sent.kind === "refused" ? (sent.reason ?? "refused") : sent.code,
@@ -173,17 +181,19 @@ function RecordDetail({
             {t("desktop.ledger.documents.open_review")}
           </Button>
         ) : (
-          <Button
-            size="sm"
-            variant="outline"
-            className="ledger-record-read"
-            disabled={busy !== null}
-            aria-busy={busy === "reading" || undefined}
-            onClick={() => void readIt()}
-          >
-            {busy === "reading" ? <Spinner /> : <Icon name="sync" />}
-            {t("desktop.ledger.documents.read_here")}
-          </Button>
+          <WriteHold>
+            <Button
+              size="sm"
+              variant="outline"
+              className="ledger-record-read"
+              disabled={busy !== null}
+              aria-busy={busy === "reading" || undefined}
+              onClick={() => void readIt()}
+            >
+              {busy === "reading" ? <Spinner /> : <Icon name="sync" />}
+              {t("desktop.ledger.documents.read_here")}
+            </Button>
+          </WriteHold>
         )}
       </div>
       <p className="text-sm">
@@ -208,7 +218,14 @@ function RecordDetail({
           <AlertDescription className="flex flex-wrap items-center gap-2">
             {t("desktop.ledger.documents.unknown_note")}
             {notice.asked !== "read" && (
-              <Button size="xs" variant="outline" onClick={() => void check()}>
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={() => {
+                  void check();
+                  if (!pause.rereading) pause.reread();
+                }}
+              >
                 {t("desktop.ledger.documents.check")}
               </Button>
             )}
@@ -264,16 +281,18 @@ function RecordDetail({
         </Field>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Button
-          size="sm"
-          className="ledger-record-save"
-          disabled={planned.kind !== "update" || busy !== null}
-          aria-busy={busy === "saving" || undefined}
-          onClick={() => void save()}
-        >
-          {busy === "saving" && <Spinner />}
-          {t("desktop.ledger.documents.save")}
-        </Button>
+        <WriteHold>
+          <Button
+            size="sm"
+            className="ledger-record-save"
+            disabled={planned.kind !== "update" || busy !== null}
+            aria-busy={busy === "saving" || undefined}
+            onClick={() => void save()}
+          >
+            {busy === "saving" && <Spinner />}
+            {t("desktop.ledger.documents.save")}
+          </Button>
+        </WriteHold>
         <Button
           size="sm"
           variant="ghost"
@@ -304,15 +323,17 @@ function RecordDetail({
           <AlertDescription className="grid gap-2">
             {t("desktop.ledger.documents.remove_note")}
             <span className="flex gap-2">
-              <Button
-                size="xs"
-                variant="destructive"
-                className="ledger-record-remove-confirm"
-                disabled={busy !== null}
-                onClick={() => void remove()}
-              >
-                {t("desktop.ledger.documents.remove")}
-              </Button>
+              <WriteHold>
+                <Button
+                  size="xs"
+                  variant="destructive"
+                  className="ledger-record-remove-confirm"
+                  disabled={busy !== null}
+                  onClick={() => void remove()}
+                >
+                  {t("desktop.ledger.documents.remove")}
+                </Button>
+              </WriteHold>
               <Button
                 size="xs"
                 variant="ghost"
@@ -356,6 +377,7 @@ export function EvidenceRecords({
   say(text: string): void;
 }) {
   const t = useStrings();
+  const pause = useWritePause();
   const [adding, setAdding] = useState(false);
   const [addFailed, setAddFailed] = useState<string | null>(null);
   const record =
@@ -376,6 +398,11 @@ export function EvidenceRecords({
         source_path: file.token,
         idempotency_key: crypto.randomUUID(),
       });
+      if (sent.kind === "unknown")
+        pause.hold({
+          what: file.name,
+          outcome: sent.saved ? "saved_unread" : "unknown",
+        });
       await port.forgetFiles([file.token]).catch(() => undefined);
       if (sent.kind === "done") {
         say(t("desktop.ledger.documents.record_added"));
@@ -400,17 +427,19 @@ export function EvidenceRecords({
     <div className="ledger-records flex min-h-0 flex-1">
       <div className="flex min-h-0 w-1/3 shrink-0 flex-col border-r border-border">
         <div className="flex items-center gap-2 p-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="ledger-record-add"
-            disabled={adding}
-            aria-busy={adding || undefined}
-            onClick={() => void add()}
-          >
-            {adding ? <Spinner /> : <Icon name="plus" />}
-            {t("desktop.ledger.documents.add_one")}
-          </Button>
+          <WriteHold>
+            <Button
+              size="sm"
+              variant="outline"
+              className="ledger-record-add"
+              disabled={adding}
+              aria-busy={adding || undefined}
+              onClick={() => void add()}
+            >
+              {adding ? <Spinner /> : <Icon name="plus" />}
+              {t("desktop.ledger.documents.add_one")}
+            </Button>
+          </WriteHold>
         </div>
         {addFailed && (
           <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>

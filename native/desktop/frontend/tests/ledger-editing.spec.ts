@@ -466,6 +466,7 @@ test("a permanent link names how its sides differ and needs a second tick for it
     invoice_id: "inv",
     invoice_number: "GT-2026-0917",
     grand_total: { decimal: "1548.80" },
+    currency: "EUR",
     counterparty_name: "Imprenta Gráficas Turia SL",
     linked_transaction_ids: [B],
   } as unknown as CatalogueInvoice;
@@ -480,6 +481,24 @@ test("a permanent link names how its sides differ and needs a second tick for it
     { ...invoice, linked_transaction_ids: [A] },
   );
   expect(same).toEqual([]);
+  // A movement in another currency differs in its currency, not by an
+  // amount: the two numbers have no difference to state.
+  const foreign = linkMismatches(
+    movement(A, {
+      amount: "1548.80",
+      currency: "USD",
+      counterparty: "Imprenta Graficas Turia",
+    }),
+    { ...invoice, linked_transaction_ids: [A] },
+  );
+  expect(foreign).toEqual([
+    { kind: "currency", movement: "USD", invoice: "EUR" },
+  ]);
+  expect(
+    linksReady([{ id: "f", mismatches: foreign }], {
+      f: { sure: true, differ: false },
+    }),
+  ).toBe(false);
   expect(decimalDistance("10", "12.5")).toBe("2.5");
   const links = [{ id: "l", mismatches }];
   expect(linksReady(links, {})).toBe(false);

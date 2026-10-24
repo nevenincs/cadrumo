@@ -27,6 +27,7 @@ import { stampText } from "../movements/movementWords";
 import { applyDocuments, type DocumentsApplied } from "../transfer/importModel";
 import { sizeText } from "../transfer/transferWords";
 import { write } from "../invoices/invoiceWrites";
+import { useWritePause, WriteHold } from "../WritePause";
 import { batchStatusLabel, sourceLabel } from "./documentWords";
 import { fileName } from "./documentsModel";
 import type { Read } from "./useLedgerRead";
@@ -114,6 +115,7 @@ export function AttachmentQueue({
   onReview(reference: string): void;
 }) {
   const t = useStrings();
+  const pause = useWritePause();
   const [reading, setReading] = useState<string | null>(null);
   const [failed, setFailed] = useState<{ id: string; code: string } | null>(
     null,
@@ -129,6 +131,11 @@ export function AttachmentQueue({
       attachment_id: item.attachment_id,
     });
     setReading(null);
+    if (sent.kind === "unknown")
+      pause.hold({
+        what: t("desktop.ledger.section.documents"),
+        outcome: sent.saved ? "saved_unread" : "unknown",
+      });
     if (sent.kind === "done") onReview(item.attachment_id);
     else
       setFailed({
@@ -185,17 +192,19 @@ export function AttachmentQueue({
               )}
             </td>
             <td className={cell}>
-              <Button
-                size="xs"
-                variant="outline"
-                className="ledger-attachment-read"
-                disabled={reading !== null}
-                aria-busy={reading === item.attachment_id || undefined}
-                onClick={() => void readIt(item)}
-              >
-                {reading === item.attachment_id && <Spinner />}
-                {t("desktop.ledger.documents.read_here")}
-              </Button>
+              <WriteHold>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  className="ledger-attachment-read"
+                  disabled={reading !== null}
+                  aria-busy={reading === item.attachment_id || undefined}
+                  onClick={() => void readIt(item)}
+                >
+                  {reading === item.attachment_id && <Spinner />}
+                  {t("desktop.ledger.documents.read_here")}
+                </Button>
+              </WriteHold>
             </td>
           </tr>
         ))}
@@ -227,6 +236,7 @@ export function FolderIntake({
   onWritten(): void;
 }) {
   const t = useStrings();
+  const pause = useWritePause();
   const label = useId();
   const [direction, setDirection] = useState<InvoiceKind | null>(null);
   const [files, setFiles] = useState<PickedFile[]>([]);
@@ -259,6 +269,11 @@ export function FolderIntake({
     const done = await applyDocuments(port, files, direction, setProgress);
     setBusy(null);
     setApplied(done);
+    if (done.stopped?.code === "unknown")
+      pause.hold({
+        what: done.stopped.files.map((file) => file.name).join(", "),
+        outcome: "unknown",
+      });
     await port
       .forgetFiles(files.map((file) => file.token))
       .catch(() => undefined);
@@ -329,16 +344,20 @@ export function FolderIntake({
             </p>
           )}
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              className="ledger-folder-add"
-              aria-disabled={direction === null || busy !== null || undefined}
-              aria-busy={busy === "adding" || undefined}
-              onClick={() => void add()}
-            >
-              {busy === "adding" && <Spinner />}
-              {t("desktop.ledger.documents.add_count", { count: files.length })}
-            </Button>
+            <WriteHold>
+              <Button
+                size="sm"
+                className="ledger-folder-add"
+                aria-disabled={direction === null || busy !== null || undefined}
+                aria-busy={busy === "adding" || undefined}
+                onClick={() => void add()}
+              >
+                {busy === "adding" && <Spinner />}
+                {t("desktop.ledger.documents.add_count", {
+                  count: files.length,
+                })}
+              </Button>
+            </WriteHold>
             {direction === null && (
               <span className="text-sm text-muted-foreground">
                 {t("desktop.ledger.documents.say_direction")}

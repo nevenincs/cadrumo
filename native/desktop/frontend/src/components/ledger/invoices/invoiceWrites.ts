@@ -21,8 +21,9 @@ export type WriteAnswer<Result> =
   | { kind: "done"; result: Result }
   /** Settled without writing, with the runtime's code and detail. */
   | { kind: "refused"; reason: string | null; detail: unknown }
-  /** Sent, and not seen to settle: it may have been saved. */
-  | { kind: "unknown" }
+  /** Sent, and not seen to settle: it may have been saved. `saved` where
+   * it did save and only its answer was not read. */
+  | { kind: "unknown"; saved: boolean }
   /** Not sent, or answered nothing: nothing was written. */
   | { kind: "failed"; code: string };
 
@@ -41,11 +42,11 @@ export async function write<D extends LedgerDefinitionId>(
         reason: outcome.reason,
         detail: outcome.detail,
       };
-    return { kind: "unknown" };
+    return { kind: "unknown", saved: false };
   } catch (error) {
     const failure = ledgerFailure(error);
     if (failure.code === "unknown" || failure.code === "saved_unread")
-      return { kind: "unknown" };
+      return { kind: "unknown", saved: failure.code === "saved_unread" };
     if (failure.code === "refused")
       return { kind: "refused", reason: failure.reason ?? null, detail: null };
     return { kind: "failed", code: failure.reason ?? failure.code };

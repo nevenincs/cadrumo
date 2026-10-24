@@ -53,6 +53,7 @@ import type { ShowImportBatch } from "../../../shell/ledgerImports";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
 import { PeriodSelector } from "../PeriodSelector";
+import { useWritePause, WriteHold } from "../WritePause";
 import {
   ACCOUNT_PROBE_LIMIT,
   IMPORT_KINDS,
@@ -541,7 +542,9 @@ export function ImportDialog({
     );
   };
 
+  const pause = useWritePause();
   const apply = async () => {
+    if (pause.held !== null) return;
     if (kind === "bank") {
       const plan = sendable.map((preview) => ({
         file: preview.file,
@@ -555,6 +558,16 @@ export function ImportDialog({
       setProgress(null);
       setOutcome({ kind: "bank", applied });
       setStep("result");
+      const unseen = applied.flatMap((item) =>
+        item.kind === "unknown" ? [item] : [],
+      );
+      if (unseen.length)
+        pause.hold({
+          what: unseen.map((item) => item.file.name).join(", "),
+          outcome: unseen.every((item) => item.code === "saved_unread")
+            ? "saved_unread"
+            : "unknown",
+        });
       if (applied.some((item) => item.kind !== "not_sent")) onWritten();
       const flagged = applied.flatMap((item) =>
         item.kind === "imported"
@@ -576,6 +589,11 @@ export function ImportDialog({
       setProgress(null);
       setOutcome({ kind: "book", file, answer });
       setStep("result");
+      if (
+        answer.kind === "failed" &&
+        (answer.code === "unknown" || answer.code === "saved_unread")
+      )
+        pause.hold({ what: file.name, outcome: answer.code });
       if (answer.kind !== "refused") onWritten();
     } else {
       setProgress({ kind: "applying", done: 0, total: files.length });
@@ -585,6 +603,11 @@ export function ImportDialog({
       setProgress(null);
       setOutcome({ kind: "documents", applied });
       setStep("result");
+      if (applied.stopped?.code === "unknown")
+        pause.hold({
+          what: applied.stopped.files.map((file) => file.name).join(", "),
+          outcome: "unknown",
+        });
       onWritten();
     }
   };
@@ -726,16 +749,18 @@ export function ImportDialog({
             {t("desktop.ledger.import.choose_accounts")}
           </span>
         )}
-        <Button
-          pending={progress?.kind === "applying"}
-          disabled={
-            kind === "bank" &&
-            (previews.length === 0 || sendable.length === 0 || missingAccount)
-          }
-          onClick={() => void apply()}
-        >
-          {label}
-        </Button>
+        <WriteHold>
+          <Button
+            pending={progress?.kind === "applying"}
+            disabled={
+              kind === "bank" &&
+              (previews.length === 0 || sendable.length === 0 || missingAccount)
+            }
+            onClick={() => void apply()}
+          >
+            {label}
+          </Button>
+        </WriteHold>
       </>
     );
   } else {

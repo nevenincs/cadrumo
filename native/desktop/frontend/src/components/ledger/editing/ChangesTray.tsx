@@ -49,7 +49,8 @@ export function ChangesTray({
   onReview,
 }: {
   tally: StageTally;
-  paused: boolean;
+  /** Why saving waits, while the page's writes are paused. */
+  paused: string | null;
   canUndo: boolean;
   onUndo: () => void;
   onDiscard: () => void;
@@ -140,7 +141,7 @@ export function ChangesTray({
             aria-disabled={paused || tally.units === 0 ? true : undefined}
             aria-label={
               paused
-                ? `${t("desktop.ledger.tray.review")}, ${t("desktop.ledger.tray.paused_reason")}`
+                ? `${t("desktop.ledger.tray.review")}, ${paused}`
                 : t("desktop.ledger.tray.review_count", { count: tally.units })
             }
             onClick={() => {
@@ -152,7 +153,7 @@ export function ChangesTray({
         </TooltipTrigger>
         <TooltipContent>
           {paused
-            ? t("desktop.ledger.tray.paused_reason")
+            ? paused
             : `${t("desktop.ledger.tray.review_count", { count: tally.units })} · Ctrl+Enter`}
         </TooltipContent>
       </Tooltip>

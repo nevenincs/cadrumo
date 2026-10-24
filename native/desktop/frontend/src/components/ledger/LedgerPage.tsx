@@ -37,7 +37,11 @@ import {
   windowProgress,
 } from "../../shell/ledgerWindow";
 import { useLedgerYears } from "../../shell/ledgerYears";
-import { EMPTY_STAGE, reduceStage } from "../../shell/ledgerStage";
+import {
+  EMPTY_STAGE,
+  reduceStage,
+  stagedMovements,
+} from "../../shell/ledgerStage";
 import { useStrings } from "../../shell/strings";
 import { localDay } from "../../shared/dates";
 import {
@@ -82,6 +86,8 @@ import { LedgerInspector } from "./inspector/LedgerInspector";
 import type { InspectorFocus } from "./inspector/MovementInspector";
 import type { RightPanelMode } from "./inspector/RightPanel";
 import { MatchQueue } from "./matching/MatchQueue";
+import { useSealedMovements } from "./useSealedMovements";
+import { PausedBanner, usePagePause, WritePauseContext } from "./WritePause";
 
 /** What the page keeps of itself while it is put away, for one profile:
  * the period it showed and how its movements were looked at. Held in memory
@@ -292,6 +298,23 @@ export function LedgerPage({
   const exportAction: LedgerHeaderAction = readable
     ? { run: () => setTransfer("export") }
     : unavailable();
+  // One pause for every write on the page: a write whose outcome was not
+  // observed holds them all until a re-read settles it.
+  const pause = usePagePause({ port, reader, period, afterReread: reread });
+  // The movements the page acts on, whose participation it reads to know
+  // which a finalized declaration seals.
+  const sealedWanted = useMemo(
+    () => [
+      ...new Set([...movements.selection, ...stagedMovements(stage.content)]),
+    ],
+    [movements.selection, stage.content],
+  );
+  const { sealed, sealedOf } = useSealedMovements(
+    port,
+    reader,
+    periodWindow?.phase === "ready" ? periodWindow.generation : null,
+    sealedWanted,
+  );
   // The staged work of every section: the tray, the review and apply,
   // and the guard before leaving.
   const [focusDraft, setFocusDraft] = useState<string | null>(null);
@@ -319,6 +342,8 @@ export function LedgerPage({
     },
     guardLeave,
     locale,
+    pause,
+    sealedOf,
   });
   // The rule dialog opens over whatever section is shown: from Rules, or
   // from a selection or a group of movements.
@@ -644,6 +669,7 @@ export function LedgerPage({
               openReview: editing.openReview,
               focusDraft,
               onDraftFocused: () => setFocusDraft(null),
+              sealed,
             }}
             view={view}
             onViewChange={onViewChange}
@@ -671,7 +697,7 @@ export function LedgerPage({
     !(drawnRows.total === 0 && stage.content.drafts.length === 0);
 
   return (
-    <>
+    <WritePauseContext.Provider value={pause}>
       <LedgerHeader
         title={pane.title}
         controls={pane.controls}
@@ -726,7 +752,7 @@ export function LedgerPage({
           aria-label={readable && !isTab ? sectionName(t, section) : undefined}
           className="flex min-h-0 flex-1 flex-col"
         >
-          {readable && editing.banner}
+          {readable && <PausedBanner pause={pause} />}
           <div className="flex min-h-0 flex-1" onKeyDown={onInspectorKey}>
             {/* The grid scrolls within what the panel leaves it; resizing
                 the panel keeps it its own width. */}
@@ -739,6 +765,7 @@ export function LedgerPage({
                 generation={periodWindow.generation}
                 stage={stage}
                 onStage={editing.onStage}
+                sealed={sealed}
                 selection={movements.selection}
                 onSelection={movements.setSelection}
                 context={inspectorContext}
@@ -838,6 +865,6 @@ export function LedgerPage({
           onCloseAutoFocus={returnTransferFocus}
         />
       )}
-    </>
+    </WritePauseContext.Provider>
   );
 }
