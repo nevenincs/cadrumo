@@ -1296,3 +1296,351 @@ The audit had filed this as "pre-existing". It is not: `RulesSection.tsx` was cr
 - Compare `mod.rs:381`, where `relay` calls `settle::still_held`.
 
 **Fix.** Wrap the answer's outcome in `settle::still_held(..., true)`.
+
+## P04.S17 usability re-walk, 2026-10-24
+
+The same ten tasks re-walked after the P03 fixes. Of the 25 earlier findings, 16 are fixed, 2 mostly fixed, 5 partly fixed, 1 still open (the narrow-grid critical) and 1 deferred. The re-walk adds 1 critical, 4 high, 5 medium and 12 low findings.
+
+#### Tasks
+
+| # | Task | Before: steps · s (≈) · result | Now: steps · s (≈) · result | Notes |
+| --- | --- | --- | --- | --- |
+| 1 | Bulk-classify 10 as Business with a category | 11 · 6.3 (≈24) · **trap** | 10 · 6.7 (≈12) · **pass at 1440, trap at 1280** | Alt+B works after a checkbox selection. The dialog splits "Expenses 6 · Income 4". Typing "soft" and pressing Enter picks Software subscriptions, and the next Enter stages. At 1280, with the agent pane and the inspector open, Description and Counterparty scroll out of view again (UX2 · narrow-grid-hides-description). |
+| 2 | Mixed at 30 %, with the usage ratio | 4 · 1.3 (≈5) · pass with trap | 8 · 3.4 (≈8) · pass | The step now asks for the share and a category, and stages the usage ratio. After saving, the row reads Done. Defect: the ratio line says only "Usage ratio: 1", and the review shows the raw id `telefonia_movil` (UX2 · usage-ratio-copy). |
+| 3 | One counterparty, grouped by category | 5 · 3.6 (≈9) · pass | 5 · 4.0 (≈7) · pass | The Group menu closes on choice. The group header has Classify ▾ and ⋯. There is still no counterparty filter: search also matches descriptions. |
+| 4 | Fix and undo a typo | 6 · 1.4 (≈6) · pass | 6 · 1.5 (≈5) · pass | Ctrl+Z / Ctrl+Y work. The toast reads "Undone: edit". |
+| 5a | Review and save | 3 · 1.5 (≈7) · pass (focus lost) | 3 · ≈1.9 (≈6) · pass | Focus returns to the active cell. The result reads "Saved · 3". |
+| 5b | Unknown outcome, pause, Re-read | 3 · 1.9 · **trap** | 3 + Re-read · ≈2.1 · pass, with a bulk trap | The title is "Outcome unknown · 2" and the pause covers the whole page. Edits staged again while paused survive the Re-read. A 10-row Re-read banner lists every name over three lines (UX2 · reread-banner-lists-every-name). |
+| 5c | Refused | 3 · 1.7 · pass with copy defect | 3 · ≈2.3 · pass | "Not saved: changed elsewhere · stays staged". The code sits under Technical details. |
+| 6 | Import a statement | 6 · 7.1 (≈20) · pass with gaps | 6 · 8.0 (≈12) · pass | Duplicates carry a copy glyph, the strip has a "Duplicates 2" chip, the detected account is an editable Select, and the import-period banner is short. The preview `⚠ 2` uses the wrong glyph (UX2 · duplicate-glyph-mismatch). |
+| 7 | Export the quarter | 5 · 3.3 (≈12) · pass | 5 · 4.1 (≈9) · pass | The footer is sticky and Export (40) is in view at 1280×800. The Save-as row is clipped (UX2 · export-saveas-clipped). |
+| 8a | Confirm a received PDF and link it | 9 · 6.3 (≈28) · pass | 9 · 7.5 (≈14) · pass | Focus moves from Confirm to "Link · permanent" and then to the next document. |
+| 8b | Confirm the **scanned** ticket and link it | could not be judged | 20 · ≈13 (≈30, plus finding the movement) · **trap** | The viewer scrolls away from the questions (UX2 · viewer-scrolls-away). No link step is offered (UX2 · ticket-no-link-path). The attested total is not what is stored (UX2 · total-answer-not-kept). |
+| 9 | Make a rule from a selection | 6 · 3.2 (≈15) · **trap** | 5 · 3.7 (≈10) · pass | "Make a rule…" is in the selection ⋯ menu, and the count reads "Matches 8 · 0 to classify". After Save rule nothing says it was saved (UX2 · rule-saved-silently). |
+| 10 | Health for a quarter | 3 · 2.7 (≈6) · pass | 3 · 2.5 (≈5) · **pass for the open quarter, trap for any other** | Health opens on the strip's last check and uses the same pills. On another quarter it shows the previous quarter's pills (UX2 · health-other-period-stale). |
+
+Scale check, 5000 rows: the ○ pill, the header tick, Alt+P on 1,000 rows (the tray appears in 0.4–0.6 s) and Review all respond. Review holds back 284–343 movements as "Sealed state not read", and the count varies between identical runs (UX2 · sealed-holdback-rounds).
+
+Keyboard re-checks: Alt+B/P/M work from the checkbox, the header and the period button. Shift+Space then Shift+↓ selects the row range. Enter stages from the Classify dialog. The paste preview's "Paste 0" is disabled and the first refusal reason is shown. "Use 77.45" fixes a decimal comma in one click. A reason chip moves focus to the marked cell.
+
+#### Status of the earlier findings
+
+- **classify-flow-hides-description (critical): still open; the earlier fix regressed at narrow widths.**
+  - At a grid width of about 700 px or more, Description is pinned and stays in view.
+  - At 1280 with the agent pane and the inspector open, the grid is 616 px wide. Description is then unpinned, and the ○ pill and reason-chip flows scroll it entirely out of view.
+  - At 1440 in the default layout, Counterparty is hidden under the pinned Description, and no cue points to it.
+  - The 40rem minimum is not enforced.
+- **unknown-titled-nothing-saved (critical): fixed.** The title follows the worst outcome, the banner uses the Alert pattern with its action, and a saved row's staged change is dropped. One new problem: the long banner after a bulk Re-read.
+- **business-on-income-forces-expense-category (high): fixed.** The dialog says "Expenses 6 · Income 4 · no category needed", and income rows stage no category.
+- **alt-b-dead-after-checkbox-selection (high): fixed.** This covers the checkbox, the header, the period button and Shift+Space row mode. The dialog title counts the selection.
+- **document-no-preview (high): partly fixed.** A viewer now exists, with page ‹ ›, zoom and fit. It is stacked above the reading, scrolls away from the questions, highlights nothing, and disappears after Confirm.
+- **import-duplicates-unmarked (high): fixed for the parts that were not deferred.** The copy glyph, the strip chip and "Archive as duplicate" ship. Pairing in the preview stays deferred.
+- **rule-matches-zero (high): fixed.** The count reads "Matches 8 · 0 to classify", Category is a Combobox, and "Make a rule…" is in the selection and group menus. New: no feedback after saving.
+- **focus-lost-after-dialogs (high): fixed for all six listed commits.** Pressing the Duplicates chip at "All periods" once left focus on `<body>`.
+- **export-footer-offscreen (medium): fixed.** The footer is sticky and Export is in view at 1280×800. The help text moved behind ⓘ. "Export without them" collapses to "Unsaved: 1 · not in this file". New: the body clips the Save-as row.
+- **readiness-counts-disagree (medium): partly fixed.**
+  - Export and Health reuse the strip for the open period.
+  - Export for another period falls back to "Readiness issues: 20", a different unit from the strip's movements.
+  - Health for another period shows the old period's pills.
+  - The strip's ⚠ count depends on which rows are loaded or filtered (UX2 · countless-warning-zero-to-fix).
+- **category-search-fuzzy (medium): partly fixed.** "soft" now finds Software subscriptions. Scattered-letter matches are still listed beside word matches, and they win Enter: "phone" puts "Depreciation of home…" above Mobile phone, "office" highlights Home-office electricity, and "tele" highlights "Alternative mutual-insurance contribution".
+- **enter-reopens-combobox (medium): fixed.**
+- **mixed-without-category (medium): fixed.** The step asks for the share and the category and stages the usage ratio. The row is Done after saving, and the fixture now raises "Mixed without a usage ratio".
+- **refused-raw-code (medium): fixed.**
+- **review-repeats-itself (medium): partly fixed.**
+  - The summary table and the collapsed "Movements · n ›" list work, the result reads "Saved · n", and the pencil is gone.
+  - The 676-row save progress lists every row as "Saved".
+  - The review's first line, "Saved together: 1 · One by one: 1", describes how the save is sent rather than what changes.
+- **hidden-columns-no-cue (medium): mostly fixed.** The `+1 ›` cue and the pinned edges ship. The column that sits under the pinned Amount shows fragments ("→ O", "Bank", "Vehic"), and nothing marks columns hidden on the left.
+- **group-header-actions (medium): fixed.**
+- **selection-inspector-repeats (low): fixed.** It shows one glyph-count line and "In 4,377.80 EUR". New: wrong "Hidden" counts after a failed readiness read.
+- **plural-grammar (low): partly fixed.** The plural bugs are gone, but the replacement "Label: n" fragments read like a data dump: "Mixed · Movements: 1", "Personal · Staged: 1", "Undone: edit". There is also a new grammar error, "Classification rules was saved".
+- **paste-refused-no-reason (low): fixed.**
+- **amount-comma-refusal (low): fixed.**
+- **usd-decimal-alignment (low): fixed.**
+- **status-column-wasted (low): fixed.** Compact density uses 2.75rem with a non-state header glyph. Comfortable density shows the word.
+- **small-copy-and-chrome (low): mostly fixed.**
+  - Fixed: the import duplicate copy, the import banner, the unreadable-file border, the palette hints, the tab names, the ⇆ glyph and the Health sum (40 = 8 + 31 + 0 + 1).
+  - Still open: the reason chips' accessible names repeat the label and count.
+  - Not re-checked: "Saved changes can't be undone here".
+- **deferred-contract-gaps:** not re-reported.
+
+P03 re-review items with a UX surface, re-checked live:
+
+- **reread-drops-new-edits: fixed.** A counterparty and Business staged again on a row the read showed as saved both survived Re-read.
+- **generic-settle-resolves-nothing: fixed for Rules.** An unknown Save rule blocks Save, its "Read again" reads the rule list, and the dialog closes as saved.
+- **unmeasured-drawn-done-in-inspectors: fixed.** When readiness fails, the selection counts show `◌ 94`. The new "Hidden" defect is below.
+- **sealed-unread-claimed-unsealed: fixed in substance.** The review says "Sealed state not read: 343 · Re-read". The UX cost is below.
+- **export-unknown-not-held: fixed.** An unknown export pauses the page and clears its file.
+- **chords-skip-the-header: fixed.**
+- **shift-space-stale-anchor: fixed.**
+- **compact-status-glyphs: header fixed.** The lifecycle badge was not re-checked.
+- **pinned-group-narrow-band: still open.** The fix unpins Description instead of keeping the grid wide enough. See the first finding.
+
+### UX2 · narrow-grid-hides-description | critical | At 1280 with the agent pane and inspector open, the "to classify" and reason-chip flows again leave no Description or Counterparty on screen
+
+- **What I did.** At 1280×800 in the default layout (agent pane open), I clicked `○ 8`, then the "Category 1" chip. I did the same at 1440×900.
+- **What happened.**
+  - The inspector opens and the grid becomes 616 px wide, under the 40rem minimum.
+  - Description loses its pinned position, and the reveal scrolls it off to the left: the header spans 116–308 against a pinned Date ending at 508.
+  - The grid then shows Status, Date, Classification, Category and Amount, plus a sliver of Counterparty ("ty", "Trazo", "Ireland Ltd").
+  - At 1440 in the default layout, Description stays pinned, but Counterparty (577–721) sits entirely under it, "Direction" is clipped to "rection", and nothing tells you a column is hidden on the left.
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\07b-1280-light-toclassify.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\07c-1280-light-reason-chip.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\07c-1280-dark-reason-chip.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\36-1440-agent-pill.png`
+- **Change.**
+  - Keep the M6 promise structurally. When the inspector opens and the grid would drop below 40rem, collapse the agent pane to its rail, the way the shell already collapses panes, or open the inspector at `--inspector-min`.
+  - Never unpin Description. Let it shrink to its 12rem minimum instead.
+  - When `reveal` would push a column out of view on the left, show the same `‹ +1` header cue the right edge already has.
+
+### UX2 · health-other-period-stale | high | Health for another quarter shows the previous quarter's readiness pills under the new quarter's heading, even after "Check"
+
+- **What I did.** I opened Setup ▾ → Health at 2026 · 4T, pressed ‹ to move to 3T, waited 6 s, and then pressed Check.
+- **What happened.**
+  - "Status · 2026 · 3T" correctly shows To classify 10 and Foreign without a rate 0.
+  - "What's still missing · 2026 · 3T" shows `◌ ○ 8 ⊘ 1`. These are the 4T values.
+  - After Check it shows `○ 8 ⊘ 1` with no ⚠ pill, although Movements for 3T shows `⚠ 10 ○ 10` and no ⊘.
+  - The Movements tab badge also keeps saying 8 while Health is open.
+  - The strip counts the page's old loaded rows against the new period's check, which R1 forbids ("every count shows stored state").
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\24c-health-3T-1440.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\25b-health-3T-checked.png`
+- **Change.** Health's strip, the tab badge and Export's strip must count from the rows of the period they are titled with. Until those rows are read, show only the muted `◌` pill, with the tooltip "3T not checked yet · Check". Health's Status table already reads its own period, so feed the strip from the same read.
+
+### UX2 · countless-warning-zero-to-fix | high | The strip says "Not ready for calculation · 0 to fix" while 30 movements need fixing, and at scale its counts change with the sort order
+
+- **What I did.**
+  - I chose Period ▾ → All periods, then pressed the "Duplicates 1" chip. This is the flagged "warning pill with no count".
+  - In the 5000-row scenario at All periods, I changed the sort from date ascending to descending.
+- **What happened.**
+  - With the duplicates filter on, the `○` and `⊘` pills vanish. The ⚠ pill becomes a solid warning capsule with no number, no longer a button, whose tooltip and accessible name read "Not ready for calculation · 0 to fix". The period has 30.
+  - The cause is that `readinessSets` intersects the check's issues with the rows currently loaded (`movementsModel.ts:369-408`). The duplicates filter is read from the ledger, so only one row is loaded. `ReadinessStrip.tsx:85-99` then draws the deliberate count-less pill.
+  - At 5000 rows, the same intersection makes `⚠ 95 ○ 143 ⊘ 16` become `⚠ 101 ○ 202 ⊘ 25` when only the sort changes. "loaded rows only" appears only in the tooltip.
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\05a-all-duplicates.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\06-dup-all-hover.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\04-all_ledgerRows_5000-dark.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\04-all-desc_ledgerRows_5000-dark.png`
+- **Change.**
+  - The ⚠ count is the number of distinct movements in the check's own issue list for the period, never the part of it that is loaded.
+  - ○ and ⊘ come from the period counts the status read already returns: `pending_review_count`, and `unconverted_currency_count` for EUR rates.
+  - A grid filter never changes the strip.
+  - Where only a window-local count exists, draw `⚠ ≥ 95`, with "in the loaded rows" in the tooltip.
+  - The count-less ⚠ is allowed only when the check reports not ready with zero movement-level issues. Its tooltip then names the period-level reason, never "0 to fix".
+
+### UX2 · preflight-failure-hides-selection | high | When readiness can't be read, every selected row on screen is reported "Hidden", and bulk classify is disabled
+
+- **What I did.** In 3T, I made `ledger.preflight` unavailable (`nextReads("ledger.preflight", 50)`), opened the inspector on a row with Alt+I, and ticked the header to select all 106 shown movements.
+- **What happened.**
+  - The selection inspector says "Hidden: 106 of 106 selected · Show them · Keep only visible", although every row is drawn and ticked.
+  - Business, Personal and Mixed are disabled.
+  - The set buttons read "Set for 0 visible + 37 hidden" and "Set for 0 visible + 106 hidden".
+  - With readiness readable, the same steps give no hidden note and "Set for 37".
+  - A transient readiness failure therefore blocks the page's main bulk action, with a false reason.
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\28d-preflight-failed-selection.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\29-selectall-3T-failed.png`
+- **Change.**
+  - Derive "visible" only from the grid's drawn rows (`MovementsSection.tsx:692`). It currently reaches the inspector through the context built at `MovementsSection.tsx:1213` and read at `SelectionInspector.tsx:167`.
+  - Make sure no readiness state can empty that set.
+  - A failed readiness read should change only the strip, to `◌` with "Couldn't check · Check again".
+  - Add a scenario test: preflight unavailable, select all, assert no hidden note.
+
+### UX2 · viewer-scrolls-away | high | The scanned ticket is never on screen next to the question it is needed for
+
+- **What I did.** In Documents I opened `ticket-plenoil-1015.jpg` at 1440×900 and pressed the Supplier NIF `⚠`, which is the "Go to the question" button.
+- **What happened.**
+  - The viewer is a fixed box of about 380 px at the top of the right panel, at 100 % zoom on a 902×1278 image, above 14 reading rows.
+  - At the question "Two tax ids are printed on the ticket", the image is scrolled above the viewport (its top is at −194 px), so the one thing you need to look at is gone.
+  - The two readings, "B87000001 · top of the ticket" and "B87000007 · footer", don't point into the image.
+  - Focusing a field highlights nothing.
+  - After Confirm the viewer disappears, so you can't check what you just confirmed.
+  - The document list keeps 463 px for three file names.
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\19b-ticket-1440.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20a-question-1440.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20b-choose-reading-1440.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20d-confirmed-1440.png`
+- **Change.**
+  - With a document open, collapse the list to the shell's narrow rail, keeping the `⚠ 2` badges.
+  - Split the panel into two ResizeHandle columns: a sticky viewer on the left, and "What was read" with the questions scrolling on the right.
+  - Choosing a reading, or focusing a field, scrolls the viewer to that reading's location. Use the reader's box when it gives one, and "top" or "footer" otherwise.
+  - Keep the viewer, read-only, under the "Confirmed as invoice" card.
+  - The scenario's synthetic ticket should print the two NIFs, so this flow can be judged at all.
+
+### UX2 · ticket-no-link-path | medium | After confirming a ticket with no matching movement, the panel offers no way to link it
+
+- **What I did.** I confirmed the ticket (10 steps), then looked for a way to link it.
+- **What happened.**
+  - The panel shows only "Confirmed as invoice T-1015-0042 · Pending".
+  - The PDF path offers "Link it to its movement? … Link · permanent". The ticket path, with no automatic match, offers nothing.
+  - Linking took ten more steps: Movements → find the fuel row by eye → Alt+I → Invoice → "Link another invoice" → pick → Review → two ticks → Save.
+  - The picker's popover is 220 px wide and wraps every entry onto two lines.
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20d-confirmed-1440.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\21b-picker.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\21d-review.png`
+- **Change.**
+  - When no movement settles the invoice, the confirmed card says "No movement matches · Find its movement…".
+  - That action opens the M1 picker turned around: movements within ±10 days and a similar amount, sorted "Settles this amount" first.
+  - It stages through the same permanent-link review.
+  - Size the popover to at least its trigger's width plus the dialog's width, as the Combobox already does.
+
+### UX2 · total-answer-not-kept | medium | Answering "It is right as read" for the printed total 58.40 still stores the invoice at 58.39
+
+- **What I did.** For "The totals do not add up · Base plus IVA is 58.39; the ticket prints 58.40", I chose "It is right as read", typed the reason "Rounding" and confirmed.
+- **What happened.** The link picker, the permanent-link review ("T-1015-0042 · 58.39") and the Invoices tab ("… 48.26 10.13 EUR … 58.39") all carry 58.39, the value the person declined.
+- **Caveat.** This is seen against the scenario host. Its catalogue entry is built from base plus IVA, so check what the product's confirm stores.
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20c-before-confirm-1440.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\21d-review.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\21f-invoices.png`
+- **Change.** Do one of the following:
+  - store the attested printed total;
+  - or, if the catalogue always derives the total, replace the "It is right as read" segment for derived fields with one plain line: "Saved as 58.39 (base + IVA) · ticket prints 58.40".
+
+### UX2 · reread-banner-lists-every-name | medium | After a bulk unknown save, the Re-read alert names every movement, over three lines
+
+- **What I did.** I bulk-staged Personal on 10 movements, saved with `nextWrites(["unknown"])`, and pressed Re-read.
+- **What happened.**
+  - The persistent alert reads "FIBRA HOGAR ALBOR was saved · PAPELERIA TRAZO was saved · GASOLINERA RUTA 7 was saved · … SOFTNUBE IRELAND SUSCRIPCION was saved". That is 10 names, about 60 words, wrapping to three lines, against R22's 8-word banner budget.
+  - Names are ambiguous: the quarter has several "PAPELERIA TRAZO" movements.
+  - Before the Re-read, the ten classified rows vanish from the "To classify" view, and the inspector says "Hidden: 10 of 10 selected". The rows are correct, but nothing says that is why.
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\14a-bulk-unknown.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\14b-after-reread.png`
+- **Change.**
+  - The alert reads `✓ 10 saved · ↺ 0 staged again · Show them`, where "Show them" applies a filter chip naming the ids.
+  - Per-row detail goes to each row's History, which R11 already asks for.
+  - The unknown banner's trailing fragment "· Staged changes" should name what is unknown, for example "Outcome unknown · 10 movements · writes paused".
+
+### UX2 · category-ranking-scatter | medium | Scattered-letter matches still sit beside word matches and win Enter
+
+- **What I did.** In the Business step I typed each of these queries and read the highlighted option: "office", "phone", "tele", "telefono", "gasolina".
+- **What happened.**
+  - "office" highlights Home-office electricity. Office supplies is fifth.
+  - "phone" lists Landline phone, then Depreciation of home used for business, then Property tax (IBI) on home used for business, then Mobile phone.
+  - "tele" highlights "Alternative mutual-insurance contribution".
+  - The Spanish words a person reads on their statement ("telefono", "gasolina", "coche") find nothing in the English catalogue.
+  - The cause: `optionScore` (`combobox.tsx:66-80`) returns 0.1 for a scatter match even when word matches exist. The family groups are also ordered by their best member, so a scatter item in an earlier group outranks a word match in a later one.
+- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\15a-office.png`
+- **Change.**
+  - Rank in this order: the name starts with the query, then a word starts with it, then the name contains it.
+  - Drop scatter matches whenever any of those exist.
+  - Order groups by their best score, and the items inside a group by score.
+  - Fold accents.
+  - Add the Spanish statement words to each category's `keywords` through the `dev.locales` catalogue.
+
+### UX2 · sealed-holdback-rounds | medium | Saving 1,000 movements holds back a different number each time as "Sealed state not read", and Re-read seems to do nothing twice
+
+- **What I did.** At 5000 rows I selected all 1,000 to classify, pressed Alt+P, then Review.
+- **What happened.**
+  - Across three identical runs, Review said "Saved together: 657 · Held back: 343", then 676/324, then 716/284, each under "Sealed state not read: n · Re-read".
+  - In the last run, the first two Re-read presses left the counts unchanged, with no progress shown. The third cleared the hold to "Saved together: 1000".
+  - "Sealed state" is jargon to a self-employed person.
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\33b-scale-review.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\34-sealed-rounds.png`
+- **Change.**
+  - The review reads the lock state of every staged movement with its own budget, as P03R asked, before it shows Save.
+  - While it reads, it shows a progress line ("Checking which movements are locked · 412 of 1,000").
+  - Use the plain word "locked" (R1's "Verified (sealed)" stays as the state name).
+  - Re-read shows its spinner, and the held count visibly falls.
+
+### UX2 · export-other-period-sentence | low | Export for another period swaps the strip for a sentence in a different unit
+
+- **What I did.** I opened Export and pressed ‹ to move to 3T.
+- **What happened.** The pills are replaced by "Not ready for calculation · Readiness issues: 20. The file shows what the ledger holds now." The 20 counts issues; the strip for 3T counts `⚠ 10 ○ 10` movements.
+- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\26a-export-3T.png`
+- **Change.** Read that period's check and draw the same strip component. Until then, draw `◌` with "3T not checked · Check".
+
+### UX2 · usage-ratio-copy | low | The Mixed step's ratio line is a bare count, and the review shows a raw id
+
+- **What happened.**
+  - The Mixed step says "Usage ratio: 1" when a ratio exists, and "No usage ratio for this category: 1 · Business-use ratios" when none does, on a one-movement dialog.
+  - The review row reads "Usage ratio · empty → telefonia_movil".
+  - The share hint reads "Percent of business use: 50 for 50%."
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\08b-mixed-filled.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\08d-mixed-review.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\09a-mixed-fuel.png`
+- **Change.**
+  - Write the line as `✓ Usage ratio · Mobile phone` or `⚠ No usage ratio for Vehicle fuel · Business-use ratios ›`.
+  - The review shows the ratio's display name; the id goes under Technical details.
+  - The hint reads "Write 30 for 30 %", as R3 words it.
+
+### UX2 · colon-count-copy | low | The plural fix replaced grammar with "Label: n" fragments, and one action has two names
+
+- **Examples.**
+  - "Mixed · Movements: 1"
+  - "Business · Software subscriptions · Staged: 10"
+  - "Undone: edit"
+  - "Rows: 3 · nothing is staged until you paste."
+  - "Classification rules was saved", which is a grammar error
+- **The same action under two names.** The page banner says "Re-read" and the rule dialog says "Read again".
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\08a-mixed-dialog.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\11c-amount-comma.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\30b-rule-after-reread.png`
+- **Change.**
+  - Use ICU plural messages in the `dev.locales` catalogue: "Mixed · 1 movement", "10 staged", "Undone · counterparty", "Rules saved".
+  - Use one verb, "Re-read", everywhere.
+
+### UX2 · rule-saved-silently | low | Save rule closes with no confirmation, and focus lands on an empty checkbox cell
+
+- **What happened.** After Save rule, the dialog closes. There is no toast and no change in the grid, because the rows were already Personal. Focus is on the first row's checkbox cell.
+- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\23b-saved-1440.png`
+- **Change.** Show the toast "Rule saved · runs 4th · Rules ›", and return focus to the active cell, as the other grid dialogs do.
+
+### UX2 · bulk-chord-overwrites-silently | low | Alt+P on a select-all reclassifies Business and Mixed rows and clears their categories, with a toast that says only "Personal · Staged: 19"
+
+- **What I did.** I ticked the header (40 movements) and pressed Alt+P.
+- **What happened.** 19 movements were staged with 21 edits, including Business and Mixed rows whose category and share are cleared. Nothing said that classified rows were being changed. The review catches it, but only if read.
+- **Change.** The toast and the tray tooltip say what was overwritten: "Personal · 19 · 11 were Business or Mixed · Undo". Above a small threshold, Alt+B/P/M on already-classified rows asks once, in the M4 dialog.
+
+### UX2 · partial-column-fragments | low | The column under the pinned Amount shows word fragments, and a staged category there is unreadable
+
+- **What happened.** At 1280 with the inspector open, the Category column is cut mid-word under the pinned Amount ("→ O", "Bank", "Home", "Vehic"). The `+1 ›` cue is there, but the staged "→ Office supplies" can't be read.
+- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\27c-dark-1280-inspector.png`
+- **Change.** Snap horizontal scrolling to column boundaries, so a column is either whole or counted in the `+n` cue.
+
+### UX2 · duplicate-glyph-mismatch | low | The import preview marks possible duplicates with ⚠, while the grid and the strip use the copy glyph
+
+- **What happened.** The preview's file card shows `⚠ 2`. The grid's Status cell and the strip's "Duplicates 2" chip use `copy`. M3 reserves ⚠ for readiness issues, and DS-12 holds that no glyph means two things.
+- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\16c-preview-1440.png`
+- **Change.** Use the copy glyph on the preview chip, with the tooltip "Possible duplicates: 2 · imported and flagged".
+
+### UX2 · export-saveas-clipped | low | The Export body clips the Save-as row behind the sticky footer, with spare height below the dialog
+
+- **What happened.** At 1440×900, the file name and "Change…" are cut at the footer edge. The dialog ends at y=658, leaving 240 px of viewport unused.
+- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\17c-chosen-1440.png`
+- **Change.** Let the Dialog body grow to the dialog's max-height before it scrolls.
+
+### UX2 · reason-chip-names-repeat | low | Reason chips' accessible names say the label and count twice
+
+- **What happened.** The names read 'Usage ratio 25 Mixed without a usage ratio: 25. Show them and how to fix them' and 'Category 4 Category missing: 4. …'. The pills and tabs are already fixed.
+- **Change.** The name is the sentence only ("Mixed without a usage ratio: 25"). "Shows them and how to fix them" goes in `aria-description`.
+
+### UX2 · unknown-pill-shape | low | The muted "not checked" pill renders as an empty, squashed capsule
+
+- **What happened.** In Health on a new period, and in the strip when readiness fails, the `◌` pill is drawn as a short grey capsule with the glyph off-centre, and it reads as a broken control.
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\24c-health-3T-1440.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\28d-preflight-failed-selection.png`
+- **Change.** Give it the same Badge size and padding as the counted pills, drawn as the glyph alone.
+
+### UX2 · period-years-late | low | "Years with movements" arrives about a second after the dropdown opens, so the dropdown grows under the pointer
+
+- **What happened.** At 300 ms the list is empty. At 1.5 s it shows 2003 · 2011 · 2019 · 2024 · 2025 · 2026, because the list costs two sequential reads per year. On the first run of the session, choosing "Year" also left focus on `<body>`; later runs returned focus to the trigger.
+- **Screenshots.**
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\01a-period-open.png`
+  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\02a-period-open-wait.png`
+- **Change.** Read the years when the page opens, not when the dropdown opens. Reserve the row's height while it loads. Always return focus to the trigger after a choice.
+
+### UX2 · unknown-export-reread | low | An unknown export's banner offers only "Re-read", which reads the ledger, not the file
+
+- **What happened.** The alert reads "Outcome unknown: writes paused · ledger-2026-4T.csv [Re-read]". The dialog itself says "check the file before exporting once more", but the banner's one action cannot tell whether the file was written.
+- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\18b-after-close.png`
+- **Change.** Keep the R11 hold. Word the banner for the file: "Export outcome unknown · ledger-2026-4T.csv · [Show in folder] [I've checked it]". The second action releases the hold.
