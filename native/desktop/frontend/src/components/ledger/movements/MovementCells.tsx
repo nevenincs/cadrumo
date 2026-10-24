@@ -24,6 +24,7 @@ const STATUS_ICONS: Record<StatusWord, IconName> = {
   pending: "pending",
   needs_fixing: "alert",
   done: "check",
+  unmeasured: "unknown",
   skipped: "forward",
   excluded: "eyeOff",
 };
@@ -37,7 +38,8 @@ export const StatusCell = memo(function StatusCell({
   wordy,
 }: {
   row: LedgerRow;
-  issues: number;
+  /** Null while readiness is not measured. */
+  issues: number | null;
   wordy: boolean;
 }) {
   const t = useStrings();

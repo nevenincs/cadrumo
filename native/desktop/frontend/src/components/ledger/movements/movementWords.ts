@@ -73,25 +73,28 @@ export function classifiedByLabel(t: Translate, source: string): string {
 }
 
 /** What the status cell says: the review status, with what readiness found
- * on a reviewed movement. */
+ * on a reviewed movement. `issues` is null while readiness is not measured:
+ * a reviewed movement is then unmeasured, never done. */
 export type StatusWord =
-  "pending" | "needs_fixing" | "done" | "skipped" | "excluded";
+  "pending" | "needs_fixing" | "done" | "unmeasured" | "skipped" | "excluded";
 export function statusWord(
   status: LedgerReviewStatus,
-  issues: number,
+  issues: number | null,
 ): StatusWord {
   if (status === "pending") return "pending";
   if (status === "skipped") return "skipped";
   if (status === "excluded") return "excluded";
+  if (issues === null) return "unmeasured";
   return issues > 0 ? "needs_fixing" : "done";
 }
 export function statusLabel(
   t: Translate,
   word: StatusWord,
-  issues: number,
+  issues: number | null,
 ): string {
+  if (word === "unmeasured") return t("desktop.ledger.readiness.not_measured");
   return word === "needs_fixing"
-    ? t("desktop.ledger.status.needs_fixing_count", { count: issues })
+    ? t("desktop.ledger.status.needs_fixing_count", { count: issues ?? 0 })
     : t(`desktop.ledger.status.${word}`);
 }
 

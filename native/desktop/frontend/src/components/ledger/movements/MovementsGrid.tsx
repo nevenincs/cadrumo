@@ -135,7 +135,11 @@ function movementColumns(
     status: (row) => (
       <StatusCell
         row={row}
-        issues={context.readiness.issues.get(id(row))?.length ?? 0}
+        issues={
+          context.readiness.checked
+            ? (context.readiness.issues.get(id(row))?.length ?? 0)
+            : null
+        }
         wordy={context.density === "comfortable"}
       />
     ),
@@ -322,9 +326,10 @@ export function MovementsGrid({
     const row = byId.get(key);
     if (!row) return edited;
     const reasons = context.readiness.issues.get(key) ?? [];
-    const word = statusWord(row.review_status, reasons.length);
+    const counted = context.readiness.checked ? reasons.length : null;
+    const word = statusWord(row.review_status, counted);
     return [
-      statusLabel(t, word, reasons.length),
+      statusLabel(t, word, counted),
       reasons.length
         ? t("desktop.ledger.describe.readiness", {
             reasons: reasons

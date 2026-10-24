@@ -19,6 +19,7 @@ import {
   sortRows,
   type SortLabels,
 } from "../src/components/ledger/movements/movementsModel";
+import { statusWord } from "../src/components/ledger/movements/movementWords";
 import type { LedgerRow, LedgerStatusResult } from "../src/shell/ledger";
 import {
   categoryCells,
@@ -438,4 +439,13 @@ test("the page's vocabularies are the published registry's own lists", () => {
     .exec(registry("facts/0081-irpf-ledger-category-taxonomy.toml"))![1]!
     .split(",");
   expect([...IRPF_CATEGORIES]).toEqual(irpf);
+});
+
+test("a reviewed movement is done only once readiness has measured it", () => {
+  expect(statusWord("reviewed", 0)).toBe("done");
+  expect(statusWord("reviewed", 2)).toBe("needs_fixing");
+  // Not measured is not zero issues.
+  expect(statusWord("reviewed", null)).toBe("unmeasured");
+  // A movement still to classify says so whatever readiness knows.
+  expect(statusWord("pending", null)).toBe("pending");
 });

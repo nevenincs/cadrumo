@@ -422,7 +422,9 @@ export function MovementsSection({
       classifiedBy: (source) => classifiedByLabel(t, source),
       account: (id) => accountLabel(t, accounts, id),
       status: (row) => {
-        const issues = sets.issues.get(idOf(row))?.length ?? 0;
+        const issues = sets.checked
+          ? (sets.issues.get(idOf(row))?.length ?? 0)
+          : null;
         return statusLabel(t, statusWord(row.review_status, issues), issues);
       },
     }),
