@@ -3,6 +3,7 @@
 use cadrumo_application::error::application::{
     ApplicationError, ChildRefusal, ErrorCode, Operation, Result,
 };
+use cadrumo_application::person_operations::{PROJECTION_DOCUMENT_MAX_BYTES, wipe};
 use serde_json::{Value, json};
 #[cfg(test)]
 use std::time::Duration;
@@ -16,8 +17,10 @@ mod native;
 #[cfg(test)]
 mod scripted;
 
-/// The longest request line the holder reads, before its newline.
-pub const REQUEST_LIMIT: usize = 16_383;
+/// The longest request: the longest document the relay carries, and one
+/// runtime frame for the request around it. No pipe line bounds a request:
+/// the relay streams one too large for a frame.
+pub const REQUEST_LIMIT: usize = PROJECTION_DOCUMENT_MAX_BYTES + 64 * 1024;
 
 /// The size of a value's compact JSON encoding, counted without keeping it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -44,9 +47,9 @@ pub fn encoded(value: &Value) -> Encoded {
     size
 }
 
-/// Whether `document` fits one request line once its request id is added.
-/// A request that does not is refused before it is written, and that refusal
-/// loses the bridge: check first.
+/// Whether `document` fits the request bound once its request id is added.
+/// A request that does not is refused before it reaches the relay, and that
+/// refusal loses the bridge: check first.
 pub fn request_fits(document: &Value) -> bool {
     let Some(fields) = document.as_object() else {
         return false;
@@ -55,17 +58,6 @@ pub fn request_fits(document: &Value) -> bool {
     // unless it is the only member.
     let id = 14 + 36 + 1 + usize::from(!fields.is_empty());
     encoded(document).bytes + id <= REQUEST_LIMIT
-}
-
-/// Overwrites every text in `value` in place, for a request that carried
-/// private input.
-pub fn wipe(value: &mut Value) {
-    match value {
-        Value::String(text) => zeroize::Zeroize::zeroize(text),
-        Value::Array(items) => items.iter_mut().for_each(wipe),
-        Value::Object(fields) => fields.values_mut().for_each(wipe),
-        _ => {}
-    }
 }
 
 fn failed(reason: &'static str) -> ApplicationError {
@@ -289,8 +281,8 @@ impl Person {
     }
 
     /// As [`Person::exchange`], for a request that carries private input:
-    /// its text is overwritten once the exchange ends, whether or not it was
-    /// sent.
+    /// its texts, numbers and flags are overwritten once the exchange ends,
+    /// whether or not it was sent.
     pub fn exchange_wiping(&mut self, document: &mut Value) -> Result<Value> {
         let reply = self.exchange_in(document);
         wipe(document);
@@ -506,7 +498,7 @@ mod language_tests {
     use super::*;
 
     #[test]
-    fn a_request_is_sized_as_the_line_it_is_written_as() {
+    fn a_request_is_sized_as_the_document_it_is_sent_as() {
         for document in [
             json!({}),
             json!({"action":"operation_submit","payload":{"text":"\u{20ac}"}}),
@@ -525,16 +517,6 @@ mod language_tests {
         assert!(!request_fits(&json!(["not", "an", "object"])));
         let size = encoded(&json!({"text":"\u{20ac}a"}));
         assert_eq!((size.bytes, size.chars), (15, 13));
-    }
-
-    #[test]
-    fn a_wiped_request_keeps_no_text() {
-        let mut document = json!({"payload":{"iban":"ES0000","rows":["a", 1, null]}});
-        wipe(&mut document);
-        assert_eq!(
-            document,
-            json!({"payload":{"iban":"","rows":["", 1, null]}})
-        );
     }
 
     #[test]

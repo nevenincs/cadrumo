@@ -680,6 +680,20 @@ mod tests {
             }
         }
 
+        /// Records the upload's header with the text it streamed, after
+        /// checking its length as the runtime's staging does.
+        fn exchange_streamed(
+            &self,
+            request: &Value,
+            payload: &[u8],
+            deadline: Instant,
+        ) -> std::result::Result<Map<String, Value>, Refusal> {
+            assert_eq!(request["descriptor"]["byte_count"], payload.len());
+            let mut recorded = request.clone();
+            recorded["streamed"] = json!(String::from_utf8(payload.to_vec()).unwrap());
+            self.exchange(&recorded, deadline)
+        }
+
         fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
             let (sender, receiver) = mpsc::channel();
             *self.pushes.lock().unwrap() = Some(sender);
@@ -1137,6 +1151,118 @@ mod tests {
         // An operation this session relayed is unsettled: its cue now reaches the window.
         runtime.push(Event::OperationChanged, SESSION);
         assert_eq!(next(&mut heard), Ok(PersonEvent::OperationChanged));
+    }
+
+    /// The edit baselines real Modelo 303 and 347 forms admitted, as the
+    /// product's form read answered them.
+    fn admitted_baselines() -> [(&'static str, Value); 2] {
+        let baseline = |envelope: &str| {
+            let read: Value = serde_json::from_str(envelope).unwrap();
+            let baseline = read["admitted_baseline"].clone();
+            assert!(baseline.is_object());
+            baseline
+        };
+        [
+            (
+                "303",
+                baseline(include_str!(
+                    "../../../../frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json"
+                )),
+            ),
+            (
+                "347",
+                baseline(include_str!(
+                    "../../../../frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json"
+                )),
+            ),
+        ]
+    }
+
+    #[test]
+    fn an_edit_of_a_real_baseline_reaches_the_runtime_whole_in_preflight_renewal_and_apply() {
+        for (modelo, baseline) in admitted_baselines() {
+            let unit = baseline["work_unit_id"].as_str().unwrap().to_owned();
+            let input = json!({"input_version": 2, "submission": {"edit_contract_version": 1,
+                "baseline": baseline, "mutation_family": "scalar",
+                "scalar_intents": [{"value": "1234.56"}]}});
+            let renewal = json!({"profile_id": PROFILE, "baseline": baseline,
+                "output_language": "en", "staged": []});
+            let steps = [
+                ("modelo.edit.preflight", "input", &input),
+                ("modelo.edit.renew", "payload", &renewal),
+                ("modelo.edit.apply", "input", &input),
+            ];
+            let runtime = Runtime::answering(steps.iter().flat_map(|_| {
+                [
+                    Answer::Reply(json!({
+                        "kind": "operation_submitted",
+                        "receipt": {"submission_version": 1, "operation_id": OPERATION,
+                            "secret_requirement": null},
+                    })),
+                    Answer::Reply(
+                        json!({"kind": "operation_acknowledged", "operation_id": OPERATION}),
+                    ),
+                ]
+            }));
+            let mut held = person(&runtime);
+            for (definition, member, body) in steps {
+                let action = if member == "input" {
+                    "operation_financial_submit"
+                } else {
+                    "operation_submit"
+                };
+                let mut request =
+                    json!({"action": action, "definition_id": definition, "subject_ref": unit});
+                request[member] = body.clone();
+                let reply = held.exchange_wiping(&mut request).unwrap();
+                assert_eq!(
+                    reply["kind"], "operation_submitted",
+                    "{modelo} {definition}"
+                );
+                assert!(
+                    !request.to_string().contains(&unit),
+                    "the request is overwritten once sent"
+                );
+            }
+            assert!(held.is_open());
+            let asked = runtime.asked();
+            assert_eq!(asked.len(), 6);
+            for (index, (definition, member, body)) in steps.iter().enumerate() {
+                let sent = &asked[2 * index];
+                assert_eq!(sent["definition_id"], *definition);
+                assert_eq!(sent["subject_ref"], unit);
+                // Whole: the runtime is handed exactly the window's document.
+                let text = sent["streamed"]
+                    .as_str()
+                    .or_else(|| sent["payload_json"].as_str())
+                    .unwrap();
+                assert_eq!(&serde_json::from_str::<Value>(text).unwrap(), *body);
+                if *member == "input" || modelo == "303" {
+                    // An operand always, and a 303 renewal too large for one
+                    // frame, reach the runtime's staging streamed.
+                    assert_eq!(
+                        sent["action"], "operation_submit_payload",
+                        "{modelo} {definition}"
+                    );
+                }
+                assert_eq!(asked[2 * index + 1]["action"], "operation_start");
+            }
+        }
+    }
+
+    #[test]
+    fn a_request_beyond_the_relays_document_is_refused_before_the_runtime_is_asked() {
+        let runtime = Runtime::answering([]);
+        let mut held = person(&runtime);
+        let mut request = submit();
+        request["payload"] = json!({"rows": "a".repeat(PROJECTION_DOCUMENT_MAX_BYTES + 64 * 1024)});
+        let error = held.exchange_wiping(&mut request).unwrap_err();
+        assert_eq!(error.reason.as_deref(), Some("person_request_too_large"));
+        assert_eq!(
+            request["payload"]["rows"], "",
+            "a refused request is overwritten too"
+        );
+        assert!(runtime.asked().is_empty());
     }
 
     #[test]

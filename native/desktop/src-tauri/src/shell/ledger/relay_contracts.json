@@ -352,8 +352,5 @@
       "may_write": false,
       "review": false
     }
-  },
-  "relay": {
-    "request_line_limit": 16384
   }
 }

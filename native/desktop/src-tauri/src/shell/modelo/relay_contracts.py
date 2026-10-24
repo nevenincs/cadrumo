@@ -5,16 +5,14 @@ manifest with what the host must know to submit it without restating its
 request: whether it may write, whether it pauses for a review, whether it takes
 a transient financial operand, which form its subject takes, whether its
 request names the profile, and which of its request fields name a local file.
-It also records the request line bound of the held person's relay.
 Request fields are read from the registered request models through the eager
 production registry, so a field that starts naming a file cannot reach the
 window unnoticed. Run with the repository Python environment; --check detects
-drift from the manifest, the request models or the relay.
+drift from the manifest or the request models. The request bounds are the
+native relay's own constants, which the host reads directly.
 """
 
 import argparse
-import ast
-import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -26,27 +24,6 @@ from cadrumo.entrypoints.operation_composition import build_production_operation
 
 _WRITING_EFFECTS = frozenset({"updated", "partial"})
 _FAMILY = "modelo."
-
-
-def _module_constant(module: str, name: str) -> int:
-    """Read one module-level integer assignment from the module's source, without importing it."""
-    spec = importlib.util.find_spec(module)
-    if spec is None or spec.origin is None:
-        raise SystemExit(f"{module} has no source")
-    source = Path(spec.origin).read_text(encoding="utf-8")
-    for node in ast.parse(source).body:
-        target = node.target if isinstance(node, ast.AnnAssign) else None
-        if isinstance(node, ast.Assign) and len(node.targets) == 1:
-            target = node.targets[0]
-        value = getattr(node, "value", None)
-        if (
-            isinstance(target, ast.Name)
-            and target.id == name
-            and isinstance(value, ast.Constant)
-            and type(value.value) is int
-        ):
-            return value.value
-    raise SystemExit(f"{name} is not a module-level integer")
 
 
 def _names_file(schema: dict[str, object]) -> bool:
@@ -78,7 +55,7 @@ def _request_facts(request_type: type[BaseModel]) -> dict[str, object]:
 
 
 def documents() -> dict[str, object]:
-    """The Modelo family's contract facts and the relay's request line bound."""
+    """The Modelo family's contract facts."""
     manifest = load_operation_contract_manifest()
     requests = {
         definition.definition_id: definition.request_type
@@ -99,12 +76,7 @@ def documents() -> dict[str, object]:
             "subject": {"kind": subject.kind.value, "path": list(subject.payload_path)},
             **_request_facts(requests[contract.definition_id]),
         }
-    return {
-        "operations": operations,
-        "relay": {
-            "request_line_limit": _module_constant("cadrumo_runtime.host.session_hold", "_MAXIMUM_REQUEST_LINE_BYTES"),
-        },
-    }
+    return {"operations": operations}
 
 
 if __name__ == "__main__":
@@ -116,6 +88,6 @@ if __name__ == "__main__":
     if args.check:
         if target.read_text(encoding="utf-8") != rendered:
             raise SystemExit("Modelo relay contracts are stale; regenerate before running the Rust Modelo tests")
-        sys.stdout.write("Modelo relay contracts match the shipped manifest, request models and relay\n")
+        sys.stdout.write("Modelo relay contracts match the shipped manifest and request models\n")
     else:
         target.write_text(rendered, encoding="utf-8", newline="\n")

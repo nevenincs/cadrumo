@@ -32,6 +32,13 @@ const INTERPRETER_SOURCES = [
   "interpreter/launch_guard.h",
   "interpreter/launch_profile.h",
 ];
+// The host's tests carry real Modelo forms' admitted edit baselines through
+// the bridge and the relay: committed envelopes the product's own form read
+// produced. Only a snapshot for the host's tests copies them.
+export const HOST_TEST_INPUTS = [
+  "desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json",
+  "desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json",
+];
 
 export function hostSnapshot(root) {
   return {
@@ -114,7 +121,7 @@ export function syncBackendSource(
 export function snapshotHostSources(
   native,
   root,
-  { incremental = false } = {},
+  { incremental = false, tests = false } = {},
 ) {
   mkdirSync(root, { recursive: true });
   if (lstatSync(root).isSymbolicLink())
@@ -132,6 +139,7 @@ export function snapshotHostSources(
   for (const member of [
     ...PATH_CRATES,
     ...INTERPRETER_SOURCES,
+    ...(tests ? HOST_TEST_INPUTS : []),
     ...HOST_CRATE_ENTRIES.map((entry) => `${HOST_CRATE}/${entry}`),
   ]) {
     const source = resolve(native, member);

@@ -387,6 +387,39 @@ fn an_edits_amounts_come_only_as_a_raw_input_for_this_profiles_baseline() {
 }
 
 #[test]
+fn a_real_baseline_is_admitted_whole_for_preflight_renewal_and_apply() {
+    for envelope in [
+        include_str!("../../../../frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json"),
+        include_str!("../../../../frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json"),
+    ] {
+        let read: Value = serde_json::from_str(envelope).unwrap();
+        let baseline = read["admitted_baseline"].clone();
+        let unit = baseline["work_unit_id"].as_str().unwrap().to_owned();
+        let profile = baseline["bucket_id"].as_str().unwrap().to_owned();
+        let input = json!({"input_version":2, "submission":{"edit_contract_version":1,
+            "baseline":baseline, "mutation_family":"scalar",
+            "scalar_intents":[{"value":"1234.56"}]}})
+        .to_string();
+        for edit in ["modelo.edit.preflight", "modelo.edit.apply"] {
+            let body = InvokeBody::Raw(input.clone().into_bytes());
+            let (operand, work_unit) = financial_body(&body, &profile).unwrap();
+            assert_eq!(work_unit, unit);
+            let request = financial_submission(edit, &work_unit, operand).unwrap();
+            assert_eq!(request.0["input"]["submission"]["baseline"], baseline);
+        }
+        let (request, subject) = plain_submission(
+            definition("modelo.edit.renew"),
+            &profile,
+            Wiped(json!({"baseline":baseline, "output_language":"en", "staged":[]})),
+            None,
+        )
+        .unwrap();
+        assert_eq!(subject, unit);
+        assert_eq!(request.0["payload"]["baseline"], baseline);
+    }
+}
+
+#[test]
 fn a_named_read_is_passed_on_only_for_this_profile_declaration_and_language() {
     let unit = hex('a');
     let form = json!({"result_version":1, "profile_id":PROFILE_ID, "work_unit_id":unit,

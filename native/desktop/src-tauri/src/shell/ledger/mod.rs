@@ -301,13 +301,7 @@ fn file_name_admitted(name: &str) -> bool {
 /// request without the profile, for adding an account or changing its
 /// details. Its text is overwritten when it is dropped.
 fn own_account_body(body: &InvokeBody) -> Result<Wiped> {
-    let InvokeBody::Raw(bytes) = body else {
-        return Err(failure("invalid"));
-    };
-    if bytes.len() > SECRET_BODY_LIMIT || bytes.trim_ascii_start().first() != Some(&b'{') {
-        return Err(failure("invalid"));
-    }
-    let request = Wiped(serde_json::from_slice(bytes).map_err(|_| failure("invalid"))?);
+    let request = relay::wiped_body(body, SECRET_BODY_LIMIT)?;
     let fields = request.0.as_object().ok_or_else(|| failure("invalid"))?;
     if !matches!(
         fields.get("action").and_then(Value::as_str),

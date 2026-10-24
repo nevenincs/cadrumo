@@ -39,6 +39,9 @@ use zeroize::Zeroizing;
 const PROTOCOL_VERSION: u64 = 3;
 const MAXIMUM_FRAME_BYTES: usize = 64 * 1024;
 const MAXIMUM_SECRET_BYTES: usize = 64 * 1024;
+/// The runtime stages a streamed submission in chunks of exactly this many
+/// bytes, the last one excepted.
+const SUBMISSION_PAYLOAD_CHUNK_BYTES: usize = 16_384;
 const DOCUMENT_FRAME: u8 = b'J';
 const SECRET_FRAME: u8 = b'S';
 const EVENT_FRAME: u8 = b'E';
@@ -820,6 +823,47 @@ impl Connection {
     }
 }
 
+impl Connection {
+    /// Sends `request`, an `operation_submit_payload` whose descriptor names
+    /// `payload`'s length, then `payload` in secret frames once the runtime
+    /// is ready for exactly that descriptor, and returns the final reply. A
+    /// refusal before readiness never sends the payload.
+    pub fn exchange_streamed(
+        &self,
+        request: &Value,
+        payload: &[u8],
+        deadline: Instant,
+    ) -> Result<Map<String, Value>, Refusal> {
+        let request_id = request
+            .get("request_id")
+            .and_then(Value::as_str)
+            .ok_or(Refusal::InvalidFrame)?
+            .to_owned();
+        let replies = self.claim(deadline)?;
+        let header =
+            Zeroizing::new(serde_json::to_vec(request).map_err(|_| Refusal::InvalidFrame)?);
+        let delivered = (|| {
+            self.write(DOCUMENT_FRAME, &header, deadline)?;
+            let ready = self.reply(&replies, &request_id, deadline)?;
+            if !ready_for(request, &ready) {
+                return Err(Refusal::InvalidFrame);
+            }
+            for chunk in payload.chunks(SUBMISSION_PAYLOAD_CHUNK_BYTES) {
+                self.write(SECRET_FRAME, chunk, deadline)?;
+            }
+            self.reply(&replies, &request_id, deadline)
+        })();
+        delivered.map_err(|refusal| self.fail(refusal))
+    }
+}
+
+/// Whether `ready` admits the upload `request` declared, and no other.
+fn ready_for(request: &Value, ready: &Map<String, Value>) -> bool {
+    text(ready, "kind") == Some("operation_payload_ready")
+        && request.get("descriptor").is_some()
+        && ready.get("descriptor") == request.get("descriptor")
+}
+
 impl Drop for Connection {
     fn drop(&mut self) {
         self.close();
@@ -832,6 +876,13 @@ impl Drop for Connection {
 pub trait SessionExchange: Send + Sync {
     /// As [`Connection::exchange`].
     fn exchange(&self, request: &Value, deadline: Instant) -> Result<Map<String, Value>, Refusal>;
+    /// As [`Connection::exchange_streamed`].
+    fn exchange_streamed(
+        &self,
+        request: &Value,
+        payload: &[u8],
+        deadline: Instant,
+    ) -> Result<Map<String, Value>, Refusal>;
     /// As [`Connection::subscribe_scoped`].
     fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed>;
     /// As [`Connection::close`]: for a peer that broke the protocol.
@@ -841,6 +892,15 @@ pub trait SessionExchange: Send + Sync {
 impl SessionExchange for Connection {
     fn exchange(&self, request: &Value, deadline: Instant) -> Result<Map<String, Value>, Refusal> {
         Connection::exchange(self, request, deadline)
+    }
+
+    fn exchange_streamed(
+        &self,
+        request: &Value,
+        payload: &[u8],
+        deadline: Instant,
+    ) -> Result<Map<String, Value>, Refusal> {
+        Connection::exchange_streamed(self, request, payload, deadline)
     }
 
     fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
@@ -1431,6 +1491,39 @@ mod tests {
     use super::*;
 
     #[test]
+    fn a_streamed_payload_follows_only_readiness_for_the_declared_upload() {
+        let descriptor = json!({"kind": "financial_operand_input", "byte_count": 70_000});
+        let request = json!({"action": "operation_submit_payload", "descriptor": descriptor});
+        let ready = |kind: &str, descriptor: Value| {
+            json!({"kind": kind, "descriptor": descriptor})
+                .as_object()
+                .unwrap()
+                .clone()
+        };
+        assert!(ready_for(
+            &request,
+            &ready("operation_payload_ready", descriptor.clone())
+        ));
+        assert!(!ready_for(
+            &request,
+            &ready(
+                "operation_payload_ready",
+                json!({"kind": "financial_operand_input", "byte_count": 69_999})
+            )
+        ));
+        assert!(!ready_for(
+            &request,
+            &ready("operation_submitted", descriptor.clone())
+        ));
+        assert!(!ready_for(
+            &json!({"action": "operation_submit_payload"}),
+            &ready("operation_payload_ready", Value::Null)
+        ));
+        // Every chunk but the last fills one secret frame within its bound.
+        assert!(frame(SECRET_FRAME, &[0; SUBMISSION_PAYLOAD_CHUNK_BYTES]).is_ok());
+    }
+
+    #[test]
     fn frames_carry_a_kind_a_big_endian_length_and_bounded_payloads() {
         let framed = frame(DOCUMENT_FRAME, b"{}").unwrap();
         assert_eq!(framed, [b'J', 0, 0, 0, 2, b'{', b'}']);
@@ -1842,6 +1935,45 @@ mod live_tests {
         Instant::now() + Duration::from_secs(30)
     }
 
+    /// The real connection, noting which definitions it streamed.
+    struct Streams<'a> {
+        connection: &'a Connection,
+        streamed: Mutex<Vec<String>>,
+    }
+
+    impl SessionExchange for Streams<'_> {
+        fn exchange(
+            &self,
+            request: &Value,
+            deadline: Instant,
+        ) -> Result<Map<String, Value>, Refusal> {
+            self.connection.exchange(request, deadline)
+        }
+
+        fn exchange_streamed(
+            &self,
+            request: &Value,
+            payload: &[u8],
+            deadline: Instant,
+        ) -> Result<Map<String, Value>, Refusal> {
+            let definition = text(request.as_object().unwrap(), "definition_id");
+            self.streamed
+                .lock()
+                .unwrap()
+                .push(definition.unwrap_or_default().to_owned());
+            self.connection
+                .exchange_streamed(request, payload, deadline)
+        }
+
+        fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
+            self.connection.subscribe_scoped()
+        }
+
+        fn close(&self) {
+            self.connection.close();
+        }
+    }
+
     #[test]
     #[ignore = "needs a running runtime: see dev/runtime_lifecycle/native_client_live.py"]
     fn a_window_signs_in_reads_its_session_and_signs_out_natively() {
@@ -1933,6 +2065,85 @@ mod live_tests {
                 .is_none_or(|language| ["es", "en", "ca", "hu"].contains(&language)),
             "{:?}",
             language.language
+        );
+
+        // A real Modelo 303 edit's preflight and apply operands, its renewal
+        // and a plain submission too large for one frame all reach the
+        // runtime's staging streamed: the runtime reads each upload's header,
+        // says it is ready for exactly that upload, and takes its bytes. The
+        // plain one is admitted as an operation. The edits name this profile
+        // but a work unit the disposable profile does not hold, so the runtime
+        // decodes each, which it can do only once every byte has arrived, and
+        // refuses it with the operation's closed `invalid`, never a broken frame.
+        // The baseline is the one the form read admitted in the desktop
+        // frontend's committed `modelo-303-1T-en.json` envelope, extracted whole.
+        let mut baseline: Value = serde_json::from_str(include_str!(
+            "../tests/data/modelo-303-admitted-baseline.json"
+        ))
+        .unwrap();
+        baseline["bucket_id"] = json!(live.profile_id);
+        let unit = baseline["work_unit_id"].as_str().unwrap().to_owned();
+        let operand = json!({"input_version": 2, "output_language": "en",
+            "submission": {"edit_contract_version": 1, "baseline": baseline,
+            "mutation_family": baseline["mutation_family"], "scalar_intents": []}});
+        let statement = json!({"profile_id": live.profile_id,
+            "csv_text": "fecha,concepto,importe\n".repeat(4 * 1024)});
+        let recording = Streams {
+            connection: &window,
+            streamed: Mutex::new(Vec::new()),
+        };
+        let mut relay = crate::person_operations::OperationRelay::new();
+        let mut submit = |action: &str, definition: &str, subject: String, member: &str, body| {
+            let mut request = Map::new();
+            request.insert("definition_id".into(), json!(definition));
+            request.insert("subject_ref".into(), json!(subject));
+            request.insert(member.into(), body);
+            relay.handle(&recording, &held, action, &request)
+        };
+        let renewal = json!({"profile_id": live.profile_id, "baseline": baseline,
+            "output_language": "en", "staged": []});
+        for (action, definition, member, body) in [
+            (
+                "operation_financial_submit",
+                "modelo.edit.preflight",
+                "input",
+                operand.clone(),
+            ),
+            (
+                "operation_financial_submit",
+                "modelo.edit.apply",
+                "input",
+                operand,
+            ),
+            ("operation_submit", "modelo.edit.renew", "payload", renewal),
+        ] {
+            let answered = submit(action, definition, unit.clone(), member, body);
+            assert!(
+                matches!(
+                    &answered,
+                    Err(crate::person_operations::RelayFailure::Refused { code, .. }) if code == "invalid"
+                ),
+                "{definition}: {answered:?}"
+            );
+        }
+        let classified = submit(
+            "operation_submit",
+            "ledger.classify.bulk",
+            format!("profile:{}", live.profile_id),
+            "payload",
+            statement,
+        )
+        .unwrap();
+        assert_eq!(classified["kind"], "operation_submitted");
+        assert_eq!(
+            *recording.streamed.lock().unwrap(),
+            [
+                "modelo.edit.preflight",
+                "modelo.edit.apply",
+                "modelo.edit.renew",
+                "ledger.classify.bulk"
+            ],
+            "both went through the runtime's streamed upload"
         );
 
         // Signing out ends every human session and revokes the stored sign-in.

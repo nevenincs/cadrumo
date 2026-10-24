@@ -1018,8 +1018,5 @@
         ]
       }
     }
-  },
-  "relay": {
-    "request_line_limit": 16384
   }
 }

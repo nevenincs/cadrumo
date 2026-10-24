@@ -69,8 +69,29 @@ impl std::fmt::Debug for Wiped {
 }
 impl Drop for Wiped {
     fn drop(&mut self) {
-        crate::agent::person::wipe(&mut self.0);
+        cadrumo_application::person_operations::wipe(&mut self.0);
     }
+}
+
+/// The JSON object a command's raw body carries, for private input that
+/// never travels as an ordinary argument. The body is read from a copy that
+/// is overwritten once parsed, and anything but an object within `limit`
+/// bytes is refused.
+pub(crate) fn wiped_body(body: &tauri::ipc::InvokeBody, limit: usize) -> Result<Wiped> {
+    let tauri::ipc::InvokeBody::Raw(bytes) = body else {
+        return Err(Failure::new("invalid"));
+    };
+    // A derived reader also takes an array of fields: only an object is read.
+    if bytes.len() > limit || bytes.trim_ascii_start().first() != Some(&b'{') {
+        return Err(Failure::new("invalid"));
+    }
+    let copied = zeroize::Zeroizing::new(bytes.to_vec());
+    let parsed = serde_json::from_slice(&copied).map_err(|_| Failure::new("invalid"))?;
+    let read = Wiped(parsed);
+    if !read.0.is_object() {
+        return Err(Failure::new("invalid"));
+    }
+    Ok(read)
 }
 pub(crate) async fn call_wiping(person: &HeldPerson, request: Wiped) -> Result<Value> {
     let person = person.clone();
@@ -126,16 +147,16 @@ pub(crate) fn submission(definition: &str, subject: &str, payload: Value) -> Wip
 /// host refuses one well before it: number spellings can differ between the
 /// two JSON encoders by a character or two.
 const PAYLOAD_HEADROOM: usize = 256;
-/// The longest payload, in characters of compact JSON, the host sends: the
-/// native relay's own bound, less the headroom.
+/// The longest payload, in bytes of compact JSON, the host sends: the
+/// document the native relay carries, less the headroom.
 pub(crate) const PAYLOAD_LIMIT: usize =
-    cadrumo_application::person_operations::MAX_PAYLOAD_TEXT - PAYLOAD_HEADROOM;
+    cadrumo_application::person_operations::PROJECTION_DOCUMENT_MAX_BYTES - PAYLOAD_HEADROOM;
 
 /// Refuses a submission the relay could not take, before anything is written
 /// to it. A request that is too large is the window's to make smaller; the
 /// host never splits one.
 pub(crate) fn admit_size(document: &Value) -> Result<()> {
-    let fits_payload = crate::agent::person::encoded(&document["payload"]).chars <= PAYLOAD_LIMIT;
+    let fits_payload = crate::agent::person::encoded(&document["payload"]).bytes <= PAYLOAD_LIMIT;
     if !fits_payload || !crate::agent::person::request_fits(document) {
         return Err(Failure::new("too_large"));
     }
@@ -237,6 +258,24 @@ mod tests {
     use super::*;
 
     #[test]
+    fn a_raw_body_is_read_only_as_one_bounded_object() {
+        let raw = |text: &str| tauri::ipc::InvokeBody::Raw(text.as_bytes().to_vec());
+        let read = wiped_body(&raw(r#" {"amount":1234.56,"iban":"ES00"}"#), 64).unwrap();
+        assert_eq!(read.0["amount"], 1234.56);
+        for refused in [
+            raw(r#"["amount",1]"#),
+            raw("{"),
+            raw(&format!(r#"{{"pad":"{}"}}"#, "a".repeat(64))),
+            tauri::ipc::InvokeBody::Json(json!({"amount": 1})),
+        ] {
+            assert_eq!(wiped_body(&refused, 64).unwrap_err().code, "invalid");
+        }
+        let mut read = read;
+        cadrumo_application::person_operations::wipe(&mut read.0);
+        assert_eq!(read.0, json!({"amount": 0, "iban": ""}));
+    }
+
+    #[test]
     fn a_request_the_relay_cannot_take_is_refused_before_it_is_written() {
         let request = |payload: Value| {
             submission(
@@ -254,8 +293,8 @@ mod tests {
                 .code,
             "too_large"
         );
-        // Within the payload's characters, but not within the line's bytes.
-        let wide = "\u{20ac}".repeat(6_000);
+        // The bound counts bytes: each of these characters takes three.
+        let wide = "\u{20ac}".repeat(near.len() / 3 + 1);
         assert_eq!(
             admit_size(&request(json!({ "csv_text": wide })).0)
                 .unwrap_err()

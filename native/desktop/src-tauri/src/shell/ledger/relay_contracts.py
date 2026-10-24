@@ -1,18 +1,16 @@
 """Produce the Rust test input that pins the ledger host to the shipped contracts.
 
 It lists every ``ledger.*`` definition in the shipped operation contract
-manifest, with whether it may write and whether it pauses for a review, and the
-bound the runtime applies to one request line. The payload bound is the native
-relay's own constant, which the host reads directly. It also checks
-that the window's mirror of the admitted list, ``LEDGER_DEFINITIONS`` in the
-frontend's ``src/shell/ledger.ts``, names the same definitions. Run with the
-repository Python environment; --check detects drift from the manifest or the
-relay. No runtime, profile or application build is required.
+manifest, with whether it may write and whether it pauses for a review. The
+request bounds are the native relay's own constants, which the host reads
+directly. It also checks that the window's mirror of the admitted list,
+``LEDGER_DEFINITIONS`` in the frontend's ``src/shell/ledger.ts``, names the
+same definitions. Run with the repository Python environment; --check detects
+drift from the manifest or the mirror. No runtime, profile or application
+build is required.
 """
 
 import argparse
-import ast
-import importlib.util
 import json
 import re
 import sys
@@ -25,29 +23,8 @@ _FRONTEND_MIRROR = Path(__file__).resolve().parents[4] / "frontend" / "src" / "s
 _MIRROR_LIST = re.compile(r"export const LEDGER_DEFINITIONS = \[(?P<ids>[^\]]*)\] as const;")
 
 
-def _module_constant(module: str, name: str) -> int:
-    """Read one module-level integer assignment from the module's source, without importing it."""
-    spec = importlib.util.find_spec(module)
-    if spec is None or spec.origin is None:
-        raise SystemExit(f"{module} has no source")
-    source = Path(spec.origin).read_text(encoding="utf-8")
-    for node in ast.parse(source).body:
-        target = node.target if isinstance(node, ast.AnnAssign) else None
-        if isinstance(node, ast.Assign) and len(node.targets) == 1:
-            target = node.targets[0]
-        value = getattr(node, "value", None)
-        if (
-            isinstance(target, ast.Name)
-            and target.id == name
-            and isinstance(value, ast.Constant)
-            and type(value.value) is int
-        ):
-            return value.value
-    raise SystemExit(f"{name} is not a module-level integer")
-
-
 def documents() -> dict[str, object]:
-    """The ledger family's contract facts and the relay's request bounds."""
+    """The ledger family's contract facts."""
     manifest = load_operation_contract_manifest()
     operations: dict[str, object] = {}
     for entry in manifest.operations:
@@ -59,12 +36,7 @@ def documents() -> dict[str, object]:
             "may_write": bool(effects & _WRITING_EFFECTS),
             "review": any(kind.value == "review" for kind in contract.interaction_kinds),
         }
-    return {
-        "operations": operations,
-        "relay": {
-            "request_line_limit": _module_constant("cadrumo_runtime.host.session_hold", "_MAXIMUM_REQUEST_LINE_BYTES"),
-        },
-    }
+    return {"operations": operations}
 
 
 def _check_frontend_mirror(operations: object) -> None:
@@ -88,6 +60,6 @@ if __name__ == "__main__":
     if args.check:
         if target.read_text(encoding="utf-8") != rendered:
             raise SystemExit("Ledger relay contracts are stale; regenerate before running the Rust ledger tests")
-        sys.stdout.write("Ledger relay contracts match the shipped manifest and relay\n")
+        sys.stdout.write("Ledger relay contracts match the shipped manifest and the window's mirror\n")
     else:
         target.write_text(rendered, encoding="utf-8", newline="\n")

@@ -18,6 +18,7 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
+  HOST_TEST_INPUTS,
   hostSnapshot,
   snapshotHostSources,
   syncBackendSource,
@@ -112,6 +113,9 @@ test("the host snapshot keeps every crate the manifests name inside its root", (
       assert.ok(crates.includes(target), `${target} is not a snapshot crate`);
       assert.ok(existsSync(join(target, "Cargo.toml")), target);
     }
+    // Only a snapshot for the host's tests carries their inputs.
+    for (const input of HOST_TEST_INPUTS)
+      assert.equal(existsSync(join(snapshot.root, input)), false, input);
     // The copy has the source tree's own relative layout.
     for (const crate of crates) {
       const source = resolve(NATIVE, relative(declared, crate));
@@ -121,6 +125,26 @@ test("the host snapshot keeps every crate the manifests name inside its root", (
         readFileSync(join(source, "Cargo.toml")),
       );
     }
+  }
+});
+
+test("a snapshot for the host's tests carries their inputs unchanged", (t) => {
+  const build = realpathSync(
+    mkdtempSync(join(tmpdir(), "cadrumo-host-snapshot-")),
+  );
+  t.after(() => rmSync(build, { recursive: true, force: true }));
+  for (const incremental of [false, true]) {
+    const declared = join(build, String(incremental), "testing/backend-host");
+    const snapshot = snapshotHostSources(NATIVE, declared, {
+      incremental,
+      tests: true,
+    });
+    assert.ok(HOST_TEST_INPUTS.length > 0);
+    for (const input of HOST_TEST_INPUTS)
+      assert.deepEqual(
+        readFileSync(join(snapshot.root, input)),
+        readFileSync(resolve(NATIVE, input)),
+      );
   }
 });
 

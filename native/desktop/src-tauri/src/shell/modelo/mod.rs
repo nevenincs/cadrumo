@@ -304,13 +304,7 @@ fn substitute(
 /// whose baseline is the one the form admitted for this profile. Answers the
 /// operand, overwritten when it is dropped, and the work unit it edits.
 fn financial_body(body: &InvokeBody, profile: &str) -> Result<(Wiped, String)> {
-    let InvokeBody::Raw(bytes) = body else {
-        return Err(failure("invalid"));
-    };
-    if bytes.len() > person::REQUEST_LIMIT || bytes.trim_ascii_start().first() != Some(&b'{') {
-        return Err(failure("invalid"));
-    }
-    let input = Wiped(serde_json::from_slice(bytes).map_err(|_| failure("invalid"))?);
+    let input = relay::wiped_body(body, person::REQUEST_LIMIT)?;
     let fields = input.0.as_object().ok_or_else(|| failure("invalid"))?;
     let baseline = &input.0["submission"]["baseline"];
     let work_unit = baseline["work_unit_id"]

@@ -223,9 +223,9 @@ pub(super) mod tests {
     use super::*;
     use serde_json::Value;
 
-    /// The shipped manifest's Modelo family, its request fields and the
-    /// relay's bounds, produced by `relay_contracts.py` and checked against
-    /// their sources by its `--check` before these tests run.
+    /// The shipped manifest's Modelo family and its request fields, produced
+    /// by `relay_contracts.py` and checked against their sources by its
+    /// `--check` before these tests run.
     pub(in super::super) fn contracts() -> Value {
         serde_json::from_str(include_str!("relay_contracts.json")).unwrap()
     }
@@ -309,15 +309,5 @@ pub(super) mod tests {
         ] {
             assert!(admitted(refused).is_none(), "{refused:?}");
         }
-    }
-
-    #[test]
-    fn the_host_stays_within_the_relays_request_bounds() {
-        let relay = &contracts()["relay"];
-        assert_eq!(
-            relay["request_line_limit"].as_u64(),
-            Some(crate::agent::person::REQUEST_LIMIT as u64 + 1),
-            "the line limit counts its newline"
-        );
     }
 }

@@ -28,7 +28,7 @@ use crate::runtime_client::{
     Admitted, Event, Pushed, Refusal, SessionExchange, base64_decode, request_id,
 };
 use crate::value::Sha256Digest;
-use serde_json::{Map, Value, json};
+use serde_json::{Map, Number, Value, json};
 use std::{
     collections::BTreeSet,
     sync::mpsc,
@@ -44,12 +44,13 @@ const RELAY_EVENT_PAGE: u64 = 64;
 const PROFILE_VIEW_EVENT_PAGE: u64 = 32;
 const PROFILE_MUTATION_EVENT_PAGE: u64 = 1;
 const MAX_WATCHED: usize = 16;
-/// The longest relayed payload, in characters of its compact JSON.
-pub const MAX_PAYLOAD_TEXT: usize = 12_288;
 const MAXIMUM_FRAME_BYTES: usize = 64 * 1024;
 const PROJECTION_PAGE_BYTES: usize = 32_768;
 const PROJECTION_PAGE_MAX_ENCODED: usize = 4 * PROJECTION_PAGE_BYTES.div_ceil(3);
-/// The longest settled document the relay assembles from result pages.
+/// The longest document the relay carries either way: a settled result it
+/// assembles from pages, and a payload or financial input it submits, in
+/// bytes of compact JSON. A submission too large for one runtime frame is
+/// streamed to the runtime's staging, which takes no more than this.
 pub const PROJECTION_DOCUMENT_MAX_BYTES: usize = 16_777_216;
 const SUBJECT_REF_MAX_CHARS: usize = 256;
 const PROFILE_VIEW: &str = "user-profile.view";
@@ -536,7 +537,7 @@ impl OperationRelay {
         // A payload can carry private input, such as an account's IBAN: its
         // encoding and the request that carried it are overwritten once sent.
         let payload_json = Zeroizing::new(compact_json(payload));
-        if payload_json.chars().count() > MAX_PAYLOAD_TEXT {
+        if payload_json.len() > PROJECTION_DOCUMENT_MAX_BYTES {
             return Err(Failure::Invalid);
         }
         let definition_id = argument_text(request, "definition_id")?;
@@ -545,10 +546,10 @@ impl OperationRelay {
         self.started(held, operation_id, deadline)
     }
 
-    /// Hands the parent's input to the runtime once, as its financial input,
-    /// and starts the operation. The runtime refuses a definition whose
-    /// contract takes no financial operand, so the relay names none; the
-    /// encoded input and the request that carried it are overwritten once sent.
+    /// Hands the parent's input to the runtime once, streamed as its financial
+    /// input, and starts the operation. The runtime refuses a definition
+    /// whose contract takes no financial operand, so the relay names none;
+    /// the encoded input is overwritten once sent.
     fn submit_financial(
         &mut self,
         held: &Held,
@@ -566,14 +567,14 @@ impl OperationRelay {
             return Err(Failure::frame());
         }
         let input_json = Zeroizing::new(compact_json(input));
-        let reply = held.exchange_wiping(
-            "operation_financial_input",
-            json!({
-                "definition_id": definition,
-                "subject_ref": subject_ref,
-                "payload_json": input_json.as_str(),
-                "idempotency_key": null,
-            }),
+        if !(2..=PROJECTION_DOCUMENT_MAX_BYTES).contains(&input_json.len()) {
+            return Err(Failure::Invalid);
+        }
+        let reply = held.streamed(
+            definition,
+            subject_ref,
+            &input_json,
+            Upload::Financial,
             deadline,
         )?;
         drop(input_json);
@@ -816,16 +817,45 @@ impl Held<'_> {
         self.send(&request, deadline)
     }
 
-    /// As [`Held::exchange`], for a request carrying private input: every
-    /// text the request held is overwritten once it is sent, sent or not.
-    fn exchange_wiping(
+    /// Submits `payload_json` streamed to the runtime's staging: the upload's
+    /// header first, then its bytes once the runtime is ready for them. The
+    /// runtime refuses a financial upload for a definition that takes none,
+    /// and a plain one whose bytes do not match the digest declared.
+    fn streamed(
         &self,
-        action: &str,
-        fields: Value,
+        definition: &str,
+        subject_ref: &str,
+        payload_json: &str,
+        upload: Upload,
         deadline: Instant,
     ) -> Outcome<Map<String, Value>> {
-        let mut request = self.request(action, fields, deadline)?;
-        sent_then_wiped(&mut request, |request| self.send(request, deadline))
+        let byte_count = payload_json.len();
+        let descriptor = match upload {
+            Upload::Financial => {
+                json!({"kind": "financial_operand_input", "byte_count": byte_count})
+            }
+            Upload::Payload => json!({
+                "byte_count": byte_count,
+                "payload_digest": Sha256Digest::of(payload_json.as_bytes()).to_string(),
+            }),
+        };
+        let request = self.request(
+            "operation_submit_payload",
+            json!({
+                "definition_id": definition,
+                "subject_ref": subject_ref,
+                "idempotency_key": null,
+                "descriptor": descriptor,
+            }),
+            deadline,
+        )?;
+        let reply =
+            self.connection
+                .exchange_streamed(&request, payload_json.as_bytes(), deadline)?;
+        match text(&reply, "kind") {
+            Some(kind) if REPLY_KINDS.contains(&kind) => Ok(reply),
+            _ => Err(Failure::frame()),
+        }
     }
 
     fn request(&self, action: &str, fields: Value, deadline: Instant) -> Outcome<Value> {
@@ -841,7 +871,8 @@ impl Held<'_> {
     }
 
     fn send(&self, request: &Value, deadline: Instant) -> Outcome<Map<String, Value>> {
-        let encoded = Zeroizing::new(canonical_json(request));
+        // Bounded by the exact bytes the connection writes as the frame.
+        let encoded = Zeroizing::new(serde_json::to_vec(request).map_err(|_| Failure::frame())?);
         if encoded.len() > MAXIMUM_FRAME_BYTES {
             return Err(Failure::frame());
         }
@@ -1500,7 +1531,7 @@ fn submit(
     {
         return Err(Failure::frame());
     }
-    let reply = held.exchange_wiping(
+    let mut request = held.request(
         "operation_submit",
         json!({
             "definition_id": definition,
@@ -1510,7 +1541,33 @@ fn submit(
         }),
         deadline,
     )?;
+    // The exact bytes the connection writes as the frame decide whether one
+    // frame carries the request.
+    let framed = Zeroizing::new(serde_json::to_vec(&request).map_err(|_| Failure::frame())?).len();
+    let reply = if framed <= MAXIMUM_FRAME_BYTES {
+        sent_then_wiped(&mut request, |request| held.send(request, deadline))?
+    } else {
+        // Too large for one runtime frame: the same submission, streamed. The
+        // unsent request is overwritten as a sent one is.
+        sent_then_wiped(&mut request, |_| ());
+        held.streamed(
+            definition,
+            subject_ref,
+            payload_json,
+            Upload::Payload,
+            deadline,
+        )?
+    };
     submitted_receipt(&reply)
+}
+
+/// What a streamed submission carries.
+#[derive(Clone, Copy)]
+enum Upload {
+    /// The registered request, checked against its digest.
+    Payload,
+    /// The definition's transient financial operand, which has no digest.
+    Financial,
 }
 
 /// The operation id of an `operation_submitted` reply, and whether its receipt
@@ -2266,22 +2323,33 @@ fn content_hash(value: &Value) -> String {
     Sha256Digest::of(canonical_json(value).as_bytes()).to_string()
 }
 
-/// Sends `request` through `send` and then overwrites every text it held,
+/// Sends `request` through `send` and then overwrites every value it held,
 /// whether or not it was sent.
 fn sent_then_wiped<R>(request: &mut Value, send: impl FnOnce(&Value) -> R) -> R {
     let reply = send(request);
     wipe(request);
+    *request = Value::Null;
     reply
 }
 
-fn wipe(value: &mut Value) {
+/// Overwrites every text, number and flag in `value` in place, for a request
+/// that carried private input. Member names are the contract's, never input.
+pub fn wipe(value: &mut Value) {
     match value {
         Value::String(text) => text.zeroize(),
+        Value::Number(number) => {
+            // A number is held inline: overwriting it overwrites its bits.
+            *number = Number::from(0u8);
+            std::hint::black_box(&*number);
+        }
+        Value::Bool(flag) => {
+            *flag = false;
+            std::hint::black_box(&*flag);
+        }
         Value::Array(items) => items.iter_mut().for_each(wipe),
         Value::Object(members) => members.values_mut().for_each(wipe),
-        _ => {}
+        Value::Null => {}
     }
-    *value = Value::Null;
 }
 
 /// A UTC instant as Python's `datetime.isoformat` spells it once parsed:
@@ -2513,6 +2581,24 @@ mod tests {
                 }
             }
             reply.map(members)
+        }
+
+        /// Records the upload's header with the bytes it streamed, after
+        /// checking them against the header as the runtime's staging does.
+        fn exchange_streamed(
+            &self,
+            request: &Value,
+            payload: &[u8],
+            deadline: Instant,
+        ) -> Result<Map<String, Value>, Refusal> {
+            let descriptor = &request["descriptor"];
+            assert_eq!(descriptor["byte_count"], payload.len());
+            if let Some(digest) = descriptor["payload_digest"].as_str() {
+                assert_eq!(digest, Sha256Digest::of(payload).to_string());
+            }
+            let mut recorded = request.clone();
+            recorded["streamed"] = json!(String::from_utf8(payload.to_vec()).unwrap());
+            self.exchange(&recorded, deadline)
         }
 
         fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
@@ -2908,8 +2994,8 @@ mod tests {
         let request = |payload: Value, definition_id: Value, subject_ref: Value| json!({"definition_id": definition_id, "subject_ref": subject_ref, "payload": payload});
         let subject = json!(format!("profile:{PROFILE}"));
         let definition = json!("ledger.example-review");
-        // 12,289 characters of compact JSON; the bound counts characters, not bytes.
-        let long = json!({"a": "\u{f1}".repeat(12_289 - 8)});
+        // Two bytes past the document in compact JSON; the bound counts bytes.
+        let long = json!({"a": "\u{f1}".repeat((PROJECTION_DOCUMENT_MAX_BYTES - 8) / 2 + 1)});
         for (payload, definition_id, subject_ref) in [
             (long, definition.clone(), subject.clone()),
             (json!([1]), definition.clone(), subject.clone()),
@@ -2943,7 +3029,7 @@ mod tests {
             reply(submitted(&operation())),
             reply(acknowledged(&operation())),
         ]);
-        let at_bound = json!({"a": "\u{f1}".repeat(12_288 - 8)});
+        let at_bound = json!({"a": "\u{f1}".repeat((PROJECTION_DOCUMENT_MAX_BYTES - 8) / 2)});
         assert!(
             handle(
                 &fake,
@@ -2978,20 +3064,90 @@ mod tests {
             json!({"kind": "operation_submitted", "operation_id": operation()})
         );
         assert!(relay.watching());
-        // Never as an ordinary submission: the runtime's own financial input, then the start.
+        // Never as an ordinary submission: streamed as the runtime's own
+        // financial input, which carries no digest, then the start.
+        let input = "{\"amount\":\"1.234,56\",\"input_version\":2}";
         assert_eq!(
             fake.sent(),
             vec![
                 target(json!({
-                    "action": "operation_financial_input",
+                    "action": "operation_submit_payload",
                     "definition_id": "ledger.example-review",
                     "idempotency_key": null,
-                    "payload_json": "{\"amount\":\"1.234,56\",\"input_version\":2}",
+                    "descriptor": {"kind": "financial_operand_input", "byte_count": input.len()},
                     "subject_ref": format!("profile:{PROFILE}"),
+                    "streamed": input,
                 })),
                 target(json!({"action": "operation_start", "operation_id": operation()})),
             ]
         );
+    }
+
+    #[test]
+    fn a_submission_beyond_one_frame_is_streamed_whole_and_beyond_the_document_is_refused() {
+        let submit = |payload: Value| {
+            json!({
+                "definition_id": "ledger.example-review",
+                "subject_ref": format!("profile:{PROFILE}"),
+                "payload": payload,
+            })
+        };
+        let wide = json!({"rows": "a".repeat(MAXIMUM_FRAME_BYTES)});
+        let fake = Fake::new(vec![
+            reply(submitted(&operation())),
+            reply(acknowledged(&operation())),
+        ]);
+        let answered = handle(
+            &fake,
+            &mut OperationRelay::new(),
+            "operation_submit",
+            submit(wide.clone()),
+        )
+        .unwrap();
+        assert_eq!(answered["operation_id"], operation());
+        let sent = fake.sent();
+        let payload = compact_json(&wide);
+        assert_eq!(sent[0]["action"], "operation_submit_payload");
+        assert_eq!(
+            sent[0]["descriptor"],
+            json!({
+                "byte_count": payload.len(),
+                "payload_digest": Sha256Digest::of(payload.as_bytes()).to_string(),
+            })
+        );
+        assert_eq!(sent[0]["streamed"], payload);
+        assert!(sent[0].get("payload_json").is_none());
+        // Within one frame, a submission is still one document.
+        let fake = Fake::new(vec![
+            reply(submitted(&operation())),
+            reply(acknowledged(&operation())),
+        ]);
+        handle(
+            &fake,
+            &mut OperationRelay::new(),
+            "operation_submit",
+            submit(json!({"a": 1})),
+        )
+        .unwrap();
+        assert_eq!(fake.sent()[0]["action"], "operation_submit");
+        // Past the document the relay carries, nothing reaches the runtime.
+        let over = "a".repeat(PROJECTION_DOCUMENT_MAX_BYTES);
+        for (action, request) in [
+            ("operation_submit", submit(json!({"a": over}))),
+            (
+                "operation_financial_submit",
+                json!({
+                    "definition_id": "ledger.example-review",
+                    "subject_ref": format!("profile:{PROFILE}"),
+                    "input": {"a": over},
+                }),
+            ),
+        ] {
+            let fake = Fake::new(Vec::new());
+            let refused = handle(&fake, &mut OperationRelay::new(), action, request);
+            assert!(matches!(refused, Err(RelayFailure::Invalid)), "{action}");
+            assert!(fake.sent().is_empty(), "{action}");
+        }
     }
 
     #[test]
@@ -3042,15 +3198,20 @@ mod tests {
             json!({"action": "operation_submit", "payload_json": iban, "rows": [iban]});
         let sent = sent_then_wiped(&mut request, |request| request.clone());
         assert_eq!(sent["payload_json"], iban);
-        // Every text was overwritten in place before the request itself was emptied.
+        // Every value was overwritten in place before the request itself was emptied.
         assert_eq!(request, Value::Null);
     }
 
     #[test]
-    fn a_wiped_request_keeps_no_text() {
-        let mut request = json!({"payload_json": "{\"amount\":\"9876.54\"}", "nested": ["x", {"y": "z"}], "n": 1});
+    fn a_wiped_request_keeps_no_text_number_or_flag() {
+        let mut request = json!({"payload_json": "{\"amount\":\"9876.54\"}",
+            "nested": ["x", {"y": "z", "amount": 9876.54}], "n": -12, "count": 7, "apply": true});
         wipe(&mut request);
-        assert_eq!(request, Value::Null);
+        assert_eq!(
+            request,
+            json!({"payload_json": "", "nested": ["", {"y": "", "amount": 0}], "n": 0,
+                "count": 0, "apply": false})
+        );
     }
 
     #[test]

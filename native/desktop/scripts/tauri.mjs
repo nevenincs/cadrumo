@@ -94,7 +94,7 @@ const snapshot = snapshotHostSources(
   backendOnly
     ? resolve(buildPath("desktop_testing"), "backend-host")
     : buildPath("desktop_host"),
-  { incremental: true },
+  { incremental: true, tests: backendOnly },
 );
 function run(args) {
   const result = spawnSync(process.execPath, [cli, ...args], {
