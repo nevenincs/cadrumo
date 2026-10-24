@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:e138adb417458dd636bafc3ba00e7572a970cac13ffaa3f86327fa4a666f7724'
+body_hash: 'sha256:43f579725dd9f315d181e5237b492b3ef586dfb5ace64b3214c8043d3c81e61a'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -43,10 +43,14 @@ Move every classification and wording decision the prototype had to make into th
 - [x] `P01.S04` - Carry per-field display text from the value presentation (ratio units, masked IBAN, booleans, dates) for the requested language; `src/cadrumo/application/modelo/value_presentation.py`.
 - [x] `P01.S05` - Add a form-level next action on the export, filing and calculation-note gates, halting only on a registry-grade admission refusal, with a state table and a gate-agreement test; `src/cadrumo/application/modelo/work_form_next_step.py`.
 - [x] `P01.S06` - Move period words and modelo titles into the application wording module and use them in the form and list projections; `src/cadrumo/application/modelo/work_form_wording.py`.
-- [x] `P01.S07` - Add a public declarations list row and register the read modelo.declarations.list, carrying state, group, next step, editability and the AEAT axes, with an exact-profile access test; `src/cadrumo/application/modelo/declarations_list.py`.
+- [ ] `P01.S07` - Add a public declarations list row and register the read modelo.declarations.list, carrying state, group, next step, editability and the AEAT axes, with an exact-profile access test; `src/cadrumo/application/modelo/declarations_list.py`.
 - [x] `P01.S08` - Move the sources grouping (family, state, boxes fed, owning surface) from the TUI into an application read; `src/cadrumo/application/modelo/work_form_source_groups.py`.
 - [x] `P01.S09` - Name the figures outside the form a failed box waits on, with their owning surface, in the casilla help card, and carry citation text for legal references; `src/cadrumo/application/modelo/casilla_help.py`.
 - [x] `P01.S10` - Accept raw typed text in edit preflight and return the parsed value, its normalisations and parse refusals per address; `src/cadrumo/application/modelo/edit_operator_input.py`.
+- [ ] `P01.S30` - Project the header's attention counts, result view, deadline view with its tone, file view and export-gate reason on the form read model, and switch the TUI header to them; `src/cadrumo/application/modelo/work_form_header.py`.
+- [ ] `P01.S31` - Carry days remaining with tone, group words, creation targets and the AEAT-side steps the read model decides on the declarations list rows, and the zones' and calendar sources' availability on the list read; `src/cadrumo/application/modelo/declarations_list.py`.
+- [ ] `P01.S32` - Fold the retained apply prerequisite and the AEAT receipt step into the form's next step; `src/cadrumo/application/modelo/work_form_next_step.py`.
+- [ ] `P01.S33` - Close the review's lower findings: the TUI reads the stored standing, page applicability words are projected, a design-constant figure shows, the typed-entry apply refusal has its own code, the filed wording keys on the recorded closure, and the gate-agreement test drives the real gates; `src/cadrumo/application/modelo/work_form_models.py`.
 
 ### Phase `P02` - One shared Modelo wording for every frontend
 
