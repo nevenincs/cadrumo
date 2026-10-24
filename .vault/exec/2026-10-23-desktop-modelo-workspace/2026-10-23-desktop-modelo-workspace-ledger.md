@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:4e8148efc4f6304092feeee3b91daf1456ac5d4b96e25d67818b2f89ec5d0c3f'
+body_hash: 'sha256:0a645a0297e8cddf61d102344b3da48ca7c63812f1438c6d61b3155cbb30bf1c'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -326,6 +326,108 @@ related:
 - `S16` `M` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.py`
 - `S16` `D` `native/desktop/src-tauri/src/shell/modelo/settle.rs`
 - `S16` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S07` `M` `src/cadrumo/application/modelo/declarations_list_operation.py`
+- `S07` `M` `src/cadrumo/application/modelo/tests/test_declarations_list_operation.py`
+- `S07` `verify:` `ruff check and format` -> `pass`
+- `S07` `verify:` `lint-imports` -> `pass`
+- `S07` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S07` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S07` `by:` `opus-p01-lane`
+- `S31` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S31` `M` `src/cadrumo/application/modelo/declarations_list_operation.py`
+- `S31` `M` `src/cadrumo/application/modelo/work_form_header.py`
+- `S31` `M` `src/cadrumo/application/overview/calendar.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/declarations/portfolio_rendering.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/declarations/portfolio_rows.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/declarations/grouped.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/declarations/calendar.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/declarations/controller.py`
+- `S31` `M` `dev/locales/tests/test_dynamic_prefix_registry_coverage.py`
+- `S31` `verify:` `ruff check and format` -> `pass`
+- `S31` `verify:` `lint-imports` -> `pass`
+- `S31` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S31` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S31` `by:` `opus-p01-lane`
+- `S32` `M` `src/cadrumo/application/modelo/work_form_next_step.py`
+- `S32` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S32` `A` `src/cadrumo/application/modelo/edit_prerequisite_wording.py`
+- `S32` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S32` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_next_step.py`
+- `S32` `A` `src/cadrumo/application/modelo/tests/test_edit_prerequisite_wording.py`
+- `S32` `M` `src/cadrumo/application/modelo/tests/test_work_form_next_step.py`
+- `S32` `verify:` `ruff check and format` -> `pass`
+- `S32` `verify:` `lint-imports` -> `pass`
+- `S32` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S32` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S32` `by:` `opus-p01-lane`
+- `S33` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S33` `M` `src/cadrumo/application/modelo/work_form_wording.py`
+- `S33` `M` `src/cadrumo/application/modelo/work_form_layout.py`
+- `S33` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S33` `M` `src/cadrumo/application/operations/financial_operand_contract.py`
+- `S33` `D` `src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`
+- `S33` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S33` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_models.py`
+- `S33` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`
+- `S33` `A` `src/cadrumo/application/modelo/tests/test_work_form_gate_agreement.py`
+- `S33` `A` `src/cadrumo/application/modelo/tests/test_work_form_page_and_box_words.py`
+- `S33` `M` `dev/quality/metadata/import_load_targets.json`
+- `S33` `verify:` `ruff check and format` -> `pass`
+- `S33` `verify:` `lint-imports` -> `pass`
+- `S33` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S33` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S33` `by:` `opus-p01-lane`
+- `S35` `A` `src/cadrumo/application/modelo/work_history_read.py`
+- `S35` `M` `src/cadrumo/application/modelo/history_operation.py`
+- `S35` `M` `src/cadrumo/application/workbench_generation_reader.py`
+- `S35` `M` `src/cadrumo/entrypoints/cli/operation_modelo_work_history.py`
+- `S35` `A` `src/cadrumo/application/modelo/tests/test_work_history_read.py`
+- `S35` `verify:` `ruff check and format` -> `pass`
+- `S35` `verify:` `lint-imports` -> `pass`
+- `S35` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S35` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S35` `by:` `opus-p01-lane-2`
+- `S37` `A` `src/cadrumo/application/modelo/edit_review_wording.py`
+- `S37` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S37` `M` `src/cadrumo/application/modelo/edit_operator_input.py`
+- `S37` `M` `src/cadrumo/application/modelo/edit_operation_requests.py`
+- `S37` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S37` `M` `src/cadrumo/application/modelo/work_form_wording.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/factory.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/session.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S37` `M` `src/cadrumo/application/operations/registry_schema_validation.py`
+- `S37` `M` `src/cadrumo_mcp/mcp/admitted_operations.py`
+- `S37` `A` `src/cadrumo/application/modelo/tests/test_work_form_field_words.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirm_real.py`
+- `S37` `verify:` `ruff check and format` -> `pass`
+- `S37` `verify:` `lint-imports` -> `pass`
+- `S37` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S37` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S37` `by:` `opus-p01-lane-2`
+- `S38` `A` `src/cadrumo/application/modelo/work_amend_correction.py`
+- `S38` `M` `src/cadrumo/application/modelo/amendment_context_operation.py`
+- `S38` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S38` `M` `src/cadrumo/application/modelo/edit_parsing.py`
+- `S38` `M` `src/cadrumo/entrypoints/cli/modelo_amend_wizard_commands.py`
+- `S38` `A` `src/cadrumo/application/modelo/tests/test_work_amend_correction.py`
+- `S38` `verify:` `ruff check and format` -> `pass`
+- `S38` `verify:` `lint-imports` -> `pass`
+- `S38` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S38` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S38` `by:` `opus-p01-lane-3`
+- `S39` `A` `src/cadrumo/application/modelo/work_form_typing_effect.py`
+- `S39` `A` `src/cadrumo/application/modelo/work_form_export_offer.py`
+- `S39` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S39` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/review.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/export.py`
+- `S39` `A` `src/cadrumo/application/modelo/tests/test_work_form_export_offer.py`
+- `S39` `verify:` `ruff check and format` -> `pass`
+- `S39` `verify:` `lint-imports` -> `pass`
+- `S39` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S39` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S39` `by:` `opus-p01-lane-3`
 
 ## Notes
 
@@ -343,3 +445,11 @@ related:
 - `S14` Not implemented: the desktop's person session now relays in Rust and another session lifted the person reply bound to the relay's 16 MiB assembled-document bound in 931da66b20, which carries a 390-sized form read in one reply; the bounded-parts mechanism is unnecessary
 - `S34` `contract_manifest.json` left out: the working tree also carries S31, S37 and S38 schema changes; it is regenerated and committed once those steps land
 - `S16` follow-up to S16: the duplicated settle layer moved into shell/settle.rs, reviewed by the desktop ledger session; adds `modelo_files_reveal`
+- `S07` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S31` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S32` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S33` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S35` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S37` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S38` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S39` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation

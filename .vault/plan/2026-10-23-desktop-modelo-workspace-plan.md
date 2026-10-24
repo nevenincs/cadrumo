@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:90cce8b937e3a74283e3b12f3b14b54485aebdf81bcaa16696b5f7e7c715b90e'
+body_hash: 'sha256:b27a685aa19b0c8774dc2c7c7e65e625aa24b91556fc9b4f6ead61f2010f1fee'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -43,20 +43,21 @@ Move every classification and wording decision the prototype had to make into th
 - [x] `P01.S04` - Carry per-field display text from the value presentation (ratio units, masked IBAN, booleans, dates) for the requested language; `src/cadrumo/application/modelo/value_presentation.py`.
 - [x] `P01.S05` - Add a form-level next action on the export, filing and calculation-note gates, halting only on a registry-grade admission refusal, with a state table and a gate-agreement test; `src/cadrumo/application/modelo/work_form_next_step.py`.
 - [x] `P01.S06` - Move period words and modelo titles into the application wording module and use them in the form and list projections; `src/cadrumo/application/modelo/work_form_wording.py`.
-- [ ] `P01.S07` - Add a public declarations list row and register the read modelo.declarations.list, carrying state, group, next step, editability and the AEAT axes, with an exact-profile access test; `src/cadrumo/application/modelo/declarations_list.py`.
+- [x] `P01.S07` - Add a public declarations list row and register the read modelo.declarations.list, carrying state, group, next step, editability and the AEAT axes, with an exact-profile access test; `src/cadrumo/application/modelo/declarations_list.py`.
 - [x] `P01.S08` - Move the sources grouping (family, state, boxes fed, owning surface) from the TUI into an application read; `src/cadrumo/application/modelo/work_form_source_groups.py`.
 - [x] `P01.S09` - Name the figures outside the form a failed box waits on, with their owning surface, in the casilla help card, and carry citation text for legal references; `src/cadrumo/application/modelo/casilla_help.py`.
 - [x] `P01.S10` - Accept raw typed text in edit preflight and return the parsed value, its normalisations and parse refusals per address; `src/cadrumo/application/modelo/edit_operator_input.py`.
 - [x] `P01.S30` - Project the header's attention counts, result view, deadline view with its tone, file view and export-gate reason on the form read model, and switch the TUI header to them; `src/cadrumo/application/modelo/work_form_header.py`.
-- [ ] `P01.S31` - Carry days remaining with tone, group words, creation targets and the AEAT-side steps the read model decides on the declarations list rows, and the zones' and calendar sources' availability on the list read; `src/cadrumo/application/modelo/declarations_list.py`.
-- [ ] `P01.S32` - Fold the retained apply prerequisite and the AEAT receipt step into the form's next step; `src/cadrumo/application/modelo/work_form_next_step.py`.
-- [ ] `P01.S33` - Close the review's lower findings: the TUI reads the stored standing, page applicability words are projected, a design-constant figure shows, the typed-entry apply refusal has its own code, the filed wording keys on the recorded closure, and the gate-agreement test drives the real gates; `src/cadrumo/application/modelo/work_form_models.py`.
+- [x] `P01.S31` - Carry days remaining with tone, group words, creation targets and the AEAT-side steps the read model decides on the declarations list rows, and the zones' and calendar sources' availability on the list read; `src/cadrumo/application/modelo/declarations_list.py`.
+- [x] `P01.S32` - Fold the retained apply prerequisite and the AEAT receipt step into the form's next step; `src/cadrumo/application/modelo/work_form_next_step.py`.
+- [x] `P01.S33` - Close the review's lower findings: the TUI reads the stored standing, page applicability words are projected, a design-constant figure shows, the typed-entry apply refusal has its own code, the filed wording keys on the recorded closure, and the gate-agreement test drives the real gates; `src/cadrumo/application/modelo/work_form_models.py`.
 - [x] `P01.S34` - Move the TUI's issue lines into the application and project them on the form read model in the form's language, with the verdict line, and switch the TUI to them; `src/cadrumo/application/modelo/work_form_issue_lines.py`.
-- [ ] `P01.S35` - Add a worded history read for one declaration in the modelo family, newest first, with a closed kind per event, and switch the TUI history to it; `src/cadrumo/application/modelo/work_history_read.py`.
+- [x] `P01.S35` - Add a worded history read for one declaration in the modelo family, newest first, with a closed kind per event, and switch the TUI history to it; `src/cadrumo/application/modelo/work_history_read.py`.
 - [ ] `P01.S36` - Add envelopes for a verified Modelo 130 with blocking and incomplete findings and one recorded as filed, read through the real producer; `native/desktop/frontend/scripts/modelo_fixtures.py`.
-- [ ] `P01.S37` - Word the typed entry's read-back value and parse refusal in the entry's language, the edit preflight's findings and edit refusals, each repeating-record cell's and context field's value text, and state each box's restore offer and confirm value on the form read model; `src/cadrumo/application/modelo/work_form_wording.py`.
-- [ ] `P01.S38` - Project a worded amendment context for a recorded declaration, with the filed record, the permitted kinds and motives in words and each box's filed value text and edit hints, and parse the corrected values typed by the filer through the canonical typed-entry path, matching the CLI amend wizard; `src/cadrumo/application/modelo/work_amend_contracts.py`.
-- [ ] `P01.S39` - Project what typing a value over each box does in words, the export offer with its artefacts, elections and their words, the revision's file format, and the recorded filing's receipt state on the form read model, and switch the TUI to them; `src/cadrumo/application/modelo/work_form_export_offer.py`.
+- [x] `P01.S37` - Word the typed entry's read-back value and parse refusal in the entry's language, the edit preflight's findings and edit refusals, each repeating-record cell's and context field's value text, and state each box's restore offer and confirm value on the form read model; `src/cadrumo/application/modelo/work_form_wording.py`.
+- [x] `P01.S38` - Project a worded amendment context for a recorded declaration, with the filed record, the permitted kinds and motives in words and each box's filed value text and edit hints, and parse the corrected values typed by the filer through the canonical typed-entry path, matching the CLI amend wizard; `src/cadrumo/application/modelo/work_amend_contracts.py`.
+- [x] `P01.S39` - Project what typing a value over each box does in words, the export offer with its artefacts, elections and their words, the revision's file format, and the recorded filing's receipt state on the form read model, and switch the TUI to them; `src/cadrumo/application/modelo/work_form_export_offer.py`.
+- [ ] `P01.S40` - Derive the form's export hold and next step from the filing gate's own predicate so no frontend offers a file the gate refuses, test gate agreement over every note kind and working figure, and remove the unused field_needs_filer route; `src/cadrumo/application/modelo/work_form_next_step.py`.
 
 ### Phase `P02` - One shared Modelo wording for every frontend
 
@@ -88,6 +89,7 @@ Promote the round-3 prototype into product components on the application's field
 - [ ] `P04.S24` - Add the Check view on the form's findings in catalogue wording; `native/desktop/frontend/src/components/modelo/CheckView.tsx`.
 - [ ] `P04.S25` - Add the Export and record view: the AEAT file through a save token, recording the filing, adding the receipt, and the other copies; `native/desktop/frontend/src/components/modelo/FilingView.tsx`.
 - [ ] `P04.S26` - Add the Sources view and the History view with correction, rename and discard; `native/desktop/frontend/src/components/modelo/`.
+- [ ] `P04.S41` - Render the read-only view of a return the AEAT holds from the declarations list, from the same read the TUI's external filing details use, and keep the list's view, sort and search while a declaration is open; `native/desktop/frontend/src/components/modelo/declarations/`.
 
 ### Phase `P05` - Proof
 
