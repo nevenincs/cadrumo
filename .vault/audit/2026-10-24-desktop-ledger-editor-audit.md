@@ -938,3 +938,9 @@ R17 set 7.5rem before R22 made the status word appear only in comfortable densit
 - "Transf…" is truncated in the 5rem Direction column. Use the ⇆ glyph and put the word in the tooltip.
 - Health's Status table spreads label and number across 680 px. Also, Active 40 ≠ To classify 8 + Reviewed 31 + Skipped 0, and nothing shows the missing one.
 - "Saved changes can't be undone here" gives no next step. Add "· edit the cell to change it back".
+
+### UX · deferred-contract-gaps | medium | Two parts of the usability fixes need product contract changes
+
+- **Duplicate pairing in the import preview (R12).** The dry run names only the ids of the rows it would import, with no date or amount, so the window cannot pair a new row with the stored movement. The `⚠ n` chip and its note ship; pairing needs the import preview to return those row facts.
+- **"Keep both" for a possible duplicate.** No product operation clears an import's likely-duplicate diagnostic, and the TUI offers only filtering and lifecycle actions. The page offers "Archive as duplicate" (`ledger.archive` with the reason prefilled) and nothing for keep-both.
+- **Seeing a document before confirming it** moved to P03.S19, under the 2026-10-24 amendment to `2026-10-23-desktop-ledger-editor-adr`.
