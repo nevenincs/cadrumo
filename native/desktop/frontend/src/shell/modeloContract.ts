@@ -2621,6 +2621,14 @@ export type ModeloCreditSnapshot = {
 };
 
 /**
+ * The details a row opens of a return the AEAT holds with no local work
+ * linked.
+ */
+export type ModeloDeclarationAeatFilingV1 = {
+  notes: string[];
+};
+
+/**
  * One modelo and period the new-declaration dialog offers, as the pinned
  * authority admits it.
  */
@@ -2676,6 +2684,7 @@ export type ModeloDeclarationListRowV1 = {
   blocking_count: number;
   opens_aeat_filing: boolean;
   help_words: string | null;
+  aeat_filing: ModeloDeclarationAeatFilingV1 | null;
   advice: CoverageAdviceReason | null;
   advice_words: string | null;
   local_draft: boolean;
@@ -4170,15 +4179,17 @@ export type ModeloFormBlocker = {
  *
  * `reason` is the calculation's own reason code, which the frontend words from
  * the catalogue; `box` is the printed box number when the note names a box the
- * form prints. A note at the blocking level withholds filing in the editor
- * (`blocking_calculation_notes`); which entrypoint refuses it, and how, is the
- * application's calculation-note gate's to say.
+ * form prints. `withholds_filing` is the application's calculation-note gate's
+ * own answer: the gate refuses the file and the recording while such a note
+ * stands, whatever its attention says, so the editor withholds them too
+ * (`blocking_calculation_notes`), as it does for a note at the blocking level.
  */
 export type ModeloFormCalculationNote = {
   reason: string;
   attention: ModeloFormAttention;
   casilla_id: CasillaId | null;
   box: string | null;
+  withholds_filing: boolean;
 };
 
 /**
@@ -4398,7 +4409,7 @@ export type ModeloFormInspectionReason =
 export type ModeloFormIssueLine = {
   level: ModeloFormAttention;
   box: string | null;
-  where: string;
+  where: string | null;
   message: string;
   action: string;
   detail: string | null;

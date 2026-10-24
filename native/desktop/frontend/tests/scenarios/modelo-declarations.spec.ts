@@ -1,4 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import type { ModeloDeclarationsListProjectionV1 } from "../../src/shell/modeloContract";
 import { label } from "../support/strings";
 
 // The Declarations page over the scenario's modelo family, which answers the
@@ -16,6 +18,18 @@ const grid = (target: Page) => page(target).getByRole("grid");
 const dataRows = (target: Page) => grid(target).locator("[data-kind=data]");
 const sections = (target: Page) => grid(target).locator("[data-kind=section]");
 const dialog = (target: Page) => target.locator(".new-declaration");
+
+/** The list the scenario answers, as the application read it. */
+const listed = (shape = "") =>
+  JSON.parse(
+    readFileSync(
+      new URL(
+        `../../src/dev/fixtures/modelo/declarations${shape ? `-${shape}` : ""}-en.json`,
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  ) as ModeloDeclarationsListProjectionV1;
 
 async function openDeclarations(target: Page, extra = "") {
   await open(target, extra);
@@ -41,28 +55,47 @@ async function chooseModelo(target: Page, modelo: string, year: number) {
 test("lists the read model's rows in its groups, with its notices", async ({
   page: target,
 }) => {
+  const read = listed();
+  const first = read.rows[0]!;
+  const local = read.rows.find(
+    (row) => row.modelo === "130" && row.opens_local_work,
+  )!;
   await openDeclarations(target);
-  await expect(sections(target).first()).toContainText("In progress");
+  await expect(sections(target).first()).toContainText(first.group_words);
   await expect(
-    dataRows(target).filter({ hasText: "Modelo 130" }).first(),
-  ).toContainText("Calculated, not checked");
-  // The AEAT side was never read: the list says so beside its rows.
-  await expect(page(target).locator(".declarations-notice")).toContainText(
-    "AEAT status",
-  );
+    dataRows(target).filter({ hasText: local.modelo_title }).first(),
+  ).toContainText(local.state_words);
+  // Where the AEAT side stands is said beside the rows, as the list says it.
+  for (const notice of read.notices)
+    await expect(page(target).locator(".declarations-notice")).toContainText(
+      notice,
+    );
 });
 
 test("an incomplete list never claims there is nothing to do", async ({
   page: target,
 }) => {
-  await openDeclarations(target);
-  await page(target)
-    .getByRole("radiogroup", { name: label("desktop.declarations.show.label") })
-    .getByText(label("workspace.declarations.list.filter.recorded"))
-    .click();
-  await expect(page(target).locator(".declarations-empty")).toContainText(
-    label("workspace.declarations.list.none_listed"),
-  );
+  // Nothing was ever read from the AEAT in this profile's list.
+  const read = listed("incomplete");
+  expect(
+    read.sources.some((source) => source.availability !== "available"),
+  ).toBe(true);
+  await openDeclarations(target, "&modelo=incomplete");
+  for (const notice of read.notices)
+    await expect(page(target).locator(".declarations-notice")).toContainText(
+      notice,
+    );
+  const show = page(target).getByRole("radiogroup", {
+    name: label("desktop.declarations.show.label"),
+  });
+  for (const view of ["todo", "recorded", "all"]) {
+    await show
+      .getByText(label(`workspace.declarations.list.filter.${view}`))
+      .click();
+    await expect(
+      page(target).getByText(label("workspace.declarations.list.all_recorded")),
+    ).toHaveCount(0);
+  }
 });
 
 test("finds a declaration by its modelo", async ({ page: target }) => {

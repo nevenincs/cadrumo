@@ -1,0 +1,2135 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
+  "form": {
+    "form": {
+      "modelo": "347",
+      "filing_year": 2026,
+      "period": { "filing_year": 2026, "code": "0A" },
+      "registry_revision_id": "2025-y-siguientes",
+      "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
+      "calculation_revision_id": "dc9237336b941c64608900d0cfeef932ad43e214dc01145e517c49747bd42353",
+      "language": "hu",
+      "layout_provenance": "generated",
+      "inspection_reason": null,
+      "seed_source": "authored",
+      "pages": [
+        {
+          "id": "m347-declarante",
+          "heading": { "text": "Összesítő lap", "disclosure": "localized" },
+          "official_ref": "BOE-A-2011-19397, anexo I, hoja resumen (PDF 7)",
+          "condition": "always",
+          "applies": true,
+          "sections": [
+            {
+              "id": "m347-declarante.identificacion",
+              "heading": {
+                "text": "Bevalló azonosítása",
+                "disclosure": "localized"
+              },
+              "official_heading": null,
+              "blocks": [
+                {
+                  "kind": "context_field",
+                  "id": "nif",
+                  "label": {
+                    "text": "Bevalló adóazonosítója",
+                    "disclosure": "localized"
+                  },
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "nincs adat"
+                },
+                {
+                  "kind": "context_field",
+                  "id": "nombre",
+                  "label": {
+                    "text": "Teljes név vagy cégnév",
+                    "disclosure": "localized"
+                  },
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "nincs adat"
+                },
+                {
+                  "kind": "field",
+                  "id": "decl-representante-legal-nif",
+                  "field": {
+                    "address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.representante-legal-nif"
+                    },
+                    "box": null,
+                    "label": {
+                      "text": "A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA",
+                      "disclosure": "localized"
+                    },
+                    "help": "A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek éves bevallásán bevallott adat.",
+                    "data_type": "nif",
+                    "value": { "kind": "null", "text": "" },
+                    "origin": "optional_empty",
+                    "editability": "editable_value",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "orden-eha-3012-2008:art-1",
+                      "orden-eha-3012-2008:art-10",
+                      "orden-hac-1431-2025:art-1",
+                      "rd-1065-2007:art-31",
+                      "ley-58-2003:art-93"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.representante-legal-nif"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Nem kötelező, üres",
+                    "origin_explanation": null,
+                    "editability_words": "Add meg a rovat összegét vagy adatát.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
+                  }
+                }
+              ],
+              "counts": {
+                "total": 1,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 0,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            },
+            {
+              "id": "m347-declarante.contacto",
+              "heading": {
+                "text": "Kapcsolattartó",
+                "disclosure": "localized"
+              },
+              "official_heading": null,
+              "blocks": [
+                {
+                  "kind": "field",
+                  "id": "decl-persona-relacion",
+                  "field": {
+                    "address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.persona-relacion"
+                    },
+                    "box": null,
+                    "label": {
+                      "text": "VEZETÉKNÉV ÉS UTÓNÉV",
+                      "disclosure": "localized"
+                    },
+                    "help": "A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek éves bevallásán bevallott adat.",
+                    "data_type": "text",
+                    "value": { "kind": "null", "text": "" },
+                    "origin": "optional_empty",
+                    "editability": "editable_value",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "orden-eha-3012-2008:art-1",
+                      "orden-eha-3012-2008:art-10",
+                      "orden-hac-1431-2025:art-1",
+                      "rd-1065-2007:art-31",
+                      "ley-58-2003:art-93"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.persona-relacion"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Nem kötelező, üres",
+                    "origin_explanation": null,
+                    "editability_words": "Add meg a rovat összegét vagy adatát.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "decl-persona-relacion-telefono",
+                  "field": {
+                    "address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.persona-relacion-telefono"
+                    },
+                    "box": null,
+                    "label": {
+                      "text": "A kapcsolattartó telefonszáma",
+                      "disclosure": "localized"
+                    },
+                    "help": "9 pozíciós numerikus mező. A bevalló által megjelölt kapcsolattartó személy telefonszáma.",
+                    "data_type": "text",
+                    "value": { "kind": "null", "text": "" },
+                    "origin": "optional_empty",
+                    "editability": "editable_value",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "orden-eha-3012-2008:art-1",
+                      "orden-eha-3012-2008:art-10",
+                      "orden-hac-1431-2025:art-1",
+                      "rd-1065-2007:art-31",
+                      "ley-58-2003:art-93"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.persona-relacion-telefono"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Nem kötelező, üres",
+                    "origin_explanation": null,
+                    "editability_words": "Add meg a rovat összegét vagy adatát.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
+                  }
+                }
+              ],
+              "counts": {
+                "total": 2,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 0,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            },
+            {
+              "id": "m347-declarante.declaracion",
+              "heading": {
+                "text": "Bevallás adatai",
+                "disclosure": "localized"
+              },
+              "official_heading": null,
+              "blocks": [
+                {
+                  "kind": "field",
+                  "id": "decl-ejercicio",
+                  "field": {
+                    "address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.ejercicio"
+                    },
+                    "box": null,
+                    "label": {
+                      "text": "Az adóbevallás vonatkozási éve",
+                      "disclosure": "localized"
+                    },
+                    "help": "A Modelo 347 nyomtatvány ejercicio. rovata, 2025. adóév.",
+                    "data_type": "year",
+                    "value": { "kind": "decimal", "text": "2026" },
+                    "origin": "informational",
+                    "editability": "informational",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "informational",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "orden-eha-3012-2008:art-1",
+                      "ley-58-2003:art-93"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.ejercicio"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Referenciaérték",
+                    "origin_explanation": null,
+                    "editability_words": "Tájékoztatásul jelenik meg; itt nem kell megadni.",
+                    "value_text": "2026",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "decl-numero-justificante",
+                  "field": {
+                    "address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.numero-justificante"
+                    },
+                    "box": null,
+                    "label": {
+                      "text": "A BEVALLÁS AZONOSÍTÓ SZÁMA",
+                      "disclosure": "localized"
+                    },
+                    "help": "A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek éves bevallásán bevallott adat.",
+                    "data_type": "text",
+                    "value": { "kind": "null", "text": "" },
+                    "origin": "optional_empty",
+                    "editability": "editable_value",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "orden-eha-3012-2008:art-1",
+                      "orden-eha-3012-2008:art-10",
+                      "orden-hac-1431-2025:art-1",
+                      "rd-1065-2007:art-31",
+                      "ley-58-2003:art-93"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.numero-justificante"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Nem kötelező, üres",
+                    "origin_explanation": null,
+                    "editability_words": "Add meg a rovat összegét vagy adatát.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "decl-complementaria-sustitutiva",
+                  "field": {
+                    "address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.complementaria-sustitutiva"
+                    },
+                    "box": null,
+                    "label": {
+                      "text": "KIEGÉSZÍTŐ VAGY HELYETTESÍTŐ BEVALLÁS",
+                      "disclosure": "localized"
+                    },
+                    "help": "A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek éves bevallásán bevallott adat.",
+                    "data_type": "text",
+                    "value": { "kind": "null", "text": "" },
+                    "origin": "optional_empty",
+                    "editability": "editable_value",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "orden-eha-3012-2008:art-1",
+                      "orden-eha-3012-2008:art-10",
+                      "orden-hac-1431-2025:art-1",
+                      "rd-1065-2007:art-31",
+                      "ley-58-2003:art-93"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "decl.complementaria-sustitutiva"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Nem kötelező, üres",
+                    "origin_explanation": null,
+                    "editability_words": "Add meg a rovat összegét vagy adatát.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
+                  }
+                },
+                {
+                  "kind": "context_field",
+                  "id": "anterior",
+                  "label": {
+                    "text": "Előző bevallás bizonylatszáma",
+                    "disclosure": "localized"
+                  },
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "nincs adat"
+                }
+              ],
+              "counts": {
+                "total": 3,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 0,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            },
+            {
+              "id": "m347-declarante.resumen",
+              "heading": {
+                "text": "A bevallásban szereplő adatok összesítése",
+                "disclosure": "localized"
+              },
+              "official_heading": null,
+              "blocks": [
+                {
+                  "kind": "context_field",
+                  "id": "resumen-personas",
+                  "label": {
+                    "text": "[01] Személyek és szervezetek száma",
+                    "disclosure": "localized"
+                  },
+                  "value": { "kind": "decimal", "text": "0" },
+                  "value_text": "0"
+                },
+                {
+                  "kind": "context_field",
+                  "id": "resumen-operaciones",
+                  "label": {
+                    "text": "[02] Ügyletek éves összege",
+                    "disclosure": "localized"
+                  },
+                  "value": { "kind": "decimal", "text": "0" },
+                  "value_text": "0"
+                },
+                {
+                  "kind": "context_field",
+                  "id": "resumen-inmuebles",
+                  "label": {
+                    "text": "[03] Ingatlanok száma",
+                    "disclosure": "localized"
+                  },
+                  "value": { "kind": "decimal", "text": "0" },
+                  "value_text": "0"
+                },
+                {
+                  "kind": "context_field",
+                  "id": "resumen-arrendamientos",
+                  "label": {
+                    "text": "[04] Üzlethelyiségek bérbeadásának összege",
+                    "disclosure": "localized"
+                  },
+                  "value": { "kind": "decimal", "text": "0" },
+                  "value_text": "0"
+                }
+              ],
+              "counts": {
+                "total": 0,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 0,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            },
+            {
+              "id": "m347-declarante.firma",
+              "heading": {
+                "text": "Dátum és aláírás",
+                "disclosure": "localized"
+              },
+              "official_heading": null,
+              "blocks": [
+                {
+                  "kind": "field",
+                  "id": "firma-fecha",
+                  "field": {
+                    "address": {
+                      "kind": "casilla",
+                      "casilla_id": "firma-fecha"
+                    },
+                    "box": null,
+                    "label": { "text": "Dátum", "disclosure": "localized" },
+                    "help": null,
+                    "data_type": "date",
+                    "value": { "kind": "decimal", "text": "0" },
+                    "origin": "informational",
+                    "editability": "informational",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "informational",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": ["orden-eha-3012-2008:art-1"],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "firma-fecha"
+                    },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Referenciaérték",
+                    "origin_explanation": null,
+                    "editability_words": "Tájékoztatásul jelenik meg; itt nem kell megadni.",
+                    "value_text": "0",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "firma-nombre",
+                  "field": {
+                    "address": {
+                      "kind": "casilla",
+                      "casilla_id": "firma-nombre"
+                    },
+                    "box": null,
+                    "label": {
+                      "text": "Aláíró neve",
+                      "disclosure": "localized"
+                    },
+                    "help": null,
+                    "data_type": "name",
+                    "value": { "kind": "null", "text": "" },
+                    "origin": "informational",
+                    "editability": "informational",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "informational",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": ["orden-eha-3012-2008:art-1"],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "firma-nombre"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Referenciaérték",
+                    "origin_explanation": null,
+                    "editability_words": "Tájékoztatásul jelenik meg; itt nem kell megadni.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "firma-cargo",
+                  "field": {
+                    "address": {
+                      "kind": "casilla",
+                      "casilla_id": "firma-cargo"
+                    },
+                    "box": null,
+                    "label": {
+                      "text": "Beosztás vagy munkakör",
+                      "disclosure": "localized"
+                    },
+                    "help": null,
+                    "data_type": "text",
+                    "value": { "kind": "null", "text": "" },
+                    "origin": "informational",
+                    "editability": "informational",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "informational",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": ["orden-eha-3012-2008:art-1"],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "casilla",
+                      "casilla_id": "firma-cargo"
+                    },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Referenciaérték",
+                    "origin_explanation": null,
+                    "editability_words": "Tájékoztatásul jelenik meg; itt nem kell megadni.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null
+                  }
+                },
+                {
+                  "kind": "grid",
+                  "id": "firma-manuscrita",
+                  "columns": [
+                    {
+                      "key": "firma",
+                      "heading": {
+                        "text": "Kézi aláírás",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "administracion",
+                      "heading": {
+                        "text": "A hatóság számára fenntartott hely",
+                        "disclosure": "localized"
+                      }
+                    }
+                  ],
+                  "rows": [
+                    {
+                      "key": "firma",
+                      "heading": {
+                        "text": "Papírnyomtatvány rovata",
+                        "disclosure": "localized"
+                      },
+                      "cells": [
+                        { "kind": "blank", "field": null, "literal": null },
+                        { "kind": "blank", "field": null, "literal": null }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "counts": {
+                "total": 3,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 0,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            }
+          ],
+          "counts": {
+            "total": 9,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          },
+          "applicability_words": null
+        },
+        {
+          "id": "m347-declarado",
+          "heading": {
+            "text": "Személyek és szervezetek",
+            "disclosure": "localized"
+          },
+          "official_ref": "BOE-A-2011-19397, anexo I, declarados (PDF 9)",
+          "condition": "always",
+          "applies": true,
+          "sections": [
+            {
+              "id": "m347-declarado.general",
+              "heading": { "text": "general", "disclosure": "technical" },
+              "official_heading": null,
+              "blocks": [
+                {
+                  "kind": "repeating",
+                  "id": "m347-declarado",
+                  "columns": [
+                    {
+                      "key": "contraparte-nif",
+                      "heading": {
+                        "text": "A bejelentett partner adószáma",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-nombre",
+                      "heading": {
+                        "text": "A bejelentett partner neve vagy cégneve",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-representante-legal-nif",
+                      "heading": {
+                        "text": "A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-provincia-codigo",
+                      "heading": {
+                        "text": "A partner tartománykódja (két számjegy)",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-pais-codigo",
+                      "heading": {
+                        "text": "A partner országkódja (ISO 3166-1 alfa-2; belföldi partnereknél üres)",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-clave-operacion",
+                      "heading": {
+                        "text": "Ügyletkód (A: beszerzések; B: termékértékesítések és szolgáltatásnyújtások)",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-importe-anual",
+                      "heading": {
+                        "text": "AZ ÜGYLETEK ÉVES ÖSSZEGE",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-importe-transmisiones-inmuebles",
+                      "heading": {
+                        "text": "IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL SZÁRMAZÓ ÉVES ÖSSZEG",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-operacion-seguro",
+                      "heading": {
+                        "text": "BIZTOSÍTÁSI ÜGYLET",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-importe-metalico",
+                      "heading": {
+                        "text": "KÉSZPÉNZBEN KAPOTT ÖSSZEG",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-ejercicio-operacion",
+                      "heading": { "text": "ADÓÉV", "disclosure": "localized" }
+                    },
+                    {
+                      "key": "contraparte-importe-transmisiones-q1",
+                      "heading": {
+                        "text": "IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG ELSŐ NEGYEDÉV",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-importe-transmisiones-q2",
+                      "heading": {
+                        "text": "IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG MÁSODIK NEGYEDÉV",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-importe-transmisiones-q3",
+                      "heading": {
+                        "text": "ÁFA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG HARMADIK NEGYEDÉV",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-importe-transmisiones-q4",
+                      "heading": {
+                        "text": "IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG NEGYEDIK NEGYEDÉV",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-bienes-vinculados",
+                      "heading": {
+                        "text": "A NEM VÁMRAKTÁROZÁSI ELJÁRÁS ALÁ VONT VAGY VONANDÓ TERMÉKEKKEL FOLYTATOTT ÜGYLET",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-importe-criterio-caja",
+                      "heading": {
+                        "text": "AZ IVA PÉNZFORGALMI SZEMLÉLETE SZERINT ESEDÉKESSÉ VÁLT ÜGYLETEK ÉVES ÖSSZEGE",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-numero-convocatoria-bdns",
+                      "heading": {
+                        "text": "BDNS PÁLYÁZATI SZÁM",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-arrendamiento-local-negocio",
+                      "heading": {
+                        "text": "ÜZLETHELYISÉG BÉRLETE",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-criterio-caja",
+                      "heading": {
+                        "text": "AZ IVA PÉNZFORGALMI KÜLÖNÖS RENDSZERE SZERINTI ÜGYLETEK",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-nif-operador-comunitario",
+                      "heading": {
+                        "text": "KÖZÖSSÉGI GAZDÁLKODÓ NIF SZÁMA",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-importe-q1",
+                      "heading": {
+                        "text": "A partnerrel végzett ügyletek összege az első negyedévben",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-importe-q2",
+                      "heading": {
+                        "text": "A partnerrel végzett ügyletek összege a második negyedévben",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-importe-q3",
+                      "heading": {
+                        "text": "A partnerrel végzett ügyletek összege a harmadik negyedévben",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-importe-q4",
+                      "heading": {
+                        "text": "A partnerrel végzett ügyletek összege a negyedik negyedévben",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "contraparte-inversion-sujeto-pasivo",
+                      "heading": {
+                        "text": "FORDÍTOTT ADÓZÁSÚ ÜGYLET",
+                        "disclosure": "localized"
+                      }
+                    }
+                  ],
+                  "column_casilla_ids": [
+                    "contraparte.nif",
+                    "contraparte.nombre",
+                    "contraparte.representante-legal-nif",
+                    "contraparte.provincia-codigo",
+                    "contraparte.pais-codigo",
+                    "contraparte.clave-operacion",
+                    "contraparte.importe-anual",
+                    "contraparte.importe-transmisiones-inmuebles",
+                    "contraparte.operacion-seguro",
+                    "contraparte.importe-metalico",
+                    "contraparte.ejercicio-operacion",
+                    "contraparte.importe-transmisiones-Q1",
+                    "contraparte.importe-transmisiones-Q2",
+                    "contraparte.importe-transmisiones-Q3",
+                    "contraparte.importe-transmisiones-Q4",
+                    "contraparte.bienes-vinculados",
+                    "contraparte.importe-criterio-caja",
+                    "contraparte.numero-convocatoria-bdns",
+                    "contraparte.arrendamiento-local-negocio",
+                    "contraparte.criterio-caja",
+                    "contraparte.nif-operador-comunitario",
+                    "contraparte.importe-Q1",
+                    "contraparte.importe-Q2",
+                    "contraparte.importe-Q3",
+                    "contraparte.importe-Q4",
+                    "contraparte.inversion-sujeto-pasivo"
+                  ],
+                  "column_data_types": [
+                    "nif",
+                    "text",
+                    "nif",
+                    "text",
+                    "country_code",
+                    "text",
+                    "money",
+                    "money",
+                    "text",
+                    "money",
+                    "year",
+                    "money",
+                    "money",
+                    "money",
+                    "money",
+                    "text",
+                    "money",
+                    "text",
+                    "text",
+                    "text",
+                    "text",
+                    "money",
+                    "money",
+                    "money",
+                    "money",
+                    "text"
+                  ],
+                  "min_rows": 0,
+                  "max_rows": null,
+                  "rows_known": false,
+                  "rows": []
+                }
+              ],
+              "counts": {
+                "total": 0,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 0,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            }
+          ],
+          "counts": {
+            "total": 0,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          },
+          "applicability_words": null
+        },
+        {
+          "id": "m347-inmueble",
+          "heading": {
+            "text": "Üzlethelyiségek bérbeadása",
+            "disclosure": "localized"
+          },
+          "official_ref": "BOE-A-2011-19397, anexo I, inmuebles (PDF 11)",
+          "condition": "optional_record",
+          "applies": null,
+          "sections": [
+            {
+              "id": "m347-inmueble.general",
+              "heading": { "text": "general", "disclosure": "technical" },
+              "official_heading": null,
+              "blocks": [
+                {
+                  "kind": "repeating",
+                  "id": "m347-inmueble",
+                  "columns": [
+                    {
+                      "key": "inmueble-arrendatario-nif",
+                      "heading": {
+                        "text": "A BÉRLŐ NIF SZÁMA",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "inmueble-arrendatario-nombre",
+                      "heading": {
+                        "text": "A BÉRLŐ VEZETÉKNEVE ÉS UTÓNEVE, CÉGNEVE VAGY MEGNEVEZÉSE",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "inmueble-representante-legal-nif",
+                      "heading": {
+                        "text": "A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "inmueble-importe-operacion",
+                      "heading": {
+                        "text": "AZ ÜGYLET ÖSSZEGE",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "inmueble-situacion",
+                      "heading": {
+                        "text": "AZ INGATLAN FEKVÉSE",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "inmueble-referencia-catastral",
+                      "heading": {
+                        "text": "KATASZTERI HIVATKOZÁS",
+                        "disclosure": "localized"
+                      }
+                    },
+                    {
+                      "key": "inmueble-direccion",
+                      "heading": {
+                        "text": "AZ INGATLAN CÍME",
+                        "disclosure": "localized"
+                      }
+                    }
+                  ],
+                  "column_casilla_ids": [
+                    "inmueble.arrendatario-nif",
+                    "inmueble.arrendatario-nombre",
+                    "inmueble.representante-legal-nif",
+                    "inmueble.importe-operacion",
+                    "inmueble.situacion",
+                    "inmueble.referencia-catastral",
+                    "inmueble.direccion"
+                  ],
+                  "column_data_types": [
+                    "nif",
+                    "text",
+                    "nif",
+                    "money",
+                    "integer",
+                    "text",
+                    "text"
+                  ],
+                  "min_rows": 0,
+                  "max_rows": null,
+                  "rows_known": false,
+                  "rows": []
+                }
+              ],
+              "counts": {
+                "total": 0,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 0,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            }
+          ],
+          "counts": {
+            "total": 0,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          },
+          "applicability_words": null
+        }
+      ],
+      "working_figures": [
+        {
+          "address": {
+            "kind": "casilla",
+            "casilla_id": "decl.tipo-declaracion"
+          },
+          "box": null,
+          "label": {
+            "text": "Bevallás típusa (eredeti / helyettesítő / kiegészítő)",
+            "disclosure": "localized"
+          },
+          "help": "A Modelo 347 nyomtatvány tipo-declaracion. rovata, 2025. adóév.",
+          "data_type": "text",
+          "value": { "kind": "string", "text": "original" },
+          "origin": "informational",
+          "editability": "informational",
+          "not_writable_reason": null,
+          "required": false,
+          "unattributed": false,
+          "grounded_rate": null,
+          "printed_rate": null,
+          "role": "informational",
+          "bindings": [],
+          "source": null,
+          "formula_id": null,
+          "formula_operands": [],
+          "blockers": [],
+          "constraints": null,
+          "legal_refs": ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"],
+          "also_appears_on": [],
+          "standing": "done",
+          "edit_address": {
+            "kind": "casilla",
+            "casilla_id": "decl.tipo-declaracion"
+          },
+          "confirmable": false,
+          "held_zero": false,
+          "origin_words": "Referenciaérték",
+          "origin_explanation": null,
+          "editability_words": "Tájékoztatásul jelenik meg; itt nem kell megadni.",
+          "value_text": "original",
+          "restorable": false,
+          "filers_own": false,
+          "confirm_value": null
+        }
+      ],
+      "unplaced": [],
+      "result_addresses": [],
+      "counts": {
+        "total": 10,
+        "needs_input": 0,
+        "entered": 0,
+        "imported": 0,
+        "calculated": 0,
+        "overridden": 0,
+        "default_to_confirm": 0,
+        "not_applicable": 0,
+        "blocked": 0
+      },
+      "progress": {
+        "state": "in_progress",
+        "materialised_count": 2,
+        "target_count": 5,
+        "denominator": {
+          "kind": "calculation_completeness_manifest",
+          "registry_revision_id": "2025-y-siguientes",
+          "source_ref": "aeat-dr-347-2025"
+        }
+      },
+      "operator_entries_known": true,
+      "edit_admitted": true,
+      "verification": null,
+      "issues": [],
+      "calculation_notes": [],
+      "calculation_notes_held": true,
+      "source_groups": [
+        {
+          "kind": "information",
+          "name": "Csak tájékoztatásul",
+          "summary": "",
+          "boxes": [],
+          "recorded": false,
+          "addresses": [
+            { "kind": "casilla", "casilla_id": "decl.ejercicio" },
+            { "kind": "casilla", "casilla_id": "firma-fecha" },
+            { "kind": "casilla", "casilla_id": "firma-nombre" },
+            { "kind": "casilla", "casilla_id": "firma-cargo" },
+            { "kind": "casilla", "casilla_id": "decl.tipo-declaracion" }
+          ],
+          "readings": []
+        },
+        {
+          "kind": "blank",
+          "name": "Üresen hagyott vagy nem alkalmazandó",
+          "summary": "",
+          "boxes": [],
+          "recorded": false,
+          "addresses": [
+            { "kind": "casilla", "casilla_id": "decl.representante-legal-nif" },
+            { "kind": "casilla", "casilla_id": "decl.persona-relacion" },
+            {
+              "kind": "casilla",
+              "casilla_id": "decl.persona-relacion-telefono"
+            },
+            { "kind": "casilla", "casilla_id": "decl.numero-justificante" },
+            {
+              "kind": "casilla",
+              "casilla_id": "decl.complementaria-sustitutiva"
+            }
+          ],
+          "readings": []
+        }
+      ],
+      "result": null,
+      "deadline": {
+        "closes_on": "2027-02-28",
+        "nominal_closes_on": "2027-02-28",
+        "holiday_coverage": "calendar_unavailable",
+        "reference_on": "2026-10-24",
+        "days_remaining": 127,
+        "days_overdue": null
+      },
+      "aeat_data": null,
+      "filing": null,
+      "last_export": null,
+      "edit_closure": null,
+      "modelo_title": "Modelo 347 · Harmadik személyekkel folytatott ügyletek (éves adatszolgáltatás)",
+      "modelo_name": "Harmadik személyekkel folytatott ügyletek (éves adatszolgáltatás)",
+      "modelo_number": "Modelo 347",
+      "period_words": "2026. éves"
+    },
+    "verified": false,
+    "filed": false
+  },
+  "admitted_baseline": {
+    "compatibility": {
+      "workspace_contract_version": 1,
+      "edit_contract_version": 1,
+      "operation_manifest_version": 4,
+      "contract_set_digest": "f73237f64eb3b78ec1a422e4c2bfec2a1b244ef3aeea98c5d82222068d47801b",
+      "operation_definition_id": "modelo.edit.apply",
+      "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
+      "request_schema": {
+        "schema_id": "modelo.edit.apply.request",
+        "schema_version": 2,
+        "schema_fingerprint": "e5a1e02a862bcf9d310c1fc919e27896f1cd5ccf9b4e008de9a9e10d473c463f"
+      },
+      "result_schema": {
+        "schema_id": "modelo.edit.apply.result",
+        "schema_version": 1,
+        "schema_fingerprint": "fcb07c3ebfda5185fff964d08883ab9ac5a7e13ae46de77868923db2f7a31af3"
+      },
+      "observation_contract_version": 1,
+      "review_projection_contract_version": null,
+      "review_schema": null,
+      "workspace_refresh_target_version": 1,
+      "workspace_refresh_target_schema": {
+        "schema_id": "modelo.edit.apply.workspace_refresh_target",
+        "schema_version": 1,
+        "schema_fingerprint": "f3ed60843779fac34b3b30864d6f82ec97d218a19dfb751f34d05fd6880822a7"
+      },
+      "financial_operand_protocol_version": 1,
+      "financial_operand_schema": {
+        "schema_id": "modelo.edit.submission",
+        "schema_version": 1,
+        "schema_fingerprint": "50137af3e279c85b63ea26b32b31e5328124cb0cac8b56a67c724112946f18f9"
+      }
+    },
+    "bucket_id": "13000000-0000-4000-8000-000000000730",
+    "modelo": "347",
+    "filing_year": 2026,
+    "period_filing_year": 2026,
+    "period_code": "0A",
+    "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
+    "work_unit_record_digest": "6e9a594c084e51b2a4c0f09352eb46b1943ef608ccb16bad981dac3284e98a52",
+    "calculation_head_digest": "8c28e7aef7e06de48b405bf5b57f108014fdef3fdb6b9b02204a3276f76229f3",
+    "current_calculation_revision_id": "dc9237336b941c64608900d0cfeef932ad43e214dc01145e517c49747bd42353",
+    "law_selected_revision_id": "2025-y-siguientes",
+    "schema_identity": {
+      "schema_id": "modelo-347-2025-y-siguientes",
+      "schema_fingerprint": "78f125bceb7037e751ad699ab302b29122895ed33ff10bf99408c0eb3e326773",
+      "completeness_manifest_digest": "dad25aeed4e2eccfe1d462f6fb4f3107d90d49bbd3e70ed874a9497144ad4b78"
+    },
+    "schema_version": 1,
+    "permitted_surface": [
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-arrendamiento-local-negocio",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-clave",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-criterio-caja",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-importe",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-importe-q1",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-importe-q2",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-importe-q3",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-importe-q4",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-inversion-sujeto-pasivo",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-nif",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-nif-operador-comunitario",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-nombre",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-pais-codigo",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-contraparte-row-provincia-codigo",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-declarante-importe-total-anual-operaciones",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-declarante-importe-total-arrendamiento-locales",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-declarante-numero-inmuebles",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-declarante-numero-personas-entidades",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-inmueble-row-arrendatario-nif",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-inmueble-row-arrendatario-nombre",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-inmueble-row-direccion",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-inmueble-row-importe",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-inmueble-row-referencia-catastral",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-347-inmueble-row-situacion",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.arrendamiento-local-negocio",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "contraparte.bienes-vinculados",
+        "data_type": "text",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "text",
+          "family": "text",
+          "channel": "text",
+          "max_fraction_digits": null,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": false,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.clave-operacion",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.criterio-caja",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.ejercicio-operacion",
+        "reason": "value_channel_unavailable"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.importe-Q1",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.importe-Q2",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.importe-Q3",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.importe-Q4",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.importe-anual",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "contraparte.importe-criterio-caja",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "contraparte.importe-metalico",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "contraparte.importe-transmisiones-Q1",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "contraparte.importe-transmisiones-Q2",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "contraparte.importe-transmisiones-Q3",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "contraparte.importe-transmisiones-Q4",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "contraparte.importe-transmisiones-inmuebles",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.inversion-sujeto-pasivo",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.nif",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.nif-operador-comunitario",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.nombre",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "contraparte.numero-convocatoria-bdns",
+        "data_type": "text",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "text",
+          "family": "text",
+          "channel": "text",
+          "max_fraction_digits": null,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": false,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "contraparte.operacion-seguro",
+        "data_type": "text",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "text",
+          "family": "text",
+          "channel": "text",
+          "max_fraction_digits": null,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": false,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.pais-codigo",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "contraparte.provincia-codigo",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "contraparte.representante-legal-nif",
+        "data_type": "nif",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "nif",
+          "family": "text",
+          "channel": "text",
+          "max_fraction_digits": null,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": false,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "decl.complementaria-sustitutiva",
+        "data_type": "text",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "text",
+          "family": "text",
+          "channel": "text",
+          "max_fraction_digits": null,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": false,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "decl.ejercicio",
+        "reason": "schema_declared_read_only"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "decl.numero-justificante",
+        "data_type": "text",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "text",
+          "family": "text",
+          "channel": "text",
+          "max_fraction_digits": null,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": false,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "decl.persona-relacion",
+        "data_type": "text",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "text",
+          "family": "text",
+          "channel": "text",
+          "max_fraction_digits": null,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": false,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "decl.persona-relacion-telefono",
+        "data_type": "text",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "text",
+          "family": "text",
+          "channel": "text",
+          "max_fraction_digits": null,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": false,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "decl.representante-legal-nif",
+        "data_type": "nif",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "nif",
+          "family": "text",
+          "channel": "text",
+          "max_fraction_digits": null,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": false,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "decl.tipo-declaracion",
+        "reason": "schema_declared_read_only"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "firma-cargo",
+        "reason": "schema_declared_read_only"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "firma-fecha",
+        "reason": "schema_declared_read_only"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "firma-nombre",
+        "reason": "schema_declared_read_only"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "inmueble.arrendatario-nif",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "inmueble.arrendatario-nombre",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "inmueble.direccion",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "inmueble.importe-operacion",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "inmueble.referencia-catastral",
+        "reason": "row_field_template"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "inmueble.representante-legal-nif",
+        "data_type": "nif",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "nif",
+          "family": "text",
+          "channel": "text",
+          "max_fraction_digits": null,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": false,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "inmueble.situacion",
+        "reason": "row_field_template"
+      }
+    ],
+    "permitted_surface_digest": "c258bc8ca1f53449315c27e6a6e73d340ff63f1c625609083c5d48dde37106ae",
+    "mutation_family": "calculate",
+    "issued_at": "2026-10-24T15:50:03.938831Z",
+    "expires_at": "2026-10-24T15:55:03.938831Z",
+    "baseline_id": "dd862313d5bb12086ce81bd4129607b26da29f751265e986a3706d1b6cf3cf4d"
+  },
+  "admission_refusal": null,
+  "next_step": {
+    "action": "verify",
+    "count": 0,
+    "findings_lead": false,
+    "recorded_at": null,
+    "file_created_at": null,
+    "receipt_to_add": false
+  },
+  "header": {
+    "attention": [],
+    "result": null,
+    "deadline": {
+      "text": "Határidő: 2027. 02. 28. · hátralévő napok: 127",
+      "short_text": "Határidő: 2027. 02. 28. · hátralévő napok: 127",
+      "tone": "normal",
+      "help": null
+    },
+    "file": null,
+    "export_hold": {
+      "reason": "verify",
+      "count": 0,
+      "words": "Exportálás előtt ellenőrizd a bevallást."
+    }
+  },
+  "issue_lines": [],
+  "verdict": {
+    "status": null,
+    "words": "A bevallást még nem ellenőrizték.",
+    "unapplied_words": null
+  },
+  "calculation_revision_id": "dc9237336b941c64608900d0cfeef932ad43e214dc01145e517c49747bd42353",
+  "verification_report_id": null,
+  "asks_m303_evidence": false,
+  "asks_modelo_390": false,
+  "registry_revision_id": "2025-y-siguientes",
+  "tax_id_format": {
+    "width": 9,
+    "country_prefix": "ES",
+    "country_prefixed_width": 11,
+    "country_prefix_strip_width": 2,
+    "prefixed_nif_leaders": "KLM",
+    "nie_leaders": "XYZ",
+    "cif_leaders": "ABCDEFGHJNPQRSUVW",
+    "nif_letters": "TRWAGMYFPDXBNJZSQVHLCKE",
+    "nie_prefix_substitutions": [
+      ["X", "0"],
+      ["Y", "1"],
+      ["Z", "2"]
+    ],
+    "cif_digit_only_kinds": "ABEH",
+    "cif_letter_only_kinds": "PQRSNW",
+    "cif_letter_table": "JABCDEFGHI"
+  },
+  "typing_effects": [
+    {
+      "address": {
+        "kind": "casilla",
+        "casilla_id": "decl.representante-legal-nif"
+      },
+      "displaces": "nothing",
+      "words": "új érték"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "decl.persona-relacion" },
+      "displaces": "nothing",
+      "words": "új érték"
+    },
+    {
+      "address": {
+        "kind": "casilla",
+        "casilla_id": "decl.persona-relacion-telefono"
+      },
+      "displaces": "nothing",
+      "words": "új érték"
+    },
+    {
+      "address": {
+        "kind": "casilla",
+        "casilla_id": "decl.numero-justificante"
+      },
+      "displaces": "nothing",
+      "words": "új érték"
+    },
+    {
+      "address": {
+        "kind": "casilla",
+        "casilla_id": "decl.complementaria-sustitutiva"
+      },
+      "displaces": "nothing",
+      "words": "új érték"
+    }
+  ],
+  "export_offer": {
+    "artefacts": [
+      {
+        "artefact": "fichero_boe",
+        "words": "BOE-fájl az AEAT-nál való benyújtáshoz"
+      },
+      {
+        "artefact": "calculation_report_csv",
+        "words": "Számítási jelentés (CSV), csak helyi nyilvántartás"
+      },
+      {
+        "artefact": "calculation_report_pdf",
+        "words": "Aláírt számítási összesítő (PDF), csak helyi nyilvántartás"
+      },
+      {
+        "artefact": "calculation_review_xlsx",
+        "words": "Mentett számítás áttekintése (XLSX)"
+      }
+    ],
+    "asks_elections": false,
+    "elections": [],
+    "file_format": "fixed_width",
+    "file_format_words": "AEAT-fájl a rögzített szélességű BOE-formátumban"
+  },
+  "receipt": null
+}

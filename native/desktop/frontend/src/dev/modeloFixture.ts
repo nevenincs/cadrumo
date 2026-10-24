@@ -2,9 +2,10 @@
 // envelopes in ./fixtures/modelo/, which scripts/modelo-fixtures.mjs reads
 // through the application's own read path for a synthetic taxpayer. The
 // declarations list, each declaration's form, the help cards and one edit
-// preflight answer exactly what the application answered, and the first
-// quarter's Modelo 130 is also read after its check and after it was
-// recorded as filed locally; an edit renewal
+// preflight answer exactly what the application answered, in each of the
+// four languages, and the first quarter's Modelo 130 is also read after its
+// check, recorded as filed locally with and without a verified receipt, and
+// with its file for the AEAT out of date; an edit renewal
 // answers the baseline the form admitted. Every other definition has no
 // envelope here and is answered as unavailable, never with a made-up
 // result. What it answers is design and test evidence only. Its call lines
@@ -38,13 +39,19 @@ import type {
 } from "../shell/modeloContract";
 import { hex64 } from "./fixtures/ledger";
 
-/** How the scenario's modelo family answers. `checked` and `filed` answer
- * as `fixture` does, except that the first quarter's Modelo 130 is read
- * after its check, or after it was recorded as filed locally. */
+/** How the scenario's modelo family answers. `checked`, `filed`, `receipt`
+ * and `stale` answer as `fixture` does, except that the first quarter's
+ * Modelo 130 is read after its check, after it was recorded as filed
+ * locally, after its AEAT receipt was verified, or after the declaration
+ * changed once its file for the AEAT was made. `incomplete` lists the
+ * declarations of a profile nothing was ever read from the AEAT for. */
 export const MODELO_SHAPES = [
   "fixture",
   "checked",
   "filed",
+  "receipt",
+  "stale",
+  "incomplete",
   "refused",
   "unknown",
   "unavailable",
@@ -57,11 +64,6 @@ const LATER_STATES = "130-1T";
 
 /** Delay added to every answer of the `slow` shape. */
 const SLOW_MS = 4000;
-
-/** The fixtures were read in English and Spanish; Catalan reads the
- * Spanish envelopes and Hungarian the English ones. */
-const fixtureLanguage = (language: OutputLanguage) =>
-  language === "es" || language === "ca" ? "es" : "en";
 
 /** A rejected call, shaped as the host rejects one. */
 class Refusal extends Error {
@@ -178,14 +180,20 @@ export function modeloFixture(options: Options): ModeloPort {
     return reject("unavailable");
   };
 
-  const state = shape === "checked" || shape === "filed" ? shape : null;
+  const state =
+    shape === "checked" ||
+    shape === "filed" ||
+    shape === "receipt" ||
+    shape === "stale"
+      ? shape
+      : null;
   const readForm = async (workUnitId: string, language: OutputLanguage) => {
     const name = await formName(workUnitId);
     const later = state && name === LATER_STATES ? `-${state}` : "";
     const form =
       name &&
       (await envelope<ModeloWorkbenchFormProjectionV1>(
-        `modelo-${name}${later}-${fixtureLanguage(language)}`,
+        `modelo-${name}${later}-${language}`,
       ));
     return form || reject("refused", { reason: "profile_mismatch" });
   };
@@ -199,7 +207,7 @@ export function modeloFixture(options: Options): ModeloPort {
     const card =
       modelo &&
       (await envelope<ModeloCasillaHelpProjectionV1>(
-        `help-${modelo}-${casillaId}-${fixtureLanguage(language)}`,
+        `help-${modelo}-${casillaId}-${language}`,
       ));
     return card || reject("unavailable");
   };
@@ -209,7 +217,7 @@ export function modeloFixture(options: Options): ModeloPort {
       say(`modelo declarations ${language}`);
       await answer();
       const list = await envelope<ModeloDeclarationsListProjectionV1>(
-        `declarations-${fixtureLanguage(language)}`,
+        `declarations${shape === "incomplete" ? "-incomplete" : ""}-${language}`,
       );
       return list ?? reject("unavailable");
     },

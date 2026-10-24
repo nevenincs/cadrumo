@@ -555,7 +555,98 @@ const SURFACES: {
       await expect(target.locator(`.ledger-${open}`)).toBeVisible();
     },
   })),
+  {
+    name: "the Declarations page",
+    scenario: "ledger",
+    reach: openDeclarations,
+  },
+  {
+    name: "the new-declaration dialog with a modelo chosen",
+    scenario: "ledger",
+    reach: async (target: Page) => {
+      await openDeclarations(target);
+      await newDeclaration(target, "130");
+    },
+  },
+  {
+    name: "a declaration whose rules are incomplete",
+    scenario: "ledger",
+    reach: async (target: Page) => {
+      await openDeclarations(target);
+      await newDeclaration(target, "390");
+      const dialog = target.getByRole("dialog");
+      await dialog.getByRole("radio", { checked: false }).last().click();
+      await dialog
+        .getByRole("button", {
+          name: label("workspace.declarations.list.new.open_it"),
+        })
+        .click();
+      await expect(declarationViews(target)).toBeVisible();
+    },
+  },
+  ...(
+    [
+      ["", "desktop.modelo.view.form"],
+      ["checked", "workspace.modelo.step.review"],
+      ["filed", "workspace.modelo.filing.title"],
+      ["stale", "workspace.modelo.filing.title"],
+      ["", "workspace.modelo.key.sources"],
+      ["filed", "workspace.modelo.history.title"],
+    ] as const
+  ).map(([shape, view]) => ({
+    name: `a Modelo 130${shape ? ` (${shape})` : ""} on its ${label(view)} view`,
+    scenario: "ledger",
+    extra: shape ? `&modelo=${shape}` : "",
+    reach: async (target: Page) => {
+      await openDeclarations(target);
+      await target
+        .getByRole("grid", {
+          name: label("workspace.declarations.destination.overview"),
+        })
+        .getByRole("row")
+        .filter({
+          has: target.getByRole("gridcell", { name: "130", exact: true }),
+        })
+        .first()
+        .dblclick();
+      const tab = declarationViews(target).getByRole("tab", {
+        name: new RegExp(`^${label(view)}`),
+      });
+      await tab.click();
+      await expect(tab).toHaveAttribute("aria-selected", "true");
+    },
+  })),
 ];
+
+async function openDeclarations(target: Page) {
+  await target.locator("[data-rail=declarations]").click();
+  await expect(
+    target
+      .getByRole("grid", {
+        name: label("workspace.declarations.destination.overview"),
+      })
+      .getByRole("row")
+      .nth(1),
+    // The list is one large read; under a loaded host it takes a while.
+  ).toBeVisible({ timeout: 15_000 });
+}
+
+async function newDeclaration(target: Page, modelo: string) {
+  await target
+    .getByRole("button", { name: label("workspace.declarations.list.key.new") })
+    .first()
+    .click();
+  const dialog = target.getByRole("dialog");
+  await dialog
+    .getByRole("button")
+    .filter({ hasText: new RegExp(`^${modelo}(?!\\d)`) })
+    .first()
+    .click();
+  await expect(dialog.getByRole("radio").first()).toBeVisible();
+}
+
+const declarationViews = (target: Page) =>
+  target.getByRole("tablist", { name: label("desktop.modelo.views.label") });
 
 for (const scheme of ["light", "dark"] as const)
   for (const surface of SURFACES)

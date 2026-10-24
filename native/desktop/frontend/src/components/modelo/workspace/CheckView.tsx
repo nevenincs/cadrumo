@@ -53,7 +53,7 @@ function Line({
     <>
       <BoxNumber box={line.box} />
       <span className="flex flex-col gap-1">
-        <span className="text-xs text-faint">{line.where}</span>
+        {line.where && <span className="text-xs text-faint">{line.where}</span>}
         <span className="text-base text-foreground">{line.message}</span>
         <span className="text-sm text-muted-foreground">{line.action}</span>
         {line.detail && (

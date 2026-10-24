@@ -1426,7 +1426,8 @@
           "reason": "unresolved_binding",
           "attention": "check",
           "casilla_id": null,
-          "box": null
+          "box": null,
+          "withholds_filing": true
         }
       ],
       "calculation_notes_held": true,
@@ -1530,7 +1531,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "3545b018ca9827f743172c81b684174b8bd5da086b6093cbb1ce2e07ee8dc971",
+      "contract_set_digest": "f73237f64eb3b78ec1a422e4c2bfec2a1b244ef3aeea98c5d82222068d47801b",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
       "request_schema": {
@@ -1565,8 +1566,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "abd84fe89ff276fdee18ad762fc7e616ed5d5c9532b881c8f37d1960588be743",
-    "calculation_head_digest": "6311def2403aa5cfeb37d37677a996b070e900c411e5775129e8806916edee1a",
+    "work_unit_record_digest": "b70391a44aaf2f1879ccb82dc567bbb0c5b97dbded2200bbf1acaa6454705ca8",
+    "calculation_head_digest": "91f5d7d7083812d1575bec64da1633aa26956812de218945c921cef74dded5d2",
     "current_calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1870,24 +1871,21 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T12:52:53.333333Z",
-    "expires_at": "2026-10-24T12:57:53.333333Z",
-    "baseline_id": "57516ff31203e809ed397c0b252e9671d06164701d4088def02415d353bff875"
+    "issued_at": "2026-10-24T15:50:27.310665Z",
+    "expires_at": "2026-10-24T15:55:27.310665Z",
+    "baseline_id": "74de99805be7409a4a7e297c2a9cfb8e46fb35f81cfd9a0dfed6337abc7e4c5b"
   },
   "admission_refusal": null,
   "next_step": {
     "action": "resolve",
-    "count": 2,
+    "count": 3,
     "findings_lead": false,
     "recorded_at": null,
     "file_created_at": null,
     "receipt_to_add": false
   },
   "header": {
-    "attention": [
-      { "level": "blocks", "count": 2, "words": "blocking: 2" },
-      { "level": "check", "count": 1, "words": "to check: 1" }
-    ],
+    "attention": [{ "level": "blocks", "count": 3, "words": "blocking: 3" }],
     "result": {
       "state": "failed",
       "casilla_id": "19",
@@ -1911,8 +1909,8 @@
     "file": null,
     "export_hold": {
       "reason": "blocks",
-      "count": 2,
-      "words": "Resolve what blocks filing before creating the file or recording the filing (blocking: 2)."
+      "count": 3,
+      "words": "Resolve what blocks filing before creating the file or recording the filing (blocking: 3)."
     }
   },
   "issue_lines": [
@@ -1933,7 +1931,7 @@
     {
       "level": "blocks",
       "box": "19",
-      "where": "[19] Final result",
+      "where": "Final result",
       "message": "The calculation could not work out this box, so the declaration has no result yet.",
       "action": "What to do: Give the values the calculation notes ask for, then calculate again.",
       "detail": "Until this box can be calculated, the filing cannot be recorded.",
@@ -1945,7 +1943,7 @@
       "recalculates": false
     },
     {
-      "level": "check",
+      "level": "blocks",
       "box": null,
       "where": "Whole declaration",
       "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",

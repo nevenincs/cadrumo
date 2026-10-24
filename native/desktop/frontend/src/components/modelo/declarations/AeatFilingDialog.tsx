@@ -11,14 +11,6 @@ import type { ModeloDeclarationListRowV1 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
 import { aeatWords } from "./declarationsWords";
 
-// The list row field this dialog reads, which the read model is gaining.
-// Once the generated contract carries it, this goes and the row's own type
-// is read directly.
-type AeatFiling = { notes: string[] };
-type RowWithFiling = ModeloDeclarationListRowV1 & {
-  aeat_filing?: AeatFiling | null;
-};
-
 /**
  * A return the AEAT holds that no local declaration is linked to, to read
  * only: what the list says of it and what the read model notes. Nothing is linked, made or
@@ -28,12 +20,12 @@ export function AeatFilingDialog({
   row,
   onClose,
 }: {
-  row: RowWithFiling;
+  row: ModeloDeclarationListRowV1;
   onClose: () => void;
 }) {
   const t = useStrings();
   const aeat = aeatWords(t, row);
-  const filing = row.aeat_filing ?? null;
+  const filing = row.aeat_filing;
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent

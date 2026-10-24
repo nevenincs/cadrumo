@@ -1377,7 +1377,8 @@
           "reason": "unresolved_binding",
           "attention": "check",
           "casilla_id": null,
-          "box": null
+          "box": null,
+          "withholds_filing": true
         }
       ],
       "calculation_notes_held": true,
@@ -1481,7 +1482,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "3545b018ca9827f743172c81b684174b8bd5da086b6093cbb1ce2e07ee8dc971",
+      "contract_set_digest": "f73237f64eb3b78ec1a422e4c2bfec2a1b244ef3aeea98c5d82222068d47801b",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
       "request_schema": {
@@ -1516,8 +1517,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "abd84fe89ff276fdee18ad762fc7e616ed5d5c9532b881c8f37d1960588be743",
-    "calculation_head_digest": "6311def2403aa5cfeb37d37677a996b070e900c411e5775129e8806916edee1a",
+    "work_unit_record_digest": "b70391a44aaf2f1879ccb82dc567bbb0c5b97dbded2200bbf1acaa6454705ca8",
+    "calculation_head_digest": "91f5d7d7083812d1575bec64da1633aa26956812de218945c921cef74dded5d2",
     "current_calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1821,14 +1822,14 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T12:51:57.815844Z",
-    "expires_at": "2026-10-24T12:56:57.815844Z",
-    "baseline_id": "ecb15db0388376f69f5dfe1948d8cf941ae904e3d28c5798af29a6e4b4ee920d"
+    "issued_at": "2026-10-24T15:49:50.020487Z",
+    "expires_at": "2026-10-24T15:54:50.020487Z",
+    "baseline_id": "48a96ef1b0c29adc7cc1fbfacdeb5a597bf8041d8749ba84add4ed0d9381c0c2"
   },
   "admission_refusal": null,
   "next_step": {
     "action": "resolve",
-    "count": 1,
+    "count": 2,
     "findings_lead": false,
     "recorded_at": null,
     "file_created_at": null,
@@ -1836,8 +1837,7 @@
   },
   "header": {
     "attention": [
-      { "level": "blocks", "count": 1, "words": "impiden presentar: 1" },
-      { "level": "check", "count": 1, "words": "para revisar: 1" }
+      { "level": "blocks", "count": 2, "words": "impiden presentar: 2" }
     ],
     "result": {
       "state": "failed",
@@ -1862,15 +1862,15 @@
     "file": null,
     "export_hold": {
       "reason": "blocks",
-      "count": 1,
-      "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 1)."
+      "count": 2,
+      "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 2)."
     }
   },
   "issue_lines": [
     {
       "level": "blocks",
       "box": "19",
-      "where": "[19] Resultado final",
+      "where": "Resultado final",
       "message": "El cálculo no pudo obtener esta casilla, así que la declaración aún no tiene resultado.",
       "action": "Qué hacer: Indica los valores que piden las notas del cálculo y vuelve a calcular.",
       "detail": "Hasta que se pueda calcular esta casilla, no se puede registrar la presentación.",
@@ -1882,7 +1882,7 @@
       "recalculates": false
     },
     {
-      "level": "check",
+      "level": "blocks",
       "box": null,
       "where": "Toda la declaración",
       "message": "Cadrumo no ha podido sacar una cifra de tus datos y habría mostrado un cero sin avisar.",

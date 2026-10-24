@@ -26,6 +26,8 @@ import textwrap
 from collections.abc import AsyncIterator, Iterable, Iterator, Mapping
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
 from uuid import UUID
@@ -50,7 +52,7 @@ DECLARATIONS: tuple[tuple[str, str, bool], ...] = (
     ("347", "0A", True),
     ("390", "0A", False),
 )
-LANGUAGES = ("en", "es")
+LANGUAGES = ("en", "es", "ca", "hu")
 #: The operator the desktop names on requests that take an actor, as src/shell/modelo.ts states it.
 ACTOR = "operator:desktop-modelo"
 #: What the operator answers for the filed 130: the earlier Renta's activity income and the earlier-filing figures.
@@ -60,6 +62,16 @@ FILED_130_ANSWERS: tuple[tuple[str, str], ...] = (
     ("modelo-130-pagos-fraccionados-anteriores", "0"),
 )
 #: The boxes whose help card the envelopes carry, by modelo.
+#: The quarter's activity income booked for the filled 130s.
+INCOME_130 = Decimal("12000.00")
+#: When the synthetic AEAT receipt of the filed 130 is imported.
+RECEIPT_AT = datetime(2026, 4, 21, 9, 30, tzinfo=UTC)
+#: The quarter the AEAT holds a Modelo 130 for that the profile has no declaration of, and when it was filed and seen.
+AEAT_ONLY = ("130", "2T")
+AEAT_PRESENTED_AT = datetime(2026, 7, 14, 11, 0, tzinfo=UTC)
+AEAT_SEEN_AT = datetime(2026, 7, 15, 9, 0, tzinfo=UTC)
+#: The seeded profile's tax id, as the modelo-ready baseline states it.
+MAIN_TAX_ID = "12345678Z"
 HELP_BOXES: Mapping[str, tuple[str, ...]] = {"130": ("01", "03", "07", "19"), "303": ("27", "71")}
 
 
@@ -306,6 +318,7 @@ def _read_ports(bucket_id: str, operation: Any) -> Any:
         calculations=ports.calculation_repository,
         verifications=VerificationReportCatalogueRepository(bucket_id=bucket_id),
         bucket_events=ports.bucket_event_repository,
+        filings=ports.filing_repository,
     )
 
 
@@ -507,27 +520,19 @@ def _verify(work: Any) -> Any:
     return _run_executor(work, MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID, executor, request)
 
 
-def _record_filed(work: Any) -> None:
-    """Calculate, check and record a Modelo 130 as filed locally, through the registered operations' executors.
+def _check_clean(work: Any) -> Any:
+    """Answer the earlier-filing figures, calculate and check a Modelo 130 cleanly; the check's result.
 
-    Recording needs a clean check, so the operator answers the earlier-filing
-    figures and the earlier Renta the 130 reads is present as filed AEAT
-    evidence under the profile's own tax id. Nothing reaches the AEAT.
+    A clean check needs the operator's answers to the earlier-filing figures
+    and the earlier Renta the 130 reads present as filed AEAT evidence under
+    the profile's own tax id.
     """
     from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
-    from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
-    from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
     from cadrumo.application.modelo.edit_models import (
         ModeloBindingEditIntentV1,
         ModeloEditBindingAddressV1,
         ModeloEditBindingIntentKind,
     )
-    from cadrumo.application.modelo.operation_definitions import (
-        MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
-        ModeloWorkFileExecutor,
-        resolve_active_workflow_profile,
-    )
-    from cadrumo.application.modelo.work_filing_contracts import ModeloWorkFileApproval, ModeloWorkFileRequest
     from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
 
     applied = work.apply(
@@ -541,7 +546,7 @@ def _record_filed(work: Any) -> None:
         )
     )
     if applied.refusal is not None:
-        raise SystemExit(f"the filed 130's answers were refused: {applied.refusal!r}")
+        raise SystemExit(f"the 130's answers were refused: {applied.refusal!r}")
     ports = build_filing_action_ports(bucket_id=work.work_unit.bucket_id, operation=work.operation)
     seed_clean_cross_period_sources(
         work.work_unit,
@@ -554,7 +559,33 @@ def _record_filed(work: Any) -> None:
     work.recalculate()
     checked = _verify(work)
     if not checked.granted_verificado_completo:
-        raise SystemExit(f"the filed 130's check was not complete: {checked.completeness_status}")
+        raise SystemExit(f"the 130's check was not complete: {checked.completeness_status}")
+    return checked
+
+
+def _seed_income(work: Any) -> None:
+    """Book the quarter's activity income in the profile's ledger, so the 130's boxes carry figures."""
+    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
+
+    seed_m130_income_transaction(amount=INCOME_130, filing_year=work.work_unit.filing_year, source_key="desktop")
+
+
+def _record_filed(work: Any) -> None:
+    """Check a Modelo 130 cleanly and record it as filed locally, through the registered executors.
+
+    Nothing reaches the AEAT.
+    """
+    from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+    from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+    from cadrumo.application.modelo.operation_definitions import (
+        MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+        ModeloWorkFileExecutor,
+        resolve_active_workflow_profile,
+    )
+    from cadrumo.application.modelo.work_filing_contracts import ModeloWorkFileApproval, ModeloWorkFileRequest
+    from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+
+    checked = _check_clean(work)
     executor = ModeloWorkFileExecutor(
         profile_resolver=resolve_active_workflow_profile,
         operator_scope_ports=build_operator_scope_ports(),
@@ -571,22 +602,180 @@ def _record_filed(work: Any) -> None:
     _run_executor(work, MODELO_WORK_FILE_OPERATION_DEFINITION_ID, executor, request)
 
 
-def write_envelopes(directory: Path) -> None:
-    """Read every envelope the scenario host answers through the application's read path."""
+def _import_receipt(work: Any) -> None:
+    """Import the recorded 130's AEAT receipt through the external-evidence door, which confirms the filing.
+
+    The receipt is a synthetic justificante stored under the profile's tax id
+    with the recorded calculation's own figures, so it matches the pending
+    local filing.
+    """
+    from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
     from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
+    from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+    from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
+    from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
+    from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+
+    modelo, period_code, _ = DECLARATIONS[0]
+    unit = work.work_unit
+    reference = f"CSV{modelo}{unit.filing_year}{period_code}DESKTOP"
+    persist_justificante_metadata(
+        reference,
+        modelo=modelo,
+        filing_year=unit.filing_year,
+        period=period_code,
+        captured_at=RECEIPT_AT,
+        tax_id=SEEDED_SOURCE_TAX_ID,
+    )
+    ports = build_filing_action_ports(bucket_id=unit.bucket_id, operation=work.operation)
+    import_external_filing_evidence(
+        work_unit_id=work.work_unit_id,
+        casilla_values={box: Decimal(value) for box, value in work.require_head().casilla_values.items()},
+        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        evidence_reference_id=reference,
+        actor=ACTOR,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
+        filing_repository=ports.filing_repository,
+        bucket_event_repository=ports.bucket_event_repository,
+        observation_repository=CalculationObservationRepository(),
+        expected_tax_id=SEEDED_SOURCE_TAX_ID,
+        clock=RECEIPT_AT,
+        operation=work.operation,
+    )
+
+
+def _export_file(work: Any, destination: Path) -> None:
+    """Write the checked calculation's file for the AEAT to a local path through the registered export executor."""
+    from cadrumo.adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
+    from cadrumo.adapters.persistence.profile.review_package_signing import (
+        build_review_package_signing_keypair_capability,
+    )
+    from cadrumo.application.modelo.operation_definitions import (
+        MODELO_EXPORT_OPERATION_DEFINITION_ID,
+        ModeloExportExecutor,
+        resolve_active_workflow_profile,
+    )
+    from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
+    from cadrumo.entrypoints.adapter_composition import build_modelo_export_ports
+
+    executor = ModeloExportExecutor(
+        profile_resolver=resolve_active_workflow_profile,
+        export_ports_factory=build_modelo_export_ports,
+        signing_keypair_capability_factory=build_review_package_signing_keypair_capability,
+        calculation_summary_pdf_writer=write_calculation_summary_pdf,
+    )
+    request = ModeloExportRequest(
+        calculation_revision_id=work.require_head().calculation_revision_id,
+        output_path=str(destination),
+        actor=ACTOR,
+    )
+    _run_executor(work, MODELO_EXPORT_OPERATION_DEFINITION_ID, executor, request)
+
+
+def _income_categories_fact() -> Any:
+    """The profile's IRPF income categories: economic activity, as the pinned registry names it.
+
+    The filing calendar needs them to say which obligations apply.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.domain.calculations.registry.irpf_income_categories import (
+        irpf_income_category_actividad_economica_token,
+    )
+    from cadrumo.domain.user_profile.values import UserProfileFact
+
+    with bundled_indexed_authority().operation() as operation:
+        token = irpf_income_category_actividad_economica_token(authority=operation).value
+    return UserProfileFact(path="taxpayer_type.irpf_income_categories", value=token)
+
+
+def _observe_at_aeat(work: Any) -> None:
+    """Store a Modelo 130 the AEAT holds for a quarter the profile has no declaration for.
+
+    It is what reading the AEAT's register of filed declarations stores: a
+    register row and its observation, through the profile's filed-declaration
+    store. Nothing is read from or sent to the AEAT.
+    """
+    import hashlib
+
+    from pydantic import AnyHttpUrl
+
+    from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+    from cadrumo.adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
+    from cadrumo.core.config import Settings, load_settings
+    from cadrumo.core.period import Period
+
+    modelo, period_code = AEAT_ONLY
+    year = work.work_unit.filing_year
+    period = Period.from_year_and_code(year, period_code)
+    aeat = Settings.external_constants().aeat
+    body = f"{modelo}{year}{period_code}-register-row".encode()
+    store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+    expediente = f"{year}1001{modelo}DESKTOPA"
+    artefact = store.persist_artefact(
+        (modelo, year, period, expediente),
+        FiledDeclaracionArtefact(
+            kind="register_row",
+            source_url=AnyHttpUrl(f"{aeat.domains.www6}{aeat.sede_paths.declarations_listing}"),
+            content_type="text/plain",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=AEAT_SEEN_AT,
+        ),
+        body,
+    )
+    store.persist_observation(
+        FiledDeclaracionObservation(
+            modelo=modelo,
+            ejercicio=year,
+            period=period,
+            expediente_id=expediente,
+            status="ALTA",
+            presented_at=AEAT_PRESENTED_AT,
+            authenticated_identity=MAIN_TAX_ID,
+            artefacts=(artefact,),
+            casillas=(),
+            extraction_coverage={"register_row": 1.0},
+            registry_snapshot_ref=work.operation.snapshot(modelo, filing_year=year, period=period_code).snapshot_ref,
+        )
+    )
+
+
+def _write_list(directory: Path, work: Any, name: str) -> None:
+    """Write the declarations list of the work's profile in every language, read through the list executor."""
     from cadrumo.application.modelo.declarations_list_operation import (
         MODELO_DECLARATIONS_LIST_OPERATION_DEFINITION_ID,
         ModeloDeclarationsListExecutor,
         ModeloDeclarationsListRequest,
     )
-    from cadrumo.application.modelo.edit_models import ModeloEditAdmittedV1
     from cadrumo.core.external_constants import OutputLanguage
     from cadrumo.core.operations import profile_operation_subject
-    from cadrumo.domain.user_profile.values import UserProfileFact
     from cadrumo.entrypoints.workbench_generation_composition import compose_secure_declaration_list_reader
 
+    bucket_id = work.work_unit.bucket_id
+    lister = ModeloDeclarationsListExecutor(
+        lambda profile_id, operation: compose_secure_declaration_list_reader(profile_id=profile_id, operation=operation)
+    )
+    for language in LANGUAGES:
+        listed = _run_executor(
+            work,
+            MODELO_DECLARATIONS_LIST_OPERATION_DEFINITION_ID,
+            lister,
+            ModeloDeclarationsListRequest(profile_id=UUID(bucket_id), output_language=OutputLanguage(language)),
+            subject_ref=profile_operation_subject(bucket_id),
+        )
+        _write(directory, f"{name}-{language}.json", listed)
+
+
+def write_envelopes(directory: Path) -> None:
+    """Read every envelope the scenario host answers through the application's read path."""
+    from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
+    from cadrumo.application.modelo.edit_models import ModeloEditAdmittedV1
+    from cadrumo.domain.user_profile.values import UserProfileFact
+
     directory.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory() as tmp, _seeded(Path(tmp)) as first:
+    income = (_income_categories_fact(),)
+    with tempfile.TemporaryDirectory() as tmp, _seeded(Path(tmp), facts=income) as first:
         works = {DECLARATIONS[0][0]: first}
         for modelo, period_code, _ in DECLARATIONS[1:]:
             works[modelo] = _other_declaration(first, modelo, period_code)
@@ -595,21 +784,8 @@ def write_envelopes(directory: Path) -> None:
                 works[modelo].recalculate()
         for modelo, period_code, _ in DECLARATIONS:
             _write_form(directory, works[modelo], f"modelo-{modelo}-{period_code}", with_help=True)
-        bucket_id = first.work_unit.bucket_id
-        lister = ModeloDeclarationsListExecutor(
-            lambda profile_id, operation: compose_secure_declaration_list_reader(
-                profile_id=profile_id, operation=operation
-            )
-        )
-        for language in LANGUAGES:
-            listed = _run_executor(
-                first,
-                MODELO_DECLARATIONS_LIST_OPERATION_DEFINITION_ID,
-                lister,
-                ModeloDeclarationsListRequest(profile_id=UUID(bucket_id), output_language=OutputLanguage(language)),
-                subject_ref=profile_operation_subject(bucket_id),
-            )
-            _write(directory, f"declarations-{language}.json", listed)
+        _observe_at_aeat(first)
+        _write_list(directory, first, "declarations")
         admission = first.admit()
         if not isinstance(admission, ModeloEditAdmittedV1):
             raise SystemExit(f"modelo {first.work_unit.modelo} was refused edit admission")
@@ -620,10 +796,23 @@ def write_envelopes(directory: Path) -> None:
         _verify(first)
         _write_form(directory, first, "modelo-130-1T-checked")
     # Its own profile: recording needs the earlier Renta filed under the profile's tax id.
-    facts = (UserProfileFact(path="identity.tax_id", value=SEEDED_SOURCE_TAX_ID),)
+    facts = (*income, UserProfileFact(path="identity.tax_id", value=SEEDED_SOURCE_TAX_ID))
     with tempfile.TemporaryDirectory() as tmp, _seeded(Path(tmp), facts=facts) as filed:
+        _seed_income(filed)
         _record_filed(filed)
         _write_form(directory, filed, "modelo-130-1T-filed")
+        # Nothing was ever read from the AEAT in this profile, so its list is incomplete.
+        _write_list(directory, filed, "declarations-incomplete")
+        _import_receipt(filed)
+        _write_form(directory, filed, "modelo-130-1T-receipt")
+    # Its own profile: the file for the AEAT is written, then the declaration changes and is checked again.
+    with tempfile.TemporaryDirectory() as tmp, _seeded(Path(tmp), facts=facts) as stale:
+        _check_clean(stale)
+        _export_file(stale, Path(tmp) / "modelo-130.txt")
+        _seed_income(stale)
+        stale.recalculate()
+        _verify(stale)
+        _write_form(directory, stale, "modelo-130-1T-stale")
 
 
 # -- check --------------------------------------------------------------------
