@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:8a3f9edd9e9482f1acb2f4709d6ba986e986f5d28e2d3092c2b9b4971defbbaf'
+body_hash: 'sha256:fb952dfd5b9344033fa1b90f99a3507d5deaae5b52e3f64850d73129336b1b1e'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -145,6 +145,41 @@ related:
 - `S10` `M` `src/cadrumo/entrypoints/tests/test_invoice_intake_operation_composition.py`
 - `S10` `verify:` `focused unit and integration pytest over 26 files (1308)` -> `pass`
 - `S10` `verify:` `ruff, ty, lint-imports, check-operation-contract-manifest` -> `pass`
+- `S05` `M` `src/cadrumo/adapters/inbound/financial/providers/_mapped_tabular.py`
+- `S05` `M` `src/cadrumo/adapters/inbound/financial/providers/tests/test_mapped_tabular_reader_unavailable.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/browser/errors.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/browser/session.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_browser_provisioning_refusal.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_terminal_preconditions.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/operations/tests/test_auth_operation_definitions.py`
+- `S05` `M` `src/cadrumo/application/dependency_wording.py`
+- `S05` `M` `src/cadrumo/application/invoices/bulk_import.py`
+- `S05` `A` `src/cadrumo/application/invoices/tests/test_bulk_import_reader_reason.py`
+- `S05` `M` `src/cadrumo/application/ledger/evidence_errors.py`
+- `S05` `M` `src/cadrumo/application/ledger/invoice_draft_extraction.py`
+- `S05` `A` `src/cadrumo/application/ledger/tests/test_evidence_reader_refusal_key.py`
+- `S05` `A` `src/cadrumo/application/tests/test_component_refusal_wording.py`
+- `S05` `M` `src/cadrumo/core/errors/registry/_adapters_part1.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_evidence_field_notices.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_evidence_field_notices.py`
+- `S05` `M` `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py`
+- `S05` `M` `src/cadrumo/entrypoints/ledger_llm_composition.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_live_browser_readiness_refusal.py`
+- `S05` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S05` `M` `src/cadrumo/locales/ca/application.yml`
+- `S05` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S05` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S05` `M` `src/cadrumo/locales/en/application.yml`
+- `S05` `M` `src/cadrumo/locales/en/errors.yml`
+- `S05` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S05` `M` `src/cadrumo/locales/es/application.yml`
+- `S05` `M` `src/cadrumo/locales/es/errors.yml`
+- `S05` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S05` `M` `src/cadrumo/locales/hu/application.yml`
+- `S05` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S05` `verify:` `focused pytest (652)` -> `pass`
+- `S05` `verify:` `ruff, ty, lint-imports, check-operation-contract-manifest` -> `pass`
+- `S05` `verify:` `just check-locales: pre-existing failures unchanged, no new findings from S05 keys` -> `fail`
 
 ## Notes
 
@@ -155,3 +190,4 @@ related:
 - `S07` Offer lives in the operation modal and app root (outside the row) because the modal closes on settlement; label composes the existing set-up key with the item name; integration failures seen were in the production registry build from other uncommitted work
 - `S08` Readers projections carry no recovery action id, so the Readers tab offers setup when the local AI row is set-up-able; Modelo and Censo ports carry no verdict and are not routed
 - `S10` Mapping model resolves through `select_role_model` for both probe and dispatch; `map_column_roles` removed for `resolve_header_roles;` text and vision readers still send their raw settings (out of scope)
+- `S05` Missing browser now settles `REFUSED_BROWSER_NOT_READY` with a message key and no internal context lines; unused cli.yml key `cli.app.ledger.evidence.label_reading_reader_unavailable` and the TUI's own label-reading wording are left for S09 cleanup
