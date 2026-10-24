@@ -44,10 +44,12 @@ from ..operations.public_mirror import (
 from ..operations.public_period import PublicPeriod
 from ..workbench_generation_modelo_contracts import PublicCasillaConstraints, PublicModeloVerificationFinding
 from .calculation_report import CalculationReportRowRole
+from .edit_apply_scalar_contracts import ModeloEditWireScalar
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import ModeloEditAdmittedV1, ModeloEditRefusedV1
 from .source_policy import SourceFamily
 from .work_form_header import ModeloFormHeader
+from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict
 from .work_form_models import (
     ModeloFormAddressV1,
     ModeloFormAeatData,
@@ -166,6 +168,8 @@ class PublicModeloFormField(BaseModel):
     origin_explanation: str | None
     editability_words: str | None
     value_text: str | None
+    restorable: bool
+    confirm_value: ModeloEditWireScalar
 
 
 class PublicModeloFormFieldBlock(BaseModel):
@@ -187,6 +191,7 @@ class PublicModeloFormContextFieldBlock(BaseModel):
     id: str
     label: ModeloFormText
     value: PublicScalarValueV1 | None
+    value_text: str | None
 
 
 class PublicModeloFormGridCell(BaseModel):
@@ -227,6 +232,7 @@ class PublicModeloFormRepeatingRow(BaseModel):
 
     index: int
     values: tuple[PublicScalarValueV1 | None, ...]
+    value_texts: tuple[str | None, ...]
 
 
 class PublicModeloFormRepeatingBlock(BaseModel):
@@ -399,6 +405,10 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
     next_step: ModeloFormNextStep | None
     #: What the header states: the attention counts, the result, the deadline, the latest file and any hold.
     header: ModeloFormHeader
+    #: What the check view lists: every finding and calculation note in words, most urgent first.
+    issue_lines: tuple[ModeloFormIssueLine, ...]
+    #: What the last check concluded, in words.
+    verdict: ModeloFormVerdict
     calculation_revision_id: str | None
     verification_report_id: str | None
     asks_m303_evidence: bool
@@ -499,6 +509,8 @@ def project_modelo_workbench_form(
         admission_refusal=admission if isinstance(admission, ModeloEditRefusedV1) else None,
         next_step=read.next_step,
         header=read.header,
+        issue_lines=read.issue_lines,
+        verdict=read.verdict,
         calculation_revision_id=read.calculation_revision_id,
         verification_report_id=read.verification_report_id,
         asks_m303_evidence=read.asks_m303_evidence,
@@ -507,7 +519,13 @@ def project_modelo_workbench_form(
         tax_id_format=_project_tax_id_format(read.tax_id_format),
     )
     restored = _restore(projection)
-    if restored != read or restored.next_step != projection.next_step or restored.header != projection.header:
+    if (
+        restored != read
+        or restored.next_step != projection.next_step
+        or restored.header != projection.header
+        or restored.issue_lines != projection.issue_lines
+        or restored.verdict != projection.verdict
+    ):
         raise ValueError("workbench form public projection changed canonical meaning")
     return projection
 

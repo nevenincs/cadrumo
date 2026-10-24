@@ -12,20 +12,17 @@ from typing import TYPE_CHECKING, Final
 from textual.content import Content
 
 from .....application.modelo.source_policy import SourceSurface
+from .....application.modelo.work_form_issue_lines import form_verdict
 from .....application.modelo.work_form_models import (
     ModeloFormAttention,
-    ModeloFormIssue,
     ModeloFormOrigin,
     ModeloWorkForm,
     address_key,
     section_fields,
 )
 from .....application.modelo.work_form_next_step import applicable_fields
-from .....core.i18n.render import tr
-from .....domain.modelos.verification_report import (
-    ModeloVerificationFindingKind,
-    VerificationCompletenessStatus,
-)
+from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import output_language, tr
 from .casilla_list_models import AddressKey
 from .navigator import presented_form
 from .page_items import workbench_pages
@@ -76,31 +73,6 @@ _ATTENTION_LEVELS: Final[Mapping[ModeloFormAttention, IssueLevel]] = MappingProx
         ModeloFormAttention.CONFIRM: IssueLevel.CONFIRM,
         ModeloFormAttention.CHECK: IssueLevel.CHECK,
         ModeloFormAttention.INFO: IssueLevel.INFO,
-    }
-)
-
-_DETAIL_LOCALE_KEYS: Final[Mapping[ModeloVerificationFindingKind, str]] = MappingProxyType(
-    {
-        ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA: (
-            "workspace.modelo.issues.detail.missing_required_casilla"
-        ),
-        ModeloVerificationFindingKind.RECONCILIATION_MISMATCH: (
-            "workspace.modelo.issues.detail.reconciliation_mismatch"
-        ),
-        ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN: (
-            "workspace.modelo.issues.detail.cross_period_dependency_unclean"
-        ),
-        ModeloVerificationFindingKind.BLOCKING_RULE: "workspace.modelo.issues.detail.blocking_rule",
-        ModeloVerificationFindingKind.ADVISORY: "workspace.modelo.issues.detail.advisory",
-        ModeloVerificationFindingKind.STALE_CALCULATION: "workspace.modelo.issues.detail.stale_calculation",
-    }
-)
-
-_VERDICT_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = MappingProxyType(
-    {
-        VerificationCompletenessStatus.COMPLETE: "workspace.modelo.issues.verdict.complete",
-        VerificationCompletenessStatus.INCOMPLETE: "workspace.modelo.issues.verdict.incomplete",
-        VerificationCompletenessStatus.BLOCKED: "workspace.modelo.issues.verdict.blocked",
     }
 )
 
@@ -248,9 +220,9 @@ def blocks_marked(text: str) -> Content:
     return Content(text).highlight_regex(re.escape(BLOCKS_MARK.glyph), style=_BLOCKS_STYLE)
 
 
-def issue_level(issue: ModeloFormIssue) -> IssueLevel:
-    """Place one finding on the scale by the attention the form gives it."""
-    return _ATTENTION_LEVELS[issue.attention]
+def attention_level(attention: ModeloFormAttention) -> IssueLevel:
+    """Place one attention the read model states on the scale."""
+    return _ATTENTION_LEVELS[attention]
 
 
 def _unentered_sections(form: ModeloWorkForm, wanted: frozenset[AddressKey]) -> tuple[UnenteredSection, ...]:
@@ -327,11 +299,10 @@ def title_text(counts: Mapping[IssueLevel, int], *, recorded: bool = False) -> s
 
 def verdict_text(form: ModeloWorkForm, *, changes_unapplied: bool = False) -> str:
     """Say what the last check concluded, or that the declaration has not been checked."""
-    if form.verification is None:
-        return tr("workspace.modelo.issues.verdict.none")
-    if changes_unapplied and form.verification is VerificationCompletenessStatus.COMPLETE:
-        return tr("workspace.modelo.issues.verdict.saved_with_changes")
-    return tr(_VERDICT_LOCALE_KEYS[form.verification])
+    verdict = form_verdict(form, OutputLanguage(output_language()))
+    if changes_unapplied and verdict.unapplied_words is not None:
+        return verdict.unapplied_words
+    return verdict.words
 
 
 def _require_total_tables() -> None:
@@ -340,8 +311,6 @@ def _require_total_tables() -> None:
         raise ValueError("every issue level needs one mark")
     if set(_ATTENTION_LEVELS) != set(ModeloFormAttention):
         raise ValueError("every attention the form gives a finding needs a level")
-    if set(_DETAIL_LOCALE_KEYS) != set(ModeloVerificationFindingKind):
-        raise ValueError("every finding kind needs a detail")
     if set(_UNENTERED_LOCALE_KEYS) != set(_UNENTERED_ORIGINS):
         raise ValueError("every level that lists boxes nobody entered needs its sentences")
 
@@ -359,8 +328,8 @@ __all__ = (
     "IssuesChoice",
     "UnenteredBoxes",
     "UnenteredSection",
+    "attention_level",
     "blocks_marked",
-    "issue_level",
     "level_counts",
     "level_words",
     "levels_marked",

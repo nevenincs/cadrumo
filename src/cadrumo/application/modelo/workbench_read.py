@@ -33,6 +33,7 @@ from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1
 from .m303_exonerado_390_applicability_attestation import modelo_390_question_asked
 from .verification_report_facts import granting_verification_report
 from .work_form_header import ModeloFormHeader, form_header
+from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict, form_issue_lines, form_verdict
 from .work_form_next_step import ModeloFormNextStep, form_next_step, registry_grade_refusal
 from .work_form_service import ModeloWorkFormLoadV1, load_modelo_work_form, modelo_form_snapshot
 
@@ -110,6 +111,18 @@ class ModeloWorkbenchFormReadV1:
         """What the header states about the declaration, in the form's language."""
         load = self.load
         return form_header(load.form, load.form.language, verified=load.verified, filed=load.filed)
+
+    @property
+    def issue_lines(self) -> tuple[ModeloFormIssueLine, ...]:
+        """What the check view lists, most urgent first, in the form's language."""
+        form = self.load.form
+        return form_issue_lines(form, form.language)
+
+    @property
+    def verdict(self) -> ModeloFormVerdict:
+        """What the last check concluded, in the form's language."""
+        form = self.load.form
+        return form_verdict(form, form.language)
 
 
 def _work_unit(work_unit_id: str, *, bucket_id: str, ports: ModeloWorkbenchReadPorts) -> WorkUnit:
