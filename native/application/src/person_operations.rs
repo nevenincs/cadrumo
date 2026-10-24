@@ -43,8 +43,8 @@ const RELAY_EVENT_PAGE: u64 = 64;
 const PROFILE_VIEW_EVENT_PAGE: u64 = 32;
 const PROFILE_MUTATION_EVENT_PAGE: u64 = 1;
 const MAX_WATCHED: usize = 16;
-/// The longest relayed request, in characters of its compact JSON.
-const MAX_PAYLOAD_TEXT: usize = 12_288;
+/// The longest relayed payload, in characters of its compact JSON.
+pub const MAX_PAYLOAD_TEXT: usize = 12_288;
 const MAXIMUM_FRAME_BYTES: usize = 64 * 1024;
 const PROJECTION_PAGE_BYTES: usize = 32_768;
 const PROJECTION_PAGE_MAX_ENCODED: usize = 4 * PROJECTION_PAGE_BYTES.div_ceil(3);
@@ -330,7 +330,9 @@ pub const RELAY_ACTION_KEYS: [(&str, &[&str]); 7] = [
 #[derive(Debug)]
 pub enum RelayFailure {
     /// The relay's closed refusal; the session keeps holding. A busy subject
-    /// names the operation that holds it.
+    /// names the operation that holds it. The code `unavailable` is never a
+    /// decision: the runtime, its transport or a reply failed, so a mutation
+    /// it carried may have committed.
     Refused {
         code: String,
         holder_operation_id: Option<String>,
@@ -530,7 +532,9 @@ impl OperationRelay {
         if !payload.is_object() {
             return Err(Failure::Invalid);
         }
-        let payload_json = compact_json(payload);
+        // A payload can carry private input, such as an account's IBAN: its
+        // encoding and the request that carried it are overwritten once sent.
+        let payload_json = Zeroizing::new(compact_json(payload));
         if payload_json.chars().count() > MAX_PAYLOAD_TEXT {
             return Err(Failure::Invalid);
         }
@@ -811,7 +815,7 @@ impl Held<'_> {
         self.send(&request, deadline)
     }
 
-    /// As [`Held::exchange`], for a request carrying financial input: every
+    /// As [`Held::exchange`], for a request carrying private input: every
     /// text the request held is overwritten once it is sent, sent or not.
     fn exchange_wiping(
         &self,
@@ -820,9 +824,7 @@ impl Held<'_> {
         deadline: Instant,
     ) -> Outcome<Map<String, Value>> {
         let mut request = self.request(action, fields, deadline)?;
-        let reply = self.send(&request, deadline);
-        wipe(&mut request);
-        reply
+        sent_then_wiped(&mut request, |request| self.send(request, deadline))
     }
 
     fn request(&self, action: &str, fields: Value, deadline: Instant) -> Outcome<Value> {
@@ -1497,7 +1499,7 @@ fn submit(
     {
         return Err(Failure::frame());
     }
-    let reply = held.exchange(
+    let reply = held.exchange_wiping(
         "operation_submit",
         json!({
             "definition_id": definition,
@@ -2266,6 +2268,14 @@ fn content_hash(value: &Value) -> String {
 /// The product's canonical JSON: sorted keys, compact separators, unescaped
 /// UTF-8, numbers as Python spells them.
 /// Overwrites every text of `value` in place, then leaves it null.
+/// Sends `request` through `send` and then overwrites every text it held,
+/// whether or not it was sent.
+fn sent_then_wiped<R>(request: &mut Value, send: impl FnOnce(&Value) -> R) -> R {
+    let reply = send(request);
+    wipe(request);
+    reply
+}
+
 fn wipe(value: &mut Value) {
     match value {
         Value::String(text) => text.zeroize(),
@@ -3165,6 +3175,17 @@ mod tests {
             assert!(matches!(refused, Err(RelayFailure::Invalid)), "{refused:?}");
             assert!(fake.sent().is_empty());
         }
+    }
+
+    #[test]
+    fn a_request_is_sent_whole_and_then_keeps_no_text() {
+        let iban = r#"{"iban":"ES9121000418450200051332"}"#;
+        let mut request =
+            json!({"action": "operation_submit", "payload_json": iban, "rows": [iban]});
+        let sent = sent_then_wiped(&mut request, |request| request.clone());
+        assert_eq!(sent["payload_json"], iban);
+        // Every text was overwritten in place before the request itself was emptied.
+        assert_eq!(request, Value::Null);
     }
 
     #[test]

@@ -783,7 +783,9 @@ impl Connection {
             .ok_or(Refusal::InvalidFrame)?
             .to_owned();
         let replies = self.claim(deadline)?;
-        let payload = serde_json::to_vec(request).map_err(|_| Refusal::InvalidFrame)?;
+        // A request can carry private input; its encoding is overwritten once written.
+        let payload =
+            Zeroizing::new(serde_json::to_vec(request).map_err(|_| Refusal::InvalidFrame)?);
         self.write(DOCUMENT_FRAME, &payload, deadline)
             .and_then(|()| self.reply(&replies, &request_id, deadline))
             .map_err(|refusal| self.fail(refusal))
