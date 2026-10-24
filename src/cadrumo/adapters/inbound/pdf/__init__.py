@@ -14,8 +14,7 @@ Where the contracts live:
   ``TEXT_VALUE_GROUP`` fragments the declaracion parser anchors on.
 - Page text -- ``page_text_extraction``, defining the pdfplumber-backed
   ``extract_pages_text_from_path``, ``extract_pages_text_from_bytes``,
-  ``extract_pages_text_concatenated`` and ``extract_pages_text_with_fast_path``
-  primitives.
+  and ``extract_pages_text_concatenated`` primitives.
 - Source provenance -- ``source_provenance``, defining ``sha256_file`` and
   ``source_pdf_reference_path``, the digest and redacted reference path that keep
   the operator's local filename out of persisted provenance at the

@@ -97,7 +97,7 @@ def rasterise_pdf_pages_to_base64_png(pdf_bytes: bytes, *, scale: float = 2.0) -
     # bare ``except Exception`` below correctly owns the render failures that
     # remain.
     require_optional_extra(LLM_EXTRA)
-    import pypdfium2 as pdfium  # lazy: keep the adapter import light, mirror the declaración fast-path
+    import pypdfium2 as pdfium  # lazy: keep the adapter import light
 
     try:
         document = pdfium.PdfDocument(pdf_bytes)

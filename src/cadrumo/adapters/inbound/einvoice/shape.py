@@ -34,7 +34,7 @@ _PDF_MAGIC = b"%PDF-"
 
 
 class _AttachmentFile(Protocol):
-    """The embedded-attachment handle pypdfium2 hands back."""
+    """The embedded-attachment handle pikepdf hands back."""
 
     def read_bytes(self) -> bytes: ...
 
