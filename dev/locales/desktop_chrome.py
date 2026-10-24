@@ -2632,9 +2632,12 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.direction.internal_transfer",
         "desktop.ledger.direction.outgoing",
         "desktop.ledger.documents.count",
+        "desktop.ledger.documents.find_movement",
         "desktop.ledger.documents.go_to_question",
+        "desktop.ledger.documents.group_near",
         "desktop.ledger.documents.list_hide",
         "desktop.ledger.documents.list_show",
+        "desktop.ledger.documents.no_movement",
         "desktop.ledger.empty_filtered",
         "desktop.ledger.empty_filtered_detail",
         "desktop.ledger.filters.account",
@@ -4235,6 +4238,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.documents.viewer.zoom",
         "desktop.ledger.documents.viewer.zoom_in",
         "desktop.ledger.documents.viewer.zoom_out",
+        "desktop.ledger.documents.worked_out",
     }
     | _WORKSPACE_KEYS
 )

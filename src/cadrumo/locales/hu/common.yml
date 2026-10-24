@@ -1412,6 +1412,7 @@ desktop:
         supplier_name: Szállító
         supplier_tax_id: Szállító NIF
         taxable_base: Adóalap
+      find_movement: Keresd meg a tételét…
       findings: Megválaszolandó kérdések
       findings_open: 'Nyitott kérdések: {count}'
       go_to_question: Ugrás a kérdéshez · {reason}
@@ -1421,6 +1422,7 @@ desktop:
         contradicted: az oldal ellentmond
         reconciled: az összegek egyeznek
         unanchored: nem található az oldalon
+      group_near: Kifizetve {days} napon belül
       hold:
         choose_kind: Add meg, hogy kaptad vagy kiállítottad
         corrections: Javítsd a jelölt értékeket
@@ -1440,6 +1442,7 @@ desktop:
         image: Kép
         pdf: PDF
       no_default: Nincs alapértelmezés
+      no_movement: Egyik tétel sem egyenlíti ki
       no_movement_to_attach: Nincs tétele, amelyhez csatolni lehetne.
       no_provenance: Forrás nincs megadva
       no_records: Még nincsenek bizonylatok
@@ -1570,6 +1573,8 @@ desktop:
         zoom_out: Kicsinyítés
       what_was_read: Mit olvastunk be
       why_right: Miért helyes a beolvasott érték
+      worked_out: '{field}: adóalap plusz IVA összegeként mentjük · a dokumentumon
+        {printed} áll'
     draft:
       describe: Új tétel, nincs mentve
       new: Új

@@ -1433,6 +1433,7 @@ desktop:
         supplier_name: Proveedor
         supplier_tax_id: NIF del proveedor
         taxable_base: Base imponible
+      find_movement: Busca su movimiento…
       findings: Preguntas por responder
       findings_open: 'Preguntas abiertas: {count}'
       go_to_question: Ir a la pregunta · {reason}
@@ -1442,6 +1443,7 @@ desktop:
         contradicted: la página no coincide
         reconciled: los totales cuadran
         unanchored: no encontrado en la página
+      group_near: Pagados en un margen de {days} días
       hold:
         choose_kind: Indica si la recibiste o la emitiste
         corrections: Corrige los valores marcados
@@ -1461,6 +1463,7 @@ desktop:
         image: Imagen
         pdf: PDF
       no_default: No hay valor por defecto
+      no_movement: Ningún movimiento la salda
       no_movement_to_attach: No tiene ningún movimiento al que adjuntarlo.
       no_provenance: Origen no indicado
       no_records: Aún no hay registros de justificantes
@@ -1589,6 +1592,8 @@ desktop:
         zoom_out: Alejar
       what_was_read: Qué se leyó
       why_right: Por qué es correcto el valor leído
+      worked_out: '{field} se guarda como base imponible más cuota de IVA · el documento
+        imprime {printed}'
     draft:
       describe: Movimiento nuevo, sin guardar
       new: Nuevo

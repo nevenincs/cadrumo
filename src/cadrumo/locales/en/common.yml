@@ -1397,6 +1397,7 @@ desktop:
         supplier_name: Supplier
         supplier_tax_id: Supplier NIF
         taxable_base: Taxable base
+      find_movement: Find its movement…
       findings: Questions to answer
       findings_open: 'Open questions: {count}'
       go_to_question: Go to the question · {reason}
@@ -1406,6 +1407,7 @@ desktop:
         contradicted: the page disagrees
         reconciled: totals agree
         unanchored: not found on the page
+      group_near: Paid within {days} days
       hold:
         choose_kind: Say whether you received or issued it
         corrections: Fix the marked values
@@ -1425,6 +1427,7 @@ desktop:
         image: Image
         pdf: PDF
       no_default: There is no default
+      no_movement: No movement settles it
       no_movement_to_attach: It has no movement to attach this to.
       no_provenance: Source not stated
       no_records: No evidence records yet
@@ -1553,6 +1556,7 @@ desktop:
         zoom_out: Zoom out
       what_was_read: What was read
       why_right: Why the value as read is right
+      worked_out: '{field} is saved as base plus IVA · the document prints {printed}'
     draft:
       describe: New movement, not saved
       new: New

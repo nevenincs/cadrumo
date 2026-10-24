@@ -1429,6 +1429,7 @@ desktop:
         supplier_name: Proveïdor
         supplier_tax_id: NIF del proveïdor
         taxable_base: Base imposable
+      find_movement: Cerca el seu moviment…
       findings: Preguntes per respondre
       findings_open: 'Preguntes obertes: {count}'
       go_to_question: Vés a la pregunta · {reason}
@@ -1438,6 +1439,7 @@ desktop:
         contradicted: la pàgina no hi coincideix
         reconciled: els totals quadren
         unanchored: no trobat a la pàgina
+      group_near: Pagats en un marge de {days} dies
       hold:
         choose_kind: Indica si la vas rebre o emetre
         corrections: Corregeix els valors marcats
@@ -1457,6 +1459,7 @@ desktop:
         image: Imatge
         pdf: PDF
       no_default: No hi ha valor per defecte
+      no_movement: Cap moviment no la salda
       no_movement_to_attach: No té cap moviment on adjuntar-lo.
       no_provenance: Origen no indicat
       no_records: Encara no hi ha registres de justificants
@@ -1585,6 +1588,8 @@ desktop:
         zoom_out: Allunya
       what_was_read: Què s'ha llegit
       why_right: Per què és correcte el valor llegit
+      worked_out: '{field} es desa com a base imposable més quota d''IVA · el document
+        imprimeix {printed}'
     draft:
       describe: Moviment nou, sense desar
       new: Nou
