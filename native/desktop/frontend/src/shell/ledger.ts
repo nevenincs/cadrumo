@@ -92,6 +92,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.evidence.consent.list",
   "ledger.evidence.extract",
   "ledger.evidence.list",
+  "ledger.evidence.page",
   "ledger.evidence.query",
   "ledger.evidence.reader-readiness",
   "ledger.evidence.remove",
@@ -1663,6 +1664,26 @@ export type AttachmentQueueResult = {
   rows?: AttachmentReviewItem[];
 };
 export type AttachmentViewRequest = { attachment_id: string };
+/** One page of a stored document, drawn as an image. Names exactly one of
+ * the evidence record or the attachment; `page` counts from 1. */
+export type EvidencePageRequest = (
+  | { evidence_id: string; attachment_id?: never }
+  | { attachment_id: string; evidence_id?: never }
+) & { page: number; max_width: number };
+export type EvidencePageResult = {
+  profile_id: string;
+  evidence_id?: string | null;
+  attachment_id: string;
+  media_type: "application/pdf" | "image/jpeg" | "image/png";
+  page: number;
+  page_count: number;
+  width: number;
+  height: number;
+  source_sha256: string;
+  file_name?: string | null;
+  /** A `data:image/png;base64,` URL; held in memory only. */
+  image_data_url: string;
+};
 export type AttachmentViewResult = {
   profile_id: string;
   item: AttachmentReviewItem;
@@ -1848,6 +1869,7 @@ export interface LedgerRequests {
   "ledger.evidence.confirm": EvidenceConfirmRequest;
   "ledger.evidence.attachment_queue": Record<string, never>;
   "ledger.evidence.attachment_view": AttachmentViewRequest;
+  "ledger.evidence.page": EvidencePageRequest;
   "ledger.evidence.consent.list": Record<string, never>;
   "ledger.evidence.reader-readiness": Record<string, never>;
   "ledger.link": LedgerLinkRequest;
@@ -1930,6 +1952,7 @@ export interface LedgerResults {
   "ledger.evidence.confirm": EvidenceConfirmResult;
   "ledger.evidence.attachment_queue": AttachmentQueueResult;
   "ledger.evidence.attachment_view": AttachmentViewResult;
+  "ledger.evidence.page": EvidencePageResult;
   "ledger.evidence.consent.list": EvidenceConsentListResult;
   "ledger.evidence.reader-readiness": ReaderReadinessResult;
   "ledger.link": LedgerLinkResult;

@@ -75,6 +75,7 @@ import {
   provenanceText,
   reasonLabel,
 } from "./documentWords";
+import { DocumentViewer } from "./DocumentViewer";
 import { OffHostDialog } from "./OffHostDialog";
 import { useLedgerRead } from "./useLedgerRead";
 
@@ -842,6 +843,15 @@ export function DraftReview({
           </AlertDescription>
         </Alert>
       )}
+
+      {/* Keyed by the document, so another document's page is never kept. */}
+      <DocumentViewer
+        key={`${reference.kind}:${reference.id}`}
+        port={port}
+        reader={reader}
+        reference={reference}
+        fileName={fileName}
+      />
 
       <section aria-labelledby={`${countryId}-read`} className="grid gap-2">
         <h4 id={`${countryId}-read`} className="text-sm font-semibold">

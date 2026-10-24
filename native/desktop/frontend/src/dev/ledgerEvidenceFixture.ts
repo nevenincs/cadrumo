@@ -29,6 +29,7 @@ import type {
   FixtureLedger,
   FixtureMovement,
 } from "./fixtures/ledger";
+import { DOCUMENT_PAGE } from "./fixtures/documentPage";
 import { InvoiceRequestInvalid, InvoiceStopped } from "./ledgerInvoiceFixture";
 
 declare global {
@@ -42,6 +43,9 @@ declare global {
       /** Changes the named document's bytes, as editing it on disk
        * would. */
       changeSource(fileName: string): void;
+      /** Makes drawing a page of the named document refuse with the
+       * page read's `reason`, such as `TOO_LARGE`; `null` lifts it. */
+      refusePage(fileName: string, reason: string | null): void;
     };
   }
 }
@@ -547,6 +551,8 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
   const { profileId, events, hex64, now } = tools;
   const readings = new Map<string, Reading>();
   const attachments: AttachmentReviewItem[] = [];
+  /** The page read's refusal, by file name, a document is held to. */
+  const pageRefusals = new Map<string, string>();
   const dispatches: {
     profile_bucket_id: string;
     evidence_content_address: string;
@@ -1277,6 +1283,71 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       attachments.find((found) => found.attachment_id === id) ?? notFound();
     return { profile_id: profileId, item: item as unknown as JsonObject };
   }
+  /** One page of a stored document, drawn: every page is the same
+   * invented picture. A PDF has two pages and an image one; any other
+   * document cannot be drawn. */
+  function page(request: JsonObject): JsonObject {
+    const evidenceId = text(request.evidence_id);
+    const attachmentId = text(request.attachment_id);
+    const number = typeof request.page === "number" ? request.page : NaN;
+    const width =
+      typeof request.max_width === "number" ? request.max_width : NaN;
+    if (
+      (evidenceId === null) === (attachmentId === null) ||
+      !Number.isInteger(number) ||
+      number < 1 ||
+      !Number.isInteger(width) ||
+      width < 64 ||
+      width > 4096
+    )
+      invalid();
+    const refused = (reason: string): never => {
+      throw new InvoiceStopped(`REFUSED_LEDGER_EVIDENCE_PAGE_${reason}`, {});
+    };
+    let facts: { id: string; sha: string; name: string | null; media: string };
+    if (evidenceId !== null) {
+      const record = recordOf(evidenceId) ?? refused("NOT_FOUND");
+      facts = {
+        id: record.attachment_id,
+        sha: record.source_sha256,
+        name: fileName(record.source_path),
+        media: record.media_kind === "pdf" ? "application/pdf" : "image/jpeg",
+      };
+    } else {
+      if (!HEX64.test(attachmentId!)) invalid();
+      const item =
+        attachments.find((found) => found.attachment_id === attachmentId) ??
+        refused("NOT_FOUND");
+      facts = {
+        id: item.attachment_id,
+        sha: item.sha256,
+        name: null,
+        media: item.mime_type,
+      };
+    }
+    const held = facts.name === null ? undefined : pageRefusals.get(facts.name);
+    if (held) refused(held);
+    const count =
+      facts.media === "application/pdf"
+        ? 2
+        : facts.media === "image/jpeg" || facts.media === "image/png"
+          ? 1
+          : refused("UNSUPPORTED_MEDIA");
+    if (number > count) refused("OUT_OF_RANGE");
+    return {
+      profile_id: profileId,
+      evidence_id: evidenceId,
+      attachment_id: facts.id,
+      media_type: facts.media,
+      page: number,
+      page_count: count,
+      width: DOCUMENT_PAGE.width,
+      height: DOCUMENT_PAGE.height,
+      source_sha256: facts.sha,
+      file_name: facts.name,
+      image_data_url: DOCUMENT_PAGE.image_data_url,
+    };
+  }
   function consentList(): JsonObject {
     return {
       profile_id: profileId,
@@ -1564,10 +1635,16 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         record.attachment_id = sha;
       }
     },
+    refusePage(name: string, reason: string | null) {
+      if (reason === null) pageRefusals.delete(name);
+      else pageRefusals.set(name, reason);
+    },
   });
   window.__scenarioDocuments = {
     changeReading: (name) => made.forEach((one) => one.changeReading(name)),
     changeSource: (name) => made.forEach((one) => one.changeSource(name)),
+    refusePage: (name, reason) =>
+      made.forEach((one) => one.refusePage(name, reason)),
   };
   return {
     reads: {
@@ -1577,6 +1654,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       "ledger.evidence.review.view": reviewView,
       "ledger.evidence.attachment_queue": attachmentQueue,
       "ledger.evidence.attachment_view": attachmentView,
+      "ledger.evidence.page": page,
       "ledger.evidence.consent.list": consentList,
       "ledger.evidence.reader-readiness": readerReadiness,
       "ledger.check": check,

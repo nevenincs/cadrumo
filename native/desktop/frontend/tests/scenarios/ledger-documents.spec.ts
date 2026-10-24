@@ -463,3 +463,142 @@ for (const scheme of ["light", "dark"] as const)
     );
     expect(await audit(target, dialog)).toEqual([]);
   });
+
+const viewer = (target: Page) => draft(target).locator(".ledger-document");
+const pageRequests = (target: Page) =>
+  calls(target).then((all) =>
+    all.filter((call) => call === "ledger ledger.evidence.page"),
+  );
+
+test("a PDF's page is shown beside what was read, with its pages and zoom", async ({
+  page: target,
+}) => {
+  await openDocuments(target);
+  await choose(target, DOMESTIKA);
+  const image = viewer(target).getByRole("img", {
+    name: label("desktop.ledger.documents.viewer.image", {
+      file: DOMESTIKA,
+      page: 1,
+    }),
+  });
+  await expect(image).toBeVisible();
+  await expect(image).toHaveAttribute("src", /^data:image\/png;base64,/);
+  const pages = viewer(target).locator(".ledger-document-page");
+  await expect(pages).toHaveText(
+    label("desktop.ledger.documents.viewer.page", { page: 1, count: 2 }),
+  );
+  const previous = viewer(target).getByRole("button", {
+    name: label("desktop.ledger.documents.viewer.previous"),
+  });
+  const next = viewer(target).getByRole("button", {
+    name: label("desktop.ledger.documents.viewer.next"),
+  });
+  await expect(previous).toBeDisabled();
+  await next.click();
+  await expect(pages).toHaveText(
+    label("desktop.ledger.documents.viewer.page", { page: 2, count: 2 }),
+  );
+  await expect(
+    viewer(target).getByRole("img", {
+      name: label("desktop.ledger.documents.viewer.image", {
+        file: DOMESTIKA,
+        page: 2,
+      }),
+    }),
+  ).toBeVisible();
+  await expect(next).toBeDisabled();
+
+  // Zooming widens the page inside its frame; fit returns it to the width.
+  const zoom = viewer(target).locator(".ledger-document-zoom");
+  await expect(zoom).toHaveText(
+    label("desktop.ledger.documents.viewer.zoom", { percent: 100 }),
+  );
+  const frame = viewer(target).locator(".ledger-document-frame");
+  const fitted = await frame.evaluate((at) => at.clientWidth);
+  await viewer(target)
+    .getByRole("button", {
+      name: label("desktop.ledger.documents.viewer.zoom_in"),
+    })
+    .click();
+  await expect(zoom).toHaveText(
+    label("desktop.ledger.documents.viewer.zoom", { percent: 150 }),
+  );
+  await expect
+    .poll(() =>
+      viewer(target)
+        .locator(".ledger-document-image")
+        .evaluate((at) => at.getBoundingClientRect().width),
+    )
+    .toBeGreaterThan(fitted * 1.4);
+  await viewer(target)
+    .getByRole("button", { name: label("desktop.ledger.documents.viewer.fit") })
+    .click();
+  await expect(zoom).toHaveText(
+    label("desktop.ledger.documents.viewer.zoom", { percent: 100 }),
+  );
+});
+
+test("an image has no page buttons, and another document drops the page shown", async ({
+  page: target,
+}) => {
+  await openDocuments(target);
+  await choose(target, PLENOIL);
+  await expect(
+    viewer(target).getByRole("img", {
+      name: label("desktop.ledger.documents.viewer.image", {
+        file: PLENOIL,
+        page: 1,
+      }),
+    }),
+  ).toBeVisible();
+  await expect(viewer(target).locator(".ledger-document-next")).toHaveCount(0);
+
+  await choose(target, ARROYO);
+  await expect(
+    viewer(target).getByRole("img", {
+      name: label("desktop.ledger.documents.viewer.image", {
+        file: ARROYO,
+        page: 1,
+      }),
+    }),
+  ).toBeVisible();
+  await expect(
+    viewer(target).getByRole("img", {
+      name: label("desktop.ledger.documents.viewer.image", {
+        file: PLENOIL,
+        page: 1,
+      }),
+    }),
+  ).toHaveCount(0);
+  expect((await pageRequests(target)).length).toBeGreaterThanOrEqual(2);
+});
+
+test("a page the runtime refuses to draw is said in words", async ({
+  page: target,
+}) => {
+  await openDocuments(target);
+  await target.evaluate(
+    (name) =>
+      (
+        window as unknown as {
+          __scenarioDocuments: {
+            refusePage(file: string, reason: string | null): void;
+          };
+        }
+      ).__scenarioDocuments.refusePage(name, "TOO_LARGE"),
+    ARROYO,
+  );
+  // The queue may have opened this document already; showing it again
+  // reads its page again.
+  await choose(target, DOMESTIKA);
+  await choose(target, ARROYO);
+  const refused = viewer(target).locator(".ledger-document-refused");
+  await expect(refused).toHaveText(
+    label("desktop.ledger.documents.viewer.refused.too_large"),
+  );
+  await expect(viewer(target).getByRole("img")).toHaveCount(0);
+  // The reading itself stays reviewable.
+  await expect(
+    draft(target).getByRole("heading", { name: ARROYO }),
+  ).toBeVisible();
+});
