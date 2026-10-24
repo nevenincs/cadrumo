@@ -271,7 +271,10 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "most 512 characters, no profile, no fragment, no percent-encoding, each key once. A link only shows, "
         "selects or focuses; it grants nothing. Pass query to search labels, keywords and ids; id for one view "
         "exactly (not_found for an id that names none, including a retired one); link to check a whole link, "
-        "answered valid with its parts or invalid with the parser's reason; or nothing to list every view. Each "
+        "answered valid with its parts and opens (the surface and view it opens by the register's declared "
+        "surfaces, the fallback none, other_surface or ancestor, whether its params are kept and whether the "
+        "person is told it opened other than asked) or invalid with the parser's reason; or nothing to list "
+        "every view. Each "
         "view carries id, parent, surfaces (gui is the window, tui the terminal workspace), params (each name "
         "with its value kind, alphabet and exact length), keywords, label in the profile's language, label_key "
         "and the link that opens it. Copy the links operation results carry rather than composing record links",

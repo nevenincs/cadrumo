@@ -22,9 +22,12 @@ from cadrumo_client.contracts.navigation import (
     PREFER_KEY,
     NavigationElement,
     NavigationRegister,
+    ViewLink,
     ViewLinkRefused,
+    ViewOpened,
     load_navigation_register,
     parse_view_link,
+    resolve_view,
     view_link,
 )
 
@@ -102,6 +105,24 @@ def _score(element: NavigationElement, label: str, query: tuple[str, ...]) -> in
     return total
 
 
+def _opens(register: NavigationRegister, request: ViewLink) -> dict[str, Any] | None:
+    """Where a valid link opens by the surfaces the register declares, or ``None`` when none does.
+
+    This is the register's answer, not a running surface's: a surface that
+    implements less than it declares can open the link elsewhere, with a notice.
+    """
+    outcome = resolve_view(request, register=register)
+    if not isinstance(outcome, ViewOpened):
+        return None
+    return {
+        "surface": outcome.surface.value,
+        "view": outcome.opened,
+        "fallback": outcome.fallback,
+        "params_kept": outcome.params == request.params,
+        "notice_due": outcome.notice_due,
+    }
+
+
 def view_register_query(args: dict[str, Any], language: str) -> dict[str, Any]:
     """Answer one ``views`` call: an exact id, a link to check, a text to search, or the whole register.
 
@@ -129,6 +150,7 @@ def view_register_query(args: dict[str, Any], language: str) -> dict[str, Any]:
             "view": _row(register, element, language),
             "params": dict(parsed.params),
             PREFER_KEY: None if parsed.prefer is None else parsed.prefer.value,
+            "opens": _opens(register, parsed),
         }
     limit = args.get("limit", VIEW_PAGE_DEFAULT)
     query = _words(args.get("query") or "")

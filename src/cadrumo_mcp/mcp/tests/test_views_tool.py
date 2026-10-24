@@ -155,6 +155,38 @@ async def test_a_valid_link_is_answered_with_its_parsed_parts() -> None:
     # The canonical spelling writes parameters in name order and prefer last.
     assert checked["link"] == f"cadrumo://view/ledger/invoices?select={_INVOICE}&prefer=gui"
     assert checked["link"] == view_link("ledger/invoices", {"select": _INVOICE}, NavigationSurface.GUI)
+    assert checked["opens"] == {
+        "surface": "gui",
+        "view": "ledger/invoices",
+        "fallback": "none",
+        "params_kept": True,
+        "notice_due": False,
+    }
+
+
+@pytest.mark.anyio
+async def test_a_valid_link_preferring_a_surface_the_view_lacks_opens_on_the_other_with_a_notice() -> None:
+    checked = await _call({"link": f"cadrumo://view/ledger/invoices?select={_INVOICE}&prefer=tui"})
+    assert checked["outcome"] == "valid"
+    assert checked["opens"] == {
+        "surface": "gui",
+        "view": "ledger/invoices",
+        "fallback": "other_surface",
+        "params_kept": True,
+        "notice_due": True,
+    }
+
+    terminal = await _call({"link": "cadrumo://view/profile/aeat-access"})
+    assert terminal["opens"] == {
+        "surface": "tui",
+        "view": "profile/aeat-access",
+        "fallback": "other_surface",
+        "params_kept": True,
+        "notice_due": True,
+    }
+    both = await _call({"link": "cadrumo://view/ledger?prefer=tui"})
+    assert both["opens"]["surface"] == "tui"
+    assert both["opens"]["fallback"] == "none"
 
 
 @pytest.mark.anyio
