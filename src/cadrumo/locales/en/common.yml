@@ -5933,14 +5933,14 @@ tui:
           read; import fewer at a time
         own_account_mismatch: the statement names a different account than the one
           you chose
+        reader_unavailable: the local AI, which reads this file, is not ready, so
+          the file was not read
         result_limit: the import reached its row limit before this file
         source_changed: the file changed after its preview, so nothing from it was
           imported; preview it again
         transaction_validation: the file could not be read as a statement
       success: Imported {imported}; skipped {skipped}.
       title: Import entries
-        reader_unavailable: the local AI, which reads this file, is not ready, so
-          the file was not read
     invoice:
       again: Add another invoice
       cancel: Cancel

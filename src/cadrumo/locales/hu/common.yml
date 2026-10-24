@@ -6013,6 +6013,8 @@ tui:
         file_limit: az importálás több fájlt tartalmaz, mint amennyit egy importálás
           elfogad, ezért egyiket sem olvastuk be; importálj egyszerre kevesebbet
         own_account_mismatch: a kivonat más számlát nevez meg, mint amit választottál
+        reader_unavailable: a helyi MI, amely ezt a fájlt olvassa, nem áll készen,
+          ezért a fájl nem lett beolvasva
         result_limit: az importálás e fájl előtt elérte a sorkorlátot
         source_changed: a fájl az előnézet után megváltozott, ezért semmi sem került
           importálásra belőle; nézd meg újra az előnézetet
@@ -6020,8 +6022,6 @@ tui:
       success: 'Importálva: {imported}; kihagyva: {skipped}.'
       title: Tételek importálása
     invoice:
-        reader_unavailable: a helyi MI, amely ezt a fájlt olvassa, nem áll készen,
-          ezért a fájl nem lett beolvasva
       again: Újabb számla hozzáadása
       cancel: Mégse
       cancelled: Megszakítva. Semmi sem került rögzítésre.
