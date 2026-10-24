@@ -29,6 +29,7 @@ pub const RECEIPT_VERSION: u32 = 1;
 const RECEIPT_BYTES_LIMIT: u64 = 4 * 1024 * 1024;
 const LOCATION_ENTRIES_LIMIT: usize = 64;
 const LOCATION_TEXT_LIMIT: usize = 128;
+const LINK_TARGET_LIMIT: usize = 4096;
 
 /// Where a verified item is, for the consumers that use it.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -100,6 +101,15 @@ pub struct ReceiptFile {
     pub sha256: Sha256Digest,
 }
 
+/// One symbolic link an item holds, with its target as written. Only a link that resolves
+/// inside the folder it sits in is ever recorded.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ReceiptLink {
+    pub path: RelativePath,
+    pub target: String,
+}
+
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Receipt {
@@ -108,6 +118,9 @@ pub struct Receipt {
     pub version: Option<String>,
     /// Every installed file, once each, in path order.
     pub files: Vec<ReceiptFile>,
+    /// Every symbolic link the item holds, in path order; absent when it holds none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub links: Vec<ReceiptLink>,
     /// When the item last verified, as UTC `YYYY-MM-DDTHH:MM:SSZ`. A receipt read with
     /// fractional seconds, as the earlier setup wrote them, holds them truncated.
     pub verified_at: String,
@@ -130,12 +143,20 @@ impl Receipt {
             item_id: item,
             version,
             files,
+            links: Vec::new(),
             verified_at: utc_timestamp(verified_at),
             hosts,
             location: None,
         };
         receipt.validate()?;
         Ok(receipt)
+    }
+
+    /// The same receipt, recording the symbolic links the item holds.
+    pub fn linked(mut self, links: Vec<ReceiptLink>) -> Result<Self, Error> {
+        self.links = links;
+        self.validate()?;
+        Ok(self)
     }
 
     /// The same receipt, saying where the item is.
@@ -152,9 +173,20 @@ impl Receipt {
         let ordered = self
             .files
             .windows(2)
-            .all(|pair| pair[0].path < pair[1].path);
+            .all(|pair| pair[0].path < pair[1].path)
+            && self
+                .links
+                .windows(2)
+                .all(|pair| pair[0].path < pair[1].path);
+        let linked = self.links.iter().all(|link| {
+            !link.target.is_empty()
+                && link.target.len() <= LINK_TARGET_LIMIT
+                && !link.target.starts_with('/')
+                && !link.target.contains(['\\', '\0'])
+        });
         if self.receipt_version != RECEIPT_VERSION
             || !ordered
+            || !linked
             || self
                 .version
                 .as_ref()
@@ -232,15 +264,58 @@ impl ReceiptStore {
 /// Hashes every regular file under `install_root` into a manifest, in path order. Links
 /// and reparse points are refused, so a manifest never describes bytes outside the root.
 pub fn build_manifest(install_root: &Path) -> Result<Vec<ReceiptFile>, Error> {
+    Ok(manifest(install_root, false)?.files)
+}
+
+/// The files and symbolic links under one install root.
+#[derive(Debug, Default)]
+pub struct LinkedManifest {
+    pub files: Vec<ReceiptFile>,
+    pub links: Vec<ReceiptLink>,
+}
+
+/// [`build_manifest`] for an install that holds symbolic links, as a macOS browser build
+/// does. On Unix each link is recorded, never followed, and admitted only when it
+/// resolves on disk inside `install_root`; any other link or reparse point is refused.
+pub fn build_linked_manifest(install_root: &Path) -> Result<LinkedManifest, Error> {
+    manifest(install_root, cfg!(unix))
+}
+
+fn manifest(install_root: &Path, links: bool) -> Result<LinkedManifest, Error> {
     filesystem::absolute_root(install_root)?;
+    let scope = if links {
+        Some(fs::canonicalize(install_root)?)
+    } else {
+        None
+    };
     let mut files = BTreeMap::new();
+    let mut recorded = BTreeMap::new();
     let mut pending = vec![install_root.to_path_buf()];
     while let Some(directory) = pending.pop() {
         for entry in fs::read_dir(&directory)? {
             let entry = entry?;
-            let meta = entry.metadata()?;
-            filesystem::refuse_metadata_links(&fs::symlink_metadata(entry.path())?)?;
             let path = entry.path();
+            let own = fs::symlink_metadata(&path)?;
+            if let Some(scope) = scope.as_deref()
+                && own.is_symlink()
+            {
+                let relative = path
+                    .strip_prefix(install_root)
+                    .map_err(|_| Error::Invalid("manifest path escaped".into()))?;
+                let relative = RelativePath::from_native(relative)?;
+                let target = link_inside(&path, scope)
+                    .ok_or_else(|| Error::Integrity("link resolves outside its install".into()))?;
+                recorded.insert(
+                    relative.clone(),
+                    ReceiptLink {
+                        path: relative,
+                        target,
+                    },
+                );
+                continue;
+            }
+            filesystem::refuse_metadata_links(&own)?;
+            let meta = entry.metadata()?;
             if meta.is_dir() {
                 pending.push(path);
             } else if meta.is_file() {
@@ -259,7 +334,19 @@ pub fn build_manifest(install_root: &Path) -> Result<Vec<ReceiptFile>, Error> {
             }
         }
     }
-    Ok(files.into_values().collect())
+    Ok(LinkedManifest {
+        files: files.into_values().collect(),
+        links: recorded.into_values().collect(),
+    })
+}
+
+/// The target of the symbolic link at `path`, when it resolves on disk inside `scope`, a
+/// canonical folder.
+fn link_inside(path: &Path, scope: &Path) -> Option<String> {
+    let target = fs::read_link(path).ok()?.to_str()?.to_owned();
+    fs::canonicalize(path)
+        .is_ok_and(|resolved| resolved.starts_with(scope))
+        .then_some(target)
 }
 
 /// How the files on disk compare with a receipt's manifest.
@@ -278,7 +365,9 @@ impl ManifestCheck {
 
 /// Compares installed files with `receipt`; `only` limits the check to named paths, as a
 /// quick check does with its executables. A named path the receipt does not record counts
-/// as missing.
+/// as missing. A check of every path also reads each recorded link back: it must still be
+/// a link with its recorded target that resolves inside the top folder it sits in, or
+/// inside `install_root` when it sits there directly.
 pub fn check_manifest(
     install_root: &Path,
     receipt: &Receipt,
@@ -311,6 +400,28 @@ pub fn check_manifest(
             || filesystem::digest(&path).ok().as_ref() != Some(&entry.sha256)
         {
             check.changed.push(name.clone());
+        }
+    }
+    if only.is_none() {
+        for link in &receipt.links {
+            check.checked += 1;
+            let path = link.path.under(install_root);
+            let scope = match link.path.as_str().split_once('/') {
+                Some((top, _)) => install_root.join(top),
+                None => install_root.to_path_buf(),
+            };
+            let linked = filesystem::refuse_links(path.parent().unwrap_or(install_root)).is_ok()
+                && fs::symlink_metadata(&path).is_ok_and(|meta| meta.is_symlink());
+            if !linked {
+                check.missing.push(link.path.clone());
+            } else if fs::canonicalize(&scope)
+                .ok()
+                .and_then(|scope| link_inside(&path, &scope))
+                .as_ref()
+                != Some(&link.target)
+            {
+                check.changed.push(link.path.clone());
+            }
         }
     }
     check
@@ -638,6 +749,83 @@ mod tests {
         )
         .unwrap();
         assert_eq!(store.read(ItemId::LocalAi), ReceiptReading::Unreadable);
+    }
+
+    #[test]
+    fn recorded_links_round_trip_and_a_receipt_without_links_keeps_its_shape() {
+        let directory = tempfile::tempdir().unwrap();
+        let install_root = directory.path().join("install");
+        install(&install_root);
+        let plain = receipt(&install_root);
+        assert!(serde_json::to_value(&plain).unwrap().get("links").is_none());
+        let link = |path: &str, target: &str| ReceiptLink {
+            path: RelativePath::new(path).unwrap(),
+            target: target.to_owned(),
+        };
+        let linked = plain
+            .clone()
+            .linked(vec![link("bin/a", "tool"), link("bin/b", "../data.txt")])
+            .unwrap();
+        let store = ReceiptStore::new(directory.path().join("receipts")).unwrap();
+        store.write(&linked).unwrap();
+        assert_eq!(
+            store.read(ItemId::LocalAi),
+            ReceiptReading::Present(linked.clone())
+        );
+        for refused in [
+            vec![link("bin/b", "tool"), link("bin/a", "tool")],
+            vec![link("bin/a", "/etc/passwd")],
+            vec![link("bin/a", "..\\tool")],
+            vec![link("bin/a", "")],
+        ] {
+            assert!(plain.clone().linked(refused).is_err());
+        }
+        // Without any link on disk, a recorded link is missing to a full check only.
+        let check = check_manifest(&install_root, &linked, None);
+        assert_eq!(check.missing.len(), 2);
+        let only = [RelativePath::new("bin/tool").unwrap()];
+        assert!(check_manifest(&install_root, &linked, Some(&only)).intact());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_linked_manifest_records_links_inside_and_refuses_one_that_leaves() {
+        use std::os::unix::fs::symlink;
+        let directory = tempfile::tempdir().unwrap();
+        let install_root = directory.path().join("install");
+        install(&install_root);
+        symlink("tool", install_root.join("bin/alias")).unwrap();
+        symlink("bin", install_root.join("programs")).unwrap();
+        let manifest = build_linked_manifest(&install_root).unwrap();
+        assert_eq!(
+            manifest
+                .links
+                .iter()
+                .map(|link| (link.path.as_str(), link.target.as_str()))
+                .collect::<Vec<_>>(),
+            [("bin/alias", "tool"), ("programs", "bin")]
+        );
+        assert_eq!(manifest.files.len(), 2, "links are not hashed as files");
+        assert!(
+            build_manifest(&install_root).is_err(),
+            "the plain manifest still refuses links"
+        );
+        let unlinked = directory.path().join("unlinked");
+        install(&unlinked);
+        let recorded = receipt(&unlinked).linked(manifest.links.clone()).unwrap();
+        assert!(check_manifest(&install_root, &recorded, None).intact());
+        fs::write(directory.path().join("outside"), b"o").unwrap();
+        symlink("../../outside", install_root.join("bin/leaves")).unwrap();
+        assert!(matches!(
+            build_linked_manifest(&install_root),
+            Err(Error::Integrity(_))
+        ));
+        fs::remove_file(install_root.join("bin/alias")).unwrap();
+        symlink("../../outside", install_root.join("bin/alias")).unwrap();
+        assert_eq!(
+            check_manifest(&install_root, &recorded, None).changed,
+            [RelativePath::new("bin/alias").unwrap()]
+        );
     }
 
     fn read_value(text: &str) -> serde_json::Value {

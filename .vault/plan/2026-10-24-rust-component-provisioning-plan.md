@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:1a3ab30590ce697cdf5591082dfe37b5fa10f0d57a7a82ced69f371462da2791'
+body_hash: 'sha256:82b263e29462e22f8fda5344ac855e6f48c746bf5b89c7453f05dacd50e7c19c'
 ---
 
 # `rust-component-provisioning` plan
@@ -54,7 +54,7 @@ The engine installs pinned Chromium archives straight into the bundled driver's 
 
 - [x] `P02.S05` - Install each pending pinned Chromium archive into the build directory browsers.json names, write the driver's completion marker set read from its registry code, and remove superseded builds after the new one verifies; `native/application/src/provisioning/browser.rs and tests against a recorded archive`.
 - [x] `P02.S06` - Add the browser quick and full checks (marker, executable digest against the receipt, headless launch and version against the pins), the engine's location record, and the item-generic Python reader of component records; `native/application/src/provisioning/browser.rs, browser/launch.rs, receipts.rs, src/cadrumo/core/component_records.py and tests`.
-- [ ] `P02.S18` - Share one bounded extractor between the component store and the browser, and admit only relative symbolic links that resolve inside the build folder, created after the regular files and verified afterwards, so platform archives that carry them install; `native/application/src/component.rs, native/application/src/provisioning/browser.rs and tests`.
+- [x] `P02.S18` - Share one bounded extractor between the component store and the browser, and admit only relative symbolic links that resolve inside the build folder, created after the regular files and verified afterwards, so platform archives that carry them install; `native/application/src/component.rs, native/application/src/provisioning/browser.rs and tests`.
 
 ### Phase `P03` - Local AI
 

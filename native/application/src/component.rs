@@ -1,4 +1,5 @@
 use crate::{
+    archive::{self, Limits, LinkRule},
     error::Error,
     filesystem,
     package::Readiness,
@@ -12,9 +13,9 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeMap,
     fs::{self, File},
-    io::{BufRead, BufReader, Read, Write},
+    io::{Read, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicBool, Ordering},
 };
@@ -418,7 +419,19 @@ impl ComponentStore {
         fs::create_dir(&candidate)?;
         let payload = candidate.join("payload");
         fs::create_dir(&payload)?;
-        let (files, archive_entries) = extract(archive, &payload, artifact, cancellation)?;
+        // Hard links of files only: the store's own check refuses every link on disk.
+        let extracted = archive::extract(
+            archive,
+            artifact.format,
+            &payload,
+            Limits {
+                entries: artifact.max_entries,
+                unpacked_bytes: artifact.max_unpacked_bytes,
+            },
+            LinkRule::FilesAsHardLinks,
+            cancellation,
+        )?;
+        let (files, archive_entries) = (extracted.files, extracted.entries);
         if !files.contains_key(&artifact.executable) {
             return Err(Error::Integrity("component executable missing".into()));
         }
@@ -561,306 +574,6 @@ fn remove_tree(tree: &Path, owner: &Path) -> Result<(), Error> {
     }
     fs::remove_dir_all(tree)?;
     Ok(())
-}
-
-type Extracted = (BTreeMap<RelativePath, Sha256Digest>, usize);
-
-fn extract(
-    archive: &Path,
-    destination: &Path,
-    artifact: &Artifact,
-    cancellation: &Cancellation,
-) -> Result<Extracted, Error> {
-    match artifact.format {
-        ArchiveFormat::Zip => extract_zip(archive, destination, artifact, cancellation),
-        ArchiveFormat::TarGz => {
-            let source = flate2::bufread::MultiGzDecoder::new(BufReader::new(File::open(archive)?));
-            extract_tar(source, destination, artifact, cancellation)
-        }
-        ArchiveFormat::TarZst => {
-            let source = ZstdFrames::new(BufReader::new(File::open(archive)?))?;
-            extract_tar(source, destination, artifact, cancellation)
-        }
-    }
-}
-
-/// Every member name an archive declares, refused when two spell one path, or one
-/// directory, differently only by case: they would collide on a case-insensitive volume.
-#[derive(Default)]
-struct MemberNames {
-    seen: BTreeSet<String>,
-    spellings: BTreeMap<String, String>,
-}
-
-impl MemberNames {
-    fn admit(&mut self, relative: &RelativePath) -> Result<(), Error> {
-        if !self.seen.insert(relative.as_str().to_lowercase()) {
-            return Err(Error::Invalid("duplicate archive member".into()));
-        }
-        let mut prefix = String::new();
-        for part in relative.as_str().split('/') {
-            if !prefix.is_empty() {
-                prefix.push('/');
-            }
-            prefix.push_str(part);
-            if let Some(previous) = self.spellings.insert(prefix.to_lowercase(), prefix.clone())
-                && previous != prefix
-            {
-                return Err(Error::Invalid("archive directory casing differs".into()));
-            }
-        }
-        Ok(())
-    }
-}
-
-/// Streams one member's bytes into a new file at `path`, counting them against the
-/// artifact's unpacked bound, and returns their digest.
-fn write_member(
-    mut member: impl Read,
-    path: &Path,
-    mode: Option<u32>,
-    artifact: &Artifact,
-    total: &mut u64,
-    cancellation: &Cancellation,
-) -> Result<Sha256Digest, Error> {
-    fs::create_dir_all(
-        path.parent()
-            .ok_or_else(|| Error::Invalid("archive path has no parent".into()))?,
-    )?;
-    let mut out = File::options().write(true).create_new(true).open(path)?;
-    let mut hash = Sha256::new();
-    let mut buffer = [0u8; 65536];
-    loop {
-        cancellation.check()?;
-        let n = member.read(&mut buffer)?;
-        if n == 0 {
-            break;
-        }
-        *total += n as u64;
-        if *total > artifact.max_unpacked_bytes {
-            return Err(Error::LimitExceeded);
-        }
-        hash.update(&buffer[..n]);
-        out.write_all(&buffer[..n])?;
-    }
-    out.sync_all()?;
-    filesystem::archive_permissions(path, mode)?;
-    Sha256Digest::from_hash(hash.finalize())
-}
-
-fn extract_zip(
-    archive: &Path,
-    destination: &Path,
-    artifact: &Artifact,
-    cancellation: &Cancellation,
-) -> Result<Extracted, Error> {
-    let mut zip = zip::ZipArchive::new(File::open(archive)?)?;
-    if zip.len() > artifact.max_entries {
-        return Err(Error::LimitExceeded);
-    }
-    let mut files = BTreeMap::new();
-    let mut names = MemberNames::default();
-    let mut total = 0u64;
-    for index in 0..zip.len() {
-        cancellation.check()?;
-        let member = zip.by_index(index)?;
-        let name = member.name()?;
-        let relative = RelativePath::new(if member.is_dir() {
-            name.trim_end_matches('/')
-        } else {
-            &name
-        })?;
-        names.admit(&relative)?;
-        let kind = member.unix_mode().unwrap_or(0) & 0o170000;
-        if member.is_symlink() || !matches!(kind, 0 | 0o040000 | 0o100000) {
-            return Err(Error::Invalid(
-                "archive links and special files are forbidden".into(),
-            ));
-        }
-        let path = relative.under(destination);
-        if member.is_dir() {
-            fs::create_dir_all(&path)?;
-            continue;
-        }
-        if member.size() > artifact.max_unpacked_bytes.saturating_sub(total) {
-            return Err(Error::LimitExceeded);
-        }
-        let mode = member.unix_mode();
-        let digest = write_member(member, &path, mode, artifact, &mut total, cancellation)?;
-        files.insert(relative, digest);
-    }
-    Ok((files, zip.len()))
-}
-
-/// A tar stream extracted with the same bounds as a zip: member count, unpacked bytes,
-/// safe relative names and no special files. No link is ever created on disk. A
-/// symbolic or hard link member names another member, as the publisher's archives do
-/// for versioned shared libraries; it is admitted only when it resolves, inside the
-/// archive and through at most a few other links, to a regular file member, and that
-/// file is then also placed at the link's path as a hard link of the same bytes, which
-/// count again against the unpacked bound. A link to a directory, outside the archive or
-/// to nothing is refused.
-fn extract_tar(
-    source: impl Read,
-    destination: &Path,
-    artifact: &Artifact,
-    cancellation: &Cancellation,
-) -> Result<Extracted, Error> {
-    let mut archive = tar::Archive::new(source);
-    let mut files: BTreeMap<RelativePath, Sha256Digest> = BTreeMap::new();
-    let mut sizes: BTreeMap<RelativePath, u64> = BTreeMap::new();
-    let mut links: BTreeMap<RelativePath, RelativePath> = BTreeMap::new();
-    let mut names = MemberNames::default();
-    let mut total = 0u64;
-    let mut entries = 0usize;
-    for entry in archive.entries()? {
-        cancellation.check()?;
-        let entry = entry?;
-        let kind = entry.header().entry_type();
-        if kind.is_pax_global_extensions() {
-            continue;
-        }
-        entries += 1;
-        if entries > artifact.max_entries {
-            return Err(Error::LimitExceeded);
-        }
-        let raw = std::str::from_utf8(&entry.path_bytes())
-            .map_err(|_| Error::Invalid("non-UTF8 archive member".into()))?
-            .to_owned();
-        let name = raw.strip_prefix("./").unwrap_or(&raw).trim_end_matches('/');
-        if name.is_empty() || name == "." {
-            if kind.is_dir() {
-                continue;
-            }
-            return Err(Error::Invalid("unnamed archive member".into()));
-        }
-        let relative = RelativePath::new(name)?;
-        names.admit(&relative)?;
-        let path = relative.under(destination);
-        if kind.is_dir() {
-            fs::create_dir_all(&path)?;
-        } else if kind.is_file() || kind.is_contiguous() {
-            let size = entry.size();
-            if size > artifact.max_unpacked_bytes.saturating_sub(total) {
-                return Err(Error::LimitExceeded);
-            }
-            let mode = entry.header().mode().ok();
-            let digest = write_member(entry, &path, mode, artifact, &mut total, cancellation)?;
-            files.insert(relative.clone(), digest);
-            sizes.insert(relative, size);
-        } else if kind.is_symlink() || kind.is_hard_link() {
-            let target = entry
-                .link_name_bytes()
-                .ok_or_else(|| Error::Invalid("archive link without a target".into()))?;
-            let target = std::str::from_utf8(&target)
-                .map_err(|_| Error::Invalid("non-UTF8 archive link".into()))?;
-            // A symbolic link is read from its own folder, a hard link from the root.
-            let base = if kind.is_symlink() {
-                relative
-                    .as_str()
-                    .rsplit_once('/')
-                    .map_or("", |(base, _)| base)
-            } else {
-                ""
-            };
-            let resolved = resolve_member(base, target)?;
-            links.insert(relative, resolved);
-        } else {
-            return Err(Error::Invalid("archive special files are forbidden".into()));
-        }
-    }
-    for (link, target) in &links {
-        cancellation.check()?;
-        let mut file = target;
-        for _ in 0..=links.len() {
-            match links.get(file) {
-                Some(next) => file = next,
-                None => break,
-            }
-        }
-        let (Some(digest), Some(size)) = (files.get(file).cloned(), sizes.get(file)) else {
-            return Err(Error::Invalid(
-                "archive link does not name a regular file in the archive".into(),
-            ));
-        };
-        total = total.saturating_add(*size);
-        if total > artifact.max_unpacked_bytes {
-            return Err(Error::LimitExceeded);
-        }
-        let path = link.under(destination);
-        fs::create_dir_all(
-            path.parent()
-                .ok_or_else(|| Error::Invalid("archive path has no parent".into()))?,
-        )?;
-        fs::hard_link(file.under(destination), &path)?;
-        files.insert(link.clone(), digest);
-    }
-    Ok((files, entries))
-}
-
-/// The archive member `target` names, read lexically from the folder `base`; refused when
-/// it is absolute or climbs above the archive's root.
-fn resolve_member(base: &str, target: &str) -> Result<RelativePath, Error> {
-    if target.starts_with('/') || target.contains('\\') {
-        return Err(Error::Invalid("archive link leaves the archive".into()));
-    }
-    let mut parts: Vec<&str> = base.split('/').filter(|part| !part.is_empty()).collect();
-    for part in target.split('/') {
-        match part {
-            "" | "." => {}
-            ".." => {
-                parts
-                    .pop()
-                    .ok_or_else(|| Error::Invalid("archive link leaves the archive".into()))?;
-            }
-            part => parts.push(part),
-        }
-    }
-    RelativePath::new(parts.join("/"))
-}
-
-/// A zstd stream of one or more frames, decoded one frame after another with the
-/// decoder's default window bound.
-struct ZstdFrames<R: BufRead> {
-    decoder: Option<ruzstd::decoding::StreamingDecoder<R, ruzstd::decoding::FrameDecoder>>,
-}
-
-impl<R: BufRead> ZstdFrames<R> {
-    fn new(source: R) -> Result<Self, Error> {
-        Ok(Self {
-            decoder: Some(Self::frame(source).map_err(Error::Io)?),
-        })
-    }
-
-    fn frame(
-        source: R,
-    ) -> std::io::Result<ruzstd::decoding::StreamingDecoder<R, ruzstd::decoding::FrameDecoder>>
-    {
-        ruzstd::decoding::StreamingDecoder::new(source)
-            .map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidData, "invalid zstd frame"))
-    }
-}
-
-impl<R: BufRead> Read for ZstdFrames<R> {
-    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
-        loop {
-            let Some(decoder) = self.decoder.as_mut() else {
-                return Ok(0);
-            };
-            let read = decoder.read(buffer)?;
-            if read > 0 || buffer.is_empty() {
-                return Ok(read);
-            }
-            let Some(decoder) = self.decoder.take() else {
-                return Ok(0);
-            };
-            let mut source = decoder.into_inner();
-            if source.fill_buf()?.is_empty() {
-                return Ok(0);
-            }
-            self.decoder = Some(Self::frame(source)?);
-        }
-    }
 }
 
 fn verify_version(version: &Path, artifact: &Artifact) -> Result<(), Error> {

@@ -129,7 +129,7 @@ def test_no_record_and_a_record_without_a_location_never_locate(tmp_path: Path) 
 
 @pytest.mark.parametrize(
     "damage",
-    ["not json", "foreign item", "relative folder", "escaping path", "unknown field", "oversized"],
+    ["not json", "foreign item", "relative folder", "escaping path", "unknown field", "absolute link", "oversized"],
 )
 def test_a_damaged_or_foreign_record_reads_unreadable_rather_than_absent(tmp_path: Path, damage: str) -> None:
     record = _engine_record(tmp_path)
@@ -152,12 +152,30 @@ def test_a_damaged_or_foreign_record_reads_unreadable_rather_than_absent(tmp_pat
     elif damage == "unknown field":
         record["installed_by"] = "someone"
         target.write_text(json.dumps(record), encoding="utf-8")
+    elif damage == "absolute link":
+        record["links"] = [{"path": "chromium-1248/chrome-win64/lib", "target": "/etc"}]
+        target.write_text(json.dumps(record), encoding="utf-8")
     else:
         target.write_bytes(b" " * (4 * 1024 * 1024 + 1))
     item = ComponentItem.LOCAL_AI if damage == "foreign item" else ComponentItem.BROWSER
 
     assert read_component_record(item, records_root=records_root).state is ComponentRecordState.UNREADABLE
     assert locate_component(item, records_root=records_root).outcome is ComponentLocateOutcome.RECORD_UNREADABLE
+
+
+def test_a_record_holding_framework_links_reads_and_locates_the_browser(tmp_path: Path) -> None:
+    record = _engine_record(tmp_path)
+    framework = "chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/Frameworks/F.framework"
+    record["links"] = [
+        {"path": f"{framework}/Resources", "target": "Versions/Current/Resources"},
+        {"path": f"{framework}/Versions/Current", "target": "156.0.8078.4"},
+    ]
+    records_root = _install(tmp_path, record)
+
+    reading = read_component_record(ComponentItem.BROWSER, records_root=records_root)
+    assert reading.record is not None
+    assert [link.target for link in reading.record.links] == ["Versions/Current/Resources", "156.0.8078.4"]
+    assert locate_component(ComponentItem.BROWSER, records_root=records_root).located
 
 
 _LOCAL_AI_FIXTURE = Path(__file__).parent / "_component_records" / "local_ai.json"

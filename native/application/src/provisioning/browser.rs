@@ -11,34 +11,40 @@
 //! a `DEPENDENCIES_VALIDATED` file it writes itself after that check is recent.
 //!
 //! The engine installs each pinned archive the same way. It fetches the bytes the pin
-//! names, extracts them with bounded, link-free extraction into a private staging folder
-//! beside the builds, marks the executable runnable, writes the marker, and only then
-//! moves the finished build into place. A build folder therefore holds a complete build or
-//! does not exist, and a build without its marker reads absent and is installed again.
-//! The engine never writes `DEPENDENCIES_VALIDATED`, so the driver still runs its own
-//! library check, and it writes no `.links` entry, because it removes superseded builds
-//! itself rather than leaving that to the vendor installer's collection.
+//! names, extracts them with the bounded extraction the component store shares into a
+//! private staging folder beside the builds, marks the executable runnable, writes the
+//! marker, and only then moves the finished build into place. The macOS builds carry
+//! framework links such as `Versions/Current`; on Unix each link that resolves inside its
+//! build is created as the link it is, after every regular file, and checked again once
+//! created, while Windows admits only links to files, placed as hard links. A build
+//! folder therefore holds a complete build or does not exist, and a build without its
+//! marker reads absent and is installed again. The engine never writes
+//! `DEPENDENCIES_VALIDATED`, so the driver still runs its own library check, and it
+//! writes no `.links` entry, because it removes superseded builds itself rather than
+//! leaving that to the vendor installer's collection.
 //!
 //! The quick check reads the markers, the executables and their bytes against the
-//! receipt. The full check also hashes every recorded file and launches the headless
-//! build once (`launch`), comparing the version it reports with the driver's. Only a
-//! passing full check mints the proof [`BrowserLayout::settle`] needs: settling writes
-//! the item's receipt, which says where the builds are and which driver they belong to,
-//! and then removes the builds of the same families they supersede.
+//! receipt. The full check also hashes every recorded file, reads every recorded link
+//! back, and launches the headless build once (`launch`), comparing the version it
+//! reports with the driver's. Only a passing full check mints the proof
+//! [`BrowserLayout::settle`] needs: settling writes the item's receipt, which says where
+//! the builds are, which links they hold and which driver they belong to, and then
+//! removes the builds of the same families they supersede.
 
 use super::{
     activity::ItemWriter,
     failure::{FailureCategory, TransferFailure},
     items::ItemId,
-    pins::{BrowserArchivePin, BrowserArchivePins, Platform},
+    pins::{ArchiveFormat, BrowserArchivePin, BrowserArchivePins, Platform},
     receipts::{
-        Receipt, ReceiptFile, ReceiptLocation, ReceiptReading, ReceiptStore, build_manifest,
-        check_manifest,
+        Receipt, ReceiptFile, ReceiptLink, ReceiptLocation, ReceiptReading, ReceiptStore,
+        build_linked_manifest, check_manifest,
     },
     state::{BlockedReason, CheckMode, Observation, Reading, SetupStep},
     transfer::{Pinned, Transfer, TransferEvent, file_failure},
 };
 use crate::{
+    archive::{self, Limits, LinkRule},
     component::Cancellation,
     error::Error,
     filesystem,
@@ -49,7 +55,6 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     ffi::OsString,
     fs::{self, File},
-    io::{Read, Write},
     path::{Path, PathBuf},
     time::{Duration, SystemTime},
 };
@@ -510,13 +515,23 @@ impl BrowserLayout {
             remove_tree(&candidate, staging)?;
         }
         fs::create_dir(&candidate)?;
-        let files = extract(archive, &candidate, cancellation)?;
+        let extracted = archive::extract(
+            archive,
+            ArchiveFormat::Zip,
+            &candidate,
+            Limits {
+                entries: ARCHIVE_ENTRIES_LIMIT,
+                unpacked_bytes: BUILD_BYTES_LIMIT,
+            },
+            LinkRule::Symbolic,
+            cancellation,
+        )?;
         let inside = build
             .executable
             .as_str()
             .strip_prefix(&format!("{}/", build.directory_name))
             .ok_or_else(|| Error::Invalid("executable outside its build".into()))?;
-        if !files.contains(inside) {
+        if !extracted.files.contains_key(&RelativePath::new(inside)?) {
             return Err(Error::Integrity("browser executable missing".into()));
         }
         make_runnable(&candidate.join(inside))?;
@@ -668,20 +683,28 @@ impl BrowserLayout {
         verified_at: SystemTime,
     ) -> Result<Settled, Error> {
         let mut files = Vec::new();
+        let mut links = Vec::new();
+        let inside = |build: &BrowserBuild, path: &RelativePath| {
+            RelativePath::new(format!("{}/{}", build.directory_name, path.as_str()))
+        };
         for build in &self.builds {
             let folder = self.root.join(&build.directory_name);
-            for file in build_manifest(&folder)? {
+            let manifest = build_linked_manifest(&folder)?;
+            for file in manifest.files {
                 files.push(ReceiptFile {
-                    path: RelativePath::new(format!(
-                        "{}/{}",
-                        build.directory_name,
-                        file.path.as_str()
-                    ))?,
+                    path: inside(build, &file.path)?,
                     ..file
+                });
+            }
+            for link in manifest.links {
+                links.push(ReceiptLink {
+                    path: inside(build, &link.path)?,
+                    ..link
                 });
             }
         }
         files.sort_by(|a, b| a.path.cmp(&b.path));
+        links.sort_by(|a, b| a.path.cmp(&b.path));
         let location = ReceiptLocation::new(
             &self.root,
             self.builds
@@ -697,6 +720,7 @@ impl BrowserLayout {
             verified_at,
             hosts,
         )?
+        .linked(links)?
         .located(location)?;
         receipts.write(&receipt)?;
         Ok(self.remove_superseded())
@@ -959,8 +983,9 @@ fn make_runnable(path: &Path) -> Result<(), Error> {
     filesystem::require_executable(path)
 }
 
-/// Removes `tree`, a direct child of `owner`, once no link is found anywhere inside it;
-/// a link is refused rather than followed or removed.
+/// Removes `tree`, a direct child of `owner`, which must not itself be a link. Inside it,
+/// a Unix symbolic link, as a macOS build carries, is removed as a link and never
+/// followed; any other link or reparse point is refused and the tree stays.
 fn remove_tree(tree: &Path, owner: &Path) -> Result<(), Error> {
     if tree.parent() != Some(owner) {
         return Err(Error::Invalid("removal outside the browsers folder".into()));
@@ -974,94 +999,19 @@ fn remove_tree(tree: &Path, owner: &Path) -> Result<(), Error> {
     while let Some(directory) = pending.pop() {
         for entry in fs::read_dir(directory)? {
             let entry = entry?;
-            filesystem::refuse_metadata_links(&fs::symlink_metadata(entry.path())?)?;
-            if entry.file_type()?.is_dir() {
+            let meta = fs::symlink_metadata(entry.path())?;
+            if cfg!(unix) && meta.is_symlink() {
+                continue;
+            }
+            filesystem::refuse_metadata_links(&meta)?;
+            if meta.is_dir() {
                 pending.push(entry.path());
             }
         }
     }
+    // The standard removal unlinks a symbolic link without following it.
     fs::remove_dir_all(tree)?;
     Ok(())
-}
-
-/// Extracts a zip into `destination`, which must be empty, and returns the files written.
-/// Every member must be a plain relative path; links, special files, duplicate names,
-/// names that differ only in case and folders spelled two ways are refused, and the member
-/// count and the bytes written are bounded.
-fn extract(
-    archive: &Path,
-    destination: &Path,
-    cancellation: &Cancellation,
-) -> Result<BTreeSet<String>, Error> {
-    let mut zip = zip::ZipArchive::new(File::open(archive)?)?;
-    if zip.len() > ARCHIVE_ENTRIES_LIMIT {
-        return Err(Error::LimitExceeded);
-    }
-    let mut files = BTreeSet::new();
-    let mut seen = BTreeSet::new();
-    let mut spellings = BTreeMap::new();
-    let mut total = 0u64;
-    let mut buffer = vec![0u8; 64 * 1024];
-    for index in 0..zip.len() {
-        cancellation.check()?;
-        let mut member = zip.by_index(index)?;
-        let name = member.name()?.into_owned();
-        let relative = RelativePath::new(if member.is_dir() {
-            name.trim_end_matches('/')
-        } else {
-            &name
-        })?;
-        if !seen.insert(relative.as_str().to_lowercase()) {
-            return Err(Error::Invalid("duplicate archive member".into()));
-        }
-        let mut prefix = String::new();
-        for part in relative.as_str().split('/') {
-            if !prefix.is_empty() {
-                prefix.push('/');
-            }
-            prefix.push_str(part);
-            if let Some(previous) = spellings.insert(prefix.to_lowercase(), prefix.clone())
-                && previous != prefix
-            {
-                return Err(Error::Invalid("archive folder spelled two ways".into()));
-            }
-        }
-        let kind = member.unix_mode().unwrap_or(0) & 0o170000;
-        if member.is_symlink() || !matches!(kind, 0 | 0o040000 | 0o100000) {
-            return Err(Error::Invalid(
-                "archive links and special files are refused".into(),
-            ));
-        }
-        let path = relative.under(destination);
-        if member.is_dir() {
-            fs::create_dir_all(&path)?;
-            continue;
-        }
-        if member.size() > BUILD_BYTES_LIMIT.saturating_sub(total) {
-            return Err(Error::LimitExceeded);
-        }
-        fs::create_dir_all(
-            path.parent()
-                .ok_or_else(|| Error::Invalid("archive member has no folder".into()))?,
-        )?;
-        let mut out = File::options().write(true).create_new(true).open(&path)?;
-        loop {
-            cancellation.check()?;
-            let n = member.read(&mut buffer)?;
-            if n == 0 {
-                break;
-            }
-            total += n as u64;
-            if total > BUILD_BYTES_LIMIT {
-                return Err(Error::LimitExceeded);
-            }
-            out.write_all(&buffer[..n])?;
-        }
-        out.sync_all()?;
-        filesystem::archive_permissions(&path, member.unix_mode())?;
-        files.insert(relative.as_str().to_owned());
-    }
-    Ok(files)
 }
 
 #[cfg(test)]
@@ -1077,7 +1027,7 @@ pub(crate) mod tests {
         value::Sha256Digest,
     };
     use std::{
-        io::Cursor,
+        io::{Cursor, Write},
         sync::Mutex,
         time::{Duration, UNIX_EPOCH},
     };
@@ -1879,6 +1829,237 @@ pub(crate) mod tests {
                 "{case}"
             );
         }
+    }
+
+    /// One Chromium archive and a plain headless one, installed into a fresh layout.
+    struct Single {
+        directory: tempfile::TempDir,
+        layout: BrowserLayout,
+        activity: ActivityStore,
+        receipts: ReceiptStore,
+    }
+
+    fn install_chromium(bytes: Vec<u8>) -> (Single, Result<Installed, Error>) {
+        let platform = platform();
+        let directory = tempfile::tempdir().unwrap();
+        let driver = driver_package(&directory.path().join("driver"));
+        let path = "builds/chromium-1248/chromium.zip";
+        let headless_path = "builds/headless/headless.zip";
+        let headless = archive(
+            Family::HeadlessShell.executable(platform).unwrap(),
+            "pinned",
+        );
+        let table = format!(
+            "playwright_driver = \"{DRIVER}\"\nhosts = [\"{HOST}\"]\n{}{}",
+            pin_entry(platform, "chromium-1248", path, &bytes),
+            pin_entry(
+                platform,
+                "chromium_headless_shell-1248",
+                headless_path,
+                &headless
+            ),
+        );
+        let pins = BrowserArchivePins::parse(&table).unwrap();
+        let layout = BrowserLayout::new(
+            directory.path().join("components/playwright"),
+            &driver,
+            Some(&pins),
+            platform,
+        )
+        .unwrap();
+        let (certificate, server) = serve(
+            [
+                (format!("/{path}"), bytes),
+                (format!("/{headless_path}"), headless),
+            ]
+            .into(),
+        );
+        let single = Single {
+            activity: ActivityStore::new(directory.path().join("components/activity")).unwrap(),
+            receipts: ReceiptStore::new(directory.path().join("components/receipts")).unwrap(),
+            directory,
+            layout,
+        };
+        let result = with_transfer(&certificate, &server, &Mutex::default(), |transfer| {
+            let writer = single.activity.begin(ItemId::Browser, SetupStep::Plan)?;
+            let installed = single
+                .layout
+                .install(transfer, &writer, &ReceiptReading::Absent)?;
+            writer.finished()?;
+            Ok(installed)
+        });
+        (single, result)
+    }
+
+    impl Single {
+        fn settle(&self) -> ReceiptReading {
+            self.layout
+                .settle(
+                    self.layout.verify_installation().unwrap(),
+                    &self.receipts,
+                    vec![HostName::new(HOST).unwrap()],
+                    UNIX_EPOCH + Duration::from_secs(1_792_846_800),
+                )
+                .unwrap();
+            self.receipts.read(ItemId::Browser)
+        }
+    }
+
+    /// A Chromium archive with its executable and, inside its top folder, `extra`.
+    fn chromium_with(extra: impl FnOnce(&mut zip::ZipWriter<Cursor<Vec<u8>>>, &str)) -> Vec<u8> {
+        let executable = Family::Chromium.executable(platform()).unwrap();
+        let top = executable.split('/').next().unwrap().to_owned();
+        zip_of(|zip| {
+            extra(zip, &top);
+            zip.start_file(
+                executable,
+                SimpleFileOptions::default().unix_permissions(0o755),
+            )
+            .unwrap();
+            zip.write_all(b"pinned executable").unwrap();
+        })
+    }
+
+    #[test]
+    fn a_link_to_a_file_inside_its_build_installs_on_every_platform() {
+        let bytes = chromium_with(|zip, top| {
+            let plain = SimpleFileOptions::default;
+            zip.add_symlink(format!("{top}/libx.so"), "lib/libx.so.1", plain())
+                .unwrap();
+            zip.start_file(format!("{top}/lib/libx.so.1"), plain())
+                .unwrap();
+            zip.write_all(b"library").unwrap();
+        });
+        let (single, result) = install_chromium(bytes);
+        result.unwrap();
+        let reading = single.settle();
+        let receipt = single.layout.receipt(&reading).unwrap();
+        let top = Family::Chromium
+            .executable(platform())
+            .unwrap()
+            .split('/')
+            .next()
+            .unwrap();
+        let link = format!("chromium-1248/{top}/libx.so");
+        let placed = single.layout.root().join(&link);
+        assert_eq!(fs::read(&placed).unwrap(), b"library");
+        if cfg!(unix) {
+            assert!(fs::symlink_metadata(&placed).unwrap().is_symlink());
+            assert_eq!(
+                receipt
+                    .links
+                    .iter()
+                    .map(|link| (link.path.as_str(), link.target.as_str()))
+                    .collect::<Vec<_>>(),
+                [(link.as_str(), "lib/libx.so.1")]
+            );
+        } else {
+            filesystem::refuse_links(&placed).unwrap();
+            assert!(receipt.links.is_empty());
+            assert!(receipt.files.iter().any(|file| file.path.as_str() == link));
+        }
+        assert!(single.layout.damaged(&reading).is_empty());
+        assert_eq!(
+            single.layout.quick_check(&reading).observation,
+            Observation::Present { note: None }
+        );
+    }
+
+    /// The pinned macOS archive's framework links in miniature, in its own order.
+    fn framework_archive() -> Vec<u8> {
+        chromium_with(|zip, top| {
+            let plain = SimpleFileOptions::default;
+            let framework = format!("{top}/F.framework");
+            zip.add_symlink(
+                format!("{framework}/Resources"),
+                "Versions/Current/Resources",
+                plain(),
+            )
+            .unwrap();
+            zip.add_symlink(format!("{framework}/Versions/Current"), "1.0", plain())
+                .unwrap();
+            zip.start_file(
+                format!("{framework}/Versions/1.0/Resources/en.pak"),
+                plain(),
+            )
+            .unwrap();
+            zip.write_all(b"pak").unwrap();
+        })
+    }
+
+    #[cfg(not(unix))]
+    #[test]
+    fn a_folder_link_is_refused_where_links_are_placed_as_files() {
+        let (single, result) = install_chromium(framework_archive());
+        let failure = result.unwrap_err();
+        assert_eq!(failure_category(&failure), FailureCategory::Unexpected);
+        assert!(!single.layout.root().join("chromium-1248").exists());
+        assert!(single.directory.path().exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn framework_links_install_as_links_are_checked_against_the_record_and_never_followed() {
+        use std::os::unix::fs::symlink;
+        let (single, result) = install_chromium(framework_archive());
+        result.unwrap();
+        let top = Family::Chromium
+            .executable(platform())
+            .unwrap()
+            .split('/')
+            .next()
+            .unwrap();
+        let framework = single
+            .layout
+            .root()
+            .join(format!("chromium-1248/{top}/F.framework"));
+        assert!(
+            fs::symlink_metadata(framework.join("Versions/Current"))
+                .unwrap()
+                .is_symlink()
+        );
+        assert_eq!(
+            fs::read(framework.join("Resources/en.pak")).unwrap(),
+            b"pak"
+        );
+        let reading = single.settle();
+        let receipt = single.layout.receipt(&reading).unwrap();
+        assert_eq!(
+            receipt
+                .links
+                .iter()
+                .map(|link| link.target.as_str())
+                .collect::<Vec<_>>(),
+            ["Versions/Current/Resources", "1.0"]
+        );
+        assert!(single.layout.damaged(&reading).is_empty());
+
+        // A link retargeted, even inside its build, is damage; one gone is missing.
+        let current = framework.join("Versions/Current");
+        fs::remove_file(&current).unwrap();
+        symlink("1.0/Resources", &current).unwrap();
+        assert_eq!(
+            single.layout.damaged(&reading),
+            BTreeSet::from(["chromium-1248".to_owned()])
+        );
+        fs::remove_file(&current).unwrap();
+        assert_eq!(
+            single.layout.damaged(&reading),
+            BTreeSet::from(["chromium-1248".to_owned()])
+        );
+
+        // Removal unlinks a link that now leaves the build and never follows it.
+        let outside = single.directory.path().join("outside");
+        fs::create_dir(&outside).unwrap();
+        fs::write(outside.join("keep"), b"keep").unwrap();
+        symlink(&outside, &current).unwrap();
+        let writer = single
+            .activity
+            .begin(ItemId::Browser, SetupStep::Plan)
+            .unwrap();
+        single.layout.remove(&writer, &single.receipts).unwrap();
+        assert!(!single.layout.root().join("chromium-1248").exists());
+        assert_eq!(fs::read(outside.join("keep")).unwrap(), b"keep");
     }
 
     #[test]

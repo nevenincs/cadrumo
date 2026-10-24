@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:2c7cae7fe4eeb7307032b211d8c86fb7cb35b77b5753f26089712ab7bf1f1f0a'
+body_hash: 'sha256:678c094296f36e83fecb75cc3332d5f40bdb8d05abae39016ff5349792d621f2'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -340,6 +340,23 @@ related:
 - `S20` `verify:` `ruff check, ruff format --check, ty check on the touched Python` -> `pass`
 - `S20` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
 - `S20` `by:` `implementation-engineer-standard`
+- `S18` `A` `native/application/src/archive.rs`
+- `S18` `A` `native/application/src/archive/tests.rs`
+- `S18` `M` `native/application/src/component.rs`
+- `S18` `M` `native/application/src/lib.rs`
+- `S18` `M` `native/application/src/provisioning/browser.rs`
+- `S18` `M` `native/application/src/provisioning/receipts.rs`
+- `S18` `M` `src/cadrumo/core/component_records.py`
+- `S18` `M` `src/cadrumo/core/tests/test_component_records.py`
+- `S18` `verify:` `cargo test --offline --lib on an export of HEAD b924ce87f9 plus this Step, Windows (167)` -> `pass`
+- `S18` `verify:` `cargo test --offline --lib --features platform, Windows worktree (211, 1 ignored)` -> `pass`
+- `S18` `verify:` `cargo test --offline --no-fail-fast integration targets, Windows (package_inspection linked_root_and_deep_root_ancestor_are_refused pre-existing non-ASCII junction failure)` -> `pass`
+- `S18` `verify:` `WSL Linux cargo test --lib archive component browser receipts (36; symlink cases), --features platform (39)` -> `pass`
+- `S18` `verify:` `WSL Linux cargo test --lib on the export (165; local_ai program record fixture fails identically on pure HEAD: Linux archive digest differs from the Windows-written fixture)` -> `pass`
+- `S18` `verify:` `cargo clippy --all-targets -D warnings, with and without --features platform, Windows export and WSL` -> `pass`
+- `S18` `verify:` `rustfmt --edition 2024 through stdin, byte-compared on the six Rust files` -> `pass`
+- `S18` `verify:` `pytest -m '' src/cadrumo/core/tests/test_component_records.py (19), ruff check, ruff format --check, ty check` -> `pass`
+- `S18` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -376,3 +393,6 @@ related:
 - `S10` S10 the containment of a killed role rests on the kill-on-close job the binary entry takes on Windows; no test kills a role during a browser check, and Linux and macOS have no job yet
 - `S10` S10 a local AI setup waits up to 35 s for the manager's server; without a manager it fails `program_not_running` after installing and recording the program
 - `S20` S20 wired `admit_local_reader` into the three text-role consumer checks `(ledger_evidence_extraction_composition,` `ledger_llm_composition,` `statement_reading)` beyond the Step's listed paths, since application code cannot import the probe; a model the runtime lists without a digest is admitted unmeasured
+- `S18` S18 link inventory of every pinned browser archive, read by range request: only the mac-x64 and mac-arm64 Chromium zips carry links, 5 each, all inside the build (Versions/Current -> 156.0.8078.4 and Resources, Libraries, Helpers and the framework binary through it), with three listed before Versions/Current; Linux and Windows archives carry none
+- `S18` S18 the component store keeps hard links of files on every platform (its own check refuses any link on disk, and the local AI archives need only file links); hard links create no pointer that can later be retargeted, so symbolic links are not strictly safer there; the browser uses symbolic links on Unix because macOS framework bundles need Versions/Current as a link, and on Windows places file links as hard links and refuses folder links
+- `S18` S18 receipts gain an optional links list (path and target), omitted when empty so linkless receipts and both record fixtures are unchanged; the Python record reader accepts it

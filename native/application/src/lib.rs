@@ -44,4 +44,5 @@ pub mod runtime;
 pub mod runtime_client;
 pub mod value;
 
+mod archive;
 mod filesystem;

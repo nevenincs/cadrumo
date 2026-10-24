@@ -47,6 +47,7 @@ __all__ = [
     "ComponentLocation",
     "ComponentRecord",
     "ComponentRecordFile",
+    "ComponentRecordLink",
     "ComponentRecordReading",
     "ComponentRecordState",
     "LocatedComponent",
@@ -68,6 +69,7 @@ LOCAL_AI_MODELS_PATH: Final = "models"
 #: The local AI record's fact naming the fixed loopback ``host:port`` its server answers on.
 LOCAL_AI_ADDRESS_FACT: Final = "address"
 _RECORD_BYTES_LIMIT: Final = 4 * 1024 * 1024
+_LINK_TARGET_LIMIT: Final = 4096
 
 type _Name = Annotated[str, StringConstraints(pattern=r"^[a-z0-9_-]{1,128}$")]
 type _Fact = Annotated[str, StringConstraints(min_length=1, max_length=128)]
@@ -104,6 +106,33 @@ class ComponentRecordFile(BaseModel):
     @pydantic_validation_boundary
     def _validate_path(cls, value: str) -> str:
         return _contained(value)
+
+
+class ComponentRecordLink(BaseModel):
+    """One symbolic link the component holds, such as a macOS browser framework link.
+
+    The engine records only a link that resolves inside the folder it sits in;
+    ``target`` is the link's own relative target, as written on disk.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    path: _RelativePath
+    target: Annotated[str, StringConstraints(min_length=1, max_length=_LINK_TARGET_LIMIT)]
+
+    @field_validator("path")
+    @classmethod
+    @pydantic_validation_boundary
+    def _validate_path(cls, value: str) -> str:
+        return _contained(value)
+
+    @field_validator("target")
+    @classmethod
+    @pydantic_validation_boundary
+    def _validate_target(cls, value: str) -> str:
+        if value.startswith("/") or "\\" in value or "\0" in value:
+            raise ValueError("a component link target is a relative path")
+        return value
 
 
 class ComponentLocation(BaseModel):
@@ -153,6 +182,7 @@ class ComponentRecord(BaseModel):
     item_id: ComponentItem
     version: Annotated[str, StringConstraints(min_length=1, max_length=128)] | None
     files: tuple[ComponentRecordFile, ...]
+    links: tuple[ComponentRecordLink, ...] = ()
     verified_at: datetime
     hosts: tuple[Annotated[str, StringConstraints(min_length=1, max_length=253)], ...]
     location: ComponentLocation | None = None
