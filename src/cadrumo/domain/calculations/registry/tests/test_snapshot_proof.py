@@ -20,6 +20,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from .....core.time.clock import today_madrid
 from .. import snapshot as snapshot_module
+from .. import snapshot_proof as snapshot_proof_module
 from ..authority import PinnedAuthorityOperation
 from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import SQLiteAuthorityReader
@@ -186,6 +187,38 @@ def test_the_validator_closure_is_rooted_at_the_snapshot_validator_and_determini
     assert all(module == "cadrumo" or module.startswith("cadrumo.") for module in modules)
     assert snapshot_validator_closure() == closure
     assert validator_digest(reversed(closure)) == validator_digest(closure)
+
+
+def test_a_cached_closure_equals_a_fresh_computation(closure: tuple[ValidatorSource, ...]) -> None:
+    warm = snapshot_validator_closure()
+    snapshot_proof_module._import_statements_cache.clear()
+    fresh = snapshot_validator_closure()
+
+    assert warm == closure
+    assert fresh == closure
+    assert snapshot_validator_closure() == fresh
+
+
+def test_parsed_import_statements_follow_the_source_digest() -> None:
+    module = "cadrumo.domain.calculations.registry.snapshot_proof_cache_probe"
+    parse = snapshot_proof_module._parsed_import_statements
+    relative = b"from . import alpha"
+    absolute = b"import cadrumo.beta"
+    first = parse(module, relative, "a" * 64)
+    second = parse(module, absolute, "b" * 64)
+
+    assert [(item.level, item.module, item.names, item.is_from) for item in first] == [(1, "", ("alpha",), True)]
+    assert [(item.level, item.module, item.names, item.is_from) for item in second] == [(0, "cadrumo.beta", (), False)]
+    assert parse(module, relative, "a" * 64) == first
+
+
+def test_a_module_source_is_located_where_the_import_system_finds_it(closure: tuple[ValidatorSource, ...]) -> None:
+    for source in closure:
+        spec = importlib.util.find_spec(source.module)
+
+        assert spec is not None
+        assert spec.origin is not None
+        assert snapshot_proof_module._module_origin(source.module) == spec.origin
 
 
 def test_the_running_validator_matches_its_own_closure(closure: tuple[ValidatorSource, ...]) -> None:

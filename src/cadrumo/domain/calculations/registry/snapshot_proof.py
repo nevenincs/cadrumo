@@ -20,6 +20,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import importlib.util
+import os
 import sys
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
@@ -197,10 +198,49 @@ def snapshot_proof_key(
     return SnapshotProofKey(modelo_id=modelo_id, filing_year=filing_year, period=normalized, grade=grade)
 
 
+def _regular_source_in(directory: str, name: str) -> str | None:
+    """Return the source file a path finder picks for ``name`` under ``directory``, a package before a module."""
+    package_init = os.path.join(directory, name, "__init__.py")
+    if os.path.isfile(package_init):
+        return package_init
+    module_file = os.path.join(directory, f"{name}.py")
+    return module_file if os.path.isfile(module_file) else None
+
+
+def _search_locations(package: str) -> tuple[str, ...] | None:
+    """Return the directories ``package``'s submodules import from, without importing anything."""
+    loaded = sys.modules.get(package)
+    spec = getattr(loaded, "__spec__", None) if loaded is not None else None
+    if spec is not None:
+        locations = spec.submodule_search_locations
+        return tuple(str(location) for location in locations) if locations is not None else None
+    parent, _, name = package.rpartition(".")
+    parent_locations = _search_locations(parent) if parent else None
+    if parent_locations is None:
+        return None
+    for directory in parent_locations:
+        init = _regular_source_in(directory, name)
+        if init is not None and init.endswith("__init__.py"):
+            return (os.path.dirname(init),)
+    return None
+
+
 def _module_origin(module: str) -> str | None:
+    """Locate a module's Python source, preferring what the import system already knows.
+
+    A loaded module states its own origin. Otherwise the file is found where
+    the import system would look, in the directories of its parent package;
+    only a module that resolution cannot place that way goes through
+    ``find_spec``.
+    """
     loaded = sys.modules.get(module)
     spec = getattr(loaded, "__spec__", None) if loaded is not None else None
     if spec is None:
+        parent, _, name = module.rpartition(".")
+        for directory in (_search_locations(parent) or ()) if parent else ():
+            origin = _regular_source_in(directory, name)
+            if origin is not None:
+                return origin
         try:
             spec = importlib.util.find_spec(module)
         except (ImportError, ValueError):
@@ -238,22 +278,60 @@ def _with_ancestors(module: str) -> Iterable[str]:
     return (".".join(parts[:index]) for index in range(1, len(parts) + 1))
 
 
-def _imported_modules(module: str, source: bytes) -> set[str]:
-    """Return every ``cadrumo`` module an import statement anywhere in ``source`` can execute."""
-    package = module if _is_package(module) else module.rpartition(".")[0]
-    found: set[str] = set()
+@dataclass(frozen=True, slots=True)
+class _ImportStatement:
+    """One import statement as written, before it is resolved against the module's package."""
+
+    level: int
+    module: str
+    names: tuple[str, ...]
+    is_from: bool
+
+
+_import_statements_cache: dict[str, tuple[str, tuple[_ImportStatement, ...]]] = {}
+"""The parsed statements of each module's latest-seen source, with the digest they were parsed from.
+
+Parsing about four hundred sources dominates a closure computation. A module's
+statements are a pure function of its source bytes, so they are reused while
+the digest is unchanged. Everything that depends on the file system (which
+module is a package, which names are submodules) is resolved afresh on every
+call, and every call re-reads and re-hashes every source.
+"""
+
+
+def _parsed_import_statements(module: str, source: bytes, digest: str) -> tuple[_ImportStatement, ...]:
+    cached = _import_statements_cache.get(module)
+    if cached is not None and cached[0] == digest:
+        return cached[1]
+    statements: list[_ImportStatement] = []
     for node in ast.walk(ast.parse(source, filename=module)):
         if isinstance(node, ast.Import):
-            found.update(alias.name for alias in node.names)
+            statements.extend(_ImportStatement(0, alias.name, (), False) for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
-            target = importlib.util.resolve_name("." * node.level + (node.module or ""), package)
-            found.add(target)
-            if not _in_closure_root(target) or not _is_package(target):
-                continue
-            for alias in node.names:
-                candidate = f"{target}.{alias.name}"
-                if alias.name != "*" and _module_origin(candidate) is not None:
-                    found.add(candidate)
+            statements.append(
+                _ImportStatement(node.level, node.module or "", tuple(alias.name for alias in node.names), True)
+            )
+    parsed = tuple(statements)
+    _import_statements_cache[module] = (digest, parsed)
+    return parsed
+
+
+def _imported_modules(module: str, statements: Iterable[_ImportStatement]) -> set[str]:
+    """Return every ``cadrumo`` module an import statement anywhere in a module can execute."""
+    package = module if _is_package(module) else module.rpartition(".")[0]
+    found: set[str] = set()
+    for statement in statements:
+        if not statement.is_from:
+            found.add(statement.module)
+            continue
+        target = importlib.util.resolve_name("." * statement.level + statement.module, package)
+        found.add(target)
+        if not _in_closure_root(target) or not _is_package(target):
+            continue
+        for name in statement.names:
+            candidate = f"{target}.{name}"
+            if name != "*" and _module_origin(candidate) is not None:
+                found.add(candidate)
     return {ancestor for name in found if _in_closure_root(name) for ancestor in _with_ancestors(name)}
 
 
@@ -286,8 +364,10 @@ def snapshot_validator_closure() -> tuple[ValidatorSource, ...]:
         source = _source_bytes(module)
         if source is None:
             raise RegistryValidationError(f"snapshot validator module {module!r} has no readable Python source")
-        digests[module] = _source_digest(source)
-        pending.extend(name for name in _imported_modules(module, source) if name not in digests)
+        digest = _source_digest(source)
+        digests[module] = digest
+        statements = _parsed_import_statements(module, source, digest)
+        pending.extend(name for name in _imported_modules(module, statements) if name not in digests)
     return tuple(ValidatorSource(module, digests[module]) for module in sorted(digests))
 
 
