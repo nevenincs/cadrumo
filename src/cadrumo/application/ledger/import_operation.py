@@ -35,6 +35,7 @@ from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..transactions.diagnostics import LedgerImportDiagnosticKind
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import require_registered_own_account
@@ -47,7 +48,7 @@ from .actions_import import (
     plan_ledger_import_sources,
     prepare_ledger_source_import,
 )
-from .import_ports import LedgerImportPorts
+from .import_ports import LedgerImportPorts, LedgerImportReaderUnavailableError
 from .models import LedgerSourceImportCommand, LedgerSourceImportResult
 from .own_account_ports import OwnAccountRepositoryProtocol
 from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
@@ -154,10 +155,23 @@ class LedgerImportFileRefusal(BaseModel):
         "source_changed",
         "empty_directory",
         "file_limit",
+        "reader_unavailable",
     ]
     """``empty_directory`` names a requested directory holding no importable file.
     ``file_limit`` names each requested entry of a request whose planned files
-    exceed the registered count, of which none is read."""
+    exceed the registered count, of which none is read. ``reader_unavailable``
+    names a file whose only reading lane needs a model that could not be asked."""
+    precondition_verdict: PreconditionVerdictSnapshot | None = None
+    """Present exactly for ``reader_unavailable``: the reader probe's verdict,
+    naming the local AI setup when setting it up lets the file be read. One
+    file of a folder can need it while the others import, so it rides on the
+    file rather than refusing the operation."""
+
+    @model_validator(mode="after")
+    def _verdict_only_for_reader(self) -> LedgerImportFileRefusal:
+        if (self.reason_code == "reader_unavailable") != (self.precondition_verdict is not None):
+            raise ValueError("a ledger import file refusal carries a verdict exactly when its reader was unavailable")
+        return self
 
 
 class LedgerImportValidationProjection(BaseModel):
@@ -478,6 +492,13 @@ def _prepare_import_file(
     )
     try:
         prepared = prepare_ledger_source_import(command, ports=ports.import_ports, own_accounts=own_accounts)
+    except LedgerImportReaderUnavailableError as exc:
+        verdict = exc.terminal_precondition_verdict
+        return LedgerImportFileRefusal(
+            file_name=_safe_file_name(path),
+            reason_code="transaction_validation" if verdict is None else "reader_unavailable",
+            precondition_verdict=None if verdict is None else PreconditionVerdictSnapshot.from_verdict(verdict),
+        )
     except TransactionValidationError as exc:
         return LedgerImportFileRefusal(
             file_name=_safe_file_name(path),

@@ -3362,6 +3362,10 @@ cli:
         importálva lett.'
       file_refused_account_mismatch: 'Elutasított és kihagyott kivonat: a(z) {file}
         más saját számlát nevez meg, mint amelyet választottál.'
+      file_reader_not_ready: 'A kivonat nem lett beolvasva: a(z) {file} fájlt a helyi
+        MI olvassa, amely nem áll készen.'
+      file_reader_unavailable: 'A kivonat nem lett beolvasva: a helyi MI ezen a számítógépen
+        nem tudja beolvasni a(z) {file} fájlt.'
       help: Bankszámlakivonatok vagy könyvelési fájlok importálása a nyilvántartásba.
       likely_duplicates: '{count} importált sor dátuma és összege megegyezik egy,
         a nyilvántartásban már szereplő vagy ebben a fájlban korábbi tranzakcióéval,

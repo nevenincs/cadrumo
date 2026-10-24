@@ -6064,6 +6064,8 @@ tui:
         transaction_validation: el fichero no se pudo leer como extracto
       success: 'Importados: {imported}; omitidos: {skipped}.'
       title: Importar apuntes
+        reader_unavailable: la IA local, que lee este fichero, no está lista, así
+          que no se leyó el fichero
     invoice:
       again: Añadir otra factura
       cancel: Cancelar

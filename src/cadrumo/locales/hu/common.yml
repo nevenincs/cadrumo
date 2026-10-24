@@ -6020,6 +6020,8 @@ tui:
       success: 'Importálva: {imported}; kihagyva: {skipped}.'
       title: Tételek importálása
     invoice:
+        reader_unavailable: a helyi MI, amely ezt a fájlt olvassa, nem áll készen,
+          ezért a fájl nem lett beolvasva
       again: Újabb számla hozzáadása
       cancel: Mégse
       cancelled: Megszakítva. Semmi sem került rögzítésre.

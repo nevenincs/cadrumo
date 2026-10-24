@@ -15,11 +15,15 @@ from ...application.ledger.import_operation import (
     LedgerImportSourceProjection,
     LedgerImportValidationProjection,
 )
+from ...application.ledger.import_ports import LedgerImportReaderUnavailableError
+from ...application.operator_actions.models import PreconditionVerdict
+from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.errors import TransactionValidationError
+from ._component_setup_rendering import component_setup_lines
 from ._ledger_support import ledger_transaction_validation_no_recovery
-from .common import bad, emit_envelope
+from .common import bad, emit_envelope, resolve_cli_precondition_action
 from .ledger_results import LedgerImportPayload
 from .operation_ledger_import import import_ledger_sources_for_cli
 from .period_parsing import _optional_canonical_period
@@ -50,10 +54,42 @@ def _validate_import_provider(provider: str) -> LedgerProviderID:
 
 
 def _refusal_message(refusal: LedgerImportFileRefusal) -> str:
-    """Explain one refused statement; an own-account mismatch names its cause."""
+    """Explain one refused statement; an own-account mismatch and a missing reader name their cause."""
     if refusal.reason_code == "own_account_mismatch":
         return tr("cli.ledger.import.file_refused_account_mismatch", file=refusal.file_name)
+    verdict = _reader_verdict(refusal)
+    if verdict is not None:
+        return tr(_reader_refusal_key(verdict), file=refusal.file_name)
     return tr("cli.ledger.import.file_refused", file=refusal.file_name)
+
+
+def _reader_verdict(refusal: LedgerImportFileRefusal) -> PreconditionVerdict | None:
+    """Return the reader probe's verdict a file was refused with, or ``None``."""
+    snapshot = refusal.precondition_verdict
+    return None if snapshot is None else snapshot.to_verdict()
+
+
+def _reader_refusal_key(verdict: PreconditionVerdict) -> str:
+    """Say the local AI is not ready only when its setup can make it ready; else that it cannot run here."""
+    if verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID:
+        return "cli.ledger.import.file_reader_not_ready"
+    return "cli.ledger.import.file_reader_unavailable"
+
+
+def _reader_setup_lines(refusals: Sequence[LedgerImportFileRefusal]) -> tuple[str, ...]:
+    """Return the setup lines once for the files refused because their reader was missing.
+
+    The first such file's verdict speaks for all of them: every lane that refuses
+    this way names the one local AI setup item.
+    """
+    for refusal in refusals:
+        verdict = _reader_verdict(refusal)
+        if verdict is None:
+            continue
+        lines = component_setup_lines(resolve_cli_precondition_action(verdict))
+        if lines is not None:
+            return lines
+    return ()
 
 
 class _ImportReport:
@@ -70,14 +106,19 @@ def _refused_file_report(refusals: Sequence[LedgerImportFileRefusal]) -> _Import
     notices: list[Notice] = []
     for refusal in refusals:
         lines.append(f"  refused\t{refusal.file_name}\t{refusal.reason_code}")
+        context = {"file": refusal.file_name, "reason_code": refusal.reason_code}
+        verdict = _reader_verdict(refusal)
+        if verdict is not None and verdict.action is not None:
+            context["recovery_action_id"] = verdict.action.action_id
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code="ledger.import.file_refused",
                 message=_refusal_message(refusal),
-                context={"file": refusal.file_name, "reason_code": refusal.reason_code},
+                context=context,
             ),
         )
+    lines.extend(f"  {line}" for line in _reader_setup_lines(refusals))
     return _ImportReport(lines=lines, notices=notices)
 
 
@@ -150,6 +191,16 @@ def ledger_import(
     result = completed.projection
     if not result.validations and result.refused_files:
         refusal = result.refused_files[0]
+        verdict = _reader_verdict(refusal)
+        if verdict is not None:
+            # The one statement named needs a reader that could not be asked.
+            # The refusal carries the probe's verdict, so the error boundary
+            # offers the local AI setup as far as the item's current row allows.
+            raise LedgerImportReaderUnavailableError(
+                translated_message=_reader_refusal_key(verdict),
+                context={"file": refusal.file_name},
+                precondition_verdict=verdict,
+            )
         if refusal.reason_code == "transaction_validation":
             # The one statement named was refused whole, so this import read
             # nothing: the typed refusal it would have raised in process.

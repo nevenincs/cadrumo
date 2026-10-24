@@ -6046,6 +6046,8 @@ tui:
         transaction_validation: el fitxer no s'ha pogut llegir com a extracte
       success: 'Importats: {imported}; omesos: {skipped}.'
       title: Importar apunts
+        reader_unavailable: la IA local, que llegeix aquest fitxer, no està a punt,
+          així que no s'ha llegit el fitxer
     invoice:
       again: Afegeix una altra factura
       cancel: Cancel·la

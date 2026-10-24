@@ -3395,6 +3395,10 @@ cli:
         importat.'
       file_refused_account_mismatch: 'Extracte rebutjat i omès: {file} indica un compte
         propi diferent del que has triat.'
+      file_reader_not_ready: 'Extracte no llegit: {file} el llegeix la IA local, que
+        no està a punt.'
+      file_reader_unavailable: 'Extracte no llegit: la IA local no pot llegir {file}
+        en aquest ordinador.'
       help: Importar extractes bancaris o altres fitxers comptables als teus registres
       likely_duplicates: '{count} fila(es) importada(es) coincideixen en data i import
         amb un altre moviment ja present als teus registres o anterior en aquest fitxer,
