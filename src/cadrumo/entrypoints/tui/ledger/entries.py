@@ -13,6 +13,7 @@ from ....core.identity.transaction_ids import TransactionId
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
 from .controller import (
+    LEDGER_TRANSACTION_FOCUS,
     LedgerEntrySelected,
     LedgerTransactionDetailRequested,
     LedgerWorkspaceController,
@@ -140,7 +141,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         focus = self.controller.context.focus
         if (
             focus is not None
-            and focus.semantic_key == "ledger.transaction"
+            and focus.semantic_key == LEDGER_TRANSACTION_FOCUS
             and focus.restore_token is not None
             and self.controller.restored_transaction_id() is None
         ):

@@ -34,9 +34,14 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
     AUTO_FOCUS: ClassVar[str | None] = ""
     """No compose-time focus: it centres the table before layout and scrolls a tall page past its heading."""
 
-    def __init__(self, controller: LedgerWorkspaceController) -> None:
-        """Retain the injected read-only workspace controller."""
+    def __init__(self, controller: LedgerWorkspaceController, *, selection_dropped: bool = False) -> None:
+        """Retain the injected read-only workspace controller.
+
+        ``selection_dropped`` says this overview opened in place of entries
+        asked for with one transaction selected, which the overview cannot show.
+        """
         super().__init__(controller, id="ledger-overview-screen")
+        self._selection_dropped = selection_dropped
 
     @override
     def compose(self) -> ComposeResult:
@@ -84,8 +89,10 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
         repaint_tables(self, self._populate_view)
 
     def on_mount(self) -> None:
-        """Populate the initially mounted projection."""
+        """Populate the initially mounted projection, and say what the opening could not do."""
         self._populate_view()
+        if self._selection_dropped:
+            self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.overview.selection_dropped"))
 
     def _populate_view(self) -> None:
         """Populate the complete navigation and quality-first summary."""

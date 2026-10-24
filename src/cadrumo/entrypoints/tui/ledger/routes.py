@@ -18,7 +18,7 @@ from ..destination_alias import closed_destination_ids
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .actividad_asset import ActivityAssetTuiActionsV1
 from .classification import LedgerClassificationScreen
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LEDGER_TRANSACTION_FOCUS, LedgerWorkspaceController, LedgerWorkspaceScreen
 from .entries import LedgerEntriesScreen
 from .evidence import LedgerEvidenceReviewListDoorV1, LedgerEvidenceScreen
 from .import_flow import LedgerImportScreen
@@ -210,13 +210,14 @@ def ledger_screen_factory(
         controller = LedgerWorkspaceController(context, projection, injection)
         # A Ledger opened on one transaction, as a link selecting it asks, lands
         # on the entries where that transaction is selected.
-        landing = (
-            LedgerWorkspaceArea.ENTRIES
-            if context.focus is not None and context.focus.semantic_key == "ledger.transaction"
-            else LedgerWorkspaceArea.OVERVIEW
-        )
+        selects_transaction = context.focus is not None and context.focus.semantic_key == LEDGER_TRANSACTION_FOCUS
+        landing = LedgerWorkspaceArea.ENTRIES if selects_transaction else LedgerWorkspaceArea.OVERVIEW
         area = area_by_action.get(context.action_candidate_id or "", landing)
         if controller.refusal_for(area) is not None:
+            # The overview shows no entry, so the selection is dropped there
+            # and the page says so.
+            if selects_transaction and controller.refusal_for(LedgerWorkspaceArea.OVERVIEW) is None:
+                return LedgerOverviewScreen(controller, selection_dropped=True)
             area = LedgerWorkspaceArea.OVERVIEW
         return resolve_ledger_screen(controller, controller.route_target(area))
 

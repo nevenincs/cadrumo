@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from typing import cast
 
 import pytest
 from textual.containers import VerticalScroll
@@ -15,6 +16,8 @@ from .....application.ledger.workspace import (
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import tr
+from .....core.identity.transaction_ids import TransactionId
 from .....tests.terminal_sizes import TERMINAL_WIDE
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
@@ -29,6 +32,7 @@ from .workspace_fixtures import (
     LEDGER_TX_B,
     ledger_context,
     ledger_controller,
+    ledger_focused_context,
     ledger_projection,
     ledger_review_action,
 )
@@ -90,6 +94,34 @@ def test_factory_requires_real_outer_context_and_keeps_injected_projection() -> 
         ledger_screen_factory(projection, review_action=ledger_review_action())(
             TuiScreenContextV1(destination="workbench.home")
         )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("selected", (LEDGER_TX_B, cast("TransactionId", "f" * 64)), ids=("shown", "not-shown"))
+async def test_a_selection_landing_on_the_overview_because_entries_are_unavailable_says_it_was_dropped(
+    selected: TransactionId,
+) -> None:
+    projection = ledger_projection(unavailable=LedgerWorkspaceArea.ENTRIES)
+    factory = ledger_screen_factory(projection, review_action=ledger_review_action())
+    screen = factory(ledger_focused_context(selected))
+    assert isinstance(screen, LedgerOverviewScreen)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await settle(pilot)
+        notice = str(screen.query_one("#ledger-refusal", Static).render())
+    assert notice == tr("tui.ledger.overview.selection_dropped")
+    assert notice != "tui.ledger.overview.selection_dropped"
+
+
+@pytest.mark.asyncio
+async def test_an_overview_opened_without_a_selection_carries_no_notice() -> None:
+    projection = ledger_projection(unavailable=LedgerWorkspaceArea.ENTRIES)
+    screen = ledger_screen_factory(projection, review_action=ledger_review_action())(ledger_context())
+    assert isinstance(screen, LedgerOverviewScreen)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await settle(pilot)
+        assert str(screen.query_one("#ledger-refusal", Static).render()) == ""
 
 
 def test_factory_refuses_undeclared_or_drifted_review_action_through_real_catalogue() -> None:

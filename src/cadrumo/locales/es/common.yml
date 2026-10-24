@@ -6248,6 +6248,8 @@ tui:
         bank_block: Banco extranjero (solo fuera de la zona SEPA)
         bank_city: Ciudad del banco
         bank_country: País del banco (código ISO)
+      selection_dropped: Los apuntes no están disponibles, así que no se muestra el
+        apunte que selecciona este enlace.
         bank_name: Nombre del banco
         closed_on: Fecha de cierre
         currency: Moneda

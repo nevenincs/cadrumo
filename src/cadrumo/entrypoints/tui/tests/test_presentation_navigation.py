@@ -16,6 +16,7 @@ from ....core.i18n.render import tr
 from ..app import CadrumoTuiApp
 from ..components.account_chrome import AccountChromeScreen
 from ..home import HomeScreen
+from ..ledger.controller import LEDGER_TRANSACTION_FOCUS
 from ..ledger.entries import LedgerEntriesScreen
 from ..ledger.routes import ledger_screen_factory
 from ..ledger.tests.workspace_fixtures import LEDGER_TX_B, ledger_projection, ledger_review_action
@@ -29,7 +30,6 @@ from ..navigation import (
     declared_destination_ids,
 )
 from ..presentation import (
-    LEDGER_TRANSACTION_FOCUS,
     PROFILE_AEAT_AUTH_FOCUS,
     TUI_VIEWS,
     opens_aeat_auth,

@@ -6117,6 +6117,8 @@ tui:
         bank_name: Bank name
         closed_on: Closed on
         currency: Currency
+      selection_dropped: The entries are not available, so the entry this link selects
+        is not shown.
         date_placeholder: YYYY-MM-DD
         holding: Your holding (you must hold the account)
         iban: IBAN (hidden)

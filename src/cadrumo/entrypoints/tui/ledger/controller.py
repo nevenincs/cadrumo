@@ -64,6 +64,9 @@ from .models import (
 from .tools import LedgerToolV1
 from .workspace_injection import LedgerWorkspaceInjection
 
+LEDGER_TRANSACTION_FOCUS: Final = "ledger.transaction"
+"""The Ledger focus that opens its entries with one transaction selected, by its id."""
+
 _AREA_LOCALE_KEYS: Final = {
     LedgerWorkspaceArea.OVERVIEW: "tui.ledger.area.overview",
     LedgerWorkspaceArea.ENTRIES: "tui.ledger.area.entries",
@@ -337,7 +340,7 @@ class LedgerWorkspaceController:
                 destination=self.context.destination,
                 focus=TuiFocusIdentityV1(
                     destination=self.context.destination,
-                    semantic_key="ledger.transaction",
+                    semantic_key=LEDGER_TRANSACTION_FOCUS,
                     restore_token=transaction_id,
                 ),
                 action_candidate_id=self.context.action_candidate_id,
@@ -354,7 +357,7 @@ class LedgerWorkspaceController:
     def restored_transaction_id(self) -> TransactionId | None:
         """Resolve a transaction focus by semantic identity, never by row position."""
         focus = self.context.focus
-        if focus is None or focus.semantic_key != "ledger.transaction" or focus.restore_token is None:
+        if focus is None or focus.semantic_key != LEDGER_TRANSACTION_FOCUS or focus.restore_token is None:
             return None
         candidate = focus.restore_token
         return candidate if any(row.transaction_id == candidate for row in self.projection.entries) else None
@@ -469,7 +472,7 @@ class LedgerWorkspaceController:
         focus = self.context.focus
         if (
             focus is not None
-            and focus.semantic_key == "ledger.transaction"
+            and focus.semantic_key == LEDGER_TRANSACTION_FOCUS
             and all(row.transaction_id != focus.restore_token for row in snapshot.projection.entries)
         ):
             focus = None

@@ -17,13 +17,11 @@ from textual.message import Message
 
 from cadrumo_client.contracts.navigation import SurfaceImplementation, ViewLink
 
+from .ledger.controller import LEDGER_TRANSACTION_FOCUS
 from .navigation import TuiDestinationIdV1, TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
 
 PROFILE_AEAT_AUTH_FOCUS: Final = "profile.aeat_auth"
 """The profile page's focus that opens its AEAT access editor once the page is up."""
-
-LEDGER_TRANSACTION_FOCUS: Final = "ledger.transaction"
-"""The Ledger focus that opens its entries with one transaction selected, by its id."""
 
 _ROUTES: Final[Mapping[str, tuple[TuiDestinationIdV1, str]]] = MappingProxyType(
     {
