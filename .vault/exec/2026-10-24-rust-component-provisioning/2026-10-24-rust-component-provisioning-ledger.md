@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:a72615e64c80ec8f1ef2f3a2a8663d20b60a8ea0b2740c1808b8d66ff3981b03'
+body_hash: 'sha256:59ffe364761ff2cb3948c6cc57def124658daed770e6af5ad3ed9aab684fbea3'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -472,6 +472,8 @@ related:
 - `S24` `verify:` `just check-locales (blocking findings are 15295 inventory violations and 17 desktop keys of other work; the S24 keys are defined in four locales)` -> `fail`
 - `S24` `verify:` `desktop cargo test --bin cadrumo shell::setup and clippy (not run: the crate needs the CMake identity projection and prepared tauri host, which this worker may not build)` -> `fail`
 - `S24` `by:` `implementation-engineer-standard`
+- `S24` `verify:` `desktop cargo test --offline --bin cadrumo shell::setup on a HEAD 27bb2fef35 export with read-only generated inputs (31)` -> `pass`
+- `S24` `verify:` `desktop cargo clippy --all-targets -D warnings on the same export` -> `pass`
 
 ## Notes
 
