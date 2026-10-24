@@ -29,7 +29,7 @@ export type StoryProps = {
   port: ModeloPort;
   language: OutputLanguage;
   session: FormSession;
-  reread: () => Promise<void>;
+  reread: () => Promise<boolean>;
 };
 
 export const storyLanguage = (locale: unknown): OutputLanguage =>
@@ -82,7 +82,7 @@ export function StorySession({
   const reread = async () => {
     // A new read of the same declaration: the same envelope as a new object.
     setEnvelope(structuredClone(envelope));
-    return Promise.resolve();
+    return Promise.resolve(true);
   };
   return <>{children({ envelope, port, language, session, reread })}</>;
 }

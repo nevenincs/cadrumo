@@ -95,6 +95,35 @@ export type StagedEdit = {
  * acknowledges it. */
 export type Rebased = { changed: number; dropped: number };
 
+/** What reports moved or dropped, by the edit address of each box, until
+ * the filer acknowledges it. */
+export type Moved = ReadonlyMap<string, "changed" | "dropped">;
+
+/** `moved` with what one report did added: a box counts once, and a box
+ * first changed and then dropped counts as dropped. */
+export function noteMoved(
+  moved: Moved,
+  found: Iterable<[string, "changed" | "dropped"]>,
+): Moved {
+  const next = new Map(moved);
+  for (const [key, outcome] of found)
+    if (outcome === "dropped" || next.get(key) !== "dropped")
+      next.set(key, outcome);
+  return next;
+}
+
+/** The notice `moved` gives: how many boxes changed and how many were
+ * dropped, or null when none. */
+export function rebasedOf(moved: Moved): Rebased | null {
+  if (moved.size === 0) return null;
+  let changed = 0;
+  let dropped = 0;
+  for (const outcome of moved.values())
+    if (outcome === "changed") changed += 1;
+    else dropped += 1;
+  return { changed, dropped };
+}
+
 const atBinding = (field: PublicModeloFormField) =>
   field.edit_address.kind === "binding";
 
@@ -322,17 +351,13 @@ export type FormSession = {
   unstage(editKey: string): void;
   discardAll(): void;
   /** Keeps the staged edits a preflight's `report` keeps, staged again
-   * against the declaration as it stands, and drops the others. After a
-   * renewal, `after` is the declaration read before it: the report waits for
-   * the next read. */
-  rebase(
-    report: ModeloFormRebaseEntryV1[],
-    after: ModeloWorkbenchFormProjectionV1 | null,
-  ): void;
-  /** What the last renewal did, until acknowledged; null when nothing. */
+   * against the declaration as it stands, and drops the others. */
+  rebase(report: ModeloFormRebaseEntryV1[]): void;
+  /** What the last report moved or dropped, until acknowledged; null when
+   * nothing. */
   rebased: Rebased | null;
-  /** A report waits for the declaration's next read: until it is applied,
-   * the staged edits do not yet carry what it says. */
+  /** A report not yet applied: until it is, the staged edits do not carry
+   * what it says. */
   rebasePending: boolean;
   /** Takes the renewal's marks off the edits the filer has looked at. */
   acknowledge(): void;
@@ -429,52 +454,45 @@ export function useFormSession({
       return next;
     });
   }, []);
-  const [rebased, setRebased] = useState<Rebased | null>(null);
+  const [moved, setMoved] = useState<Moved>(() => new Map());
+  const rebased = useMemo(() => rebasedOf(moved), [moved]);
   const discardAll = useCallback(() => {
     setStaged(new Map());
-    setRebased(null);
+    setMoved(new Map());
   }, []);
 
   // A renewal's report is applied once the declaration is read again: each
   // kept edit is staged again against its box as it now stands, as the
   // TUI's rebase does, and a box that changed under its edit is marked.
-  const [pendingRebase, setPendingRebase] = useState<{
-    report: ModeloFormRebaseEntryV1[];
-    after: ModeloWorkbenchFormProjectionV1 | null;
-  } | null>(null);
+  const [pendingRebase, setPendingRebase] = useState<
+    ModeloFormRebaseEntryV1[] | null
+  >(null);
   const rebase = useCallback(
-    (
-      report: ModeloFormRebaseEntryV1[],
-      after: ModeloWorkbenchFormProjectionV1 | null,
-    ) => setPendingRebase({ report, after }),
+    (report: ModeloFormRebaseEntryV1[]) => setPendingRebase(report),
     [],
   );
   useEffect(() => {
-    if (!pendingRebase || pendingRebase.after === envelope) return;
+    if (!pendingRebase) return;
     const outcomes = new Map(
-      pendingRebase.report.map((entry) => [
-        heldKey(entry.address),
-        entry.outcome,
-      ]),
+      pendingRebase.map((entry) => [heldKey(entry.address), entry.outcome]),
     );
     setPendingRebase(null);
     const now = new Map<string, PublicModeloFormField>(
       placed.map((p) => [p.key, p.field]),
     );
     const next = new Map<string, StagedEdit>();
-    let changed = 0;
-    let dropped = 0;
+    const found: [string, "changed" | "dropped"][] = [];
     for (const edit of staged.values()) {
       const change = held(edit);
-      const outcome =
-        (change && outcomes.get(heldKey(change.address))) ?? "kept";
+      const where = change ? heldKey(change.address) : edit.key;
+      const outcome = outcomes.get(where) ?? "kept";
       const field = now.get(addressKey(edit.field.address));
       const intent = field && outcome !== "dropped" && restaged(edit, field);
       if (!field || !intent) {
-        dropped += 1;
+        found.push([where, "dropped"]);
         continue;
       }
-      if (outcome === "changed") changed += 1;
+      if (outcome === "changed") found.push([where, "changed"]);
       const key = editKey(field);
       next.set(key, {
         ...edit,
@@ -486,16 +504,13 @@ export function useFormSession({
       });
     }
     setStaged(next);
-    // A renewal's report is the notice until the filer acknowledges it or
-    // the next renewal: a later check is told only the changes still held,
-    // so it cannot say what this one dropped.
-    if (pendingRebase.after !== null)
-      setRebased(changed || dropped ? { changed, dropped } : null);
-    else if (changed || dropped)
-      setRebased((shown) => shown ?? { changed, dropped });
-  }, [pendingRebase, envelope, placed, staged]);
+    // What a report moved or dropped is said until the filer acknowledges
+    // it: a later check is told only the changes still held, so it adds what
+    // it finds, by box, and never takes back what an earlier report dropped.
+    if (found.length) setMoved((shown) => noteMoved(shown, found));
+  }, [pendingRebase, placed, staged]);
   const acknowledge = useCallback(() => {
-    setRebased(null);
+    setMoved(new Map());
     setStaged((held) => {
       if (![...held.values()].some((edit) => edit.beforeChanged)) return held;
       return new Map(

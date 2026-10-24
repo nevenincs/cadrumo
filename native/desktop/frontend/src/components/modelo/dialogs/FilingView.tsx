@@ -167,7 +167,7 @@ export function FilingView({
   language: OutputLanguage;
   session: FormSession;
   onOpenCheck: () => void;
-  onReread: () => Promise<void>;
+  onReread: () => Promise<boolean>;
   openLink: (url: string) => void;
 }) {
   const t = useStrings();

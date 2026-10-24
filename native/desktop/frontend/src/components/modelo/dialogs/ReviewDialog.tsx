@@ -222,7 +222,7 @@ export function ReviewDialog({
   port: ModeloPort;
   /** The window's language, in which the check's findings are said. */
   language: OutputLanguage;
-  onReread: () => Promise<void>;
+  onReread: () => Promise<boolean>;
   /** Whether a refused apply's prerequisite still stands, for the header's
    * next step; only this dialog sees that refusal. */
   onPrerequisiteHeld?: (held: boolean) => void;

@@ -47,15 +47,16 @@ import { hex64 } from "./fixtures/ledger";
  * declarations of a profile nothing was ever read from the AEAT for.
  *
  * The write shapes answer that Modelo 130's writes as the application
- * answered them: `edit` applies a typed value, `renewal` first finds the
- * edit baseline stale and renews it, and `prerequisite` reads a third
- * quarter whose apply is refused on an earlier filing it waits on;
+ * answered them: `edit` applies a typed value, `renewal` reads a form whose
+ * baseline has since run out, renews it and reads the form again, and
+ * `prerequisite` reads a third quarter whose apply is refused on an earlier
+ * filing it waits on;
  * `exported` is the checked declaration with its file made, which exports
  * and records, `export-unverified` exports a file whose design carries no
  * completeness manifest, and `export-unknown` loses the export's settlement;
- * `rebase` stages on a read the declaration then moves under, so the
- * review after the renewal reports each staged change kept, changed or
- * dropped, as the application judged the changes it was sent;
+ * `rebase` stages on a read the declaration then moves under, so its check
+ * is stale, renewing its baseline is refused, and the check on the form
+ * read again reports each staged change kept, changed or dropped;
  * the `receipt` declaration is corrected, and `correction-refused` and
  * `correction-unknown` refuse the correction or lose its settlement. */
 export const MODELO_SHAPES = [
@@ -205,7 +206,9 @@ export function modeloFixture(options: Options): ModeloPort {
   // What the scenario's writes did, as far as they settled.
   let applied = false;
   let recorded = false;
-  let renewed: string | null = null;
+  // Whether a renewal was answered, granted or refused: the window then
+  // reads the declaration again.
+  let renewed = false;
   /** The envelope the first quarter's Modelo 130 is read from, by shape and
    * by what was written. */
   const laterState = (): string => {
@@ -223,14 +226,11 @@ export function modeloFixture(options: Options): ModeloPort {
       case "export-unknown":
         return recorded ? "130-1T-filed" : "130-1T-exported";
       case "edit":
-        return applied ? "130-1T-applied" : LATER_STATES;
-      // Read again after its renewal, the declaration admits a fresh baseline.
+        return applied ? "130-1T-applied" : "130-1T-exported";
+      // Read half an hour ago; read again after its renewal, it admits a
+      // fresh baseline.
       case "renewal":
-        return applied
-          ? "130-1T-applied"
-          : renewed
-            ? "130-1T-renewed"
-            : LATER_STATES;
+        return renewed ? "130-1T-renewed" : "130-1T-expiring";
       case "rebase":
         return renewed ? "130-1T-rebased" : "130-1T-rebase";
       case "prerequisite":
@@ -261,6 +261,28 @@ export function modeloFixture(options: Options): ModeloPort {
     shape === "receipt" ||
     shape === "correction-refused" ||
     shape === "correction-unknown";
+  // Every edit envelope was read on the baseline of one written form and is
+  // named after it, so a baseline names the form a write was read for; a
+  // baseline no written form admitted names none, and its write is invalid.
+  let admittedBy: Map<string, string> | null = null;
+  const formAdmitting = async (baselineId: unknown): Promise<string> => {
+    if (!admittedBy) {
+      admittedBy = new Map();
+      for (const name of Object.keys(catalogue)) {
+        const read = /^modelo-(.+)-(?:en|es|ca|hu)$/.exec(name)?.[1];
+        if (!read) continue;
+        const form = await envelope<ModeloWorkbenchFormProjectionV1>(name);
+        const admitted = form?.admitted_baseline?.baseline_id;
+        if (admitted) admittedBy.set(admitted, read);
+      }
+    }
+    const form =
+      typeof baselineId === "string" ? admittedBy.get(baselineId) : undefined;
+    return form ?? reject("invalid");
+  };
+  /** A held change or a report entry, by its box and kind. */
+  const heldKey = (change: { address: unknown; kind: string }) =>
+    `${JSON.stringify(change.address)}|${change.kind}`;
   const readHelp = async (
     workUnitId: string,
     casillaId: string,
@@ -317,26 +339,23 @@ export function modeloFixture(options: Options): ModeloPort {
               language,
             );
           case "modelo.edit.renew": {
-            const baseline = request.baseline as {
-              work_unit_id?: unknown;
-            } | null;
-            const name = await formName(String(baseline?.work_unit_id));
-            const modelo =
-              (baseline as { modelo?: string } | null)?.modelo ??
-              name?.split("-")[0];
-            const renewal =
-              modelo &&
-              (await envelope<ModeloEditRenewalProjectionV1>(
-                `renew-${modelo}${shape === "rebase" ? "-rebase" : ""}`,
-              ));
+            // The renewal the application gave the baseline this request
+            // names, granted or refused.
+            const baseline = request.baseline as { baseline_id?: unknown };
+            const form = await formAdmitting(baseline?.baseline_id);
+            const renewal = await envelope<ModeloEditRenewalProjectionV1>(
+              `renew-${form}`,
+            );
             if (!renewal) return unserved();
-            renewed = renewal.renewed_baseline?.baseline_id ?? null;
+            renewed = true;
             return renewal;
           }
-          case "modelo.edit.apply_prerequisite":
+          case "modelo.edit.apply_prerequisite": {
+            const form = await formAdmitting(request.baseline_id);
             return shape === "prerequisite"
-              ? written("apply-prerequisite-130")
+              ? written(`apply-prerequisite-${form}`)
               : unserved();
+          }
           case "modelo.export": {
             issued(request.output_path, false);
             if (shape === "export-unknown")
@@ -386,60 +405,64 @@ export function modeloFixture(options: Options): ModeloPort {
         } catch {
           return reject("invalid");
         }
-        // The answers are named by the modelo the baseline was admitted for:
-        // the later states were read in profiles of their own.
+        // The answer is the one the application gave on the baseline this
+        // body names: a baseline no written form admitted is refused.
         const submission = input.submission;
-        const modelo = submission?.baseline?.modelo;
-        if (!modelo) return unserved();
+        const form = await formAdmitting(submission?.baseline?.baseline_id);
         if (definition === "modelo.edit.preflight") {
-          // Which of the application's answers fits what was sent: a
-          // correction's figures, entries as typed, or the staged edits,
-          // which the `renewal` shape first finds on a stale baseline.
+          // Which check was sent: a correction's figures, entries as typed,
+          // or the staged changes, which a form read before the declaration
+          // moved, or before its baseline ran out, answers as stale.
           const entries = submission.lexemes ?? [];
           const correction = entries.find(
             (entry) => entry.address.kind === "correction",
           );
-          // The baseline the review first sends has run out of its lifetime;
-          // once renewed, every baseline the window holds is current.
-          const stale =
-            (shape === "renewal" || shape === "rebase") && renewed === null;
           const read = correction
             ? /^[-+\d.,\s]+$/.test(correction.lexeme)
-              ? `preflight-${modelo}-correction`
-              : `preflight-${modelo}-correction-refused`
+              ? `preflight-${form}-correction`
+              : `preflight-${form}-correction-refused`
             : entries.length > 0
-              ? `preflight-${modelo}`
-              : stale
-                ? shape === "rebase"
-                  ? `preflight-${modelo}-rebase-stale`
-                  : `preflight-${modelo}-stale`
-                : shape === "rebase"
-                  ? `preflight-${modelo}-rebase-review`
-                  : `preflight-${modelo}-review`;
+              ? `preflight-${form}-entry-${entries
+                  .map((entry) =>
+                    "casilla_id" in entry.address
+                      ? entry.address.casilla_id
+                      : entry.address.binding_id,
+                  )
+                  .join("-")}`
+              : catalogue[`preflight-${form}-stale`]
+                ? `preflight-${form}-stale`
+                : // A review was read once per set of held changes.
+                  `preflight-${form}-review${(submission.held ?? [])
+                    .map(
+                      (change) =>
+                        `-${"casilla_id" in change.address ? change.address.casilla_id : change.address.binding_id}${change.kind}`,
+                    )
+                    .sort()
+                    .join("")}`;
           const preflight =
             await envelope<ModeloEditPreflightProjectionV1>(read);
           if (!preflight) return unserved();
-          // The application judged each change it was sent as held; the
-          // answer reports the changes this window holds, as it named them.
-          const held = new Set(
-            (submission.held ?? []).map(
-              (change) => `${JSON.stringify(change.address)}|${change.kind}`,
-            ),
-          );
-          const answered: ModeloEditPreflightProjectionV1 = {
-            ...preflight,
-            rebase: preflight.rebase.filter((entry) =>
-              held.has(`${JSON.stringify(entry.address)}|${entry.kind}`),
-            ),
-          };
-          return settle(answered) as LedgerOutcome<
+          // Read for exactly this baseline and, where it reports on them,
+          // exactly the changes this window holds.
+          const outcome = preflight.outcome;
+          const on =
+            outcome.outcome === "evaluated"
+              ? outcome.baseline_id
+              : "baseline_id" in outcome.refusal
+                ? outcome.refusal.baseline_id
+                : submission.baseline.baseline_id;
+          if (on !== submission.baseline.baseline_id) reject("invalid");
+          const held = (submission.held ?? []).map(heldKey).sort();
+          const reported = preflight.rebase.map(heldKey).sort();
+          if (reported.length > 0 && reported.join() !== held.join())
+            reject("invalid");
+          return settle(preflight) as LedgerOutcome<
             ModeloResult<typeof definition>
           >;
         }
         if (shape === "prerequisite")
           reject("refused", { operation_id: nextOperation() });
-        if (shape !== "edit" && shape !== "renewal") return unserved();
-        const result = await envelope<unknown>(`apply-${modelo}`);
+        const result = await envelope<unknown>(`apply-${form}`);
         if (!result) return unserved();
         applied = true;
         return settle(result) as LedgerOutcome<ModeloResult<typeof definition>>;

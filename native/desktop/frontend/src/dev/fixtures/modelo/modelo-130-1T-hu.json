@@ -1564,9 +1564,9 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-24",
+        "reference_on": "2026-10-25",
         "days_remaining": null,
-        "days_overdue": 187
+        "days_overdue": 188
       },
       "aeat_data": null,
       "filing": null,
@@ -1585,7 +1585,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "b59aca26061bd111db90d33fe2ec98e54a1b1171f10e3e4bc735e08a4164d4a2",
+      "contract_set_digest": "8f3a0ed245e324f7fc4528e7ab661d4bcbb04840ac0747e418525584826751e5",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
       "request_schema": {
@@ -1620,8 +1620,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "72a3ff4679c7d2274c048be033b52c808a8a7bc54de5081cc85ea8b664bc1456",
-    "calculation_head_digest": "7d62bc19f3207105b0155f71e5057f20b74781140f4e788cafaee79e4fba0d90",
+    "work_unit_record_digest": "512486f33e99cda4b9bff1eedc871ada59bb0a54595e3665ec40fae1cbe1dbd7",
+    "calculation_head_digest": "0a79e21cbe96e9b722de1e2cf53f7b7cd87ba6cc7f89e12e4e47825bf4ce4f6e",
     "current_calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1925,9 +1925,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T21:39:57.189075Z",
-    "expires_at": "2026-10-24T21:44:57.189075Z",
-    "baseline_id": "799d8f845f7459cbf742cc0ed320dd3d136a358655979dd25bd158b19dbed01f"
+    "issued_at": "2026-10-24T22:41:37.634144Z",
+    "expires_at": "2026-10-24T22:46:37.634144Z",
+    "baseline_id": "75551b64dc6874f7d5213d818f0f3e4b963f180cc182f7177d4b3a603b21c4d0"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,

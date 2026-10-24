@@ -99,6 +99,14 @@ REBASE_TYPED: tuple[tuple[str, str], ...] = (("08", "250"), ("10", "75"))
 #: How the declaration moves under them: box 06's typed value is taken back and a figure typed into box 08.
 REBASE_RESTORED: tuple[str, ...] = ("06",)
 REBASE_MOVE: tuple[tuple[str, str], ...] = (("08", "500"),)
+#: What the filer types into the first-quarter 130, as typed, and an entry over a box that takes none.
+TYPED_130: tuple[tuple[str, str], ...] = (("06", "1.234,56"),)
+UNWRITABLE_130: tuple[str, str] = ("01", "doce")
+#: The change the window holds once that value is staged.
+STAGED_130: tuple[tuple[str, str], ...] = (("06", "set"),)
+STAGED_303: tuple[tuple[str, str], ...] = (("42", "set"),)
+#: The entries the rebase scenario types, as typed.
+REBASE_TYPED_ENTRIES: tuple[tuple[str, str], ...] = (("08", "250"), ("10", "75"))
 #: The declaration whose apply waits on filings this profile does not hold.
 PREREQUISITE_130 = ("130", "3T")
 #: A declaration whose file design carries no completeness manifest, and which checks cleanly when empty.
@@ -499,101 +507,6 @@ class _ReadContext:
         del written_at
         self.results.append(operand)
         return "0" * 64
-
-
-def _renew(work: Any, baseline: Any) -> BaseModel:
-    """Renew the admitted edit baseline through the modelo.edit.renew executor, as an editor does before review."""
-    from cadrumo.application.modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
-    from cadrumo.application.modelo.workbench_operations import (
-        MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
-        ModeloEditRenewExecutor,
-        ModeloEditRenewRequest,
-    )
-    from cadrumo.core.external_constants import OutputLanguage
-
-    contracts = build_production_operation_registry().public_contract_set
-    executor = ModeloEditRenewExecutor(ports_factory=_read_ports, contracts=lambda: contracts)
-    request = ModeloEditRenewRequest(
-        profile_id=UUID(work.work_unit.bucket_id),
-        baseline=ModeloEditApplyBaselineV1.from_baseline(baseline),
-        output_language=OutputLanguage.EN,
-    )
-    return _run_executor(work, MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID, executor, request)
-
-
-def _preflight(work: Any, baseline: Any, typed: tuple[tuple[str, str], ...]) -> BaseModel:
-    """Preflight entries as the filer typed them, through the production executor and its operand path."""
-    from cadrumo.application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
-    from cadrumo.application.modelo.edit_contract import ModeloEditMutationFamily
-    from cadrumo.application.modelo.edit_models import (
-        ModeloEditParseRequestV1,
-        ModeloEditScalarAddressV1,
-        ModeloEditSubmissionV1,
-    )
-    from cadrumo.application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
-    from cadrumo.application.modelo.edit_transient_operand import modelo_edit_financial_operand
-    from cadrumo.application.modelo.workbench_operations import (
-        MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-        ModeloEditPreflightExecutor,
-    )
-    from cadrumo.application.operations.models import OperationIdentity, OperationRequest
-    from cadrumo.application.operations.tests.financial_operand_delivery import deliver_financial_operand
-    from cadrumo.core.casilla_id import validated_casilla_id
-    from cadrumo.core.external_constants import OutputLanguage
-
-    entries = tuple(
-        ModeloEditParseRequestV1(
-            address=ModeloEditScalarAddressV1(casilla_id=validated_casilla_id(box)),
-            entry_locale=OutputLanguage.ES,
-            lexeme="",
-        )
-        for box, _ in typed
-    )
-    submission = ModeloEditSubmissionV1(
-        baseline=baseline, mutation_family=ModeloEditMutationFamily.CALCULATE, lexemes=entries
-    )
-    # The entries as typed are what a frontend sends; a dump of the model never repeats them.
-    document = json.loads(
-        ModeloEditOperatorInputV2(
-            submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
-        ).model_dump_json()
-    )
-    for entry, (_, text) in zip(document["submission"]["lexemes"], typed, strict=True):
-        entry["lexeme"] = text
-    definition = MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
-    prepared = prepare_modelo_edit_operand(
-        definition_id=definition,
-        profile_id=UUID(work.work_unit.bucket_id),
-        subject_ref=work.work_unit_id,
-        input_json=json.dumps(document),
-    )
-    identity = OperationIdentity(operation_id="f" * 64, definition_id=definition, subject_ref=work.work_unit_id)
-    contracts = build_production_operation_registry().public_contract_set
-    executor = ModeloEditPreflightExecutor(ports_factory=_read_ports, contracts=lambda: contracts)
-    results: list[BaseModel] = []
-
-    async def run() -> None:
-        if prepared.operand is None:
-            raise SystemExit("the preflight operand was not prepared")
-        try:
-            async with deliver_financial_operand(
-                identity=identity, declaration=modelo_edit_financial_operand(None), operand=prepared.operand
-            ) as access:
-                prepared.release()
-                context = _ReadContext(
-                    identity=identity, authority_operation=work.operation, typed_financial_operand=access
-                )
-                request = OperationRequest(
-                    definition_id=definition, subject_ref=work.work_unit_id, payload=prepared.request
-                )
-                await executor.execute(request, cast(Any, context))
-                results.extend(context.results)
-        finally:
-            prepared.release()
-
-    asyncio.run(run())
-    (result,) = results
-    return result
 
 
 def _write_form(directory: Path, work: Any, name: str, *, with_help: bool = False) -> None:
@@ -1077,28 +990,163 @@ def _admitted(work: Any, *, issued_at: datetime | None = None) -> Any:
     return admission.baseline
 
 
-def _write_edits(directory: Path, work: Any) -> None:
-    """Review and apply a typed value on a checked Modelo 130, through the registered edit operations.
+# -- the window's edits, on the baseline of the form it holds -------------------------
+#
+# The window sends every check, apply and renewal on the baseline the form it
+# shows admitted. Each edit envelope is therefore read on the baseline of one
+# written form, and named after that form: ``preflight-<form>-entry-<boxes>``
+# reads entries as typed, ``preflight-<form>-review`` and
+# ``preflight-<form>-stale`` check the staged changes with the changes the
+# window holds, ``apply-<form>`` applies them and ``renew-<form>`` renews the
+# form's baseline.
 
-    A review on a baseline whose five-minute lifetime has run out is answered
-    as stale, which is what sends an editor to renew it; the review on a
-    fresh baseline is evaluated, the apply commits the value, and the form is
-    read again.
-    """
-    from cadrumo.application.modelo.operation_definitions import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
+
+def _form_envelope(directory: Path, form: str) -> dict[str, Any]:
+    """The written English envelope of ``form``, as the window holds it."""
+    return cast(dict[str, Any], json.loads((directory / f"modelo-{form}-en.json").read_text("utf-8")))
+
+
+def _form_baseline(directory: Path, form: str) -> Any:
+    """The baseline the read of ``form`` admitted, as the window holds it from that envelope."""
+    from cadrumo.application.modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
+
+    admitted = _form_envelope(directory, form).get("admitted_baseline")
+    if admitted is None:
+        raise SystemExit(f"the form {form} admitted no edit baseline")
+    return ModeloEditApplyBaselineV1.model_validate_json(json.dumps(admitted))
+
+
+def _held(directory: Path, form: str, changes: tuple[tuple[str, str], ...]) -> list[dict[str, Any]]:
+    """The changes a window staged on ``form``, as it holds them: each box, its kind, the box's state then."""
+    fields = {field["box"]: field for field in _form_fields(_form_envelope(directory, form)) if field.get("box")}
+    return [
+        {
+            "address": {"kind": "scalar", "casilla_id": fields[box]["address"]["casilla_id"]},
+            "kind": kind,
+            "held_state": fields[box]["state_digest"],
+        }
+        for box, kind in changes
+    ]
+
+
+def _write_entries(directory: Path, work: Any, form: str, *typed: tuple[tuple[str, str], ...]) -> None:
+    """Read entries as typed into boxes of ``form``, one check per set of boxes, as the window sends each."""
     from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
-    from cadrumo.core.time.clock import now
 
-    modelo = str(work.work_unit.modelo)
-    expired = _admitted(work, issued_at=now() - timedelta(minutes=30))
-    stale = _edit(work, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, _edit_document(expired, intents=EDIT_130))
-    _write(directory, f"preflight-{modelo}-stale.json", _expect_model(stale))
-    fresh = _admitted(work)
-    reviewed = _edit(work, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, _edit_document(fresh, intents=EDIT_130))
-    _write(directory, f"preflight-{modelo}-review.json", _expect_model(reviewed))
-    applied = _edit(work, MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID, _edit_document(fresh, intents=EDIT_130))
-    _write(directory, f"apply-{modelo}.json", _expect_model(applied))
-    _write_form(directory, work, f"modelo-{modelo}-1T-applied")
+    baseline = _form_baseline(directory, form)
+    for entries in typed:
+        boxes = "-".join(box for box, _ in entries)
+        read = _edit(work, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, _edit_document(baseline, typed=entries))
+        _write(directory, f"preflight-{form}-entry-{boxes}.json", _expect_model(read))
+
+
+def _write_check(
+    directory: Path,
+    work: Any,
+    form: str,
+    *,
+    staged_on: str,
+    staged: tuple[tuple[str, str], ...],
+    intents: tuple[tuple[str, str], ...],
+    name: str = "review",
+) -> BaseModel:
+    """Check the changes staged on ``staged_on`` on the baseline of ``form``, holding them as they were staged.
+
+    A review is written once per set of held changes, named by them, so the
+    window's answer is the one the application gave for exactly the changes
+    it holds.
+    """
+    from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
+
+    document = _edit_document(
+        _form_baseline(directory, form), intents=intents, held=_held(directory, staged_on, staged)
+    )
+    checked = _expect_model(_edit(work, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, document))
+    held = "".join(f"-{box}{kind}" for box, kind in sorted(staged)) if name == "review" else ""
+    _write(directory, f"preflight-{form}-{name}{held}.json", checked)
+    return checked
+
+
+def _stale_refusal(checked: BaseModel) -> None:
+    """Refuse a check that was not answered as stale, or that said what became of the held changes."""
+    refusal = getattr(getattr(checked, "outcome", None), "refusal", None)
+    if getattr(refusal, "kind", None) != "stale_edit_baseline" or getattr(checked, "rebase", ()):
+        raise SystemExit(f"the check was not a stale refusal saying nothing of the held changes: {checked!r}")
+
+
+def _write_renewal(directory: Path, work: Any, form: str) -> BaseModel:
+    """Renew the baseline of ``form`` through the registered renewal, as the window asks for it."""
+    from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID
+
+    renewal = _operate(
+        work,
+        MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
+        _request(
+            MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
+            {
+                "profile_id": work.work_unit.bucket_id,
+                "baseline": _form_baseline(directory, form).model_dump(mode="json"),
+                "output_language": "en",
+            },
+        ),
+    )
+    _write(directory, f"renew-{form}.json", renewal)
+    return renewal
+
+
+def _write_apply(directory: Path, work: Any, form: str, intents: tuple[tuple[str, str], ...]) -> Any:
+    """Apply the staged changes on the baseline of ``form``; its public result, or the refusal it raised."""
+    from cadrumo.application.modelo.operation_definitions import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
+
+    return _edit(
+        work,
+        MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+        _edit_document(_form_baseline(directory, form), intents=intents),
+        operation_id="d" * 64,
+    )
+
+
+def _write_main_edits(directory: Path, first: Any) -> None:
+    """The main profile's first-quarter 130: its typed entries, its review, and a renewal of its baseline."""
+    form = "130-1T"
+    _write_entries(directory, first, form, (*TYPED_130, UNWRITABLE_130), TYPED_130)
+    _write_check(directory, first, form, staged_on=form, staged=STAGED_130, intents=EDIT_130)
+    _write_renewal(directory, first, form)
+
+
+def _write_renewal_flow(directory: Path, work: Any) -> None:
+    """A first-quarter 130 whose form was read half an hour ago, reviewed now, renewed and read again.
+
+    What was typed then was read while the form's baseline was current; the
+    review now finds it stale, the renewal re-admits it with nothing but its
+    lifetime changed, and the form read again admits a fresh baseline, on
+    which the review is checked. The profile's whole timeline runs on a
+    frozen clock, half an hour and then twenty minutes ago, as a replay does.
+    """
+    from cadrumo.core.time.clock import frozen_clock, now
+
+    read, renewed = "130-1T-expiring", "130-1T-renewed"
+    started = now()
+    with frozen_clock(started - timedelta(minutes=30)):
+        _write_form(directory, work, f"modelo-{read}")
+        _write_entries(directory, work, read, TYPED_130)
+    with frozen_clock(started - timedelta(minutes=20)):
+        _stale_refusal(
+            _write_check(directory, work, read, staged_on=read, staged=STAGED_130, intents=EDIT_130, name="stale")
+        )
+        if getattr(_write_renewal(directory, work, read), "renewed_baseline", None) is None:
+            raise SystemExit("the expired baseline was not renewed")
+        _write_form(directory, work, f"modelo-{renewed}")
+        _write_check(directory, work, renewed, staged_on=read, staged=STAGED_130, intents=EDIT_130)
+
+
+def _write_edits(directory: Path, work: Any) -> None:
+    """Type, review and apply a value on the checked, exported 130, and read it again after the apply."""
+    form = "130-1T-exported"
+    _write_entries(directory, work, form, TYPED_130)
+    _write_check(directory, work, form, staged_on=form, staged=STAGED_130, intents=EDIT_130)
+    _write(directory, f"apply-{form}.json", _expect_model(_write_apply(directory, work, form, EDIT_130)))
+    _write_form(directory, work, "modelo-130-1T-applied")
 
 
 def _write_prerequisite(directory: Path, first: Any) -> None:
@@ -1107,11 +1155,8 @@ def _write_prerequisite(directory: Path, first: Any) -> None:
     Its earlier instalments come from the filings of the quarters before it,
     which this profile does not hold, so the apply is refused and the worker
     holds that prerequisite for the apply's operation, which the prerequisite
-    read then names. The quarter's form is written as the scenario shows it.
+    read then names.
     """
-    modelo, period_code = PREREQUISITE_130
-    work = _other_declaration(first, modelo, period_code)
-    from cadrumo.application.modelo.operation_definitions import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
     from cadrumo.application.modelo.workbench_operations import (
         MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
         ModeloEditApplyPrerequisiteRequest,
@@ -1119,23 +1164,22 @@ def _write_prerequisite(directory: Path, first: Any) -> None:
     from cadrumo.core.errors.hierarchy import CadrumoError
     from cadrumo.core.external_constants import OutputLanguage
 
-    baseline = _admitted(work)
-    operation_id = "d" * 64
-    refused = _edit(
-        work,
-        MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
-        _edit_document(baseline, intents=EDIT_130),
-        operation_id=operation_id,
-    )
-    if not isinstance(refused, CadrumoError):
-        raise SystemExit(f"the apply without the earlier Renta was not refused: {refused!r}")
+    modelo, period_code = PREREQUISITE_130
+    work = _other_declaration(first, modelo, period_code)
+    form = f"{modelo}-{period_code}-prerequisite"
+    _write_form(directory, work, f"modelo-{form}")
+    _write_entries(directory, work, form, TYPED_130)
+    _write_check(directory, work, form, staged_on=form, staged=STAGED_130, intents=EDIT_130)
+    if not isinstance(_write_apply(directory, work, form, EDIT_130), CadrumoError):
+        raise SystemExit("the apply without the earlier filings was not refused")
+    baseline = _form_baseline(directory, form)
     prerequisite = _operate(
         work,
         MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
         ModeloEditApplyPrerequisiteRequest(
             profile_id=UUID(work.work_unit.bucket_id),
             work_unit_id=work.work_unit_id,
-            apply_operation_id=operation_id,
+            apply_operation_id="d" * 64,
             baseline_id=baseline.baseline_id,
             calculation_revision_id=baseline.current_calculation_revision_id,
             registry_revision_id=work.work_unit.revision_id,
@@ -1144,8 +1188,59 @@ def _write_prerequisite(directory: Path, first: Any) -> None:
     )
     if getattr(prerequisite, "prerequisite", None) is None:
         raise SystemExit("the refused apply holds no prerequisite")
-    _write(directory, f"apply-prerequisite-{modelo}.json", prerequisite)
-    _write_form(directory, work, f"modelo-{modelo}-{period_code}-prerequisite")
+    _write(directory, f"apply-prerequisite-{form}.json", prerequisite)
+
+
+def _write_303_edits(directory: Path, work: Any) -> None:
+    """Read a typed figure on the Modelo 303 and review it as staged, on the baseline its form admitted."""
+    form = "303-1T"
+    _write_entries(directory, work, form, TYPED_303)
+    _write_check(directory, work, form, staged_on=form, staged=STAGED_303, intents=EDIT_303)
+
+
+def _write_rebase(directory: Path, work: Any) -> None:
+    """Check changes staged on an earlier read after the declaration moved under them, as the window recovers.
+
+    The filer staged on the form as it was read: clearing
+    the value typed into one box and typing into two others. The declaration
+    then moved under those changes, as another session's apply would move it:
+    the cleared box's typed value was taken back, so it no longer takes a
+    clear, and a figure was typed into one of the typed boxes. The review's
+    check on the baseline the window holds is refused as stale, saying
+    nothing of the held changes; renewing that baseline is refused, since
+    more than its lifetime moved; the form read again admits a fresh
+    baseline, and the check on it reports one dropped, one changed and one
+    kept.
+    """
+    from cadrumo.application.modelo.operation_definitions import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
+
+    staged_on, moved = "130-1T-rebase", "130-1T-rebased"
+    _write_form(directory, work, f"modelo-{staged_on}")
+    _write_entries(directory, work, staged_on, *((entry,) for entry in REBASE_TYPED_ENTRIES))
+    _expect_model(
+        _edit(
+            work,
+            MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+            _edit_document(_admitted(work), intents=REBASE_MOVE, restored=REBASE_RESTORED),
+        )
+    )
+    _stale_refusal(
+        _write_check(
+            directory, work, staged_on, staged_on=staged_on, staged=REBASE_STAGED, intents=REBASE_TYPED, name="stale"
+        )
+    )
+    renewal = _write_renewal(directory, work, staged_on)
+    if getattr(renewal, "renewed_baseline", None) is not None or getattr(renewal, "refusal", None) is None:
+        raise SystemExit(f"renewing the baseline the declaration moved under was not refused: {renewal!r}")
+    _write_form(directory, work, f"modelo-{moved}")
+    reviewed = _write_check(directory, work, moved, staged_on=staged_on, staged=REBASE_STAGED, intents=REBASE_TYPED)
+    outcomes = sorted(entry.outcome.value for entry in getattr(reviewed, "rebase", ()))
+    if outcomes != ["changed", "dropped", "kept"]:
+        raise SystemExit(f"the review did not keep, change and drop one held change each: {outcomes}")
+    # The window lets the dropped change go and stages the others again against the boxes as they now stand,
+    # then checks them as it holds them now.
+    still = tuple(change for change in REBASE_STAGED if change[1] != "clear")
+    _write_check(directory, work, moved, staged_on=moved, staged=still, intents=REBASE_TYPED)
 
 
 def _expect_model(answer: Any) -> BaseModel:
@@ -1203,7 +1298,6 @@ def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None
     The corrected figure is checked through the canonical typed-entry path as
     the desktop sends it, once as a figure and once as words it cannot read.
     """
-    from cadrumo.application.modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
     from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
 
     modelo = str(work.work_unit.modelo)
@@ -1222,7 +1316,8 @@ def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None
     if correction is None or not correction.rows or not correction.kinds:
         raise SystemExit("the recorded 130 offers no correction")
     row = next((row for row in correction.rows if row.casilla_id == CORRECTED_130[0]), correction.rows[0])
-    baseline = ModeloEditApplyBaselineV1.from_baseline(_admitted(work)).model_dump(mode="json")
+    form = "130-1T-receipt"
+    baseline = _form_baseline(directory, form).model_dump(mode="json")
     for suffix, lexeme in (("", CORRECTED_130[1]), ("-refused", UNREADABLE_ENTRY)):
         document = {
             "input_version": 2,
@@ -1236,8 +1331,8 @@ def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None
             },
         }
         checked = _edit(work, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, document)
-        _write(directory, f"preflight-{modelo}-correction{suffix}.json", _expect_model(checked))
-    (parsed,) = [entry for entry in checked_entries(directory, modelo) if entry["address"]["kind"] == "correction"]
+        _write(directory, f"preflight-{form}-correction{suffix}.json", _expect_model(checked))
+    (parsed,) = [entry for entry in checked_entries(directory, form) if entry["address"]["kind"] == "correction"]
     definition_id = "modelo.work.amend"
     amended = _operate(
         work,
@@ -1257,9 +1352,9 @@ def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None
     _write(directory, f"amend-{modelo}.json", amended)
 
 
-def checked_entries(directory: Path, modelo: str) -> list[dict[str, Any]]:
-    """The entries the correction's figure check read, as it wrote them."""
-    return json.loads((directory / f"preflight-{modelo}-correction.json").read_text("utf-8"))["parsed"]
+def checked_entries(directory: Path, form: str) -> list[dict[str, Any]]:
+    """The entries the correction's figure check on ``form`` read, as it wrote them."""
+    return json.loads((directory / f"preflight-{form}-correction.json").read_text("utf-8"))["parsed"]
 
 
 def _write_unverified_export(directory: Path, first: Any, destination: Path) -> None:
@@ -1273,23 +1368,6 @@ def _write_unverified_export(directory: Path, first: Any, destination: Path) -> 
     if getattr(exported, "completeness", None) != "unverified":
         raise SystemExit(f"modelo {modelo}'s export is not unverified: {exported!r}")
     _write(directory, f"export-{modelo}-unverified.json", exported)
-
-
-def _write_303_edits(directory: Path, work: Any) -> None:
-    """Read a typed figure on the Modelo 303 and review it as staged, through the edit preflight."""
-    from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
-
-    modelo = str(work.work_unit.modelo)
-    baseline = _admitted(work)
-    for name, document in (
-        (f"preflight-{modelo}", _edit_document(baseline, typed=TYPED_303)),
-        (f"preflight-{modelo}-review", _edit_document(baseline, intents=EDIT_303)),
-    ):
-        _write(
-            directory,
-            f"{name}.json",
-            _expect_model(_edit(work, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, document)),
-        )
 
 
 # -- what the host hands the window ----------------------------------------------
@@ -1361,91 +1439,6 @@ def _paths_in(path: Path) -> list[str]:
     return found
 
 
-def _write_rebase(directory: Path, work: Any) -> None:
-    """Check changes staged on an earlier read against the declaration they now stand on, and write the report.
-
-    The form is read as the filer staged on it: clearing the value typed into
-    one box and typing into two others. The declaration then moves under
-    those changes, as another session's apply would move it: the cleared
-    box's typed value is taken back, so it no longer takes a clear, and a figure is
-    typed into one of the typed boxes. The review's first check, on a
-    baseline whose lifetime has run out, carries the changes as they were
-    held and is refused as stale, saying nothing of them; the baseline is
-    renewed, and the check on the renewed baseline reports one dropped, one
-    changed and one kept.
-    """
-    from cadrumo.application.modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
-    from cadrumo.application.modelo.operation_definitions import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
-    from cadrumo.application.modelo.workbench_operations import (
-        MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-        MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
-    )
-    from cadrumo.core.time.clock import now
-
-    modelo = str(work.work_unit.modelo)
-    _write_form(directory, work, f"modelo-{modelo}-1T-rebase")
-    staged_on = json.loads((directory / f"modelo-{modelo}-1T-rebase-en.json").read_text("utf-8"))
-    fields = {field["box"]: field for field in _form_fields(staged_on) if field.get("box")}
-    held = [
-        {
-            "address": {"kind": "scalar", "casilla_id": fields[box]["address"]["casilla_id"]},
-            "kind": kind,
-            "held_state": fields[box]["state_digest"],
-        }
-        for box, kind in REBASE_STAGED
-    ]
-    moved = _edit(
-        work,
-        MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
-        _edit_document(_admitted(work), intents=REBASE_MOVE, restored=REBASE_RESTORED),
-    )
-    _expect_model(moved)
-    _write_form(directory, work, f"modelo-{modelo}-1T-rebased")
-    # The review's first check runs on a baseline whose lifetime has run out,
-    # with the changes the window holds: it is refused as stale, and the
-    # renewal re-admits the baseline, nothing else having moved under it.
-    expired = _admitted(work, issued_at=now() - timedelta(minutes=30))
-    stale = _expect_model(
-        _edit(
-            work,
-            MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-            _edit_document(expired, intents=REBASE_TYPED, held=held),
-        )
-    )
-    refusal = getattr(getattr(stale, "outcome", None), "refusal", None)
-    if getattr(refusal, "kind", None) != "stale_edit_baseline":
-        raise SystemExit(f"the check on the expired baseline was not refused as stale: {stale!r}")
-    if getattr(stale, "rebase", ()):
-        raise SystemExit("a stale check reported what became of the held changes")
-    _write(directory, f"preflight-{modelo}-rebase-stale.json", stale)
-    renewal = _operate(
-        work,
-        MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
-        _request(
-            MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
-            {
-                "profile_id": work.work_unit.bucket_id,
-                "baseline": ModeloEditApplyBaselineV1.from_baseline(expired).model_dump(mode="json"),
-                "output_language": "en",
-            },
-        ),
-    )
-    if getattr(renewal, "renewed_baseline", None) is None:
-        raise SystemExit("the expired baseline was not renewed")
-    _write(directory, f"renew-{modelo}-rebase.json", renewal)
-    reviewed = _expect_model(
-        _edit(
-            work,
-            MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-            _edit_document(renewal.renewed_baseline, intents=REBASE_TYPED, held=held),
-        )
-    )
-    outcomes = sorted(entry.outcome.value for entry in getattr(reviewed, "rebase", ()))
-    if outcomes != ["changed", "dropped", "kept"]:
-        raise SystemExit(f"the review did not keep, change and drop one held change each: {outcomes}")
-    _write(directory, f"preflight-{modelo}-rebase-review.json", reviewed)
-
-
 def _form_fields(envelope: Mapping[str, Any]) -> list[dict[str, Any]]:
     """Every field of a written form envelope, in the order its pages hold them."""
     found: list[dict[str, Any]] = []
@@ -1467,7 +1460,6 @@ def _form_fields(envelope: Mapping[str, Any]) -> list[dict[str, Any]]:
 def write_envelopes(directory: Path) -> None:
     """Read every envelope the scenario host answers through the application's read path."""
     from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
-    from cadrumo.application.modelo.edit_models import ModeloEditAdmittedV1
     from cadrumo.domain.user_profile.values import UserProfileFact
 
     directory.mkdir(parents=True, exist_ok=True)
@@ -1483,15 +1475,7 @@ def write_envelopes(directory: Path) -> None:
             _write_form(directory, works[modelo], f"modelo-{modelo}-{period_code}", with_help=True)
         _observe_at_aeat(first)
         _write_list(directory, first, "declarations")
-        admission = first.admit()
-        if not isinstance(admission, ModeloEditAdmittedV1):
-            raise SystemExit(f"modelo {first.work_unit.modelo} was refused edit admission")
-        _write(
-            directory, "preflight-130.json", _preflight(first, admission.baseline, (("06", "1.234,56"), ("01", "doce")))
-        )
-        _write(directory, "renew-130.json", _renew(first, admission.baseline))
-        # Read again after the renewal, as an editor reads it: a fresh baseline, the declaration unchanged.
-        _write_form(directory, first, "modelo-130-1T-renewed")
+        _write_main_edits(directory, first)
         # Checked after everything above was read, so those envelopes stay unchecked.
         _verify(first)
         _write_form(directory, first, "modelo-130-1T-checked")
@@ -1511,6 +1495,10 @@ def write_envelopes(directory: Path) -> None:
         _write_form(directory, filed, "modelo-130-1T-receipt")
         unit = _write_filing_reads(directory, filed, "130-receipt")
         _write_correction(directory, filed, unit.current_filing_record_id)
+    # Its own profile, on a frozen timeline: a review half an hour after the form was read, and its renewal.
+    with tempfile.TemporaryDirectory() as tmp, _seeded(Path(tmp), facts=income) as renewing:
+        renewing.recalculate()
+        _write_renewal_flow(directory, renewing)
     # Its own profile: the file for the AEAT is written, then the declaration changes and is checked again.
     with tempfile.TemporaryDirectory() as tmp, _seeded(Path(tmp), facts=facts) as stale:
         _seed_income(stale)

@@ -648,7 +648,7 @@ test("staged edits survive a renewal of a baseline that went stale", async ({
 }) => {
   const stale = envelope<{
     outcome: { outcome: string; refusal?: { kind: string } };
-  }>("preflight-130-stale");
+  }>("preflight-130-1T-expiring-stale");
   expect(stale.outcome.refusal?.kind).toBe("stale_edit_baseline");
   await openDeclaration(target, "130", { shape: "renewal" });
   await stage(target, "06", TYPED_06);
@@ -712,7 +712,7 @@ test("a refused apply names the earlier filing it waits on", async ({
 }) => {
   const held = envelope<{
     prerequisite: { casilla_id: string; words: string | null } | null;
-  }>("apply-prerequisite-130").prerequisite;
+  }>("apply-prerequisite-130-3T-prerequisite").prerequisite;
   if (!held?.words) throw new Error("the refused apply holds no prerequisite");
   await openDeclaration(target, "130", { shape: "prerequisite" });
   await stage(target, "06", TYPED_06);
@@ -910,7 +910,7 @@ test("a corrected figure the application cannot read is said beside it, and noth
   page: target,
 }) => {
   const read = envelope<{ parsed: { refusal_words: string | null }[] }>(
-    "preflight-130-correction-refused",
+    "preflight-130-1T-receipt-correction-refused",
   ).parsed[0];
   if (!read?.refusal_words)
     throw new Error("the unreadable entry has no words");
@@ -952,7 +952,7 @@ test("the real Modelo 303 takes a typed value and checks it as staged", async ({
 }) => {
   const typed = envelope<{
     parsed: { value_text: string | null }[];
-  }>("preflight-303").parsed[0];
+  }>("preflight-303-1T-entry-42").parsed[0];
   if (!typed?.value_text) throw new Error("the 303 entry read no value");
   await openDeclaration(target, "303");
   // The form draws its sections as they scroll in: find the box by number.
@@ -971,7 +971,7 @@ test("the real Modelo 303 takes a typed value and checks it as staged", async ({
   ).toHaveCount(0);
 });
 
-// -- a renewal under moved boxes -------------------------------------------
+// -- a declaration that moved under the staged edits -------------------------
 
 type RebaseEntry = {
   address: { kind: string; casilla_id?: string };
@@ -979,11 +979,11 @@ type RebaseEntry = {
   outcome: "kept" | "changed" | "dropped";
 };
 
-/** What the review after the renewal found of the change held on the box
- * printed `box`, as the application judged it. */
+/** What the check on the declaration read again found of the change held
+ * on the box printed `box`, as the application judged it. */
 function rebaseOf(box: string): RebaseEntry["outcome"] {
   const entry = envelope<{ rebase: RebaseEntry[] }>(
-    "preflight-130-rebase-review",
+    "preflight-130-1T-rebased-review-06clear-08set-10set",
   ).rebase.find((item) => item.address.casilla_id === box);
   if (!entry) throw new Error(`the review says nothing of box ${box}`);
   return entry.outcome;
@@ -1004,7 +1004,7 @@ async function stageUnderRebase(target: Page) {
   return review(target, 3);
 }
 
-test("a renewal under moved boxes says what it did to the staged edits", async ({
+test("a declaration that moved under the staged edits says what became of them", async ({
   page: target,
 }) => {
   expect([rebaseOf("06"), rebaseOf("08"), rebaseOf("10")]).toEqual([
@@ -1093,19 +1093,26 @@ test("a changed edit stays marked until the filer acknowledges it", async ({
   await expect(applyButton(again)).toBeEnabled();
 });
 
-test("a stale check renews once, reads again and is checked again, and the report it then gives stands", async ({
+test("a stale check whose renewal is refused reads the declaration again once, and the check on it stands", async ({
   page: target,
 }) => {
   const stale = envelope<{
     outcome: { refusal?: { kind: string } };
     rebase: RebaseEntry[];
-  }>("preflight-130-rebase-stale");
+  }>("preflight-130-1T-rebase-stale");
   // The stale refusal says nothing of the held changes; only the check on
-  // the renewed baseline does.
+  // the declaration read again does.
   expect(stale.outcome.refusal?.kind).toBe("stale_edit_baseline");
   expect(stale.rebase).toEqual([]);
+  // More than the baseline's lifetime moved, so renewing it is refused.
+  const renewal = envelope<{ renewed_baseline: unknown; refusal: unknown }>(
+    "renew-130-1T-rebase",
+  );
+  expect(renewal.renewed_baseline).toBeNull();
+  expect(renewal.refusal).not.toBeNull();
   const dialog = await stageUnderRebase(target);
-  // Stale check, one renewal, the form read again, the check again.
+  // Stale check, the refused renewal, one read of the declaration, the
+  // check again.
   const sequence = (
     await target.evaluate(() => window.__scenarioHostCalls ?? [])
   ).filter(
@@ -1114,18 +1121,21 @@ test("a stale check renews once, reads again and is checked again, and the repor
       call === "modelo submit modelo.edit.renew" ||
       call.startsWith("modelo form "),
   );
-  const renewal = sequence.indexOf("modelo submit modelo.edit.renew");
-  expect(renewal).toBeGreaterThan(0);
-  expect(sequence[renewal - 1]).toBe("modelo edit modelo.edit.preflight");
-  expect(sequence[renewal + 1]).toMatch(/^modelo form /);
-  expect(sequence.slice(renewal + 2)).toContain(
-    "modelo edit modelo.edit.preflight",
+  const renewed = sequence.indexOf("modelo submit modelo.edit.renew");
+  expect(renewed).toBeGreaterThan(0);
+  expect(sequence[renewed - 1]).toBe("modelo edit modelo.edit.preflight");
+  const after = sequence.slice(renewed + 1);
+  expect(after.filter((call) => call.startsWith("modelo form "))).toHaveLength(
+    1,
   );
+  expect(after[0]).toMatch(/^modelo form /);
+  expect(after.slice(1)).toContain("modelo edit modelo.edit.preflight");
   expect(await calls(target, "modelo submit modelo.edit.renew")).toHaveLength(
     1,
   );
-  // What the report said stands: the dropped change is said, the changed one
-  // is marked and holds the apply until it is acknowledged.
+  // What the check on the declaration read again reported stands: the
+  // dropped change is said, the changed one is marked and holds the apply
+  // until it is acknowledged.
   await expect(dialog).toContainText(
     label("workspace.modelo.rebase.dropped", { count: 1 }),
   );

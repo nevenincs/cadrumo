@@ -4,12 +4,18 @@
   "work_unit_id": "b650ba021eda8c3082ea9d66d8be078c7c6247610af8772ddd48d75b604198f6",
   "outcome": {
     "outcome": "evaluated",
-    "baseline_id": "5848c922cb6bd1a21c3a6489e6478c6a95b177c6beef27c653a76972658d9d3e",
+    "baseline_id": "a0764fc93c1847a4032082af1b80b6564342eeff42e35c780c05c01f5a25983a",
     "findings": []
   },
   "parsed": [],
   "findings": [],
   "operator_entries_unknown": false,
   "refusal_words": null,
-  "rebase": []
+  "rebase": [
+    {
+      "address": { "kind": "scalar", "casilla_id": "42" },
+      "kind": "set",
+      "outcome": "kept"
+    }
+  ]
 }

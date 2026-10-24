@@ -14,8 +14,10 @@ import { runOperation } from "./operationRun";
 
 // The review's run: the staged edits are checked by a preflight on the
 // admitted baseline, applied once, and followed until the apply settles. A
-// stale baseline is renewed once: the edits it keeps are staged again on the
-// declaration as it is read next, and checked again on the renewed baseline. An
+// stale baseline is renewed once, as the application allows only when nothing
+// moved under it; either way the declaration is read again and the edits are
+// checked on the baseline left, the renewed one or the one the new read
+// admits, and that check says what became of each held edit. An
 // apply whose settlement was not observed is unknown: it may have committed,
 // so it is never sent again, and nothing more is applied until the
 // declaration is read again. Staged edits are cleared only by an apply the
@@ -43,19 +45,28 @@ export type ReviewPhase =
   /** The apply was sent and its settlement was not seen. */
   | { kind: "unknown"; operationId: string | null };
 
-/** The preflight of `edits` on `baseline`. A stale baseline not renewed
- * before is renewed, and the check waits for the edits to be staged again
- * on the renewed declaration. */
+/** What a check came to, and what the application said became of each
+ * held change, to apply to the read the check was made on. */
+type Checked = {
+  phase: ReviewPhase;
+  report: ModeloFormRebaseEntryV1[] | null;
+};
+
+/** What one renewal came to, for every check that waited on it. */
+type Renewal = Promise<ReviewPhase | null>;
+
+/** The preflight of the staged edits on `baseline`. A stale baseline is
+ * renewed once, through `renew`; whatever the renewal comes to, a new check
+ * follows on the declaration it leaves, and this one has nothing more to
+ * say unless the renewal failed. */
 async function preflight(
   port: ModeloPort,
   session: FormSession,
   baseline: ModeloEditApplyBaselineV1,
   language: OutputLanguage,
   renewedBefore: boolean,
-  onRenewed: (baseline: ModeloEditApplyBaselineV1) => Promise<void>,
-  onRebase: (report: ModeloFormRebaseEntryV1[]) => void,
-  renewal: { claim(): boolean; release(): void },
-): Promise<ReviewPhase> {
+  renew: (baseline: ModeloEditApplyBaselineV1) => Renewal,
+): Promise<Checked> {
   try {
     const outcome = await port.edit(
       "modelo.edit.preflight",
@@ -64,29 +75,48 @@ async function preflight(
       ),
     );
     if (outcome.kind !== "settled")
-      return { kind: "check_failed", code: "refused" };
+      return { phase: { kind: "check_failed", code: "refused" }, report: null };
     const read = outcome.result;
     const answer = read.outcome;
-    if (answer.outcome === "evaluated") {
-      // What became of each held change, as a check of them says: a box that
-      // moved under it marks it, and one that no longer takes it drops it.
-      // A refused check says nothing about them.
-      if (read.rebase.some((entry) => entry.outcome !== "kept"))
-        onRebase(read.rebase);
+    // What became of each held change is said only by a check that
+    // evaluated them; a refused check says nothing about them.
+    if (answer.outcome === "evaluated")
       return {
-        kind: "checked",
-        findings: read.findings,
-        operatorEntriesUnknown: read.operator_entries_unknown,
+        phase: {
+          kind: "checked",
+          findings: read.findings,
+          operatorEntriesUnknown: read.operator_entries_unknown,
+        },
+        report: read.rebase,
       };
-    }
     if (answer.refusal.kind !== "stale_edit_baseline" || renewedBefore)
-      return { kind: "refused", words: read.refusal_words };
+      return {
+        phase: { kind: "refused", words: read.refusal_words },
+        report: null,
+      };
   } catch (error) {
-    return { kind: "check_failed", code: ledgerFailure(error).code };
+    return {
+      phase: { kind: "check_failed", code: ledgerFailure(error).code },
+      report: null,
+    };
   }
-  // One renewal at a time: a check that finds the baseline stale while a
-  // renewal is under way waits for the check that renewal starts.
-  if (!renewal.claim()) return { kind: "checking" };
+  const failed = await renew(baseline);
+  return { phase: failed ?? { kind: "checking" }, report: null };
+}
+
+/** Renews a stale baseline, as the application allows it, and reads the
+ * declaration again. A renewal succeeds only when nothing moved under the
+ * baseline; when it is refused because something moved, the declaration is
+ * read again and the held changes are checked on the baseline that read
+ * admits, as the TUI does. Null when a new check is to follow; otherwise
+ * the phase that says why it cannot. */
+async function renewal(
+  port: ModeloPort,
+  baseline: ModeloEditApplyBaselineV1,
+  language: OutputLanguage,
+  onRenewed: (baseline: ModeloEditApplyBaselineV1) => void,
+  onReread: () => Promise<boolean>,
+): Promise<ReviewPhase | null> {
   try {
     const outcome = await port.submit("modelo.edit.renew", {
       baseline,
@@ -95,14 +125,13 @@ async function preflight(
     if (outcome.kind !== "settled")
       return { kind: "check_failed", code: "refused" };
     const next = outcome.result.renewed_baseline;
-    if (!next) return { kind: "refused", words: outcome.result.refusal_words };
-    await onRenewed(next);
-    return { kind: "checking" };
+    if (next) onRenewed(next);
   } catch (error) {
     return { kind: "check_failed", code: ledgerFailure(error).code };
-  } finally {
-    renewal.release();
   }
+  return (await onReread())
+    ? null
+    : { kind: "check_failed", code: "unavailable" };
 }
 
 export function useEditReview({
@@ -119,7 +148,8 @@ export function useEditReview({
   session: FormSession;
   port: ModeloPort;
   language: OutputLanguage;
-  onReread: () => Promise<void>;
+  /** Reads the declaration again; false when the read failed. */
+  onReread: () => Promise<boolean>;
   onPrerequisiteHeld?: (held: boolean) => void;
 }) {
   const [phase, setPhase] = useState<ReviewPhase>({ kind: "checking" });
@@ -134,9 +164,9 @@ export function useEditReview({
   } | null>(null);
   const alive = useRef(true);
   const checks = useRef(0);
-  // The declaration as read before the last renewal, until its report.
-  const renewedFrom = useRef<ModeloWorkbenchFormProjectionV1 | null>(null);
-  const renewing = useRef(false);
+  // The renewal under way, which every check that finds the baseline stale
+  // meanwhile waits on instead of starting another.
+  const renewing = useRef<Renewal | null>(null);
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -166,30 +196,24 @@ export function useEditReview({
       baseline,
       language,
       renewed !== null && baseline === renewed,
-      async (next) => {
-        // The declaration is read again; the renewed baseline then starts a
-        // new check, whose report is applied to that read.
-        renewedFrom.current = envelope;
-        setRenewed(next);
-        await onReread();
-      },
-      (report) => {
-        session.rebase(report, renewedFrom.current);
-        renewedFrom.current = null;
-      },
-      {
-        claim: () => {
-          if (renewing.current) return false;
-          renewing.current = true;
-          return true;
-        },
-        release: () => {
-          renewing.current = false;
-        },
+      (stale) => {
+        const held = renewing.current;
+        if (held) return held;
+        const running = renewal(port, stale, language, setRenewed, onReread);
+        renewing.current = running;
+        void running.finally(() => {
+          if (renewing.current === running) renewing.current = null;
+        });
+        return running;
       },
     );
-    if (alive.current && ticket === checks.current) setPhase(answer);
-  }, [baseline, port, session, language, renewed, onReread, envelope]);
+    if (!alive.current || ticket !== checks.current) return;
+    // The report is of the read this check was made on, which is the read
+    // the form holds while this check is the latest.
+    if (answer.report?.some((entry) => entry.outcome !== "kept"))
+      session.rebase(answer.report);
+    setPhase(answer.phase);
+  }, [baseline, port, session, language, renewed, onReread]);
 
   // Each opening checks the edits as they now stand; a re-read after an
   // unknown apply releases the hold.

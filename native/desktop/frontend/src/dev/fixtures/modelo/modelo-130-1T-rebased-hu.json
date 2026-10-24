@@ -1580,14 +1580,14 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-24",
+        "reference_on": "2026-10-25",
         "days_remaining": null,
-        "days_overdue": 187
+        "days_overdue": 188
       },
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-10-24T21:41:32.551416Z",
+        "exported_at": "2026-10-24T22:42:52.001020Z",
         "calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
         "current": false
       },
@@ -1605,7 +1605,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "b59aca26061bd111db90d33fe2ec98e54a1b1171f10e3e4bc735e08a4164d4a2",
+      "contract_set_digest": "8f3a0ed245e324f7fc4528e7ab661d4bcbb04840ac0747e418525584826751e5",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
       "request_schema": {
@@ -1640,8 +1640,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "85aa0aed2e0a722d7970fd166fb609620a1673161db840497a14c56338658633",
-    "calculation_head_digest": "31444327213c4db87d109844500f929b67073cb8b8ef7f6f687598f0a9b011c4",
+    "work_unit_record_digest": "da2e5adcdd23050a0426994409cf6f15a94b161b49393d7f99ba987307179cd1",
+    "calculation_head_digest": "8bf1da78bcb725f1a7319c1fcf85e0cb4574525726ce5c8579b68d85e4e5873e",
     "current_calculation_revision_id": "4e3855f8dd19b0a808d0e35518a367f21db9724c4635895af32196d1840384b2",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1945,9 +1945,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T21:42:08.751066Z",
-    "expires_at": "2026-10-24T21:47:08.751066Z",
-    "baseline_id": "11d854dde98eacbdd479dbd976f6349cecb269f42e23e225fd6efd46d3cce4cf"
+    "issued_at": "2026-10-24T22:43:21.842948Z",
+    "expires_at": "2026-10-24T22:48:21.842948Z",
+    "baseline_id": "d55a3cac2172741dfcde8aa7158f3c51247f9f3f7d5b646f5c228148314ace0b"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1957,7 +1957,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-10-24T21:41:32.551416Z",
+    "file_created_at": "2026-10-24T22:42:52.001020Z",
     "receipt_to_add": false
   },
   "header": {
@@ -1983,10 +1983,10 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-10-24T21:41:32.551416Z",
-      "created_on": "2026. 10. 24.",
+      "exported_at": "2026-10-24T22:42:52.001020Z",
+      "created_on": "2026. 10. 25.",
       "current": false,
-      "words": "A(z) 2026. 10. 24. napi fájl elavult. Hozd létre újra."
+      "words": "A(z) 2026. 10. 25. napi fájl elavult. Hozd létre újra."
     },
     "export_hold": {
       "reason": "verify",

@@ -86,7 +86,9 @@ function Ready({
   port: ModeloPort;
   language: OutputLanguage;
   locale: string;
-  reread(): Promise<void>;
+  /** Reads the declaration again; false when the read failed and the one
+   * shown stays. */
+  reread(): Promise<boolean>;
   onBack(): void;
   onOpenSurface(surface: OpenableSurface): void;
   canOpenSurface: (surface: OpenableSurface) => boolean;
@@ -163,14 +165,23 @@ function Ready({
     setBusy(false);
     setNotice(runNotice(t, outcome));
     if (outcome.kind === "unknown") setHeld(true);
-    else if (outcome.kind !== "not_sent") await reread();
+    else if (outcome.kind !== "not_sent" && !(await reread()))
+      setNotice(
+        (said) =>
+          said ?? {
+            tone: "warning",
+            words: t("workspace.modelo.outcome.failed", {
+              code: "unavailable",
+            }),
+          },
+      );
     return outcome;
   };
   // The review and the filing view read the form again after a write of
   // theirs; the list beyond the workspace learns that something was sent.
   const rereadAfterWrite = async () => {
     onWritten?.();
-    await reread();
+    return reread();
   };
   const settledThenReread = async <Result,>(
     send: () => Promise<LedgerOutcome<Result>>,
@@ -380,9 +391,12 @@ function Ready({
             size="xs"
             variant="link"
             onClick={() => {
-              setHeld(false);
-              setNotice(null);
-              void reread();
+              void reread().then((read) => {
+                // Writes stay held until the declaration is read again.
+                if (!read) return;
+                setHeld(false);
+                setNotice(null);
+              });
             }}
           >
             {t("workspace.modelo.read_again")}
@@ -635,17 +649,27 @@ export function WorkspaceScreen({
   const t = useStrings();
   const [read, setRead] = useState<Read>({ phase: "reading" });
   const latest = useRef(0);
+  // A read that fails while a declaration is shown keeps it, with what the
+  // filer staged on it, and says so to the caller; with nothing shown yet,
+  // the failure is the page.
+  const shown = useRef(false);
   const reread = useCallback(async () => {
     const ticket = ++latest.current;
     try {
       const envelope = await port.form(workUnitId, language);
-      if (ticket === latest.current) setRead({ phase: "ready", envelope });
+      if (ticket === latest.current) {
+        shown.current = true;
+        setRead({ phase: "ready", envelope });
+      }
+      return true;
     } catch (error) {
-      if (ticket === latest.current)
+      if (ticket === latest.current && !shown.current)
         setRead({ phase: "failed", code: ledgerFailure(error).code });
+      return false;
     }
   }, [port, workUnitId, language]);
   useEffect(() => {
+    shown.current = false;
     setRead({ phase: "reading" });
     void reread();
   }, [reread]);

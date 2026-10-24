@@ -1,0 +1,21 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "ac7df7f74e158b75091f4829039ea76d8faa798a4cd13bcd4753c20f20c32a63",
+  "outcome": {
+    "outcome": "evaluated",
+    "baseline_id": "5ea89239a93e5aba55498c50c60a2b99fe6d48dc359df31275c06e2ca4c50fc2",
+    "findings": []
+  },
+  "parsed": [],
+  "findings": [],
+  "operator_entries_unknown": false,
+  "refusal_words": null,
+  "rebase": [
+    {
+      "address": { "kind": "scalar", "casilla_id": "06" },
+      "kind": "set",
+      "outcome": "kept"
+    }
+  ]
+}

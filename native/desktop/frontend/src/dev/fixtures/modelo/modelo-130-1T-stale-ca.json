@@ -1581,14 +1581,14 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-24",
+        "reference_on": "2026-10-25",
         "days_remaining": null,
-        "days_overdue": 187
+        "days_overdue": 188
       },
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-10-24T21:41:32.551416Z",
+        "exported_at": "2026-10-24T22:42:52.001020Z",
         "calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
         "current": false
       },
@@ -1606,7 +1606,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "b59aca26061bd111db90d33fe2ec98e54a1b1171f10e3e4bc735e08a4164d4a2",
+      "contract_set_digest": "8f3a0ed245e324f7fc4528e7ab661d4bcbb04840ac0747e418525584826751e5",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
       "request_schema": {
@@ -1641,8 +1641,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "3c4520b7f30591a323a497a733d9f09307eed8bd1b2414fab6f9a9f5bb3eef48",
-    "calculation_head_digest": "726c7e6afb39106f44adc4ac65ba9cd5b77f7b1bc20825432a92c795ae265791",
+    "work_unit_record_digest": "df2bf94c7ae1e3f6b5ad16132e96d4c9757dc92d533d7b917b491fb0292ff50a",
+    "calculation_head_digest": "5addbb836a58e720804672bffdb2879a0ac89b7050266e37eb1f4bcd4f741f50",
     "current_calculation_revision_id": "f750b77d07a9d8ece9ecf2939bdede9bc70b159d7ff18c7ee1477c27e9c389fe",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1946,9 +1946,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T21:41:54.963422Z",
-    "expires_at": "2026-10-24T21:46:54.963422Z",
-    "baseline_id": "c3fd71be12de4f9fcac305036b5d6a8e5b8fc3ec8bb5737ed32323286b279961"
+    "issued_at": "2026-10-24T22:43:07.423371Z",
+    "expires_at": "2026-10-24T22:48:07.423371Z",
+    "baseline_id": "060beaa51bffa3fead8c7573408839c0cb3fe8e0daf65fb409eff450eac39565"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1958,7 +1958,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-10-24T21:41:32.551416Z",
+    "file_created_at": "2026-10-24T22:42:52.001020Z",
     "receipt_to_add": false
   },
   "header": {
@@ -1984,10 +1984,10 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-10-24T21:41:32.551416Z",
-      "created_on": "24/10/2026",
+      "exported_at": "2026-10-24T22:42:52.001020Z",
+      "created_on": "25/10/2026",
       "current": false,
-      "words": "El fitxer del 24/10/2026 està desactualitzat. Torna a generar-lo."
+      "words": "El fitxer del 25/10/2026 està desactualitzat. Torna a generar-lo."
     },
     "export_hold": null
   },
@@ -2107,7 +2107,7 @@
     "record": {
       "available": false,
       "reason": "file_out_of_date",
-      "words": "El fitxer del 24/10/2026 està desactualitzat. Torna a generar-lo. Si ja has presentat aquell fitxer anterior a l'AEAT, inicia una correcció."
+      "words": "El fitxer del 25/10/2026 està desactualitzat. Torna a generar-lo. Si ja has presentat aquell fitxer anterior a l'AEAT, inicia una correcció."
     },
     "review_package": {
       "words": "Paquet per al teu gestor",

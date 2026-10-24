@@ -4,18 +4,18 @@
   "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
   "outcome": {
     "outcome": "evaluated",
-    "baseline_id": "b60a86e90712085511baa5f00090f3564062c4ab3cc295bd7ad623d254060ab2",
+    "baseline_id": "84245afbbd30d23f4021da89e35f794f621733cd39dec1669b4b9d6064267379",
     "findings": []
   },
   "parsed": [
     {
-      "address": { "kind": "correction", "casilla_id": "06" },
-      "value": "150.00",
-      "normalisations": [],
+      "address": { "kind": "scalar", "casilla_id": "06" },
+      "value": "1234.56",
+      "normalisations": ["separators_removed"],
       "refusal": null,
-      "value_text": "150.00 €",
+      "value_text": "1.234,56 €",
       "refusal_words": null,
-      "comparable_value": "150"
+      "comparable_value": "1234.56"
     }
   ],
   "findings": [],

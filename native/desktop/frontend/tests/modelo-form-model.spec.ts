@@ -11,6 +11,8 @@ import {
   entrySubmission,
   fieldKey,
   placedFields,
+  noteMoved,
+  rebasedOf,
   restaged,
   restoreIntent,
   UNPLACED_PAGE,
@@ -258,4 +260,25 @@ test("a staged intent says the kind of change a renewal is told", () => {
   expect(clearIntent(own).change).toBe("clear");
   expect(clearIntent(fed).change).toBe("clear");
   expect(restoreIntent({ ...fed, restorable: true })?.change).toBe("restore");
+});
+
+test("the notice counts each box a report moved once, until acknowledged", () => {
+  const empty = new Map<string, "changed" | "dropped">();
+  expect(rebasedOf(empty)).toBeNull();
+  // Two checks in a row report box 08 changed: it is one box that changed.
+  const twice = noteMoved(noteMoved(empty, [["s:08", "changed"]]), [
+    ["s:08", "changed"],
+  ]);
+  expect(rebasedOf(twice)).toEqual({ changed: 1, dropped: 0 });
+  // A box first changed and then dropped counts as dropped, once.
+  const thenDropped = noteMoved(twice, [
+    ["s:08", "dropped"],
+    ["s:06", "dropped"],
+  ]);
+  expect(rebasedOf(thenDropped)).toEqual({ changed: 0, dropped: 2 });
+  // A dropped box reported changed later stays dropped.
+  expect(rebasedOf(noteMoved(thenDropped, [["s:08", "changed"]]))).toEqual({
+    changed: 0,
+    dropped: 2,
+  });
 });
