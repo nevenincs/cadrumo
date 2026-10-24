@@ -6046,6 +6046,8 @@ tui:
           you chose
         reader_unavailable: the local AI, which reads this file, is not ready, so
           the file was not read
+        reader_unavailable_here: the local AI cannot read this file on this computer,
+          so the file was not read
         result_limit: the import reached its row limit before this file
         source_changed: the file changed after its preview, so nothing from it was
           imported; preview it again

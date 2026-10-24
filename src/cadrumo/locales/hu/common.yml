@@ -6131,6 +6131,8 @@ tui:
         own_account_mismatch: a kivonat más számlát nevez meg, mint amit választottál
         reader_unavailable: a helyi MI, amely ezt a fájlt olvassa, nem áll készen,
           ezért a fájl nem lett beolvasva
+        reader_unavailable_here: a helyi MI ezen a számítógépen nem tudja olvasni
+          ezt a fájlt, ezért a fájl nem lett beolvasva
         result_limit: az importálás e fájl előtt elérte a sorkorlátot
         source_changed: a fájl az előnézet után megváltozott, ezért semmi sem került
           importálásra belőle; nézd meg újra az előnézetet

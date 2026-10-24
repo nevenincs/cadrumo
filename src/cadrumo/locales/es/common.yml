@@ -6175,6 +6175,8 @@ tui:
         own_account_mismatch: el extracto indica otra cuenta distinta de la que elegiste
         reader_unavailable: la IA local, que lee este fichero, no está lista, así
           que no se leyó el fichero
+        reader_unavailable_here: la IA local no puede leer este fichero en este ordenador,
+          así que no se leyó el fichero
         result_limit: la importación alcanzó su límite de filas antes de este fichero
         source_changed: el fichero cambió después de la previsualización y no se importó
           nada de él; vuelve a previsualizarlo

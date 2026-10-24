@@ -24,6 +24,7 @@ from cadrumo.application.ledger.import_operation import (
     build_ledger_import_definition,
     build_ledger_import_registration,
 )
+from cadrumo.application.local_reader import probe_local_reader
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -31,7 +32,14 @@ from cadrumo.application.operations.frontend_projection import (
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operator_actions.models import PreconditionVerdict
+from cadrumo.application.operator_actions.projection import PreconditionVerdictSnapshot
+from cadrumo.application.provisioning import AcceleratorReading, SystemMemoryReading, probe_hardware_profile
+from cadrumo.application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
+from cadrumo.core.config import Settings
+from cadrumo.core.hardware import AcceleratorKind
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -245,6 +253,85 @@ def test_preview_runs_a_dry_run_of_the_planned_files_and_keeps_each_parsed_diges
     assert payload.expected_source_sha256 is None
     assert outcome.sources == (LedgerImportSourceBindingV1(path=first.absolute(), sha256="b" * 64),)
     assert [item.reason for item in outcome.refused_files] == [tr("tui.ledger.import.refusal.own_account_mismatch")]
+
+
+#: A runtime port nothing listens on, so the reader probe finds no local AI answering.
+_CLOSED_ENDPOINT = "http://127.0.0.1:1/api/chat"
+
+
+def _reader_verdict(*, below_floor: bool) -> PreconditionVerdict:
+    """The verdict the real reader probe gives the column mapper: no answer, or a computer too small for it."""
+    hardware = (
+        probe_hardware_profile(
+            memory=SystemMemoryReading(total_bytes=1024**3, free_bytes=1024**3 // 4),
+            accelerator=AcceleratorReading(kind=AcceleratorKind.NONE),
+        )
+        if below_floor
+        else None
+    )
+    status = probe_local_reader(
+        ModelRole.COLUMN_ROLE_MAPPING, Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT), hardware=hardware
+    )
+    verdict = status.precondition_verdict
+    assert verdict is not None
+    assert (verdict.action is None) is below_floor
+    return verdict
+
+
+def _reader_refused(name: str, verdict: PreconditionVerdict) -> LedgerImportFileRefusal:
+    return LedgerImportFileRefusal(
+        file_name=name,
+        reason_code="reader_unavailable",
+        precondition_verdict=PreconditionVerdictSnapshot.from_verdict(verdict),
+    )
+
+
+def test_a_file_only_the_local_ai_reads_keeps_its_setup_action_and_one_it_cannot_read_here_names_none(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    client = _Client()
+    folder, _first, _second = _folder(tmp_path)
+    preview = _result(
+        dry_run=True,
+        imported=0,
+        valid_files=0,
+        refused=(
+            _reader_refused("april.csv", _reader_verdict(below_floor=False)),
+            _reader_refused("may.csv", _reader_verdict(below_floor=True)),
+        ),
+    )
+    _install(monkeypatch, client, [(OperationEffect.NONE, preview)])
+    request = LedgerImportRequestV1(path=folder, source_kind=LedgerImportSourceKind.BANK_STATEMENT)
+
+    outcome = asyncio.run(_door(client).preview(request))
+
+    not_ready, cannot_here = outcome.refused_files
+    assert not_ready.reason == tr("tui.ledger.import.refusal.reader_unavailable")
+    assert not_ready.recovery_action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert cannot_here.reason == tr("tui.ledger.import.refusal.reader_unavailable_here")
+    assert cannot_here.reason != not_ready.reason
+    assert cannot_here.recovery_action_id is None
+    assert outcome.recovery_action_id == LOCAL_AI_PROVISION_ACTION_ID
+
+
+def test_a_folder_whose_reader_this_computer_cannot_run_offers_no_setup(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    client = _Client()
+    folder, _first, _second = _folder(tmp_path)
+    preview = _result(
+        dry_run=True,
+        imported=2,
+        valid_files=1,
+        digests=(LedgerImportSourceDigest(file_index=0, sha256="b" * 64),),
+        refused=(_reader_refused("may.csv", _reader_verdict(below_floor=True)),),
+    )
+    _install(monkeypatch, client, [(OperationEffect.NONE, preview)])
+    request = LedgerImportRequestV1(path=folder, source_kind=LedgerImportSourceKind.BANK_STATEMENT)
+
+    outcome = asyncio.run(_door(client).preview(request))
+
+    assert outcome.recovery_action_id is None
 
 
 def test_apply_submits_exactly_the_previewed_files_with_their_digests(

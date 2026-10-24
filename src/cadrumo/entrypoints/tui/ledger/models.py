@@ -255,6 +255,12 @@ class LedgerImportFileRefusalV1(BaseModel):
 
     file_name: str
     reason: str
+    recovery_action_id: str | None = None
+    """The setup action the reader's verdict named for a file only a model reads, or ``None``.
+
+    ``None`` for every other refusal, and for a reader this computer cannot run,
+    which setup cannot change.
+    """
 
 
 class LedgerImportRowRefusalV1(BaseModel):
@@ -290,6 +296,13 @@ class LedgerImportOutcomeV1(BaseModel):
     unmapped_columns: tuple[str, ...] = ()
     sources: tuple[LedgerImportSourceBindingV1, ...] = ()
     """The files a preview read and the digest of each; applying binds to exactly these."""
+
+    @property
+    def recovery_action_id(self) -> str | None:
+        """The one setup action a refused file named, which the import offers beside its result."""
+        return next(
+            (item.recovery_action_id for item in self.refused_files if item.recovery_action_id is not None), None
+        )
 
 
 class LedgerImportDoorV1(Protocol):

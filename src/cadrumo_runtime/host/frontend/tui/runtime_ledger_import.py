@@ -14,6 +14,7 @@ from pathlib import Path
 from cadrumo.application.ledger.actions_import import plan_ledger_import_sources
 from cadrumo.application.ledger.import_operation import (
     LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+    LedgerImportFileRefusal,
     LedgerImportRequest,
     LedgerImportResultProjection,
 )
@@ -67,17 +68,31 @@ def _outcome(result: LedgerImportResultProjection, files: tuple[Path, ...]) -> L
         skipped=result.skipped,
         likely_duplicates=result.likely_duplicates,
         diagnostics=tuple(tr(item.message) for item in result.diagnostics),
-        refused_files=tuple(
-            LedgerImportFileRefusalV1(
-                file_name=item.file_name,
-                reason=tr(f"tui.ledger.import.refusal.{item.reason_code}"),
-            )
-            for item in result.refused_files
-        ),
+        refused_files=tuple(_refused_file(item) for item in result.refused_files),
         sources=tuple(
             LedgerImportSourceBindingV1(path=files[item.file_index], sha256=item.sha256)
             for item in result.source_digests
         ),
+    )
+
+
+def _refused_file(item: LedgerImportFileRefusal) -> LedgerImportFileRefusalV1:
+    """Word one refused file, keeping the setup action its reader verdict named.
+
+    A file only the local AI reads is told to wait for setup only when the
+    verdict names that setup; a reader this computer cannot run is told so,
+    with nothing to set up.
+    """
+    verdict = item.precondition_verdict
+    action_id = None if verdict is None else verdict.action_id
+    if item.reason_code == "reader_unavailable" and action_id is None:
+        return LedgerImportFileRefusalV1(
+            file_name=item.file_name, reason=tr("tui.ledger.import.refusal.reader_unavailable_here")
+        )
+    return LedgerImportFileRefusalV1(
+        file_name=item.file_name,
+        reason=tr(f"tui.ledger.import.refusal.{item.reason_code}"),
+        recovery_action_id=action_id,
     )
 
 

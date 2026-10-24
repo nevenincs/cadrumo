@@ -6156,6 +6156,8 @@ tui:
         own_account_mismatch: l'extracte indica un compte diferent del que has triat
         reader_unavailable: la IA local, que llegeix aquest fitxer, no està a punt,
           així que no s'ha llegit el fitxer
+        reader_unavailable_here: la IA local no pot llegir aquest fitxer en aquest
+          ordinador, així que no s'ha llegit el fitxer
         result_limit: la importació ha arribat al límit de files abans d'aquest fitxer
         source_changed: el fitxer ha canviat després de la previsualització i no se
           n'ha importat res; torna a previsualitzar-lo

@@ -18,6 +18,7 @@ from ....core.i18n.render import tr
 from ..components.language import localized
 from ..components.theme import tokenised
 from ..components.widgets import ContentScroll
+from ..setup.offer import SetupItemOffer, setup_item_for_action
 from .controller import LedgerRouteRequested, LedgerWorkspaceController
 from .models import LedgerFlowState, LedgerImportOutcomeV1, LedgerImportRequestV1, LedgerImportSourceKind
 from .own_accounts import LedgerOwnAccountDoorV1
@@ -166,6 +167,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
                 "tui.ledger.import.preview",
             )
             yield Static("", id="ledger-import-preview", markup=False)
+            yield SetupItemOffer(offer_id="ledger-import-setup")
             yield Static("", id="ledger-flow-status", markup=False)
             yield localized(
                 Button(tr("tui.ledger.import.confirm"), id="ledger-import-confirm", disabled=True),
@@ -357,6 +359,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
         confirm = self.query_one("#ledger-import-confirm", Button)
         confirm.disabled = False
         confirm.focus()
+        await self._offer_setup(outcome)
 
     async def _submit(self) -> None:
         """Apply exactly the request that was previewed."""
@@ -370,12 +373,23 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
             self._transition(LedgerFlowState.FAILED)
             status.update(self.failed_write_status(error, "tui.ledger.import.failure"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+            self.query_one(SetupItemOffer).clear()
         else:
             self.outcome = outcome
             self._transition(LedgerFlowState.SUCCEEDED)
             status.update(tr("tui.ledger.import.success", imported=outcome.imported, skipped=outcome.skipped))
             self.query_one("#ledger-import-preview", Static).update("\n".join(import_outcome_lines(outcome)))
+            await self._offer_setup(outcome)
         self._offer_again()
+
+    async def _offer_setup(self, outcome: LedgerImportOutcomeV1) -> None:
+        """Beside a file only the local AI reads, offer its setup, or say why there is none."""
+        await self.query_one(SetupItemOffer).show_for(setup_item_for_action(outcome.recovery_action_id))
+
+    @override
+    async def refresh_language(self) -> None:
+        await super().refresh_language()
+        self.query_one(SetupItemOffer).repaint()
 
     def _offer_again(self) -> None:
         again = self.query_one("#ledger-import-again", Button)
