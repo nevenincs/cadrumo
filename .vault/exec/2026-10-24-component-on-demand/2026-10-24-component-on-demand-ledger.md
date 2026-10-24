@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:3a975859fc8be40238cbb3aafaf3d3a00a07ab30cf34bcc784fd54ac3f7bed2e'
+body_hash: 'sha256:3cf4569881ce85a727dfe64eb44cd4a7fee0c7bec5c1d311c6e59e5674e09d78'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -103,9 +103,28 @@ related:
 - `S02` `verify:` `runtime host ledger suites (202)` -> `pass`
 - `S02` `verify:` `pre-check removed: new tests fail (mutation check)` -> `pass`
 - `S02` `verify:` `ruff, ty, lint-imports` -> `pass`
+- `S06` `A` `src/cadrumo/entrypoints/cli/_component_setup_rendering.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/config/status_rendering.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/errors.py`
+- `S06` `A` `src/cadrumo/entrypoints/cli/tests/test_component_setup_refusal_text.py`
+- `S06` `verify:` `new CLI component setup refusal text pytest (6)` -> `pass`
+- `S06` `verify:` `pytest src/cadrumo/entrypoints/cli (2859)` -> `pass`
+- `S06` `verify:` `ruff, ty, lint-imports` -> `pass`
+- `S07` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/operations/modal.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/operations/refusal_explanation.py`
+- `S07` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_setup_offer.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/setup/destination.py`
+- `S07` `A` `src/cadrumo/entrypoints/tui/setup/focus.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/setup/screen.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py`
+- `S07` `verify:` `tui operations, setup, app and navigation unit pytest (81)` -> `pass`
+- `S07` `verify:` `ruff, ty, lint-imports` -> `pass`
 
 ## Notes
 
 - `S04` Start checks sit in entrypoint preflight bindings and an auth port, not under application/live, because application may not import the adapter's BrowserError; the refusal settles FAILED `(FAIL_BROWSER_SESSION_BROWSER)` until S05 adds a REFUSED code
 - `S03` Supply-nature proposals have no production caller, so their `reader_unavailable` verdict reaches no operation result yet; invoice bulk intake's silent decline moves to S10; the mapping refusal reason is an English adapter sentence until S05 words it
 - `S02` Pre-checks sit in the reader wiring (entrypoints) so injected test readers stay unaffected; the label fallback stays a success and now carries `recovery_action_id;` batch ingest unchanged
+- `S06` Helper lives in the new `_component_setup_rendering.py` because `_action_rendering.py` is gated to its one serializer; browser refusal context lines (failure mode) still print until S05
+- `S07` Offer lives in the operation modal and app root (outside the row) because the modal closes on settlement; label composes the existing set-up key with the item name; integration failures seen were in the production registry build from other uncommitted work
