@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:946b24780ecd71889c45eb9d7d5de8935816d544e02564887ed9a603edcf6bea'
+body_hash: 'sha256:54bfdb5a6f68b4a7a3bd977c2b6a8e0884cf2f822eff7bebad9f6520dbe17d69'
 ---
 
 # `rust-component-provisioning` plan
@@ -86,7 +86,7 @@ The Python provisioning path is deleted with all its callers, and gates prove no
 - [ ] `P05.S14` - Delete the dependencies operations, the provisioning actions of local-reader.provision and the Python transfer, network, receipt, installer, archive-server, archive-fetch, package-manager and pull modules with every caller and the contract manifest entries, with no aliases; `src/cadrumo/application/dependency_*.py, src/cadrumo/application/provisioning_*.py, src/cadrumo/application/local_reader_setup_items.py, src/cadrumo/adapters/outbound/browser_runtime/, src/cadrumo/adapters/outbound/model_runtime/process_control.py, src/cadrumo/entrypoints/dependency_operation_composition.py, src/cadrumo/_data/operations/contract_manifest.json and tests`.
 - [ ] `P05.S15` - Add the gates: an import and source gate refusing any Python module that downloads, installs or decides component state, Rust fault tests for every transfer failure, four-surface conformance against one engine, and the isolated-root acquisition lane driving the role; `dev/quality/tests/test_no_python_provisioning.py, native/application/tests/provisioning_faults.rs, src/cadrumo/entrypoints/tests/test_components_surface_conformance.py, dev/smoke/acquisition_lane.py`.
 - [x] `P05.S16` - Withdraw Python provisioning at once: the product setup composition binds only read-only, withdrawn items whose effect ports refuse, setup refuses not in this build before any plan, review or effect, and local-reader start and remove are refused at access; `src/cadrumo/application/dependency_withdrawal.py, src/cadrumo/application/dependency_setup_operation.py, src/cadrumo/application/local_reader_operation.py, src/cadrumo/entrypoints/dependency_operation_composition.py, src/cadrumo/entrypoints/operation_composition.py and tests`.
-- [ ] `P05.S22` - Make the local AI record fixture test platform-neutral so its version folder identity does not depend on the platform that generated it, and run the provisioning crate tests on Linux in the gates; `native/application/src/provisioning/local_ai/ tests, src/cadrumo/core/tests/_component_records/local_ai.json and the Rust provisioning gate`.
+- [x] `P05.S22` - Make the local AI record fixture test platform-neutral so its version folder identity does not depend on the platform that generated it, and run the provisioning crate tests on Linux in the gates; `native/application/src/provisioning/local_ai/ tests, src/cadrumo/core/tests/_component_records/local_ai.json and the Rust provisioning gate`.
 
 ## Parallelization
 

@@ -141,10 +141,13 @@ fn archive(marker: &[u8]) -> Vec<u8> {
 }
 
 /// The publisher's layout in miniature, with `program` as the program at `executable`.
+/// Its entries name a Unix origin, as the publisher's do, so the archive has the same
+/// bytes on every host rather than the writer's host default.
 fn archive_of(executable: &str, program: &[u8], marker: &[u8]) -> Vec<u8> {
     let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let stored = zip::write::SimpleFileOptions::default()
         .compression_method(zip::CompressionMethod::Stored)
+        .system(zip::System::Unix)
         .unix_permissions(0o755);
     zip.start_file(executable, stored).unwrap();
     zip.write_all(program).unwrap();
@@ -671,8 +674,8 @@ fn the_record_names_the_program_the_models_and_the_fixed_address_the_python_read
     let directory = tempfile::tempdir().unwrap();
     let storage = directory.path().join("storage");
     let locations = Locations::under(&storage);
-    // One platform's layout, so the record is the same on every host.
-    let (program, _) = installed_with(
+    // One platform's layout from one archive, so the record is the same on every host.
+    let (program, pins) = installed_with(
         &locations,
         "0.40.10",
         Platform::WinX64,
@@ -703,6 +706,16 @@ fn the_record_names_the_program_the_models_and_the_fixed_address_the_python_read
     assert_eq!(location.root(), storage);
     assert_eq!(location.facts["address"], address.to_string());
     assert!(location.paths["program"].under(&location.root()).is_file());
+    // The version folder is named by the pinned archive's digest: the one part of the
+    // record that follows the archive's bytes.
+    let archive = pins.for_platform(Platform::WinX64).unwrap();
+    assert_eq!(
+        location.paths["program"].as_str(),
+        format!(
+            "components/ollama/versions/{}-0/payload/ollama.exe",
+            archive.sha256
+        )
+    );
     assert_eq!(
         location.paths["models"].under(&location.root()),
         locations.models

@@ -656,6 +656,33 @@ test-native-bundle CONFIGURATION="Release": (_native-configure CONFIGURATION)
 test-native-live CONFIGURATION="Release": (_native-configure CONFIGURATION)
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target verify-native-live
 
+# The component engine's tests on Linux. CTest's application.rust runs the crate only
+# on the host that builds the native package, and ordinary native verification builds
+# it on Windows, so Linux behaviour (archive layout, process groups, file modes) is
+# proven here: on a Linux host directly, on Windows inside WSL. The tests run against
+# the checkout in place with Cargo's output outside it, on the Rust release that
+# `native/toolchain.json` pins; another release is refused before anything compiles.
+[doc('Run the native component engine (provisioning) tests on Linux: directly on Linux, through WSL on Windows.')]
+[group('test')]
+[linux]
+test-native-provisioning-linux:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pinned="$(sed -n 's/^ *"rust": *"\([^"]*\)".*/\1/p' native/toolchain.json)"
+    actual="$(rustc --version | cut -d' ' -f2)"
+    if [[ -z "$pinned" || "$actual" != "$pinned" ]]; then
+        echo "rustc $actual is not the pinned Rust toolchain ${pinned:-(unread)} from native/toolchain.json" >&2
+        exit 2
+    fi
+    export CARGO_TARGET_DIR="${CADRUMO_PROVISIONING_CARGO_TARGET_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/cadrumo/native-provisioning-target}"
+    cargo test --locked --manifest-path native/application/Cargo.toml --lib provisioning:: -- --test-threads=2
+
+[doc('Run the native component engine (provisioning) tests on Linux: directly on Linux, through WSL on Windows.')]
+[group('test')]
+[windows]
+test-native-provisioning-linux:
+    wsl.exe --cd {{quote(justfile_directory())}} --exec just test-native-provisioning-linux
+
 # CI gets the per-machine agent checkout from a repository variable. It must be
 # passed as a CMake cache argument, because CMake deliberately ignores the
 # process environment for this selection.

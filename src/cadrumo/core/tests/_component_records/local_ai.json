@@ -1,12 +1,12 @@
 {
   "files": [
     {
-      "path": "components/ollama/versions/4ee45035ad1d5448052f33e250607d6cc613cb1c8f945436d1507b4a4a339a45-0/payload/lib/ollama/marker",
+      "path": "components/ollama/versions/17d632bd7c934986dc3c932b9e71b58adc792007ffc9fa7bca283aff4cbc33a7-0/payload/lib/ollama/marker",
       "sha256": "ed5b8120601641c516d02ed9dc643a59648524248d5e2af877da39ea253c723e",
       "size_bytes": 6
     },
     {
-      "path": "components/ollama/versions/4ee45035ad1d5448052f33e250607d6cc613cb1c8f945436d1507b4a4a339a45-0/payload/ollama.exe",
+      "path": "components/ollama/versions/17d632bd7c934986dc3c932b9e71b58adc792007ffc9fa7bca283aff4cbc33a7-0/payload/ollama.exe",
       "sha256": "63107b2b5e3d5481d0d7ea4a788dee7ea1b57411d18925016f859004c3ba38d3",
       "size_bytes": 16
     }
@@ -21,7 +21,7 @@
     },
     "paths": {
       "models": "models/ollama",
-      "program": "components/ollama/versions/4ee45035ad1d5448052f33e250607d6cc613cb1c8f945436d1507b4a4a339a45-0/payload/ollama.exe"
+      "program": "components/ollama/versions/17d632bd7c934986dc3c932b9e71b58adc792007ffc9fa7bca283aff4cbc33a7-0/payload/ollama.exe"
     },
     "root": "<storage-root>"
   },

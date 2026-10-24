@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:59ffe364761ff2cb3948c6cc57def124658daed770e6af5ad3ed9aab684fbea3'
+body_hash: 'sha256:1aa8e4e31f6cd4fb9223ce5a9033ebec6e8f992c4052c30a753ea5be426c9171'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -474,6 +474,16 @@ related:
 - `S24` `by:` `implementation-engineer-standard`
 - `S24` `verify:` `desktop cargo test --offline --bin cadrumo shell::setup on a HEAD 27bb2fef35 export with read-only generated inputs (31)` -> `pass`
 - `S24` `verify:` `desktop cargo clippy --all-targets -D warnings on the same export` -> `pass`
+- `S22` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S22` `M` `src/cadrumo/core/tests/_component_records/local_ai.json`
+- `S22` `M` `justfile`
+- `S22` `verify:` `just test-native-provisioning-linux from Windows through WSL, cargo test --lib provisioning:: on Linux rustc 1.96.0 (127 passed)` -> `pass`
+- `S22` `verify:` `the recipe refuses a non-pinned rustc before compiling (exit 2)` -> `pass`
+- `S22` `verify:` `cargo test --offline --lib provisioning::local_ai on Windows against the rewritten fixture (27 passed)` -> `pass`
+- `S22` `verify:` `cargo clippy --all-targets -D warnings and cargo fmt --check on native/application` -> `pass`
+- `S22` `verify:` `pytest test_component_records.py test_local_reader.py against the rewritten fixture (45 passed)` -> `pass`
+- `S22` `verify:` `pytest test_suite_gate_table.py test_dev_cli_justfile_wiring.py test_no_git_cli.py test_retired_invocations.py (60 passed)` -> `pass`
+- `S22` `by:` `implementation-engineer-standard`
 
 ## Notes
 
@@ -527,3 +537,5 @@ related:
 - `S19` S19 the consumer gate's `shared_playwright_runtime` driver sets `PLAYWRIGHT_BROWSERS_PATH` to its empty root before the page factory refuses, and nothing restores it outside adapters/outbound/aeat, so later Chromium docs tests on the same xdist worker fail; they pass alone; the gate file belongs to the on-demand lane
 - `S19` S19 this checkout's dev storage var/storage holds browser builds but no engine record, so product browser work there refuses until cadrumo --role components setup adopts them (0 bytes)
 - `S24` Plan contract version 1 -> 2: every plan part gains licence (null for the program, `spdx_id` and name for a model). The P04.S12 Python decoder must follow.
+- `S22` Root cause: the zip writer marks entries with its host's origin (DOS on Windows, Unix elsewhere), so the test archive's digest and the version folder it names differed by host. The test archive now names a Unix origin everywhere and the fixture was rewritten once.
+- `S22` No CI job runs native Rust tests on Linux: native verification (test-native-ci) runs on Windows only. The CI fleet must run just test-native-provisioning-linux on a Linux runner; no workflow was added.
