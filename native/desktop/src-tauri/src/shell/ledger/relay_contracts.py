@@ -2,7 +2,8 @@
 
 It lists every ``ledger.*`` definition in the shipped operation contract
 manifest, with whether it may write and whether it pauses for a review, and the
-two bounds the held person's relay applies to one request. It also checks
+bound the runtime applies to one request line. The payload bound is the native
+relay's own constant, which the host reads directly. It also checks
 that the window's mirror of the admitted list, ``LEDGER_DEFINITIONS`` in the
 frontend's ``src/shell/ledger.ts``, names the same definitions. Run with the
 repository Python environment; --check detects drift from the manifest or the
@@ -61,7 +62,6 @@ def documents() -> dict[str, object]:
     return {
         "operations": operations,
         "relay": {
-            "payload_text_limit": _module_constant("cadrumo_runtime.host.session_hold_operations", "_MAX_PAYLOAD_TEXT"),
             "request_line_limit": _module_constant("cadrumo_runtime.host.session_hold", "_MAXIMUM_REQUEST_LINE_BYTES"),
         },
     }
