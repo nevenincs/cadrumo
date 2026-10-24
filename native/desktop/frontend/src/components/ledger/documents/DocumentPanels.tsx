@@ -237,6 +237,11 @@ export function AttachmentQueue({
 
 // ---- Folder intake ---------------------------------------------------------------
 
+/** A part whose settlement was not seen: it may have saved, or it saved
+ * and its answer was not read. */
+const unseenCode = (code: string) =>
+  code === "unknown" || code === "saved_unread";
+
 const BATCH_ICONS: Record<string, IconName> = {
   ingested: "check",
   no_op: "tick",
@@ -291,11 +296,12 @@ export function FolderIntake({
     const done = await applyDocuments(port, files, direction, setProgress);
     setBusy(null);
     setApplied(done);
-    if (done.stopped?.code === "unknown") {
-      const what = done.stopped.files.map((file) => file.name).join(", ");
+    const unseen = done.stopped?.code;
+    if (unseen === "unknown" || unseen === "saved_unread") {
+      const what = done.stopped!.files.map((file) => file.name).join(", ");
       pause.hold({
         what,
-        outcome: "unknown",
+        outcome: unseen,
         // A batch is repeatable: a document the profile already holds by
         // its content address comes back as a no_op, so sending the batch
         // again adds only what did not land. The evidence list answering
@@ -415,12 +421,12 @@ export function FolderIntake({
         <div className="grid gap-2">
           {applied.stopped && (
             <Alert
-              tone={applied.stopped.code === "unknown" ? "warning" : "danger"}
+              tone={unseenCode(applied.stopped.code) ? "warning" : "danger"}
               role="alert"
               icon={
                 <Icon
                   name={
-                    applied.stopped.code === "unknown" ? "unknown" : "refused"
+                    unseenCode(applied.stopped.code) ? "unknown" : "refused"
                   }
                 />
               }
@@ -428,7 +434,9 @@ export function FolderIntake({
               <AlertTitle>
                 {applied.stopped.code === "unknown"
                   ? t("desktop.ledger.documents.unknown")
-                  : t("desktop.ledger.documents.not_done")}
+                  : applied.stopped.code === "saved_unread"
+                    ? t("desktop.ledger.apply.outcome.saved_unread")
+                    : t("desktop.ledger.documents.not_done")}
               </AlertTitle>
               <AlertDescription>
                 {applied.stopped.files.map((file) => file.name).join(" · ")}

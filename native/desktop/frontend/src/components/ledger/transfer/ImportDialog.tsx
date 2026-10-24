@@ -690,11 +690,12 @@ export function ImportDialog({
       setProgress(null);
       setOutcome({ kind: "documents", applied });
       setStep("result");
-      if (applied.stopped?.code === "unknown") {
-        const what = applied.stopped.files.map((file) => file.name).join(", ");
+      const unseen = applied.stopped?.code;
+      if (unseen === "unknown" || unseen === "saved_unread") {
+        const what = applied.stopped!.files.map((file) => file.name).join(", ");
         pause.hold({
           what,
-          outcome: "unknown",
+          outcome: unseen,
           // The documents' content addresses are known only once read; a
           // document already held is left as it is (`no_op`), so sent
           // again the part adds nothing twice.
@@ -1766,6 +1767,17 @@ function ResultStep({
       {applied.stopped &&
         (applied.stopped.code === "unknown" ? (
           unknown(applied.stopped.files.map((file) => file.name))
+        ) : applied.stopped.code === "saved_unread" ? (
+          <Alert tone="warning" role="alert" icon={<Icon name="unknown" />}>
+            <AlertTitle>
+              {t("desktop.ledger.apply.outcome.saved_unread")}
+            </AlertTitle>
+            <AlertDescription>
+              {new Intl.ListFormat(locale).format(
+                applied.stopped.files.map((file) => file.name),
+              )}
+            </AlertDescription>
+          </Alert>
         ) : (
           <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
             <AlertTitle>

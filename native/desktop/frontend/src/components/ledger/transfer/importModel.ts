@@ -420,7 +420,8 @@ export function applyBook(
 export type DocumentsApplied = {
   items: EvidenceBatchResult["run"]["items"];
   unresolved: EvidenceBatchResult["run"]["unresolved"];
-  /** The part that did not settle, if one did not, and why. */
+  /** The part that did not settle, if one did not, and why: `unknown` may
+   * have saved, `saved_unread` saved and its answer was not read. */
   stopped: { code: string; files: PickedFile[] } | null;
   /** Files of later parts, left unsent. */
   notSent: PickedFile[];
@@ -470,7 +471,7 @@ export async function applyDocuments(
           sent.kind === "refused"
             ? (sent.reason ?? "refused")
             : sent.code === "unknown" || sent.code === "saved_unread"
-              ? "unknown"
+              ? sent.code
               : (sent.reason ?? sent.code),
         files: part,
       };
