@@ -22,6 +22,7 @@ import {
 } from "./MovementCells";
 import {
   COLUMN_SPECS,
+  dateWidth,
   needsInvoice,
   statusWidth,
   type ColumnId,
@@ -293,7 +294,9 @@ function movementColumns(
         width ??
         (column === "status"
           ? statusWidth(context.density, context.statusMarks)
-          : spec.width),
+          : column === "date"
+            ? dateWidth(context.withYear)
+            : spec.width),
       ...(spec.minWidth !== undefined ? { minWidth: spec.minWidth } : {}),
       ...(spec.grow !== undefined && width === undefined
         ? { grow: spec.grow }

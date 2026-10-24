@@ -121,6 +121,13 @@ export const COLUMN_SPECS: Record<ColumnId, ColumnSpec> = {
   modified: { width: 8, sortable: true, server: "modified_at" },
 };
 
+/** A date with its year, which a window spanning years shows. */
+const DATE_WITH_YEAR_REM = 6.5;
+
+/** The date column's width: room for the year where the dates carry it. */
+export const dateWidth = (withYear: boolean) =>
+  withYear ? DATE_WITH_YEAR_REM : COLUMN_SPECS.date.width;
+
 /** One more glyph in a compact status cell, with the gap before it. */
 const STATUS_MARK_REM = 1.25;
 

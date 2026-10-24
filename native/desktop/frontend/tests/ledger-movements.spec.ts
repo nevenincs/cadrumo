@@ -17,6 +17,7 @@ import {
   serverFilters,
   shownColumns,
   sortRows,
+  dateWidth,
   statusMarks,
   statusWidth,
   type SortLabels,
@@ -606,4 +607,9 @@ test("a compact status column widens by one glyph for each kind of mark beside t
   expect(statusWidth("compact", 2)).toBe(5.25);
   // Comfortable rows have room for a mark beside the word.
   expect(statusWidth("comfortable", 2)).toBe(7.5);
+});
+
+test("a date carrying its year gets the room for it", () => {
+  expect(dateWidth(false)).toBe(4.5);
+  expect(dateWidth(true)).toBeGreaterThan(dateWidth(false));
 });

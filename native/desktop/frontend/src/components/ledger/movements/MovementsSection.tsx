@@ -92,6 +92,7 @@ import {
   shownColumns,
   sortRows,
   stagedClassifyCount,
+  dateWidth,
   statusMarks,
   statusWidth,
   type ColumnId,
@@ -819,11 +820,13 @@ export function MovementsSection({
         widths[column] ??
         (column === "status"
           ? statusWidth(view.density, marks)
-          : Math.max(spec.width, spec.minWidth ?? 0));
+          : column === "date"
+            ? dateWidth(period === null)
+            : Math.max(spec.width, spec.minWidth ?? 0));
       return sum + rem * remPx;
     }, 0);
     return needed > room;
-  }, [layout, untouched, room, widths, view.density, marks, remPx]);
+  }, [layout, untouched, room, widths, view.density, marks, period, remPx]);
   const drawnLayout = useMemo(
     () =>
       narrow

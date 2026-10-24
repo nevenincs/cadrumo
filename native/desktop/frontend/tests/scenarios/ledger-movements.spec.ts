@@ -831,6 +831,15 @@ test("compact status cells draw a state as its glyph, named, and widen for the m
   await expect
     .poll(async () => Math.round((await statusHeader.boundingBox())!.width))
     .toBe(Math.round(4 * rem));
+  // Dates over all periods carry the year, on one line.
+  const date = dataRows(target).first().locator("[data-column=date] span");
+  expect(
+    await date.evaluate(
+      (element) =>
+        element.getClientRects().length === 1 &&
+        element.scrollWidth <= element.parentElement!.clientWidth,
+    ),
+  ).toBe(true);
   // The header's glyph names the column; it is not the Done glyph.
   const done = grid(target).locator("[data-status=done] svg").first();
   expect(await statusHeader.locator("svg").innerHTML()).not.toBe(
