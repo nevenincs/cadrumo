@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:b46f801bbfba88537206836d4c691022cf5917161720c3032cc8b0e06ad6a982'
+body_hash: 'sha256:04aaa078e57e3fc767e34c615147450104add2cf24ca1ddd792d7d47efeaee97'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
@@ -234,6 +234,9 @@ related:
 - `S11` `verify:` `tsc and eslint on the ledger components` -> `pass`
 - `S11` `verify:` `playwright scenarios navigation-guards 10/10 twice at 2 workers` -> `pass`
 - `S11` `verify:` `playwright scenarios ledger-shell ledger-invoices ledger-movements agent-page-links rerun alone` -> `pass`
+- `S12` `M` `native/desktop/frontend/tests/scenarios/palette.spec.ts`
+- `S12` `M` `native/desktop/frontend/tests/scenarios/keyboard.spec.ts`
+- `S12` `verify:` `npx playwright test --project=scenarios tests/scenarios/palette.spec.ts tests/scenarios/keyboard.spec.ts tests/scenarios/columns.spec.ts` -> `pass`
 
 ## Notes
 
@@ -245,3 +248,4 @@ related:
 - `S08` Surface rows updated in place under the orchestrator's ruling (B): no consumer has pinned a release; the views tool is a local read on both surfaces. Record links cover ledger.add, ledger.update, ledger.classify.single, ledger.invoice.add, ledger.invoice.update, ledger.invoice.wizard and ledger.evidence.confirm; ledger.link (two records), ledger.invoice.import and ledger.classify.bulk (several) and ledger.invoice.remove (removed record) carry none
 - `S12` panel.spec.ts:5 and scenarios.spec.ts:2137 (rail order now has Declarations) fail independently of S12; eslint/prettier fail only on an untracked .ux-a-lib.mjs
 - `S11` Follow-up b780f0120e: a select link no longer waits silently when the Ledger draws no grid; the page holds the ask and says not found once the read settles empty or fails. A 3-worker run beside other sessions timed out 5 scenarios that pass alone. Commit 8e41b1bc2b carried the S12 rows instead of these.
+- `S12` Follow-up on owner requirement: pane and panel entries toggle again (Show/Hide {view}, same id and chord); commits 42298ef117 and 6e83e8bb24 (CR fix in the two new strings)
