@@ -314,7 +314,7 @@ export function LedgerPage({
     : unavailable();
   // One pause for every write on the page: a write whose outcome was not
   // observed holds them all until a re-read settles it.
-  const pause = usePagePause({ port, reader, period, afterReread: reread });
+  const pause = usePagePause({ reader, afterReread: reread });
   // The movements the page acts on, whose participation it reads to know
   // which a finalized declaration seals.
   const sealedWanted = useMemo(

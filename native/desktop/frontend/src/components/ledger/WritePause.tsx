@@ -24,9 +24,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { LedgerPort } from "../../shell/ledger";
-import type { LedgerPeriod } from "../../shell/ledgerGrammar";
-import { readWindow } from "../../shell/ledgerWindow";
 import { useStrings, type Translate } from "../../shell/strings";
 
 /** How a write that was not seen to settle ended as far as the page knows:
@@ -45,9 +42,8 @@ export type HeldWrite = {
   /** Reads what the write touched and words what it found, one line per
    * thing, which settles it; `StillHeld` where the read answered but
    * cannot tell, and null while it could not be read, both of which keep
-   * it held. Without one, a read of the ledger that answers settles it:
-   * only writers not yet reading back what they wrote go without one. */
-  settle?: () => Promise<string[] | StillHeld | null>;
+   * it held. No other read settles it. */
+  settle: () => Promise<string[] | StillHeld | null>;
   /** Called once the re-read settled it. */
   onSettled?: () => void;
 };
@@ -124,14 +120,10 @@ export function useWritePause(): WritePause {
 
 /** The page's one write pause. It goes with the profile. */
 export function usePagePause({
-  port,
   reader,
-  period,
   afterReread,
 }: {
-  port: LedgerPort;
   reader: string | null;
-  period: LedgerPeriod | null;
   /** Reads the page's movements again once a re-read ran. */
   afterReread: () => void;
 }): WritePause {
@@ -164,28 +156,14 @@ export function usePagePause({
       const asked = latest.current;
       const settled = new Set<number>();
       const lines: string[] = [];
-      let answered: boolean | null = null;
       for (const write of asked) {
-        if (write.settle) {
-          const found = await write.settle();
-          if (found === null) continue;
-          if (!Array.isArray(found)) {
-            lines.push(...found.held);
-            continue;
-          }
-          lines.push(...found);
-        } else {
-          answered ??= (await readWindow(port, period, 1)).kind === "read";
-          if (!answered) continue;
-          lines.push(
-            t(
-              write.outcome === "saved_unread"
-                ? "desktop.ledger.paused.found_saved"
-                : "desktop.ledger.paused.read_again",
-              { movement: write.what },
-            ),
-          );
+        const found = await write.settle();
+        if (found === null) continue;
+        if (!Array.isArray(found)) {
+          lines.push(...found.held);
+          continue;
         }
+        lines.push(...found);
         settled.add(write.id);
         write.onSettled?.();
       }
@@ -196,7 +174,7 @@ export function usePagePause({
       setRereading(false);
       afterReread();
     })();
-  }, [port, period, t, afterReread]);
+  }, [afterReread]);
 
   const unknown = writes.some((write) => write.outcome === "unknown");
   return {
