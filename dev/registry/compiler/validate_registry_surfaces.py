@@ -328,8 +328,8 @@ def _verification_predicate_family_failures(
         return [*failures, *profile_validator(prefix, owner, expression)]
     if op_name in _CASILLA_LIST_OPERATORS:
         # Includes equals(["lhs_id", "rhs_id"]), a binary consistency check whose
-        # malformed arity must be rejected at authoring time rather than letting the
-        # runtime evaluator silently hold (its <2-id defensive branch returns True).
+        # malformed arity is rejected at authoring time so the predicate never reaches
+        # publication, where runtime evaluation would refuse it with a ModeloError.
         return [
             *failures,
             *_casilla_list_predicate_failures(
