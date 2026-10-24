@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:6012e174b60b3296cce2e76f716d9b9641171a39ab68faa36b309e267d70e14f'
+body_hash: 'sha256:67507d33436bed36a841d6dff0e0b21bb15c62fc593b91345e046157e7ccb500'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -726,6 +726,17 @@ related:
 - `S16` `verify:` `application.rust ctest` -> `pass`
 - `S16` `verify:` `relay_contracts.py --check` -> `pass`
 - `S16` `verify:` `backend-snapshot node tests` -> `pass`
+- `S45` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S45` `M` `native/desktop/frontend/scripts/modelo-fixtures.mjs`
+- `S45` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S45` `M` `native/desktop/frontend/src/shell/modelo.ts`
+- `S45` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S45` `M` `native/desktop/frontend/tests/modelo-port.spec.ts`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S45` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S45` `verify:` `playwright modelo-port.spec` -> `pass`
+- `S45` `verify:` `tsc --noEmit` -> `pass`
+- `S45` `by:` `opus-port-lane`
 
 ## Notes
 
@@ -771,3 +782,4 @@ related:
 - `S43` committed in 788d9231f0, reviewed by CADRUMO-RUST-NATIVE and CADRUMO-UX-LEDGER; desktop-host-unit-test and clippy blocked by other sessions' uncommitted shell/setup and Cargo.lock work, last direct run 541 passed with the lane's one failure fixed
 - `S13` committed in 788d9231f0, reviewed by CADRUMO-RUST-NATIVE and CADRUMO-UX-LEDGER; desktop-host-unit-test and clippy blocked by other sessions' uncommitted shell/setup and Cargo.lock work, last direct run 541 passed with the lane's one failure fixed
 - `S16` committed in 788d9231f0, reviewed by CADRUMO-RUST-NATIVE and CADRUMO-UX-LEDGER; desktop-host-unit-test and clippy blocked by other sessions' uncommitted shell/setup and Cargo.lock work, last direct run 541 passed with the lane's one failure fixed
+- `S45` committed in 5da639c4ba against HEAD 788d9231f0
