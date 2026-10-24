@@ -1776,6 +1776,7 @@
         "cadrumo.core.classifier_input_source",
         "cadrumo.core.cli_metadata",
         "cadrumo.core.click_context",
+        "cadrumo.core.component_records",
         "cadrumo.core.concept_lifecycle",
         "cadrumo.core.concepto_ingreso",
         "cadrumo.core.config",
