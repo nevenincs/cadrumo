@@ -245,15 +245,21 @@ class DependencyRegistry:
         *,
         reachability: DependencyReachability | None = None,
         hosts_for: Callable[[str], tuple[str, ...]] | None = None,
+        full_checks: bool = True,
     ) -> None:
         """Enrol one checker per declared item, refusing a missing, extra or mismatched item.
 
         ``reachability`` and ``hosts_for`` bind the network preflight a full
         check applies once per host group; without them a full check reads
-        only what the checkers themselves report.
+        only what the checkers themselves report. Without ``full_checks``, a
+        request for a full check reads the quick check instead, and its rows
+        say so, rather than claim an exercise of the item that never ran.
         """
         if (reachability is None) != (hosts_for is None):
             raise ValueError("the full-check preflight needs both the reachability check and the host groups")
+        if not full_checks and reachability is not None:
+            raise ValueError("a registry without full checks binds no full-check preflight")
+        self._full_checks = full_checks
         self._reachability = reachability
         self._hosts_for = hosts_for
         by_id: dict[str, DependencyItemChecker] = {}
@@ -315,7 +321,7 @@ class DependencyRegistry:
         selected = self._ordered_selection(item_ids)
         active = {activity.item_id: activity for activity in activities}
         failures = {} if last_failures is None else dict(last_failures)
-        if mode is DependencyCheckMode.QUICK:
+        if mode is DependencyCheckMode.QUICK or not self._full_checks:
             readings = await self._quick_readings(selected)
         else:
             readings = await self._full_readings(selected, mode)

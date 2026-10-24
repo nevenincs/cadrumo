@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:fc039fd49a99113b24757fd6aa0b44d69cab815bc9661703ce3e3a30dab8b458'
+body_hash: 'sha256:c1a6fd6a0d9978dcf6b72e26c5658ed55468f31bf4d32abecda7639af7691103'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -144,6 +144,15 @@ related:
 - `S16` `M` `src/cadrumo/application/tests/test_local_reader_operation_access.py`
 - `S16` `verify:` `withdrawal, setup operation, quick check, local reader access, registry conformance, wording, contracts, CLI provision parity, MCP progress relay, session hold, local reader operation, operation composition pytest (221)` -> `pass`
 - `S16` `verify:` `ruff, ty, lint-imports (30 kept), check-operation-contract-manifest` -> `pass`
+- `S16` `M` `src/cadrumo/application/dependency_registry.py`
+- `S16` `M` `src/cadrumo/application/dependency_withdrawal.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_python_provisioning_withdrawn.py`
+- `S16` `M` `src/cadrumo_runtime/adapters/worker_authorization.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/test_runtime_server_start_authority.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/core/adapters/outbound/model_runtime/tests/test_runtime_server_containment.py`
+- `S16` `verify:` `withdrawal, setup, access, conformance, contracts, provision parity, MCP relay, session hold, server start authority, local reader operation, operation composition pytest (222)` -> `pass`
+- `S16` `verify:` `runtime server containment pytest (6)` -> `pass`
+- `S16` `verify:` `ruff, ty, lint-imports (30 kept)` -> `pass`
 
 ## Notes
 
@@ -158,3 +167,4 @@ related:
 - `S04` free space is measured by the host and passed in: the crate forbids unsafe code and no safe volume query is in its graph; an unmeasured volume is never enough
 - `S04` `package_inspection` junction fixture failure is the pre-existing non-ASCII junction path issue
 - `S16` Owner ruling 2026-10-24: Python must not provision; the Python path is withdrawn now, ahead of its P05.S14 deletion. Setup is unavailable on every surface until the components role lands; status still names what is missing. The local AI quick check takes about 1.1 s warm and 2.2 s cold with or without withdrawal, near its 2 s bound (pre-existing).
+- `S16` review correction withdrawn-full-check-relabelled: a registry without full checks answers a full request with its quick check and labels the rows quick; review correction runtime-owner-start-residual: the runtime admits no operation's request to start the local model program

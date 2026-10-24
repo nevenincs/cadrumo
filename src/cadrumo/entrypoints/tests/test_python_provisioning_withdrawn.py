@@ -50,6 +50,8 @@ def test_nothing_missing_is_offered_for_setup_in_either_check_mode(storage: Path
         registry = build_dependency_registry_factory()(_identity(), asyncio.get_running_loop())
         rows = await registry.read_rows(mode)
         assert rows, "the composed registry must declare its items"
+        # No full check runs in Python, so a full request is answered, and labelled, as the quick check.
+        assert all(row.mode is DependencyCheckMode.QUICK for row in rows), rows
         for row in rows:
             # What is already installed (a developer's browser builds) still reads usable, and a check that
             # did not answer in time reads unknown; nothing reads absent or failed, which would offer a setup.

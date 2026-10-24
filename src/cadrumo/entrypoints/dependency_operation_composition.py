@@ -67,7 +67,7 @@ def build_dependency_registry_factory() -> DependencyRegistryFactory:
             spawn=refused_runtime_spawn,
             retry_delay=dependency_retry_delay,
         )
-        return DependencyRegistry((WithdrawnSetupItem(browser), WithdrawnSetupItem(local_ai)))
+        return DependencyRegistry((WithdrawnSetupItem(browser), WithdrawnSetupItem(local_ai)), full_checks=False)
 
     return build
 

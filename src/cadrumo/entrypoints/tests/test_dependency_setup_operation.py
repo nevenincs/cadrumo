@@ -498,7 +498,7 @@ def _unused(identity: OperationIdentity, loop: asyncio.AbstractEventLoop) -> Dep
 def _withdrawn(items: dict[str, _Item]) -> OperationRegistry:
     def factory(identity: OperationIdentity, loop: asyncio.AbstractEventLoop) -> DependencyRegistry:
         del identity, loop
-        return DependencyRegistry(WithdrawnSetupItem(item) for item in items.values())
+        return DependencyRegistry((WithdrawnSetupItem(item) for item in items.values()), full_checks=False)
 
     definitions = build_dependency_operation_definitions(factory)
     return OperationRegistry(

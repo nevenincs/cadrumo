@@ -241,32 +241,18 @@ async def _submitted_then_started(harness: _Harness) -> int | None:
     return await harness.authority.start_runtime_server(harness.identity)
 
 
-def test_the_admitted_set_is_the_local_reader_provisioning_and_the_dependency_setup() -> None:
-    assert runtime_server_start_definitions() == frozenset(
-        {LOCAL_READER_OPERATION_DEFINITION_ID, DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID}
-    )
+def test_no_operation_may_have_the_runtime_start_the_model_program() -> None:
+    assert runtime_server_start_definitions() == frozenset()
 
 
 @pytest.mark.parametrize(
-    "definition_id", [DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID, LOCAL_READER_OPERATION_DEFINITION_ID]
+    "definition_id",
+    [DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID, LOCAL_READER_OPERATION_DEFINITION_ID, _UNRELATED],
 )
-def test_an_admitted_operation_starts_the_server_under_its_own_commit_fence(
+def test_every_operation_is_refused_before_any_fence_is_taken(
     definition_id: str, authority_operation: PinnedAuthorityOperation, tmp_path: Path
 ) -> None:
     harness = _harness(definition_id, authority_operation, tmp_path)
-    started = asyncio.run(_submitted_then_started(harness))
-    assert started == _SERVER_PROCESS_ID
-    submitted, fence = harness.client.guards
-    assert submitted.request.action is AccessAction.SUBMIT
-    assert harness.client.starts == [fence]
-    assert fence.request.definition_id == definition_id
-    assert fence.request.action is AccessAction.COMMIT
-
-
-def test_an_unrelated_operation_is_refused_before_any_fence_is_taken(
-    authority_operation: PinnedAuthorityOperation, tmp_path: Path
-) -> None:
-    harness = _harness(_UNRELATED, authority_operation, tmp_path)
     with pytest.raises(ProfileAccessRefusedError) as refused:
         asyncio.run(harness.authority.start_runtime_server(harness.identity))
     assert refused.value.reason is AccessDenialCode.OPERATION_DENIED

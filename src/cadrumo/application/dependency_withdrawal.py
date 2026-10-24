@@ -4,9 +4,10 @@ The native component engine owns acquiring, checking and removing the browser
 and the local AI. Until a build carries it, each item here only reads what is
 already on this computer through its quick check: an item that is not usable
 reads ``blocked`` for ``not_in_this_build``, so no surface offers a setup, and
-planning or provisioning refuses before any byte moves or any program runs. A
-full check reads the same local facts, because exercising an item (launching
-the browser, generating with a model, preflighting hosts) is the engine's.
+planning or provisioning refuses before any byte moves or any program runs.
+Exercising an item (launching the browser, generating with a model,
+preflighting hosts) is the engine's, so a registry of these items runs no full
+check: it answers a full request with its quick check, and the rows say quick.
 """
 
 from __future__ import annotations
@@ -95,10 +96,14 @@ class WithdrawnSetupItem:
         return self._item.declaration
 
     async def check(self, mode: DependencyCheckMode) -> DependencyProbeReading:
-        """Read local facts only, whatever ``mode`` asks, and hold back anything not usable."""
+        """Read local facts, holding back anything not usable; a full check cannot run and reads unknown."""
+        if mode is not DependencyCheckMode.QUICK:
+            return DependencyProbeReading(
+                item_id=self.declaration.item_id, mode=mode, outcome=DependencyProbeOutcome.UNREADABLE
+            )
         reading = await self._item.check(DependencyCheckMode.QUICK)
         if reading.outcome in _KEPT or reading.blocked_reason is DependencyBlockedReason.HARDWARE:
-            return reading.model_copy(update={"mode": mode})
+            return reading
         return DependencyProbeReading(
             item_id=reading.item_id,
             mode=mode,

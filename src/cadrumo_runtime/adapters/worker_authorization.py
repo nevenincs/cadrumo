@@ -25,10 +25,6 @@ from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenial
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError, ServerHello
-from cadrumo_client.contracts.operation_ids import (
-    DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID,
-    LOCAL_READER_OPERATION_DEFINITION_ID,
-)
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document, write_document_transfer
@@ -78,11 +74,10 @@ from .worker_transport import WorkerChannel, worker_endpoint
 def runtime_server_start_definitions() -> frozenset[str]:
     """Return the operations whose held COMMIT fence may ask the runtime to start the model program's server.
 
-    The local reader's provisioning and the dependency setup both set up the
-    local model program. Their ids are client contracts, so the runtime names
-    them without loading the product's provisioning code.
+    None may: starting the local model program belongs to the native component
+    engine, so no product operation can have the runtime start it.
     """
-    return frozenset({LOCAL_READER_OPERATION_DEFINITION_ID, DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID})
+    return frozenset[str]()
 
 
 def worker_authorization_namespace(worker_id: UUID) -> UUID:

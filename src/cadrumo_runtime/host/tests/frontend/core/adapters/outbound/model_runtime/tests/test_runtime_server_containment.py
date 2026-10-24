@@ -6,8 +6,9 @@ breakaway, and detachment does not leave a job: these tests start the real
 adapter's child from a real process, once free and once inside the worker's
 real containment scope, and observe the child across the launcher's exit and
 the scope's termination. The last ones have a contained worker ask its owner
-over the real authorization channel instead, and observe the server outside
-the scope and alive after it ends.
+over the real authorization channel instead, and observe that its owner starts
+nothing for any operation, because the native component engine owns the model
+program.
 """
 
 from __future__ import annotations
@@ -25,14 +26,11 @@ from uuid import uuid4
 import pytest
 from pydantic import SecretBytes
 
-from cadrumo.adapters.outbound.model_runtime.process_control import spawn_runtime_server
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.provisioning_host import launch_runtime_server
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
-from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.time.clock import now
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
@@ -242,87 +240,13 @@ def _seed(definition_id: str) -> Seed:
 
 
 @pytest.mark.parametrize(
-    "definition_id", [LOCAL_READER_OPERATION_DEFINITION_ID, DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID]
+    "definition_id", ["ledger.list", LOCAL_READER_OPERATION_DEFINITION_ID, DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID]
 )
-def test_a_contained_worker_that_asks_its_owner_gets_a_server_outside_its_scope_that_outlives_it(
-    definition_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_the_owner_starts_nothing_for_any_operations_fence(definition_id: str, tmp_path: Path) -> None:
+    """Starting the model program belongs to the native component engine: no operation's fence starts it."""
     if sys.platform != "win32":
         pytest.skip("requires a native Windows job")
-    import win32api
-    import win32event
-
-    _workspace(tmp_path)
-    # The owner starts ``<executable> serve`` from its own working directory.
-    monkeypatch.chdir(tmp_path)
     seed = _seed(definition_id)
-    (tmp_path / "seed.json").write_text(seed.model_dump_json(), encoding="utf-8")
-    with override_settings(
-        cadrumo_local_storage_root=tmp_path / "storage", cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"
-    ):
-        settings = load_settings()
-    started_by_owner: list[int | None] = []
-
-    def start_from_owner() -> int | None:
-        process_id = launch_runtime_server(
-            settings, spawn=spawn_runtime_server, which=lambda _name: str(native_python())
-        )
-        started_by_owner.append(process_id)
-        return process_id
-
-    scope = WindowsProcessScope()
-    servers: list[WorkerAuthorizationServer] = []
-    handles: list[int] = []
-    try:
-        worker = scope.launch(
-            executable=Path(sys.executable),
-            arguments=("-I", "-m", _OWNER_START_FIXTURE, str(tmp_path)),
-            directory=tmp_path,
-            environment=os.environ.copy(),
-        )
-        wait_file(tmp_path / "worker.pid", worker)
-        worker_pid = int((tmp_path / "worker.pid").read_text(encoding="ascii"))
-        authority = _SessionAuthority(seed)
-        server = WorkerAuthorizationServer(
-            identity=seed.identity,
-            root=tmp_path,
-            process_id=worker_pid,
-            owns_process=lambda pid: pid in scope.active_process_ids(),
-            contain=scope.terminate,
-            owner=authority,
-            runtime_server_starter=start_from_owner,
-        )
-        servers.append(server)
-        (tmp_path / "listening").write_text("1", encoding="ascii")
-        assert wait_process(worker) == 0, (tmp_path / "failure").read_text(encoding="ascii")
-        answered = json.loads((tmp_path / "started.json").read_text(encoding="utf-8"))["server"]
-        assert started_by_owner == [answered], "the worker is told the process its owner started, once"
-        assert isinstance(answered, int)
-        assert authority.grants == 1, "the start ran under one held COMMIT fence"
-        handle = win32api.OpenProcess(_SYNCHRONIZE_QUERY_TERMINATE, False, answered)
-        handles.append(handle)
-        assert answered not in scope.active_process_ids(), "the server its owner started is outside the worker's job"
-        server.require_healthy()
-        scope.terminate()
-        assert win32event.WaitForSingleObject(handle, 1500) == win32event.WAIT_TIMEOUT, (
-            "ending the worker's scope ended the server its owner started"
-        )
-    finally:
-        for server in servers:
-            server.close()
-        scope.terminate()
-        for server in servers:
-            server.settle(timeout=6)
-        for handle in handles:
-            if win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT:
-                win32api.TerminateProcess(handle, 1)
-            win32api.CloseHandle(handle)
-
-
-def test_the_owner_starts_nothing_for_a_fence_held_by_another_operation(tmp_path: Path) -> None:
-    if sys.platform != "win32":
-        pytest.skip("requires a native Windows job")
-    seed = _seed("ledger.list")
     (tmp_path / "seed.json").write_text(seed.model_dump_json(), encoding="utf-8")
     started_by_owner: list[int] = []
 
