@@ -154,6 +154,7 @@ pub fn run(
             shell::user_profile::commands(),
             shell::user_profile::censo::commands(),
             shell::ledger::commands(),
+            shell::modelo::commands(),
             manager::commands(),
             agent::commands(),
             crate::startup::commands(),
@@ -270,6 +271,9 @@ pub fn run(
 /// every cleanup even after a failure, including on run-loop exit without a
 /// window close event. Each owner keeps failed cleanup available for retry.
 fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Result<()> {
+    if let Some(modelo) = handle.try_state::<Arc<shell::modelo::ModeloHost>>() {
+        modelo.close();
+    }
     if let Some(ledger) = handle.try_state::<Arc<shell::ledger::LedgerHost>>() {
         ledger.close();
     }
@@ -344,7 +348,8 @@ pub(crate) async fn assemble<R: Runtime>(
     app.manage(Arc::new(shell::setup::SetupHost::new(sign_in.clone())));
     let profile = Arc::new(shell::user_profile::ProfileHost::new(sign_in.clone()));
     app.manage(profile.clone());
-    app.manage(Arc::new(shell::ledger::LedgerHost::new(profile)));
+    app.manage(Arc::new(shell::ledger::LedgerHost::new(profile.clone())));
+    app.manage(Arc::new(shell::modelo::ModeloHost::new(profile)));
     startup.stage(crate::startup::Phase::Runtime);
     #[cfg(windows)]
     tokio::select! {
@@ -577,6 +582,7 @@ mod tests {
             shell::user_profile::commands(),
             shell::user_profile::censo::commands(),
             shell::ledger::commands(),
+            shell::modelo::commands(),
             manager::commands(),
             agent::commands(),
             crate::startup::commands(),

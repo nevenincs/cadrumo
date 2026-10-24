@@ -6,6 +6,7 @@ mod external;
 mod interrupts;
 pub mod language;
 pub mod ledger;
+pub mod modelo;
 mod menu;
 pub mod navigation;
 pub mod presentation;
