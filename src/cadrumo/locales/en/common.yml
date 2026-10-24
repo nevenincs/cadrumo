@@ -1235,26 +1235,28 @@ desktop:
       no_category_match: No category matches
       not_saved: Staged, not saved
       nothing: Select movements first
+      overwritten: '{count} changed from another classification'
       partial: loaded rows only
       range_differs: 'Selected: {selected} · range: {range}'
-      ratio_missing: 'No usage ratio for this category: {count}'
-      ratio_staged: 'Usage ratio: {count}'
+      ratio_missing: No usage ratio for {category}
+      ratio_staged: Usage ratio · {category}
       ratio_unread: Usage ratios not read
       search_category: Search the categories
       select_range: Select range
       share: Business share
       share_categories: Only categories that take a business-use share
-      share_hint: 'Percent of business use: 50 for 50%.'
+      share_hint: Write 30 for 30%
       share_refused: '“{raw}” is not a share: write a percentage, such as 50 for 50%.'
       skipped: 'Left as is: {count}'
       stage: Stage for {count}
-      staged: '{classification} · Staged: {count}'
-      staged_category: '{category} · Staged: {count}'
-      staged_detail: '{classification} · {detail} · Staged: {count}'
-      title_business: 'Business · Movements: {count}'
+      staged: '{classification} · {count} staged'
+      staged_category: '{category} · {count} staged'
+      staged_detail: '{classification} · {detail} · {count} staged'
+      title_business: Classify {count} as Business
       title_business_split: Business · Expenses {expenses} · Income {income}
-      title_category: 'Category · Movements: {count}'
-      title_mixed: 'Mixed · Movements: {count}'
+      title_category: Set the category of {count}
+      title_mixed: Classify {count} as Mixed
+      title_personal: Classify {count} as Personal
       transfers_only: Transfers are Personal or unclassified only
     close: Close the ledger
     column:
@@ -1693,7 +1695,7 @@ desktop:
       undo_applied: Saved changes can't be undone here · edit the cell to change it
         back
       undo_nothing: Nothing to undo
-      undone: 'Undone: {what}'
+      undone: Undone · {what}
     empty: No movements in {period}
     empty_all: No movements yet
     empty_filtered: No movements match
@@ -1826,7 +1828,7 @@ desktop:
       points_hint: Percentage, 0 to 100
       reading: Reading…
       refused: Refused · {code}
-      reread: Read again
+      reread: Re-read
       save: Save
       saving: Saving…
       two_letters: Two letters, e.g. ES
@@ -2797,7 +2799,7 @@ desktop:
       blanks_note: A blank cell leaves the cell as it is; only Delete clears.
       cancel: Cancel
       changes: Cells that change
-      description: 'Rows: {rows} · nothing is staged until you paste.'
+      description: '{rows} to paste · nothing is staged until you paste'
       done: 'Cells pasted: {count} · not saved'
       done_refused: 'Cells pasted: {count} · refused, marked in the grid: {refused}'
       dropped: Past the last row or column
@@ -2815,8 +2817,8 @@ desktop:
       counted_saved: '{count} saved'
       counted_undetermined: '{count} can''t tell, still staged'
       dismiss: Dismiss
-      found_not_saved: '{movement} was not saved, staged again'
-      found_saved: '{movement} was saved'
+      found_not_saved: Not saved, staged again · {movement}
+      found_saved: Saved · {movement}
       found_undetermined: '{movement}: the read can''t tell; it stays staged, saving
         it again is the same save'
       repeatable: '{movement}: may have run; running it again does the same'
@@ -2824,7 +2826,7 @@ desktop:
       saved_unread: 'Saved, answer not read: writes paused'
       saved_unread_reason: 'Re-read first: a save''s answer was not read'
       title: 'Outcome unknown: writes paused'
-      unsaved: '{movement} was not saved'
+      unsaved: Not saved · {movement}
       untold: '{movement}: can''t tell if it saved; still paused'
       what_movements: 'Movements: {count}'
     period:
@@ -3082,6 +3084,7 @@ desktop:
       run_staged: 'Rules run staged · Movements: {count} · not saved'
       run_title: Run the rules
       save: Save rule
+      saved_toast: Rule saved · order {place}
       stage_run: Stage the run
       title: Classification rules
       what: Matches words in a movement's description and decides its classification.

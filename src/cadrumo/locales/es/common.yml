@@ -1267,27 +1267,29 @@ desktop:
       no_category_match: Ninguna categoría coincide
       not_saved: Preparado, sin guardar
       nothing: Selecciona movimientos primero
+      overwritten: 'antes con otra clasificación: {count}'
       partial: solo las filas cargadas
       range_differs: 'Seleccionados: {selected} · rango: {range}'
-      ratio_missing: 'Sin ratio de uso para esta categoría: {count}'
-      ratio_staged: 'Ratio de uso: {count}'
+      ratio_missing: Sin ratio de uso para {category}
+      ratio_staged: Ratio de uso · {category}
       ratio_unread: Ratios de uso sin leer
       search_category: Busca en las categorías
       select_range: Selecciona el rango
       share: Parte empresarial
       share_categories: Solo categorías que admiten una parte de uso empresarial
-      share_hint: 'Porcentaje de uso empresarial: 50 para el 50 %.'
+      share_hint: Escribe 30 para el 30 %
       share_refused: '«{raw}» no es una parte: escribe un porcentaje, como 50 para
         el 50 %.'
       skipped: 'Se quedan como están: {count}'
       stage: Prepara para {count}
-      staged: '{classification} · Preparados: {count}'
-      staged_category: '{category} · Preparados: {count}'
-      staged_detail: '{classification} · {detail} · Preparados: {count}'
-      title_business: 'Empresarial · Movimientos: {count}'
+      staged: '{classification} · preparado para {count}'
+      staged_category: '{category} · preparado para {count}'
+      staged_detail: '{classification} · {detail} · preparado para {count}'
+      title_business: Clasificar {count} como Empresarial
       title_business_split: Empresarial · Gastos {expenses} · Ingresos {income}
-      title_category: 'Categoría · Movimientos: {count}'
-      title_mixed: 'Mixto · Movimientos: {count}'
+      title_category: Poner la categoría de {count}
+      title_mixed: Clasificar {count} como Mixto
+      title_personal: Clasificar {count} como Personal
       transfers_only: Los traspasos solo pueden ser personales o quedar sin clasificar
     close: Cerrar el libro
     column:
@@ -1728,7 +1730,7 @@ desktop:
       undo_applied: Los cambios guardados no se deshacen aquí · edita la celda para
         revertirlo
       undo_nothing: Nada que deshacer
-      undone: 'Deshecho: {what}'
+      undone: Deshecho · {what}
     empty: No hay movimientos en {period}
     empty_all: Aún no hay movimientos
     empty_filtered: Ningún movimiento coincide
@@ -2837,7 +2839,7 @@ desktop:
       blanks_note: Una celda en blanco no cambia nada; solo Suprimir vacía.
       cancel: Cancelar
       changes: Celdas que cambian
-      description: 'Filas: {rows} · no se prepara nada hasta que pegues.'
+      description: 'Para pegar: {rows} · no se prepara nada hasta que pegues'
       done: 'Celdas pegadas: {count} · sin guardar'
       done_refused: 'Celdas pegadas: {count} · rechazadas, marcadas en la tabla: {refused}'
       dropped: Más allá de la última fila o columna
@@ -2855,8 +2857,8 @@ desktop:
       counted_saved: 'Guardado: {count}'
       counted_undetermined: 'Sin aclarar, sigue preparado: {count}'
       dismiss: Cerrar
-      found_not_saved: '{movement} no se guardó; sigue preparado'
-      found_saved: '{movement} se guardó'
+      found_not_saved: Sin guardar, preparado de nuevo · {movement}
+      found_saved: Guardado · {movement}
       found_undetermined: '{movement}: la lectura no lo aclara; sigue preparado y
         guardarlo de nuevo es el mismo guardado'
       repeatable: '{movement}: puede que se hiciera; repetirlo hace lo mismo'
@@ -2864,7 +2866,7 @@ desktop:
       saved_unread: 'Guardado, respuesta sin leer: escrituras en pausa'
       saved_unread_reason: 'Vuelve a leer primero: no se leyó la respuesta de un guardado'
       title: 'Resultado desconocido: escrituras en pausa'
-      unsaved: '{movement} no se guardó'
+      unsaved: Sin guardar · {movement}
       untold: '{movement}: no se sabe si se guardó; sigue en pausa'
       what_movements: 'Movimientos: {count}'
     period:
@@ -3131,6 +3133,7 @@ desktop:
       run_staged: 'Aplicación de reglas pendiente · Movimientos: {count} · sin guardar'
       run_title: Aplicar las reglas
       save: Guardar regla
+      saved_toast: Regla guardada · orden {place}
       stage_run: Dejar pendiente
       title: Reglas de clasificación
       what: Busca palabras en la descripción del movimiento y decide su clasificación.

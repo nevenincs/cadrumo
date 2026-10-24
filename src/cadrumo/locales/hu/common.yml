@@ -1245,26 +1245,28 @@ desktop:
       no_category_match: Nincs egyező kategória
       not_saved: Előkészítve, nincs mentve
       nothing: Előbb jelölj ki tételeket
+      overwritten: 'korábban más besorolással: {count}'
       partial: csak a betöltött sorok
       range_differs: 'Kijelölve: {selected} · tartomány: {range}'
-      ratio_missing: 'Nincs használati arány ehhez a kategóriához: {count}'
-      ratio_staged: 'Használati arány: {count}'
+      ratio_missing: 'Nincs használati arány ehhez: {category}'
+      ratio_staged: Használati arány · {category}
       ratio_unread: A használati arányok nincsenek beolvasva
       search_category: Keress a kategóriák között
       select_range: Tartomány kijelölése
       share: Üzleti rész
       share_categories: Csak üzleti használati arányt elfogadó kategóriák
-      share_hint: 'Üzleti használat százaléka: 50 az 50%-hoz.'
+      share_hint: Írj 30-at a 30%-hoz
       share_refused: '„{raw}” nem arány: írj százalékot, például 50-et az 50%-hoz.'
       skipped: 'Változatlan marad: {count}'
       stage: 'Előkészítés: {count}'
-      staged: '{classification} · Előkészítve: {count}'
-      staged_category: '{category} · Előkészítve: {count}'
-      staged_detail: '{classification} · {detail} · Előkészítve: {count}'
-      title_business: 'Üzleti · Tételek: {count}'
+      staged: '{classification} · {count} előkészítve'
+      staged_category: '{category} · {count} előkészítve'
+      staged_detail: '{classification} · {detail} · {count} előkészítve'
+      title_business: '{count} besorolása Üzleti-ként'
       title_business_split: Üzleti · Kiadás {expenses} · Bevétel {income}
-      title_category: 'Kategória · Tételek: {count}'
-      title_mixed: 'Vegyes · Tételek: {count}'
+      title_category: 'Kategória megadása ennyihez: {count}'
+      title_mixed: '{count} besorolása Vegyes-ként'
+      title_personal: '{count} besorolása Magán-ként'
       transfers_only: Az átvezetés csak magán lehet vagy besorolatlan
     close: Napló bezárása
     column:
@@ -1706,7 +1708,7 @@ desktop:
       undo_applied: A mentett változások itt nem vonhatók vissza · a cella szerkesztésével
         állíthatod vissza
       undo_nothing: Nincs mit visszavonni
-      undone: 'Visszavonva: {what}'
+      undone: Visszavonva · {what}
     empty: 'Nincs tétel ebben az időszakban: {period}'
     empty_all: Még nincs tétel
     empty_filtered: Nincs egyező tétel
@@ -2814,7 +2816,7 @@ desktop:
       blanks_note: Az üres cella nem változtat semmit; csak a Delete töröl.
       cancel: Mégse
       changes: Változó cellák
-      description: 'Sorok: {rows} · beillesztésig semmi sem kerül előkészítésre.'
+      description: 'Beillesztendő: {rows} · beillesztésig semmi sem kerül előkészítésre'
       done: 'Beillesztett cellák: {count} · nincs mentve'
       done_refused: 'Beillesztett cellák: {count} · elutasítva, jelölve a táblázatban:
         {refused}'
@@ -2833,8 +2835,8 @@ desktop:
       counted_saved: 'Mentve: {count}'
       counted_undetermined: 'Nem derül ki, előkészítve marad: {count}'
       dismiss: Bezárás
-      found_not_saved: '{movement} nem lett mentve, újra előkészítve'
-      found_saved: '{movement} mentve lett'
+      found_not_saved: Nincs mentve, újra előkészítve · {movement}
+      found_saved: Mentve · {movement}
       found_undetermined: '{movement}: az olvasásból nem derül ki; előkészítve marad,
         az újramentés ugyanaz a mentés'
       repeatable: '{movement}: lehet, hogy lefutott; az ismétlés ugyanazt teszi'
@@ -2842,7 +2844,7 @@ desktop:
       saved_unread: 'Mentve, a válasz nem olvasható: írás szüneteltetve'
       saved_unread_reason: 'Előbb olvasd be újra: egy mentés válasza nem olvasható'
       title: 'Ismeretlen eredmény: írás szüneteltetve'
-      unsaved: '{movement} nem lett mentve'
+      unsaved: Nincs mentve · {movement}
       untold: '{movement}: nem tudni, mentve lett-e; a szünet marad'
       what_movements: 'Tételek: {count}'
     period:
@@ -3104,6 +3106,7 @@ desktop:
       run_staged: 'Szabályfuttatás előkészítve · Tételek: {count} · nincs mentve'
       run_title: Szabályok futtatása
       save: Szabály mentése
+      saved_toast: 'Szabály mentve · sorrend: {place}'
       stage_run: Futtatás előkészítése
       title: Besorolási szabályok
       what: Szavakat keres a tétel leírásában, és eldönti a besorolását.

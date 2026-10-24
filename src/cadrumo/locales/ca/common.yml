@@ -1262,27 +1262,29 @@ desktop:
       no_category_match: Cap categoria coincideix
       not_saved: Preparat, sense desar
       nothing: Selecciona moviments primer
+      overwritten: 'abans amb una altra classificació: {count}'
       partial: només les files carregades
       range_differs: 'Seleccionats: {selected} · rang: {range}'
-      ratio_missing: 'Sense ràtio d''ús per a aquesta categoria: {count}'
-      ratio_staged: 'Ràtio d''ús: {count}'
+      ratio_missing: Sense ràtio d'ús per a {category}
+      ratio_staged: Ràtio d'ús · {category}
       ratio_unread: Ràtios d'ús sense llegir
       search_category: Cerca a les categories
       select_range: Selecciona el rang
       share: Part empresarial
       share_categories: Només categories que admeten una part d'ús empresarial
-      share_hint: 'Percentatge d''ús empresarial: 50 per al 50 %.'
+      share_hint: Escriu 30 per al 30 %
       share_refused: '«{raw}» no és una part: escriu un percentatge, com 50 per al
         50 %.'
       skipped: 'Es queden com estan: {count}'
       stage: Prepara per a {count}
-      staged: '{classification} · Preparats: {count}'
-      staged_category: '{category} · Preparats: {count}'
-      staged_detail: '{classification} · {detail} · Preparats: {count}'
-      title_business: 'Empresarial · Moviments: {count}'
+      staged: '{classification} · preparat per a {count}'
+      staged_category: '{category} · preparat per a {count}'
+      staged_detail: '{classification} · {detail} · preparat per a {count}'
+      title_business: Classifica {count} com a Empresarial
       title_business_split: Empresarial · Despeses {expenses} · Ingressos {income}
-      title_category: 'Categoria · Moviments: {count}'
-      title_mixed: 'Mixt · Moviments: {count}'
+      title_category: Posa la categoria de {count}
+      title_mixed: Classifica {count} com a Mixt
+      title_personal: Classifica {count} com a Personal
       transfers_only: Els traspassos només poden ser personals o quedar sense classificar
     close: Tanca el llibre
     column:
@@ -1722,7 +1724,7 @@ desktop:
         stage_action: acció
       undo_applied: Els canvis desats no es desfan aquí · edita la cel·la per revertir-ho
       undo_nothing: Res a desfer
-      undone: 'Desfet: {what}'
+      undone: Desfet · {what}
     empty: No hi ha moviments a {period}
     empty_all: Encara no hi ha moviments
     empty_filtered: Cap moviment coincideix
@@ -2830,7 +2832,7 @@ desktop:
       blanks_note: Una cel·la en blanc no canvia res; només Supr buida.
       cancel: Cancel·la
       changes: Cel·les que canvien
-      description: 'Files: {rows} · no es prepara res fins que enganxis.'
+      description: 'Per enganxar: {rows} · no es prepara res fins que enganxis'
       done: 'Cel·les enganxades: {count} · sense desar'
       done_refused: 'Cel·les enganxades: {count} · rebutjades, marcades a la taula:
         {refused}'
@@ -2849,8 +2851,8 @@ desktop:
       counted_saved: 'Desat: {count}'
       counted_undetermined: 'Sense aclarir, continua preparat: {count}'
       dismiss: Tanca
-      found_not_saved: '{movement} no es va desar; continua preparat'
-      found_saved: '{movement} es va desar'
+      found_not_saved: Sense desar, preparat de nou · {movement}
+      found_saved: Desat · {movement}
       found_undetermined: '{movement}: la lectura no ho aclareix; continua preparat
         i desar-lo de nou és el mateix desament'
       repeatable: '{movement}: potser s''ha fet; repetir-ho fa el mateix'
@@ -2859,7 +2861,7 @@ desktop:
       saved_unread_reason: 'Torna a llegir primer: no es va llegir la resposta d''un
         desament'
       title: 'Resultat desconegut: escriptures en pausa'
-      unsaved: '{movement} no es va desar'
+      unsaved: Sense desar · {movement}
       untold: '{movement}: no se sap si s''ha desat; continua en pausa'
       what_movements: 'Moviments: {count}'
     period:
@@ -3125,6 +3127,7 @@ desktop:
       run_staged: 'Aplicació de regles pendent · Moviments: {count} · sense desar'
       run_title: Aplica les regles
       save: Desa la regla
+      saved_toast: Regla desada · ordre {place}
       stage_run: Deixa-ho pendent
       title: Regles de classificació
       what: Cerca paraules a la descripció del moviment i decideix la seva classificació.
