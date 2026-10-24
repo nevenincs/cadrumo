@@ -1800,10 +1800,12 @@ function DataGridText({
       {children}
     </span>
   );
-  if (!truncated || dismissed || !(hover || focused)) return span;
+  // The text is always the tooltip's trigger, shown or not: swapping the
+  // element as the pointer enters it would remount it between the press
+  // and the release, and the click that selects its row would be lost.
   return (
     <Tooltip
-      open
+      open={truncated && !dismissed && (hover || focused)}
       onOpenChange={(open) => {
         if (open) return;
         setHover(false);
