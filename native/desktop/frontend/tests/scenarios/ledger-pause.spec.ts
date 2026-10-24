@@ -26,7 +26,7 @@ const RULES = "desktop.ledger.rules.title";
 const ledgerControls = {
   nextWrites: (
     target: Page,
-    outcomes: ("unknown" | "saved_unread" | "refused")[],
+    outcomes: ("unknown" | "lost" | "saved_unread" | "refused")[],
   ) =>
     target.evaluate(
       (next) => window.__scenarioLedger!.nextWrites(next),
@@ -688,4 +688,45 @@ test("the review reads the lock of every staged movement before it saves, the sa
     await expect(review(target)).toHaveCount(0);
   }
   expect(summaries[1]).toBe(summaries[0]);
+});
+
+test("an export lost before it wrote its file says the file is not where it was saved", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await head(target)
+    .getByRole("button", {
+      name: label("desktop.ledger.action.export"),
+      exact: true,
+    })
+    .click();
+  const exportDialog = target.getByRole("dialog", {
+    name: label("desktop.ledger.export.title"),
+  });
+  await exportDialog
+    .getByRole("button", {
+      name: label("desktop.ledger.export.choose_file"),
+      exact: true,
+    })
+    .click();
+  const file = exportDialog.locator(".ledger-export-file");
+  await expect(file).toHaveText(/\.csv$/);
+  const name = (await file.textContent())!;
+  // The write is left unknown without running: no file was written.
+  await ledgerControls.nextWrites(target, ["lost"]);
+  await exportDialog.locator(".ledger-export-send").click();
+  await expect(banner(target)).toBeVisible();
+  await exportDialog
+    .getByRole("button", {
+      name: label("desktop.ledger.export.cancel"),
+      exact: true,
+    })
+    .click();
+  await expect(exportDialog).toBeHidden();
+  await banner(target).locator(".ledger-paused-look").click();
+  await expect(banner(target).locator(".ledger-paused-looked")).toHaveText(
+    label("desktop.ledger.export.not_there", { file: name }),
+  );
+  // It stays held until the person releases it.
+  await expect(banner(target).locator(".ledger-paused-checked")).toBeVisible();
 });
