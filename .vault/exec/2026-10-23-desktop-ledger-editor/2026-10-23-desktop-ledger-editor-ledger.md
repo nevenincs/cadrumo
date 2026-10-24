@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:fe89a0c238a4fdd25656282f99f3fac347f3460dcd9377ecda130e2c312af921'
+body_hash: 'sha256:01e44f2b14c0c27d8d66a8ec6166552ecafa1aff60db86efb763034f4a1c000e'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -228,6 +228,33 @@ related:
 - `S08` `M` `src/cadrumo/_data/operations/contract_manifest.json`
 - `S08` `verify:` `pytest ledger list + TUI ledger (717)` -> `pass`
 - `S08` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/InvoiceEditor.tsx`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/InvoiceLines.tsx`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/InvoiceFields.tsx`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/invoiceModel.ts`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/invoiceWords.ts`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/invoiceWrites.ts`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/useInvoiceCatalogue.ts`
+- `S12` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S12` `M` `native/desktop/frontend/src/components/ledger/LedgerHeader.tsx`
+- `S12` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S12` `A` `native/desktop/frontend/src/dev/ledgerInvoiceFixture.ts`
+- `S12` `A` `native/desktop/frontend/src/dev/fixtures/ledgerInvoices.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S12` `A` `native/desktop/frontend/tests/ledger-invoices-model.spec.ts`
+- `S12` `A` `native/desktop/frontend/tests/scenarios/ledger-invoices.spec.ts`
+- `S12` `M` `dev/locales/desktop_chrome.py`
+- `S12` `M` `src/cadrumo/locales/en/common.yml`
+- `S12` `M` `src/cadrumo/locales/es/common.yml`
+- `S12` `M` `src/cadrumo/locales/ca/common.yml`
+- `S12` `M` `src/cadrumo/locales/hu/common.yml`
+- `S12` `verify:` `npx tsc --noEmit` -> `pass`
+- `S12` `verify:` `npx playwright test tests/ledger-invoices-model.spec.ts` -> `pass`
+- `S12` `verify:` `npx playwright test tests/scenarios/ledger-invoices.spec.ts` -> `pass`
+- `S12` `verify:` `python -m dev.locales.desktop_chrome --output <tmp>` -> `pass`
+- `S12` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -242,3 +269,5 @@ related:
 - `S08` S08 The list projection carries no own account id, import batch or import note: the account, import and import-note filters are product list reads whose ids the grid keeps, and the grid has no Account column.
 - `S08` S08 Staging is held in the page (reduceStage) and the classify command stages through it; the unsaved marker, tray and review land with S09.
 - `S08` Follow-up: list rows carry the own-account register id so the desktop grid can show and group by account
+- `S12` `dev/locales/tests/test_desktop_chrome.py` drift check fails in the working tree only on S09's uncommitted desktop.ledger.apply/edit/tray keys; no invoices key drifts.
+- `S12` ledger.invoice.wizard and the per-line OSS rate kind are not offered; the structured add covers creation.

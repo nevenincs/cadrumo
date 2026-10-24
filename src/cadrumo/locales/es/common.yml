@@ -1266,6 +1266,239 @@ desktop:
       parser: Leído con un aviso
     invoice:
       linked: Vinculada
+    invoices:
+      action:
+        add: Añadir factura
+      add: Añadir factura
+      added: Factura {number} añadida
+      added_no_rate: Factura {number} añadida · aún sin tipo de cambio a EUR
+      any_class: Cualquier clase
+      any_payment: Cualquier pago
+      back: Volver
+      base: Base imponible
+      cancel: Cancelar
+      check: Comprobar
+      class:
+        ordinaria: Ordinaria
+        rectificativa: Rectificativa
+        simplificada: Simplificada
+      class_filter: Clase de factura
+      close: Cerrar
+      column:
+        base: Base
+        class: Clase
+        counterparty: Contraparte
+        country: País
+        currency: Moneda
+        date: Emisión
+        iva: IVA
+        kind: Tipo
+        linked: Movimientos
+        notes: Notas
+        number: Número
+        operation_date: Operación
+        payment: Pago
+        recargo: Recargo
+        retention: Retención
+        tax_id: NIF
+        total: Total
+      confirm_changes: 'Cambios por guardar: {count}'
+      confirm_new: El tipo, el número, la fecha, el NIF, la moneda y el total no se
+        pueden cambiar después.
+      count: '{shown} de {total}'
+      discard: Descartar
+      discard_changes: ¿Descartar estos cambios?
+      discard_new: ¿Descartar esta factura?
+      discard_note: Todavía no se ha guardado nada.
+      document: Documento
+      duplicate: Ya está en el catálogo.
+      empty: Aún no hay facturas. Añade una o importa un libro de facturas.
+      empty_filtered: Ninguna factura coincide.
+      failed: 'No se ha enviado: {code}. No se ha guardado nada.'
+      field:
+        counterparty_country: País
+        counterparty_name: Contraparte
+        counterparty_tax_id: NIF
+        currency: Moneda
+        invoice_class: Clase
+        invoice_number: Número
+        issued_at: Fecha de emisión
+        iva_category: Categoría de IVA
+        kind: Tipo
+        lease: Arrendamiento de local de negocio
+        notes: Notas
+        operation_date: Fecha de operación
+        operation_type: Clave del modelo 349
+        payment_id: Identificador del pago
+        payment_status: Pago
+        printed_total: Total impreso
+        recargo: Recargo de equivalencia
+        rectifies_invoice_number: Factura que rectifica
+        referencia: Referencia catastral
+        retention_amount: Importe de la retención
+        retention_rate: Tipo de retención
+        series: Serie
+        situacion: Situación del inmueble
+      fixed: Forma parte de la identidad de la factura. Para cambiarlo, elimínala
+        y vuelve a añadirla.
+      from_lines: Según las líneas
+      gone: Esta factura ya no está en el catálogo.
+      gone_title: Factura no encontrada
+      grid: Facturas
+      hint:
+        country: Dos letras, p. ej. ES
+        currency: Tres letras, p. ej. EUR
+        date: Año-mes-día
+        operation_date: Si es distinta de la de emisión
+        payment_id: El catálogo no lo muestra. Escribe uno para sustituirlo.
+        percent: 15 para el 15 %
+        printed_total: Opcional. Comprueba que las líneas cuadran.
+        tax_id_optional: Opcional en una simplificada emitida
+      identity_fixed: El tipo, el número, la fecha de emisión, el NIF, la moneda,
+        los totales y las líneas son fijos.
+      invalid: 'No se ha añadido: el libro la rechaza por no válida.'
+      invariant:
+        counterparty: Nombre de la contraparte
+        country: País de dos letras
+        line: Al menos una línea
+        totals: Los totales cuadran
+      iva: IVA
+      keep_editing: Seguir editando
+      keep_it: Conservarla
+      kind:
+        issued: Emitida
+        received: Recibida
+      kind_choice:
+        issued: Factura que he emitido
+        received: Factura que he recibido
+      kind_filter: Tipo
+      kinds:
+        all: Todas
+        issued: Emitidas
+        received: Recibidas
+      lease: Arrendamiento
+      line:
+        actions: Acciones
+        add: Añadir una línea
+        category: Categoría
+        choose_rate: Elige un tipo
+        description: Descripción
+        field: Línea {line}, {field}
+        iva: IVA
+        problem: 'Línea {line} · {field}: {problem}'
+        quantity: Cant.
+        rate: Tipo de IVA
+        remove: Quitar la línea {line}
+        subtotal: Subtotal
+        unit_price: Precio unitario
+      lines: Líneas
+      lines_fixed: Fijas
+      lines_note: Punto para los decimales, hasta seis, sin separador de miles. El
+        subtotal y el IVA se calculan al céntimo.
+      linked: Movimientos vinculados
+      linked_count: 'Movimientos vinculados: {count}'
+      links_permanent: 'Un vínculo es permanente: no se puede quitar.'
+      met: cumplido
+      needs: Toda factura necesita
+      new: Nueva factura
+      new_note: Se guarda en el catálogo al añadirla.
+      next_number: 'Siguiente de la serie {series}: {number}'
+      next_number_series: Elige una serie para ver su siguiente número.
+      none: Ninguno
+      not_met: pendiente
+      not_saved: No se ha guardado. Tus cambios se conservan.
+      not_stated: Sin indicar
+      open_duplicate: Abrirla
+      operation_date_fixed: Solo se indica al añadir la factura
+      operation_key: Clave {key}
+      party: Contraparte
+      payment:
+        cancelled: Anulada
+        overdue: Vencida
+        paid: Pagada
+        partially_paid: Pagada en parte
+        pending: Pendiente
+      payment_filter: Pago
+      payment_section: Pago
+      problem:
+        choose_kind: Indica si la has emitido o recibido.
+        choose_rate: Elige un tipo.
+        country_letters: Dos letras, p. ej. ES.
+        currency_letters: Tres letras, p. ej. EUR.
+        lease_reference_not_allowed: Sin referencia catastral en esta situación.
+        missing: Obligatorio.
+        no_line: Añade al menos una línea.
+        operation_date_fixed: Una vez añadida, se puede cambiar, pero no añadir ni
+          quitar.
+        payment_id_shape: 64 caracteres hexadecimales.
+        printed_differs: Las líneas suman {total}.
+        recargo_above_iva: No puede superar el IVA.
+        rectifies_required: Indica la factura que rectifica.
+        retention_above_base: No puede superar la base imponible.
+        retention_differs: El tipo da {amount}.
+        retention_needs_amount: Un tipo necesita su importe.
+        series_required: Una rectificativa necesita serie.
+        tax_id_required: Obligatorio, salvo en una simplificada emitida.
+      rate:
+        exempt: Exento
+        not_subject: No sujeto
+      read_failed: No se han podido leer las facturas.
+      refusal:
+        ambiguous_grouping: '"{raw}" se puede leer de dos maneras. Escribe 1500 o
+          1.5.'
+        comma_decimal: '"{raw}": usa punto para los decimales.'
+        currency_symbol: '"{raw}": sin símbolo de moneda.'
+        date_not_in_calendar: '"{raw}" no es un día del calendario.'
+        date_not_iso: '"{raw}": escribe la fecha año-mes-día.'
+        exponent: '"{raw}": escribe el número completo.'
+        grouping: '"{raw}": sin separador de miles.'
+        line_break: 'Una sola línea: sin tabuladores ni saltos de línea.'
+        meant: ¿Querías decir {suggestion}?
+        not_a_date: '"{raw}" no es una fecha.'
+        not_a_number: '"{raw}" no es un número.'
+        percent_above_100: '"{raw}": como mucho el 100 %.'
+        percent_as_fraction: '"{raw}": escribe 15 para el 15 %.'
+        signed: '"{raw}": escríbelo sin signo.'
+        too_long: 'Demasiado largo: como mucho {limit} caracteres.'
+        too_many_decimals: '"{raw}": como mucho {limit} decimales.'
+        zero: Debe ser mayor que cero.
+      refused: 'No se ha guardado: el libro lo ha rechazado ({code}).'
+      remove: Eliminar
+      remove_confirm: Eliminar la factura
+      remove_linked: Una factura vinculada se queda
+      remove_linked_note: 'Movimientos vinculados: {count}. Un vínculo no se puede
+        quitar, así que esta factura tampoco.'
+      remove_note: Sale del catálogo. Los movimientos no cambian.
+      remove_question: ¿Eliminar esta factura?
+      removed: Factura {number} eliminada
+      retention: Retención, fuera del total
+      retention_presets: Tipos de retención habituales
+      review: Revisar
+      review_changes: Revisar cambios ({count})
+      save: Guardar
+      saved: Factura {number} guardada
+      search: Buscar facturas
+      search_placeholder: Número, nombre, NIF
+      situacion:
+        s1: España, excepto País Vasco y Navarra
+        s2: País Vasco o Navarra
+        s3: España sin referencia catastral
+        s4: En el extranjero
+      stored_note: '{kind} · {payment} · vinculada: {count}'
+      this_is: Es una
+      title: Factura {number}
+      to_pay: A pagar {amount}
+      to_pay_withheld: A pagar {amount} (− {retention} de retención)
+      toolbar: Catálogo de facturas
+      total: Total
+      totals: Totales
+      unknown: Resultado desconocido
+      unknown_note: Puede que se haya guardado. Compruébalo antes de seguir.
+      unknown_unread: 'Sigue sin saberse: no se ha podido leer el libro. Vuelve a
+        comprobarlo.'
+      unmatched: Sin vincular
+      use: Usar
+      use_number: Usar {number}
     irpf_category:
       actividad_economica: Actividad económica
       arrendamiento_local: Arrendamiento de local

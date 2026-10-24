@@ -19,10 +19,11 @@ const grid = (target: Page) => section(target).getByRole("grid");
 const dataRows = (target: Page) => grid(target).locator("[data-kind=data]");
 const editor = (target: Page) => target.locator(".ledger-invoice-editor");
 const toast = (target: Page) => section(target).locator(".ledger-toast");
+/** A form control by its label: a section may share its name. */
 const field = (target: Page, key: string) =>
-  editor(target).getByLabel(label(`desktop.ledger.invoices.field.${key}`), {
-    exact: true,
-  });
+  editor(target)
+    .getByLabel(label(`desktop.ledger.invoices.field.${key}`), { exact: true })
+    .and(editor(target).locator("input, select, textarea"));
 const lineCell = (target: Page, line: number, cell: number) =>
   editor(target)
     .locator(".ledger-invoice-lines tbody tr")

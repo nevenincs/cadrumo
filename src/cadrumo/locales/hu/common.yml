@@ -1244,6 +1244,236 @@ desktop:
       parser: Figyelmeztetéssel beolvasva
     invoice:
       linked: Összekapcsolva
+    invoices:
+      action:
+        add: Számla hozzáadása
+      add: Számla hozzáadása
+      added: '{number} számla hozzáadva'
+      added_no_rate: '{number} számla hozzáadva · még nincs EUR-árfolyam'
+      any_class: Bármely típus
+      any_payment: Bármely fizetés
+      back: Vissza
+      base: Adóalap
+      cancel: Mégse
+      check: Ellenőrzés
+      class:
+        ordinaria: Ordinaria (teljes)
+        rectificativa: Rectificativa (helyesbítő)
+        simplificada: Simplificada (egyszerűsített)
+      class_filter: Számla típusa
+      close: Bezárás
+      column:
+        base: Alap
+        class: Típus
+        counterparty: Partner
+        country: Ország
+        currency: Pénznem
+        date: Kiállítva
+        iva: IVA
+        kind: Fajta
+        linked: Tételek
+        notes: Megjegyzés
+        number: Szám
+        operation_date: Teljesítés
+        payment: Fizetés
+        recargo: Recargo
+        retention: Retención
+        tax_id: Adószám
+        total: Összesen
+      confirm_changes: 'Mentendő módosítások: {count}'
+      confirm_new: A fajta, a szám, a dátum, az adószám, a pénznem és a végösszeg
+        utólag nem módosítható.
+      count: '{shown} / {total}'
+      discard: Elvetés
+      discard_changes: Elveted a módosításokat?
+      discard_new: Elveted ezt a számlát?
+      discard_note: Még semmi sincs mentve.
+      document: Bizonylat
+      duplicate: Már szerepel a katalógusban.
+      empty: Még nincs számla. Adj hozzá egyet, vagy importálj számlakönyvet.
+      empty_filtered: Nincs egyező számla.
+      failed: 'Nem lett elküldve: {code}. Semmi sem lett mentve.'
+      field:
+        counterparty_country: Ország
+        counterparty_name: Partner neve
+        counterparty_tax_id: Adószám (NIF)
+        currency: Pénznem
+        invoice_class: Típus
+        invoice_number: Számlaszám
+        issued_at: Kiállítás dátuma
+        iva_category: IVA-kategória
+        kind: Fajta
+        lease: Üzlethelyiség bérlete
+        notes: Megjegyzés
+        operation_date: Teljesítés dátuma
+        operation_type: Modelo 349 kulcs
+        payment_id: Fizetés azonosítója
+        payment_status: Fizetés
+        printed_total: Nyomtatott végösszeg
+        recargo: Recargo
+        rectifies_invoice_number: Helyesbített számla
+        referencia: Kataszteri hivatkozás
+        retention_amount: Retención összege
+        retention_rate: Retención mértéke
+        series: Sorozat
+        situacion: Ingatlan helyzete
+      fixed: A számla azonosítójának része. Módosításhoz töröld, majd add hozzá újra.
+      from_lines: A tételsorok szerint
+      gone: Ez a számla már nincs a katalógusban.
+      gone_title: A számla nem található
+      grid: Számlák
+      hint:
+        country: Két betű, pl. ES
+        currency: Három betű, pl. EUR
+        date: Év-hónap-nap
+        operation_date: Ha eltér a kiállítás dátumától
+        payment_id: A katalógus nem mutatja. Írj be egyet a cseréjéhez.
+        percent: 15 a 15%-hoz
+        printed_total: Nem kötelező. Ellenőrzi, hogy a tételsorok kiadják.
+        tax_id_optional: Kiállított simplificada esetén nem kötelező
+      identity_fixed: A fajta, a szám, a kiállítás dátuma, az adószám, a pénznem,
+        az összegek és a tételsorok rögzítettek.
+      invalid: 'Nem lett hozzáadva: a főkönyv érvénytelennek találta.'
+      invariant:
+        counterparty: Partner neve
+        country: Kétbetűs ország
+        line: Legalább egy tételsor
+        totals: Az összegek egyeznek
+      iva: IVA
+      keep_editing: Szerkesztés folytatása
+      keep_it: Megtartás
+      kind:
+        issued: Kiállított
+        received: Befogadott
+      kind_choice:
+        issued: Általam kiállított számla
+        received: Általam befogadott számla
+      kind_filter: Fajta
+      kinds:
+        all: Mind
+        issued: Kiállított
+        received: Befogadott
+      lease: Bérlet
+      line:
+        actions: Műveletek
+        add: Tételsor hozzáadása
+        category: Kategória
+        choose_rate: Válassz kulcsot
+        description: Leírás
+        field: '{line}. tételsor, {field}'
+        iva: IVA
+        problem: '{line}. tételsor · {field}: {problem}'
+        quantity: Menny.
+        rate: IVA-kulcs
+        remove: A(z) {line}. tételsor eltávolítása
+        subtotal: Részösszeg
+        unit_price: Egységár
+      lines: Tételsorok
+      lines_fixed: Rögzített
+      lines_note: Tizedespont, legfeljebb hat tizedes, ezres elválasztó nélkül. A
+        részösszeg és az IVA centre pontosan számolódik.
+      linked: Kapcsolt tételek
+      linked_count: 'Kapcsolt tételek: {count}'
+      links_permanent: 'A kapcsolat végleges: nem távolítható el.'
+      met: teljesül
+      needs: Minden számlához kell
+      new: Új számla
+      new_note: A katalógusba hozzáadáskor kerül.
+      next_number: 'A(z) {series} sorozat következő száma: {number}'
+      next_number_series: Válassz sorozatot a következő szám megjelenítéséhez.
+      none: Nincs
+      not_met: nem teljesül
+      not_saved: Nem lett mentve. A módosításaid megmaradtak.
+      not_stated: Nincs megadva
+      open_duplicate: Megnyitás
+      operation_date_fixed: Csak a számla hozzáadásakor adható meg
+      operation_key: '{key} kulcs'
+      party: Partner
+      payment:
+        cancelled: Érvénytelenítve
+        overdue: Lejárt
+        paid: Kifizetve
+        partially_paid: Részben kifizetve
+        pending: Függőben
+      payment_filter: Fizetés
+      payment_section: Fizetés
+      problem:
+        choose_kind: Add meg, hogy kiállítottad vagy befogadtad.
+        choose_rate: Válassz kulcsot.
+        country_letters: Két betű, pl. ES.
+        currency_letters: Három betű, pl. EUR.
+        lease_reference_not_allowed: Ennél a helyzetnél nincs kataszteri hivatkozás.
+        missing: Kötelező.
+        no_line: Adj hozzá legalább egy tételsort.
+        operation_date_fixed: Hozzáadás után módosítható, de nem adható hozzá és nem
+          törölhető.
+        payment_id_shape: 64 hexadecimális karakter.
+        printed_differs: A tételsorok összege {total}.
+        recargo_above_iva: Nem haladhatja meg az IVA-t.
+        rectifies_required: Add meg a helyesbített számlát.
+        retention_above_base: Nem haladhatja meg az adóalapot.
+        retention_differs: A mérték alapján {amount}.
+        retention_needs_amount: A mértékhez összeg is kell.
+        series_required: A rectificativához sorozat kell.
+        tax_id_required: Kötelező, kivéve kiállított simplificada esetén.
+      rate:
+        exempt: Mentes
+        not_subject: Nem tárgya
+      read_failed: A számlák nem olvashatók be.
+      refusal:
+        ambiguous_grouping: '"{raw}" kétféleképpen érthető. Írd így: 1500 vagy 1.5.'
+        comma_decimal: '"{raw}": tizedesponttal írd.'
+        currency_symbol: '"{raw}": pénznemjel nélkül.'
+        date_not_in_calendar: '"{raw}" nem létező nap.'
+        date_not_iso: '"{raw}": év-hónap-nap alakban írd.'
+        exponent: '"{raw}": írd ki a számot teljesen.'
+        grouping: '"{raw}": ezres elválasztó nélkül.'
+        line_break: 'Csak egy sor: tabulátor és sortörés nélkül.'
+        meant: 'Erre gondoltál: {suggestion}?'
+        not_a_date: '"{raw}" nem dátum.'
+        not_a_number: '"{raw}" nem szám.'
+        percent_above_100: '"{raw}": legfeljebb 100%.'
+        percent_as_fraction: '"{raw}": 15%-hoz 15-öt írj.'
+        signed: '"{raw}": előjel nélkül írd.'
+        too_long: 'Túl hosszú: legfeljebb {limit} karakter.'
+        too_many_decimals: '"{raw}": legfeljebb {limit} tizedes.'
+        zero: Nullánál nagyobb kell legyen.
+      refused: 'Nem lett mentve: a főkönyv elutasította ({code}).'
+      remove: Törlés
+      remove_confirm: Számla törlése
+      remove_linked: A kapcsolt számla megmarad
+      remove_linked_note: 'Kapcsolt tételek: {count}. A kapcsolat nem távolítható
+        el, így ez a számla sem.'
+      remove_note: Kikerül a katalógusból. A tételek nem változnak.
+      remove_question: Törlöd ezt a számlát?
+      removed: '{number} számla törölve'
+      retention: Retención, a végösszegen kívül
+      retention_presets: Gyakori retención-mértékek
+      review: Áttekintés
+      review_changes: Módosítások áttekintése ({count})
+      save: Mentés
+      saved: '{number} számla mentve'
+      search: Számlák keresése
+      search_placeholder: Szám, név, adószám
+      situacion:
+        s1: Spanyolország, Baszkföld és Navarra kivételével
+        s2: Baszkföld vagy Navarra
+        s3: Spanyolország, kataszteri hivatkozás nélkül
+        s4: Külföldön
+      stored_note: '{kind} · {payment} · kapcsolva: {count}'
+      this_is: Ez egy
+      title: '{number} számla'
+      to_pay: 'Fizetendő: {amount}'
+      to_pay_withheld: 'Fizetendő: {amount} (− {retention} retención)'
+      toolbar: Számlakatalógus
+      total: Végösszeg
+      totals: Összegek
+      unknown: Ismeretlen eredmény
+      unknown_note: Lehet, hogy mentésre került. Ellenőrizd, mielőtt folytatod.
+      unknown_unread: 'Továbbra sem ismert: a főkönyv nem olvasható. Ellenőrizd újra.'
+      unmatched: Párosítatlan
+      use: Használat
+      use_number: '{number} használata'
     irpf_category:
       actividad_economica: Gazdasági tevékenység
       arrendamiento_local: Üzlethelyiség bérlete

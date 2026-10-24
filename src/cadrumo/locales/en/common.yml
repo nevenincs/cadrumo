@@ -1228,6 +1228,236 @@ desktop:
       parser: Read with a warning
     invoice:
       linked: Linked
+    invoices:
+      action:
+        add: Add invoice
+      add: Add invoice
+      added: Invoice {number} added
+      added_no_rate: Invoice {number} added · no EUR rate yet
+      any_class: Any class
+      any_payment: Any payment
+      back: Back
+      base: Taxable base
+      cancel: Cancel
+      check: Check
+      class:
+        ordinaria: Ordinaria (full)
+        rectificativa: Rectificativa (corrective)
+        simplificada: Simplificada (simplified)
+      class_filter: Invoice class
+      close: Close
+      column:
+        base: Base
+        class: Class
+        counterparty: Counterparty
+        country: Country
+        currency: Currency
+        date: Issued
+        iva: IVA
+        kind: Kind
+        linked: Movements
+        notes: Notes
+        number: Number
+        operation_date: Operation
+        payment: Payment
+        recargo: Recargo
+        retention: Retención
+        tax_id: Tax ID
+        total: Total
+      confirm_changes: 'Changes to save: {count}'
+      confirm_new: Kind, number, date, tax ID, currency and total can't change once
+        added.
+      count: '{shown} of {total}'
+      discard: Discard
+      discard_changes: Discard these changes?
+      discard_new: Discard this invoice?
+      discard_note: Nothing has been saved yet.
+      document: Document
+      duplicate: Already in the catalogue.
+      empty: No invoices yet. Add one or import an invoice book.
+      empty_filtered: No invoices match.
+      failed: 'Not sent: {code}. Nothing was saved.'
+      field:
+        counterparty_country: Country
+        counterparty_name: Counterparty
+        counterparty_tax_id: Tax ID (NIF)
+        currency: Currency
+        invoice_class: Class
+        invoice_number: Number
+        issued_at: Issue date
+        iva_category: IVA category
+        kind: Kind
+        lease: Business premises lease
+        notes: Notes
+        operation_date: Operation date
+        operation_type: Modelo 349 key
+        payment_id: Payment ID
+        payment_status: Payment
+        printed_total: Printed total
+        recargo: Recargo
+        rectifies_invoice_number: Rectifies invoice
+        referencia: Cadastral reference
+        retention_amount: Retención amount
+        retention_rate: Retención rate
+        series: Series
+        situacion: Property situation
+      fixed: Part of the invoice's identity. Remove it and add it again to change
+        it.
+      from_lines: From the lines
+      gone: This invoice is no longer in the catalogue.
+      gone_title: Invoice not found
+      grid: Invoices
+      hint:
+        country: Two letters, e.g. ES
+        currency: Three letters, e.g. EUR
+        date: Year-month-day
+        operation_date: If it differs from the issue date
+        payment_id: Not shown by the catalogue. Type one to replace it.
+        percent: 15 for 15%
+        printed_total: Optional. Checks that the lines add up.
+        tax_id_optional: Optional on an issued simplificada
+      identity_fixed: Kind, number, issue date, tax ID, currency, totals and lines
+        are fixed.
+      invalid: 'Not added: the ledger refused it as invalid.'
+      invariant:
+        counterparty: Counterparty name
+        country: Two-letter country
+        line: At least one line
+        totals: Totals agree
+      iva: IVA
+      keep_editing: Keep editing
+      keep_it: Keep it
+      kind:
+        issued: Issued
+        received: Received
+      kind_choice:
+        issued: Invoice I issued
+        received: Invoice I received
+      kind_filter: Kind
+      kinds:
+        all: All
+        issued: Issued
+        received: Received
+      lease: Lease
+      line:
+        actions: Actions
+        add: Add a line
+        category: Category
+        choose_rate: Choose a rate
+        description: Description
+        field: Line {line}, {field}
+        iva: IVA
+        problem: 'Line {line} · {field}: {problem}'
+        quantity: Qty
+        rate: IVA rate
+        remove: Remove line {line}
+        subtotal: Subtotal
+        unit_price: Unit price
+      lines: Lines
+      lines_fixed: Fixed
+      lines_note: A dot for decimals, up to six places, no thousands separator. Subtotal
+        and IVA are worked out to the cent.
+      linked: Linked movements
+      linked_count: 'Linked movements: {count}'
+      links_permanent: 'A link is permanent: it can''t be removed.'
+      met: met
+      needs: Every invoice needs
+      new: New invoice
+      new_note: Saved to the catalogue when you add it.
+      next_number: 'Next in series {series}: {number}'
+      next_number_series: Choose a series to see its next number.
+      none: None
+      not_met: not met
+      not_saved: It wasn't saved. Your edits are kept.
+      not_stated: Not stated
+      open_duplicate: Open it
+      operation_date_fixed: Set only when the invoice is added
+      operation_key: Key {key}
+      party: Counterparty
+      payment:
+        cancelled: Cancelled
+        overdue: Overdue
+        paid: Paid
+        partially_paid: Partly paid
+        pending: Pending
+      payment_filter: Payment
+      payment_section: Payment
+      problem:
+        choose_kind: Say whether you issued or received it.
+        choose_rate: Choose a rate.
+        country_letters: Two letters, e.g. ES.
+        currency_letters: Three letters, e.g. EUR.
+        lease_reference_not_allowed: No cadastral reference for this situation.
+        missing: Required.
+        no_line: Add at least one line.
+        operation_date_fixed: Once added, it can move but not be added or removed.
+        payment_id_shape: 64 hexadecimal characters.
+        printed_differs: The lines add up to {total}.
+        recargo_above_iva: Can't exceed the IVA.
+        rectifies_required: Name the invoice it rectifies.
+        retention_above_base: Can't exceed the taxable base.
+        retention_differs: The rate gives {amount}.
+        retention_needs_amount: A rate needs its amount.
+        series_required: A rectificativa needs a series.
+        tax_id_required: Required, except on an issued simplificada.
+      rate:
+        exempt: Exempt
+        not_subject: Not subject
+      read_failed: Couldn't read the invoices.
+      refusal:
+        ambiguous_grouping: '"{raw}" can be read two ways. Write 1500 or 1.5.'
+        comma_decimal: '"{raw}": use a dot for decimals.'
+        currency_symbol: '"{raw}": no currency symbol.'
+        date_not_in_calendar: '"{raw}" isn''t a calendar day.'
+        date_not_iso: '"{raw}": write the date year-month-day.'
+        exponent: '"{raw}": write the number out in full.'
+        grouping: '"{raw}": no thousands separator.'
+        line_break: 'One line only: no tabs or line breaks.'
+        meant: Did you mean {suggestion}?
+        not_a_date: '"{raw}" isn''t a date.'
+        not_a_number: '"{raw}" isn''t a number.'
+        percent_above_100: '"{raw}": at most 100%.'
+        percent_as_fraction: '"{raw}": write 15 for 15%.'
+        signed: '"{raw}": write it without a sign.'
+        too_long: 'Too long: at most {limit} characters.'
+        too_many_decimals: '"{raw}": at most {limit} decimals.'
+        zero: Must be more than zero.
+      refused: 'Not saved: the ledger refused it ({code}).'
+      remove: Remove
+      remove_confirm: Remove invoice
+      remove_linked: A linked invoice stays
+      remove_linked_note: 'Linked movements: {count}. A link can''t be removed, so
+        neither can this invoice.'
+      remove_note: It leaves the catalogue. Movements are not affected.
+      remove_question: Remove this invoice?
+      removed: Invoice {number} removed
+      retention: Retención, outside the total
+      retention_presets: Common retención rates
+      review: Review
+      review_changes: Review changes ({count})
+      save: Save
+      saved: Invoice {number} saved
+      search: Search invoices
+      search_placeholder: Number, name, tax ID
+      situacion:
+        s1: Spain, outside the Basque Country and Navarre
+        s2: Basque Country or Navarre
+        s3: Spain without a cadastral reference
+        s4: Abroad
+      stored_note: '{kind} · {payment} · linked: {count}'
+      this_is: This is
+      title: Invoice {number}
+      to_pay: To be paid {amount}
+      to_pay_withheld: To be paid {amount} (− {retention} retención)
+      toolbar: Invoice catalogue
+      total: Total
+      totals: Totals
+      unknown: Outcome unknown
+      unknown_note: It may have been saved. Check before doing anything else.
+      unknown_unread: 'Still unknown: the ledger couldn''t be read. Check again.'
+      unmatched: Unmatched
+      use: Use
+      use_number: Use {number}
     irpf_category:
       actividad_economica: Economic activity
       arrendamiento_local: Rent of business premises

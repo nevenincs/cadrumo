@@ -1257,6 +1257,238 @@ desktop:
       parser: Llegit amb un avís
     invoice:
       linked: Vinculada
+    invoices:
+      action:
+        add: Afegeix una factura
+      add: Afegeix la factura
+      added: Factura {number} afegida
+      added_no_rate: Factura {number} afegida · encara sense tipus de canvi a EUR
+      any_class: Qualsevol classe
+      any_payment: Qualsevol pagament
+      back: Enrere
+      base: Base imposable
+      cancel: Cancel·la
+      check: Comprova
+      class:
+        ordinaria: Ordinària
+        rectificativa: Rectificativa
+        simplificada: Simplificada
+      class_filter: Classe de factura
+      close: Tanca
+      column:
+        base: Base
+        class: Classe
+        counterparty: Contrapart
+        country: País
+        currency: Moneda
+        date: Emissió
+        iva: IVA
+        kind: Tipus
+        linked: Moviments
+        notes: Notes
+        number: Número
+        operation_date: Operació
+        payment: Pagament
+        recargo: Recàrrec
+        retention: Retenció
+        tax_id: NIF
+        total: Total
+      confirm_changes: 'Canvis per desar: {count}'
+      confirm_new: El tipus, el número, la data, el NIF, la moneda i el total no es
+        poden canviar després.
+      count: '{shown} de {total}'
+      discard: Descarta
+      discard_changes: Vols descartar aquests canvis?
+      discard_new: Vols descartar aquesta factura?
+      discard_note: Encara no s'ha desat res.
+      document: Document
+      duplicate: Ja és al catàleg.
+      empty: Encara no hi ha factures. Afegeix-ne una o importa un llibre de factures.
+      empty_filtered: Cap factura no coincideix.
+      failed: 'No s''ha enviat: {code}. No s''ha desat res.'
+      field:
+        counterparty_country: País
+        counterparty_name: Contrapart
+        counterparty_tax_id: NIF
+        currency: Moneda
+        invoice_class: Classe
+        invoice_number: Número
+        issued_at: Data d'emissió
+        iva_category: Categoria d'IVA
+        kind: Tipus
+        lease: Arrendament de local de negoci
+        notes: Notes
+        operation_date: Data d'operació
+        operation_type: Clau del model 349
+        payment_id: Identificador del pagament
+        payment_status: Pagament
+        printed_total: Total imprès
+        recargo: Recàrrec d'equivalència
+        rectifies_invoice_number: Factura que rectifica
+        referencia: Referència cadastral
+        retention_amount: Import de la retenció
+        retention_rate: Tipus de retenció
+        series: Sèrie
+        situacion: Situació de l'immoble
+      fixed: Forma part de la identitat de la factura. Per canviar-ho, elimina-la
+        i torna-la a afegir.
+      from_lines: Segons les línies
+      gone: Aquesta factura ja no és al catàleg.
+      gone_title: Factura no trobada
+      grid: Factures
+      hint:
+        country: Dues lletres, p. ex. ES
+        currency: Tres lletres, p. ex. EUR
+        date: Any-mes-dia
+        operation_date: Si és diferent de la d'emissió
+        payment_id: El catàleg no el mostra. Escriu-ne un per substituir-lo.
+        percent: 15 per al 15 %
+        printed_total: Opcional. Comprova que les línies quadren.
+        tax_id_optional: Opcional en una simplificada emesa
+      identity_fixed: El tipus, el número, la data d'emissió, el NIF, la moneda, els
+        totals i les línies són fixos.
+      invalid: 'No s''ha afegit: el llibre la rebutja per no vàlida.'
+      invariant:
+        counterparty: Nom de la contrapart
+        country: País de dues lletres
+        line: Almenys una línia
+        totals: Els totals quadren
+      iva: IVA
+      keep_editing: Continua editant
+      keep_it: Conserva-la
+      kind:
+        issued: Emesa
+        received: Rebuda
+      kind_choice:
+        issued: Factura que he emès
+        received: Factura que he rebut
+      kind_filter: Tipus
+      kinds:
+        all: Totes
+        issued: Emeses
+        received: Rebudes
+      lease: Arrendament
+      line:
+        actions: Accions
+        add: Afegeix una línia
+        category: Categoria
+        choose_rate: Tria un tipus
+        description: Descripció
+        field: Línia {line}, {field}
+        iva: IVA
+        problem: 'Línia {line} · {field}: {problem}'
+        quantity: Quant.
+        rate: Tipus d'IVA
+        remove: Treu la línia {line}
+        subtotal: Subtotal
+        unit_price: Preu unitari
+      lines: Línies
+      lines_fixed: Fixes
+      lines_note: Punt per als decimals, fins a sis, sense separador de milers. El
+        subtotal i l'IVA es calculen al cèntim.
+      linked: Moviments vinculats
+      linked_count: 'Moviments vinculats: {count}'
+      links_permanent: 'Un vincle és permanent: no es pot treure.'
+      met: complert
+      needs: Tota factura necessita
+      new: Factura nova
+      new_note: Es desa al catàleg quan l'afegeixes.
+      next_number: 'Següent de la sèrie {series}: {number}'
+      next_number_series: Tria una sèrie per veure'n el número següent.
+      none: Cap
+      not_met: pendent
+      not_saved: No s'ha desat. Els teus canvis es conserven.
+      not_stated: Sense indicar
+      open_duplicate: Obre-la
+      operation_date_fixed: Només s'indica en afegir la factura
+      operation_key: Clau {key}
+      party: Contrapart
+      payment:
+        cancelled: Anul·lada
+        overdue: Vençuda
+        paid: Pagada
+        partially_paid: Pagada en part
+        pending: Pendent
+      payment_filter: Pagament
+      payment_section: Pagament
+      problem:
+        choose_kind: Indica si l'has emesa o rebuda.
+        choose_rate: Tria un tipus.
+        country_letters: Dues lletres, p. ex. ES.
+        currency_letters: Tres lletres, p. ex. EUR.
+        lease_reference_not_allowed: Sense referència cadastral en aquesta situació.
+        missing: Obligatori.
+        no_line: Afegeix almenys una línia.
+        operation_date_fixed: Un cop afegida, es pot canviar, però no afegir ni treure.
+        payment_id_shape: 64 caràcters hexadecimals.
+        printed_differs: Les línies sumen {total}.
+        recargo_above_iva: No pot superar l'IVA.
+        rectifies_required: Indica la factura que rectifica.
+        retention_above_base: No pot superar la base imposable.
+        retention_differs: El tipus dona {amount}.
+        retention_needs_amount: Un tipus necessita el seu import.
+        series_required: Una rectificativa necessita sèrie.
+        tax_id_required: Obligatori, excepte en una simplificada emesa.
+      rate:
+        exempt: Exempt
+        not_subject: No subjecte
+      read_failed: No s'han pogut llegir les factures.
+      refusal:
+        ambiguous_grouping: '"{raw}" es pot llegir de dues maneres. Escriu 1500 o
+          1.5.'
+        comma_decimal: '"{raw}": fes servir punt per als decimals.'
+        currency_symbol: '"{raw}": sense símbol de moneda.'
+        date_not_in_calendar: '"{raw}" no és un dia del calendari.'
+        date_not_iso: '"{raw}": escriu la data any-mes-dia.'
+        exponent: '"{raw}": escriu el número sencer.'
+        grouping: '"{raw}": sense separador de milers.'
+        line_break: 'Una sola línia: sense tabuladors ni salts de línia.'
+        meant: Volies dir {suggestion}?
+        not_a_date: '"{raw}" no és una data.'
+        not_a_number: '"{raw}" no és un número.'
+        percent_above_100: '"{raw}": com a màxim el 100 %.'
+        percent_as_fraction: '"{raw}": escriu 15 per al 15 %.'
+        signed: '"{raw}": escriu-lo sense signe.'
+        too_long: 'Massa llarg: com a màxim {limit} caràcters.'
+        too_many_decimals: '"{raw}": com a màxim {limit} decimals.'
+        zero: Ha de ser més gran que zero.
+      refused: 'No s''ha desat: el llibre ho ha rebutjat ({code}).'
+      remove: Elimina
+      remove_confirm: Elimina la factura
+      remove_linked: Una factura vinculada es queda
+      remove_linked_note: 'Moviments vinculats: {count}. Un vincle no es pot treure,
+        així que aquesta factura tampoc.'
+      remove_note: Surt del catàleg. Els moviments no canvien.
+      remove_question: Vols eliminar aquesta factura?
+      removed: Factura {number} eliminada
+      retention: Retenció, fora del total
+      retention_presets: Tipus de retenció habituals
+      review: Revisa
+      review_changes: Revisa els canvis ({count})
+      save: Desa
+      saved: Factura {number} desada
+      search: Cerca factures
+      search_placeholder: Número, nom, NIF
+      situacion:
+        s1: Espanya, excepte el País Basc i Navarra
+        s2: País Basc o Navarra
+        s3: Espanya sense referència cadastral
+        s4: A l'estranger
+      stored_note: '{kind} · {payment} · vinculada: {count}'
+      this_is: És una
+      title: Factura {number}
+      to_pay: A pagar {amount}
+      to_pay_withheld: A pagar {amount} (− {retention} de retenció)
+      toolbar: Catàleg de factures
+      total: Total
+      totals: Totals
+      unknown: Resultat desconegut
+      unknown_note: Potser s'ha desat. Comprova-ho abans de continuar.
+      unknown_unread: 'Encara no se sap: no s''ha pogut llegir el llibre. Torna-ho
+        a comprovar.'
+      unmatched: Sense vincular
+      use: Fes-lo servir
+      use_number: Fes servir {number}
     irpf_category:
       actividad_economica: Activitat econòmica
       arrendamiento_local: Arrendament de local
