@@ -43,7 +43,7 @@ export const LEDGER_PROVIDERS: readonly LedgerProvider[] = [
   "qfx",
   "xlsx",
   "xls",
-  "pdf-n26",
+  "pdf",
 ];
 
 /** The most own accounts a preview reads each file against, all files

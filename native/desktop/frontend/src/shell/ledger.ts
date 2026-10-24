@@ -641,7 +641,7 @@ export type LedgerPreflightResult = {
 };
 
 export type LedgerProvider =
-  "auto" | "csv" | "ofx" | "qfx" | "xlsx" | "xls" | "pdf-n26";
+  "auto" | "csv" | "ofx" | "qfx" | "xlsx" | "xls" | "pdf";
 /** A bank statement import. Preview with `dry_run`, then apply naming the
  * previewed files' digests in `expected_source_sha256`: a file that changed
  * since the preview is refused. */

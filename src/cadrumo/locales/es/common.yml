@@ -890,8 +890,8 @@ desktop:
     failed: No se ha podido leer el libro.
     import:
       accepts:
-        bank: CSV, XLSX, XLS, OFX, QFX o un PDF de N26 · hasta 128 archivos · no se
-          leen las carpetas de dentro
+        bank: CSV, XLSX, XLS, OFX, QFX o PDF · hasta 128 archivos · no se leen las
+          carpetas de dentro
         book: CSV, TSV, XLSX, XLSM o XLS
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC o XML Facturae, UBL o CII · no
           se leen las carpetas de dentro
@@ -1011,7 +1011,7 @@ desktop:
         auto: Detectar del archivo
         csv: CSV
         ofx: OFX
-        pdf_n26: PDF de N26
+        pdf: PDF
         qfx: QFX
         xls: XLS
         xlsx: XLSX

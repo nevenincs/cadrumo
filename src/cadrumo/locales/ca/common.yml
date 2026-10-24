@@ -882,8 +882,8 @@ desktop:
     failed: No s'ha pogut llegir el llibre.
     import:
       accepts:
-        bank: CSV, XLSX, XLS, OFX, QFX o un PDF d'N26 · fins a 128 fitxers · no es
-          llegeixen les carpetes de dins
+        bank: CSV, XLSX, XLS, OFX, QFX o PDF · fins a 128 fitxers · no es llegeixen
+          les carpetes de dins
         book: CSV, TSV, XLSX, XLSM o XLS
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC o XML Facturae, UBL o CII · no
           es llegeixen les carpetes de dins
@@ -1003,7 +1003,7 @@ desktop:
         auto: Detecta-ho del fitxer
         csv: CSV
         ofx: OFX
-        pdf_n26: PDF d'N26
+        pdf: PDF
         qfx: QFX
         xls: XLS
         xlsx: XLSX
