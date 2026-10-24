@@ -2497,6 +2497,8 @@ cli:
           plan and asks first.
       complete: Cadrumo is set up.
       fix: 'To fix it, run: %{command}'
+      following: '%{name}: another setup is already setting this up, so this one follows
+        it.'
       hardware_limited: This computer does not have enough memory for the local AI.
       help: 'Set up and check what Cadrumo needs on this computer: the browser for
         the tax agency website and the local AI, its program and models.'
@@ -2535,10 +2537,14 @@ cli:
         help: 'Set up the local AI: install its program when it is missing, then download
           every role''s model. Shows the plan and asks first.'
       remove:
-        help: Delete a model Cadrumo chose from this computer and report the space
-          freed.
-        model_help: Name of the model to delete. Only models Cadrumo chose can be
-          deleted.
+        confirm_prompt: '%{name}: delete it from this computer?'
+        help: 'Delete a component from this computer: browser or local_ai. Asks first;
+          you can set it up again any time.'
+        item_help: 'Component to delete: browser or local_ai.'
+        needs_confirmation: '%{name}: nothing was deleted. Run the command again with
+          --yes to delete it.'
+        removed: '%{name}: deleted from this computer.'
+        yes_help: Delete it without asking.
       report:
         help: Report this computer's memory, the model chosen for each role, and whether
           it can be loaded now.
@@ -2550,9 +2556,6 @@ cli:
       size:
         gigabytes: '%{value} GB'
         megabytes: '%{value} MB'
-      start:
-        help: Start the installed local AI program when it is not answering. Does
-          nothing when it already answers.
       status:
         help: Show whether each component is ready, from what this computer already
           has. Quick; downloads nothing.

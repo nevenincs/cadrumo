@@ -2698,6 +2698,8 @@ cli:
           Muestra el plan y te pregunta antes.
       complete: Cadrumo está preparado.
       fix: 'Para solucionarlo, ejecuta: %{command}'
+      following: '%{name}: otra preparación ya lo está preparando, así que esta la
+        sigue.'
       hardware_limited: Este ordenador no tiene memoria suficiente para la IA local.
       help: 'Prepara y comprueba lo que Cadrumo necesita en este ordenador: el navegador
         para la web de la Agencia Tributaria y la IA local, con su programa y sus
@@ -2738,10 +2740,14 @@ cli:
         help: 'Prepara la IA local: instala su programa si falta y luego descarga
           el modelo de cada rol. Muestra el plan y te pregunta antes.'
       remove:
-        help: Borra de este ordenador un modelo que eligió Cadrumo e indica el espacio
-          liberado.
-        model_help: Nombre del modelo que borrar. Solo se pueden borrar modelos que
-          eligió Cadrumo.
+        confirm_prompt: '%{name}: ¿lo borras de este ordenador?'
+        help: 'Borra de este ordenador un componente: browser o local_ai. Te pregunta
+          antes; puedes volver a prepararlo cuando quieras.'
+        item_help: 'Componente que borrar: browser o local_ai.'
+        needs_confirmation: '%{name}: no se ha borrado nada. Vuelve a ejecutar la
+          orden con --yes para borrarlo.'
+        removed: '%{name}: se ha borrado de este ordenador.'
+        yes_help: Lo borra sin preguntar.
       report:
         help: Indica la memoria de este ordenador, el modelo elegido para cada rol
           y si se puede cargar ahora.
@@ -2755,9 +2761,6 @@ cli:
       size:
         gigabytes: '%{value} GB'
         megabytes: '%{value} MB'
-      start:
-        help: Inicia el programa de IA local instalado cuando no responde. No hace
-          nada si ya responde.
       status:
         help: Muestra si cada componente está listo, a partir de lo que este ordenador
           ya tiene. Es rápido y no descarga nada.

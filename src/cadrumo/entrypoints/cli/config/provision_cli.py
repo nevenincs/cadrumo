@@ -15,10 +15,17 @@ no state of its own and needs no signed-in profile:
   item). Each prints the plan the role asks to approve and asks; ``--yes``
   approves exactly the printed plan. Without ``--yes`` and without a terminal
   to ask on, the plan is declined, nothing moves and the command says it needs
-  your approval.
+  your approval. A setup that finds its component already being set up
+  elsewhere follows that setup instead: it asks nothing, relays its progress
+  and reports its result.
+* **remove** -- delete the named component from this computer. It asks first;
+  ``--yes`` confirms without asking. Without ``--yes`` and without a terminal
+  to ask on, nothing is removed and the command says it needs your
+  confirmation.
 
 Where this build has no Cadrumo binary, every component reads as not in this
-build. **report**, **start**, **load** and **remove** are the local reader's
+build. The local AI's server is the runtime manager's to start and stop, so
+no command here starts it. **report** and **load** are the local reader's
 actions, submitted as registered operations in the signed-in profile.
 
 While a setup runs, text mode draws one progress line on standard error and
@@ -88,8 +95,6 @@ from ....application.dependency_wording import (
 from ....application.local_reader_contracts import (
     LocalReaderProvisionPublicResultV3,
     build_local_reader_load_request,
-    build_local_reader_remove_request,
-    build_local_reader_start_request,
 )
 from ....application.local_reader_report import (
     LOCAL_READER_REPORT_OPERATION_DEFINITION_ID,
@@ -118,12 +123,10 @@ from .provision_payloads import (
     ProvisionModelPayload,
     ProvisionProbeResult,
     ProvisionPullResult,
-    ProvisionRemoveItemPayload,
     ProvisionRemoveResult,
     ProvisionReportResult,
     ProvisionSetupResult,
     ProvisionSpacePayload,
-    ProvisionStartResult,
     ProvisionStatusResult,
     ProvisionVerifyResult,
 )
@@ -146,7 +149,6 @@ __all__ = [
     "emit_provision_remove",
     "emit_provision_report",
     "emit_provision_setup",
-    "emit_provision_start",
     "emit_provision_status",
     "provision_browser",
     "provision_load",
@@ -155,11 +157,11 @@ __all__ = [
     "provision_remove",
     "provision_report",
     "provision_setup",
-    "provision_start",
     "provision_status",
     "provision_verify",
     "read_quick_setup_rows",
     "recovery_command",
+    "remove_item",
     "verify_items",
 ]
 
@@ -196,15 +198,24 @@ def _declaration(item_id: str) -> DependencyItemDeclaration:
     raise KeyError(item_id)
 
 
+def _item_kind(item: str, *, param_hint: str) -> DependencyItemKind:
+    try:
+        return DependencyItemKind(item)
+    except ValueError:
+        known = ", ".join(kind.value for kind in DependencyItemKind)
+        raise typer.BadParameter(f"choose one of: {known}", param_hint=param_hint) from None
+
+
 def verify_items(item: str | None) -> tuple[DependencyItemKind, ...]:
     """Return the items a verify checks: the named item, or every item (empty)."""
     if item is None:
         return ()
-    try:
-        return (DependencyItemKind(item),)
-    except ValueError:
-        known = ", ".join(kind.value for kind in DependencyItemKind)
-        raise typer.BadParameter(f"choose one of: {known}", param_hint="--item") from None
+    return (_item_kind(item, param_hint="--item"),)
+
+
+def remove_item(item: str) -> DependencyItemKind:
+    """Return the item a removal deletes."""
+    return _item_kind(item, param_hint="ITEM")
 
 
 # ── Wording ─────────────────────────────────────────────────────────────────
@@ -545,6 +556,8 @@ class SetupProgressLine:
             seconds = math.ceil((event.delay_ms or 0) / 1000)
             sentence = dependency_retry_sentence(attempt=event.attempt or 1, delay_s=seconds)
             self._draw(f"{_name_of(event.subject_code)}: {sentence}", settled=True)
+        elif event.notice_code is ComponentsNoticeCode.FOLLOWING and event.subject_code is not None:
+            self._draw(tr("cli.config.provision.following", name=_name_of(event.subject_code)), settled=True)
         elif event.notice_code is ComponentsNoticeCode.WAITING_FOR_SERVER and event.subject_code is not None:
             self._draw(tr("cli.config.provision.waiting_for_program", name=_name_of(event.subject_code)), settled=True)
         elif event.notice_code is ComponentsNoticeCode.CANCEL_REQUESTED:
@@ -656,6 +669,74 @@ def emit_provision_setup(
         raise typer.Exit(code=2)
 
 
+# ── Removing ────────────────────────────────────────────────────────────────
+
+
+def provision_remove(ctx: typer.Context, item: str, yes: bool = False) -> None:
+    """Delete one component from this computer once the person confirms it; ``--yes`` confirms."""
+    kind = remove_item(item)
+    confirmed = yes or (
+        _can_ask(ctx)
+        and typer.confirm(
+            tr("cli.config.provision.remove.confirm_prompt", name=_name_of(kind.value)), default=False, err=True
+        )
+    )
+    if not confirmed:
+        emit_provision_remove(ctx, None, item=kind)
+        return
+    progress = SetupProgressLine(json_mode=format_of(ctx) is OutputFormat.JSON, interactive=stderr_is_tty())
+    try:
+        result = run_components_role(
+            ComponentsRequest(ComponentsCommand.REMOVE, items=(kind,)), on_event=progress.observe
+        )
+    finally:
+        progress.finish()
+    emit_provision_remove(ctx, result, item=kind)
+
+
+def _remove_summary(result: ComponentsResultLine, item: DependencyItemKind) -> str:
+    if result.outcome is ComponentsOutcome.REMOVED:
+        return tr("cli.config.provision.remove.removed", name=_name_of(item.value))
+    if result.outcome is ComponentsOutcome.BUSY:
+        return tr("cli.config.provision.outcome.busy")
+    category = result.failure_category
+    sentence = tr(dependency_failure_key(category)) if category is not None else tr("cli.config.provision.incomplete")
+    return f"{_name_of(result.item_id or item.value)}: {sentence}"
+
+
+def emit_provision_remove(
+    ctx: typer.Context, outcome: ComponentsResultLine | None, *, item: DependencyItemKind
+) -> None:
+    """Emit the removal of ``item``, ``None`` when it was not confirmed; exit 2 unless the role removed it."""
+    if outcome is None:
+        unconfirmed = ProvisionRemoveResult(item=item.value, confirmed=False)
+        emit_envelope(
+            ctx,
+            command="config.provision.remove",
+            result=unconfirmed,
+            lines=[tr("cli.config.provision.remove.needs_confirmation", name=_name_of(item.value))],
+        )
+        raise typer.Exit(code=2)
+    rows = outcome.status_rows()
+    result = ProvisionRemoveResult(
+        item=item.value,
+        confirmed=True,
+        outcome=outcome.outcome.value,
+        removed=list(outcome.items or ()),
+        item_id=outcome.item_id,
+        failure_category=None if outcome.failure_category is None else outcome.failure_category.value,
+        items=[_item_payload(row) for row in rows],
+    )
+    emit_envelope(
+        ctx,
+        command="config.provision.remove",
+        result=result,
+        lines=[*_row_lines(rows), _remove_summary(outcome, item)],
+    )
+    if outcome.outcome is not ComponentsOutcome.REMOVED:
+        raise typer.Exit(code=2)
+
+
 # ── Running the local reader's operations ───────────────────────────────────
 
 
@@ -684,22 +765,6 @@ def _local_reader(
     )
     _require_settled(completed)
     return completed.projection
-
-
-def provision_start(ctx: typer.Context) -> None:
-    """Start the installed local AI program when it is not already answering."""
-    emit_provision_start(ctx, _local_reader(ctx, build_local_reader_start_request()))
-
-
-def provision_remove(
-    ctx: typer.Context,
-    model: str | None = None,
-    role: ModelRole | None = None,
-) -> None:
-    """Remove the named model, or the named role's model, from this computer."""
-    if model is None and role is None:
-        raise typer.BadParameter("--model or --role is required", param_hint="--model/--role")
-    emit_provision_remove(ctx, _local_reader(ctx, build_local_reader_remove_request(role, model)))
 
 
 def provision_load(
@@ -862,37 +927,3 @@ def emit_provision_report(ctx: typer.Context, report: LocalReaderReportPublicRes
         contention=_contention_payload(report.contention),
     )
     emit_envelope(ctx, command="config.provision.report", result=result, lines=_provision_result_lines(result))
-
-
-def emit_provision_start(ctx: typer.Context, outcome: LocalReaderProvisionPublicResultV3) -> None:
-    """Emit the start envelope, exiting 2 unless the local AI program answers."""
-    result = ProvisionStartResult(
-        running=outcome.succeeded,
-        already_running=outcome.already_running,
-        started_pid=outcome.started_pid,
-        facts=_reader_facts(outcome.facts),
-        precondition_action=_reader_action(outcome.verdict_condition_id, outcome.verdict_facts),
-    )
-    emit_envelope(ctx, command="config.provision.start", result=result, lines=_provision_result_lines(result))
-    if not result.running:
-        raise typer.Exit(code=2)
-
-
-def emit_provision_remove(ctx: typer.Context, outcome: LocalReaderProvisionPublicResultV3) -> None:
-    """Emit the remove envelope, exiting 2 unless every removal was confirmed."""
-    items = [
-        ProvisionRemoveItemPayload(
-            model=item.model,
-            roles=_roles(item),
-            removed=item.succeeded,
-            was_installed=item.was_installed,
-            freed_bytes=item.freed_bytes,
-            facts=_reader_facts(item.facts),
-            precondition_action=_item_action(item),
-        )
-        for item in outcome.models
-    ]
-    result = ProvisionRemoveResult(removed=outcome.succeeded, models=items)
-    emit_envelope(ctx, command="config.provision.remove", result=result, lines=_provision_result_lines(result))
-    if not result.removed:
-        raise typer.Exit(code=2)

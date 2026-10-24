@@ -60,7 +60,7 @@ _REMOVED_OPERATION: Final = "browser-runtime.provision"
 #: Operations a ``config provision`` leaf may submit: the three setup
 #: operations and the local-reader actions that download nothing.
 #: The ``config provision`` verbs that run the native components role and submit nothing.
-_COMPONENT_LEAVES: Final = frozenset({"browser", "probe", "pull", "setup", "status", "verify"})
+_COMPONENT_LEAVES: Final = frozenset({"browser", "probe", "pull", "remove", "setup", "status", "verify"})
 #: The operations the local reader's remaining verbs submit in the signed-in profile.
 _LOCAL_READER_OPERATIONS: Final = frozenset({"local-reader.provision", "local-reader.status", "local-reader.report"})
 _DOWNLOADING_LOCAL_READER_ACTIONS: Final = frozenset({"install", "pull", "setup"})
@@ -516,13 +516,15 @@ def test_provision_leaf_checker_names_a_component_verb_that_submits_and_a_foreig
         (("config", "provision", "status"), _STATUS_OPERATION),
         (("config", "provision", "browser"), None),
         (("config", "provision", "load"), "local-reader.provision"),
-        (("config", "provision", "start"), "browser-runtime.provision"),
+        (("config", "provision", "remove"), "local-reader.provision"),
+        (("config", "provision", "report"), "browser-runtime.provision"),
         (("config", "provision", "report"), None),
         (("config", "check"), None),
     ]
     assert provision_leaf_findings(rows) == [
         f"config provision status: submits {_STATUS_OPERATION!r} instead of running the components role",
-        "config provision start: submits 'browser-runtime.provision', which is not a local reader operation",
+        "config provision remove: submits 'local-reader.provision' instead of running the components role",
+        "config provision report: submits 'browser-runtime.provision', which is not a local reader operation",
         "config provision report: submits None, which is not a local reader operation",
     ]
     assert provision_leaf_findings([(("config", "check"), None)]) == ["the command table has no config provision leaf"]

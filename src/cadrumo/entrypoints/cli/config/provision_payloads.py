@@ -75,35 +75,6 @@ class ProvisionReportResult(OutputSchema):
     contention: ProvisionContentionPayload | None = None
 
 
-class ProvisionStartResult(OutputSchema):
-    """JSON envelope for ``aeat config provision start``."""
-
-    running: bool
-    already_running: bool = False
-    started_pid: int | None = None
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
-    precondition_action: ResolvedPreconditionAction | None = None
-
-
-class ProvisionRemoveItemPayload(OutputSchema):
-    """One model removal; ``freed_bytes`` is reported only when the removal was confirmed."""
-
-    model: NonEmptyStr | None = None
-    roles: list[str] = []
-    removed: bool
-    was_installed: bool = False
-    freed_bytes: int | None = None
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
-    precondition_action: ResolvedPreconditionAction | None = None
-
-
-class ProvisionRemoveResult(OutputSchema):
-    """JSON envelope for ``aeat config provision remove``; ``removed`` is true only when every item was."""
-
-    removed: bool
-    models: list[ProvisionRemoveItemPayload] = []
-
-
 class ProvisionLoadItemPayload(OutputSchema):
     """One model load, or one role whose selection refused before any load.
 
@@ -196,6 +167,26 @@ class ProvisionSetupResult(OutputSchema):
     items: list[ProvisionItemPayload] = []
 
 
+class ProvisionRemoveResult(OutputSchema):
+    """JSON envelope for ``aeat config provision remove``.
+
+    ``item`` is the component asked for and ``confirmed`` whether the person
+    confirmed its removal; nothing is removed without it. ``outcome`` is the
+    component engine's closed outcome, absent when nothing was asked of it, and
+    ``removed`` the items it removed. ``item_id`` and ``failure_category`` name
+    the item and the category of a refusal or failure. ``items`` is every
+    item's row after the removal.
+    """
+
+    item: NonEmptyStr
+    confirmed: bool
+    outcome: str | None = None
+    removed: list[str] = []
+    item_id: str | None = None
+    failure_category: str | None = None
+    items: list[ProvisionItemPayload] = []
+
+
 class ProvisionBrowserResult(ProvisionSetupResult):
     """JSON envelope for ``aeat config provision browser``: the setup of the browser alone."""
 
@@ -213,12 +204,10 @@ __all__ = [
     "ProvisionModelPayload",
     "ProvisionProbeResult",
     "ProvisionPullResult",
-    "ProvisionRemoveItemPayload",
     "ProvisionRemoveResult",
     "ProvisionReportResult",
     "ProvisionSetupResult",
     "ProvisionSpacePayload",
-    "ProvisionStartResult",
     "ProvisionStatusResult",
     "ProvisionVerifyResult",
 ]

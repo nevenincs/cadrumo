@@ -44,6 +44,7 @@ _PINNED: Mapping[str, _Pin] = {
             "search",
             "setup",
             "setup_plan",
+            "setup_remove",
             "setup_status",
             "status",
             "views",

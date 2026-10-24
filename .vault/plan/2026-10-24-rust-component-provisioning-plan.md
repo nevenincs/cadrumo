@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:71fc434b0a61c775aa9002e298b6262a8e4d7b5353fafd89c001ef3bfffe51fb'
+body_hash: 'sha256:7ac7afb6e5da60f9ede5bdaa29fa06ed45015c4c7ae1e9ae8d35092281657bbc'
 ---
 
 # `rust-component-provisioning` plan
@@ -78,7 +78,7 @@ The single binary gains the components role; the desktop calls the engine in pro
 - [x] `P04.S21` - Contain the manager's local AI server on Linux and macOS as the Windows job does, so a crashed or killed manager leaves no server behind; `native/manager/src/supervision/local_ai.rs, native/platform process scope and tests`.
 - [x] `P04.S23` - Let a second setup of an item that is already being set up follow the running one instead of refusing busy, on the role, the desktop host and the Python client, and cover the busy path in tests; `native/application/src/provisioning/engine.rs, protocol.rs, native/desktop/src-tauri/src/shell/setup/components.rs, src/cadrumo/adapters/outbound/components/ and tests`.
 - [x] `P04.S24` - Word the licence notice of a pinned role model for what it is and show the licence's display name from the pins instead of its SPDX id; `src/cadrumo/_data/dependencies/local_ai_models.toml, dev/env/local_ai_model_pins.py, native/application/src/provisioning/pins.rs and plan.rs, the desktop.setup licence keys, and tests`.
-- [ ] `P04.S25` - Point config provision remove at the components role and retire config provision start, whose server the manager now owns; pass the CADRUMO_PROXY settings to the role from every packaged profile that starts it; find and fix the cause of the intermittent refusing-proxy real-role test; and bring the workstation setup guide in line with the Rust setup; `src/cadrumo/entrypoints/cli/config/provision_cli.py, _provision_command_specs.py, the CLI command policy declarations, native/application-environment.toml, src/cadrumo/adapters/outbound/components/ tests, docs/workstation-setup.md and its translations, and tests`.
+- [x] `P04.S25` - Point config provision remove at the components role and retire config provision start, whose server the manager now owns; pass the CADRUMO_PROXY settings to the role from every packaged profile that starts it; find and fix the cause of the intermittent refusing-proxy real-role test; and bring the workstation setup guide in line with the Rust setup; `src/cadrumo/entrypoints/cli/config/provision_cli.py, _provision_command_specs.py, the CLI command policy declarations, native/application-environment.toml, src/cadrumo/adapters/outbound/components/ tests, docs/workstation-setup.md and its translations, and tests`.
 
 ### Phase `P05` - Removal and gates
 

@@ -8,11 +8,14 @@ storage root and a local proxy that refuses every tunnel.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
 from cadrumo.tests.components_role_package import (
+    CountingProxy,
     components_role_fixture,
+    counting_proxy_fixture,
     refusing_proxy_fixture,
     staged_components_role_fixture,
 )
@@ -22,6 +25,7 @@ from .cli_runner import invoke_cached_cli, semantic_cli_text
 
 __all__ = [
     "components_role_fixture",
+    "counting_proxy_fixture",
     "english_locale_fixture",
     "refusing_proxy_fixture",
     "staged_components_role_fixture",
@@ -48,3 +52,34 @@ def test_the_command_line_renders_the_real_roles_rows_and_refusal() -> None:
     )
     assert declined.exit_code == 2, declined.output
     assert "Cadrumo will set up:" not in semantic_cli_text(declined.stderr)
+
+
+def test_the_command_line_gives_the_role_the_proxy_and_never_writes_its_address(
+    components_role: Path, counting_proxy: CountingProxy
+) -> None:
+    setup = invoke_cached_cli(["config", "provision", "browser", "--yes"])
+    relayed = invoke_cached_cli(["--format", "json", "config", "provision", "setup", "--yes"])
+
+    assert setup.exit_code == 2, setup.output
+    assert semantic_cli_text(setup.stdout).splitlines()[-1] == (
+        "Browser for the tax agency website: Your network blocked the download."
+    )
+    assert relayed.exit_code == 2, relayed.output
+    assert counting_proxy.tunnels
+    assert set(counting_proxy.tunnels.values()) == {2}
+    assert counting_proxy.unauthenticated == 0
+    forms = counting_proxy.credential_forms()
+    outputs = {"text": setup.stdout + setup.stderr, "json": relayed.stdout + relayed.stderr}
+    assert [name for name, text in outputs.items() if any(form in text for form in forms)] == []
+    written = [path for path in components_role.rglob("*") if path.is_file()]
+    assert [path for path in written if any(form.encode() in path.read_bytes() for form in forms)] == []
+
+
+@pytest.mark.usefixtures("components_role")
+def test_the_command_line_removes_through_the_real_role() -> None:
+    removed = invoke_cached_cli(["config", "provision", "remove", "local_ai", "--yes"])
+    unconfirmed = invoke_cached_cli(["config", "provision", "remove", "browser"])
+
+    assert removed.exit_code == 0, removed.output
+    assert semantic_cli_text(removed.stdout).splitlines()[-1] == "Local AI: deleted from this computer."
+    assert unconfirmed.exit_code == 2, unconfirmed.output

@@ -2666,6 +2666,8 @@ cli:
           használ. Előbb megmutatja a tervet és megkérdez.
       complete: A Cadrumo elő van készítve.
       fix: 'A javításhoz futtasd: %{command}'
+      following: '%{name}: egy másik előkészítés már folyamatban van, ez pedig azt
+        követi.'
       hardware_limited: Ennek a számítógépnek nincs elég memóriája a helyi MI-hez.
       help: 'Előkészíti és ellenőrzi, amire a Cadrumónak szüksége van ezen a számítógépen:
         az adóhivatal webhelyéhez használt böngészőt és a helyi MI-t, a programjával
@@ -2705,10 +2707,14 @@ cli:
         help: 'Előkészíti a helyi MI-t: ha hiányzik, telepíti a programját, majd letölti
           minden szerep modelljét. Előbb megmutatja a tervet és megkérdez.'
       remove:
-        help: Töröl erről a számítógépről egy modellt, amelyet a Cadrumo választott,
-          és jelzi a felszabadult helyet.
-        model_help: A törlendő modell neve. Csak a Cadrumo által választott modellek
-          törölhetők.
+        confirm_prompt: '%{name}: törlöd erről a számítógépről?'
+        help: 'Töröl erről a számítógépről egy összetevőt: browser vagy local_ai.
+          Előbb megkérdez; bármikor újra előkészítheted.'
+        item_help: 'A törlendő összetevő: browser vagy local_ai.'
+        needs_confirmation: '%{name}: semmi sem törlődött. Futtasd újra a parancsot
+          a --yes kapcsolóval a törléshez.'
+        removed: '%{name}: törölve erről a számítógépről.'
+        yes_help: Kérdés nélkül törli.
       report:
         help: Jelzi a számítógép memóriáját, az egyes szerepekhez választott modellt,
           és hogy most betölthető-e.
@@ -2721,9 +2727,6 @@ cli:
       size:
         gigabytes: '%{value} GB'
         megabytes: '%{value} MB'
-      start:
-        help: Elindítja a telepített helyi MI-programot, ha nem válaszol. Nem csinál
-          semmit, ha már válaszol.
       status:
         help: Megmutatja, hogy az egyes összetevők készen állnak-e, abból, ami már
           megvan ezen a számítógépen. Gyors, semmit sem tölt le.

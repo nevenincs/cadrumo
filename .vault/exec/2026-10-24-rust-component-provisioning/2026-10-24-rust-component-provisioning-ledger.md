@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a78b6ceb851f1463952481d7e40d6a2b59b7fec576179c3c462b3e74d61c886'
+body_hash: 'sha256:273e2315a55611b0a9f5679cb27981cc7670a20f2f1783a690629dd697367694'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -631,6 +631,58 @@ related:
 - `S13` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
 - `S13` `verify:` `just check-operation-contract-manifest` -> `pass`
 - `S13` `by:` `implementation-engineer-high`
+- `S25` `M` `src/cadrumo_client/contracts/command_ports.py`
+- `S25` `M` `src/cadrumo_client/commands/_policy_validation.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/profile_authentication_policy.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/config/_provision_command_specs.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/config/provision_cli.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/config/provision_payloads.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_offline_status.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/config/tests/test_config_command_specs.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_drives_the_real_role.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py`
+- `S25` `M` `src/cadrumo/application/tests/test_dependency_registry_conformance.py`
+- `S25` `M` `src/cadrumo/tests/components_role_package.py`
+- `S25` `M` `dev/locales/tests/test_audit.py`
+- `S25` `M` `dev/packaging/native/tests/test_application_environment.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/protocol_contract.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/component_setup.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/surfaces.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/tests/test_mcp_surface_pins.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/tests/test_setup_tools.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/tests/test_setup_tools_drive_the_real_role.py`
+- `S25` `M` `dev/runtime_lifecycle/tests/test_operation_mcp_surfaces.py`
+- `S25` `M` `native/application-environment.toml`
+- `S25` `M` `docs/reference/environment-overrides.md`
+- `S25` `M` `docs/workstation-setup.md`
+- `S25` `M` `docs/how-to/classify-with-llm.md`
+- `S25` `M` `docs/_sequences/contracts/how-to/classify-with-llm/llm-provision-setup.seq`
+- `S25` `M` `docs/locales/es/LC_MESSAGES/workstation-setup.po`
+- `S25` `M` `docs/locales/ca/LC_MESSAGES/workstation-setup.po`
+- `S25` `M` `docs/locales/hu/LC_MESSAGES/workstation-setup.po`
+- `S25` `M` `docs/locales/es/LC_MESSAGES/how-to/classify-with-llm.po`
+- `S25` `M` `docs/locales/ca/LC_MESSAGES/how-to/classify-with-llm.po`
+- `S25` `M` `docs/locales/hu/LC_MESSAGES/how-to/classify-with-llm.po`
+- `S25` `M` `docs/technical/topics/runtime-tui-and-agent-harness.md`
+- `S25` `M` `docs/technical/architecture.md`
+- `S25` `M` `docs/technical/assessments/product-capability-map.md`
+- `S25` `M` `src/cadrumo/locales/en/cli.yml`
+- `S25` `M` `src/cadrumo/locales/es/cli.yml`
+- `S25` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S25` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S25` `verify:` `just test-components-role <cargo-built role harness of HEAD 0295705ba7 cadrumo.exe> (14)` -> `pass`
+- `S25` `verify:` `real-role lane x20 consecutive with a decoy shared browser cache (220 tests, decoy intact)` -> `pass`
+- `S25` `verify:` `pytest -m '' provision CLI, offline status, config specs, profile authentication, lazy tree, documented commands, operator surface, MCP suite, MCP surfaces (1031; 3 real-role errors need the image; runtime_manager_remedy passes serially)` -> `pass`
+- `S25` `verify:` `pytest -m '' launch profile vectors, application environment, env reference, role image (2 linux-x86-64 failures on Cargo.lock dependency evidence, untouched)` -> `pass`
+- `S25` `verify:` `ruff check, ruff format --check, ty check on the touched Python (24 files)` -> `pass`
+- `S25` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S25` `verify:` `just check-operation-contract-manifest` -> `pass`
+- `S25` `verify:` `docs i18n set-batch: 0 untranslated, 0 fuzzy, 0 obsolete in the six catalogues` -> `pass`
+- `S25` `verify:` `dev/docs sequence corpus golden gate (no verdict: inputs changed during its 28 min run; the changed sequence has no golden)` -> `fail`
+- `S25` `by:` `implementation-engineer-standard`
 
 ## Notes
 
@@ -699,3 +751,9 @@ related:
 - `S13` Re-review findings cli-row-source-differs-from-tui (TUI rows now read through the components role) and success-verdict-not-lifted-for-agents, MCP part (result-carried verdicts lifted as `recovery_action_ids,` setup actions gated by the quick row, held items in `setup_held)` are closed here.
 - `S13` MCP surface full gains `setup_status,` `setup_plan` and setup under its existing name, pin table updated because no consumer has pinned a release; read-only-local serves none of them.
 - `S13` Failing but not reached by this change: just check-locales (desktop domain 17 keys and inventory violations), two dev/locales `test_audit` cases on foreign keys, three runtime TUI automation inventory tests and the automation requester native test, and lane reachability for `cadrumo_client` `test_windows_process.`
+- `S25` S25 new command capability components (installation-wide component storage, profile-free): the vocabulary had no capability that reaches nothing a profile holds and allows a local-state effect without network; remove declares {components} with local-state and destructive, setup, browser and pull add it beside network
+- `S25` S25 config provision start retired with no alias, its spec, handler, payload, table row, profile-connection key and locale key; remove is now 'remove ITEM `[--yes]'` on the components role, asking on a terminal and refusing without --yes otherwise
+- `S25` S25 flaky refusing-proxy cause: the `components_role` fixture kept the run's `CADRUMO_PLAYWRIGHT_BROWSERS_DIR` (conftest pins it to var/storage/components/playwright), the client relays it, so the role planned 0 bytes for complete shared builds and skipped preflight (engine.rs preflight skips `download_bytes` == 0), giving a review; the removal test then deleted the shared builds (emptied 21:00), so it failed only after something reinstalled them. Fixture now withdraws every storage and proxy setting
+- `S25` S25 aeat and cadrumo-mcp profiles pass `CADRUMO_PROXY_URL,` `_USERNAME,` `_BYPASS;` the desktop and manager read their own process environment. This contradicts the 2026-10-18 notes in unified-setup D6 and canonical-environment constraint 12 (no operator-facing image admits them); those notes need amending
+- `S25` S25 MCP `setup_remove` (full surface only) requires confirmed true; the full surface pin row gained it in place, as S13 did for the setup tools, before release
+- `S25` S25 the CLI words the role's following notice; a followed setup asks nothing, so --yes has no effect and a non-interactive run does not ask for approval

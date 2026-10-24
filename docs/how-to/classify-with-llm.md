@@ -27,31 +27,30 @@ messages in Spanish unless you
 (set-up-a-provider)=
 ## Set up the local reader
 
-`aeat` sends every classification prompt to a model runtime on your own
+`aeat` sends every classification prompt to the local AI on your own
 computer, over a loopback connection. It stores no LLM credentials and needs
 no account. The `llm` extra provides the client, and `aeat config provision`
-installs the runtime and its models.
+sets up the local AI: its program and its models.
 
 To set up everything in one run, use:
 
 ```{cli-sequence} llm-provision-setup
 ```
 
-Setup installs the runtime with the platform package manager (winget on
-Windows, Homebrew on macOS), starts it, downloads a model for each reader
-role, loads the models, and verifies them. On Linux, install the runtime
-yourself. Setup prints its download and installation plan before proceeding.
-The `--yes` option approves that plan; omit it to review and answer at the
-terminal. Non-interactive setup without `--yes` stops before installing
-anything. Steps that are already done are reported as unchanged. See
-[Install Cadrumo](../workstation-setup.md) for the whole sequence.
+Setup downloads the pinned local AI program and a model for each reader
+role, and checks each download against its pinned checksum. It prints its
+plan before it downloads anything. The `--yes` option approves that plan; omit
+it to review and answer at the terminal. Setup without `--yes` and without a
+terminal downloads nothing. Components that are already set up are left as
+they are. The Cadrumo manager runs the local AI in the background once it is
+set up. See [Install Cadrumo](../workstation-setup.md) for the whole sequence.
 
 Text reads use the `qwen3:1.7b` model by default. Scanned and image reads use
 `qwen3-vl:2b`. Check the result with `aeat config check`. It reports the
 profile's service capabilities, whether each local reader is available, and
-the fix for each problem. `aeat config provision status` reports the runtime
-and each reader model in detail. If it reports that no fitness check is
-recorded for the text model, run `aeat config provision verify`.
+the fix for each problem. `aeat config provision status` reports whether the
+local AI is set up, and `aeat config provision verify --item local_ai` checks
+that its program answers and each reader model replies.
 
 The profile capability `llm_vision` is on by default. To stop `aeat` from reading scanned or image supporting documents, turn that capability off with `aeat config profile capabilities set`, naming `llm_vision` and `off`. Reads of scanned or image supporting documents then refuse.
 
@@ -60,10 +59,9 @@ Smoke-test the setup with a preview, which saves nothing:
 ```{cli-sequence} llm-provider-smoke-test
 ```
 
-If the runtime is not running or a model is missing, the command refuses and
-reads nothing. The refusal points to `aeat config provision status`, then to
-`aeat config provision start` and `aeat config provision pull`. Fix the gap
-and retry.
+If the local AI is not running or a model is missing, the command refuses
+and reads nothing. The refusal names the command that fixes it, such as
+`aeat config provision pull`. Fix the gap and retry.
 
 ## Ask for a suggestion
 

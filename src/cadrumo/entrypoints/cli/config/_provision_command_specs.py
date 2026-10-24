@@ -1,18 +1,20 @@
 """Import-light production authority for the ``config provision`` commands.
 
-The component leaves (status, probe, verify, setup, browser, pull) run the
-native component engine's role, which reaches only installation-wide
-components no profile holds, so they declare the profile-free pair and run
-without a session. The local reader's actions (report, start, load, remove)
-submit registered operations through the runtime in the signed-in profile's
-session, so their policies declare installation storage beside the network
-rather than the profile-free pair that would skip the session.
+The component leaves (status, probe, verify, setup, browser, pull, remove) run
+the native component engine's role, which reaches only installation-wide
+components no profile holds, so they declare only profile-free capabilities and
+run without a session: the quick check reads local files, a full check reaches
+the network, a setup downloads into component storage and a removal deletes
+from it. The local reader's actions (report, load) submit registered
+operations through the runtime in the signed-in profile's session, so their
+policies declare installation storage beside the network rather than the
+profile-free set that would skip the session.
 """
 
 from __future__ import annotations
 
 from cadrumo_client.commands.execution_policies import STATE_FREE
-from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
@@ -27,6 +29,8 @@ from cadrumo_client.contracts.command_ports import Capability, CommandNodeKind, 
 
 _STORAGE_AND_NETWORK: frozenset[Capability] = frozenset({"local-storage", "network"})
 _PROFILE_FREE: frozenset[Capability] = frozenset({"network"})
+# Installation-wide component storage, which the engine changes and no profile holds.
+_COMPONENT_STORAGE: frozenset[Capability] = frozenset({"components"})
 # The engine's quick check: local files only, no network and no model load.
 _COMPONENT_READ = ExecutionPolicySpec(
     frozenset({"state-free"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE
@@ -35,19 +39,16 @@ _COMPONENT_READ = ExecutionPolicySpec(
 _COMPONENT_CHECK = ExecutionPolicySpec(_PROFILE_FREE, frozenset({"network"}), "external-io", CommandWriteRoute.NONE)
 # The engine's setup downloads and installs into installation-wide component storage.
 _COMPONENT_SETUP = ExecutionPolicySpec(
-    _PROFILE_FREE, frozenset({"network", "local-state"}), "external-io", CommandWriteRoute.NONE
+    _PROFILE_FREE | _COMPONENT_STORAGE, frozenset({"network", "local-state"}), "external-io", CommandWriteRoute.NONE
+)
+# The engine's removal deletes an item from component storage and reaches no network.
+_COMPONENT_REMOVE = ExecutionPolicySpec(
+    _COMPONENT_STORAGE, frozenset({"local-state"}), "local-io", CommandWriteRoute.NONE, destructive=True
 )
 # Reads installation storage and the network and changes nothing.
 _SETUP_READ = ExecutionPolicySpec(_STORAGE_AND_NETWORK, frozenset({"none"}), "external-io", CommandWriteRoute.NONE)
 _SETUP_WRITE = ExecutionPolicySpec(
     _STORAGE_AND_NETWORK, frozenset({"network", "local-state"}), "external-io", CommandWriteRoute.NONE
-)
-_SETUP_DESTRUCTIVE = ExecutionPolicySpec(
-    _STORAGE_AND_NETWORK,
-    frozenset({"network", "local-state"}),
-    "external-io",
-    CommandWriteRoute.NONE,
-    destructive=True,
 )
 
 _YES = OptionSpec(
@@ -71,12 +72,18 @@ _ITEM = OptionSpec(
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.config.provision.verify.item_help"),
 )
-_REMOVE_MODEL = OptionSpec(
-    name="model",
-    declarations=("--model",),
+_REMOVE_ITEM = ArgumentSpec(
+    name="item",
     value=ValueContract(DeferredTarget("builtins", "str")),
-    default=ParameterDefault.value(None),
-    help_key=TranslationKey("cli.config.provision.remove.model_help"),
+    default=ParameterDefault.required(),
+    help_key=TranslationKey("cli.config.provision.remove.item_help"),
+)
+_REMOVE_YES = OptionSpec(
+    name="yes",
+    declarations=("--yes",),
+    value=ValueContract(DeferredTarget("builtins", "bool")),
+    default=ParameterDefault.value(False),
+    help_key=TranslationKey("cli.config.provision.remove.yes_help"),
 )
 
 
@@ -185,19 +192,6 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         result_schema=_schema("ProvisionBrowserResult", "config.provision.browser"),
     ),
     CommandSpec(
-        "config_provision_start",
-        "config_provision",
-        "start",
-        kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey("cli.config.provision.start.help"),
-        short_help_key=None,
-        invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(),
-        policy=_SETUP_WRITE,
-        handler=_handler("provision_start"),
-        result_schema=_schema("ProvisionStartResult", "config.provision.start"),
-    ),
-    CommandSpec(
         "config_provision_remove",
         "config_provision",
         "remove",
@@ -205,8 +199,8 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         help_key=TranslationKey("cli.config.provision.remove.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(_REMOVE_MODEL, _ROLE),
-        policy=_SETUP_DESTRUCTIVE,
+        parameters=(_REMOVE_ITEM, _REMOVE_YES),
+        policy=_COMPONENT_REMOVE,
         handler=_handler("provision_remove"),
         result_schema=_schema("ProvisionRemoveResult", "config.provision.remove"),
     ),

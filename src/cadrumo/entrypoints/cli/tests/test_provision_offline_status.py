@@ -2,10 +2,11 @@
 
 The component leaves run the native component engine, which reaches only
 installation-wide components no profile holds: its quick check reads local
-files only, its full check reaches the network, and its setup also writes
-component storage. The local reader's leaves still submit operations in the
-signed-in profile, so they declare installation storage and stay behind the
-session. How each check answers offline is proved by the engine's own suites.
+files only, its full check reaches the network, its setup also writes
+component storage and its removal deletes from component storage without the
+network. The local reader's leaves still submit operations in the signed-in
+profile, so they declare installation storage and stay behind the session. How
+each check answers offline is proved by the engine's own suites.
 """
 
 from __future__ import annotations
@@ -38,17 +39,30 @@ def test_a_full_check_declares_the_network_it_reaches_and_writes_nothing(key: st
 def test_a_setup_declares_its_download_and_its_component_storage(key: str) -> None:
     policy = COMMAND_GRAPH.spec(key).policy
 
-    assert policy.capabilities == frozenset({"network"})
+    assert policy.capabilities == frozenset({"components", "network"})
     assert policy.side_effects == frozenset({"network", "local-state"})
 
 
-@pytest.mark.parametrize(
-    "leaf", ["status", "probe", "verify", "setup", "browser", "pull", "report", "start", "load", "remove"]
-)
+def test_a_removal_declares_the_component_storage_it_deletes_from_and_no_network() -> None:
+    policy = COMMAND_GRAPH.spec("config_provision_remove").policy
+
+    assert policy.capabilities == frozenset({"components"})
+    assert policy.side_effects == frozenset({"local-state"})
+    assert policy.destructive
+
+
+@pytest.mark.parametrize("leaf", ["status", "probe", "verify", "setup", "browser", "pull", "report", "load", "remove"])
 def test_only_the_component_leaves_run_without_a_profile_session(leaf: str) -> None:
     profile_free = command_is_profile_free(COMMAND_GRAPH.spec(f"config_provision_{leaf}"))
 
-    assert profile_free is (leaf in {"status", "probe", "verify", "setup", "browser", "pull"})
+    assert profile_free is (leaf in {"status", "probe", "verify", "setup", "browser", "pull", "remove"})
+
+
+def test_the_local_ai_server_has_no_start_leaf_because_the_manager_runs_it() -> None:
+    leaves = {node.path[-1] for node in COMMAND_GRAPH.nodes() if node.path[1:3] == ("config", "provision")}
+
+    assert "start" not in leaves
+    assert {"status", "setup", "verify", "remove", "load", "report"} <= leaves
 
 
 def test_the_local_ai_setup_takes_no_model_of_the_operators_choosing() -> None:

@@ -484,7 +484,8 @@ def _declares_a_review(definition_id: str) -> bool:
 def test_the_tools_the_read_only_local_surface_leaves_out_serve_no_operation_on_it() -> None:
     """Only the review and setup tools are left out, and no listed operation declares a review.
 
-    The setup tools serve no registered operation: they download components or reach the download hosts.
+    The setup tools serve no registered operation: they download components, reach the download hosts or
+    delete component files.
     """
     assert MCP_TOOL_NAMES - MCP_SURFACES[_READ_ONLY_LOCAL].tools == {
         "review",
@@ -492,6 +493,7 @@ def test_the_tools_the_read_only_local_surface_leaves_out_serve_no_operation_on_
         "setup_status",
         "setup_plan",
         "setup",
+        "setup_remove",
     }
     reviewed = sorted(filter(_declares_a_review, _read_only_local_operations()))
     assert not reviewed, f"read-only local operations that need a tool the surface leaves out: {reviewed}"

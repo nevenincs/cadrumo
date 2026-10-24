@@ -88,10 +88,11 @@ CADRUMO_CLI_REVEAL_IDENTIFIERS = { kind = "boolean", role = "package" }
 CADRUMO_EXTERNAL_BIN_DIRS = { kind = "directory_list", role = "package" }
 
 # The operator's proxy for the downloads Cadrumo starts. The native component engine
-# reads them for its network preflight and pinned transfers; the runtime passes them to
-# the profile workers that run setup, and a worker hands them only to the download
-# tools that need them. No credential name is declared: a proxy password travels in
-# the address, which is therefore treated as sensitive and never logged.
+# reads them for its network preflight and pinned transfers. The command line, the TUI
+# and the MCP service start the engine's components role, so their images pass them to
+# it; the runtime passes them to its profile workers, and a worker hands them only to
+# the download tools that need them. No credential name is declared: a proxy password
+# travels in the address, which is therefore treated as sensitive and never logged.
 CADRUMO_PROXY_URL = { kind = "text", role = "pass" }
 CADRUMO_PROXY_USERNAME = { kind = "text", role = "pass" }
 CADRUMO_PROXY_BYPASS = { kind = "text", role = "pass" }
@@ -474,6 +475,8 @@ base = "groups"
 base_groups = ["system", "session", "terminal", "display", "network"]
 pins = true
 operator = ["locations", "presentation", "remote", "package"]
+# The command line and the TUI start the components role, which follows the proxy.
+pass = ["CADRUMO_PROXY_URL", "CADRUMO_PROXY_USERNAME", "CADRUMO_PROXY_BYPASS"]
 slots = [{ name = "CADRUMO_PROFILE_ROOT", required = false }]
 path = "package"
 
@@ -483,6 +486,8 @@ base = "groups"
 base_groups = ["system", "session", "terminal", "display", "network"]
 pins = true
 operator = ["locations", "presentation", "remote", "package"]
+# The MCP service starts the components role, which follows the proxy.
+pass = ["CADRUMO_PROXY_URL", "CADRUMO_PROXY_USERNAME", "CADRUMO_PROXY_BYPASS"]
 slots = [{ name = "CADRUMO_PROFILE_ROOT", required = false }]
 path = "package"
 
@@ -853,6 +858,26 @@ arguments = ["config", "show"]
 ambient = { HOME = "/home/ada", cadrumo_log_level = "DEBUG", CADRUMO_LOG_LEVEL = "INFO" }
 profile = "aeat"
 environment = { HOME = "/home/ada", CADRUMO_LOG_LEVEL = "INFO", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "windows-aeat-passes-the-proxy-to-the-components-role"
+platform = "windows"
+image = "aeat"
+arguments = ["config", "provision", "setup"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_PROXY_URL = "http://proxy.invalid:3128", CADRUMO_PROXY_USERNAME = "ada", CADRUMO_PROXY_BYPASS = "corp.invalid", CADRUMO_PROXY_PASSWORD_SECRET = "must-not-cross" }
+profile = "aeat"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_PROXY_URL = "http://proxy.invalid:3128", CADRUMO_PROXY_USERNAME = "ada", CADRUMO_PROXY_BYPASS = "corp.invalid", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-mcp-passes-the-proxy-to-the-components-role"
+platform = "posix"
+image = "cadrumo-mcp"
+arguments = []
+ambient = { HOME = "/home/ada", CADRUMO_PROXY_URL = "http://proxy.invalid:3128", CADRUMO_PROXY_USERNAME = "ada", CADRUMO_PROXY_BYPASS = "corp.invalid", CADRUMO_PROXY_PASSWORD_SECRET = "must-not-cross" }
+profile = "cadrumo-mcp"
+environment = { HOME = "/home/ada", CADRUMO_PROXY_URL = "http://proxy.invalid:3128", CADRUMO_PROXY_USERNAME = "ada", CADRUMO_PROXY_BYPASS = "corp.invalid", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
 path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
 
 [[launch_vectors]]

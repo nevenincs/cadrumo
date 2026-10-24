@@ -28,6 +28,7 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
+from ..surfaces import MCP_SURFACES, McpSurfaceName
 from .components_role import role_replay_fixture
 from .session import connected_server_and_client_session
 from .test_operation_search_tool import _AdmittedClient, _registry
@@ -53,9 +54,11 @@ class _Lease(_AdmittedClient):
         return SimpleNamespace(items=lambda _kind: (), record_revision=1, content_digest="0" * 64)
 
 
-def _adapter() -> RuntimeMcpAdapter:
+def _adapter(surface: McpSurfaceName = McpSurfaceName.FULL) -> RuntimeMcpAdapter:
     lease = _Lease(uuid4())
-    return RuntimeMcpAdapter(profile_id=lease.profile_id, client=cast(FrontendClient, lease))
+    return RuntimeMcpAdapter(
+        profile_id=lease.profile_id, client=cast(FrontendClient, lease), surface=MCP_SURFACES[surface]
+    )
 
 
 async def _until(reached: Callable[[], bool]) -> None:
@@ -308,3 +311,59 @@ async def test_a_following_that_stops_ends_busy_while_the_followed_setup_goes_on
     assert reply["outcome"] == "busy" and reply["item_id"] == "browser"
     assert [row["state"] for row in reply["rows"] if row["item_id"] == "browser"] == ["provisioning"]
     assert reply["followed"][0]["item_id"] == "browser"
+
+
+@pytest.mark.anyio
+async def test_a_confirmed_removal_runs_the_roles_remove_and_names_what_it_removed(role_replay: _Replay) -> None:
+    replay = role_replay(remove=["remove_absent_browser"])
+    adapter = _adapter()
+    try:
+        reply = await adapter.call("setup_remove", {"items": ["browser"], "confirmed": True})
+    finally:
+        await adapter.close()
+
+    assert replay.commands() == [("remove", "--item", "browser")]
+    assert [launch.written for launch in replay.launches] == [b""]
+    assert reply["outcome"] == "removed" and reply["removed"] == ["browser"]
+    browser, local_ai = reply["rows"]
+    assert (browser["item_id"], browser["state"]) == ("browser", "absent")
+    assert browser["words"]["name"] == _BROWSER_ES
+    assert local_ai["item_id"] == "local_ai"
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        {"items": ["browser"]},
+        {"items": ["browser"], "confirmed": False},
+        {"items": [], "confirmed": True},
+        {"confirmed": True},
+        {"items": ["google"], "confirmed": True},
+    ],
+)
+async def test_a_removal_without_the_persons_confirmation_or_an_item_starts_no_role(
+    role_replay: _Replay, arguments: dict[str, object]
+) -> None:
+    replay = role_replay(remove=["remove_absent_browser"])
+    adapter = _adapter()
+    try:
+        reply = await adapter.call("setup_remove", arguments)
+    finally:
+        await adapter.close()
+
+    assert reply == {"outcome": "refused", "code": "invalid_request"}
+    assert replay.launches == []
+
+
+@pytest.mark.anyio
+async def test_the_read_only_local_surface_does_not_serve_a_removal(role_replay: _Replay) -> None:
+    replay = role_replay(remove=["remove_absent_browser"])
+    adapter = _adapter(McpSurfaceName.READ_ONLY_LOCAL)
+    try:
+        reply = await adapter.call("setup_remove", {"items": ["browser"], "confirmed": True})
+    finally:
+        await adapter.close()
+
+    assert reply == {"outcome": "refused", "code": "unknown_tool"}
+    assert replay.launches == []

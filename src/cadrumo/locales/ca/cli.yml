@@ -2676,6 +2676,8 @@ cli:
           Mostra el pla i et pregunta abans.
       complete: Cadrumo està preparat.
       fix: 'Per solucionar-ho, executa: %{command}'
+      following: '%{name}: una altra preparació ja ho està preparant, així que aquesta
+        la segueix.'
       hardware_limited: Aquest ordinador no té prou memòria per a la IA local.
       help: 'Prepara i comprova el que Cadrumo necessita en aquest ordinador: el navegador
         per al web de l''Agència Tributària i la IA local, amb el seu programa i els
@@ -2716,10 +2718,14 @@ cli:
         help: 'Prepara la IA local: instal·la el seu programa si falta i després baixa
           el model de cada rol. Mostra el pla i et pregunta abans.'
       remove:
-        help: Esborra d'aquest ordinador un model que va triar Cadrumo i indica l'espai
-          alliberat.
-        model_help: Nom del model que cal esborrar. Només es poden esborrar models
-          que va triar Cadrumo.
+        confirm_prompt: '%{name}: vols esborrar-ho d''aquest ordinador?'
+        help: 'Esborra d''aquest ordinador un component: browser o local_ai. Et pregunta
+          abans; el pots tornar a preparar quan vulguis.'
+        item_help: 'Component que cal esborrar: browser o local_ai.'
+        needs_confirmation: '%{name}: no s''ha esborrat res. Torna a executar l''ordre
+          amb --yes per esborrar-ho.'
+        removed: '%{name}: s''ha esborrat d''aquest ordinador.'
+        yes_help: L'esborra sense preguntar.
       report:
         help: Indica la memòria d'aquest ordinador, el model triat per a cada rol
           i si es pot carregar ara.
@@ -2732,9 +2738,6 @@ cli:
       size:
         gigabytes: '%{value} GB'
         megabytes: '%{value} MB'
-      start:
-        help: Inicia el programa d'IA local instal·lat quan no respon. No fa res si
-          ja respon.
       status:
         help: Mostra si cada component està a punt, a partir del que aquest ordinador
           ja té. És ràpid i no baixa res.

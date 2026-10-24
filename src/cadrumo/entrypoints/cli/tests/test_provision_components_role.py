@@ -28,7 +28,6 @@ from ....adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_V
 from ....application.dependency_registry import dependency_item_declarations
 from ....application.local_reader_contracts import LocalReaderProvisionAction, LocalReaderProvisionRequest
 from ....application.local_reader_report import LocalReaderReportRequest
-from ....core.model_catalogue import ModelRole
 from ..command_operation_table import COMMAND_OPERATION_ROWS
 from ..config import provision_cli
 from .cli_runner import invoke_cached_cli, semantic_cli_text
@@ -37,7 +36,7 @@ __all__ = ["english_locale_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_COMPONENT_LEAVES = ("browser", "probe", "pull", "setup", "status", "verify")
+_COMPONENT_LEAVES = ("browser", "probe", "pull", "remove", "setup", "status", "verify")
 _BROWSER = "Browser for the tax agency website"
 _INTERNAL_TERMS = ("runtime", "playwright", "headless", "digest", "ollama", "role")
 
@@ -231,6 +230,141 @@ def test_a_build_without_the_role_reads_every_item_as_not_in_this_build(
     assert not (tmp_path / "root").exists()
 
 
+@pytest.mark.parametrize("arguments", [["config", "provision", "browser"], ["config", "provision", "browser", "--yes"]])
+def test_a_setup_that_follows_one_already_running_asks_nothing_and_reports_its_result(
+    replay: Any, arguments: list[str]
+) -> None:
+    launcher = replay("setup_followed_completed")
+
+    result = invoke_cached_cli(arguments)
+
+    assert result.exit_code == 0, result.output
+    assert launcher.launch.written == b""
+    errors = semantic_cli_text(result.stderr).splitlines()
+    assert errors[0] == f"{_BROWSER}: another setup is already setting this up, so this one follows it."
+    assert "Cadrumo will set up:" not in errors
+    assert f"{_BROWSER}: checking that it works" in errors
+    output = semantic_cli_text(result.stdout).splitlines()
+    assert f"{_BROWSER}	Ready." in output
+    assert output[-1] == "Setup finished."
+
+
+def test_a_followed_setup_relays_the_following_notice_in_json_and_records_no_approval(replay: Any) -> None:
+    replay("setup_followed_completed")
+
+    result = invoke_cached_cli(["--format", "json", "config", "provision", "browser", "--yes"])
+
+    assert result.exit_code == 0, result.output
+    relayed = [json.loads(line) for line in result.stderr.splitlines()]
+    assert relayed[0] == _relayed("setup_followed_completed", kinds={"notice"})[0]
+    assert relayed[0]["notice_code"] == "following"
+    document = _json(result)["result"]
+    assert (document["outcome"], document["approved"], document["plan_digest"]) == ("completed", False, None)
+
+
+def test_a_stopped_follow_says_another_setup_is_still_running_and_exits_2(replay: Any) -> None:
+    replay("setup_follow_stopped")
+
+    result = invoke_cached_cli(["config", "provision", "browser"])
+
+    assert result.exit_code == 2, result.output
+    errors = semantic_cli_text(result.stderr).splitlines()
+    assert errors[0] == f"{_BROWSER}: another setup is already setting this up, so this one follows it."
+    assert "Stopping the setup." in errors
+    assert semantic_cli_text(result.stdout).splitlines()[-1] == (
+        "Another setup is changing this right now. Try again when it has finished."
+    )
+    assert "approval" not in result.stdout
+
+
+def test_remove_with_yes_runs_the_roles_removal_and_reports_every_row(replay: Any) -> None:
+    launcher = replay("remove_absent_browser")
+
+    result = invoke_cached_cli(["config", "provision", "remove", "browser", "--yes"])
+
+    assert result.exit_code == 0, result.output
+    assert launcher.launch.arguments == ("--role", "components", "remove", "--item", "browser")
+    assert launcher.launch.written == b""
+    errors = semantic_cli_text(result.stderr).splitlines()
+    assert f"{_BROWSER}: tidying up" in errors
+    output = semantic_cli_text(result.stdout).splitlines()
+    assert f"{_BROWSER}	Not set up yet." in output
+    assert "	To fix it, run: aeat config provision browser" in output
+    assert output[-1] == f"{_BROWSER}: deleted from this computer."
+
+
+def test_remove_json_carries_the_roles_outcome_and_rows(replay: Any) -> None:
+    replay("remove_absent_browser")
+
+    result = invoke_cached_cli(["--format", "json", "config", "provision", "remove", "browser", "--yes"])
+
+    assert result.exit_code == 0, result.output
+    document = _json(result)["result"]
+    (role_result,) = _relayed("remove_absent_browser", kinds={"result"})
+    assert (document["item"], document["confirmed"], document["outcome"]) == ("browser", True, "removed")
+    assert document["removed"] == role_result["items"] == ["browser"]
+    assert [(item["item_id"], item["state"]) for item in document["items"]] == [
+        (row["item_id"], row["state"]) for row in role_result["rows"]
+    ]
+    assert [json.loads(line) for line in result.stderr.splitlines()] == _relayed(
+        "remove_absent_browser", kinds={"phase"}
+    )
+
+
+def test_remove_without_yes_and_without_a_terminal_removes_nothing_and_asks_for_confirmation(replay: Any) -> None:
+    launcher = replay("remove_absent_browser")
+
+    result = invoke_cached_cli(["config", "provision", "remove", "local_ai"])
+    document = invoke_cached_cli(["--format", "json", "config", "provision", "remove", "local_ai"])
+
+    assert result.exit_code == 2, result.output
+    assert launcher.launches == []
+    assert semantic_cli_text(result.stdout).splitlines() == [
+        "Local AI: nothing was deleted. Run the command again with --yes to delete it."
+    ]
+    assert document.exit_code == 2, document.output
+    assert _json(document)["result"] == {
+        "item": "local_ai",
+        "confirmed": False,
+        "outcome": None,
+        "removed": [],
+        "item_id": None,
+        "failure_category": None,
+        "items": [],
+    }
+
+
+def test_remove_refuses_an_unknown_component_before_starting_the_role(replay: Any) -> None:
+    launcher = replay("remove_absent_browser")
+
+    result = invoke_cached_cli(["config", "provision", "remove", "printer", "--yes"])
+    missing = invoke_cached_cli(["config", "provision", "remove"])
+
+    assert result.exit_code == 2
+    assert "choose one of: browser, local_ai" in semantic_cli_text(result.output)
+    assert missing.exit_code == 2
+    assert launcher.launches == []
+
+
+def test_remove_in_a_build_without_the_role_says_it_is_not_in_this_build(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(sys, "_xoptions", {}, raising=False)
+    monkeypatch.delenv(DEVELOPMENT_ROLE_IMAGE_VARIABLE, raising=False)
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "root"))
+
+    result = invoke_cached_cli(["--format", "json", "config", "provision", "remove", "browser", "--yes"])
+
+    assert result.exit_code == 2, result.output
+    document = _json(result)["result"]
+    assert (document["outcome"], document["item_id"], document["failure_category"]) == (
+        "refused",
+        "browser",
+        "not_in_this_build",
+    )
+    assert document["removed"] == []
+
+
 def test_the_progress_line_words_a_retry_and_a_wait_for_the_program(capsys: pytest.CaptureFixture[str]) -> None:
     line = provision_cli.SetupProgressLine(json_mode=False, interactive=False)
     line.observe(
@@ -276,23 +410,14 @@ def test_the_local_reader_leaves_still_submit_their_registered_operations(monkey
 
     monkeypatch.setattr(provision_cli, "run_registered_operation", record)
     monkeypatch.setattr(provision_cli, "bound_profile_client", lambda ctx: object())
-    for leaf, arguments in (
-        ("start", {}),
-        ("load", {}),
-        ("remove", {"role": ModelRole.TEXT_EXTRACTION}),
-        ("report", {}),
-    ):
+    for leaf in ("load", "report"):
         with pytest.raises(_StopError):
-            getattr(provision_cli, f"provision_{leaf}")(object(), **arguments)
+            getattr(provision_cli, f"provision_{leaf}")(object())
 
     rows = {path[2]: operation for path, operation in COMMAND_OPERATION_ROWS if path[:2] == ("config", "provision")}
-    assert [definition for definition, _ in submitted] == [rows["start"], rows["load"], rows["remove"], rows["report"]]
+    assert [definition for definition, _ in submitted] == [rows["load"], rows["report"]]
     actions = [payload.action for _, payload in submitted if isinstance(payload, LocalReaderProvisionRequest)]
-    assert actions == [
-        LocalReaderProvisionAction.START,
-        LocalReaderProvisionAction.LOAD,
-        LocalReaderProvisionAction.REMOVE,
-    ]
+    assert actions == [LocalReaderProvisionAction.LOAD]
     assert isinstance(submitted[-1][1], LocalReaderReportRequest)
 
 

@@ -11,6 +11,9 @@ digest for the person to approve; ``setup`` carries exactly that digest and the
 role sets up only while the plan still has it, asking for no review of its own.
 When the agent column starts a setup, the desktop's approval of the tool call
 is the person's act. A call without a digest is refused before the role starts.
+``setup_remove`` deletes the named items, as the command line's removal does,
+and only with ``confirmed`` true: like the command line's ``--yes``, it is the
+person's confirmation, and a call without it is refused before the role starts.
 
 The role's byte figures are relayed as ``notifications/progress`` while the
 call runs, when the client sent a progress token, and the reply carries the
@@ -68,7 +71,7 @@ from .progress_relay import ProgressSink, component_progress
 
 __all__ = ["SETUP_TOOLS", "gate_setup_actions", "run_setup_tool", "setup_request"]
 
-SETUP_TOOLS: Final = frozenset({"setup_status", "setup_plan", "setup"})
+SETUP_TOOLS: Final = frozenset({"setup_status", "setup_plan", "setup", "setup_remove"})
 """The tools served by the component engine rather than by a registered operation."""
 
 _DIGEST: Final = re.compile(r"^[0-9a-f]{64}$")
@@ -91,7 +94,8 @@ def setup_request(name: str, args: dict[str, Any]) -> ComponentsRequest:
     """Return the role command one setup tool call asks for, refusing arguments the tool does not take.
 
     Raises:
-        ValueError: An unknown or repeated item, or a setup without the exact digest of an approved plan.
+        ValueError: An unknown or repeated item, a setup without the exact digest of an approved plan, or a
+            removal without the person's confirmation or without an item.
     """
     items = _items(args)
     if name == "setup_status":
@@ -105,6 +109,12 @@ def setup_request(name: str, args: dict[str, Any]) -> ComponentsRequest:
         if not isinstance(digest, str) or _DIGEST.fullmatch(digest) is None:
             raise ValueError("a setup carries the plan_digest of the plan the person approved")
         return ComponentsRequest(ComponentsCommand.SETUP, items=items, approve=digest)
+    if name == "setup_remove":
+        if args.get("confirmed") is not True:
+            raise ValueError("a removal carries the person's confirmation")
+        if not items:
+            raise ValueError("a removal names its items")
+        return ComponentsRequest(ComponentsCommand.REMOVE, items=items)
     raise ValueError("not a setup tool")
 
 
@@ -152,6 +162,8 @@ def _reply(result: ComponentsResultLine, language: str, latest: dict[str, Compon
         reply["plan"] = result.plan.model_dump(mode="json")
         reply["plan_digest"] = result.plan_digest
         reply["notices"] = _notices(result.plan, language)
+    if result.command is ComponentsCommand.REMOVE and result.items is not None:
+        reply["removed"] = list(result.items)
     if result.item_id is not None:
         reply["item_id"] = result.item_id
     if result.failure_category is not None:

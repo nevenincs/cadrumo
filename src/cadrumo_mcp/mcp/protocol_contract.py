@@ -499,6 +499,21 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         # It downloads from the declared hosts and replaces a superseded build once the new one checks.
         _acts("Set up components", destructive=True, open_world=True),
     ),
+    (
+        "setup_remove",
+        "Delete the named items, browser or local_ai, from this computer: the browser's builds, or the local AI's "
+        "program and every role's model. Name at least one item. Ask the person first and call only once they "
+        "confirmed the removal: "
+        "confirmed must be true, and a call without it is refused before anything is touched. Nothing is "
+        "downloaded and no other host is reached; an item that is not set up is removed as a no-op. The local AI's "
+        "server is stopped by Cadrumo's manager before its program goes. Outcome removed names in removed the items "
+        "it removed; busy means a setup is changing the item right now; failed carries failure_category and "
+        "failure, the sentence in the profile's language. rows carry every item's row afterwards, and an item "
+        "removed can be set up again with setup_plan and setup",
+        _schema({"items": _SETUP_ITEMS, "confirmed": _FLAG}),
+        # It deletes component files on this computer and reaches no other host.
+        _acts("Remove components", destructive=True, open_world=False),
+    ),
 )
 MCP_TOOL_CATALOGUE = tuple((name, description, schema) for name, description, schema, _hints in _DECLARED_TOOLS)
 """Each tool as it is advertised: its name, its description and the schema of its arguments."""

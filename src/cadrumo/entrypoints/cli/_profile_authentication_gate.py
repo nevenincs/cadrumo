@@ -52,9 +52,7 @@ _PROFILE_CONNECTION_KEYS = frozenset(
     {
         "config_check",
         "config_provision_load",
-        "config_provision_remove",
         "config_provision_report",
-        "config_provision_start",
         "config_google_folder_view",
         "config_google_folder_organize",
         "config_google_probe",

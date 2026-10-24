@@ -118,6 +118,7 @@ _EVERY_TOOL: Final = frozenset(
         "setup_status",
         "setup_plan",
         "setup",
+        "setup_remove",
     }
 )
 
@@ -125,9 +126,10 @@ _EVERY_TOOL: Final = frozenset(
 # declares one, so the two tools that serve reviews have nothing to act on.
 _REVIEW_TOOLS: Final = frozenset({"review", "respond"})
 
-# Setting a component up downloads it, and a full check reaches the download
-# hosts, so a surface that reaches no other host serves none of the setup tools.
-_SETUP_TOOLS: Final = frozenset({"setup_status", "setup_plan", "setup"})
+# Setting a component up downloads it, a full check reaches the download hosts
+# and a removal deletes component files, so a surface that reaches no other host
+# and changes nothing serves none of the setup tools.
+_SETUP_TOOLS: Final = frozenset({"setup_status", "setup_plan", "setup", "setup_remove"})
 
 
 def _local_reads() -> frozenset[str]:

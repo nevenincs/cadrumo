@@ -79,7 +79,7 @@ def test_publisher_identity_is_compiled_for_every_profile_and_ignores_ambient_ov
         assert "case-folded-override" not in defined.values()
     # Each admission is planted into a profile that declares no list of that kind yet.
     for profile, admitted in (
-        ("aeat", 'pass = ["CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"]'),
+        ("cadrumo-agent-service", 'pass = ["CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"]'),
         ("cadrumo-runtime", 'slots = [{ name = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", required = false }]'),
     ):
         header = f"[profiles.{profile}]\n"

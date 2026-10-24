@@ -69,6 +69,7 @@ class MachineSecretPresence(StrEnum):
 type Capability = Literal[
     "state-free",
     "local-storage",
+    "components",
     "registry",
     "profile-custody",
     "encrypted-facts",

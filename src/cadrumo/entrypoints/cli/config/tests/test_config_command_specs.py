@@ -160,7 +160,7 @@ def test_fiscal_residency_reaches_the_handler_as_the_documented_token(token: str
     ("token", "parameters", "identity", "capabilities"),
     [
         ("load", ("model", "role"), "config.provision.load", frozenset({"local-storage", "network"})),
-        ("setup", ("yes",), "config.provision.setup", frozenset({"network"})),
+        ("setup", ("yes",), "config.provision.setup", frozenset({"components", "network"})),
     ],
 )
 def test_provision_load_and_setup_extend_the_provision_cluster(
@@ -177,7 +177,8 @@ def test_provision_load_and_setup_extend_the_provision_cluster(
     assert tuple(parameter.name for parameter in spec.parameters) == parameters
     # Load submits a registered operation in the signed-in profile's session, so it
     # declares installation storage beside the network; setup runs the component
-    # engine's role, which reaches nothing a profile holds, so it declares the network.
+    # engine's role, which reaches nothing a profile holds, so it declares the network
+    # and the installation-wide component storage it writes.
     assert spec.policy.capabilities == capabilities
     assert spec.policy.side_effects == frozenset({"network", "local-state"})
     assert spec.policy.performance == "external-io"

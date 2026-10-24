@@ -69,3 +69,21 @@ async def test_a_setup_under_the_planned_digest_is_refused_by_a_blocking_network
     assert setup["plan_digest"] == plan["plan_digest"]
     assert "progress" not in setup
     assert [row["state"] for row in after["rows"]] == ["absent"]
+
+
+@pytest.mark.anyio
+@pytest.mark.usefixtures("components_role")
+async def test_a_confirmed_removal_runs_on_the_role_and_an_unconfirmed_one_never_reaches_it() -> None:
+    adapter = _adapter()
+    try:
+        unconfirmed = await adapter.call("setup_remove", {"items": ["local_ai"], "confirmed": False})
+        removal = await adapter.call("setup_remove", {"items": ["local_ai"], "confirmed": True})
+    finally:
+        await adapter.close()
+
+    assert unconfirmed == {"outcome": "refused", "code": "invalid_request"}
+    assert (removal["outcome"], removal["removed"]) == ("removed", ["local_ai"])
+    assert [(row["item_id"], row["state"]) for row in removal["rows"]] == [
+        ("browser", "absent"),
+        ("local_ai", "absent"),
+    ]

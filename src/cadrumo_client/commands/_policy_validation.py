@@ -8,6 +8,7 @@ CAPABILITIES = frozenset(
     {
         "state-free",
         "local-storage",
+        "components",
         "registry",
         "profile-custody",
         "encrypted-facts",
