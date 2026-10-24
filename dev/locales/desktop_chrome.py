@@ -3761,3 +3761,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+        "desktop.ledger.inventory.acquisition",
+        "desktop.ledger.inventory.acquisition_hint",
+        "desktop.ledger.inventory.authority_file",
+        "desktop.ledger.inventory.authority_file_too_large",
+        "desktop.ledger.inventory.authority_file_unread",

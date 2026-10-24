@@ -387,6 +387,47 @@ test("an inventory valuation preview records nothing", async ({
   );
 });
 
+test("a closing authority or a purchase's cost is read from a file the person picks", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await openSetup(target, "registers");
+  await area(target, "desktop.ledger.registers.area.inventory");
+  await button(target, "desktop.ledger.inventory.task.closing").click();
+  const record = field(target, "desktop.ledger.inventory.authority");
+  const picker = target.locator(".ledger-setup-registers input[type=file]");
+  const document = JSON.stringify({ decision: {}, prior_closing_link: {} });
+  await picker.setInputFiles({
+    name: "cierre.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(document),
+  });
+  await expect(record).toHaveValue(document);
+  // A file past the bound is not read, and says so; the field keeps its text.
+  await picker.setInputFiles({
+    name: "grande.json",
+    mimeType: "application/json",
+    buffer: Buffer.alloc(1024 * 1024 + 1, 0x20),
+  });
+  await expect(target.locator(".ledger-setup-registers")).toContainText(
+    label("desktop.ledger.inventory.authority_file_too_large"),
+  );
+  await expect(record).toHaveValue(document);
+
+  // Purchase-cost evidence is offered for a purchase alone.
+  await button(target, "desktop.ledger.inventory.task.movement").click();
+  const cost = field(target, "desktop.ledger.inventory.acquisition");
+  await expect(cost).toHaveCount(0);
+  await field(target, "desktop.ledger.inventory.kind_label").selectOption(
+    "purchase",
+  );
+  await expect(cost).toBeVisible();
+  await field(target, "desktop.ledger.inventory.kind_label").selectOption(
+    "cogs",
+  );
+  await expect(cost).toHaveCount(0);
+});
+
 test("what is missing opens the movements each reason names", async ({
   page: target,
 }) => {

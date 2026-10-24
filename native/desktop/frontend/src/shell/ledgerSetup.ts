@@ -509,6 +509,8 @@ export type InventoryMovementAddRequest = {
   quantity: PublicDecimal;
   unit_cost?: PublicDecimal | null;
   taxable_base?: PublicDecimal | null;
+  /** A purchase's cost evidence, as the person's typed document. */
+  acquisition_cost?: JsonObject | null;
 };
 export type InventoryMovementAddResult = {
   outcome: "added" | "refused";

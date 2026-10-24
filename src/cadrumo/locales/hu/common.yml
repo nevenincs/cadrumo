@@ -2302,8 +2302,14 @@ desktop:
       authority_hint: A döntés, az esetleges leltár és a kapcsolat az előző zárással
       authority_unread: Nem JSON-objektum.
       base: Adóalap
+      acquisition: Beszerzési költség igazolása (JSON)
+      acquisition_hint: 'Nem kötelező: az ellenérték és áfája, a hozzárendelhető költségek
+        és igazolásuk'
       book: Nyilvántartás
       books: Készletnyilvántartások {year}
+      authority_file: Beolvasás fájlból…
+      authority_file_too_large: A fájl nagyobb 1 MiB-nál.
+      authority_file_unread: A fájlt nem sikerült beolvasni.
       column:
         actividad: Tevékenység
         date: Dátum

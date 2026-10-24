@@ -2285,8 +2285,14 @@ desktop:
       authority_hint: The decision, the physical count if any, and the link to the
         prior closing
       authority_unread: Not a JSON object.
+      acquisition: Purchase cost evidence (JSON)
+      acquisition_hint: 'Optional: the consideration and its IVA, the attributable
+        costs and their evidence'
       base: Taxable base
       book: Book
+      authority_file: Read from a file…
+      authority_file_too_large: The file is larger than 1 MiB.
+      authority_file_unread: The file couldn't be read.
       books: Inventory books {year}
       column:
         actividad: Activity

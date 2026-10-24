@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,10 +46,14 @@ import { grammarText, tokenText } from "./setupWords";
 const METHODS = ["fifo", "pmp", "coste_medio"] as const;
 const KINDS = ["opening", "purchase", "cogs", "count"] as const;
 
+/** The largest JSON document read from a file into the field. */
+const JSON_FILE_LIMIT = 1024 * 1024;
+
 /**
- * A JSON document typed or pasted by the person: the inventory's closing
- * authority record. The same field takes a picked file's content once the
- * host reads one.
+ * A JSON document typed, pasted or read from a file by the person: an
+ * inventory's closing authority record or a purchase's cost evidence. The
+ * operation takes the document itself, so the page reads the file's text;
+ * the browser never tells it where the file is.
  */
 export function JsonDocumentField({
   label,
@@ -64,22 +68,67 @@ export function JsonDocumentField({
   hint?: string;
   error?: string | null;
 }) {
+  const t = useStrings();
   const id = useId();
+  const picker = useRef<HTMLInputElement>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const read = async (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > JSON_FILE_LIMIT) {
+      setFileError(t("desktop.ledger.inventory.authority_file_too_large"));
+      return;
+    }
+    try {
+      onValue(await file.text());
+      setFileError(null);
+    } catch {
+      setFileError(t("desktop.ledger.inventory.authority_file_unread"));
+    }
+  };
+  const shown = fileError ?? error;
   return (
-    <Field data-invalid={error ? true : undefined}>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+    <Field data-invalid={shown ? true : undefined}>
+      <div className="flex items-center justify-between gap-2">
+        <FieldLabel htmlFor={id}>{label}</FieldLabel>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={() => picker.current?.click()}
+        >
+          <Icon name="folder" size="sm" />
+          {t("desktop.ledger.inventory.authority_file")}
+        </Button>
+        <input
+          ref={picker}
+          type="file"
+          accept=".json,application/json"
+          hidden
+          tabIndex={-1}
+          aria-hidden="true"
+          onChange={(event) => {
+            const input = event.currentTarget;
+            void read(input.files?.[0]).finally(() => {
+              input.value = "";
+            });
+          }}
+        />
+      </div>
       <textarea
         id={id}
         value={value}
         spellCheck={false}
         rows={8}
-        aria-invalid={error ? true : undefined}
+        aria-invalid={shown ? true : undefined}
         aria-describedby={hint ? `${id}-hint` : undefined}
         className="w-full rounded-md border border-input bg-card p-2 font-mono text-sm text-foreground aria-invalid:border-destructive"
-        onChange={(event) => onValue(event.target.value)}
+        onChange={(event) => {
+          setFileError(null);
+          onValue(event.target.value);
+        }}
       />
       {hint && <FieldDescription id={`${id}-hint`}>{hint}</FieldDescription>}
-      <FieldError>{error}</FieldError>
+      <FieldError>{shown}</FieldError>
     </Field>
   );
 }
@@ -120,6 +169,7 @@ export function InventoryPane({
   const [unitCost, setUnitCost] = useState("");
   const [base, setBase] = useState("");
   const [authority, setAuthority] = useState("");
+  const [acquisition, setAcquisition] = useState("");
   const [preview, setPreview] =
     useState<SetupCall<InventoryValuationResult> | null>(null);
   const [lastBook, setLastBook] = useState<InventoryBook | null>(null);
@@ -138,6 +188,9 @@ export function InventoryPane({
   const baseParsed = parseDecimal(base, TAX_AMOUNT_RULE);
   const dateParsed = parseIsoDate(movementDate);
   const record = parseObject(authority);
+  // Purchase-cost evidence belongs to a purchase alone.
+  const cost =
+    kind === "purchase" ? parseObject(acquisition) : { kind: "empty" as const };
   const refusedText = (parsed: Parsed<unknown>) =>
     parsed.kind === "refused" ? grammarText(t, parsed.refusal) : null;
   const ready =
@@ -152,7 +205,8 @@ export function InventoryPane({
           kind !== "" &&
           quantityParsed.kind === "value" &&
           unitParsed.kind !== "refused" &&
-          baseParsed.kind !== "refused"
+          baseParsed.kind !== "refused" &&
+          cost.kind !== "refused"
         : task === "closing"
           ? book !== undefined && record.kind === "value"
           : false;
@@ -187,6 +241,7 @@ export function InventoryPane({
             quantity: decimalOr(quantityParsed) ?? { decimal: "" },
             unit_cost: decimalOr(unitParsed),
             taxable_base: decimalOr(baseParsed),
+            acquisition_cost: cost.kind === "value" ? cost.value : null,
           },
           true,
         );
@@ -494,6 +549,19 @@ export function InventoryPane({
                 error={refusedText(baseParsed)}
               />
             </FormGrid>
+          )}
+          {task === "movement" && kind === "purchase" && (
+            <JsonDocumentField
+              label={t("desktop.ledger.inventory.acquisition")}
+              value={acquisition}
+              onValue={setAcquisition}
+              hint={t("desktop.ledger.inventory.acquisition_hint")}
+              error={
+                cost.kind === "refused"
+                  ? t("desktop.ledger.inventory.authority_unread")
+                  : null
+              }
+            />
           )}
           {task === "closing" && (
             <JsonDocumentField
