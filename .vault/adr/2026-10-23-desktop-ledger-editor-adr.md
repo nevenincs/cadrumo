@@ -66,6 +66,18 @@ We will add a Ledger page to the desktop shell, and a `ledger` host module to se
 - Frontend: a `ledger` port on `Host` (`native/desktop/frontend/src/shell/host.ts`), typed request and result shapes for the operations the page uses, a scenario answer built from synthetic fixtures, a grid primitive in `src/components/ui/`, and the page itself under `src/components/ledger/`. The page's interaction design is the reviewed prototype of this feature.
 - These details are hypotheses that may change within the constraints: the exact command names, whether review answers share the setup module's helpers, and how large one bulk-classification request may be before the page splits it.
 
+### Amendment 2026-10-24: the person sees the document they confirm
+
+Accepted under the owner's standing authorization for this feature. The P03 usability review (`2026-10-24-desktop-ledger-editor-audit`, `document-no-preview`) found that the page asks the person to confirm a scanned receipt, such as which of two printed tax IDs is the supplier's, without ever showing it. No admitted read returns a stored document's bytes.
+
+- **A registered read renders one page of a stored document as an image.** Its request names one evidence record or one attachment, a page number and a width bound. Its permitted effects are none or unknown.
+  - The worker loads the encrypted bytes from custody and checks them against the record's digest. It renders a PDF page with the already-declared pdfplumber and pypdfium2. It passes a JPEG or PNG through, bounded.
+  - The result carries the page image as a `data:` URL under the reply bound, with the media type, the page count, the source digest and the file name. It carries no path.
+  - It refuses above a byte bound, and refuses any media type it cannot render.
+- **The window never parses a PDF**, and no PDF renderer is added to the frontend. The current CSP already admits `data:` images, so it does not change.
+- **The read joins the admitted list.** Bytes reach the window in memory only. They are dropped when the panel closes or the document changes, and never persisted or logged.
+- **The CLI and MCP reach the same registered read**, as every registered operation does. The CLI writes the rendered page to a file the person names.
+
 ## Rationale
 
 The registered contracts are already the authority for every ledger request, and the relay already carries them for this person in this session. A closed list of ids in the host stops the window from naming arbitrary operations, which is what separated the capabilities record from a general bridge, and it does so without writing each contract twice. Paths and secrets stay with the host, as the shell record requires.
