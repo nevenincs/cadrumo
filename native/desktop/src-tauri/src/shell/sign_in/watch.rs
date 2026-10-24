@@ -468,10 +468,7 @@ mod tests {
             "runtime_version_mismatch"
         );
         assert_eq!(
-            unavailable_code(&Refusal::Denied {
-                code: "profile_locked".into(),
-                sign_in: None
-            }),
+            unavailable_code(&Refusal::denied("profile_locked")),
             "profile_locked"
         );
     }

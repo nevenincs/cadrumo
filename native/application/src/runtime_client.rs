@@ -67,16 +67,38 @@ pub enum Refusal {
     InvalidFrame,
     ConnectionClosed,
     DeadlineExceeded,
-    /// The runtime answered with its typed refusal: an access denial code and,
-    /// for a sign-in, the reason it was refused.
+    /// The runtime answered with its typed refusal: an access denial code,
+    /// for a sign-in the reason it was refused, and for a busy subject the
+    /// operation that holds it.
     Denied {
         code: String,
         sign_in: Option<Value>,
+        holder_operation_id: Option<String>,
     },
     Io(io::Error),
 }
 
 impl Refusal {
+    /// The runtime's refusal `code`, with no sign-in reason or holder.
+    pub fn denied(code: impl Into<String>) -> Self {
+        Self::Denied {
+            code: code.into(),
+            sign_in: None,
+            holder_operation_id: None,
+        }
+    }
+
+    /// The operation that holds a refused request's subject, when the runtime named one.
+    pub fn holder_operation_id(&self) -> Option<&str> {
+        match self {
+            Self::Denied {
+                holder_operation_id,
+                ..
+            } => holder_operation_id.as_deref(),
+            _ => None,
+        }
+    }
+
     /// The reason a sign-in was refused, when the runtime gave one: a receipt
     /// refusal reason, `throttled` or `credential_rejected`.
     pub fn sign_in_reason(&self) -> Option<&str> {
@@ -217,6 +239,15 @@ pub enum Event {
     ModelRunRequested,
     /// The connection ended; no further reply or event will arrive.
     Disconnected,
+}
+
+/// A pushed event with the profile and session the runtime addressed it to,
+/// for a holder that must tell its own session's cues from another's.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Pushed {
+    pub event: Event,
+    pub profile_id: Option<String>,
+    pub session_id: Option<String>,
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
@@ -361,15 +392,20 @@ pub fn base64_decode(encoded: &str) -> Option<Vec<u8>> {
 struct Shared {
     connection_id: Mutex<Option<String>>,
     subscribers: Mutex<Vec<mpsc::Sender<Event>>>,
+    scoped: Mutex<Vec<mpsc::Sender<Pushed>>>,
     closed: AtomicBool,
 }
 
 impl Shared {
-    fn dispatch(&self, event: &Event) {
+    fn dispatch(&self, pushed: &Pushed) {
         self.subscribers
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .retain(|subscriber| subscriber.send(event.clone()).is_ok());
+            .retain(|subscriber| subscriber.send(pushed.event.clone()).is_ok());
+        self.scoped
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .retain(|subscriber| subscriber.send(pushed.clone()).is_ok());
     }
 
     /// Binds the connection id a reply or event carries, refusing a change.
@@ -496,15 +532,23 @@ fn read_loop(
         {
             break;
         }
-        let pushed = event(&document);
-        if pushed == Event::Disconnected {
+        let pushed = Pushed {
+            event: event(&document),
+            profile_id: text(&document, "profile_id").map(str::to_owned),
+            session_id: text(&document, "session_id").map(str::to_owned),
+        };
+        if pushed.event == Event::Disconnected {
             break;
         }
         shared.dispatch(&pushed);
     }
     shared.closed.store(true, Ordering::Release);
     pipe.close();
-    shared.dispatch(&Event::Disconnected);
+    shared.dispatch(&Pushed {
+        event: Event::Disconnected,
+        profile_id: None,
+        session_id: None,
+    });
 }
 
 impl Connection {
@@ -525,6 +569,7 @@ impl Connection {
         let shared = Arc::new(Shared {
             connection_id: Mutex::new(None),
             subscribers: Mutex::new(Vec::new()),
+            scoped: Mutex::new(Vec::new()),
             closed: AtomicBool::new(false),
         });
         let (replies, exchange) = mpsc::channel();
@@ -569,6 +614,25 @@ impl Connection {
         } else {
             self.shared
                 .subscribers
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .push(sender);
+        }
+        receiver
+    }
+
+    /// As [`Connection::subscribe`], with the profile and session each event names.
+    pub fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
+        let (sender, receiver) = mpsc::channel();
+        if self.closed() {
+            let _ = sender.send(Pushed {
+                event: Event::Disconnected,
+                profile_id: None,
+                session_id: None,
+            });
+        } else {
+            self.shared
+                .scoped
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner())
                 .push(sender);
@@ -665,6 +729,7 @@ impl Connection {
                     .get("sign_in")
                     .filter(|value| !value.is_null())
                     .cloned(),
+                holder_operation_id: text(&reply, "holder_operation_id").map(str::to_owned),
             });
         }
         Ok(reply)
@@ -759,6 +824,26 @@ impl Drop for Connection {
     }
 }
 
+/// What a held session's requests need of a connection: correlated exchanges
+/// and the events pushed to it. [`Connection`] is the one real implementation;
+/// a unit test of the logic layered on it may answer in its place.
+pub trait SessionExchange: Send + Sync {
+    /// As [`Connection::exchange`].
+    fn exchange(&self, request: &Value, deadline: Instant) -> Result<Map<String, Value>, Refusal>;
+    /// As [`Connection::subscribe_scoped`].
+    fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed>;
+}
+
+impl SessionExchange for Connection {
+    fn exchange(&self, request: &Value, deadline: Instant) -> Result<Map<String, Value>, Refusal> {
+        Connection::exchange(self, request, deadline)
+    }
+
+    fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
+        Connection::subscribe_scoped(self)
+    }
+}
+
 /// The frontend a sign-in is made from; the runtime decides what each may do.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Frontend {
@@ -843,10 +928,7 @@ fn admitted(reply: &Map<String, Value>, profile_id: &str) -> Result<Admitted, Re
         .ok_or(Refusal::InvalidFrame)?;
     let flag = |key: &str| status.get(key).and_then(Value::as_bool).unwrap_or(false);
     if let Some(denial) = text(status, "denial") {
-        return Err(Refusal::Denied {
-            code: denial.to_owned(),
-            sign_in: None,
-        });
+        return Err(Refusal::denied(denial));
     }
     let session_id = text(status, "session_id");
     if !flag("connected")
@@ -855,10 +937,7 @@ fn admitted(reply: &Map<String, Value>, profile_id: &str) -> Result<Admitted, Re
         || text(status, "profile_id") != Some(profile_id)
         || session_id.is_none()
     {
-        return Err(Refusal::Denied {
-            code: "profile_mismatch".into(),
-            sign_in: None,
-        });
+        return Err(Refusal::denied("profile_mismatch"));
     }
     Ok(Admitted {
         profile_id: profile_id.to_owned(),
@@ -1004,6 +1083,51 @@ impl Connection {
         self.login(profile_id, frontend, "receipt", proof, false, deadline)
     }
 
+    /// Resumes the stored sign-in of `profile_id` from `storage_root` with the
+    /// proof its receipt names, as every other frontend resumes it.
+    ///
+    /// A sign-in that completes between reading the proof and the runtime's
+    /// check replaces the receipt, so the proof read before it no longer
+    /// unwraps the one the runtime reads. Such a refusal is retried with a
+    /// fresh read, a bounded number of times and only while the proof differs
+    /// from the one refused.
+    pub fn resume_receipt(
+        &self,
+        storage_root: &Path,
+        profile_id: &str,
+        frontend: Frontend,
+        deadline: Instant,
+    ) -> Result<Admitted, ResumeRefusal> {
+        let mut presented: Option<Zeroizing<Vec<u8>>> = None;
+        for attempt in 1..=RECEIPT_PROOF_ATTEMPTS {
+            let proof = stored_sign_in_proof(storage_root, profile_id)
+                .map_err(|refusal| ResumeRefusal::Receipt(refusal.code().to_owned()))?;
+            if presented
+                .as_ref()
+                .is_some_and(|refused| **refused == *proof)
+            {
+                // No sign-in replaced the receipt: the proof was refused for itself.
+                return Err(ResumeRefusal::Receipt("tampered".to_owned()));
+            }
+            let refusal = match self.login_receipt(profile_id, frontend, &proof, deadline) {
+                Ok(admitted) => return Ok(admitted),
+                Err(refusal) => refusal,
+            };
+            let Some(reason) = receipt_refusal(&refusal) else {
+                return Err(ResumeRefusal::Runtime(refusal));
+            };
+            if reason != "tampered"
+                || attempt == RECEIPT_PROOF_ATTEMPTS
+                || Instant::now() >= deadline
+                || self.closed()
+            {
+                return Err(ResumeRefusal::Receipt(reason.to_owned()));
+            }
+            presented = Some(proof);
+        }
+        Err(ResumeRefusal::Receipt("tampered".to_owned()))
+    }
+
     fn session(
         &self,
         action: &str,
@@ -1043,10 +1167,7 @@ impl Connection {
             .and_then(Value::as_object)
             .and_then(|status| text(status, "denial"))
         {
-            Some(denial) => Err(Refusal::Denied {
-                code: denial.to_owned(),
-                sign_in: None,
-            }),
+            Some(denial) => Err(Refusal::denied(denial)),
             None => Ok(()),
         }
     }
@@ -1068,6 +1189,77 @@ impl Connection {
                 .get("automation_access_remains")
                 .and_then(Value::as_bool),
         })
+    }
+}
+
+/// Presentations of one resume; each after the first needs a proof that
+/// changed since the last refusal.
+const RECEIPT_PROOF_ATTEMPTS: usize = 3;
+
+/// The persisted-session refusal reasons a runtime may name for a presented receipt.
+const RECEIPT_REFUSAL_REASONS: [&str; 9] = [
+    "absent",
+    "malformed",
+    "schema_version_mismatch",
+    "expired_idle",
+    "expired_absolute",
+    "keychain_entry_missing",
+    "keyring_unavailable",
+    "custody_changed",
+    "tampered",
+];
+
+/// Why a stored sign-in was not resumed.
+#[derive(Debug)]
+pub enum ResumeRefusal {
+    /// The receipt does not sign this login in, by its persisted-session
+    /// refusal reason: none is stored, it could not be read, or the runtime
+    /// refused it.
+    Receipt(String),
+    /// The runtime could not be asked, or refused for another reason.
+    Runtime(Refusal),
+}
+
+impl ResumeRefusal {
+    pub fn code(&self) -> &str {
+        match self {
+            Self::Receipt(reason) => reason,
+            Self::Runtime(refusal) => refusal.code(),
+        }
+    }
+}
+
+impl std::fmt::Display for ResumeRefusal {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Receipt(reason) => write!(formatter, "receipt_refused: {reason}"),
+            Self::Runtime(refusal) => refusal.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for ResumeRefusal {}
+
+/// The receipt refusal a runtime denial of a presented receipt stands for,
+/// if it is one: the sign-in reason it names, or the denial's own meaning.
+fn receipt_refusal(refusal: &Refusal) -> Option<&str> {
+    if let Some(reason) = refusal
+        .sign_in_reason()
+        .filter(|reason| RECEIPT_REFUSAL_REASONS.contains(reason))
+    {
+        return Some(reason);
+    }
+    match refusal {
+        Refusal::Denied { code, .. } => match code.as_str() {
+            // The runtime deleted a receipt that no longer signs this login in.
+            "authentication_required" => Some("absent"),
+            // The denial does not distinguish idle from absolute expiry.
+            "session_expired" => Some("expired_idle"),
+            "custody_changed" => Some("custody_changed"),
+            "credential_rejected" => Some("tampered"),
+            _ => None,
+        },
+        _ => None,
     }
 }
 
@@ -1227,6 +1419,51 @@ mod tests {
         ] {
             assert!(frame_header(&header).is_err(), "{header:?}");
         }
+    }
+
+    #[test]
+    fn a_refused_receipt_reads_as_its_receipt_reason_and_other_refusals_do_not() {
+        let named = Refusal::Denied {
+            code: "authentication_required".into(),
+            sign_in: Some(json!({"reason": "expired_absolute"})),
+            holder_operation_id: None,
+        };
+        assert_eq!(receipt_refusal(&named), Some("expired_absolute"));
+        for (code, reason) in [
+            ("authentication_required", "absent"),
+            ("session_expired", "expired_idle"),
+            ("custody_changed", "custody_changed"),
+            ("credential_rejected", "tampered"),
+        ] {
+            assert_eq!(
+                receipt_refusal(&Refusal::denied(code)),
+                Some(reason),
+                "{code}"
+            );
+        }
+        let throttled = Refusal::Denied {
+            code: "credential_rejected".into(),
+            sign_in: Some(json!({"reason": "throttled", "remaining_seconds": 30})),
+            holder_operation_id: None,
+        };
+        assert_eq!(receipt_refusal(&throttled), Some("tampered"));
+        assert_eq!(receipt_refusal(&Refusal::denied("profile_locked")), None);
+        assert_eq!(receipt_refusal(&Refusal::ConnectionClosed), None);
+    }
+
+    #[test]
+    fn a_busy_subject_names_its_holder() {
+        let busy = Refusal::Denied {
+            code: "subject_busy".into(),
+            sign_in: None,
+            holder_operation_id: Some("0f0f0f0f-0000-4000-8000-000000000000".into()),
+        };
+        assert_eq!(
+            busy.holder_operation_id(),
+            Some("0f0f0f0f-0000-4000-8000-000000000000")
+        );
+        assert_eq!(Refusal::denied("subject_busy").holder_operation_id(), None);
+        assert_eq!(Refusal::InvalidFrame.holder_operation_id(), None);
     }
 
     #[test]
