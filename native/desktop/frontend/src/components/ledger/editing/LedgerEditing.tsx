@@ -109,23 +109,35 @@ export function useLedgerEditing({
     return out;
   }, [content]);
 
-  // A staged model approval that leaves the stage unanswered, wherever it
+  // A staged model answer that leaves the stage unanswered, wherever it
   // was dropped (the review, the tray, the leave guard, undo or a row's ×),
-  // cancels its review, so it does not wait at its review step. One whose
-  // answer was sent has settled, and the host leaves it as it is.
-  const staging = useRef<ReadonlySet<string>>(new Set());
+  // cancels its review, so it does not hold its movement at its review
+  // step; so does leaving the page, which drops the stage. One whose answer
+  // was sent is a write, and is left to settle.
+  const staging = useRef<ReadonlyMap<string, string>>(new Map());
   const portRef = useRef(port);
   portRef.current = port;
   useEffect(() => {
-    const now = new Set(
+    const now = new Map(
       content.actions.flatMap((action) =>
-        action.kind === "suggestion" ? [action.operationId] : [],
+        action.kind === "suggestion"
+          ? [[action.operationId, action.transactionId] as const]
+          : [],
       ),
     );
-    for (const operation of staging.current)
-      if (!now.has(operation)) void releaseReview(portRef.current, operation);
+    for (const [operation, movement] of staging.current)
+      if (!now.has(operation))
+        void releaseReview(portRef.current, operation, movement);
     staging.current = now;
   }, [content.actions]);
+  useEffect(
+    () => () => {
+      for (const [operation, movement] of staging.current)
+        void releaseReview(portRef.current, operation, movement);
+      staging.current = new Map();
+    },
+    [],
+  );
 
   // What stays staged is now compared with the ledger as just read.
   const rebase = useCallback((fresh: ReadonlyMap<string, LedgerRow>) => {

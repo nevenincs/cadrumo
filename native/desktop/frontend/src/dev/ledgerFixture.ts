@@ -122,6 +122,9 @@ export type LedgerShape = (typeof LEDGER_SHAPES)[number];
 
 /** Delay added to every answer of the `slow` shape. */
 const SLOW_MS = 4000;
+/** How long a cancelled review takes to settle, as a worker that notices
+ * the cancel at its next step would. */
+const CANCEL_SETTLE_MS = 40;
 
 declare global {
   interface Window {
@@ -145,6 +148,12 @@ declare global {
       /** Changes a stored movement's field, as another window saving it
        * would. */
       editElsewhere(id: string, field: string, value: string | null): void;
+      /** The model reviews still waiting, by definition and movement,
+       * cancelling ones included until they settle. */
+      waitingReviews(): { definition: string; transaction: string }[];
+      /** Asks the model about a movement from another window, which keeps
+       * the review waiting there. */
+      reviewElsewhere(id: string): void;
     };
   }
 }
@@ -648,9 +657,23 @@ export function ledgerFixture(options: Options): LedgerPort {
     definition: LedgerDefinitionId;
     request: JsonObject;
     transaction: string;
+    /** What its lease holds: one waiting review per subject and
+     * definition. */
+    subject: string;
     version: number;
     shown: string | null;
+    /** Cancelled, and not yet settled: it still holds its subject. */
+    cancelling: boolean;
   };
+  // A classification review is held per movement and can be cancelled
+  // while it waits; a split review still holds the whole profile and
+  // cannot be.
+  const subjectOf = (definition: LedgerDefinitionId, transaction: string) =>
+    definition === "ledger.classify.review"
+      ? `transaction:${transaction}`
+      : `profile:${LEDGER_FIXTURE_PROFILE_ID}`;
+  const cancellableReview = (definition: LedgerDefinitionId) =>
+    definition === "ledger.classify.review";
   const reviews = new Map<string, Pending>();
   // How the next writes are answered, where a scenario asked.
   const queued: ("unknown" | "saved_unread" | "refused")[] = [];
@@ -752,6 +775,26 @@ export function ledgerFixture(options: Options): LedgerPort {
       ] = field === "notes" || field === "counterparty" ? (value ?? "") : value;
       movement.transaction.modified_at = now();
     },
+    waitingReviews: () =>
+      [...reviews.values()].map((pending) => ({
+        definition: pending.definition,
+        transaction: pending.transaction,
+      })),
+    reviewElsewhere(id) {
+      reviews.set(nextOperation(), {
+        definition: "ledger.classify.review",
+        request: {
+          transaction_id: id,
+          mode: "classification",
+          origin: "classify_llm_apply",
+        },
+        transaction: id,
+        subject: subjectOf("ledger.classify.review", id),
+        version: 0,
+        shown: null,
+        cancelling: false,
+      });
+    },
   });
   window.__scenarioLedger = {
     drop: (names) => ledgers.forEach((made) => made.drop(names)),
@@ -761,6 +804,9 @@ export function ledgerFixture(options: Options): LedgerPort {
       ledgers.forEach((made) => made.nextReads(definition, count, where)),
     editElsewhere: (id, field, value) =>
       ledgers.forEach((made) => made.editElsewhere(id, field, value)),
+    waitingReviews: () => [...ledgers].flatMap((made) => made.waitingReviews()),
+    reviewElsewhere: (id) =>
+      ledgers.forEach((made) => made.reviewElsewhere(id)),
     changeFile(name) {
       edits.set(name, (edits.get(name) ?? 0) + 1);
     },
@@ -1982,22 +2028,47 @@ export function ledgerFixture(options: Options): LedgerPort {
       failingReads.set(definition, failing - 1);
       return reject("unavailable");
     }
+    // A second review of a subject one already holds is refused before it
+    // is submitted, as the runtime's lease refuses it.
+    if (ledgerClassOf(definition) === "review") {
+      const asked = ledger.movements.find(
+        (movement) =>
+          movement.transaction.transaction_id === request.transaction_id,
+      );
+      const subject =
+        asked &&
+        subjectOf(
+          definition as LedgerDefinitionId,
+          asked.transaction.transaction_id,
+        );
+      if (
+        subject &&
+        [...reviews.values()].some(
+          (pending) =>
+            pending.definition === definition && pending.subject === subject,
+        )
+      )
+        return reject("refused", { reason: "subject_busy" });
+    }
     const operation = nextOperation();
     try {
       if (ledgerClassOf(definition) === "review") {
         const movement = resolve(ledger, request.transaction_id);
+        const reviewed = definition as LedgerDefinitionId;
         reviews.set(operation, {
-          definition: definition as LedgerDefinitionId,
+          definition: reviewed,
           request,
           transaction: movement.transaction.transaction_id,
+          subject: subjectOf(reviewed, movement.transaction.transaction_id),
           version: 0,
           shown: null,
+          cancelling: false,
         });
         const paused: LedgerOutcome = {
           kind: "review",
           operation_id: operation,
           revision: 2,
-          cancellable: false,
+          cancellable: cancellableReview(reviewed),
         };
         outcomes.set(operation, paused);
         return paused;
@@ -2111,7 +2182,8 @@ export function ledgerFixture(options: Options): LedgerPort {
       await answer();
       const pending = reviews.get(operation);
       if (!outcomes.has(operation)) return reject("not_admitted");
-      if (!pending) return reject("review_changed", { reason: "not_pending" });
+      if (!pending || pending.cancelling)
+        return reject("review_changed", { reason: "not_pending" });
       const review = suggestion(pending, operation);
       pending.shown = hex64(JSON.stringify(review));
       const shown: LedgerReview<Review> = {
@@ -2127,8 +2199,9 @@ export function ledgerFixture(options: Options): LedgerPort {
       say(`ledger answer ${decision}`);
       await answer();
       const pending = reviews.get(operation);
-      if (!pending || pending.shown !== reviewDigest)
-        return reject("review_changed");
+      if (!pending || pending.cancelling)
+        return reject("review_changed", { reason: "not_pending" });
+      if (pending.shown !== reviewDigest) return reject("review_changed");
       // The review may have changed since the page read it.
       if (
         hex64(JSON.stringify(suggestion(pending, operation))) !== reviewDigest
@@ -2220,14 +2293,41 @@ export function ledgerFixture(options: Options): LedgerPort {
         },
       });
     },
-    async cancel(operation) {
+    async cancel(operation, revision) {
       say("ledger cancel");
       await answer();
-      if (!outcomes.has(operation)) return reject("not_admitted");
-      return reject("refused", {
+      const observed = outcomes.get(operation);
+      if (!observed) return reject("not_admitted");
+      const pending = reviews.get(operation);
+      const refuse = (reason: string) =>
+        reject("refused", { operation_id: operation, reason });
+      if (!pending) return refuse("operation_terminal");
+      if (!cancellableReview(pending.definition))
+        return refuse("cancellation_unsupported");
+      if (pending.cancelling) return observed;
+      if (observed.revision !== revision)
+        return refuse("stale_operation_revision");
+      // It has written nothing: cancelled, it settles with no effect and
+      // lets its subject go once its worker notices.
+      pending.cancelling = true;
+      const settling: LedgerOutcome = {
+        kind: "running",
         operation_id: operation,
-        reason: "cancellation_unsupported",
-      });
+        revision: revision + 1,
+        cancellable: false,
+      };
+      outcomes.set(operation, settling);
+      window.setTimeout(() => {
+        reviews.delete(operation);
+        outcomes.set(operation, {
+          kind: "refused",
+          operation_id: operation,
+          revision: revision + 2,
+          reason: null,
+          detail: null,
+        });
+      }, CANCEL_SETTLE_MS);
+      return settling;
     },
     async pickFiles(purpose, pick) {
       say(`ledger pickFiles ${purpose} ${pick}`);

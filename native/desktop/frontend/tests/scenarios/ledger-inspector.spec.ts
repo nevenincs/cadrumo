@@ -505,6 +505,208 @@ test("a Mixed proposal without a share is held until it is asked again with one"
   expect(await trayCount(target)).toBe(1);
 });
 
+/** The movements whose model review waits in the scenario's runtime. */
+const waitingReviews = (target: Page) =>
+  target.evaluate(() =>
+    window
+      .__scenarioLedger!.waitingReviews()
+      .map((review) => review.transaction)
+      .sort(),
+  );
+const hostCalls = (target: Page) =>
+  target.evaluate(
+    () =>
+      (window as unknown as { __scenarioHostCalls?: string[] })
+        .__scenarioHostCalls ?? [],
+  );
+const keyOf = async (target: Page, text: string) =>
+  (await rowOf(target, text).getAttribute("data-key"))!;
+
+async function askModel(target: Page) {
+  const model = body(target).locator(".ledger-model");
+  await model
+    .getByRole("button", {
+      name: label("desktop.ledger.inspector.model.ask"),
+      exact: true,
+    })
+    .click();
+  await expect(model.locator(".ledger-suggestion")).toBeVisible();
+  return model;
+}
+
+test("two movements are reviewed at once, each holding its own review until it is saved", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const trazo = await keyOf(target, "PAPELERIA TRAZO");
+  const softnube = await keyOf(target, "SOFTNUBE IRELAND SUSCRIPCION");
+  await inspect(target, "PAPELERIA TRAZO");
+  const model = await askModel(target);
+  await model
+    .locator(".ledger-suggestion")
+    .getByRole("button", {
+      name: label("desktop.ledger.inspector.model.approve"),
+    })
+    .click();
+  // The staged approval holds its review while another movement is asked.
+  await inspect(target, "SOFTNUBE IRELAND SUSCRIPCION");
+  const other = await askModel(target);
+  await expect(other.locator("[role=alert]")).toHaveCount(0);
+  expect(await waitingReviews(target)).toEqual([trazo, softnube].sort());
+  await other
+    .locator(".ledger-suggestion")
+    .getByRole("button", {
+      name: label("desktop.ledger.inspector.model.approve"),
+    })
+    .click();
+  expect(await trayCount(target)).toBe(2);
+  await openReview(target);
+  await save(target);
+  await expect(review(target).locator("[data-outcome=refused]")).toHaveCount(0);
+  await review(target).locator(".ledger-apply-done").click();
+  expect(await waitingReviews(target)).toEqual([]);
+});
+
+test("asking again about the same movement cancels the review it replaces, and leaving a movement cancels its unstaged review", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const trazo = await keyOf(target, "PAPELERIA TRAZO");
+  await inspect(target, "PAPELERIA TRAZO");
+  const model = await askModel(target);
+  const card = model.locator(".ledger-suggestion");
+  await card
+    .getByRole("button", {
+      name: label("desktop.ledger.inspector.model.reject"),
+    })
+    .click();
+  await card
+    .getByLabel(label("desktop.ledger.inspector.model.reason"))
+    .fill("Una compra personal");
+  const before = (await hostCalls(target)).filter(
+    (call) => call === "ledger cancel",
+  ).length;
+  await card
+    .getByRole("button", {
+      name: label("desktop.ledger.inspector.model.continue_reject"),
+    })
+    .click();
+  // The first review is cancelled before the second is asked, so the
+  // runtime's one review per movement does not refuse it.
+  await expect(card).toContainText(
+    label("desktop.ledger.inspector.model.rejecting", {
+      reason: "Una compra personal",
+    }),
+  );
+  await expect(model.locator("[role=alert]")).toHaveCount(0);
+  expect(
+    (await hostCalls(target)).filter((call) => call === "ledger cancel").length,
+  ).toBe(before + 1);
+  expect(await waitingReviews(target)).toEqual([trazo]);
+  // Another movement shown, the review nobody staged is let go.
+  await inspect(target, "SOFTNUBE IRELAND SUSCRIPCION");
+  await expect.poll(() => waitingReviews(target)).toEqual([]);
+});
+
+test("a review of the movement still open elsewhere is refused in words", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const trazo = await keyOf(target, "PAPELERIA TRAZO");
+  await target.evaluate(
+    (id) => window.__scenarioLedger!.reviewElsewhere(id),
+    trazo,
+  );
+  await inspect(target, "PAPELERIA TRAZO");
+  const model = body(target).locator(".ledger-model");
+  await model
+    .getByRole("button", {
+      name: label("desktop.ledger.inspector.model.ask"),
+      exact: true,
+    })
+    .click();
+  const refusal = model.locator("[role=alert]");
+  await expect(refusal).toContainText(
+    label("desktop.ledger.inspector.model.busy"),
+  );
+  await expect(refusal).not.toContainText("subject_busy");
+});
+
+test("asking the model for each of three movements keeps one review waiting for each, and lets go of those not approved", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const texts = [
+    "PAPELERIA TRAZO",
+    "SOFTNUBE IRELAND SUSCRIPCION",
+    "FIBRA HOGAR ALBOR",
+  ];
+  const keys = await Promise.all(texts.map((text) => keyOf(target, text)));
+  const selectThree = async () => {
+    await cellOf(rowOf(target, texts[0]!), "status").click();
+    for (const text of texts.slice(1))
+      await cellOf(rowOf(target, text), "status").click({
+        modifiers: ["Control"],
+      });
+    if (!(await panel(target).isVisible()))
+      await target.keyboard.press("Alt+KeyI");
+    await expect(panel(target).locator(".ledger-selection")).toBeVisible();
+  };
+  await selectThree();
+  const selection = panel(target).locator(".ledger-selection");
+  await selection
+    .getByRole("button", {
+      name: label("desktop.ledger.inspector.selection.ask_each"),
+    })
+    .click();
+  const asked = selection.locator(".ledger-asked");
+  await expect(asked).toContainText(
+    label("desktop.ledger.inspector.selection.asked", { count: 3 }),
+  );
+  await expect(asked.locator("li")).toHaveCount(3);
+  await expect(asked.locator("[data-code]")).toHaveCount(0);
+  expect(await waitingReviews(target)).toEqual([...keys].sort());
+  // Approve the first; closing the selection lets the other two go, and
+  // the staged approval keeps its own.
+  await asked
+    .locator("li")
+    .filter({ hasText: texts[0]! })
+    .getByRole("button", {
+      name: label("desktop.ledger.inspector.model.approve"),
+    })
+    .click();
+  expect(await trayCount(target)).toBe(1);
+  await selection
+    .getByRole("button", {
+      name: label("desktop.ledger.inspector.selection.clear"),
+    })
+    .click();
+  await expect.poll(() => waitingReviews(target)).toEqual([keys[0]]);
+  // Discarding the staged approval from the tray lets its review go too.
+  await tray(target).locator(".ledger-tray-toggle").click();
+  await tray(target).locator(".ledger-tray-discard").click();
+  await expect.poll(() => waitingReviews(target)).toEqual([]);
+});
+
+test("a staged approval left with the page lets its review go", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await inspect(target, "PAPELERIA TRAZO");
+  const model = await askModel(target);
+  await model
+    .locator(".ledger-suggestion")
+    .getByRole("button", {
+      name: label("desktop.ledger.inspector.model.approve"),
+    })
+    .click();
+  expect(await waitingReviews(target)).toHaveLength(1);
+  await target.keyboard.press("Control+Shift+KeyD");
+  await target.locator(".ledger-leave .ledger-leave-discard").click();
+  await expect(page(target)).toHaveCount(0);
+  await expect.poll(() => waitingReviews(target)).toEqual([]);
+});
+
 test("IVA worked out from a category is staged as its own write", async ({
   page: target,
 }) => {
@@ -761,7 +963,7 @@ test("while readiness is not measured, neither inspector draws a reviewed moveme
   await expect(statuses.first()).toHaveText(/2/);
 });
 
-test("at 1280 with the agent open, the inspector opens narrower so the grid keeps 40rem, and a revealed cell is shown whole", async ({
+test("at 1280 with the agent open, the inspector narrows the agent so the grid keeps 40rem, Description stays pinned, and a revealed cell is shown whole", async ({
   page: target,
 }) => {
   await target.setViewportSize({ width: 1280, height: 800 });
@@ -770,7 +972,12 @@ test("at 1280 with the agent open, the inspector opens narrower so the grid keep
     "aria-pressed",
     "true",
   );
+  const agent = target.locator("aside.agent-column");
+  const agentBefore = (await agent.boundingBox())!.width;
   await inspect(target, "PAPELERIA TRAZO");
+  // The agent stays open, narrower, and the room is the grid's.
+  await expect(agent).toBeVisible();
+  expect((await agent.boundingBox())!.width).toBeLessThan(agentBefore);
   const rem = await target.evaluate(() =>
     parseFloat(getComputedStyle(document.documentElement).fontSize),
   );
@@ -783,8 +990,9 @@ test("at 1280 with the agent open, the inspector opens narrower so the grid keep
     .boundingBox())!;
   expect(column.width).toBeGreaterThanOrEqual(40 * rem - 1);
   // Moving to Classification shows the whole cell between the pinned
-  // groups: Description scrolls rather than covering it.
+  // groups, and Description stays pinned beside it.
   const row = rowOf(target, "PAPELERIA TRAZO");
+  const pinnedAt = (await cellOf(row, "description").boundingBox())!.x;
   await cellOf(row, "description").click();
   for (let step = 0; step < 3; step += 1)
     await target.keyboard.press("ArrowRight");
@@ -804,6 +1012,15 @@ test("at 1280 with the agent open, the inspector opens narrower so the grid keep
     [cell.x + 4, cell.y + cell.height / 2],
   );
   expect(covering).toBe("classification");
+  const description = (await cellOf(row, "description").boundingBox())!;
+  expect(Math.abs(description.x - pinnedAt)).toBeLessThan(1);
+  expect(cell.x).toBeGreaterThanOrEqual(description.x + description.width - 1);
+  // Closed, the panel gives the agent back the width it was laid out at.
+  await target.keyboard.press("Escape");
+  await expect(panel(target)).toHaveCount(0);
+  await expect
+    .poll(async () => (await agent.boundingBox())!.width)
+    .toBeCloseTo(agentBefore, 0);
 });
 
 test("the inspector is resized by its separator within its limits", async ({

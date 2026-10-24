@@ -1,9 +1,16 @@
 import { expect, test } from "@playwright/test";
-import type { JsonObject, LedgerOutcome, LedgerRow } from "../src/shell/ledger";
+import type {
+  JsonObject,
+  LedgerOutcome,
+  LedgerPort,
+  LedgerRow,
+} from "../src/shell/ledger";
 import {
   changedSinceRead,
   keepAfterApply,
+  askReview,
   prepareApply,
+  RELEASE_OBSERVATIONS,
   releaseReview,
   resolveUnknown,
   runPlan,
@@ -824,45 +831,143 @@ test("a rule apply whose outcome is unknown is reported by its action, never as 
     );
 });
 
-test("a review the page will not answer is cancelled at the revision observed now, where the host can", async () => {
+/** A port whose observations follow `seen` in order, the last repeated,
+ * and whose cancel answers `cancelled`. */
+function reviewPort(
+  seen: (LedgerOutcome | Error)[],
+  cancelled: () => Promise<LedgerOutcome>,
+) {
   const asked: [string, number][] = [];
-  const portAt = (now: LedgerOutcome | Error) => ({
+  let observed = 0;
+  const port = {
     ...fakePort(() => ({ refuse: "unused" })).port,
     observe: async () => {
+      const now = seen[Math.min(observed, seen.length - 1)]!;
+      observed += 1;
       if (now instanceof Error) throw now;
       return now;
     },
     cancel: async (operation: string, revision: number) => {
       asked.push([operation, revision]);
-      throw new Error("refused");
+      return cancelled();
     },
-  });
-  await releaseReview(
-    portAt({
-      kind: "review",
-      operation_id: "op-1",
-      revision: 7,
-      cancellable: true,
-    }),
-    "op-1",
+  };
+  return { port, asked, observed: () => observed };
+}
+const waiting = (revision: number, cancellable = true): LedgerOutcome => ({
+  kind: "review",
+  operation_id: "op-1",
+  revision,
+  cancellable,
+});
+const running: LedgerOutcome = {
+  kind: "running",
+  operation_id: "op-1",
+  revision: 8,
+  cancellable: false,
+};
+const cancelledNow: LedgerOutcome = {
+  kind: "refused",
+  operation_id: "op-1",
+  revision: 9,
+  reason: null,
+  detail: null,
+};
+const hostRefusal = (code: string, reason: string) =>
+  Object.assign(new Error(code), { code, reason, operation_id: "op-1" });
+
+test("a review the page will not answer is cancelled at the revision observed now, and followed until it settles", async () => {
+  // The cancel answers while the review still settles; the release follows
+  // it until it is neither waiting nor running.
+  const settling = reviewPort(
+    [waiting(7), running, running, cancelledNow],
+    async () => running,
   );
-  // A refused cancel is left to expire, without an error.
-  expect(asked).toEqual([["op-1", 7]]);
+  await releaseReview(settling.port, "op-1", A);
+  expect(settling.asked).toEqual([["op-1", 7]]);
+  expect(settling.observed()).toBe(4);
+
+  // A cancel that settles at once is not observed again.
+  const settled = reviewPort([waiting(3)], async () => cancelledNow);
+  await releaseReview(settled.port, "op-1", A);
+  expect(settled.asked).toEqual([["op-1", 3]]);
+  expect(settled.observed()).toBe(1);
+});
+
+test("a review that cannot be cancelled now is left as it is, and a refused or lost cancel is observed, never sent again", async () => {
   for (const now of [
-    {
-      kind: "review" as const,
-      operation_id: "op-2",
-      revision: 3,
-      cancellable: false,
-    },
+    waiting(3, false),
     {
       kind: "settled" as const,
-      operation_id: "op-2",
+      operation_id: "op-1",
       revision: 9,
       result: {},
     },
+    running,
     new Error("unavailable"),
-  ])
-    await releaseReview(portAt(now), "op-2");
-  expect(asked).toEqual([["op-1", 7]]);
+  ]) {
+    const left = reviewPort([now], async () => cancelledNow);
+    await releaseReview(left.port, "op-1", A);
+    expect(left.asked).toEqual([]);
+  }
+  // Answered first: the review is now a write, followed until it settles.
+  const answered = reviewPort([waiting(4), running, cancelledNow], async () => {
+    throw hostRefusal("refused", "stale_operation_revision");
+  });
+  await releaseReview(answered.port, "op-1", A);
+  expect(answered.asked).toEqual([["op-1", 4]]);
+  expect(answered.observed()).toBe(3);
+  const lost = reviewPort([waiting(4), cancelledNow], async () => {
+    throw hostRefusal("unknown", "unknown");
+  });
+  await releaseReview(lost.port, "op-1", A);
+  expect(lost.asked).toEqual([["op-1", 4]]);
+  expect(lost.observed()).toBe(2);
+  // A review the runtime cannot cancel is not waited for.
+  const unsupported = reviewPort([waiting(4)], async () => {
+    throw hostRefusal("refused", "cancellation_unsupported");
+  });
+  await releaseReview(unsupported.port, "op-1", A);
+  expect(unsupported.observed()).toBe(1);
+});
+
+test("a review that never settles is followed only within the bound", async () => {
+  const stuck = reviewPort([waiting(5), running], async () => running);
+  await releaseReview(stuck.port, "op-1", A);
+  expect(stuck.observed()).toBe(1 + RELEASE_OBSERVATIONS);
+});
+
+test("a new ask about a movement waits for its earlier review's release, and an ask about another does not", async () => {
+  const events: string[] = [];
+  let settle: () => void = () => {};
+  const released = new Promise<void>((done) => (settle = done));
+  const port = {
+    ...fakePort(() => ({ refuse: "unused" })).port,
+    observe: async (): Promise<LedgerOutcome> => {
+      events.push("observe");
+      await released;
+      return cancelledNow;
+    },
+    cancel: async (): Promise<LedgerOutcome> => cancelledNow,
+    submit: async (_definition: string, payload: unknown) => {
+      events.push(`submit ${(payload as JsonObject).transaction_id}`);
+      return waiting(2);
+    },
+  } as unknown as LedgerPort;
+  const release = releaseReview(port, "op-1", A);
+  const again = askReview(port, "ledger.classify.review", {
+    transaction_id: A,
+    mode: "classification",
+    origin: "classify_llm_apply",
+  });
+  await askReview(port, "ledger.classify.review", {
+    transaction_id: B,
+    mode: "classification",
+    origin: "classify_llm_apply",
+  });
+  expect(events).toEqual(["observe", `submit ${B}`]);
+  settle();
+  await release;
+  await again;
+  expect(events).toEqual(["observe", `submit ${B}`, `submit ${A}`]);
 });

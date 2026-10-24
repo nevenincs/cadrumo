@@ -16,6 +16,7 @@ import {
   type LedgerClassifyResult,
   type LedgerErrorDetail,
   type LedgerFailureCode,
+  type LedgerLlmReviewRequest,
   type LedgerOutcome,
   type LedgerPort,
   type LedgerRow,
@@ -645,17 +646,86 @@ export async function prepareApply(
   };
 }
 
-/** Asks the host to cancel a review the page will not answer, at the
- * revision it is observed at now. A review that already settled, that the
- * host says cannot be cancelled now, or that cannot be observed is left as
- * it is: it expires on its own. */
-export async function releaseReview(
+/** How many times, and how far apart, a release observes a cancelled
+ * review before it stops waiting for it to settle. */
+export const RELEASE_OBSERVATIONS = 20;
+export const RELEASE_INTERVAL_MS = 100;
+
+// The releases still settling, by the movement their review is about: the
+// runtime holds one waiting review per movement, so a new ask about it
+// waits for these first.
+const releasing = new Map<string, Set<Promise<void>>>();
+
+const waitingOn = (now: LedgerOutcome | null) =>
+  now?.kind === "review" || now?.kind === "running";
+
+async function cancelReview(
   port: LedgerPort,
   operation: string,
 ): Promise<void> {
   const now = await port.observe(operation).catch(() => null);
+  // Only a review waiting for its answer is cancelled: one answered is a
+  // write, and is left to settle.
   if (now?.kind !== "review" || !now.cancellable) return;
-  await port.cancel(operation, now.revision).catch(() => null);
+  let seen: LedgerOutcome | null;
+  try {
+    seen = await port.cancel(operation, now.revision);
+  } catch (error) {
+    // The runtime refuses a cancel it cannot take: an answer taken first
+    // (`stale_operation_revision`), a write already started
+    // (`cancellation_unavailable`) or one already settled. A lost reply is
+    // unknown. None is sent again; each is observed.
+    const failure = ledgerFailure(error);
+    if (failure.reason === "cancellation_unsupported") return;
+    if (failure.code !== "refused" && failure.code !== "unknown") return;
+    seen = null;
+  }
+  for (let at = 0; at < RELEASE_OBSERVATIONS; at += 1) {
+    if (seen !== null && !waitingOn(seen)) return;
+    await new Promise((done) => setTimeout(done, RELEASE_INTERVAL_MS));
+    try {
+      seen = await port.observe(operation);
+    } catch {
+      return;
+    }
+  }
+}
+
+/**
+ * Cancels a review of `movement` the page will not answer, at the revision
+ * it is observed at now, and follows it until it is neither waiting nor
+ * running, within a bound. A review that already settled, was answered,
+ * cannot be cancelled or cannot be observed is left as it is. Cancelling
+ * a review that has written nothing releases it with no effect.
+ */
+export function releaseReview(
+  port: LedgerPort,
+  operation: string,
+  movement: string,
+): Promise<void> {
+  const run = cancelReview(port, operation);
+  const held = releasing.get(movement) ?? new Set<Promise<void>>();
+  releasing.set(movement, held);
+  held.add(run);
+  void run.finally(() => {
+    held.delete(run);
+    if (held.size === 0 && releasing.get(movement) === held)
+      releasing.delete(movement);
+  });
+  return run;
+}
+
+/** Asks the model about one movement, once every release of an earlier
+ * review of it has settled: the runtime refuses a second waiting review of
+ * the same movement with `subject_busy`. */
+export async function askReview(
+  port: LedgerPort,
+  definition: "ledger.classify.review" | "ledger.split.review",
+  request: LedgerLlmReviewRequest,
+): Promise<LedgerOutcome> {
+  const earlier = releasing.get(request.transaction_id);
+  if (earlier) await Promise.all([...earlier]);
+  return port.submit(definition, request);
 }
 
 export type UnknownResolution = "saved" | "not_saved" | "undetermined";

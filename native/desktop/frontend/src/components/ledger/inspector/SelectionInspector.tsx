@@ -1,4 +1,11 @@
-import { useId, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
@@ -21,6 +28,7 @@ import {
   type ClassifyKind,
   type OpenRuleFromSelection,
 } from "../../../shell/ledgerCommands";
+import { askReview, releaseReview } from "../../../shell/ledgerApply";
 import { planApply, SINGLE_WRITE_SECONDS } from "../../../shell/ledgerPlan";
 import {
   reduceStage,
@@ -60,6 +68,7 @@ import {
   irpfCategoryOptions,
   ivaCategoryOptions,
   lifecycleName,
+  modelFailureText,
   skipName,
 } from "./inspectorWords";
 import { useLedgerRead } from "./useInspectorReads";
@@ -104,6 +113,7 @@ type Held = {
 type Asked = {
   id: string;
   review: LedgerReview<LedgerLlmSuggestion> | null;
+  /** The runtime's code, or `no_review` or `refused` where it gave none. */
   failed: string | null;
 };
 
@@ -185,6 +195,56 @@ export function SelectionInspector({
   const [held, setHeld] = useState<Held | null>(null);
   const [asked, setAsked] = useState<Asked[] | null>(null);
   const [asking, setAsking] = useState(false);
+
+  // "Ask the model for each" keeps one review waiting per movement until
+  // it is approved or let go. The ones not staged are cancelled when the
+  // list is asked again or the inspector closes; a staged one is the
+  // stage's, which lets it go when its answer is dropped, and it leaves
+  // the list then, since its review is no longer there to answer.
+  const portRef = useRef(port);
+  const holding = useRef<Asked[]>([]);
+  const stagedReviews = useRef<ReadonlySet<string>>(new Set());
+  const askTurn = useRef(0);
+  useEffect(() => {
+    portRef.current = port;
+  }, [port]);
+  const stagedNow = useMemo(
+    () =>
+      new Set(
+        stage.content.actions.flatMap((action) =>
+          action.kind === "suggestion" ? [action.operationId] : [],
+        ),
+      ),
+    [stage.content.actions],
+  );
+  useEffect(() => {
+    const before = stagedReviews.current;
+    stagedReviews.current = stagedNow;
+    const gone = (entry: Asked) =>
+      entry.review !== null &&
+      before.has(entry.review.operation_id) &&
+      !stagedNow.has(entry.review.operation_id);
+    if (!holding.current.some(gone)) return;
+    holding.current = holding.current.filter((entry) => !gone(entry));
+    setAsked(holding.current);
+  }, [stagedNow]);
+  const letGo = useCallback(() => {
+    for (const entry of holding.current)
+      if (entry.review && !stagedReviews.current.has(entry.review.operation_id))
+        void releaseReview(
+          portRef.current,
+          entry.review.operation_id,
+          entry.id,
+        );
+    holding.current = [];
+  }, []);
+  useEffect(
+    () => () => {
+      askTurn.current += 1;
+      letGo();
+    },
+    [letGo],
+  );
 
   // A complete split cohort can be merged: the history of one part names
   // its siblings.
@@ -327,44 +387,62 @@ export function SelectionInspector({
   async function askEach() {
     // Each ask runs the registered review, a write the page's pause holds.
     if (paused !== null) return;
+    const turn = (askTurn.current += 1);
+    // Asked again, the reviews the list held and nobody staged are let go.
+    letGo();
+    setAsked(null);
+    // A movement whose answer is staged already holds its review.
+    const answered = new Set(
+      content.actions.flatMap((action) =>
+        action.kind === "suggestion" ? [action.transactionId] : [],
+      ),
+    );
     const targets = ids
       .filter((id) => visible.has(id))
       .filter((id) => rows.get(id)?.transaction.lifecycle_state === "ACTIVE")
+      .filter((id) => !answered.has(id))
       .slice(0, ASK_EACH_MAX);
     setAsking(true);
-    const found: Asked[] = [];
+    holding.current = [];
     for (const id of targets) {
+      let operation: string | null = null;
+      let entry: Asked;
       try {
-        const outcome = await port.submit("ledger.classify.review", {
+        const outcome = await askReview(port, "ledger.classify.review", {
           transaction_id: id,
           mode: "classification",
           origin: "classify_llm_apply",
         });
-        if (outcome.kind !== "review") {
-          found.push({
+        if (outcome.kind === "review" || outcome.kind === "running")
+          operation = outcome.operation_id;
+        if (outcome.kind !== "review")
+          entry = {
             id,
             review: null,
             failed:
               outcome.kind === "refused"
                 ? (outcome.reason ?? "refused")
                 : "no_review",
-          });
-          continue;
-        }
-        found.push({
-          id,
-          review: await port.review<LedgerLlmSuggestion>(outcome.operation_id),
-          failed: null,
-        });
+          };
+        else
+          entry = {
+            id,
+            review: await port.review<LedgerLlmSuggestion>(
+              outcome.operation_id,
+            ),
+            failed: null,
+          };
       } catch (error) {
         const failure = ledgerFailure(error);
-        found.push({
-          id,
-          review: null,
-          failed: failure.reason ?? failure.code,
-        });
+        entry = { id, review: null, failed: failure.reason ?? failure.code };
       }
-      setAsked([...found]);
+      // A review the list cannot show, or that came back after the list
+      // was let go, is cancelled at once.
+      if (operation && (entry.review === null || turn !== askTurn.current))
+        void releaseReview(port, operation, id);
+      if (turn !== askTurn.current) return;
+      holding.current = [...holding.current, entry];
+      setAsked(holding.current);
     }
     setAsking(false);
   }
@@ -772,9 +850,9 @@ export function SelectionInspector({
                             .join(" · ")}
                         </span>
                       ) : (
-                        <code className="font-mono text-xs">
-                          {entry.failed}
-                        </code>
+                        entry.failed !== null && (
+                          <AskedFailure code={entry.failed} />
+                        )
                       )}
                       <span className="flex flex-wrap gap-2">
                         {suggestion &&
@@ -835,5 +913,23 @@ export function SelectionInspector({
         </section>
       </div>
     </div>
+  );
+}
+
+/** Why the model gave nothing to read for one movement, in words, with a
+ * code the words do not name under Technical details. */
+function AskedFailure({ code }: { code: string }) {
+  const t = useStrings();
+  const failure = modelFailureText(t, code);
+  return (
+    <span className="grid gap-0.5" data-code={code}>
+      {failure.text}
+      {failure.technical && (
+        <details className="ledger-technical text-xs">
+          <summary>{t("desktop.ledger.apply.technical")}</summary>
+          <code className="font-mono">{code}</code>
+        </details>
+      )}
+    </span>
   );
 }

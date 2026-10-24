@@ -151,6 +151,37 @@ export function decidedBy(t: Translate, source: string): string {
   return t("desktop.ledger.inspector.by.you");
 }
 
+/** Why asking the model gave nothing to read, in words, and whether its
+ * code says more than the words, for Technical details. `subject_busy` is
+ * an earlier review of the same movement still waiting. */
+export function modelFailureText(
+  t: Translate,
+  code: string,
+): { text: string; technical: boolean } {
+  switch (code) {
+    case "subject_busy":
+      return {
+        text: t("desktop.ledger.inspector.model.busy"),
+        technical: false,
+      };
+    case "no_review":
+      return {
+        text: t("desktop.ledger.inspector.model.no_review"),
+        technical: false,
+      };
+    case "refused":
+      return {
+        text: t("desktop.ledger.inspector.model.refused"),
+        technical: false,
+      };
+    default:
+      return {
+        text: t("desktop.ledger.inspector.model.unavailable"),
+        technical: true,
+      };
+  }
+}
+
 // ---- Choices -------------------------------------------------------------------
 
 export const categoryOptions = (t: Translate): ComboboxOption[] =>

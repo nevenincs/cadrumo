@@ -20,7 +20,7 @@ import {
   type LedgerReview,
   type LedgerRow,
 } from "../../../shell/ledger";
-import { releaseReview } from "../../../shell/ledgerApply";
+import { askReview, releaseReview } from "../../../shell/ledgerApply";
 import { parsePercent } from "../../../shell/ledgerGrammar";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
@@ -28,6 +28,7 @@ import { useWritePause, WriteHold } from "../WritePause";
 import { fieldName, refusalText, valueText } from "../editing/editingWords";
 import { percentText } from "../movements/movementWords";
 import { needsShare, suggestionWrites } from "./inspectorModel";
+import { modelFailureText } from "./inspectorWords";
 
 type Ask = "suggest" | "share" | "reject";
 type Shown = {
@@ -41,7 +42,8 @@ type State =
   | { kind: "idle" }
   | { kind: "asking"; ask: Ask }
   | { kind: "shown"; shown: Shown }
-  | { kind: "failed"; reason: string };
+  /** The runtime's code, or `no_review` or `refused` where it gave none. */
+  | { kind: "failed"; code: string };
 
 const ORIGINS: Record<LedgerLlmReviewMode, LedgerLlmReviewRequest["origin"]> = {
   classification: "classify_llm_apply",
@@ -58,8 +60,9 @@ const ORIGINS: Record<LedgerLlmReviewMode, LedgerLlmReviewRequest["origin"]> = {
  * nothing is written until the changes are saved. A rejection's reason
  * and a Mixed proposal's share are part of the review's request, so they
  * are asked for again with it, and the new review is the one answered.
- * A review that is asked again, left for another movement or whose staged
- * answer is dropped is cancelled, so it does not stay waiting.
+ * The runtime holds one waiting review per movement: a review asked again
+ * or left for another movement is cancelled, and a new ask waits for that
+ * to settle. A staged answer dropped is released where the stage is kept.
  */
 export function ModelSuggestion({
   port,
@@ -91,7 +94,7 @@ export function ModelSuggestion({
   const [shareError, setShareError] = useState<string | null>(null);
   // The review shown and not yet staged, and which ask is the latest: an
   // answer to an earlier ask is not shown.
-  const pending = useRef<string | null>(null);
+  const pending = useRef<{ operation: string; movement: string } | null>(null);
   const asking = useRef(0);
   // Cancelling follows the port without making a new port a new movement.
   const portRef = useRef(port);
@@ -99,9 +102,10 @@ export function ModelSuggestion({
     portRef.current = port;
   }, [port]);
   const abandon = useCallback(() => {
-    const operation = pending.current;
+    const shown = pending.current;
     pending.current = null;
-    if (operation) void releaseReview(portRef.current, operation);
+    if (shown)
+      void releaseReview(portRef.current, shown.operation, shown.movement);
   }, []);
   // Another movement's review is not this one's.
   useEffect(() => {
@@ -114,16 +118,6 @@ export function ModelSuggestion({
       abandon();
     };
   }, [id, abandon]);
-  // A staged answer dropped for this movement leaves its review unanswered.
-  const stagedOperation = staged?.operationId ?? null;
-  const lastStaged = useRef<{ id: string; operation: string } | null>(null);
-  useEffect(() => {
-    const before = lastStaged.current;
-    lastStaged.current =
-      stagedOperation === null ? null : { id, operation: stagedOperation };
-    if (before && before.id === id && before.operation !== stagedOperation)
-      void releaseReview(portRef.current, before.operation);
-  }, [id, stagedOperation]);
 
   async function ask(
     mode: LedgerLlmReviewMode,
@@ -134,7 +128,8 @@ export function ModelSuggestion({
     if (paused !== null) return;
     const turn = (asking.current += 1);
     const superseded = () => turn !== asking.current;
-    // Asking again, with a share or a reason, replaces the review shown.
+    // Asking again, with a share or a reason, replaces the review shown:
+    // it is cancelled, and the ask waits for that to settle.
     abandon();
     setState({ kind: "asking", ask: purpose });
     const definition =
@@ -148,34 +143,31 @@ export function ModelSuggestion({
     };
     let asked: string | null = null;
     try {
-      const outcome = await port.submit(definition, request);
-      if (outcome.kind === "review") asked = outcome.operation_id;
+      const outcome = await askReview(port, definition, request);
+      if (outcome.kind === "review" || outcome.kind === "running")
+        asked = outcome.operation_id;
       if (superseded()) {
-        if (asked) void releaseReview(port, asked);
+        if (asked) void releaseReview(port, asked, id);
         return;
       }
       if (outcome.kind === "refused") {
-        setState({
-          kind: "failed",
-          reason: outcome.reason ?? t("desktop.ledger.inspector.model.refused"),
-        });
+        setState({ kind: "failed", code: outcome.reason ?? "refused" });
         return;
       }
       if (outcome.kind !== "review") {
-        setState({
-          kind: "failed",
-          reason: t("desktop.ledger.inspector.model.no_review"),
-        });
+        // A review still being asked is not one the page can show.
+        if (asked) void releaseReview(port, asked, id);
+        setState({ kind: "failed", code: "no_review" });
         return;
       }
       const review = await port.review<LedgerLlmSuggestion>(
         outcome.operation_id,
       );
       if (superseded()) {
-        void releaseReview(port, outcome.operation_id);
+        void releaseReview(port, outcome.operation_id, id);
         return;
       }
-      pending.current = outcome.operation_id;
+      pending.current = { operation: outcome.operation_id, movement: id };
       // The reason now travels with the review it was asked with.
       setRejecting(null);
       setState({
@@ -191,10 +183,10 @@ export function ModelSuggestion({
       });
     } catch (error) {
       // A review that could not be read is one the page cannot answer.
-      if (asked) void releaseReview(port, asked);
+      if (asked) void releaseReview(port, asked, id);
       if (superseded()) return;
       const failure = ledgerFailure(error);
-      setState({ kind: "failed", reason: failure.reason ?? failure.code });
+      setState({ kind: "failed", code: failure.reason ?? failure.code });
     }
   }
 
@@ -312,19 +304,32 @@ export function ModelSuggestion({
   );
 
   let body = askButtons;
-  if (state.kind === "failed")
+  if (state.kind === "failed") {
+    const failure = modelFailureText(t, state.code);
     body = (
       <div className="grid gap-2">
-        <Alert tone="warning" role="alert" icon={<Icon name="unplug" />}>
+        <Alert
+          tone="warning"
+          role="alert"
+          icon={
+            <Icon name={state.code === "subject_busy" ? "pause" : "unplug"} />
+          }
+          data-code={state.code}
+        >
           <span className="grid gap-0.5">
-            {t("desktop.ledger.inspector.model.unavailable")}
-            <code className="font-mono text-xs">{state.reason}</code>
+            {failure.text}
+            {failure.technical && (
+              <details className="ledger-technical text-xs">
+                <summary>{t("desktop.ledger.apply.technical")}</summary>
+                <code className="font-mono">{state.code}</code>
+              </details>
+            )}
           </span>
         </Alert>
         {askButtons}
       </div>
     );
-  else if (state.kind === "shown") {
+  } else if (state.kind === "shown") {
     const { shown } = state;
     const suggestion = shown.review.review.suggestion;
     const writes = suggestionWrites(suggestion);
