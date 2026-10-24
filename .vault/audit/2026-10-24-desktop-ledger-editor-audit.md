@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:1430ef9d99d4401a0884abd5f0e5495ace61ec0a016caed8ef99a3ff39925f39'
+body_hash: 'sha256:dfc0d10f82001aec5bcaac429fe057a05d4b4e440233e2fde06c63c30862d98c'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
   - "[[2026-10-23-desktop-ledger-editor-adr]]"
@@ -1644,3 +1644,10 @@ P03 re-review items with a UX surface, re-checked live:
 - **What happened.** The alert reads "Outcome unknown: writes paused · ledger-2026-4T.csv [Re-read]". The dialog itself says "check the file before exporting once more", but the banner's one action cannot tell whether the file was written.
 - **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\18b-after-close.png`
 - **Change.** Keep the R11 hold. Word the banner for the file: "Export outcome unknown · ledger-2026-4T.csv · [Show in folder] [I've checked it]". The second action releases the hold.
+
+### UX2R · viewer-reading-place | low | The document viewer cannot scroll to where a reading was found, because a reading carries no position
+
+- **What happened.** viewer-scrolls-away is fixed in `5c1b42b6bd`: the viewer sits beside the reading and its questions, the list folds to a rail, and the viewer stays after Confirm. Scrolling the viewer to the place a reading came from is not done.
+- **Why.** A reading's candidates (`AmbiguityCandidate`: value, anchor, note) carry no page, box or offset. Inferring one from the note's text would be a heuristic second route beside the extractor's own provenance.
+- **Recommendation.** A follow-on decision on the reading contract: whether extractors report a page and a box for each candidate, and how a box from an image or a PDF is expressed. The viewer then scrolls to it. Until then the person reads the page beside the questions.
+- **Also deferred and listed with it:** rule matching on counterparty or amount range (S14), and import duplicate pairing in the preview and "Keep both" (`deferred-contract-gaps`).

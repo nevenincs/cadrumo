@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:fc4fd13df46d7939293d3b8569cfdd13787118457918ef71314d346031a4aa56'
+body_hash: 'sha256:05cf2c14addcab342193e14569e8917724eefa61fb412dcbbf4084ad9f40fc2e'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -771,6 +771,11 @@ related:
 - `S17` `M` `native/desktop/frontend/src/components/PaneHeader.tsx`
 - `S17` `M` `native/desktop/frontend/src/components/ledger/LedgerHeader.tsx`
 - `S17` `verify:` `playwright ledger shell focus inspector movements accessibility` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/documents/documentsModel.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/matching/matchingModel.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/inspector/InvoiceSection.tsx`
+- `S17` `M` `native/desktop/frontend/tests/ledger-matching.spec.ts`
+- `S17` `verify:` `npx playwright test tests/scenarios/ledger-documents.spec.ts tests/ledger-matching.spec.ts` -> `pass`
 
 ## Notes
 
@@ -828,3 +833,4 @@ related:
 - `S16` S16 294041c3f0 packaged-window ledger privacy check not run here: just desktop-agent-live --ledger-privacy needs the Release bundle, the remote-debugging host and the person's signed-in window
 - `S17` UX2 viewer-scrolls-away 5c1b42b6bd; scrolling the viewer to a reading's place is not done: the reading contract carries no position
 - `S17` ff9165347e grid floor with the panel shut and narrow header; 7dcf276adc UX2 strings batches 1-2
+- `S17` UX2 total-answer-not-kept 3db3117515: the product derives the total by design `(invoice_confirmation` `printed_total_discrepancy;` resolutions only gate), so the window says so; ticket-no-link-path 5745d2b430
