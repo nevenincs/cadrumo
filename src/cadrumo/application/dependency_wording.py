@@ -39,6 +39,8 @@ from .dependency_contracts import (
     DependencyState,
     DependencyStatusRow,
 )
+from .operator_actions.models import PreconditionVerdict
+from .provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
 
 __all__ = [
     "DEPENDENCY_RETRY_PLACEHOLDERS",
@@ -48,6 +50,7 @@ __all__ = [
     "DependencyRowWording",
     "DependencyRowWordingV1",
     "DependencyWordingV1",
+    "column_reader_refusal_reason",
     "dependency_action_key",
     "dependency_copy_details",
     "dependency_failure_key",
@@ -163,6 +166,19 @@ def dependency_retry_sentence(*, attempt: int, delay_s: int, locale: str | None 
 def dependency_space_sentence(*, required: str, free: str, locale: str | None = None) -> str:
     """Render the sentence naming both sizes of a full disk; the caller formats the sizes."""
     return tr(_key("space_needed"), required=required, free=free, locale=locale)
+
+
+def column_reader_refusal_reason(verdict: PreconditionVerdict, *, locale: str | None = None) -> str:
+    """Word why a file whose column names only the local AI reads was not read.
+
+    Every import lane that needs the column-naming model gives this one reason,
+    so the person reads the same sentence whichever lane refused. It names the
+    local AI, and says to set it up only when ``verdict`` names that setup; a
+    role this computer cannot run is told so without an action.
+    """
+    if verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID:
+        return tr("application.provisioning.refusal.column_names_local_ai_not_ready", locale=locale)
+    return tr("application.provisioning.refusal.column_names_local_ai_unavailable", locale=locale)
 
 
 def dependency_copy_details(

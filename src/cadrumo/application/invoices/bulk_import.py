@@ -61,6 +61,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.raw_transaction import RawProvenance, SourceFormat
+from ..dependency_wording import column_reader_refusal_reason
 from ..ledger.import_ports import LedgerImportReaderUnavailableError
 from ._bulk_import_columns import (
     BulkImportColumnResolution,
@@ -473,11 +474,6 @@ def _parse_bulk_invoice_row(
     )
 
 
-#: Why a book refused when its column-naming model could not be asked. It names
-#: the missing reader, not the file, because the file was never read.
-_READER_UNAVAILABLE_REASON = "the local AI that reads this book's column names is not ready, so the file was not read"
-
-
 def _assert_required_fields_present(resolution: BulkImportColumnResolution) -> None:
     """Refuse a file that cannot supply a required field under any column.
 
@@ -504,7 +500,7 @@ def _assert_required_fields_present(resolution: BulkImportColumnResolution) -> N
     if verdict is not None:
         raise LedgerImportReaderUnavailableError(
             translated_message="errors.transaction.ledger_import_failed",
-            context={"reason": _READER_UNAVAILABLE_REASON},
+            context={"reason": column_reader_refusal_reason(verdict)},
             precondition_verdict=verdict,
         )
     raise InvoiceValidationError(

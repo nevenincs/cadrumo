@@ -33,6 +33,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import override
 
+from .....application.dependency_wording import column_reader_refusal_reason
 from .....application.ledger.column_roles import ColumnRoleReaderUnavailable, resolve_column_roles
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CoreValidationError
@@ -83,10 +84,6 @@ TabularMappingResolver = Callable[[NormalizedTable], ColumnRoleMapping | ColumnR
 :class:`~application.ledger.column_roles.ColumnRoleReaderUnavailable` means the
 model was never asked; ``None`` means no mapping was established.
 """
-
-#: Diagnostic for a table whose column-naming model could not be asked. It is
-#: the reason a refusal prints, so it names the missing reader, not the file.
-_READER_UNAVAILABLE_WARNING = "the local AI that reads this table's column names is not ready, so the file was not read"
 
 
 @dataclass(frozen=True, slots=True)
@@ -172,7 +169,7 @@ class MappedTabularProvider(FinancialProvider):
         if isinstance(mapping, ColumnRoleReaderUnavailable):
             return ProviderValidation(
                 is_valid=False,
-                warnings=(_READER_UNAVAILABLE_WARNING,),
+                warnings=(column_reader_refusal_reason(mapping.precondition_verdict),),
                 detected_encoding=table.dialect.encoding,
                 detected_dialect=dialect_note,
                 reader_unavailable_verdict=mapping.precondition_verdict,
@@ -277,7 +274,9 @@ class MappedTabularProvider(FinancialProvider):
             )
         mapping = self.mapping_resolver(table)
         if isinstance(mapping, ColumnRoleReaderUnavailable):
-            raise InvalidFinancialSourceError(f"{path.name}: {_READER_UNAVAILABLE_WARNING}")
+            raise InvalidFinancialSourceError(
+                f"{path.name}: {column_reader_refusal_reason(mapping.precondition_verdict)}"
+            )
         if mapping is None:
             raise InvalidFinancialSourceError(
                 f"column roles could not be established for {path.name}",

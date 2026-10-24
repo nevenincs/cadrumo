@@ -642,6 +642,13 @@ application:
           számlát, és ez a megerősítés a következőkben tér el: %{divergent_fields}.
           Javítsd vagy töröld a tárolt számlát ahelyett, hogy ugyanazt a dokumentumot
           kétszer erősítenéd meg.'
+      label_reading:
+        local_ai_not_ready: 'A helyi MI nem áll készen, ezért a címkék által nem lefedett
+          %{count} mező nem lett beolvasva, és üres marad: %{fields}. Állítsd be,
+          majd futtasd újra a kinyerést.'
+        reader_unavailable: 'Az automatikus olvasó nem tudott elindulni, ezért a címkék
+          által nem lefedett %{count} mező üres marad: %{fields}. Futtasd újra a kinyerést
+          később, vagy töltsd ki ezeket a mezőket.'
   live:
     borrador:
       errors:
@@ -1931,6 +1938,12 @@ application:
     note:
       downloaded_not_loaded: Letöltve, még nincs betöltve.
       own_network_settings: A saját hálózati beállításait használja.
+    refusal:
+      column_names_local_ai_not_ready: a helyi MI, amely a fájl oszlopneveit olvassa,
+        nem áll készen, ezért a fájl nem lett beolvasva. Állítsd be, majd próbáld
+        újra.
+      column_names_local_ai_unavailable: a helyi MI ezen a számítógépen nem tudja
+        beolvasni a fájl oszlopneveit, ezért a fájl nem lett beolvasva.
     retry: Kapcsolati hiba. Újrapróbálkozás %{seconds} másodperc múlva (%{attempt}.
       próbálkozás).
     space_needed: A beállításhoz %{required} szabad hely kell, és %{free} érhető el.

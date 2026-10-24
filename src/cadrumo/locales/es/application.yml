@@ -664,6 +664,13 @@ application:
         document_already_confirmed: 'Este documento ya generó la factura %{stored_invoice_id},
           y esta confirmación difiere en: %{divergent_fields}. Corrige o elimina la
           factura almacenada en lugar de confirmar dos veces el mismo documento.'
+      label_reading:
+        local_ai_not_ready: 'La IA local no está lista, así que los %{count} campo(s)
+          que las etiquetas no cubrían no se han leído y siguen vacíos: %{fields}.
+          Configura la IA local y vuelve a extraer.'
+        reader_unavailable: 'El lector automático no ha podido funcionar, así que
+          los %{count} campo(s) que las etiquetas no cubrían siguen vacíos: %{fields}.
+          Vuelve a extraer más tarde, o rellénalos tú.'
   live:
     borrador:
       errors:
@@ -1967,6 +1974,13 @@ application:
     note:
       downloaded_not_loaded: Descargado, aún sin cargar.
       own_network_settings: Usa su propia configuración de red.
+    refusal:
+      column_names_local_ai_not_ready: la IA local, que lee los nombres de las columnas
+        de este archivo, no está lista, así que no se ha leído el archivo. Configura
+        la IA local y vuelve a intentarlo.
+      column_names_local_ai_unavailable: la IA local no puede leer los nombres de
+        las columnas de este archivo en este ordenador, así que no se ha leído el
+        archivo.
     retry: Problema de conexión. Se volverá a intentar en %{seconds} segundos (intento
       %{attempt}).
     space_needed: La configuración necesita %{required} libres y hay %{free} disponibles.

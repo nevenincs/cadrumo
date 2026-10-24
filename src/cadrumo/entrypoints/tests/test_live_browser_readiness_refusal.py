@@ -50,7 +50,7 @@ from ..operation_composition import build_production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_BROWSER_REFUSAL_CODE = "FAIL_BROWSER_SESSION_BROWSER"
+_BROWSER_REFUSAL_CODE = "REFUSED_BROWSER_NOT_READY"
 
 
 def _marked_browser_root(root: Path) -> Path:
@@ -102,11 +102,11 @@ def _settle(
 
 
 def _assert_browser_refusal(profile: TestRuntimeProfile, terminal: OperationPersistedSnapshot) -> None:
-    assert terminal.terminal_condition is OperationTerminalCondition.FAILED
+    assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
     assert terminal.effect is OperationEffect.NONE
     receipt = terminal.terminal_receipt
     assert receipt is not None
-    assert receipt.failure_error_code == _BROWSER_REFUSAL_CODE
+    assert receipt.refusal_ref == _BROWSER_REFUSAL_CODE
     assert receipt.error_detail_ref is not None
     detail = asyncio.run(
         operation_secure_reference_repository(objects=profile.repository).resolve(
@@ -114,6 +114,7 @@ def _assert_browser_refusal(profile: TestRuntimeProfile, terminal: OperationPers
         )
     )
     assert detail.error_code == _BROWSER_REFUSAL_CODE
+    assert detail.message_key == "adapters.browser.errors.not_provisioned"
     assert detail.precondition_verdict_json is not None
     verdict = json.loads(detail.precondition_verdict_json)
     assert verdict["failed_condition_id"] == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value

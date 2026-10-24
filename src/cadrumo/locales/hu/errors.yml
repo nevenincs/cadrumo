@@ -1142,13 +1142,12 @@ errors:
       meg olyan partnerazonosítóval, amely nem érvényes.
     refused_ledger_evidence_input: Egy megadott igazolás-bemenet sérti a vásárlási
       számla szerződést. Javítsd a bemenetet, és próbáld újra.
+    refused_ledger_evidence_local_ai_not_ready: A helyi MI nem áll készen, ezért semmi
+      sem lett beolvasva. Állítsd be, majd próbáld újra.
     refused_ledger_evidence_not_found: Nem létezik vásárlási számla igazolás a megadott
       azonosítóval.
-    refused_ledger_evidence_reader_unavailable: Ehhez az igazoláshoz a dokumentumolvasó
-      nem érhető el ezen a gépen, ezért semmi sem lett beolvasva. Ellenőrizd az `aeat
-      config provision status` paranccsal, indítsd el az `aeat config provision start`
-      paranccsal, és töltsd le a modelljeit az `aeat config provision pull` paranccsal,
-      vagy válassz külső szolgáltatót ehhez az olvasáshoz, majd próbáld újra.
+    refused_ledger_evidence_reader_unavailable: Az automatikus olvasó nem tudott elindulni,
+      ezért semmi sem lett beolvasva.
     refused_ledger_evidence_reader_unreadable_answer: A dokumentumolvasó olyan formában
       válaszolt, amelyet ez a parancs nem tudott értelmezni, ezért semmi sem került
       átvételre a dokumentumból. Semmi sem lett mentve; futtasd újra a parancsot,

@@ -366,19 +366,20 @@ def test_sign_in_without_the_browser_refuses_before_any_credential_loads(
 
         with override_settings(cadrumo_playwright_browsers_dir=empty_root):
             refused = acquire("a" * 64)
-        assert refused.terminal_condition is OperationTerminalCondition.FAILED
+        assert refused.terminal_condition is OperationTerminalCondition.REFUSED
         assert refused.effect is OperationEffect.NONE
         assert secrets.calls == 0
         receipt = refused.terminal_receipt
         assert receipt is not None
-        assert receipt.failure_error_code == "FAIL_BROWSER_SESSION_BROWSER"
+        assert receipt.refusal_ref == "REFUSED_BROWSER_NOT_READY"
         assert receipt.error_detail_ref is not None
         detail = asyncio.run(
             operation_secure_reference_repository(objects=profile.repository).resolve(
                 receipt.error_detail_ref, OperationErrorDetailV1
             )
         )
-        assert detail.error_code == "FAIL_BROWSER_SESSION_BROWSER"
+        assert detail.error_code == "REFUSED_BROWSER_NOT_READY"
+        assert detail.message_key == "adapters.browser.errors.not_provisioned"
         assert detail.precondition_verdict_json is not None
         verdict = json.loads(detail.precondition_verdict_json)
         assert verdict["failed_condition_id"] == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value

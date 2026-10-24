@@ -46,8 +46,10 @@ adapters:
           context; call authenticate() first.
   browser:
     errors:
-      not_provisioned: The Chromium browser that AEAT automation launches is not installed
-        on this computer. Provision it, then try again.
+      not_provisioned: The browser for the tax agency website is not set up yet. Set
+        it up, then try again.
+      not_usable: This version of Cadrumo cannot use the browser for the tax agency
+        website.
   google:
     calc_sheets:
       errors:

@@ -662,6 +662,13 @@ application:
         document_already_confirmed: 'Aquest document ja va generar la factura %{stored_invoice_id},
           i aquesta confirmació difereix en: %{divergent_fields}. Corregeix o elimina
           la factura emmagatzemada en lloc de confirmar dues vegades el mateix document.'
+      label_reading:
+        local_ai_not_ready: 'La IA local no està a punt, així que els %{count} camps
+          que les etiquetes no cobrien no s''han llegit i queden buits: %{fields}.
+          Configura-la i torna a extreure.'
+        reader_unavailable: 'El lector automàtic no ha pogut funcionar, així que els
+          %{count} camps que les etiquetes no cobrien queden buits: %{fields}. Torna
+          a extreure més tard, o emplena''ls tu.'
   live:
     borrador:
       errors:
@@ -1965,6 +1972,12 @@ application:
     note:
       downloaded_not_loaded: Baixat, encara sense carregar.
       own_network_settings: Fa servir la seva pròpia configuració de xarxa.
+    refusal:
+      column_names_local_ai_not_ready: la IA local, que llegeix els noms de les columnes
+        d'aquest fitxer, no està a punt, així que no s'ha llegit el fitxer. Configura-la
+        i torna-ho a provar.
+      column_names_local_ai_unavailable: la IA local no pot llegir els noms de les
+        columnes d'aquest fitxer en aquest ordinador, així que no s'ha llegit el fitxer.
     retry: Problema de connexió. Es tornarà a provar d'aquí a %{seconds} segons (intent
       %{attempt}).
     space_needed: La configuració necessita %{required} lliures i n'hi ha %{free}

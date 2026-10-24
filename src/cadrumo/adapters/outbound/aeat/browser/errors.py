@@ -137,3 +137,31 @@ class BrowserFailureMode(StrEnum):
     NAVIGATION_TRANSPORT_ERROR = "navigation_transport_error"
     SITE_HEALTH_NON_OK = "site_health_non_ok"
     BROWSER_CLOSE_FAILED = "browser_close_failed"
+
+
+class BrowserNotReadyError(BrowserError):
+    """Raised when browser work starts while the browser setup item is not ready.
+
+    A refusal rather than a failure: it is raised before any browser, driver,
+    certificate or secret is touched, so the operation it stops had no effect,
+    and the carried verdict says whether setting the browser up repairs it.
+
+    Its failure mode is always :attr:`BrowserFailureMode.BROWSER_NOT_PROVISIONED`
+    and is read from the class. The base keeps the mode in the error context and
+    as a public attribute, and both reach the person as context lines beside the
+    sentence; this refusal carries neither, so the person reads the sentence and
+    the verdict's setup action only.
+    """
+
+    failure_mode = BrowserFailureMode.BROWSER_NOT_PROVISIONED.value
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        translated_message: str,
+        precondition_verdict: PreconditionVerdict | None,
+    ) -> None:
+        """Construct the refusal from its message key and the setup probe's verdict."""
+        super().__init__(message, translated_message=translated_message, precondition_verdict=precondition_verdict)
+        del self.failure_mode

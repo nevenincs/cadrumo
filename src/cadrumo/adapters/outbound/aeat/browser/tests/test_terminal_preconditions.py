@@ -125,7 +125,7 @@ _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
 # recovery action, is the provisioning probe's own rather than a browser-authored one.
 _PROVISIONING_DELEGATED_CARRIERS: frozenset[str] = frozenset(
     {
-        "session:require_browser_ready:BrowserError:Chromium browser build is not provisioned",
+        "session:require_browser_ready:BrowserNotReadyError:Chromium browser build is not provisioned",
     }
 )
 
@@ -188,7 +188,7 @@ def _browser_error_carriers() -> dict[str, ast.Call]:
             @override
             def visit_Call(self, node: ast.Call) -> None:
                 error_type = _call_name(node.func)
-                if error_type in {"BrowserError", "BrowserEvasionError"}:
+                if error_type in {"BrowserError", "BrowserEvasionError", "BrowserNotReadyError"}:
                     assert node.args
                     key = f"{self.module_name}:{self.owner}:{error_type}:{_message_identity(node.args[0])}"
                     assert key not in carriers, f"duplicate browser failure carrier {key}"

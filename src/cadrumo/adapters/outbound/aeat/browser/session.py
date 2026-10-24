@@ -46,7 +46,6 @@ from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError, SiteHealthState
 from .....core.file_permissions import restrict_directory_permissions
-from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.operator_action_enums import NoRecoveryOutcome
 from .....core.time.clock import now
@@ -55,6 +54,7 @@ from ._site_health_probe import probe_response
 from .errors import (
     BrowserError,
     BrowserFailureMode,
+    BrowserNotReadyError,
     BrowserPreconditionCondition,
     browser_no_action_verdict,
 )
@@ -69,6 +69,12 @@ from .site_health_records import (
 logger = get_logger(__name__)
 
 
+#: The refusal for a browser that setup can install, naming that setup.
+_BROWSER_NOT_SET_UP_KEY = "adapters.browser.errors.not_provisioned"
+#: The refusal for a browser this copy cannot use, which setup cannot repair.
+_BROWSER_NOT_USABLE_KEY = "adapters.browser.errors.not_usable"
+
+
 def require_browser_ready(settings: Settings, *, profile_name: str) -> None:
     """Refuse browser work while the browser setup item is not ready.
 
@@ -76,7 +82,9 @@ def require_browser_ready(settings: Settings, *, profile_name: str) -> None:
     operations call it when they start, before they load a certificate or a
     secret, and :class:`BrowserSession` calls it again before every launch.
     The refusal carries the setup probe's own verdict, which names the browser
-    setup action, so every caller refuses the same way.
+    setup action when setting the browser up repairs it, so every caller
+    refuses the same way. The message key follows the verdict: a browser setup
+    can install says so, and one it cannot repair offers no setup.
     """
     from .....application.provisioning_browser import probe_playwright_browser
 
@@ -88,11 +96,10 @@ def require_browser_ready(settings: Settings, *, profile_name: str) -> None:
         BrowserFailureMode.BROWSER_NOT_PROVISIONED,
         profile_name,
     )
-    raise BrowserError(
+    setup_repairs = status.precondition_verdict is not None and status.precondition_verdict.action is not None
+    raise BrowserNotReadyError(
         "Chromium browser build is not provisioned",
-        failure_mode=BrowserFailureMode.BROWSER_NOT_PROVISIONED,
-        context={"profile": profile_name},
-        translated_message=tr("adapters.browser.errors.not_provisioned"),
+        translated_message=_BROWSER_NOT_SET_UP_KEY if setup_repairs else _BROWSER_NOT_USABLE_KEY,
         precondition_verdict=status.precondition_verdict,
     )
 

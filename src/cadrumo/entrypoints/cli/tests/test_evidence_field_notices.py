@@ -495,12 +495,18 @@ def test_both_evidence_surfaces_emit_the_degradation_notices() -> None:
 # --- a label reading that stood without its model fill -----------------------
 
 
-def _fallback(cause: LabelReadingFallbackCause, *, failed_condition_id: str | None = None) -> LabelReadingFallback:
+def _fallback(
+    cause: LabelReadingFallbackCause,
+    *,
+    failed_condition_id: str | None = None,
+    recovery_action_id: str | None = None,
+) -> LabelReadingFallback:
     return LabelReadingFallback(
         cause=cause,
         unread_fields=("currency", "supplier_name"),
         reader_error_type="ReaderFailureForTest",
         failed_condition_id=failed_condition_id,
+        recovery_action_id=recovery_action_id,
     )
 
 
@@ -541,8 +547,26 @@ def test_an_unavailable_reader_fill_is_a_warning_naming_the_failure_and_the_unre
         "unread_field_count": "2",
         "reader_error_type": "ReaderFailureForTest",
     }
-    assert "ReaderFailureForTest" in notice.message
+    # The exception's name stays in the typed context; the sentence is plain words.
+    assert "ReaderFailureForTest" not in notice.message
     assert "currency, supplier_name" in notice.message
+    assert "set it up" not in notice.message.lower()
+
+
+def test_a_reader_the_probe_can_set_up_names_local_ai_and_its_setup() -> None:
+    fallback = _fallback(
+        LabelReadingFallbackCause.READER_UNAVAILABLE,
+        failed_condition_id="provisioning.role_model.installed",
+        recovery_action_id="operator.provision.local_ai",
+    )
+
+    (notice,) = label_reading_fallback_notices(fallback)
+
+    assert notice.code == "ledger.evidence.label_reading.reader_unavailable"
+    assert notice.message.startswith("Local AI is not ready")
+    assert "currency, supplier_name" in notice.message
+    assert "Set it up, then extract again." in notice.message
+    assert "ReaderFailureForTest" not in notice.message
 
 
 def test_a_busy_refused_fill_is_a_warning_naming_the_occupancy_and_the_unread_fields() -> None:

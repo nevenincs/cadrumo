@@ -14,12 +14,16 @@ from ......application.ledger.column_roles import ColumnRoleReaderUnavailable, b
 from ......application.provisioning_contracts import (
     LOCAL_AI_PROVISION_ACTION_ID,
     ProvisioningPreconditionCondition,
+    provisioning_no_recovery_verdict,
     provisioning_setup_verdict,
 )
+from ......tests.english_locale_fixture import english_locale_fixture
 from ......tests.inventory import FIXTURES_DIR
 from .._mapped_tabular import MappedTabularProvider
 from ..base import InvalidFinancialSourceError
 from ..detection import detect_provider
+
+__all__ = ["english_locale_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -70,3 +74,30 @@ def test_detection_hands_a_reader_blocked_file_to_its_lane() -> None:
 
     assert isinstance(blocked, MappedTabularProvider)
     assert declined is None
+
+
+def test_the_reason_names_local_ai_and_its_setup_when_setup_repairs_it() -> None:
+    validation = MappedTabularProvider(mapping_resolver=lambda table: _reader_unavailable()).validate_source(
+        _UNREAD_VOCABULARY
+    )
+
+    (reason,) = validation.warnings
+    assert reason.startswith("Local AI")
+    assert "Set it up, then try again." in reason
+
+
+def test_the_reason_offers_no_setup_for_a_role_this_computer_cannot_run() -> None:
+    unservable = ColumnRoleReaderUnavailable(
+        precondition_verdict=provisioning_no_recovery_verdict(
+            ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
+            facts={"role": "column_role_mapping", "runtime_reachable": True, "role_model_selected": False},
+        )
+    )
+    lane = MappedTabularProvider(mapping_resolver=lambda table: unservable)
+
+    (reason,) = lane.validate_source(_UNREAD_VOCABULARY).warnings
+
+    assert reason.startswith("Local AI")
+    assert "set it up" not in reason.lower()
+    with pytest.raises(InvalidFinancialSourceError, match="on this computer"):
+        list(lane.ingest(_UNREAD_VOCABULARY))

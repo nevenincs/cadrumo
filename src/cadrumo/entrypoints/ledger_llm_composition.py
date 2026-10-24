@@ -22,6 +22,7 @@ from ..adapters.persistence.storage.runtime_repository import secure_object_repo
 from ..application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ..application.ledger.evidence_errors import (
     PurchaseInvoiceEvidenceReaderError,
+    evidence_reader_refusal_key,
 )
 from ..application.ledger.evidence_input import (
     resolve_attachment_evidence_input,
@@ -55,7 +56,7 @@ def _reader_unavailable(verdict: PreconditionVerdict) -> PurchaseInvoiceEvidence
     """Return the ledger reader refusal carrying the reader probe's own verdict."""
     return PurchaseInvoiceEvidenceReaderError(
         LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value,
-        translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
+        translated_message=evidence_reader_refusal_key(verdict),
         precondition_verdict=verdict,
     )
 

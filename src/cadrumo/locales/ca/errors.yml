@@ -1222,13 +1222,12 @@ errors:
       amb un identificador de contrapart que no valida.
     refused_ledger_evidence_input: Una dada d'evidència indicada infringeix el contracte
       de la factura de compra. Corregeix l'entrada i torna-ho a provar.
+    refused_ledger_evidence_local_ai_not_ready: La IA local no està a punt, així que
+      no s'ha llegit res. Configura-la i torna-ho a provar.
     refused_ledger_evidence_not_found: No existeix cap evidència de factura de compra
       amb l'identificador indicat.
-    refused_ledger_evidence_reader_unavailable: El lector de documents per a aquest
-      justificant no està disponible en aquest equip, així que no s'ha llegit res.
-      Comprova-ho amb `aeat config provision status`, arrenca'l amb `aeat config provision
-      start` i descarrega'n els models amb `aeat config provision pull`, o tria un
-      proveïdor extern per a aquesta lectura, i torna-ho a provar.
+    refused_ledger_evidence_reader_unavailable: El lector automàtic no ha pogut funcionar,
+      així que no s'ha llegit res.
     refused_ledger_evidence_reader_unreadable_answer: El lector de documents ha respost
       en un format que aquesta ordre no ha pogut llegir, així que no s'ha pres res
       del document. No s'ha desat res; torna a executar l'ordre i, si continua passant,

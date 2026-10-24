@@ -37,7 +37,11 @@ from ..adapters.persistence.storage.attachment import AttachmentStore
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ..application.ledger.document_transcription import DocumentTranscription
 from ..application.ledger.evidence import PurchaseInvoiceEvidenceService
-from ..application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
+from ..application.ledger.evidence_errors import (
+    PurchaseInvoiceEvidenceInputError,
+    PurchaseInvoiceEvidenceReaderError,
+    evidence_reader_refusal_key,
+)
 from ..application.ledger.evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,
@@ -127,7 +131,7 @@ def _require_on_host_reader(role: ModelRole, settings: Settings, provider: LLMPr
         return
     raise InvoiceDraftReaderUnavailableError(
         PurchaseInvoiceEvidenceReaderError(
-            translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
+            translated_message=evidence_reader_refusal_key(status.precondition_verdict),
             precondition_verdict=status.precondition_verdict,
         ),
         precondition_verdict=status.precondition_verdict,

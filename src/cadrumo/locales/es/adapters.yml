@@ -49,8 +49,10 @@ adapters:
           de navegador activo; llama primero a authenticate().
   browser:
     errors:
-      not_provisioned: El navegador que abre la automatización de la AEAT no está
-        instalado en este equipo. Descarga el navegador y vuelve a intentarlo.
+      not_provisioned: El navegador para la web de la Agencia Tributaria aún no está
+        configurado. Configura el navegador y vuelve a intentarlo.
+      not_usable: Esta versión de Cadrumo no puede usar el navegador para la web de
+        la Agencia Tributaria.
   google:
     calc_sheets:
       errors:

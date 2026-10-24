@@ -99,7 +99,12 @@ from ..local_reader import probe_local_reader
 from ..operator_actions.models import PreconditionVerdict
 from ..user_profile.capabilities import resolve_active_capability
 from .document_transcription import DocumentTranscription
-from .evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
+from .evidence_errors import (
+    EVIDENCE_READER_UNAVAILABLE_KEY,
+    PurchaseInvoiceEvidenceInputError,
+    PurchaseInvoiceEvidenceReaderError,
+    evidence_reader_refusal_key,
+)
 from .evidence_input import EvidenceInput
 from .evidence_textlayer import transcribe_text_layer
 from .invoice_draft_extraction_ports import (
@@ -376,7 +381,7 @@ def _refuse_with_unavailable_reader(
     """Preserve a reader refusal as typed facts, without presentation prose."""
     if precondition_verdict is not None:
         raise PurchaseInvoiceEvidenceReaderError(
-            translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
+            translated_message=evidence_reader_refusal_key(precondition_verdict),
             precondition_verdict=precondition_verdict,
         ) from exc
     if isinstance(exc, MissingOptionalExtraError):
@@ -392,7 +397,7 @@ def _refuse_with_unavailable_reader(
         }
     raise PurchaseInvoiceEvidenceReaderError(
         context=facts,
-        translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
+        translated_message=EVIDENCE_READER_UNAVAILABLE_KEY,
         precondition_verdict=ledger_no_recovery_verdict(
             LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
             facts=facts,
@@ -939,7 +944,7 @@ def _extract_invoice_fields_via_vision(
             verdict = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, settings).precondition_verdict
         if verdict is not None:
             raise PurchaseInvoiceEvidenceReaderError(
-                translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
+                translated_message=evidence_reader_refusal_key(verdict),
                 precondition_verdict=verdict,
             ) from cause
         facts: dict[str, str | bool] = {
@@ -949,7 +954,7 @@ def _extract_invoice_fields_via_vision(
         }
         raise PurchaseInvoiceEvidenceReaderError(
             context=facts,
-            translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
+            translated_message=EVIDENCE_READER_UNAVAILABLE_KEY,
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
                 facts=facts,

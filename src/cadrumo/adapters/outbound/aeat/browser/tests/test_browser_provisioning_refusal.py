@@ -11,18 +11,28 @@ from __future__ import annotations
 
 import asyncio
 import os
+import sys
+from importlib.machinery import ModuleSpec
 from pathlib import Path
+from types import ModuleType
 
 import psutil
 import pytest
 from playwright.async_api import async_playwright
 
+from ......application.operations.error_detail import build_operation_error_detail
 from ......application.operator_actions.catalogue import lookup_action
 from ......application.provisioning_browser import BROWSER_PROVISION_ACTION_ID, required_browser_builds
 from ......application.provisioning_contracts import ProvisioningPreconditionCondition
 from ......core.config import Settings
-from ......core.i18n.render import tr
-from ..errors import BrowserError, BrowserFailureMode
+from ......core.errors.error_codes import (
+    ErrorCategory,
+    build_error_envelope,
+    get_registered_error_code,
+    render_error_text,
+    resolve_error_message,
+)
+from ..errors import BrowserError, BrowserFailureMode, BrowserNotReadyError
 from ..factory import create_browser_session, opened_browser_page, shared_playwright_runtime
 from ..profile import Profile
 from ..session import BrowserSession, require_browser_ready
@@ -58,9 +68,12 @@ def _marked_browser_root(root: Path) -> Path:
 
 
 def _assert_names_the_browser_setup(error: BrowserError, browsers_root: Path) -> None:
+    assert isinstance(error, BrowserNotReadyError)
+    assert get_registered_error_code(error).category is ErrorCategory.REFUSED
     assert error.failure_mode == BrowserFailureMode.BROWSER_NOT_PROVISIONED.value
     assert error.__cause__ is None
-    assert error.translated_message == tr("adapters.browser.errors.not_provisioned")
+    # A catalogue key, not rendered text: the stored detail renders it in the reader's language.
+    assert error.translated_message == "adapters.browser.errors.not_provisioned"
     verdict = error.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
@@ -85,8 +98,6 @@ def test_readiness_check_refuses_an_empty_root_and_admits_a_complete_one(tmp_pat
     with pytest.raises(BrowserError) as raised:
         require_browser_ready(Settings(cadrumo_playwright_browsers_dir=empty), profile_name="readiness")
     _assert_names_the_browser_setup(raised.value, empty)
-    assert raised.value.context is not None
-    assert raised.value.context["profile"] == "readiness"
 
     marked = _marked_browser_root(tmp_path / "marked-cache")
     require_browser_ready(Settings(cadrumo_playwright_browsers_dir=marked), profile_name="readiness")
@@ -122,3 +133,47 @@ async def test_page_factory_refuses_a_missing_browser_on_a_shared_runtime(tmp_pa
                 pytest.fail("a page opened without a provisioned browser")
 
     _assert_names_the_browser_setup(raised.value, empty)
+
+
+def test_a_browser_setup_cannot_repair_is_refused_without_offering_setup(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An installed Playwright whose browser manifest is gone cannot be repaired by setup."""
+    damaged = tmp_path / "damaged-playwright"
+    damaged.mkdir()
+    module = ModuleType("playwright")
+    module.__spec__ = ModuleSpec("playwright", None, origin=str(damaged / "__init__.py"))
+    monkeypatch.setitem(sys.modules, "playwright", module)
+
+    with pytest.raises(BrowserNotReadyError) as raised:
+        require_browser_ready(Settings(cadrumo_playwright_browsers_dir=tmp_path / "cache"), profile_name="damaged")
+
+    error = raised.value
+    assert get_registered_error_code(error).category is ErrorCategory.REFUSED
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_MANIFEST_READABLE.value
+    assert verdict.action is None
+    assert error.translated_message == "adapters.browser.errors.not_usable"
+    sentence = resolve_error_message(error, locale="en")
+    assert "browser for the tax agency website" in sentence
+    assert "set it up" not in sentence.lower()
+
+
+def test_the_rendered_refusal_is_its_sentence_alone(tmp_path: Path) -> None:
+    """The failure mode and the browser profile stay internal; the verdict carries the action."""
+    with pytest.raises(BrowserNotReadyError) as raised:
+        require_browser_ready(Settings(cadrumo_playwright_browsers_dir=tmp_path / "empty"), profile_name="internal")
+    error = raised.value
+
+    text = render_error_text(error)
+    assert text.splitlines()[1:] == []
+    assert resolve_error_message(error) in text
+    for internal in ("browser_not_provisioned", "Failure mode", "internal", "Chromium"):
+        assert internal not in text
+    assert build_error_envelope(error).context is None
+    detail = build_operation_error_detail(error)
+    assert detail is not None
+    assert detail.context == ()
+    assert detail.message_key == "adapters.browser.errors.not_provisioned"
+    assert detail.precondition_verdict() == error.terminal_precondition_verdict

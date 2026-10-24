@@ -49,8 +49,10 @@ adapters:
           igényel; először hívja meg az authenticate() metódust.
   browser:
     errors:
-      not_provisioned: Az AEAT-automatizálás által indított böngésző nincs telepítve
-        ezen a gépen. Töltsd le, majd próbáld újra.
+      not_provisioned: Az adóhivatal webhelyéhez használt böngésző még nincs beállítva.
+        Állítsd be, majd próbáld újra.
+      not_usable: A Cadrumo ezen verziója nem tudja használni az adóhivatal webhelyéhez
+        használt böngészőt.
   google:
     calc_sheets:
       errors:

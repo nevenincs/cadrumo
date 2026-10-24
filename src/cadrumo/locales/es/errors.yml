@@ -1212,13 +1212,12 @@ errors:
       de establecimiento con un identificador de contraparte que no valida.
     refused_ledger_evidence_input: Un dato de evidencia indicado infringe el contrato
       de la factura de compra. Corrige la entrada y vuelve a intentarlo.
+    refused_ledger_evidence_local_ai_not_ready: La IA local no está lista, así que
+      no se ha leído nada. Configura la IA local y vuelve a intentarlo.
     refused_ledger_evidence_not_found: No existe ninguna evidencia de factura de compra
       con el identificador indicado.
-    refused_ledger_evidence_reader_unavailable: El lector de documentos para este
-      justificante no está disponible en este equipo, así que no se ha leído nada.
-      Compruébalo con `aeat config provision status`, arráncalo con `aeat config provision
-      start` y descarga sus modelos con `aeat config provision pull`, o elige un proveedor
-      externo para esta lectura, y vuelve a intentarlo.
+    refused_ledger_evidence_reader_unavailable: El lector automático no ha podido
+      funcionar, así que no se ha leído nada.
     refused_ledger_evidence_reader_unreadable_answer: El lector de documentos respondió
       en un formato que este comando no ha podido leer, así que no se ha tomado nada
       del documento. No se ha guardado nada; vuelve a ejecutar el comando y, si sigue
