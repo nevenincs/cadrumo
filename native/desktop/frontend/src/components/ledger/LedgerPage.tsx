@@ -68,6 +68,7 @@ import {
   type MovementsMemory,
 } from "./movements/useMovementsView";
 import { PeriodSelector } from "./PeriodSelector";
+import { RowRevealNotice, useLinkedRow } from "./RowReveal";
 import { ExportDialog } from "./transfer/ExportDialog";
 import { useLedgerEditing } from "./editing/LedgerEditing";
 import { ImportDialog } from "./transfer/ImportDialog";
@@ -157,6 +158,8 @@ export function LedgerPage({
     onViewChange((current) => ({ ...current, section: next }));
   };
   const readable = reader !== null;
+  const linkedMovement = useLinkedRow("ledger/movements");
+  const linkedInvoice = useLinkedRow("ledger/invoices");
   // Only the sections that show a period's records have a period to choose.
   const periodShown =
     section === "movements" || section === "invoices" || section === "health";
@@ -516,6 +519,7 @@ export function LedgerPage({
         onEditor={setInvoiceEditor}
         copy={copy}
         onPeriod={setPeriod}
+        linked={linkedInvoice}
       />
     );
   else if (section === "rules")
@@ -677,6 +681,7 @@ export function LedgerPage({
             onInspector={setInspectorContext}
             shownImport={shownImport}
             onImportCleared={() => setShownImport(null)}
+            linked={linkedMovement}
           />
         </>
       );
@@ -692,6 +697,37 @@ export function LedgerPage({
     !(periodWindow.phase === "failed" && periodWindow.failure) &&
     drawnRows !== null &&
     !(drawnRows.total === 0 && stage.content.drafts.length === 0);
+
+  // A link's movement is asked of the page, which holds it until the grid
+  // draws it. A read that ends empty or fails draws no grid, so the page
+  // says the movement is not here; while it reads, the ask waits.
+  const noMovementsGrid =
+    readable &&
+    section === "movements" &&
+    periodWindow !== null &&
+    ((periodWindow.phase === "failed" && !!periodWindow.failure) ||
+      (drawnRows !== null &&
+        drawnRows.total === 0 &&
+        stage.content.drafts.length === 0));
+  const [movementMissing, setMovementMissing] = useState(false);
+  const { ask: movementAsk, done: movementDone } = linkedMovement;
+  useEffect(() => {
+    if (!movementAsk) return;
+    setMovementMissing(noMovementsGrid);
+    if (noMovementsGrid) movementDone();
+  }, [movementAsk, movementDone, noMovementsGrid]);
+  useEffect(() => {
+    if (!noMovementsGrid) setMovementMissing(false);
+  }, [noMovementsGrid]);
+  // An ask for a section put away by the person goes with it.
+  const { done: invoiceDone } = linkedInvoice;
+  useEffect(() => {
+    if (section !== "movements") {
+      movementDone();
+      setMovementMissing(false);
+    }
+    if (section !== "invoices") invoiceDone();
+  }, [section, movementDone, invoiceDone]);
 
   return (
     <WritePauseContext.Provider value={pause}>
@@ -753,7 +789,19 @@ export function LedgerPage({
           <div className="flex min-h-0 flex-1" onKeyDown={onInspectorKey}>
             {/* The grid scrolls within what the panel leaves it; resizing
                 the panel keeps it its own width. */}
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col">{body}</div>
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              {movementMissing && (
+                <div className="px-3 pt-3">
+                  <RowRevealNotice
+                    notice={{ kind: "missing" }}
+                    dismiss={() => setMovementMissing(false)}
+                    hidden={t("desktop.ledger.reveal.movement_hidden")}
+                    missing={t("desktop.ledger.reveal.movement_missing")}
+                  />
+                </div>
+              )}
+              {body}
+            </div>
             {inspectorShown && periodWindow && (
               <LedgerInspector
                 port={port}

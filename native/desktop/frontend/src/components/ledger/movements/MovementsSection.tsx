@@ -103,7 +103,7 @@ import {
 } from "./movementWords";
 import { ReadinessStrip } from "./ReadinessStrip";
 import { useFocusTarget } from "../../../shell/navigation/hooks";
-import { RowRevealNotice, useRowReveal } from "../RowReveal";
+import { RowRevealNotice, useRowReveal, type LinkedRow } from "../RowReveal";
 import { movementHiding, withoutHiding } from "./movementReveal";
 import type { MovementsView } from "./useMovementsView";
 import type { ImportedBatches } from "../../../shell/ledgerImports";
@@ -315,6 +315,7 @@ export function MovementsSection({
   shownImport,
   onImportCleared,
   editing: pageEditing,
+  linked,
 }: {
   port: LedgerPort;
   reader: string;
@@ -342,6 +343,8 @@ export function MovementsSection({
   /** The person took the import's filter off. */
   onImportCleared?: () => void;
   editing: SectionEditing;
+  /** The movement a link selects, held by the page. */
+  linked: LinkedRow;
 }) {
   const t = useStrings();
   const grid = useRef<DataGridHandle>(null);
@@ -562,7 +565,7 @@ export function MovementsSection({
         '[role="grid"] [tabindex="0"]',
       ) ?? null,
   );
-  const reveal = useRowReveal("ledger/movements", {
+  const reveal = useRowReveal(linked, {
     shown: (id) => visibleSet.has(id),
     hiding: (id) => {
       const row = byId.get(id);

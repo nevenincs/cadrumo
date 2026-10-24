@@ -22,7 +22,7 @@ import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import { useFocusTarget } from "../../../shell/navigation/hooks";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { failureCode } from "../ledgerWords";
-import { RowRevealNotice, useRowReveal } from "../RowReveal";
+import { RowRevealNotice, useRowReveal, type LinkedRow } from "../RowReveal";
 import { INVOICE_TSV_COLUMNS, invoicesTsv } from "../transfer/tsv";
 import { dayText } from "../transfer/transferWords";
 import { InvoiceEditor, type EditorTarget } from "./InvoiceEditor";
@@ -233,6 +233,7 @@ export function InvoicesSection({
   onEditor,
   copy,
   onPeriod,
+  linked,
 }: {
   port: LedgerPort;
   reader: string | null;
@@ -244,6 +245,8 @@ export function InvoicesSection({
   copy(text: string): Promise<void>;
   /** Shows another period, to show an invoice the period shown hides. */
   onPeriod?: (period: LedgerPeriod | null) => void;
+  /** The invoice a link selects, held by the page. */
+  linked: LinkedRow;
 }) {
   const t = useStrings();
   const { read, reread, settle } = useInvoiceCatalogue(port, reader, shown);
@@ -305,7 +308,7 @@ export function InvoicesSection({
         '[role="grid"] [tabindex="0"]',
       ) ?? null,
   );
-  const reveal = useRowReveal("ledger/invoices", {
+  const reveal = useRowReveal(linked, {
     shown: (id) => rows.some((invoice) => invoice.invoice_id === id),
     hiding: (id) => {
       const invoice = invoices?.find((found) => found.invoice_id === id);
@@ -316,7 +319,9 @@ export function InvoicesSection({
         if (hiding.period) onPeriod?.(null);
       };
     },
-    settled: invoices !== null,
+    // A catalogue that could not be read draws no grid: the invoice is not
+    // here either way.
+    settled: invoices !== null || read.phase === "failed",
     reveal: (id, focus) => {
       if (focus) grid.current?.focusCell(id);
       else grid.current?.scrollToKey(id, "center");

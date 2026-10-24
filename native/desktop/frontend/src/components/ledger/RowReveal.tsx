@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -24,24 +30,41 @@ export type RevealGrid = {
   within: RefObject<HTMLElement | null>;
 };
 
-type Notice =
+export type RevealNotice =
   | { readonly kind: "hidden"; readonly show: () => void }
   | { readonly kind: "missing" };
 
+/** The row a navigation's `select` asks of a grid, until it is settled. */
+export type LinkedRow = {
+  readonly ask: { readonly id: string } | null;
+  /** The ask is settled: revealed, announced or dismissed. */
+  done(): void;
+};
+
 /**
- * Reveals the row a navigation's `select` names in the grid of register
- * element `view`: once it is drawn, it is scrolled into view, selected and
- * given the keyboard. The navigation hands the row over when the grid has
- * mounted, and the grid's own draws settle it, never a delay. A row the
- * person's view hides, or one not found, is said in a notice instead.
+ * Holds the row a navigation to register element `view` selects. The page
+ * holds it, not the grid, because the grid may never mount: a ledger that
+ * is empty or failed to read draws no grid, and the page must still say
+ * the row is not here. Each navigation replaces it.
  */
-export function useRowReveal(view: string, grid: RevealGrid) {
+export function useLinkedRow(view: string): LinkedRow {
   const [ask, setAsk] = useState<{ readonly id: string } | null>(null);
-  const [notice, setNotice] = useState<Notice | null>(null);
-  useViewParams(view, (params) => {
-    setNotice(null);
-    setAsk(params.select ? { id: params.select } : null);
-  });
+  useViewParams(view, (params) =>
+    setAsk(params.select ? { id: params.select } : null),
+  );
+  const done = useCallback(() => setAsk(null), []);
+  return { ask, done };
+}
+
+/**
+ * Reveals the row `linked` asks for in a grid: once it is drawn, it is
+ * scrolled into view, selected and given the keyboard. The grid's own
+ * draws settle it, never a delay. A row the person's view hides, or one
+ * not found, is said in a notice instead.
+ */
+export function useRowReveal(linked: LinkedRow, grid: RevealGrid) {
+  const { ask, done } = linked;
+  const [notice, setNotice] = useState<RevealNotice | null>(null);
   const latest = useRef(grid);
   latest.current = grid;
   const { drawn, settled } = grid;
@@ -49,7 +72,7 @@ export function useRowReveal(view: string, grid: RevealGrid) {
     if (!ask) return;
     const now = latest.current;
     if (now.shown(ask.id)) {
-      setAsk(null);
+      done();
       setNotice(null);
       const held = document.activeElement;
       const page = now.within.current?.closest(".ledger-page");
@@ -62,14 +85,14 @@ export function useRowReveal(view: string, grid: RevealGrid) {
     const show = now.hiding(ask.id);
     if (show) setNotice({ kind: "hidden", show });
     else if (now.settled) {
-      setAsk(null);
+      done();
       setNotice({ kind: "missing" });
-    }
-  }, [ask, drawn, settled]);
+    } else setNotice(null);
+  }, [ask, done, drawn, settled]);
   return {
     notice,
     dismiss: () => {
-      setAsk(null);
+      done();
       setNotice(null);
     },
   };
@@ -82,7 +105,12 @@ export function RowRevealNotice({
   dismiss,
   hidden,
   missing,
-}: ReturnType<typeof useRowReveal> & { hidden: string; missing: string }) {
+}: {
+  notice: RevealNotice | null;
+  dismiss(): void;
+  hidden: string;
+  missing: string;
+}) {
   const t = useStrings();
   if (!notice) return null;
   return (

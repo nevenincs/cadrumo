@@ -283,3 +283,23 @@ test("an invoice link focuses its row in the catalogue", async ({ page }) => {
   ).click();
   await expect(grid.locator(`[data-key="${id}"] :focus`)).toHaveCount(1);
 });
+
+test("a movement link into an empty ledger says it is not here, and opens no grid", async ({
+  page,
+}) => {
+  await page.goto(
+    "/scenarios.html?scenario=ledger&ledger=empty&latency=0&bar=off",
+  );
+  await (
+    await linkTo(
+      page,
+      `cadrumo://view/ledger/movements?select=${"a".repeat(64)}`,
+    )
+  ).click();
+  await expect(page.locator(".ledger-empty")).toBeVisible();
+  await expect(notice(page)).toContainText(
+    label("desktop.ledger.reveal.movement_missing"),
+  );
+  await expect(notice(page).locator(".ledger-reveal-show")).toHaveCount(0);
+  await expect(ledgerGrid(page)).toHaveCount(0);
+});
