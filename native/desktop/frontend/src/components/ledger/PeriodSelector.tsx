@@ -113,6 +113,7 @@ export function PeriodSelector({
   const yearMode = mode === "year";
   const [shownYear, setShownYear] = useState(value?.year ?? fallbackYear);
   const content = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
   const shown = periodText(t, locale, value, mode);
 
   const step = (by: number) => {
@@ -161,6 +162,7 @@ export function PeriodSelector({
       >
         <PopoverTrigger asChild>
           <Button
+            ref={trigger}
             variant="outline"
             size="xs"
             className="ledger-period gap-1 tabular-nums"
@@ -182,6 +184,12 @@ export function PeriodSelector({
               : "desktop.ledger.period.choose",
           )}
           className="ledger-period-menu grid w-menu gap-3 p-2"
+          // A choice can draw the page anew under the menu: the focus goes
+          // back to the trigger as it is drawn now, never to the page.
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            requestAnimationFrame(() => trigger.current?.focus());
+          }}
           onOpenAutoFocus={(event) => {
             // The chosen item takes focus, else the year, else the first.
             event.preventDefault();
@@ -289,37 +297,51 @@ export function PeriodSelector({
               {t("desktop.ledger.period.all")}
             </Button>
           )}
-          {years !== null && years.length > 0 && (
+          {/* The row keeps its height while the years are read, so the list
+              does not grow under the pointer. */}
+          {years === null ? (
             <div
-              role="group"
-              aria-label={t("desktop.ledger.period.years_with_movements")}
-              className="grid gap-1"
+              className="ledger-period-years-reading grid gap-1"
+              aria-hidden="true"
             >
-              <span
-                aria-hidden="true"
-                className="text-xs text-muted-foreground"
-              >
+              <span className="text-xs text-muted-foreground">
                 {t("desktop.ledger.period.years_with_movements")}
               </span>
-              <div className="ledger-period-years flex flex-wrap gap-1">
-                {years.map((year) => (
-                  <Button
-                    key={year}
-                    variant="pill"
-                    size="xs"
-                    className={item}
-                    aria-pressed={year === shownYear}
-                    onClick={() =>
-                      yearMode
-                        ? apply({ year, code: value?.code ?? "0A" })
-                        : setShownYear(year)
-                    }
-                  >
-                    {year}
-                  </Button>
-                ))}
-              </div>
+              <div className="h-control-xs" />
             </div>
+          ) : (
+            years.length > 0 && (
+              <div
+                role="group"
+                aria-label={t("desktop.ledger.period.years_with_movements")}
+                className="grid gap-1"
+              >
+                <span
+                  aria-hidden="true"
+                  className="text-xs text-muted-foreground"
+                >
+                  {t("desktop.ledger.period.years_with_movements")}
+                </span>
+                <div className="ledger-period-years flex flex-wrap gap-1">
+                  {years.map((year) => (
+                    <Button
+                      key={year}
+                      variant="pill"
+                      size="xs"
+                      className={item}
+                      aria-pressed={year === shownYear}
+                      onClick={() =>
+                        yearMode
+                          ? apply({ year, code: value?.code ?? "0A" })
+                          : setShownYear(year)
+                      }
+                    >
+                      {year}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )
           )}
         </PopoverContent>
       </Popover>

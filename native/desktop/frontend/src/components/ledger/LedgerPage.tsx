@@ -298,13 +298,11 @@ export function LedgerPage({
   };
   // What an import brought in, as the person asked to see it.
   const [shownImport, setShownImport] = useState<ImportedBatches | null>(null);
+  // Read with the page, so the period list never grows under the pointer.
   const { years, refresh: refreshYears } = useLedgerYears(
     port,
     reader,
-    periodOpen ||
-      transfer !== null ||
-      section === "rules" ||
-      section === "registers",
+    readable,
   );
   const numbers = useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const fallbackYear = Number(today.slice(0, 4));

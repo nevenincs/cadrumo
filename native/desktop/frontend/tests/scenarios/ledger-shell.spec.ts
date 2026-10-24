@@ -583,3 +583,27 @@ test("readiness is a glyph and a count per thing it counts, with the words in it
       }),
     ).toHaveCount(1);
 });
+
+test("the years with movements are read with the page, so the period list does not grow once open, and a choice hands focus back", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  // Let the page read what it reads on opening.
+  await expect(
+    page(target).locator(".ledger-readiness [data-readiness]").first(),
+  ).toBeVisible();
+  const periods = await openPeriods(target);
+  const years = periods.locator(".ledger-period-years");
+  await expect(years).toBeVisible();
+  const height = (await periods.boundingBox())!.height;
+  await target.waitForTimeout(800);
+  expect((await periods.boundingBox())!.height).toBe(height);
+  await periods
+    .getByRole("group", {
+      name: label("desktop.ledger.period.of_year", { year: 2026 }),
+    })
+    .getByRole("button", { name: "3T", exact: true })
+    .click();
+  await expect(periods).toBeHidden();
+  await expect(trigger(target)).toBeFocused();
+});
