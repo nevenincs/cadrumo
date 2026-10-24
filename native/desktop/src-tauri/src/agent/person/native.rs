@@ -47,6 +47,8 @@ struct Shared {
     language_dirty: AtomicBool,
     /// The runtime ended this session, or the connection ended.
     retired: AtomicBool,
+    /// The window gave the session up itself: its connection's end is no retirement.
+    released: AtomicBool,
 }
 
 pub(super) struct NativeSession {
@@ -174,6 +176,7 @@ impl NativeSession {
     }
 
     fn end(&mut self) {
+        self.shared.released.store(true, Ordering::Release);
         // The last owner of the connection closes it; the runtime ends its session.
         self.connection = None;
     }
@@ -472,6 +475,12 @@ impl NativeSession {
     }
 }
 
+impl Drop for NativeSession {
+    fn drop(&mut self) {
+        self.end();
+    }
+}
+
 impl Bridge for NativeSession {
     fn exchange(&mut self, request: &Value) -> Result<Value> {
         if self.connection.is_none() {
@@ -568,7 +577,11 @@ fn route(
         }
     }
     shared.retired.store(true, Ordering::Release);
-    send(PersonEvent::Retired);
+    // As when the hold exited: a session the window gave up retires nobody
+    // else's waits on the shared events.
+    if !shared.released.load(Ordering::Acquire) {
+        send(PersonEvent::Retired);
+    }
 }
 
 #[cfg(test)]
@@ -938,6 +951,24 @@ mod tests {
         assert_eq!(error.code, ErrorCode::SessionUnavailable);
         assert_eq!(error.reason.as_deref(), Some("person_session_retired"));
         assert!(runtime.asked().is_empty());
+    }
+
+    #[test]
+    fn a_session_the_window_gives_up_retires_nobody() {
+        let runtime = Runtime::answering([]);
+        let held = person(&runtime);
+        let (events, mut heard) = tokio::sync::broadcast::channel(8);
+        *held.events.lock().unwrap() = Some(events);
+        let pushes = runtime.pushes.lock().unwrap().clone().unwrap();
+        drop(held);
+        // The connection's end reaches the router after the window let go.
+        let _ = pushes.send(Pushed {
+            event: Event::Disconnected,
+            profile_id: None,
+            session_id: None,
+        });
+        settle();
+        assert!(heard.try_recv().is_err());
     }
 
     #[test]
