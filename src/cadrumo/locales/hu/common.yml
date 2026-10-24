@@ -2262,12 +2262,10 @@ desktop:
         copy: Másolás TSV-ként
         cost: '{count} tétel egyenként mentődne, kb. {minutes} perc. Előbb besorolva
           együtt mentődnek.'
-        in: Bevétel · {currency}
         make_rule: Szabály létrehozása
         merge_hint: Az egyesítéshez jelöld ki egy felosztott tétel összes részét.
         mixed_values: 'Eltérő értékek: {count}'
         nothing: Egyikre sem alkalmazható
-        out: Kiadás · {currency}
         partial: Csak a betöltött tételek
         set_for: Beállítás {count} tételre
         set_hidden: Beállítás {visible} látható + {hidden} rejtett tételre
@@ -2278,7 +2276,6 @@ desktop:
         staged: 'Előkészítve: {count} · nincs mentve'
         title: '{count} kijelölve'
         totals: Összesen
-        transfer: Átvezetések · {currency}
       share: Üzleti arány
       share_required: Add meg az üzleti arányt.
       show: Mutasd
@@ -2989,7 +2986,6 @@ desktop:
       expression_hint: A leírás bármely részén, kis- és nagybetűtől függetlenül.
       expression_unread: Ez az ablak nem tudja értelmezni a kifejezést.
       from_selection: Szabály a kijelölésből
-      matches: '{count} betöltött tételre illik'
       matches_split: 'Egyezés: {count} · besorolandó: {pending}'
       matches_unknown: Itt nem számolható
       move_down: 'Lejjebb: {rule}'

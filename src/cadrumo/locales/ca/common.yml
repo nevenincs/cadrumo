@@ -2277,12 +2277,10 @@ desktop:
         copy: Copia com a TSV
         cost: '{count} es desarien un a un, uns {minutes} min. Si classifiques primer,
           es desen junts.'
-        in: Entrades · {currency}
         make_rule: Crea una regla
         merge_hint: Selecciona totes les parts d'un moviment dividit per unir-les.
         mixed_values: 'Valors diferents: {count}'
         nothing: Cap no ho admet
-        out: Sortides · {currency}
         partial: Només els moviments carregats
         set_for: Aplica a {count}
         set_hidden: Aplica a {visible} visibles + {hidden} ocults
@@ -2293,7 +2291,6 @@ desktop:
         staged: 'Preparats: {count} · sense desar'
         title: '{count} seleccionats'
         totals: Totals
-        transfer: Transferències · {currency}
       share: Part professional
       share_required: Indica la part professional.
       show: Mostra
@@ -3010,7 +3007,6 @@ desktop:
         majúscules.
       expression_unread: Aquesta finestra no pot llegir aquesta expressió.
       from_selection: Crea una regla a partir de la selecció
-      matches: Coincideix amb {count} carregats
       matches_split: Coincideix amb {count} · {pending} per classificar
       matches_unknown: No comptat aquí
       move_down: 'Baixa: {rule}'

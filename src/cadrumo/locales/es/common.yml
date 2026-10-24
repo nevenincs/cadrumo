@@ -2284,12 +2284,10 @@ desktop:
         copy: Copiar como TSV
         cost: '{count} se guardarían uno a uno, unos {minutes} min. Si clasificas
           primero, se guardan juntos.'
-        in: Entradas · {currency}
         make_rule: Crear una regla
         merge_hint: Selecciona todas las partes de un movimiento dividido para unirlas.
         mixed_values: 'Valores distintos: {count}'
         nothing: Ninguno lo admite
-        out: Salidas · {currency}
         partial: Solo los movimientos cargados
         set_for: Aplicar a {count}
         set_hidden: Aplicar a {visible} visibles + {hidden} ocultos
@@ -2300,7 +2298,6 @@ desktop:
         staged: 'Preparados: {count} · sin guardar'
         title: '{count} seleccionados'
         totals: Totales
-        transfer: Transferencias · {currency}
       share: Parte profesional
       share_required: Indica la parte profesional.
       show: Ver
@@ -3015,7 +3012,6 @@ desktop:
         mayúsculas.
       expression_unread: Esta ventana no puede leer esa expresión.
       from_selection: Crear regla a partir de la selección
-      matches: Coincide con {count} cargados
       matches_split: Coincide con {count} · {pending} por clasificar
       matches_unknown: No contado aquí
       move_down: 'Bajar: {rule}'

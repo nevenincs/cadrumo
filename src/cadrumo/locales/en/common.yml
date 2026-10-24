@@ -2244,12 +2244,10 @@ desktop:
         copy: Copy as TSV
         cost: '{count} would be saved one at a time, about {minutes} min. Classifying
           first saves them together.'
-        in: In · {currency}
         make_rule: Make a rule
         merge_hint: Select every part of one split movement to merge them.
         mixed_values: 'Different values: {count}'
         nothing: None of them takes it
-        out: Out · {currency}
         partial: Loaded movements only
         set_for: Set for {count}
         set_hidden: Set for {visible} visible + {hidden} hidden
@@ -2260,7 +2258,6 @@ desktop:
         staged: 'Staged: {count} · not saved'
         title: '{count} selected'
         totals: Totals
-        transfer: Transfers · {currency}
       share: Business share
       share_required: Enter the business share.
       show: Show
@@ -2966,7 +2963,6 @@ desktop:
       expression_hint: Matched anywhere in the description, ignoring case.
       expression_unread: This window can't read that expression.
       from_selection: Make a rule from the selection
-      matches: Matches {count} loaded
       matches_split: Matches {count} · {pending} to classify
       matches_unknown: Not counted here
       move_down: 'Move down: {rule}'
