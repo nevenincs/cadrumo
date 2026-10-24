@@ -63,28 +63,32 @@ def collect_official_box_unpopulated_diagnostics(
             (e.g. ``iva.cuota-devengada-total``) and the official box ids
             (e.g. ``09``) resolve.
 
+    Raises:
+        ModeloError: An ADVISORY predicate is malformed (unparseable, wrong
+            arity, an operator with no advisory evaluator, a non-canonical
+            casilla token or an unreadable registry literal).
+
     See Also:
         ``cadrumo.application.modelo.verification_actions._evaluate_predicate_expression``:
             Verification-side evaluator for the same predicate DSL.
     """
     # Lazy imports avoid the calculate/verification action cycle. The domain
-    # registry owns predicate syntax; the verification module owns evaluation.
-    from ...domain.calculations.registry.schema_verification import (
-        VerificationPredicateOperator,
-        parse_verification_predicate_expression,
-    )
-    from .verification_predicates import evaluate_advisory_predicate_fires
+    # registry owns predicate syntax; the verification module owns admission
+    # and evaluation.
+    from ...domain.calculations.registry.schema_verification import VerificationPredicateOperator
+    from .verification_predicates import evaluate_advisory_predicate_fires, required_advisory_predicate
 
     diagnostics: list[CalculationSourceDiagnostic] = []
     for predicate in revision.verification_predicates:
         if predicate.finding_kind != "ADVISORY":
             continue
-        parsed = parse_verification_predicate_expression(predicate.expression)
-        if parsed is None or parsed.operator is not VerificationPredicateOperator.IMPLIES_ANY_NONZERO:
+        # Admission refuses a malformed ADVISORY predicate exactly as the verify
+        # gate does; skipping it would let a broken predicate pass for one that
+        # names another operator.
+        parsed = required_advisory_predicate(predicate.expression)
+        if parsed.operator is not VerificationPredicateOperator.IMPLIES_ANY_NONZERO:
             continue
         ids = parsed.casilla_ids
-        if len(ids) < 2:
-            continue
         # The fire condition is the verification side's, called rather than
         # restated: this collector and the verify gate must answer identically
         # for the same casilla values, and a second copy of the antecedent /

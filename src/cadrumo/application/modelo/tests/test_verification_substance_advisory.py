@@ -152,16 +152,22 @@ def test_art109_profile_advisory_ignores_high_retention_amount_ratio_when_profil
     ),
 )
 def test_advisory_when_ratio_ge_refuses_a_non_finite_threshold(threshold: str, hazard: str) -> None:
-    """A non-finite threshold must not fire and must not escape as an exception.
+    """A non-finite threshold is an unreadable registry literal, refused before any comparison.
 
-    Registry build refuses these, so a validated registry cannot reach here with
-    one; this is the defence in depth for anything that bypasses that gate. The
-    ``NaN`` case is the one that used to escape: the evaluator's ``try`` wrapped
-    only the ``Decimal`` construction, which does NOT raise for ``NaN``, while
-    the comparison that does raise sat outside it. Not firing is the honest
-    reading of a threshold that cannot be evaluated.
+    ``Decimal`` builds each of these without raising, and each would corrupt the
+    comparison in its own way, so admission refuses them as typed
+    :class:`ModeloError` refusals on every call rather than leaving the
+    advisory silent or letting ``InvalidOperation`` escape.
     """
     values = _casilla_values((_CASILLA_00501, "10500"), (_M200_BIN_GENERATED_CASILLA, "15000"))
     expression = f'advisory_when_ratio_ge(["DP200012:00501", "DP200014:00552", "{threshold}"])'
 
-    assert evaluate_advisory_predicate_fires(expression, values) is False, hazard
+    for _ in range(3):
+        with pytest.raises(ModeloError) as raised:
+            evaluate_advisory_predicate_fires(expression, values)
+        assert raised.value.context == {
+            "predicate_expression_recognised": False,
+            "predicate_operator": "advisory_when_ratio_ge",
+            "predicate_refusal": "literal",
+            "predicate_route": "advisory",
+        }, hazard

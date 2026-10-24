@@ -26,6 +26,7 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..action_errors import WorkUnitRevisionDivergenceError
 from ..verification_predicates import evaluate_advisory_predicate_fires
@@ -64,7 +65,7 @@ def _work_unit() -> WorkUnit:
 
 
 class TestAdvisoryPredicateDecimalNarrowing:
-    """evaluate_advisory_predicate_fires only catches InvalidOperation on threshold parse."""
+    """evaluate_advisory_predicate_fires reads a registry threshold or refuses it as a typed error."""
 
     _VALID_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "0.5"])'
     _INVALID_THR_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "notadecimal"])'
@@ -72,12 +73,6 @@ class TestAdvisoryPredicateDecimalNarrowing:
     @pytest.mark.parametrize(
         ("expression", "values", "expected"),
         (
-            pytest.param(
-                _INVALID_THR_EXPR,
-                {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")},
-                False,
-                id="invalid-threshold",
-            ),
             pytest.param(
                 _VALID_EXPR,
                 {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")},
@@ -100,6 +95,18 @@ class TestAdvisoryPredicateDecimalNarrowing:
     ) -> None:
         result = evaluate_advisory_predicate_fires(expression, values)
         assert result is expected, expression
+
+    def test_a_non_numeric_threshold_is_refused_not_read_as_silent(self) -> None:
+        values = {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")}
+        for _ in range(3):
+            with pytest.raises(ModeloError) as raised:
+                evaluate_advisory_predicate_fires(self._INVALID_THR_EXPR, values)
+            assert raised.value.context == {
+                "predicate_expression_recognised": False,
+                "predicate_operator": "advisory_when_ratio_ge",
+                "predicate_refusal": "literal",
+                "predicate_route": "advisory",
+            }
 
 
 class TestResultSummaryNarrowing:

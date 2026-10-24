@@ -119,12 +119,44 @@ def test_memoised_parse_value_cannot_be_mutated() -> None:
         'profile_field_required("only_field")',
     ],
 )
-def test_malformed_expression_refuses_on_every_parse(malformed: str) -> None:
-    """Memoisation keeps the unknown-or-malformed refusal on every call."""
+def test_malformed_expression_refuses_on_every_parse_and_never_enters_the_memo(
+    malformed: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A malformed text is re-parsed and refused on every call, and the memo holds none of it."""
     _parse_verification_predicate_expression_memo.cache_clear()
+    parse_verification_predicate_expression('all_nonzero(["01", "02"])')
+    size_before = _parse_verification_predicate_expression_memo.cache_info().currsize
+    grammar_calls: list[str] = []
+    real_operator_name = schema_verification.verification_predicate_operator_name
+
+    def counting_operator_name(text: str) -> str | None:
+        grammar_calls.append(text)
+        return real_operator_name(text)
+
+    monkeypatch.setattr(schema_verification, "verification_predicate_operator_name", counting_operator_name)
+
     assert parse_verification_predicate_expression(malformed) is None
     assert parse_verification_predicate_expression(malformed) is None
     assert parse_verification_predicate_expression(malformed) is None
+
+    assert grammar_calls == [malformed, malformed, malformed]
+    assert _parse_verification_predicate_expression_memo.cache_info().currsize == size_before
+
+
+def test_memo_holds_only_successful_parses() -> None:
+    """Every memoised value is a parsed predicate; refusals leave no entry behind."""
+    _parse_verification_predicate_expression_memo.cache_clear()
+    valid = 'implies_nonzero(["01", "07"])'
+    parse_verification_predicate_expression('unknown_operator(["01", "02"])')
+    parse_verification_predicate_expression(valid)
+    parse_verification_predicate_expression('all_nonzero("01", "02")')
+    parse_verification_predicate_expression(valid)
+
+    info = _parse_verification_predicate_expression_memo.cache_info()
+    assert info.currsize == 1
+    assert info.hits == 1
+    assert isinstance(_parse_verification_predicate_expression_memo(valid), ParsedVerificationPredicate)
 
 
 def test_distinct_expression_text_is_parsed_independently() -> None:

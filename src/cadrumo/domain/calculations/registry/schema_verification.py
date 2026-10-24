@@ -1233,31 +1233,40 @@ def parse_verification_predicate_expression(expression: str) -> ParsedVerificati
     """Parse one runtime-supported verification-predicate DSL expression.
 
     ``None`` means the expression is unknown or malformed. Registry validation
-    turns that state into an authoring-time refusal; the runtime retains its
-    defensive fallback for anything that bypasses registry validation.
+    turns that state into an authoring-time refusal, and runtime evaluation
+    refuses it on every call rather than treating it as holding.
 
     The parse reads only ``expression`` and immutable module grammar, and the
     result is a frozen value of strings and tuples, so repeated verification
-    runs share one bounded memo per distinct expression text.
+    runs share one bounded memo per distinct well-formed expression text. A
+    malformed text leaves the memo as a raise, which :func:`functools.lru_cache`
+    never stores, so the memo holds successful parses only and each malformed
+    call is parsed and refused afresh.
     """
-    return _parse_verification_predicate_expression_memo(expression)
+    try:
+        return _parse_verification_predicate_expression_memo(expression)
+    except RegistryValidationError:
+        return None
 
 
 @lru_cache(maxsize=_PARSED_PREDICATE_CACHE_SIZE)
-def _parse_verification_predicate_expression_memo(expression: str) -> ParsedVerificationPredicate | None:
+def _parse_verification_predicate_expression_memo(expression: str) -> ParsedVerificationPredicate:
     operator_name = verification_predicate_operator_name(expression)
     if operator_name is None:
-        return None
+        raise RegistryValidationError("verification predicate expression names no operator")
     try:
         operator = VerificationPredicateOperator(operator_name)
     except ValueError:
-        return None
+        raise RegistryValidationError("verification predicate operator is not in the vocabulary") from None
     specification = VERIFICATION_PREDICATE_SPECIFICATIONS[operator]
     stripped = expression.strip()
     parser = _PREDICATE_EXPRESSION_PARSERS.get(specification.syntax)
     if parser is None:
         raise AssertionError(f"unsupported verification predicate syntax {specification.syntax!r}")
-    return parser(operator, stripped, specification.syntax)
+    parsed = parser(operator, stripped, specification.syntax)
+    if parsed is None:
+        raise RegistryValidationError("verification predicate expression does not match its operator grammar")
+    return parsed
 
 
 class VerificationPredicateDefinition(RegistryModel):

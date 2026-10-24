@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
 
 import pytest
@@ -376,15 +377,45 @@ def test_roll_forward_balances_tolerates_one_cent_but_not_euros() -> None:
     assert evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, beyond) is True
 
 
-def test_roll_forward_balances_bad_arity_holds_and_does_not_fire() -> None:
-    """A malformed arity reads as holding (BLOCKING) and never fires (ADVISORY)."""
+def _assert_predicate_refused(
+    evaluate: Callable[[], object],
+    *,
+    refusal: str,
+    operator: str | None,
+    route: str,
+) -> None:
+    """Assert that every one of three evaluations refuses with the same machine context."""
+    for _ in range(3):
+        with pytest.raises(ModeloError) as raised:
+            evaluate()
+        assert raised.value.context == {
+            "predicate_expression_recognised": False,
+            "predicate_operator": operator,
+            "predicate_refusal": refusal,
+            "predicate_route": route,
+        }
+
+
+def test_roll_forward_balances_bad_arity_refuses_on_both_routes() -> None:
+    """A malformed arity is a malformed registry predicate: it neither holds nor stays silent."""
     expr = 'roll_forward_balances(["00671", "00670", "DP200014:00547"])'
     values: dict[CasillaId, Decimal] = {
         _M200_BIN_CLOSING_CASILLA: Decimal("0"),
         _M200_BIN_OPEN_CASILLA: Decimal("9999"),
     }
-    assert evaluate_predicate_expression(expr, values, workflow_profile()) is True
-    assert evaluate_advisory_predicate_fires(expr, values) is False
+    profile = workflow_profile()
+    _assert_predicate_refused(
+        lambda: evaluate_predicate_expression(expr, values, profile),
+        refusal="arity",
+        operator="roll_forward_balances",
+        route="blocking",
+    )
+    _assert_predicate_refused(
+        lambda: evaluate_advisory_predicate_fires(expr, values),
+        refusal="arity",
+        operator="roll_forward_balances",
+        route="advisory",
+    )
 
 
 def test_roll_forward_balances_emits_advisory_finding_on_discontinuity() -> None:
@@ -427,22 +458,151 @@ def test_roll_forward_balances_emits_no_finding_when_continuous() -> None:
     assert evaluate_verification_predicates((predicate,), values, workflow_profile()) == []
 
 
-def test_unknown_expression_does_not_block() -> None:
-    """An unrecognised expression pattern does not produce a blocking finding."""
+def test_unknown_expression_refuses_on_both_routes() -> None:
+    """An expression outside the operator vocabulary is refused, never read as holding or silent."""
     values: dict[CasillaId, Decimal] = {}
-    # Passes through — unknown DSL extensions do not block existing registry data.
-    assert evaluate_predicate_expression('threshold(["01"], 100)', values, workflow_profile()) is True
+    profile = workflow_profile()
+    _assert_predicate_refused(
+        lambda: evaluate_predicate_expression('threshold(["01"], 100)', values, profile),
+        refusal="unparseable",
+        operator=None,
+        route="blocking",
+    )
+    _assert_predicate_refused(
+        lambda: evaluate_advisory_predicate_fires('threshold(["01"], 100)', values),
+        refusal="unparseable",
+        operator=None,
+        route="advisory",
+    )
 
 
-def test_repeated_evaluation_keeps_unknown_and_malformed_outcomes() -> None:
-    """Every evaluation repeats the unknown pass-through and the hostile-token refusal."""
+def test_known_operator_with_broken_syntax_refuses_naming_its_operator() -> None:
+    """A vocabulary operator whose arguments do not match its grammar is unparseable."""
+    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
+    _assert_predicate_refused(
+        lambda: evaluate_predicate_expression('all_nonzero("01", "02")', values, workflow_profile()),
+        refusal="unparseable",
+        operator="all_nonzero",
+        route="blocking",
+    )
+
+
+def test_repeated_evaluation_keeps_unknown_and_hostile_token_refusals() -> None:
+    """Every evaluation repeats the unknown-expression refusal and the hostile-token refusal."""
     values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
     profile = workflow_profile()
+    _assert_predicate_refused(
+        lambda: evaluate_predicate_expression('threshold(["01"], 100)', values, profile),
+        refusal="unparseable",
+        operator=None,
+        route="blocking",
+    )
+    for evaluate in (
+        lambda: evaluate_predicate_expression('all_nonzero(["01", "bad key"])', values, profile),
+        lambda: evaluate_advisory_predicate_fires('implies_nonzero(["01", "bad key"])', values),
+    ):
+        for _ in range(3):
+            with pytest.raises(ModeloError) as raised:
+                evaluate()
+            assert raised.value.context == {"casilla_id_token": "bad key", "casilla_id_canonical": False}
 
-    for _ in range(3):
-        assert evaluate_predicate_expression('threshold(["01"], 100)', values, profile) is True
-        with pytest.raises(ModeloError):
-            evaluate_predicate_expression('all_nonzero(["01", "bad key"])', values, profile)
+
+def test_an_operator_on_the_wrong_route_refuses() -> None:
+    """A blocking predicate must name a blocking operator, and an advisory one an advisory operator."""
+    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
+    _assert_predicate_refused(
+        lambda: evaluate_predicate_expression('advisory_when_positive(["01"])', values, workflow_profile()),
+        refusal="operator_family",
+        operator="advisory_when_positive",
+        route="blocking",
+    )
+    _assert_predicate_refused(
+        lambda: evaluate_advisory_predicate_fires('all_nonzero(["01"])', values),
+        refusal="operator_family",
+        operator="all_nonzero",
+        route="advisory",
+    )
+
+
+@pytest.mark.parametrize(
+    ("expression", "operator", "route"),
+    (
+        pytest.param(
+            'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "not-a-date"])',
+            "deduccion_requires_adquisicion_before",
+            "advisory",
+            id="cutoff",
+        ),
+        pytest.param(
+            'profile_flag_enabled("not_a_known_profile_flag")',
+            "profile_flag_enabled",
+            "advisory",
+            id="profile-flag-field",
+        ),
+        pytest.param(
+            'casilla_equals_implies_nonzero(["01", "", "07"])',
+            "casilla_equals_implies_nonzero",
+            "advisory",
+            id="empty-literal-advisory",
+        ),
+        pytest.param(
+            'casilla_equals_implies_zero(["01", "", "07"])',
+            "casilla_equals_implies_zero",
+            "blocking",
+            id="empty-literal-blocking",
+        ),
+    ),
+)
+def test_an_unreadable_registry_literal_refuses(expression: str, operator: str, route: str) -> None:
+    """A registry-authored cutoff, flag field or comparison literal that cannot be read is refused."""
+    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
+    profile = workflow_profile()
+    if route == "blocking":
+        _assert_predicate_refused(
+            lambda: evaluate_predicate_expression(expression, values, profile),
+            refusal="literal",
+            operator=operator,
+            route=route,
+        )
+    else:
+        _assert_predicate_refused(
+            lambda: evaluate_advisory_predicate_fires(expression, values, {}, profile),
+            refusal="literal",
+            operator=operator,
+            route=route,
+        )
+
+
+def test_each_verification_route_refuses_its_own_malformed_predicate() -> None:
+    """Registry-order evaluation refuses a malformed ADVISORY and a malformed BLOCKING_RULE predicate alike."""
+    values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
+    profile = workflow_profile()
+    advisory = VerificationPredicateDefinition(
+        id="all-nonzero:advisory-on-a-blocking-operator",
+        predicate_id="modelo-100-advisory-on-a-blocking-operator",
+        legal_refs=("ley-35-2006:art-96",),
+        expression='all_nonzero(["01"])',
+        finding_kind="ADVISORY",
+    )
+    blocking = VerificationPredicateDefinition(
+        id="advisory-when-positive:blocking-on-an-advisory-operator",
+        predicate_id="modelo-100-blocking-on-an-advisory-operator",
+        legal_refs=("ley-35-2006:art-96",),
+        expression='advisory_when_positive(["01"])',
+        finding_kind="BLOCKING_RULE",
+    )
+    _assert_predicate_refused(
+        lambda: evaluate_verification_predicates((advisory,), values, profile),
+        refusal="operator_family",
+        operator="all_nonzero",
+        route="advisory",
+    )
+    _assert_predicate_refused(
+        lambda: evaluate_verification_predicates((blocking,), values, profile),
+        refusal="operator_family",
+        operator="advisory_when_positive",
+        route="blocking",
+    )
 
 
 def test_repeated_evaluation_reuses_the_parse_and_keeps_its_verdicts(
@@ -552,12 +712,23 @@ def test_casilla_equals_implies_nonzero_defaults_text_values_to_empty() -> None:
     assert evaluate_advisory_predicate_fires(_CASILLA_EQUALS_IMPLIES_NONZERO, values) is False
 
 
-def test_casilla_equals_implies_nonzero_bad_arity_does_not_fire() -> None:
-    """A malformed arity reads as holding and never fires (ADVISORY-only, defensive default)."""
-    expr = 'casilla_equals_implies_nonzero(["01", "07"])'  # two tokens; needs three
+def test_casilla_equals_implies_nonzero_bad_arity_refuses_on_both_routes() -> None:
+    """Two tokens where three are required is a malformed predicate on either route."""
+    expr = 'casilla_equals_implies_nonzero(["01", "07"])'
     values: dict[CasillaId, Decimal] = {_CASILLA_07: Decimal("0")}
     text_values = {_CASILLA_01: "literal-value"}
-    assert evaluate_advisory_predicate_fires(expr, values, text_values) is False
+    _assert_predicate_refused(
+        lambda: evaluate_advisory_predicate_fires(expr, values, text_values),
+        refusal="arity",
+        operator="casilla_equals_implies_nonzero",
+        route="advisory",
+    )
+    _assert_predicate_refused(
+        lambda: evaluate_predicate_expression(expr, values, workflow_profile(), text_values),
+        refusal="arity",
+        operator="casilla_equals_implies_nonzero",
+        route="blocking",
+    )
 
 
 def test_casilla_equals_implies_nonzero_blocking_branch_uses_exact_text() -> None:
