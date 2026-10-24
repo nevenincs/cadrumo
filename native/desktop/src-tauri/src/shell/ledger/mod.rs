@@ -38,8 +38,10 @@ use tokio::sync::broadcast::Receiver;
 /// host refuses one well before it: number spellings can differ between the
 /// two JSON encoders by a character or two.
 const PAYLOAD_HEADROOM: usize = 256;
-/// The longest payload, in characters of compact JSON, the host sends.
-pub(crate) const PAYLOAD_LIMIT: usize = 12_288 - PAYLOAD_HEADROOM;
+/// The longest payload, in characters of compact JSON, the host sends: the
+/// native relay's own bound, less the headroom.
+pub(crate) const PAYLOAD_LIMIT: usize =
+    cadrumo_application::person_operations::MAX_PAYLOAD_TEXT - PAYLOAD_HEADROOM;
 /// How many submitted operations the window may still follow.
 const TRACKED_LIMIT: usize = 64;
 

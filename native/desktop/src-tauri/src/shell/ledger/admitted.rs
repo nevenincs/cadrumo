@@ -200,14 +200,5 @@ mod tests {
             Some(crate::agent::person::REQUEST_LIMIT as u64 + 1),
             "the line limit counts its newline"
         );
-        let relay_payload = relay["payload_text_limit"].as_u64().unwrap();
-        assert!(
-            (super::super::PAYLOAD_LIMIT as u64) < relay_payload,
-            "the host bound keeps room below the relay's"
-        );
-        assert_eq!(
-            super::super::PAYLOAD_LIMIT as u64 + super::super::PAYLOAD_HEADROOM as u64,
-            relay_payload
-        );
     }
 }
