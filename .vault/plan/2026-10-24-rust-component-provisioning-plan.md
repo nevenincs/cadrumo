@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:f3f29489a3a00f7564d3631f608975174d09ea683c4d3012946ca1a6f670c4db'
+body_hash: 'sha256:5e3416eda73e5464fd5ae782996390e765be9da5a56472ba6589b036cb87fb1e'
 ---
 
 # `rust-component-provisioning` plan
@@ -63,6 +63,7 @@ The engine installs a pinned portable Ollama, runs it as its own child, pulls an
 - [x] `P03.S07` - Install the pinned portable Ollama archive into components/ollama/<version>, start and stop it as the engine's child with the existing models root and home, and detect but never modify a system install; `native/application/src/provisioning/local_ai/program.rs, native/application/Cargo.toml (archive crates through cargo-deny), native/deny.toml and tests`.
 - [x] `P03.S08` - Pull each role's model through the started server with byte progress, compare its manifest digest with the pin for stale, run the one-token generation check, and decide the hardware floor from memory and NVIDIA VRAM; `native/application/src/provisioning/local_ai/models.rs, native/application/src/provisioning/local_ai/hardware.rs and tests against a local fake pull server`.
 - [x] `P03.S09` - Make the Python readers locate the program, the server's fixed address and the models from the Rust component record, refuse with the local AI setup verdict when no manager runs the server, and move role fitness to consumer admission outside component state; `src/cadrumo/application/local_reader.py, src/cadrumo/application/provisioning_host.py (locate only), src/cadrumo/application/provisioning_fitness.py, src/cadrumo/adapters/outbound/llm/providers/local.py and tests`.
+- [ ] `P03.S20` - Measure each role's model fitness at its first use as consumer admission, once per installed model digest, and record the verdict, so an unmeasured model is measured before it reads and an unfit one refuses with no setup action; `src/cadrumo/application/local_reader.py, src/cadrumo/application/provisioning_fitness.py, src/cadrumo/adapters/outbound/llm/role_fitness.py and tests`.
 
 ### Phase `P04` - Role and surfaces
 
@@ -74,6 +75,7 @@ The single binary gains the components role; the desktop calls the engine in pro
 - [ ] `P04.S13` - Make the TUI setup screen and the MCP service clients of the same role, with MCP approval bound to the plan digest and progress relayed as notifications; `src/cadrumo/entrypoints/tui/setup/, src/cadrumo_mcp/ and tests`.
 - [x] `P04.S17` - Have the runtime manager supervise the engine's local AI server on one fixed Cadrumo loopback address declared in the canonical environment definition: start it while the local AI is set up, restart it after a crash, stop it on exit, at session end and before the engine replaces or removes the program, contain it, and record the address in the local AI component record; `native/manager/src/supervision/, native/application/src/provisioning/local_ai/, native/application-environment.toml, src/cadrumo/core/config_runtime_fields.py (default derived from the declaration) and tests`.
 - [ ] `P04.S19` - Let the components role adopt browser builds already installed without downloading, then point the Python launch guard at the Rust component record, with test support writing the engine's fixture record into each test storage root; `native/application/src/provisioning/browser.rs, src/cadrumo/application/provisioning_browser.py (locate only), src/cadrumo/adapters/outbound/aeat/browser/session.py, the real-browser test support and conftest, and tests`.
+- [ ] `P04.S21` - Contain the manager's local AI server on Linux and macOS as the Windows job does, so a crashed or killed manager leaves no server behind; `native/manager/src/supervision/local_ai.rs, native/platform process scope and tests`.
 
 ### Phase `P05` - Removal and gates
 
