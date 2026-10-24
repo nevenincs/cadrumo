@@ -459,10 +459,21 @@ def probe_local_reader(
         A :class:`DependencyStatus` on the ``local-reader:<role>`` row. Never raises.
     """
     resolved = settings if settings is not None else load_settings()
-    service = local_reader_service(role)
     if model is None:
         model = configured_role_model(role, resolved)
     inventory = installed if installed is not None else read_installed_models(resolved)
+    return _reader_status_from_inventory(role, resolved, model=model, inventory=inventory)
+
+
+def _reader_status_from_inventory(
+    role: ModelRole,
+    resolved: Settings,
+    *,
+    model: str | None,
+    inventory: tuple[InstalledModel, ...] | None,
+) -> DependencyStatus:
+    """Judge ``role``'s reader against an inventory already read; ``None`` means the runtime did not answer."""
+    service = local_reader_service(role)
     if inventory is None:
         facts: dict[str, ProvisioningFactValue] = {
             "role": role.value,
@@ -526,6 +537,10 @@ class LocalReaderRoleStatus(BaseModel):
     fit_for_role: bool | None = None
     ready: bool
     failed_condition_id: str | None = None
+    #: The operator action the reader probe named for the failed condition, or
+    #: ``None`` when it named none -- a role this computer cannot run, a fitness
+    #: verdict, or a ready role.
+    recovery_action_id: str | None = None
 
 
 class LocalReaderStatus(BaseModel):
@@ -579,6 +594,7 @@ class _RoleRuntimeStatus:
     load_admitted: bool | None
     contention_causes: tuple[ContentionCause, ...]
     failed_condition_id: str | None
+    recovery_action_id: str | None
     ready: bool
 
 
@@ -628,8 +644,11 @@ def _role_runtime_status(
     residents: tuple[RuntimeResident, ...] | None,
     assess_load: bool,
 ) -> _RoleRuntimeStatus:
-    probe = probe_local_reader(role, settings, installed=inventory) if inventory is not None else None
     model = configured_role_model(role, settings)
+    # Judged by the probe's own verdicts even when the runtime did not answer,
+    # so the row names the same setup action a refused read would.
+    probe = _reader_status_from_inventory(role, settings, model=model, inventory=inventory)
+    verdict = probe.precondition_verdict
     installed = None if model is None else _present(model, None if inventory is None else _names(inventory))
     resident = None if model is None else _present(model, None if residents is None else _names(residents))
     admitted, causes = _role_load_admission(
@@ -641,20 +660,15 @@ def _role_runtime_status(
         residents=residents,
         assess_load=assess_load,
     )
-    if probe is not None and probe.precondition_verdict is not None:
-        failed = probe.precondition_verdict.failed_condition_id
-    elif probe is None:
-        failed = ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
-    else:
-        failed = None
     return _RoleRuntimeStatus(
         model=model,
         installed=installed,
         resident=resident,
         load_admitted=admitted,
         contention_causes=causes,
-        failed_condition_id=failed,
-        ready=probe is not None and probe.available,
+        failed_condition_id=None if verdict is None else verdict.failed_condition_id,
+        recovery_action_id=None if verdict is None or verdict.action is None else verdict.action.action_id,
+        ready=probe.available,
     )
 
 
@@ -721,6 +735,8 @@ def _role_status(
         fit_for_role=fit,
         ready=ready,
         failed_condition_id=failure,
+        # Fitness is judged only for a ready role, whose probe named no action.
+        recovery_action_id=runtime.recovery_action_id,
     )
 
 

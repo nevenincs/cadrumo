@@ -247,6 +247,9 @@ def build_ledger_evidence_extract_definition(
         executor_type=LedgerEvidenceExtractExecutor,
         build=lambda: LedgerEvidenceExtractExecutor(ports_factory),
         capabilities=invoice_evidence_operation_capabilities(mutates=False, off_host_optional=True),
+        # A reader refusal's verdict names the setup that lets the read run; a
+        # frontend in another process learns it only from the recorded detail.
+        public_error_detail=True,
     )
 
 

@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
@@ -101,7 +102,13 @@ class ReaderHostProjectionV1(BaseModel):
 
 
 class ReaderRoleProjectionV1(BaseModel):
-    """One locally measured model role and its recorded fitness."""
+    """One locally measured model role and its recorded fitness.
+
+    ``recovery_action_id`` is the operator action the reader probe named for
+    ``failed_condition_id`` -- the local AI setup when the runtime does not
+    answer or the role's model is not installed -- and is absent when it named
+    none, as for a role this computer cannot run.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     role: Annotated[str, Field(min_length=1, max_length=128)]
@@ -114,6 +121,7 @@ class ReaderRoleProjectionV1(BaseModel):
     fit_for_role: bool | None = None
     ready: bool
     failed_condition_id: InvoiceEvidenceLabel | None = None
+    recovery_action_id: NamespacedId | None = None
 
 
 class ReaderPullProjectionV1(BaseModel):
@@ -141,7 +149,7 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
 
     @classmethod
     def from_status(cls, profile_id: UUID, status: LocalReaderStatus) -> Self:
-        """Copy measured host and role facts without a provisioning action."""
+        """Copy measured host and role facts, and the setup action a role's probe named."""
         host = status.host
         last_pull = status.last_pull
         version = _reported_version(host.version)
@@ -173,6 +181,7 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
                     fit_for_role=row.fit_for_role,
                     ready=row.ready,
                     failed_condition_id=row.failed_condition_id,
+                    recovery_action_id=row.recovery_action_id,
                 )
                 for row in status.roles
             ),

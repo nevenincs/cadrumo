@@ -372,6 +372,23 @@ def _refuse_a_text_read_with_no_reader(
     )
 
 
+def _refuse_with_reader_verdict(verdict: PreconditionVerdict, *, cause: Exception) -> NoReturn:
+    """Refuse with the reader probe's verdict, carried by exactly one refusal.
+
+    The pre-check already refuses with that verdict and hands the refusal up as
+    the unavailable reader's cause. It is re-raised unchanged rather than
+    wrapped in a second refusal: an operation's error detail keeps a verdict
+    only when one registered error in the chain carries it, so two carriers of
+    the same verdict would settle with none, and no surface could offer setup.
+    """
+    if isinstance(cause, PurchaseInvoiceEvidenceReaderError) and cause.terminal_precondition_verdict == verdict:
+        raise cause
+    raise PurchaseInvoiceEvidenceReaderError(
+        translated_message=evidence_reader_refusal_key(verdict),
+        precondition_verdict=verdict,
+    ) from cause
+
+
 def _refuse_with_unavailable_reader(
     exc: Exception,
     *,
@@ -380,10 +397,7 @@ def _refuse_with_unavailable_reader(
 ) -> NoReturn:
     """Preserve a reader refusal as typed facts, without presentation prose."""
     if precondition_verdict is not None:
-        raise PurchaseInvoiceEvidenceReaderError(
-            translated_message=evidence_reader_refusal_key(precondition_verdict),
-            precondition_verdict=precondition_verdict,
-        ) from exc
+        _refuse_with_reader_verdict(precondition_verdict, cause=exc)
     if isinstance(exc, MissingOptionalExtraError):
         facts: dict[str, str | bool] = {
             "extra": exc.extra.extra,
@@ -943,10 +957,7 @@ def _extract_invoice_fields_via_vision(
         if verdict is None:
             verdict = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, settings).precondition_verdict
         if verdict is not None:
-            raise PurchaseInvoiceEvidenceReaderError(
-                translated_message=evidence_reader_refusal_key(verdict),
-                precondition_verdict=verdict,
-            ) from cause
+            _refuse_with_reader_verdict(verdict, cause=cause)
         facts: dict[str, str | bool] = {
             "vision_reader_available": False,
             "vision_reader_probe_available": True,

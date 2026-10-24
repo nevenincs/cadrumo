@@ -131,18 +131,23 @@ def test_native_structured_extract_confirm_readback_and_stale_digest_refusal(tmp
         refusal_context = refusal_error["context"]
         assert refusal_error["code"] == "REFUSED_LLM_CONSENT", refusal_error
         assert refusal_error["category"] == "REFUSED"
+        # The operation records its refusal's detail, so the consent gate's own
+        # reason reaches the command line rather than a generic refusal.
         assert set(refusal_context) == {
-            "reason",
-            "refusal_code",
+            "acknowledged",
+            "deployment_permitted",
+            "gestor_mode",
+            "profile_eligible",
             "effect",
             "operation_id",
             "terminal_condition",
         }, refusal_error
-        assert refusal_context["reason"] == refusal_context["refusal_code"] == "REFUSED_LLM_CONSENT"
+        assert refusal_context["acknowledged"] == "true"
+        assert refusal_context["deployment_permitted"] == "false"
         assert refusal_context["effect"] == "none"
         assert refusal_context["terminal_condition"] == "refused"
         assert isinstance(refusal_context["operation_id"], str) and len(refusal_context["operation_id"]) == 64
-        assert refusal_error["action"]["failed_condition_id"] == "cli.refusal.completed"
+        assert refusal_error["action"]["failed_condition_id"] == "llm.evidence.off_host_dispatch_permitted"
         assert refusal_error["action"]["no_recovery_outcome"] == "operator_decision"
         assert any(
             item.stage == "profile_operation_returned" and item.definition_id == "ledger.evidence.extract"
