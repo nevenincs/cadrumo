@@ -909,6 +909,7 @@ desktop:
         needs_classification: 'Sense classificació: {count}'
         not_active: 'No actius, i només canvien els actius: {count}'
         sealed: 'Segellats per una declaració finalitzada: {count}'
+        sealed_unread: 'Segellat sense llegir: {count}'
         share_needs_mixed: 'Amb part però no Mixt: {count}'
         suggestion_and_edits: 'Aprovació del model i edicions alhora: {count}'
         suggestion_and_rules: 'Aprovació del model i una aplicació de regles que els
@@ -1218,6 +1219,9 @@ desktop:
       nothing: Selecciona moviments primer
       partial: només les files carregades
       range_differs: 'Seleccionats: {selected} · rang: {range}'
+      ratio_missing: 'Sense ràtio d''ús per a aquesta categoria: {count}'
+      ratio_staged: 'Ràtio d''ús: {count}'
+      ratio_unread: Ràtios d'ús sense llegir
       search_category: Cerca a les categories
       select_range: Selecciona el rang
       share: Part empresarial
@@ -2323,6 +2327,7 @@ desktop:
         not_active: no actius
         personal: Personals
         sealed: segellats
+        sealed_unread: segellat sense llegir
         transfer: transferències
         unclassified: sense classificar
       source_jurisdiction: Jurisdicció d'origen
@@ -2789,6 +2794,7 @@ desktop:
       found_undetermined: '{movement}: la lectura no ho aclareix; continua preparat
         i desar-lo de nou és el mateix desament'
       read_again: '{movement}: llegit de nou, comprova el que hi ha desat'
+      repeatable: '{movement}: potser s''ha fet; repetir-ho fa el mateix'
       reread: Torna a llegir
       saved_unread: 'Desat, resposta sense llegir: escriptures en pausa'
       saved_unread_reason: 'Torna a llegir primer: no es va llegir la resposta d''un
@@ -2796,6 +2802,7 @@ desktop:
       staged: Canvis preparats
       title: 'Resultat desconegut: escriptures en pausa'
       unsaved: '{movement} no es va desar'
+      untold: '{movement}: no se sap si s''ha desat; continua en pausa'
     period:
       all: Tots els períodes
       choose: Tria un període

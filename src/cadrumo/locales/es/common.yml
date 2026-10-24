@@ -916,6 +916,7 @@ desktop:
         needs_classification: 'Sin clasificación: {count}'
         not_active: 'No activos, y solo cambian los activos: {count}'
         sealed: 'Sellados por una declaración finalizada: {count}'
+        sealed_unread: 'Sellado sin leer: {count}'
         share_needs_mixed: 'Con parte pero no Mixto: {count}'
         suggestion_and_edits: 'Aprobación del modelo y ediciones a la vez: {count}'
         suggestion_and_rules: 'Aprobación del modelo y una aplicación de reglas que
@@ -1223,6 +1224,9 @@ desktop:
       nothing: Selecciona movimientos primero
       partial: solo las filas cargadas
       range_differs: 'Seleccionados: {selected} · rango: {range}'
+      ratio_missing: 'Sin ratio de uso para esta categoría: {count}'
+      ratio_staged: 'Ratio de uso: {count}'
+      ratio_unread: Ratios de uso sin leer
       search_category: Busca en las categorías
       select_range: Selecciona el rango
       share: Parte empresarial
@@ -2330,6 +2334,7 @@ desktop:
         not_active: no activos
         personal: Personales
         sealed: sellados
+        sealed_unread: sellado sin leer
         transfer: transferencias
         unclassified: sin clasificar
       source_jurisdiction: Jurisdicción de origen
@@ -2795,12 +2800,14 @@ desktop:
       found_undetermined: '{movement}: la lectura no lo aclara; sigue preparado y
         guardarlo de nuevo es el mismo guardado'
       read_again: '{movement}: leído de nuevo, comprueba lo guardado'
+      repeatable: '{movement}: puede que se hiciera; repetirlo hace lo mismo'
       reread: Volver a leer
       saved_unread: 'Guardado, respuesta sin leer: escrituras en pausa'
       saved_unread_reason: 'Vuelve a leer primero: no se leyó la respuesta de un guardado'
       staged: Cambios preparados
       title: 'Resultado desconocido: escrituras en pausa'
       unsaved: '{movement} no se guardó'
+      untold: '{movement}: no se sabe si se guardó; sigue en pausa'
     period:
       all: Todos los periodos
       choose: Elige un periodo

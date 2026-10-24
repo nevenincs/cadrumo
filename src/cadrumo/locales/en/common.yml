@@ -881,6 +881,7 @@ desktop:
         needs_classification: 'Classification missing: {count}'
         not_active: 'Not active, and only active movements change: {count}'
         sealed: 'Sealed by a finalised declaration: {count}'
+        sealed_unread: 'Sealed state not read: {count}'
         share_needs_mixed: 'A share but not Mixed: {count}'
         suggestion_and_edits: 'A model approval and edits together: {count}'
         suggestion_and_rules: 'A model approval and a rules apply that names them:
@@ -1187,6 +1188,9 @@ desktop:
       nothing: Select movements first
       partial: loaded rows only
       range_differs: 'Selected: {selected} · range: {range}'
+      ratio_missing: 'No usage ratio for this category: {count}'
+      ratio_staged: 'Usage ratio: {count}'
+      ratio_unread: Usage ratios not read
       search_category: Search the categories
       select_range: Select range
       share: Business share
@@ -2290,6 +2294,7 @@ desktop:
         not_active: not active
         personal: Personal
         sealed: sealed
+        sealed_unread: sealed state not read
         transfer: transfers
         unclassified: not classified yet
       source_jurisdiction: Source jurisdiction
@@ -2753,12 +2758,14 @@ desktop:
       found_undetermined: '{movement}: the read can''t tell; it stays staged, saving
         it again is the same save'
       read_again: '{movement}: read again, check what is stored'
+      repeatable: '{movement}: may have run; running it again does the same'
       reread: Re-read
       saved_unread: 'Saved, answer not read: writes paused'
       saved_unread_reason: 'Re-read first: a save''s answer was not read'
       staged: Staged changes
       title: 'Outcome unknown: writes paused'
       unsaved: '{movement} was not saved'
+      untold: '{movement}: can''t tell if it saved; still paused'
     period:
       all: All periods
       choose: Choose a period

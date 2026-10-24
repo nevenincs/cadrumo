@@ -897,6 +897,7 @@ desktop:
         needs_classification: 'Besorolás hiányzik: {count}'
         not_active: 'Nem aktív, csak aktív tétel módosítható: {count}'
         sealed: 'Véglegesített bevallás miatt lezárva: {count}'
+        sealed_unread: 'Lezárás nincs beolvasva: {count}'
         share_needs_mixed: 'Arány, de nem Vegyes: {count}'
         suggestion_and_edits: 'Modell-jóváhagyás és szerkesztés együtt: {count}'
         suggestion_and_rules: 'Modell-jóváhagyás és rájuk is kiterjedő szabályalkalmazás:
@@ -1201,6 +1202,9 @@ desktop:
       nothing: Előbb jelölj ki tételeket
       partial: csak a betöltött sorok
       range_differs: 'Kijelölve: {selected} · tartomány: {range}'
+      ratio_missing: 'Nincs használati arány ehhez a kategóriához: {count}'
+      ratio_staged: 'Használati arány: {count}'
+      ratio_unread: A használati arányok nincsenek beolvasva
       search_category: Keress a kategóriák között
       select_range: Tartomány kijelölése
       share: Üzleti rész
@@ -2309,6 +2313,7 @@ desktop:
         not_active: nem aktív
         personal: magán
         sealed: lezárt
+        sealed_unread: lezárás nincs beolvasva
         transfer: átvezetés
         unclassified: még nincs besorolva
       source_jurisdiction: Forrás szerinti joghatóság
@@ -2773,12 +2778,14 @@ desktop:
       found_undetermined: '{movement}: az olvasásból nem derül ki; előkészítve marad,
         az újramentés ugyanaz a mentés'
       read_again: '{movement}: újra beolvasva, ellenőrizd, mi van mentve'
+      repeatable: '{movement}: lehet, hogy lefutott; az ismétlés ugyanazt teszi'
       reread: Újraolvasás
       saved_unread: 'Mentve, a válasz nem olvasható: írás szüneteltetve'
       saved_unread_reason: 'Előbb olvasd be újra: egy mentés válasza nem olvasható'
       staged: Előkészített változások
       title: 'Ismeretlen eredmény: írás szüneteltetve'
       unsaved: '{movement} nem lett mentve'
+      untold: '{movement}: nem tudni, mentve lett-e; a szünet marad'
     period:
       all: Minden időszak
       choose: Válassz időszakot
