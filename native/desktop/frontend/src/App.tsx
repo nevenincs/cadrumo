@@ -1791,15 +1791,19 @@ export function App({ host }: { host: Host }) {
               setPage("ledger");
             },
           },
+          // Every Ledger section the window draws, as the register lists
+          // them, wears the Ledger's icon.
           ...Object.fromEntries(
-            [
-              "ledger/movements",
-              "ledger/invoices",
-              "ledger/documents",
-              "ledger/rules",
-              "ledger/registers",
-              "ledger/health",
-            ].map((id) => [id, { icon: "ledger", group: "views" } as const]),
+            NAVIGATION.elements
+              .filter(
+                (element) =>
+                  element.parent === "ledger" &&
+                  element.surfaces.includes("gui"),
+              )
+              .map((element) => [
+                element.id,
+                { icon: "ledger", group: "views" } as const,
+              ]),
           ),
           declarations: {
             id: "view.declarations",

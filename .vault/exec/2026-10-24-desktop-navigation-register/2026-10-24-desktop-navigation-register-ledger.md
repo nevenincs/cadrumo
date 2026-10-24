@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:3c769218249ea8f985e90fa3d50dea65ac55b08d2da6663df18bc92dec9a52d8'
+body_hash: 'sha256:3d84bac644b905924d1bb30b0c06ee526a66ebdf874310610457b0f95ff1740b'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
@@ -237,6 +237,9 @@ related:
 - `S08` `M` `src/cadrumo_mcp/mcp/view_register.py`
 - `S08` `M` `src/cadrumo_mcp/mcp/tests/test_views_tool.py`
 - `S08` `verify:` `pytest src/cadrumo_mcp/mcp/tests` -> `pass`
+- `S12` `verify:` `tsc --noEmit` -> `pass`
+- `S12` `verify:` `eslint+prettier App.tsx` -> `pass`
+- `S12` `verify:` `playwright scenarios palette keyboard navigation-register agent-page-links` -> `pass`
 
 ## Notes
 
@@ -255,3 +258,4 @@ related:
 - `S06` review fix: retired-append-only (shipped-id baseline gate with defect fixtures)
 - `S06` review fix: suppression (nosemgrep removed; project runner already excludes the importlib compatibility rule)
 - `S08` review fix: dead-reference (views link check reports opens via `resolve_view)`
+- `S12` review fix: register-duplication (palette icons); the presentation.rs projection-test hunk is held as a patch until the host unit test can run
