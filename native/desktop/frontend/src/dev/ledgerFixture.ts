@@ -168,6 +168,10 @@ const text = (value: JsonValue | undefined) =>
 const AMOUNT = /^\d{1,12}(\.\d{1,2})?$/;
 const FRACTION = /^(0(\.\d{1,4})?|1(\.0{1,4})?)$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+// Single update and classify refuse a decimal that is not in its shortest
+// spelling ("40.00", "0.50"), as their request models do; add and the bulk
+// re-render what they read.
+const shortest = (value: string) => !/\.(\d*0)?$/.test(value);
 
 function reviewStatus(classification: string): LedgerReviewStatus {
   if (classification === "NOT_YET_PROCESSED") return "pending";
@@ -589,7 +593,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     for (const field of fields as LedgerUpdateField[]) {
       const value = text(values[field]);
       if (field === "amount") {
-        if (!value || !AMOUNT.test(value))
+        if (!value || !AMOUNT.test(value) || !shortest(value))
           return refused("The amount is not a canonical decimal.");
         next.amount = money(cents(value));
       } else if (field === "booked_date" || field === "value_date") {
@@ -697,7 +701,8 @@ export function ledgerFixture(options: Options): LedgerPort {
   const checkDecision = (classification: string | null, pct: string | null) => {
     if (!classification || !DECIDED.includes(classification)) return invalid();
     if ((classification === "MIXED") !== (pct !== null)) return invalid();
-    if (pct !== null && !FRACTION.test(pct)) return invalid();
+    if (pct !== null && (!FRACTION.test(pct) || !shortest(pct)))
+      return invalid();
   };
 
   function classify(request: JsonObject): JsonObject {
@@ -713,7 +718,8 @@ export function ledgerFixture(options: Options): LedgerPort {
     const pct = text(patch.business_pct);
     checkDecision(classification, pct);
     const rate = text(patch.iva_rate);
-    if (rate !== null && !FRACTION.test(rate)) return invalid();
+    if (rate !== null && (!FRACTION.test(rate) || !shortest(rate)))
+      return invalid();
     const movement = resolve(ledger, request.transaction_id);
     if (movement.sealed || movement.transaction.lifecycle_state !== "ACTIVE")
       return {
