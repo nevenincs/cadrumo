@@ -567,3 +567,21 @@ test("Export for another period checks that period and says it with the same str
     label("desktop.ledger.readiness.not_ready_period"),
   );
 });
+
+test("the export's body grows before it scrolls, and its actions never cover the file it saves to", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1440, height: 900 });
+  await openLedger(target);
+  await button(head(target), "desktop.ledger.action.export").click();
+  const dialog = exportDialog(target);
+  await button(dialog, "desktop.ledger.export.choose_file").click();
+  const file = dialog.locator(".ledger-export-file");
+  await expect(file).toHaveText(/\.\w+$/);
+  const body = (await dialog.locator(".ledger-export-body").boundingBox())!;
+  const actions = (await dialog
+    .locator("[data-slot=dialog-footer]")
+    .boundingBox())!;
+  expect(actions.y).toBeGreaterThanOrEqual(body.y + body.height);
+  await expect(file).toBeInViewport({ ratio: 1 });
+});

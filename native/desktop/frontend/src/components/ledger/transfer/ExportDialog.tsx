@@ -77,9 +77,7 @@ type Counts = {
   split: number;
 };
 type Status =
-  | { kind: "reading" }
-  | { kind: "read"; counts: Counts }
-  | { kind: "failed" };
+  { kind: "reading" } | { kind: "read"; counts: Counts } | { kind: "failed" };
 
 /** The status read's counts span the whole ledger: they are the counts of
  * "All periods", and of no single period. */
@@ -207,12 +205,10 @@ export function ExportDialog({
     setStatus({ kind: "reading" });
     const counted: Promise<Counts | null> =
       period === null
-        ? port
-            .submit("ledger.status", { period: null })
-            .then((outcome) => {
-              const read = readAnswer(outcome);
-              return read.kind === "answer" ? ledgerCounts(read.result) : null;
-            })
+        ? port.submit("ledger.status", { period: null }).then((outcome) => {
+            const read = readAnswer(outcome);
+            return read.kind === "answer" ? ledgerCounts(read.result) : null;
+          })
         : readWindow(port, period).then((read) =>
             read.kind === "read" ? periodCounts(read.rows) : null,
           );
@@ -403,7 +399,9 @@ export function ExportDialog({
       <DialogContent
         placement="top"
         closeLabel={t("desktop.ledger.export.close")}
-        className="ledger-export w-dialog-md overflow-y-auto"
+        // The body grows to the dialog's height before it scrolls, and only
+        // the body scrolls: the actions stay below it, never over it.
+        className="ledger-export flex w-dialog-md flex-col"
         onOpenAutoFocus={(event) => {
           event.preventDefault();
           heading.current?.focus();
@@ -445,7 +443,7 @@ export function ExportDialog({
             </AlertDescription>
           </Alert>
         ) : (
-          <div className="grid gap-4">
+          <div className="ledger-export-body -mx-5 grid min-h-0 shrink gap-4 overflow-y-auto px-5">
             {selection && selection.length > 0 && (
               <Alert icon={<Icon name="info" />}>
                 <AlertTitle>
@@ -687,7 +685,7 @@ export function ExportDialog({
             )}
           </div>
         )}
-        <DialogFooter sticky>
+        <DialogFooter>
           {done ? (
             <Button onClick={onClose}>
               {t("desktop.ledger.export.close")}
