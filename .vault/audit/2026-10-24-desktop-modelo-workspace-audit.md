@@ -67,6 +67,15 @@ Typed text is excluded from every dump and representation and apply refuses it a
 ### closure-as-recorded | low | any edit closure words the form as recorded
 `worded_form` derives recorded from any edit closure (`work_form_wording.py:425`); the only closure today is recorded as filed, but a new one would silently switch to the filed wording.
 
+### form-offers-what-the-gate-refuses | medium | resolved: the form offered a file the export gate refused
+Found while widening the gate-agreement test after the P01 follow-up steps: the form judged calculation notes by attention alone, so an unresolved working figure or a note naming no printed box read as worth checking and the file was offered, while `require_work_unit_calculation_unblocked` refused it. Resolved in `46f9e9219b` by keeping the gate as the authority: `gate_refuses` (`src/cadrumo/application/modelo/calculation_note_gate.py`) is the gate's one condition, each note carries `withholds_filing`, and the header's export hold, the next step and the issue lines read it; `test_work_form_gate_agreement.py` drives every stored note reason, a working figure and a no-box note through the real export and filing gates.
+
+### aeat-reference-not-shown | low | the desktop omits the AEAT reference the TUI's technical toggle shows
+The TUI's external filing details show `aeat_reference_id` behind a technical toggle (`src/cadrumo/entrypoints/tui/declarations/external_details.py`). The desktop's read-only view of a return only the AEAT holds shows the row's notes only, because the reference is declared `exclude=True` on `DeclarationsCalendarEntryRefV1` and the public list row also reaches MCP and the scenario fixtures. Carrying it would reverse that custody decision, so it is left as a known gap that needs its own decision.
+
+### list-reads-filing-grade | medium | the declarations list reads an applicability-graded revision as unreadable
+`declaration_summary` (`src/cadrumo/application/modelo/declaration_summary.py:84`) and the result-box reader (`src/cadrumo/entrypoints/workbench_generation_composition.py:162`) snapshot at the default FILING grade, so the 2026 Modelo 390 revision, which declares applicability grade, reads as "Could not be read" in the list while its form opens. Plan step P01.S42 routes both through `modelo_form_snapshot`, which reads the law-selected revision at its declared grade.
+
 Verified sound: the next-step ladder and missing-value count are identical to the removed TUI code; origin, editability and source wording are faithful moves; no TUI module re-exports a moved name; the public round trip covers the new fields; the list read is exact-profile with whole-profile consent and no commit action; neither relay names a definition, the runtime refuses definitions without a financial operand, and both relays drop or overwrite the input after sending; every moved catalogue key exists in all four languages. Not verified by the reviewer: the full TUI and Rust suites (relying on the ledger's results), the full type and Ruff gates, the S02 mutation claim, and a live end-to-end financial submit through the Rust relay to a worker.
 
 ## Recommendations

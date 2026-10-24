@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc434ea329de23eb2e74e984f49df944367dcf440fa7b29bddc7042d0960e33b'
+body_hash: 'sha256:d0abbf21690f31864b72e6143e8d0811d6683d31062070da4ef234dd1d97976c'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -607,6 +607,30 @@ related:
 - `S12` `verify:` `tsc --noEmit` -> `pass`
 - `S12` `verify:` `eslint and prettier` -> `pass`
 - `S12` `by:` `opus-wording-lane`
+- `S40` `M` `src/cadrumo/application/modelo/calculation_note_gate.py`
+- `S40` `M` `src/cadrumo/application/modelo/work_form_notes.py`
+- `S40` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S40` `M` `src/cadrumo/application/modelo/work_form_next_step.py`
+- `S40` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S40` `M` `src/cadrumo/application/modelo/work_form_inspection.py`
+- `S40` `M` `src/cadrumo/application/modelo/work_form_issue_lines.py`
+- `S40` `M` `src/cadrumo/application/modelo/tests/test_work_form_gate_agreement.py`
+- `S40` `M` `src/cadrumo/application/modelo/tests/test_work_form_issue_lines.py`
+- `S40` `M` `src/cadrumo/application/modelo/tests/test_work_form_calculation_notes.py`
+- `S40` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S40` `verify:` `ruff check and format` -> `pass`
+- `S40` `verify:` `basedpyright touched files` -> `pass`
+- `S40` `verify:` `lint-imports` -> `pass`
+- `S40` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S40` `verify:` `pytest application form and gate suites` -> `pass`
+- `S40` `verify:` `pytest TUI declarations and workbench suites` -> `pass`
+- `S40` `by:` `opus-p01-lane`
+- `S41` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S41` `M` `src/cadrumo/application/modelo/tests/test_declarations_list.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/declarations/external_details.py`
+- `S41` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S41` `verify:` `pytest test_declarations_list` -> `pass`
+- `S41` `by:` `opus-p01-lane`
 
 ## Notes
 
@@ -644,3 +668,5 @@ related:
 - `S25` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
 - `S26` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
 - `S12` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
+- `S40` committed in 46f9e9219b with the `aeat_filing` row field for P04.S41
+- `S41` the row field half of S41, committed in 46f9e9219b; the AEAT reference stays out of the public row by its owner's custody decision, a known gap against the TUI's technical toggle
