@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:3d84bac644b905924d1bb30b0c06ee526a66ebdf874310610457b0f95ff1740b'
+body_hash: 'sha256:9693c6808308d90ad0e96554c432da3eb727cef665c57be5aaef57de4aa8a5e7'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
@@ -240,6 +240,15 @@ related:
 - `S12` `verify:` `tsc --noEmit` -> `pass`
 - `S12` `verify:` `eslint+prettier App.tsx` -> `pass`
 - `S12` `verify:` `playwright scenarios palette keyboard navigation-register agent-page-links` -> `pass`
+- `S06` `M` `src/cadrumo_client/contracts/tests/navigation_shipped_views.json`
+- `S06` `verify:` `pytest contracts+tui ledger+presentation_navigation (1128 passed)` -> `pass`
+- `S06` `verify:` `ruff check and format on touched files` -> `pass`
+- `S06` `verify:` `lint-imports (30 kept, 0 broken)` -> `pass`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/tests/workspace_fixtures.py`
+- `S07` `verify:` `pytest contracts+tui ledger+presentation_navigation (1128 passed)` -> `pass`
+- `S07` `verify:` `ruff check and format on touched files` -> `pass`
+- `S07` `verify:` `lint-imports (30 kept, 0 broken)` -> `pass`
+- `S07` `verify:` `four common.yml catalogues parse as YAML` -> `pass`
 
 ## Notes
 
@@ -259,3 +268,5 @@ related:
 - `S06` review fix: suppression (nosemgrep removed; project runner already excludes the importlib compatibility rule)
 - `S08` review fix: dead-reference (views link check reports opens via `resolve_view)`
 - `S12` review fix: register-duplication (palette icons); the presentation.rs projection-test hunk is held as a patch until the host unit test can run
+- `S06` re-review fix: retired ids append-only
+- `S07` re-review fix: dropped-selection notice only for entries, follows language switch, shown on the unavailable page; fixture uses `LEDGER_TRANSACTION_FOCUS`
