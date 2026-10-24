@@ -346,6 +346,69 @@ mod relayed {
     }
 
     #[tokio::test]
+    async fn a_page_reaches_the_window_with_its_file_name_and_image_and_no_folder() {
+        // Base64 carries "/" and "+", which the folder reduction must leave alone.
+        let image = "data:image/png;base64,iVBORw0KGgo+/Users/alba/AAAA+/x==";
+        let held = holder(|_| {
+            vec![
+                step(
+                    "operation_submit",
+                    json!([
+                        ["definition_id", "ledger.evidence.page"],
+                        ["payload.profile_id", PROFILE],
+                        ["payload.evidence_id", "ev-1"],
+                        ["payload.page", 2]
+                    ]),
+                    json!({"kind":"operation_submitted","operation_id":OPERATION}),
+                    false,
+                ),
+                step(
+                    "operation_observe",
+                    json!([]),
+                    observed(
+                        "ledger.evidence.page",
+                        &subject(),
+                        "terminal",
+                        json!({"terminal_condition":"succeeded","revision":2}),
+                    ),
+                    false,
+                ),
+                step(
+                    "operation_result",
+                    json!([]),
+                    json!({"kind":"operation_result","operation_id":OPERATION,
+                        "definition_id":"ledger.evidence.page",
+                        "document":{"projection":{"file_name":r"C:\Users\alba\Tickets\ticket-plenoil.jpg",
+                            "media_type":"image/jpeg","page":2,"page_count":3,
+                            "source_sha256":"ab","image_data_url":image}}}),
+                    false,
+                ),
+            ]
+        });
+        let operations = Operations::default();
+        let mut events = held.events.subscribe();
+        let outcome = submit_on(
+            &operations,
+            &held.person,
+            held.identity.clone(),
+            &mut events,
+            definition("ledger.evidence.page"),
+            Wiped(json!({"evidence_id":"ev-1","page":2,"max_width":1200})),
+            Vec::new(),
+        )
+        .await
+        .unwrap();
+        let Outcome::Settled { result, .. } = outcome else {
+            panic!("the page read did not settle: {outcome:?}");
+        };
+        // A worker that named where the file lay is reduced to its name; the
+        // image passes untouched.
+        assert_eq!(result["file_name"], "ticket-plenoil.jpg");
+        assert_eq!(result["image_data_url"], image);
+        assert!(!result.to_string().contains("Tickets"));
+    }
+
+    #[tokio::test]
     async fn a_settled_refusal_carries_its_code_and_declared_detail() {
         let detail = json!({"detail_version":1,"kind":"registered_error",
             "error_code":"REFUSED_CLI_VALIDATION_BOUNDARY","context":[]});

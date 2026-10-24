@@ -108,6 +108,10 @@
       "may_write": false,
       "review": false
     },
+    "ledger.evidence.page": {
+      "may_write": false,
+      "review": false
+    },
     "ledger.evidence.query": {
       "may_write": false,
       "review": false

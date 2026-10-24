@@ -210,7 +210,8 @@ fn substitute(
 }
 
 /// Result fields that name a file the worker read or wrote.
-const RESULT_PATH_KEYS: [&str; 9] = [
+const RESULT_PATH_KEYS: [&str; 10] = [
+    "file_name",
     "files",
     "output_path",
     "path",

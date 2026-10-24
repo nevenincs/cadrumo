@@ -36,7 +36,7 @@ impl Definition {
 
 use Kind::{Read, Review, Write};
 
-const ADMITTED: [(&str, Kind); 87] = [
+const ADMITTED: [(&str, Kind); 88] = [
     ("ledger.actividad-asset.claim", Write),
     ("ledger.actividad-asset.correct", Write),
     ("ledger.actividad-asset.create", Write),
@@ -64,6 +64,7 @@ const ADMITTED: [(&str, Kind); 87] = [
     ("ledger.evidence.consent.list", Read),
     ("ledger.evidence.extract", Write),
     ("ledger.evidence.list", Read),
+    ("ledger.evidence.page", Read),
     ("ledger.evidence.query", Read),
     ("ledger.evidence.reader-readiness", Read),
     ("ledger.evidence.remove", Write),
