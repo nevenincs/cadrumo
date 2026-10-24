@@ -27,6 +27,7 @@ from ....core.operations import OperationEffect
 from ....domain.iva.schema import InvoiceKind
 from ..components.language import localized
 from ..components.workspace_host import replace_workspace_body
+from ..setup.offer import setup_item_for_action
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .evidence_files_common import EvidenceFilesToolScreen, blank_to_none, shown
 from .evidence_files_doors import LedgerEvidenceFilesDoorsV1
@@ -72,8 +73,15 @@ def batch_outcome(projection: LedgerEvidenceBatchProjection) -> EvidenceFilesOut
         ),
         tr("tui.ledger.evidence_files.batch.outcome.writes", count=projection.write_count),
     ]
-    if run.inference_pause is not None:
-        lines.append(tr("tui.ledger.evidence_files.batch.outcome.paused"))
+    pause = run.inference_pause
+    setup_item = None if pause is None else setup_item_for_action(pause.precondition_verdict.action_id)
+    if pause is not None:
+        # The pause names the local AI's setup when setting it up would let the paused documents be read.
+        lines.append(
+            tr("tui.ledger.evidence_files.batch.outcome.paused_local_ai_not_ready")
+            if setup_item is not None
+            else tr("tui.ledger.evidence_files.batch.outcome.paused")
+        )
     if projection.effect is OperationEffect.PARTIAL:
         lines.append(tr("tui.ledger.evidence_files.batch.outcome.partial"))
     rows: list[EvidenceFilesOutcomeRowV1] = [
@@ -100,6 +108,7 @@ def batch_outcome(projection: LedgerEvidenceBatchProjection) -> EvidenceFilesOut
             tr("tui.ledger.evidence_files.column.reason"),
         ),
         rows=tuple(rows),
+        setup_item=setup_item,
     )
 
 

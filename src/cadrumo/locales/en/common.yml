@@ -1444,6 +1444,10 @@ desktop:
         text_layer: Read from the PDF
         text_rules: Read from the text
         vision: Read from the image
+      paused_local_ai: Local AI, which reads the paused documents, is not ready. Add
+        them again once it is ready to finish them.
+      paused_unavailable: Local AI could not read the paused documents on this computer.
+        Add them again later to finish them.
       printed_differs: The document prints {printed}; the invoice records {recorded}.
       provenance: '{origin}, {grounding}'
       queue: Readings to review
@@ -5702,8 +5706,10 @@ tui:
           partial: 'This batch was partial: some documents were stored and others
             were not. Run it again after fixing the refused ones; stored documents
             are not stored twice.'
-          paused: Reading paused because the model reader could not be admitted. Run
-            the batch again later to finish the paused documents.
+          paused: Local AI could not read the paused documents on this computer. Run
+            the batch again later to finish them.
+          paused_local_ai_not_ready: Local AI, which reads the paused documents, is
+            not ready. Run the batch again once it is ready to finish them.
           writes: 'Records written: {count}.'
         prompt: Add every document directly inside one folder as invoice evidence.
           Documents are read on this machine.

@@ -32,6 +32,7 @@ import {
 } from "../../../shell/ledgerGrammar";
 import { importBatchFilters } from "../../../shell/ledgerImports";
 import { readPage } from "../../../shell/ledgerWindow";
+import { provisionActionOf } from "../../../shell/provisioningRecovery";
 
 export const IMPORT_KINDS = ["bank", "book", "documents"] as const;
 export type ImportKind = (typeof IMPORT_KINDS)[number];
@@ -401,6 +402,9 @@ export type DocumentsApplied = {
   stopped: { code: string; files: PickedFile[] } | null;
   /** Files of later parts, left unsent. */
   notSent: PickedFile[];
+  /** A part whose reading paused, and the setup action its pause names, or
+   * null when setting nothing up would end it. */
+  paused: { action: string | null } | null;
 };
 
 /** Adds documents as evidence in parts, stopping at a part that does not
@@ -416,6 +420,7 @@ export async function applyDocuments(
     unresolved: [],
     stopped: null,
     notSent: [],
+    paused: null,
   };
   for (let at = 0; at < files.length; at += DOCUMENTS_PER_PART) {
     const part = files.slice(at, at + DOCUMENTS_PER_PART);
@@ -432,6 +437,11 @@ export async function applyDocuments(
     if (sent.kind === "settled") {
       done.items.push(...sent.result.run.items);
       done.unresolved.push(...sent.result.run.unresolved);
+      const pause = sent.result.run.inference_pause;
+      if (pause !== null)
+        done.paused = {
+          action: done.paused?.action ?? provisionActionOf(pause),
+        };
     } else
       done.stopped = {
         code:

@@ -176,6 +176,65 @@ test("a scan refused for a local AI this computer cannot set up says why and off
   await expect(draft(target).locator(".setup-offer")).toHaveCount(0);
 });
 
+/** Adds the folder's documents as received ones; its scan pauses for the
+ * missing local AI. */
+async function addFolder(target: Page) {
+  await tab(target, "folder").click();
+  const folder = section(target).locator(".ledger-folder");
+  await folder.locator(".ledger-folder-pick").click();
+  await folder
+    .getByRole("radio", {
+      name: label("desktop.ledger.invoices.kind_choice.received"),
+    })
+    .click();
+  await folder.locator(".ledger-folder-add").click();
+  await expect(folder.locator("[data-status=paused]")).toHaveCount(1);
+  return folder;
+}
+
+test("a folder whose scan paused for the local AI names it and opens its prompt once", async ({
+  page: target,
+}) => {
+  await openDocuments(target, "fresh");
+  const folder = await addFolder(target);
+  // The batch settled; its pause still leads to the local AI's prompt.
+  await promptSaysOnce(target);
+  await prompt(target)
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
+  await expect(prompt(target)).toBeHidden();
+  const paused = folder.locator(".ledger-batch-paused");
+  await expect(paused).toContainText(
+    label("desktop.ledger.documents.paused_local_ai"),
+  );
+  await expect(paused).toContainText(LOCAL_AI);
+  await expect(target.getByRole("dialog")).toHaveCount(0);
+  await paused.getByRole("button", { name: "Set up", exact: true }).click();
+  await promptSaysOnce(target);
+});
+
+test("a folder paused for a local AI this computer cannot set up says why and offers no setup", async ({
+  page: target,
+}) => {
+  await openDocuments(target, "hardware");
+  const folder = await addFolder(target);
+  const shown = prompt(target);
+  await expect(shown).toContainText(
+    "This computer does not have enough memory for this.",
+  );
+  await expect(shown.getByRole("button")).toHaveText([
+    label("desktop.setup.close"),
+  ]);
+  await shown
+    .getByRole("button", { name: label("desktop.setup.close"), exact: true })
+    .click();
+  const paused = folder.locator(".ledger-batch-paused");
+  await expect(paused).toContainText(
+    label("desktop.ledger.documents.paused_local_ai"),
+  );
+  await expect(paused.locator(".setup-offer")).toHaveCount(0);
+});
+
 test("a reader held back by memory offers no setup, though the local AI is not set up", async ({
   page: target,
 }) => {

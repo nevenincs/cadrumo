@@ -410,6 +410,20 @@ export function FolderIntake({
               </AlertDescription>
             </Alert>
           )}
+          {applied.paused && (
+            <Alert
+              tone="warning"
+              icon={<Icon name="pause" />}
+              className="ledger-batch-paused"
+            >
+              <AlertDescription>
+                {applied.paused.action !== null
+                  ? t("desktop.ledger.documents.paused_local_ai")
+                  : t("desktop.ledger.documents.paused_unavailable")}
+                <SetupOffer action={applied.paused.action} className="mt-1" />
+              </AlertDescription>
+            </Alert>
+          )}
           <Table
             label={t("desktop.ledger.documents.batch_results")}
             columns={[

@@ -1,4 +1,10 @@
-"""Bulk intake of one folder: reviewed first, then each document's outcome, and a partial batch said so."""
+"""Bulk intake of one folder: reviewed first, then each document's outcome, and a partial batch said so.
+
+A batch the local AI paused names it and offers its setup while the local AI's
+quick-status row can set it up; a blocked row shows its own sentence instead,
+and a pause setup cannot end offers nothing. The pause verdicts come from the
+real local reader probe and the provisioning no-recovery verdict.
+"""
 
 from __future__ import annotations
 
@@ -7,19 +13,25 @@ from typing import cast
 
 import pytest
 from textual.pilot import Pilot
-from textual.widgets import DataTable, Input, Select
+from textual.widgets import Button, DataTable, Input, Select, Static
 
+from .....application.ledger.batch_ingest import InferencePause
 from .....application.ledger.evidence_ingestion_contracts import LedgerEvidenceBatchRequest
+from .....application.local_reader import probe_local_reader
+from .....application.provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from .....core.model_catalogue import ModelRole
 from .....domain.iva.schema import InvoiceKind
-from ...tests.settling import settle
+from ...setup.offer import SetupItemOffer
+from ...tests.settling import settle, settle_until
 from ..controller import LedgerWorkspaceController
 from ..evidence_files_batch import LedgerEvidenceFilesBatchScreen
 from ..evidence_files_write import LedgerEvidenceFilesWriteScreen
 from ..models import LedgerFlowState
 from ..workspace_injection import LedgerWorkspaceInjection
 from .evidence_files_fixtures import EVIDENCE_FILES_REFUSAL_KEY, MemoryEvidenceFilesStore, press, text_of
+from .setup_status_fixtures import LOCAL_AI_HELD, SetupStatusWorkspaceHostApp, absent_row, not_in_this_build_row
 from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -130,3 +142,100 @@ async def test_a_refused_batch_is_shown_on_the_write_step(tmp_path: Path) -> Non
             assert isinstance(write, LedgerEvidenceFilesWriteScreen)
             assert write.flow_state is LedgerFlowState.FAILED
             assert text_of(write, "#ledger-refusal") == tr(EVIDENCE_FILES_REFUSAL_KEY)
+
+
+def _local_ai_pause() -> InferencePause:
+    """The pause the local reader probe gives when the role's model is not installed: it names the setup."""
+    status = probe_local_reader(ModelRole.TEXT_EXTRACTION, installed=(), model="reader-model:1b")
+    assert status.precondition_verdict is not None
+    return InferencePause(facts={"role_model_installed": False}, precondition_verdict=status.precondition_verdict)
+
+
+def _unrecoverable_pause() -> InferencePause:
+    """A pause setup cannot end, so its verdict names no action."""
+    return InferencePause(
+        facts={"role_model_selected": False},
+        precondition_verdict=provisioning_no_recovery_verdict(
+            ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
+            facts={"role": ModelRole.TEXT_EXTRACTION.value, "role_model_selected": False},
+        ),
+    )
+
+
+def _paused_store(pause: InferencePause) -> MemoryEvidenceFilesStore:
+    store = MemoryEvidenceFilesStore()
+    store.batch_documents = (("factura-a.pdf", "ingested"), ("ticket-b.jpg", "paused"))
+    store.batch_pause = pause
+    return store
+
+
+def _offer(write: LedgerEvidenceFilesWriteScreen) -> SetupItemOffer:
+    return write.query_one("#evidence-files-setup", SetupItemOffer)
+
+
+@pytest.mark.asyncio
+async def test_a_batch_paused_for_the_local_ai_names_it_and_offers_its_setup(tmp_path: Path) -> None:
+    store = _paused_store(_local_ai_pause())
+    host = SetupStatusWorkspaceHostApp(_screen(store), rows=(absent_row("local_ai"),))
+    with override_settings(cadrumo_output_language="en"):
+        async with host.run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
+            await _stage(pilot, str(tmp_path))
+            await press(pilot, "evidence-files-confirm")
+            write = pilot.app.screen
+            assert isinstance(write, LedgerEvidenceFilesWriteScreen)
+            outcome = text_of(write, "#evidence-files-outcome")
+            assert tr("tui.ledger.evidence_files.batch.outcome.paused_local_ai_not_ready") in outcome
+            assert "admitted" not in outcome
+            offer = _offer(write)
+            await settle_until(pilot, lambda: offer.display, "the setup offer to be shown")
+            button = offer.query_one(Button)
+            assert button.display
+            assert str(button.label) == "Set up: Local AI"
+
+            button.press()
+            await settle(pilot)
+
+    assert host.row_reads == ["local_ai"]
+    assert host.requested == ["local_ai"]
+
+
+@pytest.mark.asyncio
+async def test_a_batch_paused_for_a_local_ai_this_build_cannot_set_up_says_why_and_offers_nothing(
+    tmp_path: Path,
+) -> None:
+    store = _paused_store(_local_ai_pause())
+    host = SetupStatusWorkspaceHostApp(_screen(store), rows=(not_in_this_build_row("local_ai"),))
+    with override_settings(cadrumo_output_language="en"):
+        async with host.run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
+            await _stage(pilot, str(tmp_path))
+            await press(pilot, "evidence-files-confirm")
+            write = pilot.app.screen
+            assert isinstance(write, LedgerEvidenceFilesWriteScreen)
+            offer = _offer(write)
+            await settle_until(pilot, lambda: offer.display, "the item's sentence to be shown")
+            assert not offer.query_one(Button).display
+            assert str(offer.query_one(Static).render()) == LOCAL_AI_HELD
+
+    assert host.row_reads == ["local_ai"]
+    assert host.requested == []
+
+
+@pytest.mark.asyncio
+async def test_a_batch_paused_for_a_reason_setup_cannot_end_offers_no_setup(tmp_path: Path) -> None:
+    store = _paused_store(_unrecoverable_pause())
+    host = SetupStatusWorkspaceHostApp(_screen(store), rows=(absent_row("local_ai"),))
+    with override_settings(cadrumo_output_language="en"):
+        async with host.run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
+            await _stage(pilot, str(tmp_path))
+            await press(pilot, "evidence-files-confirm")
+            write = pilot.app.screen
+            assert isinstance(write, LedgerEvidenceFilesWriteScreen)
+            outcome = text_of(write, "#evidence-files-outcome")
+            assert tr("tui.ledger.evidence_files.batch.outcome.paused") in outcome
+            assert not _offer(write).display
+
+    assert host.row_reads == []
+    assert host.requested == []

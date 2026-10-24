@@ -1476,6 +1476,10 @@ desktop:
         text_layer: Llegit del PDF
         text_rules: Llegit del text
         vision: Llegit de la imatge
+      paused_local_ai: La IA local, que llegeix els documents en pausa, no està a
+        punt. Torna-los a afegir quan estigui a punt per acabar-los.
+      paused_unavailable: La IA local no ha pogut llegir els documents en pausa en
+        aquest ordinador. Torna-los a afegir més tard per acabar-los.
       printed_differs: El document indica {printed}; la factura registra {recorded}.
       provenance: '{origin}, {grounding}'
       queue: Lectures per revisar
@@ -5804,8 +5808,10 @@ tui:
           partial: 'Aquest lot ha estat parcial: alguns documents s''han desat i d''altres
             no. Torna a llançar-lo després de corregir els rebutjats; els documents
             desats no es desen dues vegades.'
-          paused: La lectura s'ha pausat perquè no s'ha pogut admetre el lector de
-            models. Torna a llançar el lot més tard per acabar els documents en pausa.
+          paused: La IA local no ha pogut llegir els documents en pausa en aquest
+            ordinador. Torna a llançar el lot més tard per acabar-los.
+          paused_local_ai_not_ready: La IA local, que llegeix els documents en pausa,
+            no està a punt. Torna a llançar el lot quan estigui a punt per acabar-los.
           writes: 'Registres escrits: {count}.'
         prompt: Afegeix com a justificants de factura tots els documents que hi ha
           directament en una carpeta. Els documents es llegeixen en aquest equip.

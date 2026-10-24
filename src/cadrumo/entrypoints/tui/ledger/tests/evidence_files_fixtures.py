@@ -37,6 +37,7 @@ from .....application.ledger.batch_ingest import (
     BatchItemResult,
     BatchItemStatus,
     BatchRunResult,
+    InferencePause,
     UnresolvedBatchSource,
 )
 from .....application.ledger.evidence import MediaKind
@@ -244,6 +245,8 @@ class MemoryEvidenceFilesStore:
     drafts: dict[str, LedgerEvidenceReviewViewProjection] = field(default_factory=dict)
     batch_documents: tuple[tuple[str, BatchItemStatus], ...] = ()
     batch_unreadable: tuple[str, ...] = ()
+    batch_pause: InferencePause | None = None
+    """The pause that closed the batch's reading, as the run reports it."""
     expired: bool = False
     refusing: set[str] = field(default_factory=set)
     """Door names that answer with the store's typed refusal."""
@@ -349,7 +352,11 @@ class MemoryEvidenceFilesStore:
             )
             for name in self.batch_unreadable
         )
-        run = BatchRunResult(items=tuple(sorted(items, key=lambda item: item.content_address)), unresolved=unresolved)
+        run = BatchRunResult(
+            items=tuple(sorted(items, key=lambda item: item.content_address)),
+            unresolved=unresolved,
+            inference_pause=self.batch_pause,
+        )
         writes = sum(1 for item in run.items if item.status in {"ingested", "pending_review"})
         incomplete = run.any_failed or run.any_deferred
         effect = (

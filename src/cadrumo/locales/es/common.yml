@@ -1480,6 +1480,10 @@ desktop:
         text_layer: Leído del PDF
         text_rules: Leído del texto
         vision: Leído de la imagen
+      paused_local_ai: La IA local, que lee los documentos en pausa, no está lista.
+        Vuelve a añadirlos cuando esté lista para terminarlos.
+      paused_unavailable: La IA local no ha podido leer los documentos en pausa en
+        este ordenador. Vuelve a añadirlos más tarde para terminarlos.
       printed_differs: El documento indica {printed}; la factura registra {recorded}.
       provenance: '{origin}, {grounding}'
       queue: Lecturas por revisar
@@ -5819,8 +5823,10 @@ tui:
           partial: 'Este lote fue parcial: algunos documentos se guardaron y otros
             no. Vuelve a lanzarlo después de corregir los rechazados; los documentos
             guardados no se guardan dos veces.'
-          paused: La lectura se pausó porque no se pudo admitir el lector de modelos.
-            Vuelve a lanzar el lote más tarde para terminar los documentos en pausa.
+          paused: La IA local no ha podido leer los documentos en pausa en este ordenador.
+            Vuelve a lanzar el lote más tarde para terminarlos.
+          paused_local_ai_not_ready: La IA local, que lee los documentos en pausa,
+            no está lista. Vuelve a lanzar el lote cuando esté lista para terminarlos.
           writes: 'Registros escritos: {count}.'
         prompt: Añade como justificantes de factura todos los documentos que están
           directamente en una carpeta. Los documentos se leen en este equipo.

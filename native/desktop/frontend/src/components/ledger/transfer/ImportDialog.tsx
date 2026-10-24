@@ -52,6 +52,7 @@ import {
 import type { ShowImportBatch } from "../../../shell/ledgerImports";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
+import { SetupOffer } from "../../setup/SetupOffer";
 import { PeriodSelector } from "../PeriodSelector";
 import { useWritePause, WriteHold } from "../WritePause";
 import {
@@ -1720,6 +1721,20 @@ function ResultStep({
             </AlertDescription>
           </Alert>
         ))}
+      {applied.paused && (
+        <Alert
+          tone="warning"
+          icon={<Icon name="pause" />}
+          className="ledger-batch-paused"
+        >
+          <AlertDescription>
+            {applied.paused.action !== null
+              ? t("desktop.ledger.documents.paused_local_ai")
+              : t("desktop.ledger.documents.paused_unavailable")}
+            <SetupOffer action={applied.paused.action} className="mt-1" />
+          </AlertDescription>
+        </Alert>
+      )}
       {(refused.length > 0 ||
         applied.unresolved.length > 0 ||
         applied.notSent.length > 0) && (

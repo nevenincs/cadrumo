@@ -2283,6 +2283,8 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.documents.origin.text_layer",
         "desktop.ledger.documents.origin.text_rules",
         "desktop.ledger.documents.origin.vision",
+        "desktop.ledger.documents.paused_local_ai",
+        "desktop.ledger.documents.paused_unavailable",
         "desktop.ledger.documents.printed_differs",
         "desktop.ledger.documents.provenance",
         "desktop.ledger.documents.queue",

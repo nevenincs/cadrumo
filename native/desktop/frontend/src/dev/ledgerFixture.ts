@@ -1537,7 +1537,9 @@ export function ledgerFixture(options: Options): LedgerPort {
   }
 
   /** Documents added as evidence: a PDF or an XML is read at once, an image
-   * waits for its reading, and a document already held is left as it is. */
+   * waits for its reading, and a document already held is left as it is.
+   * Where the local AI is not set up, an image cannot be read: it is paused,
+   * and the run's pause names the local AI's setup. */
   function addDocuments(request: JsonObject): JsonObject {
     const sources = request.sources;
     const direction = request.direction;
@@ -1545,6 +1547,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     if (direction !== "issued" && direction !== "received") return invalid();
     const items: JsonObject[] = [];
     let writes = 0;
+    let paused = false;
     for (const token of sources) {
       const file = fileOf(token, "documents");
       const address = hex64(`document:${bytesOf(file.name)}`);
@@ -1553,6 +1556,21 @@ export function ledgerFixture(options: Options): LedgerPort {
       const held = ledger.evidence.some(
         (record) => record.source_sha256 === address,
       );
+      if (image && !held && shape === "reader_missing") {
+        paused = true;
+        items.push({
+          content_address: address,
+          identity: `${address}:${direction}`,
+          direction,
+          source_name: file.name,
+          status: "paused",
+          refusal_code: null,
+          refusal_verdict: null,
+          needed_inference: true,
+          label_reading_fallback: null,
+        });
+        continue;
+      }
       if (!held) {
         writes += 1;
         const at = now();
@@ -1591,7 +1609,28 @@ export function ledgerFixture(options: Options): LedgerPort {
       write_count: writes,
       effect: writes > 0 ? "updated" : "none",
       direction,
-      run: { items, unresolved: [], inference_pause: null },
+      run: {
+        items,
+        unresolved: [],
+        inference_pause: paused ? readerPause() : null,
+      },
+    };
+  }
+
+  /** The pause a batch reports when the local AI's program does not answer:
+   * its verdict names the local AI's setup. */
+  function readerPause(): JsonObject {
+    return {
+      facts: [{ name: "runtime_reachable", value: false }],
+      precondition_verdict: {
+        failed_condition_id: "provisioning.runtime.reachable",
+        evidence: [],
+        action_id: "operator.provision.local_ai",
+        argument_bindings: [],
+        missing_argument_names: [],
+        conditionality: "immediate",
+        no_recovery_outcome: null,
+      },
     };
   }
 

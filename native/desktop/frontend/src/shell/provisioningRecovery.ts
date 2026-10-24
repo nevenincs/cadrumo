@@ -100,9 +100,25 @@ export function useProvisioningRecovery(): ProvisioningRecovery {
 }
 
 /**
+ * The setup action a settled batch's reading pause names: a batch whose
+ * reading the missing local AI paused settles, and its run carries the
+ * pause's verdict. Null for any other result.
+ */
+export function pausedActionOf(result: unknown): string | null {
+  if (typeof result !== "object" || result === null) return null;
+  const run = (result as Record<string, unknown>).run;
+  if (typeof run !== "object" || run === null) return null;
+  const pause = (run as Record<string, unknown>).inference_pause;
+  return pause === null || pause === undefined
+    ? null
+    : provisionActionOf(pause);
+}
+
+/**
  * The ledger port, with every refused outcome whose verdict names a setup
- * action handed to `offer` once per operation, whichever call observed it.
- * The outcome itself reaches the page unchanged.
+ * action, and every settled batch whose reading pause names one, handed to
+ * `offer` once per operation, whichever call observed it. The outcome itself
+ * reaches the page unchanged.
  */
 export function routeProvisioningRefusals(
   port: LedgerPort,
@@ -113,8 +129,14 @@ export function routeProvisioningRefusals(
     answer: Promise<Outcome>,
   ): Promise<Outcome> =>
     answer.then((outcome) => {
-      if (outcome.kind === "refused" && !offered.has(outcome.operation_id)) {
-        const action = provisionActionOf(outcome.detail);
+      if (
+        (outcome.kind === "refused" || outcome.kind === "settled") &&
+        !offered.has(outcome.operation_id)
+      ) {
+        const action =
+          outcome.kind === "refused"
+            ? provisionActionOf(outcome.detail)
+            : pausedActionOf(outcome.result);
         if (action !== null) {
           offered.add(outcome.operation_id);
           offer(action);

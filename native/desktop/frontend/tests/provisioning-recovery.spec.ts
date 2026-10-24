@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   LOCAL_AI_SETUP_ACTION,
+  pausedActionOf,
   provisionActionOf,
   routeProvisioningRefusals,
 } from "../src/shell/provisioningRecovery";
@@ -134,6 +135,57 @@ test("each ledger refusal that names a setup reaches the prompt once, unchanged"
   // A read that settles offers nothing.
   await routed.submit("ledger.evidence.reader-readiness", {});
   expect(offered).toHaveLength(2);
+});
+
+test("a batch whose reading the missing local AI paused reaches the prompt once", async () => {
+  for (const shape of ["reader_missing", "documents"] as const) {
+    const port = ledgerFixture({
+      say: () => undefined,
+      wait: async () => undefined,
+      signedIn: () => true,
+      shape,
+    });
+    const offered: string[] = [];
+    const routed = routeProvisioningRefusals(port, (action) => {
+      offered.push(action);
+    });
+    const picked = await routed.pickFiles("documents", "files", "documents");
+    const scans = picked.files.filter(
+      (file) => !/\.(pdf|xml)$/i.test(file.name),
+    );
+    expect(scans.length).toBeGreaterThan(0);
+    const added = await routed.submit("ledger.evidence.batch", {
+      sources: scans.map((file) => file.token),
+      direction: "received",
+    });
+    if (added.kind !== "settled") throw new Error("the batch did not settle");
+    const paused = added.result.run.items.filter(
+      (item) => item.status === "paused",
+    );
+    if (shape === "reader_missing") {
+      // The batch settles: its pause names the local AI's setup.
+      expect(paused).toHaveLength(scans.length);
+      expect(pausedActionOf(added.result)).toBe(LOCAL_AI_SETUP_ACTION);
+      expect(offered).toEqual([LOCAL_AI_SETUP_ACTION]);
+      await routed.observe(added.operation_id);
+      expect(offered).toHaveLength(1);
+    } else {
+      // With the local AI there, nothing pauses and nothing is offered.
+      expect(paused).toHaveLength(0);
+      expect(pausedActionOf(added.result)).toBeNull();
+      expect(offered).toEqual([]);
+    }
+  }
+  // A pause whose verdict names no action names nothing.
+  expect(
+    pausedActionOf({
+      run: {
+        inference_pause: { facts: [], precondition_verdict: verdict(null) },
+      },
+    }),
+  ).toBeNull();
+  expect(pausedActionOf({ run: { inference_pause: null } })).toBeNull();
+  expect(pausedActionOf(null)).toBeNull();
 });
 
 test("a ledger refusal that names no setup offers nothing", async () => {

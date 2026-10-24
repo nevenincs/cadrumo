@@ -1459,6 +1459,11 @@ desktop:
         text_layer: A PDF-ből olvasva
         text_rules: A szövegből olvasva
         vision: A képről olvasva
+      paused_local_ai: A helyi MI, amely a szüneteltetett dokumentumokat olvassa,
+        nem áll készen. A befejezésükhöz add hozzá újra a dokumentumokat, amint készen
+        áll.
+      paused_unavailable: A helyi MI nem tudta beolvasni a szüneteltetett dokumentumokat
+        ezen a számítógépen. A befejezésükhöz később add hozzá újra a dokumentumokat.
       printed_differs: A dokumentumon {printed} áll; a számla {recorded} összeget
         rögzít.
       provenance: '{origin}, {grounding}'
@@ -5776,8 +5781,11 @@ tui:
           partial: 'A köteg részleges volt: egyes dokumentumok tárolódtak, mások nem.
             Az elutasítottak javítása után futtasd újra; a tárolt dokumentumok nem
             kerülnek kétszer tárolásra.'
-          paused: A beolvasás szünetel, mert a modellolvasót nem lehetett elindítani.
-            A szüneteltetett dokumentumok befejezéséhez később futtasd újra a köteget.
+          paused: A helyi MI nem tudta beolvasni a szüneteltetett dokumentumokat ezen
+            a számítógépen. A befejezésükhöz később futtasd újra a beolvasást.
+          paused_local_ai_not_ready: A helyi MI, amely a szüneteltetett dokumentumokat
+            olvassa, nem áll készen. A befejezésükhöz futtasd újra a beolvasást, amint
+            készen áll.
           writes: 'Kiírt rekordok: {count}.'
         prompt: Egy mappában közvetlenül található összes dokumentum hozzáadása számlabizonylatként.
           A dokumentumok beolvasása ezen a gépen történik.
