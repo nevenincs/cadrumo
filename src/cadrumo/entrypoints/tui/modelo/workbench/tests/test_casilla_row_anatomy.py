@@ -206,7 +206,7 @@ def test_a_description_that_opens_by_naming_its_box_loses_that_opening_in_every_
 def test_a_reworded_box_opening_in_the_catalogue_is_followed_rather_than_missed(tmp_path: Path) -> None:
     """The opening is the catalogue's own words for the row's box, so rewording them moves what is dropped."""
     (tmp_path / "en.yml").write_text(
-        "tui:\n  modelo:\n    workbench:\n      help:\n        box_opening: 'Field {box} -'\n",
+        "workspace:\n  modelo:\n    help:\n      box_opening: 'Field {box} -'\n",
         encoding="utf-8",
     )
 
