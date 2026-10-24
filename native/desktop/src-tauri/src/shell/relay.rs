@@ -136,6 +136,11 @@ fn accepted(submitted: Result<Value>, mutation: bool) -> Result<String> {
     let lost = || Failure::new(if mutation { "unknown" } else { "unavailable" });
     let submitted = submitted.map_err(|_| lost())?;
     if submitted["kind"] == "operation_refused" {
+        // The relay answers "unavailable" when the runtime's reply was lost
+        // after the submission was written: a mutation may have been taken.
+        if mutation && submitted["code"] == "unavailable" {
+            return Err(lost());
+        }
         let mut refused = Failure::new("refused");
         refused.reason = submitted["code"].as_str().map(str::to_owned);
         return Err(refused);

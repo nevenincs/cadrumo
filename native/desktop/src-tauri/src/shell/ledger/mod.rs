@@ -152,6 +152,17 @@ pub enum Outcome {
     },
 }
 
+impl Outcome {
+    fn operation_id(&self) -> &str {
+        match self {
+            Self::Settled { operation_id, .. }
+            | Self::Refused { operation_id, .. }
+            | Self::Review { operation_id, .. }
+            | Self::Running { operation_id, .. } => operation_id,
+        }
+    }
+}
+
 /// The review a paused operation shows, with the digest an answer must name.
 #[derive(Debug, Serialize)]
 pub struct ReviewDocument {
@@ -222,6 +233,8 @@ struct Tracked {
     subject: String,
     identity: Value,
     shown: Option<Shown>,
+    /// The folders of the files the host put in its payload.
+    folders: Vec<String>,
 }
 impl Tracked {
     fn relayed<'a>(&'a self, person: &'a HeldPerson) -> Relayed<'a> {
@@ -299,14 +312,16 @@ fn path_text(path: &Path) -> Result<Value> {
 
 /// Puts the path behind each token where the definition reads a file, and
 /// fills the directory those files are under where it reads one. Anything
-/// but a token this session issued for that purpose is refused.
+/// but a token this session issued for that purpose is refused. Answers the
+/// folders those files are in, which the window is never shown.
 fn substitute(
     files: &Files,
     identity: &Value,
     definition: Definition,
     payload: &mut Map<String, Value>,
-) -> Result<()> {
+) -> Result<Vec<String>> {
     let mut first: Option<std::path::PathBuf> = None;
+    let mut folders = Vec::new();
     for field in PATH_FIELDS
         .iter()
         .filter(|field| field.definition == definition.id)
@@ -318,6 +333,18 @@ fn substitute(
             let token = token.as_str().ok_or_else(|| failure("invalid"))?;
             let path = files.path(identity, token, field.purpose, field.shape == Shape::Save)?;
             let text = path_text(&path)?;
+            let folder = if path.is_dir() {
+                Some(path.as_path())
+            } else {
+                path.parent()
+            };
+            // A drive's root names no one.
+            if let Some(folder) = folder.filter(|folder| folder.file_name().is_some())
+                && let Some(folder) = folder.to_str()
+                && !folders.iter().any(|known| known == folder)
+            {
+                folders.push(folder.to_owned());
+            }
             first.get_or_insert(path);
             Ok(text)
         };
@@ -356,16 +383,17 @@ fn substitute(
             return Err(failure("invalid"));
         }
     }
-    Ok(())
+    Ok(folders)
 }
 
 /// Result fields that name a file the worker read or wrote.
-const RESULT_PATH_KEYS: [&str; 8] = [
+const RESULT_PATH_KEYS: [&str; 9] = [
     "files",
     "output_path",
     "path",
     "provider_locator",
     "source_directory",
+    "source_name",
     "source_path",
     "source_reference",
     "verify_source",
@@ -418,8 +446,58 @@ fn file_names(value: &mut Value) {
     }
 }
 
+/// What the window is shown of a document the runtime answered for an
+/// operation: every path reduced to its file name, wherever the worker
+/// quoted it, as in a message, a review line or a row's source.
+fn reduced(document: &Value, folders: &[String]) -> Value {
+    fn strip(value: &mut Value, folders: &[(String, String)]) {
+        match value {
+            Value::String(text) => {
+                for (folder, name) in folders {
+                    if text.contains(folder.as_str()) {
+                        *text = text
+                            .replace(&format!("{folder}\\"), "")
+                            .replace(&format!("{folder}/"), "")
+                            .replace(folder.as_str(), name);
+                    }
+                }
+            }
+            Value::Array(items) => items.iter_mut().for_each(|item| strip(item, folders)),
+            Value::Object(fields) => fields.values_mut().for_each(|field| strip(field, folders)),
+            _ => {}
+        }
+    }
+    let mut document = document.clone();
+    file_names(&mut document);
+    // The worker may spell a folder with either separator; the deepest
+    // folder goes first so a nested one is not cut at its parent.
+    let mut spellings: Vec<(String, String)> = folders
+        .iter()
+        .flat_map(|folder| {
+            let name = folder
+                .rsplit(['/', '\\'])
+                .next()
+                .unwrap_or_default()
+                .to_owned();
+            [
+                (folder.clone(), name.clone()),
+                (folder.replace('\\', "/"), name),
+            ]
+        })
+        .collect();
+    spellings.sort_by_key(|(folder, _)| std::cmp::Reverse(folder.len()));
+    spellings.dedup();
+    strip(&mut document, &spellings);
+    document
+}
+
 /// The outcome a projection settles to, reading the result where there is one.
-async fn outcome(relayed: &Relayed<'_>, p: &Value, mutation: bool) -> Result<Outcome> {
+async fn outcome(
+    relayed: &Relayed<'_>,
+    p: &Value,
+    mutation: bool,
+    folders: &[String],
+) -> Result<Outcome> {
     let operation_id = relayed.operation.clone();
     let revision = p["revision"].as_u64().ok_or_else(protocol)?;
     let cancellable = p["cancellable_now"] == true;
@@ -432,8 +510,7 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, mutation: bool) -> Result<Out
                     "unavailable"
                 })
             })?;
-            let mut result = document["projection"].clone();
-            file_names(&mut result);
+            let result = reduced(&document["projection"], folders);
             if !result.is_object() {
                 return Err(failure(if mutation {
                     "saved_unread"
@@ -455,11 +532,7 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, mutation: bool) -> Result<Out
                 relay::result(relayed)
                     .await
                     .ok()
-                    .map(|document| {
-                        let mut detail = document["projection"].clone();
-                        file_names(&mut detail);
-                        detail
-                    })
+                    .map(|document| reduced(&document["projection"], folders))
                     .filter(Value::is_object)
             } else {
                 None
@@ -489,13 +562,14 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, mutation: bool) -> Result<Out
 /// unknown for a mutation, which is never sent again.
 async fn settle(
     events: &mut Receiver<PersonEvent>,
-    relayed: &Relayed<'_>,
-    definition: Definition,
+    tracked: &Tracked,
+    person: &HeldPerson,
 ) -> Result<Outcome> {
-    let mutation = definition.mutation();
+    let relayed = &tracked.relayed(person);
+    let mutation = tracked.definition.mutation();
     let settled = tokio::time::timeout(relay::SETTLE_LIMIT, async {
         let p = relay::follow(events, relayed, waits_on_person).await?;
-        outcome(relayed, &p, mutation).await
+        outcome(relayed, &p, mutation, &tracked.folders).await
     })
     .await
     .unwrap_or_else(|_| Err(failure(if mutation { "unknown" } else { "unavailable" })));
@@ -519,6 +593,7 @@ async fn submit_on(
     events: &mut Receiver<PersonEvent>,
     definition: Definition,
     mut payload: Wiped,
+    folders: Vec<String>,
 ) -> Result<Outcome> {
     let profile = identity["profile_id"]
         .as_str()
@@ -539,16 +614,17 @@ async fn submit_on(
         subject,
         identity,
         shown: None,
+        folders,
     };
     operations.track(tracked.clone());
-    settle(events, &tracked.relayed(person), definition).await
+    settle(events, &tracked, person).await
 }
 
 async fn observe_on(tracked: &Tracked, person: &HeldPerson) -> Result<Outcome> {
     let relayed = tracked.relayed(person);
     let mutation = tracked.definition.mutation();
     let observed = match relay::observe(&relayed).await {
-        Ok(p) => outcome(&relayed, &p, mutation).await,
+        Ok(p) => outcome(&relayed, &p, mutation, &tracked.folders).await,
         Err(failure) => Err(failure),
     };
     observed.map_err(|mut failure| {
@@ -611,7 +687,7 @@ async fn review_on(
         revision,
         review_digest: digest.to_owned(),
         expires_at: reply["expires_at"].as_str().map(str::to_owned),
-        review: review.clone(),
+        review: reduced(review, &tracked.folders),
     })
 }
 
@@ -646,12 +722,17 @@ async fn answer_on(
     .map_err(|_| unknown())?;
     operations.show(&tracked.operation, None);
     if reply["kind"] == "operation_refused" {
+        // The relay answers "unavailable" when the runtime's reply was lost
+        // after the answer may have been taken.
+        if reply["code"] == "unavailable" {
+            return Err(unknown());
+        }
         return Err(review_refusal(&reply));
     }
     if reply["kind"] != "operation_responded" || reply["operation_id"] != tracked.operation {
         return Err(unknown());
     }
-    settle(events, &tracked.relayed(person), tracked.definition).await
+    settle(events, tracked, person).await
 }
 
 /// Asks the runtime to cancel at the revision the window observed, then
@@ -807,7 +888,7 @@ impl LedgerHost {
         let _serial = self.profile.serial().await;
         let person = self.profile.person(None).await?;
         let identity = relay::identity(&person).await?;
-        substitute(
+        let folders = substitute(
             &self.files,
             &identity,
             definition,
@@ -824,9 +905,19 @@ impl LedgerHost {
             &mut events,
             definition,
             payload,
+            folders,
         )
         .await?;
-        self.still_holding(&person).await?;
+        if let Err(changed) = self.still_holding(&person).await {
+            // The account changed after the write was sent: the write may
+            // have committed, so it is unknown, never "not sent".
+            if !definition.mutation() {
+                return Err(changed);
+            }
+            let mut unknown = failure("unknown");
+            unknown.operation_id = Some(outcome.operation_id().to_owned());
+            return Err(unknown);
+        }
         Ok(outcome)
     }
     /// Tokens for what the person dropped on the page that takes drops.

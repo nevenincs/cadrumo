@@ -92,13 +92,14 @@ fn file_tokens_become_paths_only_where_the_definition_reads_a_file() {
     assert!(!import.contains_key("source_directory"));
 
     let mut add = object(json!({"source_path":receipt}));
-    substitute(
+    let folders = substitute(
         &files,
         &session,
         definition("ledger.evidence.add"),
         &mut add,
     )
     .unwrap();
+    assert_eq!(folders, [root.to_str().unwrap()]);
     assert_eq!(add["source_path"], text(root.join("receipt.pdf")));
     assert_eq!(add["source_directory"], text(root.clone()));
 
@@ -321,6 +322,31 @@ fn results_name_files_and_never_where_they_are() {
     assert_eq!(result["queue"][2]["provider_locator"], "drive:1AbCdEf");
 }
 
+#[test]
+fn a_folder_the_host_filled_in_is_never_shown_wherever_the_worker_quotes_it() {
+    let folders = [
+        r"C:\Users\alba\Bancos".to_owned(),
+        r"C:\Users\alba\Bancos\2026".to_owned(),
+    ];
+    let document = json!({
+        "unresolved": [{"source_name": r"C:\Users\alba\Bancos\2026\n26.csv", "reason": "duplicate"}],
+        "message": r"could not read C:/Users/alba/Bancos/ing.csv",
+        "context": [{"value": r"in C:\Users\alba\Bancos"}],
+        "lines": [r"C:\Users\alba\Bancos\2026\abril\bbva.csv: 3 rows"],
+        "supplier": "C:\\Users\\albacete",
+        "amount": 12,
+    });
+    let shown = super::reduced(&document, &folders);
+    assert_eq!(shown["unresolved"][0]["source_name"], "n26.csv");
+    assert_eq!(shown["unresolved"][0]["reason"], "duplicate");
+    assert_eq!(shown["message"], "could not read ing.csv");
+    assert_eq!(shown["context"][0]["value"], "in Bancos");
+    assert_eq!(shown["lines"][0], r"abril\bbva.csv: 3 rows");
+    assert_eq!(shown["supplier"], "C:\\Users\\albacete");
+    assert_eq!(shown["amount"], 12);
+    assert!(!shown.to_string().contains("alba\\"));
+}
+
 fn projection(lifecycle: &str) -> Value {
     json!({"lifecycle":lifecycle, "terminal_condition":null, "effect":"none",
         "refusal_ref":null, "failure_error_code":null, "revision":3, "cancellable_now":false,
@@ -368,6 +394,7 @@ fn a_window_follows_only_its_own_sessions_operations() {
         subject: "profile:p".into(),
         identity: json!({"profile_id":"p","session_id":session}),
         shown: None,
+        folders: Vec::new(),
     };
     operations.track(tracked("a", "one"));
     assert!(operations.find("a").is_ok());
@@ -571,6 +598,7 @@ mod relayed {
             &mut events,
             definition("ledger.list"),
             Wiped(json!({"limit":200})),
+            Vec::new(),
         )
         .await
         .unwrap();
@@ -627,6 +655,7 @@ mod relayed {
             &mut events,
             definition("ledger.update"),
             Wiped(json!({"transaction_id":"t1","patch":{}})),
+            Vec::new(),
         )
         .await
         .unwrap();
@@ -690,6 +719,7 @@ mod relayed {
             &mut events,
             definition("ledger.own_account"),
             own_account_body(&body).unwrap(),
+            Vec::new(),
         )
         .await
         .unwrap();
@@ -721,12 +751,95 @@ mod relayed {
             &mut events,
             definition("ledger.add"),
             Wiped(json!({})),
+            Vec::new(),
         )
         .await
         .unwrap_err();
         assert_eq!(refused.code, "refused");
         assert_eq!(refused.reason.as_deref(), Some("subject_busy"));
         assert!(operations.find(OPERATION).is_err());
+    }
+
+    #[tokio::test]
+    async fn a_write_whose_submission_reply_was_lost_is_unknown_and_a_read_stays_refused() {
+        for (id, code, reason) in [
+            ("ledger.add", "unknown", None),
+            ("ledger.list", "refused", Some("unavailable")),
+        ] {
+            let held = holder(|_| {
+                vec![step(
+                    "operation_submit",
+                    json!([]),
+                    json!({"kind":"operation_refused","code":"unavailable","holder_operation_id":null}),
+                    false,
+                )]
+            });
+            let operations = Operations::default();
+            let mut events = held.events.subscribe();
+            let failed = submit_on(
+                &operations,
+                &held.person,
+                held.identity.clone(),
+                &mut events,
+                definition(id),
+                Wiped(json!({})),
+                Vec::new(),
+            )
+            .await
+            .unwrap_err();
+            assert_eq!(failed.code, code, "{id}");
+            assert_eq!(failed.reason.as_deref(), reason, "{id}");
+        }
+    }
+
+    #[tokio::test]
+    async fn an_answer_whose_reply_was_lost_is_unknown_for_its_operation() {
+        let digest = "c".repeat(64);
+        let held = holder(|_| {
+            vec![
+                step(
+                    "operation_review",
+                    json!([]),
+                    json!({"kind":"operation_review","operation_id":OPERATION,"interaction_id":"i-1",
+                        "revision":5,"expires_at":null,"review_digest":"c".repeat(64),
+                        "document":{"projection":{"proposal":{}}}}),
+                    false,
+                ),
+                step(
+                    "operation_respond",
+                    json!([]),
+                    json!({"kind":"operation_refused","code":"unavailable","holder_operation_id":null}),
+                    false,
+                ),
+            ]
+        });
+        let operations = Operations::default();
+        operations.track(Tracked {
+            operation: OPERATION.into(),
+            definition: definition("ledger.classify.review"),
+            subject: format!("profile:{PROFILE}"),
+            identity: held.identity.clone(),
+            shown: None,
+            folders: Vec::new(),
+        });
+        let tracked = operations.find(OPERATION).unwrap();
+        review_on(&operations, &tracked, &held.person)
+            .await
+            .unwrap();
+        let tracked = operations.find(OPERATION).unwrap();
+        let mut events = held.events.subscribe();
+        let lost = answer_on(
+            &operations,
+            &tracked,
+            &held.person,
+            &mut events,
+            &digest,
+            Decision::Apply,
+        )
+        .await
+        .unwrap_err();
+        assert_eq!(lost.code, "unknown");
+        assert_eq!(lost.operation_id.as_deref(), Some(OPERATION));
     }
 
     #[tokio::test]
@@ -742,6 +855,7 @@ mod relayed {
             &mut events,
             definition("ledger.classify.bulk"),
             Wiped(json!({"csv_text":"a".repeat(PAYLOAD_LIMIT)})),
+            Vec::new(),
         )
         .await
         .unwrap_err();
@@ -820,6 +934,7 @@ mod relayed {
             &mut events,
             definition("ledger.classify.review"),
             Wiped(json!({"transaction_id":"t1","mode":"classification"})),
+            Vec::new(),
         )
         .await
         .unwrap();
@@ -909,6 +1024,7 @@ mod relayed {
             subject: format!("profile:{PROFILE}"),
             identity: held.identity.clone(),
             shown: None,
+            folders: Vec::new(),
         });
         let tracked = operations.find(OPERATION).unwrap();
         review_on(&operations, &tracked, &held.person)
@@ -946,6 +1062,7 @@ mod relayed {
             subject: format!("profile:{PROFILE}"),
             identity: held.identity.clone(),
             shown: None,
+            folders: Vec::new(),
         };
         let refused = cancel_on(&tracked, &held.person, 9).await.unwrap_err();
         assert_eq!(refused.code, "refused");
