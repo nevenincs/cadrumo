@@ -1419,6 +1419,8 @@ desktop:
       link_offer: Link it to its movement?
       link_offer_note: '{description} · {date} · {amount} settles it. A link is permanent
         once saved.'
+      list_hide: Fold the readings
+      list_show: Show the readings
       media:
         image: Image
         pdf: PDF
@@ -1545,6 +1547,7 @@ desktop:
           too_large: The document is too large to show here.
           unreadable: The file cannot be opened as the type it was saved as.
           unsupported_media: Only PDF, JPEG and PNG documents can be shown here.
+        resize: Resize the document
         zoom: 'Zoom: {percent}%'
         zoom_in: Zoom in
         zoom_out: Zoom out
@@ -1674,9 +1677,6 @@ desktop:
       inactive: Include archived and set-aside movements
       left_out: Left out · archived {archived} · set aside {aside} · split {split}
       no_file: No file chosen
-      not_ready: Not ready for calculation
-      not_ready_note: 'Readiness issues: {count}. The file shows what the ledger holds
-        now.'
       period: Export period
       refused: Not exported
       review_staged: Review and save
@@ -1839,7 +1839,6 @@ desktop:
         declaration; nothing else changes.
       missing: What's still missing · {period}
       net: Net, EUR
-      no_movements: No movements in {period}. That isn't the same as nothing owed.
       not_run: 'Not run yet: nothing is shown as zero until it''s measured.'
       of_active: Of the active
       one_sided: One-sided invoice links
@@ -1863,6 +1862,7 @@ desktop:
       status: Status · {period}
       unconverted: Foreign without a rate
       whole: Check the whole ledger
+      whole_counts: Movements · whole ledger
     import:
       accepts:
         bank: CSV, XLSX, XLS, OFX, QFX or PDF · up to 128 files · folders inside a
@@ -2888,18 +2888,20 @@ desktop:
       year: Ratio year
     readiness:
       checking: Checking…
-      failed: Couldn't check readiness
+      failed: Couldn't check · Check again
       fewer: Fewer
-      loaded_only: loaded rows only
+      listed_only: the check lists only some of them
       more: +{count}
       more_name: 'More reasons: {count}'
       no_rate: 'Without an EUR rate: {count}'
       not_checked: Not checked yet
+      not_checked_period: '{period} not checked yet · Check'
       not_measured: Readiness not measured
       not_ready: Not ready for calculation · {count} to fix
+      not_ready_period: Not ready for calculation · nothing to fix on a single movement
       out_of_date: 'Not checked since saving · Changes: {count}'
       ready: Ready for calculation · checked {time}
-      reason_name: '{reason}: {count}. Show them and how to fix them'
+      reason_action: Shows them and how to fix them
       reasons: Readiness reasons
       staged: '{count} staged'
       title: Readiness

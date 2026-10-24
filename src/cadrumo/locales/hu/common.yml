@@ -1434,6 +1434,8 @@ desktop:
       link_offer: Összekapcsolod a tételével?
       link_offer_note: '{description} · {date} · {amount} kiegyenlíti. A kapcsolás
         mentés után végleges.'
+      list_hide: Olvasatok összecsukása
+      list_show: Olvasatok megjelenítése
       media:
         image: Kép
         pdf: PDF
@@ -1562,6 +1564,7 @@ desktop:
           too_large: A dokumentum túl nagy ahhoz, hogy itt megjelenjen.
           unreadable: A fájl nem nyitható meg azként a típusként, amellyel mentették.
           unsupported_media: Itt csak PDF-, JPEG- és PNG-dokumentum jeleníthető meg.
+        resize: Dokumentum átméretezése
         zoom: 'Nagyítás: {percent}%'
         zoom_in: Nagyítás
         zoom_out: Kicsinyítés
@@ -1690,9 +1693,6 @@ desktop:
       inactive: Archivált és félretett tételekkel együtt
       left_out: Kimarad · archivált {archived} · félretett {aside} · felosztott {split}
       no_file: Nincs kiválasztott fájl
-      not_ready: Nem kész a számításra
-      not_ready_note: 'Készültségi problémák: {count}. A fájl azt mutatja, ami most
-        a naplóban van.'
       period: Exportálási időszak
       refused: Nincs exportálva
       review_staged: Áttekintés és mentés
@@ -1855,7 +1855,6 @@ desktop:
         bevallást beolvas; más nem változik.
       missing: Ami még hiányzik · {period}
       net: Nettó, EUR
-      no_movements: '{period} időszakban nincs tétel. Ez nem jelenti, hogy nincs fizetnivaló.'
       not_run: 'Még nem futott: amíg nincs mérve, semmi sem jelenik meg nullaként.'
       of_active: Az aktívak közül
       one_sided: Egyoldalú számlakapcsolatok
@@ -1880,6 +1879,7 @@ desktop:
       status: Állapot · {period}
       unconverted: Árfolyam nélküli devizás
       whole: A teljes napló ellenőrzése
+      whole_counts: Tételek · teljes napló
     import:
       accepts:
         bank: CSV, XLSX, XLS, OFX, QFX vagy PDF · legfeljebb 128 fájl · a mappán belüli
@@ -2913,18 +2913,20 @@ desktop:
       year: Arány éve
     readiness:
       checking: Ellenőrzés…
-      failed: A készültséget nem sikerült ellenőrizni
+      failed: Nem sikerült ellenőrizni · Ellenőrizd újra
       fewer: Kevesebb
-      loaded_only: csak a betöltött sorok
+      listed_only: az ellenőrzés csak egy részüket sorolja fel
       more: +{count}
       more_name: 'További okok: {count}'
       no_rate: 'Euróárfolyam nélkül: {count}'
       not_checked: Még nincs ellenőrizve
+      not_checked_period: '{period} még nincs ellenőrizve · Ellenőrzés'
       not_measured: A készültség nincs felmérve
       not_ready: Nem kész a számításra · {count} javítandó
+      not_ready_period: Nem kész a számításra · egyetlen tételen sincs javítanivaló
       out_of_date: 'Mentés óta nincs ellenőrizve · Változások: {count}'
       ready: 'Számításra kész · ellenőrizve: {time}'
-      reason_name: '{reason}: {count}. Mutasd őket és a javításuk módját'
+      reason_action: Megmutatja őket és a javításuk módját
       reasons: Készültségi okok
       staged: '{count} előkészítve'
       title: Készültség

@@ -1451,6 +1451,8 @@ desktop:
       link_offer: La vincules al seu moviment?
       link_offer_note: '{description} · {date} · {amount} la liquida. Un vincle és
         permanent un cop desat.'
+      list_hide: Plega les lectures
+      list_show: Mostra les lectures
       media:
         image: Imatge
         pdf: PDF
@@ -1577,6 +1579,7 @@ desktop:
           too_large: El document és massa gran per mostrar-lo aquí.
           unreadable: El fitxer no es pot obrir com el tipus amb què es va desar.
           unsupported_media: Aquí només es poden mostrar documents PDF, JPEG i PNG.
+        resize: Canvia l'amplada del document
         zoom: 'Zoom: {percent} %'
         zoom_in: Apropa
         zoom_out: Allunya
@@ -1706,9 +1709,6 @@ desktop:
       inactive: Inclou moviments arxivats i apartats
       left_out: Fora · arxivats {archived} · apartats {aside} · dividits {split}
       no_file: Cap fitxer triat
-      not_ready: No llest per calcular
-      not_ready_note: 'Problemes de preparació: {count}. El fitxer mostra el que el
-        llibre conté ara.'
       period: Període d'exportació
       refused: No exportat
       review_staged: Revisa i desa
@@ -1871,7 +1871,6 @@ desktop:
         totes les declaracions; res més no canvia.
       missing: El que encara falta · {period}
       net: Net, EUR
-      no_movements: No hi ha moviments a {period}. No és el mateix que no deure res.
       not_run: 'Encara no feta: res no es mostra com a zero fins que es mesura.'
       of_active: Dels actius
       one_sided: Enllaços de factura d'un sol costat
@@ -1895,6 +1894,7 @@ desktop:
       status: Estat · {period}
       unconverted: Estrangers sense canvi
       whole: Comprova tot el llibre
+      whole_counts: Moviments · tot el llibre
     import:
       accepts:
         bank: CSV, XLSX, XLS, OFX, QFX o PDF · fins a 128 fitxers · no es llegeixen
@@ -2929,18 +2929,20 @@ desktop:
       year: Any del percentatge
     readiness:
       checking: S'està comprovant…
-      failed: No s'ha pogut comprovar la preparació
+      failed: No s'ha pogut comprovar · Torna a comprovar
       fewer: Menys
-      loaded_only: només les files carregades
+      listed_only: la comprovació només n'enumera una part
       more: +{count}
       more_name: 'Més motius: {count}'
       no_rate: 'Sense tipus de canvi a euros: {count}'
       not_checked: Encara sense comprovar
+      not_checked_period: '{period} encara sense comprovar · Comprova'
       not_measured: Preparació sense mesurar
       not_ready: No llest per calcular · {count} per corregir
+      not_ready_period: No llest per calcular · res a corregir en un moviment concret
       out_of_date: 'Sense comprovar des que vas desar · Canvis: {count}'
       ready: Llest per calcular · comprovat a les {time}
-      reason_name: '{reason}: {count}. Mostra''ls i com corregir-los'
+      reason_action: Els mostra i com corregir-los
       reasons: Motius de preparació
       staged: '{count} preparats'
       title: Preparació

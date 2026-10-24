@@ -1455,6 +1455,8 @@ desktop:
       link_offer: ¿Vincularla a su movimiento?
       link_offer_note: '{description} · {date} · {amount} la liquida. Un vínculo es
         permanente una vez guardado.'
+      list_hide: Plegar las lecturas
+      list_show: Mostrar las lecturas
       media:
         image: Imagen
         pdf: PDF
@@ -1581,6 +1583,7 @@ desktop:
           too_large: El documento es demasiado grande para mostrarlo aquí.
           unreadable: El archivo no se puede abrir como el tipo con el que se guardó.
           unsupported_media: Aquí solo se pueden mostrar documentos PDF, JPEG y PNG.
+        resize: Cambiar el ancho del documento
         zoom: 'Zoom: {percent} %'
         zoom_in: Acercar
         zoom_out: Alejar
@@ -1712,9 +1715,6 @@ desktop:
       inactive: Incluir movimientos archivados y apartados
       left_out: Fuera · archivados {archived} · apartados {aside} · divididos {split}
       no_file: Ningún archivo elegido
-      not_ready: No listo para calcular
-      not_ready_note: 'Problemas de preparación: {count}. El archivo muestra lo que
-        el libro contiene ahora.'
       period: Periodo de exportación
       refused: No exportado
       review_staged: Revisar y guardar
@@ -1877,7 +1877,6 @@ desktop:
         todas las declaraciones; nada más cambia.
       missing: Lo que aún falta · {period}
       net: Neto, EUR
-      no_movements: No hay movimientos en {period}. No es lo mismo que no deber nada.
       not_run: 'Aún no hecha: nada se muestra como cero hasta medirlo.'
       of_active: De los activos
       one_sided: Enlaces de factura de un solo lado
@@ -1901,6 +1900,7 @@ desktop:
       status: Estado · {period}
       unconverted: Extranjeros sin cambio
       whole: Comprobar todo el libro
+      whole_counts: Movimientos · todo el libro
     import:
       accepts:
         bank: CSV, XLSX, XLS, OFX, QFX o PDF · hasta 128 archivos · no se leen las
@@ -2934,18 +2934,21 @@ desktop:
       year: Año del porcentaje
     readiness:
       checking: Comprobando…
-      failed: No se ha podido comprobar la preparación
+      failed: No se ha podido comprobar · Vuelve a comprobar
       fewer: Menos
-      loaded_only: solo las filas cargadas
+      listed_only: la comprobación solo enumera una parte
       more: +{count}
       more_name: 'Más motivos: {count}'
       no_rate: 'Sin tipo de cambio a euros: {count}'
       not_checked: Aún sin comprobar
+      not_checked_period: '{period} aún sin comprobar · Comprobar'
       not_measured: Preparación sin medir
       not_ready: No listo para calcular · {count} por corregir
+      not_ready_period: No listo para calcular · nada que corregir en un movimiento
+        concreto
       out_of_date: 'Sin comprobar desde que guardaste · Cambios: {count}'
       ready: Listo para calcular · comprobado a las {time}
-      reason_name: '{reason}: {count}. Muéstralos y cómo corregirlos'
+      reason_action: Los muestra y cómo corregirlos
       reasons: Motivos de preparación
       staged: '{count} preparados'
       title: Preparación
