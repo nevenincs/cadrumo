@@ -9,7 +9,7 @@ related:
   - '[[2026-10-24-rust-component-provisioning-reference]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:a5fd6913238bdbc711e77c9694cfe80def13849703e77e2b0b6a584f5372b57f'
+body_hash: 'sha256:288b6de335ff84ead1b715ae2a1fb060bfad4c4b12bc276f75afb574038368c1'
 ---
 
 # `component-on-demand` plan
@@ -41,7 +41,8 @@ The work is independent of the proposed `2026-10-24-rust-component-provisioning-
 - [x] `S08` - Route every desktop refusal whose verdict names operator.provision to the setup prompt on that item, and give the Readers tab a set-up action; `native/desktop/frontend/src/shell/ledger.ts, native/desktop/frontend/src/App.tsx, native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx, native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx, scenarios and stories`.
 - [ ] `S09` - Add the consumer gating gate: every browser and model-role consumer declares its item and refuses with operator.provision.<item> before any effect; `src/cadrumo/application/tests/test_dependency_consumer_gating.py`.
 - [x] `S10` - Carry the column reader refusal through invoice bulk intake instead of turning every error into a silent decline, and make the reader probe check the model the mapper actually sends; `src/cadrumo/entrypoints/invoice_intake_operation_composition.py, src/cadrumo/adapters/outbound/llm/column_role_mapping.py, src/cadrumo/application/local_reader.py and tests`.
-- [ ] `S11` - Keep the reader verdict on the outer evidence extraction refusal so it routes to setup, and carry the local AI recovery action on the reader readiness projections; `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py, src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py, src/cadrumo/_data/operations/contract_manifest.json and tests`.
+- [x] `S11` - Keep the reader verdict on the outer evidence extraction refusal so it routes to setup, and carry the local AI recovery action on the reader readiness projections; `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py, src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py, src/cadrumo/_data/operations/contract_manifest.json and tests`.
+- [ ] `S12` - Repair the label-reading notice tests the reader pre-check broke, publish the error detail of the ledger classification and evidence ingestion operations so their reader verdicts reach every surface, and make the desktop Readers tab read each role's recovery action; `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_label_reading_notice.py and its loopback runtime, the ledger classification and evidence ingestion operation definitions, native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx and shell/ledger.ts, and tests`.
 
 ## Parallelization
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:fb952dfd5b9344033fa1b90f99a3507d5deaae5b52e3f64850d73129336b1b1e'
+body_hash: 'sha256:bae4b883e560f8b565891382f6c38f530a156121d5472aaecf2d678fc741427d'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -180,6 +180,17 @@ related:
 - `S05` `verify:` `focused pytest (652)` -> `pass`
 - `S05` `verify:` `ruff, ty, lint-imports, check-operation-contract-manifest` -> `pass`
 - `S05` `verify:` `just check-locales: pre-existing failures unchanged, no new findings from S05 keys` -> `fail`
+- `S11` `M` `src/cadrumo/application/ledger/invoice_draft_extraction.py`
+- `S11` `M` `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py`
+- `S11` `M` `src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py`
+- `S11` `A` `src/cadrumo/application/ledger/tests/test_invoice_evidence_reader_readiness_recovery.py`
+- `S11` `M` `src/cadrumo/application/local_reader.py`
+- `S11` `A` `src/cadrumo/entrypoints/tests/test_evidence_reader_refusal_settlement.py`
+- `S11` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_invoice_evidence_native.py`
+- `S11` `verify:` `evidence reader refusal settlement through the real supervisor (2) and readiness recovery on a real loopback runtime (3)` -> `pass`
+- `S11` `verify:` `executor conformance and operations suites (857)` -> `pass`
+- `S11` `verify:` `ruff, ty, pyrefly, basedpyright, lint-imports, check-operation-contract-manifest` -> `pass`
+- `S11` `verify:` `caller suites: 3109 passed, 25 failed not from S11 (18 TUI catalogue from modelo work, 1 flaky) and 6 label-reading notice tests broken by S02's pre-check` -> `fail`
 
 ## Notes
 
@@ -191,3 +202,4 @@ related:
 - `S08` Readers projections carry no recovery action id, so the Readers tab offers setup when the local AI row is set-up-able; Modelo and Censo ports carry no verdict and are not routed
 - `S10` Mapping model resolves through `select_role_model` for both probe and dispatch; `map_column_roles` removed for `resolve_header_roles;` text and vision readers still send their raw settings (out of scope)
 - `S05` Missing browser now settles `REFUSED_BROWSER_NOT_READY` with a message key and no internal context lines; unused cli.yml key `cli.app.ledger.evidence.label_reading_reader_unavailable` and the TUI's own label-reading wording are left for S09 cleanup
+- `S11` The verdict was lost to a doubled refusal and to ledger.evidence.extract not publishing its error detail; `recovery_action_id` rides on role rows only because the host probe names no action
