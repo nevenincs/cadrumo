@@ -944,3 +944,252 @@ R17 set 7.5rem before R22 made the status word appear only in comfortable densit
 - **Duplicate pairing in the import preview (R12).** The dry run names only the ids of the rows it would import, with no date or amount, so the window cannot pair a new row with the stored movement. The `⚠ n` chip and its note ship; pairing needs the import preview to return those row facts.
 - **"Keep both" for a possible duplicate.** No product operation clears an import's likely-duplicate diagnostic, and the TUI offers only filtering and lifecycle actions. The page offers "Archive as duplicate" (`ledger.archive` with the reason prefilled) and nothing for keep-both.
 - **Seeing a document before confirming it** moved to P03.S19, under the 2026-10-24 amendment to `2026-10-23-desktop-ledger-editor-adr`.
+
+## P03 re-review, 2026-10-24
+
+Changes from 2ee7b77c63 to d7311a0669. No critical or high finding: the two P03 highs and the two usability criticals are resolved. Six medium and eight low findings follow; the mediums are fixed under the reopened affected Steps.
+
+#### Status of the earlier findings
+
+### P03 phase-close review
+
+- **setup-unknown-not-held (high):** resolved for the binding constraint. There is now one page pause (`WritePause.tsx`) that every Setup, Invoices, Import, Documents, model-ask and staged-apply writer checks and records into. `saved_unread` is mapped to its own outcome (`setupModel.ts:65`, `invoiceWrites.ts:49`) and worded as saved. Every ledger write route I traced is behind `WriteHold`, or returns early on `held`.
+  - What remains: the re-read does not settle the forms' own outcome (P03R generic-settle-resolves-nothing). Document imports still fold `saved_unread` into unknown (low). Export is outside the pause (low).
+- **approval-after-corrections (high):** resolved.
+  - `checkRow` holds an approval on any field edit or m210 (`ledgerPlan.ts:708`), and on a rules apply that names the movement (`ledgerPlan.ts:713-722`, `ruleApplyClashes` 550-563).
+  - The review offers "Drop the edits", "Drop the rules apply" and "Drop the approval" (`ReviewDialog.tsx:436-475`).
+  - Plan tests: `ledger-plan.spec.ts:433, 467`.
+  - Link and attach on the same row are not held. That is correct: answers rank 0 and link/attach rank 1 (`ledgerPlan.ts:401-418`), so the approval commits first.
+- **sealed-never-supplied (medium):** partly resolved. A sealed set now reaches the grid, both inspectors, `ActionDialog` and the review's `planApply`. Above its bound, or after a failed read, an unread movement is still treated as unsealed (P03R sealed-unread-claimed-unsealed).
+- **redundant-share-clear (medium):** resolved. `clearedBy` (`ledgerPlan.ts:138-154`) sends the clears on the classification's own route (`ledgerPlan.ts:596-609`). This matches `_command_from_patch` (`src/cadrumo/application/ledger/actions_manual.py:1451-1465`). `bulkRow` puts no cell for a clear (`ledgerPlan.ts:855-860`). Tests: `ledger-plan.spec.ts:505, 549`.
+- **status-done-unchecked (medium):** resolved in the grid (`MovementsGrid.tsx:143-147, 338-340`, `MovementsSection.tsx:546-551`). It remains in the inspector header and the selection counts (P03R unmeasured-drawn-done-in-inspectors).
+- **permanent-link-unknowns (medium):** resolved.
+  - A link whose invoice could not be read is held, and a Re-read is offered (`ReviewDialog.tsx:1471-1473`, `useLedgerApply.ts:262-269`).
+  - A currency mismatch needs the second tick (`editingModel.ts:951-960`).
+- **rule-apply-unknown-finding (low):** resolved. It is keyed by the action id and worded through `actionText` (`ledgerApply.ts:721-726`, `useLedgerApply.ts:335-345`).
+- **output-language (low):** resolved (`ReviewDialog.tsx:1355-1359`). `locale` is always a catalogue key (`useLanguage.ts:100`, `strings.ts:10`).
+- **superseded-reviews (low):** partly resolved. A review is released only from inside the mounted `ModelSuggestion` (P03R superseded-reviews-partial).
+- **readiness-dead-code (low):** resolved. `readinessCurrency` and `readinessAfterSave` are gone from `src` and `tests`.
+- **split-followups-silent (low):** resolved.
+  - `partsUnnamed` adds a `parts_unnamed` row (`ledgerApply.ts:322-328, 460-461`).
+  - `keepAfterApply` skips `follows` rows, so the split is never staged again (`ledgerApply.ts:538-543`).
+
+### P03 usability and design review
+
+- **classify-flow-hides-description (critical):** resolved for the reported failure. Description is in the pinned group (`movementsModel.ts:76-83`), the pinned edges show, and there is a `+n` cue. The narrow layout the review measured is not fixed: the 40rem grid minimum is still not enforced (P03R pinned-group-narrow-band).
+- **unknown-titled-nothing-saved (critical):** resolved.
+  - The result is titled by its worst outcome (`ReviewDialog.tsx:1692-1708`).
+  - The banner uses the Alert pattern with its action at the end (`WritePause.tsx:189-214`).
+  - Rows the post-apply read shows as saved are dropped (`useLedgerApply.ts:391-400`).
+  - The re-read that follows can drop edits made after the apply (P03R reread-drops-new-edits).
+- **business-on-income-forces-expense-category (high):** resolved.
+  - `takesExpenseCategory` (`ledgerCommands.ts:69-74`) reproduces `_transaction_needs_expense_category` (`src/cadrumo/application/ledger/preflight.py:479-495`): OUTGOING, or INCOMING with purchase evidence. `INTERNAL_TRANSFER` takes none, and transfers are blocked anyway.
+  - The dialog counts and words the split (`ClassifyDialog.tsx:92-106, 219-225`).
+  - The review raises an "Expense category on income" chip (`ReviewDialog.tsx:244-259, 1484-1492`).
+  - Caveat: the rule reads the stored direction, not a staged one (see the low items below).
+- **alt-b-dead-after-checkbox-selection (high):** resolved for the grid, the checkboxes, the toolbar and the inspector.
+  - A document-level listener scoped to `.ledger-page` handles the chords (`MovementsSection.tsx:1090-1107`).
+  - Shift+Space now starts row mode (`data-grid.tsx:1105-1111`).
+  - When the selection and the range differ, the dialog says so (`ClassifyDialog.tsx:145-162`).
+  - Remaining gaps are in the low items below.
+- **document-no-preview (high):** deferred to P03.S19. Not re-reported.
+- **import-duplicates-unmarked (high):** resolved for the marker, the strip chip and "Archive as duplicate" (`MovementsSection.tsx:511-529`, `MovementCells.tsx:85`, `MovementInspector.tsx:362-383`). Pairing in the preview and "Keep both" are deferred. Not re-reported.
+- **rule-matches-zero (high):** resolved.
+  - The count now reads `Matches {count} · {pending} to classify`.
+  - Category uses the Combobox (`RuleDialog.tsx:171-183`).
+  - "Make a rule" is in the selection menu and the group menu.
+  - Counterparty and amount matchers stay deferred under S14.
+- **focus-lost-after-dialogs (high):** resolved for each listed commit:
+  - Classify dialog: `onClosed` goes to `backToGrid`.
+  - Review: `returnReviewFocus` → `focusActive` (`LedgerEditing.tsx:152-161`, `LedgerPage.tsx:352-356`).
+  - "As read": focus goes to Confirm (`DraftReview.tsx:1029-1033`).
+  - Confirm: focus goes to "Link · permanent", or to the focusable root (`DraftReview.tsx:395-399, 576-579`).
+  - Paste and cost dialogs: focus goes back to the active cell (`MovementEditing.tsx:769-797`).
+  - Rule from the grid: focus goes back to the active cell (`LedgerPage.tsx:930-934`).
+  - Not verified by a run.
+- **Resolved by reading the code:**
+  - export-footer-offscreen: sticky `DialogFooter` (`dialog.tsx:139-163`) on Export, Import and Review.
+  - readiness-counts-disagree: the shared strip, hidden when the Export period differs (`ExportDialog.tsx:418`).
+  - category-search-fuzzy: `optionScore`, plus a popup at least as wide as its trigger that wraps.
+  - enter-reopens-combobox: `enterStages`.
+  - refused-raw-code.
+  - hidden-columns-no-cue.
+  - group-header-actions.
+  - selection-inspector-repeats.
+  - paste-refused-no-reason.
+  - usd-decimal-alignment: `currencySlot`.
+  - status-column-wasted: amended to 2.75rem compact by the owner ruling.
+- **mixed-without-category (medium):** partly resolved. The Mixed step now asks for a category, but against the real product the row still comes back "Needs fixing" (P03R mixed-step-still-needs-fixing).
+- **plural-grammar (low):** reworded to a `Label: {count}` form. I sampled 12 new keys and each is present in es, ca and hu. In the English sample no reworded string lost meaning: the paste columns moved into `title_into`, and the batch counts read "Rows · new · already". None of the reworded strings draws an unknown as zero. One pre-existing zero default is listed with the low items.
+- **review-repeats-itself, amount-comma-refusal, small-copy-and-chrome:** checked only by the presence of their keys and code paths; not traced in depth.
+
+### P03R · reread-drops-new-edits | medium | The re-read after an unknown save silently drops changes the person staged again while writes were paused
+
+- **Scenario:**
+  1. A save's outcome is unknown. The post-apply read already shows row A's category as saved, so A is added to `seen` and its staged category is dropped.
+  2. Writes are paused, but grid editing is not. The person stages a new category on A.
+  3. The person presses Re-read. `settle` marks every `seen` id as saved again and calls `dropSaved`, which dispatches `revert_cell` for every field the step sent.
+  4. A's new staged category is removed with no word. The banner says "A was saved".
+- **Other routes:** the same happens for any row the re-read finds saved, and for a re-staged approval. Its action id is the fixed `suggestion:${id}` (`ModelSuggestion.tsx:208`), so `drop_action` removes the new approval too.
+- **Evidence:**
+  - `components/ledger/editing/useLedgerApply.ts:309-317`: `dropSaved` reverts by field and action id, whatever the current staged value.
+  - `components/ledger/editing/useLedgerApply.ts:330-332`: `seen` is re-dropped.
+  - `shell/ledgerStage.ts:338-343`: `revert_cell` removes the staged change outright.
+- **Fix:** drop a field or action only while its staged value still equals the one the step sent. Compare against the `staged` snapshot that `settle` already closes over.
+
+### P03R · generic-settle-resolves-nothing | medium | A Setup, Rules, Import or Documents write with an unknown outcome is released by any one-movement read, and its form then sends the same document again
+
+- **Scenario:**
+  1. In the rule dialog, Save rule (`ledger.rule.add`) comes back unknown, and the page pauses.
+  2. Re-read runs the generic settle: `readWindow(port, period, 1)`. That read never looks at rules. If it answers, the hold is removed with "Rules: read again, check what is stored", and `onSettled` clears the dialog's notice.
+  3. The dialog is still open with the same pattern. `ready` depends only on `held`, so Save is enabled again. A second press sends the same `ledger.rule.add`, whose outcomes are only `added` or `validation_error` (`shell/ledgerSetup.ts:43`).
+  4. If the first save committed, the rule now exists twice.
+- **Other routes:** the same happens for Assets create and correct, Inventory, Prorrata, Capital goods, Counterparties, Ratios, Accounts, the invoice-book import and the document confirm. Each holds without a `settle` of its own.
+- **Why it matters:** the ADR's "pause until it re-reads" is met to the letter. The earlier fix requirement was "keep each form's send disabled until its re-read resolves the outcome", and here the re-read resolves nothing about what was written.
+- **Evidence:**
+  - `components/ledger/WritePause.tsx:134-145`: the generic settle.
+  - `components/ledger/setup/SetupParts.tsx:489-490`: Setup writes hold with no `settle`.
+  - `components/ledger/setup/RuleDialog.tsx:192-199, 219-224`.
+  - `components/ledger/setup/AssetsPane.tsx:364`.
+  - `components/ledger/transfer/ImportDialog.tsx:637, 648`.
+  - `components/ledger/documents/DraftReview.tsx:526-529`.
+- **Fix:** give each writer a `settle` that reads what it wrote, as the invoice editor's `landedOf` does (`InvoiceEditor.tsx:258-291`). For example, the rule list for the pattern, the asset list, or `ledger.evidence.review.list` for a confirm. Keep a form's send held until that `settle` answers.
+
+### P03R · unmeasured-drawn-done-in-inspectors | medium | The movement inspector and the selection inspector still draw reviewed movements as "Done" while readiness is unchecked or failed
+
+- **Scenario:** `ledger.preflight` fails, or has not answered yet. The grid now shows `◌` "Not measured". Meanwhile:
+  - The single-movement inspector header shows the badge "Done".
+  - The selection inspector counts every reviewed row under the success glyph.
+- **Why it matters:** both receive an empty `issues` map and take an unknown count as 0, which is the earlier finding on two other surfaces.
+- **Evidence:**
+  - `components/ledger/inspector/MovementInspector.tsx:274, 408`: `statusWord(row.review_status, issues.length)`.
+  - `components/ledger/inspector/inspectorModel.ts:116-119`: `issues.get(...)?.length ?? 0`.
+  - `components/ledger/inspector/SelectionInspector.tsx:170`.
+  - `components/ledger/inspector/inspectorContext.ts`: the context carries `issues` but not `checked`.
+- **Fix:** add `checked` to `SectionInspectorContext`. Pass `null` issue counts while it is false, as `MovementsGrid.tsx:143-147` already does.
+
+### P03R · sealed-unread-claimed-unsealed | medium | Past the 400-read bound, or after a failed `ledger.track`, a movement is planned and counted as unsealed
+
+- **Scenario:**
+  1. In a large period the person ticks the header to select all. The selection alone spends the 400 `ledger.track` reads for this window generation.
+  2. The person stages a change on a movement outside those 400, then opens the review.
+  3. `sealedOf` has no room left, so that movement is never read. The review plans it as "saved together", and "Set for n (k sealed skipped)" counts it as unsealed. The product then refuses it with `finalized_blockers`.
+- **Failed reads:** a failed read is cached as `null` for the whole generation and is never asked again at review time.
+- **Why it matters:** an unread movement is drawn as not sealed, against R1, R8 and the ADR rule that unknown is never drawn as known. The product's own guard prevents a wrong write.
+- **Evidence:**
+  - `components/ledger/useSealedMovements.ts:16`: `SEALED_READS = 400`.
+  - `components/ledger/useSealedMovements.ts:66-68`: `room` is shared across selection reads and review reads.
+  - `components/ledger/useSealedMovements.ts:29-33`: a failure becomes `null`.
+  - `components/ledger/useSealedMovements.ts:78`: only `true` counts as sealed.
+  - `components/ledger/LedgerPage.tsx:312-323`: the sealed reads are driven by the selection.
+- **Fix:**
+  - Give the review's `sealedOf` its own budget, and retry `null` entries there.
+  - Return the unread ids alongside the sealed ones, and have `planApply` and the selection counts show "sealed state not read · n" instead of counting those rows as savable.
+
+### P03R · mixed-step-still-needs-fixing | medium | Alt+M now asks for a share and a category, but the product still reports the row as needing a proportionality reference, and the scenario host cannot show it
+
+- **Scenario:**
+  1. On a telephone bill the person presses Alt+M and enters 30% and Mobile phone.
+  2. The Mixed step stages the classification, the share and the category, but no `usage_ratio_id` (`classifyCells`). The bulk passes `usage_ratio_id` through only when supplied (`classify_patch.py:193-194`).
+  3. After saving, the product's preflight raises `missing_proportionality_reference` for every MIXED row whose `usage_ratio_id` is None (`preflight.py:578-590`). The row reads "⚠ 1 · Needs fixing" again.
+- **Why the tests miss it:**
+  - The fixture host never raises that reason. Its `missing_category` rule also ignores INCOMING rows with purchase evidence (`src/dev/ledgerFixture.ts:592-608`).
+  - The scenario tests that exercise the Mixed flow therefore pass against looser rules than the host. This is a fidelity gap of the kind P01 · scenario-host-fidelity listed.
+- **Evidence:**
+  - `src/shell/ledgerCommands.ts:168-215`.
+  - `components/ledger/movements/ClassifyDialog.tsx:84-87, 124-127`.
+  - `src/cadrumo/application/ledger/preflight.py:578-590`.
+  - `src/dev/ledgerFixture.ts:592-608`.
+- **Fix:**
+  - Where a usage ratio is configured for the chosen category, have the Mixed step stage `usage_ratio_id` = that category, routed by R2 (`ledger.allocate` carries it), and say so otherwise.
+  - Make the fixture raise `missing_proportionality_reference` and the product's `missing_category` rule.
+
+### P03R · pinned-group-narrow-band | medium | With Description pinned, the grid widths the review measured leave almost no scrolling band, so the Classification cell the classify flows reveal cannot be shown whole
+
+- **Widths, from the column specs:**
+  - Pinned at the start: select 2.25 + status 7.5 (comfortable) or 2.75 (compact) + date 4.5 + description 12 = 26.25rem or 21.5rem.
+  - Pinned at the end: amount 6.5 + invoice 3 = 9.5rem.
+- **The band left over:**
+  - The earlier review measured a 591px grid at 1280 with the agent pane and the inspector open.
+  - In comfortable density the pinned width is 35.75rem = 572px, leaving about 19px to scroll in.
+  - In compact density the pinned width is 31rem = 496px, leaving about 95px.
+- **Effect:** the Classification column (8rem = 128px) can never be fully in view. `reveal` aligns its right edge, so most of the cell sits under the pinned Description, in exactly the flow the critical was about.
+- **Why it is unfixed:** the earlier finding's 40rem guarantee was not implemented. `GRID_MIN_REM` limits only resizing, and the panel is `shrink-0 w-inspector`.
+- **Evidence:**
+  - `components/ledger/movements/movementsModel.ts:71-92, 106, 122-123`.
+  - `components/ledger/inspector/RightPanel.tsx:18, 56-65, 116`.
+  - `components/ui/data-grid.tsx:652-660`.
+- **Fix:** when both the agent pane and the inspector are open, either open the inspector at `--inspector-min` or collapse the agent pane to its rail, so the grid keeps 40rem. Below a minimum scrolling band, unpin Description or let it shrink to its minimum.
+
+### P03R · superseded-reviews-partial | low | A staged approval dropped outside its movement's inspector leaves its review pending
+
+- **What is fixed:** a review is now released when it is asked again, when the inspector moves to another movement, or when the staged answer is dropped while `ModelSuggestion` is mounted for that movement.
+- **What is not:** dropping the approval while that inspector is not mounted leaves the review paused at its review step. That covers:
+  - the review dialog's "Drop the approval", which the new hold now offers;
+  - the per-row ×;
+  - the tray's Discard;
+  - the leave guard's Discard.
+- **Evidence:**
+  - `components/ledger/inspector/ModelSuggestion.tsx:101-126`: the only callers of `releaseReview`.
+  - `components/ledger/editing/ReviewDialog.tsx:444-449`.
+  - `components/ledger/editing/LedgerEditing.tsx:201, 233`.
+- **Fix:** release in one place that watches the stage, for example in `useLedgerEditing`: compare the suggestion actions before and after each `drop_action`, `revert_movement` or `discard`, and release every operation that disappears.
+
+### P03R · documents-saved-unread-as-unknown | low | Adding documents folds `saved_unread` into unknown, so a batch that saved is shown as "Outcome unknown"
+
+- **Evidence:**
+  - `components/ledger/transfer/importModel.ts:440-441` maps `saved_unread` to `"unknown"`.
+  - `components/ledger/transfer/ImportDialog.tsx:648-652` then holds it as unknown.
+  - Bank and book imports keep the distinction (`importModel.ts:368-369`, `ImportDialog.tsx:637`).
+- **Fix:** carry the code through `stopped.code`, and hold with `outcome: "saved_unread"` when it is that.
+
+### P03R · export-unknown-not-held | low | An export with an unknown outcome is not recorded in the page pause, so reopening Export sends it again with no re-read
+
+- **Why it matters:** R11 says an unknown export is never retried before a re-read. The dialog disables Send only in its own instance, and a new instance starts at idle.
+- **Evidence:** `components/ledger/transfer/ExportDialog.tsx:204-227, 592-599`. There is no `useWritePause` in that file.
+- **Fix:** hold the pause on an unknown export, and wrap Send in `WriteHold`.
+
+### P03R · chords-skip-the-header | low | Alt+B/P/M do nothing while focus is in the Ledger header (tabs, period, Import or Export)
+
+- **Why it happens:** the listener requires `closest(".ledger-page")`. That class is on the content `<section>`, and `LedgerHeader` is its sibling, outside it.
+- **Evidence:** `components/ledger/movements/MovementsSection.tsx:1101`, `components/ledger/LedgerPage.tsx:790-832`.
+- **Fix:** mark the page's root, header included, and test for that mark, or put the class on a wrapper around both.
+
+### P03R · shift-space-stale-anchor | low | Shift+Space selects from an old anchor, so row mode can again draw a range that differs from the selection
+
+- **Scenario:**
+  1. Click row 3, then press ↓ five times. The selection anchor stays on row 3.
+  2. Press Shift+Space. It selects rows 3 to 8, not the active row.
+  3. Press Shift+↓ twice. The cell range covers rows 8 to 10, while the selection covers rows 3 to 10.
+  4. Alt+B then shows "Selected: 8 · range: 3".
+- **Expected:** a spreadsheet selects only the current row on Shift+Space.
+- **Evidence:** `components/ui/data-grid.tsx:774-786` (range from `selectionAnchor`) and `1105-1111`.
+- **Fix:** on Shift+Space, set `selectionAnchor` to the active row and select that row only.
+
+### P03R · compact-status-glyphs | low | In compact density the 2.75rem Status column clips the lifecycle badge, and its header reuses the Done glyph
+
+- **The badge:**
+  - `StatusCell` also draws the lifecycle word as a `Badge` (Archived, Set aside, Split), the duplicate mark and a two-digit count. These cannot fit in 44px, so a non-active row's state is cut off.
+  - Evidence: `components/ledger/movements/MovementCells.tsx:54-87`, `movementsModel.ts:122-123`.
+- **The header glyph:**
+  - The compact header is the `check` glyph, which is also `STATUS_ICONS.done`. One glyph then means two things (DS-12).
+  - Evidence: `components/ledger/movements/MovementsGrid.tsx:280`, `MovementCells.tsx:27`.
+- **Fix:** draw the lifecycle state as a glyph with its name, for example the `lifecycle` column's glyph. Give the header a glyph that is not a state glyph.
+
+### P03R · text-tip-stale-anchor | low | The shared grid tooltip keeps the position it had when it opened, so a focused cell's tip floats over other rows while the grid scrolls
+
+- **Why it happens:** `box` is measured only when `GridTextTip` renders. The anchor is `position: fixed` outside the scroller, so the foundation's close-on-scroll does not fire for the grid's own scroll. A focused, cut-short cell that is scrolled within the overscan keeps its tip at the old coordinates.
+- **Evidence:** `components/ui/data-grid.tsx:247-299`, especially line 267.
+- **Fix:** hide the tip on the scroller's `onScroll`, which `syncView` already handles, or re-measure on scroll.
+
+### P03R · lower-points | low | Four smaller items
+
+- **Stored, not staged, values:**
+  - `takesExpenseCategory` and `incomeWithCategory` read the stored direction and evidence. A movement whose direction is staged to change is counted on its old direction. Evidence: `shell/ledgerCommands.ts:69-74`, `components/ledger/editing/ReviewDialog.tsx:255`.
+  - The selection inspector's `undecided` reads stored classifications, so the tax fields stay hidden after Business is staged for the whole selection (R8). Evidence: `SelectionInspector.tsx:172-174`.
+  - Use effective staged facts in all three.
+- **The review's "needs classification" fix:** its Business ▾ always asks for a category, even for income rows, which take none (`ReviewDialog.tsx:333-356`). It also bypasses the M4 command. Route it through `classifyCells` with the category step skipped for income.
+- **A failed duplicates read:** if the read fails, every duplicate mark and the strip chip disappear without a word (`MovementsSection.tsx:518-520`). Show the failure as the filter-membership read already does.
+- **Pre-existing, not introduced here:**
+  - The rules dry run draws a null `skipped_already_classified` or `no_match` as 0 (`components/ledger/setup/RulesSection.tsx:343-344`).
+  - The combobox ranking is not accent-insensitive, so "telefonia" does not match "Telefonía" as a word.
