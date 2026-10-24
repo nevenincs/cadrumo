@@ -138,9 +138,12 @@ declare global {
        * and an import would. */
       changeFile(name: string): void;
       /** Answers the next writes so, one each: `unknown` lands the write
-       * and leaves its settlement unobserved, `saved_unread` lands it and
-       * loses its answer, `refused` refuses it whole and writes nothing. */
-      nextWrites(outcomes: ("unknown" | "saved_unread" | "refused")[]): void;
+       * and leaves its settlement unobserved, `lost` leaves it unknown
+       * without its ever running, `saved_unread` lands it and loses its
+       * answer, `refused` refuses it whole and writes nothing. */
+      nextWrites(
+        outcomes: ("unknown" | "lost" | "saved_unread" | "refused")[],
+      ): void;
       /** Answers the next `count` reads of `definition` as unavailable,
        * as a runtime that did not answer them; with `where`, only reads
        * whose request carries each of its values. */
@@ -676,7 +679,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     definition === "ledger.classify.review";
   const reviews = new Map<string, Pending>();
   // How the next writes are answered, where a scenario asked.
-  const queued: ("unknown" | "saved_unread" | "refused")[] = [];
+  const queued: ("unknown" | "lost" | "saved_unread" | "refused")[] = [];
   // How many of the next reads of a definition answer nothing.
   const failingReads = new Map<string, number>();
   // Reads that fail only where their request carries these values.
@@ -686,6 +689,8 @@ export function ledgerFixture(options: Options): LedgerPort {
     count: number;
   }[] = [];
   const files = new Map<FileToken, { name: string; purpose: FilePurpose }>();
+  // The save tokens an export has written a file to.
+  const written = new Set<FileToken>();
   const bytesOf = (name: string) =>
     hex64(`bytes:${name}:${edits.get(name) ?? 0}`);
   const drops = new Set<(signal: LedgerDropSignal) => void>();
@@ -1728,6 +1733,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     const target = fileOf(request.output_path, "export");
     const format = (request.export_format as string | undefined) ?? "csv";
     if (target.name.split(".").pop() !== format) return invalid();
+    written.add(request.output_path as FileToken);
     const rows = ledger.movements.filter(
       (movement) =>
         (request.include_inactive === true ||
@@ -2113,6 +2119,10 @@ export function ledgerFixture(options: Options): LedgerPort {
         outcomes.set(operation, refused);
         return refused;
       }
+      // Sent, and never run: nothing was written, and nothing can be
+      // observed of it.
+      if (asked === "lost")
+        return reject("unknown", { operation_id: operation });
       const result = handle(request);
       // The write landed; its settlement was not observed, but it can be:
       // observing the operation answers what it settled.
@@ -2370,10 +2380,14 @@ export function ledgerFixture(options: Options): LedgerPort {
       const file = files.get(token);
       if (!file) return reject("file_unavailable");
       if (file.purpose !== "export") return reject("invalid");
+      if (!written.has(token)) return reject("file_unavailable");
     },
     async forgetFiles(tokens) {
       say("ledger forgetFiles");
-      tokens.forEach((token) => files.delete(token));
+      tokens.forEach((token) => {
+        files.delete(token);
+        written.delete(token);
+      });
     },
     async observeDrops(purpose, listener) {
       say(`ledger observeDrops ${purpose}`);

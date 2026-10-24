@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fixtureLedger } from "../src/dev/fixtures/ledger";
+import type { FileToken } from "../src/shell/ledger";
 import {
   RELAY_PAYLOAD_LIMIT,
   RELAY_REQUEST_LIMIT,
@@ -164,4 +165,43 @@ test("a model review names its movement by the full id, as the registered reques
   expect(await ask(`${id}0`)).toBe("invalid");
   // The full id is asked.
   expect(await ask(id)).toBeNull();
+});
+
+test("an export is shown in the file manager only once its file was written", async () => {
+  const port = ledgerFixture({
+    say: () => undefined,
+    wait: async () => undefined,
+    signedIn: () => true,
+    shape: "fixture",
+  });
+  const reveal = (token: FileToken) =>
+    port.revealFile(token).then(
+      () => null,
+      (error: { code: string }) => error.code,
+    );
+  const saveTo = async () =>
+    (await port.saveFile("csv", "CSV", "movimientos-2026.csv")).files[0]!.token;
+  const exportTo = (output_path: FileToken) =>
+    port.submit("ledger.export", { output_path, export_format: "csv" }).then(
+      () => null,
+      (error: { code: string }) => error.code,
+    );
+  // Saved to, but nothing written there yet.
+  const first = await saveTo();
+  expect(await reveal(first)).toBe("file_unavailable");
+  expect(await exportTo(first)).toBeNull();
+  expect(await reveal(first)).toBeNull();
+  // An export whose outcome is unknown, and which never ran, wrote nothing.
+  const second = await saveTo();
+  (
+    stand.window as {
+      __scenarioLedger?: { nextWrites(outcomes: string[]): void };
+    }
+  ).__scenarioLedger!.nextWrites(["lost"]);
+  expect(await exportTo(second)).toBe("unknown");
+  expect(await reveal(second)).toBe("file_unavailable");
+  // A file picked to be read is never shown through this door.
+  const picked = (await port.pickFiles("bank_statements", "file", "CSV"))
+    .files[0]!.token;
+  expect(await reveal(picked)).toBe("invalid");
 });
