@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:8407d29e8294d4296f945ec8645b4e1c1bba9d5a90401d490372c87015e57d5f'
+body_hash: 'sha256:1f7a56457f94ba142956a3a29a5c181754c142772adde2a125f45103993dbd05'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -110,6 +110,24 @@ related:
 - `S06` `verify:` `npx playwright test tests/scenarios/accessibility.spec.ts design-system.spec.ts keyboard.spec.ts` -> `pass`
 - `S06` `verify:` `npx tsc --noEmit; npx eslint; npx prettier --check` -> `pass`
 - `S06` `by:` `vaultspec-high-executor`
+- `S18` `A` `native/desktop/frontend/src/shell/ledgerGrammar.ts`
+- `S18` `A` `native/desktop/frontend/src/shell/ledgerWindow.ts`
+- `S18` `A` `native/desktop/frontend/src/shell/ledgerStage.ts`
+- `S18` `A` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S18` `A` `native/desktop/frontend/src/shell/ledgerApply.ts`
+- `S18` `A` `native/desktop/frontend/tests/support/ledger.ts`
+- `S18` `A` `native/desktop/frontend/tests/ledger-grammar.spec.ts`
+- `S18` `A` `native/desktop/frontend/tests/ledger-window.spec.ts`
+- `S18` `A` `native/desktop/frontend/tests/ledger-stage.spec.ts`
+- `S18` `A` `native/desktop/frontend/tests/ledger-plan.spec.ts`
+- `S18` `A` `native/desktop/frontend/tests/ledger-apply.spec.ts`
+- `S18` `verify:` `npx tsc --noEmit` -> `pass`
+- `S18` `verify:` `npx eslint ledger model sources and specs` -> `pass`
+- `S18` `verify:` `npx prettier --check ledger model sources and specs` -> `pass`
+- `S18` `verify:` `npx playwright test -c scratchpad/ledgertest/pw.config.mjs ledger-grammar ledger-window ledger-stage ledger-plan ledger-apply (54 tests)` -> `pass`
+- `S18` `verify:` `uv run --no-sync python scratchpad/ledgertest/gen/check.py payloads.json (planner bulk CSV, single classify, update and add payloads through the product request parsers)` -> `pass`
+- `S18` `verify:` `mutation check of bulk-never-clears, stale-drop, unknown-pauses and mixed-share-in-bulk, each restored byte-for-byte` -> `pass`
+- `S18` `by:` `implementation-engineer-high`
 
 ## Notes
 
