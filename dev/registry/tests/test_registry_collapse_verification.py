@@ -650,9 +650,9 @@ def test_indexed_revision_and_snapshot_parity_include_form_layout_components(tmp
     from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, ValidatedRegistryAuthority
     from dev.registry.pipeline.authority_publication import install_validated_authority_database
 
-    from .test_authority_database import _artifact
+    from ._authority_generation_support import synthetic_authority_artifact
 
-    source_artifact = _artifact()
+    source_artifact = synthetic_authority_artifact()
     source_modelo = source_artifact.modelos[0]
     source_revision = next(iter(source_modelo.revisions.values()))
     layout = FormLayoutDefinition(

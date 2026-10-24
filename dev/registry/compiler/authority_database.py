@@ -5,8 +5,11 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.config import override_settings
+from cadrumo.core.hashing import hash_file, sha256_hex
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
     AuthorityComponentKind,
@@ -28,11 +31,16 @@ from cadrumo.domain.calculations.registry.authority_component_codec import (
     decode_authority_component,
     encode_authority_component,
 )
-from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DATABASE_FORMAT
+from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DATABASE_FORMAT, AuthorityDescriptor
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.snapshot import collect_snapshot_ref_ids
 from cadrumo.domain.calculations.registry.snapshot_globals import SnapshotGlobalCatalogues
+from cadrumo.domain.calculations.registry.snapshot_proof import (
+    SNAPSHOT_PROOF_DDL,
+    SnapshotProofSet,
+    prove_snapshot_selectors,
+)
 from cadrumo.domain.calculations.registry.temporal import ModeloRevisionDirectory
 
 
@@ -48,7 +56,15 @@ class CompiledAuthorityDatabase:
 
 
 def build_authority_database(path: Path, artifact: AuthorityArtifact) -> CompiledAuthorityDatabase:
-    """Write one new complete SQLite candidate from an already validated authority."""
+    """Write one new complete SQLite candidate from an already validated authority.
+
+    Once the components are written and their closure is checked, the
+    candidate's declared snapshot selectors are proven through the runtime
+    reader, and the proofs join the same database before its physical digest
+    is taken. Every build proves: a declared cell that fails at or below its
+    revision's declared grade raises ``SnapshotProofPublicationError`` and
+    leaves nothing to publish.
+    """
     if path.exists():
         raise RegistryValidationError(f"authority database staging path already exists: {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -68,9 +84,7 @@ def build_authority_database(path: Path, artifact: AuthorityArtifact) -> Compile
                 (AUTHORITY_DATABASE_FORMAT, artifact.identity_digest, len(components)),
             )
             connection.commit()
-            integrity = connection.execute("PRAGMA integrity_check").fetchone()
-            if integrity != ("ok",):
-                raise RegistryValidationError(f"compiled authority database integrity_check failed: {integrity!r}")
+            _require_integrity(connection)
             if connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
                 raise RegistryValidationError("compiled authority database foreign-key closure failed")
             require_acyclic_authority_dependencies(
@@ -78,6 +92,16 @@ def build_authority_database(path: Path, artifact: AuthorityArtifact) -> Compile
                     "SELECT component_kind, component_key, dependency_kind, dependency_key FROM dependencies"
                 ).fetchall()
             )
+        finally:
+            connection.close()
+        proofs = _prove_staged_database(path, artifact.identity_digest)
+        connection = sqlite3.connect(path)
+        try:
+            connection.execute("PRAGMA journal_mode = DELETE")
+            connection.execute("PRAGMA synchronous = FULL")
+            _insert_snapshot_proofs(connection, proofs)
+            connection.commit()
+            _require_integrity(connection)
             connection.execute("VACUUM")
         finally:
             connection.close()
@@ -90,6 +114,72 @@ def build_authority_database(path: Path, artifact: AuthorityArtifact) -> Compile
         physical_sha256=sha256_hex(payload),
         byte_count=len(payload),
         component_count=len(components),
+    )
+
+
+def _require_integrity(connection: sqlite3.Connection) -> None:
+    integrity = connection.execute("PRAGMA integrity_check").fetchone()
+    if integrity != ("ok",):
+        raise RegistryValidationError(f"compiled authority database integrity_check failed: {integrity!r}")
+
+
+def _prove_staged_database(path: Path, logical_generation: str) -> SnapshotProofSet:
+    """Sweep the staged, still proofless database through the runtime reader and return its proofs.
+
+    The reader admits only a content-addressed file that a descriptor names,
+    so for the sweep alone the staged file moves into a private directory
+    beside it, under its current digest, and moves back afterwards. Admission
+    would leave a per-user receipt for that digest, which names bytes that are
+    never published; the sweep therefore resolves storage under a private
+    root that is never provisioned, where admission writes no receipt.
+    """
+    digest, size = hash_file(path)
+    with TemporaryDirectory(prefix="authority-proof-", dir=path.parent) as private:
+        private_root = Path(private)
+        database_name = f"authority-{digest}.sqlite3"
+        admitted = private_root / database_name
+        descriptor_path = private_root / "authority.current.json"
+        descriptor_path.write_bytes(
+            AuthorityDescriptor(
+                database=database_name,
+                database_size=size,
+                database_sha256=digest,
+                logical_generation=logical_generation,
+            ).to_bytes()
+        )
+        path.replace(admitted)
+        try:
+            with override_settings(cadrumo_local_storage_root=private_root / "unprovisioned-storage"):
+                authority = IndexedRegistryAuthority(descriptor_path)
+                try:
+                    with authority.operation() as operation:
+                        return prove_snapshot_selectors(operation)
+                finally:
+                    authority.close()
+        finally:
+            admitted.replace(path)
+
+
+def _insert_snapshot_proofs(connection: sqlite3.Connection, proofs: SnapshotProofSet) -> None:
+    contract = proofs.contract
+    connection.execute(
+        "INSERT INTO snapshot_proof_contract(singleton, validator_digest, window_from, window_to) VALUES (1, ?, ?, ?)",
+        (
+            contract.validator_digest,
+            None if contract.window_from is None else contract.window_from.isoformat(),
+            None if contract.window_to is None else contract.window_to.isoformat(),
+        ),
+    )
+    connection.executemany(
+        "INSERT INTO snapshot_proof_validator_sources(module, sha256) VALUES (?, ?)",
+        ((source.module, source.sha256) for source in contract.validator_sources),
+    )
+    connection.executemany(
+        "INSERT INTO snapshot_proofs(modelo_id, filing_year, period, grade, revision_id) VALUES (?, ?, ?, ?, ?)",
+        (
+            (proof.key.modelo_id, proof.key.filing_year, proof.key.period, proof.key.grade.value, proof.revision_id)
+            for proof in proofs.proofs
+        ),
     )
 
 
@@ -399,6 +489,8 @@ def _create_schema(connection: sqlite3.Connection) -> None:
         CREATE INDEX dependencies_target ON dependencies(dependency_kind, dependency_key);
         """
     )
+    for statement in SNAPSHOT_PROOF_DDL:
+        connection.execute(statement)
 
 
 def _insert_components(connection: sqlite3.Connection, components: tuple[_CompiledComponent, ...]) -> None:

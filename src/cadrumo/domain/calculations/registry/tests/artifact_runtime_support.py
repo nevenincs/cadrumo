@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from .....core.authority_grade import RegistryAuthorityGrade
@@ -10,6 +10,7 @@ from .....core.casilla_id import validated_casilla_id
 from .....core.classification.policies import SensitivityClass
 from .....core.hashing import sha256_hex
 from .....core.tax_domain import TaxDomain
+from ....modelos.perceptor_clave_scope import PERCEPTOR_CLAVE_SCOPE_FACT_ID
 from ..facts.schema import GovernedFact, GovernedFactCatalogue
 from ..runtime_catalogues import (
     ApoderamientoScopeRecord,
@@ -56,7 +57,75 @@ def _minimal_source_ref() -> SourceReference:
     )
 
 
-def minimal_catalogues() -> RegistryCatalogues:
+def _snapshot_checked_fact(
+    fact_id: str, entries: tuple[tuple[str, str], ...], *, restated_on: date | None
+) -> GovernedFact:
+    """Return a mapping fact valid from 2024, restated unchanged in a second variant from ``restated_on``."""
+    first = date(2024, 1, 1)
+    bounds = (
+        ((first, None),) if restated_on is None else ((first, restated_on - timedelta(days=1)), (restated_on, None))
+    )
+    return GovernedFact.model_validate(
+        {
+            "fact_id": fact_id,
+            "family": "mapping",
+            "provider_id": "artifact-fixture",
+            "variants": tuple(
+                {
+                    "variant_id": f"{fact_id}:fixture:{valid_from.isoformat()}",
+                    "date_axis": "filing_period",
+                    "valid_from": valid_from,
+                    "valid_to": valid_to,
+                    "legal_refs": (_LEGAL_ID,),
+                    "review_status": "agent_reviewed",
+                    "ownership": "authored",
+                    "payload": {
+                        "kind": "mapping",
+                        "entries": tuple({"key": key, "value": value} for key, value in entries),
+                    },
+                }
+                for valid_from, valid_to in bounds
+            ),
+        }
+    )
+
+
+def _snapshot_checked_facts(restated_on: date | None) -> tuple[GovernedFact, ...]:
+    """Return the governed facts the snapshot cross-checks resolve for every modelo.
+
+    Every publication proves those checks for the declared selectors, so a
+    publishable catalogue carries them even though the miniature revision
+    binds neither: the M130 retenciones routing is resolved without a
+    retenciones binding, and the M190 perceptor clave scope by a cross-domain
+    check. A scope naming no casilla is refused as an empty declaration, so it
+    names one.
+    """
+    return (
+        _snapshot_checked_fact(
+            "m130-retenciones-output-routing",
+            (("modelo", "130"), ("binding_id", "fixture-retenciones"), ("output_casilla", "01")),
+            restated_on=restated_on,
+        ),
+        _snapshot_checked_fact(
+            PERCEPTOR_CLAVE_SCOPE_FACT_ID,
+            (
+                ("modelo", "190"),
+                ("row_clave_binding", "fixture-perceptor-clave"),
+                ("row_subclave_binding", "fixture-perceptor-subclave"),
+                ("casilla:perc.ano-nacimiento", "A"),
+            ),
+            restated_on=restated_on,
+        ),
+    )
+
+
+def minimal_catalogues(*, facts_restated_on: date | None = None) -> RegistryCatalogues:
+    """Return the smallest catalogue set a publication accepts and proves.
+
+    ``facts_restated_on`` restates the snapshot-checked facts, unchanged, in a
+    new variant from that date, so a wall-clock lookup of them resolves
+    another variant from then on.
+    """
     legal = LegalReference(
         id=_LEGAL_ID,
         evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
@@ -176,7 +245,9 @@ def minimal_catalogues() -> RegistryCatalogues:
     return RegistryCatalogues(
         legal={_LEGAL_ID: legal},
         sources={source.id: source, workbook.id: workbook},
-        facts=GovernedFactCatalogue(facts={tax_id_format.fact_id: tax_id_format}),
+        facts=GovernedFactCatalogue(
+            facts={fact.fact_id: fact for fact in (tax_id_format, *_snapshot_checked_facts(facts_restated_on))}
+        ),
         runtime=runtime,
         supported_filing_years=published_supported_filing_years(),
     )
@@ -190,7 +261,10 @@ def minimal_revision(
         review_status="agent_reviewed",
         reviewed_by="artifact runtime fixture",
         reviewed_at=date(2026, 7, 1),
-        authority_grade=RegistryAuthorityGrade.FILING,
+        # The highest grade this revision satisfies: it declares no export
+        # layout, so a filing claim would fail its own snapshot checks and
+        # block publication of any artifact carrying it.
+        authority_grade=RegistryAuthorityGrade.CALCULATION,
         localization_key="test.schema.revision.test-revision.label",
         valid_from=date(2024, 1, 1),
         period_selector=PeriodSelector(year_from=2024, periods=("0A",)),

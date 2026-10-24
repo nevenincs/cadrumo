@@ -13,7 +13,7 @@ import json
 import os
 import shutil
 import sqlite3
-from decimal import Decimal
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -21,24 +21,8 @@ from typer.testing import CliRunner
 
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority_artifact import (
-    AuthorityArtifact,
-    AuthorityEvidenceProjection,
-    PublishedLegalEvidence,
-)
 from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, SQLiteAuthorityReader
-from cadrumo.domain.calculations.registry.runtime_catalogues import (
-    ApoderamientoScopeRecord,
-    CountryVocabularyRecord,
-    PublishedIvaPlaceOfSupplyRule,
-    PublishedIvaRegulation,
-    PublishedRecargoBand,
-    RuntimeRegistryCatalogues,
-    SpanishPostalTerritory,
-    TerritoryCarveOut,
-)
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
-from dev.registry.compiler.authority import compiled_bundled_authority
+from cadrumo.domain.calculations.registry.snapshot_proof import SNAPSHOT_PROOF_TABLES
 
 from ..conformance.cli import app as conformance_app
 from ..pipeline.authority_publication import (
@@ -48,99 +32,12 @@ from ..pipeline.authority_publication import (
     authority_source_identity,
     install_validated_authority_database,
 )
-from ._referential_integrity_support import (
-    minimal_catalogues,
-    minimal_modelo,
-    minimal_revision,
-)
+from ._authority_generation_support import synthetic_authority_artifact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REVISION_TOML = 'id = "2025"\nvalid_from = 2025-01-01\n'
-_LEGAL_ID = "ley-35-2006:art-1"
-_LEGAL_TEXT = "art-1 fixture authority text"
 _STALE_IDENTITY = sha256_hex(b"stale fixture authority sources")
-
-
-def _publication_catalogues() -> RegistryCatalogues:
-    """Build the smallest complete typed catalogue set accepted by the artifact boundary."""
-    catalogues = minimal_catalogues()
-    runtime = RuntimeRegistryCatalogues(
-        iva_regulations={
-            "fixture-exempt": PublishedIvaRegulation(
-                category="fixture-exempt",
-                requires_reverse_charge=False,
-                requires_supplier_iva_id=False,
-                manual_references=(),
-                citations=(),
-                notes="No legal treatment is asserted by this fixture row.",
-                legal_basis_exempt=True,
-            )
-        },
-        iva_place_of_supply={
-            "fixture-exempt": PublishedIvaPlaceOfSupplyRule(
-                rule_id="fixture-exempt",
-                notes="No placement is asserted by this fixture row.",
-                legal_basis_exempt=True,
-            )
-        },
-        countries={"ES": CountryVocabularyRecord(code="ES", alpha3="ESP", names=("Espana",))},
-        spanish_postal_territories={
-            "28": SpanishPostalTerritory(
-                postal_prefixes=("28",),
-                scope="peninsula_baleares",
-                name="Madrid",
-                legal_refs=(_LEGAL_ID,),
-            )
-        },
-        territory_carve_outs={
-            "ES": TerritoryCarveOut(
-                code="ES",
-                name="Espana",
-                establishes_nothing=True,
-                legal_refs=(_LEGAL_ID,),
-            )
-        },
-        recargo_bands={
-            "all": PublishedRecargoBand(
-                id="all",
-                min_completed_months=0,
-                surcharge_pct=Decimal("1"),
-                legal_ref=_LEGAL_ID,
-            )
-        },
-        apoderamientos_version="fixture-v1",
-        apoderamientos_scopes={
-            "GENERAL": ApoderamientoScopeRecord(
-                code="GENERAL",
-                name_es="General",
-                name_en="General",
-                name_ca="General",
-                name_hu="Altalanos",
-            )
-        },
-    ).require_complete()
-    compiled = compiled_bundled_authority()
-    published_facts = compiled.catalogues.facts
-    tax_id_fact = published_facts.facts["spanish-tax-identifier-format"]
-    return catalogues.model_copy(
-        update={
-            "runtime": runtime,
-            "facts": published_facts.model_copy(update={"facts": {tax_id_fact.fact_id: tax_id_fact}}),
-        }
-    )
-
-
-def _publication_evidence() -> AuthorityEvidenceProjection:
-    return AuthorityEvidenceProjection(
-        legal=(
-            PublishedLegalEvidence(
-                legal_reference_id=_LEGAL_ID,
-                anchored_text=_LEGAL_TEXT,
-                text_sha256=sha256_hex(_LEGAL_TEXT.encode("utf-8")),
-            ),
-        )
-    )
 
 
 def _stage_inputs(root: Path) -> tuple[Path, Path]:
@@ -162,13 +59,7 @@ def _stage_inputs(root: Path) -> tuple[Path, Path]:
 def _publish(artifact_path: Path, identity_digest: str) -> None:
     """Install a generation recording ``identity_digest`` through the real publisher."""
     install_validated_authority_database(
-        AuthorityArtifact(
-            modelos=(minimal_modelo(minimal_revision()),),
-            catalogues=_publication_catalogues(),
-            identity_digest=identity_digest,
-            profile_schema=compiled_bundled_authority().profile_schema(),
-            evidence=_publication_evidence(),
-        ),
+        replace(synthetic_authority_artifact(), identity_digest=identity_digest),
         destination=artifact_path.parent,
         require_current=lambda: None,
     )
@@ -223,18 +114,27 @@ def test_the_published_generation_is_the_legal_source_identity(tmp_path: Path) -
 
 
 def test_the_published_database_records_nothing_about_the_compiler_or_its_environment(tmp_path: Path) -> None:
-    """The artifact holds the law and its component graph only: no compiler, interpreter or dependency rows."""
+    """The artifact holds the law, its component graph and its snapshot proofs: no compiler or environment rows.
+
+    The proofs name the runtime snapshot validator that proved them, which is
+    product code, never the development compiler that wrote the database.
+    """
     publication = _fresh_publication(tmp_path)
     descriptor = AuthorityDescriptor.read(publication.artifact_path)
     connection = sqlite3.connect(publication.artifact_path.parent / descriptor.database)
     try:
         tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
         manifest_columns = {row[1] for row in connection.execute("PRAGMA table_info(authority_manifest)")}
+        validator_modules = {
+            row[0] for row in connection.execute("SELECT module FROM snapshot_proof_validator_sources")
+        }
     finally:
         connection.close()
 
-    assert tables == {"authority_manifest", "components", "dependencies"}
+    assert tables == {"authority_manifest", "components", "dependencies", *SNAPSHOT_PROOF_TABLES}
     assert manifest_columns == {"singleton", "format", "logical_generation", "component_count"}
+    assert validator_modules
+    assert all(module == "cadrumo" or module.startswith("cadrumo.") for module in validator_modules)
 
 
 def test_unchanged_inputs_reproduce_the_same_source_identity(tmp_path: Path) -> None:
