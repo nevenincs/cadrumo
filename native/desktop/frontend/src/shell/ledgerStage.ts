@@ -5,6 +5,7 @@
 // check a staged change against the others before anything is sent.
 
 import type {
+  FileToken,
   LedgerAddRequest,
   LedgerClassifyRequest,
   LedgerDecision,
@@ -67,6 +68,12 @@ export type Draft = {
 };
 
 export type M210Options = NonNullable<LedgerClassifyRequest["m210"]>;
+/** A split part's classification, set when the split is staged. */
+export type SplitPartClassification = {
+  classification: string;
+  category_id?: string | null;
+  business_pct?: string | null;
+};
 export type LifecycleKind = "archive" | "stash" | "restore" | "exclude";
 /** An action on one or more movements, each sent through its own
  * operation. */
@@ -81,6 +88,17 @@ export type StagedAction =
       attachmentIds: string[];
     }
   | {
+      /** A document from this computer, added as evidence and then
+       * attached. Its idempotency key is drawn once, so an add sent again
+       * after a re-read is the same add. */
+      id: string;
+      kind: "attach_file";
+      transactionId: string;
+      file: FileToken;
+      name: string;
+      idempotencyKey: string;
+    }
+  | {
       id: string;
       kind: "detach";
       transactionId: string;
@@ -90,7 +108,13 @@ export type StagedAction =
       id: string;
       kind: "split";
       transactionId: string;
-      children: { amount: string; description: string }[];
+      children: {
+        amount: string;
+        description: string;
+        /** How the part is classified once the split has made it, sent
+         * as its own single classification after the split settles. */
+        classify?: SplitPartClassification;
+      }[];
       reason: string;
     }
   | { id: string; kind: "merge"; childIds: string[]; reason: string }
@@ -105,12 +129,41 @@ export type StagedAction =
       reviewDigest: string;
       decision: LedgerDecision;
       reason: string;
+      /** What approving it writes, field by field, as the review showed
+       * it: the review lists each before it is approved. */
+      writes?: {
+        field: StageField;
+        value: string | null;
+        /** Worked out by Cadrumo from the registry's rate, not proposed
+         * by the model. */
+        derived?: true;
+      }[];
     }
   | {
       id: string;
       kind: "m210";
       transactionId: string;
       options: M210Options;
+    }
+  | {
+      /** Base, rate and IVA worked out from the registry's rate for the
+       * IVA category the person chose, through
+       * `ledger.classify.iva-derive`. */
+      id: string;
+      kind: "iva_derive";
+      transactionId: string;
+      ivaCategory: string;
+    }
+  | {
+      /** A business share set through `ledger.allocate`, as a fraction,
+       * with what it is allocated by. */
+      id: string;
+      kind: "allocate";
+      transactionId: string;
+      businessPct: string;
+      categoryId: string | null;
+      usageRatioId: string | null;
+      prorrataReference: string | null;
     }
   | {
       /** The stored rules run over the ledger through `ledger.rule.apply`:

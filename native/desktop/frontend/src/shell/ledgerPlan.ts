@@ -165,6 +165,11 @@ const STRUCTURAL: ReadonlySet<StagedActionKind> = new Set([
   "merge",
   "remove",
 ]);
+/** Actions that write a movement's classification figures themselves. */
+const CLASSIFYING: ReadonlySet<StagedActionKind> = new Set([
+  "iva_derive",
+  "allocate",
+]);
 
 export type PlanField = StageField | "m210_income_classification";
 
@@ -369,9 +374,12 @@ export function splitBulk(
 const ACTION_RANK: Record<StagedActionKind, number> = {
   suggestion: 0,
   m210: 0,
+  iva_derive: 0,
+  allocate: 0,
   rule_apply: 0,
   link: 1,
   attach: 1,
+  attach_file: 1,
   detach: 1,
   archive: 2,
   stash: 2,
@@ -405,6 +413,16 @@ function actionStep(action: StagedAction): PlanStep | null {
         request: {
           transaction_id: action.transactionId,
           invoice_id: action.invoiceId,
+        },
+      };
+    case "attach_file":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.evidence.add",
+        request: {
+          source_path: action.file,
+          idempotency_key: action.idempotencyKey,
         },
       };
     case "attach":
@@ -465,6 +483,30 @@ function actionStep(action: StagedAction): PlanStep | null {
     case "m210":
       // Sent inside the row's single classification.
       return null;
+    case "iva_derive":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.classify.iva-derive",
+        request: {
+          transaction_id: action.transactionId,
+          iva_category: action.ivaCategory,
+        },
+      };
+    case "allocate":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.allocate",
+        request: {
+          transaction_id: action.transactionId,
+          business_pct:
+            canonicalDecimal(action.businessPct) ?? action.businessPct,
+          category_id: action.categoryId,
+          usage_ratio_id: action.usageRatioId,
+          prorrata_reference: action.prorrataReference,
+        },
+      };
     case "rule_apply":
       return {
         kind: "action",
@@ -576,11 +618,13 @@ function checkRow(
   }
 
   const structural = actions.filter((action) => STRUCTURAL.has(action.kind));
+  const classifying = actions.filter((action) => CLASSIFYING.has(action.kind));
+  const files = actions.filter((action) => action.kind === "attach_file");
   const suggestions = actions.filter((action) => action.kind === "suggestion");
   const links = actions.filter((action) => action.kind === "link");
   if (
     row.transaction.lifecycle_state !== "ACTIVE" &&
-    (edits || suggestions.length)
+    (edits || suggestions.length || classifying.length || files.length)
   )
     entry.blockers.push({
       kind: "not_active",
@@ -588,7 +632,11 @@ function checkRow(
     });
   if (
     context.sealed?.has(id) &&
-    (edits || structural.length || suggestions.length)
+    (edits ||
+      structural.length ||
+      suggestions.length ||
+      classifying.length ||
+      files.length)
   )
     entry.blockers.push({ kind: "sealed" });
   const first = structural[0];
@@ -602,6 +650,12 @@ function checkRow(
         : { kind: "action_and_edits", action: first.id },
     );
   }
+  const derivation = classifying[0];
+  if (
+    derivation &&
+    (fields.some((field) => CLASSIFICATION_FIELDS.has(field)) || m210)
+  )
+    entry.blockers.push({ kind: "action_and_edits", action: derivation.id });
   const suggestion = suggestions[0];
   if (
     suggestion &&
@@ -616,6 +670,10 @@ function checkRow(
       ? [...structural, ...suggestions]
       : []),
     ...(suggestions.length > 1 ? suggestions : []),
+    ...(classifying.length &&
+    (classifying.length > 1 || suggestions.length || structural.length)
+      ? [...classifying, ...suggestions, ...structural]
+      : []),
     ...(links.length > 1 ? links : []),
   ];
   if (clashing.length)
