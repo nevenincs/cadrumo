@@ -2060,8 +2060,7 @@ cli:
       missing: hiányzik
       preflight_label: Előzetes ellenőrzés
       profile_label: profil
-      setup_unavailable: Az előkészítés nem ellenőrizhető, mert a Cadrumo háttérszolgáltatása
-        nem válaszolt.
+      setup_unavailable: Az előkészítés most nem ellenőrizhető.
     collab:
       help: Bizalmi címzettek kezelése az ellenőrző csomag együttműködéshez.
       recipient:
@@ -2670,7 +2669,7 @@ cli:
       hardware_limited: Ennek a számítógépnek nincs elég memóriája a helyi MI-hez.
       help: 'Előkészíti és ellenőrzi, amire a Cadrumónak szüksége van ezen a számítógépen:
         az adóhivatal webhelyéhez használt böngészőt és a helyi MI-t, a programjával
-        és a modelljeivel. Minden parancs a bejelentkezett profilodban fut.'
+        és a modelljeivel.'
       incomplete: Néhány összetevő még nem áll készen.
       load:
         help: Betölti a modelleket a memóriába, hogy az első olvasásnak ne kelljen
@@ -2679,12 +2678,9 @@ cli:
         model_help: A betöltendő modell neve. Már letöltöttnek kell lennie. Alapértelmezés
           szerint a szerephez választott modell.
       outcome:
+        busy: Egy másik előkészítés éppen ezt módosítja. Próbáld újra, ha befejeződött.
         cancelled: Megszakítottad az előkészítést.
         completed: Az előkészítés befejeződött.
-        interrupted: Az előkészítés befejezés előtt megszakadt. Futtasd újra a parancsot
-          a folytatáshoz.
-        not_enough_space: Nincs elég szabad hely a lemezen, ezért semmi sem töltődött
-          le.
         nothing_to_do: Már minden elő van készítve.
         plan_changed: A terv megváltozott, miután jóváhagytad, ezért semmi sem töltődött
           le. Futtasd újra a parancsot az új terv megtekintéséhez.
@@ -2693,8 +2689,7 @@ cli:
         destination: '  Helye: %{path}'
         entry: '%{name}: %{size}, innen: %{hosts}'
         heading: 'A Cadrumo ezeket készíti elő:'
-        installs_program: '  Ez egy programot telepít erre a számítógépre. A telepítője
-          engedélyt kérhet tőled.'
+        installs_program: '  Ez egy programot telepít erre a számítógépre.'
         part: '    %{name}: %{size}'
         shared: '  Ugyanazt a letöltést használja, mint: %{name}.'
         size_unknown: a méret még nem ismert
@@ -2708,10 +2703,7 @@ cli:
       progress_bytes: '%{name}: letöltés, %{done} / %{total} (%{percent}%)'
       pull:
         help: 'Előkészíti a helyi MI-t: ha hiányzik, telepíti a programját, majd letölti
-          minden szerep modelljét. Előbb megmutatja a tervet és megkérdez; a program
-          telepítője is engedélyt kérhet.'
-        model_help: Egy katalógusbeli modell neve, amelyet a Cadrumo által választott
-          helyett használsz.
+          minden szerep modelljét. Előbb megmutatja a tervet és megkérdez.'
       remove:
         help: Töröl erről a számítógépről egy modellt, amelyet a Cadrumo választott,
           és jelzi a felszabadult helyet.
@@ -2742,11 +2734,13 @@ cli:
         plan: tervezés
         preflight: a kapcsolat ellenőrzése
         verify: működés ellenőrzése
+      stopping: Az előkészítés leállítása.
       verify:
         help: Alaposan ellenőriz egy összetevőt, vagy mindet, ha nem adsz meg egyet
           sem. Semmit sem tölt le.
         item_help: 'Az ellenőrzendő összetevő: browser vagy local_ai. Alapértelmezés
           szerint mind.'
+      waiting_for_program: '%{name}: várakozás a program indulására'
       yes_help: Kérdés nélkül jóváhagyja a parancs által megmutatott tervet.
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
@@ -2783,8 +2777,8 @@ cli:
         mi törlődne.
       reset_progress_yes_help: Megszakított parancs mentett folyamatainak törlésének
         megerősítése.
-      setup_status_hint: Az előkészítés állapotát az alábbi állapotparancs mutatja
-        meg, miután bejelentkeztél.
+      setup_status_hint: Az előkészítés most nem ellenőrizhető. Az alábbi állapotparancs
+        újra ellenőrzi.
       yes_help: Javítás megerősítése.
     reset:
       help: Elindítja, megjeleníti vagy folytatja az összes helyben tárolt profil

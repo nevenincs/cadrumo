@@ -926,19 +926,6 @@ def _data(run: ChildRun) -> dict[str, object]:
     return _object_dict(document.get("result")) or document
 
 
-def _browser_result(run: ChildRun) -> dict[str, object]:
-    """Return the browser's entry in a setup command's ``results``, read through the CLI's published shape."""
-    from cadrumo.entrypoints.cli.config.provision_payloads import ProvisionSetupItemPayload
-
-    results = _data(run).get("results")
-    if isinstance(results, list):
-        for entry in results:
-            result = ProvisionSetupItemPayload.model_validate(entry)
-            if result.item_id == "browser":
-                return _object_dict(result.model_dump(mode="json")) or {}
-    return {}
-
-
 def _browser_row(run: ChildRun) -> dict[str, object]:
     """Return the browser's row from a provision command's ``items``, read through the CLI's published shape."""
     from cadrumo.entrypoints.cli.config.provision_payloads import ProvisionItemPayload
@@ -1097,10 +1084,11 @@ async def _operation_path(
         measuring = report.scenarios["plan"]["downstream_bytes"]
         ceiling = (measuring if isinstance(measuring, int) else 0) + _NO_TRANSFER_ALLOWANCE
         report.require(again.exit_code == 0, f"the second setup failed: {again.stderr_tail[-3:]}")
-        repeated = _browser_result(again)
+        # The components role plans nothing for a browser already set up.
+        repeated = _data(again)
         report.require(
-            repeated.get("changed") is False and repeated.get("transferred_bytes") == 0,
-            f"the second setup changed or transferred something: {repeated}",
+            repeated.get("outcome") == "nothing_to_do" and repeated.get("plan_digest") is None,
+            f"the second setup planned or changed something: {repeated}",
         )
         report.require(
             again.downstream_bytes <= ceiling,

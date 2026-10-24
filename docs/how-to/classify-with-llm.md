@@ -184,10 +184,10 @@ you provisioned, preview first:
 ```{cli-sequence} llm-read-evidence-local
 ```
 
-Pull a different model with `aeat config provision pull --model <model>`. For
-example, use `qwen2.5vl:7b` on a computer with room for it. To use it for one
-scanned or image read, add `--vision-model qwen2.5vl:7b` to the classify
-command.
+Setup downloads the model Cadrumo chose for each role. To read one scanned or
+image document with another model the local AI already has, such as
+`qwen2.5vl:7b` on a computer with room for it, add
+`--vision-model qwen2.5vl:7b` to the classify command.
 
 A transaction with no attached supporting document sends nothing extra: the model receives only the transaction row, exactly as in the plain suggestion flow.
 

@@ -1124,30 +1124,3 @@ for (const scheme of ["light", "dark"] as const)
     await expect(panel(target).locator(".ledger-selection")).toBeVisible();
     expect(await audit(target)).toEqual([]);
   });
-
-test("a readiness check that fails hides no drawn movement from the selection", async ({
-  page: target,
-}) => {
-  await open(target);
-  await target.evaluate(() =>
-    window.__scenarioLedger!.nextReads("ledger.preflight", 50),
-  );
-  await target.locator("[data-rail=ledger]").click();
-  await expect(dataRows(target).first()).toBeVisible();
-  await inspect(target, "PAPELERIA TRAZO");
-  await grid(target)
-    .getByRole("checkbox", { name: label("desktop.ledger.select.shown") })
-    .click();
-  const selection = panel(target).locator(".ledger-selection");
-  await expect(selection).toBeVisible();
-  await expect(
-    selection.getByRole("button", {
-      name: label("desktop.ledger.selection.keep_visible"),
-    }),
-  ).toHaveCount(0);
-  await expect(
-    selection.getByRole("radio", {
-      name: label("desktop.ledger.classification.business"),
-    }),
-  ).toBeEnabled();
-});

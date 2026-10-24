@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:54bfdb5a6f68b4a7a3bd977c2b6a8e0884cf2f822eff7bebad9f6520dbe17d69'
+body_hash: 'sha256:c4b7fb973d1ff226edbaa37c95e69216437401cbce2696c54a0fd411e4a9c936'
 ---
 
 # `rust-component-provisioning` plan
@@ -71,7 +71,7 @@ The single binary gains the components role; the desktop calls the engine in pro
 
 - [x] `P04.S10` - Add the components role to the single binary with its line-delimited JSON protocol for status, plan, setup, verify, cancel and remove, and document it in the package contract; `native/application/src/role.rs, native/application/src/provisioning/protocol.rs, the binary entry, native/CONTRACT.md and tests`.
 - [x] `P04.S11` - Point the desktop setup host at the in-process engine and drop its relay of dependencies operations, keeping the window contract unchanged; `native/desktop/src-tauri/src/shell/setup/, native/desktop/src-tauri/src/app.rs and Rust tests`.
-- [ ] `P04.S12` - Add a Python client that starts the components role and decodes its protocol, and make config provision, config check and the health report thin clients of it with words from the canonical catalogues; `src/cadrumo/adapters/outbound/components/, src/cadrumo/entrypoints/cli/config/provision_cli.py, src/cadrumo/entrypoints/cli/config/check_cli.py, src/cadrumo/application/preflight.py, src/cadrumo/application/diagnostics.py, src/cadrumo/entrypoints/cli/command_operation_table.py and tests`.
+- [x] `P04.S12` - Add a Python client that starts the components role and decodes its protocol, and make config provision, config check and the health report thin clients of it with words from the canonical catalogues; `src/cadrumo/adapters/outbound/components/, src/cadrumo/entrypoints/cli/config/provision_cli.py, src/cadrumo/entrypoints/cli/config/check_cli.py, src/cadrumo/application/preflight.py, src/cadrumo/application/diagnostics.py, src/cadrumo/entrypoints/cli/command_operation_table.py and tests`.
 - [ ] `P04.S13` - Make the TUI setup screen and the MCP service clients of the same role, with MCP approval bound to the plan digest and progress relayed as notifications; `src/cadrumo/entrypoints/tui/setup/, src/cadrumo_mcp/ and tests`.
 - [x] `P04.S17` - Have the runtime manager supervise the engine's local AI server on one fixed Cadrumo loopback address declared in the canonical environment definition: start it while the local AI is set up, restart it after a crash, stop it on exit, at session end and before the engine replaces or removes the program, contain it, and record the address in the local AI component record; `native/manager/src/supervision/, native/application/src/provisioning/local_ai/, native/application-environment.toml, src/cadrumo/core/config_runtime_fields.py (default derived from the declaration) and tests`.
 - [x] `P04.S19` - Let the components role adopt browser builds already installed without downloading, then point the Python launch guard at the Rust component record, with test support writing the engine's fixture record into each test storage root; `native/application/src/provisioning/browser.rs, src/cadrumo/application/provisioning_browser.py (locate only), src/cadrumo/adapters/outbound/aeat/browser/session.py, the real-browser test support and conftest, and tests`.

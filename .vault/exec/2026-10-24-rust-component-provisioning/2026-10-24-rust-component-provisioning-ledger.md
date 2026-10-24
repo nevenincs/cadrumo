@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:1aa8e4e31f6cd4fb9223ce5a9033ebec6e8f992c4052c30a753ea5be426c9171'
+body_hash: 'sha256:d8d8c6d6faae75d0c59238567b142825b8ea995dfa3826f43728bfa52ba0a4e6'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -484,6 +484,81 @@ related:
 - `S22` `verify:` `pytest test_component_records.py test_local_reader.py against the rewritten fixture (45 passed)` -> `pass`
 - `S22` `verify:` `pytest test_suite_gate_table.py test_dev_cli_justfile_wiring.py test_no_git_cli.py test_retired_invocations.py (60 passed)` -> `pass`
 - `S22` `by:` `implementation-engineer-standard`
+- `S12` `A` `src/cadrumo/adapters/outbound/components/__init__.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/components/client.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/components/protocol.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/components/role_image.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/components/tests/__init__.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/components/tests/test_protocol.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/components/tests/test_client.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py`
+- `S12` `A` `src/cadrumo/tests/components_role_replay.py`
+- `S12` `A` `src/cadrumo/tests/components_role_package.py`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/transcripts.json`
+- `S12` `A` `src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py`
+- `S12` `A` `src/cadrumo/entrypoints/cli/tests/test_provision_drives_the_real_role.py`
+- `S12` `A` `dev/packaging/tests/test_native_development_role_image.py`
+- `S12` `D` `src/cadrumo/entrypoints/cli/tests/test_provision_operation_parity.py`
+- `S12` `D` `src/cadrumo/entrypoints/cli/tests/test_provision_setup_through_the_runtime.py`
+- `S12` `D` `src/cadrumo/entrypoints/cli/tests/provision_rendering_support.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/config/provision_cli.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/config/_provision_command_specs.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/config/provision_payloads.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/config/check_cli.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/config/repair_commands.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/errors.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S12` `M` `src/cadrumo/application/preflight.py`
+- `S12` `M` `src/cadrumo/application/diagnostics.py`
+- `S12` `M` `src/cadrumo/locales/en/cli.yml`
+- `S12` `M` `src/cadrumo/locales/es/cli.yml`
+- `S12` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S12` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S12` `M` `src/cadrumo/entrypoints/cli/config/tests/test_check_setup_rows.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/config/tests/test_config_command_specs.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_offline_status.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/tests/test_component_setup_refusal_text.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py`
+- `S12` `M` `src/cadrumo/application/tests/test_dependency_registry_conformance.py`
+- `S12` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_free_commands_without_keychain.py`
+- `S12` `M` `native/application-environment.toml`
+- `S12` `M` `dev/packaging/native/application_environment.py`
+- `S12` `M` `dev/locales/fstring_registry.py`
+- `S12` `M` `dev/locales/tests/test_audit.py`
+- `S12` `M` `dev/tests/test_lane_reachability.py`
+- `S12` `M` `dev/smoke/acquisition_lane.py`
+- `S12` `M` `dev/quality/metadata/import_load_targets.json`
+- `S12` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S12` `M` `justfile`
+- `S12` `M` `pyproject.toml`
+- `S12` `M` `src/cadrumo/tests/README.md`
+- `S12` `M` `docs/how-to/classify-with-llm.md`
+- `S12` `M` `docs/locales/es/LC_MESSAGES/how-to/classify-with-llm.po`
+- `S12` `M` `docs/locales/ca/LC_MESSAGES/how-to/classify-with-llm.po`
+- `S12` `M` `docs/locales/hu/LC_MESSAGES/how-to/classify-with-llm.po`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/cancel_nothing_running.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/invalid_request.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/plan_every_item.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/remove_absent_browser.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/setup_browser_completed.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/setup_declined.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/setup_input_refused.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/setup_local_ai_refused_host_unreachable.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/setup_plan_changed.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/setup_refused_blocked_by_network.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/status_quick.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/status_quick_browser.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/status_quick_browser_ready.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/verify_browser_blocked_by_network.jsonl`
+- `S12` `A` `src/cadrumo/tests/fixtures/components_role/verify_cancelled_by_input.jsonl`
+- `S12` `verify:` `pytest -m '' components client, protocol, provision CLI, check and repair, policies, refusal text, posture, command specs, documented commands, registry conformance, keychainless frontend, environment declaration, env reference, acquisition lane (615)` -> `pass`
+- `S12` `verify:` `just test-components-role <cargo-built role harness of HEAD 27bb2fef35 cadrumo.exe> (7)` -> `pass`
+- `S12` `verify:` `pytest -m '' src/cadrumo/entrypoints/cli lane (4870 of 4908; 38 failures in ledger llm, justificante capture, bootstrap citation, repair connectivity, all outside this Step)` -> `pass`
+- `S12` `verify:` `ruff check, ruff format --check, ty check on the touched Python` -> `pass`
+- `S12` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S12` `verify:` `just check-operation-contract-manifest` -> `pass`
+- `S12` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -539,3 +614,8 @@ related:
 - `S24` Plan contract version 1 -> 2: every plan part gains licence (null for the program, `spdx_id` and name for a model). The P04.S12 Python decoder must follow.
 - `S22` Root cause: the zip writer marks entries with its host's origin (DOS on Windows, Unix elsewhere), so the test archive's digest and the version folder it names differed by host. The test archive now names a Unix origin everywhere and the fixture was rewritten once.
 - `S22` No CI job runs native Rust tests on Linux: native verification (test-native-ci) runs on Windows only. The CI fleet must run just test-native-provisioning-linux on a Linux runner; no workflow was added.
+- `S12` S12 the real role is driven through a cargo-built harness that runs native/application role::select and `provisioning::role_host::run` from an export of HEAD; the desktop host binary that links the same role needs CMake-generated inputs and was not built
+- `S12` S12 transcripts under `src/cadrumo/tests/fixtures/components_role` are the real role's output of HEAD 27bb2fef35 (plan contract 2) against a staged package and throwaway roots; `setup_browser_completed` downloaded the pinned Chromium into a scratch root; only HEAD preflights reached publishers
+- `S12` S12 config provision remove, start, load and report still submit local-reader operations; remove was not re-pointed at the role because no profile-free policy admits a local-state effect without a network capability
+- `S12` S12 config repair connectivity fails `test_repair_verb_runs_clean_without_session_on_fresh_root` on a fresh root with the browser setup refusal; the refusal predates this Step (browser guard reads the engine record)
+- `S12` S12 docs/workstation-setup.md still describes winget, Homebrew, --confirm and pull --model from before the Python withdrawal; left for the documentation owner

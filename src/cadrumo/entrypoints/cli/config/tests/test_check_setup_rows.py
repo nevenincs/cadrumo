@@ -1,41 +1,40 @@
-"""``aeat config check`` shows the setup rows it reads through the runtime, or says it could not read them.
+"""``aeat config check`` and ``aeat config repair`` show the setup rows the components role reports.
 
-The workstation report comes from the profile worker, which has no runtime
-connection, so the command reads ``dependencies.status`` itself. The report
-and the status read are answered here by recorded runtime replies built from
-real registry rows; what is checked is the command's own composition: one
-``setup:<item>`` preflight row per registry row, and a typed notice, with no
-rows, when the runtime refuses. ``config repair`` points at the status
-command instead, because it runs without a session.
+The workstation report comes from the profile worker, which does not read
+component state, so ``config check`` reads the role's quick check itself.
+``config repair`` reads the same rows with no profile session. The report is a
+recorded worker reply and the role's side is a conversation the real role
+recorded, replayed on a real pipe; what is checked is each command's own
+composition: one row per row the role reported, graded, and one typed notice,
+with no rows, when the role cannot answer.
 """
 
 from __future__ import annotations
 
 import json
+import sys
+from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
 import pytest
 import typer
 import typer.main
-from pydantic import BaseModel
 
-from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo.tests.components_role_replay import ReplayLauncher
+from cadrumo.tests.english_locale_fixture import english_locale_fixture
 
-from .....application.dependency_contracts import DependencyCheckMode, DependencyProbeOutcome, DependencyProbeReading
-from .....application.dependency_registry import dependency_item_declarations, derive_dependency_row
-from .....application.dependency_setup_operation import (
-    DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID,
-    DependencyStatusRequest,
-    DependencyStatusResultV1,
-)
+from .....adapters.outbound.components import client as components_client
+from .....adapters.outbound.components.client import ComponentsLaunch
+from .....adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from .....application.workstation_check import WorkstationCheckReport
 from .....application.workstation_check_operation import WorkstationCheckProjection
-from .....core.config import override_settings
 from .....core.json_contract import ResolvedNoticeAction
-from .....core.operations import OperationEffect, OperationTerminalCondition
+from ...tests.cli_runner import invoke_cached_cli
 from .. import check_cli, repair_commands
+
+__all__ = ["english_locale_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -51,84 +50,91 @@ def _context(output_format: str) -> typer.Context:
     return typer.Context(typer.main.get_command(app), obj={"format": output_format})
 
 
-def _status() -> DependencyStatusResultV1:
-    rows = tuple(
-        derive_dependency_row(
-            declaration,
-            DependencyProbeReading(
-                item_id=declaration.item_id,
-                mode=DependencyCheckMode.QUICK,
-                outcome=DependencyProbeOutcome.ABSENT
-                if declaration.item_id == "browser"
-                else DependencyProbeOutcome.PRESENT,
-            ),
-        )
-        for declaration in dependency_item_declarations()
-    )
-    return DependencyStatusResultV1(mode=DependencyCheckMode.QUICK, rows=rows, complete=False, hardware_limited=False)
+def _unavailable(
+    image: Path, arguments: Sequence[str], environment: Mapping[str, str], directory: Path
+) -> ComponentsLaunch:
+    del image, arguments, environment, directory
+    raise FileNotFoundError("the binary went away")
 
 
-def _install(monkeypatch: pytest.MonkeyPatch, *, refused: bool) -> list[tuple[str, BaseModel]]:
-    submitted: list[tuple[str, BaseModel]] = []
+@pytest.fixture
+def role(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
+    """Answer the role's start with a recorded conversation, or with a start that fails."""
+    image = tmp_path / "cadrumo.exe"
+    image.write_bytes(b"")
+    monkeypatch.setattr(sys, "_xoptions", {}, raising=False)
+    monkeypatch.setenv(DEVELOPMENT_ROLE_IMAGE_VARIABLE, str(image))
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "root"))
     report = WorkstationCheckReport(profile_id=_PROFILE, capabilities=(), dependencies=(), preflight=(), issues=())
-
-    def run(client: object, payload: BaseModel, **options: Any) -> RegisteredOperationCompletion[Any]:
-        del client
-        submitted.append((options["definition_id"], payload))
-        if refused:
-            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-        return RegisteredOperationCompletion(
-            operation_id="a" * 64,
-            projection=_status(),
-            effect=OperationEffect.NONE,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-        )
-
     monkeypatch.setattr(
         check_cli, "read_workstation_check_for_cli", lambda ctx: WorkstationCheckProjection.from_report(report)
     )
-    monkeypatch.setattr(check_cli, "run_registered_operation", run)
-    monkeypatch.setattr(check_cli, "bound_profile_client", lambda ctx: object())
-    return submitted
+
+    def choose(name: str | None) -> ReplayLauncher | None:
+        launcher = None if name is None else ReplayLauncher(name)
+        monkeypatch.setattr(components_client, "launch_components_role", _unavailable if launcher is None else launcher)
+        return launcher
+
+    return choose
 
 
-def test_config_check_renders_one_setup_row_per_registry_item(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+def test_config_check_renders_one_setup_row_per_row_the_role_reports(
+    role: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    submitted = _install(monkeypatch, refused=False)
+    launcher = role("status_quick_browser_ready")
 
-    with override_settings(cadrumo_output_language="en"):
-        check_cli.config_check(_context("json"))
+    check_cli.config_check(_context("json"))
     envelope = json.loads(capsys.readouterr().out)
 
-    assert submitted == [(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, DependencyStatusRequest())]
+    assert launcher.launch.arguments == ("--role", "components", "status")
     rows = {row["check"]: row for row in envelope["result"]["preflight"]}
-    assert list(rows) == [f"setup:{declaration.item_id}" for declaration in dependency_item_declarations()]
-    assert rows["setup:browser"]["healthy"] is False
-    assert rows["setup:browser"]["precondition_action"]["action"]["action_id"] == "operator.provision.browser"
-    assert all(row["healthy"] for name, row in rows.items() if name != "setup:browser")
+    assert list(rows) == ["setup:browser", "setup:local_ai"]
+    assert rows["setup:browser"]["healthy"] is True
+    assert rows["setup:local_ai"]["healthy"] is False
+    assert rows["setup:local_ai"]["precondition_action"]["action"]["action_id"] == "operator.provision.local_ai"
     assert [notice["code"] for notice in envelope["notices"]] == []
 
 
-def test_an_unreachable_runtime_shows_a_typed_notice_and_no_setup_rows(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+def test_a_role_that_cannot_answer_shows_a_typed_notice_and_no_setup_rows(
+    role: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    _install(monkeypatch, refused=True)
+    role(None)
 
-    with override_settings(cadrumo_output_language="en"):
-        check_cli.config_check(_context("text"))
+    check_cli.config_check(_context("text"))
     output = capsys.readouterr().out
 
     assert "setup:" not in output
-    assert "notice\tconfig.check.setup_unavailable\tSetup could not be checked" in output
+    assert "notice\tconfig.check.setup_unavailable\tSetup could not be checked right now." in output
 
 
-def test_repair_points_at_the_status_command_instead_of_reading_setup() -> None:
-    with override_settings(cadrumo_output_language="en"):
-        notice = repair_commands._setup_status_notice()
+def test_repair_reports_each_setup_row_with_no_session(role: Any) -> None:
+    role("status_quick_browser_ready")
 
-    assert notice.code == "config.repair.setup_status"
-    assert notice.message == "Setup is shown by the status command below once you're signed in."
+    result = invoke_cached_cli(["--format", "json", "config", "repair"])
+
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.stdout)
+    checks = {check["name"]: check for check in envelope["result"]["checks"] if check["name"].startswith("setup.")}
+    assert list(checks) == ["setup.browser", "setup.local_ai"]
+    assert (checks["setup.browser"]["status"], checks["setup.browser"]["precondition_action"]) == ("ok", None)
+    local_ai = checks["setup.local_ai"]
+    assert local_ai["status"] == "warn"
+    assert local_ai["summary"] == "Local AI: Not set up yet."
+    assert local_ai["precondition_action"]["action"]["action_id"] == "operator.provision.local_ai"
+    assert envelope["notices"] == []
+
+
+def test_repair_points_at_the_status_command_when_the_role_cannot_answer(role: Any) -> None:
+    role(None)
+
+    result = invoke_cached_cli(["--format", "json", "config", "repair"])
+
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.stdout)
+    assert not [check for check in envelope["result"]["checks"] if check["name"].startswith("setup.")]
+    assert [notice["code"] for notice in envelope["notices"]] == ["config.repair.setup_status"]
+    notice = repair_commands._setup_status_notice()
+    assert notice.message == "Setup could not be checked right now. The status command below checks it again."
     action = notice.action
     assert isinstance(action, ResolvedNoticeAction)
     assert action.action.target_command_key == "config.provision.status"

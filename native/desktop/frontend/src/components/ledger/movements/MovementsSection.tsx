@@ -3,10 +3,8 @@ import {
   useMemo,
   useRef,
   useState,
-  type Dispatch,
   type KeyboardEvent,
   type RefObject,
-  type SetStateAction,
 } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -429,7 +427,7 @@ export function MovementsSection({
    * has one. */
   onOpenInspector?: (section: "classify") => void;
   /** Hands the inspector what the section draws and its commands. */
-  onInspector?: Dispatch<SetStateAction<SectionInspectorContext | null>>;
+  onInspector?: (context: SectionInspectorContext | null) => void;
   /** Hands the page's palette what the section offers. */
   register: (actions: (() => Action[]) | null) => void;
   /** An import's movements, which the grid shows when asked. */
@@ -1236,17 +1234,7 @@ export function MovementsSection({
     sentContext.current = inspectorContext;
     onInspector?.(inspectorContext);
   }, [onInspector, inspectorContext]);
-  // Going, the section takes back only what it sent, since a section drawn
-  // in its place may have sent its own already; and it forgets having sent
-  // it, so that one still here sends it again.
-  useEffect(
-    () => () => {
-      const mine = sentContext.current;
-      sentContext.current = null;
-      onInspector?.((current) => (current === mine ? null : current));
-    },
-    [onInspector],
-  );
+  useEffect(() => () => onInspector?.(null), [onInspector]);
 
   // ---- Menus -----------------------------------------------------------------
   const [acting, setActing] = useState<ActionRequest | null>(null);

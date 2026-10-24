@@ -59,11 +59,10 @@ _REMOVED_OPERATION: Final = "browser-runtime.provision"
 
 #: Operations a ``config provision`` leaf may submit: the three setup
 #: operations and the local-reader actions that download nothing.
-_PROVISION_LEAF_OPERATIONS: Final = _DEPENDENCY_OPERATIONS | {
-    "local-reader.provision",
-    "local-reader.status",
-    "local-reader.report",
-}
+#: The ``config provision`` verbs that run the native components role and submit nothing.
+_COMPONENT_LEAVES: Final = frozenset({"browser", "probe", "pull", "setup", "status", "verify"})
+#: The operations the local reader's remaining verbs submit in the signed-in profile.
+_LOCAL_READER_OPERATIONS: Final = frozenset({"local-reader.provision", "local-reader.status", "local-reader.report"})
 _DOWNLOADING_LOCAL_READER_ACTIONS: Final = frozenset({"install", "pull", "setup"})
 
 #: Catalogue subtrees that hold setup wording: the plain sentences and actions
@@ -271,17 +270,18 @@ def script_private_list_findings(source: str, identities: frozenset[str], *, ori
 
 
 def provision_leaf_findings(rows: Iterable[tuple[tuple[str, ...], str | None]]) -> list[str]:
-    """Name every ``config provision`` leaf that submits no operation or one outside the setup set."""
+    """Name every component verb that submits an operation, and every other verb that submits no local reader one."""
     findings: list[str] = []
     seen = False
     for path, operation in rows:
         if path[:2] != ("config", "provision") or len(path) < 3:
             continue
         seen = True
-        if operation is None:
-            findings.append(f"{' '.join(path)}: runs in the CLI process instead of a registered operation")
-        elif operation not in _PROVISION_LEAF_OPERATIONS:
-            findings.append(f"{' '.join(path)}: submits {operation!r}, which is not a setup operation")
+        if path[2] in _COMPONENT_LEAVES:
+            if operation is not None:
+                findings.append(f"{' '.join(path)}: submits {operation!r} instead of running the components role")
+        elif operation not in _LOCAL_READER_OPERATIONS:
+            findings.append(f"{' '.join(path)}: submits {operation!r}, which is not a local reader operation")
     if not seen:
         findings.append("the command table has no config provision leaf")
     return findings
@@ -510,17 +510,20 @@ def test_script_list_checker_names_a_private_item_array_and_ignores_comments() -
     assert script_private_list_findings(commented, identities, origin="fixture.tsx") == []
 
 
-def test_provision_leaf_checker_names_an_in_process_leaf_and_a_foreign_operation() -> None:
-    """A provision verb with no operation, or one submitting an unrelated operation, is caught."""
+def test_provision_leaf_checker_names_a_component_verb_that_submits_and_a_foreign_operation() -> None:
+    """A component verb that submits an operation, or a local reader verb submitting another one, is caught."""
     rows = [
         (("config", "provision", "status"), _STATUS_OPERATION),
         (("config", "provision", "browser"), None),
-        (("config", "provision", "pull"), "browser-runtime.provision"),
+        (("config", "provision", "load"), "local-reader.provision"),
+        (("config", "provision", "start"), "browser-runtime.provision"),
+        (("config", "provision", "report"), None),
         (("config", "check"), None),
     ]
     assert provision_leaf_findings(rows) == [
-        "config provision browser: runs in the CLI process instead of a registered operation",
-        "config provision pull: submits 'browser-runtime.provision', which is not a setup operation",
+        f"config provision status: submits {_STATUS_OPERATION!r} instead of running the components role",
+        "config provision start: submits 'browser-runtime.provision', which is not a local reader operation",
+        "config provision report: submits None, which is not a local reader operation",
     ]
     assert provision_leaf_findings([(("config", "check"), None)]) == ["the command table has no config provision leaf"]
 
@@ -660,8 +663,8 @@ def test_desktop_setup_renders_host_snapshots_and_keeps_no_item_list() -> None:
     assert not findings, "\n".join(findings)
 
 
-def test_every_config_provision_leaf_submits_a_setup_operation() -> None:
-    """No ``config provision`` verb runs in the CLI process; each submits a registered setup operation."""
+def test_component_verbs_run_the_role_and_the_local_reader_verbs_submit_its_operations() -> None:
+    """The component verbs start the components role; the local reader's verbs submit its registered operations."""
     findings = provision_leaf_findings(_command_operation_rows())
     assert not findings, "\n".join(findings)
 

@@ -1,11 +1,12 @@
 """``aeat config check`` — the authenticated workstation report presenter.
 
-The workstation report runs inside the profile worker, which holds no runtime
-connection, so its setup rows are read here: one quick ``dependencies.status``
-read through this command's own runtime connection, rendered as one
-``setup:<item>`` preflight row per registry row. When that read is refused or
-the runtime cannot be reached, the report says so in one typed notice and
-shows no setup rows; nothing here starts or manages the runtime.
+The workstation report runs inside the profile worker, which does not read
+component state, so its setup rows are read here: one quick check of the
+native component engine's ``components`` role, rendered as one
+``setup:<item>`` preflight row per row the role reports. When the role cannot
+be started or breaks its protocol, the report says so in one typed notice and
+shows no setup rows. A build without the role reads every item as not in this
+build.
 """
 
 from __future__ import annotations
@@ -15,26 +16,15 @@ from collections.abc import Mapping
 
 import typer
 
-from cadrumo_client.commands.errors import CliOperationStillRunningError, CliRefusedBoundaryError
-from cadrumo_client.commands.profile_binding import bound_profile_client
-from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from ....application.dependency_contracts import DependencyCheckMode, DependencyStatusRow
-from ....application.dependency_setup_operation import (
-    DEPENDENCIES_OPERATION_SUBJECT,
-    DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID,
-    DependencyStatusRequest,
-    DependencyStatusResultV1,
-)
+from ....application.dependency_contracts import DependencyStatusRow
 from ....application.operator_actions.models import PreconditionVerdict
 from ....application.preflight import PreflightCheck, dependency_preflight_checks
 from ....application.provisioning import DependencyStatus
 from ....application.workstation_check_operation import WorkstationCheckProjection
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
-from ....core.operations import OperationTerminalCondition
 from ..common import emit_envelope, resolve_cli_precondition_action
 from .check_payloads import (
     CheckCapabilityPayload,
@@ -125,28 +115,14 @@ def _check_text_lines(
     return tuple(lines)
 
 
-_SETUP_STATUS_TIMEOUT_S = 60.0
+def read_setup_rows() -> tuple[DependencyStatusRow, ...] | None:
+    """Read every setup item's quick check from the components role, or ``None`` when the role cannot answer."""
+    from .provision_cli import read_quick_setup_rows
 
-
-def read_setup_rows(ctx: typer.Context) -> tuple[DependencyStatusRow, ...] | None:
-    """Read every setup item's quick check through the runtime, or ``None`` when the runtime refuses or is gone."""
     try:
-        completed = run_registered_operation(
-            bound_profile_client(ctx),
-            DependencyStatusRequest(mode=DependencyCheckMode.QUICK),
-            definition_id=DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID,
-            subject_ref=DEPENDENCIES_OPERATION_SUBJECT,
-            result_type=DependencyStatusResultV1,
-            request_version=1,
-            result_version=1,
-            timeout=_SETUP_STATUS_TIMEOUT_S,
-            settlement_timeout=_SETUP_STATUS_TIMEOUT_S,
-        )
-    except (RefusalError, FrontendRefusedError, CliRefusedBoundaryError, CliOperationStillRunningError):
+        return read_quick_setup_rows()
+    except RefusalError:
         return None
-    if completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-        return None
-    return completed.projection.rows
 
 
 def _setup_unavailable_notice() -> Notice:
@@ -198,7 +174,7 @@ def _present_report(
 def config_check(ctx: typer.Context) -> None:
     """Report the authenticated profile's canonical workstation health facts."""
     projection = read_workstation_check_for_cli(ctx)
-    setup_rows = read_setup_rows(ctx)
+    setup_rows = read_setup_rows()
     result, lines = _present_report(projection, setup_rows)
     notices = () if setup_rows is not None else (_setup_unavailable_notice(),)
     emit_envelope(ctx, command="config.check", result=result, lines=lines, notices=notices)

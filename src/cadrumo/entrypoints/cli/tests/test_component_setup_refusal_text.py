@@ -5,8 +5,8 @@ empty browsers root, and the local reader probe asking a closed runtime port.
 The refusals pass through the real CLI error boundary and the live action
 resolver, both in-process and rebuilt from a worker's recorded error detail.
 The item's quick-status row comes from the real row derivation: absent, so its
-action sets it up, or blocked as not in this build, as every item reads while
-this build sets nothing up. Text output shows the error's sentence and then
+action sets it up, or blocked as not in this build, as the components role and
+a build without it read an item they cannot set up. Text output shows the error's sentence and then
 the exact command for an offerable row, the row's own sentence for a blocked
 row, and nothing more when the status cannot be read; JSON keeps the typed
 action record unchanged.
@@ -15,6 +15,7 @@ action record unchanged.
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
@@ -27,6 +28,7 @@ from cadrumo_client.commands.registered_operation_errors import detailed_registe
 
 from ....adapters.outbound.aeat.browser.errors import BrowserError
 from ....adapters.outbound.aeat.browser.session import require_browser_ready
+from ....adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from ....application.dependency_contracts import (
     DependencyBlockedReason,
     DependencyCheckMode,
@@ -234,8 +236,12 @@ def test_an_unreadable_setup_status_prints_the_sentence_alone() -> None:
     _assert_no_action_record(output)
 
 
-def test_a_command_without_a_profile_connection_reads_no_status_and_offers_nothing() -> None:
-    """The boundary reads the status through the command's own connection; without one it offers nothing."""
+def test_every_command_reads_the_components_roles_status_and_a_build_without_it_says_so(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The boundary reads the status from the components role, which needs no profile connection."""
+    monkeypatch.setattr(sys, "_xoptions", {}, raising=False)
+    monkeypatch.delenv(DEVELOPMENT_ROLE_IMAGE_VARIABLE, raising=False)
     error = _reader_refusal()
     app = typer.Typer()
 
@@ -250,8 +256,9 @@ def test_a_command_without_a_profile_connection_reads_no_status_and_offers_nothi
     assert result.exit_code != 0
     output = semantic_cli_output(result)
     lines = output.splitlines()
-    assert len(lines) == 1, output
     assert resolve_error_message(error) in lines[0]
+    assert lines[-1] == f"  {_LOCAL_AI_HELD}"
+    assert "To fix it" not in output
     _assert_no_action_record(output)
 
 

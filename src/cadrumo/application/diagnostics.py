@@ -7,7 +7,7 @@ root ``aeat --version`` surface without loading the bundled registry.
 :class:`~application.workflow.state_models.WorkflowState` loading,
 :class:`~application.workflow.profile_health.ActiveProfileHealth` profile storage
 verdicts, :class:`~application.wizard.status.WizardStatusReport`
-readiness and secure-object decryptability into a
+readiness, secure-object decryptability and the caller's setup checks into a
 :class:`ConfigRepairReport` of :class:`DiagnosticCheck` rows.
 
 Every warn/fail :class:`DiagnosticCheck` carries an application-owned
@@ -35,6 +35,7 @@ See Also:
 from __future__ import annotations
 
 import sys
+from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 from ..core.i18n.render import tr
@@ -263,6 +264,7 @@ def build_config_repair_report(
     *,
     ports: DiagnosticsPorts,
     profile_decode_context: ProfileDecodeContext | None = None,
+    setup_checks: Iterable[_DiagnosticCheck] = (),
 ) -> _ConfigRepairReport:
     """Return local diagnostics for the ``aeat config repair`` surface.
 
@@ -277,9 +279,9 @@ def build_config_repair_report(
     fails, the report still emits profile and auth rows from the redacted health
     verdict so repair remains usable on a cold or degraded storage root.
     Each emitted warning/failure row is validated by :class:`DiagnosticCheck` so
-    the caller never receives a silent repair finding. Setup state is not
-    part of this report: repair runs without a profile session, and the setup
-    rows are read through the runtime only in a signed-in session.
+    the caller never receives a silent repair finding. ``setup_checks`` are the
+    ``setup.<item>`` rows the caller graded from the native component engine's
+    quick check, which needs no profile session; they follow the local checks.
     """
     _ensure_models_rebuilt()
     checks = _initial_config_repair_checks()
@@ -291,6 +293,7 @@ def build_config_repair_report(
 
     secure_objects = _probe_secure_objects_integrity(ports)
     checks.append(_secure_objects_integrity_check(secure_objects))
+    checks.extend(setup_checks)
 
     return _ConfigRepairReport(
         overall=_overall_status(tuple(checks)),

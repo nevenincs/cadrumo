@@ -269,7 +269,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     def _wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
         token = _ACTIVE_COMMAND_ID.set(_resolve_active_command_id(*args, *kwargs.values()))
         try:
-            with setup_status_source(_invocation_setup_rows(*args, *kwargs.values())):
+            with setup_status_source(_quick_setup_rows):
                 try:
                     return callback(*args, **kwargs)
                 except Exception as error:
@@ -611,31 +611,16 @@ def _active_command_identifier() -> str | None:
     return _ACTIVE_COMMAND_ID.get()
 
 
-def _invocation_setup_rows(*values: object) -> Callable[[], tuple[DependencyStatusRow, ...]]:
-    """Return the quick setup status read of the executing command's profile connection.
+def _quick_setup_rows() -> tuple[DependencyStatusRow, ...]:
+    """Read every setup item's row from the components role's quick check.
 
-    A component setup line is printed only from the item's current row, so the
-    read binds the callback's injected Context, found as
-    :func:`_resolve_active_command_id` finds it. Nothing is read until a line
-    needs a row; a command without a Context or a profile connection reads none.
+    A component setup line is printed only from the item's current row. The
+    role needs no profile session, so every command reads the same rows; nothing
+    is read until a line needs a row.
     """
-    context = next(
-        (
-            value
-            for value in values
-            if isinstance(getattr(value, "command_path", None), str) and isinstance(getattr(value, "meta", None), dict)
-        ),
-        None,
-    )
+    from .config.provision_cli import read_quick_setup_rows
 
-    def read() -> tuple[DependencyStatusRow, ...]:
-        if not isinstance(context, typer.Context):
-            raise LookupError("no command context to read the setup status through")
-        from .config.provision_cli import read_quick_setup_rows
-
-        return read_quick_setup_rows(context)
-
-    return read
+    return read_quick_setup_rows()
 
 
 def _resolve_active_command_id(*values: object) -> str | None:

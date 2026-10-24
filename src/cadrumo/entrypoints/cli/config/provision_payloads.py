@@ -177,27 +177,21 @@ class ProvisionSpacePayload(OutputSchema):
     sufficient: bool
 
 
-class ProvisionSetupItemPayload(OutputSchema):
-    """What setting up one item did, with its failure category when it did not end usable."""
-
-    item_id: NonEmptyStr
-    changed: bool
-    failure_category: str | None = None
-    transferred_bytes: NonNegativeInt = 0
-
-
 class ProvisionSetupResult(OutputSchema):
     """JSON envelope for ``aeat config provision setup``.
 
-    ``approved`` records whether the plan was approved; nothing moves without
-    it. ``items`` is a fresh quick check of every item after the setup.
+    ``outcome`` is the component engine's closed outcome. ``approved`` records
+    whether the printed plan was approved; nothing moves without it.
+    ``item_id`` and ``failure_category`` name the item and the category a
+    refusal or failure is for. ``items`` is every item's row after the setup.
     """
 
     outcome: NonEmptyStr
     approved: bool
     plan_digest: str | None = None
     space: ProvisionSpacePayload | None = None
-    results: list[ProvisionSetupItemPayload] = []
+    item_id: str | None = None
+    failure_category: str | None = None
     complete: bool
     items: list[ProvisionItemPayload] = []
 
@@ -222,7 +216,6 @@ __all__ = [
     "ProvisionRemoveItemPayload",
     "ProvisionRemoveResult",
     "ProvisionReportResult",
-    "ProvisionSetupItemPayload",
     "ProvisionSetupResult",
     "ProvisionSpacePayload",
     "ProvisionStartResult",

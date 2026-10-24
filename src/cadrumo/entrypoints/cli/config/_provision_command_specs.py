@@ -1,10 +1,12 @@
 """Import-light production authority for the ``config provision`` commands.
 
-Every leaf submits a registered operation through the runtime: the setup
-status, setup and verification operations, or the local reader's actions
-that download nothing. Each therefore runs in the signed-in profile's
-session, so the policies below declare installation storage beside the
-network rather than the profile-free pair that would skip the session.
+The component leaves (status, probe, verify, setup, browser, pull) run the
+native component engine's role, which reaches only installation-wide
+components no profile holds, so they declare the profile-free pair and run
+without a session. The local reader's actions (report, start, load, remove)
+submit registered operations through the runtime in the signed-in profile's
+session, so their policies declare installation storage beside the network
+rather than the profile-free pair that would skip the session.
 """
 
 from __future__ import annotations
@@ -24,12 +26,19 @@ from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, Invoc
 from cadrumo_client.contracts.command_ports import Capability, CommandNodeKind, CommandWriteRoute
 
 _STORAGE_AND_NETWORK: frozenset[Capability] = frozenset({"local-storage", "network"})
+_PROFILE_FREE: frozenset[Capability] = frozenset({"network"})
+# The engine's quick check: local files only, no network and no model load.
+_COMPONENT_READ = ExecutionPolicySpec(
+    frozenset({"state-free"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE
+)
+# The engine's full check reaches each item's hosts, launches the browser and asks each model one token.
+_COMPONENT_CHECK = ExecutionPolicySpec(_PROFILE_FREE, frozenset({"network"}), "external-io", CommandWriteRoute.NONE)
+# The engine's setup downloads and installs into installation-wide component storage.
+_COMPONENT_SETUP = ExecutionPolicySpec(
+    _PROFILE_FREE, frozenset({"network", "local-state"}), "external-io", CommandWriteRoute.NONE
+)
 # Reads installation storage and the network and changes nothing.
 _SETUP_READ = ExecutionPolicySpec(_STORAGE_AND_NETWORK, frozenset({"none"}), "external-io", CommandWriteRoute.NONE)
-# Exercises an item at the network (a refresh, a load) and records nothing locally.
-_SETUP_EXERCISE = ExecutionPolicySpec(
-    _STORAGE_AND_NETWORK, frozenset({"network"}), "external-io", CommandWriteRoute.NONE
-)
 _SETUP_WRITE = ExecutionPolicySpec(
     _STORAGE_AND_NETWORK, frozenset({"network", "local-state"}), "external-io", CommandWriteRoute.NONE
 )
@@ -41,13 +50,6 @@ _SETUP_DESTRUCTIVE = ExecutionPolicySpec(
     destructive=True,
 )
 
-_MODEL = OptionSpec(
-    name="model",
-    declarations=("--model",),
-    value=ValueContract(DeferredTarget("builtins", "str")),
-    default=ParameterDefault.value(None),
-    help_key=TranslationKey("cli.config.provision.pull.model_help"),
-)
 _YES = OptionSpec(
     name="yes",
     declarations=("--yes",),
@@ -125,8 +127,8 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         help_key=TranslationKey("cli.config.provision.pull.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(_MODEL, _YES),
-        policy=_SETUP_WRITE,
+        parameters=(_YES,),
+        policy=_COMPONENT_SETUP,
         handler=_handler("provision_pull"),
         result_schema=_schema("ProvisionPullResult", "config.provision.pull"),
     ),
@@ -139,7 +141,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(_ITEM,),
-        policy=_SETUP_EXERCISE,
+        policy=_COMPONENT_CHECK,
         handler=_handler("provision_verify"),
         result_schema=_schema("ProvisionVerifyResult", "config.provision.verify"),
     ),
@@ -152,7 +154,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(),
-        policy=_SETUP_READ,
+        policy=_COMPONENT_READ,
         handler=_handler("provision_status"),
         result_schema=_schema("ProvisionStatusResult", "config.provision.status"),
     ),
@@ -165,7 +167,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(),
-        policy=_SETUP_EXERCISE,
+        policy=_COMPONENT_CHECK,
         handler=_handler("provision_probe"),
         result_schema=_schema("ProvisionProbeResult", "config.provision.probe"),
     ),
@@ -178,7 +180,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(_YES,),
-        policy=_SETUP_WRITE,
+        policy=_COMPONENT_SETUP,
         handler=_handler("provision_browser"),
         result_schema=_schema("ProvisionBrowserResult", "config.provision.browser"),
     ),
@@ -239,7 +241,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(_YES,),
-        policy=_SETUP_WRITE,
+        policy=_COMPONENT_SETUP,
         handler=_handler("provision_setup"),
         result_schema=_schema("ProvisionSetupResult", "config.provision.setup"),
     ),

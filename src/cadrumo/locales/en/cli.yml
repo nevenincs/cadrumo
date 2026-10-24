@@ -1942,8 +1942,7 @@ cli:
       missing: missing
       preflight_label: Preflight check
       profile_label: profile
-      setup_unavailable: Setup could not be checked because Cadrumo's background service
-        did not answer.
+      setup_unavailable: Setup could not be checked right now.
     collab:
       help: Manage trusted recipients for review-package collaboration.
       recipient:
@@ -2500,8 +2499,7 @@ cli:
       fix: 'To fix it, run: %{command}'
       hardware_limited: This computer does not have enough memory for the local AI.
       help: 'Set up and check what Cadrumo needs on this computer: the browser for
-        the tax agency website and the local AI, its program and models. Each command
-        runs in your signed-in profile.'
+        the tax agency website and the local AI, its program and models.'
       incomplete: Some components are not ready yet.
       load:
         help: Load models into memory so the first read does not wait, every role's
@@ -2510,11 +2508,9 @@ cli:
         model_help: Name of the model to load. It must already be downloaded. Defaults
           to the model chosen for the role.
       outcome:
+        busy: Another setup is changing this right now. Try again when it has finished.
         cancelled: You cancelled the setup.
         completed: Setup finished.
-        interrupted: Setup was interrupted before it finished. Run the command again
-          to resume.
-        not_enough_space: There is not enough free disk space, so nothing was downloaded.
         nothing_to_do: Everything is already set up.
         plan_changed: The plan changed after you approved it, so nothing was downloaded.
           Run the command again to see the new plan.
@@ -2523,8 +2519,7 @@ cli:
         destination: '  Stored in %{path}'
         entry: '%{name}: %{size} from %{hosts}'
         heading: 'Cadrumo will set up:'
-        installs_program: '  This installs a program on this computer. Its installer
-          may ask for your permission.'
+        installs_program: '  This installs a program on this computer.'
         part: '    %{name}: %{size}'
         shared: '  Uses the same download as %{name}.'
         size_unknown: size not known yet
@@ -2538,9 +2533,7 @@ cli:
       progress_bytes: '%{name}: downloading %{done} of %{total} (%{percent}%)'
       pull:
         help: 'Set up the local AI: install its program when it is missing, then download
-          every role''s model. Shows the plan and asks first; the program''s installer
-          may also ask for your permission.'
-        model_help: Name of a catalogue model to use instead of the one Cadrumo chooses.
+          every role''s model. Shows the plan and asks first.'
       remove:
         help: Delete a model Cadrumo chose from this computer and report the space
           freed.
@@ -2570,10 +2563,12 @@ cli:
         plan: planning
         preflight: checking the connection
         verify: checking that it works
+      stopping: Stopping the setup.
       verify:
         help: Check one component fully, or every component when none is named. Downloads
           nothing.
         item_help: 'Component to check: browser or local_ai. Defaults to every component.'
+      waiting_for_program: '%{name}: waiting for the program to start'
       yes_help: Approve the plan the command shows, without asking.
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
@@ -2606,8 +2601,8 @@ cli:
       reset_progress_requires_yes: This operation is destructive. Re-run with --yes
         to confirm or pass --dry-run to see what would be cleared.
       reset_progress_yes_help: Confirm clearing saved interrupted-command progress
-      setup_status_hint: Setup is shown by the status command below once you're signed
-        in.
+      setup_status_hint: Setup could not be checked right now. The status command
+        below checks it again.
       yes_help: Confirm repair.
     reset:
       help: Start, inspect, or resume the irreversible reset of all locally stored

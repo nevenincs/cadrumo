@@ -307,11 +307,6 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             values=_enum_values(DependencySetupStep),
         ),
         FStringKeyRegistration(
-            description="cli.config.provision.outcome.* (DependencySetupOutcome)",
-            key_factory=lambda v: f"cli.config.provision.outcome.{v}",
-            values=_enum_values(DependencySetupOutcome),
-        ),
-        FStringKeyRegistration(
             description="tui.setup.outcome.* (DependencySetupOutcome)",
             key_factory=lambda v: f"tui.setup.outcome.{v}",
             values=_enum_values(DependencySetupOutcome),

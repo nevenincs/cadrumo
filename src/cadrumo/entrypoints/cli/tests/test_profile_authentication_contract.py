@@ -184,9 +184,12 @@ def test_profile_authentication_posture_is_graph_and_exemption_derived() -> None
     # declaration more and the same family is gated again.
     for profile_free in ("modelo.list", "ledger.categories", "config.storage.list"):
         assert postures[profile_free] is ProfileAuthenticationPosture.NOT_APPLICABLE, profile_free
-    # Component setup runs as the runtime's registered operations on the signed-in profile.
+    # Component setup runs the native component engine's role, which reaches nothing a
+    # profile holds; the local reader's actions stay registered operations on the profile.
     for setup in ("config.provision.status", "config.provision.verify", "config.provision.pull"):
-        assert postures[setup] is ProfileAuthenticationPosture.RESUME_FALLBACK, setup
+        assert postures[setup] is ProfileAuthenticationPosture.NOT_APPLICABLE, setup
+    for reader in ("config.provision.report", "config.provision.load"):
+        assert postures[reader] is ProfileAuthenticationPosture.RESUME_FALLBACK, reader
     assert postures["config.check"] is ProfileAuthenticationPosture.RESUME_FALLBACK
     metadata = {row.command: row.profile_authentication for row in command_registration_metadata()}
     assert metadata == {identity: posture.value for identity, posture in postures.items() if identity is not None}

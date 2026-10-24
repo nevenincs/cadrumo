@@ -51,16 +51,10 @@ _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
 _PROFILE_CONNECTION_KEYS = frozenset(
     {
         "config_check",
-        "config_provision_browser",
         "config_provision_load",
-        "config_provision_probe",
-        "config_provision_pull",
         "config_provision_remove",
         "config_provision_report",
-        "config_provision_setup",
         "config_provision_start",
-        "config_provision_status",
-        "config_provision_verify",
         "config_google_folder_view",
         "config_google_folder_organize",
         "config_google_probe",

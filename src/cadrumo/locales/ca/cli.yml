@@ -2066,8 +2066,7 @@ cli:
       missing: absent
       preflight_label: Comprovació prèvia
       profile_label: perfil
-      setup_unavailable: No s'ha pogut comprovar la preparació perquè el servei en
-        segon pla de Cadrumo no ha respost.
+      setup_unavailable: No s'ha pogut comprovar la preparació ara mateix.
     collab:
       help: Gestiona els destinataris de confiança per a la col.laboració amb paquets
         de revisió.
@@ -2680,7 +2679,7 @@ cli:
       hardware_limited: Aquest ordinador no té prou memòria per a la IA local.
       help: 'Prepara i comprova el que Cadrumo necessita en aquest ordinador: el navegador
         per al web de l''Agència Tributària i la IA local, amb el seu programa i els
-        seus models. Cada ordre s''executa al teu perfil amb la sessió iniciada.'
+        seus models.'
       incomplete: Alguns components encara no estan a punt.
       load:
         help: Carrega els models a la memòria perquè la primera lectura no esperi,
@@ -2689,12 +2688,10 @@ cli:
         model_help: Nom del model que cal carregar. Ja ha d'estar baixat. Per defecte,
           el model triat per al rol.
       outcome:
+        busy: Una altra preparació està canviant això ara mateix. Torna-ho a provar
+          quan acabi.
         cancelled: Has cancel·lat la preparació.
         completed: La preparació ha acabat.
-        interrupted: La preparació es va interrompre abans d'acabar. Torna a executar
-          l'ordre per continuar.
-        not_enough_space: No hi ha prou espai lliure al disc, així que no s'ha baixat
-          res.
         nothing_to_do: Tot ja està preparat.
         plan_changed: El pla va canviar després que l'aprovessis, així que no s'ha
           baixat res. Torna a executar l'ordre per veure el pla nou.
@@ -2703,8 +2700,7 @@ cli:
         destination: '  Es desa a %{path}'
         entry: '%{name}: %{size} des de %{hosts}'
         heading: 'Cadrumo prepararà:'
-        installs_program: '  Això instal·la un programa en aquest ordinador. El seu
-          instal·lador et pot demanar permís.'
+        installs_program: '  Això instal·la un programa en aquest ordinador.'
         part: '    %{name}: %{size}'
         shared: '  Fa servir la mateixa baixada que %{name}.'
         size_unknown: mida encara desconeguda
@@ -2718,10 +2714,7 @@ cli:
       progress_bytes: '%{name}: baixant %{done} de %{total} (%{percent}%)'
       pull:
         help: 'Prepara la IA local: instal·la el seu programa si falta i després baixa
-          el model de cada rol. Mostra el pla i et pregunta abans; l''instal·lador
-          del programa també et pot demanar permís.'
-        model_help: Nom d'un model del catàleg que cal fer servir en lloc del que
-          tria Cadrumo.
+          el model de cada rol. Mostra el pla i et pregunta abans.'
       remove:
         help: Esborra d'aquest ordinador un model que va triar Cadrumo i indica l'espai
           alliberat.
@@ -2752,11 +2745,13 @@ cli:
         plan: planificant
         preflight: comprovant la connexió
         verify: comprovant que funciona
+      stopping: S'està aturant la preparació.
       verify:
         help: Comprova a fons un component, o tots si no n'indiques cap. No baixa
           res.
         item_help: 'Component que cal comprovar: browser o local_ai. Per defecte,
           tots.'
+      waiting_for_program: '%{name}: s''està esperant que s''iniciï el programa'
       yes_help: Aprova el pla que mostra l'ordre, sense preguntar.
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
@@ -2793,8 +2788,8 @@ cli:
         amb --yes per confirmar o passa --dry-run per veure què s'esborraria.
       reset_progress_yes_help: Confirmar l'esborrat del progrés desat d'una ordre
         interrompuda
-      setup_status_hint: La preparació es mostra amb l'ordre d'estat de sota un cop
-        hagis iniciat la sessió.
+      setup_status_hint: No s'ha pogut comprovar la preparació ara mateix. L'ordre
+        d'estat de sota la torna a comprovar.
       yes_help: Confirmar la reparació.
     reset:
       help: Inicia, consulta o reprèn el reinici irreversible de tots els perfils

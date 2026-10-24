@@ -541,7 +541,7 @@ def probe_portal_registry_health() -> PreflightCheck:
     )
 
 
-# ── Setup items, from the dependency registry ─────────────────────────
+# ── Setup items, as the native component engine reports them ──────────
 
 _SETUP_WARNING_STATES: Final = frozenset(
     {DependencyState.STALE, DependencyState.UNKNOWN, DependencyState.PROVISIONING, DependencyState.VERIFYING}
@@ -558,12 +558,13 @@ def _setup_severity(row: DependencyStatusRow) -> HealthSeverity:
 
 
 def dependency_preflight_checks(rows: Iterable[DependencyStatusRow]) -> tuple[PreflightCheck, ...]:
-    """Turn the registry's status rows into ``setup:<item>`` health rows, in setup order.
+    """Turn the component engine's status rows into ``setup:<item>`` health rows, in the order given.
 
-    The rows come from the registry's quick check, so a doctor run moves no
-    network traffic and loads no model. A usable item is healthy (a stale one
-    with a warning); every other state is unhealthy and names the item's
-    recovery action when it has one.
+    The rows come from the engine's quick check, so a doctor run moves no
+    network traffic and loads no model. The row's state is the engine's; this
+    only grades it for the report: a usable item is healthy (a stale one with
+    a warning), and every other state is unhealthy and names the item's
+    recovery action when the row offers one.
     """
     checks: list[PreflightCheck] = []
     for row in rows:
@@ -601,8 +602,8 @@ def run_preflight_checks(
     Concatenates the per-auth-provider certificate / Cl@ve Móvil health
     rows, the secure-storage / bundled-corpus / configuration rows, and the
     portal-registry health / recorded-drift row. Setup rows are not probed
-    here: the worker that runs this has no runtime connection, so a frontend
-    reads ``dependencies.status`` itself and renders
+    here: component state belongs to the native component engine, so a
+    frontend reads its ``components`` role and renders
     :func:`dependency_preflight_checks` beside these rows. Every probe catches
     its own failures and reports them as ``error`` rows, so the aggregate
     never raises. The portal-drift row runs with the offline default (no

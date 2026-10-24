@@ -2082,8 +2082,7 @@ cli:
       missing: ausente
       preflight_label: Comprobación previa
       profile_label: perfil
-      setup_unavailable: No se ha podido comprobar la preparación porque el servicio
-        en segundo plano de Cadrumo no ha respondido.
+      setup_unavailable: No se ha podido comprobar la preparación ahora mismo.
     collab:
       help: Gestiona los destinatarios de confianza para la colaboración con paquetes
         de revisión.
@@ -2702,7 +2701,7 @@ cli:
       hardware_limited: Este ordenador no tiene memoria suficiente para la IA local.
       help: 'Prepara y comprueba lo que Cadrumo necesita en este ordenador: el navegador
         para la web de la Agencia Tributaria y la IA local, con su programa y sus
-        modelos. Cada orden se ejecuta en tu perfil con la sesión iniciada.'
+        modelos.'
       incomplete: Algunos componentes aún no están listos.
       load:
         help: Carga los modelos en memoria para que la primera lectura no espere,
@@ -2711,12 +2710,10 @@ cli:
         model_help: Nombre del modelo que cargar. Debe estar ya descargado. Por defecto,
           el modelo elegido para el rol.
       outcome:
+        busy: Otra preparación está cambiando esto ahora mismo. Vuelve a intentarlo
+          cuando termine.
         cancelled: Has cancelado la preparación.
         completed: La preparación ha terminado.
-        interrupted: La preparación se interrumpió antes de terminar. Vuelve a ejecutar
-          la orden para continuar.
-        not_enough_space: No hay espacio libre suficiente en el disco, así que no
-          se ha descargado nada.
         nothing_to_do: Todo está ya preparado.
         plan_changed: El plan cambió después de que lo aprobaras, así que no se ha
           descargado nada. Vuelve a ejecutar la orden para ver el plan nuevo.
@@ -2725,8 +2722,7 @@ cli:
         destination: '  Se guarda en %{path}'
         entry: '%{name}: %{size} desde %{hosts}'
         heading: 'Cadrumo va a preparar:'
-        installs_program: '  Esto instala un programa en este ordenador. Su instalador
-          puede pedirte permiso.'
+        installs_program: '  Esto instala un programa en este ordenador.'
         part: '    %{name}: %{size}'
         shared: '  Usa la misma descarga que %{name}.'
         size_unknown: tamaño aún desconocido
@@ -2740,10 +2736,7 @@ cli:
       progress_bytes: '%{name}: descargando %{done} de %{total} (%{percent}%)'
       pull:
         help: 'Prepara la IA local: instala su programa si falta y luego descarga
-          el modelo de cada rol. Muestra el plan y te pregunta antes; el instalador
-          del programa también puede pedirte permiso.'
-        model_help: Nombre de un modelo del catálogo que usar en lugar del que elige
-          Cadrumo.
+          el modelo de cada rol. Muestra el plan y te pregunta antes.'
       remove:
         help: Borra de este ordenador un modelo que eligió Cadrumo e indica el espacio
           liberado.
@@ -2775,10 +2768,12 @@ cli:
         plan: planificando
         preflight: comprobando la conexión
         verify: comprobando que funciona
+      stopping: Deteniendo la preparación.
       verify:
         help: Comprueba a fondo un componente, o todos si no indicas ninguno. No descarga
           nada.
         item_help: 'Componente que comprobar: browser o local_ai. Por defecto, todos.'
+      waiting_for_program: '%{name}: esperando a que se inicie el programa'
       yes_help: Aprueba el plan que muestra la orden, sin preguntar.
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
@@ -2814,8 +2809,8 @@ cli:
         con --yes para confirmar o pasa --dry-run para ver qué se borraría.
       reset_progress_yes_help: Confirmar el borrado del progreso guardado de un comando
         interrumpido
-      setup_status_hint: La preparación se muestra con la orden de estado de abajo
-        una vez que hayas iniciado sesión.
+      setup_status_hint: No se ha podido comprobar la preparación ahora mismo. La
+        orden de estado de abajo la vuelve a comprobar.
       yes_help: Confirmar la reparación.
     reset:
       help: Inicia, consulta o reanuda el reinicio irreversible de todos los perfiles
