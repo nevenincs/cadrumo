@@ -298,6 +298,8 @@ export type LedgerRow = {
   transaction: LedgerTransaction;
   review_status: LedgerReviewStatus;
   group_label: string | null;
+  /** The own account's register id, never its number; null for none. */
+  own_account_id: string | null;
 };
 
 /** The order is the product's: filter, group selection, sort, group

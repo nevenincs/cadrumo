@@ -11,6 +11,8 @@ import {
   type JsonValue,
   type LedgerAddResult,
   type LedgerBulkClassifyResult,
+  type LedgerClassifyField,
+  type LedgerClassifyRequest,
   type LedgerClassifyResult,
   type LedgerErrorDetail,
   type LedgerFailureCode,
@@ -30,7 +32,7 @@ import {
   type StageKeep,
   type StagedContent,
 } from "./ledgerStage";
-import type { LedgerPeriod } from "./ledgerGrammar";
+import { canonicalDecimal, type LedgerPeriod } from "./ledgerGrammar";
 import { readWindow, rowsById, type LedgerReadFailure } from "./ledgerWindow";
 
 /** Why a step was not sent. */
@@ -71,6 +73,9 @@ export type StepReport = {
   /** For a bulk part, `refused` means nothing in the part was saved. */
   outcome: StepOutcome;
   rows: RowResult[];
+  /** A write sent because the action this names settled: a split part's
+   * classification, or the attach of a document just added. */
+  follows?: string;
 };
 
 export type ApplyReport = {
@@ -105,7 +110,10 @@ export function stepRows(step: PlanStep): string[] {
       return [];
     case "action":
     case "answer":
-      return actionRows(step.action);
+      // The rules' apply reports on the movements its dry run named.
+      return step.action.kind === "rule_apply"
+        ? step.action.transactionIds
+        : actionRows(step.action);
   }
 }
 
@@ -203,6 +211,28 @@ function settledOutcome(
       );
     }
     case "action":
+      if (step.action.kind === "rule_apply") {
+        // Each named movement a rule classified saved; the others were
+        // left as they were.
+        const applied = new Set(
+          (Array.isArray(result.applied) ? result.applied : []).flatMap(
+            (row) => {
+              const id = object(row)?.transaction_id;
+              return typeof id === "string" ? [id] : [];
+            },
+          ),
+        );
+        return {
+          outcome: { kind: "applied", newId: null },
+          rows: ids.map((transactionId) => ({
+            transactionId,
+            outcome: applied.has(transactionId)
+              ? { kind: "applied", newId: null }
+              : { kind: "unchanged" },
+          })),
+        };
+      }
+      return each({ kind: "applied", newId: null });
     case "answer":
       return each({ kind: "applied", newId: null });
   }
@@ -284,6 +314,76 @@ async function send(
   }
 }
 
+/**
+ * The writes an action's settled result asks for next: each split part's
+ * own classification, by the part's new id in order, and the attach of a
+ * document just added as evidence, by its evidence id. None is sent when
+ * the result does not name what it needs.
+ */
+export function followUps(step: PlanStep, result: JsonObject): PlanStep[] {
+  if (step.kind !== "action") return [];
+  const action = step.action;
+  if (action.kind === "split") {
+    const children = texts(result.child_transaction_ids);
+    if (children.length !== action.children.length) return [];
+    return action.children.flatMap((child, at): PlanStep[] => {
+      const wanted = child.classify;
+      const id = children[at]!;
+      if (!wanted) return [];
+      const patch: LedgerClassifyRequest["patch"] = {
+        business_classification: wanted.classification,
+      };
+      const fields: StageField[] = ["business_classification"];
+      if (wanted.category_id) {
+        patch.category_id = wanted.category_id;
+        fields.push("category_id");
+      }
+      if (wanted.business_pct) {
+        patch.business_pct =
+          canonicalDecimal(wanted.business_pct) ?? wanted.business_pct;
+        fields.push("business_pct");
+      }
+      return [
+        {
+          kind: "classify",
+          transactionId: id,
+          fields,
+          m210Action: null,
+          request: {
+            transaction_id: id,
+            patch,
+            patch_fields: [...fields].sort() as LedgerClassifyField[],
+          },
+        },
+      ];
+    });
+  }
+  if (action.kind === "attach_file") {
+    const record = object(result.record);
+    const evidence = record?.evidence_id;
+    if (typeof evidence !== "string") return [];
+    return [
+      {
+        kind: "action",
+        action: {
+          id: `${action.id}:attach`,
+          kind: "attach",
+          transactionId: action.transactionId,
+          evidenceId: evidence,
+          attachmentIds: [],
+        },
+        definition: "ledger.attach",
+        request: {
+          transaction_id: action.transactionId,
+          purchase_invoice_evidence_id: evidence,
+          attachment_ids: [],
+        },
+      },
+    ];
+  }
+  return [];
+}
+
 const DONE: ReadonlySet<StepOutcome["kind"]> = new Set([
   "applied",
   "unchanged",
@@ -308,7 +408,10 @@ export async function runPlan(
   let paused: ApplyReport["paused"] = null;
   let stopped: LedgerFailureCode | null = null;
   let partRefused = false;
-  for (const [index, step] of plan.steps.entries()) {
+  const queue: { index: number; step: PlanStep; follows?: string }[] =
+    plan.steps.map((step, index) => ({ index, step }));
+  for (let at = 0; at < queue.length; at += 1) {
+    const { index, step, follows } = queue[at]!;
     const rows = stepRows(step);
     let settled: { outcome: StepOutcome; rows: RowResult[] };
     const hold = (why: NotSentWhy) => {
@@ -325,7 +428,16 @@ export async function runPlan(
       settled = hold("after_refusal");
     else {
       try {
-        settled = outcomeOf(step, await send(port, step, current));
+        const answered = await send(port, step, current);
+        settled = outcomeOf(step, answered);
+        if (answered.kind === "settled" && DONE.has(settled.outcome.kind)) {
+          const next = followUps(step, answered.result).map((found) => ({
+            index,
+            step: found,
+            follows: step.kind === "action" ? step.action.id : undefined,
+          }));
+          queue.splice(at + 1, 0, ...next);
+        }
       } catch (error) {
         const outcome = thrownOutcome(error);
         if (outcome.kind === "not_sent") stopped = ledgerFailure(error).code;
@@ -349,7 +461,12 @@ export async function runPlan(
     }
     for (const row of settled.rows)
       if (!DONE.has(row.outcome.kind)) failedRows.add(row.transactionId);
-    const report: StepReport = { index, step, ...settled };
+    const report: StepReport = {
+      index,
+      step,
+      ...settled,
+      ...(follows ? { follows } : {}),
+    };
     steps.push(report);
     onStep?.(report);
   }
@@ -391,7 +508,16 @@ export function keepAfterApply(
   const actions = new Set(content.actions.map((action) => action.id));
   const drop = (id: string, fields: StageField[]) =>
     fields.forEach((field) => rows.get(id)?.delete(field));
-  for (const { step, outcome, rows: results } of report.steps) {
+  for (const { step, outcome, rows: results, follows } of report.steps) {
+    // A document's attach that did not save keeps its add staged: sent
+    // again under its key, the add is the same add. A split is never sent
+    // twice: a part left unclassified is classified like any movement.
+    if (follows) {
+      const parent = content.actions.find((action) => action.id === follows);
+      if (parent?.kind === "attach_file" && !DONE.has(outcome.kind))
+        actions.add(follows);
+      continue;
+    }
     if (step.kind === "bulk") {
       for (const [at, row] of step.rows.entries())
         if (DONE.has(results[at]!.outcome.kind))

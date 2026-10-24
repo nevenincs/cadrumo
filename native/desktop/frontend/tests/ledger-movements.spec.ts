@@ -159,6 +159,8 @@ test("each readiness set filters exactly the movements it counts", () => {
 
 test("the product's own filters become one list read each", () => {
   expect(serverFilters(NO_FILTERS)).toEqual([]);
+  // The account is the row's own field: no read asks for it.
+  expect(serverFilters({ ...NO_FILTERS, account: "acc-01" })).toEqual([]);
   expect(
     serverFilters({
       ...NO_FILTERS,
@@ -167,24 +169,48 @@ test("the product's own filters become one list read each", () => {
       hideRejected: true,
     }),
   ).toEqual([
-    {
-      filters: ["account=acc-01", "import=b1"],
-      exclude_llm_rejected: true,
-    },
-    {
-      filters: ["account=acc-01", "import=b2"],
-      exclude_llm_rejected: true,
-    },
+    { filters: ["import=b1"], exclude_llm_rejected: true },
+    { filters: ["import=b2"], exclude_llm_rejected: true },
   ]);
   const members = new Set([A, B]);
   const sets = readinessSets(rows, null);
   expect(
     rows
-      .filter((row) =>
-        keepsRow(row, { ...NO_FILTERS, account: "acc-01" }, sets, members),
-      )
+      .filter((row) => keepsRow(row, NO_FILTERS, sets, members))
       .map((row) => row.transaction.transaction_id),
   ).toEqual([A, B]);
+});
+
+test("the account filter and grouping read each row's own account", () => {
+  const bound = [
+    movement(A, {}, null, "acc-01"),
+    movement(B, {}, null, "acc-02"),
+    movement(C, {}, null, null),
+  ];
+  const sets = readinessSets(bound, null);
+  const kept = (account: string) =>
+    bound
+      .filter((row) => keepsRow(row, { ...NO_FILTERS, account }, sets, null))
+      .map((row) => row.transaction.transaction_id);
+  expect(kept("acc-02")).toEqual([B]);
+  // The empty account is the movements bound to none.
+  expect(kept("")).toEqual([C]);
+  const groups = groupRows(bound, "account", {
+    label: (value) => value,
+    pendingFirst: false,
+    descending: false,
+  });
+  expect(groups.map((group) => group.value)).toEqual(["acc-01", "acc-02", ""]);
+  const sorted = sortRows(
+    bound,
+    { key: "account", direction: "desc" },
+    { ...labels, account: (id) => (id === "acc-01" ? "Zeta" : "Alfa") },
+  );
+  expect(sorted.map((row) => row.transaction.transaction_id)).toEqual([
+    A,
+    B,
+    C,
+  ]);
 });
 
 test("a search matches every word, months by name and figures either way", () => {
@@ -233,6 +259,7 @@ const labels: SortLabels = {
   direction: (direction) => direction,
   lifecycle: (state) => state,
   classifiedBy: (source) => source,
+  account: (id) => id,
   status: (row) => row.review_status,
 };
 

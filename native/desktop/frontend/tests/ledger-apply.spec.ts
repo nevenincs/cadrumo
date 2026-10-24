@@ -136,6 +136,7 @@ test("a mixed apply sends each step once, in order, under the ids earlier steps 
   draft.fields = {
     booked_date: "2026-10-21",
     amount: "12",
+    currency: "EUR",
     direction: "OUTGOING",
     description: "TAXI",
   };
@@ -244,6 +245,7 @@ test("an unknown outcome pauses every later write and nothing is sent again", as
   draft.fields = {
     booked_date: "2026-10-21",
     amount: "12",
+    currency: "EUR",
     direction: "OUTGOING",
     description: "TAXI",
   };
@@ -458,6 +460,7 @@ test("a replayed add is unchanged, and a saved-but-unread write pauses but is no
   draft.fields = {
     booked_date: "2026-10-21",
     amount: "12",
+    currency: "EUR",
     direction: "OUTGOING",
     description: "TAXI",
   };
@@ -587,6 +590,7 @@ test("a re-read tells whether an unknown write saved; an add is never told", () 
   draft.fields = {
     booked_date: "2026-10-01",
     amount: "1",
+    currency: "EUR",
     direction: "INCOMING",
     description: "X",
   };
@@ -597,4 +601,141 @@ test("a re-read tells whether an unknown write saved; an add is never told", () 
   expect(resolveUnknown(addPlan.steps[0]!, content, rowsOf())).toEqual(
     new Map([[draft.key, "undetermined"]]),
   );
+});
+
+test("a split's parts are classified one by one once the split settles, by their new ids", async () => {
+  const split: StagedAction = {
+    id: "split",
+    kind: "split",
+    transactionId: A,
+    reason: "",
+    children: [
+      {
+        amount: "10.00",
+        description: "uno",
+        classify: { classification: "BUSINESS", category_id: "telefono" },
+      },
+      { amount: "26.30", description: "dos" },
+      {
+        amount: "5",
+        description: "tres",
+        classify: { classification: "MIXED", business_pct: "0.50" },
+      },
+    ],
+  };
+  const content: StagedContent = { rows: {}, drafts: [], actions: [split] };
+  const children = [hexId("c1"), hexId("c2"), hexId("c3")];
+  const done = await apply(content, rowsOf(movement(A, { amount: "41.30" })), {
+    "ledger.split.manual": [
+      { settle: { profile_id: PROFILE, child_transaction_ids: children } },
+    ],
+    "ledger.classify.single": [
+      { settle: { outcome: "classified", bucket_event_ids: ["e1"] } },
+      { fail: { code: "unknown", operation_id: "op-c3" } },
+    ],
+  });
+  expect(
+    done.calls.map((call) => call.kind === "submit" && call.payload),
+  ).toEqual([
+    expect.objectContaining({ transaction_id: A }),
+    {
+      transaction_id: children[0],
+      patch: { business_classification: "BUSINESS", category_id: "telefono" },
+      patch_fields: ["business_classification", "category_id"],
+    },
+    {
+      transaction_id: children[2],
+      patch: { business_classification: "MIXED", business_pct: "0.5" },
+      patch_fields: ["business_classification", "business_pct"],
+    },
+  ]);
+  // An unknown part pauses what comes after, like any write.
+  expect(done.report.paused).toEqual({ index: 0, operationId: "op-c3" });
+  expect(done.report.steps.map((step) => step.follows ?? null)).toEqual([
+    null,
+    "split",
+    "split",
+  ]);
+  // A split is never sent twice: it leaves the stage once it settled.
+  expect(keepAfterApply(content, done.report).actions).toEqual([]);
+  // A split the product refused sends no part's classification.
+  const refused = await apply(content, rowsOf(movement(A)), {
+    "ledger.split.manual": [{ refuse: "validation_error" }],
+  });
+  expect(refused.calls).toHaveLength(1);
+  expect(keepAfterApply(content, refused.report).actions).toEqual(["split"]);
+});
+
+test("a document added as evidence is attached by the evidence id it settled with", async () => {
+  const add: StagedAction = {
+    id: "doc",
+    kind: "attach_file",
+    transactionId: A,
+    file: "file-1" as never,
+    name: "ticket.pdf",
+    idempotencyKey: "desktop-evidence-1",
+  };
+  const content: StagedContent = { rows: {}, drafts: [], actions: [add] };
+  const settled = {
+    settle: {
+      profile_id: PROFILE,
+      record: { evidence_id: "0123456789abcdef" },
+    },
+  };
+  const done = await apply(content, rowsOf(business(A)), {
+    "ledger.evidence.add": [settled],
+    "ledger.attach": [{ settle: { profile_id: PROFILE } }],
+  });
+  expect(
+    done.calls.map((call) => call.kind === "submit" && call.payload),
+  ).toEqual([
+    { source_path: "file-1", idempotency_key: "desktop-evidence-1" },
+    {
+      transaction_id: A,
+      purchase_invoice_evidence_id: "0123456789abcdef",
+      attachment_ids: [],
+    },
+  ]);
+  expect(keepAfterApply(content, done.report).actions).toEqual([]);
+  // An attach that was refused keeps the add staged: sent again under its
+  // key it is the same add, then the attach.
+  const kept = await apply(content, rowsOf(business(A)), {
+    "ledger.evidence.add": [settled],
+    "ledger.attach": [{ refuse: "validation_error" }],
+  });
+  expect(keepAfterApply(content, kept.report).actions).toEqual(["doc"]);
+});
+
+test("a rule apply is one call, and the movements a rule classified are what saved", async () => {
+  const rules: StagedAction = {
+    id: "rules",
+    kind: "rule_apply",
+    reaffirm: false,
+    transactionIds: [A, B],
+  };
+  const content: StagedContent = { rows: {}, drafts: [], actions: [rules] };
+  const done = await apply(content, rowsOf(movement(A), movement(B)), {
+    "ledger.rule.apply": [
+      {
+        settle: {
+          profile_id: PROFILE,
+          outcome: "applied",
+          applied: [
+            {
+              transaction_id: A,
+              matched_rule_id: "rule-1",
+              classification: "PERSONAL",
+            },
+          ],
+        },
+      },
+    ],
+  });
+  expect(done.calls).toHaveLength(1);
+  expect(done.report.steps[0]!.rows).toEqual([
+    { transactionId: A, outcome: { kind: "applied", newId: null } },
+    { transactionId: B, outcome: { kind: "unchanged" } },
+  ]);
+  expect(done.report.reread.sort()).toEqual([A, B].sort());
+  expect(keepAfterApply(content, done.report).actions).toEqual([]);
 });

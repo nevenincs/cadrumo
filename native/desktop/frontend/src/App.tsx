@@ -65,6 +65,7 @@ import { SignedOut, SignInDialog } from "./components/SignIn";
 import { AboutDialog } from "./components/AboutDialog";
 import { UserProfilePage } from "./components/profile/UserProfilePage";
 import { LedgerPage, type LedgerMemory } from "./components/ledger/LedgerPage";
+import type { LeaveGuard } from "./components/ledger/editing/LedgerEditing";
 import { AccountMenu } from "./components/AccountMenu";
 import { ManageProfiles } from "./components/account/ManageProfiles";
 import { Titlebar } from "./components/Titlebar";
@@ -235,9 +236,25 @@ export function App({ host }: { host: Host }) {
   // What the first pane shows: the documentation, or a view of the profile
   // where the host offers one. The documentation stays loaded underneath.
   const page = layout.page;
-  const setPage = useCallback((page: Layout["page"]) => {
-    setLayout((current) => ({ ...current, page }));
+  // The Ledger page asks before what it has staged is dropped: by another
+  // page, a sign-out, a profile switch or the window's close.
+  const ledgerGuard = useRef<LeaveGuard | null>(null);
+  const guardLeave = useCallback((guard: LeaveGuard | null) => {
+    ledgerGuard.current = guard;
   }, []);
+  const guarded = useCallback((proceed: () => void) => {
+    if (!ledgerGuard.current?.(proceed)) proceed();
+  }, []);
+  const shownPage = useRef(page);
+  shownPage.current = page;
+  const setPage = useCallback(
+    (page: Layout["page"]) => {
+      const go = () => setLayout((current) => ({ ...current, page }));
+      if (shownPage.current === "ledger" && page !== "ledger") guarded(go);
+      else go();
+    },
+    [guarded],
+  );
   const calendarPage = useRef<HTMLElement>(null);
   const profilePage = useRef<HTMLElement>(null);
   const ledgerPage = useRef<HTMLElement>(null);
@@ -375,17 +392,21 @@ export function App({ host }: { host: Host }) {
   const accountRef = useRef(account);
   accountRef.current = account;
   const signOut = useCallback(() => {
-    // Signing out here is not a reason to ask for the password again.
-    setSignInDismissed(true);
-    void accountRef.current.signOut();
-  }, []);
+    guarded(() => {
+      // Signing out here is not a reason to ask for the password again.
+      setSignInDismissed(true);
+      void accountRef.current.signOut();
+    });
+  }, [guarded]);
   // The palette shortcut enters the same account flow as the header.
   const switchProfile = useCallback(() => {
-    setSettingsOpen(false);
-    signInOpener.current = null;
-    setSignInDismissed(false);
-    void accountRef.current.signOut();
-  }, []);
+    guarded(() => {
+      setSettingsOpen(false);
+      signInOpener.current = null;
+      setSignInDismissed(false);
+      void accountRef.current.signOut();
+    });
+  }, [guarded]);
   useEffect(() => {
     if (gated) return;
     // Admitted: the next time the gate closes, the dialog opens again, and
@@ -2517,6 +2538,7 @@ export function App({ host }: { host: Host }) {
           memory={ledgerKept.memory}
           contribute={contribute}
           copy={(text) => host.writeClipboard(text)}
+          guardLeave={guardLeave}
           pane={{
             title: t("desktop.ledger.title"),
             onToggleMaximize: () => toggleMaximize("docs"),
@@ -2827,6 +2849,7 @@ export function App({ host }: { host: Host }) {
         <div className="desktop-window flex h-dvh min-w-0 flex-col bg-chrome">
           <Titlebar
             host={host}
+            guardClose={guarded}
             onFailure={() => say(t("desktop.titlebar.failed"))}
           >
             <AccountMenu

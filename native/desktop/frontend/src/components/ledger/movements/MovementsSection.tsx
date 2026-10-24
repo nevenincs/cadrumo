@@ -26,7 +26,7 @@ import {
   type ClassifyBlock,
   type ClassifyKind,
 } from "../../../shell/ledgerCommands";
-import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
+import { parsePercent, type LedgerPeriod } from "../../../shell/ledgerGrammar";
 import {
   useLedgerMembership,
   useOwnAccounts,
@@ -34,6 +34,7 @@ import {
 } from "../../../shell/ledgerMovementReads";
 import {
   stagedMovements,
+  type DraftField,
   type StageEvent,
   type StageState,
 } from "../../../shell/ledgerStage";
@@ -46,6 +47,8 @@ import {
 } from "../../../shell/ledgerWindow";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { dateFormats } from "../../../shared/dateFormats";
+import { draftRow, stageTally } from "../editing/editingModel";
+import { useMovementEditing } from "../editing/MovementEditing";
 import { periodText } from "../ledgerWords";
 import { ClassifyDialog } from "./ClassifyDialog";
 import { MovementsGrid } from "./MovementsGrid";
@@ -78,6 +81,7 @@ import {
 import { MovementsToolbar } from "./MovementsToolbar";
 import { monthNames } from "../ledgerWords";
 import {
+  accountLabel,
   amountText,
   categoryLabel,
   classificationLabel,
@@ -109,7 +113,20 @@ type Asking = {
   skipped: number;
   partial: boolean;
   error: string | null;
+  /** A new movement's classification, filled in rather than staged. */
+  draft?: string;
 };
+
+/** What staged editing on the section needs from the page. */
+export type SectionEditing = {
+  openReview: () => void;
+  /** A new movement to focus once it is drawn. */
+  focusDraft: string | null;
+  onDraftFocused: () => void;
+  /** Movements a finalized declaration cites, where the page knows. */
+  sealed?: ReadonlySet<string>;
+};
+const NO_SEALED: ReadonlySet<string> = new Set();
 
 function blockText(t: Translate, block: ClassifyBlock): string {
   switch (block.kind) {
@@ -254,6 +271,15 @@ function groupLabelOf(
   }
 }
 
+/** The account grouping's labels come from the register, read once. */
+function accountGroupLabel(
+  t: Translate,
+  accounts: readonly { id: string; label: string }[] | null,
+  value: string,
+): string {
+  return accountLabel(t, accounts, value === "" ? null : value);
+}
+
 /**
  * The Movements section: the readiness strip, the toolbar and the grid of
  * a period's movements, as stored. Filters, search, sort and groups refine
@@ -279,6 +305,7 @@ export function MovementsSection({
   register,
   shownImport,
   onImportCleared,
+  editing: pageEditing,
 }: {
   port: LedgerPort;
   reader: string;
@@ -303,6 +330,7 @@ export function MovementsSection({
   shownImport: ImportedBatches | null;
   /** The person took the import's filter off. */
   onImportCleared?: () => void;
+  editing: SectionEditing;
 }) {
   const t = useStrings();
   const grid = useRef<DataGridHandle>(null);
@@ -363,10 +391,14 @@ export function MovementsSection({
     [membership],
   );
   const [wantAccounts, setWantAccounts] = useState(false);
+  const accountsShown =
+    shownColumns(columnLayout(view.columns)).includes("account") ||
+    groupBy === "account" ||
+    stage.content.drafts.length > 0;
   const accounts = useOwnAccounts(
     port,
     reader,
-    wantAccounts || filters.account !== null,
+    wantAccounts || filters.account !== null || accountsShown,
   );
   const elsewhere = useSearchElsewhere(port, reader, period, search);
 
@@ -380,12 +412,13 @@ export function MovementsSection({
       direction: (direction) => directionLabel(t, direction),
       lifecycle: (state) => lifecycleLabel(t, state),
       classifiedBy: (source) => classifiedByLabel(t, source),
+      account: (id) => accountLabel(t, accounts, id),
       status: (row) => {
         const issues = sets.issues.get(idOf(row))?.length ?? 0;
         return statusLabel(t, statusWord(row.review_status, issues), issues);
       },
     }),
-    [t, sets],
+    [t, sets, accounts],
   );
   const terms = useMemo(() => searchTerms(search), [search]);
   const months = useMemo(() => {
@@ -429,12 +462,14 @@ export function MovementsSection({
     }
     return groupRows(sorted, grouping, {
       label: (value) =>
-        groupLabelOf(t, locale, grouping, value, firstOf.get(value)!),
+        grouping === "account"
+          ? accountGroupLabel(t, accounts, value)
+          : groupLabelOf(t, locale, grouping, value, firstOf.get(value)!),
       pendingFirst: savedView === "to_classify",
       descending:
         effectiveSort.key === "date" && effectiveSort.direction === "desc",
     });
-  }, [grouping, sorted, savedView, effectiveSort, t, locale]);
+  }, [grouping, sorted, savedView, effectiveSort, t, locale, accounts]);
 
   // The group headers' buttons act on the state of the moment they are
   // pressed.
@@ -453,7 +488,10 @@ export function MovementsSection({
       out.push({
         kind: "section",
         key: group.key,
-        label: groupLabelOf(t, locale, grouping!, group.value, first),
+        label:
+          grouping === "account"
+            ? accountGroupLabel(t, accounts, group.value)
+            : groupLabelOf(t, locale, grouping!, group.value, first),
         hint: t("desktop.ledger.group.count", { count: group.rows.length }),
         collapsed: folded,
         summary: complete ? (
@@ -474,10 +512,29 @@ export function MovementsSection({
           out.push({ kind: "data", key: idOf(row), data: row });
     }
     return out;
-  }, [groups, grouping, sorted, collapsed, complete, locale, t]);
+  }, [groups, grouping, sorted, collapsed, complete, locale, t, accounts]);
   const visible = useMemo(
     () => gridRows.flatMap((row) => (row.kind === "data" ? [row.key] : [])),
     [gridRows],
+  );
+  // New movements sit at the top, outside every group and sort.
+  const drafts = stage.content.drafts;
+  const draftGridRows = useMemo<GridRow<LedgerRow>[]>(
+    () =>
+      drafts.map((draft) => ({
+        kind: "data",
+        key: draft.key,
+        data: draftRow(draft),
+      })),
+    [drafts],
+  );
+  const drawnGridRows = useMemo(
+    () => (draftGridRows.length ? [...draftGridRows, ...gridRows] : gridRows),
+    [draftGridRows, gridRows],
+  );
+  const drawnRows = useMemo(
+    () => [...drafts.map((draft) => draft.key), ...visible],
+    [drafts, visible],
   );
   const visibleSet = useMemo(() => new Set(visible), [visible]);
 
@@ -573,7 +630,37 @@ export function MovementsSection({
     },
     sortable: (column: ColumnId) =>
       complete || COLUMN_SPECS[column].server !== undefined,
+    accounts,
   };
+
+  // ---- Staged editing ---------------------------------------------------------
+  const edit = useMovementEditing({
+    t,
+    locale,
+    grid,
+    byId,
+    stage,
+    onStage,
+    sealed: pageEditing.sealed ?? NO_SEALED,
+    drawnRows,
+    drawnColumns: order,
+    withYear: period === null,
+    accounts,
+    classify: (kind, ids) => classifySelection(kind, { ids }),
+    askDraft: (kind, key) =>
+      setAsking({
+        kind,
+        ids: [],
+        skipped: 0,
+        partial: false,
+        error: null,
+        draft: key,
+      }),
+    say: (text) => setToast(text),
+    openReview: pageEditing.openReview,
+    focusDraft: pageEditing.focusDraft,
+    onDraftFocused: pageEditing.onDraftFocused,
+  });
 
   // ---- Commands --------------------------------------------------------------
   const [asking, setAsking] = useState<Asking | null>(null);
@@ -593,7 +680,6 @@ export function MovementsSection({
         raw: outcome.refusal.raw,
       });
     if (outcome.kind === "needs") return null;
-    onStage(outcome.event);
     const classification = classificationLabel(
       t,
       kind === "business"
@@ -602,24 +688,23 @@ export function MovementsSection({
           ? "MIXED"
           : "PERSONAL",
     );
-    setToast(
-      answer.category
+    const said = answer.category
+      ? t("desktop.ledger.classify.staged_detail", {
+          classification,
+          detail: categoryLabel(t, answer.category),
+          count: outcome.movements,
+        })
+      : answer.share
         ? t("desktop.ledger.classify.staged_detail", {
             classification,
-            detail: categoryLabel(t, answer.category),
+            detail: `${answer.share.trim().replace(/\s*%$/, "")}%`,
             count: outcome.movements,
           })
-        : answer.share
-          ? t("desktop.ledger.classify.staged_detail", {
-              classification,
-              detail: `${answer.share.trim().replace(/\s*%$/, "")}%`,
-              count: outcome.movements,
-            })
-          : t("desktop.ledger.classify.staged", {
-              classification,
-              count: outcome.movements,
-            }),
-    );
+        : t("desktop.ledger.classify.staged", {
+            classification,
+            count: outcome.movements,
+          });
+    edit.stageChecked(outcome.event, () => setToast(said));
     return null;
   }
 
@@ -737,6 +822,10 @@ export function MovementsSection({
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.defaultPrevented || event.nativeEvent.isComposing) return;
+    if (edit.onKeyDown(event)) {
+      event.preventDefault();
+      return;
+    }
     if (
       event.key === "F8" &&
       (exactly(event) || exactly(event, { shift: true }))
@@ -832,13 +921,39 @@ export function MovementsSection({
         ).kind === "ready",
       shortcut: `Alt+${kind === "business" ? "B" : kind === "personal" ? "P" : "M"}`,
     }));
-  const openMenu = (key: string, at: MenuAnchor) => {
+  const openMenu = (key: string, column: string | null, at: MenuAnchor) => {
     const group = groups?.find((entry) => entry.key === key);
     const ids = group ? group.rows.map(idOf) : null;
+    const draft = drafts.some((found) => found.key === key);
+    const staged = draft || stagedMovements(stage.content).has(key);
     setMenu({
       at,
       items: [
-        ...classifyItems(ids),
+        ...(draft ? [] : classifyItems(ids)),
+        ...(ids
+          ? []
+          : [
+              { separator: true as const },
+              {
+                id: "revert.cell",
+                label: t("desktop.ledger.edit.revert_cell"),
+                enabled: column !== null && edit.cellStaged(key, column),
+                shortcut: "Ctrl+Alt+Z",
+              },
+              {
+                id: "revert.movement",
+                label: draft
+                  ? t("desktop.ledger.draft.remove")
+                  : t("desktop.ledger.edit.revert_movement"),
+                enabled: staged,
+              },
+              {
+                id: "fill",
+                label: t("desktop.ledger.fill.down"),
+                enabled: column !== null,
+                shortcut: "Ctrl+D",
+              },
+            ]),
         ...(ids
           ? [
               {
@@ -855,7 +970,15 @@ export function MovementsSection({
           : []),
       ],
       run: (chosen) => {
-        if (chosen.startsWith("classify."))
+        if (chosen === "revert.cell" && column)
+          edit.revertCell(key, column as ColumnId);
+        else if (chosen === "revert.movement") edit.revertMovement(key);
+        else if (chosen === "fill" && column)
+          edit.onFill({
+            rows: drawnRows.filter((id) => id === key || selected.has(id)),
+            columns: [column],
+          });
+        else if (chosen.startsWith("classify."))
           classifySelection(
             chosen.slice("classify.".length) as ClassifyKind,
             ids ? { ids } : undefined,
@@ -885,10 +1008,7 @@ export function MovementsSection({
           total: numbers.format(rows.length),
         });
   const status = [shownNote, selectedNote].filter(Boolean).join(" · ");
-  const unsaved = (() => {
-    const content = stage.content;
-    return stagedMovements(content).size + content.drafts.length;
-  })();
+  const unsaved = stageTally(stage.content).units;
   const stagedClassify = [...sets.toClassify].filter(
     (id) =>
       stage.content.rows[id]?.business_classification?.kind === "set" ||
@@ -915,6 +1035,7 @@ export function MovementsSection({
     <div
       className="ledger-movements flex min-h-0 flex-1 flex-col gap-2 p-3"
       onKeyDown={onKeyDown}
+      onKeyDownCapture={edit.onKeyDownCapture}
     >
       <ReadinessStrip
         readiness={readiness}
@@ -1073,11 +1194,15 @@ export function MovementsSection({
       <MovementsGrid
         gridRef={grid}
         order={order}
-        context={columnContext}
+        context={{ ...columnContext, editing: edit.editing }}
         byId={byId}
         className="ledger-grid rounded-md"
         label={t("desktop.ledger.grid", { period: shownPeriod })}
-        rows={gridRows}
+        rows={drawnGridRows}
+        onCommit={edit.onCommit}
+        onPaste={edit.onPaste}
+        onCopy={edit.onCopy}
+        onFill={edit.onFill}
         density={view.density}
         sort={{ column: effectiveSort.key, direction: effectiveSort.direction }}
         onSort={(column) =>
@@ -1098,7 +1223,7 @@ export function MovementsSection({
           else next.add(key);
           setCollapsed(next);
         }}
-        onMenu={(key, _column, at) => openMenu(key, at)}
+        onMenu={(key, column, at) => openMenu(key, column, at)}
         onColumnResize={(column, width) =>
           onViewChange((current) => ({
             ...current,
@@ -1158,12 +1283,42 @@ export function MovementsSection({
       {asking && (
         <ClassifyDialog
           kind={asking.kind}
-          movements={asking.ids.length}
+          movements={asking.draft ? 1 : asking.ids.length}
           skipped={asking.skipped}
           partial={asking.partial}
           error={asking.error}
           onCancel={() => setAsking(null)}
           onStage={(answer) => {
+            if (asking.draft) {
+              // A new movement's classification is filled in, not staged
+              // over a stored one: Business with its category, Mixed with
+              // its share.
+              const key = asking.draft;
+              const share =
+                answer.share === undefined ? null : parsePercent(answer.share);
+              if (share && share.kind !== "value") {
+                setAsking({
+                  ...asking,
+                  error: t("desktop.ledger.classify.share_refused", {
+                    raw: answer.share ?? "",
+                  }),
+                });
+                return;
+              }
+              const edit = (field: DraftField, value: string | null) =>
+                onStage({ type: "edit_draft", key, field, value });
+              edit(
+                "business_classification",
+                asking.kind === "mixed" ? "MIXED" : "BUSINESS",
+              );
+              if (answer.category) edit("category_id", answer.category);
+              edit(
+                "business_pct",
+                share?.kind === "value" ? share.value : null,
+              );
+              setAsking(null);
+              return;
+            }
             if (asking.kind === "category") {
               const outcome = categoryCells(
                 asking.ids,
@@ -1200,6 +1355,7 @@ export function MovementsSection({
           }}
         />
       )}
+      {edit.dialogs}
       <Toast className="ledger-toast">{toast}</Toast>
     </div>
   );

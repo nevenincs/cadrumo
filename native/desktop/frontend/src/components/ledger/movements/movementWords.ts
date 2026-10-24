@@ -174,3 +174,14 @@ export function stampText(locale: string, stamp: string): string {
     ? stamp
     : dateFormats(locale).dateTime.format(new Date(time));
 }
+
+/** An own account by its label in the register, its id where the register
+ * was not read or does not hold it, and "No account" for none. */
+export function accountLabel(
+  t: Translate,
+  accounts: readonly { id: string; label: string }[] | null,
+  id: string | null,
+): string {
+  if (id === null) return t("desktop.ledger.account.none");
+  return accounts?.find((account) => account.id === id)?.label ?? id;
+}

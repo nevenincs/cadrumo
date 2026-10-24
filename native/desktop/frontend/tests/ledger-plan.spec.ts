@@ -427,11 +427,12 @@ test("a model suggestion is not combined with the person's own edits or a second
   expect(plan.steps).toEqual([]);
 });
 
-test("new movements need their four facts and keep their key", () => {
+test("new movements need their five facts and keep their key", () => {
   const ready = newDraft();
   ready.fields = {
     booked_date: "2026-10-21",
     amount: "12.50",
+    currency: "EUR",
     direction: "OUTGOING",
     description: "TAXI",
     business_classification: "BUSINESS",
@@ -443,6 +444,7 @@ test("new movements need their four facts and keep their key", () => {
   mixedDraft.fields = {
     booked_date: "2026-10-21",
     amount: "5",
+    currency: "EUR",
     direction: "OUTGOING",
     description: "X",
     business_classification: "MIXED",
@@ -451,6 +453,7 @@ test("new movements need their four facts and keep their key", () => {
   transfer.fields = {
     booked_date: "2026-10-21",
     amount: "5",
+    currency: "EUR",
     direction: "INTERNAL_TRANSFER",
     description: "X",
     iva_amount: "1",
@@ -464,7 +467,7 @@ test("new movements need their four facts and keep their key", () => {
     [
       {
         kind: "draft_incomplete",
-        fields: ["booked_date", "direction", "description"],
+        fields: ["booked_date", "currency", "direction", "description"],
       },
     ],
     [{ kind: "mixed_needs_share" }],
@@ -477,6 +480,7 @@ test("new movements need their four facts and keep their key", () => {
       request: {
         booked_date: "2026-10-21",
         amount: "12.5",
+        currency: "EUR",
         direction: "OUTGOING",
         description: "TAXI",
         business_classification: "BUSINESS",
@@ -501,6 +505,7 @@ test("the work is ordered: bulk, single classifications, corrections, adds, then
   draft.fields = {
     booked_date: "2026-10-21",
     amount: "1",
+    currency: "EUR",
     direction: "INCOMING",
     description: "X",
   };

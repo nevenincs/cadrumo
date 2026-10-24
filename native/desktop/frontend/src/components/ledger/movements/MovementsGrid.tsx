@@ -2,7 +2,9 @@ import type { ComponentProps, ReactNode, Ref } from "react";
 import {
   DataGrid,
   DataGridRowCheckbox,
+  type CellDescription,
   type DataGridHandle,
+  type EditorContext,
   type GridColumn,
 } from "@/components/ui/data-grid";
 import { Icon } from "@/components/ui/icon";
@@ -23,6 +25,7 @@ import {
   type ReadinessSets,
 } from "./movementsModel";
 import {
+  accountLabel,
   amountText,
   categoryLabel,
   classificationText,
@@ -37,6 +40,27 @@ import {
   statusLabel,
   statusWord,
 } from "./movementWords";
+
+/** What staged editing adds to the columns: each one's editor and why a
+ * cell takes none, what a cell draws while a change is staged on it, and
+ * what is said of a staged cell or row. */
+export type ColumnEditing = {
+  editor: (
+    column: ColumnId,
+  ) =>
+    ((row: LedgerRow, context: EditorContext) => ReactNode | null) | undefined;
+  readOnlyReason: (
+    column: ColumnId,
+  ) => ((row: LedgerRow) => string | undefined) | undefined;
+  /** Draws a cell over its stored drawing, which `stored` gives. */
+  decorate: (
+    row: LedgerRow,
+    column: ColumnId,
+    stored: () => ReactNode,
+  ) => ReactNode;
+  describeCell: (key: string, column: string) => CellDescription | undefined;
+  describeRow: (key: string) => string | undefined;
+};
 
 export type ColumnContext = {
   t: Translate;
@@ -54,6 +78,10 @@ export type ColumnContext = {
   onSelectShown: (how: "replace" | "add" | "remove") => void;
   /** Sorting by this column waits for the whole window. */
   sortable: (column: ColumnId) => boolean;
+  /** The register's own accounts, null while unread. */
+  accounts: readonly { id: string; label: string }[] | null;
+  /** Staged editing, where the grid takes edits. */
+  editing?: ColumnEditing;
 };
 
 const id = (row: LedgerRow) => row.transaction.transaction_id;
@@ -195,6 +223,12 @@ function movementColumns(
       );
     },
     group_label: (row) => <TextCell text={row.group_label} />,
+    account: (row) => (
+      <TextCell
+        text={accountLabel(t, context.accounts, row.own_account_id)}
+        quiet={row.own_account_id === null}
+      />
+    ),
     notes: (row) => <TextCell text={row.transaction.notes} quiet />,
     lifecycle: (row) => (
       <TextCell
@@ -212,6 +246,7 @@ function movementColumns(
       <TextCell text={stampText(locale, row.transaction.modified_at)} quiet />
     ),
   };
+  const editing = context.editing;
   return order.map((column): GridColumn<LedgerRow> => {
     const spec = COLUMN_SPECS[column];
     const name = t(`desktop.ledger.column.${column}`);
@@ -238,7 +273,13 @@ function movementColumns(
       ...(spec.align ? { align: spec.align } : {}),
       sortable: spec.sortable && context.sortable(column),
       resizable: column !== "select",
-      cell: draw[column],
+      cell: editing
+        ? (row) => editing.decorate(row, column, () => draw[column](row))
+        : draw[column],
+      ...(editing?.editor(column) ? { editor: editing.editor(column) } : {}),
+      ...(editing?.readOnlyReason(column)
+        ? { readOnlyReason: editing.readOnlyReason(column) }
+        : {}),
     };
   });
 }
@@ -270,8 +311,9 @@ export function MovementsGrid({
   const full = { ...context, t };
   const columns = movementColumns(order, full);
   const describeRow = (key: string) => {
+    const edited = context.editing?.describeRow(key);
     const row = byId.get(key);
-    if (!row) return undefined;
+    if (!row) return edited;
     const reasons = context.readiness.issues.get(key) ?? [];
     const word = statusWord(row.review_status, reasons.length);
     return [
@@ -287,11 +329,14 @@ export function MovementsGrid({
         ? lifecycleLabel(t, row.transaction.lifecycle_state)
         : "",
       context.readiness.noRate.has(key) ? t("desktop.ledger.no_rate") : "",
+      edited ?? "",
     ]
       .filter(Boolean)
       .join(" · ");
   };
   const describeCell = (key: string, column: string) => {
+    const edited = context.editing?.describeCell(key, column);
+    if (edited) return edited;
     const row = byId.get(key);
     const missing = context.missing;
     if (!row || !missing || !isMissing(context, row, column)) return undefined;

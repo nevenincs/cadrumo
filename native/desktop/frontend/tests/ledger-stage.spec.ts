@@ -171,7 +171,7 @@ test("a new movement keeps one random idempotency key through every edit", () =>
   expect(state.content.drafts[0]?.idempotencyKey).toBe(fixed.idempotencyKey);
 });
 
-test("an apply clears undo; the rebase keeps only what did not save", () => {
+test("an apply keeps undo only for what did not save", () => {
   const link: StagedAction = {
     id: "link-1",
     kind: "link",
@@ -192,8 +192,9 @@ test("an apply clears undo; the rebase keeps only what did not save", () => {
     { type: "stage_action", action: link },
     { type: "add_draft", draft },
   );
+  state = reduceStage(state, { type: "undo" });
+  state = reduceStage(state, { type: "redo" });
   state = reduceStage(state, { type: "apply_started" });
-  expect(state.undo).toEqual([]);
   expect(state.redo).toEqual([]);
   expect(state.applied).toBe(true);
   state = reduceStage(state, {
@@ -205,7 +206,30 @@ test("an apply clears undo; the rebase keeps only what did not save", () => {
     drafts: [draft],
     actions: [],
   });
-  // Nothing saved comes back on undo.
+  // Undo steps back through what did not save, and nothing saved comes
+  // back: the link step changed nothing kept, so it is gone.
+  expect(state.undo.map((entry) => entry.label)).toEqual([
+    "paste",
+    "add_draft",
+  ]);
+  const before = reduceStage(state, { type: "undo" });
+  expect(before.content).toEqual({
+    rows: { [A]: { notes: { kind: "set", value: "Nota" } } },
+    drafts: [],
+    actions: [],
+  });
+  const first = reduceStage(before, { type: "undo" });
+  expect(first.content).toEqual({ rows: {}, drafts: [], actions: [] });
+  expect(reduceStage(first, { type: "undo" })).toBe(first);
+  // After everything kept is undone, there is nothing saved to take back.
+  state = reduceStage(
+    reduceStage(state, {
+      type: "rebase",
+      keep: { rows: {}, drafts: [], actions: [] },
+    }),
+    { type: "rebase", keep: { rows: {}, drafts: [], actions: [] } },
+  );
+  expect(state.undo).toEqual([]);
   expect(reduceStage(state, { type: "undo" })).toBe(state);
   // A change staged afterwards is undoable again.
   state = reduceStage(state, {
@@ -256,8 +280,10 @@ test("the effective row is the stored row plus its changes; identity fields are 
   expect(facts.taxable_base).toBeNull();
   expect(facts.category_id).toBe("telefono");
   expect(facts.iva_rate).toBe("0.21");
-  // Not in the read: unknown, not empty.
-  expect(facts.own_account_id).toBeUndefined();
+  // The list read names the own account; what it does not carry is
+  // unknown, not empty.
+  expect(facts.own_account_id).toBeNull();
+  expect(facts.deduction_fact_kind).toBeUndefined();
   // The stored row is untouched.
   expect(rowA.transaction.taxable_base).toBe("30.00");
 

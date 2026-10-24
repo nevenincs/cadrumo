@@ -17,10 +17,13 @@ export function Titlebar({
   host,
   children,
   onFailure,
+  guardClose,
 }: {
   host: Host;
   children: ReactNode;
   onFailure: () => void;
+  /** Asks first where closing would drop the window's unsaved work. */
+  guardClose?: (proceed: () => void) => void;
 }) {
   const t = useStrings();
   const [state, setState] = useState<WindowPresentation | null>(null);
@@ -118,7 +121,9 @@ export function Titlebar({
           disabled={!native}
           aria-label={t("desktop.titlebar.close")}
           title={t("desktop.titlebar.close")}
-          onClick={() => run("close")}
+          onClick={() =>
+            guardClose ? guardClose(() => run("close")) : run("close")
+          }
         >
           <Icon name="close" size="xs" />
         </Button>

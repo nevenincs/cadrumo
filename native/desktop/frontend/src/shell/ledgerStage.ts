@@ -435,19 +435,31 @@ export function reduceStage(state: StageState, event: StageEvent): StageState {
       };
     }
     case "apply_started":
-      // What an apply saves cannot be unstaged here.
-      return { content, undo: [], redo: [], applied: true };
+      // Nothing is redone over an apply; what it saves leaves the history
+      // when the apply settles.
+      return { ...state, redo: [], applied: true };
     case "rebase":
+      // What saved cannot be unstaged here, so it leaves every step of the
+      // history; what did not save keeps its steps.
       return {
         content: keptContent(content, event.keep),
-        undo: [],
+        undo: rebasedHistory(state.undo, content, event.keep),
         redo: [],
         applied: true,
       };
-    case "rekey":
-      return event.from === event.to
-        ? state
-        : { ...state, content: rekeyContent(content, event.from, event.to) };
+    case "rekey": {
+      if (event.from === event.to) return state;
+      const follow = (entry: StageHistoryEntry) => ({
+        ...entry,
+        content: rekeyContent(entry.content, event.from, event.to),
+      });
+      return {
+        ...state,
+        content: rekeyContent(content, event.from, event.to),
+        undo: state.undo.map(follow),
+        redo: state.redo.map(follow),
+      };
+    }
   }
 }
 
@@ -468,6 +480,26 @@ function keptContent(content: StagedContent, keep: StageKeep): StagedContent {
       keep.actions.includes(action.id),
     ),
   };
+}
+
+/** The undo steps of what an apply left staged: each step keeps only the
+ * kept work, and a step that would change nothing is dropped. */
+function rebasedHistory(
+  undo: readonly StageHistoryEntry[],
+  content: StagedContent,
+  keep: StageKeep,
+): StageHistoryEntry[] {
+  const out: StageHistoryEntry[] = [];
+  let after = JSON.stringify(keptContent(content, keep));
+  for (let at = undo.length - 1; at >= 0; at -= 1) {
+    const entry = undo[at]!;
+    const kept = keptContent(entry.content, keep);
+    const text = JSON.stringify(kept);
+    if (text === after) continue;
+    out.unshift({ content: kept, label: entry.label });
+    after = text;
+  }
+  return out;
 }
 
 /** Follows a movement's new id everywhere it is named. */
@@ -523,6 +555,7 @@ export function storedFieldValue(
     case "group_label":
       return row.group_label;
     case "own_account_id":
+      return row.own_account_id;
     case "deduction_fact_kind":
     case "investment_asset_id":
       return undefined;

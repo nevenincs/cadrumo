@@ -290,18 +290,21 @@ test("an empty period says so in one line with its ways in", async ({
   await expect(empty).toContainText(
     label("desktop.ledger.empty", { period: shown }),
   );
-  // Importing is offered; adding a movement is not yet.
+  // Importing and adding a movement are both offered.
   await expect(
     empty.getByRole("button", {
       name: label("desktop.ledger.action.import"),
       exact: true,
     }),
   ).not.toHaveAttribute("aria-disabled", "true");
-  await expect(
-    empty.getByRole("button", {
-      name: new RegExp(`^${label("desktop.ledger.action.add_movement")}`),
-    }),
-  ).toHaveAttribute("aria-disabled", "true");
+  const add = empty.getByRole("button", {
+    name: new RegExp(`^${label("desktop.ledger.action.add_movement")}`),
+  });
+  await expect(add).not.toHaveAttribute("aria-disabled", "true");
+  // A new movement is drawn in the grid, not saved.
+  await add.click();
+  await expect(page(target).getByRole("grid")).toBeVisible();
+  await expect(page(target).locator(".ledger-draft-status")).toHaveCount(1);
 });
 
 test("a failed read says so with its code and reads again only when asked", async ({

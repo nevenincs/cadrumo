@@ -15,6 +15,7 @@ export function movement(
   id: string,
   facts: Partial<LedgerTransaction> = {},
   group: string | null = null,
+  account: string | null = null,
 ): LedgerRow {
   const transaction: LedgerTransaction = {
     transaction_id: id,
@@ -59,7 +60,12 @@ export function movement(
     transaction.business_classification === "NOT_YET_PROCESSED"
       ? "pending"
       : "reviewed";
-  return { transaction, review_status: status, group_label: group };
+  return {
+    transaction,
+    review_status: status,
+    group_label: group,
+    own_account_id: account,
+  };
 }
 
 /** A 64-hex-digit id made from a short name, shaped like the product's. */

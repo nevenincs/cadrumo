@@ -186,6 +186,8 @@ export type PlanBlocker =
   | { kind: "action_and_edits"; action: string }
   | { kind: "exclude_and_classification"; action: string }
   | { kind: "suggestion_and_edits"; action: string }
+  /** A Mixed approval names no business share: it is never saved so. */
+  | { kind: "suggestion_needs_share"; action: string }
   | { kind: "actions_conflict"; actions: string[] }
   | { kind: "too_large" }
   | { kind: "draft_incomplete"; fields: DraftField[] };
@@ -665,6 +667,19 @@ function checkRow(
       kind: "suggestion_and_edits",
       action: suggestion.id,
     });
+  for (const found of suggestions) {
+    if (found.kind !== "suggestion" || found.decision !== "apply") continue;
+    const writes = found.writes ?? [];
+    const mixed = writes.some(
+      (write) =>
+        write.field === "business_classification" && write.value === "MIXED",
+    );
+    const share = writes.some(
+      (write) => write.field === "business_pct" && write.value !== null,
+    );
+    if (mixed && !share)
+      entry.blockers.push({ kind: "suggestion_needs_share", action: found.id });
+  }
   const clashing = [
     ...(structural.length > 1 || (structural.length && suggestions.length)
       ? [...structural, ...suggestions]
@@ -695,9 +710,11 @@ function checkRow(
   return entry;
 }
 
+// The currency is asked for like the date: a new movement assumes none.
 const DRAFT_REQUIRED: readonly DraftField[] = [
   "booked_date",
   "amount",
+  "currency",
   "direction",
   "description",
 ];

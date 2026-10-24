@@ -63,6 +63,7 @@ import {
 } from "./movements/useMovementsView";
 import { PeriodSelector } from "./PeriodSelector";
 import { ExportDialog } from "./transfer/ExportDialog";
+import { useLedgerEditing, type LeaveGuard } from "./editing/LedgerEditing";
 import { ImportDialog } from "./transfer/ImportDialog";
 import { dayText } from "./transfer/transferWords";
 
@@ -93,6 +94,7 @@ export function LedgerPage({
   pane,
   contribute,
   copy,
+  guardLeave,
 }: {
   port: LedgerPort;
   /** Whose ledger, or null while the account withholds it. */
@@ -115,6 +117,8 @@ export function LedgerPage({
   contribute(actions: (() => Action[]) | null): void;
   /** Puts text on the clipboard through the host. */
   copy(text: string): Promise<void>;
+  /** Hands the shell the guard that asks before staged work is dropped. */
+  guardLeave?: (guard: LeaveGuard | null) => void;
 }) {
   const t = useStrings();
   const panel = useId();
@@ -191,7 +195,42 @@ export function LedgerPage({
   const exportAction: LedgerHeaderAction = readable
     ? { run: () => setTransfer("export") }
     : unavailable();
-  const addAction = unavailable();
+  // The staged work of every section: the tray, the review and apply,
+  // and the guard before leaving.
+  const [focusDraft, setFocusDraft] = useState<string | null>(null);
+  const editing = useLedgerEditing({
+    port,
+    period,
+    rows: periodWindow ? (shownRows(periodWindow)?.rows ?? null) : null,
+    stage,
+    dispatch: dispatchStage,
+    reread,
+    onRekey: (from, to) => {
+      if (!movements.selection.has(from)) return;
+      const next = new Set(movements.selection);
+      next.delete(from);
+      next.add(to);
+      movements.setSelection(next);
+    },
+    onShowRows: (ids) => {
+      setSection("movements");
+      movements.setSelection(new Set(ids));
+    },
+    onGoToDraft: (key) => {
+      setSection("movements");
+      setFocusDraft(key);
+    },
+    guardLeave,
+    locale,
+  });
+  const addAction: LedgerHeaderAction = readable
+    ? {
+        run: () => {
+          setSection("movements");
+          setFocusDraft(editing.addDraft());
+        },
+      }
+    : unavailable();
   const addInvoiceAction: LedgerHeaderAction = readable
     ? { run: () => setInvoiceEditor({ kind: "new" }) }
     : unavailable();
@@ -379,7 +418,7 @@ export function LedgerPage({
           description={reading}
         />
       );
-    else if (rows.total === 0)
+    else if (rows.total === 0 && stage.content.drafts.length === 0)
       body = (
         <EmptyState
           className="ledger-empty"
@@ -435,7 +474,12 @@ export function LedgerPage({
             readiness={readiness}
             movements={movements}
             stage={stage}
-            onStage={dispatchStage}
+            onStage={editing.onStage}
+            editing={{
+              openReview: editing.openReview,
+              focusDraft,
+              onDraftFocused: () => setFocusDraft(null),
+            }}
             view={view}
             onViewChange={onViewChange}
             locale={locale}
@@ -504,9 +548,11 @@ export function LedgerPage({
           aria-label={readable && !isTab ? sectionName(t, section) : undefined}
           className="flex min-h-0 flex-1 flex-col"
         >
+          {readable && editing.banner}
           {body}
         </div>
       </section>
+      {readable && editing.dock}
       {readable && transfer === "import" && (
         <ImportDialog
           port={port}
@@ -538,7 +584,8 @@ export function LedgerPage({
           onFormat={(exportFormat) =>
             onViewChange((current) => ({ ...current, exportFormat }))
           }
-          staged={0}
+          staged={editing.tally.units}
+          onReviewStaged={editing.openReview}
           copy={copy}
           onClose={() => setTransfer(null)}
         />

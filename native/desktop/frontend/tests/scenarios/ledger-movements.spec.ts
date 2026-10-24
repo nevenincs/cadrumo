@@ -460,6 +460,10 @@ test("the grid's keys: typing never runs a command, Alt+B and F8 do, shell chord
   for (const key of ["b", "p", "m", "n", "/"]) await target.keyboard.press(key);
   await expect(target.locator(".ledger-classify")).toHaveCount(0);
   await expect(target.locator(".palette")).toHaveCount(0);
+  // It opened the cell's editor, which holds what was typed.
+  await expect(target.locator(".ledger-cell-editor")).toHaveValue("bpmn/");
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".ledger-cell-editor")).toHaveCount(0);
   await target.keyboard.press("Alt+KeyB");
   const dialog = target.locator(".ledger-classify");
   await expect(dialog).toBeVisible();

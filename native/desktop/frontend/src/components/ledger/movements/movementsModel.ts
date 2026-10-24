@@ -43,6 +43,7 @@ export const COLUMN_IDS = [
   "invoice",
   "documents",
   "group_label",
+  "account",
   "notes",
   "lifecycle",
   "classified_by",
@@ -100,6 +101,7 @@ export const COLUMN_SPECS: Record<ColumnId, ColumnSpec> = {
   invoice: { width: 6, sortable: false },
   documents: { width: 4.5, align: "end", sortable: false },
   group_label: { width: 8, sortable: true },
+  account: { width: 8, sortable: true },
   notes: { width: 10, sortable: true },
   lifecycle: {
     width: 6,
@@ -352,10 +354,12 @@ export type MovementFilters = {
   direction: string[];
   classification: string[];
   lifecycle: string[];
-  /** The product's own filters: the movements' own account, the import
-   * that brought them and what the import noted, read from the ledger. */
+  /** The movements' own account, as each row names it; the empty string
+   * is the movements bound to none. */
   account: string | null;
-  /** The batches an import wrote, when the person asked to see them. */
+  /** The product's own filters, read from the ledger: the batches an
+   * import wrote, when the person asked to see them, and what the import
+   * noted. */
   importBatches: string[];
   importIssue: ImportIssue | null;
   /** Null is any; `{ label: null }` is the movements with no group label. */
@@ -392,7 +396,6 @@ export const NO_FILTERS: MovementFilters = {
 export function serverFilters(filters: MovementFilters): LedgerWindowScope[] {
   if (!hasServerFilters(filters)) return [];
   const clauses: string[] = [];
-  if (filters.account) clauses.push(`account=${filters.account}`);
   if (filters.importIssue) clauses.push(`issue=${filters.importIssue}`);
   const scope = (extra: string[]): LedgerWindowScope => ({
     ...(clauses.length || extra.length
@@ -406,7 +409,6 @@ export function serverFilters(filters: MovementFilters): LedgerWindowScope[] {
 }
 export const hasServerFilters = (filters: MovementFilters) =>
   !!(
-    filters.account ||
     filters.importBatches.length ||
     filters.importIssue ||
     filters.hideRejected
@@ -461,6 +463,11 @@ export function keepsRow(
   )
     return false;
   if (filters.group && (row.group_label ?? null) !== filters.group.label)
+    return false;
+  if (
+    filters.account !== null &&
+    (row.own_account_id ?? "") !== filters.account
+  )
     return false;
   if (filters.reason && !readiness.issues.get(id)?.includes(filters.reason))
     return false;
@@ -616,6 +623,7 @@ export const SORT_KEYS: readonly SortKey[] = [
   "status",
   "direction",
   "group_label",
+  "account",
   "lifecycle",
   "modified",
 ];
@@ -630,6 +638,8 @@ export type SortLabels = {
   lifecycle: (state: string) => string;
   classifiedBy: (source: string) => string;
   status: (row: LedgerRow) => string;
+  /** An own account's label; null where the row names none. */
+  account: (id: string) => string;
 };
 
 type SortValue =
@@ -674,6 +684,8 @@ function sortValue(
       return text(t.notes);
     case "group_label":
       return text(row.group_label);
+    case "account":
+      return text(row.own_account_id && labels.account(row.own_account_id));
     case "category":
       return text(t.category_id && labels.category(t.category_id));
     case "iva_category":
@@ -737,6 +749,7 @@ export const GROUPING_IDS = [
   "iva_category",
   "counterparty",
   "description",
+  "account",
 ] as const;
 export type GroupingId = (typeof GROUPING_IDS)[number];
 export const isGrouping = (id: string | null): id is GroupingId =>
@@ -780,6 +793,8 @@ export function groupValue(row: LedgerRow, by: GroupingId): string {
       return t.counterparty.trim().toLocaleUpperCase();
     case "description":
       return normalisedDescription(t.description);
+    case "account":
+      return row.own_account_id ?? "";
   }
 }
 

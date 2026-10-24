@@ -81,6 +81,13 @@ declare global {
       /** Changes a file's bytes, as editing it on disk between a preview
        * and an import would. */
       changeFile(name: string): void;
+      /** Answers the next writes so, one each: `unknown` lands the write
+       * and leaves its settlement unobserved, `refused` refuses it whole
+       * and writes nothing. */
+      nextWrites(outcomes: ("unknown" | "refused")[]): void;
+      /** Changes a stored movement's field, as another window saving it
+       * would. */
+      editElsewhere(id: string, field: string, value: string | null): void;
     };
   }
 }
@@ -270,6 +277,7 @@ const row = (movement: FixtureMovement): LedgerRow => ({
   transaction: { ...movement.transaction },
   review_status: reviewStatus(movement.transaction.business_classification),
   group_label: movement.group_label,
+  own_account_id: movement.own_account_id,
 });
 
 function periodSpan(year: number, code: string): [string, string] | null {
@@ -568,6 +576,8 @@ export function ledgerFixture(options: Options): LedgerPort {
     shown: string | null;
   };
   const reviews = new Map<string, Pending>();
+  // How the next writes are answered, where a scenario asked.
+  const queued: ("unknown" | "refused")[] = [];
   const files = new Map<FileToken, { name: string; purpose: FilePurpose }>();
   const bytesOf = (name: string) =>
     hex64(`bytes:${name}:${edits.get(name) ?? 0}`);
@@ -639,10 +649,24 @@ export function ledgerFixture(options: Options): LedgerPort {
         pending.version += 1;
       });
     },
+    nextWrites(next) {
+      queued.push(...next);
+    },
+    editElsewhere(id, field, value) {
+      const movement = transactionOf(id);
+      if (!movement) return;
+      (movement.transaction as unknown as Record<string, string | null>)[
+        field
+      ] = field === "notes" || field === "counterparty" ? (value ?? "") : value;
+      movement.transaction.modified_at = now();
+    },
   });
   window.__scenarioLedger = {
     drop: (names) => ledgers.forEach((made) => made.drop(names)),
     changeReviews: () => ledgers.forEach((made) => made.changeReviews()),
+    nextWrites: (next) => ledgers.forEach((made) => made.nextWrites(next)),
+    editElsewhere: (id, field, value) =>
+      ledgers.forEach((made) => made.editElsewhere(id, field, value)),
     changeFile(name) {
       edits.set(name, (edits.get(name) ?? 0) + 1);
     },
@@ -1770,9 +1794,23 @@ export function ledgerFixture(options: Options): LedgerPort {
           ? ownAccount
           : (writes[definition] ?? reads[definition]);
       if (!handle) return reject("unavailable");
+      const asked = mutation ? queued.shift() : undefined;
+      if (asked === "refused") {
+        // Refused whole, as a revision-guarded save that found the ledger
+        // changed: nothing was written.
+        const refused: LedgerOutcome = {
+          kind: "refused",
+          operation_id: operation,
+          revision: 3,
+          reason: "precondition_failed",
+          detail: null,
+        };
+        outcomes.set(operation, refused);
+        return refused;
+      }
       const result = handle(request);
       // The write landed; its settlement was not observed.
-      if (mutation && shape === "unknown")
+      if (mutation && (shape === "unknown" || asked === "unknown"))
         return reject("unknown", { operation_id: operation });
       return settle(operation, result);
     } catch (error) {
