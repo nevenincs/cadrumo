@@ -16,7 +16,11 @@ prints.
 
 The probe calls the transport directly rather than through the caching client:
 a fitness answer must come from the model now, never from a stored reply, and it
-must run without an unlocked profile.
+must run without an unlocked profile. A consumer's admission runs it once per
+installed digest, before the first read with the model's current weights. Each
+phase of the request is bounded by the reader's own timeout, so an admission is
+never left waiting on it: an answer that takes longer is the model's
+``timed_out`` verdict, while a connection that is never accepted is no verdict.
 """
 
 from __future__ import annotations

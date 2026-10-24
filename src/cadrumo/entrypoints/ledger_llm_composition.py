@@ -13,6 +13,7 @@ from ..adapters.inbound.einvoice.shape import probe_document_shape
 from ..adapters.outbound.llm.errors import LLMCacheError, LLMProviderError
 from ..adapters.outbound.llm.models import MultimodalImageInput
 from ..adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
+from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
 from ..adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
 from ..adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
 from ..adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
@@ -39,7 +40,7 @@ from ..application.ledger.llm_classification_ports import (
     ResolvedEvidenceInput,
 )
 from ..application.ledger.preconditions import LedgerPreconditionCondition
-from ..application.local_reader import probe_local_reader
+from ..application.local_reader import admit_local_reader, probe_local_reader
 from ..application.operator_actions.models import PreconditionVerdict
 from ..core.config import Settings
 from ..core.model_catalogue import ModelRole
@@ -66,9 +67,11 @@ def _require_reader(role: ModelRole, settings: Settings) -> None:
 
     Asked of the runtime ahead of the read rather than inferred from its
     failure, so a missing model or an unanswering runtime reaches the operator
-    as the probe's verdict, naming the setup that supplies it.
+    as the probe's verdict, naming the setup that supplies it. A model read
+    with for the first time on its current weights is measured for fitness
+    here, before the read.
     """
-    status = probe_local_reader(role, settings)
+    status = admit_local_reader(role, settings, text_probe=probe_text_extraction_fitness)
     if not status.available and status.precondition_verdict is not None:
         raise _reader_unavailable(status.precondition_verdict)
 

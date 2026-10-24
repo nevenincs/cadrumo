@@ -25,6 +25,7 @@ from ..local_reader import (
     EXTRACTION_READER_ROLES,
     RoleFitnessOutcome,
     RoleFitnessState,
+    admit_local_reader,
     configured_role_model,
     probe_local_reader,
     read_local_reader_status,
@@ -42,6 +43,7 @@ from ..provisioning_contracts import (
     ProvisioningPreconditionCondition,
     provisioning_no_recovery_verdict,
 )
+from ..provisioning_fitness import RoleFitnessVerdict, read_fitness_verdict
 from ..provisioning_runtime import InstalledModel, runtime_model_names_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -55,15 +57,18 @@ _MAPPING = default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING)
 class _Runtime(SilentLoopbackHandler):
     installed: ClassVar[list[str]] = []
     residents: ClassVar[list[str]] = []
+    digests: ClassVar[dict[str, str]] = {}
 
     @override
     def do_GET(self) -> None:
         if self.path == "/api/version":
             write_json_response(self, {"version": "0.9.0"}, status=HTTPStatus.OK)
         elif self.path == "/api/tags":
-            write_json_response(
-                self, {"models": [{"name": n, "size": 1} for n in self.installed]}, status=HTTPStatus.OK
-            )
+            rows = [
+                {"name": n, "size": 1, **({"digest": self.digests[n]} if n in self.digests else {})}
+                for n in self.installed
+            ]
+            write_json_response(self, {"models": rows}, status=HTTPStatus.OK)
         elif self.path == "/api/ps":
             rows = [{"name": n, "size": 1, "size_vram": 1} for n in self.residents]
             write_json_response(self, {"models": rows}, status=HTTPStatus.OK)
@@ -81,9 +86,12 @@ class _Runtime(SilentLoopbackHandler):
 
 
 @contextmanager
-def _runtime(*, installed: list[str], residents: list[str] | None = None) -> Generator[str]:
+def _runtime(
+    *, installed: list[str], residents: list[str] | None = None, digests: dict[str, str] | None = None
+) -> Generator[str]:
     _Runtime.installed = installed
     _Runtime.residents = residents or []
+    _Runtime.digests = digests or {}
     with (
         serving_loopback(_Runtime, path="/api/chat") as chat_url,
         override_settings(
@@ -231,12 +239,13 @@ class _Probe:
 
     def __init__(self, *, fit: bool, transport_failed: bool = False) -> None:
         self.calls: list[str] = []
+        self.endpoints: list[str] = []
         self._fit = fit
         self._transport_failed = transport_failed
 
     def __call__(self, model: str, settings: Settings) -> RoleFitnessOutcome:
-        del settings
         self.calls.append(model)
+        self.endpoints.append(settings.cadrumo_llm_ollama_chat_url)
         if self._fit:
             return RoleFitnessOutcome(
                 role=ModelRole.TEXT_EXTRACTION,
@@ -381,3 +390,25 @@ def test_the_readers_ask_the_server_at_the_address_the_record_names(tmp_path: Pa
     assert sent_to == chat_url
     assert reader.host.endpoint_url == chat_url
     assert reader.host.executable_located is True and reader.host.reachable is True
+
+
+def test_a_first_use_measures_at_the_recorded_address_and_keys_the_verdict_to_it(tmp_path: Path) -> None:
+    probe = _Probe(fit=False)
+    with _runtime(installed=[_TEXT], digests={_TEXT: "sha256:text-1"}) as chat_url:
+        address = chat_url.removeprefix("http://").removesuffix("/api/chat")
+        with override_settings(cadrumo_llm_ollama_chat_url=LOCAL_AI_CHAT_URL):
+            _install_local_ai(tmp_path, address)
+            status = admit_local_reader(ModelRole.TEXT_EXTRACTION, text_probe=probe)
+            at_record = read_fitness_verdict(
+                endpoint=chat_url, model=_TEXT, digest="sha256:text-1", role=ModelRole.TEXT_EXTRACTION
+            )
+            at_default = read_fitness_verdict(
+                endpoint=LOCAL_AI_CHAT_URL, model=_TEXT, digest="sha256:text-1", role=ModelRole.TEXT_EXTRACTION
+            )
+    assert probe.endpoints == [chat_url], "the probe reads from the server the record names"
+    assert at_record is not None and at_record.verdict is RoleFitnessVerdict.UNFIT
+    assert chat_url != LOCAL_AI_CHAT_URL
+    assert at_default is None, "the verdict is keyed to the address the server answers on"
+    assert status.available is False
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.action is None

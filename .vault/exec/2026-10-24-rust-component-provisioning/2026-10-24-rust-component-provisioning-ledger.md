@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:bbcb58b898163979c2b7f70e9c4b5ed927f326d83197563886a8703cf5038180'
+body_hash: 'sha256:2c7cae7fe4eeb7307032b211d8c86fb7cb35b77b5753f26089712ab7bf1f1f0a'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -325,6 +325,21 @@ related:
 - `S10` `verify:` `rustfmt --edition 2024 --check through stdin on the touched files` -> `pass`
 - `S10` `verify:` `cargo deny check (platform; application --features platform)` -> `pass`
 - `S10` `by:` `implementation-engineer-high`
+- `S20` `M` `src/cadrumo/application/local_reader.py`
+- `S20` `M` `src/cadrumo/application/provisioning_fitness.py`
+- `S20` `M` `src/cadrumo/adapters/outbound/llm/role_fitness.py`
+- `S20` `M` `src/cadrumo/adapters/outbound/llm/statement_reading.py`
+- `S20` `M` `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py`
+- `S20` `M` `src/cadrumo/entrypoints/ledger_llm_composition.py`
+- `S20` `M` `src/cadrumo/application/tests/test_local_reader.py`
+- `S20` `M` `src/cadrumo/application/tests/test_provisioning_fitness.py`
+- `S20` `M` `src/cadrumo/adapters/outbound/llm/tests/test_role_fitness.py`
+- `S20` `verify:` `pytest local reader, provisioning fitness, role fitness, consumer gating, quick check bound -n 6 (105 passed; 1 failed: gate supply_nature_proposal row refused its catalogue selection on live hardware, a consumer this Step does not touch; the gate's behaviour rows rerun alone 9 passed)` -> `pass`
+- `S20` `verify:` `pytest evidence, classification, statement and batch reader suites (31 files, 279 passed)` -> `pass`
+- `S20` `verify:` `pytest local reader setup items and local reader operations (88 passed)` -> `pass`
+- `S20` `verify:` `ruff check, ruff format --check, ty check on the touched Python` -> `pass`
+- `S20` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S20` `by:` `implementation-engineer-standard`
 
 ## Notes
 
@@ -360,3 +375,4 @@ related:
 - `S09` S09 the record is consulted only while the chat URL is the managed default; an operator-configured endpoint is used as written; providers/local.py needed no change because the client resolves the URL before the consent gate and the adapter posts only to what it is given
 - `S10` S10 the containment of a killed role rests on the kill-on-close job the binary entry takes on Windows; no test kills a role during a browser check, and Linux and macOS have no job yet
 - `S10` S10 a local AI setup waits up to 35 s for the manager's server; without a manager it fails `program_not_running` after installing and recording the program
+- `S20` S20 wired `admit_local_reader` into the three text-role consumer checks `(ledger_evidence_extraction_composition,` `ledger_llm_composition,` `statement_reading)` beyond the Step's listed paths, since application code cannot import the probe; a model the runtime lists without a digest is admitted unmeasured

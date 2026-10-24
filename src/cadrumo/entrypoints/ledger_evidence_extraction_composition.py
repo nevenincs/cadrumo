@@ -32,6 +32,7 @@ from ..adapters.outbound.llm.evidence_draft_vision import (
 from ..adapters.outbound.llm.models import MultimodalImageInput
 from ..adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from ..adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
+from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
 from ..adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposal, SupplyNatureProposer
 from ..adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
 from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -71,7 +72,7 @@ from ..application.ledger.invoice_draft_records import InvoiceDraft
 from ..application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
 from ..application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from ..application.ledger.structured_invoice_ports import StructuredInvoiceRecord
-from ..application.local_reader import probe_local_reader
+from ..application.local_reader import admit_local_reader, probe_local_reader
 from ..application.operator_actions.models import PreconditionVerdict
 from ..core.config import Settings
 from ..core.config_support import LLMProvider
@@ -123,11 +124,12 @@ def _require_on_host_reader(role: ModelRole, settings: Settings, provider: LLMPr
     Asked of the runtime ahead of the read rather than inferred from its
     failure, so a missing model or an unanswering runtime reaches the operator
     as the probe's own verdict, naming the setup that supplies it, instead of a
-    reader error discovered by trying.
+    reader error discovered by trying. A model read with for the first time on
+    its current weights is measured for fitness here, before the read.
     """
     if not _reads_on_host(provider):
         return
-    status = probe_local_reader(role, settings)
+    status = admit_local_reader(role, settings, text_probe=probe_text_extraction_fitness)
     if status.available:
         return
     raise InvoiceDraftReaderUnavailableError(

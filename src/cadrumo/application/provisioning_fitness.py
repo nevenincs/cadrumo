@@ -2,9 +2,10 @@
 
 A fitness probe costs a model load plus a full answer budget, so neither a
 status surface nor a consumer may run one on every refresh. The verdict is
-recorded here by the verify action and read back at a consumer's admission and
-by status; it is never part of the local AI component's state, which the
-native engine decides. It is keyed by endpoint, model and the runtime's content
+measured and recorded at a consumer's first use of the model's current
+weights, under one lock so concurrent first uses measure once, and read back at
+every later admission and by status; it is never part of the local AI
+component's state, which the native engine decides. It is keyed by endpoint, model and the runtime's content
 digest: the endpoint of the server the runtime manager runs is its one fixed
 address, so a verdict survives the server's restarts, while a verdict describes
 exact weights, so a pull that replaces them or a removal drops the record
@@ -17,6 +18,7 @@ lives in one fixed file under the storage root.
 from __future__ import annotations
 
 import json
+from contextlib import AbstractContextManager
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
@@ -26,6 +28,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from ..core.atomic_write import atomic_write_text
 from ..core.config import Settings, load_settings
+from ..core.locks import exclusive_file_lock
 from ..core.model_catalogue import ModelRole
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.paths import effective_storage_root
@@ -36,6 +39,7 @@ __all__ = [
     "FITNESS_VERDICT_SCHEMA_VERSION",
     "RecordedFitnessVerdict",
     "RoleFitnessVerdict",
+    "fitness_measurement_lock",
     "fitness_verdict_path",
     "invalidate_role_fitness",
     "read_fitness_verdict",
@@ -85,6 +89,20 @@ def fitness_verdict_path(settings: Settings | None = None) -> Path:
     return root / storage_location(StorageCategory.LOCAL_READER_FITNESS_VERDICTS).relative_path()
 
 
+def fitness_measurement_lock(settings: Settings | None = None, *, timeout: float) -> AbstractContextManager[Path]:
+    """Return the exclusive lock under which a verdict is measured and recorded.
+
+    Every process that measures a model at a consumer's first use, or records a
+    verdict, holds this lock across reading the record, probing and writing, so
+    two first uses of the same weights measure once and no write drops another's
+    verdict. ``timeout`` bounds the wait for a measurement another holder runs.
+
+    Raises:
+        LockAcquisitionError: On entry, when the lock is not acquired within ``timeout``.
+    """
+    return exclusive_file_lock(fitness_verdict_path(settings), timeout=timeout)
+
+
 def _read_document(path: Path) -> _FitnessVerdictDocument:
     try:
         payload = path.read_bytes()
@@ -94,7 +112,7 @@ def _read_document(path: Path) -> _FitnessVerdictDocument:
         return _FitnessVerdictDocument.model_validate(json.loads(payload), strict=False)
     except (ValueError, ValidationError):
         # An unreadable record proves nothing about any model. It reads as "not
-        # verified", which keeps readiness closed, and the next verify replaces it.
+        # verified", so the next consumer measures again and replaces it.
         return _FitnessVerdictDocument(schema_version=FITNESS_VERDICT_SCHEMA_VERSION)
 
 

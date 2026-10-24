@@ -369,7 +369,8 @@ class LocalStatementReader:
         reader sends for the text role and the role's configured model for
         scanned pages. ``None`` when the reader can run, and when the caller
         pinned a text model rather than the role's, which setup would not
-        install.
+        install. A model read with for the first time on its current weights
+        is measured for fitness here, before the read.
 
         Deferred import: the probe sits in the application tier, which reaches
         back into this package, so an eager binding would close that loop at
@@ -377,10 +378,11 @@ class LocalStatementReader:
         """
         if role is ModelRole.TEXT_EXTRACTION and self._model_pinned:
             return None
-        from ....application.local_reader import probe_local_reader
+        from ....application.local_reader import admit_local_reader
+        from .role_fitness import probe_text_extraction_fitness
 
         model = self._model if role is ModelRole.TEXT_EXTRACTION else None
-        status = probe_local_reader(role, self._settings, model=model)
+        status = admit_local_reader(role, self._settings, model=model, text_probe=probe_text_extraction_fitness)
         return None if status.available else status.precondition_verdict
 
     def _require_reader(self, role: ModelRole) -> None:

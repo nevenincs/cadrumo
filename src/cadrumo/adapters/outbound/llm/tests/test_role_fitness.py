@@ -11,15 +11,19 @@ import contextlib
 import json
 import threading
 from collections.abc import Generator, Mapping
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from http import HTTPStatus
+from pathlib import Path
 from queue import Queue
 from typing import ClassVar, override
 
 import pytest
 
-from .....application.provisioning_contracts import ProvisioningPreconditionCondition
-from .....core.config import load_settings, override_settings
+from .....application.local_reader import RoleFitnessOutcome, admit_local_reader
+from .....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from .....application.provisioning_fitness import RoleFitnessVerdict, read_fitness_verdict
+from .....core.config import Settings, load_settings, override_settings
+from .....core.model_catalogue import ModelRole
 from .....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -145,3 +149,108 @@ def test_an_unreachable_runtime_is_a_transport_failure_not_unfitness() -> None:
     assert outcome.timed_out is False
     assert outcome.precondition_verdict is not None
     assert outcome.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.MODEL_READY
+
+
+# ---------------------------------------------------------------------------
+# the probe as a consumer's first-use admission, on a runtime that lists the model
+# ---------------------------------------------------------------------------
+
+_TEXT_MODEL = "text-model:1b"
+_DIGEST = "sha256:text-weights-1"
+
+
+class _Reader(SilentLoopbackHandler):
+    """A runtime holding the text model under one digest and answering chat with ``content``."""
+
+    content: ClassVar[str] = ""
+    chats: ClassVar[Queue[Mapping[str, object]]]
+
+    @override
+    def do_GET(self) -> None:
+        rows = [{"name": _TEXT_MODEL, "size": 1, "digest": _DIGEST}]
+        write_json_response(self, {"models": rows}, status=HTTPStatus.OK)
+
+    @override
+    def do_POST(self) -> None:
+        self.chats.put(read_json_body(self))
+        write_json_response(self, ollama_chat_reply(self.content, eval_count=300), status=HTTPStatus.OK)
+
+
+@contextmanager
+def _reader(content: str, storage_root: Path) -> Generator[Queue[Mapping[str, object]]]:
+    _Reader.content = content
+    _Reader.chats = Queue()
+    with (
+        serving_loopback(_Reader, path="/api/chat") as endpoint,
+        override_settings(
+            cadrumo_local_storage_root=storage_root,
+            cadrumo_llm_ollama_chat_url=endpoint,
+            cadrumo_llm_ollama_text_model=_TEXT_MODEL,
+        ),
+    ):
+        yield _Reader.chats
+
+
+def _recorded() -> RoleFitnessVerdict | None:
+    settings = load_settings()
+    recorded = read_fitness_verdict(
+        endpoint=settings.cadrumo_llm_ollama_chat_url,
+        model=_TEXT_MODEL,
+        digest=_DIGEST,
+        role=ModelRole.TEXT_EXTRACTION,
+    )
+    return None if recorded is None else recorded.verdict
+
+
+def test_a_first_read_sends_the_real_probe_once_and_admits_a_fit_model(tmp_path: Path) -> None:
+    with _reader(_FIT_REPLY, tmp_path) as chats:
+        first = admit_local_reader(ModelRole.TEXT_EXTRACTION, text_probe=probe_text_extraction_fitness)
+        second = admit_local_reader(ModelRole.TEXT_EXTRACTION, text_probe=probe_text_extraction_fitness)
+        recorded = _recorded()
+
+    assert first.available is True and second.available is True
+    assert chats.qsize() == 1, "the second read is admitted on the recorded verdict"
+    assert "PROBE-0001" in json.dumps(chats.get_nowait()["messages"])
+    assert recorded is RoleFitnessVerdict.FIT
+
+
+def test_a_first_read_with_a_model_that_cannot_answer_the_reader_refuses_with_no_setup(tmp_path: Path) -> None:
+    with _reader("I cannot help with that.", tmp_path) as chats:
+        refused = admit_local_reader(ModelRole.TEXT_EXTRACTION, text_probe=probe_text_extraction_fitness)
+        again = admit_local_reader(ModelRole.TEXT_EXTRACTION, text_probe=probe_text_extraction_fitness)
+        recorded = _recorded()
+
+    assert refused.available is False and again.available is False
+    assert chats.qsize() == 1
+    assert recorded is RoleFitnessVerdict.UNFIT
+    assert refused.precondition_verdict is not None
+    assert refused.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_FIT_FOR_ROLE
+    assert refused.precondition_verdict.action is None
+
+
+def test_a_first_read_after_the_server_stopped_refuses_with_the_local_ai_setup(tmp_path: Path) -> None:
+    _Reader.content = _FIT_REPLY
+    _Reader.chats = Queue()
+    with ExitStack() as server:
+        endpoint = server.enter_context(serving_loopback(_Reader, path="/api/chat"))
+
+        def stop_then_probe(model: str, settings: Settings) -> RoleFitnessOutcome:
+            # The server stops between the inventory read and the probe, as a
+            # crashed runtime does; the probe then reaches nothing.
+            server.close()
+            return probe_text_extraction_fitness(model, settings)
+
+        with override_settings(
+            cadrumo_local_storage_root=tmp_path,
+            cadrumo_llm_ollama_chat_url=endpoint,
+            cadrumo_llm_ollama_text_model=_TEXT_MODEL,
+        ):
+            status = admit_local_reader(ModelRole.TEXT_EXTRACTION, text_probe=stop_then_probe)
+            recorded = _recorded()
+
+    assert status.available is False
+    assert recorded is None, "a probe that reached nothing is no verdict about the model"
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE
+    assert status.precondition_verdict.action is not None
+    assert status.precondition_verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID

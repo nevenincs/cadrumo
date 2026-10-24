@@ -20,12 +20,13 @@ the catalogue cannot serve refuses first and offers nothing, because setup
 cannot change either; then a local AI the record does not locate, or a server
 that does not answer at its address, refuses with the local AI setup; then a
 missing model does too. Role fitness, the answer quality of the text model, is
-the consumer's admission and not part of the component's state: a verdict
-recorded against the model's current weights that found it unfit or too slow
-refuses its consumer and offers nothing, and a model with no verdict is
-admitted. Its one write is the fitness verdict :func:`verify_role_target`
-records in :mod:`.provisioning_fitness`; status reads that record and never
-probes unless asked.
+the consumer's admission and not part of the component's state. A consumer
+admits its read through :func:`admit_local_reader`, which measures the model's
+fitness at the first use of its current weights and records the verdict in
+:mod:`.provisioning_fitness`; a verdict that found the weights unfit or too
+slow refuses its consumer and offers nothing. Status, and the plain
+:func:`probe_local_reader`, read that record and never probe unless asked, so a
+model nobody has read with yet is not verified there rather than unfit.
 """
 
 from __future__ import annotations
@@ -33,6 +34,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -45,6 +47,7 @@ from ..core.component_records import (
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.hardware import ContentionCause
+from ..core.locks_errors import LockAcquisitionError
 from ..core.model_catalogue import ModelRole, default_model_runtime_id, model_candidate
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.clock import now
@@ -68,6 +71,7 @@ from .provisioning_contracts import (
 from .provisioning_fitness import (
     RecordedFitnessVerdict,
     RoleFitnessVerdict,
+    fitness_measurement_lock,
     read_fitness_verdict,
     record_fitness_verdict,
 )
@@ -95,6 +99,7 @@ __all__ = [
     "RoleFitnessState",
     "RoleModelTarget",
     "TextExtractionFitnessProbe",
+    "admit_local_reader",
     "configured_role_model",
     "local_ai_settings",
     "local_reader_service",
@@ -117,6 +122,16 @@ EXTRACTION_READER_ROLES: tuple[ModelRole, ...] = (ModelRole.TEXT_EXTRACTION, Mod
 #: vision model configured in the text role spends its whole answer budget and
 #: returns nothing the parser can read.
 FITNESS_PROBED_ROLES: tuple[ModelRole, ...] = (ModelRole.TEXT_EXTRACTION,)
+
+#: How many reader timeouts a consumer waits while another one measures the
+#: same record: the holder's probe bounds its connect, send and answer phases
+#: by the reader's own timeout each, and one more covers rendering the probe
+#: document and writing the verdict.
+_MEASUREMENT_WAIT_BOUNDS: Final[int] = 4
+
+
+def _measurement_wait_s(settings: Settings) -> float:
+    return float(_MEASUREMENT_WAIT_BOUNDS * settings.cadrumo_llm_default_timeout_s)
 
 
 class RoleFitnessOutcome(ProvisioningOutcome):
@@ -195,13 +210,7 @@ class LocalReaderDocumentReadiness(StrEnum):
 
 
 def _installed_digest(model: str, settings: Settings) -> str | None:
-    inventory = read_installed_models(settings)
-    if inventory is None:
-        return None
-    return next(
-        (entry.digest for entry in inventory if runtime_model_names_match(model, entry.name)),
-        None,
-    )
+    return _inventory_digest(model, read_installed_models(settings))
 
 
 def _record(outcome: RoleFitnessOutcome, *, digest: str, settings: Settings) -> None:
@@ -230,8 +239,8 @@ def probe_role_fitness(
 ) -> RoleFitnessOutcome | None:
     """Run ``role``'s fitness probe against ``model`` now, or return ``None`` when the role is not probed.
 
-    Records nothing; :func:`verify_role_target` is the only writer of the
-    recorded verdict.
+    Records nothing; the callers that record a verdict hold
+    :func:`.provisioning_fitness.fitness_measurement_lock` while they do.
     """
     if role not in FITNESS_PROBED_ROLES:
         return None
@@ -291,7 +300,8 @@ def verify_role_target(
         if fitness is None:
             continue
         if fitness.settled and digest is not None:
-            _record(fitness, digest=digest, settings=resolved)
+            with fitness_measurement_lock(resolved, timeout=_measurement_wait_s(resolved)):
+                _record(fitness, digest=digest, settings=resolved)
         if fitness.fit:
             continue
         facts = dict(fitness.facts)
@@ -503,6 +513,10 @@ def probe_local_reader(
     * A fitness verdict recorded against the text model's current weights that
       found it unfit or too slow refuses and names no action.
 
+    It never measures fitness, so a model with no verdict is admitted here; a
+    consumer about to read admits through :func:`admit_local_reader`, which
+    measures it first.
+
     Args:
         role: The reader role a document needs.
         settings: Settings carrying the endpoint and role models.
@@ -515,6 +529,29 @@ def probe_local_reader(
     Returns:
         A :class:`DependencyStatus` on the ``local-reader:<role>`` row. Never raises.
     """
+    return _judge_reader(role, settings, installed=installed, model=model, hardware=hardware).status
+
+
+@dataclass(frozen=True, slots=True)
+class _ReaderJudgement:
+    """One reader probe's verdict with what it was judged on, so admission can continue from it."""
+
+    settings: Settings
+    located: LocatedLocalAi | None
+    selection: ModelSelection
+    model: str | None
+    inventory: tuple[InstalledModel, ...] | None
+    status: DependencyStatus
+
+
+def _judge_reader(
+    role: ModelRole,
+    settings: Settings | None,
+    *,
+    installed: tuple[InstalledModel, ...] | None,
+    model: str | None,
+    hardware: HardwareProfile | None,
+) -> _ReaderJudgement:
     resolved, located = local_ai_settings(settings if settings is not None else load_settings())
     selection = select_role_model(role, resolved, profile=hardware)
     if model is None:
@@ -522,8 +559,143 @@ def probe_local_reader(
     inventory = installed
     if inventory is None and _selection_refusal(role, selection) is None and _locates(located):
         inventory = read_installed_models(resolved)
-    return _reader_status_from_inventory(
+    status = _reader_status_from_inventory(
         role, resolved, model=model, inventory=inventory, selection=selection, located=located
+    )
+    return _ReaderJudgement(
+        settings=resolved, located=located, selection=selection, model=model, inventory=inventory, status=status
+    )
+
+
+def admit_local_reader(
+    role: ModelRole,
+    settings: Settings | None = None,
+    *,
+    text_probe: TextExtractionFitnessProbe,
+    model: str | None = None,
+) -> DependencyStatus:
+    """Admit a consumer's read with ``role``'s reader, measuring its fitness at first use.
+
+    The reader probe judges first, in :func:`probe_local_reader`'s order. A
+    role in :data:`FITNESS_PROBED_ROLES` whose installed model carries no
+    verdict for its current digest is then measured with ``text_probe`` before
+    the read, and the verdict is recorded against that digest and the endpoint
+    the reading is aimed at. The measurement runs under
+    :func:`.provisioning_fitness.fitness_measurement_lock`, which re-reads the
+    record once held, so concurrent first uses of the same weights measure
+    once; every later admission reads the record. A model the runtime lists
+    without a digest cannot be keyed to its weights and is admitted unmeasured.
+
+    Refusals stay typed:
+
+    * A recorded or freshly measured unfit or too-slow verdict refuses and names
+      no action, because setup cannot change a model's answers.
+    * A probe that got no answer is judged again from a fresh inventory, so a
+      server that stopped reads as the local AI setup verdict; one still
+      answering refuses with the probe's own verdict, which records nothing.
+    * Another measurement holding the record longer than its bound refuses as
+      not yet verified, naming no action.
+
+    Nothing is downloaded, started or installed: the probe is one inference
+    request to the server the reader would read from.
+
+    Args:
+        role: The reader role the consumer reads with.
+        settings: Settings carrying the endpoint and role models.
+        text_probe: The text reader's fitness probe, supplied by composition.
+        model: The role model the consumer already resolved and will send;
+            resolved through :func:`configured_role_model` when omitted.
+
+    Returns:
+        A :class:`DependencyStatus` on the ``local-reader:<role>`` row.
+    """
+    judged = _judge_reader(role, settings, installed=None, model=model, hardware=None)
+    reader_model = judged.model
+    if not judged.status.available or role not in FITNESS_PROBED_ROLES or reader_model is None:
+        return judged.status
+    digest = _inventory_digest(reader_model, judged.inventory)
+    if digest is None:
+        return judged.status
+    try:
+        outcome = _measure_at_first_use(role, reader_model, digest, judged.settings, text_probe=text_probe)
+    except LockAcquisitionError:
+        return _measurement_pending(role, reader_model, judged.settings)
+    if outcome is not None and not outcome.settled:
+        again = _judge_reader(role, settings, installed=None, model=model, hardware=None)
+        if not again.status.available:
+            return again.status
+        return _unanswered_probe(role, outcome)
+    return _reader_status_from_inventory(
+        role,
+        judged.settings,
+        model=reader_model,
+        inventory=judged.inventory,
+        selection=judged.selection,
+        located=judged.located,
+    )
+
+
+def _inventory_digest(model: str, inventory: tuple[InstalledModel, ...] | None) -> str | None:
+    return next(
+        (entry.digest for entry in inventory or () if runtime_model_names_match(model, entry.name)),
+        None,
+    )
+
+
+def _measure_at_first_use(
+    role: ModelRole,
+    model: str,
+    digest: str,
+    settings: Settings,
+    *,
+    text_probe: TextExtractionFitnessProbe,
+) -> RoleFitnessOutcome | None:
+    """Measure and record ``model``'s fitness unless its weights carry a verdict; ``None`` when they do.
+
+    Raises:
+        LockAcquisitionError: When another measurement holds the record past the wait.
+    """
+    with fitness_measurement_lock(settings, timeout=_measurement_wait_s(settings)):
+        if recorded_role_fitness(role, model, digest, settings) is not RoleFitnessState.NOT_VERIFIED:
+            return None
+        outcome = probe_role_fitness(role, model, settings, text_probe=text_probe)
+        if outcome is not None and outcome.settled:
+            _record(outcome, digest=digest, settings=settings)
+        return outcome
+
+
+def _measurement_pending(role: ModelRole, model: str, settings: Settings) -> DependencyStatus:
+    facts: dict[str, ProvisioningFactValue] = {
+        "role": role.value,
+        "runtime_reachable": True,
+        "model": model,
+        "role_model_installed": True,
+        "fitness": RoleFitnessState.NOT_VERIFIED.value,
+        "fitness_measurement_wait_s": int(_measurement_wait_s(settings)),
+    }
+    return DependencyStatus(
+        service=local_reader_service(role),
+        available=False,
+        facts=facts,
+        precondition_verdict=provisioning_no_recovery_verdict(
+            ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_VERIFIED, facts=facts
+        ),
+    )
+
+
+def _unanswered_probe(role: ModelRole, outcome: RoleFitnessOutcome) -> DependencyStatus:
+    facts: dict[str, ProvisioningFactValue] = {
+        "role": role.value,
+        "runtime_reachable": True,
+        "role_model_installed": True,
+        **outcome.facts,
+        "fitness": RoleFitnessState.NOT_VERIFIED.value,
+    }
+    return DependencyStatus(
+        service=local_reader_service(role),
+        available=False,
+        facts=facts,
+        precondition_verdict=outcome.precondition_verdict,
     )
 
 
@@ -570,8 +742,7 @@ def _fitness_refusal(
     settings: Settings,
 ) -> DependencyStatus | None:
     """Return the admission refusal for a model whose current weights were found unfit or too slow."""
-    digest = next((entry.digest for entry in inventory if runtime_model_names_match(model, entry.name)), None)
-    state = recorded_role_fitness(role, model, digest, settings)
+    state = recorded_role_fitness(role, model, _inventory_digest(model, inventory), settings)
     if state not in (RoleFitnessState.UNFIT, RoleFitnessState.TIMED_OUT):
         return None
     facts: dict[str, ProvisioningFactValue] = {
@@ -815,11 +986,7 @@ def _current_role_fitness(
     if text_probe is not None:
         outcome = probe_role_fitness(role, model, settings, text_probe=text_probe)
         return None if outcome is None else _fresh_fitness_state(outcome)
-    digest = next(
-        (entry.digest for entry in inventory or () if runtime_model_names_match(model, entry.name)),
-        None,
-    )
-    state = recorded_role_fitness(role, model, digest, settings)
+    state = recorded_role_fitness(role, model, _inventory_digest(model, inventory), settings)
     failed = _FITNESS_FAILURE[state].value if state is not None and state is not RoleFitnessState.FIT else None
     return state, failed
 
@@ -910,8 +1077,8 @@ def read_local_reader_status(
     admission check for installed models that are not yet resident, which
     reads hardware counters and can be skipped by a surface that refreshes
     often. Without ``text_probe`` the text model's fitness is the verdict
-    ``verify`` recorded for its current digest, and a model with no recorded
-    verdict is not verified rather than unfit, and is admitted. With
+    recorded for its current digest at a consumer's first use, and a model with
+    no recorded verdict is not verified rather than unfit, and is admitted. With
     ``text_probe`` the check runs now and its answer is reported without being
     recorded. Every reading is aimed at the server the local AI record names.
     """

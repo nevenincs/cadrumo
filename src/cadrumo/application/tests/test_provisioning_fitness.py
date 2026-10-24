@@ -11,8 +11,9 @@ varies.
 from __future__ import annotations
 
 import json
-from collections.abc import Generator
-from contextlib import contextmanager
+import threading
+from collections.abc import Callable, Generator
+from contextlib import ExitStack, contextmanager
 from datetime import UTC, datetime
 from http import HTTPStatus
 from pathlib import Path
@@ -22,6 +23,7 @@ import pytest
 
 from ...core.config import Settings, load_settings, override_settings
 from ...core.hardware import AcceleratorKind
+from ...core.locks_errors import LockAcquisitionError
 from ...core.model_catalogue import ModelRole, default_model_runtime_id
 from ...tests.loopback_llm import (
     SilentLoopbackHandler,
@@ -38,6 +40,7 @@ from ..local_reader import (
     LocalReaderStatus,
     RoleFitnessOutcome,
     RoleFitnessState,
+    admit_local_reader,
     probe_local_reader,
     read_local_reader_status,
     role_model_targets,
@@ -46,14 +49,20 @@ from ..local_reader import (
 from ..provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
+    DependencyStatus,
     HardwareProfile,
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from ..provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
+from ..provisioning_contracts import (
+    LOCAL_AI_PROVISION_ACTION_ID,
+    ProvisioningPreconditionCondition,
+    provisioning_no_recovery_verdict,
+)
 from ..provisioning_fitness import (
     RecordedFitnessVerdict,
     RoleFitnessVerdict,
+    fitness_measurement_lock,
     fitness_verdict_path,
     invalidate_role_fitness,
     read_fitness_verdict,
@@ -72,13 +81,17 @@ _MAPPING = default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING)
 class _Runtime(SilentLoopbackHandler):
     store: ClassVar[dict[str, str]] = {}
     pulls: ClassVar[int] = 0
+    reports_digests: ClassVar[bool] = True
 
     @override
     def do_GET(self) -> None:
         if self.path == "/api/version":
             write_json_response(self, {"version": "0.9.0"}, status=HTTPStatus.OK)
         elif self.path == "/api/tags":
-            rows = [{"name": name, "size": GIB, "digest": digest} for name, digest in self.store.items()]
+            rows = [
+                {"name": name, "size": GIB, **({"digest": digest} if self.reports_digests else {})}
+                for name, digest in self.store.items()
+            ]
             write_json_response(self, {"models": rows}, status=HTTPStatus.OK)
         elif self.path == "/api/ps":
             rows = [{"name": name, "size": GIB, "size_vram": GIB} for name in self.store]
@@ -115,6 +128,7 @@ class _Runtime(SilentLoopbackHandler):
 def _runtime(tmp_path: Path, **store: str) -> Generator[str]:
     _Runtime.store = dict(store) or {_TEXT: "sha256:text-1", _VISION: "sha256:vision-1"}
     _Runtime.pulls = 0
+    _Runtime.reports_digests = True
     with (
         serving_loopback(_Runtime, path="/api/chat") as chat_url,
         override_settings(
@@ -129,16 +143,27 @@ def _runtime(tmp_path: Path, **store: str) -> Generator[str]:
 
 
 class _Probe:
-    """The injected fitness port: records calls and answers a fixed verdict."""
+    """The injected fitness port: records calls and answers a fixed verdict.
 
-    def __init__(self, verdict: RoleFitnessVerdict | None) -> None:
+    ``during`` runs inside each call before it answers, which is where a test
+    observes what holds while a measurement is in progress.
+    """
+
+    def __init__(
+        self,
+        verdict: RoleFitnessVerdict | None,
+        *,
+        during: Callable[[Settings], None] | None = None,
+    ) -> None:
         # ``None`` answers a transport failure: no verdict about the model.
         self.calls: list[str] = []
         self._verdict = verdict
+        self._during = during
 
     def __call__(self, model: str, settings: Settings) -> RoleFitnessOutcome:
-        del settings
         self.calls.append(model)
+        if self._during is not None:
+            self._during(settings)
         if self._verdict is RoleFitnessVerdict.FIT:
             return RoleFitnessOutcome(
                 role=ModelRole.TEXT_EXTRACTION,
@@ -462,3 +487,211 @@ def test_a_refused_removal_keeps_the_recorded_verdict(tmp_path: Path) -> None:
 
     assert refused.removed is False
     assert kept is not None and kept.verdict is RoleFitnessVerdict.FIT
+
+
+# ---------------------------------------------------------------------------
+# a consumer's first use measures, once per installed digest
+# ---------------------------------------------------------------------------
+
+
+def _admit_text(probe: _Probe, settings: Settings | None = None) -> DependencyStatus:
+    return admit_local_reader(ModelRole.TEXT_EXTRACTION, settings, text_probe=probe)
+
+
+def _recorded_text_verdict(digest: str) -> RecordedFitnessVerdict | None:
+    settings = load_settings()
+    return read_fitness_verdict(
+        endpoint=settings.cadrumo_llm_ollama_chat_url, model=_TEXT, digest=digest, role=ModelRole.TEXT_EXTRACTION
+    )
+
+
+def test_a_first_use_measures_the_unmeasured_model_once_and_records_it(tmp_path: Path) -> None:
+    probe = _Probe(RoleFitnessVerdict.FIT)
+    with _runtime(tmp_path):
+        first = _admit_text(probe)
+        second = _admit_text(probe)
+        recorded = _recorded_text_verdict("sha256:text-1")
+        _, row = _text_row()
+
+    assert probe.calls == [_TEXT], "the second admission reads the verdict the first one recorded"
+    assert first.available is True and second.available is True
+    assert recorded is not None and recorded.verdict is RoleFitnessVerdict.FIT
+    assert row.fitness is RoleFitnessState.FIT, "status reads the verdict the first use recorded"
+
+
+@pytest.mark.parametrize(
+    ("verdict", "condition"),
+    [
+        (RoleFitnessVerdict.UNFIT, ProvisioningPreconditionCondition.ROLE_MODEL_FIT_FOR_ROLE),
+        (RoleFitnessVerdict.TIMED_OUT, ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_WITHIN_TIMEOUT),
+    ],
+)
+def test_an_unfit_first_use_refuses_with_no_setup_action_and_is_not_measured_again(
+    tmp_path: Path,
+    verdict: RoleFitnessVerdict,
+    condition: ProvisioningPreconditionCondition,
+) -> None:
+    probe = _Probe(verdict)
+    with _runtime(tmp_path):
+        first = _admit_text(probe)
+        second = _admit_text(probe)
+
+    assert probe.calls == [_TEXT]
+    for refused in (first, second):
+        assert refused.available is False
+        assert refused.facts["fitness"] == verdict.value
+        assert refused.precondition_verdict is not None
+        assert refused.precondition_verdict.failed_condition_id == condition
+        assert refused.precondition_verdict.action is None, "setup cannot change a model's answers"
+
+
+def test_replaced_weights_are_measured_again_at_their_first_use(tmp_path: Path) -> None:
+    probe = _Probe(RoleFitnessVerdict.FIT)
+    with _runtime(tmp_path):
+        _admit_text(probe)
+        _Runtime.store = {**_Runtime.store, _TEXT: "sha256:text-2"}
+        replaced = _admit_text(probe)
+        _admit_text(probe)
+        recorded = _recorded_text_verdict("sha256:text-2")
+
+    assert probe.calls == [_TEXT, _TEXT], "one measurement per installed digest"
+    assert replaced.available is True
+    assert recorded is not None and recorded.verdict is RoleFitnessVerdict.FIT
+
+
+def test_a_role_that_is_not_probed_is_admitted_without_measuring(tmp_path: Path) -> None:
+    probe = _Probe(RoleFitnessVerdict.UNFIT)
+    with _runtime(tmp_path):
+        vision = admit_local_reader(ModelRole.VISION_TRANSCRIPTION, text_probe=probe)
+
+    assert vision.available is True
+    assert probe.calls == []
+
+
+def test_a_missing_model_refuses_with_its_setup_before_any_measurement(tmp_path: Path) -> None:
+    probe = _Probe(RoleFitnessVerdict.FIT)
+    with _runtime(tmp_path, **{_VISION: "sha256:vision-1"}):
+        status = _admit_text(probe)
+
+    assert probe.calls == []
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED
+    assert status.precondition_verdict.action is not None
+    assert status.precondition_verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+
+
+def test_a_model_listed_without_a_digest_is_admitted_unmeasured(tmp_path: Path) -> None:
+    probe = _Probe(RoleFitnessVerdict.UNFIT)
+    with _runtime(tmp_path):
+        _Runtime.reports_digests = False
+        status = _admit_text(probe)
+        path = fitness_verdict_path()
+
+    assert status.available is True, "a verdict could not be keyed to weights nobody can name"
+    assert probe.calls == []
+    assert not path.exists()
+
+
+def test_the_measurement_holds_the_record_lock_while_it_probes(tmp_path: Path) -> None:
+    excluded: list[bool] = []
+
+    def try_the_lock(settings: Settings) -> None:
+        try:
+            with fitness_measurement_lock(settings, timeout=0):
+                excluded.append(False)
+        except LockAcquisitionError:
+            excluded.append(True)
+
+    with _runtime(tmp_path):
+        _admit_text(_Probe(RoleFitnessVerdict.FIT, during=try_the_lock))
+
+    assert excluded == [True], "a second first use cannot start measuring while one runs"
+
+
+def test_concurrent_first_uses_measure_once(tmp_path: Path) -> None:
+    probing = threading.Event()
+    release = threading.Event()
+
+    def hold_the_answer(settings: Settings) -> None:
+        del settings
+        probing.set()
+        release.wait(timeout=30)
+
+    probe = _Probe(RoleFitnessVerdict.FIT, during=hold_the_answer)
+    admitted: list[DependencyStatus] = []
+    with _runtime(tmp_path):
+        settings = load_settings()
+        start = threading.Barrier(2)
+
+        def first_use() -> None:
+            start.wait(timeout=30)
+            admitted.append(_admit_text(probe, settings))
+
+        users = [threading.Thread(target=first_use) for _ in range(2)]
+        for user in users:
+            user.start()
+        assert probing.wait(timeout=30)
+        release.set()
+        for user in users:
+            user.join(timeout=30)
+
+    assert probe.calls == [_TEXT]
+    assert [status.available for status in admitted] == [True, True]
+
+
+def test_a_measurement_held_elsewhere_past_the_wait_refuses_as_not_verified(tmp_path: Path) -> None:
+    probe = _Probe(RoleFitnessVerdict.FIT)
+    with (
+        _runtime(tmp_path),
+        override_settings(cadrumo_llm_default_timeout_s=0),
+        fitness_measurement_lock(timeout=0),
+    ):
+        status = _admit_text(probe)
+
+    assert probe.calls == []
+    assert status.available is False
+    assert status.facts["fitness"] == RoleFitnessState.NOT_VERIFIED.value
+    assert status.precondition_verdict is not None
+    assert (
+        status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_VERIFIED
+    )
+    assert status.precondition_verdict.action is None
+
+
+def test_a_probe_that_finds_the_server_stopped_refuses_with_the_local_ai_setup(tmp_path: Path) -> None:
+    _Runtime.store = {_TEXT: "sha256:text-1"}
+    _Runtime.reports_digests = True
+    with ExitStack() as server:
+        chat_url = server.enter_context(serving_loopback(_Runtime, path="/api/chat"))
+        probe = _Probe(None, during=lambda _settings: server.close())
+        with override_settings(
+            cadrumo_local_storage_root=tmp_path,
+            cadrumo_llm_ollama_chat_url=chat_url,
+            cadrumo_llm_ollama_text_model=_TEXT,
+        ):
+            status = _admit_text(probe)
+            path = fitness_verdict_path()
+
+    assert probe.calls == [_TEXT]
+    assert status.available is False
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE
+    assert status.precondition_verdict.action is not None, "a stopped server is the setup's, not the model's"
+    assert status.precondition_verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert not path.exists(), "no answer is no verdict"
+
+
+def test_a_probe_with_no_answer_from_a_running_server_refuses_and_records_nothing(tmp_path: Path) -> None:
+    unanswered = _Probe(None)
+    with _runtime(tmp_path):
+        refused = _admit_text(unanswered)
+        later = _Probe(RoleFitnessVerdict.FIT)
+        admitted = _admit_text(later)
+
+    assert refused.available is False
+    assert refused.facts["fitness"] == RoleFitnessState.NOT_VERIFIED.value
+    assert refused.precondition_verdict is not None
+    assert refused.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.MODEL_READY
+    assert refused.precondition_verdict.action is None
+    assert later.calls == [_TEXT], "nothing was recorded, so the next first use measures"
+    assert admitted.available is True
