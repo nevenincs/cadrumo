@@ -31,6 +31,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormText,
     ModeloFormTextDisclosure,
     ModeloWorkForm,
+    revised_field,
 )
 from ......application.modelo.work_form_wording import origin_words
 from ......core.config import override_settings
@@ -131,8 +132,9 @@ def test_a_section_shows_the_most_severe_thing_it_still_holds() -> None:
     entered = form_field("01", "Income", ModeloFormOrigin.ENTERED, Decimal("1"))
     assumed = form_field("02", "Expenses", ModeloFormOrigin.DEFAULT_TO_CONFIRM, Decimal("0"))
     missing = form_field("03", "Withholdings", ModeloFormOrigin.NEEDS_INPUT)
-    blocked = form_field("04", "Payments", ModeloFormOrigin.ENTERED, Decimal("2")).model_copy(
-        update={"blockers": (ModeloFormBlocker(code="synthetic_blocker"),)}
+    blocked = revised_field(
+        form_field("04", "Payments", ModeloFormOrigin.ENTERED, Decimal("2")),
+        blockers=(ModeloFormBlocker(code="synthetic_blocker"),),
     )
 
     assert section_mark(_section(entered)) == DONE_MARK

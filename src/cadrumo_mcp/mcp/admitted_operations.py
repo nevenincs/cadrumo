@@ -208,9 +208,9 @@ def _operator_input_json_schema() -> dict[str, object]:
     place. Imported on use so that serving the other tools loads none of it.
     """
     from cadrumo.application.modelo.edit_operator_input import ModeloEditOperatorInputV2
-    from cadrumo.application.operations.registry_schema_validation import strict_model_json_schema
+    from cadrumo.application.operations.registry_schema_validation import strict_model_input_json_schema
 
-    return strict_model_json_schema(ModeloEditOperatorInputV2)
+    return strict_model_input_json_schema(ModeloEditOperatorInputV2)
 
 
 def _execute(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:

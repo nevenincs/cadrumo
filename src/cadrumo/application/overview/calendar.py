@@ -38,6 +38,7 @@ from datetime import date
 from itertools import chain
 from typing import TYPE_CHECKING, Protocol
 
+from ...core.external_constants import OutputLanguage as _OutputLanguage
 from ...core.i18n.render import tr as _tr
 from ...core.identity.tax_id import same_tax_identifier
 from ...core.logging import get_logger as _get_logger
@@ -921,25 +922,37 @@ def shift_reason_statement(shift_reason: str) -> str:
     return " + ".join(_shift_reason_part_statement(part) for part in shift_reason.split(" + "))
 
 
-def holiday_coverage_statement(coverage: _DeadlineHolidayCoverage, territory: str | None) -> str:
+def holiday_coverage_statement(
+    coverage: _DeadlineHolidayCoverage, territory: str | None, language: _OutputLanguage | None = None
+) -> str:
     """Return the localized statement of which holidays an effective close date accounts for.
 
-    Both frontends render this one statement, so neither can describe a
-    national-only or unverified date as final.
+    Every frontend renders this one statement, so none can describe a
+    national-only or unverified date as final. ``language`` renders it, the
+    configured output language when not given.
     """
+    locale = None if language is None else language.value
     if coverage is _DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY:
         if territory is None:
-            return _tr("application.overview.calendar.holiday_coverage.national_and_territory_without_name")
-        return _tr("application.overview.calendar.holiday_coverage.national_and_territory", territory=territory)
+            return _tr(
+                "application.overview.calendar.holiday_coverage.national_and_territory_without_name", locale=locale
+            )
+        return _tr(
+            "application.overview.calendar.holiday_coverage.national_and_territory", territory=territory, locale=locale
+        )
     if coverage is _DeadlineHolidayCoverage.TERRITORY_UNVERIFIED:
         if territory is None:
-            return _tr("application.overview.calendar.holiday_coverage.territory_unverified_without_name")
-        return _tr("application.overview.calendar.holiday_coverage.territory_unverified", territory=territory)
+            return _tr(
+                "application.overview.calendar.holiday_coverage.territory_unverified_without_name", locale=locale
+            )
+        return _tr(
+            "application.overview.calendar.holiday_coverage.territory_unverified", territory=territory, locale=locale
+        )
     if coverage is _DeadlineHolidayCoverage.NATIONAL_ONLY:
-        return _tr("application.overview.calendar.holiday_coverage.national_only")
+        return _tr("application.overview.calendar.holiday_coverage.national_only", locale=locale)
     if coverage is _DeadlineHolidayCoverage.NOT_SHIFTED:
-        return _tr("application.overview.calendar.holiday_coverage.not_shifted")
-    return _tr("application.overview.calendar.holiday_coverage.calendar_unavailable")
+        return _tr("application.overview.calendar.holiday_coverage.not_shifted", locale=locale)
+    return _tr("application.overview.calendar.holiday_coverage.calendar_unavailable", locale=locale)
 
 
 def _calendar_entry_from_obligation(

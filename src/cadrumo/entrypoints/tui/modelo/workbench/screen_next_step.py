@@ -6,10 +6,14 @@ from dataclasses import replace
 from functools import partial
 from typing import TYPE_CHECKING
 
+from .....application.modelo.edit_prerequisite_wording import prerequisite_words
 from .....application.modelo.work_form_models import ModeloFormField, ModeloWorkForm, address_key
-from .....application.modelo.work_form_next_step import ModeloFormNextAction
+from .....application.modelo.work_form_next_step import (
+    ModeloFormNextAction,
+    ModeloFormNextStep,
+    held_prerequisite_step,
+)
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
-from .....application.modelo.work_form_source_groups import earlier_filing_text
 from .....core.i18n.render import tr
 from ...components.dialogs import ConfirmScreen
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
@@ -21,6 +25,8 @@ from .progress import WorkbenchProgress, workbench_progress
 from .review import recalculation_risk_text
 from .screen_constants import (
     _DIALOG_FRAME,
+    _FINDINGS_KEY,
+    _NEXT_KEYS,
 )
 from .sources import OpenSourceSurface
 
@@ -87,7 +93,7 @@ class WorkbenchNextStepMixin:
             self._edit_unavailable()
             return
         if self._session.dirty:
-            self._notice(tr("workspace.modelo.calculate.apply_first"))
+            self._notice(f"{tr('workspace.modelo.calculate.apply_first')} [{_NEXT_KEYS[ModeloFormNextAction.APPLY]}]")
             return
         self._calculate(actions)
 
@@ -218,27 +224,18 @@ class WorkbenchNextStepMixin:
         field: ModeloFormField,
         prerequisite: WorkbenchApplyPrerequisite,
     ) -> str:
-        source = field.source
-        filings = () if source is None else source.earlier_filings
-        message = tr(
-            "workspace.modelo.apply_prerequisite.earlier" if filings else "workspace.modelo.apply_prerequisite.what"
+        return prerequisite_words(
+            field,
+            operator_entries_known=form.operator_entries_known,
+            source_boxes=prerequisite.source_boxes,
+            language=self._language,
         )
-        if not form.operator_entries_known:
-            message += "\n" + tr("workspace.modelo.apply_prerequisite.legacy")
-        if filings:
-            message += "\n" + earlier_filing_text(filings)
-        if prerequisite.source_boxes:
-            message += "\n" + tr(
-                "workspace.modelo.apply_prerequisite.source_boxes",
-                boxes=", ".join(f"[{box}]" for box in prerequisite.source_boxes),
-            )
-        return message
 
     def _state_apply_prerequisite(self: ModeloWorkbenchScreen) -> bool:
         line = self._apply_prerequisite_line()
         if line is None:
             return False
-        self._notice(tr("workspace.modelo.apply_prerequisite.notice", box=f"[{line.box}]"))
+        self._notice(f"{tr('workspace.modelo.apply_prerequisite.notice', box=f'[{line.box}]')} [{_FINDINGS_KEY}]")
         self._render_progress()
         return True
 
@@ -248,11 +245,12 @@ class WorkbenchNextStepMixin:
             load.form, staged=len(self._session.changes), verified=load.verified, filed=self.recorded
         )
         if self._active_apply_prerequisite() is not None:
+            held = held_prerequisite_step(ModeloFormNextStep(action=progress.next_action, count=progress.count))
             return replace(
                 progress,
-                next_action=ModeloFormNextAction.RESOLVE,
-                count=1,
+                next_action=held.action,
+                count=held.count,
                 blocking=progress.blocking + 1,
-                findings_lead=True,
+                findings_lead=held.findings_lead,
             )
         return progress

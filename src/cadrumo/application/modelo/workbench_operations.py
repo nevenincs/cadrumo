@@ -21,7 +21,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Mapping
 from types import MappingProxyType
-from typing import Annotated, Final, Literal, Self
+from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -69,6 +69,7 @@ from .edit_admission import ModeloEditRenewedV1, renew_modelo_edit_baseline
 from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import (
+    ModeloEditCorrectionAddressV1,
     ModeloEditNormalisation,
     ModeloEditParsedValueV1,
     ModeloEditParseRefusalV1,
@@ -79,10 +80,22 @@ from .edit_models import (
     ModeloEditValueAddressV1,
 )
 from .edit_operation_requests import ModeloEditPreflightRequestV2
-from .edit_parsing import parse_modelo_edit_lexeme
+from .edit_parsing import entry_grammar, parse_modelo_edit_lexeme
 from .edit_preflight import preflight_modelo_edit
-from .edit_refusal_projection import ModeloEditRefusalProjectionStore
+from .edit_prerequisite_wording import read_prerequisite_words
+from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1, ModeloEditRefusalProjectionStore
+from .edit_review_wording import (
+    ModeloEditReviewFindingV1,
+    edit_refusal_words,
+    entry_read_back,
+    grammar_data_type,
+    operator_entries_unknown,
+    review_findings,
+)
 from .edit_transient_operand import modelo_edit_financial_operand
+from .edit_value_grammar import ModeloEditValueGrammarV1
+from .work_amend_correction import correction_value_grammars
+from .work_form_service import modelo_form_snapshot
 from .work_lifecycle import get_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .workbench_projection import ModeloWorkbenchFormProjectionV1, project_modelo_workbench_form
@@ -92,6 +105,9 @@ from .workbench_read import (
     read_modelo_casilla_help,
     read_modelo_workbench_form,
 )
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 MODELO_WORK_FORM_OPERATION_DEFINITION_ID = "modelo.work.form"
 MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID = "modelo.work.casilla_help"
@@ -128,10 +144,14 @@ class ModeloCasillaHelpRequest(CredentialFreeOperationRequest):
 
 
 class ModeloEditRenewRequest(CredentialFreeOperationRequest):
-    """The baseline an edit session holds, to renew before review or submission."""
+    """The baseline an edit session holds, to renew before review or submission.
+
+    ``output_language`` is the language a refusal is said in.
+    """
 
     profile_id: UUID
     baseline: ModeloEditApplyBaselineV1
+    output_language: OutputLanguage
 
 
 class ModeloEditApplyPrerequisiteRequest(CredentialFreeOperationRequest):
@@ -143,6 +163,9 @@ class ModeloEditApplyPrerequisiteRequest(CredentialFreeOperationRequest):
     baseline_id: ModeloEditBaselineId
     calculation_revision_id: CalculationRevisionId | None
     registry_revision_id: _BoundedText
+    #: The language the prerequisite is said in; ``None`` asks for the prerequisite only, for a frontend that
+    #: words it from the form it already holds.
+    output_language: OutputLanguage | None = None
 
 
 # -- results ------------------------------------------------------------------
@@ -169,6 +192,8 @@ class ModeloEditRenewalProjectionV1(BaseModel):
     work_unit_id: str
     renewed_baseline: ModeloEditApplyBaselineV1 | None
     refusal: ModeloEditRefusedV1 | None
+    #: Why the renewal was refused, in the language the request named; ``None`` when it was renewed.
+    refusal_words: str | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -187,7 +212,8 @@ class ModeloEditTypedEntryV1(BaseModel):
     """One entry as the filer typed it, read through its address's grammar; never the text itself.
 
     A read entry carries the value in the form an edit intent takes it, with
-    what reading it normalised; an entry that cannot be read carries why.
+    what reading it normalised, and reads it back in the entry's language; an
+    entry that cannot be read carries why, also in words.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -196,20 +222,31 @@ class ModeloEditTypedEntryV1(BaseModel):
     value: ModeloEditWireScalar = None
     normalisations: tuple[ModeloEditNormalisation, ...] = ()
     refusal: ModeloEditParseRefusalV1 | None = None
+    #: The value the entry will be read as, written as its box shows it, in the entry's language.
+    value_text: str | None = None
+    #: Why the entry cannot be read, as one sentence in the entry's language.
+    refusal_words: str | None = None
 
     @classmethod
-    def from_outcome(cls, outcome: ModeloEditParseResultV1) -> ModeloEditTypedEntryV1:
-        """Mirror one parse outcome onto the wire."""
+    def from_outcome(
+        cls, outcome: ModeloEditParseResultV1, *, grammar: ModeloEditValueGrammarV1 | None, language: OutputLanguage
+    ) -> ModeloEditTypedEntryV1:
+        """Mirror one parse outcome onto the wire, said in ``language``."""
         if isinstance(outcome, ModeloEditParsedValueV1):
+            if grammar is None:
+                raise TypeError("a read entry was read through its address's grammar")
             return cls(
                 address=outcome.address,
                 value=wire_scalar_value(outcome.value),
                 normalisations=outcome.normalisations,
+                value_text=entry_read_back(
+                    outcome.value, data_type=grammar_data_type(grammar, outcome.address), language=language
+                ),
             )
         refusal = outcome.refusal
         if not isinstance(refusal, ModeloEditParseRefusalV1):
             raise TypeError("an entry is refused only by its address's grammar")
-        return cls(address=refusal.address, refusal=refusal)
+        return cls(address=refusal.address, refusal=refusal, refusal_words=edit_refusal_words(refusal, language))
 
 
 class ModeloEditPreflightProjectionV1(BaseModel):
@@ -219,6 +256,11 @@ class ModeloEditPreflightProjectionV1(BaseModel):
     through its address's grammar: the value it is, with what reading it
     normalised, or why it cannot be read. It is empty when nothing was typed
     and when the submission was refused before anything could be read.
+
+    ``findings`` are the check's findings the review lists, in the request's
+    language, and ``refusal_words`` says why the whole check was refused;
+    ``operator_entries_unknown`` says whether the filer's earlier entries could
+    not be read, which the review says in its own sentence.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -228,6 +270,9 @@ class ModeloEditPreflightProjectionV1(BaseModel):
     work_unit_id: str
     outcome: Annotated[ModeloEditPreflightEvaluatedV1 | ModeloEditRefusedV1, Field(discriminator="outcome")]
     parsed: tuple[ModeloEditTypedEntryV1, ...] = ()
+    findings: tuple[ModeloEditReviewFindingV1, ...] = ()
+    operator_entries_unknown: bool = False
+    refusal_words: str | None = None
 
 
 class ModeloEditApplyPrerequisiteV1(BaseModel):
@@ -238,6 +283,9 @@ class ModeloEditApplyPrerequisiteV1(BaseModel):
     casilla_id: CasillaId
     calculation_revision_id: str | None
     source_boxes: tuple[CasillaId, ...]
+    #: The prerequisite said in the language asked for, one sentence per line; ``None`` when none was asked
+    #: for or the form no longer shows the box.
+    words: str | None = None
 
 
 class ModeloEditApplyPrerequisiteProjectionV1(BaseModel):
@@ -408,11 +456,30 @@ class ModeloEditRenewExecutor:
                     else None
                 ),
                 refusal=renewal if isinstance(renewal, ModeloEditRefusedV1) else None,
+                refusal_words=(
+                    edit_refusal_words(renewal.refusal, payload.output_language)
+                    if isinstance(renewal, ModeloEditRefusedV1)
+                    else None
+                ),
             )
 
         return await _read(
             context, phase=MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID, task_name="modelo-edit-renew", read=read
         )
+
+
+def _correction_grammars(
+    submission: ModeloEditSubmissionV1, operation: PinnedAuthorityOperation
+) -> Mapping[CasillaId, ModeloEditValueGrammarV1] | None:
+    """The correction grammars of the baseline's revision, read only when an entry is typed for a correction."""
+    if not any(isinstance(lexeme.address, ModeloEditCorrectionAddressV1) for lexeme in submission.lexemes):
+        return None
+    baseline = submission.baseline
+    return correction_value_grammars(
+        modelo_form_snapshot(
+            operation, baseline.modelo, baseline.filing_year, baseline.period, baseline.law_selected_revision_id
+        )
+    )
 
 
 class ModeloEditPreflightExecutor:
@@ -447,22 +514,33 @@ class ModeloEditPreflightExecutor:
                 calculation_catalogue=ports.calculations.load(operation=operation),
                 tax_id_format=tax_id_format,
             )
+            corrections = _correction_grammars(submission, operation)
             parsed = (
                 ()
                 if isinstance(outcome, ModeloEditRefusedV1)
                 else tuple(
                     ModeloEditTypedEntryV1.from_outcome(
-                        parse_modelo_edit_lexeme(lexeme, baseline=baseline, tax_id_format=tax_id_format)
+                        parse_modelo_edit_lexeme(
+                            lexeme, baseline=baseline, tax_id_format=tax_id_format, correction_grammars=corrections
+                        ),
+                        grammar=entry_grammar(lexeme.address, baseline=baseline, correction_grammars=corrections),
+                        language=lexeme.entry_locale,
                     )
                     for lexeme in submission.lexemes
                 )
             )
+            language = payload.output_language
+            refused = outcome.refusal if isinstance(outcome, ModeloEditRefusedV1) else None
+            found = () if isinstance(outcome, ModeloEditRefusedV1) else outcome.findings
             return ModeloEditPreflightProjectionV1(
                 result_version=1,
                 profile_id=payload.profile_id,
                 work_unit_id=baseline.work_unit_id,
                 outcome=outcome,
                 parsed=parsed,
+                findings=review_findings(found, language),
+                operator_entries_unknown=operator_entries_unknown(found),
+                refusal_words=None if refused is None else edit_refusal_words(refused, language),
             )
 
         async with context.typed_financial_operand.consume(ModeloEditSubmissionV1) as submission:
@@ -486,6 +564,42 @@ class ModeloEditApplyPrerequisiteExecutor:
         self._ports_factory = ports_factory
         self._store = store
 
+    def _named(
+        self,
+        prerequisite: ModeloEditCalculationPrerequisiteV1,
+        payload: ModeloEditApplyPrerequisiteRequest,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+    ) -> ModeloEditApplyPrerequisiteV1:
+        ports = self._ports_factory(bucket_id, operation)
+        boxes = modelo_edit_prerequisite_source_boxes(
+            prerequisite,
+            bucket_id=bucket_id,
+            registry_revision_id=payload.registry_revision_id,
+            ports=ports,
+            operation=operation,
+        )
+        language = payload.output_language
+        words = (
+            None
+            if language is None
+            else read_prerequisite_words(
+                payload.work_unit_id,
+                prerequisite.casilla_id,
+                boxes,
+                bucket_id=bucket_id,
+                ports=ports,
+                operation=operation,
+                language=language,
+            )
+        )
+        return ModeloEditApplyPrerequisiteV1(
+            casilla_id=prerequisite.casilla_id,
+            calculation_revision_id=prerequisite.calculation_revision_id,
+            source_boxes=boxes,
+            words=words,
+        )
+
     async def execute(
         self, request: OperationRequest[ModeloEditApplyPrerequisiteRequest], context: OperationExecutorContext
     ) -> str:
@@ -507,21 +621,7 @@ class ModeloEditApplyPrerequisiteExecutor:
                 baseline_id=payload.baseline_id,
                 calculation_revision_id=payload.calculation_revision_id,
             )
-            named = (
-                None
-                if prerequisite is None
-                else ModeloEditApplyPrerequisiteV1(
-                    casilla_id=prerequisite.casilla_id,
-                    calculation_revision_id=prerequisite.calculation_revision_id,
-                    source_boxes=modelo_edit_prerequisite_source_boxes(
-                        prerequisite,
-                        bucket_id=bucket_id,
-                        registry_revision_id=payload.registry_revision_id,
-                        ports=self._ports_factory(bucket_id, operation),
-                        operation=operation,
-                    ),
-                )
-            )
+            named = None if prerequisite is None else self._named(prerequisite, payload, bucket_id, operation)
             return ModeloEditApplyPrerequisiteProjectionV1(
                 result_version=1, profile_id=payload.profile_id, work_unit_id=payload.work_unit_id, prerequisite=named
             )

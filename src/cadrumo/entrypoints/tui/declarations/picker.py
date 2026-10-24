@@ -90,7 +90,7 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
         self.query_one("#declaration-picker-title", Static).update(tr(title))
         hint = self.query_one("#declaration-picker-hint", Static)
         hint.display = self.modelo is not None and self.selected is None and not self.confirmation
-        hint.update(tr("workspace.declarations.list.new.period_selection_hint") if hint.display else "")
+        hint.update(tr("tui.declarations.list.new.period_selection_hint") if hint.display else "")
         self.query_one("#declaration-picker-all", Button).display = self.modelo is None and not self.confirmation
         # The first step has no filing address to create. Keep its two actions
         # within a narrow terminal even when Show all has a long translation.

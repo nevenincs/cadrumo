@@ -217,6 +217,18 @@ class ModeloEditBindingAddressV1(EditModel):
     binding_id: BindingId
 
 
+class ModeloEditCorrectionAddressV1(EditModel):
+    """A casilla's corrected value on a declaration recorded as filed, read for its amendment.
+
+    Only an entry typed for a correction is addressed this way, and only a
+    preflight reads it: a correction is never an edit intent, so no apply or
+    surface entry takes this address.
+    """
+
+    kind: Literal["correction"] = "correction"
+    casilla_id: CasillaId
+
+
 class ModeloEditExistingRowAddressV1(EditModel):
     """The application-issued canonical coordinate of one persisted repeated row."""
 
@@ -532,10 +544,10 @@ class ModeloEditNormalisation(StrEnum):
 
 
 type ModeloEditValueAddressV1 = Annotated[
-    ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1,
+    ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1 | ModeloEditCorrectionAddressV1,
     Field(discriminator="kind"),
 ]
-"""An address that takes one typed value: a casilla or a binding override."""
+"""An address that takes one typed value: a casilla, a binding override, or a filed casilla's correction."""
 
 
 class ModeloEditParsedValueV1(EditModel):
@@ -890,6 +902,7 @@ class ModeloDetailRowEditIntentV1(EditModel):
 def _intent_address_key(
     address: ModeloEditScalarAddressV1
     | ModeloEditBindingAddressV1
+    | ModeloEditCorrectionAddressV1
     | ModeloEditRowAddressV1
     | ModeloEditDetailRowAddressV1,
 ) -> tuple[str, str]:
@@ -897,6 +910,8 @@ def _intent_address_key(
         return ("scalar", address.casilla_id)
     if isinstance(address, ModeloEditBindingAddressV1):
         return ("binding_override", address.binding_id)
+    if isinstance(address, ModeloEditCorrectionAddressV1):
+        return ("correction", address.casilla_id)
     if isinstance(address, ModeloEditDetailRowAddressV1):
         return ("detail_row", f"{address.detail_row_kind}:{address.natural_key}")
     if isinstance(address, ModeloEditExistingRowAddressV1):
@@ -1006,6 +1021,7 @@ __all__ = [
     "ModeloEditBindingAddressV1",
     "ModeloEditBindingIntentKind",
     "ModeloEditCompatibilityRefusalV1",
+    "ModeloEditCorrectionAddressV1",
     "ModeloEditDetailRowAddressV1",
     "ModeloEditDetailRowIntentKind",
     "ModeloEditDomainRefusalV1",

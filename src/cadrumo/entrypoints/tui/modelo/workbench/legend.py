@@ -122,8 +122,8 @@ LEGEND_LOCALE_KEYS: Final[tuple[LegendGroup, ...]] = (
             LegendEntry(STALE_MARK, "workspace.modelo.legend.meaning.mark.stale", "R"),
             LegendEntry(DONE_MARK, "workspace.modelo.legend.meaning.mark.done"),
             LegendEntry(HERE_MARK, "workspace.modelo.legend.meaning.mark.here"),
-            LegendEntry(COLLAPSED_MARK, "workspace.modelo.legend.meaning.mark.collapsed"),
-            LegendEntry(EXPANDED_MARK, "workspace.modelo.legend.meaning.mark.expanded"),
+            LegendEntry(COLLAPSED_MARK, "tui.modelo.legend.meaning.mark.collapsed"),
+            LegendEntry(EXPANDED_MARK, "tui.modelo.legend.meaning.mark.expanded"),
         ),
     ),
 )
@@ -173,12 +173,12 @@ def on_screen_text(boxes: Iterable[WorkbenchMark], others: Iterable[WorkbenchMar
 
 def more_text() -> str:
     """The line that says the next ``?`` opens every symbol and key."""
-    return tr("workspace.modelo.legend.more")
+    return tr("tui.modelo.legend.more")
 
 
 def first_open_text() -> str:
     """The notice a filer sees the first time the workbench opens in a session."""
-    return tr("workspace.modelo.legend.first_open")
+    return tr("tui.modelo.legend.first_open")
 
 
 def _heading(text: str) -> Text:

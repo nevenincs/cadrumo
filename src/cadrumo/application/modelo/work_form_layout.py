@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
 
 from ...core.casilla_id import CasillaId
+from ...domain.calculations.registry.export_semantics import ExportDraftAttribute
 from ...domain.calculations.registry.form_context import form_context_choice, resolve_form_context_field
 from ...domain.calculations.registry.form_projection_fields import resolve_form_projection_fields
 from ...domain.calculations.registry.ids import BindingId
@@ -63,6 +64,7 @@ from .work_form_rates import (
 )
 from .work_form_records import saved_form_records
 from .work_form_sources import FIXED_BY_THE_FORM
+from .work_form_wording import context_value_text
 
 
 class LayoutWalker:
@@ -120,7 +122,7 @@ class LayoutWalker:
             unattributed=False,
             value=fixed,
             source=FIXED_BY_THE_FORM,
-            standing=field_standing(ModeloFormOrigin.INFORMATIONAL),
+            standing=field_standing(ModeloFormOrigin.INFORMATIONAL, field.blockers, recorded=self.context.filed),
         )
 
     def page(self, page: FormPageDefinition) -> ModeloFormPage:
@@ -185,7 +187,19 @@ class LayoutWalker:
             choice = form_context_choice(block, value)
             if choice is not None:
                 value = localized_heading(choice.heading_key, choice.official_heading, "Opción", language).text
-            return ModeloFormContextFieldBlock(id=block.id, label=label, value=value)
+            period = self.context.snapshot.filing_period
+            shows_period = (
+                owner.binding is None
+                and owner.draft_attribute is ExportDraftAttribute.PERIOD_CODE
+                and value is not None
+                and choice is None
+            )
+            return ModeloFormContextFieldBlock(
+                id=block.id,
+                label=label,
+                value=value,
+                value_text=context_value_text(value, language, period=period if shows_period else None),
+            )
         if isinstance(block, FormFieldBlock):
             if block.casilla_id is not None and block.casilla_id in self.seen:
                 return self.alias(block)

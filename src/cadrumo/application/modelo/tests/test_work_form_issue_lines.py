@@ -26,11 +26,12 @@ from ....domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
-from ..calculation_notes import RECORDS_REASONS, note_attention, what_locale_key
+from ..calculation_notes import CALCULATION_NOTE_ATTENTION, RECORDS_REASONS, note_attention, what_locale_key
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..finding_message_text import finding_message_text
 from ..source_policy import SourceSurface
+from ..work_form_header import attention_counts
 from ..work_form_issue_lines import DETAIL_LOCALE_KEYS, form_issue_lines, form_verdict
 from ..work_form_models import (
     ModeloFormAttention,
@@ -43,6 +44,7 @@ from ..work_form_models import (
     map_form_fields,
     revised_field,
 )
+from ..work_form_next_step import blocking_count, is_result_field
 from ..work_form_service import ModeloWorkFormLoadV1
 from ..workbench_projection import project_modelo_workbench_form, restore_modelo_workbench_form
 from ..workbench_read import ModeloWorkbenchFormReadV1
@@ -243,3 +245,81 @@ def test_the_public_read_carries_the_lines_and_verdict_in_the_forms_language(
     restored = restore_modelo_workbench_form(projection)
     assert (restored.issue_lines, restored.verdict) == (projection.issue_lines, projection.verdict)
     assert type(projection).model_validate_json(projection.model_dump_json()) == projection
+
+
+def _failed_results(form: ModeloWorkForm) -> ModeloWorkForm:
+    def change(field: ModeloFormField) -> ModeloFormField:
+        return (
+            revised_field(field, origin=ModeloFormOrigin.CALCULATION_FAILED) if is_result_field(form, field) else field
+        )
+
+    return map_form_fields(form, change)
+
+
+def _checked_notes() -> tuple[ModeloFormCalculationNote, ...]:
+    blocking = next(
+        reason for reason, attention in CALCULATION_NOTE_ATTENTION.items() if attention is ModeloFormAttention.BLOCKS
+    )
+    check = next(
+        reason for reason, attention in CALCULATION_NOTE_ATTENTION.items() if attention is ModeloFormAttention.CHECK
+    )
+    return (
+        ModeloFormCalculationNote(reason=check, attention=ModeloFormAttention.CHECK),
+        ModeloFormCalculationNote(reason=blocking, attention=ModeloFormAttention.BLOCKS),
+    )
+
+
+@pytest.mark.parametrize(("modelo", "period"), [("130", "1T"), ("303", "1T"), ("347", "0A")])
+@pytest.mark.parametrize("with_notes", [False, True])
+def test_every_block_and_check_the_header_counts_has_its_line(
+    operation: PinnedAuthorityOperation, modelo: str, period: str, with_notes: bool
+) -> None:
+    built = _failed_results(built_form(operation, modelo, 2026, period))
+    form = _with_issues(
+        built,
+        _finding(None, ModeloVerificationFindingKind.ADVISORY, ModeloVerificationFindingSeverity.WARNING),
+    )
+    if with_notes:
+        form = form.model_copy(update={"calculation_notes": _checked_notes()})
+
+    lines = form_issue_lines(form, OutputLanguage.EN)
+    counted = {count.level: count.count for count in attention_counts(form, OutputLanguage.EN, recorded=False)}
+
+    for level in (ModeloFormAttention.BLOCKS, ModeloFormAttention.CHECK):
+        assert sum(1 for line in lines if line.level is level) == counted.get(level, 0), level
+    assert counted.get(ModeloFormAttention.BLOCKS, 0) == blocking_count(form)
+    failed = [
+        field
+        for field in form.fields()
+        if field.origin is ModeloFormOrigin.CALCULATION_FAILED and is_result_field(form, field)
+    ]
+    if modelo == "130":
+        assert failed
+    for field in failed:
+        (line,) = [line for line in lines if line.address == field.address]
+        assert line.level is ModeloFormAttention.BLOCKS
+        assert line.box == (field.box or None)
+        assert line.message == tr("workspace.modelo.issues.failed_result", locale=OutputLanguage.EN.value)
+
+
+def test_a_failed_result_a_blocking_finding_already_names_is_not_listed_twice(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    built = _failed_results(built_form(operation, "130", 2026, "1T"))
+    (failed,) = [
+        field
+        for field in built.fields()
+        if field.origin is ModeloFormOrigin.CALCULATION_FAILED and is_result_field(built, field)
+    ]
+    assert isinstance(failed.address, ModeloFormCasillaAddressV1)
+    form = built.model_copy(
+        update={
+            "verification": VerificationCompletenessStatus.BLOCKED,
+            "issues": (ModeloFormIssue(finding=_finding(str(failed.address.casilla_id)), box=failed.box),),
+        }
+    )
+
+    lines = form_issue_lines(form, OutputLanguage.EN)
+
+    assert [line.level for line in lines] == [ModeloFormAttention.BLOCKS]
+    assert blocking_count(form) == 1

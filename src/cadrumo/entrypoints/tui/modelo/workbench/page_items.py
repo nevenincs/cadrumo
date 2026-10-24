@@ -27,7 +27,6 @@ from types import MappingProxyType
 from typing import Final
 
 from .....application.modelo.source_policy import SourceFamily
-from .....application.modelo.value_presentation import absent_value_text, format_casilla_value
 from .....application.modelo.work_form_models import (
     ModeloFormAttention,
     ModeloFormBindingInputsBlock,
@@ -41,15 +40,15 @@ from .....application.modelo.work_form_models import (
     ModeloFormOrigin,
     ModeloFormRepeatingBlock,
     ModeloFormSection,
+    ModeloFormStanding,
     ModeloFormText,
     ModeloFormTextDisclosure,
     ModeloWorkForm,
     address_key,
-    field_needs_filer,
     holds_zero,
     section_fields,
 )
-from .....application.modelo.work_form_wording import holds_nothing, shown_rate
+from .....application.modelo.work_form_wording import context_value_text, holds_nothing, shown_rate
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from .casilla_list_models import (
@@ -98,9 +97,6 @@ class WorkbenchFilter(StrEnum):
     AMOUNT = "amount"
 
 
-_MINE_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}
-)
 _RECORD_FAMILIES: Final[frozenset[SourceFamily]] = frozenset({SourceFamily.RECORDS, SourceFamily.REGISTERS})
 _FROM_SOURCE_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
@@ -246,14 +242,14 @@ def _shown(
     if key in staged:
         return True
     if mode is WorkbenchFilter.ATTENTION:
-        return field_needs_filer(field, recorded=page.recorded, applies=page.applies)
+        return field.standing is ModeloFormStanding.NEEDS_YOU
     if mode is WorkbenchFilter.RECORDS:
         return _from_records(field)
     if mode is WorkbenchFilter.CALCULATED:
         return field.origin is ModeloFormOrigin.CALCULATED
     if mode is WorkbenchFilter.AMOUNT:
         return _holds_amount(field)
-    return field.origin in _MINE_ORIGINS
+    return field.filers_own
 
 
 def _entry(
@@ -510,15 +506,10 @@ def _section_items(
             items.extend(_grid_items(block, staged, mode, page))
         elif isinstance(block, ModeloFormContextFieldBlock):
             if mode is WorkbenchFilter.ALL:
-                language = OutputLanguage(output_language())
                 value = (
-                    absent_value_text(language)
-                    if block.value is None
-                    else format_casilla_value(
-                        block.value,
-                        data_type="text",
-                        language=language,
-                    )
+                    block.value_text
+                    if block.value_text is not None
+                    else context_value_text(block.value, OutputLanguage(output_language()))
                 )
                 items.append(CasillaListNote(f"{block.label.text}: {value}", indent=1))
         elif mode is WorkbenchFilter.ALL:

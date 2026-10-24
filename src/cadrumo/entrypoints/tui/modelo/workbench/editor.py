@@ -63,6 +63,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormOrigin,
     ModeloFormScalar,
 )
+from .....application.modelo.work_form_typing_effect import TYPED_EDITABILITIES
 from .....application.modelo.work_form_wording import editability_text
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
@@ -76,7 +77,7 @@ from .dialog_width import fit_dialog_width
 from .ports import WorkbenchChangeKind, WorkbenchParsed, WorkbenchParseOutcome, WorkbenchRefused
 from .sources import OpenSourceSurface, surface_target
 from .status_bar import StatusBar
-from .vocabulary import TYPED_EDITABILITIES, origin_text
+from .vocabulary import origin_text
 
 if TYPE_CHECKING:
     from .header import StatusLine
@@ -455,14 +456,14 @@ class CasillaEditorPanel(Vertical):
     def _keys_text(self) -> str | None:
         if not self.read_only:
             return tr(
-                "workspace.modelo.editor.keys",
+                "tui.modelo.editor.keys",
                 save_next=tr("workspace.modelo.editor.save_next"),
                 save=tr("workspace.modelo.editor.save"),
             )
         if self._open_area is None:
             return None
         return tr(
-            "workspace.modelo.editor.open_keys",
+            "tui.modelo.editor.open_keys",
             open=self._open_label(self._open_area),
             back=tr("workspace.modelo.key.back"),
         )
@@ -576,7 +577,7 @@ class CasillaEditorPanel(Vertical):
         readback.display = bool(lexeme)
         self._parsed = None
         if self._confirming(lexeme):
-            readback.update(tr("workspace.modelo.editor.confirm_hint", value=self._current()))
+            readback.update(tr("tui.modelo.editor.confirm_hint", value=self._current()))
             readback.add_class("-confirm")
             self._allow_keep(True)
             return

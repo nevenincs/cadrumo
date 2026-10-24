@@ -48,6 +48,7 @@ from .edit_apply_scalar_contracts import ModeloEditWireScalar
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import ModeloEditAdmittedV1, ModeloEditRefusedV1
 from .source_policy import SourceFamily
+from .work_form_export_offer import ModeloFormExportOffer, ModeloFormReceipt
 from .work_form_header import ModeloFormHeader
 from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict
 from .work_form_models import (
@@ -75,6 +76,7 @@ from .work_form_models import (
 )
 from .work_form_next_step import ModeloFormNextStep
 from .work_form_service import ModeloWorkFormLoadV1
+from .work_form_typing_effect import ModeloFormTypingEffect
 from .work_review import ModeloWorkProgress
 from .workbench_read import ModeloWorkbenchFormReadV1
 
@@ -169,6 +171,7 @@ class PublicModeloFormField(BaseModel):
     editability_words: str | None
     value_text: str | None
     restorable: bool
+    filers_own: bool
     confirm_value: ModeloEditWireScalar
 
 
@@ -295,6 +298,7 @@ class PublicModeloFormPage(BaseModel):
     applies: bool | None
     sections: tuple[PublicModeloFormSection, ...]
     counts: ModeloFormCounts
+    applicability_words: str | None
 
 
 class PublicModeloFormUnplacedField(BaseModel):
@@ -352,6 +356,7 @@ class PublicModeloWorkForm(BaseModel):
     last_export: ModeloFormExport | None
     edit_closure: ModeloFormEditClosure | None
     modelo_title: str | None
+    modelo_name: str | None
     modelo_number: str | None
     period_words: str | None
 
@@ -415,6 +420,12 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
     asks_modelo_390: bool
     registry_revision_id: str
     tax_id_format: PublicSpanishTaxIdFormat
+    #: What typing a value over each box the filer can type on does, in words, by the box's address.
+    typing_effects: tuple[ModeloFormTypingEffect, ...] = ()
+    #: What exporting offers: the artefacts, whether elections are asked and with which choices, the file format.
+    export_offer: ModeloFormExportOffer | None = None
+    #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
+    receipt: ModeloFormReceipt | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -487,6 +498,8 @@ def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchForm
         asks_modelo_390=projection.asks_modelo_390,
         registry_revision_id=projection.registry_revision_id,
         tax_id_format=_restore_tax_id_format(projection.tax_id_format),
+        export_offer=projection.export_offer,
+        receipt=projection.receipt,
     )
 
 
@@ -517,10 +530,14 @@ def project_modelo_workbench_form(
         asks_modelo_390=read.asks_modelo_390,
         registry_revision_id=read.registry_revision_id,
         tax_id_format=_project_tax_id_format(read.tax_id_format),
+        typing_effects=read.typing_effects,
+        export_offer=read.export_offer,
+        receipt=read.receipt,
     )
     restored = _restore(projection)
     if (
         restored != read
+        or restored.typing_effects != projection.typing_effects
         or restored.next_step != projection.next_step
         or restored.header != projection.header
         or restored.issue_lines != projection.issue_lines

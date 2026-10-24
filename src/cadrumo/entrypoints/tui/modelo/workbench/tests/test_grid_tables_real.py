@@ -35,6 +35,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormStanding,
     ModeloWorkForm,
     address_key,
+    revised_field,
 )
 from ......application.modelo.work_form_service import modelo_form_snapshot
 from ......application.modelo.work_review import (
@@ -148,7 +149,7 @@ def _with_field(form: ModeloWorkForm, box: str, update: Mapping[str, object]) ->
     """The form with one box's field changed, everything else as the read model built it."""
 
     def changed(field: ModeloFormField) -> ModeloFormField:
-        return field.model_copy(update=dict(update)) if field.box == box else field
+        return revised_field(field, **update) if field.box == box else field
 
     pages = []
     for page in form.pages:

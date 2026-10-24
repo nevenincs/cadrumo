@@ -101,7 +101,7 @@ async def test_each_file_state_reads_in_the_header_and_leads_f8_to_its_one_step(
             app.exit(None)
 
         def next_words(key: str, action: str, **values: object) -> str:
-            return tr("workspace.modelo.next_line", action=tr(f"workspace.modelo.next.{action}", **values), key=key)
+            return tr("tui.modelo.next_line", action=tr(f"workspace.modelo.next.{action}", **values), key=key)
 
         if state == "no-file":
             assert not shown
@@ -117,7 +117,7 @@ async def test_each_file_state_reads_in_the_header_and_leads_f8_to_its_one_step(
         else:
             assert shown and warned
             assert file_colour == warning, "a file that no longer matches reads as a warning"
-            assert file_text == tr("workspace.modelo.header.file_out_of_date", date=day, key="e")
+            assert file_text == f"{tr('workspace.modelo.header.file_out_of_date', date=day)} [e]"
             assert next_line == next_words("e", "export_again", date=day)
             assert after_f8 is screen, "F8 neither records the filing nor asks to"
             assert notice == tr("workspace.modelo.record.refused_file_out_of_date", date=day)

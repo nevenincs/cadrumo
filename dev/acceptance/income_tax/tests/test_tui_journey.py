@@ -259,7 +259,7 @@ def test_the_next_step_key_is_refused_while_the_workbench_offers_another_step() 
     """F8 runs whatever step is offered; pressing it while filling is offered would not verify."""
     from cadrumo.core.i18n.render import tr
 
-    fill_offered = tr("workspace.modelo.next_line", action=tr("workspace.modelo.next.fill", count=2), key="n")
+    fill_offered = tr("tui.modelo.next_line", action=tr("workspace.modelo.next.fill", count=2), key="n")
 
     async def scenario() -> None:
         app = _WidgetsApp(Static("", id="wb-notice"), Static(fill_offered, id="wb-next"))
@@ -439,7 +439,7 @@ def test_the_first_open_greeting_is_no_earlier_notice() -> None:
 
     from ..tui_readback import workbench_notice
 
-    greeting = tr("workspace.modelo.legend.first_open")
+    greeting = tr("tui.modelo.legend.first_open")
 
     async def scenario() -> str:
         app = _WidgetsApp(Static(greeting, id="wb-notice"))
@@ -454,7 +454,7 @@ def test_the_first_open_greeting_is_no_earlier_notice() -> None:
 def test_the_record_step_is_refused_while_the_workbench_offers_verifying() -> None:
     from cadrumo.core.i18n.render import tr
 
-    verify_offered = tr("workspace.modelo.next_line", action=tr("workspace.modelo.next.verify"), key="F8")
+    verify_offered = tr("tui.modelo.next_line", action=tr("workspace.modelo.next.verify"), key="F8")
 
     async def scenario() -> None:
         app = _WidgetsApp(Static("", id="wb-notice"), Static(verify_offered, id="wb-next"))

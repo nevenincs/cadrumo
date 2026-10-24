@@ -504,6 +504,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         what_to_do_locale_key,
     )
     from cadrumo.application.modelo.edit_models import ModeloEditParseReason
+    from cadrumo.application.modelo.edit_review_wording import WORDED_FINDING_CODES
     from cadrumo.application.modelo.source_policy import SourceFamily
     from cadrumo.application.modelo.work_form_models import (
         ModeloFormEditability,
@@ -512,17 +513,21 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         ModeloFormTextDisclosure,
     )
     from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction
+    from cadrumo.application.modelo.work_form_typing_effect import TYPING_EFFECTS
     from cadrumo.application.modelo.work_form_wording import (
         NOT_WRITABLE_REASONS,
         PERIOD_WORD_NAMES,
         SOURCE_WORDED_ORIGINS,
     )
+    from cadrumo.core.export_layout_format import ExportLayoutFormat
+    from cadrumo.domain.modelos.calculation_revision_amendment import (
+        CalculationRevisionAmendmentKind,
+        M303RectificativaMotive,
+    )
     from cadrumo.entrypoints.tui.modelo.workbench.editor import EDITOR_HINT_KINDS
-    from cadrumo.entrypoints.tui.modelo.workbench.factory import WORDED_FINDING_CODES
     from cadrumo.entrypoints.tui.modelo.workbench.page_items import WorkbenchFilter
     from cadrumo.entrypoints.tui.modelo.workbench.progress import WorkbenchStep
     from cadrumo.entrypoints.tui.modelo.workbench.result import ResultGroup
-    from cadrumo.entrypoints.tui.modelo.workbench.review import REVIEW_EFFECTS
     from cadrumo.entrypoints.tui.modelo.workbench.session import StageRefusal
 
     root = "workspace.modelo"
@@ -548,7 +553,10 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         ("stage_refused", _enum_values(StageRefusal)),
         ("editor.placeholder", EDITOR_HINT_KINDS),
         ("editor.format", EDITOR_HINT_KINDS),
-        ("review.effect", REVIEW_EFFECTS),
+        ("review.effect", TYPING_EFFECTS),
+        ("amend.kind_help", _enum_values(CalculationRevisionAmendmentKind)),
+        ("amend.motive", _enum_values(M303RectificativaMotive)),
+        ("export.file_format", _enum_values(ExportLayoutFormat)),
         ("review.finding", WORDED_FINDING_CODES),
         ("result_diff.group", _enum_values(ResultGroup)),
         ("result_diff.count", _enum_values(ResultGroup)),

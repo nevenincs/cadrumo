@@ -50,8 +50,9 @@ from .....application.modelo.work_form_models import (
     address_key,
     section_fields,
 )
-from .....application.modelo.work_form_next_step import inapplicable_pages
+from .....application.modelo.work_form_next_step import ModeloFormNextAction, inapplicable_pages
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
+from .....application.modelo.work_form_wording import does_not_apply_words
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from .....core.logging import get_logger
@@ -88,6 +89,7 @@ from .ports import (
 from .screen_confirmation import WorkbenchConfirmationMixin
 from .screen_constants import (
     _GREETED,
+    _NEXT_KEYS,
 )
 from .screen_editor import WorkbenchEditorMixin
 from .screen_footer import WorkbenchFooterMixin
@@ -107,7 +109,6 @@ from .vocabulary import (
     HERE_MARK,
     WorkbenchMark,
 )
-from .wording import does_not_apply_text
 
 
 class ModeloWorkbenchScreen(
@@ -422,7 +423,7 @@ class ModeloWorkbenchScreen(
             return
         load = self._load
         if load is None or load.form.calculation_revision_id is None:
-            self._notice(tr("workspace.modelo.export.verify_first"))
+            self._notice(f"{tr('workspace.modelo.export.verify_first')} [{_NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
             return
         if self._session.dirty:
             self._filing_withheld()
@@ -620,7 +621,7 @@ class ModeloWorkbenchScreen(
 
     def _not_applying_text(self) -> str:
         form = self.form
-        return "" if form is None else does_not_apply_text(form.period)
+        return "" if form is None else does_not_apply_words(form.period, self._language)
 
     def _first_attention(self) -> tuple[int, AddressKey] | None:
         """The first box that needs the filer, on a page that applies this period; none once recorded as filed."""

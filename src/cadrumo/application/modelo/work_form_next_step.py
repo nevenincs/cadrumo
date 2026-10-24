@@ -16,9 +16,17 @@ the AEAT, and recording once a file made from the current calculation exists;
 a file made from an earlier calculation is to be created again, never recorded.
 
 What a page that does not apply this period holds is never to do: its missing
-and assumed boxes are not counted. Changes a frontend holds unapplied come
-before everything else, so it offers :attr:`ModeloFormNextAction.APPLY`
-itself; the read model never states that action.
+and assumed boxes are not counted. Once a filing is recorded, the one step
+left is adding its AEAT receipt until the receipt is verified; recording the
+filing sends nothing to the AEAT, so the receipt is what shows the AEAT holds
+it. A frontend that cannot take a receipt shows the declaration as recorded.
+
+Two steps come from what only a frontend holds, so the read model never states
+them and each frontend adds them the same way. Changes held unapplied come
+before everything else: that frontend offers :attr:`ModeloFormNextAction.APPLY`.
+An apply refused because a value it would keep needs its source fixed first is
+retained by the worker for that frontend's own session, and while its changes
+still stand the step is resolving it, as :func:`held_prerequisite_step` says.
 """
 
 from __future__ import annotations
@@ -89,6 +97,10 @@ class ModeloFormNextStep(BaseModel):
     recorded_at: datetime | None = None
     #: When the latest file for the AEAT was created, once one was.
     file_created_at: datetime | None = None
+    #: For :attr:`ModeloFormNextAction.RECORDED`, whether the recorded filing's AEAT receipt is still to be
+    #: added, so that is the step left where a frontend can take a receipt; ``False`` when it is verified or
+    #: the read did not say.
+    receipt_to_add: bool = False
 
 
 def inapplicable_pages(form: ModeloWorkForm) -> frozenset[str]:
@@ -157,6 +169,24 @@ def is_result_field(form: ModeloWorkForm, field: ModeloFormField) -> bool:
     return address.casilla_id == settling or address.casilla_id in form.result_addresses
 
 
+def failed_results(form: ModeloWorkForm) -> tuple[ModeloFormField, ...]:
+    """The result boxes the calculation could not produce that no blocking finding or note already names.
+
+    Each blocks filing on its own: the counts count it once, and the check view
+    lists it as its own line.
+    """
+    named = {issue.box for issue in form.issues if issue.attention is ModeloFormAttention.BLOCKS and issue.box} | {
+        note.box for note in form.blocking_calculation_notes if note.box is not None
+    }
+    return tuple(
+        field
+        for field in result_fields(form).values()
+        if field.origin is ModeloFormOrigin.CALCULATION_FAILED
+        and field.box not in named
+        and is_result_field(form, field)
+    )
+
+
 def blocking_count(form: ModeloWorkForm) -> int:
     """How many things block filing: the check's blocking findings, the calculation's blocking notes, and failed boxes.
 
@@ -164,24 +194,19 @@ def blocking_count(form: ModeloWorkForm) -> int:
     finding nor a note already names it. The chips, the next action and the
     gate on the file and the recording all count with this.
     """
-    blocking = [issue for issue in form.issues if issue.attention is ModeloFormAttention.BLOCKS]
-    notes = form.blocking_calculation_notes
-    named = {issue.box for issue in blocking if issue.box is not None} | {
-        note.box for note in notes if note.box is not None
-    }
-    failed = sum(
-        1
-        for field in result_fields(form).values()
-        if field.origin is ModeloFormOrigin.CALCULATION_FAILED
-        and field.box not in named
-        and is_result_field(form, field)
-    )
-    return len(blocking) + len(notes) + failed
+    blocking = sum(1 for issue in form.issues if issue.attention is ModeloFormAttention.BLOCKS)
+    return blocking + len(form.blocking_calculation_notes) + len(failed_results(form))
 
 
 def confirm_count(form: ModeloWorkForm) -> int:
     """How many values wait for the filer to confirm: the assumed values on pages that apply."""
     return to_do_counts(form).default_to_confirm
+
+
+def check_count(form: ModeloWorkForm) -> int:
+    """How many things are worth checking: the check's warnings and the calculation's notes at that level."""
+    findings = sum(1 for issue in form.issues if issue.attention is ModeloFormAttention.CHECK)
+    return findings + sum(1 for note in form.calculation_notes if note.attention is ModeloFormAttention.CHECK)
 
 
 def _record_casillas(form: ModeloWorkForm) -> frozenset[str]:
@@ -260,23 +285,38 @@ def registry_grade_refusal(admission: ModeloEditAdmissionResultV1) -> bool:
     )
 
 
-def form_next_step(form: ModeloWorkForm, *, verified: bool, filed: bool) -> ModeloFormNextStep:
+def form_next_step(
+    form: ModeloWorkForm, *, verified: bool, filed: bool, receipt_confirmed: bool | None = None
+) -> ModeloFormNextStep:
     """The one action the form offers next, from its own facts and its lifecycle.
 
-    A declaration recorded as filed is done whatever its form still marks. When
-    nothing blocks and only values are missing, the next action is filling them
-    in, never resolving what blocks; where findings alone name those values,
-    the findings list leads to them.
+    A declaration recorded as filed is done whatever its form still marks; its
+    receipt is still to be added while ``receipt_confirmed`` is ``False``, and
+    ``None`` says nothing about it. When nothing blocks and only values are
+    missing, the next action is filling them in, never resolving what blocks;
+    where findings alone name those values, the findings list leads to them.
     """
     action, count, findings_lead = _next(form, verified=verified, filed=filed)
+    recorded = action is ModeloFormNextAction.RECORDED
     return ModeloFormNextStep(
         action=action,
         count=count,
         findings_lead=findings_lead,
-        recorded_at=(
-            form.filing.recorded_at if action is ModeloFormNextAction.RECORDED and form.filing is not None else None
-        ),
+        recorded_at=form.filing.recorded_at if recorded and form.filing is not None else None,
         file_created_at=None if form.last_export is None else form.last_export.exported_at,
+        receipt_to_add=recorded and receipt_confirmed is False,
+    )
+
+
+def held_prerequisite_step(step: ModeloFormNextStep) -> ModeloFormNextStep:
+    """The next step while an apply's retained prerequisite still stands: resolving it, from the findings.
+
+    The worker holds the prerequisite for the frontend session whose apply was
+    refused, so only that frontend knows it stands; it counts as the one thing
+    that blocks, and the findings list, which names it, leads there.
+    """
+    return step.model_copy(
+        update={"action": ModeloFormNextAction.RESOLVE, "count": 1, "findings_lead": True, "receipt_to_add": False}
     )
 
 
@@ -331,8 +371,11 @@ __all__ = [
     "applicable_fields",
     "awaiting_the_check",
     "blocking_count",
+    "check_count",
     "confirm_count",
+    "failed_results",
     "form_next_step",
+    "held_prerequisite_step",
     "inapplicable_pages",
     "is_result_field",
     "missing_count",

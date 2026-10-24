@@ -41,8 +41,13 @@ from textual.content import Content
 from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Static
 
-from .....application.modelo.source_policy import SourceFamily
-from .....application.modelo.work_form_wording import period_words
+from .....application.modelo.work_form_typing_effect import (
+    CLEAR_EFFECT_LOCALE_KEY,
+    RESTORE_EFFECT_LOCALE_KEY,
+    ModeloFormDisplacement,
+    typing_effect_key,
+    typing_effect_words,
+)
 from .....core.i18n.render import tr
 from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
@@ -50,7 +55,7 @@ from .bulk_confirm import TickBox
 from .dialog_width import fit_dialog_width
 from .issue_scale import blocks_marked
 from .ports import WorkbenchChangeKind
-from .session import Displacement, StagedChange
+from .session import StagedChange
 from .sources import BOX_LIST_LINES
 from .status_bar import StatusBar
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, WorkbenchMark
@@ -75,17 +80,8 @@ class ReviewNote:
     blocking: bool
 
 
-_NAMED_FILING: Final[str] = "named_filing"
 _FRAME: Final[int] = 4
 """Cells a dialog's border and padding take on each side, for a first estimate of its paragraph width."""
-REVIEW_EFFECTS: Final[tuple[str, ...]] = (
-    "clear",
-    "restore",
-    *(f"set_{item.value}" for item in Displacement),
-    *(f"replaces_{family.value}" for family in SourceFamily),
-    f"replaces_{_NAMED_FILING}",
-)
-"""Every effect the review can state for a change; a replaced source is named by its family."""
 _NOTE_MARKS: Final[Mapping[bool, WorkbenchMark]] = {True: BLOCKS_MARK, False: CHECK_MARK}
 """A finding that refuses the changes blocks; any other is worth checking, marked as every surface marks it."""
 _AND_MORE_LOCALE_KEY: Final[str] = "workspace.modelo.review.and_more"
@@ -93,37 +89,20 @@ _NAMED_BOXES_UP_TO: Final[int] = 20
 """Past this many boxes a list of their numbers stops helping; the sections that hold them are named instead."""
 
 
-def _effect_key(effect: str) -> str:
-    return f"workspace.modelo.review.effect.{effect}"
-
-
 def change_effect_key(change: StagedChange) -> str:
-    """The catalogue key saying in words what one change does.
-
-    A value that replaces a source says which kind of place that value came
-    from, and which declaration when it was carried from exactly one; the key
-    for one earlier declaration takes ``{modelo}`` and ``{period}``.
-    """
+    """The catalogue key saying in words what one change does; a typed value's is its field's."""
     if change.kind is WorkbenchChangeKind.CLEAR:
-        return _effect_key("clear")
+        return CLEAR_EFFECT_LOCALE_KEY
     if change.kind is WorkbenchChangeKind.RESTORE:
-        return _effect_key("restore")
-    source = change.field.source
-    if change.displaces is Displacement.SOURCE and source is not None:
-        if source.family is SourceFamily.EARLIER_FILINGS and len(source.earlier_filings) == 1:
-            return _effect_key(f"replaces_{_NAMED_FILING}")
-        return _effect_key(f"replaces_{source.family.value}")
-    return _effect_key(f"set_{change.displaces.value}")
+        return RESTORE_EFFECT_LOCALE_KEY
+    return typing_effect_key(change.field)
 
 
 def change_effect_text(change: StagedChange) -> str:
     """Say in words what one change does, naming the source a replaced value came from."""
-    key = change_effect_key(change)
-    source = change.field.source
-    if key == _effect_key(f"replaces_{_NAMED_FILING}") and source is not None:
-        filing = source.earlier_filings[0]
-        return tr(key, modelo=filing.modelo, period=period_words(filing.period))
-    return tr(key)
+    if change.kind is WorkbenchChangeKind.SET:
+        return typing_effect_words(change.field)
+    return tr(change_effect_key(change))
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,7 +191,8 @@ def change_line(change: StagedChange) -> str:
 
 def _displacing_count(changes: tuple[StagedChange, ...]) -> int:
     return sum(
-        change.kind is WorkbenchChangeKind.SET and change.displaces in {Displacement.SOURCE, Displacement.CALCULATION}
+        change.kind is WorkbenchChangeKind.SET
+        and change.displaces in {ModeloFormDisplacement.SOURCE, ModeloFormDisplacement.CALCULATION}
         for change in changes
     )
 
@@ -459,7 +439,6 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
 
 
 __all__ = [
-    "REVIEW_EFFECTS",
     "EditReviewScreen",
     "ReviewDecision",
     "ReviewNote",

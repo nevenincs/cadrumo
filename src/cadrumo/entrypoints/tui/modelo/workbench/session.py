@@ -38,22 +38,17 @@ from .....application.modelo.work_form_models import (
     confirmable,
     edit_address,
 )
+from .....application.modelo.work_form_typing_effect import (
+    TYPED_EDITABILITIES,
+    ModeloFormDisplacement,
+    field_displacement,
+)
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .casilla_list_models import AddressKey, CasillaListEntry
 from .casilla_list_values import value_text
 from .page_items import StagedDisplay
 from .ports import WorkbenchChange, WorkbenchChangeKind
-from .vocabulary import TYPED_EDITABILITIES
-
-
-class Displacement(StrEnum):
-    """What a staged change replaces, for the review's warnings."""
-
-    NOTHING = "nothing"
-    SOURCE = "source"
-    CALCULATION = "calculation"
-    FILER = "filer"
 
 
 class StageRefusal(StrEnum):
@@ -74,7 +69,7 @@ class StagedChange:
     value: ModeloFormScalar
     text: str
     previous_text: str
-    displaces: Displacement
+    displaces: ModeloFormDisplacement
     #: The box read differently when the declaration was read again after the change was staged.
     before_changed: bool = False
 
@@ -97,16 +92,6 @@ class Rebase:
     changed: tuple[StagedChange, ...] = ()
     #: No longer possible, or no longer needed, on the declaration as it stands.
     dropped: tuple[StagedChange, ...] = ()
-
-
-def _displacement(field: ModeloFormField) -> Displacement:
-    if field.origin in {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.OVERRIDES_SOURCE}:
-        return Displacement.SOURCE
-    if field.origin is ModeloFormOrigin.CALCULATED:
-        return Displacement.CALCULATION
-    if field.origin is ModeloFormOrigin.ENTERED:
-        return Displacement.FILER
-    return Displacement.NOTHING
 
 
 class WorkbenchEditSession:
@@ -172,7 +157,7 @@ class WorkbenchEditSession:
             value=value,
             text=display,
             previous_text=self._before(field),
-            displaces=_displacement(field),
+            displaces=field_displacement(field),
         )
         return None
 
@@ -207,7 +192,7 @@ class WorkbenchEditSession:
             value=None,
             text=tr("workspace.modelo.staged.clear"),
             previous_text=self._before(field),
-            displaces=Displacement.FILER,
+            displaces=ModeloFormDisplacement.FILER,
         )
         return None
 
@@ -218,7 +203,7 @@ class WorkbenchEditSession:
             ModeloFormEditability.EDITABLE_OVERRIDE,
         }:
             return StageRefusal.NOT_EDITABLE
-        if field.origin not in {ModeloFormOrigin.OVERRIDES_SOURCE, ModeloFormOrigin.ENTERED}:
+        if not field.restorable:
             return StageRefusal.NOTHING_TO_RESTORE
         self._changes[address_key(field.address)] = StagedChange(
             field=field,
@@ -226,7 +211,7 @@ class WorkbenchEditSession:
             value=None,
             text=tr("workspace.modelo.staged.restore"),
             previous_text=self._before(field),
-            displaces=Displacement.FILER,
+            displaces=ModeloFormDisplacement.FILER,
         )
         return None
 
@@ -291,4 +276,4 @@ class WorkbenchEditSession:
         return tuple(change.change for change in self._changes.values())
 
 
-__all__ = ["Displacement", "Rebase", "StageRefusal", "StagedChange", "WorkbenchEditSession"]
+__all__ = ["Rebase", "StageRefusal", "StagedChange", "WorkbenchEditSession"]

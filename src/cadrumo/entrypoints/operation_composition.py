@@ -155,6 +155,7 @@ def _build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthorit
         borrador_snapshots=build_borrador_100_snapshot_repository(bucket_id=bucket_id),
         holiday_territory=partial(_profile_holiday_territory, bucket_id, operation),
         bucket_events=ports.bucket_event_repository,
+        filings=ports.filing_repository,
     )
 
 

@@ -20,7 +20,7 @@ import pytest
 from rich.cells import cell_len
 from textual.widgets import Static
 
-from ......application.modelo.work_form_header import ModeloFormDeadlineTone
+from ......application.modelo.work_form_header import ModeloFormAttentionCount, ModeloFormDeadlineTone
 from ......application.modelo.work_form_models import (
     ModeloFormAttention,
     ModeloFormOrigin,
@@ -35,6 +35,8 @@ from ......core.result_disposition import ResultDisposition
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
 from ..header import (
+    AttentionChip,
+    StatusLine,
     attention_chips,
     deadline_help,
     deadline_view,
@@ -450,3 +452,27 @@ def test_a_loss_carried_forward_keeps_its_words_whole_dropping_the_box_first(
     assert line.result in (view.text, view.short_text), "the words that say the loss carries forward are never cut"
     assert ModeloFormAttention.BLOCKS in [chip.level for chip in line.chips]
     assert cell_len(line.result) <= width and widest <= width
+
+
+def _counted(level: ModeloFormAttention, count: int, words: str) -> AttentionChip:
+    return AttentionChip(ModeloFormAttentionCount(level=level, count=count, words=words))
+
+
+def test_a_narrow_status_line_gives_up_chip_words_before_any_chip() -> None:
+    chips = (
+        _counted(ModeloFormAttention.BLOCKS, 1, "blocking: 1"),
+        _counted(ModeloFormAttention.CONFIRM, 1, "to confirm: 1"),
+        _counted(ModeloFormAttention.CHECK, 2, "to check: 2"),
+    )
+    line = StatusLine(None, chips)
+    full = cell_len(line.text())
+
+    fitted = line.fitted(full - 1)
+    briefest = line.fitted(cell_len("▲ 1   ◐ 1   ◆ 2"))
+
+    # The least urgent level keeps its glyph and count first; every level still reads.
+    assert fitted.text() == "▲ blocking: 1   ◐ to confirm: 1   ◆ 2"
+    assert briefest.text() == "▲ 1   ◐ 1   ◆ 2"
+    assert line.fitted(full).text() == line.text()
+    # Only a line too narrow even for the bare counts drops the least urgent level.
+    assert line.fitted(cell_len("▲ 1   ◐ 1")).text() == "▲ 1   ◐ 1"

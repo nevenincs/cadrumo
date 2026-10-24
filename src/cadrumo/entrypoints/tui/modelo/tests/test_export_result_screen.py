@@ -34,6 +34,7 @@ from .....application.modelo.operation_definitions import (
     build_modelo_export_registration,
 )
 from .....application.modelo.work_export_contracts import ModeloExportSettledResult
+from .....application.modelo.work_form_export_offer import EXPORT_ARTEFACT_LOCALE_KEYS
 from .....application.operations.models import OperationIdentity, OperationTerminalReceipt
 from .....core.calculation_report_format import CalculationReportDocumentFormat
 from .....core.config import override_settings
@@ -48,7 +49,6 @@ from ....adapter_composition import build_modelo_export_ports
 from ...components.widgets import ContentDataTable
 from ...tests.settling import settle
 from ..export_result import (
-    EXPORT_ARTEFACT_LOCALE_KEYS,
     EXPORT_COMPLETENESS_LOCALE_KEYS,
     EXPORT_EVIDENCE_STATUS_LOCALE_KEYS,
     EXPORT_RESULT_ROW_LOCALE_KEYS,

@@ -43,11 +43,9 @@ from .....application.modelo.source_policy import SourceFamily
 from .....application.modelo.work_form_models import (
     ASKS_FOR_A_VALUE,
     ORIGIN_STANDINGS,
-    ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
     ModeloFormStanding,
-    field_needs_filer,
 )
 from .....application.modelo.work_form_wording import origin_words, origin_words_key, set_by_form
 from .....core.external_constants import OutputLanguage
@@ -313,12 +311,11 @@ def _field_attention_increments(
     *,
     asked: bool,
     recorded: bool,
-    applies: bool,
 ) -> tuple[int, str | None, int, int]:
     blocks = int(bool(item.blockers) and not recorded)
     bucket = _ORIGIN_TALLIES.get(item.origin)
     counted_bucket = bucket if bucket is not None and (asked or item.origin not in ASKS_FOR_A_VALUE) else None
-    pending = int(field_needs_filer(item, recorded=recorded, applies=applies))
+    pending = int(item.standing is ModeloFormStanding.NEEDS_YOU)
     checked = 0 if item.box is None else checked_boxes.get(item.box, 0)
     return blocks, counted_bucket, pending, checked
 
@@ -347,7 +344,6 @@ def field_counts(
             checks,
             asked=asked,
             recorded=recorded,
-            applies=applies,
         )
         tallies["blocks"] += blocks
         if bucket is not None:
@@ -355,16 +351,6 @@ def field_counts(
         pending += pending_boxes
         check += checked_count
     return AttentionCounts(**tallies, check=check, pending=pending)
-
-
-#: Editabilities under which the filer may stage a typed value on the field itself.
-TYPED_EDITABILITIES: Final[frozenset[ModeloFormEditability]] = frozenset(
-    {
-        ModeloFormEditability.EDITABLE_VALUE,
-        ModeloFormEditability.EDITABLE_OVERRIDE,
-        ModeloFormEditability.OVERRIDABLE_SOURCE,
-    }
-)
 
 
 #: The mark of a value carried from an earlier declaration, in place of the imported glyph.
@@ -471,7 +457,6 @@ __all__ = [
     "ORIGIN_MARKS",
     "ORIGIN_ROLES",
     "STALE_MARK",
-    "TYPED_EDITABILITIES",
     "WORKBENCH_MARKS",
     "Attention",
     "AttentionCounts",

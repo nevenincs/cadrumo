@@ -12,7 +12,15 @@ from textual.events import DescendantFocus
 from textual.widgets import Button, DataTable, Input, Static
 
 from ....application.modelo.declaration_targets import DeclarationTarget
-from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow, declaration_list_rows
+from ....application.modelo.declarations_list import (
+    DeclarationListGroup,
+    DeclarationListRow,
+    applicable_modelos,
+    creation_targets,
+    declaration_list_rows,
+    existing_declaration,
+    preferred_creation_target,
+)
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
@@ -41,7 +49,7 @@ from .portfolio_rendering import (
     portfolio_row_refusal,
     portfolio_source_lines,
 )
-from .portfolio_rows import creation_targets, existing_declaration, preferred_creation_target, visible_portfolio_rows
+from .portfolio_rows import visible_portfolio_rows
 
 _FILTERS = ("all", "attention", "this_year", "recorded", "not_started")
 _SORTS = ("deadline", "modelo", "result", "state")
@@ -178,7 +186,8 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             + " · "
             + tr("workspace.declarations.list.sort." + _SORTS[self.sort_index])
         )
-        self.query_one("#declarations-empty", Static).update("" if visible else tr("workspace.declarations.list.empty"))
+        empty = f"{tr('workspace.declarations.list.empty')} {tr('tui.declarations.list.start_hint')}"
+        self.query_one("#declarations-empty", Static).update("" if visible else empty)
         index = next((i for i, row in enumerate(table.ordered_rows) if row.key.value == selected), None)
         if index is not None:
             table.move_cursor(row=index)
@@ -231,7 +240,9 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         elif row.state == "aeat_unlinked":
             self.app.push_screen(ExternalFilingDetailsScreen(row))
         else:
-            self.query_one("#declarations-refusal", Static).update(portfolio_row_refusal(row))
+            self.query_one("#declarations-refusal", Static).update(
+                portfolio_row_refusal(row, OutputLanguage(output_language()))
+            )
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Fold a group, open admitted local work, or confirm starting a due return."""
@@ -274,7 +285,7 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         """Offer only registry-backed Modelo/period coordinates."""
         if self._creating or self.controller.work_create_handoff is None:
             return
-        applicable = frozenset(row.modelo for row in self.rows if row.state != "maybe")
+        applicable = applicable_modelos(self.rows)
         targets = creation_targets(self.rows, self.controller.creation_targets)
         preferred = preferred_creation_target(self.rows)
         self.app.push_screen(NewDeclarationPicker(targets, applicable, preferred=preferred), self._create_selected)

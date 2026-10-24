@@ -16,6 +16,7 @@ from textual.widgets import OptionList, Static
 
 from ......application.modelo.work_form_models import ModeloFormAttention
 from ......application.modelo.work_form_next_step import ModeloFormNextAction, inapplicable_pages
+from ......application.modelo.work_form_wording import does_not_apply_words
 from ......core.config import override_settings
 from ......core.i18n.render import tr
 from ......core.period import Period
@@ -27,7 +28,6 @@ from ..navigator import NavigatorState, checked_boxes, navigator_rows, presented
 from ..page_items import workbench_pages
 from ..progress import workbench_progress
 from ..screen import ModeloWorkbenchScreen
-from ..wording import does_not_apply_text
 from .sectioned_form import LAST_QUARTER_PAGE, sectioned_form
 from .workbench_fixture import FakeActions, FakeReader
 
@@ -47,7 +47,7 @@ def _rows(*, last_quarter_applies: bool | None, current: int = 0) -> tuple[Text,
         width=60,
         show_attention=True,
         inapplicable=inapplicable_pages(form),
-        not_applying=does_not_apply_text(form.period),
+        not_applying=does_not_apply_words(form.period),
     )
     return tuple(row.prompt for row in rows)
 
@@ -109,9 +109,9 @@ def test_a_heading_the_layout_prints_twice_is_listed_once_with_both_parts_counte
 def test_the_words_for_a_page_that_does_not_apply_name_the_period_in_every_language(language: str) -> None:
     periods = [Period.from_year_and_code(2026, code) for code in ("1T", "01", "0A")]
     with override_settings(cadrumo_output_language="en"):
-        english = [does_not_apply_text(period) for period in periods]
+        english = [does_not_apply_words(period) for period in periods]
     with override_settings(cadrumo_output_language=language):
-        words = [does_not_apply_text(period) for period in periods]
+        words = [does_not_apply_words(period) for period in periods]
         fallback = tr("workspace.modelo.applicability.period")
 
     assert len(set(words)) == len(words), "a quarter, a month and a year are each named"

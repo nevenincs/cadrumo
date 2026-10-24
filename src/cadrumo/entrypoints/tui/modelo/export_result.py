@@ -28,6 +28,7 @@ from ....application.modelo.export_projection import (
     ModeloExportEvidenceStatus,
     ModeloExportPublicResultV3,
 )
+from ....application.modelo.work_form_export_offer import EXPORT_ARTEFACT_LOCALE_KEYS
 from ....core.i18n.render import tr
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.presentation import NoticePresentation
@@ -54,12 +55,6 @@ ModeloExportResultScreen { align: center middle; }
 #: member of the closed axis appears, so an artefact the product can publish is
 #: never offered or stated as a bare token. The export control offers these and
 #: the statement names the one that was published with the same words.
-EXPORT_ARTEFACT_LOCALE_KEYS: Final[dict[ModeloExportArtefact, str]] = {
-    ModeloExportArtefact.FICHERO_BOE: "tui.modelo.export.artefact.fichero_boe",
-    ModeloExportArtefact.CALCULATION_REPORT_CSV: "tui.modelo.export.artefact.calculation_report_csv",
-    ModeloExportArtefact.CALCULATION_REPORT_PDF: "tui.modelo.export.artefact.calculation_report_pdf",
-    ModeloExportArtefact.CALCULATION_REVIEW_XLSX: "tui.modelo.export.artefact.calculation_review_xlsx",
-}
 #: Each evidence status in the operator's words. Every member appears, so a
 #: status the export can state is never shown as a bare token.
 EXPORT_EVIDENCE_STATUS_LOCALE_KEYS: Final[dict[ModeloExportEvidenceStatus, str]] = {
@@ -274,7 +269,6 @@ class ModeloExportResultScreen(ModalScreen[None]):
 
 
 __all__ = [
-    "EXPORT_ARTEFACT_LOCALE_KEYS",
     "EXPORT_COMPLETENESS_LOCALE_KEYS",
     "EXPORT_EVIDENCE_STATUS_LOCALE_KEYS",
     "EXPORT_RESULT_ROW_LOCALE_KEYS",

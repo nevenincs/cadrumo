@@ -191,7 +191,10 @@ class ModeloWorkspaceLifecycleDoor:
             OperationRequest(
                 definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
                 subject_ref=self.work_unit_id,
-                payload=ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
+                payload=ModeloEditOperatorInputV2(
+                    submission=ModeloEditApplySubmissionV1.from_submission(submission),
+                    output_language=OutputLanguage(output_language()),
+                ),
             )
         )
         return controller, renewal.baseline

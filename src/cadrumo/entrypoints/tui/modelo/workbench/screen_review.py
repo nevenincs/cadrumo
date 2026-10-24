@@ -65,7 +65,7 @@ class WorkbenchReviewMixin:
     async def _review_is_stale(self: ModeloWorkbenchScreen, preflight: WorkbenchPreflight, rebased: bool) -> bool:
         if preflight.stale:
             if rebased:
-                self._notice(tr("workspace.modelo.rebase.still_moving"))
+                self._notice(f"{tr('workspace.modelo.rebase.still_moving')} [R]")
                 return True
             if await self._rebase() and self._session.dirty:
                 await self._open_review(rebased=True)

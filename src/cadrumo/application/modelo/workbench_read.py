@@ -32,10 +32,12 @@ from .edit_models import ModeloEditAdmissionResultV1
 from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1
 from .m303_exonerado_390_applicability_attestation import modelo_390_question_asked
 from .verification_report_facts import granting_verification_report
-from .work_form_header import ModeloFormHeader, form_header
+from .work_form_export_offer import ModeloFormExportOffer, ModeloFormReceipt, form_export_offer, form_receipt
+from .work_form_header import ModeloFormHeader, form_header, form_recorded
 from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict, form_issue_lines, form_verdict
 from .work_form_next_step import ModeloFormNextStep, form_next_step, registry_grade_refusal
 from .work_form_service import ModeloWorkFormLoadV1, load_modelo_work_form, modelo_form_snapshot
+from .work_form_typing_effect import ModeloFormTypingEffect, form_typing_effects
 
 if TYPE_CHECKING:
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -43,6 +45,7 @@ if TYPE_CHECKING:
     from ...domain.deadlines.festivos import CalendarCCAA
     from ...domain.modelos.protocols import (
         CalculationRevisionCatalogueRepositoryProtocol,
+        ModeloRecordCatalogueRepositoryProtocol,
         VerificationReportCatalogueRepositoryProtocol,
     )
     from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
@@ -61,7 +64,9 @@ class ModeloWorkbenchReadPorts:
     holiday territory afresh on each read, so a deadline shifts for the filer's
     own regional holidays and not the national ones only; ``bucket_events`` is
     the profile's event history, read to say when the latest file for the AEAT
-    was created and whether it still matches.
+    was created and whether it still matches; ``filings`` is the profile's
+    filing records, read to say whether a recorded filing's AEAT receipt is
+    verified.
     """
 
     work_units: WorkUnitCatalogueRepositoryProtocol
@@ -70,6 +75,7 @@ class ModeloWorkbenchReadPorts:
     borrador_snapshots: Borrador100SnapshotRepository | None = None
     holiday_territory: Callable[[], CalendarCCAA | None] | None = None
     bucket_events: BucketEventHistoryRepositoryProtocol | None = None
+    filings: ModeloRecordCatalogueRepositoryProtocol | None = None
 
 
 type ModeloWorkbenchReadPortsFactory = Callable[[str, PinnedAuthorityOperation], ModeloWorkbenchReadPorts]
@@ -97,6 +103,22 @@ class ModeloWorkbenchFormReadV1:
     registry_revision_id: str
     #: The governed Spanish tax-identifier format the frontend parses NIF entries against.
     tax_id_format: SpanishTaxIdFormat
+    #: What exporting offers: the artefacts this installation publishes, the elections and the file format.
+    export_offer: ModeloFormExportOffer | None = None
+    #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
+    receipt: ModeloFormReceipt | None = None
+
+    @property
+    def typing_effects(self) -> tuple[ModeloFormTypingEffect, ...]:
+        """What typing a value over each box the filer can type on does, in the form's language."""
+        form = self.load.form
+        return form_typing_effects(form, form.language)
+
+    @property
+    def receipt_confirmed(self) -> bool | None:
+        """Whether the recorded filing's AEAT receipt is verified; ``None`` when nothing is recorded or read."""
+        receipt = self.receipt
+        return None if receipt is None else receipt.verified
 
     @property
     def next_step(self) -> ModeloFormNextStep | None:
@@ -104,7 +126,9 @@ class ModeloWorkbenchFormReadV1:
         if registry_grade_refusal(self.admission):
             return None
         load = self.load
-        return form_next_step(load.form, verified=load.verified, filed=load.filed)
+        return form_next_step(
+            load.form, verified=load.verified, filed=load.filed, receipt_confirmed=self.receipt_confirmed
+        )
 
     @property
     def header(self) -> ModeloFormHeader:
@@ -187,7 +211,28 @@ def read_modelo_workbench_form(
         asks_modelo_390=is_m303 and modelo_390_question_asked(unit.period, operation=operation),
         registry_revision_id=form.registry_revision_id,
         tax_id_format=runtime_tax_id_format(authority=operation),
+        export_offer=form_export_offer(
+            str(unit.modelo),
+            modelo_form_snapshot(operation, unit.modelo, unit.filing_year, unit.period, form.registry_revision_id),
+            language,
+        ),
+        receipt=_receipt(unit, loaded, ports=ports, language=language),
     )
+
+
+def _receipt(
+    unit: WorkUnit, loaded: ModeloWorkFormLoadV1, *, ports: ModeloWorkbenchReadPorts, language: OutputLanguage
+) -> ModeloFormReceipt | None:
+    """The recorded filing's receipt state, read from the unit's current filing record."""
+    form = loaded.form
+    if ports.filings is None or not form_recorded(form, filed=loaded.filed):
+        return None
+    record_id = unit.current_filing_record_id
+    record = None if record_id is None else ports.filings.load().get(record_id)
+    if record is not None and (record.bucket_id != unit.bucket_id or record.work_unit_id != unit.work_unit_id):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    filing = form.filing
+    return form_receipt(record, recorded_at=None if filing is None else filing.recorded_at, language=language)
 
 
 def read_modelo_casilla_help(

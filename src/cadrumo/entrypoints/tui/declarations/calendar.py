@@ -14,12 +14,14 @@ from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
 )
+from ....application.modelo.declarations_list import source_words
 from ....application.operator_actions.models import DeclaredNextAction
 from ....application.overview.calendar import holiday_coverage_statement, shift_reason_statement
 from ....application.overview.home import HomeAvailability
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ..components.account_chrome import AccountChromeScreen
 from ..components.dialogs import ConfirmScreen
 from ..components.language import localized, repaint_tables
@@ -39,7 +41,7 @@ from .models import CalendarRecoveryHandoffV1, DeclarationsCalendarScopeV1
 _TUI_REFUSAL_LOCALE_KEYS: dict[str, str] = {
     # The application's wording names the CLI command; here the same fix is a key away.
     "application.modelo.errors.profile_readiness_setup_incomplete": (
-        "workspace.declarations.calendar.recovery.setup_incomplete"
+        "tui.declarations.calendar.recovery.setup_incomplete"
     ),
 }
 
@@ -245,27 +247,9 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         return self._rows_by_identity.get(str(key))
 
     def _source_detail_lines(self) -> list[str]:
-        """Describe each authority's observation without inventing a timestamp."""
-        lines: list[str] = []
-        for source in DeclarationsCalendarSource:
-            state = self.controller.source(source)
-            if state.observed_at is not None:
-                observed = timestamp_label(state.observed_at)
-            elif state.availability is HomeAvailability.NEVER_CAPTURED:
-                observed = tr("workspace.declarations.calendar.never_observed")
-            elif state.availability is HomeAvailability.AVAILABLE:
-                observed = tr("workspace.declarations.calendar.observation.not_recorded")
-            else:
-                observed = tr("workspace.declarations.calendar.observation.time_not_recorded")
-            lines.append(
-                tr(
-                    "workspace.declarations.calendar.detail.source",
-                    source=tr(f"workspace.declarations.calendar.source.{source.value}"),
-                    availability=tr(f"workspace.declarations.availability.{state.availability.value}"),
-                    observed=observed,
-                )
-            )
-        return lines
+        """Describe each authority's observation without inventing a timestamp, as the list says it."""
+        language = OutputLanguage(output_language())
+        return [source_words(self.controller.source(source), language) for source in DeclarationsCalendarSource]
 
     def _render_detail(self, row: DeclarationsCalendarEntryRefV1) -> None:
         lines = [

@@ -636,7 +636,7 @@ def _payload(
         case "modelo.work.history":
             unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
             subject_ref = unit.work_unit_id
-            values = {"profile_id": profile_id, "work_unit_id": unit.work_unit_id}
+            values = {"profile_id": profile_id, "work_unit_id": unit.work_unit_id, "output_language": OutputLanguage.ES}
         case "modelo.work.review":
             unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
             subject_ref = unit.work_unit_id
@@ -659,11 +659,19 @@ def _payload(
         case "modelo.edit.renew":
             work_unit_id, wire_submission = seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
-            values = {"profile_id": profile_id, "baseline": wire_submission.baseline}
+            values = {
+                "profile_id": profile_id,
+                "baseline": wire_submission.baseline,
+                "output_language": OutputLanguage.EN,
+            }
         case "modelo.edit.preflight":
             work_unit_id, wire_submission = seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
-            return subject_ref, ModeloEditOperatorInputV2(submission=wire_submission), None
+            return (
+                subject_ref,
+                ModeloEditOperatorInputV2(submission=wire_submission, output_language=OutputLanguage.EN),
+                None,
+            )
         case "modelo.edit.apply_prerequisite":
             work_unit_id, wire_submission = seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
@@ -1553,7 +1561,11 @@ def _payload(
         case "modelo.edit.apply":
             work_unit_id, wire_submission = seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
-            return subject_ref, ModeloEditOperatorInputV2(submission=wire_submission), None
+            return (
+                subject_ref,
+                ModeloEditOperatorInputV2(submission=wire_submission, output_language=OutputLanguage.EN),
+                None,
+            )
         case "modelo.work.file":
             revision_id, report_id = modelo_operation_test_support.seeded_modelo_verification_report(
                 profile_id, operation=operation

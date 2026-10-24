@@ -775,6 +775,18 @@ desktop:
     lead: Elige un área de trabajo a continuación o ábrela desde la barra lateral.
       También puedes abrir la documentación desde cualquiera de esos lugares.
     title: No hay nada abierto
+  declarations:
+    close: Cerrar declaraciones
+    loading: Leyendo tus declaraciones…
+    maximize: Maximizar declaraciones
+    position: Declaración {row} de {count}
+    read_failed: Cadrumo no ha podido leer tus declaraciones.
+    retry: Volver a intentarlo
+    search:
+      label: Buscar una declaración
+    show:
+      label: Mostrar
+    signed_out: Inicia sesión para ver tus declaraciones.
   docs:
     frame_title: Documentación de Cadrumo
     hide: Ocultar la documentación
@@ -3169,6 +3181,41 @@ desktop:
     never: Aún sin sincronizar con la AEAT
     none_unread: Ninguno sin leer en la última sincronización
     unread: '{count} sin leer'
+  modelo:
+    correction:
+      kind_label: Tipo de corrección
+      motive_label: Motivo de la rectificación
+      values_label: Valores corregidos
+    details:
+      close: Cerrar detalles
+      hide: Ocultar detalles
+      show: Mostrar detalles
+    discard:
+      confirm: Descartar
+      lead: Sale de tu lista de declaraciones. Su historial se conserva.
+      reason: Por qué (opcional)
+    form:
+      pages: Páginas del formulario
+    keys:
+      change: Cambiar la casilla elegida; otro Enter la guarda y pasa a la siguiente
+      delete: Quita tu valor de la casilla elegida
+      leave: Dejar una casilla sin cambios
+      move: Moverse entre casillas
+      next_attention: Siguiente casilla que te necesita (con el formulario enfocado)
+    outline:
+      label: Esquema del formulario
+    rename:
+      name: Nombre
+      save: Guardar el nombre
+    search:
+      label: Buscar una casilla
+    side:
+      label: Junto al formulario
+      outline: Esquema
+    view:
+      form: Formulario
+    views:
+      label: Vistas de la declaración
   palette:
     actions: Acciones
     close: Cerrar la búsqueda
@@ -4591,6 +4638,16 @@ tui:
     unattended: Permitir uso desatendido
     uncertain: Resultado desconocido; conserva el ID de solicitud
     waiting: Enviando solicitud
+  declarations:
+    calendar:
+      recovery:
+        setup_incomplete: 'Primero declara completa la configuración del perfil: abre
+          Perfil (F4) y pulsa F8.'
+    list:
+      new:
+        period_selection_hint: Pulsa Enter para elegir el periodo; después, crea y
+          abre la declaración.
+      start_hint: Pulsa + para empezar una.
   destination:
     aeat_sync: Sincronización AEAT
     declarations: Declaraciones
@@ -5242,6 +5299,7 @@ tui:
       status: Estado
     entries:
       empty: Todavía no hay apuntes.
+      selection_absent: El apunte que selecciona este enlace no está en esta lista.
       title: Apuntes
     entry_label: '{date} · {description}'
     entry_tools:
@@ -6542,6 +6600,10 @@ tui:
         y prepara el lector, su runtime y sus modelos.
       title: Lector de documentos
   modelo:
+    editor:
+      confirm_hint: Pulsa ⏎ para confirmar {value} o escribe el valor correcto.
+      keys: 'Teclas: ⏎ {save_next} · Ctrl+⏎ {save}'
+      open_keys: 'Teclas: a {open} · Esc {back}'
     export:
       account:
         charge_label: Cuenta en la que la AEAT carga (domiciliación)
@@ -6620,6 +6682,15 @@ tui:
           not_official: 'Este fichero no es evidencia oficial de presentación ante
             la AEAT. La evidencia oficial la emite la AEAT tras la presentación: justificante;
             consulta de declaraciones presentadas; o cotejo por CSV.'
+    go_to:
+      prompt: 'Ir a la casilla: escribe su número y pulsa Intro.'
+    legend:
+      first_open: ¿Es tu primera vez? Pulsa ? para ver qué significa cada símbolo.
+      meaning:
+        mark:
+          collapsed: Pulsa → para abrirla.
+          expanded: Pulsa ← para cerrarla.
+      more: Pulsa ? otra vez para ver todos los símbolos y teclas.
     m303_evidence:
       admission_unavailable: Aquí no se puede registrar una confirmación nueva para
         esta declaración. No se ha calculado nada.
@@ -6643,6 +6714,10 @@ tui:
       stale_context: La declaración seleccionada cambió mientras el formulario estaba
         abierto. No se ha calculado nada; vuelve a elegir Calcular.
       title: Datos de la autoliquidación del modelo 303
+    next_line: 'Siguiente: {action} [{key}]'
+    search:
+      prompt: Busca en todas las páginas por número de casilla o por palabras. Intro
+        te lleva a la casilla.
   operations:
     action:
       close: Cerrar
@@ -7089,6 +7164,7 @@ workspace:
       evidence:
         clear: Sin conflicto observado
         conflicted: Estado contradictorio en la AEAT observado
+        disagrees: las pruebas no coinciden
       justificante:
         not_verified: No verificado
         unknown: Desconocido
@@ -7115,8 +7191,6 @@ workspace:
         confirm: Confirmar
         failure: No se pudo completar la recuperación.
         progress: Creando la declaración…
-        setup_incomplete: 'Primero declara completa la configuración del perfil: abre
-          Perfil (F4) y pulsa F8.'
         success: Se ha creado {address}. Aparecerá en Declaraciones cuando vuelvas
           allí.
       scope:
@@ -7168,6 +7242,10 @@ workspace:
       modelo_workspace: Abrir una declaración para rellenarla y presentarla
       overview: Declaraciones
       revisions: Cálculos anteriores
+    due:
+      days_late: 'Días de retraso: {days}'
+      days_left: 'Días restantes: {days}'
+      'on': Vence el {date}
     empty: Todavía no hay nada registrado aquí.
     evidence:
       aeat_csv_register: Registro CSV de la AEAT observado
@@ -7183,6 +7261,15 @@ workspace:
     filing_state:
       supersedido: Presentación registrada sustituida
       vigente: Presentación registrada vigente
+    holiday_coverage:
+      calendar_unavailable: Festivos sin comprobar
+      national_only: Festivos autonómicos sin comprobar
+      territory_unverified: Festivos autonómicos sin confirmar
+    hub:
+      holidays_national_only: Los plazos tienen en cuenta los festivos nacionales;
+        los autonómicos no se comprueban.
+      lead: Prepara cada modelo, exporta el fichero que presentas en la AEAT y registra
+        que lo has presentado.
     lifecycle:
       amended: Corrección iniciada
       calculated: Cálculo completado
@@ -7216,18 +7303,22 @@ workspace:
           unavailable: Todavía no se puede vincular esta presentación ni abrir su
             justificante desde esta lista. No necesitas volver a presentar la misma
             declaración.
+      all_recorded: Nada pendiente. Todas las declaraciones están registradas.
       column:
         deadline: Plazo
         declaration: Declaración
+        modelo: Modelo
         period: Periodo
+        result: Resultado
         state: Estado
-      empty: Aún no tienes declaraciones. Pulsa + para empezar una.
+      empty: Aún no tienes declaraciones.
       filter:
         all: Todas
         attention: Requiere atención
         not_started: Sin empezar
         recorded: Registradas como presentadas
         this_year: Este año
+        todo: Pendientes
       group:
         attention: Requiere atención
         in_progress: En curso
@@ -7242,14 +7333,31 @@ workspace:
         help: Cadrumo no ha podido saber por tu perfil si debes presentarla. Compruébalo
           antes del plazo.
       new:
+        already_started: Ya empezada
+        another: Otro modelo
         choose_modelo: ¿Qué modelo?
         choose_period: ¿Qué periodo?
         create: Crear y abrir
+        create_declaration: Crear la declaración
+        creating: Creando la declaración…
         exists: Esta declaración ya existe. ¿Abrirla?
-        period_selection_hint: Pulsa Enter para elegir el periodo; después, crea y
-          abre la declaración.
+        expected: Previstos para ti
+        failed: No se ha podido crear la declaración.
+        no_match: Ningún modelo coincide con «{query}».
+        none: No hay ninguna declaración que puedas empezar aquí.
+        open_count: 'abiertas: {count}'
+        open_it: Abrirla
+        other: Otros modelos
+        refused: Cadrumo no ha creado la declaración.
+        search_placeholder: Número o nombre, por ejemplo 303 o IVA
         show_all: Mostrar todos los modelos, no solo los tuyos
         start_confirm: ¿Empezar el {modelo} de {period}?
+        unknown: Cadrumo no ha podido saber si se ha creado la declaración.
+        unknown_next: Se vuelve a leer la lista. Revísala antes de volver a intentarlo.
+        which_modelo: ¿Qué modelo quieres preparar?
+        which_period: ¿De qué periodo es?
+        which_year: ¿De qué año es?
+        year: Año
       next:
         check_aeat: Comprobar la presentación en la AEAT
         continue: Seguir rellenando
@@ -7259,15 +7367,21 @@ workspace:
         none: Nada pendiente
         open_local_draft: Abrir el borrador local
         start: Empezarla
+      no_match: Ninguna declaración coincide con «{query}».
+      none_listed: No hay declaraciones en la lista.
       not_openable:
         help: Esta fila aún no se puede abrir desde aquí.
       search:
         hint: Busca por número de modelo, nombre o periodo
+        modelo: Buscar un modelo
       sort:
+        amount: Importe
+        by: Ordenar por
         deadline: Plazo
         modelo: Modelo
         result: Resultado
         state: Estado
+        work_order: Orden de trabajo
       state:
         aeat_needs_check: Presentación en la AEAT pendiente de comprobar
         aeat_unlinked: Presentada en la AEAT, sin vincular aquí
@@ -7275,7 +7389,6 @@ workspace:
         blocked: Algo impide presentarla
         calculated: Calculada, sin comprobar
         checked: Comprobada
-        correction: Corrección
         draft: En preparación
         local_draft: Borrador local
         not_started: Sin empezar
@@ -7295,7 +7408,7 @@ workspace:
           calendar:
             taxpayer_model_undeclared: El calendario fiscal necesita saber qué tipo
               de contribuyente es este perfil y, si es una persona física, sus categorías
-              de renta del IRPF. Complétalos en el perfil (F4).
+              de renta del IRPF. Complétalos en tu perfil.
           declarations:
             lifecycle_reader_unavailable: El historial de presentaciones no se puede
               leer en esta sesión.
@@ -7326,7 +7439,7 @@ workspace:
       progress: Creando o retomando la declaración seleccionada…
       refusal:
         not_applicable: 'El modelo %{modelo} no se aplica a este perfil: %{reason}
-          Si debería aplicarse, corrige el perfil en Perfil (F4) y vuelve a intentarlo.'
+          Si debería aplicarse, corrige tu perfil y vuelve a intentarlo.'
         period: Indica un periodo válido para el ejercicio seleccionado.
         year: Indica un ejercicio admitido de cuatro cifras.
       reused: Se ha retomado {address}. Vuelve a Declaraciones para trabajar en ella.
@@ -7334,6 +7447,25 @@ workspace:
       borrador: Borrador
       descartado: Descartado
   modelo:
+    about:
+      generated: Su agrupación se ha obtenido de ese diseño y aún no se ha comparado
+        con el modelo impreso; cada valor se guarda por su número de casilla.
+      official: Las casillas siguen el diseño oficial del modelo {modelo} para este
+        periodo.
+      title: Sobre este modelo
+    amend:
+      kind_help:
+        complementaria: Completa lo que declaraba la declaración presentada, por ejemplo
+          una cuota que faltaba.
+        rectificativa: Corrige la declaración presentada al alza o a la baja, cuando
+          las normas de este modelo y periodo la prevén.
+        sustitutiva: Sustituye por completo la declaración presentada.
+      motive:
+        discrepancia_criterio_administrativo: Discrepancia con el criterio administrativo
+        rectificaciones: Rectificaciones de las cifras que declaraste
+      motive_help: Una rectificativa del modelo 303 indica por qué corrige la declaración.
+        Elige uno; Cadrumo nunca elige por ti.
+      reason_prompt: ¿Por qué corriges esta declaración?
     applicability:
       month: No aplica este mes
       period: No aplica en este periodo
@@ -7345,8 +7477,7 @@ workspace:
         anterior.
       legacy: Este cálculo anterior no puede reutilizar todos los valores introducidos.
       next: Revisa el origen del cálculo
-      notice: 'No se aplicó; cambios conservados. {box}: revisa su origen en Incidencias
-        [i].'
+      notice: 'No se aplicó; cambios conservados. {box}: revisa su origen en Incidencias.'
       source_boxes: 'Casillas de origen anteriores: {boxes}'
       what: Para este recálculo, el valor de origen de esta casilla no está disponible.
     attention:
@@ -7370,7 +7501,7 @@ workspace:
       tick: He revisado estos valores y son correctos para mí
       title: Confirmar valores supuestos
     calculate:
-      apply_first: Aplica o descarta tus cambios antes de recalcular [R].
+      apply_first: Aplica o descarta tus cambios antes de recalcular.
       at_risk_cancel: Conservar los valores actuales
       at_risk_proceed: Recalcular
       at_risk_title: ¿Recalcular a partir de tus orígenes?
@@ -7385,6 +7516,32 @@ workspace:
       operator_entries_unknown: Esta declaración se calculó por última vez fuera de
         esta pantalla, así que Cadrumo no puede saber qué valores escribiste. Al volver
         a calcular solo se conservan los valores introducidos aquí.
+    correction:
+      confirm: Preparar la corrección
+      kind: Que se presente como complementaria o como rectificativa depende del modelo
+        y del sentido en que cambia el importe. Cadrumo lo determina y te lo indica
+        antes de exportar.
+      lead: Una declaración presentada nunca se cambia directamente. Cadrumo prepara
+        una corrección a partir de ella; cambias lo que estaba mal, exportas su fichero
+        y lo presentas en la AEAT como cualquier otro.
+      title: Preparar una corrección
+    details:
+      card_unavailable: No se ha podido leer la explicación de esta casilla.
+      choose_box: Elige una casilla para ver de dónde sale su valor y qué significa.
+      constraints: Límites
+      formula_incomplete: Parte de este cálculo aún no está detallada.
+      is_result: Esta casilla es el resultado de la declaración.
+      legal_basis: Base legal
+      official_text: Texto oficial
+      reach: Qué cambia
+      reach_others: 'También:'
+      reading: Leyendo la explicación…
+      retrieved: Consultado el {date}
+      undo: Deshacer
+      uses_outside_many: 'También usa datos que se guardan fuera de este modelo: {count}.'
+      uses_outside_one: También usa un dato que se guarda fuera de este modelo.
+      what_it_means: Qué significa
+      worked_out_from: Calculada a partir de
     details_page: Detalles del cálculo
     disclosure:
       official_spanish: texto oficial
@@ -7437,7 +7594,7 @@ workspace:
           Tus registros no cambian y puedes volver al valor del origen cuando quieras.
       cancel: Cancelar
       clear: Vaciar
-      confirm_hint: Pulsa ⏎ para confirmar {value} o escribe el valor correcto.
+      confirm: Confirmar
       format:
         boolean: Responde sí o no.
         date: Una fecha del calendario.
@@ -7447,9 +7604,10 @@ workspace:
         ratio: Escribe el valor tal como figura en el impreso.
         text: Texto libre.
         year: Un año de cuatro cifras.
-      keys: 'Teclas: ⏎ {save_next} · Ctrl+⏎ {save}'
+      new_value_for_box: 'Casilla {box}: nuevo valor'
+      not_checked: Ahora no se ha podido comprobar este valor, así que no se ha guardado.
+        Vuelve a intentarlo.
       open_area: Abrir {area}
-      open_keys: 'Teclas: a {open} · Esc {back}'
       placeholder:
         boolean: sí o no
         date: Fecha, p. ej. 31/03/2026
@@ -7460,20 +7618,90 @@ workspace:
         text: Texto
         year: Año, p. ej. 2026
       read_as: ✓ Se leerá como {value}
+      reading: Leyendo lo que has escrito…
+      replace_here: Sustituirlo solo en esta declaración
       restore: Volver al valor del origen
+      rules_incomplete: La edición aún no está disponible para esta declaración. Se
+        abrirá cuando las reglas de Cadrumo para este modelo estén completas.
       save: Dejar para revisar
       save_next: Dejar y pasar a la siguiente
       unreadable: No se ha podido leer este valor.
     export:
       confirm_first: 'Confirma los valores supuestos antes de generar el fichero o
-        registrar la presentación (por confirmar: {count}) [n].'
+        registrar la presentación (por confirmar: {count}).'
+      file_format:
+        fixed_width: Fichero de la AEAT con el diseño de registro BOE de ancho fijo
+        xml_dictionary: Fichero XML de la AEAT
       resolve_first: 'Resuelve lo que impide presentar antes de generar el fichero
-        o registrar la presentación (impiden presentar: {count}) [i].'
+        o registrar la presentación (impiden presentar: {count}).'
       title: Exportar la declaración
-      verify_first: Comprueba la declaración antes de exportarla [F8].
+      verify_first: Comprueba la declaración antes de exportarla.
     filed:
       read_only: 'Registrada como presentada: puedes consultarla, pero no cambiarla.
         Para cambiarla, inicia una corrección de esta declaración.'
+    filing:
+      add_receipt_pdf: Añadir el justificante de la AEAT (PDF)…
+      add_receipt_to_confirm: Añade el justificante de la AEAT para confirmarla
+      after_filed_title: Cuando la hayas presentado
+      after_filing: Cuando la hayas presentado en la AEAT
+      also_other_way: También si la presentaste de otra forma.
+      at_aeat: En la AEAT
+      check_first: Comprueba primero la declaración.
+      completeness_unverified: Cadrumo no ha podido comprobar que todas las casillas
+        obligatorias estén en el fichero.
+      copy:
+        calculation_report_csv:
+          action: Guardar el CSV
+          detail: Todas las cifras del informe, en una tabla.
+        calculation_report_pdf:
+          action: Guardar el informe
+          detail: Un PDF firmado que explica cada cifra. No prueba la presentación.
+        calculation_review_xlsx:
+          action: Guardar el libro
+          detail: Cada casilla con su fórmula, en una hoja de cálculo.
+        package:
+          action: Preparar el paquete
+          detail: Cifrado para una sola persona, que puede devolverte comentarios.
+          title: Paquete para tu gestor
+      export_again: Exportar de nuevo
+      export_again_warning: Exportar de nuevo genera otro fichero; hazlo solo para
+        una corrección.
+      export_file: Exportar el fichero…
+      file_current: Generado con el cálculo actual
+      file_earlier: 'Generado con un cálculo anterior: no lo presentes'
+      file_exported: Fichero exportado
+      file_format: En el formato oficial del modelo {modelo}. No prueba la presentación;
+        el justificante de la AEAT, sí.
+      file_local: Generado solo en este ordenador
+      file_title: El fichero que presentas en la AEAT
+      filter:
+        boe: Fichero de presentación AEAT
+        csv: Fichero CSV
+        pdf: Documento PDF
+        receipt: Justificante de la AEAT (PDF)
+        xlsx: Libro de Excel
+        xml: Fichero XML de presentación
+        zip: Paquete ZIP
+      how_to_upload: Cómo presentarlo
+      kept_locally: Se guarda solo en este ordenador.
+      lead: Cadrumo genera el fichero; tú lo presentas en la sede electrónica de la
+        AEAT. Desde aquí no se envía nada.
+      not_confirmed_yet: Aún sin confirmar
+      not_yet: Todavía no
+      open_check: Abrir Comprobar
+      other_copies: Otras copias
+      receipt_differs: El justificante no coincide con esta declaración.
+      receipt_matches: El justificante coincide con esta declaración.
+      receipt_missing: Aún no la confirma ningún justificante.
+      record_as_filed: Registrar como presentada…
+      record_lead: Registra aquí que la has presentado, para que lo sepan tu calendario
+        y tus declaraciones posteriores. Después añade el justificante de la AEAT
+        para confirmarlo.
+      recorded_here: Registrada aquí; Cadrumo no ha enviado nada
+      saved: Guardado como {name}. No es prueba de presentación.
+      show_filed_file: Mostrar el fichero presentado
+      show_in_folder: Mostrar en la carpeta
+      title: Exportar y registrar
     filter:
       all: todas las casillas
       amount: solo las casillas con importe
@@ -7483,10 +7711,10 @@ workspace:
       empty_next: 'No hay nada en esta página con este filtro. Siguiente página con
         algo: {page}'
       mine: solo tus valores
+      only_mine: Solo mis valores
       records: solo lo que viene de tus registros
     go_to:
       missing: No hay ninguna casilla [{box}] en este modelo.
-      prompt: 'Ir a la casilla: escribe su número y pulsa Intro.'
     grid:
       column_unnamed: Columna {number}
       records_read_only: Esta tabla se rellena con tus registros. Cámbialos allí.
@@ -7504,8 +7732,7 @@ workspace:
         un fin de semana o festivo.
       deadline_today: El plazo termina hoy, {date}
       file_created: Fichero generado el {date}
-      file_out_of_date: El fichero del {date} está desactualizado. Vuelve a generarlo
-        [{key}]
+      file_out_of_date: El fichero del {date} está desactualizado. Vuelve a generarlo.
       no_deadline: No consta ningún plazo para este periodo
       no_deadline_short: No consta el plazo
       own_calculation: Cálculo de Cadrumo. La AEAT no lo ha visto.
@@ -7514,22 +7741,26 @@ workspace:
         choice_pending_short: A compensar o a devolver
         direction_unknown_help: Cadrumo aún no indica si este importe es a ingresar
           o a devolver. Compruébalo en el modelo oficial antes de presentar.
-        failed: 'Resultado: no se pudo calcular [{key}]'
+        failed: 'Resultado: no se pudo calcular'
         negative: 'Resultado negativo: nada a ingresar'
         negative_carried: 'Resultado negativo: {amount} a deducir en los siguientes
           trimestres'
-        not_calculated: 'Resultado: aún sin calcular [{key}]'
+        no_result_box: Este modelo no tiene casilla de resultado
+        not_calculated: 'Resultado: aún sin calcular'
         other_boxes: 'Otras casillas de resultado de este modelo: {boxes}'
+        out_of_date_until_applied: desactualizado hasta que lo apliques
+        provisional: provisional
         sign_help: La casilla [{box}] figura en el modelo oficial como {value}. Arriba
           se muestra el importe sin signo y el sentido en palabras.
         to_carry_forward: A compensar
+        to_deduct_later: A deducir en periodos posteriores
         to_pay: A ingresar
         to_refund: A devolver
         unknown: Resultado
         zero: Resultado cero
       stale:
-        changes: 'desactualizado: cambios sin aplicar: {count} [{key}]'
-        recalculate: 'desactualizado: vuelve a calcular [{key}]'
+        changes: 'desactualizado: cambios sin aplicar: {count}'
+        recalculate: 'desactualizado: vuelve a calcular'
     help:
       box_opening: 'Casilla {box}:'
       empty: No hay casillas en esta vista.
@@ -7542,12 +7773,33 @@ workspace:
       origin: 'Origen: {origin}'
       origin_no_earlier_declaration: Esta casilla vale 0 porque este año no hay ninguna
         declaración anterior de la que traer un valor.
+    history:
+      changes_applied: Cambios aplicados
+      detail:
+        renamed: '{previous} → {new}'
+      discard: Descartar esta declaración
+      event:
+        audit_exported: Paquete de auditoría exportado
+        audit_verified: Paquete de auditoría comprobado
+        iva_wallet_corrected: Cartera de IVA corregida
+        iva_wallet_override_recorded: Cartera de IVA sustituida manualmente
+        ledger_evidence_recaptured: Evidencia de los registros leída de nuevo
+        live_evidence_stamped: Evidencia de la AEAT registrada para el cálculo
+        revision_reconciled: Cálculo conciliado
+      lead: Lo que ha pasado con esta declaración, de lo más reciente a lo más antiguo.
+        Se guarda en este ordenador.
+      other: Otro cambio registrado
+      read_from_aeat: Leído de la AEAT
+      rename: Cambiar el nombre
+      title: Historial
     in_spanish: (en español)
     issues:
       action:
         confirm: Abre cada casilla y confirma su valor, o escribe el correcto.
         confirm_by_section: Abre cada sección y confirma sus valores, o escribe los
           correctos.
+        failed_result: Indica los valores que piden las notas del cálculo y vuelve
+          a calcular.
         fill: Abre cada casilla y escribe su valor. Si el valor correcto es cero,
           escribe 0.
         fill_by_section: Abre cada sección y escribe los valores que necesita.
@@ -7560,6 +7812,8 @@ workspace:
         advisory: Es un consejo. Puedes presentar la declaración tal como está.
         blocking_rule: No se cumple una regla del modelo; aún no se puede registrar
           la presentación.
+        calculation_failed: Hasta que se pueda calcular esta casilla, no se puede
+          registrar la presentación.
         cross_period_dependency_unclean: Esta declaración usa cifras de un periodo
           anterior que aún no está resuelto, así que su resultado todavía puede cambiar.
         missing_required_casilla: Este valor es necesario para presentar. Si es cero,
@@ -7570,6 +7824,8 @@ workspace:
           así que sus cifras pueden no coincidir ya con ellos. No se puede registrar
           la presentación hasta que vuelvas a calcularla.
       empty: No hay nada que revisar.
+      failed_result: El cálculo no pudo obtener esta casilla, así que la declaración
+        aún no tiene resultado.
       go_to_box: Ir a la casilla
       key:
         less: Ver menos
@@ -7628,7 +7884,6 @@ workspace:
       stay: Seguir editando
       title: Cambios sin aplicar
     legend:
-      first_open: ¿Es tu primera vez? Pulsa ? para ver qué significa cada símbolo.
       group:
         empty: Vacía a propósito, o todavía sin valor
         keys: Teclas
@@ -7644,10 +7899,8 @@ workspace:
           check: Conviene revisarlo. No te impide presentar.
           info: Una explicación, por ejemplo por qué no se usó un origen.
         mark:
-          collapsed: Pulsa → para abrirla.
           done: 'Terminado: no queda nada por hacer aquí.'
           earlier: Traído de una declaración anterior registrada como presentada.
-          expanded: Pulsa ← para cerrarla.
           here: La casilla seleccionada o el paso en el que estás.
           staged: Cambiaste esta casilla. El cambio aún no se ha aplicado.
           stale: El resultado aún no incluye tus últimos cambios.
@@ -7669,7 +7922,6 @@ workspace:
           not_imported_yet: Sus datos aún no se han traído.
           optional_empty: Opcional. Déjala vacía si no te afecta.
           overrides_source: Tu valor sustituye al de su origen, solo en esta declaración.
-      more: Pulsa ? otra vez para ver todos los símbolos y teclas.
       name:
         collapsed: Sección cerrada
         done: Hecho
@@ -7683,7 +7935,9 @@ workspace:
     level:
       blocks: Impide presentar
       check: Conviene revisarlo
+      confirm: Por confirmar
       info: Para tu información
+      missing: Falta
     loading: Cargando la declaración…
     modelo_number: Modelo {modelo}
     modelo_title: Modelo {modelo} · {title}
@@ -7701,7 +7955,19 @@ workspace:
       recorded: Registrada como presentada el {date}
       resolve: 'Resuelve lo que impide presentar (pendientes: {count})'
       verify: Comprueba la declaración
-    next_line: 'Siguiente: {action} [{key}]'
+    next_button:
+      add_receipt: Añade el justificante de la AEAT
+      apply: Revisa y aplica
+      calculate: Calcula la declaración
+      confirm: Confirma los valores supuestos
+      export: Genera el fichero
+      export_again: Vuelve a generar el fichero
+      fill: Completa las casillas marcadas
+      recalculate: Vuelve a calcular
+      record_after_file: Registra la presentación
+      resolve: Resuelve lo que impide presentar
+      see_missing: Mira qué falta
+      verify: Comprueba la declaración
     not_writable:
       absent_from_admission: Esta casilla no se puede editar aquí.
       capability_unavailable: Editar esta casilla aún no está disponible en esta versión.
@@ -7717,10 +7983,9 @@ workspace:
     operation:
       calculated: Calculada. {direction} {value}.
       checked:
-        blocked: 'Comprobada: algo impide presentarla. Abre las incidencias para verlo
-          [{key}].'
+        blocked: 'Comprobada: algo impide presentarla. Abre las incidencias para verlo.'
         complete: 'Comprobada: nada impide presentarla.'
-        incomplete: 'Comprobada: faltan datos que la declaración necesita [{key}].'
+        incomplete: 'Comprobada: faltan datos que la declaración necesita.'
       done: Hecho. La declaración se ha actualizado.
       not_done: No se ha completado; tus cambios siguen aquí.
     origin:
@@ -7772,6 +8037,18 @@ workspace:
         records: Tuyo, sustituye a tus registros
         registers: Tuyo, sustituye a tu registro
         your_entries: Tuyo, sustituye a lo que escribiste
+    outcome:
+      failed: No se ha podido hacer ({code}).
+      not_done: No se ha hecho; no ha cambiado nada.
+      refused: 'No se ha hecho: {code}. No ha cambiado nada.'
+      unknown: Cadrumo no ha podido ver si terminó; puede que sí. No se vuelve a hacer.
+        Vuelve a leer la declaración antes de seguir.
+    page:
+      calculation_details: Detalles del cálculo, no impresos en el modelo
+      does_not_apply: '{page}: no aplica en este periodo'
+      only_if_it_applies: solo si se te aplica
+      unplaced: Casillas aún sin colocar en este modelo
+      working_figures: Datos que pide el cálculo y no tienen casilla propia
     page_number: Página {page}
     page_position: página {current} de {total}
     period:
@@ -7798,13 +8075,18 @@ workspace:
       of_row: El tipo de esta fila es el {rate}.
       of_row_printed: 'El modelo oficial imprime este tipo en esta fila: {rate}.'
       printed_by_form: El modelo oficial imprime este tipo en esta fila.
+    read_again: Volver a leer la declaración
     read_failed: No se pudo leer la declaración. Vuelve atrás y ábrela de nuevo.
     rebase:
       changed: 'Casillas que ahora muestran otro valor: {count}.'
       dropped: 'Cambios que ya no se aplican y se han quitado: {count}.'
       moved: La declaración cambió desde que escribiste cambios que aún no has aplicado.
       still_moving: La declaración sigue cambiando. Espera un momento y vuelve a revisar
-        tus cambios [R].
+        tus cambios.
+    receipt:
+      missing: Todavía no se ha verificado ningún justificante de la AEAT para esta
+        presentación.
+      verified: Justificante de la AEAT verificado el {date}.
     record:
       refused_file_out_of_date: El fichero del {date} está desactualizado. Vuelve
         a generarlo. Si ya presentaste ese fichero anterior en la AEAT, inicia una
@@ -7831,12 +8113,15 @@ workspace:
       acknowledge: He comprobado lo que hace aplicar
       and_more: '{shown} y {count} más'
       apply: Aplicar y recalcular
+      applying: Aplicando tus cambios…
       back: Volver a editar
       before_changed: la casilla cambió desde que escribiste esto
       blocked: Resuelve lo marcado con ▲ antes de aplicar.
       change_line: '{box}{concept}: {before} pasa a {after} ({effect})'
+      check_again: Volver a comprobar
       check_failed: No se han podido comprobar tus cambios. Siguen aquí; inténtalo
         de nuevo.
+      checking: Comprobando tus cambios…
       column:
         after: Después
         before: Antes
@@ -7884,11 +8169,13 @@ workspace:
       rebased: 'La declaración cambió después de que escribieras estos cambios, que
         aún no están aplicados. Revisa de nuevo las líneas marcadas (cambiadas: {count}).'
       title: 'Cambios por aplicar: {count}'
+      unknown: Cadrumo no ha podido ver si tus cambios se aplicaron; puede que sí.
+        No se vuelven a enviar. Vuelve a leer la declaración antes de seguir; tus
+        cambios siguen aquí.
     search:
       count: 'Casillas encontradas: {count}'
       empty: Ninguna casilla coincide con {query}.
-      prompt: Busca en todas las páginas por número de casilla o por palabras. Intro
-        te lleva a la casilla.
+      placeholder: Busca una casilla por número o por palabras
     section:
       box: Casilla {box}
       boxes: Casillas {first} a {last}
@@ -7903,6 +8190,7 @@ workspace:
     sources:
       and_more: y {count} más
       count: 'Casillas: {count}'
+      go_to_box: Ir a la casilla {box}
       group:
         aeat_data: Datos de la AEAT
         aeat_data_imported_on: Datos de la AEAT, importados el {date}
@@ -7929,6 +8217,8 @@ workspace:
         expand: Ver casillas
         go: Abrir la casilla
         open: Abrir el origen
+      lead: Al calcular, las casillas se rellenan con estos datos. Corrige un valor
+        donde se guarda y vuelve a calcular.
       no_source: Esta casilla no se rellena desde otro apartado.
       no_surface: «{source}» no tiene un apartado propio que abrir.
       none: Esta declaración no tiene casillas que mostrar.
@@ -7949,6 +8239,31 @@ workspace:
       file: Registrar presentación
       fill: Rellenar
       review: Comprobar
+    summary:
+      blocked: No se pudieron calcular
+      calculated: Calculadas a partir de otras casillas
+      entered: Introducidas por ti
+      imported: Traídas de tus datos
+      needs_you: Te necesitan
+      not_calculated: 'Aún sin calcular: las casillas se rellenan al calcularla.'
+      title: Esta declaración
+    surface:
+      correct:
+        declarations: Abre esa declaración y corrígelo allí
+        ledger: Abre tus registros y corrígelo allí
+        profile: Abre tu perfil y corrígelo allí
+        withholding: Abre las retenciones y corrígelo allí
+      open:
+        declarations: Abrir esa declaración
+        ledger: Abrir tus registros
+        profile: Abrir tu perfil
+        withholding: Abrir las retenciones
+    todo:
+      failed: 'Casillas que no se pudieron calcular: {count}'
+      failed_lead: Esperan algo que le faltaba al cálculo. Elige una para ver qué.
+      none: Nada de este modelo te necesita.
+      title: Pendiente
     value:
       not_applicable: no aplica
+      not_known_yet: Aún no se sabe
     was: 'antes: {value}'

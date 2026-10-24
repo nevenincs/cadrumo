@@ -16,6 +16,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Protocol, cast
 from uuid import UUID
@@ -26,6 +27,7 @@ from pydantic import BaseModel, ValidationError
 from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ...application.modelo.action_errors import ModeloEditBaselineStaleError
 from ...application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -35,6 +37,7 @@ from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
     ModeloEditAdmittedV1,
     ModeloEditApplyRequestV1,
+    ModeloEditCorrectionAddressV1,
     ModeloEditParseReason,
     ModeloEditParseRequestV1,
     ModeloEditPreflightEvaluatedV1,
@@ -46,11 +49,16 @@ from ...application.modelo.edit_models import (
     ModeloScalarEditIntentV1,
 )
 from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
+from ...application.modelo.edit_parse_text import parse_refusal_text
+from ...application.modelo.edit_preflight import VALUE_REFUSED_PREFIX
 from ...application.modelo.edit_refusal_projection import (
     ModeloEditCalculationPrerequisiteV1,
     ModeloEditRefusalProjectionStore,
 )
+from ...application.modelo.edit_review_wording import STATED_BY_THE_REVIEW
 from ...application.modelo.edit_transient_operand import modelo_edit_financial_operand
+from ...application.modelo.value_presentation import format_casilla_value
+from ...application.modelo.work_amend_contracts import ModeloWorkAmendOverride
 from ...application.modelo.work_form_service import load_modelo_work_form
 from ...application.modelo.workbench_operations import (
     MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
@@ -83,8 +91,10 @@ from ...application.operations.owner import OperationExecutorContext
 from ...application.operations.tests.financial_operand_delivery import deliver_financial_operand
 from ...application.operations.typed_financial_operand_context import BoundTypedFinancialOperandAccess
 from ...core.casilla_id import validated_casilla_id
+from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
+from ...core.i18n.render import tr
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_repository import CalculationRevisionPersistenceError
@@ -445,7 +455,9 @@ def test_renewal_extends_an_unmoved_baseline_and_names_what_moved_otherwise(
         expired = work.admit(issued_at=datetime.now(UTC) - timedelta(minutes=10))
         assert isinstance(expired, ModeloEditAdmittedV1)
         request = ModeloEditRenewRequest(
-            profile_id=_profile_id(work), baseline=ModeloEditApplyBaselineV1.from_baseline(expired.baseline)
+            profile_id=_profile_id(work),
+            baseline=ModeloEditApplyBaselineV1.from_baseline(expired.baseline),
+            output_language=OutputLanguage.EN,
         )
         renewed, _ = _run(
             work, executor, MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID, request, ModeloEditRenewalProjectionV1
@@ -462,6 +474,9 @@ def test_renewal_extends_an_unmoved_baseline_and_names_what_moved_otherwise(
     assert renewed.renewed_baseline.expires_at > datetime.now(UTC)
     assert moved.renewed_baseline is None and moved.refusal is not None
     assert isinstance(moved.refusal.refusal, ModeloEditStaleBaselineRefusalV1)
+    # The refusal is said in the language the request named, in its registered family's message.
+    assert renewed.refusal_words is None
+    assert moved.refusal_words == resolve_error_message(ModeloEditBaselineStaleError(), locale=OutputLanguage.EN.value)
 
 
 def test_preflight_names_the_address_of_its_findings_without_applying(
@@ -483,7 +498,9 @@ def test_preflight_names_the_address_of_its_findings_without_applying(
             work,
             executor,
             MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-            ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
+            ModeloEditOperatorInputV2(
+                submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+            ),
             ModeloEditPreflightProjectionV1,
         )
         after = work.require_head()
@@ -492,12 +509,20 @@ def test_preflight_names_the_address_of_its_findings_without_applying(
     assert isinstance(projection.outcome, ModeloEditPreflightEvaluatedV1)
     assert all(finding.address in {None, _SET_06.address} for finding in projection.outcome.findings)
     assert after.calculation_revision_id == before.calculation_revision_id
+    listed = [finding for finding in projection.outcome.findings if finding.code not in STATED_BY_THE_REVIEW]
+    assert [finding.code for finding in projection.findings] == [finding.code for finding in listed]
+    for worded in projection.findings:
+        if not worded.code.startswith(VALUE_REFUSED_PREFIX):
+            assert worded.words == tr(f"workspace.modelo.review.finding.{worded.code}", locale=OutputLanguage.EN.value)
+    assert projection.refusal_words is None
 
 
 def _typed_input(submission: ModeloEditSubmissionV1, typed: tuple[str, ...]) -> str:
     """The operator input a frontend sends: the submission, with each entry's text as the filer typed it."""
     document = json.loads(
-        ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)).model_dump_json()
+        ModeloEditOperatorInputV2(
+            submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+        ).model_dump_json()
     )
     for entry, text in zip(document["submission"]["lexemes"], typed, strict=True):
         entry["lexeme"] = text
@@ -536,7 +561,9 @@ def test_preflight_reads_each_entry_as_typed_through_its_address_grammar(
             work,
             executor,
             MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-            ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
+            ModeloEditOperatorInputV2(
+                submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+            ),
             ModeloEditPreflightProjectionV1,
             input_json=_typed_input(submission, ("1.234,56", "7")),
         )
@@ -547,7 +574,8 @@ def test_preflight_reads_each_entry_as_typed_through_its_address_grammar(
             ModeloEditOperatorInputV2(
                 submission=ModeloEditApplySubmissionV1.from_submission(
                     submission.model_copy(update={"lexemes": entries[:1]})
-                )
+                ),
+                output_language=OutputLanguage.EN,
             ),
             ModeloEditPreflightProjectionV1,
             input_json=_typed_input(submission.model_copy(update={"lexemes": entries[:1]}), ("doce",)),
@@ -561,8 +589,21 @@ def test_preflight_reads_each_entry_as_typed_through_its_address_grammar(
     assert closed_box.refusal.reason is ModeloEditParseReason.ADDRESS_NOT_WRITABLE
     (word,) = nonsense.parsed
     assert word.value is None and word.refusal is not None and word.refusal.address == _SET_06.address
-    # What the filer typed never comes back, and nothing was applied.
-    assert "1.234,56" not in projection.model_dump_json() and "doce" not in nonsense.model_dump_json()
+    # Each entry is read back, or refused, in the language it was typed in.
+    six = next(
+        entry
+        for entry in admission.baseline.permitted_surface
+        if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1) and entry.casilla_id == _SET_06.address.casilla_id
+    )
+    assert amount.value_text == format_casilla_value(
+        Decimal("1234.56"), data_type=six.grammar.data_type, language=OutputLanguage.ES
+    )
+    assert amount.refusal_words is None
+    assert closed_box.refusal_words == parse_refusal_text(closed_box.refusal, OutputLanguage.ES)
+    assert word.refusal_words == parse_refusal_text(word.refusal, OutputLanguage.ES)
+    # What the filer typed never comes back, only the value it is read as, and nothing was applied.
+    read_back = {"parsed": {"__all__": {"value_text"}}}
+    assert "1.234,56" not in projection.model_dump_json(exclude=read_back) and "doce" not in nonsense.model_dump_json()
     assert after.calculation_revision_id == before.calculation_revision_id
 
 
@@ -585,7 +626,7 @@ def test_an_apply_carrying_entries_as_typed_is_refused_before_it_is_admitted(tmp
         with pytest.raises(ValidationError):
             ModeloEditApplyRequestV1(operation_id="a" * 64, submission=submission)
 
-    assert refused.value.reason is OperationFinancialOperandRefusalCode.WRONG_MODEL
+    assert refused.value.reason is OperationFinancialOperandRefusalCode.ENTRY_AS_TYPED
 
 
 def test_a_retained_prerequisite_is_handed_out_once_to_its_exact_apply(tmp_path: Path) -> None:
@@ -624,6 +665,14 @@ def test_a_retained_prerequisite_is_handed_out_once_to_its_exact_apply(tmp_path:
             request,
             ModeloEditApplyPrerequisiteProjectionV1,
         )
+        store.retain(prerequisite)
+        worded, _ = _run(
+            work,
+            executor,
+            MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
+            request.model_copy(update={"output_language": OutputLanguage.ES}),
+            ModeloEditApplyPrerequisiteProjectionV1,
+        )
         store.retain(replace(prerequisite, operation_id="e" * 64))
         other_baseline, _ = _run(
             work,
@@ -636,5 +685,65 @@ def test_a_retained_prerequisite_is_handed_out_once_to_its_exact_apply(tmp_path:
     assert first.prerequisite is not None
     assert first.prerequisite.casilla_id == "06"
     assert first.prerequisite.calculation_revision_id == head.calculation_revision_id
+    assert first.prerequisite.words is None
+    assert worded.prerequisite is not None and worded.prerequisite.words is not None
+    assert worded.prerequisite.words.splitlines()[0] in {
+        tr("workspace.modelo.apply_prerequisite.what", locale="es"),
+        tr("workspace.modelo.apply_prerequisite.earlier", locale="es"),
+    }
     assert second.prerequisite is None
     assert other_baseline.prerequisite is None
+
+
+def test_preflight_reads_a_correction_typed_for_any_box_the_revision_defines(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A corrected figure reads for a box no edit may write, through the correction grammar, and nothing is applied."""
+    with seeded_operator_work(tmp_path) as work:
+        before = work.recalculate()
+        admission = work.admit()
+        assert isinstance(admission, ModeloEditAdmittedV1)
+        writable = {
+            entry.casilla_id
+            for entry in admission.baseline.permitted_surface
+            if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1)
+        }
+        revision = work.operation.revision_for_context("130", filing_year=2026, period="1T")
+        closed = next(casilla.id for casilla in revision.casillas if casilla.id not in writable)
+        entries = (
+            ModeloEditParseRequestV1(
+                address=ModeloEditCorrectionAddressV1(casilla_id=closed), entry_locale=OutputLanguage.ES, lexeme=""
+            ),
+            ModeloEditParseRequestV1(
+                address=ModeloEditCorrectionAddressV1(casilla_id=validated_casilla_id("06")),
+                entry_locale=OutputLanguage.ES,
+                lexeme="",
+            ),
+        )
+        submission = ModeloEditSubmissionV1(
+            baseline=admission.baseline, mutation_family=ModeloEditMutationFamily.CALCULATE, lexemes=entries
+        )
+        executor = ModeloEditPreflightExecutor(
+            ports_factory=_ports_factory(work, observations=_OperationLoadObservations(), monkeypatch=monkeypatch)
+        )
+        projection, _ = _run(
+            work,
+            executor,
+            MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
+            ModeloEditOperatorInputV2(
+                submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+            ),
+            ModeloEditPreflightProjectionV1,
+            input_json=_typed_input(submission, ("1.234,567", "1,1234567")),
+        )
+        after = work.require_head()
+
+    assert isinstance(projection.outcome, ModeloEditPreflightEvaluatedV1)
+    corrected, too_fine = projection.parsed
+    assert (corrected.address, corrected.value, corrected.refusal) == (entries[0].address, "1234.567", None)
+    ModeloWorkAmendOverride(casilla_id=closed, value="1234.567")
+    assert too_fine.refusal is not None
+    assert too_fine.refusal.reason is ModeloEditParseReason.TOO_MANY_DECIMALS
+    assert "1.234,567" not in projection.model_dump_json(exclude={"parsed": {"__all__": {"value_text"}}})
+    assert after.calculation_revision_id == before.calculation_revision_id

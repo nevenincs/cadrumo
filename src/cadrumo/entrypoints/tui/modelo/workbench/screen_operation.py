@@ -25,6 +25,7 @@ from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.operations import OperationTerminalCondition
+from .....domain.modelos.verification_report import VerificationCompletenessStatus
 from ...components.dialogs import ConfirmScreen
 from ...operations.controller_port import OperationControllerPort
 from ...operations.refusal_explanation import public_refusal_explanation
@@ -84,14 +85,16 @@ class WorkbenchOperationMixin:
             action = tr("workspace.modelo.next.apply", count=len(self._session.changes))
             self._notice(f"{action} [{_NEXT_KEYS[ModeloFormNextAction.APPLY]}]")
             return True
-        hold = export_hold(load.form, verified=load.verified, recorded=self.recorded)
+        hold = export_hold(load.form, self._language, verified=load.verified, recorded=self.recorded)
         if hold is None or hold.reason is ModeloFormExportHoldReason.VERIFY:
             return False
         if hold.reason is ModeloFormExportHoldReason.BLOCKS:
             self.action_issues()
         elif self._may_confirm():
             self._confirm_next()
-        self._notice(tr(hold.locale_key, count=hold.count))
+        blocks = hold.reason is ModeloFormExportHoldReason.BLOCKS
+        key = _NEXT_KEYS[ModeloFormNextAction.RESOLVE if blocks else ModeloFormNextAction.CONFIRM]
+        self._notice(f"{hold.words} [{key}]")
         return True
 
     def action_export(self: ModeloWorkbenchScreen) -> None:
@@ -117,10 +120,10 @@ class WorkbenchOperationMixin:
         if not artefacts:
             if self._filing_withheld():
                 return
-            self._notice(tr("workspace.modelo.export.verify_first"))
+            self._notice(f"{tr('workspace.modelo.export.verify_first')} [{_NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
             return
         if load.form.calculation_revision_id is None:
-            self._notice(tr("workspace.modelo.export.verify_first"))
+            self._notice(f"{tr('workspace.modelo.export.verify_first')} [{_NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
             return
         offer = replace(
             offer,
@@ -139,7 +142,9 @@ class WorkbenchOperationMixin:
             if request.artefact is not ModeloExportArtefact.CALCULATION_REVIEW_XLSX and (
                 self._load is None or not self._load.verified
             ):
-                self._notice(tr("workspace.modelo.export.verify_first"))
+                self._notice(
+                    f"{tr('workspace.modelo.export.verify_first')} [{_NEXT_KEYS[ModeloFormNextAction.VERIFY]}]"
+                )
                 return
             self._run_operation(partial(actions.export, request))
 
@@ -341,7 +346,10 @@ class WorkbenchOperationMixin:
             verdict = form.verification
             if verdict is None:
                 return tr("workspace.modelo.operation.done")
-            return tr(_CHECKED_LOCALE_KEYS[verdict], key="i")
+            checked = tr(_CHECKED_LOCALE_KEYS[verdict])
+            if verdict is VerificationCompletenessStatus.COMPLETE:
+                return checked
+            return f"{checked} [{_NEXT_KEYS[ModeloFormNextAction.RESOLVE]}]"
         view = result_view(form, self._language, staged=0, recorded=self.recorded)
         if view is None or view.settled is None:
             return tr("workspace.modelo.operation.done")

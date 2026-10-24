@@ -97,7 +97,11 @@ def test_confirming_an_assumed_value_then_applying_makes_it_entered_by_the_filer
         result_line = bench.result_line()
         decision, shown = asyncio.run(_keep_in_panel(assumed, bench.installed, result_line))
         assert result_line.text()
-        assert shown == result_line.text()
+        # The panel repeats the header's result line in one line of its own width: the result whole, and every
+        # level the header counts with its glyph and count, its words given up first when the line is too narrow.
+        assert result_line.view is not None and shown.startswith(result_line.view.text)
+        for chip in result_line.chips:
+            assert f"{chip.mark.glyph} {chip.tally.words}" in shown or f"{chip.mark.glyph} {chip.count}" in shown
         assert isinstance(decision, EditorDecision)
 
         session = WorkbenchEditSession(OutputLanguage.EN)

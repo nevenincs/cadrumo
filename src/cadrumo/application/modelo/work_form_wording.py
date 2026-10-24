@@ -22,17 +22,21 @@ from ...core.period import Period, PeriodKind
 from .edit_models import ModeloEditNonWritableReason
 from .edit_value_grammar import ModeloEditRatioUnit, ratio_unit
 from .source_policy import SourceFamily
-from .value_presentation import format_casilla_value
+from .value_presentation import absent_value_text, format_casilla_value
 from .work_form_models import (
     ABSENT_FROM_ADMISSION,
     ASKS_FOR_A_VALUE,
     ModeloFormEditability,
+    ModeloFormEditClosure,
     ModeloFormField,
     ModeloFormOrigin,
     ModeloFormPrintedRate,
     ModeloFormRate,
     ModeloFormRateUnit,
+    ModeloFormRepeatingBlock,
+    ModeloFormRepeatingRow,
     ModeloFormScalar,
+    ModeloFormSection,
     ModeloWorkForm,
     holds_zero,
     map_form_fields,
@@ -70,13 +74,40 @@ def modelo_number(modelo: str, language: OutputLanguage | None = None) -> str:
     return tr("workspace.modelo.modelo_number", modelo=modelo, locale=_locale(language))
 
 
-def modelo_title(modelo: str, language: OutputLanguage) -> str:
-    """The modelo's number and its own title in the filer's language, else in Spanish, else its number alone."""
+def modelo_name(modelo: str, language: OutputLanguage) -> str | None:
+    """The modelo's own title without its number, in the filer's language, else in Spanish; ``None`` without one."""
     for locale in (language.value, OutputLanguage.ES.value):
         title = lookup_translation(f"modelo.schema.{modelo}.field.title", locale=locale)
         if title is not None and title:
-            return tr("workspace.modelo.modelo_title", modelo=modelo, title=title, locale=language.value)
-    return modelo_number(modelo, language)
+            return title
+    return None
+
+
+def modelo_title(modelo: str, language: OutputLanguage) -> str:
+    """The modelo's number and its own title in the filer's language, else in Spanish, else its number alone."""
+    name = modelo_name(modelo, language)
+    if name is None:
+        return modelo_number(modelo, language)
+    return tr("workspace.modelo.modelo_title", modelo=modelo, title=name, locale=language.value)
+
+
+_NOT_APPLYING_LOCALE_KEYS: Final[Mapping[PeriodKind, str]] = MappingProxyType(
+    {
+        PeriodKind.QUARTERLY: "workspace.modelo.applicability.quarter",
+        PeriodKind.MONTHLY: "workspace.modelo.applicability.month",
+        PeriodKind.ANNUAL: "workspace.modelo.applicability.year",
+    }
+)
+_NOT_APPLYING_PERIOD_LOCALE_KEY: Final[str] = "workspace.modelo.applicability.period"
+
+
+def does_not_apply_words(period: Period, language: OutputLanguage | None = None) -> str:
+    """Say that a page does not apply, naming the period the way the filer counts it: this quarter, month or year.
+
+    A period kind without words of its own is said as "this period".
+    """
+    key = _NOT_APPLYING_LOCALE_KEYS.get(period.kind, _NOT_APPLYING_PERIOD_LOCALE_KEY)
+    return tr(key, locale=_locale(language))
 
 
 def date_text(value: date, language: OutputLanguage) -> str:
@@ -397,19 +428,65 @@ def field_value_text(field: ModeloFormField, language: OutputLanguage) -> str | 
     if rate is not None and rate_is_value(field):
         return rate_text(rate, language)
     value = field.value
-    if (
-        value is None
-        or field.editability is ModeloFormEditability.DESIGN_CONSTANT
-        or field.origin in _NO_FIGURE_ORIGINS
-        or field.origin in _ABSENT_ORIGINS
-        or bare_rate(field)
-    ):
+    if value is None or field.origin in _NO_FIGURE_ORIGINS or field.origin in _ABSENT_ORIGINS or bare_rate(field):
         return None
     unit = own_ratio_unit(field)
     if unit in _RATE_READINGS and isinstance(value, Decimal):
         # A rate reads as the printed form writes one, "2 %" rather than "2.00 %"; dropping zeros rounds nothing.
         value = _without_trailing_zeros(value)
     return format_casilla_value(value, data_type=field.data_type, language=language, ratio_unit=unit)
+
+
+_CONTEXT_DATA_TYPE: Final[str] = "text"
+
+
+def context_value_text(value: ModeloFormScalar, language: OutputLanguage, *, period: Period | None = None) -> str:
+    """A declared filing-context value in ``language``.
+
+    The period reads in words when the value is the period, a date in the
+    language's order, and a value that is not there in the words for nothing.
+    """
+    if period is not None:
+        return period_words(period, language)
+    if value is None:
+        return absent_value_text(language)
+    return format_casilla_value(value, data_type=_CONTEXT_DATA_TYPE, language=language)
+
+
+def record_value_text(value: ModeloFormScalar, data_type: str, language: OutputLanguage) -> str | None:
+    """One value of a table's records as the table shows it; ``None`` when the record holds none."""
+    if value is None:
+        return None
+    return format_casilla_value(value, data_type=data_type, language=language, ratio_unit=ratio_unit(data_type, None))
+
+
+def _worded_records(block: ModeloFormRepeatingBlock, language: OutputLanguage) -> ModeloFormRepeatingBlock:
+    rows: list[ModeloFormRepeatingRow] = [
+        row.model_copy(
+            update={
+                "value_texts": tuple(
+                    record_value_text(value, data_type, language)
+                    for value, data_type in zip(row.values, block.column_data_types, strict=True)
+                )
+            }
+        )
+        for row in block.rows
+    ]
+    return block.model_copy(update={"rows": tuple(rows)})
+
+
+def _with_worded_records(form: ModeloWorkForm, language: OutputLanguage) -> ModeloWorkForm:
+    def section(part: ModeloFormSection) -> ModeloFormSection:
+        blocks = tuple(
+            _worded_records(block, language) if isinstance(block, ModeloFormRepeatingBlock) else block
+            for block in part.blocks
+        )
+        return part.model_copy(update={"blocks": blocks})
+
+    pages = tuple(
+        page.model_copy(update={"sections": tuple(section(part) for part in page.sections)}) for page in form.pages
+    )
+    return form.model_copy(update={"pages": pages})
 
 
 def worded_form(form: ModeloWorkForm) -> ModeloWorkForm:
@@ -420,7 +497,7 @@ def worded_form(form: ModeloWorkForm) -> ModeloWorkForm:
     filed or not, and naming the day its AEAT tax data was imported.
     """
     language = form.language
-    recorded = form.edit_closure is not None
+    recorded = form.edit_closure is ModeloFormEditClosure.RECORDED_AS_FILED
     imported = aeat_imported_on(form)
 
     def word(field: ModeloFormField) -> ModeloFormField:
@@ -434,10 +511,17 @@ def worded_form(form: ModeloWorkForm) -> ModeloWorkForm:
         )
 
     worded = map_form_fields(form, word)
+    worded = _with_worded_records(worded, language)
     modelo = str(form.modelo)
+    not_applying = does_not_apply_words(form.period, language)
     return worded.model_copy(
         update={
+            "pages": tuple(
+                page.model_copy(update={"applicability_words": not_applying if page.applies is False else None})
+                for page in worded.pages
+            ),
             "modelo_title": modelo_title(modelo, language),
+            "modelo_name": modelo_name(modelo, language),
             "modelo_number": modelo_number(modelo, language),
             "period_words": period_words(form.period, language),
         }
@@ -463,11 +547,14 @@ __all__ = [
     "SOURCE_WORDED_ORIGINS",
     "aeat_imported_on",
     "bare_rate",
+    "context_value_text",
     "date_text",
     "day_text",
+    "does_not_apply_words",
     "editability_text",
     "field_value_text",
     "holds_nothing",
+    "modelo_name",
     "modelo_number",
     "modelo_title",
     "no_earlier_filing",
@@ -479,6 +566,7 @@ __all__ = [
     "period_words",
     "rate_is_value",
     "rate_text",
+    "record_value_text",
     "set_by_form",
     "shown_rate",
     "worded_form",

@@ -51,6 +51,8 @@ from cadrumo.application.operations.frontend_projection import OperationPublicPr
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import output_language
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.entrypoints.tui.modelo.lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
 from cadrumo.entrypoints.tui.operations.controller_port import OperationControllerPort
@@ -243,6 +245,7 @@ class _RuntimeModeloLifecycleBindings:
             ModeloEditRenewRequest(
                 profile_id=self.profile_id,
                 baseline=ModeloEditApplyBaselineV1.from_baseline(baseline),
+                output_language=OutputLanguage(output_language()),
             ),
             ModeloEditRenewalProjectionV1,
         )
@@ -258,7 +261,10 @@ class _RuntimeModeloLifecycleBindings:
     def preflight(self, submission: ModeloEditSubmissionV1) -> ModeloEditPreflightResultV1:
         projection = self.read(
             MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-            ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
+            ModeloEditOperatorInputV2(
+                submission=ModeloEditApplySubmissionV1.from_submission(submission),
+                output_language=OutputLanguage(output_language()),
+            ),
             ModeloEditPreflightProjectionV1,
         )
         if projection.profile_id != self.profile_id or projection.work_unit_id != self.work_unit_id:

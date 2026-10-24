@@ -258,7 +258,7 @@ class WorkbenchSearchPanel(Vertical):
         self._mode = mode
         self._entries = entries
         self._hits = ()
-        prompt = "workspace.modelo.search.prompt" if mode is SearchMode.SEARCH else "workspace.modelo.go_to.prompt"
+        prompt = "tui.modelo.search.prompt" if mode is SearchMode.SEARCH else "tui.modelo.go_to.prompt"
         self.query_one("#wb-search-prompt", Static).update(tr(prompt))
         self.query_one("#wb-search-status", Static).update("")
         self.query_one("#wb-search-results", OptionList).clear_options()

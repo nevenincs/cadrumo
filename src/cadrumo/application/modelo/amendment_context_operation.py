@@ -13,6 +13,7 @@ from pydantic import BaseModel, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import profile_operation_subject
@@ -46,6 +47,8 @@ from .filing_record_ownership import load_profile_filing_record
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .registry_discovery import registry_casillas_for_registry_scope
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
+from .work_amend_correction import ModeloAmendmentCorrectionContextV1, filed_casilla_values, worded_amendment_context
+from .work_form_service import modelo_form_snapshot
 
 MODELO_WORK_AMENDMENT_CONTEXT_OPERATION_DEFINITION_ID = "modelo.work.amendment_context"
 
@@ -57,6 +60,8 @@ class ModeloWorkAmendmentContextRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     filing_record_id: FilingRecordId
+    #: The language to word the correction in; ``None`` reads the facts without words.
+    output_language: OutputLanguage | None = None
 
 
 class ModeloWorkAmendmentContextProjection(BaseModel):
@@ -72,6 +77,8 @@ class ModeloWorkAmendmentContextProjection(BaseModel):
     casilla_rows: tuple[ModeloCasillaRow, ...]
     permitted_amendment_kinds: tuple[CalculationRevisionAmendmentKind, ...]
     m303_rectificativa_motive_applicable: bool
+    #: The correction worded in the requested language; ``None`` when no language was requested.
+    correction: ModeloAmendmentCorrectionContextV1 | None = None
 
     @model_validator(mode="after")
     def _bound_result(self) -> Self:
@@ -85,6 +92,13 @@ class ModeloWorkAmendmentContextProjection(BaseModel):
             self.permitted_amendment_kinds
         ):
             raise ValueError("amendment context has invalid permitted kinds")
+        correction = self.correction
+        if correction is not None and (
+            correction.filed.filing_record_id != self.record.filing_record_id
+            or tuple(option.kind for option in correction.kinds) != self.permitted_amendment_kinds
+            or not {row.casilla_id for row in correction.rows} <= set(row_ids)
+        ):
+            raise ValueError("amendment context wording does not match its facts")
         return self
 
 
@@ -145,21 +159,40 @@ def _capture(
     permitted_kinds = tuple(kind for kind in CalculationRevisionAmendmentKind if kind.value in permitted_values)
     if frozenset(kind.value for kind in permitted_kinds) != permitted_values:
         raise ValueError("amendment context contains an unknown permitted kind")
+    calculation = ModeloCalculationSnapshot.from_revision(
+        revision, work_unit=unit, operation=context.authority_operation
+    )
+    casilla_rows = registry_casillas_for_registry_scope(
+        str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period.registry_token,
+        operation=context.authority_operation,
+    ).rows
+    language = payload.output_language
     return ModeloWorkAmendmentContextProjection(
         profile_id=payload.profile_id,
         record=ModeloFilingRecordSnapshot.from_record(record),
         unit=ModeloWorkMetadataSnapshot.from_work_unit(unit),
-        calculation=ModeloCalculationSnapshot.from_revision(
-            revision, work_unit=unit, operation=context.authority_operation
-        ),
-        casilla_rows=registry_casillas_for_registry_scope(
-            str(unit.modelo),
-            filing_year=unit.filing_year,
-            period=unit.period.registry_token,
-            operation=context.authority_operation,
-        ).rows,
+        calculation=calculation,
+        casilla_rows=casilla_rows,
         permitted_amendment_kinds=permitted_kinds,
         m303_rectificativa_motive_applicable=motive_applicable,
+        correction=(
+            None
+            if language is None
+            else worded_amendment_context(
+                record=record,
+                unit=unit,
+                snapshot=modelo_form_snapshot(
+                    context.authority_operation, unit.modelo, unit.filing_year, unit.period, unit.revision_id
+                ),
+                casilla_rows=casilla_rows,
+                filed_values=filed_casilla_values(calculation),
+                permitted_kinds=permitted_kinds,
+                motive_applicable=motive_applicable,
+                language=language,
+            )
+        ),
     )
 
 

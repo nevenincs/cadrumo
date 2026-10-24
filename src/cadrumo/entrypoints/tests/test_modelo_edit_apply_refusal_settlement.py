@@ -32,6 +32,7 @@ from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2
 from ...application.modelo.edit_services import writable_scalar_entry
 from ...core.casilla_id import validated_casilla_id
 from ...core.errors.error_codes import get_registered_error_code_by_code
+from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
 from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
@@ -129,7 +130,7 @@ def test_a_refused_edit_settles_refused_with_its_family_code_and_writes_nothing(
         work_unit_id, wire = seeded_modelo_edit_submission(profile_id, operation=operation)
         assert isinstance(wire, ModeloEditApplySubmissionV1)
         refused = ModeloEditApplySubmissionV1.from_submission(variant(wire.to_submission()))
-        payload = ModeloEditOperatorInputV2(submission=refused)
+        payload = ModeloEditOperatorInputV2(submission=refused, output_language=OutputLanguage.EN)
         catalogues_before = _catalogue_digests()
 
         _submitted, observed = asyncio.run(

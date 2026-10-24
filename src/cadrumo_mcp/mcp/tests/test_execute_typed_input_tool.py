@@ -205,7 +205,7 @@ async def test_describe_gives_the_typed_operator_input_schema_only_where_the_con
 
     assert edit["description"]["contract"]["transient_financial_operand"] is not None
     schema = edit["operator_input_json_schema"]
-    assert set(schema["properties"]) == {"input_version", "submission"}
+    assert set(schema["properties"]) == {"input_version", "submission", "output_language"}
     assert read["description"]["contract"]["transient_financial_operand"] is None
     assert "operator_input_json_schema" not in read
 

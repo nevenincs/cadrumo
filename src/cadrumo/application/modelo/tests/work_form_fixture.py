@@ -16,7 +16,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.filing.schema import ModeloValueKind
-from ....domain.modelos.calculation_revision import CalculationRevisionState
+from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import ModeloVerificationFinding
 from ..work_form import build_modelo_work_form
@@ -42,8 +42,12 @@ def built_form(
     lifecycle: CalculationRevisionState | None = None,
     findings: tuple[ModeloVerificationFinding, ...] = (),
     language: OutputLanguage = OutputLanguage.EN,
+    revision: CalculationRevision | None = None,
 ) -> ModeloWorkForm:
-    """Build a form whose ``held`` boxes carry the calculation's values; ``entered`` ``None`` is an unknown record."""
+    """Build a form whose ``held`` boxes carry the calculation's values; ``entered`` ``None`` is an unknown record.
+
+    ``revision`` is the calculation the form shows, whose notes the form carries; ``None`` before any.
+    """
     snapshot = form_snapshot(operation, modelo, year, code)
     values = held or {}
     rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
@@ -54,7 +58,7 @@ def built_form(
         period=Period.from_year_and_code(year, code),
         registry_revision_id=snapshot.revision.id,
         work_unit_id="e" * 64,
-        calculation_revision_id=None,
+        calculation_revision_id=None if revision is None else revision.calculation_revision_id,
         lifecycle_state=lifecycle,
         verification_outcome=None,
         progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
@@ -71,7 +75,7 @@ def built_form(
         review=review,
         snapshot=snapshot,
         layout=operation.form_layout(modelo, snapshot.revision.id),
-        revision=None,
+        revision=revision,
         permitted_surface=None,
         entered_casilla_ids=None if entered is None else frozenset(validated_casilla_id(item) for item in entered),
         overridden_binding_ids=None if entered is None else frozenset(),

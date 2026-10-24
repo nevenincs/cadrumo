@@ -17,11 +17,15 @@ refusal never echoes the lexeme.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
+from ...core.casilla_id import CasillaId
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...domain.filing.schema import ModeloScalar
 from .edit_models import (
     ModeloEditBaselineV1,
     ModeloEditBindingAddressV1,
+    ModeloEditCorrectionAddressV1,
     ModeloEditNormalisation,
     ModeloEditParsedValueV1,
     ModeloEditParseReason,
@@ -99,19 +103,39 @@ def modelo_edit_address_grammar(
     return None
 
 
+def entry_grammar(
+    address: ModeloEditValueAddressV1,
+    *,
+    baseline: ModeloEditBaselineV1,
+    correction_grammars: Mapping[CasillaId, ModeloEditValueGrammarV1] | None = None,
+) -> ModeloEditValueGrammarV1 | None:
+    """The grammar an entry typed for ``address`` is read against, or ``None`` when nothing may be typed there.
+
+    A correction reads against ``correction_grammars``; every other address
+    against the grammar ``baseline`` admitted for it.
+    """
+    if isinstance(address, ModeloEditCorrectionAddressV1):
+        return (correction_grammars or {}).get(address.casilla_id)
+    return modelo_edit_address_grammar(baseline, address)
+
+
 def parse_modelo_edit_lexeme(
     request: ModeloEditParseRequestV1,
     *,
     baseline: ModeloEditBaselineV1,
     tax_id_format: SpanishTaxIdFormat | None,
+    correction_grammars: Mapping[CasillaId, ModeloEditValueGrammarV1] | None = None,
 ) -> ModeloEditParseResultV1:
     """Read one typed lexeme as its address's locale-free value, or refuse with a stable reason.
 
     ``tax_id_format`` is the governed Spanish tax-identifier format; ``None``
     refuses NIF addresses rather than validating them against nothing.
+    ``correction_grammars`` are the grammars a filed declaration's corrected
+    values are read against, by casilla; without them a correction entry is
+    refused as not writable.
     """
     address = request.address
-    grammar = modelo_edit_address_grammar(baseline, address)
+    grammar = entry_grammar(address, baseline=baseline, correction_grammars=correction_grammars)
     if grammar is None:
         return ModeloEditRefusedV1(
             refusal=ModeloEditParseRefusalV1(address=address, reason=ModeloEditParseReason.ADDRESS_NOT_WRITABLE)
@@ -138,6 +162,7 @@ def parse_modelo_edit_lexeme(
 
 
 __all__ = [
+    "entry_grammar",
     "modelo_edit_address_grammar",
     "parse_modelo_edit_lexeme",
     "validate_modelo_edit_value",

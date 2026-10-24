@@ -16,6 +16,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormScalar,
     ModeloFormValueSource,
     address_key,
+    revised_field,
 )
 from ......application.modelo.work_form_next_step import ModeloFormNextAction
 from ......core.aggregation import BindingSourceKind
@@ -143,8 +144,8 @@ def test_a_staged_clear_or_restore_keeps_its_own_semantics_instead_of_becoming_a
         assert session.stage_clear(declared) is None
         clear = session.display()[address_key(declared.address)]
         assert not clear.concrete_value and clear.text == tr("workspace.modelo.staged.clear")
-        overridden = declared.model_copy(
-            update={"origin": ModeloFormOrigin.OVERRIDES_SOURCE, "editability": ModeloFormEditability.EDITABLE_OVERRIDE}
+        overridden = revised_field(
+            declared, origin=ModeloFormOrigin.OVERRIDES_SOURCE, editability=ModeloFormEditability.EDITABLE_OVERRIDE
         )
         assert session.stage_restore(overridden) is None
         restore = session.display()[address_key(overridden.address)]
@@ -226,6 +227,8 @@ async def test_reentering_clear_and_restore_displays_the_intent_separately_from_
                 "06": {
                     "origin": ModeloFormOrigin.OVERRIDES_SOURCE,
                     "editability": ModeloFormEditability.EDITABLE_OVERRIDE,
+                    # The form states that the filer's value can go back to its source, as the builder derives.
+                    "restorable": True,
                 }
             },
         )

@@ -58,6 +58,7 @@ from cadrumo.application.modelo.filing_projection import ModeloFilingRecordSnaps
 from cadrumo.application.modelo.filing_repository import modelo_record_catalogue_repository
 from cadrumo.application.modelo.metadata_projection import ModeloWorkMetadataSnapshot
 from cadrumo.application.modelo.registry_discovery import registry_casillas_for_registry_scope
+from cadrumo.application.modelo.work_amend_correction import amendable_casilla_rows, filed_casilla_values
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.modelo.work_unit_repository import work_unit_catalogue_repository
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -84,8 +85,6 @@ from cadrumo.entrypoints.cli.modelo_amend_wizard_commands import (
     _KIND_PAGE_ID,
     _MOTIVE_PAGE_ID,
     _REASON_PAGE_ID,
-    _amendable_rows,
-    _baseline_values,
     _selected_rows,
     _selection_definition,
     _value_page_id,
@@ -399,8 +398,8 @@ def _scripted_amend(
                 baseline_revision=baseline_revision,
                 operation=operation,
             )
-        baseline_values = _baseline_values(context)
-        amendable = _amendable_rows(context.casilla_rows, baseline_values)
+        baseline_values = filed_casilla_values(context.calculation)
+        amendable = amendable_casilla_rows(context.casilla_rows, baseline_values)
         by_number = {row.number: row for row in amendable}
         selected_ids = [by_number[number].casilla_id for number in change_numbers]
         _ACTIVE_RUNS[run_id] = {}
@@ -513,8 +512,8 @@ def _permitted_kind_choice_values(
                 baseline_revision=baseline_revision,
                 operation=operation,
             )
-        baseline_values = _baseline_values(context)
-        amendable = _amendable_rows(context.casilla_rows, baseline_values)
+        baseline_values = filed_casilla_values(context.calculation)
+        amendable = amendable_casilla_rows(context.casilla_rows, baseline_values)
         by_number = {row.number: row for row in amendable}
         selected = tuple(by_number[number] for number in change_numbers)
         _ACTIVE_RUNS[run_id] = {}
@@ -902,8 +901,8 @@ def test_amend_wizard_blank_selection_yields_no_corrections(seed_profile: Profil
                 baseline_revision=baseline_revision,
                 operation=operation,
             )
-        baseline_values = _baseline_values(context)
-        amendable = _amendable_rows(context.casilla_rows, baseline_values)
+        baseline_values = filed_casilla_values(context.calculation)
+        amendable = amendable_casilla_rows(context.casilla_rows, baseline_values)
         _ACTIVE_RUNS[run_id] = {}
         try:
             definition = _selection_definition(

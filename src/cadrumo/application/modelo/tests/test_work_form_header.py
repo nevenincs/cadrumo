@@ -16,6 +16,7 @@ from uuid import UUID
 import pytest
 
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
@@ -169,9 +170,12 @@ def test_the_result_is_stated_once_calculated_and_otherwise_says_why_it_has_no_f
     failed = result_view(_result_box(form, ModeloFormOrigin.CALCULATION_FAILED), _EN, recorded=False)
 
     assert uncalculated is not None and uncalculated.state is ModeloFormResultState.NOT_CALCULATED
-    assert uncalculated.text is None and uncalculated.locale_key == "workspace.modelo.header.result.not_calculated"
+    assert (
+        uncalculated.text == uncalculated.brief_text == tr("workspace.modelo.header.result.not_calculated", locale="en")
+    )
+    assert uncalculated.words is None and "[" not in uncalculated.text
     assert failed is not None and failed.state is ModeloFormResultState.FAILED
-    assert failed.locale_key == "workspace.modelo.header.result.failed"
+    assert failed.text == tr("workspace.modelo.header.result.failed", locale="en")
     assert failed.help
     assert failed.casilla_id == selected.casilla_id
 
@@ -202,7 +206,7 @@ def test_a_settled_result_reads_its_declared_direction_and_never_the_sign(operat
     assert unknown is not None and unknown.amount_text is not None and unknown.amount_text.startswith("−")
 
 
-def test_the_file_is_said_in_words_when_current_and_by_its_sentence_when_out_of_date(
+def test_the_file_is_said_in_words_and_one_from_an_earlier_calculation_is_out_of_date(
     operation: PinnedAuthorityOperation,
 ) -> None:
     form = _calculated(_entered(operation))
@@ -222,8 +226,9 @@ def test_the_file_is_said_in_words_when_current_and_by_its_sentence_when_out_of_
     made = file_view(current, _EN, recorded=False)
     stale = file_view(earlier, _EN, recorded=False)
 
-    assert made is not None and made.words is not None and made.created_on in made.words
-    assert stale is not None and stale.words is None and stale.locale_key == "workspace.modelo.header.file_out_of_date"
+    assert made is not None and made.current and made.created_on in made.words
+    assert stale is not None and not stale.current
+    assert stale.words == tr("workspace.modelo.header.file_out_of_date", date=stale.created_on, locale="en")
     assert file_view(current, _EN, recorded=True) is None
     assert file_view(form, _EN, recorded=False) is None
 
@@ -253,7 +258,7 @@ def test_the_file_is_held_back_exactly_where_the_next_step_does_not_offer_it(
         (verified, True, None, 0),
     ]
     for form, is_verified, reason, count in table:
-        hold = export_hold(form, verified=is_verified, recorded=False)
+        hold = export_hold(form, _EN, verified=is_verified, recorded=False)
         offered = form_next_step(form, verified=is_verified, filed=False).action in _FILE_ACTIONS
         assert (None if hold is None else (hold.reason, hold.count)) == (None if reason is None else (reason, count)), (
             reason,
@@ -261,7 +266,7 @@ def test_the_file_is_held_back_exactly_where_the_next_step_does_not_offer_it(
         )
         assert offered == (hold is None), (reason, hold)
     filed = built_form(operation, "210", 2025, "0A", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO)
-    assert export_hold(filed, verified=False, recorded=True) is None
+    assert export_hold(filed, _EN, verified=False, recorded=True) is None
 
 
 def test_a_recorded_declaration_states_its_result_and_nothing_left_to_do(operation: PinnedAuthorityOperation) -> None:

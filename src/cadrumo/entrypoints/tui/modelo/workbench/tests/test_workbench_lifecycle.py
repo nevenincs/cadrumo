@@ -74,7 +74,7 @@ async def test_staged_changes_are_applied_before_a_recalculation() -> None:
             notice = _notice(screen)
 
     assert actions.requested == []
-    assert notice == "Apply or discard your changes before recalculating [R]."
+    assert notice == "Apply or discard your changes before recalculating. [R]"
 
 
 @pytest.mark.asyncio
@@ -109,7 +109,7 @@ async def test_an_export_waits_for_verification() -> None:
             notice = _notice(screen)
 
     assert still_workbench
-    assert notice == tr("workspace.modelo.export.verify_first", locale="en")
+    assert notice == f"{tr('workspace.modelo.export.verify_first', locale='en')} [F8]"
     assert actions.exports == []
 
 

@@ -235,7 +235,7 @@ def _next_line_source(action: str, key: str) -> str:
     from cadrumo.core.i18n.render import tr
 
     line = tr(
-        "workspace.modelo.next_line",
+        "tui.modelo.next_line",
         action=tr(f"workspace.modelo.next.{action}", count=_COUNT_PLACEHOLDER, date=_DATE_PLACEHOLDER),
         key=key,
     )

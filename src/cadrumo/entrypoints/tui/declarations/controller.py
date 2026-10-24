@@ -18,6 +18,7 @@ from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarSource,
     DeclarationsCalendarSourceStateV1,
 )
+from ....application.modelo.declarations_list import observed_text
 from ....application.modelo.declarations_workspace_contracts import (
     DECLARATIONS_WORKSPACE_CONTRACT_VERSION,
     DeclarationsWorkspaceAvailability,
@@ -86,7 +87,7 @@ _EVIDENCE_LOCALE_KEYS: Final = {
 _WORK_CREATE_REFUSAL_LOCALE_KEYS: Final = {
     # The application's wording names the CLI command; here the same fix is a key away.
     "application.modelo.errors.profile_readiness_setup_incomplete": (
-        "workspace.declarations.calendar.recovery.setup_incomplete"
+        "tui.declarations.calendar.recovery.setup_incomplete"
     ),
 }
 
@@ -106,8 +107,8 @@ def natural_address(modelo: object, year: object, period: object) -> str:
 
 
 def timestamp_label(value: datetime) -> str:
-    """Render a deterministic minute-bearing UTC timestamp without locale ambiguity."""
-    return value.strftime("%d/%m/%Y %H:%M UTC")
+    """Render a deterministic minute-bearing UTC timestamp without locale ambiguity, as the list says one."""
+    return observed_text(value)
 
 
 def calendar_date_label(value: date | None) -> str:

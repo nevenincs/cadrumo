@@ -20,10 +20,8 @@ declaration, so they are decided here, once, from the form and its lifecycle:
 A declaration recorded as filed shows its result and nothing else: no
 deadline, no counts, no file and no hold, since nothing is left to do on it.
 
-Words are rendered in the language given. A sentence the catalogue still
-writes with a terminal key hint (``[{key}]``) is carried as its catalogue key,
-with the values it takes, for each frontend to say with its own way to act;
-every other sentence is carried in words.
+Every sentence is rendered in the language given and names no key or button:
+a frontend that offers a way to act adds it beside the words.
 
 Changes a frontend holds unapplied make the result out of date; only that
 frontend knows them, so it adds that mark itself, as it offers
@@ -55,7 +53,7 @@ from .work_form_models import (
     ModeloFormResultDirection,
     ModeloWorkForm,
 )
-from .work_form_next_step import blocking_count, confirm_count, missing_count, result_fields
+from .work_form_next_step import blocking_count, check_count, confirm_count, missing_count, result_fields
 from .work_form_wording import date_text, day_text, field_value_text, origin_words
 
 SOON_DAYS: Final[int] = 7
@@ -84,7 +82,7 @@ _DIRECTION_LOCALE_KEYS: Final[Mapping[ModeloFormResultDirection, str]] = Mapping
 )
 """The words for each direction the read model states; total over the directions."""
 
-COUNTED_LEVELS: Final[Mapping[ModeloFormAttention, str]] = MappingProxyType(
+_COUNTED_LEVEL_LOCALE_KEYS: Final[Mapping[ModeloFormAttention, str]] = MappingProxyType(
     {
         ModeloFormAttention.BLOCKS: "workspace.modelo.header.chip.blocks",
         ModeloFormAttention.MISSING: "workspace.modelo.header.chip.missing",
@@ -119,28 +117,23 @@ class ModeloFormResultState(StrEnum):
     FAILED = "failed"
 
 
-_WORDED_RESULTS: Final[frozenset[ModeloFormResultState]] = frozenset(
-    {ModeloFormResultState.STATED, ModeloFormResultState.CHOICE_PENDING}
-)
 _RESULT_LOCALE_KEYS: Final[Mapping[ModeloFormResultState, str]] = MappingProxyType(
     {
         ModeloFormResultState.NOT_CALCULATED: "workspace.modelo.header.result.not_calculated",
         ModeloFormResultState.FAILED: "workspace.modelo.header.result.failed",
     }
 )
-"""The sentence for a result with no figure, written with the key that calculates or opens the issues."""
+"""The sentence for a result with no figure: it waits on a calculation, or the last one could not produce it."""
 _RECALCULATE_LOCALE_KEY: Final[str] = "workspace.modelo.header.stale.recalculate"
 
 
 class ModeloFormResultView(BaseModel):
     """The declaration's result as the header states it.
 
-    A result with a figure carries its words: ``text`` names the box,
-    ``short_text`` drops it and ``brief_text`` is the fewest words that still
-    state it. A result with no figure carries ``locale_key`` instead, the
-    sentence a frontend says with its own way to calculate or to open the
-    issues. ``words`` and ``amount_text`` are the direction and the amount it
-    carries, set together where the result states both.
+    ``text`` names the box, ``short_text`` drops it and ``brief_text`` is the
+    fewest words that still state the result; a result with no figure says why
+    in all three. ``words`` and ``amount_text`` are the direction and the
+    amount it carries, set together where the result states both.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -154,23 +147,17 @@ class ModeloFormResultView(BaseModel):
     direction: ModeloFormResultDirection
     words: str | None = None
     amount_text: str | None = None
-    text: str | None = None
-    short_text: str | None = None
-    brief_text: str | None = None
-    locale_key: str | None = None
+    text: str = Field(min_length=1)
+    short_text: str = Field(min_length=1)
+    brief_text: str = Field(min_length=1)
     #: What the header's help says about the result, first that it is Cadrumo's own calculation.
     help: tuple[str, ...] = ()
-    #: The sentence, written with the key that calculates, saying the records changed after the calculation.
-    out_of_date_locale_key: str | None = None
+    #: That the filer's records changed after the calculation, so it must be calculated again.
+    out_of_date_words: str | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
-    def _words_or_key(self) -> Self:
-        worded = self.state in _WORDED_RESULTS
-        if worded != (self.text is not None and self.short_text is not None and self.brief_text is not None):
-            raise ValueError("a result with a figure is said in words, and only such a result")
-        if (self.locale_key is None) == (self.state not in _WORDED_RESULTS):
-            raise ValueError("a result with no figure is said by its sentence's key, and only such a result")
+    def _direction_with_its_amount(self) -> Self:
         if (self.words is None) != (self.amount_text is None):
             raise ValueError("a result's direction words and its amount are set together")
         return self
@@ -202,9 +189,8 @@ class ModeloFormDeadlineView(BaseModel):
 class ModeloFormFileView(BaseModel):
     """The latest file for the AEAT, and whether it no longer matches the declaration.
 
-    A file made from the current calculation is said in ``words``; one made
-    from an earlier calculation is said by ``locale_key``, the sentence a
-    frontend says with its own way to create the file again.
+    ``words`` say when it was created or, for a file made from an earlier
+    calculation, that it is out of date and is to be created again.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -213,15 +199,7 @@ class ModeloFormFileView(BaseModel):
     #: The day the file was created, in the filer's language.
     created_on: str = Field(min_length=1)
     current: bool
-    words: str | None = None
-    locale_key: str | None = None
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _words_when_current(self) -> Self:
-        if (self.words is not None) != self.current or (self.locale_key is not None) == self.current:
-            raise ValueError("a current file is said in words and an out-of-date one by its sentence's key")
-        return self
+    words: str = Field(min_length=1)
 
 
 class ModeloFormExportHoldReason(StrEnum):
@@ -252,8 +230,8 @@ class ModeloFormExportHold(BaseModel):
     reason: ModeloFormExportHoldReason
     #: What blocks or waits to be confirmed, as the attention counts count it; zero for a check still to run.
     count: int = Field(ge=0)
-    #: The sentence saying why, written with the key that resolves it; it takes ``count``.
-    locale_key: str = Field(min_length=1)
+    #: Why, in the filer's language.
+    words: str = Field(min_length=1)
 
 
 class ModeloFormHeader(BaseModel):
@@ -292,11 +270,11 @@ def attention_counts(
         ModeloFormAttention.BLOCKS: blocking_count(form),
         ModeloFormAttention.MISSING: missing_count(form),
         ModeloFormAttention.CONFIRM: confirm_count(form),
-        ModeloFormAttention.CHECK: sum(1 for issue in form.issues if issue.attention is ModeloFormAttention.CHECK),
+        ModeloFormAttention.CHECK: check_count(form),
     }
     return tuple(
         ModeloFormAttentionCount(
-            level=level, count=count, words=tr(COUNTED_LEVELS[level], count=count, locale=language.value)
+            level=level, count=count, words=tr(_COUNTED_LEVEL_LOCALE_KEYS[level], count=count, locale=language.value)
         )
         for level, count in counts.items()
         if count
@@ -376,22 +354,18 @@ def file_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool)
     if export is None or recorded:
         return None
     day = day_text(export.exported_at, language)
-    if export.current:
-        return ModeloFormFileView(
-            exported_at=export.exported_at,
-            created_on=day,
-            current=True,
-            words=tr("workspace.modelo.header.file_created", date=day, locale=language.value),
-        )
+    key = "workspace.modelo.header.file_created" if export.current else "workspace.modelo.header.file_out_of_date"
     return ModeloFormFileView(
         exported_at=export.exported_at,
         created_on=day,
-        current=False,
-        locale_key="workspace.modelo.header.file_out_of_date",
+        current=export.current,
+        words=tr(key, date=day, locale=language.value),
     )
 
 
-def export_hold(form: ModeloWorkForm, *, verified: bool, recorded: bool) -> ModeloFormExportHold | None:
+def export_hold(
+    form: ModeloWorkForm, language: OutputLanguage, *, verified: bool, recorded: bool
+) -> ModeloFormExportHold | None:
     """Why the file for the AEAT is withheld, or ``None`` when nothing withholds it.
 
     Something that blocks filing comes first, then an assumed value, then a
@@ -402,17 +376,18 @@ def export_hold(form: ModeloWorkForm, *, verified: bool, recorded: bool) -> Mode
         return None
     blocking = blocking_count(form)
     if blocking:
-        return _hold(ModeloFormExportHoldReason.BLOCKS, blocking)
+        return _hold(ModeloFormExportHoldReason.BLOCKS, blocking, language)
     assumed = confirm_count(form)
     if assumed:
-        return _hold(ModeloFormExportHoldReason.CONFIRM, assumed)
+        return _hold(ModeloFormExportHoldReason.CONFIRM, assumed, language)
     if not verified or form.calculation_revision_id is None:
-        return _hold(ModeloFormExportHoldReason.VERIFY, 0)
+        return _hold(ModeloFormExportHoldReason.VERIFY, 0, language)
     return None
 
 
-def _hold(reason: ModeloFormExportHoldReason, count: int) -> ModeloFormExportHold:
-    return ModeloFormExportHold(reason=reason, count=count, locale_key=_HOLD_LOCALE_KEYS[reason])
+def _hold(reason: ModeloFormExportHoldReason, count: int, language: OutputLanguage) -> ModeloFormExportHold:
+    words = tr(_HOLD_LOCALE_KEYS[reason], count=count, locale=language.value)
+    return ModeloFormExportHold(reason=reason, count=count, words=words)
 
 
 @dataclass(frozen=True, slots=True)
@@ -571,7 +546,7 @@ def _stated(
         short_text=presentation.short_text,
         brief_text=presentation.brief_text if presentation.brief_text is not None else presentation.short_text,
         help=tuple(help_lines),
-        out_of_date_locale_key=out_of_date,
+        out_of_date_words=out_of_date,
     )
 
 
@@ -583,10 +558,16 @@ def _view(selected: _SelectedResult, state: ModeloFormResultState, **words: obje
             "box": selected.box,
             "settles": selected.settles,
             "direction": selected.direction,
-            "locale_key": _RESULT_LOCALE_KEYS.get(state),
             **words,
         }
     )
+
+
+def _unstated(
+    selected: _SelectedResult, state: ModeloFormResultState, language: OutputLanguage, **words: object
+) -> ModeloFormResultView:
+    said = tr(_RESULT_LOCALE_KEYS[state], locale=language.value)
+    return _view(selected, state, text=said, short_text=said, brief_text=said, **words)
 
 
 def result_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool) -> ModeloFormResultView | None:
@@ -600,13 +581,14 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: boo
     selected = _selected_result(form)
     if selected is None:
         return None
-    out_of_date = _RECALCULATE_LOCALE_KEY if form.calculation_out_of_date and not recorded else None
+    locale = language.value
+    out_of_date = tr(_RECALCULATE_LOCALE_KEY, locale=locale) if form.calculation_out_of_date and not recorded else None
     origin = selected.field.origin if selected.field is not None else None
     if origin is ModeloFormOrigin.CALCULATION_FAILED:
-        own = (tr(_OWN_CALCULATION_LOCALE_KEY, locale=language.value),)
-        return _view(selected, ModeloFormResultState.FAILED, help=own, out_of_date_locale_key=out_of_date)
+        own = (tr(_OWN_CALCULATION_LOCALE_KEY, locale=locale),)
+        return _unstated(selected, ModeloFormResultState.FAILED, language, help=own, out_of_date_words=out_of_date)
     if form.calculation_revision_id is None or origin is ModeloFormOrigin.NOT_CALCULATED_YET or selected.value is None:
-        return _view(selected, ModeloFormResultState.NOT_CALCULATED, out_of_date_locale_key=out_of_date)
+        return _unstated(selected, ModeloFormResultState.NOT_CALCULATED, language, out_of_date_words=out_of_date)
     return _stated(selected, form, language, out_of_date)
 
 
@@ -618,12 +600,11 @@ def form_header(form: ModeloWorkForm, language: OutputLanguage, *, verified: boo
         result=result_view(form, language, recorded=recorded),
         deadline=deadline_view(form, language, recorded=recorded),
         file=file_view(form, language, recorded=recorded),
-        export_hold=export_hold(form, verified=verified, recorded=recorded),
+        export_hold=export_hold(form, language, verified=verified, recorded=recorded),
     )
 
 
 __all__ = [
-    "COUNTED_LEVELS",
     "SOON_DAYS",
     "URGENT_DAYS",
     "ModeloFormAttentionCount",
@@ -637,8 +618,8 @@ __all__ = [
     "ModeloFormResultView",
     "attention_counts",
     "deadline_tone",
-    "deadline_words",
     "deadline_view",
+    "deadline_words",
     "export_hold",
     "file_view",
     "form_header",

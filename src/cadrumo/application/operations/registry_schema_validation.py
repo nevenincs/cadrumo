@@ -502,6 +502,28 @@ def strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
     return closed_schema
 
 
+def strict_model_input_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
+    """Return the closed schema of a typed input a frontend sends, after enforcing the public model baseline.
+
+    A transient input is validated and never serialized back to a client, so
+    its contract is the validation shape alone. A field the model keeps out of
+    every dump, such as an entry as the filer typed it, is part of what the
+    frontend sends while appearing in no serialization; requiring both shapes
+    to agree would refuse exactly the inputs that withhold such a value.
+    """
+    require_strict_frozen_operation_model_graph(model_type, path="input schema")
+    try:
+        schema: object = model_type.model_json_schema(
+            mode="validation", schema_generator=_UnambiguousDefinitionsSchemaGenerator
+        )
+    except PydanticInvalidForJsonSchema as error:
+        raise ValueError("typed input schema model must have a closed JSON schema") from error
+    if not is_str_keyed_dict(schema):
+        raise ValueError("typed input schema model must have a closed JSON schema")
+    validate_closed_json_schema(schema, path=model_type.__name__)
+    return schema
+
+
 def _active_schema_compilation_memo() -> _SchemaCompilationMemo | None:
     """Return the context memo only while its registry build remains active."""
     memo = _SCHEMA_COMPILATION_MEMO.get()
@@ -693,6 +715,7 @@ __all__ = [
     "is_hex64_string_schema",
     "operation_schema_compilation_scope",
     "reject_secret_capable_schema_branch",
+    "strict_model_input_json_schema",
     "strict_model_json_schema",
     "validate_closed_array_schema",
     "validate_closed_json_schema",

@@ -1776,7 +1776,7 @@ application:
       file_confirm_cancel: Mégse
       file_confirm_message: Ez az ellenőrzött bevallást benyújtottként rögzíti a Cadrumóban.
         Semmit sem küld az AEAT-nak.
-      file_confirm_title: Rögzíti a benyújtást?
+      file_confirm_title: Rögzíted a benyújtást?
       refusal:
         calculation_required: A folytatás előtt számítsd ki ezt a bevallást.
         edit_unavailable: Ez a bevallás jelenleg nem kínál szerkeszthető értékeket;

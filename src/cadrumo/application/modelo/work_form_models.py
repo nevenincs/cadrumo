@@ -66,6 +66,7 @@ from ...domain.modelos.verification_report import (
     VerificationCompletenessStatus,
 )
 from .calculation_report import CalculationReportRowRole
+from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .source_policy import SourceFamily, SourceOverridePolicy, SourcePolicyV1, SourceSurface
 from .work_review import ModeloWorkProgress
 
@@ -210,6 +211,17 @@ def field_standing(
     if not applies and origin in ASKS_FOR_A_VALUE:
         return ModeloFormStanding.DONE
     return ORIGIN_STANDINGS[origin]
+
+
+def fitting_standings(
+    origin: ModeloFormOrigin, blockers: tuple[ModeloFormBlocker, ...] | list[ModeloFormBlocker] = ()
+) -> frozenset[ModeloFormStanding]:
+    """Every standing a box of this origin and blockers can have, on some declaration and page."""
+    return frozenset(
+        field_standing(origin, blockers, recorded=recorded, applies=applies)
+        for recorded in (False, True)
+        for applies in (True, False)
+    )
 
 
 def _default_standing(data: dict[str, Any]) -> ModeloFormStanding:
@@ -400,6 +412,22 @@ def _default_held_zero(data: dict[str, Any]) -> bool:
     return holds_zero(data.get("value"))
 
 
+_FILERS_OWN_ORIGINS = frozenset({ModeloFormOrigin.OVERRIDES_SOURCE, ModeloFormOrigin.ENTERED})
+
+
+def _filers_own_of(data: dict[str, Any]) -> bool:
+    return data["origin"] in _FILERS_OWN_ORIGINS
+
+
+def _restorable_of(data: dict[str, Any]) -> bool:
+    return data["editability"] in _OVERRIDE_EDITABILITIES and _filers_own_of(data)
+
+
+def _confirm_value_of(data: dict[str, Any]) -> ModeloEditWireScalar:
+    value = data["value"]
+    return wire_scalar_value(value) if value is not None and _confirmable_of(data) else None
+
+
 class ModeloFormField(_FormModel):
     """One box or binding input, classified for an editor."""
 
@@ -445,6 +473,12 @@ class ModeloFormField(_FormModel):
     confirmable: bool = Field(default_factory=_confirmable_of)
     #: Whether the box holds an amount of exactly zero: a figure the form holds, never the same as nothing.
     held_zero: bool = Field(default_factory=_default_held_zero)
+    #: Whether the box holds the filer's value over a source, which they can give back to that source.
+    restorable: bool = Field(default_factory=_restorable_of)
+    #: Whether the box holds the filer's own value: typed here, or replacing its source's.
+    filers_own: bool = Field(default_factory=_filers_own_of)
+    #: The value confirming the box stages, as an edit intent carries it; ``None`` when the box is not confirmable.
+    confirm_value: ModeloEditWireScalar = Field(default_factory=_confirm_value_of)
     #: Where the box's value stands, in the few words every frontend shows beside it, in the
     #: form's language; ``None`` until the builder words the form.
     origin_words: str | None = None
@@ -472,10 +506,26 @@ class ModeloFormField(_FormModel):
             raise ValueError("a field is confirmable exactly when its own state makes it so")
         if self.held_zero is not holds_zero(self.value):
             raise ValueError("a field holds zero exactly when its value is an amount of zero")
+        if self.filers_own is not _filers_own_of(dict(self)):
+            raise ValueError("a field holds the filer's own value exactly when its origin says so")
+        if self.restorable is not _restorable_of(dict(self)):
+            raise ValueError("a field can go back to its source exactly when its own state makes it so")
+        if self.confirm_value != _confirm_value_of(dict(self)):
+            raise ValueError("a field's confirm value is the value its own state lets a confirmation stage")
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _standing_fits_the_field(self) -> ModeloFormField:
+        # The builder knows the declaration and the page; the field alone bounds what either can make of it.
+        if self.standing not in fitting_standings(self.origin, self.blockers):
+            raise ValueError("a field's standing is one its origin and blockers allow on some declaration and page")
         return self
 
 
-_SELF_DERIVED: Final[frozenset[str]] = frozenset({"edit_address", "confirmable", "held_zero"})
+_SELF_DERIVED: Final[frozenset[str]] = frozenset(
+    {"edit_address", "confirmable", "held_zero", "restorable", "filers_own", "confirm_value"}
+)
 
 
 def revised_field(field: ModeloFormField, **update: Any) -> ModeloFormField:
@@ -484,10 +534,14 @@ def revised_field(field: ModeloFormField, **update: Any) -> ModeloFormField:
     A plain model copy skips validation, so a copy that changes a value, an
     origin or an editability would keep derivations that no longer hold. The
     standing is kept unless ``update`` gives one, because it also depends on
-    the declaration and page the builder knows.
+    the declaration and page the builder knows. A copy that changes the origin
+    or the blockers without giving a standing has it derived again, as for a
+    field with no declaration or page to say more.
     """
     data = {name: getattr(field, name) for name in type(field).model_fields if name not in _SELF_DERIVED}
     data.update(update)
+    if "standing" not in update and ("origin" in update or "blockers" in update):
+        data["standing"] = field_standing(data["origin"], data["blockers"])
     return type(field).model_validate(data)
 
 
@@ -562,6 +616,8 @@ class ModeloFormContextFieldBlock(_FormModel):
     id: str
     label: ModeloFormText
     value: ModeloFormScalar
+    #: The value in the form's language, dates and the period in words; ``None`` until the builder words the form.
+    value_text: str | None = None
 
 
 class ModeloFormGridColumn(_FormModel):
@@ -601,6 +657,16 @@ class ModeloFormRepeatingRow(_FormModel):
 
     index: int = Field(ge=1)
     values: tuple[ModeloFormScalar, ...]
+    #: Each value as the table shows it in the form's language, aligned with ``values``; ``None`` for an empty
+    #: value, and empty until the builder words the form.
+    value_texts: tuple[str | None, ...] = ()
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _texts_align_with_values(self) -> ModeloFormRepeatingRow:
+        if self.value_texts and len(self.value_texts) != len(self.values):
+            raise ValueError("a record's value texts align with its values")
+        return self
 
 
 class ModeloFormRepeatingBlock(_FormModel):
@@ -661,6 +727,9 @@ class ModeloFormPage(_FormModel):
     applies: bool | None
     sections: tuple[ModeloFormSection, ...]
     counts: ModeloFormCounts
+    #: That the page does not apply this period, said as the filer counts the period; ``None`` on a page that
+    #: applies or may.
+    applicability_words: str | None = None
 
 
 class ModeloFormUnplacedField(_FormModel):
@@ -1167,6 +1236,8 @@ class ModeloWorkForm(_FormModel):
     edit_closure: ModeloFormEditClosure | None = None
     #: The modelo's number and title, its number alone, and the period, in the form's language.
     modelo_title: str | None = None
+    #: The modelo's own title without its number, beside the number a frontend shows apart; ``None`` without one.
+    modelo_name: str | None = None
     modelo_number: str | None = None
     period_words: str | None = None
 
@@ -1319,6 +1390,7 @@ __all__ = [
     "field_standing",
     "finding_action_locale_key",
     "finding_attention",
+    "fitting_standings",
     "holds_zero",
     "map_form_fields",
     "map_section_fields",

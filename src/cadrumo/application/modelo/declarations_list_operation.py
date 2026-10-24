@@ -3,7 +3,12 @@
 ``modelo.declarations.list`` joins the profile's local declarations with the
 legal calendar inside the profile worker and returns the rows every frontend
 lists, each with its state, group, next step and the AEAT's facts kept apart
-from its own. It writes nothing and settles with no effect.
+from its own. Beside the rows it says what the list could read: every area of
+the local declarations and every calendar source with its availability and
+when it was read, so a list read in part, or with the AEAT's evidence never
+captured, is never taken for a profile holding nothing; and it carries the
+addresses the new-declaration dialog offers. It writes nothing and settles
+with no effect.
 """
 
 from __future__ import annotations
@@ -36,7 +41,22 @@ from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .declarations_list import DeclarationListInputs, ModeloDeclarationListRowV1, worded_declaration_list
+from .declarations_calendar import DeclarationsCalendarProjectionV1
+from .declarations_list import (
+    DeclarationListInputs,
+    ModeloDeclarationCreationTargetV1,
+    ModeloDeclarationListRowV1,
+    ModeloDeclarationsListSourceV1,
+    ModeloDeclarationsListZoneV1,
+    calendar_sources,
+    deadline_note_words,
+    declaration_list_rows,
+    source_notices,
+    worded_creation_targets,
+    worded_list_row,
+    zone_states,
+)
+from .declarations_workspace_contracts import DeclarationsWorkspaceProjectionV1
 
 MODELO_DECLARATIONS_LIST_OPERATION_DEFINITION_ID = "modelo.declarations.list"
 
@@ -60,6 +80,16 @@ class ModeloDeclarationsListProjectionV1(BaseModel):
     profile_id: UUID
     output_language: OutputLanguage
     rows: tuple[ModeloDeclarationListRowV1, ...]
+    #: Every area of the local declarations, in canonical order, with whether it could be read and when.
+    zones: tuple[ModeloDeclarationsListZoneV1, ...]
+    #: Every source of the filing calendar, with whether it could be read and when.
+    sources: tuple[ModeloDeclarationsListSourceV1, ...]
+    #: What the list says beside its rows about what it could read, in the filer's language.
+    notices: tuple[str, ...] = ()
+    #: Which holidays the listed deadlines leave out, when an open one is not final.
+    deadline_note_words: str | None = None
+    #: The addresses the new-declaration dialog offers.
+    creation_targets: tuple[ModeloDeclarationCreationTargetV1, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -92,12 +122,30 @@ class ModeloDeclarationsListExecutor:
                 inputs = self._reader_factory(str(payload.profile_id), operation)()
                 if inputs.workspace is None:
                     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-                rows = worded_declaration_list(inputs.workspace, inputs.calendar, payload.output_language)
-            return ModeloDeclarationsListProjectionV1(
-                result_version=1, profile_id=payload.profile_id, output_language=payload.output_language, rows=rows
-            )
+                return project_declarations_list(payload, inputs.workspace, inputs.calendar)
 
         return await capture_read_result(context, read, task_name="modelo-declarations-list")
+
+
+def project_declarations_list(
+    payload: ModeloDeclarationsListRequest,
+    workspace: DeclarationsWorkspaceProjectionV1,
+    calendar: DeclarationsCalendarProjectionV1,
+) -> ModeloDeclarationsListProjectionV1:
+    """Say one profile's list in the language asked for: its rows, what it could read, and what may be started."""
+    language = payload.output_language
+    rows = declaration_list_rows(workspace, calendar)
+    return ModeloDeclarationsListProjectionV1(
+        result_version=1,
+        profile_id=payload.profile_id,
+        output_language=language,
+        rows=tuple(worded_list_row(row, language) for row in rows),
+        zones=zone_states(workspace, language),
+        sources=calendar_sources(calendar, language),
+        notices=source_notices(workspace, calendar, language),
+        deadline_note_words=deadline_note_words(rows, language),
+        creation_targets=worded_creation_targets(rows, workspace.creation_targets, language),
+    )
 
 
 def build_modelo_declarations_list_definition(reader_factory: DeclarationListReaderFactory) -> OperationDefinition:
@@ -144,4 +192,5 @@ __all__ = [
     "ModeloDeclarationsListRequest",
     "build_modelo_declarations_list_definition",
     "build_modelo_declarations_list_registration",
+    "project_declarations_list",
 ]

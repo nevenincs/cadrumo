@@ -42,6 +42,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.core.errors.error_codes import build_error_envelope
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.request_faults import RequestFault
@@ -145,7 +146,9 @@ def native_bulk_runtime(
                         ),
                     ),
                 )
-                edit_input = ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(batch))
+                edit_input = ModeloEditOperatorInputV2(
+                    submission=ModeloEditApplySubmissionV1.from_submission(batch), output_language=OutputLanguage.EN
+                )
                 definitions = frozenset({"modelo.edit.apply", "modelo.edit.preflight"})
                 registry = build_production_operation_registry()
                 disclosures = {

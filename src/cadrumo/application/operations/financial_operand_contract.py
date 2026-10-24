@@ -41,6 +41,8 @@ class OperationFinancialOperandRefusalCode(StrEnum):
     TERMINAL_OPERATION = "terminal_operation"
     WRONG_MODEL = "wrong_model"
     WRONG_BASELINE = "wrong_baseline"
+    #: An apply carried entries as the filer typed them, which only a preflight reads.
+    ENTRY_AS_TYPED = "entry_as_typed"
     WRONG_GRANT = "wrong_grant"
     STALE_REVISION = "stale_revision"
     DUPLICATE_SUBMISSION = "duplicate_submission"

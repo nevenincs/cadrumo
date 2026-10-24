@@ -12,7 +12,11 @@ from pydantic.fields import FieldInfo, ModelPrivateAttr
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaMode
 
 from ....core.models import STRICT_FROZEN_CONFIG
-from ..registry_schema_validation import operation_schema_compilation_scope, strict_model_json_schema
+from ..registry_schema_validation import (
+    operation_schema_compilation_scope,
+    strict_model_input_json_schema,
+    strict_model_json_schema,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -295,3 +299,41 @@ def test_model_mutation_during_schema_generation_is_refused() -> None:
 
     with operation_schema_compilation_scope(), pytest.raises(ValueError, match="model graph changed"):
         strict_model_json_schema(MutatingPayload)
+
+
+class _TypedEntry(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    locale: str
+    #: As the filer typed it: sent by the frontend, kept out of every dump.
+    text: Annotated[str, Field(max_length=8, exclude=True, repr=False)]
+
+
+class _TypedInput(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    entries: tuple[_TypedEntry, ...]
+
+
+class _LaxInput(BaseModel):
+    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+    value: str
+
+
+def test_a_typed_input_schema_describes_what_the_frontend_sends_while_dumps_withhold_it() -> None:
+    schema = strict_model_input_json_schema(_TypedInput)
+
+    definitions = cast(dict[str, Any], schema["$defs"])
+    entry = next(definition for name, definition in definitions.items() if "TypedEntry" in name)
+    assert set(entry["properties"]) == {"locale", "text"}
+    assert entry["additionalProperties"] is False
+    # A result or request schema still requires one shape for both directions, so the same model is refused there.
+    with pytest.raises(ValueError, match="shapes must be identical"):
+        strict_model_json_schema(_TypedInput)
+    sent = _TypedInput.model_validate_json('{"entries": [{"locale": "es", "text": "1,5"}]}')
+    assert "1,5" not in sent.model_dump_json()
+
+
+def test_a_typed_input_schema_keeps_the_public_model_baseline() -> None:
+    with pytest.raises(ValueError):
+        strict_model_input_json_schema(_LaxInput)

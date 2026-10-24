@@ -124,17 +124,22 @@ def file_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool)
     view = form_file_view(form, language, recorded=recorded)
     if view is None:
         return None
-    if view.words is not None:
+    if view.current:
         return FileView(view.words, out_of_date=False)
-    text = tr(str(view.locale_key), date=view.created_on, key=_EXPORT_KEY, locale=language.value)
-    return FileView(text, out_of_date=True)
+    return FileView(f"{view.words} [{_EXPORT_KEY}]", out_of_date=True)
 
 
 @dataclass(frozen=True, slots=True)
 class AttentionChip:
-    """One attention level with something in it, as the read model counts it."""
+    """One attention level with something in it, as the read model counts it.
+
+    A ``brief`` chip keeps its glyph and count without the words, for a line
+    too narrow to say every level in full: the level and how many it holds
+    still read, and its accessible meaning is the glyph's.
+    """
 
     tally: ModeloFormAttentionCount
+    brief: bool = False
 
     @property
     def level(self) -> ModeloFormAttention:
@@ -153,8 +158,14 @@ class AttentionChip:
 
     @property
     def text(self) -> str:
-        """The chip as the header shows it: the glyph, then its count in words."""
+        """The chip as the header shows it: the glyph, then its count in words, or the bare count when brief."""
+        if self.brief:
+            return f"{self.mark.glyph} {self.tally.count}"
         return f"{self.mark.glyph} {self.tally.words}"
+
+    def briefly(self) -> AttentionChip:
+        """The same chip with its glyph and count only."""
+        return AttentionChip(self.tally, brief=True)
 
     @property
     def content(self) -> Content:
@@ -193,9 +204,9 @@ def deadline_help(form: ModeloWorkForm, language: OutputLanguage, *, recorded: b
 
 def _result_stale_notice(view: ModeloFormResultView, *, staged: int, recorded: bool) -> str | None:
     if staged and not recorded:
-        return f"{STALE_MARK.glyph} {tr(_STALE_LOCALE_KEY, count=staged, key=_REVIEW_KEY)}"
-    if view.out_of_date_locale_key is not None:
-        return f"{STALE_MARK.glyph} {tr(view.out_of_date_locale_key, key=_CALCULATE_KEY)}"
+        return f"{STALE_MARK.glyph} {tr(_STALE_LOCALE_KEY, count=staged)} [{_REVIEW_KEY}]"
+    if view.out_of_date_words is not None:
+        return f"{STALE_MARK.glyph} {view.out_of_date_words} [{_CALCULATE_KEY}]"
     return None
 
 
@@ -210,12 +221,11 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, 
     if view is None:
         return None
     stale = _result_stale_notice(view, staged=staged, recorded=recorded)
-    if view.locale_key is not None:
-        text = tr(view.locale_key, key=_RESULT_KEYS[view.state], locale=language.value)
+    key = _RESULT_KEYS.get(view.state)
+    if key is not None:
+        text = f"{view.text} [{key}]"
         failed = view.state is ModeloFormResultState.FAILED
         return ResultView(text=text, short_text=text, stale=stale, failed=failed, help=view.help)
-    if view.text is None or view.short_text is None:
-        raise ValueError("a result with a figure is said in words")
     return ResultView(
         text=view.text,
         short_text=view.short_text,
@@ -338,12 +348,21 @@ class StatusLine:
         return self._line("" if self.view is None else self.view.text, self.chips).text()
 
     def fitted(self, width: int) -> ResultLine:
-        """The line within ``width`` cells on one line: the fullest result that fits, then as many chips as fit."""
+        """The line within ``width`` cells on one line: the fullest result that fits, then as many chips as fit.
+
+        Before any chip is dropped, the least urgent chips give up their words
+        and keep their glyph and count, so every level still reads.
+        """
         view = self.view
         results = ("",) if view is None else (view.text, view.short_text, view.briefest)
         for result in results:
             kept = list(self.chips)
             line = self._line(result, tuple(kept))
+            worded = len(kept)
+            while worded and cell_len(line.text()) > width:
+                worded -= 1
+                kept[worded] = kept[worded].briefly()
+                line = self._line(result, tuple(kept))
             while kept and cell_len(line.text()) > width:
                 kept.pop()
                 line = self._line(result, tuple(kept))

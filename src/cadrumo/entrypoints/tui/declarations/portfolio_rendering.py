@@ -1,17 +1,24 @@
-"""Worded portfolio authorities, table groups and admitted key guidance."""
+"""Worded portfolio authorities, table groups and admitted key guidance.
+
+The group headings, what the list could read and what a row that opens
+nothing says are the application's words for the list; this module lays
+them out for a terminal and adds the keys that act.
+"""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from types import MappingProxyType
-from typing import Final
-
 from rich.text import Text
 
-from ....application.modelo.declarations_calendar import DeclarationsCalendarSource
-from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow, is_unlinked_local_draft
+from ....application.modelo.declarations_list import (
+    DeclarationListGroup,
+    DeclarationListRow,
+    group_words,
+    is_unlinked_local_draft,
+    row_help_words,
+    source_notices,
+)
 from ....core.external_constants import OutputLanguage
-from ....core.i18n.render import tr
+from ....core.i18n.render import output_language, tr
 from ..components.cell_text import wrap_words
 from ..components.widgets import ContentDataTable
 from .controller import (
@@ -19,45 +26,11 @@ from .controller import (
 )
 from .row_words import row_lines
 
-DECLARATION_GROUP_LOCALE_KEYS: Final[Mapping[DeclarationListGroup, str]] = MappingProxyType(
-    {
-        DeclarationListGroup.ATTENTION: "workspace.declarations.list.group.attention",
-        DeclarationListGroup.IN_PROGRESS: "workspace.declarations.list.group.in_progress",
-        DeclarationListGroup.READY: "workspace.declarations.list.group.ready",
-        DeclarationListGroup.NOT_STARTED: "workspace.declarations.list.group.not_started",
-        DeclarationListGroup.RECORDED: "workspace.declarations.list.group.recorded",
-        DeclarationListGroup.AEAT_UNLINKED: "workspace.declarations.list.state.aeat_unlinked",
-        DeclarationListGroup.MAYBE: "workspace.declarations.list.group.maybe",
-    }
-)
-
 
 def portfolio_source_lines(controller: DeclarationsWorkspaceController) -> list[str]:
-    """Describe observed authorities and retained incomplete evidence."""
-    lines = []
-    projection = controller.calendar_projection
-    if projection is not None:
-        for source in projection.sources:
-            if source.source is not DeclarationsCalendarSource.AEAT_EVIDENCE:
-                continue
-            from .controller import timestamp_label
-
-            observed = (
-                timestamp_label(source.observed_at)
-                if source.observed_at is not None
-                else tr("workspace.declarations.calendar.never_observed")
-            )
-            lines.append(
-                tr(
-                    "workspace.declarations.calendar.detail.source",
-                    source=tr("workspace.declarations.calendar.source." + source.source.value),
-                    availability=tr("workspace.declarations.availability." + source.availability.value),
-                    observed=observed,
-                )
-            )
-    if any(zone.availability.value == "stale" for zone in controller.projection.zones):
-        lines.append(tr("workspace.declarations.refusal.source"))
-    return lines
+    """Say what the list could read, as the application words it."""
+    language = OutputLanguage(output_language())
+    return list(source_notices(controller.projection, controller.calendar_projection, language))
 
 
 def configure_portfolio_columns(table: ContentDataTable[Text | str], width: int) -> str | None:
@@ -98,8 +71,7 @@ def populate_portfolio_groups(
         members = [row for row in visible if row.group is group]
         folded = not members or group in folded_groups
         mark = "▹" if folded else "▿"
-        group_key = DECLARATION_GROUP_LOCALE_KEYS[group]
-        title = "\n".join(wrap_words(f"{mark} {tr(group_key)} ({len(members)})", width))
+        title = "\n".join(wrap_words(f"{mark} {group_words(group, language)} ({len(members)})", width))
         table.add_row(
             Text(title, style="bold"),
             "",
@@ -180,15 +152,7 @@ def add_portfolio_row(
     )
 
 
-def portfolio_row_refusal(row: DeclarationListRow) -> str:
-    """Keep the exact state-specific refusal after row routing."""
-    key = (
-        "workspace.declarations.list.aeat_unlinked.help.confirmed"
-        if row.state == "aeat_unlinked"
-        else "workspace.declarations.list.unreadable.help"
-        if row.state == "unreadable"
-        else "workspace.declarations.list.maybe.help"
-        if row.state == "maybe"
-        else "workspace.declarations.list.aeat_needs_check.help"
-    )
-    return tr(key)
+def portfolio_row_refusal(row: DeclarationListRow, language: OutputLanguage) -> str:
+    """What choosing a row with no step of its own says; a row this session cannot open says so."""
+    words = row_help_words(row, language)
+    return words if words is not None else tr("workspace.declarations.refusal.handoff")

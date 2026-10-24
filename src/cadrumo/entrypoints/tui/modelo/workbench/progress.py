@@ -97,7 +97,7 @@ _STATUS_MARKS: Final[dict[StepStatus, WorkbenchMark | None]] = {
     StepStatus.PENDING: None,
 }
 _PENDING_STYLE: Final[str] = "dim"
-_NEXT_LINE_LOCALE_KEY: Final[str] = "workspace.modelo.next_line"
+_NEXT_LINE_LOCALE_KEY: Final[str] = "tui.modelo.next_line"
 _DATED_ACTIONS: Final[frozenset[ModeloFormNextAction]] = frozenset(
     {ModeloFormNextAction.EXPORT_AGAIN, ModeloFormNextAction.RECORD_AFTER_FILE}
 )

@@ -1882,7 +1882,6 @@
         "cadrumo.entrypoints.tui.modelo.workbench.sources",
         "cadrumo.entrypoints.tui.modelo.workbench.status_bar",
         "cadrumo.entrypoints.tui.modelo.workbench.vocabulary",
-        "cadrumo.entrypoints.tui.modelo.workbench.wording",
         "cadrumo.entrypoints.tui.module_arguments",
         "cadrumo.entrypoints.tui.navigation",
         "cadrumo.entrypoints.tui.operations",

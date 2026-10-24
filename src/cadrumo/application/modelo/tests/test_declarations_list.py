@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from uuid import UUID
 
 import pytest
 
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.work_unit import WorkUnitState
+from ...overview.calendar import holiday_coverage_statement
 from ...overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEntrySource,
@@ -21,6 +24,7 @@ from ...overview.calendar_models import (
 from ...overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from ...overview.home import HomeAvailability
 from ..declaration_summary import DeclarationSummary, DeclarationSummaryState
+from ..declaration_targets import DeclarationTarget
 from ..declarations_calendar import (
     DeclarationsCalendarEntryRefV1,
     DeclarationsCalendarProjectionV1,
@@ -28,10 +32,22 @@ from ..declarations_calendar import (
     DeclarationsCalendarSourceStateV1,
 )
 from ..declarations_list import (
+    DECLARATION_GROUP_LOCALE_KEYS,
     DeclarationListGroup,
     DeclarationListNextStep,
+    calendar_sources,
+    deadline_note_words,
     declaration_list_rows,
+    group_words,
+    source_notices,
+    worded_creation_targets,
     worded_declaration_list,
+    zone_states,
+)
+from ..declarations_list_operation import (
+    ModeloDeclarationsListProjectionV1,
+    ModeloDeclarationsListRequest,
+    project_declarations_list,
 )
 from ..declarations_workspace_contracts import (
     DeclarationsWorkspaceAvailability,
@@ -41,6 +57,7 @@ from ..declarations_workspace_contracts import (
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneStateV1,
 )
+from ..work_form_header import ModeloFormDeadlineTone
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -290,3 +307,157 @@ def test_rows_are_said_in_the_language_asked_for() -> None:
     assert (english.period_words, spanish.period_words) == ("1st quarter 2025", "1.er trimestre 2025")
     assert english.state_words != spanish.state_words
     assert english.next_step is spanish.next_step is DeclarationListNextStep.CONTINUE
+
+
+def _zone_stale(workspace: DeclarationsWorkspaceProjectionV1) -> DeclarationsWorkspaceProjectionV1:
+    zones = tuple(
+        zone.model_copy(
+            update={
+                "availability": DeclarationsWorkspaceAvailability.STALE,
+                "reason_code": "workbench.declarations.partial_read",
+            }
+        )
+        if zone.zone is DeclarationsWorkspaceZone.FILING_HISTORY
+        else zone
+        for zone in workspace.zones
+    )
+    return workspace.model_copy(update={"zones": zones})
+
+
+def test_an_open_deadline_counts_its_days_at_the_headers_thresholds_and_a_closed_row_has_none() -> None:
+    soon = _entry(external=False, period=Period.from_year_and_code(2025, "2T"), close=date(2025, 5, 5))
+    overdue = _entry(external=False)
+    third = Period.from_year_and_code(2025, "3T")
+    recorded = _local(DeclarationSummaryState.RECORDED, work="c" * 64).model_copy(update={"period": third})
+    recorded_deadline = _entry(external=False, period=third, close=date(2025, 5, 2))
+
+    rows = {
+        row.key: row
+        for row in worded_declaration_list(
+            _workspace(recorded), _calendar(soon, overdue, recorded_deadline), OutputLanguage.EN
+        )
+    }
+
+    due_soon = next(row for row in rows.values() if row.period_code == "2T")
+    assert (due_soon.days_remaining, due_soon.days_overdue, due_soon.due_tone) == (5, None, ModeloFormDeadlineTone.SOON)
+    assert due_soon.due_words == tr("workspace.modelo.header.deadline", date="05/05/2025", days=5, locale="en")
+    late = next(row for row in rows.values() if row.key.startswith("due:") and row.period_code == "1T")
+    assert (late.days_remaining, late.days_overdue, late.due_tone) == (None, 9, ModeloFormDeadlineTone.URGENT)
+    closed = rows["c" * 64]
+    assert closed.deadline is not None, closed
+    assert (closed.days_remaining, closed.days_overdue, closed.due_words, closed.due_tone) == (None, None, None, None)
+
+
+def test_every_row_names_its_group_and_a_row_with_no_step_says_why() -> None:
+    unlinked = _entry(external=True)
+    advice = (AdvisedObligation(modelo="100", reason=CoverageAdviceReason.APPLICABILITY_UNDETERMINED),)
+
+    rows = worded_declaration_list(_workspace(), _calendar(unlinked, advised=advice), OutputLanguage.EN)
+
+    assert set(DECLARATION_GROUP_LOCALE_KEYS) == set(DeclarationListGroup)
+    for row in rows:
+        assert row.group_words == group_words(row.group, OutputLanguage.EN) != row.group.value
+    filed = next(row for row in rows if row.state == "aeat_unlinked")
+    assert filed.opens_aeat_filing and filed.next_step is None
+    assert filed.help_words == tr("workspace.declarations.list.aeat_unlinked.help.confirmed", locale="en")
+    maybe = next(row for row in rows if row.state == "maybe")
+    assert not maybe.opens_aeat_filing and maybe.help_words == tr("workspace.declarations.list.maybe.help", locale="en")
+
+
+def test_the_new_declaration_dialog_offers_the_admitted_addresses_with_the_due_one_first() -> None:
+    draft = _local(DeclarationSummaryState.DRAFT)
+    later = _entry(external=False, period=Period.from_year_and_code(2025, "2T"), close=date(2025, 7, 21))
+    rows = declaration_list_rows(_workspace(draft), _calendar(later))
+    admitted = (
+        DeclarationTarget("303", _PERIOD),
+        DeclarationTarget("303", later.period),
+        DeclarationTarget("390", Period.from_year_and_code(2025, "0A")),
+    )
+
+    targets = {
+        (target.modelo, target.period_code): target
+        for target in worded_creation_targets(rows, admitted, OutputLanguage.EN)
+    }
+
+    assert set(targets) == {("303", "1T"), ("303", "2T"), ("390", "0A")}
+    existing = targets["303", "1T"].existing
+    assert existing is not None and existing.work_unit_id == "a" * 64 and existing.state_words
+    suggested = targets["303", "2T"]
+    assert suggested.suggested and suggested.expected and suggested.existing is None
+    assert suggested.deadline == date(2025, 7, 21) and suggested.deadline_text == "21/07/2025"
+    assert not targets["390", "0A"].expected and not targets["390", "0A"].suggested
+    assert [target.suggested for target in targets.values()].count(True) == 1
+    # With nothing admitted, the returns due are what the dialog offers.
+    offered = [(item.modelo, item.period_code) for item in worded_creation_targets(rows, (), OutputLanguage.EN)]
+    assert offered == [("303", "2T")]
+
+
+def test_the_list_says_what_it_could_read_and_never_passes_a_partial_read_for_everything() -> None:
+    workspace = _zone_stale(_workspace())
+    calendar = _calendar(_entry(external=False))
+    never = calendar.model_copy(
+        update={
+            "sources": tuple(
+                source.model_copy(
+                    update={
+                        "availability": HomeAvailability.NEVER_CAPTURED,
+                        "observed_at": None,
+                        "item_count": None,
+                        "reason_code": "home.aeat.never_captured",
+                    }
+                )
+                if source.source is DeclarationsCalendarSource.AEAT_EVIDENCE
+                else source
+                for source in calendar.sources
+            )
+        }
+    )
+
+    zones = zone_states(workspace, OutputLanguage.EN)
+    sources = calendar_sources(never, OutputLanguage.EN)
+    notices = source_notices(workspace, never, OutputLanguage.EN)
+
+    assert [zone.zone for zone in zones] == list(DeclarationsWorkspaceZone)
+    stale = next(zone for zone in zones if zone.zone is DeclarationsWorkspaceZone.FILING_HISTORY)
+    assert stale.availability is DeclarationsWorkspaceAvailability.STALE
+    assert stale.words == tr("workspace.declarations.availability.stale", locale="en")
+    aeat = next(source for source in sources if source.source is DeclarationsCalendarSource.AEAT_EVIDENCE)
+    assert aeat.observed_at is None and tr("workspace.declarations.calendar.never_observed", locale="en") in aeat.words
+    assert notices == (aeat.words, tr("workspace.declarations.refusal.source", locale="en"))
+    schedule = next(source for source in sources if source.source is DeclarationsCalendarSource.SCHEDULE)
+    assert "30/04/2025 12:00 UTC" in schedule.words, schedule.words
+    fresh = calendar_sources(calendar, OutputLanguage.EN)
+    aeat_read = next(item.words for item in fresh if item.source is DeclarationsCalendarSource.AEAT_EVIDENCE)
+    assert source_notices(_workspace(), calendar, OutputLanguage.EN) == (aeat_read,)
+
+
+def test_a_deadline_short_of_the_regional_holidays_is_noted_and_a_final_one_is_not() -> None:
+    national = _entry(external=False)
+    regional = national.model_copy(update={"holiday_coverage": DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY})
+
+    noted = deadline_note_words(declaration_list_rows(_workspace(), _calendar(national)), OutputLanguage.ES)
+    final = deadline_note_words(declaration_list_rows(_workspace(), _calendar(regional)), OutputLanguage.ES)
+
+    assert noted == holiday_coverage_statement(DeadlineHolidayCoverage.NATIONAL_ONLY, None, OutputLanguage.ES)
+    assert noted != holiday_coverage_statement(DeadlineHolidayCoverage.NATIONAL_ONLY, None, OutputLanguage.EN)
+    assert final is None
+
+
+def test_the_public_list_carries_what_it_could_read_and_the_dialogs_addresses_and_round_trips() -> None:
+    workspace = _zone_stale(_workspace(_local(DeclarationSummaryState.DRAFT))).model_copy(
+        update={"creation_targets": (DeclarationTarget("303", Period.from_year_and_code(2025, "2T")),)}
+    )
+    request = ModeloDeclarationsListRequest(
+        profile_id=UUID("13000000-0000-4000-8000-000000000450"), output_language=OutputLanguage.EN
+    )
+
+    projection = project_declarations_list(request, workspace, _calendar(_entry(external=False)))
+
+    assert [zone.zone for zone in projection.zones] == list(DeclarationsWorkspaceZone)
+    assert {source.source for source in projection.sources} == set(DeclarationsCalendarSource)
+    assert tr("workspace.declarations.refusal.source", locale="en") in projection.notices
+    assert projection.deadline_note_words is not None
+    assert [(target.modelo, target.period_code) for target in projection.creation_targets] == [("303", "2T")]
+    assert all(row.group_words for row in projection.rows)
+    restored = ModeloDeclarationsListProjectionV1.model_validate_json(projection.model_dump_json())
+    assert restored == projection

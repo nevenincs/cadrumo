@@ -99,6 +99,7 @@ def _row(key: str) -> ModeloDeclarationListRowV1:
     return ModeloDeclarationListRowV1(
         key=key,
         group=DeclarationListGroup.NOT_STARTED,
+        group_words="Due, not started",
         state="not_started",
         modelo="303",
         modelo_title="Modelo 303",
@@ -109,10 +110,20 @@ def _row(key: str) -> ModeloDeclarationListRowV1:
 
 def test_the_result_lists_each_row_once() -> None:
     one = ModeloDeclarationsListProjectionV1(
-        result_version=1, profile_id=_PROFILE, output_language=OutputLanguage.EN, rows=(_row("due:a"), _row("due:b"))
+        result_version=1,
+        profile_id=_PROFILE,
+        output_language=OutputLanguage.EN,
+        rows=(_row("due:a"), _row("due:b")),
+        zones=(),
+        sources=(),
     )
     assert ModeloDeclarationsListProjectionV1.model_validate_json(one.model_dump_json()) == one
     with pytest.raises(ValidationError):
         ModeloDeclarationsListProjectionV1(
-            result_version=1, profile_id=_PROFILE, output_language=OutputLanguage.EN, rows=(_row("due:a"),) * 2
+            result_version=1,
+            profile_id=_PROFILE,
+            output_language=OutputLanguage.EN,
+            rows=(_row("due:a"),) * 2,
+            zones=(),
+            sources=(),
         )

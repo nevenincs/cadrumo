@@ -33,8 +33,10 @@ from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, Mode
 from ..work_form_models import ModeloFormAttention, ModeloFormCalculationNote, ModeloFormExport, ModeloWorkForm
 from ..work_form_next_step import (
     ModeloFormNextAction,
+    ModeloFormNextStep,
     blocking_count,
     form_next_step,
+    held_prerequisite_step,
     missing_count,
     registry_grade_refusal,
 )
@@ -177,3 +179,30 @@ def test_only_rules_short_of_calculation_grade_halt_the_next_step() -> None:
     assert not registry_grade_refusal(
         _refusal(ModeloEditRefusalCode.CALCULATION_HEAD_CONFLICT, "registry_authority_grade")
     )
+
+
+def test_a_recorded_filing_leaves_its_receipt_to_add_until_it_is_verified(operation: PinnedAuthorityOperation) -> None:
+    filed = built_form(operation, "210", 2025, "0A", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO)
+    verified = _calculated(_entered(operation), verification=VerificationCompletenessStatus.COMPLETE)
+
+    unverified = form_next_step(filed, verified=True, filed=True, receipt_confirmed=False)
+    confirmed = form_next_step(filed, verified=True, filed=True, receipt_confirmed=True)
+    unread = form_next_step(filed, verified=True, filed=True)
+
+    assert (unverified.action, unverified.receipt_to_add) == (ModeloFormNextAction.RECORDED, True)
+    assert (confirmed.action, confirmed.receipt_to_add) == (ModeloFormNextAction.RECORDED, False)
+    assert (unread.action, unread.receipt_to_add) == (ModeloFormNextAction.RECORDED, False)
+    # A declaration not recorded has no receipt to add, whatever the read said.
+    open_step = form_next_step(verified, verified=True, filed=False, receipt_confirmed=False)
+    assert open_step.action is ModeloFormNextAction.EXPORT and not open_step.receipt_to_add
+
+
+def test_a_retained_prerequisite_makes_resolving_it_the_one_step_from_the_findings() -> None:
+    for action in ModeloFormNextAction:
+        held = held_prerequisite_step(ModeloFormNextStep(action=action, count=4, receipt_to_add=True))
+        assert (held.action, held.count, held.findings_lead, held.receipt_to_add) == (
+            ModeloFormNextAction.RESOLVE,
+            1,
+            True,
+            False,
+        ), action

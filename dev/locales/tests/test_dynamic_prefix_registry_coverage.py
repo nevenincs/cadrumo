@@ -247,6 +247,7 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
     """A new choice or row state cannot vanish behind a registered wildcard."""
     from cadrumo.application.modelo.declaration_summary import DeclarationSummaryState
     from cadrumo.application.modelo.declarations_list import (
+        DECLARATION_GROUP_LOCALE_KEYS,
         DeclarationListGroup,
         DeclarationListNextStep,
         declaration_list_rows,
@@ -254,7 +255,6 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
     )
     from cadrumo.application.overview.coverage import CoverageAdviceReason
     from cadrumo.entrypoints.tui.declarations.grouped import GroupedDeclarationsScreen
-    from cadrumo.entrypoints.tui.declarations.portfolio_rendering import DECLARATION_GROUP_LOCALE_KEYS
 
     producer_module = inspect.getmodule(declaration_list_rows)
     assert producer_module is not None

@@ -14,6 +14,9 @@ sentences in the same order:
   when the calculation is out of date, names that instead;
 * a missing value whose box the missing values already list is left out, since
   that list names the box;
+* a result box the calculation could not work out, that no blocking finding or
+  note already names, blocks filing on its own line, so every block the header
+  counts is a line here;
 * what the latest calculation noticed follows in the same parts, the records
   it could not place leading to the ledger.
 
@@ -59,7 +62,7 @@ from .work_form_models import (
     ModeloWorkForm,
     address_key,
 )
-from .work_form_next_step import applicable_fields
+from .work_form_next_step import applicable_fields, failed_results
 
 _BOX_NUMBER: Final[re.Pattern[str]] = re.compile(r"\d{1,4}[A-Z]?")
 _NO_BOX: Final[str] = "·"
@@ -75,6 +78,10 @@ _BOX_NOT_ON_FORM_LOCALE_KEY: Final[str] = "workspace.modelo.issues.box_not_on_fo
 _WHAT_TO_DO_LOCALE_KEY: Final[str] = "workspace.modelo.issues.what_to_do"
 _TECHNICAL_LOCALE_KEY: Final[str] = "workspace.modelo.issues.technical"
 _UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_unnumbered"
+_FAILED_RESULT_LOCALE_KEY: Final[str] = "workspace.modelo.issues.failed_result"
+_FAILED_RESULT_ACTION_LOCALE_KEY: Final[str] = "workspace.modelo.issues.action.failed_result"
+_FAILED_RESULT_DETAIL_LOCALE_KEY: Final[str] = "workspace.modelo.issues.detail.calculation_failed"
+_FAILED_RESULT_CODE: Final[str] = "calculation_failed"
 
 DETAIL_LOCALE_KEYS: Final[Mapping[ModeloVerificationFindingKind, str]] = MappingProxyType(
     {
@@ -346,6 +353,25 @@ def _finding_line(issue: ModeloFormIssue, context: _Context) -> ModeloFormIssueL
     )
 
 
+def _failed_result_line(field: ModeloFormField, context: _Context) -> ModeloFormIssueLine:
+    """A result box the calculation could not work out, which blocks filing until it can."""
+    box = field.box or None
+    codes = [
+        _FAILED_RESULT_CODE,
+        *(() if not isinstance(field.address, ModeloFormCasillaAddressV1) else (str(field.address.casilla_id),)),
+    ]
+    return ModeloFormIssueLine(
+        level=ModeloFormAttention.BLOCKS,
+        box=box,
+        where=_field_name(field) or f"[{box or _NO_BOX}]",
+        message=context.tr(_FAILED_RESULT_LOCALE_KEY),
+        action=context.tr(_WHAT_TO_DO_LOCALE_KEY, action=context.tr(_FAILED_RESULT_ACTION_LOCALE_KEY)),
+        detail=context.tr(_FAILED_RESULT_DETAIL_LOCALE_KEY),
+        technical=f"{context.tr(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
+        address=field.address,
+    )
+
+
 def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloFormIssueLine:
     """One thing the latest calculation noticed, in the same parts as a finding."""
     casilla_id = None if note.casilla_id is None else str(note.casilla_id)
@@ -379,7 +405,7 @@ def _note_where(note: ModeloFormCalculationNote, field: ModeloFormField | None, 
 
 
 def form_issue_lines(form: ModeloWorkForm, language: OutputLanguage) -> tuple[ModeloFormIssueLine, ...]:
-    """The form's findings, then its calculation notes, as lines in ``language``, most urgent first."""
+    """The form's findings, its failed result boxes, then its calculation notes, as lines, most urgent first."""
     records = _record_values(form, language)
     context = _Context(
         language=language,
@@ -389,6 +415,7 @@ def form_issue_lines(form: ModeloWorkForm, language: OutputLanguage) -> tuple[Mo
         listed=_listed_missing(form),
     )
     lines = [line for issue in form.issues if (line := _finding_line(issue, context)) is not None]
+    lines.extend(_failed_result_line(field, context) for field in failed_results(form))
     lines.extend(_note_line(note, context) for note in form.calculation_notes)
     return tuple(sorted(lines, key=lambda line: _ATTENTION_ORDER.index(line.level)))
 

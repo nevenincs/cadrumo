@@ -27,6 +27,7 @@ from ......application.modelo.calculation_actions import (
 from ......application.modelo.value_presentation import format_casilla_value
 from ......application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ......application.modelo.work_form_models import ModeloFormRepeatingBlock
+from ......application.modelo.work_form_wording import does_not_apply_words
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -57,7 +58,6 @@ from ..issue_projection import issue_lines
 from ..issues import WorkbenchIssuesScreen
 from ..page_items import page_of, workbench_pages
 from ..screen import ModeloWorkbenchScreen
-from ..wording import does_not_apply_text
 
 pytestmark = [pytest.mark.hex_entrypoint]
 
@@ -204,7 +204,7 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
             help_text = str(screen.query_one("#wb-help", Static).render())
             assert tr("workspace.modelo.filter.empty") not in heading
             assert tr("workspace.modelo.filter.empty_next", page="") not in heading
-            assert does_not_apply_text(unit.period) not in heading
+            assert does_not_apply_words(unit.period) not in heading
             assert tr("workspace.modelo.help.empty") not in help_text
             assert tr("workspace.modelo.grid.records_read_only") in help_text
             assert all(
@@ -322,7 +322,7 @@ async def test_installed_known_empty_records_keep_source_guidance_and_column_fin
                 heading = str(screen.query_one(selector, Static).render())
                 assert tr("workspace.modelo.filter.empty") not in heading
                 assert tr("workspace.modelo.filter.empty_next", page="") not in heading
-                assert does_not_apply_text(unit.period) not in heading
+                assert does_not_apply_words(unit.period) not in heading
             help_text = str(screen.query_one("#wb-help", Static).render())
             assert tr("workspace.modelo.grid.records_read_only") in help_text
             assert tr("workspace.modelo.help.empty") not in help_text

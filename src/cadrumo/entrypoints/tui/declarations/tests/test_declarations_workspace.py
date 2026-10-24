@@ -640,7 +640,8 @@ async def test_unavailable_is_refusal_empty_is_measured_and_missing_handoff_refu
     app = ScreenHostApp[None](empty)
     async with app.run_test(size=(80, 24)) as pilot:
         await settle(pilot)
-        assert tr("workspace.declarations.list.empty") in _copy(empty)
+        copy = _copy(empty)
+        assert tr("workspace.declarations.list.empty") in copy and tr("tui.declarations.list.start_hint") in copy
     screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation)))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:

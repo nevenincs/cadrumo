@@ -27,6 +27,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormOrigin,
 )
+from ......application.modelo.work_form_typing_effect import ModeloFormDisplacement
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -34,7 +35,7 @@ from ....components.host import ScreenHostApp
 from ....tests.settling import settle
 from ..bulk_confirm import BulkConfirmScreen
 from ..ports import WorkbenchChangeKind
-from ..session import Displacement, StageRefusal, WorkbenchEditSession
+from ..session import StageRefusal, WorkbenchEditSession
 from .workbench_fixture import fed_by, form_field, status_line_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -65,7 +66,7 @@ def test_confirming_an_assumed_value_stages_it_as_the_filers_own_at_its_box() ->
     (change,) = session.changes
     assert change.kind is WorkbenchChangeKind.SET
     assert change.value == Decimal("12.50")
-    assert change.displaces is Displacement.NOTHING
+    assert change.displaces is ModeloFormDisplacement.NOTHING
     assert change.text == change.previous_text
     (submitted,) = session.payload()
     assert submitted.address == ModeloFormCasillaAddressV1(casilla_id="06")

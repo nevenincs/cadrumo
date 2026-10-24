@@ -67,6 +67,7 @@ from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.tests.financial_operand_delivery import deliver_financial_operand
 from cadrumo.application.operations.typed_financial_operand_context import BoundTypedFinancialOperandAccess
 from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import OperationEffect
 from cadrumo.core.period import Period
@@ -247,7 +248,9 @@ class SeededOperatorWork:
         request = OperationRequest(
             definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
             subject_ref=self.work_unit_id,
-            payload=ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
+            payload=ModeloEditOperatorInputV2(
+                submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+            ),
         )
         return self._run_edit(request, operation_id=new_operation_id())
 

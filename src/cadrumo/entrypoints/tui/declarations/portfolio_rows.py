@@ -1,13 +1,11 @@
-"""Pure search, ordering and creation choices over the joined filing portfolio."""
+"""Pure search and ordering over the joined filing portfolio."""
 
 from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
 
-from ....application.modelo.declaration_targets import DeclarationTarget
 from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow
-from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.work_form_wording import modelo_title, period_words
 from ....core.external_constants import OutputLanguage
 from ....core.text_fold import fold_for_matching
@@ -64,34 +62,3 @@ def result_sort_key(row: DeclarationListRow) -> tuple[bool, Decimal, str]:
     summary = None if row.declaration is None else row.declaration.summary
     value = None if summary is None or summary.result is None else summary.result.value
     return (value is None, value if value is not None else Decimal(0), row.modelo)
-
-
-def preferred_creation_target(rows: tuple[DeclarationListRow, ...]) -> DeclarationTarget | None:
-    """Prefer the first due row only when it carries a filing period."""
-    due = sorted((row for row in rows if row.state == "not_started"), key=lambda row: row.deadline or date.max)
-    return DeclarationTarget(due[0].modelo, due[0].period) if due and due[0].period is not None else None
-
-
-def creation_targets(
-    rows: tuple[DeclarationListRow, ...], admitted: tuple[DeclarationTarget, ...]
-) -> tuple[DeclarationTarget, ...]:
-    """Keep admitted choices, falling back to joined not-started addresses."""
-    return admitted or tuple(
-        DeclarationTarget(row.modelo, row.period)
-        for row in rows
-        if row.period is not None and row.state == "not_started"
-    )
-
-
-def existing_declaration(
-    rows: tuple[DeclarationListRow, ...], target: DeclarationTarget
-) -> DeclarationsWorkspaceDeclarationRefV1 | None:
-    """Find an existing declaration at exactly the chosen filing address."""
-    return next(
-        (
-            row.declaration
-            for row in rows
-            if row.declaration is not None and row.modelo == target.modelo and row.period == target.period
-        ),
-        None,
-    )

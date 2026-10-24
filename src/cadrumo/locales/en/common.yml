@@ -740,6 +740,18 @@ desktop:
     lead: Choose a work area below, or open one from the sidebar. You can open the
       documentation from either place.
     title: Nothing open
+  declarations:
+    close: Close declarations
+    loading: Reading your declarations…
+    maximize: Maximize declarations
+    position: Declaration {row} of {count}
+    read_failed: Cadrumo could not read your declarations.
+    retry: Try again
+    search:
+      label: Find a declaration
+    show:
+      label: Show
+    signed_out: Sign in to see your declarations.
   docs:
     frame_title: Cadrumo documentation
     hide: Hide the docs
@@ -3118,6 +3130,41 @@ desktop:
     never: Not synced with AEAT yet
     none_unread: None unread at the last sync
     unread: '{count} unread'
+  modelo:
+    correction:
+      kind_label: Kind of correction
+      motive_label: Reason for the rectification
+      values_label: Corrected values
+    details:
+      close: Close details
+      hide: Hide details
+      show: Show details
+    discard:
+      confirm: Discard
+      lead: It leaves your list of declarations. Its history is kept.
+      reason: Why (optional)
+    form:
+      pages: Pages of the form
+    keys:
+      change: Change the chosen box; Enter again keeps it and moves on
+      delete: Take your value out of the chosen box
+      leave: Leave a box unchanged
+      move: Move between boxes
+      next_attention: Next box that needs you (while the form has focus)
+    outline:
+      label: Form outline
+    rename:
+      name: Name
+      save: Save name
+    search:
+      label: Find a box
+    side:
+      label: Beside the form
+      outline: Outline
+    view:
+      form: Form
+    views:
+      label: Declaration views
   palette:
     actions: Actions
     close: Close search
@@ -4501,6 +4548,16 @@ tui:
     unattended: Allow unattended use
     uncertain: Outcome unknown; retain request ID
     waiting: Submitting request
+  declarations:
+    calendar:
+      recovery:
+        setup_incomplete: 'Declare the profile setup complete first: open Profile
+          (F4) and press F8.'
+    list:
+      new:
+        period_selection_hint: Press Enter to select a period, then create and open
+          the declaration.
+      start_hint: Press + to start one.
   destination:
     aeat_sync: AEAT Sync
     declarations: Declarations
@@ -5136,6 +5193,7 @@ tui:
       status: Status
     entries:
       empty: No entries yet.
+      selection_absent: The entry this link selects is not in this list.
       title: Entries
     entry_label: '{date} · {description}'
     entry_tools:
@@ -6410,6 +6468,10 @@ tui:
         set up the reader, its runtime and its models.
       title: Document reader
   modelo:
+    editor:
+      confirm_hint: Press ⏎ to confirm {value}, or type the right value.
+      keys: 'Keys: ⏎ {save_next} · Ctrl+⏎ {save}'
+      open_keys: 'Keys: a {open} · Esc {back}'
     export:
       account:
         charge_label: Account AEAT debits (domiciliación)
@@ -6485,6 +6547,15 @@ tui:
           not_official: 'This file is not official AEAT filing evidence. Official
             evidence comes from AEAT after filing: justificante; consulta de declaraciones
             presentadas; or CSV cotejo.'
+    go_to:
+      prompt: 'Go to box: type its number and press Enter.'
+    legend:
+      first_open: New here? Press ? to see what each symbol means.
+      meaning:
+        mark:
+          collapsed: Press → to open it.
+          expanded: Press ← to close it.
+      more: Press ? again for all symbols and keys.
     m303_evidence:
       admission_unavailable: A new confirmation cannot be recorded for this declaration
         here. Nothing was calculated.
@@ -6508,6 +6579,9 @@ tui:
       stale_context: The selected declaration changed while the form was open. Nothing
         was calculated; choose Calculate again.
       title: Modelo 303 filing facts
+    next_line: 'Next: {action} [{key}]'
+    search:
+      prompt: Search every page by box number or by words. Enter goes to the box.
   operations:
     action:
       close: Close
@@ -6945,6 +7019,7 @@ workspace:
       evidence:
         clear: No conflict observed
         conflicted: Conflicting AEAT status observed
+        disagrees: evidence disagrees
       justificante:
         not_verified: Not verified
         unknown: Unknown
@@ -6971,8 +7046,6 @@ workspace:
         confirm: Confirm
         failure: Recovery request could not be completed.
         progress: Creating the declaration…
-        setup_incomplete: 'Declare the profile setup complete first: open Profile
-          (F4) and press F8.'
         success: Created {address}. It is listed under Declarations once you return
           there.
       scope:
@@ -7024,6 +7097,10 @@ workspace:
       modelo_workspace: Open a declaration to fill in and file
       overview: Declarations
       revisions: Earlier calculations
+    due:
+      days_late: 'Days late: {days}'
+      days_left: 'Days left: {days}'
+      'on': Due {date}
     empty: Nothing recorded here yet.
     evidence:
       aeat_csv_register: AEAT CSV register observed
@@ -7039,6 +7116,15 @@ workspace:
     filing_state:
       supersedido: Replaced recorded filing
       vigente: Current recorded filing
+    holiday_coverage:
+      calendar_unavailable: Holidays not checked
+      national_only: Regional holidays not checked
+      territory_unverified: Regional holidays not confirmed
+    hub:
+      holidays_national_only: Deadlines count national holidays; regional ones are
+        not checked.
+      lead: Prepare each modelo, export the file you upload at the AEAT, and record
+        that you filed it.
     lifecycle:
       amended: Correction started
       calculated: Calculation completed
@@ -7070,18 +7156,22 @@ workspace:
           no_refile: Linking does not require filing it again.
           unavailable: This filing cannot be linked or its receipt opened from this
             list yet. You do not need to file the same return again.
+      all_recorded: Nothing to do. Every declaration is recorded.
       column:
         deadline: Deadline
         declaration: Declaration
+        modelo: Modelo
         period: Period
+        result: Result
         state: State
-      empty: You have no declarations yet. Press + to start one.
+      empty: You have no declarations yet.
       filter:
         all: All
         attention: Needs attention
         not_started: Not started
         recorded: Recorded as filed
         this_year: This year
+        todo: To do
       group:
         attention: Needs attention
         in_progress: In progress
@@ -7096,14 +7186,31 @@ workspace:
         help: Cadrumo could not tell from your profile whether you must file this.
           Check it before the deadline.
       new:
+        already_started: Already started
+        another: Another modelo
         choose_modelo: Which modelo?
         choose_period: Which period?
         create: Create and open
+        create_declaration: Create declaration
+        creating: Creating the declaration…
         exists: This declaration already exists. Open it?
-        period_selection_hint: Press Enter to select a period, then create and open
-          the declaration.
+        expected: Expected for you
+        failed: The declaration could not be created.
+        no_match: No modelo matches “{query}”.
+        none: There is no declaration you can start here.
+        open_count: 'open: {count}'
+        open_it: Open it
+        other: Other modelos
+        refused: Cadrumo did not create the declaration.
+        search_placeholder: Number or name, for example 303 or IVA
         show_all: Show all modelos, not only yours
         start_confirm: Start {modelo} for {period}?
+        unknown: Cadrumo could not tell whether the declaration was created.
+        unknown_next: The list is read again. Check it before you try again.
+        which_modelo: Which modelo do you want to prepare?
+        which_period: Which period is it for?
+        which_year: Which year is it for?
+        year: Year
       next:
         check_aeat: Check AEAT filing
         continue: Continue filling in
@@ -7113,15 +7220,21 @@ workspace:
         none: Nothing to do
         open_local_draft: Open local draft
         start: Start it
+      no_match: No declaration matches “{query}”.
+      none_listed: No declarations are listed.
       not_openable:
         help: This row cannot be opened here yet.
       search:
         hint: Search by Modelo number, name or period
+        modelo: Find a modelo
       sort:
+        amount: Amount
+        by: Sort by
         deadline: Deadline
         modelo: Modelo
         result: Result
         state: State
+        work_order: Work order
       state:
         aeat_needs_check: AEAT filing needs checking
         aeat_unlinked: Filed with AEAT, not linked here
@@ -7129,7 +7242,6 @@ workspace:
         blocked: Something blocks filing
         calculated: Calculated, not checked
         checked: Checked
-        correction: Correction
         draft: Being filled in
         local_draft: Local draft
         not_started: Not started
@@ -7149,7 +7261,7 @@ workspace:
           calendar:
             taxpayer_model_undeclared: The filing calendar needs to know what kind
               of taxpayer this profile is and, for a natural person, their IRPF income
-              categories. Complete them in the profile (F4).
+              categories. Complete them in your profile.
           declarations:
             lifecycle_reader_unavailable: The filing history can't be read in this
               session.
@@ -7180,7 +7292,7 @@ workspace:
       progress: Creating or reopening the selected declaration…
       refusal:
         not_applicable: 'Modelo %{modelo} does not apply to this profile: %{reason}
-          If it should, correct the profile in Profile (F4) and try again.'
+          If it should, correct your profile and try again.'
         period: Enter a valid period for the selected year.
         year: Enter a supported four-digit filing year.
       reused: Reopened {address}. Reopen Declarations to work on it.
@@ -7188,6 +7300,25 @@ workspace:
       borrador: Draft
       descartado: Discarded
   modelo:
+    about:
+      generated: Their grouping was produced from that design and has not yet been
+        checked against the printed form; each value is kept by its box number.
+      official: The boxes follow the official design of modelo {modelo} for this period.
+      title: About this form
+    amend:
+      kind_help:
+        complementaria: Adds to what the filed declaration declared, for example tax
+          that was left out.
+        rectificativa: Corrects the filed declaration in either direction, where the
+          rules for this modelo and period use it.
+        sustitutiva: Replaces the filed declaration in full.
+      motive:
+        discrepancia_criterio_administrativo: Disagreement with the tax authority's
+          criteria
+        rectificaciones: Corrections to the figures you declared
+      motive_help: A Modelo 303 rectificativa states why it corrects the filing. Choose
+        one; Cadrumo never chooses for you.
+      reason_prompt: Why are you correcting this declaration?
     applicability:
       month: Does not apply this month
       period: Does not apply this period
@@ -7198,7 +7329,7 @@ workspace:
       earlier: For this recalculation, the value from an earlier filing is unavailable.
       legacy: This older calculation cannot reuse all the values originally entered.
       next: Review the calculation source
-      notice: Not applied; changes kept. Check the source for {box} in Issues [i].
+      notice: Not applied; changes kept. Check the source for {box} in Issues.
       source_boxes: 'Earlier source boxes: {boxes}'
       what: For this recalculation, the source value for this box is unavailable.
     attention:
@@ -7222,7 +7353,7 @@ workspace:
       tick: I have checked these values and they are right for me
       title: Confirm assumed values
     calculate:
-      apply_first: Apply or discard your changes before recalculating [R].
+      apply_first: Apply or discard your changes before recalculating.
       at_risk_cancel: Keep the current values
       at_risk_proceed: Recalculate
       at_risk_title: Recalculate from your sources?
@@ -7236,6 +7367,32 @@ workspace:
       operator_entries_unknown: This declaration was last calculated outside this
         screen, so Cadrumo cannot tell which values you typed. Calculating again keeps
         only the values entered here.
+    correction:
+      confirm: Prepare the correction
+      kind: Whether it is filed as a supplementary return or a rectification depends
+        on the modelo and on which way the amount moves. Cadrumo works it out and
+        tells you before you export.
+      lead: A filed declaration is never changed in place. Cadrumo prepares a correction
+        from it; you change what was wrong, then export its file and file it at the
+        AEAT like any other.
+      title: Prepare a correction
+    details:
+      card_unavailable: The explanation of this box could not be read.
+      choose_box: Choose a box to see where its value comes from and what it means.
+      constraints: Limits
+      formula_incomplete: Part of this calculation is not written out yet.
+      is_result: This box is the declaration's result.
+      legal_basis: Legal basis
+      official_text: Official text
+      reach: What it changes
+      reach_others: 'Also:'
+      reading: Reading the explanation…
+      retrieved: Read on {date}
+      undo: Undo
+      uses_outside_many: 'It also uses figures kept outside this form: {count}.'
+      uses_outside_one: It also uses a figure kept outside this form.
+      what_it_means: What it means
+      worked_out_from: Worked out from
     details_page: Calculation details
     disclosure:
       official_spanish: official Spanish text
@@ -7290,7 +7447,7 @@ workspace:
           source's value at any time.
       cancel: Cancel
       clear: Clear
-      confirm_hint: Press ⏎ to confirm {value}, or type the right value.
+      confirm: Confirm
       format:
         boolean: Answer yes or no.
         date: A calendar date.
@@ -7300,9 +7457,10 @@ workspace:
         ratio: Type the value as it appears on the form.
         text: Free text.
         year: A four-digit year.
-      keys: 'Keys: ⏎ {save_next} · Ctrl+⏎ {save}'
+      new_value_for_box: 'Box {box}: new value'
+      not_checked: This value could not be checked just now, so it was not kept. Try
+        again.
       open_area: Open {area}
-      open_keys: 'Keys: a {open} · Esc {back}'
       placeholder:
         boolean: yes or no
         date: Date, e.g. 31/03/2026
@@ -7313,20 +7471,88 @@ workspace:
         text: Text
         year: Year, e.g. 2026
       read_as: ✓ Will be read as {value}
+      reading: Reading what you typed…
+      replace_here: Replace it in this declaration only
       restore: Go back to the source's value
+      rules_incomplete: Editing is not available for this declaration yet. It will
+        open once Cadrumo's rules for this modelo are complete.
       save: Keep for review
       save_next: Keep and go to next
       unreadable: This value could not be read.
     export:
       confirm_first: 'Confirm the assumed values before creating the file or recording
-        the filing (to confirm: {count}) [n].'
+        the filing (to confirm: {count}).'
+      file_format:
+        fixed_width: AEAT file in the fixed-width BOE design
+        xml_dictionary: AEAT XML file
       resolve_first: 'Resolve what blocks filing before creating the file or recording
-        the filing (blocking: {count}) [i].'
+        the filing (blocking: {count}).'
       title: Export the declaration
-      verify_first: Check the declaration before exporting it [F8].
+      verify_first: Check the declaration before exporting it.
     filed:
       read_only: 'Recorded as filed: you can look at it but not change it. To change
         it, start a correction of this declaration.'
+    filing:
+      add_receipt_pdf: Add the AEAT receipt (PDF)…
+      add_receipt_to_confirm: Add the AEAT receipt to confirm
+      after_filed_title: After you have filed
+      after_filing: After you have filed at the AEAT
+      also_other_way: Also if you filed some other way.
+      at_aeat: At the AEAT
+      check_first: Check the declaration first.
+      completeness_unverified: Cadrumo could not check that every required box reached
+        the file.
+      copy:
+        calculation_report_csv:
+          action: Save CSV
+          detail: Every figure of the report, as a table.
+        calculation_report_pdf:
+          action: Save report
+          detail: A signed PDF explaining every figure. It is not proof of filing.
+        calculation_review_xlsx:
+          action: Save workbook
+          detail: Every box with its formula, as a spreadsheet file.
+        package:
+          action: Prepare package
+          detail: Encrypted for one person, who can send comments back.
+          title: Package for your accountant
+      export_again: Export again
+      export_again_warning: Exporting again makes a new file; only do it for a correction.
+      export_file: Export file…
+      file_current: Made from the current calculation
+      file_earlier: 'Made from an earlier calculation: do not upload it'
+      file_exported: File exported
+      file_format: In the official format for modelo {modelo}. It is not proof of
+        filing; the AEAT's receipt is.
+      file_local: Made on this computer only
+      file_title: The file to upload at the AEAT
+      filter:
+        boe: AEAT filing file
+        csv: CSV file
+        pdf: PDF document
+        receipt: AEAT receipt (PDF)
+        xlsx: Excel workbook
+        xml: XML filing file
+        zip: ZIP package
+      how_to_upload: How to upload it
+      kept_locally: Kept on this computer only.
+      lead: Cadrumo makes the file; you upload it yourself at the AEAT's electronic
+        office. Nothing is sent from here.
+      not_confirmed_yet: Not confirmed yet
+      not_yet: Not yet
+      open_check: Open Check
+      other_copies: Other copies
+      receipt_differs: The receipt does not match this declaration.
+      receipt_matches: The receipt matches this declaration.
+      receipt_missing: Not confirmed by a receipt yet.
+      record_as_filed: Record as filed…
+      record_lead: Record here that you filed it, so your calendar and later declarations
+        know. Then add the AEAT's receipt to confirm it.
+      recorded_here: Recorded here; nothing was sent from Cadrumo
+      saved: Saved as {name}. It is not proof of filing.
+      show_filed_file: Show the filed file
+      show_in_folder: Show in folder
+      title: Export and record
     filter:
       all: all boxes
       amount: only boxes with an amount
@@ -7336,10 +7562,10 @@ workspace:
       empty_next: 'Nothing on this page for this filter. Next page with something:
         {page}'
       mine: only your values
+      only_mine: Only my entries
       records: only values from your records
     go_to:
       missing: There is no box [{box}] on this form.
-      prompt: 'Go to box: type its number and press Enter.'
     grid:
       column_unnamed: Column {number}
       records_read_only: This table is filled from your records. Change them there.
@@ -7357,7 +7583,7 @@ workspace:
         of a weekend or holiday.
       deadline_today: Deadline today, {date}
       file_created: File created on {date}
-      file_out_of_date: The file from {date} is out of date. Create it again [{key}]
+      file_out_of_date: The file from {date} is out of date. Create it again.
       no_deadline: No deadline on record for this period
       no_deadline_short: No deadline on record
       own_calculation: Cadrumo's calculation. AEAT has not seen it.
@@ -7367,21 +7593,25 @@ workspace:
         choice_pending_short: To carry forward or refund
         direction_unknown_help: Cadrumo does not yet say whether this amount is to
           pay or to refund. Check it against the official form before you file.
-        failed: 'Result: could not be calculated [{key}]'
+        failed: 'Result: could not be calculated'
         negative: 'Negative result: nothing to pay'
         negative_carried: 'Negative result: {amount} to deduct in later quarters'
-        not_calculated: 'Result: not calculated yet [{key}]'
+        no_result_box: This form has no result box
+        not_calculated: 'Result: not calculated yet'
         other_boxes: 'Other result boxes on this form: {boxes}'
+        out_of_date_until_applied: out of date until applied
+        provisional: provisional
         sign_help: Box [{box}] shows {value} on the official form. The header shows
           the amount without its sign and says the direction in words.
         to_carry_forward: To carry forward
+        to_deduct_later: To deduct in later periods
         to_pay: To pay
         to_refund: To be refunded
         unknown: Result
         zero: Result zero
       stale:
-        changes: 'out of date: changes not applied yet: {count} [{key}]'
-        recalculate: 'out of date: calculate again [{key}]'
+        changes: 'out of date: changes not applied yet: {count}'
+        recalculate: 'out of date: calculate again'
     help:
       box_opening: 'Box {box}:'
       empty: There are no boxes in this view.
@@ -7394,12 +7624,32 @@ workspace:
       origin: 'Source: {origin}'
       origin_no_earlier_declaration: This box holds 0 because there is no earlier
         declaration this year to carry a value from.
+    history:
+      changes_applied: Changes applied
+      detail:
+        renamed: '{previous} → {new}'
+      discard: Discard this declaration
+      event:
+        audit_exported: Audit package exported
+        audit_verified: Audit package checked
+        iva_wallet_corrected: IVA wallet corrected
+        iva_wallet_override_recorded: IVA wallet replaced by hand
+        ledger_evidence_recaptured: Records evidence read again
+        live_evidence_stamped: AEAT evidence recorded for the calculation
+        revision_reconciled: Calculation reconciled
+      lead: What happened to this declaration, newest first. Kept on this computer.
+      other: Other change recorded
+      read_from_aeat: Read from the AEAT
+      rename: Rename
+      title: History
     in_spanish: (in Spanish)
     issues:
       action:
         confirm: Open each box and confirm its value, or type the right one.
         confirm_by_section: Open each section and confirm its values, or type the
           right ones.
+        failed_result: Give the values the calculation notes ask for, then calculate
+          again.
         fill: Open each box and type its value. If the right value is zero, enter
           0.
         fill_by_section: Open each section and type the values it needs.
@@ -7412,6 +7662,8 @@ workspace:
         advisory: This is advice. You can file the declaration as it is.
         blocking_rule: A rule of this modelo is unmet, so the filing cannot be recorded
           yet.
+        calculation_failed: Until this box can be calculated, the filing cannot be
+          recorded.
         cross_period_dependency_unclean: This declaration uses figures from an earlier
           period that is not settled yet, so its result can still change.
         missing_required_casilla: To file, provide this value. If zero is correct,
@@ -7422,6 +7674,8 @@ workspace:
           so its figures may no longer match them. The filing cannot be recorded until
           it is calculated again.
       empty: Nothing to look at.
+      failed_result: The calculation could not work out this box, so the declaration
+        has no result yet.
       go_to_box: Go to box
       key:
         less: Show less
@@ -7481,7 +7735,6 @@ workspace:
       stay: Keep editing
       title: Changes not applied
     legend:
-      first_open: New here? Press ? to see what each symbol means.
       group:
         empty: Empty on purpose, or not there yet
         keys: Keys
@@ -7497,10 +7750,8 @@ workspace:
           check: Worth checking. It does not stop you from filing.
           info: An explanation, for example why a source was not used.
         mark:
-          collapsed: Press → to open it.
           done: 'Finished: nothing left to do here.'
           earlier: Carried from an earlier declaration you recorded as filed.
-          expanded: Press ← to close it.
           here: The selected box, or the step you are on.
           staged: You changed this box. The change is not applied yet.
           stale: The result does not include your latest changes yet.
@@ -7523,7 +7774,6 @@ workspace:
           optional_empty: Optional. Leave it empty if it does not apply to you.
           overrides_source: Your value replaces the one from its source, in this declaration
             only.
-      more: Press ? again for all symbols and keys.
       name:
         collapsed: Closed section
         done: Done
@@ -7537,7 +7787,9 @@ workspace:
     level:
       blocks: Blocks filing
       check: Worth checking
+      confirm: To confirm
       info: For your information
+      missing: Missing
     loading: Loading the declaration…
     modelo_number: Modelo {modelo}
     modelo_title: Modelo {modelo} · {title}
@@ -7554,7 +7806,19 @@ workspace:
       recorded: Recorded as filed on {date}
       resolve: 'Resolve what blocks filing (to do: {count})'
       verify: Check the declaration
-    next_line: 'Next: {action} [{key}]'
+    next_button:
+      add_receipt: Add the AEAT receipt
+      apply: Review and apply
+      calculate: Calculate the declaration
+      confirm: Confirm the assumed values
+      export: Create the file
+      export_again: Create the file again
+      fill: Complete the marked boxes
+      recalculate: Calculate again
+      record_after_file: Record the filing
+      resolve: Resolve what blocks filing
+      see_missing: See what is missing
+      verify: Check the declaration
     not_writable:
       absent_from_admission: This box cannot be edited here.
       capability_unavailable: Editing this box is not available in this version yet.
@@ -7570,9 +7834,9 @@ workspace:
     operation:
       calculated: Calculated. {direction} {value}.
       checked:
-        blocked: 'Checked: something blocks filing. Open the issues to see what [{key}].'
+        blocked: 'Checked: something blocks filing. Open the issues to see what.'
         complete: 'Checked: nothing blocks filing.'
-        incomplete: 'Checked: some values the declaration needs are missing [{key}].'
+        incomplete: 'Checked: some values the declaration needs are missing.'
       done: Done. The declaration has been updated.
       not_done: It did not complete; your changes are still here.
     origin:
@@ -7624,6 +7888,19 @@ workspace:
         records: Yours, replaces your records
         registers: Yours, replaces your register
         your_entries: Yours, replaces your entry
+    outcome:
+      failed: It could not be done ({code}).
+      not_done: It was not done; nothing changed.
+      refused: 'Not done: {code}. Nothing changed.'
+      unknown: Cadrumo could not see whether this finished; it may have. It is not
+        done again. Read the declaration again before you go on.
+    page:
+      calculation_details: Calculation details, not printed on the form
+      does_not_apply: '{page}: does not apply this period'
+      only_if_it_applies: only if it applies to you
+      unplaced: Boxes not yet placed on this form
+      working_figures: Figures the calculation asks for that have no box of their
+        own
     page_number: Page {page}
     page_position: page {current} of {total}
     period:
@@ -7650,6 +7927,7 @@ workspace:
       of_row: This row's rate is {rate}.
       of_row_printed: 'The official form prints this rate for this row: {rate}.'
       printed_by_form: The official form prints this rate for this row.
+    read_again: Read the declaration again
     read_failed: The declaration could not be read. Go back and open it again.
     rebase:
       changed: 'Boxes that now read differently: {count}.'
@@ -7657,7 +7935,10 @@ workspace:
       moved: The declaration changed since you entered changes that are not applied
         yet.
       still_moving: The declaration is still changing. Wait a moment and review your
-        changes again [R].
+        changes again.
+    receipt:
+      missing: No AEAT receipt has been verified for this filing yet.
+      verified: AEAT receipt verified on {date}.
     record:
       refused_file_out_of_date: The file from {date} is out of date. Create it again.
         If you already filed that older file with AEAT, start a correction instead.
@@ -7683,11 +7964,14 @@ workspace:
       acknowledge: I have checked what applying does
       and_more: '{shown} and {count} more'
       apply: Apply and recalculate
+      applying: Applying your changes…
       back: Back to editing
       before_changed: the box changed since you entered this
       blocked: Resolve the items marked ▲ before applying.
       change_line: '{box}{concept}: {before} becomes {after} ({effect})'
+      check_again: Check again
       check_failed: Your changes could not be checked. They are still here; try again.
+      checking: Checking your changes…
       column:
         after: After
         before: Before
@@ -7733,10 +8017,13 @@ workspace:
       rebased: 'The declaration changed after you entered these changes, which are
         not applied yet. Check the marked lines again (changed: {count}).'
       title: 'Changes to apply: {count}'
+      unknown: Cadrumo could not see whether your changes were applied; they may have
+        been. They are not sent again. Read the declaration again before you go on;
+        your changes are still here.
     search:
       count: 'Boxes found: {count}'
       empty: No box matches {query}.
-      prompt: Search every page by box number or by words. Enter goes to the box.
+      placeholder: Find a box by number or words
     section:
       box: Box {box}
       boxes: Boxes {first} to {last}
@@ -7751,6 +8038,7 @@ workspace:
     sources:
       and_more: and {count} more
       count: 'Boxes: {count}'
+      go_to_box: Go to box {box}
       group:
         aeat_data: AEAT data
         aeat_data_imported_on: AEAT data, imported {date}
@@ -7777,6 +8065,8 @@ workspace:
         expand: Show boxes
         go: Open box
         open: Open source
+      lead: Boxes are filled from these when you calculate. Correct a value where
+        it is kept, then calculate again.
       no_source: This box is not filled from another area.
       no_surface: “{source}” has no area of its own to open.
       none: This declaration has no boxes to show.
@@ -7797,6 +8087,32 @@ workspace:
       file: Record filing
       fill: Fill in
       review: Check
+    summary:
+      blocked: Could not be worked out
+      calculated: Worked out from other boxes
+      entered: Entered by you
+      imported: Brought in from your data
+      needs_you: Need you
+      not_calculated: 'Not calculated yet: the boxes fill in when it is.'
+      title: This declaration
+    surface:
+      correct:
+        declarations: Open that declaration and correct it there
+        ledger: Open your records and correct it there
+        profile: Open your profile and correct it there
+        withholding: Open withholdings and correct it there
+      open:
+        declarations: Open that declaration
+        ledger: Open your records
+        profile: Open your profile
+        withholding: Open withholdings
+    todo:
+      failed: 'Boxes that could not be worked out: {count}'
+      failed_lead: They wait on something the calculation lacked. Choose one to see
+        what.
+      none: Nothing needs you on this form.
+      title: To do
     value:
       not_applicable: n/a
+      not_known_yet: Not known yet
     was: was {value}

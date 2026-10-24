@@ -22,13 +22,14 @@ from ......application.modelo.work_form_models import (
     ModeloFormTextDisclosure,
     ModeloFormValueSource,
 )
+from ......application.modelo.work_form_typing_effect import TYPING_EFFECTS
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
 from ......core.period import Period
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
-from ..review import REVIEW_EFFECTS, EditReviewScreen, ReviewDecision, change_line
+from ..review import EditReviewScreen, ReviewDecision, change_line
 from ..session import StagedChange, WorkbenchEditSession
 from .workbench_fixture import status_line_of
 
@@ -104,7 +105,7 @@ def test_a_replaced_value_names_the_place_it_came_from() -> None:
 @pytest.mark.parametrize("language", _LANGUAGES, ids=[item.value for item in _LANGUAGES])
 def test_no_effect_calls_a_value_imported(language: OutputLanguage) -> None:
     imported_words = {"en": "imported", "es": "importado", "ca": "importat", "hu": "importált"}[language.value]
-    for effect in REVIEW_EFFECTS:
+    for effect in TYPING_EFFECTS:
         text = lookup_translation(f"workspace.modelo.review.effect.{effect}", locale=language.value)
         assert text is not None and text, effect
         assert imported_words not in text, effect

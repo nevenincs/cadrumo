@@ -1,10 +1,11 @@
 """Ask the filer where and how to export the verified declaration.
 
-The dialog offers only the artefacts this installation can publish, so the
-filer never picks an export the installation would refuse. A Modelo 303 asks the
-three declaration-shaping elections -- refund, payment and prior direct debit --
-each pre-set to its neutral default and never blank; other modelos submit those
-defaults without asking. Beside the elections it offers the own bank account
+The dialog offers the artefacts the declaration's read says this installation
+can publish, so the filer never picks an export the installation would refuse.
+Where the read says the export asks them, it asks the three declaration-shaping
+elections -- refund, payment and prior direct debit -- each pre-set to its
+neutral default and never blank; otherwise it submits those defaults without
+asking. Beside the elections it offers the own bank account
 AEAT debits and the one it pays a refund into, each prefilled from the Ledger
 designation for this modelo and shown masked. Nothing is exported here: the
 dialog returns the typed request and the workbench runs it through the
@@ -29,10 +30,15 @@ from .....application.ledger.own_account_operation import (
     LedgerOwnAccountResult,
     OwnAccountProjection,
 )
+from .....application.modelo.work_form_export_offer import (
+    EXPORT_ARTEFACT_LOCALE_KEYS,
+    PAYMENT_ELECTION_LOCALE_KEYS,
+    PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS,
+    REFUND_ELECTION_LOCALE_KEYS,
+)
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
 from .....core.modelo_export_artefact import ModeloExportArtefact
-from .....core.optional_extras import PDF_EXTRA, OptionalExtra, optional_extra_available
 from .....core.payment_election import PaymentElection
 from .....core.prior_domiciliation_election import PriorDomiciliationElection
 from .....core.refund_election import RefundElection
@@ -41,29 +47,8 @@ from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
 from ...ledger.own_accounts import LedgerOwnAccountDoorV1
 from ...ledger.workspace_presentation import door_refusal_text
-from ..export_result import EXPORT_ARTEFACT_LOCALE_KEYS
 from .dialog_width import fit_dialog_width
 from .ports import WorkbenchExportOffer, WorkbenchExportRequest
-
-REFUND_ELECTION_LOCALE_KEYS: Final[Mapping[RefundElection, str]] = MappingProxyType(
-    {
-        RefundElection.COMPENSAR: "tui.modelo.export.refund_election.compensar",
-        RefundElection.DEVOLVER: "tui.modelo.export.refund_election.devolver",
-    }
-)
-PAYMENT_ELECTION_LOCALE_KEYS: Final[Mapping[PaymentElection, str]] = MappingProxyType(
-    {
-        PaymentElection.INGRESO: "tui.modelo.export.payment_election.ingreso",
-        PaymentElection.DOMICILIACION: "tui.modelo.export.payment_election.domiciliacion",
-        PaymentElection.CUENTA_CORRIENTE: "tui.modelo.export.payment_election.cuenta_corriente",
-    }
-)
-PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS: Final[Mapping[PriorDomiciliationElection, str]] = MappingProxyType(
-    {
-        PriorDomiciliationElection.KEEP: "tui.modelo.export.prior_domiciliation_election.keep",
-        PriorDomiciliationElection.CANCEL_OR_MODIFY: "tui.modelo.export.prior_domiciliation_election.cancel_or_modify",
-    }
-)
 
 #: The account choice that leaves the export to resolve the Ledger designations.
 DESIGNATED_ACCOUNT: Final = "-"
@@ -76,27 +61,6 @@ def designated_account_id(result: LedgerOwnAccountResult, role: OwnAccountRole, 
     """The account the register designates for ``role`` on ``modelo``: its own scope first, then every modelo."""
     scoped = {(item.role, item.modelo): item.own_account_id for item in result.designations}
     return scoped.get((role, modelo)) or scoped.get((role, None))
-
-
-#: An artefact that needs an optional extra is offered only when the extra is
-#: installed, so the operator never picks an export the installation would
-#: refuse and no other artefact is ever published in its place.
-_EXPORT_ARTEFACT_EXTRAS: Final[Mapping[ModeloExportArtefact, OptionalExtra]] = MappingProxyType(
-    {ModeloExportArtefact.CALCULATION_REPORT_PDF: PDF_EXTRA},
-)
-
-
-def offered_export_artefacts() -> tuple[ModeloExportArtefact, ...]:
-    """Return the artefacts this installation can publish, in the order the dialog lists them.
-
-    Probed each time, through the same spec-only probe the export service's own
-    refusal rests on.
-    """
-    return tuple(
-        artefact
-        for artefact in EXPORT_ARTEFACT_LOCALE_KEYS
-        if (extra := _EXPORT_ARTEFACT_EXTRAS.get(artefact)) is None or optional_extra_available(extra)
-    )
 
 
 class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
@@ -332,10 +296,6 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
 
 __all__ = [
     "DESIGNATED_ACCOUNT",
-    "PAYMENT_ELECTION_LOCALE_KEYS",
-    "PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS",
-    "REFUND_ELECTION_LOCALE_KEYS",
     "WorkbenchExportScreen",
     "designated_account_id",
-    "offered_export_artefacts",
 ]

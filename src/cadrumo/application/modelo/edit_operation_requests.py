@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Literal
 from uuid import UUID
 
+from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import WorkUnitId
 from ..operations.financial_operand_contract import CredentialFreeFinancialOperationRequest
 
@@ -18,8 +19,13 @@ class ModeloEditApplyOperationRequestV2(CredentialFreeFinancialOperationRequest)
 
 
 class ModeloEditPreflightRequestV2(CredentialFreeFinancialOperationRequest):
-    """Safe preflight admission coordinates with the same whole-batch custody."""
+    """Safe preflight admission coordinates with the same whole-batch custody.
+
+    ``output_language`` is the language the findings and any refusal are
+    said in.
+    """
 
     request_version: Literal[2] = 2
     profile_id: UUID
     work_unit_id: WorkUnitId
+    output_language: OutputLanguage

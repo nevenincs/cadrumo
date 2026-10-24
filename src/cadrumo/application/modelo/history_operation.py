@@ -9,6 +9,7 @@ from pydantic import BaseModel, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.external_constants import OutputLanguage
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -37,15 +38,17 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .history import WorkUnitHistory, assemble_work_unit_history
 from .history_ports import ModeloHistoryPorts, ModeloHistoryPortsFactory
+from .work_history_read import ModeloWorkHistoryEntryV1, worded_history
 
 MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID = "modelo.work.history"
 
 
 class ModeloWorkHistoryRequest(CredentialFreeOperationRequest):
-    """Address one full work identity in the authenticated profile."""
+    """Address one full work identity in the authenticated profile, and the language its history is said in."""
 
     profile_id: UUID
     work_unit_id: WorkUnitId
+    output_language: OutputLanguage
 
 
 class ModeloWorkHistorySnapshot(BaseModel):
@@ -76,13 +79,18 @@ class ModeloWorkHistorySnapshot(BaseModel):
 
 
 class ModeloWorkHistoryProjection(BaseModel):
-    """Retain canonical event constraints within an encrypted profile result."""
+    """Retain canonical event constraints within an encrypted profile result.
+
+    ``entries`` are the same events said in the request's language, newest
+    first, each with its lifecycle kind, words and any detail.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     result_version: Literal[1] = 1
     profile_id: UUID
     history: ModeloWorkHistorySnapshot
+    entries: tuple[ModeloWorkHistoryEntryV1, ...]
 
     @model_validator(mode="after")
     def _bound_history(self) -> Self:
@@ -97,6 +105,10 @@ class ModeloWorkHistoryProjection(BaseModel):
             != self.history.events
         ):
             raise ValueError("work history is not chronologically ordered")
+        if tuple(entry.event_id for entry in self.entries) != tuple(
+            event.event_id for event in reversed(self.history.events)
+        ):
+            raise ValueError("the worded history says each event once, newest first")
         return self
 
 
@@ -154,7 +166,9 @@ class ModeloWorkHistoryExecutor:
             if history.work_unit_id != payload.work_unit_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
             return ModeloWorkHistoryProjection(
-                profile_id=payload.profile_id, history=ModeloWorkHistorySnapshot.from_history(history)
+                profile_id=payload.profile_id,
+                history=ModeloWorkHistorySnapshot.from_history(history),
+                entries=worded_history(history, payload.output_language),
             )
 
         return await capture_read_result(context, read, task_name="modelo-work-history")

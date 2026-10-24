@@ -11,6 +11,7 @@ from .....application.modelo.work_form_models import (
     confirmable,
     section_fields,
 )
+from .....application.modelo.work_form_typing_effect import TYPED_EDITABILITIES
 from .....core.i18n.render import tr
 from ...search import TuiSearchHostV1
 from .bulk_confirm import BulkConfirmScreen
@@ -22,7 +23,6 @@ from .screen_constants import (
     _NONE_TO_CONFIRM_LOCALE_KEYS,
 )
 from .sources import GoToCasilla, OpenSourceSurface, SourcesChoice, WorkbenchSourcesScreen, surface_target
-from .vocabulary import TYPED_EDITABILITIES
 
 if TYPE_CHECKING:
     from .screen import ModeloWorkbenchScreen

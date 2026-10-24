@@ -82,6 +82,7 @@ from .modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceZoneObservationV1,
 )
 from .modelo.reconciliation_records import ModeloReconciliationRecord
+from .modelo.work_history_read import LIFECYCLE_KIND_BY_EVENT
 from .modelo.workspace_models import (
     ModeloWorkspaceProjectionV1,
 )
@@ -126,24 +127,29 @@ if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from .ledger.action_ports import LedgerActionPorts
 
+_FILING_HISTORY_KINDS: Final[frozenset[DeclarationsLifecycleKind]] = frozenset(
+    {
+        DeclarationsLifecycleKind.CREATED,
+        DeclarationsLifecycleKind.RENAMED,
+        DeclarationsLifecycleKind.CALCULATED,
+        DeclarationsLifecycleKind.VERIFIED,
+        DeclarationsLifecycleKind.VERIFICATION_REFUSED,
+        DeclarationsLifecycleKind.FILED,
+        DeclarationsLifecycleKind.RECONCILED,
+        DeclarationsLifecycleKind.OBSERVATION_OVERRIDDEN,
+        DeclarationsLifecycleKind.OBSERVATION_OVERRIDE_CLEARED,
+    }
+)
 _LIFECYCLE_KIND_BY_EVENT: Final[Mapping[BucketEventType, DeclarationsLifecycleKind]] = {
-    BucketEventType.MODELO_WORK_UNIT_CREATED: DeclarationsLifecycleKind.CREATED,
-    BucketEventType.MODELO_WORK_UNIT_RENAMED: DeclarationsLifecycleKind.RENAMED,
-    BucketEventType.MODELO_CALCULATION_CREATED: DeclarationsLifecycleKind.CALCULATED,
-    BucketEventType.MODELO_VERIFICATION_PASSED: DeclarationsLifecycleKind.VERIFIED,
-    BucketEventType.MODELO_VERIFICATION_REFUSED: DeclarationsLifecycleKind.VERIFICATION_REFUSED,
-    BucketEventType.MODELO_FILED: DeclarationsLifecycleKind.FILED,
-    BucketEventType.MODELO_FILING_RECONCILED: DeclarationsLifecycleKind.RECONCILED,
-    BucketEventType.MODELO_OBSERVATION_OVERRIDDEN: DeclarationsLifecycleKind.OBSERVATION_OVERRIDDEN,
-    BucketEventType.MODELO_OBSERVATION_OVERRIDE_CLEARED: DeclarationsLifecycleKind.OBSERVATION_OVERRIDE_CLEARED,
+    event: kind for event, kind in LIFECYCLE_KIND_BY_EVENT.items() if kind in _FILING_HISTORY_KINDS
 }
 
 
-"""The bucket events the filing history reports, by the lifecycle meaning they carry.
+"""The bucket events the profile's filing history reports, by the lifecycle meaning each carries.
 
-Every other ``MODELO_*`` event is outside this history's closed vocabulary --
-exports, revision reconciliations, wallet corrections -- and is left to the
-per-modelo history view that renders raw events.
+The meaning of every event is the declaration history's; this history reports
+the meanings above, and leaves exports, corrections, discards and the events
+with no lifecycle meaning to each declaration's own history.
 """
 
 

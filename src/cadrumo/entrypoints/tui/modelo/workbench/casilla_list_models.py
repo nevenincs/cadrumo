@@ -41,8 +41,8 @@ from .....application.modelo.work_form_models import (
     NEEDS_ATTENTION,
     ModeloFormField,
     ModeloFormOrigin,
+    ModeloFormStanding,
     address_key,
-    field_needs_filer,
 )
 from .....application.modelo.work_form_wording import origin_words
 from .grid import (
@@ -124,14 +124,14 @@ class CasillaListEntry:
 
     @property
     def needs_filer(self) -> bool:
-        """Whether the filer can act on the field now: a staged change, or what the shared classing says.
+        """Whether the filer can act on the field now: a staged change, or the standing the read model states.
 
         A box waiting on an import or a calculation is not one, and nothing on
         a recorded declaration is; ``n`` visits exactly these.
         """
         if self.staged_text is not None:
             return True
-        return field_needs_filer(self.field, recorded=self.recorded, applies=self.applies)
+        return self.field.standing is ModeloFormStanding.NEEDS_YOU
 
     @property
     def origin_mark(self) -> str:

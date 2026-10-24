@@ -112,11 +112,22 @@ def fed_box_label(binding_id: str, context: WorkFormContext) -> ModeloFormText |
 
 def casilla_help(casilla: CasillaDefinition, label: str, context: WorkFormContext) -> str | None:
     """Return the casilla's help unless it only restates the label or names the box."""
+    return casilla_help_text(casilla, label, language=context.language, box_locators=context.box_locators)
+
+
+def casilla_help_text(
+    casilla: CasillaDefinition,
+    label: str,
+    *,
+    language: OutputLanguage,
+    box_locators: tuple[re.Pattern[str], ...],
+) -> str | None:
+    """Return the casilla's help in ``language`` unless it only restates ``label`` or names the box."""
     keys = tuple(f"{key.removesuffix('.label')}.help" for key in casilla.localization_keys)
-    text = resolve_modelo_localization(keys, locale=context.language.value)
+    text = resolve_modelo_localization(keys, locale=language.value)
     if not (text is not None and text):
         return None
-    if normalized_help_text(text) == normalized_help_text(label) or names_only_its_box(text, context.box_locators):
+    if normalized_help_text(text) == normalized_help_text(label) or names_only_its_box(text, box_locators):
         return None
     return text
 

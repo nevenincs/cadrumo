@@ -68,17 +68,20 @@ from ...application.modelo.amendment_context_operation import (
     ModeloWorkAmendmentContextRequest,
 )
 from ...application.modelo.amendment_projection import ModeloWorkAmendPublicResultV2
+from ...application.modelo.edit_models import ModeloEditCorrectionAddressV1, ModeloEditParseRefusalV1
+from ...application.modelo.edit_parsing import validate_modelo_edit_value
+from ...application.modelo.edit_value_grammar import ModeloEditValueGrammarV1
 from ...application.modelo.work_amend_contracts import (
     ModeloWorkAmendBaseline,
     ModeloWorkAmendOverride,
     ModeloWorkAmendRequest,
 )
-from ...application.operations.public_scalar import PublicDecimal
+from ...application.modelo.work_amend_correction import amendable_casilla_rows, filed_casilla_values
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ...core.i18n.render import tr
+from ...core.i18n.render import output_language, tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
 from ...domain.modelos.calculation_revision_amendment import (
@@ -187,7 +190,11 @@ def run_modelo_work_amend_wizard(
     client = require_profile_client(ctx, expected_profile_id=UUID(profile_id))
     context_projection = read_modelo_work_amendment_context(
         client,
-        ModeloWorkAmendmentContextRequest(profile_id=client.profile_id, filing_record_id=unit.current_filing_record_id),
+        ModeloWorkAmendmentContextRequest(
+            profile_id=client.profile_id,
+            filing_record_id=unit.current_filing_record_id,
+            output_language=OutputLanguage(output_language()),
+        ),
     ).projection
     if not isinstance(context_projection, ModeloWorkAmendmentContextProjection) or _amendment_context_scope_invalid(
         context_projection, unit
@@ -207,8 +214,15 @@ def run_modelo_work_amend_wizard(
                 filing_record_id=baseline.filing_record_id,
             ),
         ) from None
-    baseline_values = _baseline_values(context_projection)
-    amendable = _amendable_rows(context_projection.casilla_rows, baseline_values)
+    correction = context_projection.correction
+    if correction is None:
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    try:
+        baseline_values = filed_casilla_values(context_projection.calculation)
+    except ValueError:
+        raise RefusalError(RefusalCode.INVALID_FRAME) from None
+    amendable = amendable_casilla_rows(context_projection.casilla_rows, baseline_values)
+    grammars = {row.casilla_id: row.grammar for row in correction.rows}
     if not amendable:
         raise typer.BadParameter(
             tr(
@@ -233,6 +247,7 @@ def run_modelo_work_amend_wizard(
             modelo=str(baseline.modelo),
             permitted_amendment_kinds=context_projection.permitted_amendment_kinds,
             m303_rectificativa_motive_applicable=context_projection.m303_rectificativa_motive_applicable,
+            grammars=grammars,
             run_token=run_token,
         )
     finally:
@@ -259,29 +274,6 @@ def run_modelo_work_amend_wizard(
         reason=reason,
         corrections=corrections,
     )
-
-
-def _baseline_values(context: ModeloWorkAmendmentContextProjection) -> dict[str, Decimal]:
-    """Read exact persisted decimal values without reconstructing a revision."""
-    values: dict[str, Decimal] = {}
-    for fact in context.calculation.casilla_values:
-        if not isinstance(fact.value, PublicDecimal):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        values[fact.key] = Decimal(fact.value.decimal)
-    return values
-
-
-def _amendable_rows(
-    casilla_rows: tuple[ModeloCasillaRow, ...], baseline_values: Mapping[str, Decimal]
-) -> tuple[ModeloCasillaRow, ...]:
-    """Return the registry rows that carry a baseline value, in casilla-number order.
-
-    These are exactly the casillas the operator may amend: every casilla the
-    attested baseline actually declares a value for. The order is stable
-    (casilla number) so the CHECKBOX choices and the follow-up value pages
-    read top-to-bottom like the printed return.
-    """
-    return tuple(row for row in sorted(casilla_rows, key=lambda r: r.number) if row.casilla_id in baseline_values)
 
 
 def _run_flow(definition: FlowDefinition) -> FlowState:
@@ -379,21 +371,25 @@ def _selected_rows(
     return tuple(selected)
 
 
-def _wizard_corrected_amount(state: FlowState, casilla_id: str) -> Decimal:
+def _wizard_corrected_amount(state: FlowState, casilla_id: str, grammar: ModeloEditValueGrammarV1 | None) -> Decimal:
     """Read one corrected casilla amount back off the flow state.
 
     The DECIMAL widget's shape validation already admitted only a
-    canonical-grammar amount and canonicalised it to ``str(Decimal)``, so this
-    re-read is defence in depth against a widget contract change rather than the
-    boundary itself. It uses the same uncapped grammar the widget applies, so a
-    value the widget accepted can never hard-refuse here — a refusal at the end
-    of a collected flow would be a refusal at the wrong surface.
+    canonical-grammar amount and canonicalised it to ``str(Decimal)``. The
+    amount is then held to the correction grammar every frontend reads a
+    corrected value against, which admits any amount the amendment request's
+    override shape takes, so it refuses only what the amendment would refuse.
     """
     raw = (state.answers.get(_value_page_id(casilla_id)) or "").strip()
     parsed = try_parse_canonical_decimal(raw)
-    if parsed is None:
+    if parsed is None or grammar is None:
         raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=raw))
-    return parsed
+    outcome = validate_modelo_edit_value(
+        parsed, address=ModeloEditCorrectionAddressV1(casilla_id=casilla_id), grammar=grammar, tax_id_format=None
+    )
+    if isinstance(outcome, ModeloEditParseRefusalV1) or not isinstance(outcome.value, Decimal):
+        raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=raw))
+    return outcome.value
 
 
 def _prompt_values_kind_reason(
@@ -403,6 +399,7 @@ def _prompt_values_kind_reason(
     modelo: str,
     permitted_amendment_kinds: tuple[CalculationRevisionAmendmentKind, ...],
     m303_rectificativa_motive_applicable: bool,
+    grammars: Mapping[str, ModeloEditValueGrammarV1],
     run_token: str,
 ) -> tuple[
     tuple[tuple[ModeloCasillaRow, Decimal, Decimal], ...],
@@ -432,7 +429,9 @@ def _prompt_values_kind_reason(
     corrections: list[tuple[ModeloCasillaRow, Decimal, Decimal]] = []
     for row in selected:
         previous = baseline_values[row.casilla_id]
-        corrections.append((row, previous, _wizard_corrected_amount(state, row.casilla_id)))
+        corrections.append(
+            (row, previous, _wizard_corrected_amount(state, row.casilla_id, grammars.get(row.casilla_id)))
+        )
     amendment_kind = CalculationRevisionAmendmentKind((state.answers.get(_KIND_PAGE_ID) or "").strip())
     raw_motive = (state.answers.get(_MOTIVE_PAGE_ID) or "").strip()
     motive = M303RectificativaMotive(raw_motive) if raw_motive else None

@@ -7,14 +7,8 @@ from typing import TYPE_CHECKING
 from rich.cells import cell_len
 from textual.geometry import Size
 
-from .....application.modelo.edit_value_grammar import ratio_unit
-from .....application.modelo.value_presentation import (
-    format_casilla_value,
-)
-from .....application.modelo.work_form_models import (
-    ModeloFormScalar,
-)
-from .....application.modelo.work_form_wording import rate_text
+from .....application.modelo.work_form_models import ModeloFormRepeatingRow
+from .....application.modelo.work_form_wording import rate_text, record_value_text
 from .....core.i18n.render import tr
 from ...components.cell_text import wrap_words
 from . import casilla_list_models as _models
@@ -266,23 +260,17 @@ class CasillaListLayoutMixin:
             rate=item.field.data_type == _values._RATIO_DATA_TYPE,
         )
 
-    def _record_value(self: CasillaList, value: ModeloFormScalar, data_type: str) -> str:
-        if value is None:
-            return _values._EMPTY_VALUE
-        return format_casilla_value(
-            value, data_type=data_type, language=self._language, ratio_unit=ratio_unit(data_type, None)
+    def _record_values(self: CasillaList, row: ModeloFormRepeatingRow, data_types: tuple[str, ...]) -> tuple[str, ...]:
+        texts = row.value_texts or tuple(
+            record_value_text(value, data_type, self._language)
+            for value, data_type in zip(row.values, data_types, strict=True)
         )
+        return tuple(_values._EMPTY_VALUE if text is None else text for text in texts)
 
     def _record_lines(self: CasillaList, item: CasillaListRecords, width: int) -> tuple[tuple[str, str], ...]:
         """A repeating group's records: a table when it fits, otherwise every labelled value stacked."""
         indexes = tuple(str(row.index) for row in item.rows)
-        values = tuple(
-            tuple(
-                self._record_value(value, data_type)
-                for value, data_type in zip(row.values, item.data_types, strict=True)
-            )
-            for row in item.rows
-        )
+        values = tuple(self._record_values(row, item.data_types) for row in item.rows)
         geometry = measure_records(item.headings, indexes, values, width)
         if not geometry.table:
             return self._stacked_record_lines(item, indexes, values, width, geometry.index)

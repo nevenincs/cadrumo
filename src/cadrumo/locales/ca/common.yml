@@ -768,6 +768,18 @@ desktop:
     lead: Tria una àrea de treball a continuació o obre-la des de la barra lateral.
       També pots obrir la documentació des de qualsevol d’aquests llocs.
     title: No hi ha res obert
+  declarations:
+    close: Tanca les declaracions
+    loading: S'estan llegint les teves declaracions…
+    maximize: Maximitza les declaracions
+    position: Declaració {row} de {count}
+    read_failed: Cadrumo no ha pogut llegir les teves declaracions.
+    retry: Torna-ho a provar
+    search:
+      label: Cercar una declaració
+    show:
+      label: Mostrar
+    signed_out: Inicia la sessió per veure les teves declaracions.
   docs:
     frame_title: Documentació de Cadrumo
     hide: Amaga la documentació
@@ -3160,6 +3172,41 @@ desktop:
     never: Encara sense sincronitzar amb l'AEAT
     none_unread: Cap sense llegir a l'última sincronització
     unread: '{count} sense llegir'
+  modelo:
+    correction:
+      kind_label: Tipus de correcció
+      motive_label: Motiu de la rectificació
+      values_label: Valors corregits
+    details:
+      close: Tancar els detalls
+      hide: Amagar els detalls
+      show: Mostrar els detalls
+    discard:
+      confirm: Descartar
+      lead: Surt de la teva llista de declaracions. Se'n conserva l'historial.
+      reason: Per què (opcional)
+    form:
+      pages: Pàgines del formulari
+    keys:
+      change: Canviar la casella triada; un altre Enter la desa i passa a la següent
+      delete: Treu el teu valor de la casella triada
+      leave: Deixar una casella sense canvis
+      move: Moure's entre caselles
+      next_attention: Següent casella que et necessita (amb el formulari enfocat)
+    outline:
+      label: Esquema del formulari
+    rename:
+      name: Nom
+      save: Desar el nom
+    search:
+      label: Cercar una casella
+    side:
+      label: Al costat del formulari
+      outline: Esquema
+    view:
+      form: Formulari
+    views:
+      label: Vistes de la declaració
   palette:
     actions: Accions
     close: Tanca la cerca
@@ -4579,6 +4626,16 @@ tui:
     unattended: Permet l'ús sense supervisió
     uncertain: Resultat desconegut; conserva l'ID de la sol·licitud
     waiting: S'està enviant la sol·licitud
+  declarations:
+    calendar:
+      recovery:
+        setup_incomplete: 'Primer declara completa la configuració del perfil: obre
+          Perfil (F4) i prem F8.'
+    list:
+      new:
+        period_selection_hint: Prem Enter per triar el període; després, crea i obre
+          la declaració.
+      start_hint: Prem + per començar-ne una.
   destination:
     aeat_sync: Sincronització AEAT
     declarations: Declaracions
@@ -5225,6 +5282,7 @@ tui:
       status: Estat
     entries:
       empty: Encara no hi ha cap apunt.
+      selection_absent: L'apunt que selecciona aquest enllaç no és en aquesta llista.
       title: Apunts
     entry_label: '{date} · {description}'
     entry_tools:
@@ -6517,6 +6575,10 @@ tui:
         equip i prepara el lector, el seu runtime i els seus models.
       title: Lector de documents
   modelo:
+    editor:
+      confirm_hint: Prem ⏎ per confirmar {value} o escriu el valor correcte.
+      keys: 'Tecles: ⏎ {save_next} · Ctrl+⏎ {save}'
+      open_keys: 'Tecles: a {open} · Esc {back}'
     export:
       account:
         charge_label: Compte on l'AEAT carrega (domiciliació)
@@ -6595,6 +6657,15 @@ tui:
           not_official: 'Aquest fitxer no és evidència oficial de presentació davant
             l''AEAT. L''evidència oficial l''emet l''AEAT després de la presentació:
             justificant; consulta de declaracions presentades; o acarament per CSV.'
+    go_to:
+      prompt: 'Anar a la casella: escriu-ne el número i prem Retorn.'
+    legend:
+      first_open: És la primera vegada? Prem ? per veure què vol dir cada símbol.
+      meaning:
+        mark:
+          collapsed: Prem → per obrir-la.
+          expanded: Prem ← per tancar-la.
+      more: Prem ? un altre cop per veure tots els símbols i tecles.
     m303_evidence:
       admission_unavailable: Aquí no es pot registrar una confirmació nova per a aquesta
         declaració. No s'ha calculat res.
@@ -6618,6 +6689,10 @@ tui:
       stale_context: La declaració seleccionada ha canviat mentre el formulari era
         obert. No s'ha calculat res; torna a triar Calcula.
       title: Dades de l'autoliquidació del Model 303
+    next_line: 'Següent: {action} [{key}]'
+    search:
+      prompt: Cerca a totes les pàgines per número de casella o per paraules. Retorn
+        et porta a la casella.
   operations:
     action:
       close: Tanca
@@ -7062,6 +7137,7 @@ workspace:
       evidence:
         clear: No s'ha observat cap conflicte
         conflicted: S'ha observat un estat contradictori a l'AEAT
+        disagrees: les proves no coincideixen
       justificante:
         not_verified: No verificat
         unknown: Desconegut
@@ -7088,8 +7164,6 @@ workspace:
         confirm: Confirma
         failure: No s'ha pogut completar la recuperació.
         progress: S'està creant la declaració…
-        setup_incomplete: 'Primer declara completa la configuració del perfil: obre
-          Perfil (F4) i prem F8.'
         success: S'ha creat {address}. Apareixerà a Declaracions quan hi tornis.
       scope:
         all: Totes
@@ -7140,6 +7214,10 @@ workspace:
       modelo_workspace: Obre una declaració per emplenar-la i presentar-la
       overview: Declaracions
       revisions: Càlculs anteriors
+    due:
+      days_late: 'Dies de retard: {days}'
+      days_left: 'Dies restants: {days}'
+      'on': Venç el {date}
     empty: Encara no hi ha res registrat aquí.
     evidence:
       aeat_csv_register: Registre CSV de l'AEAT observat
@@ -7155,6 +7233,15 @@ workspace:
     filing_state:
       supersedido: Presentació registrada substituïda
       vigente: Presentació registrada vigent
+    holiday_coverage:
+      calendar_unavailable: Festius sense comprovar
+      national_only: Festius autonòmics sense comprovar
+      territory_unverified: Festius autonòmics sense confirmar
+    hub:
+      holidays_national_only: Els terminis tenen en compte els festius estatals; els
+        autonòmics no es comproven.
+      lead: Prepara cada model, exporta el fitxer que presentes a l'AEAT i registra
+        que l'has presentat.
     lifecycle:
       amended: Correcció iniciada
       calculated: Càlcul completat
@@ -7188,18 +7275,22 @@ workspace:
           unavailable: Encara no es pot vincular aquesta presentació ni obrir-ne el
             justificant des d'aquesta llista. No cal tornar a presentar la mateixa
             declaració.
+      all_recorded: Res pendent. Totes les declaracions estan registrades.
       column:
         deadline: Termini
         declaration: Declaració
+        modelo: Model
         period: Període
+        result: Resultat
         state: Estat
-      empty: Encara no tens declaracions. Prem + per començar-ne una.
+      empty: Encara no tens declaracions.
       filter:
         all: Totes
         attention: Requereix atenció
         not_started: Sense començar
         recorded: Registrades com a presentades
         this_year: Aquest any
+        todo: Pendents
       group:
         attention: Requereix atenció
         in_progress: En curs
@@ -7214,14 +7305,32 @@ workspace:
         help: Cadrumo no ha pogut saber pel teu perfil si l'has de presentar. Comprova-ho
           abans del termini.
       new:
+        already_started: Ja començada
+        another: Un altre model
         choose_modelo: Quin model?
         choose_period: Quin període?
         create: Crear i obrir
+        create_declaration: Crear la declaració
+        creating: S'està creant la declaració…
         exists: Aquesta declaració ja existeix. Obrir-la?
-        period_selection_hint: Prem Enter per triar el període; després, crea i obre
-          la declaració.
+        expected: Previstos per a tu
+        failed: No s'ha pogut crear la declaració.
+        no_match: Cap model no coincideix amb «{query}».
+        none: No hi ha cap declaració que puguis començar aquí.
+        open_count: 'obertes: {count}'
+        open_it: Obrir-la
+        other: Altres models
+        refused: Cadrumo no ha creat la declaració.
+        search_placeholder: Número o nom, per exemple 303 o IVA
         show_all: Mostra tots els models, no només els teus
         start_confirm: Començar el {modelo} de {period}?
+        unknown: Cadrumo no ha pogut saber si s'ha creat la declaració.
+        unknown_next: Es torna a llegir la llista. Revisa-la abans de tornar-ho a
+          provar.
+        which_modelo: Quin model vols preparar?
+        which_period: De quin període és?
+        which_year: De quin any és?
+        year: Any
       next:
         check_aeat: Comprova la presentació a l'AEAT
         continue: Continuar emplenant
@@ -7231,15 +7340,21 @@ workspace:
         none: Res pendent
         open_local_draft: Obre l'esborrany local
         start: Començar-la
+      no_match: Cap declaració no coincideix amb «{query}».
+      none_listed: No hi ha declaracions a la llista.
       not_openable:
         help: Aquesta fila encara no es pot obrir des d'aquí.
       search:
         hint: Cerca per número de model, nom o període
+        modelo: Cercar un model
       sort:
+        amount: Import
+        by: Ordena per
         deadline: Termini
         modelo: Model
         result: Resultat
         state: Estat
+        work_order: Ordre de treball
       state:
         aeat_needs_check: Presentació a l'AEAT pendent de comprovar
         aeat_unlinked: Presentada a l'AEAT, sense vincular aquí
@@ -7247,7 +7362,6 @@ workspace:
         blocked: Alguna cosa n'impedeix la presentació
         calculated: Calculada, sense comprovar
         checked: Comprovada
-        correction: Correcció
         draft: En preparació
         local_draft: Esborrany local
         not_started: Sense començar
@@ -7267,7 +7381,7 @@ workspace:
           calendar:
             taxpayer_model_undeclared: El calendari fiscal necessita saber quin tipus
               de contribuent és aquest perfil i, si és una persona física, les seves
-              categories de renda de l'IRPF. Completa-les al perfil (F4).
+              categories de renda de l'IRPF. Completa-les al teu perfil.
           declarations:
             lifecycle_reader_unavailable: L'historial de presentacions no es pot llegir
               en aquesta sessió.
@@ -7298,8 +7412,7 @@ workspace:
       progress: Creant o reprenent la declaració seleccionada…
       refusal:
         not_applicable: 'El model %{modelo} no s''aplica a aquest perfil: %{reason}
-          Si s''hi hauria d''aplicar, corregeix el perfil a Perfil (F4) i torna-ho
-          a provar.'
+          Si s''hi hauria d''aplicar, corregeix el teu perfil i torna-ho a provar.'
         period: Indica un període vàlid per a l'exercici seleccionat.
         year: Indica un exercici admès de quatre xifres.
       reused: S'ha reprès {address}. Torna a Declaracions per treballar-hi.
@@ -7307,6 +7420,25 @@ workspace:
       borrador: Esborrany
       descartado: Descartat
   modelo:
+    about:
+      generated: La seva agrupació s'ha obtingut d'aquest disseny i encara no s'ha
+        comparat amb el model imprès; cada valor es desa pel seu número de casella.
+      official: Les caselles segueixen el disseny oficial del model {modelo} per a
+        aquest període.
+      title: Sobre aquest model
+    amend:
+      kind_help:
+        complementaria: Completa el que declarava la declaració presentada, per exemple
+          una quota que hi faltava.
+        rectificativa: Corregeix la declaració presentada a l'alça o a la baixa, quan
+          les normes d'aquest model i període la preveuen.
+        sustitutiva: Substitueix completament la declaració presentada.
+      motive:
+        discrepancia_criterio_administrativo: Discrepància amb el criteri administratiu
+        rectificaciones: Rectificacions de les xifres que vas declarar
+      motive_help: Una rectificativa del model 303 indica per què corregeix la declaració.
+        Tria'n un; Cadrumo mai no tria per tu.
+      reason_prompt: Per què corregeixes aquesta declaració?
     applicability:
       month: No s'aplica aquest mes
       period: No s'aplica en aquest període
@@ -7318,8 +7450,7 @@ workspace:
         anterior.
       legacy: Aquest càlcul anterior no pot reutilitzar tots els valors introduïts.
       next: Revisa l’origen del càlcul
-      notice: 'No s’ha aplicat; canvis conservats. {box}: revisa’n l’origen a Incidències
-        [i].'
+      notice: 'No s’ha aplicat; canvis conservats. {box}: revisa’n l’origen a Incidències.'
       source_boxes: 'Caselles d’origen anteriors: {boxes}'
       what: Per a aquest recàlcul, el valor d’origen d’aquesta casella no està disponible.
     attention:
@@ -7343,7 +7474,7 @@ workspace:
       tick: He revisat aquests valors i són correctes per a mi
       title: Confirmar valors suposats
     calculate:
-      apply_first: Aplica o descarta els teus canvis abans de recalcular [R].
+      apply_first: Aplica o descarta els teus canvis abans de recalcular.
       at_risk_cancel: Conserva els valors actuals
       at_risk_proceed: Recalcula
       at_risk_title: Vols recalcular a partir dels teus orígens?
@@ -7358,6 +7489,33 @@ workspace:
       operator_entries_unknown: Aquesta declaració es va calcular per última vegada
         fora d'aquesta pantalla, així que Cadrumo no pot saber quins valors vas escriure.
         En tornar a calcular només es conserven els valors introduïts aquí.
+    correction:
+      confirm: Preparar la correcció
+      kind: Que es presenti com a complementària o com a rectificativa depèn del model
+        i del sentit en què canvia l'import. Cadrumo ho determina i t'ho indica abans
+        d'exportar.
+      lead: Una declaració presentada no es canvia mai directament. Cadrumo en prepara
+        una correcció; canvies el que estava malament, n'exportes el fitxer i el presentes
+        a l'AEAT com qualsevol altre.
+      title: Preparar una correcció
+    details:
+      card_unavailable: No s'ha pogut llegir l'explicació d'aquesta casella.
+      choose_box: Tria una casella per veure d'on surt el valor i què significa.
+      constraints: Límits
+      formula_incomplete: Part d'aquest càlcul encara no està detallada.
+      is_result: Aquesta casella és el resultat de la declaració.
+      legal_basis: Base legal
+      official_text: Text oficial
+      reach: Què canvia
+      reach_others: 'També:'
+      reading: Llegint l'explicació…
+      retrieved: Consultat el {date}
+      undo: Desfés
+      uses_outside_many: 'També fa servir dades que es desen fora d''aquest model:
+        {count}.'
+      uses_outside_one: També fa servir una dada que es desa fora d'aquest model.
+      what_it_means: Què significa
+      worked_out_from: Calculada a partir de
     details_page: Detalls del càlcul
     disclosure:
       official_spanish: text oficial en castellà
@@ -7412,7 +7570,7 @@ workspace:
           quan vulguis.
       cancel: Cancel·la
       clear: Buida
-      confirm_hint: Prem ⏎ per confirmar {value} o escriu el valor correcte.
+      confirm: Confirmar
       format:
         boolean: Respon sí o no.
         date: Una data del calendari.
@@ -7422,9 +7580,10 @@ workspace:
         ratio: Escriu el valor tal com figura a l'imprès.
         text: Text lliure.
         year: Un any de quatre xifres.
-      keys: 'Tecles: ⏎ {save_next} · Ctrl+⏎ {save}'
+      new_value_for_box: 'Casella {box}: valor nou'
+      not_checked: Ara no s'ha pogut comprovar aquest valor, així que no s'ha desat.
+        Torna-ho a provar.
       open_area: Obre {area}
-      open_keys: 'Tecles: a {open} · Esc {back}'
       placeholder:
         boolean: sí o no
         date: Data, p. ex. 31/03/2026
@@ -7435,20 +7594,90 @@ workspace:
         text: Text
         year: Any, p. ex. 2026
       read_as: ✓ Es llegirà com {value}
+      reading: S'està llegint el que has escrit…
+      replace_here: Substituir-lo només en aquesta declaració
       restore: Tornar al valor de l'origen
+      rules_incomplete: L'edició encara no està disponible per a aquesta declaració.
+        S'obrirà quan les regles de Cadrumo per a aquest model estiguin completes.
       save: Deixar per revisar
       save_next: Deixar i passar a la següent
       unreadable: No s'ha pogut llegir aquest valor.
     export:
       confirm_first: 'Confirma els valors suposats abans de generar el fitxer o registrar
-        la presentació (per confirmar: {count}) [n].'
+        la presentació (per confirmar: {count}).'
+      file_format:
+        fixed_width: Fitxer de l'AEAT amb el disseny de registre BOE d'amplada fixa
+        xml_dictionary: Fitxer XML de l'AEAT
       resolve_first: 'Resol el que impedeix presentar abans de generar el fitxer o
-        registrar la presentació (impedeixen presentar: {count}) [i].'
+        registrar la presentació (impedeixen presentar: {count}).'
       title: Exporta la declaració
-      verify_first: Comprova la declaració abans d'exportar-la [F8].
+      verify_first: Comprova la declaració abans d'exportar-la.
     filed:
       read_only: 'Registrada com a presentada: la pots consultar, però no canviar.
         Per canviar-la, inicia una correcció d''aquesta declaració.'
+    filing:
+      add_receipt_pdf: Afegir el justificant de l'AEAT (PDF)…
+      add_receipt_to_confirm: Afegeix el justificant de l'AEAT per confirmar-la
+      after_filed_title: Quan l'hagis presentada
+      after_filing: Quan l'hagis presentada a l'AEAT
+      also_other_way: També si l'has presentada d'una altra manera.
+      at_aeat: A l'AEAT
+      check_first: Comprova primer la declaració.
+      completeness_unverified: Cadrumo no ha pogut comprovar que totes les caselles
+        obligatòries siguin al fitxer.
+      copy:
+        calculation_report_csv:
+          action: Desar el CSV
+          detail: Totes les xifres de l'informe, en una taula.
+        calculation_report_pdf:
+          action: Desar l'informe
+          detail: Un PDF signat que explica cada xifra. No prova la presentació.
+        calculation_review_xlsx:
+          action: Desar el llibre
+          detail: Cada casella amb la seva fórmula, en un full de càlcul.
+        package:
+          action: Preparar el paquet
+          detail: Xifrat per a una sola persona, que et pot tornar comentaris.
+          title: Paquet per al teu gestor
+      export_again: Tornar a exportar
+      export_again_warning: Tornar a exportar genera un altre fitxer; fes-ho només
+        per a una correcció.
+      export_file: Exportar el fitxer…
+      file_current: Generat amb el càlcul actual
+      file_earlier: 'Generat amb un càlcul anterior: no el presentis'
+      file_exported: Fitxer exportat
+      file_format: En el format oficial del model {modelo}. No prova la presentació;
+        el justificant de l'AEAT, sí.
+      file_local: Generat només en aquest ordinador
+      file_title: El fitxer que presentes a l'AEAT
+      filter:
+        boe: Fitxer de presentació AEAT
+        csv: Fitxer CSV
+        pdf: Document PDF
+        receipt: Justificant de l'AEAT (PDF)
+        xlsx: Llibre d'Excel
+        xml: Fitxer XML de presentació
+        zip: Paquet ZIP
+      how_to_upload: Com presentar-lo
+      kept_locally: Es desa només en aquest ordinador.
+      lead: Cadrumo genera el fitxer; tu el presentes a la seu electrònica de l'AEAT.
+        Des d'aquí no s'envia res.
+      not_confirmed_yet: Encara sense confirmar
+      not_yet: Encara no
+      open_check: Obrir Comprovar
+      other_copies: Altres còpies
+      receipt_differs: El justificant no coincideix amb aquesta declaració.
+      receipt_matches: El justificant coincideix amb aquesta declaració.
+      receipt_missing: Encara no la confirma cap justificant.
+      record_as_filed: Registrar com a presentada…
+      record_lead: Registra aquí que l'has presentada, perquè ho sàpiguen el teu calendari
+        i les declaracions posteriors. Després afegeix el justificant de l'AEAT per
+        confirmar-ho.
+      recorded_here: Registrada aquí; Cadrumo no ha enviat res
+      saved: Desat com a {name}. No és prova de presentació.
+      show_filed_file: Mostrar el fitxer presentat
+      show_in_folder: Mostrar a la carpeta
+      title: Exportar i registrar
     filter:
       all: totes les caselles
       amount: només les caselles amb import
@@ -7458,10 +7687,10 @@ workspace:
       empty_next: 'No hi ha res en aquesta pàgina amb aquest filtre. Pàgina següent
         amb alguna cosa: {page}'
       mine: només els teus valors
+      only_mine: Només els meus valors
       records: només el que ve dels teus registres
     go_to:
       missing: No hi ha cap casella [{box}] en aquest model.
-      prompt: 'Anar a la casella: escriu-ne el número i prem Retorn.'
     grid:
       column_unnamed: Columna {number}
       records_read_only: Aquesta taula s'omple amb els teus registres. Canvia'ls allà.
@@ -7479,8 +7708,7 @@ workspace:
         per un cap de setmana o festiu.
       deadline_today: El termini acaba avui, {date}
       file_created: Fitxer generat el {date}
-      file_out_of_date: El fitxer del {date} està desactualitzat. Torna a generar-lo
-        [{key}]
+      file_out_of_date: El fitxer del {date} està desactualitzat. Torna a generar-lo.
       no_deadline: No consta cap termini per a aquest període
       no_deadline_short: Termini no registrat
       own_calculation: Càlcul de Cadrumo. L'AEAT no l'ha vist.
@@ -7489,21 +7717,25 @@ workspace:
         choice_pending_short: A compensar o a retornar
         direction_unknown_help: Cadrumo encara no indica si aquest import és a ingressar
           o a retornar. Comprova-ho al model oficial abans de presentar.
-        failed: 'Resultat: no s''ha pogut calcular [{key}]'
+        failed: 'Resultat: no s''ha pogut calcular'
         negative: 'Resultat negatiu: res a ingressar'
         negative_carried: 'Resultat negatiu: {amount} a deduir en els trimestres següents'
-        not_calculated: 'Resultat: encara sense calcular [{key}]'
+        no_result_box: Aquest model no té casella de resultat
+        not_calculated: 'Resultat: encara sense calcular'
         other_boxes: 'Altres caselles de resultat d''aquest model: {boxes}'
+        out_of_date_until_applied: desactualitzat fins que ho apliquis
+        provisional: provisional
         sign_help: La casella [{box}] figura al model oficial com a {value}. A dalt
           es mostra l'import sense signe i el sentit en paraules.
         to_carry_forward: A compensar
+        to_deduct_later: A deduir en períodes posteriors
         to_pay: A ingressar
         to_refund: A retornar
         unknown: Resultat
         zero: Resultat zero
       stale:
-        changes: 'desactualitzat: canvis sense aplicar: {count} [{key}]'
-        recalculate: 'desactualitzat: torna a calcular [{key}]'
+        changes: 'desactualitzat: canvis sense aplicar: {count}'
+        recalculate: 'desactualitzat: torna a calcular'
     help:
       box_opening: 'Casella {box}:'
       empty: No hi ha caselles en aquesta vista.
@@ -7516,12 +7748,33 @@ workspace:
       origin: 'Origen: {origin}'
       origin_no_earlier_declaration: Aquesta casella val 0 perquè aquest any no hi
         ha cap declaració anterior d'on portar un valor.
+    history:
+      changes_applied: Canvis aplicats
+      detail:
+        renamed: '{previous} → {new}'
+      discard: Descartar aquesta declaració
+      event:
+        audit_exported: Paquet d'auditoria exportat
+        audit_verified: Paquet d'auditoria comprovat
+        iva_wallet_corrected: Cartera d'IVA corregida
+        iva_wallet_override_recorded: Cartera d'IVA substituïda manualment
+        ledger_evidence_recaptured: Evidència dels registres llegida de nou
+        live_evidence_stamped: Evidència de l'AEAT registrada per al càlcul
+        revision_reconciled: Càlcul conciliat
+      lead: El que ha passat amb aquesta declaració, del més recent al més antic.
+        Es desa en aquest ordinador.
+      other: Un altre canvi registrat
+      read_from_aeat: Llegit de l'AEAT
+      rename: Canviar el nom
+      title: Historial
     in_spanish: (en castellà)
     issues:
       action:
         confirm: Obre cada casella i confirma'n el valor, o escriu el correcte.
         confirm_by_section: Obre cada secció i confirma'n els valors, o escriu els
           correctes.
+        failed_result: Indica els valors que demanen les notes del càlcul i torna
+          a calcular.
         fill: Obre cada casella i escriu-ne el valor. Si el valor correcte és zero,
           escriu 0.
         fill_by_section: Obre cada secció i escriu-hi els valors que necessita.
@@ -7534,6 +7787,8 @@ workspace:
         advisory: És un consell. Pots presentar la declaració tal com està.
         blocking_rule: No es compleix una regla del model; encara no es pot registrar
           la presentació.
+        calculation_failed: Fins que no es pugui calcular aquesta casella, no es pot
+          registrar la presentació.
         cross_period_dependency_unclean: Aquesta declaració fa servir xifres d'un
           període anterior que encara no està resolt, així que el resultat encara
           pot canviar.
@@ -7546,6 +7801,8 @@ workspace:
           declaració, així que les seves xifres poden no coincidir-hi. No es pot registrar
           la presentació fins que la tornis a calcular.
       empty: No hi ha res a revisar.
+      failed_result: El càlcul no ha pogut obtenir aquesta casella, així que la declaració
+        encara no té resultat.
       go_to_box: Anar a la casella
       key:
         less: Mostra'n menys
@@ -7606,7 +7863,6 @@ workspace:
       stay: Continua editant
       title: Canvis sense aplicar
     legend:
-      first_open: És la primera vegada? Prem ? per veure què vol dir cada símbol.
       group:
         empty: Buida a propòsit, o encara sense valor
         keys: Tecles
@@ -7622,10 +7878,8 @@ workspace:
           check: Convé revisar-ho. No t'impedeix presentar.
           info: Una explicació, per exemple per què no s'ha fet servir un origen.
         mark:
-          collapsed: Prem → per obrir-la.
           done: 'Acabat: aquí no queda res per fer.'
           earlier: Portat d'una declaració anterior registrada com a presentada.
-          expanded: Prem ← per tancar-la.
           here: La casella seleccionada o el pas en què ets.
           staged: Has canviat aquesta casella. El canvi encara no s'ha aplicat.
           stale: El resultat encara no inclou els teus últims canvis.
@@ -7648,7 +7902,6 @@ workspace:
           optional_empty: Opcional. Deixa-la buida si no t'afecta.
           overrides_source: El teu valor substitueix el del seu origen, només en aquesta
             declaració.
-      more: Prem ? un altre cop per veure tots els símbols i tecles.
       name:
         collapsed: Secció tancada
         done: Fet
@@ -7662,7 +7915,9 @@ workspace:
     level:
       blocks: Impedeix presentar
       check: Convé revisar-ho
+      confirm: Per confirmar
       info: Per a la teva informació
+      missing: Falta
     loading: Carregant la declaració…
     modelo_number: Modelo {modelo}
     modelo_title: Modelo {modelo} · {title}
@@ -7680,7 +7935,19 @@ workspace:
       recorded: Registrada com a presentada el {date}
       resolve: 'Resol el que impedeix presentar (pendents: {count})'
       verify: Comprova la declaració
-    next_line: 'Següent: {action} [{key}]'
+    next_button:
+      add_receipt: Afegeix el justificant de l'AEAT
+      apply: Revisa i aplica
+      calculate: Calcula la declaració
+      confirm: Confirma els valors suposats
+      export: Genera el fitxer
+      export_again: Torna a generar el fitxer
+      fill: Completa les caselles marcades
+      recalculate: Torna a calcular
+      record_after_file: Registra la presentació
+      resolve: Resol el que impedeix presentar
+      see_missing: Mira què falta
+      verify: Comprova la declaració
     not_writable:
       absent_from_admission: Aquesta casella no es pot editar aquí.
       capability_unavailable: Editar aquesta casella encara no està disponible en
@@ -7698,9 +7965,9 @@ workspace:
       calculated: Calculada. {direction} {value}.
       checked:
         blocked: 'Comprovada: alguna cosa n''impedeix la presentació. Obre les incidències
-          per veure-ho [{key}].'
+          per veure-ho.'
         complete: 'Comprovada: res no n''impedeix la presentació.'
-        incomplete: 'Comprovada: falten dades que la declaració necessita [{key}].'
+        incomplete: 'Comprovada: falten dades que la declaració necessita.'
       done: Fet. La declaració s'ha actualitzat.
       not_done: No s'ha completat; els teus canvis continuen aquí.
     origin:
@@ -7752,6 +8019,18 @@ workspace:
         records: Teu, substitueix els teus registres
         registers: Teu, substitueix el teu registre
         your_entries: Teu, substitueix el que vas escriure
+    outcome:
+      failed: No s'ha pogut fer ({code}).
+      not_done: No s'ha fet; no ha canviat res.
+      refused: 'No s''ha fet: {code}. No ha canviat res.'
+      unknown: Cadrumo no ha pogut veure si ha acabat; potser sí. No es torna a fer.
+        Torna a llegir la declaració abans de continuar.
+    page:
+      calculation_details: Detalls del càlcul, no impresos al model
+      does_not_apply: '{page}: no s''aplica en aquest període'
+      only_if_it_applies: només si se t'aplica
+      unplaced: Caselles encara sense col·locar en aquest model
+      working_figures: Dades que demana el càlcul i que no tenen casella pròpia
     page_number: Pàgina {page}
     page_position: pàgina {current} de {total}
     period:
@@ -7778,6 +8057,7 @@ workspace:
       of_row: El tipus d'aquesta fila és el {rate}.
       of_row_printed: 'El model oficial imprimeix aquest tipus en aquesta fila: {rate}.'
       printed_by_form: El model oficial imprimeix aquest tipus en aquesta fila.
+    read_again: Tornar a llegir la declaració
     read_failed: No s'ha pogut llegir la declaració. Torna enrere i obre-la de nou.
     rebase:
       changed: 'Caselles que ara mostren un altre valor: {count}.'
@@ -7785,7 +8065,10 @@ workspace:
       moved: La declaració ha canviat des que vas escriure canvis que encara no has
         aplicat.
       still_moving: La declaració continua canviant. Espera un moment i torna a revisar
-        els teus canvis [R].
+        els teus canvis.
+    receipt:
+      missing: Encara no s'ha verificat cap justificant de l'AEAT per a aquesta presentació.
+      verified: Justificant de l'AEAT verificat el {date}.
     record:
       refused_file_out_of_date: El fitxer del {date} està desactualitzat. Torna a
         generar-lo. Si ja has presentat aquell fitxer anterior a l'AEAT, inicia una
@@ -7812,12 +8095,15 @@ workspace:
       acknowledge: He comprovat el que fa aplicar
       and_more: '{shown} i {count} més'
       apply: Aplica i recalcula
+      applying: Aplicant els teus canvis…
       back: Torna a editar
       before_changed: la casella ha canviat des que vas escriure això
       blocked: Resol el que està marcat amb ▲ abans d'aplicar.
       change_line: '{box}{concept}: {before} passa a {after} ({effect})'
+      check_again: Tornar a comprovar
       check_failed: No s'han pogut comprovar els teus canvis. Continuen aquí; torna-ho
         a provar.
+      checking: Comprovant els teus canvis…
       column:
         after: Després
         before: Abans
@@ -7865,11 +8151,13 @@ workspace:
       rebased: 'La declaració va canviar després que escrivissis aquests canvis, que
         encara no estan aplicats. Revisa de nou les línies marcades (canviades: {count}).'
       title: 'Canvis per aplicar: {count}'
+      unknown: Cadrumo no ha pogut veure si els teus canvis s'han aplicat; potser
+        sí. No es tornen a enviar. Torna a llegir la declaració abans de continuar;
+        els teus canvis encara hi són.
     search:
       count: 'Caselles trobades: {count}'
       empty: Cap casella no coincideix amb {query}.
-      prompt: Cerca a totes les pàgines per número de casella o per paraules. Retorn
-        et porta a la casella.
+      placeholder: Cerca una casella per número o per paraules
     section:
       box: Casella {box}
       boxes: Caselles {first} a {last}
@@ -7884,6 +8172,7 @@ workspace:
     sources:
       and_more: i {count} més
       count: 'Caselles: {count}'
+      go_to_box: Anar a la casella {box}
       group:
         aeat_data: Dades de l'AEAT
         aeat_data_imported_on: Dades de l'AEAT, importades el {date}
@@ -7910,6 +8199,8 @@ workspace:
         expand: Mostra les caselles
         go: Obre la casella
         open: Obre l'origen
+      lead: En calcular, les caselles s'emplenen amb aquestes dades. Corregeix un
+        valor on es desa i torna a calcular.
       no_source: Aquesta casella no s'omple des d'un altre apartat.
       no_surface: «{source}» no té un apartat propi per obrir.
       none: Aquesta declaració no té caselles per mostrar.
@@ -7930,6 +8221,32 @@ workspace:
       file: Registrar presentació
       fill: Emplenar
       review: Comprovar
+    summary:
+      blocked: No s'han pogut calcular
+      calculated: Calculades a partir d'altres caselles
+      entered: Introduïdes per tu
+      imported: Portades de les teves dades
+      needs_you: Et necessiten
+      not_calculated: 'Encara sense calcular: les caselles s''emplenen quan es calcula.'
+      title: Aquesta declaració
+    surface:
+      correct:
+        declarations: Obre aquella declaració i corregeix-ho allà
+        ledger: Obre els teus registres i corregeix-ho allà
+        profile: Obre el teu perfil i corregeix-ho allà
+        withholding: Obre les retencions i corregeix-ho allà
+      open:
+        declarations: Obrir aquella declaració
+        ledger: Obrir els teus registres
+        profile: Obrir el teu perfil
+        withholding: Obrir les retencions
+    todo:
+      failed: 'Caselles que no s''han pogut calcular: {count}'
+      failed_lead: Esperen alguna cosa que li faltava al càlcul. Tria'n una per veure
+        què.
+      none: Res d'aquest model no et necessita.
+      title: Pendent
     value:
       not_applicable: no s'aplica
+      not_known_yet: Encara no se sap
     was: 'abans: {value}'

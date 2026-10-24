@@ -15,6 +15,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormValueSource,
     ModeloWorkForm,
 )
+from .....application.modelo.work_form_typing_effect import TYPED_EDITABILITIES
 from .....application.modelo.work_form_wording import (
     SOURCE_WORDED_ORIGINS,
     holds_nothing,
@@ -27,7 +28,6 @@ from .....application.modelo.work_form_wording import (
 )
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
-from .vocabulary import TYPED_EDITABILITIES
 
 if TYPE_CHECKING:
     from .header import ResultView

@@ -14,6 +14,7 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
+from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....domain.buckets.event import (
     BucketEvent,
@@ -40,12 +41,14 @@ from ..history_operation import (
     build_modelo_work_history_registration,
 )
 from ..history_ports import ModeloHistoryPorts, ModeloHistoryPortsFactory
+from ..work_history_read import ModeloWorkHistoryEntryV1, worded_history
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _NOW = datetime(2026, 3, 10, 12, tzinfo=UTC)
+_EN = OutputLanguage.EN
 
 
 class _GuardPhaseReachedError(Exception):
@@ -152,7 +155,9 @@ def _request(
     return OperationRequest[BaseModel](
         definition_id=MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID,
         subject_ref=subject_ref or unit.work_unit_id,
-        payload=ModeloWorkHistoryRequest(profile_id=profile_id, work_unit_id=unit.work_unit_id),
+        payload=ModeloWorkHistoryRequest(
+            profile_id=profile_id, work_unit_id=unit.work_unit_id, output_language=OutputLanguage.EN
+        ),
     )
 
 
@@ -162,7 +167,9 @@ def _executor_request(
     return OperationRequest[ModeloWorkHistoryRequest](
         definition_id=MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID,
         subject_ref=subject_ref or unit.work_unit_id,
-        payload=ModeloWorkHistoryRequest(profile_id=profile_id, work_unit_id=unit.work_unit_id),
+        payload=ModeloWorkHistoryRequest(
+            profile_id=profile_id, work_unit_id=unit.work_unit_id, output_language=OutputLanguage.EN
+        ),
     )
 
 
@@ -255,7 +262,9 @@ def test_projection_preserves_canonical_event_and_rejects_foreign_duplicate_unor
     later = _event(occurred_at=datetime(2026, 3, 10, 13, tzinfo=UTC))
     history = WorkUnitHistory(bucket_id=str(_PROFILE), work_unit_id=_unit().work_unit_id, events=(first, later))
     projection = ModeloWorkHistoryProjection(
-        profile_id=_PROFILE, history=ModeloWorkHistorySnapshot.from_history(history)
+        profile_id=_PROFILE,
+        history=ModeloWorkHistorySnapshot.from_history(history),
+        entries=worded_history(history, OutputLanguage.EN),
     )
     assert ModeloWorkHistoryProjection.model_validate_json(projection.model_dump_json()) == projection
     assert projection.history.to_history() == history
@@ -269,9 +278,28 @@ def test_projection_preserves_canonical_event_and_rejects_foreign_duplicate_unor
                     work_unit_id=history.work_unit_id,
                     events=tuple(BucketEventProjection.from_event(event) for event in events),
                 ),
+                entries=_entries_for(history.work_unit_id, events),
             )
     with pytest.raises(ValidationError):
-        ModeloWorkHistoryProjection(profile_id=_OTHER, history=ModeloWorkHistorySnapshot.from_history(history))
+        ModeloWorkHistoryProjection(
+            profile_id=_OTHER,
+            history=ModeloWorkHistorySnapshot.from_history(history),
+            entries=worded_history(history, OutputLanguage.EN),
+        )
+    with pytest.raises(ValidationError, match="newest first"):
+        ModeloWorkHistoryProjection(
+            profile_id=_PROFILE,
+            history=ModeloWorkHistorySnapshot.from_history(history),
+            entries=tuple(reversed(worded_history(history, OutputLanguage.EN))),
+        )
+
+
+def _entries_for(work_unit_id: str, events: tuple[BucketEvent, ...]) -> tuple[ModeloWorkHistoryEntryV1, ...]:
+    """Each event worded on its own, newest first by the order given, so only the events' own defect refuses."""
+    return tuple(
+        worded_history(WorkUnitHistory(bucket_id=str(_PROFILE), work_unit_id=work_unit_id, events=(event,)), _EN)[0]
+        for event in reversed(events)
+    )
 
 
 def test_profile_and_subject_refused_before_repositories(
