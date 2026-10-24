@@ -36,11 +36,13 @@ const remPx = () =>
 const columnLeast = (columnFloor: number | null, rem: number) =>
   Math.max(GRID_MIN_REM * rem, columnFloor ?? 0);
 
-/** The least the row of grid and panel takes, in CSS pixels: both at their
- * least, and the separator's line between them. */
-export const panelRowFloor = (columnFloor: number | null) => {
+/** The least the row takes, in CSS pixels: the grid's column at its least,
+ * and with the panel open, the panel at its least and the separator's line
+ * between them. */
+export const rowFloor = (columnFloor: number | null, withPanel: boolean) => {
   const rem = remPx();
-  return Math.ceil(columnLeast(columnFloor, rem) + MIN_REM * rem) + 1;
+  const column = columnLeast(columnFloor, rem);
+  return Math.ceil(withPanel ? column + MIN_REM * rem + 1 : column);
 };
 
 /** The width the panel is drawn at, in CSS pixels: the person's, or the

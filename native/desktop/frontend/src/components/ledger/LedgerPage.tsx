@@ -92,7 +92,7 @@ import type { SectionInspectorContext } from "./inspector/inspectorContext";
 import type { InspectorSection } from "./inspector/inspectorModel";
 import { LedgerInspector } from "./inspector/LedgerInspector";
 import type { InspectorFocus } from "./inspector/MovementInspector";
-import { panelRowFloor, type RightPanelMode } from "./inspector/RightPanel";
+import { rowFloor, type RightPanelMode } from "./inspector/RightPanel";
 import { GridRoomContext } from "./gridRoom";
 import { MatchQueue } from "./matching/MatchQueue";
 import { useSealedMovements } from "./useSealedMovements";
@@ -730,16 +730,16 @@ export function LedgerPage({
 
   // The panel stands beside the movements only while the grid is drawn.
   const drawnRows = periodWindow ? shownRows(periodWindow) : null;
-  const inspectorShown =
-    view.inspectorOpen &&
+  const gridShown =
     readable &&
     section === "movements" &&
     periodWindow !== null &&
     !(periodWindow.phase === "failed" && periodWindow.failure) &&
     drawnRows !== null &&
     !(drawnRows.total === 0 && stage.content.drafts.length === 0);
-  // The grid keeps beside the panel the least it needs to show any
-  // scrolling column whole, with what its column draws around it; the
+  const inspectorShown = view.inspectorOpen && gridShown;
+  // The grid keeps the least it needs to show any scrolling column whole,
+  // with what its column draws around it, beside the panel or alone; the
   // window makes the room from the agent column rather than squeezing it.
   const row = useRef<HTMLDivElement>(null);
   const [gridLeast, setGridLeast] = useState<number | null>(null);
@@ -747,7 +747,7 @@ export function LedgerPage({
   useLayoutEffect(() => {
     const column = row.current?.firstElementChild;
     const drawn = column?.querySelector<HTMLElement>("[data-slot=data-grid]");
-    if (!inspectorShown || gridLeast === null || !column || !drawn) {
+    if (!gridShown || gridLeast === null || !column || !drawn) {
       setColumnFloor(null);
       return;
     }
@@ -768,16 +768,16 @@ export function LedgerPage({
         parseFloat(style.borderRightWidth);
     }
     setColumnFloor(Math.ceil(gridLeast + frame));
-  }, [inspectorShown, gridLeast]);
+  }, [gridShown, gridLeast]);
   const gridRoom = useMemo(
     () => ({ columnFloor, onLeast: setGridLeast }),
     [columnFloor],
   );
   useLayoutEffect(() => {
     if (!onFloor) return;
-    onFloor(inspectorShown ? panelRowFloor(columnFloor) : null);
+    onFloor(gridShown ? rowFloor(columnFloor, inspectorShown) : null);
     return () => onFloor(null);
-  }, [inspectorShown, columnFloor, onFloor]);
+  }, [gridShown, inspectorShown, columnFloor, onFloor]);
 
   // A link's movement is asked of the page, which holds it until the grid
   // draws it. A read that ends empty or fails draws no grid, so the page

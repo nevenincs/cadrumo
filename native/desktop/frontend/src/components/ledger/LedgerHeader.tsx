@@ -60,11 +60,13 @@ export function HeldButton({
       {children}
     </Button>
   );
-  if (!action.reason) return button;
+  // Narrow, the button keeps only its glyph; the tooltip names it.
   return (
     <Tooltip>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent>{action.reason}</TooltipContent>
+      <TooltipContent>
+        {action.reason ? `${name} · ${action.reason}` : name}
+      </TooltipContent>
     </Tooltip>
   );
 }
@@ -115,6 +117,7 @@ export function LedgerHeader({
       title={title}
       controls={controls}
       onToggleMaximize={onToggleMaximize}
+      titleYields
     >
       {section === undefined ? (
         <span className="flex-1" />
@@ -137,7 +140,7 @@ export function LedgerHeader({
                     value={value}
                     id={sectionTabId(panel, value)}
                     aria-controls={panel}
-                    className="min-w-0 px-2 text-sm"
+                    className="shrink-0 px-2 text-sm"
                   >
                     {sectionName(t, value)}
                     {count && (
@@ -233,7 +236,9 @@ export function LedgerHeader({
               className="ledger-add shrink-0"
             >
               <Icon name="plus" />
-              {t("desktop.ledger.action.add")}
+              <span className="@max-4xl/head:sr-only">
+                {t("desktop.ledger.action.add")}
+              </span>
             </HeldButton>
           )}
         </div>

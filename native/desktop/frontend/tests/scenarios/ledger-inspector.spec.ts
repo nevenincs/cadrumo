@@ -97,6 +97,53 @@ async function inspect(target: Page, text: string) {
   );
 }
 
+/** Each section tab shows its whole name, and none overlaps the next. */
+async function expectSectionsWhole(target: Page) {
+  const tabs = await target
+    .locator(".ledger-sections [role=tab]")
+    .evaluateAll((all) =>
+      all.map((tab) => {
+        const box = tab.getBoundingClientRect();
+        return {
+          left: box.left,
+          right: box.right,
+          fits: tab.scrollWidth <= tab.clientWidth,
+        };
+      }),
+    );
+  for (const [at, tab] of tabs.entries()) {
+    expect(tab.fits).toBe(true);
+    if (at > 0)
+      expect(tab.left).toBeGreaterThanOrEqual(tabs[at - 1]!.right - 1);
+  }
+}
+
+/** The band between the pinned groups shows the widest scrolling column
+ * whole. */
+async function expectBandFits(target: Page) {
+  const band = await target.evaluate(() => {
+    const heads = [
+      ...document.querySelectorAll<HTMLElement>(
+        ".ledger-grid [data-header-column]",
+      ),
+    ];
+    const pinned = heads.filter(
+      (head) => getComputedStyle(head).position === "sticky",
+    );
+    const widest = Math.max(
+      ...heads
+        .filter((head) => !pinned.includes(head))
+        .map((head) => head.offsetWidth),
+    );
+    const scroller = document.querySelector<HTMLElement>(
+      ".ledger-grid [role=grid]",
+    )!;
+    const covered = pinned.reduce((sum, head) => sum + head.offsetWidth, 0);
+    return { room: scroller.clientWidth - covered, widest };
+  });
+  expect(band.room).toBeGreaterThanOrEqual(band.widest - 1);
+}
+
 /** Jumps to a section through the index, or its More menu where the
  * entry did not fit. */
 async function jumpTo(target: Page, section: string, name: string) {
@@ -978,7 +1025,10 @@ test("at 1280 with the agent open, the inspector narrows the agent so the grid k
   await target.locator(".agent-separator").focus();
   await target.keyboard.press("End");
   const agentBefore = (await agent.boundingBox())!.width;
-  expect(agentBefore).toBeGreaterThan(640);
+  // As wide as it goes, it still leaves the grid its pinned groups and a
+  // scrolling column whole, and the header its sections side by side.
+  await expectBandFits(target);
+  await expectSectionsWhole(target);
   await inspect(target, "PAPELERIA TRAZO");
   // The agent stays open, narrower, and the room is the grid's.
   await expect(agent).toBeVisible();
@@ -996,27 +1046,7 @@ test("at 1280 with the agent open, the inspector narrows the agent so the grid k
   expect(column.width).toBeGreaterThanOrEqual(40 * rem - 1);
   // And the band between the pinned groups shows the widest scrolling
   // column whole.
-  const band = await target.evaluate(() => {
-    const heads = [
-      ...document.querySelectorAll<HTMLElement>(
-        ".ledger-grid [data-header-column]",
-      ),
-    ];
-    const pinned = heads.filter(
-      (head) => getComputedStyle(head).position === "sticky",
-    );
-    const widest = Math.max(
-      ...heads
-        .filter((head) => !pinned.includes(head))
-        .map((head) => head.offsetWidth),
-    );
-    const scroller = document.querySelector<HTMLElement>(
-      ".ledger-grid [role=grid]",
-    )!;
-    const covered = pinned.reduce((sum, head) => sum + head.offsetWidth, 0);
-    return { room: scroller.clientWidth - covered, widest };
-  });
-  expect(band.room).toBeGreaterThanOrEqual(band.widest - 1);
+  await expectBandFits(target);
   // Moving to Classification shows the whole cell between the pinned
   // groups, and Description stays pinned beside it.
   const row = rowOf(target, "PAPELERIA TRAZO");
@@ -1150,4 +1180,21 @@ test("a readiness check that fails hides no drawn movement from the selection", 
       name: label("desktop.ledger.classification.business"),
     }),
   ).toBeEnabled();
+});
+
+test("in a narrow window the header keeps every section whole: the title and Add's word give way, and stay named", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 760, height: 700 });
+  await openLedger(target);
+  await expectSectionsWhole(target);
+  const title = target.locator(".pane-head .pane-title").first();
+  await expect(title).toHaveText(/\S/);
+  expect(
+    await title.evaluate((head) => head.getBoundingClientRect().width),
+  ).toBeLessThanOrEqual(1);
+  const add = target.locator(".ledger-add");
+  await expect(add).toHaveAccessibleName(/\S/);
+  await add.hover();
+  await expect(target.getByRole("tooltip")).toBeVisible();
 });

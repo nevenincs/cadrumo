@@ -50,10 +50,15 @@ export function PaneHeader({
   status,
   controls,
   onToggleMaximize,
+  titleYields,
   children,
 }: {
   title: string;
   status?: { phase: SessionPhase; note?: string };
+  /** The title is said only to assistive technology where the header is
+   * too narrow for it beside the page's own controls: for a page whose
+   * place the rail and its sections already show. */
+  titleYields?: boolean;
   controls: PaneControl[];
   onToggleMaximize: () => void;
   /** The page's own controls, between the title and the pane's. They take
@@ -66,7 +71,12 @@ export function PaneHeader({
       {/* The note gives way first: the title is cut only once the note has
           gone. Cut, it still says all of itself to a pointer that rests on
           it. */}
-      <h2 className="pane-title min-w-0 truncate font-semibold text-foreground">
+      <h2
+        className={cn(
+          "pane-title min-w-0 truncate font-semibold text-foreground",
+          titleYields && "@max-4xl/head:sr-only",
+        )}
+      >
         {title}
       </h2>
       {status?.note && (
