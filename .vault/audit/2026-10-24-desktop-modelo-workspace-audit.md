@@ -152,6 +152,20 @@ The TUI re-stages each kept change against the renewed field and drops one now e
 ### review-package-availability | low | The window still decides when the review package is ready
 `FilingView.tsx:691` keys it on a verified calculation because the export offer does not list the package.
 
+The second re-review (`5ccbb347f8`, `7f2a1fd88b` and the modelo part of `46742867b6`, independent opus lane, 2026-10-24) passed with no critical or high finding: renew-request-value-digest, edit-limit-above-relay, fixture-host-reduction-copy, raw-body-framework-copy and live-edit-proof (for admission) are resolved, and apply refuses held changes before journaling. New findings follow.
+
+### stale-preflight-rebase | medium | A stale-refused preflight's rebase report is applied before the renewal
+`ModeloEditPreflightExecutor.read` computes `rebase` whatever the outcome (`src/cadrumo/application/modelo/workbench_operations.py:557`), and the window, which always sends held changes, applies a stale preflight's report against the old read (`native/desktop/frontend/src/components/modelo/form/session.ts:450`), so the renewal's dropped notice can be lost and a dropped edit can start a second renewal; the committed stale envelope is produced without held changes, which hides it.
+
+### preflight-result-reference-digest | medium | The preflight's encrypted result is journaled under an unkeyed digest of its plaintext
+`SecureOperationReferences._put` keys a result by SHA-256 of its serialized plaintext (`src/cadrumo/adapters/persistence/operations/secure_references.py:83`) and the reference enters the plaintext journal's terminal receipt; a preflight result holds parsed typed entries beside coordinates the journal also records, so a single-entry result's reference may be enumerable. It predates this feature and needs a follow-on decision by the operations owner on keyed or random references for results that carry financial values.
+
+### review-package-unconsumed | low | No frontend reads the export offer's review package availability
+`FilingView.tsx:684` keeps its own rule beside `ModeloFormExportOffer.review_package` (`src/cadrumo/application/modelo/work_form_export_offer.py:192`).
+
+### staged-field-comment | low | A comment says a staged edit's field is never rewritten, which a rebase now does
+`native/desktop/frontend/src/components/modelo/form/session.ts:81`.
+
 Verified sound by the plan-close review: the closed admitted list pinned to the manifest, exact-profile filling and subject binding, files as session tokens, unknown versus refused on every mutation path with no resend, no logging or web storage in the Modelo host and components, typed entries only through the edit port with the buffer zeroed, list, header, next step, issue lines, sources, AEAT notes and receipt from shared producers, theme-only styling, missing drawn as a dash, and the prototype's interaction design unchanged.
 
 Verified sound: the next-step ladder and missing-value count are identical to the removed TUI code; origin, editability and source wording are faithful moves; no TUI module re-exports a moved name; the public round trip covers the new fields; the list read is exact-profile with whole-profile consent and no commit action; neither relay names a definition, the runtime refuses definitions without a financial operand, and both relays drop or overwrite the input after sending; every moved catalogue key exists in all four languages. Not verified by the reviewer: the full TUI and Rust suites (relying on the ledger's results), the full type and Ruff gates, the S02 mutation claim, and a live end-to-end financial submit through the Rust relay to a worker.

@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:d1d1106647e4f165cbb1ff3ed981b8b3629a79b02d42c7e00fa64f30c6c56787'
+body_hash: 'sha256:08fde8e286e88df9bb20cc22bef9e2f5ea1b289110e25119f2b1d9499b3ab0c0'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -61,6 +61,7 @@ Move every classification and wording decision the prototype had to make into th
 - [x] `P01.S42` - Read each declaration list row at the authority grade its revision declares, as the form does, so an applicability-graded revision shows its real state rather than unreadable; `src/cadrumo/application/modelo/declaration_summary.py`.
 - [x] `P01.S44` - Project the edit admission refusal's words and whether a box takes a typed value on the form read model, report per staged address what a renewal dropped or changed, and give the export offer per-artefact and record availability from the gate predicates, switching the TUI to each; `src/cadrumo/application/modelo/workbench_projection.py`.
 - [x] `P01.S48` - Replace the per-box state digest with a token derived from no typed or stored value, so the journaled renewal request carries nothing reversible, and list the review package with its availability in the export offer; `src/cadrumo/application/modelo/work_form_models.py`.
+- [ ] `P01.S52` - Omit the rebase report from a preflight the stale baseline refuses, so only an evaluated preflight judges held changes; `src/cadrumo/application/modelo/workbench_operations.py`.
 
 ### Phase `P02` - One shared Modelo wording for every frontend
 
@@ -98,6 +99,7 @@ Promote the round-3 prototype into product components on the application's field
 - [x] `P04.S41` - Render the read-only view of a return the AEAT holds from the declarations list, from the same read the TUI's external filing details use, and keep the list's view, sort and search while a declaration is open; `native/desktop/frontend/src/components/modelo/declarations/`.
 - [x] `P04.S46` - Render the new admission, typing, renewal and availability fields, show every correction and creation outcome in catalogue words, and type the presentation tables against the generated enums; `native/desktop/frontend/src/components/modelo/`.
 - [x] `P04.S50` - Re-stage each kept edit against the renewed box through the staging path after a renewal, keep changed marks until acknowledged, and carry the staged kind on the intent; `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`.
+- [ ] `P04.S53` - Act on a rebase report only from an evaluated preflight, render the export offer's review package availability, and correct the staged field's comment; `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`.
 
 ### Phase `P05` - Proof
 
@@ -108,6 +110,7 @@ Prove the workspace in the browser and the packaged window over real envelopes, 
 - [ ] `P05.S29` - Review the integrated work against this plan, the decision and the frozen prototype, and record findings in the feature audit; `.vault/audit/`.
 - [x] `P05.S47` - Add scenario answers from real envelopes for apply, renewal, export, recording, receipt and correction, and specs proving staged edits survive a renewal, an unknown apply holds until a re-read and a recorded filing differs from a verified receipt; `native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [x] `P05.S51` - Produce renewal envelopes from real staged changes with kept, changed and dropped outcomes and prove the window renders and applies each; `native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
+- [ ] `P05.S54` - Produce the stale preflight with the held changes and prove the real two-preflight renewal sequence renews once and keeps the dropped notice; `native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 
 ## Parallelization
 
