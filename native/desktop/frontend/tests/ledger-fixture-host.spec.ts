@@ -135,3 +135,33 @@ test("the scenario's readiness check asks what the product's does: a usage ratio
   expect(bulk.kind).toBe("settled");
   expect(await reasons()).toEqual([`${refund}:missing_category`]);
 });
+
+test("a model review names its movement by the full id, as the registered request decodes it", async () => {
+  const movement = fixtureLedger().movements.find(
+    (found) => !found.sealed && found.transaction.lifecycle_state === "ACTIVE",
+  )!;
+  const id = movement.transaction.transaction_id;
+  const port = ledgerFixture({
+    say: () => undefined,
+    wait: async () => undefined,
+    signedIn: () => true,
+    shape: "fixture",
+  });
+  const ask = (transaction_id: string) =>
+    port
+      .submit("ledger.classify.review", {
+        transaction_id,
+        mode: "classification",
+        origin: "classify_llm_apply",
+      })
+      .then(
+        () => null,
+        (error: { code: string }) => error.code,
+      );
+  // A short handle, another spelling of the id, or a longer one is refused.
+  expect(await ask(id.slice(0, 8))).toBe("invalid");
+  expect(await ask(id.toUpperCase())).toBe("invalid");
+  expect(await ask(`${id}0`)).toBe("invalid");
+  // The full id is asked.
+  expect(await ask(id)).toBeNull();
+});

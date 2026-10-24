@@ -79,6 +79,8 @@ const LINE_FRAME = {
 };
 const REQUEST_ID_ROOM = 14 + 36 + 1 + 1;
 const encoder = new TextEncoder();
+/** A movement's id as the registered review request takes it. */
+const CANONICAL_ID = /^[0-9a-f]{64}$/;
 
 /** Whether the host refuses the request before sending it: the payload's
  * bytes of compact JSON, or the whole request's. */
@@ -2011,6 +2013,16 @@ export function ledgerFixture(options: Options): LedgerPort {
     if (
       definition === "ledger.own_account" &&
       OWN_ACCOUNT_SECRETS.some((field) => field in request)
+    )
+      return reject("invalid");
+    // A review names its movement by the full id the registered request
+    // decodes; a short handle or another spelling is refused there.
+    if (
+      ledgerClassOf(definition) === "review" &&
+      !(
+        typeof request.transaction_id === "string" &&
+        CANONICAL_ID.test(request.transaction_id)
+      )
     )
       return reject("invalid");
     if (tooLarge(definition, request)) return reject("too_large");
