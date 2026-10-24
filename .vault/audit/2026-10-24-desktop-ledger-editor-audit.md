@@ -523,3 +523,139 @@ The review covered commits a573a74940..434aaab711 and d2dc93f4b2 (P01), and 17bb
 - Matching TS and Rust shapes.
 - The product bundle boundary.
 - Grid keyboard, ARIA, windowing, sticky columns, forced colours and tokens, per R16 and R17.
+
+## P03 phase-close review, 2026-10-24
+
+Revision required: 2 high, 4 medium and 5 low findings, none critical. Scope: base a88d4e0e72 to 2ee7b77c63. The two highs reopen P03.S09 (apply runner and the page-wide pause), P03.S14 (Setup writes) and P03.S18 (the plan model). Verified by the review: the plan links every governing ADR; `ledgerApply.ts` chains split-part classifications and the attach after `ledger.evidence.add`; no ledger value reaches storage or logs; data is dropped on profile change and sign-out; ESLint passes over the ledger, shell and grid files.
+
+### P03 · setup-unknown-not-held | high | Setup writes are not held after an unknown outcome, `saved_unread` is reported as a failure, and the pause is not page-wide
+
+Scenario: in Registers › Assets, the person submits `ledger.actividad-asset.create` and the relay answers `unknown`. The pane shows the warning line, but the submit button is enabled again with the same revision document in the form. A second click sends the same create, with no re-read in between. The same happens with Rule › Save (`ledger.rule.add`), Inventory create and movement add, Prorrata, Capital goods, Counterparties and Ratios.
+
+If the host answers `saved_unread` (the write committed but its result could not be read, src-tauri/src/shell/settle.rs:309-315), `callFailure` turns it into `failed`. The person reads "failed" for a write that saved, and is invited to send it again.
+
+The pause is also per surface. An unknown outcome in the staged apply disables only the tray’s Review. Invoices, Import, Documents and Setup keep writing, because LedgerPage hands none of them the pause. For example, while an unknown `ledger.link` to invoice X is paused, Invoices › Remove X is still offered.
+
+The ADR requires: "never retried automatically; the page pauses writes until it re-reads".
+
+Evidence:
+- `native/desktop/frontend/src/components/ledger/setup/setupModel.ts:60-68`: only `unknown` maps to unknown.
+- `setup/SetupParts.tsx:437-455`: `useSetupWrite.run` clears `last` and holds nothing after an unknown.
+- `setup/RuleDialog.tsx:171-177`: `ready` ignores `saved?.kind`.
+- `setup/AssetsPane.tsx:361`: the submit is gated only on `!ready || write.busy`.
+- `components/ledger/LedgerPage.tsx:465-518`: the sections get no pause.
+- `editing/useLedgerApply.ts:166, 237`: the pause gates only `apply`.
+
+Fix: lift one page-level "writes paused" state that every writer (staged apply, Setup, Invoices, Import, Documents) checks and sets on `unknown` or `saved_unread`. Map `saved_unread` to unknown in `callFailure`. Keep each form’s send disabled until its re-read resolves the outcome.
+
+### P03 · approval-after-corrections | high | A staged model approval is answered after the same row’s corrections, so its baseline-guarded commit is refused
+
+Scenario: on movement A the person approves the model’s suggestion (staged `suggestion`) and also edits A’s notes, description, counterparty, date, own account or group label.
+
+`checkRow` raises `suggestion_and_edits` only for classification fields, so the plan holds nothing back. `planApply` then orders the steps bulk, classify, update, add, and finally the actions, the `answer` among them. The notes (bulk) or the description (update, which also gives A a new id) are written first.
+
+The review then commits with `expected_current=baseline`. That baseline is the whole transaction as it stood when the model was asked, so the commit fails ("transaction changed since it was opened") or no longer locates A. The review is consumed and the person has to ask the model again.
+
+This also breaks R2’s per-row order (classification first, then corrections). Swapping the order would not fix it: a later bulk row always re-sends the row’s effective classification (`bulkRow`, ledgerPlan.ts:796-799), which is the pre-approval value, and would overwrite the approved one.
+
+A second route to the same refusal: `ruleApplyClashes` ignores staged suggestions. A staged rule apply whose dry run names A can run before the answer and change A.
+
+Evidence:
+- `src/shell/ledgerPlan.ts:661-669`: the check is limited to `CLASSIFICATION_FIELDS`.
+- `ledgerPlan.ts:995-1001`: answers run after the updates.
+- `ledgerPlan.ts:525-534`: `ruleApplyClashes`.
+- `src/cadrumo/application/ledger/llm_review_execution.py:204-216`.
+- `src/cadrumo/application/ledger/actions_manual.py:1049-1058`: whole-row equality.
+
+Fix: hold a staged approval back when the same row has any field edit or a clashing rule apply (as structural actions already are), offering "Drop the edits" or "Drop the approval". Add a plan test that combines a description or notes edit with an approval.
+
+### P03 · sealed-never-supplied | medium | The page never knows which movements are sealed, so the locks, the skip counts and the review’s sealed hold never fire
+
+Scenario: a movement cited by a finalized Modelo revision is still editable in the grid. "Set for 276" counts no sealed rows as skipped. The review plans the edit as "saved together", and the product then refuses the row (bulk `finalized_blockers`). The page claims what it cannot do, contrary to R1 and R8 ("Set for 276 (64 sealed skipped)") and R2 ("`lockReason` is evaluated against the staged row"). The product’s own guard prevents a wrong write, so the impact is false promises and refusals, not data loss.
+
+Evidence:
+- `components/ledger/LedgerPage.tsx:622-626`: `editing` is passed without `sealed`.
+- `movements/MovementsSection.tsx:652`: falls back to `NO_SEALED`.
+- `inspector/LedgerInspector.tsx:141, 194`: `SelectionInspector` and `ActionDialog` get `NO_SEALED`.
+- `editing/ReviewDialog.tsx:1208`: `planApply(content, { rows })` without `sealed`.
+- Only the single-row inspector derives `sealed`, from `ledger.track` (`inspector/MovementInspector.tsx:193-195`).
+
+Fix: read the sealed set once per window, or for the staged rows when the review opens (`ledger.track` participation), and pass it to the grid, the inspectors, `ActionDialog` and the review’s `planApply`.
+
+### P03 · redundant-share-clear | medium | Reclassifying Mixed rows away from Mixed adds one single write per row that the bulk already covers
+
+Scenario: select 120 stored Mixed movements and choose Business (M4) or Personal, or type it in the grid. `classifyCells` and `rowCells` stage a `business_pct` clear with the classification. `routeChange` sends that clear through `ledger.classify.single`, because the bulk carries no clears.
+
+The bulk part alone already clears the share: `_command_from_patch` drops `business_pct` whenever the classification is set to anything but Mixed. The apply therefore makes 120 extra one-at-a-time writes (about 6 minutes at `SINGLE_WRITE_SECONDS`), and each reports "unchanged". The plan line says "120 saved one at a time" for a change that costs one bulk part.
+
+Evidence:
+- `src/shell/ledgerCommands.ts:166-172`.
+- `components/ledger/editing/editingModel.ts:367-373`.
+- `src/shell/ledgerPlan.ts:81, 124-128`.
+- `src/cadrumo/application/ledger/actions_manual.py:1451-1453`.
+
+Fix: do not stage, or do not route, a share clear on a row whose staged classification is set to a non-Mixed value. Let the classification write carry it.
+
+### P03 · status-done-unchecked | medium | Every reviewed movement is drawn "Done" with the success glyph while readiness is unchecked or failed
+
+Scenario: `ledger.preflight` fails, or is still running on first load. The strip correctly shows `◌`. Meanwhile every reviewed row’s status cell reads "Done" in the success tone, because the per-row issue count falls back to 0. An unknown issue count is drawn as no issues, against R1 and R22 and the ADR rule that unknown is never drawn as zero.
+
+Evidence:
+- `components/ledger/movements/MovementsGrid.tsx:135-140`: `?.length ?? 0`.
+- `movements/movementWords.ts:79-87`: `issues > 0 ? needs_fixing : done`.
+- `movements/movementsModel.ts:337`: `sets.checked` exists but is not consulted by `StatusCell`.
+
+Fix: pass `checked` to `StatusCell`. While unchecked, draw reviewed rows with the not-measured state (`circle-dashed`) instead of Done.
+
+### P03 · permanent-link-unknowns | medium | The permanent-link review treats an unread invoice, or a different currency, as "no mismatch"
+
+Scenario 1: `ledger.invoice.list` fails when the review opens. `invoices` becomes null, each link row shows only the raw invoice id with no mismatch chips, and one tick enables Save for an irreversible link.
+
+Scenario 2: a 100.00 USD movement linked to a 100.00 EUR invoice raises no "Amount differs" chip, because `linkMismatches` compares the numbers only. M1 requires both sides and their differences to be shown, with a second tick, before Save.
+
+Evidence:
+- `components/ledger/editing/useLedgerApply.ts:190-196`: the failed read becomes `null`.
+- `editing/ReviewDialog.tsx:1304-1316`: a missing invoice gives `mismatches: []`.
+- `editing/editingModel.ts:943-963`: no currency comparison.
+
+Fix: while a link’s invoice could not be read, hold the link with "Invoice could not be read · Re-read". Add a currency mismatch kind that needs the second tick.
+
+### P03 · rule-apply-unknown-finding | low | An unknown rule apply re-reads to an empty finding
+
+`resolveUnknown` returns an empty map for `rule_apply`, which names no `transactionId` and whose `actionRows` is empty. `reread` therefore sets `findings = []`, and the banner draws an empty neutral alert with only Dismiss. The person is never told whether the rules ran.
+
+Evidence: `src/shell/ledgerApply.ts:682-736`, `components/ledger/editing/useLedgerApply.ts:295`, `editing/LedgerEditing.tsx:164-211`.
+
+Fix: report the action itself as undetermined, keyed by the action id, and word it.
+
+### P03 · output-language | low | Bulk row refusals arrive in Spanish whatever the window’s language
+
+No caller passes `outputLanguage` to `planApply`, so the bulk request omits `output_language` and the worker renders each failure reason in its default, `es`.
+
+Evidence: `components/ledger/editing/ReviewDialog.tsx:1208`, `src/shell/ledgerPlan.ts:287, 343-345`, `src/cadrumo/core/external_constants.py:551`.
+
+Fix: pass the chrome language to `planApply`.
+
+### P03 · superseded-reviews | low | Superseded or abandoned model reviews are left pending
+
+Each re-ask (with a share or a rejection reason), each switch to another movement, and each dropped staged approval leaves the earlier `ledger.classify.review` paused at its review. `port.cancel` is never called anywhere on the page; in src/components/ledger the only `.cancel(` calls are the cell editors’ own.
+
+Evidence: `components/ledger/inspector/ModelSuggestion.tsx:88-93, 95-146, 200`.
+
+Fix: cancel the superseded operation at its observed revision.
+
+### P03 · readiness-dead-code | low | Unused readiness helpers contradict M3
+
+`readinessCurrency` counts staged changes as "out of date" ("Staged changes count"), which M3 reversed. Neither it nor `readinessAfterSave` has a production caller; only `tests/ledger-window.spec.ts` uses them.
+
+Evidence: `src/shell/ledgerWindow.ts:535-566`.
+
+Fix: remove both and their tests, or bring them in line with M3.
+
+### P03 · split-followups-silent | low | A split whose result does not list its parts drops the staged part classifications without a word
+
+When `child_transaction_ids` is missing or has the wrong length, `followUps` returns `[]`. The split counts as applied and leaves the stage with its part classifications, and the report shows no line for them.
+
+Evidence: `src/shell/ledgerApply.ts:326-328, 533`.
+
+Fix: emit a report row that says the parts’ classifications were not sent.
