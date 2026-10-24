@@ -165,6 +165,38 @@ test("fields are as wide as what they hold", async ({ page: target }) => {
   expect(name).toBeGreaterThan(number);
 });
 
+test("a flagged field's glyph goes to the question about it", async ({
+  page: target,
+}) => {
+  await openDocuments(target);
+  await choose(target, PLENOIL);
+  for (const [field, reason] of [
+    ["supplier_tax_id", "ambiguous_identity"],
+    ["grand_total", "closure_discrepancy"],
+  ] as const) {
+    const glyph = draft(target).locator(
+      `[data-field=${field}] .ledger-provenance-question`,
+    );
+    await expect(glyph).toHaveAccessibleName(
+      new RegExp(
+        label("desktop.ledger.documents.go_to_question", {
+          reason: label(`desktop.ledger.documents.reason.${reason}`),
+        }),
+      ),
+    );
+    await glyph.click();
+    const finding = draft(target).locator(".ledger-finding:focus");
+    await expect(finding).toContainText(
+      label(`desktop.ledger.documents.reason.${reason}`),
+    );
+    await expect(finding).toBeInViewport();
+  }
+  // A field no finding asks about keeps its plain glyph.
+  await expect(
+    draft(target).locator("[data-field=iva_rate] .ledger-provenance-question"),
+  ).toHaveCount(0);
+});
+
 test("a reading that changed before confirming is shown again instead of confirmed", async ({
   page: target,
 }) => {

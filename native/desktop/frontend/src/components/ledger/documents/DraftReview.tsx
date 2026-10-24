@@ -10,6 +10,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import {
   SegmentedControl,
@@ -94,20 +95,26 @@ function shownValue(locale: string, field: ReadingField, value: string | null) {
   return value;
 }
 
+/** The finding that asks about a field, and how to go to it. */
+type Question = { reason: string; go(): void };
+
 /**
  * Where a value came from, as a glyph: its words are the tooltip and what a
- * screen reader hears, so the column stays one glyph wide.
+ * screen reader hears, so the column stays one glyph wide. A field a
+ * finding asks about is flagged, and its glyph goes to that finding.
  */
 function Provenance({
   t,
   draft,
   field,
   edited,
+  question,
 }: {
   t: Translate;
   draft: EvidenceDraft;
   field: ReadingField;
   edited: boolean;
+  question: Question | null;
 }) {
   const found = edited ? null : provenanceOf(draft, field);
   const [glyph, words] = edited
@@ -148,6 +155,20 @@ function Provenance({
             />,
             t("desktop.ledger.documents.no_provenance"),
           ];
+  if (question)
+    return (
+      <IconButton
+        className="ledger-provenance ledger-provenance-question text-warning"
+        label={words}
+        hint={t("desktop.ledger.documents.go_to_question", {
+          reason: reasonLabel(t, question.reason),
+        })}
+        side="right"
+        onClick={question.go}
+      >
+        <Icon name="alert" size="xs" />
+      </IconButton>
+    );
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -162,11 +183,14 @@ function Provenance({
 }
 
 function Finding({
+  id,
   t,
   blocker,
   answer,
   onAnswer,
 }: {
+  /** Where a flagged field's glyph goes. */
+  id: string;
   t: Translate;
   blocker: ConfirmationBlocker;
   answer: FindingAnswer | undefined;
@@ -178,7 +202,9 @@ function Finding({
   const current = answer ?? { action: "attest", value: "", note: "" };
   return (
     <li
-      className="ledger-finding grid gap-2 rounded-md bg-muted p-3"
+      id={id}
+      tabIndex={-1}
+      className="ledger-finding grid scroll-m-3 gap-2 rounded-md bg-muted p-3"
       data-answered={answered || undefined}
     >
       <div className="flex flex-wrap items-center gap-2">
@@ -689,6 +715,20 @@ export function DraftReview({
   const open = blockers.filter(
     (blocker) => resolutionOf(blocker, answers[blocker.blocker_id]) === null,
   ).length;
+  const findingId = (at: number) => `${countryId}-finding-${at}`;
+  /** The first finding that asks about `field`, as the way to it. */
+  const questionOf = (field: ReadingField): Question | null => {
+    const at = blockers.findIndex((blocker) => blocker.field === field);
+    if (at < 0) return null;
+    return {
+      reason: blockers[at]!.reason,
+      go: () => {
+        const finding = document.getElementById(findingId(at));
+        finding?.scrollIntoView({ block: "nearest" });
+        finding?.focus({ preventScroll: true });
+      },
+    };
+  };
 
   return (
     <div ref={root} className="ledger-draft grid gap-4 p-3">
@@ -833,6 +873,7 @@ export function DraftReview({
                         draft={draft}
                         field={row.field}
                         edited={false}
+                        question={questionOf(row.field)}
                       />
                     </td>
                     <td className="py-1 pr-2 tabular-nums">
@@ -858,6 +899,7 @@ export function DraftReview({
                       draft={draft}
                       field={facts.readField}
                       edited={facts.edited}
+                      question={questionOf(facts.readField)}
                     />
                   </td>
                   <td className="py-1 pr-2">
@@ -911,9 +953,10 @@ export function DraftReview({
             </Badge>
           </h4>
           <ul className="grid gap-2">
-            {blockers.map((blocker) => (
+            {blockers.map((blocker, at) => (
               <Finding
                 key={blocker.blocker_id}
+                id={findingId(at)}
                 t={t}
                 blocker={blocker}
                 answer={answers[blocker.blocker_id]}
