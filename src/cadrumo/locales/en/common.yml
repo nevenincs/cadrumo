@@ -1997,6 +1997,9 @@ desktop:
         file_limit: More than 128 files at once.
         other: 'Not imported: {code}'
         own_account_mismatch: Its rows name a different account.
+        reader_unavailable: 'Not read: Local AI, which reads this file, is not ready.'
+        reader_unavailable_here: 'Not read: Local AI cannot read this file on this
+          computer.'
         result_limit: 'More than 4,096 rows: import it in parts.'
         source_changed: 'Changed after the preview: preview it again.'
         transaction_validation: Couldn't be read as a bank statement.

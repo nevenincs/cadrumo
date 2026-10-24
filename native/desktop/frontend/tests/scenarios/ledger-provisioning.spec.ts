@@ -235,6 +235,69 @@ test("a folder paused for a local AI this computer cannot set up says why and of
   await expect(paused.locator(".setup-offer")).toHaveCount(0);
 });
 
+/** Opens the Ledger's import on the bank statements, with the window's
+ * setup dialog put away, and previews every statement it offers. */
+async function previewStatements(target: Page, setup: string) {
+  await target.goto(
+    `/scenarios.html?scenario=ledger&latency=0&bar=off&ledger=reader_missing&setup=${setup}`,
+  );
+  await setupDialog(target)
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
+  await expect(setupDialog(target)).toBeHidden();
+  await target.locator("[data-rail=ledger]").click();
+  await expect(target.locator(".ledger-movements")).toBeVisible();
+  await target
+    .locator(".pane-docs .pane-head")
+    .getByRole("button", {
+      name: label("desktop.ledger.action.import"),
+      exact: true,
+    })
+    .click();
+  const dialog = target.getByRole("dialog", {
+    name: label("desktop.ledger.import.title"),
+  });
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.ledger.import.choose_files"),
+      exact: true,
+    })
+    .click();
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.ledger.import.preview"),
+      exact: true,
+    })
+    .click();
+  return dialog
+    .getByRole("listitem")
+    .filter({ hasText: "movimientos-tarjeta.pdf" });
+}
+
+test("a PDF statement only the local AI reads names it and offers its setup", async ({
+  page: target,
+}) => {
+  const card = await previewStatements(target, "fresh");
+  await expect(card).toContainText(
+    label("desktop.ledger.import.refusal.reader_unavailable"),
+  );
+  await expect(card).toContainText(LOCAL_AI);
+  // A preview is no refusal of the import: nothing opens by itself.
+  await expect(prompt(target)).toHaveCount(0);
+  await card.getByRole("button", { name: "Set up", exact: true }).click();
+  await promptSaysOnce(target);
+});
+
+test("a PDF statement for a local AI this computer cannot set up offers no setup", async ({
+  page: target,
+}) => {
+  const card = await previewStatements(target, "hardware");
+  await expect(card).toContainText(
+    label("desktop.ledger.import.refusal.reader_unavailable"),
+  );
+  await expect(card.locator(".setup-offer")).toHaveCount(0);
+});
+
 test("a reader held back by memory offers no setup, though the local AI is not set up", async ({
   page: target,
 }) => {

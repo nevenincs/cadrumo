@@ -19,11 +19,20 @@ const IMPORT_REFUSALS = new Set([
   "source_changed",
   "empty_directory",
   "file_limit",
+  "reader_unavailable",
 ]);
 
 /** Why a file was not imported, in plain words; a code the page does not
- * know is named as it came, after a general sentence. */
-export function importRefusal(t: Translate, reason: string): string {
+ * know is named as it came, after a general sentence. A file only the local
+ * AI reads says the local AI is not ready where `setup` names its setup, and
+ * that it cannot read the file on this computer where nothing does. */
+export function importRefusal(
+  t: Translate,
+  reason: string,
+  setup: string | null = null,
+): string {
+  if (reason === "reader_unavailable" && setup === null)
+    return t("desktop.ledger.import.refusal.reader_unavailable_here");
   return IMPORT_REFUSALS.has(reason)
     ? t(`desktop.ledger.import.refusal.${reason}`)
     : t("desktop.ledger.import.refusal.other", { code: reason });

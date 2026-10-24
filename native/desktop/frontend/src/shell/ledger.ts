@@ -849,7 +849,11 @@ export type LedgerImportRefusalCode =
   | "result_limit"
   | "source_changed"
   | "empty_directory"
-  | "file_limit";
+  | "file_limit"
+  /** Only the local AI reads this file and it could not be asked; the
+   * file's verdict names its setup when setting it up lets the file be
+   * read. */
+  | "reader_unavailable";
 export type LedgerImportDiagnosticKind =
   "original-file" | "gap" | "duplicate" | "parser";
 /** The translation keys a diagnostic names, from the product's closed set. */
@@ -894,7 +898,12 @@ export type LedgerImportResult = {
     message: LedgerImportDiagnosticMessage;
     affected_transaction_ids: string[];
   }[];
-  refused_files: { file_name: string; reason_code: LedgerImportRefusalCode }[];
+  refused_files: {
+    file_name: string;
+    reason_code: LedgerImportRefusalCode;
+    /** Present exactly for `reader_unavailable`: the reader's verdict. */
+    precondition_verdict?: JsonObject | null;
+  }[];
   source_digests: { file_index: number; sha256: string }[];
 };
 

@@ -576,6 +576,7 @@ export function ImportDialog({
             kind: "refused",
             file: item.file,
             reason: read.refusal ?? "source_changed",
+            setup: read.refusal ? read.setup : null,
           };
         return {
           ...item,
@@ -1321,8 +1322,9 @@ function BankPreview({
                 refused
               >
                 <span className="text-sm">
-                  {importRefusal(t, preview.reason)}
+                  {importRefusal(t, preview.reason, preview.setup ?? null)}
                 </span>
+                <SetupOffer action={preview.setup ?? null} className="mt-1" />
               </FileRow>
             );
           if (preview.kind === "failed")
@@ -1595,11 +1597,14 @@ function ResultStep({
                   : item.kind === "changed"
                     ? importRefusal(t, "source_changed")
                     : item.kind === "refused"
-                      ? importRefusal(t, item.reason)
+                      ? importRefusal(t, item.reason, item.setup ?? null)
                       : item.kind === "unknown"
                         ? t("desktop.ledger.import.file_unknown")
                         : t("desktop.ledger.import.file_not_sent")}
               </span>
+              {item.kind === "refused" && (
+                <SetupOffer action={item.setup ?? null} className="mt-1" />
+              )}
             </FileRow>
           ))}
         </ul>

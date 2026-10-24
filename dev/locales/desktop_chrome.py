@@ -686,6 +686,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "source_changed",
             "empty_directory",
             "file_limit",
+            "reader_unavailable",
         ),
         "desktop.ledger.import.diagnostic.": (
             "no_rows",
@@ -1860,6 +1861,8 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.import.refusal.file_limit",
         "desktop.ledger.import.refusal.other",
         "desktop.ledger.import.refusal.own_account_mismatch",
+        "desktop.ledger.import.refusal.reader_unavailable",
+        "desktop.ledger.import.refusal.reader_unavailable_here",
         "desktop.ledger.import.refusal.result_limit",
         "desktop.ledger.import.refusal.source_changed",
         "desktop.ledger.import.refusal.transaction_validation",

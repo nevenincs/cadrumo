@@ -2030,6 +2030,10 @@ desktop:
         file_limit: Més de 128 fitxers alhora.
         other: 'No importat: {code}'
         own_account_mismatch: Les seves files indiquen un altre compte.
+        reader_unavailable: 'No s''ha llegit: la IA local, que llegeix aquest fitxer,
+          no està a punt.'
+        reader_unavailable_here: 'No s''ha llegit: la IA local no pot llegir aquest
+          fitxer en aquest ordinador.'
         result_limit: 'Més de 4.096 files: importa''l per parts.'
         source_changed: 'Ha canviat després de la previsualització: torna a previsualitzar-lo.'
         transaction_validation: No s'ha pogut llegir com a extracte bancari.

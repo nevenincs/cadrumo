@@ -2015,6 +2015,10 @@ desktop:
         file_limit: Egyszerre több mint 128 fájl.
         other: 'Nincs importálva: {code}'
         own_account_mismatch: A sorai másik számlát neveznek meg.
+        reader_unavailable: 'Nincs beolvasva: a helyi MI, amely ezt a fájlt olvassa,
+          nem áll készen.'
+        reader_unavailable_here: 'Nincs beolvasva: a helyi MI nem tudja beolvasni
+          ezt a fájlt ezen a számítógépen.'
         result_limit: 'Több mint 4096 sor: importáld részletekben.'
         source_changed: 'Az előnézet óta megváltozott: nézd meg újra.'
         transaction_validation: Nem olvasható be bankszámlakivonatként.

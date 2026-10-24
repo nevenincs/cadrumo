@@ -2036,6 +2036,10 @@ desktop:
         file_limit: Más de 128 archivos a la vez.
         other: 'No importado: {code}'
         own_account_mismatch: Sus filas indican otra cuenta.
+        reader_unavailable: 'No se ha leído: la IA local, que lee este archivo, no
+          está lista.'
+        reader_unavailable_here: 'No se ha leído: la IA local no puede leer este archivo
+          en este ordenador.'
         result_limit: 'Más de 4.096 filas: impórtalo por partes.'
         source_changed: 'Ha cambiado tras la vista previa: vuelve a previsualizarlo.'
         transaction_validation: No se ha podido leer como extracto bancario.

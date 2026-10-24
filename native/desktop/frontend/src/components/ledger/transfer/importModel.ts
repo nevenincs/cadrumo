@@ -151,7 +151,13 @@ export type BankFilePreview =
       /** Whether every registered account was read against it. */
       probed: boolean;
     }
-  | { kind: "refused"; file: PickedFile; reason: LedgerImportRefusalCode }
+  | {
+      kind: "refused";
+      file: PickedFile;
+      reason: LedgerImportRefusalCode;
+      /** The setup action the file's refusal names, if any. */
+      setup?: string | null;
+    }
   | { kind: "failed"; file: PickedFile; code: string };
 
 const dryRun = (
@@ -174,10 +180,15 @@ const rowIds = (result: LedgerImportResult) =>
     .sort()
     .join(",");
 
-/** The file's own refusal or digest in one dry run's answer. */
+/** The file's own refusal, the setup action it names, and its digest in
+ * one dry run's answer. */
 function readOf(result: LedgerImportResult) {
-  const refusal = result.refused_files[0]?.reason_code ?? null;
-  return { refusal, digest: result.source_digests[0]?.sha256 ?? null };
+  const refused = result.refused_files[0] ?? null;
+  return {
+    refusal: refused?.reason_code ?? null,
+    setup: provisionActionOf(refused),
+    digest: result.source_digests[0]?.sha256 ?? null,
+  };
 }
 
 /** Previews one statement file: with no account, then against each own
@@ -199,8 +210,8 @@ export async function previewBankFile(
     return { kind: "failed", file, code: base.reason ?? base.code };
   if (base.kind === "refused")
     return { kind: "failed", file, code: base.reason ?? "refused" };
-  const { refusal, digest } = readOf(base.result);
-  if (refusal) return { kind: "refused", file, reason: refusal };
+  const { refusal, setup, digest } = readOf(base.result);
+  if (refusal) return { kind: "refused", file, reason: refusal, setup };
   const preview: Extract<BankFilePreview, { kind: "read" }> = {
     kind: "read",
     file,
@@ -221,7 +232,8 @@ export async function previewBankFile(
     // The bytes changed between two reads of the same preview.
     if (read.refusal === "source_changed" || read.digest !== digest)
       return { kind: "refused", file, reason: "source_changed" };
-    if (read.refusal) return { kind: "refused", file, reason: read.refusal };
+    if (read.refusal)
+      return { kind: "refused", file, reason: read.refusal, setup: read.setup };
     preview.byAccount[account.id] = read.result;
     if (
       preview.detected === null &&
@@ -245,6 +257,7 @@ export async function previewForAccount(
       kind: "read";
       result: LedgerImportResult;
       refusal: LedgerImportRefusalCode | null;
+      setup: string | null;
       digest: string | null;
     }
   | { kind: "failed"; code: string }
@@ -305,6 +318,8 @@ export type BankApplied =
       kind: "refused";
       file: PickedFile;
       reason: LedgerImportRefusalCode | string;
+      /** The setup action the file's refusal names, if any. */
+      setup?: string | null;
     }
   /** Its bytes are not those the preview read: preview it again. */
   | { kind: "changed"; file: PickedFile }
@@ -357,12 +372,18 @@ export async function applyBank(
       true,
     );
     if (sent.kind === "settled") {
-      const refusal = sent.result.refused_files[0]?.reason_code;
+      const refused = sent.result.refused_files[0];
+      const refusal = refused?.reason_code;
       applied.push(
         refusal === "source_changed"
           ? { kind: "changed", file }
           : refusal
-            ? { kind: "refused", file, reason: refusal }
+            ? {
+                kind: "refused",
+                file,
+                reason: refusal,
+                setup: provisionActionOf(refused),
+              }
             : { kind: "imported", file, result: sent.result },
       );
     } else if (sent.kind === "refused") {

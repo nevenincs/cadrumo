@@ -1379,6 +1379,16 @@ export function ledgerFixture(options: Options): LedgerPort {
         refused.push({ file_name: file.name, reason_code: "source_changed" });
         return;
       }
+      // Where the local AI is not set up, a PDF statement, which only the
+      // local AI reads, is refused for it, and its verdict names the setup.
+      if (shape === "reader_missing" && file.name.endsWith(".pdf")) {
+        refused.push({
+          file_name: file.name,
+          reason_code: "reader_unavailable",
+          precondition_verdict: readerPause().precondition_verdict ?? null,
+        });
+        return;
+      }
       if (!spec.readable) {
         refused.push({
           file_name: file.name,
