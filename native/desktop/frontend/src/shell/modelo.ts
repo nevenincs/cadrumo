@@ -24,6 +24,8 @@ import type {
 } from "./ledger";
 import {
   MODELO_DEFINITIONS,
+  MODELO_EDIT_DEFINITIONS,
+  MODELO_STORED_SUBJECT_DEFINITIONS,
   type ModeloCasillaHelpProjectionV1,
   type ModeloContracts,
   type ModeloDeclarationsListProjectionV1,
@@ -41,25 +43,12 @@ export function isModeloDefinition(id: string): id is ModeloDefinitionId {
  * the TUI names "operator:tui-modelo". */
 export const MODELO_ACTOR = "operator:desktop-modelo";
 
-/** The definitions whose request is the edit's financial body: they are
- * sent through `edit`, never through `submit`. */
-export const MODELO_EDIT_DEFINITIONS = [
-  "modelo.edit.preflight",
-  "modelo.edit.apply",
-] as const;
+/** A definition whose request is the edit's financial body, sent through
+ * `edit`, never through `submit`. */
 export type ModeloEditDefinitionId = (typeof MODELO_EDIT_DEFINITIONS)[number];
 
-/** The definitions whose subject is the work unit owning the stored record
- * their request names; only the store knows it, so the page names it from
- * the form it read. Every other definition takes no work unit. */
-export const MODELO_STORED_SUBJECT_DEFINITIONS = [
-  "modelo.export",
-  "modelo.review_package.build",
-  "modelo.work.amend",
-  "modelo.work.file",
-  "modelo.work.revision_snapshot",
-  "modelo.work.verify",
-] as const;
+/** A definition whose subject is a stored record's work unit, which the
+ * page names from the form it read. */
 export type ModeloStoredSubjectDefinitionId =
   (typeof MODELO_STORED_SUBJECT_DEFINITIONS)[number];
 export function needsWorkUnit(
@@ -67,10 +56,6 @@ export function needsWorkUnit(
 ): id is ModeloStoredSubjectDefinitionId {
   return (MODELO_STORED_SUBJECT_DEFINITIONS as readonly string[]).includes(id);
 }
-
-/** The longest edit body, in bytes, the host sends on. A longer one is
- * refused with `invalid` before anything is sent; the page splits the edit. */
-export const MODELO_EDIT_BODY_LIMIT = 16_383;
 
 type Contract<D extends ModeloDefinitionId> = D extends keyof ModeloContracts
   ? ModeloContracts[D]

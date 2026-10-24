@@ -5,8 +5,8 @@
 // preflight answer exactly what the application answered, in each of the
 // four languages, and the first quarter's Modelo 130 is also read after its
 // check, recorded as filed locally with and without a verified receipt, and
-// with its file for the AEAT out of date; an edit renewal
-// answers the baseline the form admitted. Every other definition has no
+// with its file for the AEAT out of date; an edit renewal answers the
+// renewal the application read for that baseline. Every other definition has no
 // envelope here and is answered as unavailable, never with a made-up
 // result. What it answers is design and test evidence only. Its call lines
 // name a definition, never a value.
@@ -20,7 +20,6 @@ import type {
   LedgerOutcome,
 } from "../shell/ledger";
 import {
-  MODELO_EDIT_BODY_LIMIT,
   isModeloDefinition,
   needsWorkUnit,
   type ModeloFilePurpose,
@@ -28,14 +27,15 @@ import {
   type ModeloResult,
   type ModeloSaveFormat,
 } from "../shell/modelo";
-import type {
-  ModeloCasillaHelpProjectionV1,
-  ModeloDeclarationsListProjectionV1,
-  ModeloEditOperatorInputV2,
-  ModeloEditPreflightProjectionV1,
-  ModeloEditRenewalProjectionV1,
-  ModeloWorkbenchFormProjectionV1,
-  OutputLanguage,
+import {
+  MODELO_EDIT_BODY_LIMIT,
+  type ModeloCasillaHelpProjectionV1,
+  type ModeloDeclarationsListProjectionV1,
+  type ModeloEditOperatorInputV2,
+  type ModeloEditPreflightProjectionV1,
+  type ModeloEditRenewalProjectionV1,
+  type ModeloWorkbenchFormProjectionV1,
+  type OutputLanguage,
 } from "../shell/modeloContract";
 import { hex64 } from "./fixtures/ledger";
 
@@ -256,17 +256,13 @@ export function modeloFixture(options: Options): ModeloPort {
             const baseline = request.baseline as {
               work_unit_id?: unknown;
             } | null;
-            const form = await readForm(String(baseline?.work_unit_id), "en");
-            if (!form.admitted_baseline) return unserved();
-            const renewal: ModeloEditRenewalProjectionV1 = {
-              result_version: 1,
-              profile_id: form.profile_id,
-              work_unit_id: form.work_unit_id,
-              renewed_baseline: form.admitted_baseline,
-              refusal: null,
-              refusal_words: null,
-            };
-            return renewal;
+            const name = await formName(String(baseline?.work_unit_id));
+            const renewal =
+              name &&
+              (await envelope<ModeloEditRenewalProjectionV1>(
+                `renew-${name.split("-")[0]}`,
+              ));
+            return renewal || unserved();
           }
           default:
             return unserved();

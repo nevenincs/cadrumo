@@ -3418,12 +3418,15 @@ export type ModeloEditRefusedV1 = {
 /**
  * The baseline an edit session holds, to renew before review or submission.
  *
- * `output_language` is the language a refusal is said in.
+ * `output_language` is the language a refusal is said in. `staged` are the
+ * changes the session holds, by box, kind and the box's state when each was
+ * staged, never a value; the result says what becomes of each.
  */
 export type ModeloEditRenewRequest = {
   profile_id: string;
   baseline: ModeloEditApplyBaselineV1;
   output_language: OutputLanguage;
+  staged?: ModeloFormStagedChangeV1[];
 };
 
 /**
@@ -3437,6 +3440,7 @@ export type ModeloEditRenewalProjectionV1 = {
   renewed_baseline: ModeloEditApplyBaselineV1 | null;
   refusal: ModeloEditRefusedV1 | null;
   refusal_words: string | null;
+  rebase: ModeloFormRebaseEntryV1[];
 };
 
 /**
@@ -3540,6 +3544,7 @@ export type ModeloEditTypedEntryV1 = {
   refusal: ModeloEditParseRefusalV1 | null;
   value_text: string | null;
   refusal_words: string | null;
+  comparable_value: ModeloEditWireScalar;
 };
 
 /**
@@ -4125,11 +4130,13 @@ export type ModeloFormAeatData = {
 };
 
 /**
- * One artefact the export offers, in the filer's words.
+ * One artefact the export offers, in the filer's words, and whether it can be
+ * created now.
  */
 export type ModeloFormArtefactOption = {
   artefact: ModeloExportArtefact;
   words: string;
+  availability: ModeloFormAvailability;
 };
 
 /**
@@ -4146,6 +4153,16 @@ export type ModeloFormAttentionCount = {
   level: ModeloFormAttention;
   count: number;
   words: string;
+};
+
+/**
+ * Whether an export, or recording the filing, can be done now, and if not why,
+ * in the filer's words.
+ */
+export type ModeloFormAvailability = {
+  available: boolean;
+  reason: ModeloFormUnavailable | null;
+  words: string | null;
 };
 
 /**
@@ -4343,6 +4360,7 @@ export type ModeloFormExportHoldReason = "blocks" | "confirm" | "verify";
  */
 export type ModeloFormExportOffer = {
   artefacts: ModeloFormArtefactOption[];
+  record: ModeloFormAvailability;
   asks_elections: boolean;
   elections: ModeloFormElectionQuestion[];
   file_format: ExportLayoutFormat | null;
@@ -4479,6 +4497,20 @@ export type ModeloFormOrigin =
 export type ModeloFormRateUnit = "fraction";
 
 /**
+ * One held change and what the renewal did to it.
+ */
+export type ModeloFormRebaseEntryV1 = {
+  address: ModeloFormAddressV1;
+  kind: ModeloFormStagedKind;
+  outcome: ModeloFormRebaseOutcome;
+};
+
+/**
+ * What a renewal did to one held change.
+ */
+export type ModeloFormRebaseOutcome = "kept" | "changed" | "dropped";
+
+/**
  * Whether the AEAT receipt of the recorded filing has been verified, and when.
  *
  * `verified_at` is when the verified receipt was imported, and is set only
@@ -4588,6 +4620,21 @@ export type ModeloFormSourceReading = {
 export type ModeloFormSourceState = "produced" | "none_found" | "not_yet";
 
 /**
+ * One change a frontend holds: its box, its kind and the box's state digest
+ * when it was staged.
+ */
+export type ModeloFormStagedChangeV1 = {
+  address: ModeloFormAddressV1;
+  kind: ModeloFormStagedKind;
+  held_state: string;
+};
+
+/**
+ * The kind of change a frontend holds on a box.
+ */
+export type ModeloFormStagedKind = "set" | "clear" | "restore";
+
+/**
  * Where one box stands on the filing journey, as every frontend that counts
  * boxes classes it.
  */
@@ -4623,6 +4670,17 @@ export type ModeloFormTypingEffect = {
   displaces: ModeloFormDisplacement;
   words: string;
 };
+
+/**
+ * Why an export, or recording the filing, cannot be done now.
+ */
+export type ModeloFormUnavailable =
+  | "not_calculated"
+  | "not_verified"
+  | "blocks"
+  | "confirm"
+  | "file_out_of_date"
+  | "recorded";
 
 /**
  * What the last check concluded about the declaration, in the form's language.
@@ -6818,6 +6876,8 @@ export type ModeloWorkbenchFormProjectionV1 = {
   form: PublicModeloWorkFormLoadV1;
   admitted_baseline: ModeloEditApplyBaselineV1 | null;
   admission_refusal: ModeloEditRefusedV1 | null;
+  admission_refusal_words: string | null;
+  rules_incomplete: boolean;
   next_step: ModeloFormNextStep | null;
   header: ModeloFormHeader;
   issue_lines: ModeloFormIssueLine[];
@@ -7384,6 +7444,10 @@ export type PublicModeloFormField = {
   restorable: boolean;
   filers_own: boolean;
   confirm_value: ModeloEditWireScalar;
+  takes_typed_value: boolean;
+  clearable: boolean;
+  own_value: ModeloEditWireScalar;
+  state_digest: string;
 };
 
 /**
@@ -8117,6 +8181,30 @@ export const MODELO_DEFINITIONS = [
   "modelo.work.wizard_attempt",
   "modelo.work.wizard_context",
 ] as const;
+
+/** The definitions whose request is the edit's financial body: they are sent
+ * through the raw edit commands, never as a payload. */
+export const MODELO_EDIT_DEFINITIONS = [
+  "modelo.edit.apply",
+  "modelo.edit.preflight",
+] as const;
+
+/** The definitions whose subject is the work unit owning the stored record
+ * their request names; only the store knows it, so the page names it from
+ * the form it read. Every other definition takes no work unit. */
+export const MODELO_STORED_SUBJECT_DEFINITIONS = [
+  "modelo.export",
+  "modelo.review_package.build",
+  "modelo.work.amend",
+  "modelo.work.file",
+  "modelo.work.revision_snapshot",
+  "modelo.work.verify",
+] as const;
+
+/** The longest edit body, in bytes, the host sends on: its relay's request
+ * bound. A longer one is refused with `invalid` before anything is sent;
+ * the page splits the edit. */
+export const MODELO_EDIT_BODY_LIMIT = 16842752;
 
 /** Each admitted definition's registered request, result and review, as the
  * runtime's contract names them; a request names the profile the host fills. */

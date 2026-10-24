@@ -1,0 +1,357 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+  "renewed_baseline": {
+    "compatibility": {
+      "workspace_contract_version": 1,
+      "edit_contract_version": 1,
+      "operation_manifest_version": 4,
+      "contract_set_digest": "dacb2026b840053b1fee12afc93c522daa02204340dd7b501e3cfc58675ea93a",
+      "operation_definition_id": "modelo.edit.apply",
+      "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
+      "request_schema": {
+        "schema_id": "modelo.edit.apply.request",
+        "schema_version": 2,
+        "schema_fingerprint": "e5a1e02a862bcf9d310c1fc919e27896f1cd5ccf9b4e008de9a9e10d473c463f"
+      },
+      "result_schema": {
+        "schema_id": "modelo.edit.apply.result",
+        "schema_version": 1,
+        "schema_fingerprint": "fcb07c3ebfda5185fff964d08883ab9ac5a7e13ae46de77868923db2f7a31af3"
+      },
+      "observation_contract_version": 1,
+      "review_projection_contract_version": null,
+      "review_schema": null,
+      "workspace_refresh_target_version": 1,
+      "workspace_refresh_target_schema": {
+        "schema_id": "modelo.edit.apply.workspace_refresh_target",
+        "schema_version": 1,
+        "schema_fingerprint": "f3ed60843779fac34b3b30864d6f82ec97d218a19dfb751f34d05fd6880822a7"
+      },
+      "financial_operand_protocol_version": 1,
+      "financial_operand_schema": {
+        "schema_id": "modelo.edit.submission",
+        "schema_version": 1,
+        "schema_fingerprint": "50137af3e279c85b63ea26b32b31e5328124cb0cac8b56a67c724112946f18f9"
+      }
+    },
+    "bucket_id": "13000000-0000-4000-8000-000000000730",
+    "modelo": "130",
+    "filing_year": 2026,
+    "period_filing_year": 2026,
+    "period_code": "1T",
+    "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+    "work_unit_record_digest": "65fcd0a87ef67022d4a5a88782b1b227a8cae0bf51dac039a51a33436e5762de",
+    "calculation_head_digest": "c443bf3d9f2431659eee000a3184363f3780c6e7608f783015770efd1458d9a1",
+    "current_calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
+    "law_selected_revision_id": "2019-y-siguientes",
+    "schema_identity": {
+      "schema_id": "modelo-130-2019-y-siguientes",
+      "schema_fingerprint": "eb7d05820612972661edddda4e1f1f694ad933759de63e32456d8a07e218b1fe",
+      "completeness_manifest_digest": "3bb3ca3e26fc0d78ab0a6ce74d5117f7dae7d265532ec043c6d6eab803f756ce"
+    },
+    "schema_version": 1,
+    "permitted_surface": [
+      {
+        "kind": "writable_binding_override",
+        "binding_id": "irpf.previous_year_economic_activity_net_income",
+        "allowed_intents": ["set_override_value", "remove_override"],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-130-actividad-economica-gastos-cumulative",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-130-actividad-economica-ingresos-cumulative",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-130-actividad-economica-retenciones-cumulative",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "writable_binding_override",
+        "binding_id": "modelo-130-pagos-fraccionados-anteriores",
+        "allowed_intents": ["set_override_value", "remove_override"],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_binding_override",
+        "binding_id": "modelo-130-resultados-negativos-anteriores",
+        "allowed_intents": ["set_override_value", "remove_override"],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "01",
+        "reason": "schema_declared_read_only"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "02",
+        "reason": "schema_declared_read_only"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "03",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "04",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "05",
+        "reason": "schema_declared_read_only"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "06",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "non_negative",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": true
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "07",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "08",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "09",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "10",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "non_negative",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": true
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "11",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "12",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "13",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "14",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "15",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "16",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "17",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "18",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "19",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "saldo-negativo-fin-periodo",
+        "reason": "computed_by_formula"
+      }
+    ],
+    "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
+    "mutation_family": "calculate",
+    "issued_at": "2026-10-24T18:03:00.208858Z",
+    "expires_at": "2026-10-24T18:08:00.208858Z",
+    "baseline_id": "9f619104951c49f97e148f6193b0aa305e6b245390b77bbb0271c75552f2f66d"
+  },
+  "refusal": null,
+  "refusal_words": null,
+  "rebase": []
+}

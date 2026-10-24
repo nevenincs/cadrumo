@@ -166,7 +166,11 @@
                     "value_text": "12.000,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "3857746d964868b8e4b0973c9763f89c55b35e18b781ddbcaecf16af845ae55e"
                   }
                 },
                 {
@@ -228,7 +232,11 @@
                     "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "26f32cb7d29df130e8fd740bb4ebe49e99b6c577404d3a364110735683bfa903"
                   }
                 },
                 {
@@ -277,7 +285,11 @@
                     "value_text": "12.000,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "e1331da9df525c1a8cbd4419fbe5b48383a8473a15848cdd1e2c3e3a44dc2c0b"
                   }
                 },
                 {
@@ -334,7 +346,11 @@
                     "value_text": "2.400,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 },
                 {
@@ -418,7 +434,11 @@
                     "value_text": "0,00 €",
                     "restorable": true,
                     "filers_own": true,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": "0",
+                    "state_digest": "77a4f098fe52b84822f9683c9b677510a74cd09ea6ba808de64f5cb7f3917375"
                   }
                 },
                 {
@@ -483,7 +503,11 @@
                     "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
                 {
@@ -530,7 +554,11 @@
                     "value_text": "2.400,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 }
               ],
@@ -598,7 +626,11 @@
                     "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
                 {
@@ -663,7 +695,11 @@
                     "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -728,7 +764,11 @@
                     "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
                 {
@@ -775,7 +815,11 @@
                     "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 }
               ],
@@ -843,7 +887,11 @@
                     "value_text": "2.400,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 },
                 {
@@ -892,7 +940,11 @@
                     "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -939,7 +991,11 @@
                     "value_text": "2.400,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 },
                 {
@@ -999,7 +1055,11 @@
                     "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -1046,7 +1106,11 @@
                     "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
                 {
@@ -1093,7 +1157,11 @@
                     "value_text": "2.400,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 },
                 {
@@ -1140,7 +1208,11 @@
                     "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
                   }
                 },
                 {
@@ -1187,7 +1259,11 @@
                     "value_text": "2.400,00 €",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
                   }
                 }
               ],
@@ -1342,7 +1418,11 @@
           "value_text": "0,00 €",
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
         }
       ],
       "unplaced": [],
@@ -1476,7 +1556,7 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-10-24T15:51:18.671510Z",
+        "exported_at": "2026-10-24T18:04:06.860584Z",
         "calculation_revision_id": "a69213a1915ba8c3b41c216150a2795d28b50520c465e05ac31d0c231f325e5b",
         "current": false
       },
@@ -1494,7 +1574,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "f73237f64eb3b78ec1a422e4c2bfec2a1b244ef3aeea98c5d82222068d47801b",
+      "contract_set_digest": "dacb2026b840053b1fee12afc93c522daa02204340dd7b501e3cfc58675ea93a",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
       "request_schema": {
@@ -1529,8 +1609,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "9b5969e28d4b539932822267771b68287b63691cba0a7e766ffc208e138e4fb6",
-    "calculation_head_digest": "c37094760d37bd29774f71e1b049fedec7144d52be88e75af5216b67a285c9bd",
+    "work_unit_record_digest": "75b876bec672b88d0d2c0460894566fedf5343597a4b92c4677656301576bf53",
+    "calculation_head_digest": "484970a55e8c3c9a309304e65bc19c33e35cf5807ec020b974219c673162615a",
     "current_calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1834,17 +1914,19 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T15:51:27.238697Z",
-    "expires_at": "2026-10-24T15:56:27.238697Z",
-    "baseline_id": "4d2c9a27717eb66c57d6363c4651935a45133ead21d7963d2b14a4b33f6d4b76"
+    "issued_at": "2026-10-24T18:04:17.362374Z",
+    "expires_at": "2026-10-24T18:09:17.362374Z",
+    "baseline_id": "840cd57ff7acaa54e2645a8f0c1bfe7caa532afadb55d93ae558cf6df3effced"
   },
   "admission_refusal": null,
+  "admission_refusal_words": null,
+  "rules_incomplete": false,
   "next_step": {
     "action": "export_again",
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-10-24T15:51:18.671510Z",
+    "file_created_at": "2026-10-24T18:04:06.860584Z",
     "receipt_to_add": false
   },
   "header": {
@@ -1870,7 +1952,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-10-24T15:51:18.671510Z",
+      "exported_at": "2026-10-24T18:04:06.860584Z",
       "created_on": "24/10/2026",
       "current": false,
       "words": "El fichero del 24/10/2026 está desactualizado. Vuelve a generarlo."
@@ -1957,21 +2039,30 @@
     "artefacts": [
       {
         "artefact": "fichero_boe",
-        "words": "Fichero BOE para presentar en la AEAT"
+        "words": "Fichero BOE para presentar en la AEAT",
+        "availability": { "available": true, "reason": null, "words": null }
       },
       {
         "artefact": "calculation_report_csv",
-        "words": "Informe de cálculo (CSV), solo registro local"
+        "words": "Informe de cálculo (CSV), solo registro local",
+        "availability": { "available": true, "reason": null, "words": null }
       },
       {
         "artefact": "calculation_report_pdf",
-        "words": "Resumen del cálculo firmado (PDF), solo registro local"
+        "words": "Resumen del cálculo firmado (PDF), solo registro local",
+        "availability": { "available": true, "reason": null, "words": null }
       },
       {
         "artefact": "calculation_review_xlsx",
-        "words": "Revisión del cálculo guardado (XLSX)"
+        "words": "Revisión del cálculo guardado (XLSX)",
+        "availability": { "available": true, "reason": null, "words": null }
       }
     ],
+    "record": {
+      "available": false,
+      "reason": "file_out_of_date",
+      "words": "El fichero del 24/10/2026 está desactualizado. Vuelve a generarlo. Si ya presentaste ese fichero anterior en la AEAT, inicia una corrección."
+    },
     "asks_elections": false,
     "elections": [],
     "file_format": "fixed_width",

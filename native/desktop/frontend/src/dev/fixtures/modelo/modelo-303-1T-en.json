@@ -259,7 +259,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 },
                 {
@@ -310,7 +314,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 }
               ],
@@ -412,7 +420,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         },
@@ -471,7 +483,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": "00000"
                         },
@@ -525,7 +541,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         }
@@ -604,7 +624,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         },
@@ -662,7 +686,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         },
@@ -718,7 +746,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         }
@@ -784,7 +816,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         },
@@ -857,7 +893,11 @@
                             "value_text": "4 %",
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "0f6de34e68dad08fb2184713f1d41270b728f60cb5281a063929a3e6308c773f"
                           },
                           "literal": "00400"
                         },
@@ -913,7 +953,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         }
@@ -992,7 +1036,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         },
@@ -1046,7 +1094,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         },
@@ -1102,7 +1154,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         }
@@ -1168,7 +1224,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         },
@@ -1241,7 +1301,11 @@
                             "value_text": "10 %",
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "7fab9e5afa336a5a8dff18aca209ad36b78c135b697670c08078a748491a2b4b"
                           },
                           "literal": "01000"
                         },
@@ -1297,7 +1361,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         }
@@ -1363,7 +1431,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         },
@@ -1436,7 +1508,11 @@
                             "value_text": "21 %",
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "975c357d82b208910abfa1a02f8e241af01a17ffdedc75e1bae56705a3911780"
                           },
                           "literal": "02100"
                         },
@@ -1490,7 +1566,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         }
@@ -1557,7 +1637,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         },
@@ -1614,7 +1698,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         }
@@ -1677,7 +1765,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         },
@@ -1734,7 +1826,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         }
@@ -1797,7 +1893,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         },
@@ -1852,7 +1952,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         }
@@ -1915,7 +2019,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         },
@@ -1988,7 +2096,11 @@
                             "value_text": "1.75 %",
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "58b9678e442ac0a137e2c80bd387c0a0284adeaba8060311410fd33730478b18"
                           },
                           "literal": "00175"
                         },
@@ -2043,7 +2155,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         }
@@ -2106,7 +2222,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         },
@@ -2160,7 +2280,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         },
@@ -2231,7 +2355,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         }
@@ -2294,7 +2422,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         },
@@ -2353,7 +2485,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": "00000"
                         },
@@ -2407,7 +2543,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         }
@@ -2470,7 +2610,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         },
@@ -2543,7 +2687,11 @@
                             "value_text": "1.4 %",
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "0d7a507ce56f4eea2e746081d2e88e51a14ecf53048ee59204fcf90e0f339d04"
                           },
                           "literal": "00140"
                         },
@@ -2614,7 +2762,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         }
@@ -2677,7 +2829,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         },
@@ -2750,7 +2906,11 @@
                             "value_text": "5.2 %",
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "454b95ec9651493452e58ad1e1bde0bc6a9507ff2b075545220d4bd617db869d"
                           },
                           "literal": "00520"
                         },
@@ -2821,7 +2981,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         }
@@ -2884,7 +3048,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         },
@@ -2939,7 +3107,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": true,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                           },
                           "literal": null
                         }
@@ -3013,7 +3185,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 }
               ],
@@ -3117,7 +3293,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         },
@@ -3174,7 +3354,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         }
@@ -3241,7 +3425,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         },
@@ -3299,7 +3487,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         }
@@ -3379,7 +3571,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         },
@@ -3433,7 +3629,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         }
@@ -3513,7 +3713,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         },
@@ -3584,7 +3788,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         }
@@ -3668,7 +3876,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         },
@@ -3724,7 +3936,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         }
@@ -3804,7 +4020,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         },
@@ -3875,7 +4095,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         }
@@ -3944,7 +4168,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         },
@@ -4004,7 +4232,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                           },
                           "literal": null
                         }
@@ -4057,7 +4289,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -4122,7 +4358,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
                 {
@@ -4191,7 +4431,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
                 {
@@ -4239,7 +4483,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
                 {
@@ -4295,7 +4543,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 }
               ],
@@ -5143,7 +5395,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
               ],
@@ -5212,7 +5468,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -5260,7 +5520,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -5308,7 +5572,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
               ],
@@ -5374,7 +5642,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -5422,7 +5694,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -5470,7 +5746,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -5518,7 +5798,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
               ],
@@ -5587,7 +5871,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -5635,7 +5923,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -5683,7 +5975,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
               ],
@@ -5752,7 +6048,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
               ],
@@ -5859,7 +6159,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
                 {
@@ -5922,7 +6226,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
                 {
@@ -5984,7 +6292,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
                 {
@@ -6046,7 +6358,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
                 {
@@ -6093,7 +6409,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -6140,7 +6460,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -6238,7 +6562,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         },
@@ -6310,7 +6638,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                           },
                           "literal": null
                         }
@@ -6381,7 +6713,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
                 {
@@ -6447,7 +6783,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 }
               ],
@@ -6513,7 +6853,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -6566,7 +6910,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
                 {
@@ -6630,7 +6978,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
                 {
@@ -6672,7 +7024,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
                 {
@@ -6720,7 +7076,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -6807,7 +7167,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
                   }
                 },
                 {
@@ -6876,7 +7240,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
                 {
@@ -6945,7 +7313,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
                 {
@@ -6993,7 +7365,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -7041,7 +7417,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -7102,7 +7482,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 },
                 {
@@ -7150,7 +7534,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -7198,7 +7586,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -7247,7 +7639,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 }
               ],
@@ -7682,7 +8078,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -7740,7 +8140,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -7798,7 +8202,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -7856,7 +8264,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -7914,7 +8326,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
               ],
@@ -7993,7 +8409,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8051,7 +8471,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8109,7 +8533,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8167,7 +8595,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8225,7 +8657,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8283,7 +8719,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8341,7 +8781,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8399,7 +8843,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8457,7 +8905,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8515,7 +8967,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8573,7 +9029,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8631,7 +9091,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8689,7 +9153,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8747,7 +9215,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8805,7 +9277,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8863,7 +9339,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8921,7 +9401,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -8997,7 +9481,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
                   }
                 }
               ],
@@ -9148,7 +9636,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -9214,7 +9706,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -9280,7 +9776,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -9346,7 +9846,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -9412,7 +9916,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -9483,7 +9991,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -9549,7 +10061,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -9615,7 +10131,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -9681,7 +10201,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -9747,7 +10271,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -9818,7 +10346,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -9884,7 +10416,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -9950,7 +10486,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -10016,7 +10556,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -10082,7 +10626,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -10153,7 +10701,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -10219,7 +10771,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -10285,7 +10841,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -10351,7 +10911,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -10417,7 +10981,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -10488,7 +11056,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -10554,7 +11126,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -10620,7 +11196,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -10686,7 +11266,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -10752,7 +11336,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -10869,7 +11457,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -10934,7 +11526,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -11008,7 +11604,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -11073,7 +11673,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -11147,7 +11751,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -11212,7 +11820,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -11286,7 +11898,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -11351,7 +11967,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -11425,7 +12045,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -11490,7 +12114,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -11564,7 +12192,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -11629,7 +12261,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -11703,7 +12339,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -11768,7 +12408,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -11829,7 +12473,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -11881,7 +12529,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -11932,7 +12584,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 },
                 {
@@ -11978,7 +12634,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 }
               ],
@@ -12090,7 +12750,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -12155,7 +12819,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -12229,7 +12897,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -12294,7 +12966,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -12368,7 +13044,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -12433,7 +13113,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -12507,7 +13191,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -12572,7 +13260,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -12646,7 +13338,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -12711,7 +13407,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -12785,7 +13485,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -12850,7 +13554,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -12924,7 +13632,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -12989,7 +13701,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -13050,7 +13766,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         },
@@ -13102,7 +13822,11 @@
                             "value_text": null,
                             "restorable": false,
                             "filers_own": false,
-                            "confirm_value": null
+                            "confirm_value": null,
+                            "takes_typed_value": false,
+                            "clearable": false,
+                            "own_value": null,
+                            "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                           },
                           "literal": null
                         }
@@ -13153,7 +13877,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 },
                 {
@@ -13199,7 +13927,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 }
               ],
@@ -13292,7 +14024,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
               ],
@@ -13459,7 +14195,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -13512,7 +14252,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
           "address": {
@@ -13563,7 +14307,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": true,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
         },
         {
           "address": {
@@ -13614,7 +14362,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": true,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
         },
         {
           "address": {
@@ -13665,7 +14417,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": true,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
         },
         {
           "address": {
@@ -13730,7 +14486,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -13795,7 +14555,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -13861,7 +14625,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -13927,7 +14695,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -13991,7 +14763,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -14057,7 +14833,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -14126,7 +14906,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -14194,7 +14978,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -14262,7 +15050,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -14327,7 +15119,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
           "address": {
@@ -14389,7 +15185,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
           "address": {
@@ -14448,7 +15248,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
           "address": {
@@ -14512,7 +15316,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
           "address": {
@@ -14566,7 +15374,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
           "address": {
@@ -14620,7 +15432,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
           "address": {
@@ -14674,7 +15490,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
           "address": {
@@ -14736,7 +15556,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
         },
         {
           "address": {
@@ -14795,7 +15619,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": true,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
         },
         {
           "address": {
@@ -14854,7 +15682,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": true,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
         },
         {
           "address": {
@@ -14920,7 +15752,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -14986,7 +15822,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15052,7 +15892,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15118,7 +15962,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15184,7 +16032,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15250,7 +16102,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15301,7 +16157,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": true,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
         },
         {
           "address": {
@@ -15365,7 +16225,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15431,7 +16295,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15495,7 +16363,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15561,7 +16433,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15626,7 +16502,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15690,7 +16570,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15756,7 +16640,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15821,7 +16709,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15886,7 +16778,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -15950,7 +16846,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -16014,7 +16914,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -16079,7 +16983,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         },
         {
           "address": {
@@ -16144,7 +17052,11 @@
           "value_text": null,
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "ab48e09d34db338f6921ceefabcbbc4f1b80a5b33b9bdc5f4ce9f4bf8d7a4bce"
         }
       ],
       "unplaced": [
@@ -16204,7 +17116,11 @@
             "value_text": null,
             "restorable": false,
             "filers_own": false,
-            "confirm_value": null
+            "confirm_value": null,
+            "takes_typed_value": true,
+            "clearable": false,
+            "own_value": null,
+            "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
           },
           "reason": "no_official_anchor"
         }
@@ -16862,7 +17778,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "f73237f64eb3b78ec1a422e4c2bfec2a1b244ef3aeea98c5d82222068d47801b",
+      "contract_set_digest": "dacb2026b840053b1fee12afc93c522daa02204340dd7b501e3cfc58675ea93a",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
       "request_schema": {
@@ -19978,11 +20894,13 @@
     ],
     "permitted_surface_digest": "55e1f327f6ef11017b79b42e78ea5e991f50ab537a901307c3c3b3b06b6f049a",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T15:49:56.703841Z",
-    "expires_at": "2026-10-24T15:54:56.703841Z",
-    "baseline_id": "b8517a03114cc54eb86359c5215bbe0cffcd41ff7dc76ac5e47bae44be696472"
+    "issued_at": "2026-10-24T18:02:27.092428Z",
+    "expires_at": "2026-10-24T18:07:27.092428Z",
+    "baseline_id": "9b5a412817eeefdd02b4d2c45dea18f5817ad4623cc50ad54e825571db13cff6"
   },
   "admission_refusal": null,
+  "admission_refusal_words": null,
+  "rules_incomplete": false,
   "next_step": {
     "action": "calculate",
     "count": 0,
@@ -20416,21 +21334,46 @@
     "artefacts": [
       {
         "artefact": "fichero_boe",
-        "words": "Fichero BOE for presentation at AEAT"
+        "words": "Fichero BOE for presentation at AEAT",
+        "availability": {
+          "available": false,
+          "reason": "not_calculated",
+          "words": "Calculate the declaration"
+        }
       },
       {
         "artefact": "calculation_report_csv",
-        "words": "Calculation report (CSV), a local record only"
+        "words": "Calculation report (CSV), a local record only",
+        "availability": {
+          "available": false,
+          "reason": "not_calculated",
+          "words": "Calculate the declaration"
+        }
       },
       {
         "artefact": "calculation_report_pdf",
-        "words": "Signed calculation summary (PDF), a local record only"
+        "words": "Signed calculation summary (PDF), a local record only",
+        "availability": {
+          "available": false,
+          "reason": "not_calculated",
+          "words": "Calculate the declaration"
+        }
       },
       {
         "artefact": "calculation_review_xlsx",
-        "words": "Saved calculation review (XLSX)"
+        "words": "Saved calculation review (XLSX)",
+        "availability": {
+          "available": false,
+          "reason": "not_calculated",
+          "words": "Calculate the declaration"
+        }
       }
     ],
+    "record": {
+      "available": false,
+      "reason": "not_calculated",
+      "words": "Calculate the declaration"
+    },
     "asks_elections": true,
     "elections": [
       {

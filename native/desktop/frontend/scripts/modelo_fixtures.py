@@ -17,6 +17,7 @@ read, so they are validated rather than compared byte for byte.
 from __future__ import annotations
 
 import argparse
+import ast
 import asyncio
 import json
 import re
@@ -42,8 +43,13 @@ FIXTURES = FRONTEND / "src" / "dev" / "fixtures" / "modelo"
 
 #: The host's closed list of admitted definitions, which the generated mirror is pinned to.
 ADMITTED = FRONTEND.parent / "src-tauri" / "src" / "shell" / "modelo" / "admitted.rs"
-#: The definitions whose request travels as the financial body, never as a payload.
-FINANCIAL = frozenset({"modelo.edit.apply", "modelo.edit.preflight"})
+#: What the host records about each admitted definition, generated from the shipped contracts.
+HOST_FACTS = ADMITTED.with_name("relay_contracts.json")
+#: The held person's relay, whose request bound an edit body is held to, and where its constants come from.
+RELAY_SOURCES: tuple[Path, ...] = (
+    FRONTEND.parent / "src-tauri" / "src" / "agent" / "person.rs",
+    FRONTEND.parents[1] / "application" / "src" / "person_operations.rs",
+)
 
 #: The declarations the envelopes read: modelo, period, and whether it is calculated first.
 DECLARATIONS: tuple[tuple[str, str, bool], ...] = (
@@ -84,6 +90,57 @@ def definitions() -> tuple[str, ...]:
     return tuple(sorted(item.definition_id for item in contracts if item.definition_id.startswith("modelo.")))
 
 
+def host_operations() -> dict[str, Any]:
+    """What the host records about each admitted definition: its subject, financial body and file fields."""
+    return json.loads(HOST_FACTS.read_text("utf-8"))["operations"]
+
+
+_RUST_CONSTANT = re.compile(r"pub(?:\([a-z]+\))? const ([A-Z_][A-Z0-9_]*): usize =\s*([^;]+);")
+
+
+def _usize(expression: str, constants: Mapping[str, str]) -> int:
+    """Evaluate one Rust ``usize`` constant expression of literals, names, ``+``, ``-`` and ``*``."""
+
+    def value(node: ast.expr) -> int:
+        if isinstance(node, ast.Constant) and isinstance(node.value, int):
+            return node.value
+        if isinstance(node, ast.Name) and node.id in constants:
+            return _usize(constants[node.id], constants)
+        if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub, ast.Mult)):
+            left, right = value(node.left), value(node.right)
+            return (
+                left + right
+                if isinstance(node.op, ast.Add)
+                else left - right
+                if isinstance(node.op, ast.Sub)
+                else left * right
+            )
+        raise SystemExit(f"the relay's request bound is no longer a plain constant expression: {expression!r}")
+
+    return value(ast.parse(_digits(expression), mode="eval").body)
+
+
+def _digits(expression: str) -> str:
+    """Drop Rust digit separators inside number literals only, keeping names whole."""
+    return re.sub(r"(?<![A-Za-z_])(\d[\d_]*)", lambda found: found.group(1).replace("_", ""), expression)
+
+
+def request_limit() -> int:
+    """The bound the host holds an edit body to: its relay's ``REQUEST_LIMIT``, evaluated from the Rust sources."""
+    constants: dict[str, str] = {}
+    for source in RELAY_SOURCES:
+        for name, expression in _RUST_CONSTANT.findall(source.read_text("utf-8")):
+            constants.setdefault(name, expression.strip())
+    if "REQUEST_LIMIT" not in constants:
+        raise SystemExit(f"{RELAY_SOURCES[0]} no longer declares REQUEST_LIMIT")
+    return _usize(constants["REQUEST_LIMIT"], constants)
+
+
+def _constant_list(doc: str, name: str, items: Iterable[str]) -> str:
+    values = "\n".join(f"  {_literal(item)}," for item in items)
+    return f"/** {doc} */\nexport const {name} = [\n{values}\n] as const;"
+
+
 def admitted_by_host() -> tuple[str, ...]:
     """The ids of the host's closed list, as its Rust constant spells them."""
     table = ADMITTED.read_text("utf-8").split("const ADMITTED", 1)[1].split("];", 1)[0]
@@ -101,7 +158,7 @@ def _model_roots() -> tuple[list[tuple[str, str, type[BaseModel]]], list[type[Ba
         contract = registry.lookup_public_contract(definition_id)
         request = registry.lookup_public_schema_binding(contract.request_schema).model_type
         roots.append((definition_id, "request", request))
-        if definition_id not in FINANCIAL:
+        if contract.transient_financial_operand is None:
             sent.append(request)
         for role, identity in (("result", contract.result_schema), ("review", contract.review_projection_schema)):
             if identity is not None:
@@ -245,10 +302,34 @@ def render_contract() -> str:
     writer = _Writer(defs, sent_only=sent_reach - received)
     names = sorted((name for name in defs if not writer.inlined(name)), key=_ts_name)
     blocks = [_HEADER, *(writer.definition(name) for name in names)]
-    ids = "\n".join(f"  {_literal(definition_id)}," for definition_id in definitions())
     blocks.append(
-        "/** The definitions the host admits, mirroring its closed list. */\n"
-        f"export const MODELO_DEFINITIONS = [\n{ids}\n] as const;"
+        _constant_list(
+            "The definitions the host admits, mirroring its closed list.", "MODELO_DEFINITIONS", definitions()
+        )
+    )
+    operations = host_operations()
+    blocks.append(
+        _constant_list(
+            "The definitions whose request is the edit's financial body: they are sent\n"
+            " * through the raw edit commands, never as a payload.",
+            "MODELO_EDIT_DEFINITIONS",
+            sorted(key for key, facts in operations.items() if facts["financial"]),
+        )
+    )
+    blocks.append(
+        _constant_list(
+            "The definitions whose subject is the work unit owning the stored record\n"
+            " * their request names; only the store knows it, so the page names it from\n"
+            " * the form it read. Every other definition takes no work unit.",
+            "MODELO_STORED_SUBJECT_DEFINITIONS",
+            sorted(key for key, facts in operations.items() if facts["subject"]["kind"] == "stored_work_unit"),
+        )
+    )
+    blocks.append(
+        "/** The longest edit body, in bytes, the host sends on: its relay's request\n"
+        " * bound. A longer one is refused with `invalid` before anything is sent;\n"
+        " * the page splits the edit. */\n"
+        f"export const MODELO_EDIT_BODY_LIMIT = {request_limit()};"
     )
     by_definition: dict[str, list[str]] = {}
     for definition_id, role, model in roots:
@@ -362,6 +443,26 @@ class _ReadContext:
         del written_at
         self.results.append(operand)
         return "0" * 64
+
+
+def _renew(work: Any, baseline: Any) -> BaseModel:
+    """Renew the admitted edit baseline through the modelo.edit.renew executor, as an editor does before review."""
+    from cadrumo.application.modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
+    from cadrumo.application.modelo.workbench_operations import (
+        MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
+        ModeloEditRenewExecutor,
+        ModeloEditRenewRequest,
+    )
+    from cadrumo.core.external_constants import OutputLanguage
+
+    contracts = build_production_operation_registry().public_contract_set
+    executor = ModeloEditRenewExecutor(ports_factory=_read_ports, contracts=lambda: contracts)
+    request = ModeloEditRenewRequest(
+        profile_id=UUID(work.work_unit.bucket_id),
+        baseline=ModeloEditApplyBaselineV1.from_baseline(baseline),
+        output_language=OutputLanguage.EN,
+    )
+    return _run_executor(work, MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID, executor, request)
 
 
 def _preflight(work: Any, baseline: Any, typed: tuple[tuple[str, str], ...]) -> BaseModel:
@@ -792,6 +893,7 @@ def write_envelopes(directory: Path) -> None:
         _write(
             directory, "preflight-130.json", _preflight(first, admission.baseline, (("06", "1.234,56"), ("01", "doce")))
         )
+        _write(directory, "renew-130.json", _renew(first, admission.baseline))
         # Checked after everything above was read, so those envelopes stay unchecked.
         _verify(first)
         _write_form(directory, first, "modelo-130-1T-checked")
@@ -823,6 +925,7 @@ def _fixture_models() -> list[tuple[str, type[BaseModel]]]:
     from cadrumo.application.modelo.workbench_operations import (
         ModeloCasillaHelpProjectionV1,
         ModeloEditPreflightProjectionV1,
+        ModeloEditRenewalProjectionV1,
     )
     from cadrumo.application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
 
@@ -831,6 +934,7 @@ def _fixture_models() -> list[tuple[str, type[BaseModel]]]:
         ("help-*.json", ModeloCasillaHelpProjectionV1),
         ("declarations-*.json", ModeloDeclarationsListProjectionV1),
         ("preflight-*.json", ModeloEditPreflightProjectionV1),
+        ("renew-*.json", ModeloEditRenewalProjectionV1),
     ]
 
 

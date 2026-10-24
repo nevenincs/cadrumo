@@ -101,7 +101,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
               ],
@@ -176,7 +180,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -230,7 +238,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 }
               ],
@@ -302,7 +314,11 @@
                     "value_text": "2026",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "715d5f6868309ec5bf14c290d777361e5c39ac46cdb05fdae531f23a5a723269"
                   }
                 },
                 {
@@ -356,7 +372,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -410,7 +430,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
                   }
                 },
                 {
@@ -547,7 +571,11 @@
                     "value_text": "0",
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "550193fdd890c1ea3f9094b905a38649623af033dc19e038a32aa51115967e06"
                   }
                 },
                 {
@@ -595,7 +623,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 },
                 {
@@ -643,7 +675,11 @@
                     "value_text": null,
                     "restorable": false,
                     "filers_own": false,
-                    "confirm_value": null
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "state_digest": "d32b2516ce02f7aac7871278d304e80374c9f77cd42303379c2eadbb0b158d80"
                   }
                 },
                 {
@@ -1159,7 +1195,11 @@
           "value_text": "original",
           "restorable": false,
           "filers_own": false,
-          "confirm_value": null
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "state_digest": "c6580f587062eac84aed03717afdd4cecb5d83c5cba03042a454704c08f5bfd2"
         }
       ],
       "unplaced": [],
@@ -1255,7 +1295,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "f73237f64eb3b78ec1a422e4c2bfec2a1b244ef3aeea98c5d82222068d47801b",
+      "contract_set_digest": "dacb2026b840053b1fee12afc93c522daa02204340dd7b501e3cfc58675ea93a",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "18404b045cdb1a4d5300963faa14183eb6a1f1acfe1c9e76ef31f4c168e1accd",
       "request_schema": {
@@ -1290,8 +1330,8 @@
     "period_filing_year": 2026,
     "period_code": "0A",
     "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-    "work_unit_record_digest": "6e9a594c084e51b2a4c0f09352eb46b1943ef608ccb16bad981dac3284e98a52",
-    "calculation_head_digest": "8c28e7aef7e06de48b405bf5b57f108014fdef3fdb6b9b02204a3276f76229f3",
+    "work_unit_record_digest": "ae4e66d5be0a4f2c3d24dccbd6d751fc127522c8c0e93c885416dfb858253878",
+    "calculation_head_digest": "ba5624d183542989ef877a251288d6d22ad6f7c7a701bc7a153025d942e30d60",
     "current_calculation_revision_id": "dc9237336b941c64608900d0cfeef932ad43e214dc01145e517c49747bd42353",
     "law_selected_revision_id": "2025-y-siguientes",
     "schema_identity": {
@@ -2013,11 +2053,13 @@
     ],
     "permitted_surface_digest": "c258bc8ca1f53449315c27e6a6e73d340ff63f1c625609083c5d48dde37106ae",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T15:50:03.585086Z",
-    "expires_at": "2026-10-24T15:55:03.585086Z",
-    "baseline_id": "f2ca44cf3e7d49ac25ccd0e210682b8e14e2cbfe346a436b4b81cd564307a28a"
+    "issued_at": "2026-10-24T18:02:35.638757Z",
+    "expires_at": "2026-10-24T18:07:35.638757Z",
+    "baseline_id": "63f647463e903f5b8fd1e56e51ac42cb519f95660b783ac7e74ceb49b9e8d408"
   },
   "admission_refusal": null,
+  "admission_refusal_words": null,
+  "rules_incomplete": false,
   "next_step": {
     "action": "verify",
     "count": 0,
@@ -2114,21 +2156,42 @@
     "artefacts": [
       {
         "artefact": "fichero_boe",
-        "words": "Fitxer BOE per presentar a l'AEAT"
+        "words": "Fitxer BOE per presentar a l'AEAT",
+        "availability": {
+          "available": false,
+          "reason": "not_verified",
+          "words": "Comprova la declaració abans d'exportar-la."
+        }
       },
       {
         "artefact": "calculation_report_csv",
-        "words": "Informe de càlcul (CSV), només registre local"
+        "words": "Informe de càlcul (CSV), només registre local",
+        "availability": {
+          "available": false,
+          "reason": "not_verified",
+          "words": "Comprova la declaració abans d'exportar-la."
+        }
       },
       {
         "artefact": "calculation_report_pdf",
-        "words": "Resum del càlcul signat (PDF), només registre local"
+        "words": "Resum del càlcul signat (PDF), només registre local",
+        "availability": {
+          "available": false,
+          "reason": "not_verified",
+          "words": "Comprova la declaració abans d'exportar-la."
+        }
       },
       {
         "artefact": "calculation_review_xlsx",
-        "words": "Revisió del càlcul desat (XLSX)"
+        "words": "Revisió del càlcul desat (XLSX)",
+        "availability": { "available": true, "reason": null, "words": null }
       }
     ],
+    "record": {
+      "available": false,
+      "reason": "not_verified",
+      "words": "Comprova la declaració abans d'exportar-la."
+    },
     "asks_elections": false,
     "elections": [],
     "file_format": "fixed_width",

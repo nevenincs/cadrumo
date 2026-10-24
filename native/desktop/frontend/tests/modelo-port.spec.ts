@@ -4,16 +4,16 @@ import { fileURLToPath } from "node:url";
 import { ledgerFailure, type FileToken } from "../src/shell/ledger";
 import type { HostCall } from "../src/shell/hostCall";
 import {
-  MODELO_EDIT_DEFINITIONS,
-  MODELO_STORED_SUBJECT_DEFINITIONS,
   isModeloDefinition,
   modeloEditBody,
   needsWorkUnit,
 } from "../src/shell/modelo";
-import type {
-  ModeloEditOperatorInputV2,
-  ModeloEditPreflightProjectionV1,
-  ModeloWorkbenchFormProjectionV1,
+import {
+  MODELO_EDIT_DEFINITIONS,
+  MODELO_STORED_SUBJECT_DEFINITIONS,
+  type ModeloEditOperatorInputV2,
+  type ModeloEditPreflightProjectionV1,
+  type ModeloWorkbenchFormProjectionV1,
 } from "../src/shell/modeloContract";
 import { tauriModelo } from "../src/shell/tauriModelo";
 import {
@@ -296,7 +296,7 @@ test("the scenario refuses a request the host would refuse", async () => {
   );
 });
 
-test("a renewal answers the baseline the form admitted", async () => {
+test("a renewal answers the application's renewal of the form's baseline", async () => {
   const { port } = scenario();
   const form = await formOf("130");
   const outcome = await port.submit("modelo.edit.renew", {
@@ -304,8 +304,12 @@ test("a renewal answers the baseline the form admitted", async () => {
     output_language: "en",
   });
   expect(outcome.kind).toBe("settled");
-  if (outcome.kind === "settled")
-    expect(outcome.result.renewed_baseline).toEqual(form.admitted_baseline);
+  if (outcome.kind === "settled") {
+    expect(outcome.result.refusal).toBeNull();
+    expect(outcome.result.renewed_baseline?.work_unit_id).toBe(
+      form.work_unit_id,
+    );
+  }
 });
 
 test("the later shapes read the first quarter's 130 after its check and after recording it", async () => {

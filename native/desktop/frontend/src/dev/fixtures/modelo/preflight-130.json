@@ -4,7 +4,7 @@
   "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
   "outcome": {
     "outcome": "evaluated",
-    "baseline_id": "bdac33e2dec4559af09d10c688bae73e533c826758a58af9e37d49996169261d",
+    "baseline_id": "772338420f6e974d14971a28c2276641ed4d0103e0b2b5820ddbbb4d1548cf1e",
     "findings": []
   },
   "parsed": [
@@ -14,7 +14,8 @@
       "normalisations": ["separators_removed"],
       "refusal": null,
       "value_text": "1.234,56 €",
-      "refusal_words": null
+      "refusal_words": null,
+      "comparable_value": "1234.56"
     },
     {
       "address": { "kind": "scalar", "casilla_id": "01" },
@@ -28,7 +29,8 @@
         "message_arguments": []
       },
       "value_text": null,
-      "refusal_words": "Esta casilla no se puede cambiar así."
+      "refusal_words": "Esta casilla no se puede cambiar así.",
+      "comparable_value": null
     }
   ],
   "findings": [],
