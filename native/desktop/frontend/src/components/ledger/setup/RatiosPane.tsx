@@ -8,19 +8,25 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { parsePercent, percentOf } from "../../../shell/ledgerGrammar";
+import {
+  compareDecimal,
+  parsePercent,
+  percentOf,
+} from "../../../shell/ledgerGrammar";
 import type {
   LedgerRatiosEligibleResult,
+  LedgerRatiosListResult,
   LedgerRatiosValidateResult,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
-import { WriteHold } from "../WritePause";
+import { WriteHold, type Landing } from "../WritePause";
 import { categoryLabel, percentText } from "../movements/movementWords";
 import { PeriodSelector } from "../PeriodSelector";
 import {
   CallLine,
   Panel,
   Reading,
+  readLanding,
   SetupTable,
   useSetupDraft,
   useSetupRead,
@@ -98,13 +104,20 @@ export function RatiosPane({
       return;
     }
     setRefused({ ...refused, [category]: "" });
-    const done = await write.run(() =>
-      setupCall(
-        port,
-        "ledger.ratios.set",
-        { category, ratio: parsed.value, year },
-        true,
-      ),
+    const done = await write.run(
+      () =>
+        setupCall(
+          port,
+          "ledger.ratios.set",
+          { category, ratio: parsed.value, year },
+          true,
+        ),
+      ratioLanding((rows) => {
+        const found = rows.find((row) => row.category === category);
+        return found && compareDecimal(found.ratio, parsed.value) === 0
+          ? "saved"
+          : "not_saved";
+      }),
     );
     if (done.kind === "done") {
       const next = { ...editing };
@@ -113,9 +126,20 @@ export function RatiosPane({
     }
     reload();
   };
+  /** How a ratio write landed, on the year's ratios listed again; a list
+   * the censo withholds tells nothing. */
+  const ratioLanding = (
+    judge: (rows: LedgerRatiosListResult["rows"]) => Landing,
+  ) =>
+    readLanding(port, "ledger.ratios.list", { year }, (result) =>
+      result.outcome === "available" ? judge(result.rows) : "untold",
+    );
   const unset = async (category: string) => {
-    await write.run(() =>
-      setupCall(port, "ledger.ratios.unset", { category }, true),
+    await write.run(
+      () => setupCall(port, "ledger.ratios.unset", { category }, true),
+      ratioLanding((rows) =>
+        rows.some((row) => row.category === category) ? "not_saved" : "saved",
+      ),
     );
     reload();
   };

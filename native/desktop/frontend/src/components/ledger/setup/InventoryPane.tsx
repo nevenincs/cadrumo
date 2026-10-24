@@ -25,7 +25,7 @@ import type {
   InventoryValuationResult,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
-import { WriteHold } from "../WritePause";
+import { WriteHold, type Landing, type LandingCheck } from "../WritePause";
 import { amountText, dateText } from "../movements/movementWords";
 import { PeriodSelector } from "../PeriodSelector";
 import {
@@ -34,6 +34,7 @@ import {
   FormGrid,
   Panel,
   Reading,
+  readLanding,
   SetupTable,
   TextField,
   useSetupDraft,
@@ -232,8 +233,39 @@ export function InventoryPane({
 
   const decimalOr = (parsed: ReturnType<typeof parseDecimal>) =>
     parsed.kind === "value" ? { decimal: parsed.value } : null;
+  /** How an inventory write landed, judged on the books listed again. */
+  const bookLanding = (judge: (rows: InventoryBookRow[]) => Landing) =>
+    readLanding(port, "ledger.inventory.list", {}, (result) =>
+      judge(result.rows),
+    );
+  const landing = (): LandingCheck => {
+    const named = actividad.trim();
+    if (task === "create")
+      return bookLanding((rows) =>
+        rows.some((row) => row.actividad_id === named && row.year === year)
+          ? "saved"
+          : "not_saved",
+      );
+    if (task === "movement" && book) {
+      // A movement adds one to its book's count; its id is refused if sent
+      // again, so the count before the write tells it.
+      const before = book.movement_count;
+      const target = book.actividad_id;
+      return bookLanding((rows) => {
+        const now = rows.find(
+          (row) => row.actividad_id === target && row.year === year,
+        );
+        if (!now) return "not_saved";
+        return now.movement_count > before ? "saved" : "not_saved";
+      });
+    }
+    // No read lists a closing authority's record; recorded again with the
+    // same document it changes nothing (`changed` is false).
+    return async () => "repeatable";
+  };
   const send = async () => {
     if (!ready) return;
+    const landed = landing();
     const done = await write.run(async (): Promise<SetupCall<unknown>> => {
       if (task === "create")
         return setupCall(
@@ -276,7 +308,7 @@ export function InventoryPane({
           true,
         );
       return { kind: "failed", code: "invalid", reason: null };
-    });
+    }, landed);
     if (done.kind === "done") {
       const result = done.result as InventoryCreateResult | null;
       if (result && "ledger" in result && result.ledger)

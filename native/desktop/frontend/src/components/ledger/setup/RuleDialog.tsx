@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,7 +21,7 @@ import type { LedgerRuleRow } from "../../../shell/ledgerSetup";
 import type { StageEvent } from "../../../shell/ledgerStage";
 import { SPENDING_CATEGORY_FAMILIES } from "../../../shell/ledgerVocabulary";
 import { useStrings } from "../../../shell/strings";
-import { useWritePause, WriteHold } from "../WritePause";
+import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
   categoryLabel,
   classificationLabel,
@@ -36,6 +36,7 @@ import {
   priorityAt,
   ruleOrder,
   rulePrefill,
+  ruleStored,
   setupCall,
   wordsPattern,
   type SetupCall,
@@ -189,6 +190,14 @@ export function RuleDialog({
       (category || null) !== target.rule.category_id);
   const takesCategory = classification === "BUSINESS";
   const { hold, held } = useWritePause();
+  // A save the page settles after this dialog closed says nothing here.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const ready =
     held === null &&
     rules !== null &&
@@ -201,27 +210,40 @@ export function RuleDialog({
   const save = async () => {
     if (!ready || priority === null) return;
     setSaving(true);
-    const call = await setupCall(
-      port,
-      "ledger.rule.add",
-      {
-        description_pattern: pattern,
-        classification,
-        category_id: takesCategory && category ? category : null,
-        priority,
-      },
-      true,
-    );
+    const sent = {
+      description_pattern: pattern,
+      classification,
+      category_id: takesCategory && category ? category : null,
+      priority,
+    };
+    const call = await setupCall(port, "ledger.rule.add", sent, true);
     setSaving(false);
     setSaved(call);
     // Not seen to settle: every write waits for the page's re-read, and
-    // this form never sends the same rule again on its own.
-    if (call.kind === "unknown" || call.kind === "saved_unread")
+    // this form never sends the same rule again on its own. The re-read
+    // reads the rules: the rule stored as sent closes the dialog as a save
+    // does; one not stored leaves the form to send again.
+    if (call.kind === "unknown" || call.kind === "saved_unread") {
+      const what = t("desktop.ledger.rules.title");
+      let stored: LedgerRuleRow | null = null;
       hold({
-        what: t("desktop.ledger.rules.title"),
+        what,
         outcome: call.kind,
-        onSettled: () => setSaved(null),
+        settle: landingSettle(t, what, async () => {
+          const listed = await setupCall(port, "ledger.rule.list", {}, false);
+          if (listed.kind !== "done") return null;
+          stored =
+            listed.result.rules.find((rule) => ruleStored([rule], sent)) ??
+            null;
+          return stored ? "saved" : "not_saved";
+        }),
+        onSettled: () => {
+          if (!mounted.current) return;
+          setSaved(null);
+          if (stored) onSaved(stored);
+        },
       });
+    }
     if (
       call.kind !== "done" ||
       call.result.outcome !== "added" ||

@@ -35,6 +35,7 @@ import {
   CallLine,
   Panel,
   Reading,
+  readLanding,
   TextField,
   useSetupRead,
   useSetupWrite,
@@ -168,8 +169,11 @@ export function HealthSection({
     setChecking(false);
   };
   const runRebuild = async () => {
-    const done = await rebuild.run(() =>
-      setupCall(port, "ledger.participation.rebuild", {}, true),
+    const done = await rebuild.run(
+      () => setupCall(port, "ledger.participation.rebuild", {}, true),
+      // No read says whether a rebuild ran; it recomputes the declaration
+      // links from what is stored, so run again it builds the same links.
+      async () => "repeatable",
     );
     setRebuilt(done.kind === "done" ? done.result : null);
   };
@@ -188,12 +192,17 @@ export function HealthSection({
   };
   const runReset = async () => {
     if (!dryRun) return;
-    const done = await resetting.run(() =>
-      setupCall(
-        port,
-        "ledger.reset",
-        { reason: dryRun.reason, dry_run: false },
-        true,
+    const done = await resetting.run(
+      () =>
+        setupCall(
+          port,
+          "ledger.reset",
+          { reason: dryRun.reason, dry_run: false },
+          true,
+        ),
+      // A reset removes every movement: the whole ledger's count tells.
+      readLanding(port, "ledger.status", { period: null }, (result) =>
+        result.total_count === 0 ? "saved" : "not_saved",
       ),
     );
     if (done.kind !== "failed") onReset();

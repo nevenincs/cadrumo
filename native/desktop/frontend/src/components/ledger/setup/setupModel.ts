@@ -275,6 +275,27 @@ export function priorityAt(
     : Math.max(lowest, after.priority - STEP);
 }
 
+/** Whether `rules` hold the rule a `ledger.rule.add` sent, at the
+ * priority it sent: its pattern, classification and category are its id,
+ * so adding the same three again only moves it. */
+export function ruleStored(
+  rules: readonly LedgerRuleRow[],
+  sent: {
+    description_pattern: string;
+    classification: string;
+    category_id?: string | null;
+    priority?: number;
+  },
+): boolean {
+  return rules.some(
+    (rule) =>
+      rule.description_pattern === sent.description_pattern &&
+      rule.classification === sent.classification &&
+      (rule.category_id ?? null) === (sent.category_id ?? null) &&
+      (sent.priority === undefined || rule.priority === sent.priority),
+  );
+}
+
 /** One rule written again with a new priority: the same pattern,
  * classification and category, so the same rule. */
 export type RuleWrite = { rule: LedgerRuleRow; priority: number };

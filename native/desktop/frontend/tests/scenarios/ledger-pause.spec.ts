@@ -32,11 +32,20 @@ const ledgerControls = {
       (next) => window.__scenarioLedger!.nextWrites(next),
       outcomes,
     ),
-  nextReads: (target: Page, definition: string, count: number) =>
+  nextReads: (
+    target: Page,
+    definition: string,
+    count: number,
+    where?: Record<string, string>,
+  ) =>
     target.evaluate(
-      ([name, times]) =>
-        window.__scenarioLedger!.nextReads(name as string, times as number),
-      [definition, count] as const,
+      ([name, times, only]) =>
+        window.__scenarioLedger!.nextReads(
+          name as string,
+          times as number,
+          (only ?? undefined) as Record<string, string> | undefined,
+        ),
+      [definition, count, where ?? null] as const,
     ),
 };
 
@@ -149,10 +158,11 @@ test("a Setup write with an unknown outcome holds its form, and pressing it agai
     label("desktop.ledger.form.refused", { code: "precondition_failed" }),
   );
   await expect(banner(target)).toBeVisible();
-  // The re-read settles it, and writes may run again.
+  // The re-read reads the rules, finds the move stored, and writes may
+  // run again.
   await banner(target).locator(".ledger-paused-reread").click();
   await expect(findings(target)).toContainText(
-    label("desktop.ledger.paused.read_again", { movement: label(RULES) }),
+    label("desktop.ledger.paused.found_saved", { movement: label(RULES) }),
   );
   await expect(banner(target)).toHaveCount(0);
   await expect(target.locator(".setup-call-line")).toHaveCount(0);
@@ -384,4 +394,180 @@ test("movements a finalized declaration seals are counted as skipped for the sel
   await expect(panel(target)).toContainText(
     label("desktop.ledger.inspector.selection.skipped", { count: 2 }),
   );
+});
+
+test("a rule save whose outcome is unknown stays held until the rule list answers, then closes as saved", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await openRules(target);
+  await target.locator(".ledger-rule-new").click();
+  const dialog = target.getByRole("dialog", {
+    name: label("desktop.ledger.rules.new_title"),
+  });
+  await expect(dialog).toBeVisible();
+  await dialog
+    .getByLabel(label("desktop.ledger.rules.words"), { exact: true })
+    .fill("LIBRERIA CENTRAL");
+  await dialog
+    .getByLabel(label("desktop.ledger.rules.classification"), { exact: true })
+    .selectOption("PERSONAL");
+  await ledgerControls.nextWrites(target, ["unknown"]);
+  const save = dialog.locator(".ledger-rule-save");
+  await save.click();
+  await expect(banner(target)).toContainText(
+    `${label("desktop.ledger.paused.title")} · ${label(RULES)}`,
+  );
+  await expect(save).toHaveAttribute("aria-disabled", "true");
+  // A re-read whose rule list does not answer settles nothing, and the
+  // form still sends nothing.
+  await ledgerControls.nextReads(target, "ledger.rule.list", 1);
+  // The dialog covers the page, so its own line offers the page's re-read.
+  const reread = dialog.locator(".setup-call-reread");
+  await reread.click();
+  await expect(reread).not.toHaveAttribute("aria-disabled", "true");
+  await expect(banner(target)).toBeVisible();
+  await expect(save).toHaveAttribute("aria-disabled", "true");
+  await expect(dialog).toBeVisible();
+  // Once the list answers, the rule is found stored as sent.
+  await reread.click();
+  await expect(findings(target)).toContainText(
+    label("desktop.ledger.paused.found_saved", { movement: label(RULES) }),
+  );
+  await expect(banner(target)).toHaveCount(0);
+  await expect(dialog).toBeHidden();
+  await expect(target.locator(".ledger-rules-table")).toContainText(
+    label("desktop.ledger.rules.contains", { words: "LIBRERIA CENTRAL" }),
+  );
+});
+
+test("an export whose outcome is unknown holds the page's writes, a new Export too, until a re-read", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const exportDialog = target.getByRole("dialog", {
+    name: label("desktop.ledger.export.title"),
+  });
+  const openExport = () =>
+    head(target)
+      .getByRole("button", {
+        name: label("desktop.ledger.action.export"),
+        exact: true,
+      })
+      .click();
+  const choose = () =>
+    exportDialog
+      .getByRole("button", {
+        name: label("desktop.ledger.export.choose_file"),
+        exact: true,
+      })
+      .click();
+  const cancel = () =>
+    exportDialog
+      .getByRole("button", {
+        name: label("desktop.ledger.export.cancel"),
+        exact: true,
+      })
+      .click();
+  await openExport();
+  await choose();
+  const file = exportDialog.locator(".ledger-export-file");
+  await expect(file).toHaveText(/\.csv$/);
+  const name = (await file.textContent())!;
+  await ledgerControls.nextWrites(target, ["unknown"]);
+  await exportDialog.locator(".ledger-export-send").click();
+  await expect(exportDialog).toContainText(
+    label("desktop.ledger.export.unknown"),
+  );
+  await expect(banner(target)).toContainText(
+    `${label("desktop.ledger.paused.title")} · ${name}`,
+  );
+  await cancel();
+  await expect(exportDialog).toBeHidden();
+  // A new Export starts at rest, and still waits for the re-read.
+  await openExport();
+  await choose();
+  const send = exportDialog.locator(".ledger-export-send");
+  await expect(send).toHaveAttribute("aria-disabled", "true");
+  await expect(send).toHaveAccessibleDescription(
+    label("desktop.ledger.tray.paused_reason"),
+  );
+  await send.click({ force: true });
+  await expect(exportDialog).not.toContainText(
+    label("desktop.ledger.export.heading_done"),
+  );
+  await cancel();
+  // The re-read settles it in words, and the export may run again.
+  await banner(target).locator(".ledger-paused-reread").click();
+  await expect(findings(target)).toContainText(
+    label("desktop.ledger.paused.repeatable", { movement: name }),
+  );
+  await openExport();
+  await choose();
+  await expect(exportDialog.locator(".ledger-export-send")).not.toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+});
+
+test("a change staged again while writes were paused survives the re-read that finds the first one saved", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const counterparty = () =>
+    cellOf(rowOf(target, "PAPELERIA TRAZO"), "counterparty");
+  await typeInto(target, counterparty(), "Trazo Papelería SL");
+  await openReview(target);
+  await ledgerControls.nextWrites(target, ["unknown"]);
+  await review(target).locator(".ledger-apply-save").click();
+  await expect(review(target).locator(".ledger-apply-done")).toBeVisible({
+    timeout: 20_000,
+  });
+  await review(target).locator(".ledger-apply-done").click();
+  await expect(banner(target)).toBeVisible();
+  // The read after the apply showed it saved, so nothing stands staged.
+  await expect(counterparty()).toHaveText("Trazo Papelería SL");
+  await expect(counterparty().locator("[data-staged]")).toHaveCount(0);
+  // While writes wait, the person stages a newer value on the same cell.
+  await typeInto(target, counterparty(), "Papelería Trazo Norte SL");
+  await expect(counterparty().locator("[data-staged]")).toContainText(
+    "Papelería Trazo Norte SL",
+  );
+  await banner(target).locator(".ledger-paused-reread").click();
+  await expect(findings(target)).toContainText(
+    label("desktop.ledger.paused.found_saved", {
+      movement: "PAPELERIA TRAZO",
+    }),
+  );
+  // The re-read drops only what it sent: the newer value stays staged.
+  await expect(counterparty().locator("[data-staged]")).toContainText(
+    "Papelería Trazo Norte SL",
+  );
+  await expect(target.locator(".ledger-tray")).toBeVisible();
+});
+
+test("a staged movement whose sealed state was not read is held as unread until it is read again", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const row = rowOf(target, "PAPELERIA TRAZO");
+  const id = (await row.getAttribute("data-key"))!;
+  // Its participation fails to read twice: the page's own read, and the
+  // review's, which asks again what failed.
+  await ledgerControls.nextReads(target, "ledger.track", 2, {
+    transaction_prefix: id,
+  });
+  await typeInto(target, cellOf(row, "counterparty"), "Trazo Papelería SL");
+  await openReview(target);
+  const held = review(target).locator("[data-blocker=sealed_unread]");
+  await expect(held).toContainText(
+    label("desktop.ledger.apply.blocker.sealed_unread", { count: 1 }),
+  );
+  await expect(review(target).locator("[data-blocker=sealed]")).toHaveCount(0);
+  // Read again, it is known not to be sealed and may be saved.
+  await held.locator(".ledger-fix-reread-sealed").click();
+  await expect(held).toHaveCount(0);
+  await expect(
+    review(target).locator(".ledger-apply-save"),
+  ).not.toHaveAttribute("aria-disabled", "true");
 });

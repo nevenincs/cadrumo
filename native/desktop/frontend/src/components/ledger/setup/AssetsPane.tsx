@@ -18,7 +18,7 @@ import type {
   ActivityAssetRevision,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
-import { WriteHold } from "../WritePause";
+import { WriteHold, type Landing } from "../WritePause";
 import { amountText, dateText } from "../movements/movementWords";
 import { JsonDocumentField } from "./InventoryPane";
 import {
@@ -29,6 +29,7 @@ import {
   SetupTable,
   TextField,
   useSetupDraft,
+  READ_ONLY,
   useSetupWrite,
 } from "./SetupParts";
 import type { SetupProps } from "./setupProps";
@@ -87,6 +88,26 @@ export function AssetsPane({ port, locale }: SetupProps) {
       ),
     );
   };
+  /** How a create or correction landed: the asset read again holds a
+   * revision of that number, which revisions are never edited. */
+  const revisionLanding =
+    (revision: ActivityAssetRevision) => async (): Promise<Landing | null> => {
+      if (typeof revision.asset_id !== "string" || revision.asset_id === "")
+        return "untold";
+      const read = await setupCall(
+        port,
+        "ledger.actividad-asset.inspect",
+        { asset_id: revision.asset_id },
+        false,
+      );
+      if (read.kind === "refused") return "not_saved";
+      if (read.kind !== "done") return null;
+      return (read.result.revisions ?? []).some(
+        (found) => found.revision.revision_number === revision.revision_number,
+      )
+        ? "saved"
+        : "not_saved";
+    };
   const revisions =
     inspected?.kind === "done" ? (inspected.result.revisions ?? []) : [];
   const latest = revisions.at(-1);
@@ -123,15 +144,17 @@ export function AssetsPane({ port, locale }: SetupProps) {
     if (!ready || !task) return;
     if (task === "create" || task === "correct") {
       if (document.kind !== "value") return;
-      const done = await write.run(() =>
-        setupCall(
-          port,
-          task === "create"
-            ? "ledger.actividad-asset.create"
-            : "ledger.actividad-asset.correct",
-          { revision: document.value as ActivityAssetRevision },
-          true,
-        ),
+      const done = await write.run(
+        () =>
+          setupCall(
+            port,
+            task === "create"
+              ? "ledger.actividad-asset.create"
+              : "ledger.actividad-asset.correct",
+            { revision: document.value as ActivityAssetRevision },
+            true,
+          ),
+        revisionLanding(document.value as ActivityAssetRevision),
       );
       if (done.kind === "done") {
         setTask(null);
@@ -145,44 +168,52 @@ export function AssetsPane({ port, locale }: SetupProps) {
       return;
     }
     if (task === "forecast") {
-      const done = await write.run(() =>
-        setupCall(
-          port,
-          "ledger.actividad-asset.forecast",
-          {
-            asset_id: assetId.trim(),
-            covered_from: fromDay.kind === "value" ? fromDay.value : "",
-            covered_until: untilDay.kind === "value" ? untilDay.value : "",
-            requested_free_amount:
-              freeAmount.kind === "value"
-                ? { decimal: freeAmount.value }
-                : null,
-          },
-          false,
-        ),
+      const done = await write.run(
+        () =>
+          setupCall(
+            port,
+            "ledger.actividad-asset.forecast",
+            {
+              asset_id: assetId.trim(),
+              covered_from: fromDay.kind === "value" ? fromDay.value : "",
+              covered_until: untilDay.kind === "value" ? untilDay.value : "",
+              requested_free_amount:
+                freeAmount.kind === "value"
+                  ? { decimal: freeAmount.value }
+                  : null,
+            },
+            false,
+          ),
+        READ_ONLY,
       );
       if (done.kind === "done") setForecast(done.result.forecast);
       return;
     }
-    const done = await write.run(() =>
-      setupCall(
-        port,
-        "ledger.actividad-asset.filing-handoff",
-        { tax_year: year!, m130_period: quarter },
-        false,
-      ),
+    const done = await write.run(
+      () =>
+        setupCall(
+          port,
+          "ledger.actividad-asset.filing-handoff",
+          { tax_year: year!, m130_period: quarter },
+          false,
+        ),
+      READ_ONLY,
     );
     if (done.kind === "done") setHandoff(done.result);
   };
   const claim = async () => {
     if (!forecast || !creatingOperation.trim()) return;
-    await write.run(() =>
-      setupCall(
-        port,
-        "ledger.actividad-asset.claim",
-        { forecast, creating_operation: creatingOperation.trim() },
-        true,
-      ),
+    await write.run(
+      () =>
+        setupCall(
+          port,
+          "ledger.actividad-asset.claim",
+          { forecast, creating_operation: creatingOperation.trim() },
+          true,
+        ),
+      // No read lists an asset's claims; a claim sent again for the same
+      // forecast reuses the claim it made (`reused_existing_claim`).
+      async () => "repeatable",
     );
   };
   const refusal = () => {

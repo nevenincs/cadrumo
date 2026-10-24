@@ -2,13 +2,17 @@ import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { parseDecimal, TAX_AMOUNT_RULE } from "../../../shell/ledgerGrammar";
+import {
+  compareDecimal,
+  parseDecimal,
+  TAX_AMOUNT_RULE,
+} from "../../../shell/ledgerGrammar";
 import type {
   ProrrataEntry,
   ProrrataMutationResult,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
-import { WriteHold } from "../WritePause";
+import { WriteHold, type Landing, type LandingCheck } from "../WritePause";
 import { amountText } from "../movements/movementWords";
 import { PeriodSelector } from "../PeriodSelector";
 import {
@@ -17,6 +21,7 @@ import {
   FormGrid,
   Panel,
   Reading,
+  readLanding,
   SetupTable,
   TextField,
   useSetupDraft,
@@ -146,6 +151,60 @@ export function ProrrataPane({
     }
   })();
 
+  /** How a register write landed, on the register listed again: each
+   * write leaves its ejercicio's entry, or its sector, as it sent it. */
+  const prorrataLanding = (
+    sent: Action,
+    election: { percentage: { decimal: string }; sector_id: string | null },
+  ): LandingCheck => {
+    const target = ejercicio;
+    const chosen = sector.trim() || null;
+    const letter = letra;
+    const volumes = {
+      con: conVolume.kind === "value" ? conVolume.value : "",
+      sin: sinVolume.kind === "value" ? sinVolume.value : "",
+    };
+    const same = (stored: { decimal: string } | null, value: string) =>
+      stored !== null && compareDecimal(stored.decimal, value) === 0;
+    return readLanding(port, "ledger.prorrata.list", {}, (result) => {
+      const entry = (sectorId: string | null) =>
+        result.entries.find(
+          (found) => found.ejercicio === target && found.sector_id === sectorId,
+        );
+      const told = (saved: boolean): Landing => (saved ? "saved" : "not_saved");
+      switch (sent) {
+        case "seed":
+          return told(entry(null) !== undefined);
+        case "declare_sector":
+          return told(
+            result.sectors.some(
+              (found) => found.sector_id === chosen && found.letra === letter,
+            ),
+          );
+        case "elect_general":
+        case "elect_especial":
+        case "revoke_especial": {
+          const found = entry(election.sector_id);
+          return told(
+            found !== undefined &&
+              found.regime ===
+                (sent === "elect_especial" ? "especial" : "general") &&
+              same(found.provisional_percentage, election.percentage.decimal),
+          );
+        }
+        case "seed_sector":
+          return told(entry(chosen) !== undefined);
+        case "settle_sector": {
+          const found = entry(chosen);
+          return told(
+            found !== undefined &&
+              same(found.definitive_volume_con_derecho, volumes.con) &&
+              same(found.definitive_volume_sin_derecho, volumes.sin),
+          );
+        }
+      }
+    });
+  };
   const send = async () => {
     if (!action || !ready) return;
     const election = () => ({
@@ -220,6 +279,7 @@ export function ProrrataPane({
             );
         }
       },
+      prorrataLanding(action, election()),
     );
     if (done.kind === "done") setAction(null);
     reload();

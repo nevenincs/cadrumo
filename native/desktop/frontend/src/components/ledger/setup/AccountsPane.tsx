@@ -18,7 +18,7 @@ import type {
   OwnAccountRole,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
-import { useWritePause, WriteHold } from "../WritePause";
+import { useWritePause, WriteHold, type Landing } from "../WritePause";
 import { dateText } from "../movements/movementWords";
 import {
   CallLine,
@@ -26,6 +26,7 @@ import {
   FormGrid,
   Panel,
   Reading,
+  readLanding,
   SetupTable,
   TextField,
   useSetupDraft,
@@ -179,6 +180,13 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
     return out;
   };
 
+  /** How a write of the account list landed, judged on the list read
+   * again. */
+  const listLanding = (judge: (result: LedgerOwnAccountResult) => Landing) =>
+    readLanding(port, "ledger.own_account", { action: "list" }, judge);
+  const accountOf = (result: LedgerOwnAccountResult, id: string) =>
+    result.accounts.find((found) => found.own_account_id === id);
+
   const addReady =
     label.trim() !== "" &&
     holding !== "" &&
@@ -186,101 +194,160 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
     ibanWrong === null &&
     CURRENCY.test(currency) &&
     openedOn.kind === "value";
-  const add = () =>
-    write.run(async () =>
-      finish(
-        await sendChange(port, {
-          action: "add",
-          label: label.trim(),
-          holding,
-          currency: currency.toUpperCase(),
-          opened_on: openedOn.kind === "value" ? openedOn.value : undefined,
-          ...details(),
-        }),
-      ),
+  const add = () => {
+    const before = new Set(
+      (listed?.accounts ?? []).map((found) => found.own_account_id),
     );
-  const update = (account: OwnAccount) =>
-    write.run(async () => {
-      const secretsGiven = iban !== "" || bankBlock.length > 0;
-      const renamed = label.trim() !== "" && label.trim() !== account.label;
-      if (secretsGiven)
-        return finish(
+    const named = label.trim();
+    return write.run(
+      async () =>
+        finish(
           await sendChange(port, {
-            action: "update",
-            own_account_id: account.own_account_id,
-            ...(renamed ? { label: label.trim() } : {}),
+            action: "add",
+            label: label.trim(),
+            holding,
+            currency: currency.toUpperCase(),
+            opened_on: openedOn.kind === "value" ? openedOn.value : undefined,
             ...details(),
           }),
-        );
-      return finish(
-        await setupCall(
-          port,
-          "ledger.own_account",
-          {
-            action: "update",
-            own_account_id: account.own_account_id,
-            label: label.trim(),
-          },
-          true,
         ),
-      );
-    });
+      // A new account is one the list did not hold, under the label sent.
+      listLanding((result) =>
+        result.accounts.some(
+          (found) => !before.has(found.own_account_id) && found.label === named,
+        )
+          ? "saved"
+          : "not_saved",
+      ),
+    );
+  };
+  const update = (account: OwnAccount) => {
+    const secretsGiven = iban !== "" || bankBlock.length > 0;
+    const renamed = label.trim() !== "" && label.trim() !== account.label;
+    const named = label.trim();
+    return write.run(
+      async () => {
+        if (secretsGiven)
+          return finish(
+            await sendChange(port, {
+              action: "update",
+              own_account_id: account.own_account_id,
+              ...(renamed ? { label: label.trim() } : {}),
+              ...details(),
+            }),
+          );
+        return finish(
+          await setupCall(
+            port,
+            "ledger.own_account",
+            {
+              action: "update",
+              own_account_id: account.own_account_id,
+              label: label.trim(),
+            },
+            true,
+          ),
+        );
+      },
+      renamed
+        ? // The label travels in the same write as any account details.
+          listLanding((result) =>
+            accountOf(result, account.own_account_id)?.label === named
+              ? "saved"
+              : "not_saved",
+          )
+        : // The list shows no account number: an update that sends only the
+          // number and bank block is told by no read, and sent again it
+          // stores the same details over themselves.
+          async () => "repeatable",
+    );
+  };
   const updateReady = (account: OwnAccount) =>
     (iban === "" || ibanWrong === null) &&
     (iban !== "" ||
       bankBlock.length > 0 ||
       (label.trim() !== "" && label.trim() !== account.label));
   const close = (account: OwnAccount) =>
-    write.run(async () =>
-      finish(
-        await setupCall(
-          port,
-          "ledger.own_account",
-          {
-            action: "close",
-            own_account_id: account.own_account_id,
-            closed_on: closing.kind === "value" ? closing.value : "",
-          },
-          true,
+    write.run(
+      async () =>
+        finish(
+          await setupCall(
+            port,
+            "ledger.own_account",
+            {
+              action: "close",
+              own_account_id: account.own_account_id,
+              closed_on: closing.kind === "value" ? closing.value : "",
+            },
+            true,
+          ),
         ),
+      listLanding((result) =>
+        accountOf(result, account.own_account_id)?.closed_on ===
+        (closing.kind === "value" ? closing.value : null)
+          ? "saved"
+          : "not_saved",
       ),
     );
   const designate = (account: OwnAccount) =>
-    write.run(async () =>
-      finish(
-        await setupCall(
-          port,
-          "ledger.own_account",
-          {
-            action: "designate",
-            own_account_id: account.own_account_id,
-            role: role as OwnAccountRole,
-            modelo: modelo.trim() || null,
-          },
-          true,
+    write.run(
+      async () =>
+        finish(
+          await setupCall(
+            port,
+            "ledger.own_account",
+            {
+              action: "designate",
+              own_account_id: account.own_account_id,
+              role: role as OwnAccountRole,
+              modelo: modelo.trim() || null,
+            },
+            true,
+          ),
         ),
+      listLanding((result) =>
+        result.designations.some(
+          (found) =>
+            found.own_account_id === account.own_account_id &&
+            found.role === role &&
+            found.modelo === (modelo.trim() || null),
+        )
+          ? "saved"
+          : "not_saved",
       ),
     );
   const undesignate = (found: OwnAccountDesignation) =>
-    write.run(async () =>
-      finish(
-        await setupCall(
-          port,
-          "ledger.own_account",
-          { action: "undesignate", role: found.role, modelo: found.modelo },
-          true,
+    write.run(
+      async () =>
+        finish(
+          await setupCall(
+            port,
+            "ledger.own_account",
+            { action: "undesignate", role: found.role, modelo: found.modelo },
+            true,
+          ),
         ),
+      listLanding((result) =>
+        result.designations.some(
+          (other) => other.role === found.role && other.modelo === found.modelo,
+        )
+          ? "not_saved"
+          : "saved",
       ),
     );
   const remove = (account: OwnAccount) =>
-    write.run(async () =>
-      finish(
-        await setupCall(
-          port,
-          "ledger.own_account",
-          { action: "remove", own_account_id: account.own_account_id },
-          true,
+    write.run(
+      async () =>
+        finish(
+          await setupCall(
+            port,
+            "ledger.own_account",
+            { action: "remove", own_account_id: account.own_account_id },
+            true,
+          ),
         ),
+      listLanding((result) =>
+        accountOf(result, account.own_account_id) ? "not_saved" : "saved",
       ),
     );
 

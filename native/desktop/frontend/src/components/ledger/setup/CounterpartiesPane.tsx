@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import type { LedgerCounterpartyResult } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
-import { WriteHold } from "../WritePause";
+import { WriteHold, type Landing } from "../WritePause";
 import { stampText } from "../movements/movementWords";
 import {
   CallLine,
   ChoiceField,
   FormGrid,
   Panel,
+  readLanding,
   TextField,
   useSetupDraft,
   useSetupWrite,
@@ -61,6 +62,18 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
     );
   };
   const result = viewed?.kind === "done" ? viewed.result : null;
+  /** How a confirmation or a withdrawal landed: what the counterparty
+   * stands on, viewed again. */
+  const viewLanding = (
+    id: string,
+    judge: (facts: LedgerCounterpartyResult["facts"]) => Landing,
+  ) =>
+    readLanding(
+      port,
+      "ledger.counterparty",
+      { action: "view", tax_identifier: id },
+      (read) => judge(read.facts),
+    );
   const countryWrong = country !== "" && !TWO_LETTERS.test(country);
   const stateWrong = state !== "" && !TWO_LETTERS.test(state);
   const canConfirm =
@@ -68,35 +81,48 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
 
   const confirm = async () => {
     if (!result || !canConfirm) return;
-    const done = await write.run(() =>
-      setupCall(
-        port,
-        "ledger.counterparty",
-        {
-          action: "confirm",
-          tax_identifier: result.tax_identifier,
-          country_code: country.toUpperCase(),
-          territorial_scope: scope,
-          identification_state: state ? state.toUpperCase() : null,
-          note: note.trim(),
-        },
-        true,
+    const done = await write.run(
+      () =>
+        setupCall(
+          port,
+          "ledger.counterparty",
+          {
+            action: "confirm",
+            tax_identifier: result.tax_identifier,
+            country_code: country.toUpperCase(),
+            territorial_scope: scope,
+            identification_state: state ? state.toUpperCase() : null,
+            note: note.trim(),
+          },
+          true,
+        ),
+      viewLanding(result.tax_identifier, (facts) =>
+        facts !== null &&
+        facts.territorial_scope === scope &&
+        facts.identification_state === (state ? state.toUpperCase() : null) &&
+        facts.note === note.trim()
+          ? "saved"
+          : "not_saved",
       ),
     );
     if (done.kind === "done") setViewed(done);
   };
   const withdraw = async () => {
     if (!result) return;
-    const done = await write.run(() =>
-      setupCall(
-        port,
-        "ledger.counterparty",
-        {
-          action: "withdraw",
-          tax_identifier: result.tax_identifier,
-          note: note.trim(),
-        },
-        true,
+    const done = await write.run(
+      () =>
+        setupCall(
+          port,
+          "ledger.counterparty",
+          {
+            action: "withdraw",
+            tax_identifier: result.tax_identifier,
+            note: note.trim(),
+          },
+          true,
+        ),
+      viewLanding(result.tax_identifier, (facts) =>
+        facts === null ? "saved" : "not_saved",
       ),
     );
     setWithdrawing(false);

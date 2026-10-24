@@ -19,6 +19,7 @@ import {
   FormGrid,
   Panel,
   Reading,
+  readLanding,
   SetupTable,
   TextField,
   useSetupDraft,
@@ -91,27 +92,34 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
 
   const declare = async () => {
     if (!ready || acquired === null) return;
-    const done = await write.run(() =>
-      setupCall(
-        port,
-        "ledger.bienes_inversion.declare",
-        {
-          identifier: identifier.trim(),
-          description: description.trim(),
-          acquisition_year: acquired,
-          acquisition_ledger_id: movement.trim(),
-          cuota_soportada: {
-            decimal: cuotaParsed.kind === "value" ? cuotaParsed.value : "",
+    const done = await write.run(
+      () =>
+        setupCall(
+          port,
+          "ledger.bienes_inversion.declare",
+          {
+            identifier: identifier.trim(),
+            description: description.trim(),
+            acquisition_year: acquired,
+            acquisition_ledger_id: movement.trim(),
+            cuota_soportada: {
+              decimal: cuotaParsed.kind === "value" ? cuotaParsed.value : "",
+            },
+            prorrata_inicial_pct: {
+              decimal: pctParsed.kind === "value" ? pctParsed.value : "",
+            },
+            kind,
+            art108_elegible: art108 === "yes",
+            disposal_year: disposed,
+            disposal_regime: disposalRegime || null,
           },
-          prorrata_inicial_pct: {
-            decimal: pctParsed.kind === "value" ? pctParsed.value : "",
-          },
-          kind,
-          art108_elegible: art108 === "yes",
-          disposal_year: disposed,
-          disposal_regime: disposalRegime || null,
-        },
-        true,
+          true,
+        ),
+      // A good is declared once under its identifier, which the list shows.
+      readLanding(port, "ledger.bienes_inversion.list", {}, (result) =>
+        result.rows.some((found) => found.identifier === identifier.trim())
+          ? "saved"
+          : "not_saved",
       ),
     );
     if (done.kind === "done") setOpen(false);

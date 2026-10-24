@@ -24,6 +24,7 @@ import {
   CallLine,
   Panel,
   Reading,
+  readLanding,
   SetupTable,
   SetupTabs,
   useSetupRead,
@@ -35,6 +36,7 @@ import {
   patternWords,
   reorderWrites,
   ruleOrder,
+  ruleStored,
   setupCall,
   type SetupCall,
 } from "./setupModel";
@@ -42,6 +44,8 @@ import { ruleMatchText } from "./setupWords";
 
 const AREAS = ["rules", "ratios", "counterparties", "diagnostics"] as const;
 type Area = (typeof AREAS)[number];
+/** The sub-areas of Setup › Rules. */
+export type RulesArea = Area;
 
 let stagedApplies = 0;
 
@@ -56,10 +60,13 @@ export function RulesSection(
     onOpenRule(target: RuleDialogTarget): void;
     /** Changes when a rule was saved elsewhere, to read the list again. */
     rulesVersion: number;
+    /** The sub-area it opens on, such as Business-use ratios from a Mixed
+     * step that found none configured. */
+    initialArea?: RulesArea;
   },
 ) {
   const t = useStrings();
-  const [area, setArea] = useState<Area>("rules");
+  const [area, setArea] = useState<Area>(props.initialArea ?? "rules");
   return (
     <div className="ledger-setup-rules flex min-h-0 flex-1 flex-col">
       <SetupTabs<Area>
@@ -116,24 +123,42 @@ function RulesPane({
   const move = async (from: number, to: number) => {
     if (!rules) return;
     const writes = reorderWrites(rules, from, to);
-    await moving.run(async () => {
-      let last: SetupCall<unknown> = { kind: "done", result: null };
-      for (const write of writes) {
-        last = await setupCall(
-          port,
-          "ledger.rule.add",
-          {
-            description_pattern: write.rule.description_pattern,
-            classification: write.rule.classification,
-            category_id: write.rule.category_id,
-            priority: write.priority,
-          },
-          true,
-        );
-        if (last.kind !== "done") break;
-      }
-      return last;
-    });
+    // The write in flight when one was not seen to settle: the earlier ones
+    // settled, and the later ones were not sent.
+    let sending: (typeof writes)[number] | null = null;
+    await moving.run(
+      async () => {
+        let last: SetupCall<unknown> = { kind: "done", result: null };
+        for (const write of writes) {
+          sending = write;
+          last = await setupCall(
+            port,
+            "ledger.rule.add",
+            {
+              description_pattern: write.rule.description_pattern,
+              classification: write.rule.classification,
+              category_id: write.rule.category_id,
+              priority: write.priority,
+            },
+            true,
+          );
+          if (last.kind !== "done") break;
+        }
+        return last;
+      },
+      readLanding(port, "ledger.rule.list", {}, (result) => {
+        const sent = sending;
+        if (!sent) return "not_saved";
+        return ruleStored(result.rules, {
+          description_pattern: sent.rule.description_pattern,
+          classification: sent.rule.classification,
+          category_id: sent.rule.category_id,
+          priority: sent.priority,
+        })
+          ? "saved"
+          : "not_saved";
+      }),
+    );
     reload();
   };
   const runPreview = async () => {

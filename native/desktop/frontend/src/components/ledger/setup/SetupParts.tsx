@@ -30,7 +30,12 @@ import type {
 } from "../../../shell/ledger";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import { useStrings } from "../../../shell/strings";
-import { useWritePause } from "../WritePause";
+import {
+  landingSettle,
+  useWritePause,
+  type Landing,
+  type LandingCheck,
+} from "../WritePause";
 import { setupCall, type SetupCall } from "./setupModel";
 import { callText } from "./setupWords";
 
@@ -461,6 +466,24 @@ export function useSetupRead<D extends LedgerDefinitionId>(
   return { read, reload };
 }
 
+/** A landing check that reads one Setup operation and judges what it
+ * answered; null while it did not answer. */
+export function readLanding<D extends LedgerDefinitionId>(
+  port: LedgerPort,
+  definition: D,
+  payload: LedgerRequest<D>,
+  judge: (result: LedgerResult<D>) => Landing,
+): LandingCheck {
+  return async () => {
+    const read = await setupCall(port, definition, payload, false);
+    return read.kind === "done" ? judge(read.result) : null;
+  };
+}
+
+/** The landing of a call that writes nothing: sent again, it is the same
+ * read. */
+export const READ_ONLY: LandingCheck = async () => "repeatable";
+
 /** Typed values of a Setup form not yet written: a navigation that leaves
  * the section asks before they go. */
 export function useSetupDraft(drafted: boolean): void {
@@ -469,31 +492,42 @@ export function useSetupDraft(drafted: boolean): void {
 
 /** A write in flight and how the last one ended, for one form. A write
  * whose outcome was not seen, or whose answer was not read, holds every
- * write on the page under `what` until the page's re-read settles it; the
- * form's line about it goes once that read has run. A navigation that
- * leaves the section is refused while the write is in flight; `owner` names
- * the section where it is not drawn inside `SetupTabs`. */
+ * write on the page under `what` until the page's re-read reads, through
+ * the write's own `landed`, what it wrote; the form's line about it goes
+ * once that read settled it, so the form's send stays held until then. A
+ * navigation that leaves the section is refused while the write is in
+ * flight; `owner` names the section where it is not drawn inside
+ * `SetupTabs`. */
 export function useSetupWrite(what: string, owner?: string) {
+  const t = useStrings();
   const { hold } = useWritePause();
   const [busy, setBusy] = useState(false);
   const section = useContext(SetupOwner);
   useNavigationGuard(owner ?? section, busy ? "busy" : "clean");
   const [last, setLast] = useState<SetupCall<unknown> | null>(null);
   const run = useCallback(
-    async <R,>(write: () => Promise<SetupCall<R>>): Promise<SetupCall<R>> => {
+    async <R,>(
+      write: () => Promise<SetupCall<R>>,
+      landed: LandingCheck,
+    ): Promise<SetupCall<R>> => {
       setBusy(true);
       setLast(null);
       try {
         const done = await write();
         setLast(done);
         if (done.kind === "unknown" || done.kind === "saved_unread")
-          hold({ what, outcome: done.kind, onSettled: () => setLast(null) });
+          hold({
+            what,
+            outcome: done.kind,
+            settle: landingSettle(t, what, landed),
+            onSettled: () => setLast(null),
+          });
         return done;
       } finally {
         setBusy(false);
       }
     },
-    [hold, what],
+    [hold, what, t],
   );
   return { busy, last, run, clear: () => setLast(null) };
 }
