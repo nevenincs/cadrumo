@@ -6198,6 +6198,8 @@ tui:
       affected_declarations: Declaracions afectades
       areas: Àrees de Registres
       quality: Qualitat de les dades i feina pendent
+      selection_dropped: Els apunts no estan disponibles, així que no es mostra l'apunt
+        que selecciona aquest enllaç.
       title: 'Registres: resum'
     own_accounts:
       cancel: Cancel·la
@@ -6228,8 +6230,6 @@ tui:
         closed_on: Data de tancament
         currency: Moneda
         date_placeholder: AAAA-MM-DD
-      selection_dropped: Els apunts no estan disponibles, així que no es mostra l'apunt
-        que selecciona aquest enllaç.
         holding: La teva titularitat (has de ser titular del compte)
         iban: IBAN (ocult)
         label: Nom del compte

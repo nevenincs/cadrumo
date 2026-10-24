@@ -6167,6 +6167,8 @@ tui:
       affected_declarations: Érintett bevallások
       areas: A Nyilvántartás területei
       quality: Adatminőség és megoldatlan feladatok
+      selection_dropped: A tételek nem érhetők el, ezért a hivatkozás által kijelölt
+        tétel nem jelenik meg.
       title: 'Nyilvántartás: áttekintés'
     own_accounts:
       cancel: Mégse
@@ -6199,8 +6201,6 @@ tui:
         date_placeholder: ÉÉÉÉ-HH-NN
         holding: Tulajdonosi viszonyod (a számla a tiéd kell legyen)
         iban: IBAN (rejtett)
-      selection_dropped: A tételek nem érhetők el, ezért a hivatkozás által kijelölt
-        tétel nem jelenik meg.
         label: A számla neve
         modelo: Modelo (üresen mindegyikre)
         opened_on: Nyitás dátuma (nem kötelező)
