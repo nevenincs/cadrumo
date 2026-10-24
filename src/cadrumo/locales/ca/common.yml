@@ -3827,6 +3827,58 @@ llm:
         del contribuent.'
       mint_refused: 'Rebutjat: la lectura externa de documents del contribuent no
         està permesa per a aquesta invocació.'
+navigation:
+  view:
+    aeat_sync:
+      label: Sincronització AEAT
+    agent:
+      label: Agent
+    calendar:
+      label: Calendari de presentacions
+    declarations:
+      label: Declaracions
+    docs:
+      label: Documentació
+    home:
+      label: Inici
+    installation:
+      label: Instal·lació
+    ledger:
+      documents:
+        label: Documents
+      health:
+        label: Estat
+      invoices:
+        label: Factures
+      label: Llibre
+      movements:
+        label: Moviments
+      registers:
+        label: Registres
+      rules:
+        label: Regles
+    operations:
+      label: Operacions
+    panel:
+      console:
+        label: Consola
+      label: Panell inferior
+      logs:
+        label: Registres
+      python:
+        label: Shell de Python
+    profile:
+      aeat_access:
+        label: Accés a l’AEAT
+      label: Perfil
+    reference:
+      label: Referència
+    setup:
+      label: Components
+    terminal:
+      label: Espai de treball
+    withholding:
+      label: Retencions
 operation:
   modal:
     action:

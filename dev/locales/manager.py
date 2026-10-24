@@ -109,7 +109,7 @@ class LocaleManager:
         fixture payload or assertion literal can never inject a phantom
         required key that no production code requests.
 
-        Combines six discovery paths:
+        Combines these discovery paths:
 
         1. Regex scanner — ``tr("…")`` / ``t("…")`` literal call sites.
         2. AST scanner — programmatic emissions such as
@@ -134,12 +134,17 @@ class LocaleManager:
            TypeScript frontend reads from its generated strings file. No
            Python call site names them, so they are declared once by the
            generator. See :mod:`locales.desktop_chrome`.
+        7. Navigation register - the label key of every element in the
+           client's navigation register, which every palette shows. The
+           register is TOML data, so no source scan sees its keys; they are
+           read through the register's own validating loader.
 
         Dynamic namespaces (open-ended f-string and concatenation forms)
         are returned by :meth:`get_codebase_namespaces` and checked
         through a separate parity assertion that verifies at least one
         concrete locale key exists under each declared prefix.
         """
+        from cadrumo_client.contracts.navigation import load_navigation_register
         from dev.quality.unread_inputs import report_unread
 
         from ._ast_scanner import scan_source_trees
@@ -184,6 +189,7 @@ class LocaleManager:
         keys.update(wizard_descriptor_keys())
         keys.update(DESKTOP_CHROME_KEYS)
         keys.update(MANAGER_CHROME_KEYS)
+        keys.update(element.label for element in load_navigation_register().elements)
         from ._paths import LOCALES_DIR
         from .service_catalogues import SERVICE_FAMILIES, SERVICE_KEYS
 

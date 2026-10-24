@@ -1,0 +1,1181 @@
+{
+  "schema": 1,
+  "about": "Conformance vectors for cadrumo://view links against the shipped navigation register. format: the canonical spelling, parameters in name order and then prefer. parse: expect is the parsed link or the first refusal reason. resolve: implemented maps a surface to the views it opens now and, per view, the parameter names it honours; null means the register's declared surfaces, each honouring every declared parameter. expect.params are the parameters passed on to the opened view.",
+  "format": [
+    {
+      "view_id": "ledger",
+      "params": {},
+      "prefer": null,
+      "link": "cadrumo://view/ledger"
+    },
+    {
+      "view_id": "ledger/invoices",
+      "params": {},
+      "prefer": null,
+      "link": "cadrumo://view/ledger/invoices"
+    },
+    {
+      "view_id": "profile/aeat-access",
+      "params": {},
+      "prefer": "tui",
+      "link": "cadrumo://view/profile/aeat-access?prefer=tui"
+    },
+    {
+      "view_id": "calendar",
+      "params": {},
+      "prefer": "gui",
+      "link": "cadrumo://view/calendar?prefer=gui"
+    },
+    {
+      "view_id": "ledger/invoices",
+      "params": {
+        "select": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+      },
+      "prefer": null,
+      "link": "cadrumo://view/ledger/invoices?select=fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+    },
+    {
+      "view_id": "ledger/movements",
+      "params": {
+        "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      },
+      "prefer": "tui",
+      "link": "cadrumo://view/ledger/movements?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&prefer=tui"
+    }
+  ],
+  "parse": [
+    {
+      "link": "cadrumo://view/ledger",
+      "expect": {
+        "view_id": "ledger",
+        "params": {},
+        "prefer": null
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/invoices",
+      "expect": {
+        "view_id": "ledger/invoices",
+        "params": {},
+        "prefer": null
+      }
+    },
+    {
+      "link": "cadrumo://view/profile/aeat-access?prefer=tui",
+      "expect": {
+        "view_id": "profile/aeat-access",
+        "params": {},
+        "prefer": "tui"
+      }
+    },
+    {
+      "link": "cadrumo://view/calendar?prefer=gui",
+      "expect": {
+        "view_id": "calendar",
+        "params": {},
+        "prefer": "gui"
+      }
+    },
+    {
+      "link": "cadrumo://view/aeat-sync",
+      "expect": {
+        "view_id": "aeat-sync",
+        "params": {},
+        "prefer": null
+      }
+    },
+    {
+      "link": "cadrumo://view/panel/logs?prefer=tui",
+      "expect": {
+        "view_id": "panel/logs",
+        "params": {},
+        "prefer": "tui"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/invoices?select=fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "expect": {
+        "view_id": "ledger/invoices",
+        "params": {
+          "select": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        },
+        "prefer": null
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/movements?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&prefer=tui",
+      "expect": {
+        "view_id": "ledger/movements",
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "prefer": "tui"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/movements?prefer=gui&select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "expect": {
+        "view_id": "ledger/movements",
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "prefer": "gui"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "expect": {
+        "view_id": "ledger",
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "prefer": null
+      }
+    },
+    {
+      "link": "",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expect": {
+        "refused": "too_long"
+      }
+    },
+    {
+      "link": "cadrumo://view/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expect": {
+        "refused": "unknown_view"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/invoices?select=fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210&prefer=tuixxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "expect": {
+        "refused": "too_long"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger ",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": " cadrumo://view/ledger",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger\t",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/l\u00e9dger",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "CADRUMO://view/ledger",
+      "expect": {
+        "refused": "uppercase"
+      }
+    },
+    {
+      "link": "cadrumo://VIEW/ledger",
+      "expect": {
+        "refused": "uppercase"
+      }
+    },
+    {
+      "link": "cadrumo://view/Ledger",
+      "expect": {
+        "refused": "uppercase"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?prefer=TUI",
+      "expect": {
+        "refused": "uppercase"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/invoices?select=FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210",
+      "expect": {
+        "refused": "uppercase"
+      }
+    },
+    {
+      "link": "https://view/ledger",
+      "expect": {
+        "refused": "not_a_view_link"
+      }
+    },
+    {
+      "link": "cadrumo:view/ledger",
+      "expect": {
+        "refused": "not_a_view_link"
+      }
+    },
+    {
+      "link": "cadrumo:/view/ledger",
+      "expect": {
+        "refused": "not_a_view_link"
+      }
+    },
+    {
+      "link": "cadrumo://view",
+      "expect": {
+        "refused": "not_a_view_link"
+      }
+    },
+    {
+      "link": "cadrumo://profiles/5aa00000-0000-4000-8000-0000000000aa/ledger",
+      "expect": {
+        "refused": "not_a_view_link"
+      }
+    },
+    {
+      "link": "cadrumo://corpus/boe-a-2006-20764",
+      "expect": {
+        "refused": "not_a_view_link"
+      }
+    },
+    {
+      "link": "cadrumo://views/ledger",
+      "expect": {
+        "refused": "not_a_view_link"
+      }
+    },
+    {
+      "link": "cadrumo://user@view/ledger",
+      "expect": {
+        "refused": "credentials"
+      }
+    },
+    {
+      "link": "cadrumo://user:secret@view/ledger",
+      "expect": {
+        "refused": "credentials"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger%2finvoices",
+      "expect": {
+        "refused": "percent_encoding"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?prefer=%74ui",
+      "expect": {
+        "refused": "percent_encoding"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger#invoices",
+      "expect": {
+        "refused": "fragment"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?prefer=tui#top",
+      "expect": {
+        "refused": "fragment"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?prefer=",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?prefer",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?prefer=both",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?prefer=gui&prefer=tui",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?focus=1",
+      "expect": {
+        "refused": "unknown_param"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?fo_cus=1",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?=1",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?prefer=gui&focus=1",
+      "expect": {
+        "refused": "unknown_param"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/invoices?zoom=2&select=fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "expect": {
+        "refused": "unknown_param"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?prefer=gui?prefer=tui",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?prefer=gui&",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?&prefer=gui",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&prefer=gui&select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?prefer=gui&prefer=gui",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?select=",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef=",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/a/b/c/d/e",
+      "expect": {
+        "refused": "too_many_segments"
+      }
+    },
+    {
+      "link": "cadrumo://view/",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view//ledger",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger_invoices",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/-ledger",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger--invoices",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/workbench.ledger",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/../ledger",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/aeat_sync",
+      "expect": {
+        "refused": "malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/nowhere",
+      "expect": {
+        "refused": "unknown_view"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/invoices/x/y",
+      "expect": {
+        "refused": "unknown_view"
+      }
+    },
+    {
+      "link": "cadrumo://view/nowhere?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "expect": {
+        "refused": "unknown_view"
+      }
+    },
+    {
+      "link": "cadrumo://view/calendar?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "expect": {
+        "refused": "param_not_accepted"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/rules?prefer=gui&select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "expect": {
+        "refused": "param_not_accepted"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/rules?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&prefer=tui",
+      "expect": {
+        "refused": "param_not_accepted"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/invoices?select=fedcba9876543210fedcba9876543210fedcba9876543210fedcba987654321",
+      "expect": {
+        "refused": "param_malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/invoices?select=fedcba9876543210fedcba9876543210fedcba9876543210fedcba98765432100",
+      "expect": {
+        "refused": "param_malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/invoices?select=f-0001-2026",
+      "expect": {
+        "refused": "param_malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/movements?select=b12345678",
+      "expect": {
+        "refused": "param_malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger/movements?select=gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "expect": {
+        "refused": "param_malformed"
+      }
+    }
+  ],
+  "resolve": [
+    {
+      "link": {
+        "view_id": "ledger",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "ledger",
+        "surface": "gui",
+        "fallback": "none",
+        "notice": false,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger",
+        "params": {},
+        "prefer": "tui"
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "ledger",
+        "surface": "tui",
+        "fallback": "none",
+        "notice": false,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger",
+        "params": {},
+        "prefer": "gui"
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "ledger",
+        "surface": "gui",
+        "fallback": "none",
+        "notice": false,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "home",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "home",
+        "surface": "tui",
+        "fallback": "other_surface",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "home",
+        "params": {},
+        "prefer": "tui"
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "home",
+        "surface": "tui",
+        "fallback": "none",
+        "notice": false,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "calendar",
+        "params": {},
+        "prefer": "tui"
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "calendar",
+        "surface": "gui",
+        "fallback": "other_surface",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger/invoices",
+        "params": {},
+        "prefer": "tui"
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "ledger/invoices",
+        "surface": "gui",
+        "fallback": "other_surface",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "profile/aeat-access",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "profile/aeat-access",
+        "surface": "tui",
+        "fallback": "other_surface",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "profile/aeat-access",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "profile"
+          ],
+          "params": {}
+        },
+        "tui": {
+          "views": [],
+          "params": {}
+        }
+      },
+      "expect": {
+        "opened": "profile",
+        "surface": "gui",
+        "fallback": "ancestor",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "profile/aeat-access",
+        "params": {},
+        "prefer": "gui"
+      },
+      "implemented": {
+        "gui": {
+          "views": [],
+          "params": {}
+        },
+        "tui": {
+          "views": [
+            "profile"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "opened": "profile",
+        "surface": "tui",
+        "fallback": "ancestor",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger/invoices",
+        "params": {},
+        "prefer": "tui"
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {}
+        },
+        "tui": {
+          "views": [],
+          "params": {}
+        }
+      },
+      "expect": {
+        "opened": "ledger",
+        "surface": "gui",
+        "fallback": "ancestor",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger/rules",
+        "params": {},
+        "prefer": "tui"
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {}
+        },
+        "tui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "opened": "ledger",
+        "surface": "tui",
+        "fallback": "ancestor",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger/rules",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger",
+            "ledger/rules"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "opened": "ledger/rules",
+        "surface": "gui",
+        "fallback": "none",
+        "notice": false,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger/rules",
+        "params": {},
+        "prefer": "tui"
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger/rules"
+          ],
+          "params": {}
+        },
+        "tui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "opened": "ledger/rules",
+        "surface": "gui",
+        "fallback": "other_surface",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger/invoices",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [],
+          "params": {}
+        },
+        "tui": {
+          "views": [],
+          "params": {}
+        }
+      },
+      "expect": {
+        "refused": "not_implemented"
+      }
+    },
+    {
+      "link": {
+        "view_id": "home",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": {},
+      "expect": {
+        "refused": "not_implemented"
+      }
+    },
+    {
+      "link": {
+        "view_id": "nowhere",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": null,
+      "expect": {
+        "refused": "unknown_view"
+      }
+    },
+    {
+      "link": {
+        "view_id": "nowhere",
+        "params": {},
+        "prefer": "tui"
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "nowhere"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "refused": "unknown_view"
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger/invoices",
+        "params": {
+          "select": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        },
+        "prefer": null
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "ledger/invoices",
+        "surface": "gui",
+        "fallback": "none",
+        "notice": false,
+        "params": {
+          "select": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        }
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger/movements",
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "prefer": "tui"
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "ledger/movements",
+        "surface": "gui",
+        "fallback": "other_surface",
+        "notice": true,
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        }
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger",
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "prefer": "tui"
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "ledger",
+        "surface": "tui",
+        "fallback": "none",
+        "notice": false,
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        }
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger",
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {}
+        },
+        "tui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {
+            "ledger": [
+              "select"
+            ]
+          }
+        }
+      },
+      "expect": {
+        "opened": "ledger",
+        "surface": "tui",
+        "fallback": "other_surface",
+        "notice": true,
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        }
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger",
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "prefer": "tui"
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {
+            "ledger": [
+              "select"
+            ]
+          }
+        },
+        "tui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "opened": "ledger",
+        "surface": "gui",
+        "fallback": "other_surface",
+        "notice": true,
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        }
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger",
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {}
+        },
+        "tui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "opened": "ledger",
+        "surface": "gui",
+        "fallback": "none",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger",
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "prefer": "tui"
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {}
+        },
+        "tui": {
+          "views": [],
+          "params": {}
+        }
+      },
+      "expect": {
+        "opened": "ledger",
+        "surface": "gui",
+        "fallback": "other_surface",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger/movements",
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {
+            "ledger": [
+              "select"
+            ]
+          }
+        },
+        "tui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {
+            "ledger": [
+              "select"
+            ]
+          }
+        }
+      },
+      "expect": {
+        "opened": "ledger",
+        "surface": "gui",
+        "fallback": "ancestor",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger/movements",
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "prefer": "tui"
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {}
+        },
+        "tui": {
+          "views": [
+            "ledger"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "opened": "ledger",
+        "surface": "tui",
+        "fallback": "ancestor",
+        "notice": true,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger/invoices",
+        "params": {
+          "select": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        },
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [],
+          "params": {}
+        },
+        "tui": {
+          "views": [],
+          "params": {}
+        }
+      },
+      "expect": {
+        "refused": "not_implemented"
+      }
+    },
+    {
+      "link": {
+        "view_id": "calendar",
+        "params": {
+          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "prefer": null
+      },
+      "implemented": null,
+      "expect": {
+        "refused": "param_not_accepted"
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger",
+        "params": {
+          "zoom": "2"
+        },
+        "prefer": null
+      },
+      "implemented": null,
+      "expect": {
+        "refused": "unknown_param"
+      }
+    },
+    {
+      "link": {
+        "view_id": "ledger/invoices",
+        "params": {
+          "select": "f-0001-2026"
+        },
+        "prefer": null
+      },
+      "implemented": null,
+      "expect": {
+        "refused": "param_malformed"
+      }
+    }
+  ]
+}

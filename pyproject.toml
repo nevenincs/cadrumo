@@ -458,12 +458,14 @@ exclude = [
   "src/cadrumo/_data/corpus/**/*.zip",
 ]
 # `py.typed` marks the package PEP 561 typed so consumers read the inline
-# types; `external_constants.toml` carries the curated leaf constants.
+# types; `external_constants.toml` carries the curated leaf constants and
+# `navigation.toml` the navigation register every link and palette reads.
 include = [
   "src/cadrumo/py.typed",
   "src/cadrumo/core/external_constants.toml",
   "src/cadrumo/_data/local_runtime/**",
   "src/cadrumo_client/py.typed",
+  "src/cadrumo_client/contracts/navigation.toml",
   "src/cadrumo_runtime/py.typed",
   "src/cadrumo_runtime/_data/**",
   "src/cadrumo_mcp/py.typed",

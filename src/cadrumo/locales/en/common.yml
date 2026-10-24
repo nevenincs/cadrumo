@@ -3765,6 +3765,58 @@ llm:
         reader at a loopback address to read taxpayer evidence.'
       mint_refused: 'Refused: off-host reading of taxpayer evidence is not permitted
         for this invocation.'
+navigation:
+  view:
+    aeat_sync:
+      label: AEAT Sync
+    agent:
+      label: Agent
+    calendar:
+      label: Filing calendar
+    declarations:
+      label: Declarations
+    docs:
+      label: Docs
+    home:
+      label: Home
+    installation:
+      label: Installation
+    ledger:
+      documents:
+        label: Documents
+      health:
+        label: Health
+      invoices:
+        label: Invoices
+      label: Ledger
+      movements:
+        label: Movements
+      registers:
+        label: Registers
+      rules:
+        label: Rules
+    operations:
+      label: Operations
+    panel:
+      console:
+        label: Console
+      label: Bottom panel
+      logs:
+        label: Logs
+      python:
+        label: Python shell
+    profile:
+      aeat_access:
+        label: AEAT access
+      label: Profile
+    reference:
+      label: Reference
+    setup:
+      label: Components
+    terminal:
+      label: Workspace
+    withholding:
+      label: Withholding
 operation:
   modal:
     action:

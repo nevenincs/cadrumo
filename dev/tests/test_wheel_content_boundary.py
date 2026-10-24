@@ -157,6 +157,7 @@ _REQUIRED_DATA_ROOTS = (
 _REQUIRED_MEMBERS = (
     f"{_WHEEL_PREFIX}/py.typed",
     f"{_WHEEL_PREFIX}/core/external_constants.toml",
+    "cadrumo_client/contracts/navigation.toml",
 )
 
 
@@ -498,7 +499,7 @@ def test_wheel_keeps_required_data_roots(wheel_members: frozenset[str]) -> None:
 
 
 def test_wheel_keeps_required_functional_members(wheel_members: frozenset[str]) -> None:
-    """The py.typed marker and external_constants.toml still ship."""
+    """The py.typed marker, external_constants.toml and the navigation register still ship."""
 
     missing = sorted(member for member in _REQUIRED_MEMBERS if member not in wheel_members)
     assert not missing, (

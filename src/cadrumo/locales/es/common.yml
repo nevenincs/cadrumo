@@ -3839,6 +3839,58 @@ llm:
         el lector local con una dirección de loopback para leer documentos del contribuyente.'
       mint_refused: 'Rechazado: la lectura externa de documentos del contribuyente
         no está permitida para esta invocación.'
+navigation:
+  view:
+    aeat_sync:
+      label: Sincronización AEAT
+    agent:
+      label: Agente
+    calendar:
+      label: Calendario de presentaciones
+    declarations:
+      label: Declaraciones
+    docs:
+      label: Documentación
+    home:
+      label: Inicio
+    installation:
+      label: Instalación
+    ledger:
+      documents:
+        label: Documentos
+      health:
+        label: Estado
+      invoices:
+        label: Facturas
+      label: Libro
+      movements:
+        label: Movimientos
+      registers:
+        label: Registros
+      rules:
+        label: Reglas
+    operations:
+      label: Operaciones
+    panel:
+      console:
+        label: Consola
+      label: Panel inferior
+      logs:
+        label: Registros
+      python:
+        label: Shell de Python
+    profile:
+      aeat_access:
+        label: Acceso a la AEAT
+      label: Perfil
+    reference:
+      label: Referencia
+    setup:
+      label: Componentes
+    terminal:
+      label: Espacio de trabajo
+    withholding:
+      label: Retenciones
 operation:
   modal:
     action:

@@ -3803,6 +3803,58 @@ llm:
         olvasásához állítsd a helyi olvasót loopback címre.'
       mint_refused: 'Elutasítva: az adózó bizonylatainak gépen kívüli olvasása ehhez
         a híváshoz nem engedélyezett.'
+navigation:
+  view:
+    aeat_sync:
+      label: AEAT-szinkron
+    agent:
+      label: Ügynök
+    calendar:
+      label: Bevallási naptár
+    declarations:
+      label: Bevallások
+    docs:
+      label: Dokumentáció
+    home:
+      label: Kezdőlap
+    installation:
+      label: Telepítés
+    ledger:
+      documents:
+        label: Dokumentumok
+      health:
+        label: Állapot
+      invoices:
+        label: Számlák
+      label: Napló
+      movements:
+        label: Tételek
+      registers:
+        label: Nyilvántartások
+      rules:
+        label: Szabályok
+    operations:
+      label: Műveletek
+    panel:
+      console:
+        label: Konzol
+      label: Alsó panel
+      logs:
+        label: Naplók
+      python:
+        label: Python-shell
+    profile:
+      aeat_access:
+        label: AEAT-hozzáférés
+      label: Profil
+    reference:
+      label: Kézikönyv
+    setup:
+      label: Összetevők
+    terminal:
+      label: Munkaterület
+    withholding:
+      label: Levonások
 operation:
   modal:
     action:
