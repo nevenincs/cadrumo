@@ -2760,7 +2760,6 @@ desktop:
       found_saved: '{movement} was saved'
       found_undetermined: '{movement}: the read can''t tell; it stays staged, saving
         it again is the same save'
-      read_again: '{movement}: read again, check what is stored'
       repeatable: '{movement}: may have run; running it again does the same'
       reread: Re-read
       saved_unread: 'Saved, answer not read: writes paused'

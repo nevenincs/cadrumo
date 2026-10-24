@@ -2803,7 +2803,6 @@ desktop:
       found_saved: '{movement} se guardó'
       found_undetermined: '{movement}: la lectura no lo aclara; sigue preparado y
         guardarlo de nuevo es el mismo guardado'
-      read_again: '{movement}: leído de nuevo, comprueba lo guardado'
       repeatable: '{movement}: puede que se hiciera; repetirlo hace lo mismo'
       reread: Volver a leer
       saved_unread: 'Guardado, respuesta sin leer: escrituras en pausa'

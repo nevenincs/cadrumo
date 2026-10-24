@@ -3666,7 +3666,6 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.paused.found_not_saved",
         "desktop.ledger.paused.found_saved",
         "desktop.ledger.paused.found_undetermined",
-        "desktop.ledger.paused.read_again",
         "desktop.ledger.paused.repeatable",
         "desktop.ledger.paused.reread",
         "desktop.ledger.paused.saved_unread",

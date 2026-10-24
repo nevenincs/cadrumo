@@ -2797,7 +2797,6 @@ desktop:
       found_saved: '{movement} es va desar'
       found_undetermined: '{movement}: la lectura no ho aclareix; continua preparat
         i desar-lo de nou és el mateix desament'
-      read_again: '{movement}: llegit de nou, comprova el que hi ha desat'
       repeatable: '{movement}: potser s''ha fet; repetir-ho fa el mateix'
       reread: Torna a llegir
       saved_unread: 'Desat, resposta sense llegir: escriptures en pausa'

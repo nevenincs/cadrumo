@@ -2781,7 +2781,6 @@ desktop:
       found_saved: '{movement} mentve lett'
       found_undetermined: '{movement}: az olvasásból nem derül ki; előkészítve marad,
         az újramentés ugyanaz a mentés'
-      read_again: '{movement}: újra beolvasva, ellenőrizd, mi van mentve'
       repeatable: '{movement}: lehet, hogy lefutott; az ismétlés ugyanazt teszi'
       reread: Újraolvasás
       saved_unread: 'Mentve, a válasz nem olvasható: írás szüneteltetve'
