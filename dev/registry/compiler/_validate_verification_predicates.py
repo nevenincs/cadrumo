@@ -17,12 +17,15 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     VERIFICATION_PREDICATE_SPECIFICATIONS,
     ParsedVerificationPredicate,
+    VerificationFindingKind,
     VerificationPredicateOperator,
     VerificationPredicateSyntax,
     parse_verification_predicate_expression,
 )
 
 __all__ = [
+    "_ADVISORY_ONLY_OPERATORS",
+    "_BLOCKING_ONLY_OPERATORS",
     "_CASILLA_LIST_OPERATORS",
     "_advisory_when_ratio_ge_predicate_failures",
     "_casilla_equals_implies_diverges_predicate_failures",
@@ -30,6 +33,7 @@ __all__ = [
     "_casilla_equals_implies_profile_flag_predicate_failures",
     "_casilla_list_predicate_failures",
     "_deduccion_requires_adquisicion_before_predicate_failures",
+    "_finding_kind_failures",
     "_profile_field_required_predicate_failures",
     "_profile_flag_enabled_predicate_failures",
 ]
@@ -40,6 +44,51 @@ _CASILLA_LIST_OPERATORS = frozenset(
     for specification in VERIFICATION_PREDICATE_SPECIFICATIONS.values()
     if specification.syntax is VerificationPredicateSyntax.CASILLA_LIST
 )
+
+# Operators the verification evaluators serve for one finding kind only. An operator
+# authored under the kind its evaluator does not serve never reports a finding: a
+# blocking rule over an advisory-only operator always holds, and an advisory over a
+# blocking-only operator never fires.
+_ADVISORY_ONLY_OPERATORS = frozenset(
+    {
+        VerificationPredicateOperator.ADVISORY_WHEN_COMPUTED_DIVERGES,
+        VerificationPredicateOperator.ADVISORY_WHEN_POSITIVE,
+        VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE,
+        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_DIVERGES,
+        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_PROFILE_FLAG,
+        VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE,
+        VerificationPredicateOperator.PROFILE_FLAG_ENABLED,
+    },
+)
+
+_BLOCKING_ONLY_OPERATORS = frozenset(
+    {
+        VerificationPredicateOperator.ALL_NONZERO,
+        VerificationPredicateOperator.ANY_NONZERO,
+        VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE,
+        VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK,
+        VerificationPredicateOperator.PROFILE_FIELD_REQUIRED,
+    },
+)
+
+
+def _finding_kind_failures(
+    prefix: str,
+    owner: str,
+    operator: VerificationPredicateOperator,
+    finding_kind: VerificationFindingKind,
+) -> list[str]:
+    if finding_kind is VerificationFindingKind.BLOCKING_RULE and operator in _ADVISORY_ONLY_OPERATORS:
+        return [
+            f"{prefix}: {owner} {operator.value} is advisory-only and cannot be authored as a "
+            f"{finding_kind.value}; it would never block",
+        ]
+    if finding_kind is VerificationFindingKind.ADVISORY and operator in _BLOCKING_ONLY_OPERATORS:
+        return [
+            f"{prefix}: {owner} {operator.value} is blocking-only and cannot be authored as "
+            f"{finding_kind.value}; it would never fire",
+        ]
+    return []
 
 
 def _parsed_expression(

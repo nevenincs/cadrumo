@@ -19,6 +19,7 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from cadrumo.domain.calculations.registry.schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     VerificationExpectationDefinition,
+    VerificationFindingKind,
     VerificationPredicateOperator,
     verification_predicate_operator_name,
 )
@@ -32,6 +33,7 @@ from ._validate_verification_predicates import (
     _casilla_equals_implies_profile_flag_predicate_failures,
     _casilla_list_predicate_failures,
     _deduccion_requires_adquisicion_before_predicate_failures,
+    _finding_kind_failures,
     _profile_field_required_predicate_failures,
     _profile_flag_enabled_predicate_failures,
 )
@@ -213,6 +215,7 @@ def validate_verification_expectation_section(
                 prefix,
                 owner,
                 predicate.expression,
+                finding_kind=predicate.finding_kind,
                 casillas=casillas,
                 casilla_by_id=casilla_by_id,
             ),
@@ -278,6 +281,29 @@ def _verification_predicate_expression_failures(
     owner: str,
     expression: str,
     *,
+    finding_kind: VerificationFindingKind,
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> list[str]:
+    return [
+        failure if repr(expression) in failure else f"{failure} (expression {expression!r})"
+        for failure in _verification_predicate_family_failures(
+            prefix,
+            owner,
+            expression,
+            finding_kind=finding_kind,
+            casillas=casillas,
+            casilla_by_id=casilla_by_id,
+        )
+    ]
+
+
+def _verification_predicate_family_failures(
+    prefix: str,
+    owner: str,
+    expression: str,
+    *,
+    finding_kind: VerificationFindingKind,
     casillas: set[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> list[str]:
@@ -292,25 +318,34 @@ def _verification_predicate_expression_failures(
             f"{prefix}: {owner} expression uses unknown operator {op_name!r}; known operators: "
             f"{sorted(KNOWN_VERIFICATION_PREDICATE_OPERATORS)!r}",
         ]
+    operator = VerificationPredicateOperator(op_name)
+    failures = _finding_kind_failures(prefix, owner, operator, finding_kind)
     mixed_token_validator = _MIXED_TOKEN_PREDICATE_VALIDATORS.get(op_name)
     if mixed_token_validator is not None:
-        return mixed_token_validator(prefix, owner, expression, casillas, casilla_by_id)
+        return [*failures, *mixed_token_validator(prefix, owner, expression, casillas, casilla_by_id)]
     profile_validator = _PROFILE_PREDICATE_VALIDATORS.get(op_name)
     if profile_validator is not None:
-        return profile_validator(prefix, owner, expression)
+        return [*failures, *profile_validator(prefix, owner, expression)]
     if op_name in _CASILLA_LIST_OPERATORS:
         # Includes equals(["lhs_id", "rhs_id"]), a binary consistency check whose
         # malformed arity must be rejected at authoring time rather than letting the
         # runtime evaluator silently hold (its <2-id defensive branch returns True).
-        return _casilla_list_predicate_failures(
-            prefix,
-            owner,
-            expression,
-            operator_name=op_name,
-            casillas=casillas,
-            casilla_by_id=casilla_by_id,
-        )
-    return []
+        return [
+            *failures,
+            *_casilla_list_predicate_failures(
+                prefix,
+                owner,
+                expression,
+                operator_name=op_name,
+                casillas=casillas,
+                casilla_by_id=casilla_by_id,
+            ),
+        ]
+    return [
+        *failures,
+        f"{prefix}: {owner} operator {op_name!r} has no authoring validator; "
+        "refusing to accept an expression no gate has checked",
+    ]
 
 
 def validate_application_link_section(
