@@ -2,6 +2,7 @@ import { useId, useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,6 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
 import { Switch } from "@/components/ui/switch";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { RuleSeed } from "../../../shell/ledgerCommands";
@@ -29,6 +29,7 @@ import {
 } from "../movements/movementWords";
 import { CallLine, ChoiceField, TextField, useSetupRead } from "./SetupParts";
 import {
+  patternHits,
   patternMatcher,
   patternMatches,
   patternWords,
@@ -108,6 +109,7 @@ export function RuleDialog({
   onStage,
   onSaved,
   onClose,
+  onClosed,
 }: {
   port: LedgerPort;
   reader: string | null;
@@ -117,6 +119,9 @@ export function RuleDialog({
   onStage(event: StageEvent): void;
   onSaved(rule: LedgerRuleRow): void;
   onClose(): void;
+  /** Called as the dialog closes, to hand focus back to where it was
+   * opened from. */
+  onClosed?: () => void;
 }) {
   const t = useStrings();
   const ids = useId();
@@ -161,7 +166,21 @@ export function RuleDialog({
 
   const pattern = advanced ? expression.trim() : wordsPattern(words);
   const patternBroken = advanced && pattern !== "" && !patternMatcher(pattern);
+  const hits = rows && pattern ? patternHits(pattern, rows) : null;
   const matches = rows && pattern ? patternMatches(pattern, rows) : null;
+  const categories = useMemo<ComboboxOption[]>(
+    () => [
+      { value: "", label: t("desktop.ledger.rules.no_category") },
+      ...SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
+        members.map((member) => ({
+          value: member,
+          label: categoryLabel(t, member),
+          group: familyLabel(t, family),
+        })),
+      ),
+    ],
+    [t],
+  );
   const priority = priorityAt(ordered, position);
   const changesRule =
     target.kind === "rule" &&
@@ -243,6 +262,11 @@ export function RuleDialog({
         className="ledger-rule-dialog w-dialog-lg"
         closeLabel={t("desktop.ledger.form.close")}
         aria-describedby={`${ids}-what`}
+        onCloseAutoFocus={(event) => {
+          if (!onClosed) return;
+          event.preventDefault();
+          onClosed();
+        }}
       >
         <DialogHeader>
           <DialogTitle>
@@ -309,25 +333,29 @@ export function RuleDialog({
               <FieldLabel htmlFor={`${ids}-category`}>
                 {t("desktop.ledger.rules.category")}
               </FieldLabel>
-              <NativeSelect
-                id={`${ids}-category`}
+              <Combobox
+                label={t("desktop.ledger.rules.category")}
                 value={takesCategory ? category : ""}
-                disabled={!takesCategory}
-                onChange={(event) => setCategory(event.target.value)}
+                options={categories}
+                emptyLabel={t("desktop.ledger.classify.no_category_match")}
+                placeholder={t("desktop.ledger.classify.search_category")}
+                onCommit={(value) => setCategory(value)}
               >
-                <option value="">
-                  {t("desktop.ledger.rules.no_category")}
-                </option>
-                {SPENDING_CATEGORY_FAMILIES.map(([family, members]) => (
-                  <optgroup key={family} label={familyLabel(t, family)}>
-                    {members.map((member) => (
-                      <option key={member} value={member}>
-                        {categoryLabel(t, member)}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </NativeSelect>
+                <Button
+                  id={`${ids}-category`}
+                  type="button"
+                  variant="outline"
+                  disabled={!takesCategory}
+                  className="justify-between"
+                >
+                  <span className="min-w-0 truncate">
+                    {takesCategory && category
+                      ? categoryLabel(t, category)
+                      : t("desktop.ledger.rules.no_category")}
+                  </span>
+                  <Icon name="chevronDown" size="xs" />
+                </Button>
+              </Combobox>
             </Field>
           </div>
           <ChoiceField
@@ -352,10 +380,11 @@ export function RuleDialog({
           )}
           <div className="ledger-rule-matches flex flex-wrap items-center gap-3 rounded-md bg-accent px-3 py-2">
             <span className="tabular-nums" aria-live="polite">
-              {matches === null
+              {matches === null || hits === null
                 ? t("desktop.ledger.rules.matches_unknown")
-                : t("desktop.ledger.rules.matches", {
-                    count: matches.length,
+                : t("desktop.ledger.rules.matches_split", {
+                    count: hits.length,
+                    pending: matches.length,
                   })}
             </span>
             <span className="flex items-center gap-2">

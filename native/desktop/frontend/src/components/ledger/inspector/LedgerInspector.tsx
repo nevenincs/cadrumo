@@ -117,6 +117,9 @@ export function LedgerInspector({
         onStage={onStage}
         classify={context?.classify ?? null}
         issues={context?.issues.get(one.transaction.transaction_id) ?? []}
+        duplicate={
+          context?.duplicates.has(one.transaction.transaction_id) ?? false
+        }
         accounts={accounts}
         focus={focus}
         locale={locale}

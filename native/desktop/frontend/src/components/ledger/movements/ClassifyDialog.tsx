@@ -35,6 +35,7 @@ export function ClassifyDialog({
   partial,
   error,
   initialShare = "",
+  range,
   onStage,
   onCancel,
   onClosed,
@@ -54,6 +55,9 @@ export function ClassifyDialog({
   error: string | null;
   /** A share typed beside the control that asked. */
   initialShare?: string;
+  /** A cell range over other rows than the selection, which the person can
+   * make the selection instead. */
+  range?: { count: number; onSelect: () => void };
   onStage: (answer: { category?: string; share?: string }) => void;
   onCancel: () => void;
   /** Called as the dialog closes, to hand focus back. */
@@ -85,6 +89,7 @@ export function ClassifyDialog({
     skipped > 0 ? t("desktop.ledger.classify.skipped", { count: skipped }) : "",
     partial ? t("desktop.ledger.classify.partial") : "",
   ].filter(Boolean);
+  const both = kind === "business" && split.expenses > 0 && split.income > 0;
   const submit = () => form.current?.requestSubmit();
   // Once what it asks for is filled in, Enter on the category stages
   // rather than opening the list again.
@@ -93,7 +98,12 @@ export function ClassifyDialog({
     event.preventDefault();
     submit();
   };
-  const categoryLabelText = t("desktop.ledger.classify.category");
+  const categoryLabelText =
+    split.income > 0 && kind !== "category"
+      ? t("desktop.ledger.classify.expense_category", {
+          count: split.expenses,
+        })
+      : t("desktop.ledger.classify.category");
   return (
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
       <DialogContent
@@ -119,14 +129,37 @@ export function ClassifyDialog({
         >
           <DialogHeader>
             <DialogTitle>
-              {t(`desktop.ledger.classify.title_${kind}`, {
-                count: movements,
-              })}
+              {both
+                ? t("desktop.ledger.classify.title_business_split", {
+                    expenses: split.expenses,
+                    income: split.income,
+                  })
+                : t(`desktop.ledger.classify.title_${kind}`, {
+                    count: movements,
+                  })}
             </DialogTitle>
             <DialogDescription>
               {[t("desktop.ledger.classify.not_saved"), ...notes].join(" · ")}
             </DialogDescription>
           </DialogHeader>
+          {range && (
+            <p className="ledger-classify-range flex flex-wrap items-center gap-2 text-sm">
+              <Icon name="alert" size="xs" className="text-warning" />
+              {t("desktop.ledger.classify.range_differs", {
+                selected: movements,
+                range: range.count,
+              })}
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                className="ledger-classify-select-range"
+                onClick={range.onSelect}
+              >
+                {t("desktop.ledger.classify.select_range")}
+              </Button>
+            </p>
+          )}
           {asksShare && (
             <div className="grid gap-1.5">
               <label htmlFor={shareId} className="text-sm font-medium">
@@ -161,6 +194,11 @@ export function ClassifyDialog({
                 options={options}
                 emptyLabel={t("desktop.ledger.classify.no_category_match")}
                 placeholder={t("desktop.ledger.classify.search_category")}
+                hint={
+                  mixed
+                    ? t("desktop.ledger.classify.share_categories")
+                    : undefined
+                }
                 onCommit={(value) => setCategory(value)}
               >
                 <Button
@@ -177,6 +215,13 @@ export function ClassifyDialog({
                 </Button>
               </Combobox>
             </div>
+          )}
+          {kind !== "category" && split.income > 0 && (
+            <p className="ledger-classify-income text-sm text-muted-foreground">
+              {t("desktop.ledger.classify.income_no_category", {
+                count: split.income,
+              })}
+            </p>
           )}
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onCancel}>

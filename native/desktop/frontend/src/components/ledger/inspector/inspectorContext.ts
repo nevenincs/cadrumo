@@ -15,6 +15,8 @@ export type SectionInspectorContext = {
    * classification. */
   issues: ReadonlyMap<string, readonly string[]>;
   accounts: readonly OwnAccountChoice[] | null;
+  /** The movements an import flagged as likely duplicates. */
+  duplicates: ReadonlySet<string>;
   classify: ClassifySelection;
   /** Focuses the grid's active cell. */
   focusActive: () => void;
@@ -35,6 +37,7 @@ export function sameInspectorContext(
   if (left.partial !== right.partial || left.accounts !== right.accounts)
     return false;
   if (!sameSet(left.visible, right.visible)) return false;
+  if (!sameSet(left.duplicates, right.duplicates)) return false;
   if (left.issues === right.issues) return true;
   if (left.issues.size !== right.issues.size) return false;
   for (const [id, reasons] of left.issues) {

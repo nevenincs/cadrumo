@@ -193,7 +193,13 @@ export function stagedField(
               };
         const parsed = parseCell(kind, field, raw, labels);
         if (parsed.kind === "refused")
-          return { kind: "refused", message: refusalText(t, parsed.refusal) };
+          return {
+            kind: "refused",
+            message: refusalText(t, parsed.refusal),
+            ...(parsed.refusal.suggestion
+              ? { suggestion: parsed.refusal.suggestion }
+              : {}),
+          };
         if (parsed.kind === "empty") return { kind: "clear" };
         return { kind: "value", value: parsed.value.value };
       };

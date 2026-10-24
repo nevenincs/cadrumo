@@ -325,6 +325,49 @@ test("a typed field refuses what the grammar refuses and stages a correction", a
   await expect(typed).toHaveAttribute("aria-invalid", "true");
   await target.keyboard.press("Escape");
   expect(await trayCount(target)).toBe(1);
+  // A decimal comma is refused with its meaning offered in one press,
+  // never taken silently.
+  await amount.click();
+  const comma = body(target).locator("input:focus");
+  await comma.fill("77,45");
+  await target.keyboard.press("Enter");
+  await expect(comma).toHaveAttribute("aria-invalid", "true");
+  expect(await trayCount(target)).toBe(1);
+  await body(target)
+    .getByRole("button", {
+      name: label("desktop.ledger.edit.refusal.use", { suggestion: "77.45" }),
+    })
+    .click();
+  await expect(amount).toContainText("77.45");
+  // The tray counts movements: still the one.
+  expect(await trayCount(target)).toBe(1);
+});
+
+test("the selection inspector counts by glyph once and asks to classify before tax fields", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await cellOf(rowOf(target, "PAPELERIA TRAZO"), "status").click();
+  await cellOf(rowOf(target, "SOFTNUBE IRELAND"), "status").click({
+    modifiers: ["Control"],
+  });
+  if (!(await panel(target).isVisible()))
+    await target.keyboard.press("Alt+KeyI");
+  const selection = panel(target).locator(".ledger-selection");
+  const statuses = selection.locator(".ledger-selection-statuses li");
+  await expect(statuses).toHaveCount(1);
+  await expect(statuses.first()).toHaveAttribute("data-status", "pending");
+  await expect(statuses.first()).toHaveText(/2/);
+  await expect(
+    selection.locator("[data-common=business_classification]"),
+  ).toHaveCount(0);
+  await expect(selection.locator(".ledger-selection-sums")).not.toContainText(
+    "· EUR",
+  );
+  await expect(selection.locator(".ledger-classify-first")).toHaveText(
+    label("desktop.ledger.inspector.selection.classify_first_hint"),
+  );
+  await expect(selection.locator("[data-set=category_id]")).toHaveCount(0);
 });
 
 test("the model's approval is staged with what it writes, and is answered bound to the review read", async ({
@@ -637,9 +680,10 @@ test("set for all applies as chosen and says how many hidden movements it reache
   await expect(selection).toContainText(
     label("desktop.ledger.selection.hidden", { hidden: 1, selected: 2 }),
   );
-  // Both are still to classify: a tax field skips them, a group label
-  // reaches both, the hidden one said so.
-  await expect(selection.locator("[data-set=iva_category]")).toBeDisabled();
+  // Both are still to classify: the tax fields wait for a classification,
+  // a group label reaches both, the hidden one said so.
+  await expect(selection.locator(".ledger-classify-first")).toBeVisible();
+  await expect(selection.locator("[data-set=iva_category]")).toHaveCount(0);
   const group = selection.locator("form").filter({
     has: target.getByLabel(label("desktop.ledger.column.group_label")),
   });
@@ -656,7 +700,7 @@ test("set for all applies as chosen and says how many hidden movements it reache
   expect(await trayCount(target)).toBe(2);
   // With none of them drawn, nothing is set until the person chooses.
   await search(target).fill("NO SUCH MOVEMENT");
-  await expect(selection.locator("[data-set=category_id]")).toBeDisabled();
+  await expect(group.getByRole("button")).toBeDisabled();
   await selection
     .getByRole("button", {
       name: label("desktop.ledger.selection.keep_visible"),

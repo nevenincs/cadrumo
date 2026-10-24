@@ -14,7 +14,13 @@ import { useStrings } from "../../../shell/strings";
 export type FieldParse =
   | { kind: "value"; value: string }
   | { kind: "clear" }
-  | { kind: "refused"; message: string };
+  | {
+      kind: "refused";
+      message: string;
+      /** The value the refusal names as meant, which the person can take
+       * in one press; it is never taken for them. */
+      suggestion?: string;
+    };
 
 export type FieldEditor =
   | {
@@ -72,6 +78,7 @@ export function InspectorField({
   const button = useRef<HTMLButtonElement>(null);
   const [typing, setTyping] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
   const editable = !lock && editor !== undefined && onCommit !== undefined;
   const changed = was !== undefined;
 
@@ -87,8 +94,10 @@ export function InspectorField({
     const parsed = editor.parse(raw);
     if (parsed.kind === "refused") {
       setError(parsed.message);
+      setSuggestion(parsed.suggestion ?? null);
       return;
     }
+    setSuggestion(null);
     setTyping(null);
     setError(null);
     onCommit(parsed.kind === "clear" ? null : parsed.value);
@@ -203,6 +212,23 @@ export function InspectorField({
             )}
             {error ?? editor.hint}
           </span>
+        )}
+        {error && suggestion !== null && (
+          <Button
+            type="button"
+            variant="outline"
+            size="xs"
+            className="ledger-field-suggestion w-fit"
+            // The field keeps focus, so leaving it does not try the
+            // refused text again.
+            onPointerDown={(event) => event.preventDefault()}
+            onClick={() => {
+              setTyping(suggestion);
+              commitTyped(suggestion);
+            }}
+          >
+            {t("desktop.ledger.edit.refusal.use", { suggestion })}
+          </Button>
         )}
       </div>
     );

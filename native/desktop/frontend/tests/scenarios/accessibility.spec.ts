@@ -535,7 +535,12 @@ const SURFACES: {
         await movements
           .locator(".ledger-group-actions")
           .first()
-          .getByRole("button", { name: label("desktop.ledger.group.business") })
+          .getByRole("button", { name: label("desktop.ledger.group.classify") })
+          .click();
+        await target
+          .getByRole("menuitem", {
+            name: label("desktop.ledger.group.business"),
+          })
           .click();
         await expect(target.locator(".ledger-classify")).toBeVisible();
         return;

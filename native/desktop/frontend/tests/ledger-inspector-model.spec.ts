@@ -387,10 +387,15 @@ test("the inspector hears of a section only when what it shows changed", () => {
     partial: false,
     issues: new Map([["a", ["missing_category"]]]),
     accounts: null,
+    duplicates: new Set(["a"]),
     classify: () => undefined,
     focusActive: () => undefined,
     showHidden: () => undefined,
   };
+  // A duplicate marked or cleared is news.
+  expect(
+    sameInspectorContext(base, { ...base, duplicates: new Set<string>() }),
+  ).toBe(false);
   expect(
     sameInspectorContext(base, {
       ...base,

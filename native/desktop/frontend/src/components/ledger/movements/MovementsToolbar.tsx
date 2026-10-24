@@ -210,6 +210,7 @@ export function MovementsToolbar({
   groupLabels,
   reasons,
   status,
+  selectionActions,
 }: {
   search: string;
   onSearch: (search: string) => void;
@@ -239,6 +240,9 @@ export function MovementsToolbar({
   reasons: readonly string[];
   /** How many movements are shown and selected, as one line. */
   status: string;
+  /** What acts on a selection of several, beside the line that counts
+   * it. */
+  selectionActions?: ReactNode;
 }) {
   const t = useStrings();
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -642,6 +646,7 @@ export function MovementsToolbar({
         >
           {status}
         </span>
+        {selectionActions}
       </div>
       {chips.length > 0 && (
         <ul

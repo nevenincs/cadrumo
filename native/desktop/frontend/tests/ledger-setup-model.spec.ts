@@ -15,6 +15,7 @@ import {
   ibanProblem,
   parseObject,
   parsePoints,
+  patternHits,
   patternMatcher,
   patternMatches,
   patternWords,
@@ -76,6 +77,10 @@ test("a pattern matches the loaded active movements still to classify", () => {
   ];
   expect(patternMatches(wordsPattern("albor"), rows)).toEqual(["a"]);
   expect(patternMatches("(?P<x>albor)", rows)).toBeNull();
+  // What it matches, classified or not, is counted apart from what it
+  // would classify now.
+  expect(patternHits(wordsPattern("albor"), rows)).toEqual(["a", "b"]);
+  expect(patternHits("(?P<x>albor)", rows)).toBeNull();
 });
 
 test("a rule from a selection starts from what the movements share", () => {

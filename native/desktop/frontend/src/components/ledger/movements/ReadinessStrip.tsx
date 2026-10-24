@@ -161,6 +161,9 @@ export function ReadinessStrip({
   partial,
   onPill,
   onReason,
+  duplicates = 0,
+  duplicatesShown = false,
+  onDuplicates,
 }: {
   readiness: Readiness;
   sets: ReadinessSets;
@@ -174,6 +177,11 @@ export function ReadinessStrip({
   partial: boolean;
   onPill: (filter: ReadinessFilter | null) => void;
   onReason: (reason: string | null) => void;
+  /** Movements an import flagged as likely duplicates, which a chip
+   * shows. */
+  duplicates?: number;
+  duplicatesShown?: boolean;
+  onDuplicates?: (show: boolean) => void;
 }) {
   const t = useStrings();
   const [more, setMore] = useState(false);
@@ -253,6 +261,33 @@ export function ReadinessStrip({
           );
         })}
       </ul>
+      {duplicates > 0 && onDuplicates && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="pill"
+              size="xs"
+              className="ledger-duplicates"
+              aria-pressed={duplicatesShown}
+              onClick={() => onDuplicates(!duplicatesShown)}
+            >
+              <Icon name="copy" size="xs" className="text-warning" />
+              <span aria-hidden="true">
+                {t("desktop.ledger.duplicate.chip")}
+              </span>
+              <span aria-hidden="true" className="tabular-nums">
+                {duplicates}
+              </span>
+              <span className="sr-only">
+                {t("desktop.ledger.duplicate.chip_name", { count: duplicates })}
+              </span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {t("desktop.ledger.duplicate.chip_name", { count: duplicates })}
+          </TooltipContent>
+        </Tooltip>
+      )}
       {reasons.length > 0 && (
         <ul
           aria-label={t("desktop.ledger.readiness.reasons")}

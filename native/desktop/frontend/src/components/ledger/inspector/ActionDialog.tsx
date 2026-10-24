@@ -30,7 +30,12 @@ import { declarationName, lifecycleName } from "./inspectorWords";
 
 /** The action a dialog stages, on the movements it names. */
 export type ActionRequest =
-  | { kind: LifecycleAction; ids: readonly string[] }
+  | {
+      kind: LifecycleAction;
+      ids: readonly string[];
+      /** The reason the dialog starts from, which the person can change. */
+      reason?: string;
+    }
   | { kind: "remove"; id: string }
   | { kind: "merge"; ids: readonly string[] };
 
@@ -52,6 +57,7 @@ export function ActionDialog({
   sealed,
   onStage,
   onClose,
+  onClosed,
   say,
 }: {
   port: LedgerPort;
@@ -60,11 +66,15 @@ export function ActionDialog({
   sealed: ReadonlySet<string>;
   onStage: (event: StageEvent) => void;
   onClose: () => void;
+  /** Called as the dialog closes, to hand focus back. */
+  onClosed?: () => void;
   say: (text: string) => void;
 }) {
   const t = useStrings();
   const reasonId = useId();
-  const [reason, setReason] = useState("");
+  const [reason, setReason] = useState(
+    "reason" in request ? (request.reason ?? "") : "",
+  );
   const [preview, setPreview] = useState<Preview | null>(
     request.kind === "remove" ? { kind: "reading" } : null,
   );
@@ -175,6 +185,11 @@ export function ActionDialog({
       <DialogContent
         className="ledger-action-dialog w-dialog-md"
         closeLabel={t("desktop.ledger.inspector.cancel")}
+        onCloseAutoFocus={(event) => {
+          if (!onClosed) return;
+          event.preventDefault();
+          onClosed();
+        }}
       >
         <form
           className="grid gap-4"

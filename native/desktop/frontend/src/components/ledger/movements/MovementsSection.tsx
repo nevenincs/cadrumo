@@ -9,6 +9,15 @@ import {
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { DataGridHandle, GridRow } from "@/components/ui/data-grid";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { IconButton } from "@/components/ui/icon-button";
 import { exactly } from "@/components/ui/dataGridModel";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
@@ -27,7 +36,9 @@ import {
   type ClassifyBlock,
   type ClassifyKind,
   type ClassifyScope,
+  type OpenRuleFromSelection,
 } from "../../../shell/ledgerCommands";
+import { ActionDialog, type ActionRequest } from "../inspector/ActionDialog";
 import {
   sameInspectorContext,
   type SectionInspectorContext,
@@ -71,6 +82,7 @@ import {
   keepsRow,
   matchesSearch,
   presetHidden,
+  presetOf,
   readinessSets,
   searchTerms,
   serverFilters,
@@ -78,6 +90,7 @@ import {
   shownColumns,
   sortRows,
   stagedClassifyCount,
+  statusWidth,
   type ColumnId,
   type CurrencySum,
   type GroupingId,
@@ -152,6 +165,17 @@ type Asking = {
   draft?: string;
 };
 
+/** The chord each classify kind takes. */
+const CHORD_OF: Record<ClassifyKind, string> = {
+  business: "Alt+B",
+  personal: "Alt+P",
+  mixed: "Alt+M",
+};
+
+/** The list read that keeps the movements an import flagged as likely
+ * duplicates. */
+const DUPLICATE_SCOPES = [{ filters: ["issue=duplicate"] }] as const;
+
 /** What staged editing on the section needs from the page. */
 export type SectionEditing = {
   openReview: () => void;
@@ -213,10 +237,13 @@ type GroupCommands = {
   classify: (kind: ClassifyKind, ids: readonly string[]) => void;
   category: (ids: string[]) => void;
   select: (ids: string[]) => void;
+  /** Null where the page has no rule dialog. */
+  makeRule: ((ids: string[]) => void) | null;
 };
 
 /** A group header's quick actions, which act on the group's movements
- * through the page's one classify command. */
+ * through the page's one classify command: one Classify menu, and a menu of
+ * the rest. A press on them is theirs, never the header's. */
 function GroupActions({
   ids,
   transfers,
@@ -227,46 +254,78 @@ function GroupActions({
   commands: RefObject<GroupCommands>;
 }) {
   const t = useStrings();
-  const button = (label: string, run: () => void, held?: string) => (
-    <Button
-      variant="ghost"
-      size="xs"
-      tabIndex={-1}
-      aria-disabled={held ? true : undefined}
-      aria-label={held ? `${label}, ${held}` : undefined}
-      onClick={(event) => {
-        event.stopPropagation();
-        if (!held) run();
-      }}
-      onDoubleClick={(event) => event.stopPropagation()}
-    >
-      {label}
-    </Button>
-  );
+  const own = {
+    onClick: (event: { stopPropagation: () => void }) =>
+      event.stopPropagation(),
+    onDoubleClick: (event: { stopPropagation: () => void }) =>
+      event.stopPropagation(),
+    onPointerDown: (event: { stopPropagation: () => void }) =>
+      event.stopPropagation(),
+  };
   const transferNote = transfers
     ? t("desktop.ledger.classify.transfers_only")
     : undefined;
+  const kinds: [ClassifyKind, string][] = [
+    ["business", t("desktop.ledger.group.business")],
+    ["personal", t("desktop.ledger.group.personal")],
+    ["mixed", t("desktop.ledger.group.mixed")],
+  ];
   return (
-    <span className="ledger-group-actions flex items-center gap-0.5">
-      {button(
-        t("desktop.ledger.group.business"),
-        () => commands.current.classify("business", ids),
-        transferNote,
-      )}
-      {button(t("desktop.ledger.group.personal"), () =>
-        commands.current.classify("personal", ids),
-      )}
-      {button(
-        t("desktop.ledger.group.mixed"),
-        () => commands.current.classify("mixed", ids),
-        transferNote,
-      )}
-      {button(t("desktop.ledger.group.category"), () =>
-        commands.current.category(ids),
-      )}
-      {button(t("desktop.ledger.group.select", { count: ids.length }), () =>
-        commands.current.select(ids),
-      )}
+    <span className="ledger-group-actions flex items-center gap-1" {...own}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="xs"
+            tabIndex={-1}
+            className="ledger-group-classify"
+          >
+            {t("desktop.ledger.group.classify")}
+            <Icon name="chevronDown" size="xs" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {kinds.map(([kind, label]) => (
+            <DropdownMenuItem
+              key={kind}
+              disabled={kind !== "personal" && transferNote !== undefined}
+              onSelect={() => commands.current.classify(kind, ids)}
+            >
+              {label}
+              {kind !== "personal" && transferNote && (
+                <DropdownMenuShortcut>{transferNote}</DropdownMenuShortcut>
+              )}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <IconButton
+            label={t("desktop.ledger.group.more")}
+            size="xs"
+            variant="outline"
+            tabIndex={-1}
+            className="ledger-group-more"
+          >
+            <Icon name="more" />
+          </IconButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => commands.current.category(ids)}>
+            {t("desktop.ledger.group.category")}…
+          </DropdownMenuItem>
+          {commands.current.makeRule && (
+            <DropdownMenuItem onSelect={() => commands.current.makeRule?.(ids)}>
+              {t("desktop.ledger.group.make_rule")}…
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={() => commands.current.select(ids)}>
+            {t("desktop.ledger.group.select", { count: ids.length })}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </span>
   );
 }
@@ -343,6 +402,7 @@ export function MovementsSection({
   onImportCleared,
   editing: pageEditing,
   linked,
+  onMakeRule,
 }: {
   port: LedgerPort;
   reader: string;
@@ -372,6 +432,9 @@ export function MovementsSection({
   editing: SectionEditing;
   /** The movement a link selects, held by the page. */
   linked: LinkedRow;
+  /** Opens the rule dialog prefilled from movements, where the page has
+   * one. */
+  onMakeRule?: OpenRuleFromSelection;
 }) {
   const t = useStrings();
   const grid = useRef<DataGridHandle>(null);
@@ -442,6 +505,32 @@ export function MovementsSection({
     wantAccounts || filters.account !== null || accountsShown,
   );
   const elsewhere = useSearchElsewhere(port, reader, period, search);
+  // What an import flagged as a likely duplicate: the product keeps it as an
+  // import diagnostic, which the list reads by its issue filter. A movement
+  // archived since is no longer marked.
+  const flagged = useLedgerMembership(
+    port,
+    reader,
+    period,
+    DUPLICATE_SCOPES,
+    periodWindow.phase === "ready" ? periodWindow.generation : null,
+  );
+  const duplicates = useMemo(() => {
+    if (flagged.kind !== "ready") return new Set<string>();
+    return new Set(
+      rows
+        .filter(
+          (row) =>
+            flagged.ids.has(idOf(row)) &&
+            row.transaction.lifecycle_state === "ACTIVE",
+        )
+        .map(idOf),
+    );
+  }, [flagged, rows]);
+  const currencySlot = useMemo(
+    () => rows.some((row) => row.transaction.currency !== "EUR"),
+    [rows],
+  );
 
   // ---- What is shown ---------------------------------------------------------
   const labels = useMemo<SortLabels>(
@@ -520,6 +609,7 @@ export function MovementsSection({
     classify: () => undefined,
     category: () => undefined,
     select: () => undefined,
+    makeRule: null,
   });
   const gridRows = useMemo<GridRow<LedgerRow>[]>(() => {
     if (!groups)
@@ -678,7 +768,6 @@ export function MovementsSection({
 
   // ---- Columns ---------------------------------------------------------------
   const layout = useMemo(() => columnLayout(view.columns), [view.columns]);
-  const order = shownColumns(layout);
   const remPx =
     typeof document === "undefined"
       ? 16
@@ -689,6 +778,44 @@ export function MovementsSection({
       out[column] = px / remPx;
     return out;
   }, [view.columns.widths, remPx]);
+  // Where the review preset the page starts from does not fit, it gives up
+  // Group before Category, and the columns menu shows Group as hidden, so
+  // showing it there draws it. A layout the person made is drawn as made.
+  const [room, setRoom] = useState<number | null>(null);
+  useEffect(() => {
+    const element = within.current;
+    if (!element) return;
+    const observer = new ResizeObserver(() => setRoom(element.clientWidth));
+    observer.observe(element);
+    setRoom(element.clientWidth);
+    return () => observer.disconnect();
+  }, []);
+  const untouched = view.columns.order.length === 0;
+  const narrow = useMemo(() => {
+    if (room === null || !untouched || presetOf(layout) !== "review")
+      return false;
+    const needed = shownColumns(layout).reduce((sum, column) => {
+      const spec = COLUMN_SPECS[column];
+      const rem =
+        widths[column] ??
+        (column === "status"
+          ? statusWidth(view.density)
+          : Math.max(spec.width, spec.minWidth ?? 0));
+      return sum + rem * remPx;
+    }, 0);
+    return needed > room;
+  }, [layout, untouched, room, widths, view.density, remPx]);
+  const drawnLayout = useMemo(
+    () =>
+      narrow
+        ? {
+            ...layout,
+            hidden: new Set<ColumnId>([...layout.hidden, "group_label"]),
+          }
+        : layout,
+    [layout, narrow],
+  );
+  const order = useMemo(() => shownColumns(drawnLayout), [drawnLayout]);
   const missing = filters.reason
     ? (() => {
         const column = REASON_FIX[filters.reason]?.column ?? null;
@@ -986,6 +1113,7 @@ export function MovementsSection({
       classify: (kind, ids) => classifySelection(kind, { ids }),
       category: askCategory,
       select: (ids) => setSelection(new Set(ids)),
+      makeRule: onMakeRule ? (ids) => onMakeRule({ ids }) : null,
     };
     latest.current = () => [
       ...CLASSIFY_KINDS.map((kind): Action => {
@@ -1063,12 +1191,13 @@ export function MovementsSection({
       partial,
       issues: sets.issues,
       accounts,
+      duplicates,
       classify: (kind, scope) =>
         inspectorCommands.current.classify(kind, scope),
       focusActive: () => inspectorCommands.current.focusActive(),
       showHidden: () => inspectorCommands.current.showHidden(),
     }),
-    [visibleSet, partial, sets, accounts],
+    [visibleSet, partial, sets, accounts, duplicates],
   );
   // The page hears of a change only: the section draws often.
   const sentContext = useRef<SectionInspectorContext | null>(null);
@@ -1081,6 +1210,10 @@ export function MovementsSection({
   useEffect(() => () => onInspector?.(null), [onInspector]);
 
   // ---- Menus -----------------------------------------------------------------
+  const [acting, setActing] = useState<ActionRequest | null>(null);
+  /** Focus goes back to the grid's active cell as a dialog it opened
+   * closes. */
+  const backToGrid = () => inspectorCommands.current.focusActive();
   const [menu, setMenu] = useState<{
     at: MenuAnchor;
     items: ContextMenuItem[];
@@ -1096,7 +1229,7 @@ export function MovementsSection({
           ids ? { ids, hidden: 0, partial } : classifyTarget(),
           byId,
         ).kind === "ready",
-      shortcut: `Alt+${kind === "business" ? "B" : kind === "personal" ? "P" : "M"}`,
+      shortcut: CHORD_OF[kind],
     }));
   const openMenu = (key: string, column: string | null, at: MenuAnchor) => {
     const group = groups?.find((entry) => entry.key === key);
@@ -1130,6 +1263,16 @@ export function MovementsSection({
                 enabled: column !== null,
                 shortcut: "Ctrl+D",
               },
+              ...(duplicates.has(key)
+                ? [
+                    { separator: true as const },
+                    {
+                      id: "duplicate.archive",
+                      label: `${t("desktop.ledger.duplicate.archive")}…`,
+                      enabled: true,
+                    },
+                  ]
+                : []),
             ]),
         ...(ids
           ? [
@@ -1138,6 +1281,15 @@ export function MovementsSection({
                 label: t("desktop.ledger.group.category"),
                 enabled: true,
               },
+              ...(onMakeRule
+                ? [
+                    {
+                      id: "make_rule",
+                      label: `${t("desktop.ledger.group.make_rule")}…`,
+                      enabled: true,
+                    },
+                  ]
+                : []),
               {
                 id: "select",
                 label: t("desktop.ledger.group.select", { count: ids.length }),
@@ -1162,6 +1314,17 @@ export function MovementsSection({
           );
         else if (chosen === "category" && ids) askCategory(ids);
         else if (chosen === "select" && ids) setSelection(new Set(ids));
+        else if (chosen === "make_rule" && ids) onMakeRule?.({ ids });
+        else if (chosen === "duplicate.archive")
+          // The menu hands focus back to the grid as it closes; the dialog
+          // opens after that, or it would take the move as a press outside.
+          window.requestAnimationFrame(() =>
+            setActing({
+              kind: "archive",
+              ids: [key],
+              reason: t("desktop.ledger.import_issue.duplicate"),
+            }),
+          );
       },
     });
   };
@@ -1198,6 +1361,43 @@ export function MovementsSection({
   );
   const hiddenByFilters = rows.length - filtered.length;
   const shownPeriod = periodText(t, locale, period);
+  const selectionActions =
+    selected.size > 1 ? (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <IconButton
+            label={t("desktop.ledger.selection.actions")}
+            size="sm"
+            className="ledger-selection-actions"
+          >
+            <Icon name="more" />
+          </IconButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {CLASSIFY_KINDS.map((kind) => (
+            <DropdownMenuItem
+              key={kind}
+              disabled={availabilityOf(kind).kind !== "ready"}
+              onSelect={() => classifySelection(kind)}
+            >
+              {t(`desktop.ledger.classify.as_${kind}`)}
+              <DropdownMenuShortcut>{CHORD_OF[kind]}</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          ))}
+          {onMakeRule && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={hiddenSelected.length > 0}
+                onSelect={() => onMakeRule({ ids: [...selected] })}
+              >
+                {t("desktop.ledger.inspector.selection.make_rule")}…
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ) : null;
 
   return (
     <div
@@ -1216,6 +1416,13 @@ export function MovementsSection({
         partial={partial}
         onPill={onPill}
         onReason={onReason}
+        duplicates={duplicates.size}
+        duplicatesShown={filters.importIssue === "duplicate"}
+        onDuplicates={(show) =>
+          show
+            ? leadTo({ ...NO_FILTERS, importIssue: "duplicate" }, "status")
+            : setFilters({ ...filters, importIssue: null })
+        }
       />
       <div>
         <MovementsToolbar
@@ -1240,7 +1447,7 @@ export function MovementsSection({
           sort={effectiveSort}
           onSort={setSort}
           sortAllowed={(key) => complete || serverSortField(key) !== null}
-          layout={layout}
+          layout={drawnLayout}
           onLayout={setLayout}
           density={view.density}
           onDensity={(density) =>
@@ -1251,6 +1458,7 @@ export function MovementsSection({
           groupLabels={groupLabels}
           reasons={sets.reasons.map((entry) => entry.reason)}
           status={status}
+          selectionActions={selectionActions}
         />
       </div>
       {membership.kind === "reading" && (
@@ -1368,8 +1576,16 @@ export function MovementsSection({
       <MovementsGrid
         gridRef={grid}
         order={order}
-        context={{ ...columnContext, editing: edit.editing }}
+        context={{
+          ...columnContext,
+          duplicates,
+          currencySlot,
+          editing: edit.editing,
+        }}
         byId={byId}
+        moreColumnsLabel={(count) =>
+          t("desktop.ledger.columns.more_name", { count })
+        }
         className="ledger-grid rounded-md"
         label={t("desktop.ledger.grid", { period: shownPeriod })}
         rows={drawnGridRows}
@@ -1456,15 +1672,26 @@ export function MovementsSection({
       </div>
       {asking && (
         <ClassifyDialog
+          key={asking.ids.join(" ")}
           kind={asking.kind}
           movements={asking.draft ? 1 : asking.ids.length}
           split={asking.split}
           {...(asking.share ? { initialShare: asking.share } : {})}
-          onClosed={
-            asking.draft
-              ? undefined
-              : () => inspectorCommands.current.focusActive()
-          }
+          {...(asking.range
+            ? {
+                range: {
+                  count: asking.range.length,
+                  onSelect: () => {
+                    const ids = asking.range!;
+                    setSelection(new Set(ids));
+                    const kind = asking.kind;
+                    if (kind === "category") askCategory(ids);
+                    else classifySelection(kind, { ids });
+                  },
+                },
+              }
+            : {})}
+          onClosed={asking.draft ? undefined : backToGrid}
           skipped={asking.skipped}
           partial={asking.partial}
           error={asking.error}
@@ -1534,6 +1761,18 @@ export function MovementsSection({
             setMenu(null);
             if (id) run(id);
           }}
+        />
+      )}
+      {acting && (
+        <ActionDialog
+          port={port}
+          request={acting}
+          rows={byId}
+          sealed={pageEditing.sealed ?? NO_SEALED}
+          onStage={onStage}
+          onClose={() => setActing(null)}
+          onClosed={backToGrid}
+          say={setToast}
         />
       )}
       {edit.dialogs}

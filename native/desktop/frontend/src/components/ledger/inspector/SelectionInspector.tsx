@@ -38,6 +38,7 @@ import {
   statusLabel,
 } from "../movements/movementWords";
 import { currencySums } from "../movements/movementsModel";
+import { STATUS_ICONS } from "../movements/MovementCells";
 import { MOVEMENT_TSV_COLUMNS, movementsTsv } from "../transfer/tsv";
 import type { ActionRequest } from "./ActionDialog";
 import type { SectionInspectorContext } from "./inspectorContext";
@@ -67,11 +68,12 @@ const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
   personal: "PERSONAL",
   mixed: "MIXED",
 };
+/** The classifications a person decides; the rest are counted by status. */
+const DECIDED = new Set(["BUSINESS", "PERSONAL", "MIXED"]);
 /** The fields whose shared value the selection shows, and how each is
- * read. */
+ * read. The classification is counted above them instead. */
 const COMMON_FIELDS: readonly (readonly [
   (
-    | "business_classification"
     | "category_id"
     | "iva_category"
     | "irpf_category"
@@ -81,7 +83,6 @@ const COMMON_FIELDS: readonly (readonly [
   ),
   (row: LedgerRow) => string | null,
 ])[] = [
-  ["business_classification", (row) => row.transaction.business_classification],
   ["category_id", (row) => row.transaction.category_id],
   ["iva_category", (row) => row.transaction.iva_category],
   ["irpf_category", (row) => row.transaction.irpf_category],
@@ -167,6 +168,10 @@ export function SelectionInspector({
   const shown = selected.length - hidden;
   const blocked = shown === 0;
   const counts = selectionCounts(selected, context?.issues ?? new Map());
+  // While none of them is classified, the tax fields take nothing yet.
+  const undecided = selected.every(
+    (row) => !DECIDED.has(row.transaction.business_classification),
+  );
   const sums = currencySums(selected);
   const content = stage.content;
   const [share, setShare] = useState("");
@@ -427,48 +432,56 @@ export function SelectionInspector({
           <h3 id={`${shareId}-totals`} className="text-sm font-semibold">
             {t("desktop.ledger.inspector.selection.totals")}
           </h3>
-          <dl className="ledger-selection-sums grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 rounded-md bg-accent p-2.5 text-sm tabular-nums">
+          <ul className="ledger-selection-sums grid gap-0.5 rounded-md bg-accent p-2.5 text-sm tabular-nums">
             {sums.flatMap((sum) =>
               (
                 [
-                  ["incoming", "desktop.ledger.inspector.selection.in"],
-                  ["outgoing", "desktop.ledger.inspector.selection.out"],
-                  ["transfer", "desktop.ledger.inspector.selection.transfer"],
+                  ["incoming", "desktop.ledger.sum.in"],
+                  ["outgoing", "desktop.ledger.sum.out"],
+                  ["transfer", "desktop.ledger.sum.transfer"],
                 ] as const
               ).flatMap(([side, label]) =>
                 sum[side] === null
                   ? []
                   : [
-                      <dt
-                        key={`${sum.currency}:${side}:t`}
-                        className="text-muted-foreground"
-                      >
-                        {t(label, { currency: sum.currency })}
-                      </dt>,
-                      <dd key={`${sum.currency}:${side}:d`}>
-                        {amountText(locale, sum[side]!)} {sum.currency}
-                      </dd>,
+                      <li key={`${sum.currency}:${side}`}>
+                        {t(label, {
+                          amount: `${amountText(locale, sum[side]!)} ${sum.currency}`,
+                        })}
+                      </li>,
                     ],
               ),
             )}
-          </dl>
-          <ul className="flex flex-wrap gap-x-3 gap-y-0.5 text-sm">
-            {counts.classifications.map(([classification, count]) => (
-              <li key={classification}>
-                {classificationLabel(t, classification)}{" "}
-                <span className="font-medium tabular-nums">{count}</span>
-              </li>
-            ))}
           </ul>
-          <ul className="flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
-            {counts.statuses.map(([word, count]) => (
-              <li key={word}>
-                {statusLabel(t, word, 0)}{" "}
-                <span className="font-medium text-foreground tabular-nums">
-                  {count}
-                </span>
-              </li>
-            ))}
+          <ul className="ledger-selection-statuses flex flex-wrap gap-x-3 gap-y-0.5 text-sm">
+            {counts.statuses.map(([word, count]) => {
+              const name =
+                word === "needs_fixing"
+                  ? t("desktop.ledger.status.needs_fixing")
+                  : statusLabel(t, word, null);
+              return (
+                <li
+                  key={word}
+                  data-status={word}
+                  title={name}
+                  className="inline-flex items-center gap-1 text-muted-foreground"
+                >
+                  <Icon name={STATUS_ICONS[word]} size="xs" />
+                  <span aria-hidden="true" className="text-foreground">
+                    {count}
+                  </span>
+                  <span className="sr-only">{`${name} ${count}`}</span>
+                </li>
+              );
+            })}
+            {counts.classifications
+              .filter(([classification]) => DECIDED.has(classification))
+              .map(([classification, count]) => (
+                <li key={classification}>
+                  {classificationLabel(t, classification)}{" "}
+                  <span className="font-medium tabular-nums">{count}</span>
+                </li>
+              ))}
           </ul>
         </section>
 
@@ -563,20 +576,28 @@ export function SelectionInspector({
               />
             </label>
           </div>
-          {choice(
-            "category_id",
-            fieldName(t, "category_id"),
-            categoryOptions(t),
-          )}
-          {choice(
-            "iva_category",
-            fieldName(t, "iva_category"),
-            ivaCategoryOptions(t),
-          )}
-          {choice(
-            "irpf_category",
-            fieldName(t, "irpf_category"),
-            irpfCategoryOptions(t),
+          {undecided ? (
+            <p className="ledger-classify-first text-sm text-muted-foreground">
+              {t("desktop.ledger.inspector.selection.classify_first_hint")}
+            </p>
+          ) : (
+            <>
+              {choice(
+                "category_id",
+                fieldName(t, "category_id"),
+                categoryOptions(t),
+              )}
+              {choice(
+                "iva_category",
+                fieldName(t, "iva_category"),
+                ivaCategoryOptions(t),
+              )}
+              {choice(
+                "irpf_category",
+                fieldName(t, "irpf_category"),
+                irpfCategoryOptions(t),
+              )}
+            </>
           )}
           {(
             [

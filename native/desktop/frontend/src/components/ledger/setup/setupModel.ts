@@ -141,10 +141,10 @@ export function patternMatcher(pattern: string): RegExp | null {
   }
 }
 
-/** The movements of `rows` a rule with `pattern` would classify now: the
- * active ones still to classify whose description it finds. Null where the
- * window cannot try the pattern. */
-export function patternMatches(
+/** The active movements of `rows` whose description `pattern` finds,
+ * whatever their classification. Null where the window cannot try the
+ * pattern. */
+export function patternHits(
   pattern: string,
   rows: readonly LedgerRow[],
 ): string[] | null {
@@ -154,10 +154,29 @@ export function patternMatches(
     .filter(
       (row) =>
         row.transaction.lifecycle_state === "ACTIVE" &&
-        row.transaction.business_classification === "NOT_YET_PROCESSED" &&
         matcher.test(row.transaction.description),
     )
     .map((row) => row.transaction.transaction_id);
+}
+
+/** The movements of `rows` a rule with `pattern` would classify now: the
+ * active ones still to classify whose description it finds. Null where the
+ * window cannot try the pattern. */
+export function patternMatches(
+  pattern: string,
+  rows: readonly LedgerRow[],
+): string[] | null {
+  const hits = patternHits(pattern, rows);
+  if (hits === null) return null;
+  const pending = new Set(
+    rows
+      .filter(
+        (row) =>
+          row.transaction.business_classification === "NOT_YET_PROCESSED",
+      )
+      .map((row) => row.transaction.transaction_id),
+  );
+  return hits.filter((id) => pending.has(id));
 }
 
 // ---- A rule from a selection ---------------------------------------------

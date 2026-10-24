@@ -48,6 +48,24 @@ async function openLedger(target: Page, extra = "", scheme?: "light" | "dark") {
   await expect(dataRows(target).first()).toBeVisible();
 }
 
+/** Shows a column through the columns menu, as a person does where the
+ * page's starting preset gives it up for want of room. */
+async function showColumn(target: Page, column: string) {
+  await page(target)
+    .getByRole("button", {
+      name: new RegExp(`^${label("desktop.ledger.columns.title")}`),
+    })
+    .click();
+  const box = target
+    .locator(`.ledger-columns li[data-column=${column}]`)
+    .getByRole("checkbox");
+  if (!(await box.isChecked())) await box.check();
+  await target.keyboard.press("Escape");
+  await expect(
+    grid(target).locator(`[role=columnheader][data-header-column=${column}]`),
+  ).toHaveCount(1);
+}
+
 /** The row whose description is `text`, among those drawn. */
 const rowOf = (target: Page, text: string) =>
   dataRows(target).filter({
@@ -359,6 +377,30 @@ test("classifying is one command: hidden selections are held, Business asks a ca
   ).toContainText("40%");
 });
 
+test("the review flags an expense category on income, which no expense reads", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  // A stored Business income, given a spending category in its cell.
+  const income = rowOf(target, "TRANSFERENCIA TALLERES ONDARA");
+  await chooseIn(
+    target,
+    cellOf(income, "category"),
+    label("desktop.ledger.category.vehiculo_combustible"),
+  );
+  // The same category on an expense is no mismatch.
+  await chooseIn(
+    target,
+    cellOf(rowOf(target, "COMISION MANTENIMIENTO CUENTA"), "category"),
+    label("desktop.ledger.category.vehiculo_combustible"),
+  );
+  await openReview(target);
+  const chip = review(target).locator("[data-mismatch=income_category]");
+  await expect(chip).toHaveText(
+    label("desktop.ledger.apply.mismatch.income_category", { count: 1 }),
+  );
+});
+
 test("a transfer takes no tax field and only Personal", async ({
   page: target,
 }) => {
@@ -382,6 +424,7 @@ test("a paste of several rows is previewed, blanks change nothing, and an open q
   page: target,
 }) => {
   await openLedger(target);
+  await showColumn(target, "group_label");
   await find(target, "farmacia nube");
   const rows = dataRows(target);
   await cellOf(rows.first(), "counterparty").click();
@@ -453,6 +496,7 @@ test("fill down copies the top value, undo and redo step through it, and revert 
   page: target,
 }) => {
   await openLedger(target);
+  await showColumn(target, "group_label");
   await find(target, "farmacia nube");
   const rows = dataRows(target);
   await typeInto(target, cellOf(rows.nth(0), "group_label"), "Ticket guardado");
@@ -592,6 +636,7 @@ test("leaving with staged work asks first, from a shell chord too", async ({
   page: target,
 }) => {
   await openLedger(target);
+  await showColumn(target, "group_label");
   await typeInto(
     target,
     cellOf(rowOf(target, "PAPELERIA TRAZO"), "group_label"),
@@ -617,6 +662,7 @@ test("an unknown write pauses every later write until a re-read says whether it 
   page: target,
 }) => {
   await openLedger(target);
+  await showColumn(target, "group_label");
   const row = rowOf(target, "PAPELERIA TRAZO");
   await typeInto(target, cellOf(row, "counterparty"), "Trazo Papelería SL");
   await typeInto(
@@ -655,6 +701,7 @@ test("a write the read after it shows saved leaves the stage, and the re-read sa
   page: target,
 }) => {
   await openLedger(target);
+  await showColumn(target, "group_label");
   await typeInto(
     target,
     cellOf(rowOf(target, "PAPELERIA TRAZO"), "counterparty"),
@@ -850,6 +897,7 @@ test("the tray counts movements, new movements and actions on every section", as
   page: target,
 }) => {
   await openLedger(target);
+  await showColumn(target, "group_label");
   const row = rowOf(target, "PAPELERIA TRAZO");
   await typeInto(target, cellOf(row, "counterparty"), "Trazo SL");
   await typeInto(target, cellOf(row, "group_label"), "Oficina");

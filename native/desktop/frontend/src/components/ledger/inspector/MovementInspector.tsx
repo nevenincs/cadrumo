@@ -109,6 +109,7 @@ export function MovementInspector({
   onStage,
   classify,
   issues,
+  duplicate = false,
   accounts,
   focus,
   locale,
@@ -131,6 +132,8 @@ export function MovementInspector({
   onStage: (event: StageEvent) => void;
   classify: ClassifySelection | null;
   issues: readonly string[];
+  /** An import flagged it as a likely duplicate of a stored movement. */
+  duplicate?: boolean;
   accounts: readonly OwnAccountChoice[] | null;
   focus: InspectorFocus;
   locale: string;
@@ -356,6 +359,28 @@ export function MovementInspector({
                 </DropdownMenuItem>
               )}
               {lifecycleItems}
+              {duplicate && (
+                <DropdownMenuItem
+                  className="ledger-archive-duplicate"
+                  disabled={
+                    !lifecycleTakes(
+                      "archive",
+                      row,
+                      sealed ? new Set([id]) : new Set(),
+                    )
+                  }
+                  onSelect={() =>
+                    onAction({
+                      kind: "archive",
+                      ids: [id],
+                      reason: t("desktop.ledger.import_issue.duplicate"),
+                    })
+                  }
+                >
+                  <Icon name="copy" />
+                  {t("desktop.ledger.duplicate.archive")}…
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={() => onAction({ kind: "remove", id })}
@@ -381,6 +406,12 @@ export function MovementInspector({
           </span>
           <span>{directionLabel(t, tx.direction)}</span>
           <Badge variant="neutral">{statusLabel(t, word, issues.length)}</Badge>
+          {duplicate && (
+            <Badge variant="neutral" className="ledger-duplicate-badge">
+              <Icon name="copy" size="xs" className="text-warning" />
+              {t("desktop.ledger.import_issue.duplicate")}
+            </Badge>
+          )}
           {tx.lifecycle_state !== "ACTIVE" && (
             <Badge variant="neutral">
               {lifecycleLabel(t, tx.lifecycle_state)}

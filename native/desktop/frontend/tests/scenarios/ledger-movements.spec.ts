@@ -271,13 +271,26 @@ test("grouping by counterparty heads each group with its count, sums and actions
     label("desktop.ledger.group.count", { count: 1 }).replace("1", ""),
   );
   await expect(header).toContainText(/(Out|In) \d/);
-  for (const action of ["business", "personal", "mixed", "category"])
+  // The actions are one Classify menu and a menu of the rest.
+  await expect(
+    header.getByRole("button", {
+      name: label("desktop.ledger.group.classify"),
+      exact: true,
+    }),
+  ).toBeVisible();
+  await header
+    .getByRole("button", { name: label("desktop.ledger.group.more") })
+    .click();
+  const more = target.getByRole("menu");
+  for (const item of [
+    `${label("desktop.ledger.group.category")}…`,
+    `${label("desktop.ledger.group.make_rule")}…`,
+  ])
     await expect(
-      header.getByRole("button", {
-        name: label(`desktop.ledger.group.${action}`),
-        exact: true,
-      }),
+      more.getByRole("menuitem", { name: item, exact: true }),
     ).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(more).toHaveCount(0);
   // A group folds and opens again by its header.
   const before = await dataRows(target).count();
   await header
@@ -285,7 +298,10 @@ test("grouping by counterparty heads each group with its count, sums and actions
     .first()
     .click({ position: { x: 8, y: 8 } });
   await expect(dataRows(target)).toHaveCount(before - 1);
-  await expect(header.locator("[aria-expanded=false]")).toHaveCount(1);
+  // The fold says it is folded; the action menus are not folds.
+  await expect(
+    header.locator("[aria-expanded=false]:not([aria-haspopup])"),
+  ).toHaveCount(1);
   // The view and its grouping are kept as presentation.
   await expect
     .poll(() =>
@@ -300,6 +316,12 @@ test("grouping by counterparty heads each group with its count, sums and actions
   // A group's Personal stages through the one classify command.
   await header
     .getByRole("button", {
+      name: label("desktop.ledger.group.classify"),
+      exact: true,
+    })
+    .click();
+  await target
+    .getByRole("menuitem", {
       name: label("desktop.ledger.group.personal"),
       exact: true,
     })
@@ -526,6 +548,228 @@ test("the grid's keys: typing never runs a command, Alt+B and F8 do, shell chord
   await dataRows(target).first().locator("[data-column=description]").click();
   await target.keyboard.press("F6");
   await expect(target.locator("[role=gridcell]:focus")).toHaveCount(0);
+});
+
+const rowWith = (target: Page, text: string) =>
+  dataRows(target)
+    .filter({
+      has: target.locator("[data-column=description]", { hasText: text }),
+    })
+    .first();
+const toast = (target: Page) => page(target).locator(".ledger-toast");
+const classify = (target: Page) => target.locator(".ledger-classify");
+
+test("Business on income asks for no expense category, and on both says which is which", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await choosePeriod(target, 2026, "4T");
+  // Income alone is staged at once: it takes no spending category.
+  await rowWith(target, "FRA 2026-058").locator("[data-column=status]").click();
+  await target.keyboard.press("Alt+KeyB");
+  await expect(classify(target)).toHaveCount(0);
+  await expect(toast(target)).toHaveText(
+    label("desktop.ledger.classify.staged", {
+      classification: label("desktop.ledger.classification.business"),
+      count: 1,
+    }),
+  );
+  // An expense and an income: the category is asked for the expense only.
+  await rowWith(target, "PAPELERIA TRAZO")
+    .locator("[data-column=status]")
+    .click();
+  await rowWith(target, "FRA 2026-058")
+    .locator("[data-column=status]")
+    .click({ modifiers: ["Control"] });
+  await target.keyboard.press("Alt+KeyB");
+  await expect(classify(target).getByRole("heading")).toHaveText(
+    label("desktop.ledger.classify.title_business_split", {
+      expenses: 1,
+      income: 1,
+    }),
+  );
+  await expect(classify(target)).toContainText(
+    label("desktop.ledger.classify.expense_category", { count: 1 }),
+  );
+  await expect(classify(target)).toContainText(
+    label("desktop.ledger.classify.income_no_category", { count: 1 }),
+  );
+  await target.keyboard.press("Escape");
+  await expect(classify(target)).toHaveCount(0);
+  await expect(target.locator("[role=gridcell]:focus")).toHaveCount(1);
+});
+
+test("Mixed asks its share and a category a share applies to; Enter stages, and focus returns", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await choosePeriod(target, 2026, "4T");
+  await rowWith(target, "RECIBO TELEFONIA")
+    .locator("[data-column=description]")
+    .click();
+  await target.keyboard.press("Alt+KeyM");
+  const dialog = classify(target);
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel(label("desktop.ledger.classify.share")).fill("30");
+  await dialog.locator(".ledger-classify-category").click();
+  const list = target.locator("[data-slot=combobox]");
+  await expect(list).toContainText(
+    label("desktop.ledger.classify.share_categories"),
+  );
+  // A category with no business-use share is not offered.
+  await expect(
+    list.getByRole("option", {
+      name: label("desktop.ledger.category.software_suscripcion"),
+    }),
+  ).toHaveCount(0);
+  await target.keyboard.type(label("desktop.ledger.category.telefonia_movil"));
+  await target.keyboard.press("Enter");
+  await expect(list).toBeHidden();
+  // With both filled in, Enter stages rather than opening the list again.
+  await target.keyboard.press("Enter");
+  await expect(dialog).toHaveCount(0);
+  await expect(toast(target)).toContainText(
+    label("desktop.ledger.category.telefonia_movil"),
+  );
+  await expect(toast(target)).toContainText("30%");
+  const focused = target.locator("[role=gridcell]:focus");
+  await expect(focused).toHaveCount(1);
+  await expect(focused.locator("xpath=..")).toContainText("RECIBO TELEFONIA");
+});
+
+test("the classify chords work after a checkbox selection, and Shift+Space then Shift+arrows select rows", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await choosePeriod(target, 2026, "4T");
+  await dataRows(target).nth(0).locator("input[type=checkbox]").click();
+  await dataRows(target)
+    .nth(2)
+    .locator("input[type=checkbox]")
+    .click({ modifiers: ["Shift"] });
+  await expect(count(target)).toContainText(
+    label("desktop.ledger.selected", { count: 3 }),
+  );
+  // Focus sits on the checkbox: the chord is still the page's.
+  await target.keyboard.press("Alt+KeyB");
+  await expect(classify(target)).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(classify(target)).toHaveCount(0);
+
+  await dataRows(target).nth(0).locator("[data-column=description]").click();
+  await target.keyboard.press("Shift+Space");
+  for (let step = 0; step < 3; step += 1)
+    await target.keyboard.press("Shift+ArrowDown");
+  await expect(count(target)).toContainText(
+    label("desktop.ledger.selected", { count: 4 }),
+  );
+});
+
+test("a cell range over other rows than the selection is said, and can become it", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await choosePeriod(target, 2026, "4T");
+  await rowWith(target, "PAPELERIA TRAZO")
+    .locator("[data-column=description]")
+    .click();
+  await target.keyboard.press("Shift+ArrowDown");
+  await target.keyboard.press("Shift+ArrowDown");
+  await target.keyboard.press("Alt+KeyB");
+  const dialog = classify(target);
+  await expect(dialog.locator(".ledger-classify-range")).toContainText(
+    label("desktop.ledger.classify.range_differs", { selected: 1, range: 3 }),
+  );
+  await dialog.locator(".ledger-classify-select-range").click();
+  await expect(count(target)).toContainText(
+    label("desktop.ledger.selected", { count: 3 }),
+  );
+  await expect(dialog.locator(".ledger-classify-range")).toHaveCount(0);
+  await expect(dialog.locator(".ledger-classify-stage")).toHaveText(
+    label("desktop.ledger.classify.stage", { count: 3 }),
+  );
+});
+
+test("an imported likely duplicate is marked, counted, and offered its archive", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await head(target).locator(".ledger-period").click();
+  await target.locator(".ledger-period-all").click();
+  const chip = page(target).locator(".ledger-duplicates");
+  await expect(chip).toBeVisible();
+  const counted = Number(await chip.locator(".tabular-nums").textContent());
+  expect(counted).toBeGreaterThan(0);
+  await chip.click();
+  await expect(chip).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(async () => (await shownOf(target)).shown).toBe(counted);
+  const row = dataRows(target).first();
+  const mark = row.locator("[data-column=status] [data-duplicate]");
+  await expect(mark).toHaveCount(1);
+  await expect(mark.locator(".sr-only")).toHaveText(
+    label("desktop.ledger.import_issue.duplicate"),
+  );
+  await row.locator("[data-column=description]").click({ button: "right" });
+  await target
+    .getByRole("menuitem", {
+      name: `${label("desktop.ledger.duplicate.archive")}…`,
+    })
+    .click();
+  const dialog = target.locator(".ledger-action-dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("textbox")).toHaveValue(
+    label("desktop.ledger.import_issue.duplicate"),
+  );
+  await target.keyboard.press("Escape");
+  await expect(target.locator("[role=gridcell]:focus")).toHaveCount(1);
+});
+
+test("where the review preset does not fit it gives up Group, and a cue names the columns scrolled away", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1100, height: 800 });
+  await openLedger(target);
+  await choosePeriod(target, 2026, "4T");
+  const header = (name: string) =>
+    grid(target).getByRole("columnheader", { name, exact: true });
+  await expect(header(label("desktop.ledger.column.category"))).toHaveCount(1);
+  await expect(header(label("desktop.ledger.column.group_label"))).toHaveCount(
+    0,
+  );
+  // The columns menu says Group is hidden, and showing it there draws it.
+  await page(target)
+    .getByRole("button", {
+      name: new RegExp(`^${label("desktop.ledger.columns.title")}`),
+    })
+    .click();
+  const group = target
+    .locator(".ledger-columns li[data-column=group_label]")
+    .getByRole("checkbox");
+  await expect(group).not.toBeChecked();
+  await group.check();
+  await target.keyboard.press("Escape");
+  await expect(header(label("desktop.ledger.column.group_label"))).toHaveCount(
+    1,
+  );
+  // A wider preset scrolls under the pinned amount: the header says how
+  // many columns are there, and takes the person to them.
+  await page(target)
+    .getByRole("button", {
+      name: new RegExp(`^${label("desktop.ledger.columns.title")}`),
+    })
+    .click();
+  await target
+    .getByRole("radio", { name: label("desktop.ledger.columns.preset.iva") })
+    .click();
+  await target.keyboard.press("Escape");
+  const cue = grid(target).locator("[data-slot=data-grid-more-columns]");
+  await expect(cue).toBeVisible();
+  const scroller = grid(target);
+  const before = await scroller.evaluate((element) => element.scrollLeft);
+  await cue.click();
+  await expect
+    .poll(() => scroller.evaluate((element) => element.scrollLeft))
+    .toBeGreaterThan(before);
 });
 
 test("every row says its stored status to a screen reader with each cell", async ({
