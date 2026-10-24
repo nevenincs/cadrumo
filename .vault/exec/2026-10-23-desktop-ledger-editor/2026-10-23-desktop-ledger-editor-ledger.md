@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:7138d809a7c68754b58c67e166e12f9ac9801e1ea469bb73f639e779b84b0109'
+body_hash: 'sha256:fc4fd13df46d7939293d3b8569cfdd13787118457918ef71314d346031a4aa56'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -670,6 +670,107 @@ related:
 - `S19` `M` `src/cadrumo/locales/en/cli.yml`
 - `S19` `M` `src/cadrumo/locales/en/errors.yml`
 - `S19` `verify:` `dev/packaging/tests/test_inference_imports_are_declared.py` -> `pass`
+- `S08` `verify:` `npx playwright test tests/ledger-movements.spec.ts tests/scenarios/ledger-movements.spec.ts` -> `pass`
+- `S09` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S09` `verify:` `npx eslint WritePause.tsx LedgerPage.tsx` -> `pass`
+- `S09` `verify:` `playwright scenarios/ledger-pause ledger-documents ledger-setup ledger-transfer ledger-invoices` -> `pass`
+- `S10` `M` `native/desktop/frontend/src/shell/ledgerApply.ts`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/editing/LedgerEditing.tsx`
+- `S10` `M` `native/desktop/frontend/tests/ledger-apply.spec.ts`
+- `S10` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S10` `verify:` `npx eslint and prettier --check on the Step's files` -> `pass`
+- `S10` `verify:` `npx playwright test tests/ledger-apply.spec.ts` -> `pass`
+- `S10` `verify:` `npx playwright test tests/scenarios/ledger-inspector.spec.ts` -> `fail`
+- `S10` `by:` `vaultspec-high-executor`
+- `S14` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S14` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S14` `verify:` `npx playwright test tests/scenarios/ledger-setup.spec.ts` -> `pass`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/transfer/importModel.ts`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S13` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S13` `verify:` `npx playwright test tests/scenarios/ledger-documents.spec.ts tests/scenarios/ledger-transfer.spec.ts tests/scenarios/ledger-pause.spec.ts` -> `pass`
+- `S13` `by:` `vaultspec-high-executor`
+- `S09` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S09` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npx playwright test tests/ledger-movements.spec.ts tests/scenarios/ledger-movements.spec.ts tests/scenarios/ledger-editing.spec.ts` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/App.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S17` `A` `native/desktop/frontend/src/components/ledger/gridRoom.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/inspector/RightPanel.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ui/data-grid.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ui/dataGridModel.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsGrid.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/movements/movementsModel.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S17` `M` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S17` `M` `native/desktop/frontend/tests/data-grid.spec.ts`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts`
+- `S17` `M` `dev/locales/desktop_chrome.py`
+- `S17` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S17` `verify:` `playwright data-grid ledger-plan ledger-inspector ledger-movements` -> `pass`
+- `S10` `M` `src/cadrumo/application/ledger/llm_review_contracts.py`
+- `S10` `M` `src/cadrumo/application/ledger/llm_review_operation.py`
+- `S10` `M` `src/cadrumo/application/ledger/llm_review_execution.py`
+- `S10` `M` `src/cadrumo/application/operations/_supervisor_settlement.py`
+- `S10` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S10` `M` `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/ledger_lifecycle_cli.py`
+- `S10` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_categorisation.py`
+- `S10` `M` `src/cadrumo/adapters/persistence/operations/tests/test_llm_review_operation_persistence.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_classification_support.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/test_ledger_classification_reader_refusal_settlement.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/dependency_operation_gating_support.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_ledger_llm.py`
+- `S10` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_categorisation.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/ledger_frontend_parity_test_support.py`
+- `S10` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo (persistence/operations, CLI ledger llm, TUI categorisation, entrypoint review, parity, gating, censal)` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo_runtime host/tests/frontend/tui/test_runtime_ledger_categorisation.py` -> `pass`
+- `S10` `verify:` `pytest dev/operation_contract_manifest/tests` -> `pass`
+- `S01` `M` `native/desktop/src-tauri/src/shell/settle.rs`
+- `S01` `M` `native/desktop/src-tauri/src/shell/ledger/relay_contracts.py`
+- `S01` `M` `native/desktop/src-tauri/src/shell/ledger/relay_contracts.json`
+- `S01` `M` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S01` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S01` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
+- `S01` `verify:` `uv run --no-sync python native/desktop/src-tauri/src/shell/ledger/relay_contracts.py --check` -> `pass`
+- `S17` `verify:` `playwright ledger-inspector at-1280 scenario` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/movements/ReadinessStrip.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/setup/HealthSection.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/transfer/ExportDialog.tsx`
+- `S17` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/ledgerReadiness.ts`
+- `S17` `M` `native/desktop/frontend/tests/ledger-movements.spec.ts`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-movements.spec.ts`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts`
+- `S17` `verify:` `npx playwright test ledger-setup ledger-movements ledger-transfer ledger-inspector scenarios and tests/ledger-movements.spec.ts` -> `pass`
+- `S17` `by:` `vaultspec-high-executor`
+- `S16` `A` `native/desktop/frontend/tests/live/ledger-privacy.live.ts`
+- `S16` `A` `native/desktop/frontend/tests/live/privacy.ts`
+- `S16` `A` `native/desktop/frontend/tests/live/privacy.unit.ts`
+- `S16` `M` `native/desktop/frontend/tests/live/playwright.config.ts`
+- `S16` `M` `native/desktop/frontend/tests/live/README.md`
+- `S16` `M` `native/desktop/frontend/package.json`
+- `S16` `M` `dev/desktop_agent_live/lane.py`
+- `S16` `A` `dev/desktop_agent_live/tests/test_ledger_privacy.py`
+- `S16` `verify:` `node --test tests/live/privacy.unit.ts` -> `pass`
+- `S16` `verify:` `npx tsc -p tests/live/tsconfig.json --noEmit` -> `pass`
+- `S16` `verify:` `npx tsc --noEmit` -> `pass`
+- `S16` `verify:` `eslint and prettier --check tests/live` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest dev/desktop_agent_live/tests -q` -> `pass`
+- `S16` `verify:` `ruff check and ruff format --check on lane.py and test_ledger_privacy.py` -> `pass`
+- `S16` `by:` `vaultspec-high-executor`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentViewer.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentsSection.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S17` `M` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`
+- `S17` `verify:` `npx playwright test tests/scenarios/ledger-documents.spec.ts tests/scenarios/ledger-provisioning.spec.ts` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/PaneHeader.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/LedgerHeader.tsx`
+- `S17` `verify:` `playwright ledger shell focus inspector movements accessibility` -> `pass`
 
 ## Notes
 
@@ -718,3 +819,12 @@ related:
 - `S15` 67afa01221 adds and rewords 110 keys plural-free; 703653a275 and 8d10ad2e6f retire 18
 - `S19` `dev/operation_contract_manifest/tests/test_command_operation_join.py` fails on errors.py/main.py findings and config profile dependencies.status rows from another session's commit ca8b1943ac; the derived row for app ledger evidence page matches the recorded table.
 - `S19` 4fd1d57cdb strings (92b51eefeb restored strings it dropped); 3d46e89c4a drops the stale deptry Pillow suppression; deptry itself crashes in importlib metadata on HEAD as well; generated CLI docs are gitignored build outputs
+- `S10` ledger-inspector.spec.ts:966 (at 1280 with the agent open) fails on a concurrent layout change outside this Step; every model review scenario passes
+- `S13` ledger-documents.spec.ts:71 failed once in the batch run and passed on its own re-run
+- `S09` three ledger-editing scenarios failed once in the batch run and passed on their own re-run
+- `S17` UX2 narrow-grid-hides-description fixed in db2410b0cd; bulk split by halving in 00902a1a1c
+- `S17` 1236ded35a: column frame read from styles; the new band assertion fails at 136 `<` 159 with the old measurement
+- `S17` UX2 preflight-failure-hides-selection ed394518c8, restored in 0246e4cdb8 after cf177d8bb7 reverted it; health-other-period-stale, countless-warning-zero-to-fix, export-other-period-sentence, unknown-pill-shape, reason-chip-names-repeat and the whole-ledger status counts in 16a0c6fb0a
+- `S16` S16 294041c3f0 packaged-window ledger privacy check not run here: just desktop-agent-live --ledger-privacy needs the Release bundle, the remote-debugging host and the person's signed-in window
+- `S17` UX2 viewer-scrolls-away 5c1b42b6bd; scrolling the viewer to a reading's place is not done: the reading contract carries no position
+- `S17` ff9165347e grid floor with the panel shut and narrow header; 7dcf276adc UX2 strings batches 1-2
