@@ -783,6 +783,8 @@ desktop:
     failed: Ezt a részt nem sikerült betölteni.
     unavailable: Ehhez a részhez az asztali alkalmazás kell.
   ledger:
+    account:
+      none: Nincs számla
     action:
       add: Hozzáadás
       add_movement: Tétel hozzáadása
@@ -790,6 +792,150 @@ desktop:
       go_to_period: Ugrás időszakra…
       import: Importálás
       section: 'Napló: {section}'
+    apply:
+      action:
+        archive: Archiválás
+        attach: Csatolás
+        detach: Leválasztás
+        exclude: Kizárás
+        link: Összekapcsolás · végleges
+        m210: 210-es modell jövedelme
+        merge: Részek egyesítése
+        remove: Eltávolítás
+        restore: Visszaállítás
+        split: Felosztás
+        stash: Félretevés
+        suggestion: Modell-jóváhagyás
+      approvals: Modell-jóváhagyások
+      approve: általad jóváhagyva
+      back: Vissza
+      blocker:
+        action_and_edits: '{count} művelettel és szerkesztéssel együtt'
+        actions_conflict: '{count} össze nem illő műveletekkel'
+        cannot_clear: '{count} olyan értékkel, amelyet semmi sem töröl'
+        draft_incomplete: '{count} új tételhez még adat kell'
+        exclude_and_classification: '{count} egyszerre kizárva és besorolva'
+        gone: '{count} törölve vagy áthelyezve beolvasás óta'
+        mixed_needs_share: '{count} Vegyes üzleti arány nélkül'
+        needs_classification: '{count} besorolást igényel'
+        not_active: '{count} nem aktív: csak aktív tétel módosítható'
+        sealed: '{count} lezárva véglegesített bevallás miatt'
+        share_needs_mixed: '{count} aránnyal, de nem Vegyes'
+        suggestion_and_edits: '{count} modell-jóváhagyással és szerkesztéssel együtt'
+        suggestion_needs_share: '{count} Vegyes jóváhagyás: add meg az arányt'
+        too_large: '{count} túl nagy a küldéshez'
+        transfer_with_tax: '{count} átvezetés adóadattal'
+      blocker_fields: 'Mezők: {fields}'
+      checked_again: Az készültség újra ellenőrizve.
+      close: Kész
+      conflict_choice: Mit tartasz meg
+      conflicts_description: Egy másik ablak elmentette ezeket a tételeket, miután
+        beolvastad őket. Válaszd ki, mit tartasz meg.
+      conflicts_looked: Megnéztem, mi változott
+      conflicts_title: Megváltozott, mióta beolvastad
+      continue: Mentés folytatása
+      done: Mentve
+      done_description: A könyv válasza változásonként.
+      done_nothing: Semmi sem lett mentve
+      done_partly: Részben mentve
+      drop: '{movement} változásainak elvetése'
+      filter: Változások szűrése
+      fix:
+        business: Mind Üzleti
+        drop_action: Művelet elvetése
+        drop_approval: Jóváhagyás elvetése
+        drop_changes: Változások elvetése
+        drop_edits: Szerkesztések elvetése
+        drop_share: Arány elvetése
+        go_to_draft: Ugrás az új tételre
+        keep_first: Az első művelet marad
+        keep_stored: Tárolt érték megtartása
+        personal: Mind Magán
+        set_currency: Pénznem megadása
+        set_share: Arány megadása
+        show: Mutasd a táblázatban
+      gone: Beolvasás óta törölték, vagy kikerült az időszakból.
+      gone_mine: Előkészítve marad
+      gone_movement: Már nem olvasható tétel
+      gone_theirs: Változások elvetése
+      held: '{count} visszatartva'
+      held_note: '{count} visszatartva a fenti problémák miatt; előkészítve maradnak.'
+      keep_editing: Szerkesztés folytatása
+      link:
+        amount_differs: 'Az összeg eltérése: {amount}'
+        counterparty_differs: Eltérő partner
+        differ: Tudom, hogy eltérnek
+        linked_elsewhere: A számla már {count} tételhez kapcsolódik
+        sure: Összekapcsolás · végleges
+      mine: Az enyém marad
+      more: további {count}
+      needs_you: Előbb a te döntésed kell
+      new: '{count} új'
+      now_stored: Most a könyvben
+      one_by_one: '{count} egyenként (kb. {minutes} perc)'
+      outcome:
+        applied: Mentve
+        applied_new_id: Új hivatkozással mentve
+        not_sent_after_part: 'Nem ment el: egy korábbi részt egészében elutasítottak.'
+        not_sent_after_refusal: 'Nem ment el: e tétel egy korábbi változását elutasították.'
+        not_sent_paused: 'Nem ment el: ismeretlen eredmény után szünetel az írás.
+          Előkészítve marad.'
+        not_sent_stopped: 'Nem ment el: a munkamenet megszakadt. Előkészítve marad.'
+        refused: 'Elutasítva: {reason}. Előkészítve marad.'
+        saved_unread: Mentve, de a válasz nem olvasható. Olvasd be újra.
+        settled: Mentve, vagy már így volt
+        settled_value: 'Mentve, vagy már így volt: {field} = {value}'
+        unchanged: A könyvben már így volt. Semmi sem változott.
+        unchanged_value: 'A könyvben már ez volt: {field} {value} (újraolvasva). Semmi
+          sem változott.'
+        unknown: Lehet, hogy mentődött. Az írás szünetel; olvasd be újra, hogy kiderüljön.
+      outcomes: A könyv válasza
+      part_refused: 'Nincs mentve: a könyv mentés közben megváltozott. Ebből a részből
+        semmi sem mentődött.'
+      part_unknown: E rész egészének eredménye ismeretlen. Az írás szünetel.
+      paused_footer: Az írás az újraolvasásig szünetel.
+      permanent: Végleges
+      permanent_note: Egy kapcsolat később sem itt, sem máshol nem szüntethető meg.
+        Jelöld be mindegyiket, amelyikben biztos vagy.
+      progress: Mentés állapota
+      progress_count: '{done} / {total} mentés'
+      read_failed: 'A könyvet nem sikerült újraolvasni: semmi sem lett mentve'
+      reading: A könyv újraolvasása…
+      reject: 'elutasítva: {reason}'
+      rows: Változások tételenként
+      save: '{count} mentése'
+      save_held: '{count} mentése · {held} visszatartva'
+      saving: Mentés
+      saving_description: Minden változás egyszer, sorrendben megy el.
+      show_all: Mind mutatása
+      show_rows: Sorok mutatása
+      shown: '{shown} / {total}'
+      step:
+        add: Új tétel · {movement}
+        bulk: '{part}/{parts}. rész · {count} együtt mentve'
+      stopped: 'A munkamenet megszakadt: ami nem ment el, előkészítve marad'
+      summary: Összegzés
+      summary_change: Változás
+      summary_field: Mező
+      summary_movements: Tételek
+      tally:
+        applied: Mentve
+        not_sent: Nem ment el
+        refused: Elutasítva
+        saved_unread: Mentve, nem olvasva
+        settled: Mentve vagy már így
+        unchanged: Változatlan
+        unknown: Ismeretlen eredmény
+      technical: Technikai részletek
+      theirs: A mentettet veszem
+      tick_links: Mentéshez jelöld be az összes végleges kapcsolatot.
+      title: Áttekintés és mentés · {count}
+      together: '{count} együtt mentve'
+      unknown_note: 'Lehet, hogy mentődött, lehet, hogy nem. Semmi sem ismétlődik:
+        az írás az újraolvasásig szünetel.'
+      unknown_title: Egy mentés eredménye ismeretlen
+      when_read: Beolvasáskor
+      yours: Az előkészített változásod
     category:
       amortizacion_vivienda_afecto: Üzleti célra használt lakás amortizációja
       arrendamiento_local: Üzlethelyiség bérleti díja
@@ -892,6 +1038,7 @@ desktop:
       transfers_only: Az átvezetés csak magán lehet vagy besorolatlan
     close: Napló bezárása
     column:
+      account: Számla
       amount: Összeg
       category: Kategória
       classification: Besorolás
@@ -927,6 +1074,12 @@ desktop:
       presets: Előbeállítások
       reset: Oszlopok visszaállítása
       title: Oszlopok
+    cost:
+      cancel: Mégse
+      description: 'Mindegyik a teljes könyvet tölti be és menti: mentéskor kb. {minutes}
+        perc.'
+      stage: Előkészítés mégis
+      title: '{count} egyenkénti mentés'
     count:
       to_classify: '{count} besorolandó'
     density:
@@ -940,6 +1093,86 @@ desktop:
       outgoing: Kimenő
     documents:
       count: '{count} dokumentum'
+    draft:
+      describe: Új tétel, nincs mentve
+      new: Új
+      remove: Új tétel eltávolítása
+      required: Kötelező
+      untitled: Új tétel
+    edit:
+      changed_was: 'módosítva, nincs mentve, korábban: {was}'
+      cleared: törölve
+      empty: üres
+      held:
+        cannot_clear: Nem törölhető
+        needs_classification: Előbb besorolás kell
+      hint:
+        amount: 'Tizedespont, ezres tagolás nélkül: 1234.56'
+        date: 'Év-hónap-nap: 2026-10-05'
+        figure: 'Tizedespont, ezres tagolás nélkül: 1234.56'
+        percent: 21 a 21%-hoz
+      lock:
+        after_add: A tétel mentése után adható meg
+        derived: A Cadrumo számolja
+        not_active: 'Nem aktív: {state}. Csak aktív tétel módosítható.'
+        sealed: 'Lezárva: egy véglegesített bevallás használja'
+        transfer: Átvezetésnek nincs adóadata
+      new_identity: Mentéskor új hivatkozást kap
+      no_match: Nincs találat
+      not_cleared: '{count} nincs törölve: {reason}'
+      not_saved_was: 'Nincs mentve · tárolt: {was}'
+      redo_nothing: Nincs mit újra végrehajtani
+      redone: 'Újra: {what}'
+      refusal:
+        ambiguous_grouping: '„{raw}” kétféleképp olvasható: írd tagolás nélkül, például
+          1000 vagy 1.5.'
+        cannot_clear: 'Egyik művelet sem törli: írj más értéket'
+        comma_decimal: '„{raw}” tizedesvesszős: írd így: {suggestion}.'
+        currency_symbol: '„{raw}” pénznemjelet tartalmaz: csak a számot írd.'
+        date_not_in_calendar: „{raw}” nem naptári nap.
+        date_not_iso: '„{raw}”: évvel kezdve írd a dátumot: {suggestion}.'
+        exponent: '„{raw}” hatványalakban van: írd ki a számjegyeket.'
+        grouping: '„{raw}” ezreseket tagol: írd így: {suggestion}.'
+        line_break: '„{raw}” tabulátort vagy sortörést tartalmaz: maradjon egy sorban.'
+        locked: Itt nem szerkeszthető
+        needs_share: '„{raw}”: a Vegyes üzleti arányt kér, például Vegyes 50%.'
+        not_a_date: '„{raw}” nem dátum: írd így: 2026-10-05.'
+        not_a_number: „{raw}” nem szám.
+        percent_above_100: „{raw}” több mint 100%.
+        percent_as_fraction: '„{raw}” törtnek tűnik: írj {suggestion}-t a {suggestion}%-hoz.'
+        period_unknown: „{raw}” nem időszak.
+        required: 'Kötelező: nem törölhető'
+        signed: '„{raw}” előjeles: írd előjel nélkül, és add meg az irányt.'
+        too_long: '„{raw}” túl hosszú: legfeljebb {limit} karakter.'
+        too_many_decimals: „{raw}” több mint {limit} tizedesjegyet tartalmaz.
+        unknown_choice: „{raw}” nem a választható értékek egyike.
+        year_not_a_number: „{raw}” nem évszám.
+        year_out_of_range: „{raw}” kívül esik a Cadrumo által kezelt éveken.
+        zero: '„{raw}” nulla: az összeg nullánál nagyobb.'
+      revert_cell: Cella visszaállítása
+      revert_movement: Tétel visszaállítása
+      reverted_cell: '{field} visszaállítva'
+      reverted_movement: Tétel visszaállítva
+      row_changes: '{count} mentetlen változás'
+      row_unsaved: Mentetlen változások
+      search: 'Keresés: {column}'
+      step:
+        add_draft: új tétel
+        bulk_set: besorolás
+        clear: törlés
+        discard: elvetés
+        drop_action: művelet elvetése
+        edit_draft: új tétel szerkesztése
+        fill: kitöltés lefelé
+        paste: beillesztés
+        remove_draft: új tétel eltávolítása
+        revert_cell: cella visszaállítása
+        revert_movement: tétel visszaállítása
+        set: szerkesztés
+        stage_action: művelet
+      undo_applied: A mentett változások itt nem vonhatók vissza
+      undo_nothing: Nincs mit visszavonni
+      undone: 'Visszavonva: {what}'
     empty: 'Nincs tétel ebben az időszakban: {period}'
     empty_all: Még nincs tétel
     empty_filtered: Nincs egyező tétel
@@ -1017,6 +1250,24 @@ desktop:
         a fájlt, mielőtt ismét exportálsz.'
       without_staged: Exportálás nélkülük
     failed: A naplót nem sikerült beolvasni.
+    field:
+      booked_date: Könyvelési dátum
+      business_pct: Üzleti arány
+      counterparty_country: Partner országa
+      counterparty_identification_state: Közösségi adószám
+      currency: Pénznem
+      deduction_fact_kind: Levonási tény
+      investment_asset_id: Beruházási javak
+      m210_income_classification: 210-es modell jövedelme
+      own_account_id: Számla
+      recargo_amount: Recargo
+      usage_ratio_id: Használati arány
+      value_date: Értéknap
+    fill:
+      done: '{count} cella kitöltve · nincs mentve'
+      done_kept: '{count} cella kitöltve · {kept} változatlan'
+      down: Kitöltés lefelé
+      too_short: Előbb jelölj ki legalább két sort, aztán tölts ki lefelé
     filters:
       account: Bankszámla
       active: '{count} aktív'
@@ -1045,6 +1296,7 @@ desktop:
       to_match_chip: Párosítandó
     grid: Tételek, {period}
     group:
+      account: Számla
       business: Üzleti…
       by: Csoportosítás szerint
       category: Kategória
@@ -1056,6 +1308,7 @@ desktop:
       description: Leírás hivatkozások nélkül
       direction: Irány
       empty:
+        account: Nincs számla
         category: Kategória nélkül
         category_family: Kategória nélkül
         classification: Nincs megadva
@@ -1506,6 +1759,12 @@ desktop:
       recargo_equivalencia: Recargo de equivalencia
       regimen_simplificado: Régimen simplificado
       unknown: Ismeretlen
+    leave:
+      cancel: Mégse
+      description: '{count} változás csak ebben az ablakban van. Ha kilépsz, elvesznek.'
+      discard: Elvetés és kilépés
+      review: Áttekintés és mentés
+      title: Kilépsz mentetlen változásokkal?
     lifecycle:
       active: Aktív
       archived: Archivált
@@ -1520,6 +1779,32 @@ desktop:
     no_rate: Nincs árfolyam
     no_rate_detail: 'Erre a napra nincs árfolyam: az EUR-érték nem ismert, és nem
       nulla.'
+    paste:
+      apply: '{count} cella beillesztése'
+      blanks: Üres cellák
+      blanks_note: Az üres cella nem változtat semmit; csak a Delete töröl.
+      cancel: Mégse
+      changes: Változó cellák
+      description: '{rows} sor ide: {columns}. Beillesztésig semmi sem kerül előkészítésre.'
+      done: '{count} cella beillesztve · nincs mentve'
+      done_refused: '{count} cella beillesztve · {refused} elutasítva, jelölve a táblázatban'
+      dropped: Az utolsó soron vagy oszlopon túl
+      identity_note: A leírás, az összeg, a dátum vagy a számla módosítása mentéskor
+        új hivatkozást ad a tételnek.
+      new_identity: Új hivatkozás
+      refused: Elutasítva
+      refused_empty: Nincs mit beilleszteni
+      refused_unclosed_quote: 'Nincs beillesztve: egy idézőjel nincs lezárva'
+      single_writes: Egyenként mentve
+      title: Beilleszted a táblázatba?
+    paused:
+      dismiss: Bezárás
+      found_not_saved: '{movement} nem lett mentve, újra előkészítve'
+      found_saved: '{movement} mentve lett'
+      found_undetermined: '{movement}: az olvasásból nem derül ki; előkészítve marad,
+        az újramentés ugyanaz a mentés'
+      reread: Újraolvasás
+      title: 'Ismeretlen eredmény: írás szüneteltetve'
     period:
       all: Minden időszak
       choose: Válassz időszakot
@@ -1638,6 +1923,7 @@ desktop:
       current: '{key}, {direction}'
       desc: Csökkenő
       key:
+        account: Számla
         amount: Összeg
         category: Kategória
         classification: Besorolás
@@ -1678,6 +1964,20 @@ desktop:
       transfer: Átvezetés {amount}
     title: Napló
     toolbar: Tételnézet
+    tray:
+      actions: '{count} művelet'
+      discard: Elvetés
+      edits: '{edits} módosítás {movements} tételen'
+      in_parts: részletekben mentődik
+      name: '{count} mentetlen: {what}'
+      new: '{count} új'
+      paused: írás szüneteltetve
+      paused_reason: 'Előbb olvasd be újra: egy mentés eredménye ismeretlen'
+      region: Mentetlen változások
+      review: Áttekintés
+      review_count: '{count} változás áttekintése és mentése'
+      undo: Visszavonás
+      window_only: csak ebben az ablakban
     unavailable: Még nem érhető el
     view:
       all: Összes

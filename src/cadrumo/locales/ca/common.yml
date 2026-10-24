@@ -795,6 +795,8 @@ desktop:
     failed: Aquesta part no s'ha pogut carregar.
     unavailable: Aquesta part necessita l'aplicació d'escriptori.
   ledger:
+    account:
+      none: Sense compte
     action:
       add: Afegeix
       add_movement: Afegeix un moviment
@@ -802,6 +804,154 @@ desktop:
       go_to_period: Ves a un període…
       import: Importa
       section: 'Llibre: {section}'
+    apply:
+      action:
+        archive: Arxiva
+        attach: Adjunta
+        detach: Separa
+        exclude: Exclou
+        link: Vincula · permanent
+        m210: Renda del model 210
+        merge: Uneix parts
+        remove: Elimina
+        restore: Restaura
+        split: Divideix
+        stash: Aparta
+        suggestion: Aprovació del model
+      approvals: Aprovacions del model
+      approve: aprovat per tu
+      back: Enrere
+      blocker:
+        action_and_edits: '{count} amb una acció i edicions alhora'
+        actions_conflict: '{count} amb accions incompatibles'
+        cannot_clear: '{count} amb un valor que cap operació buida'
+        draft_incomplete: '{count} moviments nous encara necessiten dades'
+        exclude_and_classification: '{count} exclosos i classificats alhora'
+        gone: '{count} eliminats o moguts des que els vas llegir'
+        mixed_needs_share: '{count} Mixtos sense part professional'
+        needs_classification: '{count} necessiten una classificació'
+        not_active: '{count} no actius: només canvien els actius'
+        sealed: '{count} segellats per una declaració finalitzada'
+        share_needs_mixed: '{count} amb part però no Mixtos'
+        suggestion_and_edits: '{count} amb una aprovació del model i edicions alhora'
+        suggestion_needs_share: '{count} aprovacions Mixtes: indica una part per aprovar'
+        too_large: '{count} massa grans per enviar'
+        transfer_with_tax: '{count} traspassos amb dades fiscals'
+      blocker_fields: 'Camps: {fields}'
+      checked_again: La preparació es torna a comprovar.
+      close: Fet
+      conflict_choice: Què conservar
+      conflicts_description: Una altra finestra va desar aquests moviments després
+        que els llegissis. Tria què conservar en cadascun.
+      conflicts_looked: He revisat el que va canviar
+      conflicts_title: Canviat des que ho vas llegir
+      continue: Continua desant
+      done: Desat
+      done_description: El que va respondre el llibre, canvi a canvi.
+      done_nothing: No s'ha desat res
+      done_partly: Desat en part
+      drop: Treu els canvis de {movement}
+      filter: Filtra els canvis
+      fix:
+        business: Classifica'ls tots com a Professional
+        drop_action: Treu l'acció
+        drop_approval: Treu l'aprovació
+        drop_changes: Treu els canvis
+        drop_edits: Treu les edicions
+        drop_share: Treu la part
+        go_to_draft: Ves al moviment nou
+        keep_first: Conserva la primera acció
+        keep_stored: Conserva el valor desat
+        personal: Classifica'ls tots com a Personal
+        set_currency: Indica la moneda
+        set_share: Indica la part
+        show: Mostra a la taula
+      gone: Eliminat o mogut fora del període des que el vas llegir.
+      gone_mine: Mantén-lo preparat
+      gone_movement: Un moviment que ja no es llegeix
+      gone_theirs: Treu els canvis
+      held: '{count} retinguts'
+      held_note: '{count} retinguts pels problemes de dalt; continuen preparats.'
+      keep_editing: Continua editant
+      link:
+        amount_differs: L'import difereix en {amount}
+        counterparty_differs: Contrapart diferent
+        differ: Sé que difereixen
+        linked_elsewhere: Factura ja vinculada a {count} moviments
+        sure: Vincula aquests · permanent
+      mine: Conserva el meu
+      more: '{count} més'
+      needs_you: Primer necessita la teva atenció
+      new: '{count} nous'
+      now_stored: Ara al llibre
+      one_by_one: '{count} un a un (uns {minutes} min)'
+      outcome:
+        applied: Desat
+        applied_new_id: Desat amb una nova referència
+        not_sent_after_part: 'No enviat: es va rebutjar sencera una part anterior.'
+        not_sent_after_refusal: 'No enviat: es va rebutjar un canvi anterior d''aquest
+          moviment.'
+        not_sent_paused: 'No enviat: escriptures en pausa després d''un resultat desconegut.
+          Continua preparat.'
+        not_sent_stopped: 'No enviat: la sessió s''ha tancat. Continua preparat.'
+        refused: 'Rebutjat: {reason}. Continua preparat.'
+        saved_unread: Desat, però no se'n va llegir la resposta. Torna a llegir per
+          veure-ho.
+        settled: Desat o ja era així
+        settled_value: 'Desat o ja era així: {field} és {value}'
+        unchanged: El llibre ja ho tenia. No ha canviat res.
+        unchanged_value: El llibre ja tenia {field} {value} (llegit de nou). No ha
+          canviat res.
+        unknown: Pot ser que s'hagi desat o no. Les escriptures estan en pausa; torna
+          a llegir per saber-ho.
+      outcomes: El que va respondre el llibre
+      part_refused: 'No desat: el llibre va canviar mentre es desava. No s''ha desat
+        res d''aquesta part.'
+      part_unknown: Resultat desconegut per a aquesta part sencera. Les escriptures
+        estan en pausa.
+      paused_footer: Les escriptures estan en pausa fins que tornis a llegir.
+      permanent: Permanent
+      permanent_note: Un vincle no es pot treure després, ni aquí ni enlloc. Marca
+        cadascun del qual estiguis segur.
+      progress: Progrés del desament
+      progress_count: '{done} de {total} desaments'
+      read_failed: 'No s''ha pogut tornar a llegir el llibre: no s''ha desat res'
+      reading: Llegint el llibre de nou…
+      reject: 'rebutjat: {reason}'
+      rows: Canvis per moviment
+      save: Desa {count}
+      save_held: Desa {count} · {held} retinguts
+      saving: Desant
+      saving_description: Cada canvi s'envia una vegada, en ordre.
+      show_all: Mostra-ho tot
+      show_rows: Mostra les files
+      shown: '{shown} de {total}'
+      step:
+        add: Moviment nou · {movement}
+        bulk: Part {part} de {parts} · {count} desats junts
+      stopped: 'La sessió s''ha tancat: el que no s''ha enviat continua preparat'
+      summary: Resum
+      summary_change: Canvi
+      summary_field: Camp
+      summary_movements: Moviments
+      tally:
+        applied: Desats
+        not_sent: No enviats
+        refused: Rebutjats
+        saved_unread: Desats, sense llegir
+        settled: Desats o ja així
+        unchanged: Sense canvis
+        unknown: Resultat desconegut
+      technical: Detalls tècnics
+      theirs: Pren el desat
+      tick_links: Marca cada vincle permanent per desar.
+      title: Revisa i desa · {count}
+      together: '{count} desats junts'
+      unknown_note: 'Pot ser que s''hagi desat o no. No es reintenta res: les escriptures
+        esperen que tornis a llegir.'
+      unknown_title: Un desament té un resultat desconegut
+      when_read: Quan el vas llegir
+      yours: El teu canvi preparat
     category:
       amortizacion_vivienda_afecto: Amortització de l'habitatge afecte a l'activitat
       arrendamiento_local: Lloguer del local de negoci
@@ -905,6 +1055,7 @@ desktop:
       transfers_only: Els traspassos només poden ser personals o quedar sense classificar
     close: Tanca el llibre
     column:
+      account: Compte
       amount: Import
       category: Categoria
       classification: Classificació
@@ -940,6 +1091,11 @@ desktop:
       presets: Predefinides
       reset: Restableix les columnes
       title: Columnes
+    cost:
+      cancel: Cancel·la
+      description: 'Cadascun carrega i desa tot el llibre: uns {minutes} min en desar.'
+      stage: Prepara igualment
+      title: '{count} desats un a un'
     count:
       to_classify: '{count} per classificar'
     density:
@@ -953,6 +1109,88 @@ desktop:
       outgoing: Sortida
     documents:
       count: '{count} documents'
+    draft:
+      describe: Moviment nou, sense desar
+      new: Nou
+      remove: Treu el moviment nou
+      required: Obligatori
+      untitled: Moviment nou
+    edit:
+      changed_was: canviat, sense desar, abans {was}
+      cleared: buidat
+      empty: buit
+      held:
+        cannot_clear: No es pot buidar
+        needs_classification: Primer necessita una classificació
+      hint:
+        amount: 'Punt decimal, sense separador de milers: 1234.56'
+        date: 'Any-mes-dia: 2026-10-05'
+        figure: 'Punt decimal, sense separador de milers: 1234.56'
+        percent: 21 per al 21 %
+      lock:
+        after_add: S'indica quan el moviment estigui desat
+        derived: El calcula Cadrumo
+        not_active: 'No actiu: {state}. Només canvien els moviments actius.'
+        sealed: 'Segellat: l''usa una declaració finalitzada'
+        transfer: Els traspassos no porten dades fiscals
+      new_identity: Nova referència en desar
+      no_match: Cap coincidència
+      not_cleared: '{count} sense buidar: {reason}'
+      not_saved_was: 'Sense desar · desat: {was}'
+      redo_nothing: Res a refer
+      redone: 'Refet: {what}'
+      refusal:
+        ambiguous_grouping: '«{raw}» es pot llegir de dues maneres: escriu-lo sense
+          separador de milers, com 1000 o 1.5.'
+        cannot_clear: 'Cap operació el buida: escriu un altre valor'
+        comma_decimal: '«{raw}» usa coma decimal: escriu {suggestion}.'
+        currency_symbol: '«{raw}» porta símbol de moneda: escriu només el número.'
+        date_not_in_calendar: «{raw}» no és un dia del calendari.
+        date_not_iso: '«{raw}»: escriu la data començant per l''any, {suggestion}.'
+        exponent: '«{raw}» està en notació exponencial: escriu les xifres.'
+        grouping: '«{raw}» separa els milers: escriu {suggestion}.'
+        line_break: '«{raw}» conté un tabulador o un salt de línia: deixa-ho en una
+          línia.'
+        locked: No s'edita aquí
+        needs_share: '«{raw}»: Mixt necessita una part professional, com Mixt 50 %.'
+        not_a_date: '«{raw}» no és una data: escriu 2026-10-05.'
+        not_a_number: «{raw}» no és un número.
+        percent_above_100: «{raw}» supera el 100 %.
+        percent_as_fraction: '«{raw}» sembla una fracció: escriu {suggestion} per
+          al {suggestion} %.'
+        period_unknown: «{raw}» no és un període.
+        required: 'Obligatori: no es pot buidar'
+        signed: '«{raw}» porta signe: escriu l''import sense i indica el sentit.'
+        too_long: '«{raw}» és massa llarg: com a màxim {limit} caràcters.'
+        too_many_decimals: «{raw}» té més de {limit} decimals.
+        unknown_choice: «{raw}» no és una de les opcions.
+        year_not_a_number: «{raw}» no és un any.
+        year_out_of_range: «{raw}» és fora dels anys que admet Cadrumo.
+        zero: '«{raw}» és zero: un import és més gran que zero.'
+      revert_cell: Reverteix la cel·la
+      revert_movement: Reverteix el moviment
+      reverted_cell: '{field} revertit'
+      reverted_movement: Moviment revertit
+      row_changes: '{count} canvis sense desar'
+      row_unsaved: Té canvis sense desar
+      search: Cerca a {column}
+      step:
+        add_draft: moviment nou
+        bulk_set: classificació
+        clear: buidatge
+        discard: descart
+        drop_action: acció treta
+        edit_draft: edició del moviment nou
+        fill: emplenament avall
+        paste: enganxada
+        remove_draft: moviment nou tret
+        revert_cell: cel·la revertida
+        revert_movement: moviment revertit
+        set: edició
+        stage_action: acció
+      undo_applied: Els canvis desats no es desfan aquí
+      undo_nothing: Res a desfer
+      undone: 'Desfet: {what}'
     empty: No hi ha moviments a {period}
     empty_all: Encara no hi ha moviments
     empty_filtered: Cap moviment coincideix
@@ -1030,6 +1268,24 @@ desktop:
         revisa el fitxer abans d''exportar un altre cop.'
       without_staged: Exporta sense ells
     failed: No s'ha pogut llegir el llibre.
+    field:
+      booked_date: Data comptable
+      business_pct: Part professional
+      counterparty_country: País de la contrapart
+      counterparty_identification_state: Identificació a efectes d'IVA
+      currency: Moneda
+      deduction_fact_kind: Fet deduïble
+      investment_asset_id: Bé d'inversió
+      m210_income_classification: Renda del model 210
+      own_account_id: Compte
+      recargo_amount: Recàrrec
+      usage_ratio_id: Ràtio d'ús
+      value_date: Data valor
+    fill:
+      done: '{count} cel·les emplenades · sense desar'
+      done_kept: '{count} cel·les emplenades · {kept} sense canvis'
+      down: Emplena avall
+      too_short: Selecciona primer dues files o més i emplena avall
     filters:
       account: Compte
       active: '{count} actius'
@@ -1058,6 +1314,7 @@ desktop:
       to_match_chip: Per conciliar
     grid: Moviments, {period}
     group:
+      account: Compte
       business: Empresarial…
       by: Agrupa per
       category: Categoria
@@ -1069,6 +1326,7 @@ desktop:
       description: Descripció, sense referències
       direction: Sentit
       empty:
+        account: Sense compte
         category: Sense categoria
         category_family: Sense categoria
         classification: Sense valor
@@ -1521,6 +1779,12 @@ desktop:
       recargo_equivalencia: Recàrrec d'equivalència
       regimen_simplificado: Règim simplificat
       unknown: Desconeguda
+    leave:
+      cancel: Cancel·la
+      description: '{count} canvis són només en aquesta finestra. Si surts, es perden.'
+      discard: Descarta i surt
+      review: Revisa i desa
+      title: Sortir amb canvis sense desar?
     lifecycle:
       active: Actiu
       archived: Arxivat
@@ -1535,6 +1799,33 @@ desktop:
     no_rate: Sense tipus de canvi
     no_rate_detail: 'No hi ha tipus de canvi per a aquesta data: el valor en EUR no
       es coneix i no és zero.'
+    paste:
+      apply: Enganxa {count} cel·les
+      blanks: Cel·les en blanc
+      blanks_note: Una cel·la en blanc no canvia res; només Supr buida.
+      cancel: Cancel·la
+      changes: Cel·les que canvien
+      description: '{rows} files a {columns}. No es prepara res fins que enganxis.'
+      done: '{count} cel·les enganxades · sense desar'
+      done_refused: '{count} cel·les enganxades · {refused} rebutjades, marcades a
+        la taula'
+      dropped: Més enllà de l'última fila o columna
+      identity_note: Canviar la descripció, l'import, la data o el compte dona al
+        moviment una nova referència en desar-lo.
+      new_identity: Nova referència
+      refused: Rebutjades
+      refused_empty: Res a enganxar
+      refused_unclosed_quote: 'No enganxat: hi ha unes cometes sense tancar'
+      single_writes: Desats un a un
+      title: Enganxar a la taula?
+    paused:
+      dismiss: Tanca
+      found_not_saved: '{movement} no es va desar; continua preparat'
+      found_saved: '{movement} es va desar'
+      found_undetermined: '{movement}: la lectura no ho aclareix; continua preparat
+        i desar-lo de nou és el mateix desament'
+      reread: Torna a llegir
+      title: 'Resultat desconegut: escriptures en pausa'
     period:
       all: Tots els períodes
       choose: Tria un període
@@ -1654,6 +1945,7 @@ desktop:
       current: '{key}, {direction}'
       desc: Descendent
       key:
+        account: Compte
         amount: Import
         category: Categoria
         classification: Classificació
@@ -1694,6 +1986,20 @@ desktop:
       transfer: Traspassos {amount}
     title: Llibre
     toolbar: Vista de moviments
+    tray:
+      actions: '{count} accions'
+      discard: Descarta
+      edits: '{edits} canvis en {movements} moviments'
+      in_parts: es desa per parts
+      name: '{count} sense desar: {what}'
+      new: '{count} nous'
+      paused: escriptures en pausa
+      paused_reason: 'Torna a llegir primer: un desament té un resultat desconegut'
+      region: Canvis sense desar
+      review: Revisa
+      review_count: Revisa i desa {count} canvis
+      undo: Desfés
+      window_only: només en aquesta finestra
     unavailable: Encara no disponible
     view:
       all: Tots

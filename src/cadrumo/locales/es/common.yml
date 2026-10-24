@@ -802,6 +802,8 @@ desktop:
     failed: Esta parte no se ha podido cargar.
     unavailable: Esta parte necesita la aplicación de escritorio.
   ledger:
+    account:
+      none: Sin cuenta
     action:
       add: Añadir
       add_movement: Añadir movimiento
@@ -809,6 +811,155 @@ desktop:
       go_to_period: Ir a un periodo…
       import: Importar
       section: 'Libro: {section}'
+    apply:
+      action:
+        archive: Archivar
+        attach: Adjuntar
+        detach: Separar
+        exclude: Excluir
+        link: Vincular · permanente
+        m210: Renta del modelo 210
+        merge: Unir partes
+        remove: Eliminar
+        restore: Restaurar
+        split: Dividir
+        stash: Apartar
+        suggestion: Aprobación del modelo
+      approvals: Aprobaciones del modelo
+      approve: aprobado por ti
+      back: Atrás
+      blocker:
+        action_and_edits: '{count} con una acción y ediciones a la vez'
+        actions_conflict: '{count} con acciones incompatibles'
+        cannot_clear: '{count} con un valor que ninguna operación vacía'
+        draft_incomplete: '{count} movimientos nuevos aún necesitan datos'
+        exclude_and_classification: '{count} excluidos y clasificados a la vez'
+        gone: '{count} eliminados o movidos desde que los leíste'
+        mixed_needs_share: '{count} Mixtos sin parte profesional'
+        needs_classification: '{count} necesitan una clasificación'
+        not_active: '{count} no activos: solo cambian los activos'
+        sealed: '{count} sellados por una declaración finalizada'
+        share_needs_mixed: '{count} con parte pero no Mixtos'
+        suggestion_and_edits: '{count} con una aprobación del modelo y ediciones a
+          la vez'
+        suggestion_needs_share: '{count} aprobaciones Mixtas: indica una parte para
+          aprobar'
+        too_large: '{count} demasiado grandes para enviar'
+        transfer_with_tax: '{count} traspasos con datos fiscales'
+      blocker_fields: 'Campos: {fields}'
+      checked_again: La preparación se vuelve a comprobar.
+      close: Hecho
+      conflict_choice: Qué conservar
+      conflicts_description: Otra ventana guardó estos movimientos después de que
+        los leyeras. Elige qué conservar en cada uno.
+      conflicts_looked: He revisado lo que cambió
+      conflicts_title: Cambiado desde que lo leíste
+      continue: Seguir guardando
+      done: Guardado
+      done_description: Lo que respondió el libro, cambio a cambio.
+      done_nothing: No se ha guardado nada
+      done_partly: Guardado en parte
+      drop: Quitar los cambios de {movement}
+      filter: Filtrar los cambios
+      fix:
+        business: Clasificar todos como Profesional
+        drop_action: Quitar la acción
+        drop_approval: Quitar la aprobación
+        drop_changes: Quitar los cambios
+        drop_edits: Quitar las ediciones
+        drop_share: Quitar la parte
+        go_to_draft: Ir al movimiento nuevo
+        keep_first: Conservar la primera acción
+        keep_stored: Conservar el valor guardado
+        personal: Clasificar todos como Personal
+        set_currency: Indicar la moneda
+        set_share: Indicar la parte
+        show: Mostrar en la tabla
+      gone: Eliminado o movido fuera del periodo desde que lo leíste.
+      gone_mine: Mantenerlo preparado
+      gone_movement: Un movimiento que ya no se lee
+      gone_theirs: Quitar los cambios
+      held: '{count} retenidos'
+      held_note: '{count} retenidos por los problemas de arriba; siguen preparados.'
+      keep_editing: Seguir editando
+      link:
+        amount_differs: El importe difiere en {amount}
+        counterparty_differs: Contraparte distinta
+        differ: Sé que difieren
+        linked_elsewhere: Factura ya vinculada a {count} movimientos
+        sure: Vincular estos · permanente
+      mine: Conservar el mío
+      more: '{count} más'
+      needs_you: Primero necesita tu atención
+      new: '{count} nuevos'
+      now_stored: Ahora en el libro
+      one_by_one: '{count} uno a uno (unos {minutes} min)'
+      outcome:
+        applied: Guardado
+        applied_new_id: Guardado con una nueva referencia
+        not_sent_after_part: 'No enviado: se rechazó entera una parte anterior.'
+        not_sent_after_refusal: 'No enviado: se rechazó un cambio anterior de este
+          movimiento.'
+        not_sent_paused: 'No enviado: escrituras en pausa tras un resultado desconocido.
+          Sigue preparado.'
+        not_sent_stopped: 'No enviado: la sesión se cerró. Sigue preparado.'
+        refused: 'Rechazado: {reason}. Sigue preparado.'
+        saved_unread: Guardado, pero no se leyó la respuesta. Vuelve a leer para verlo.
+        settled: Guardado o ya estaba así
+        settled_value: 'Guardado o ya estaba así: {field} es {value}'
+        unchanged: El libro ya lo tenía. No cambió nada.
+        unchanged_value: El libro ya tenía {field} {value} (leído de nuevo). No cambió
+          nada.
+        unknown: Puede que se haya guardado o no. Las escrituras están en pausa; vuelve
+          a leer para saberlo.
+      outcomes: Lo que respondió el libro
+      part_refused: 'No guardado: el libro cambió mientras se guardaba. No se guardó
+        nada de esta parte.'
+      part_unknown: Resultado desconocido para esta parte entera. Las escrituras están
+        en pausa.
+      paused_footer: Las escrituras están en pausa hasta que vuelvas a leer.
+      permanent: Permanente
+      permanent_note: Un vínculo no se puede quitar después, ni aquí ni en ningún
+        otro sitio. Marca cada uno del que estés seguro.
+      progress: Progreso del guardado
+      progress_count: '{done} de {total} guardados'
+      read_failed: 'No se ha podido volver a leer el libro: no se ha guardado nada'
+      reading: Leyendo el libro de nuevo…
+      reject: 'rechazado: {reason}'
+      rows: Cambios por movimiento
+      save: Guardar {count}
+      save_held: Guardar {count} · {held} retenidos
+      saving: Guardando
+      saving_description: Cada cambio se envía una vez, en orden.
+      show_all: Mostrar todo
+      show_rows: Mostrar filas
+      shown: '{shown} de {total}'
+      step:
+        add: Movimiento nuevo · {movement}
+        bulk: Parte {part} de {parts} · {count} guardados juntos
+      stopped: 'La sesión se cerró: lo que no se envió sigue preparado'
+      summary: Resumen
+      summary_change: Cambio
+      summary_field: Campo
+      summary_movements: Movimientos
+      tally:
+        applied: Guardados
+        not_sent: No enviados
+        refused: Rechazados
+        saved_unread: Guardados, sin leer
+        settled: Guardados o ya así
+        unchanged: Sin cambios
+        unknown: Resultado desconocido
+      technical: Detalles técnicos
+      theirs: Tomar el guardado
+      tick_links: Marca cada vínculo permanente para guardar.
+      title: Revisar y guardar · {count}
+      together: '{count} guardados juntos'
+      unknown_note: 'Puede que se haya guardado o no. No se reintenta nada: las escrituras
+        esperan a que vuelvas a leer.'
+      unknown_title: Un guardado tiene un resultado desconocido
+      when_read: Cuando lo leíste
+      yours: Tu cambio preparado
     category:
       amortizacion_vivienda_afecto: Amortización de la vivienda afecta
       arrendamiento_local: Alquiler del local
@@ -912,6 +1063,7 @@ desktop:
       transfers_only: Los traspasos solo pueden ser personales o quedar sin clasificar
     close: Cerrar el libro
     column:
+      account: Cuenta
       amount: Importe
       category: Categoría
       classification: Clasificación
@@ -947,6 +1099,11 @@ desktop:
       presets: Predefinidas
       reset: Restablece las columnas
       title: Columnas
+    cost:
+      cancel: Cancelar
+      description: 'Cada uno carga y guarda todo el libro: unos {minutes} min al guardar.'
+      stage: Preparar igualmente
+      title: '{count} guardados uno a uno'
     count:
       to_classify: '{count} por clasificar'
     density:
@@ -960,6 +1117,89 @@ desktop:
       outgoing: Salida
     documents:
       count: '{count} documentos'
+    draft:
+      describe: Movimiento nuevo, sin guardar
+      new: Nuevo
+      remove: Quitar movimiento nuevo
+      required: Obligatorio
+      untitled: Movimiento nuevo
+    edit:
+      changed_was: cambiado, sin guardar, antes {was}
+      cleared: vaciado
+      empty: vacío
+      held:
+        cannot_clear: No se puede vaciar
+        needs_classification: Primero necesita una clasificación
+      hint:
+        amount: 'Punto decimal, sin separador de miles: 1234.56'
+        date: 'Año-mes-día: 2026-10-05'
+        figure: 'Punto decimal, sin separador de miles: 1234.56'
+        percent: 21 para el 21 %
+      lock:
+        after_add: Se indica cuando el movimiento esté guardado
+        derived: Lo calcula Cadrumo
+        not_active: 'No activo: {state}. Solo cambian los movimientos activos.'
+        sealed: 'Sellado: lo usa una declaración finalizada'
+        transfer: Los traspasos no llevan datos fiscales
+      new_identity: Nueva referencia al guardar
+      no_match: No hay coincidencias
+      not_cleared: '{count} sin vaciar: {reason}'
+      not_saved_was: 'Sin guardar · guardado: {was}'
+      redo_nothing: Nada que rehacer
+      redone: 'Rehecho: {what}'
+      refusal:
+        ambiguous_grouping: '«{raw}» se puede leer de dos maneras: escríbelo sin separador
+          de miles, como 1000 o 1.5.'
+        cannot_clear: 'Ninguna operación lo vacía: escribe otro valor'
+        comma_decimal: '«{raw}» usa coma decimal: escribe {suggestion}.'
+        currency_symbol: '«{raw}» lleva símbolo de moneda: escribe solo el número.'
+        date_not_in_calendar: «{raw}» no es un día del calendario.
+        date_not_iso: '«{raw}»: escribe la fecha empezando por el año, {suggestion}.'
+        exponent: '«{raw}» está en notación exponencial: escribe las cifras.'
+        grouping: '«{raw}» separa los miles: escribe {suggestion}.'
+        line_break: '«{raw}» contiene un tabulador o un salto de línea: déjalo en
+          una línea.'
+        locked: No se edita aquí
+        needs_share: '«{raw}»: Mixto necesita una parte profesional, como Mixto 50
+          %.'
+        not_a_date: '«{raw}» no es una fecha: escribe 2026-10-05.'
+        not_a_number: «{raw}» no es un número.
+        percent_above_100: «{raw}» supera el 100 %.
+        percent_as_fraction: '«{raw}» parece una fracción: escribe {suggestion} para
+          el {suggestion} %.'
+        period_unknown: «{raw}» no es un periodo.
+        required: 'Obligatorio: no se puede vaciar'
+        signed: '«{raw}» lleva signo: escribe el importe sin él e indica el sentido.'
+        too_long: '«{raw}» es demasiado largo: como mucho {limit} caracteres.'
+        too_many_decimals: «{raw}» tiene más de {limit} decimales.
+        unknown_choice: «{raw}» no es una de las opciones.
+        year_not_a_number: «{raw}» no es un año.
+        year_out_of_range: «{raw}» está fuera de los años que admite Cadrumo.
+        zero: '«{raw}» es cero: un importe es mayor que cero.'
+      revert_cell: Revertir celda
+      revert_movement: Revertir movimiento
+      reverted_cell: '{field} revertido'
+      reverted_movement: Movimiento revertido
+      row_changes: '{count} cambios sin guardar'
+      row_unsaved: Tiene cambios sin guardar
+      search: Buscar en {column}
+      step:
+        add_draft: movimiento nuevo
+        bulk_set: clasificación
+        clear: vaciado
+        discard: descarte
+        drop_action: acción quitada
+        edit_draft: edición del movimiento nuevo
+        fill: relleno hacia abajo
+        paste: pegado
+        remove_draft: movimiento nuevo quitado
+        revert_cell: celda revertida
+        revert_movement: movimiento revertido
+        set: edición
+        stage_action: acción
+      undo_applied: Los cambios guardados no se deshacen aquí
+      undo_nothing: Nada que deshacer
+      undone: 'Deshecho: {what}'
     empty: No hay movimientos en {period}
     empty_all: Aún no hay movimientos
     empty_filtered: Ningún movimiento coincide
@@ -1039,6 +1279,24 @@ desktop:
         revisa el archivo antes de exportar otra vez.'
       without_staged: Exportar sin ellos
     failed: No se ha podido leer el libro.
+    field:
+      booked_date: Fecha contable
+      business_pct: Parte profesional
+      counterparty_country: País de la contraparte
+      counterparty_identification_state: Identificación a efectos de IVA
+      currency: Moneda
+      deduction_fact_kind: Hecho deducible
+      investment_asset_id: Bien de inversión
+      m210_income_classification: Renta del modelo 210
+      own_account_id: Cuenta
+      recargo_amount: Recargo
+      usage_ratio_id: Ratio de uso
+      value_date: Fecha valor
+    fill:
+      done: '{count} celdas rellenadas · sin guardar'
+      done_kept: '{count} celdas rellenadas · {kept} sin cambios'
+      down: Rellenar hacia abajo
+      too_short: Selecciona primero dos filas o más y rellena hacia abajo
     filters:
       account: Cuenta
       active: '{count} activos'
@@ -1067,6 +1325,7 @@ desktop:
       to_match_chip: Por conciliar
     grid: Movimientos, {period}
     group:
+      account: Cuenta
       business: Empresarial…
       by: Agrupar por
       category: Categoría
@@ -1078,6 +1337,7 @@ desktop:
       description: Descripción, sin referencias
       direction: Sentido
       empty:
+        account: Sin cuenta
         category: Sin categoría
         category_family: Sin categoría
         classification: Sin valor
@@ -1531,6 +1791,12 @@ desktop:
       recargo_equivalencia: Recargo de equivalencia
       regimen_simplificado: Régimen simplificado
       unknown: Desconocida
+    leave:
+      cancel: Cancelar
+      description: '{count} cambios están solo en esta ventana. Si sales, se pierden.'
+      discard: Descartar y salir
+      review: Revisar y guardar
+      title: ¿Salir con cambios sin guardar?
     lifecycle:
       active: Activo
       archived: Archivado
@@ -1545,6 +1811,33 @@ desktop:
     no_rate: Sin tipo de cambio
     no_rate_detail: 'No hay tipo de cambio para esta fecha: el valor en EUR no se
       conoce y no es cero.'
+    paste:
+      apply: Pegar {count} celdas
+      blanks: Celdas en blanco
+      blanks_note: Una celda en blanco no cambia nada; solo Suprimir vacía.
+      cancel: Cancelar
+      changes: Celdas que cambian
+      description: '{rows} filas en {columns}. No se prepara nada hasta que pegues.'
+      done: '{count} celdas pegadas · sin guardar'
+      done_refused: '{count} celdas pegadas · {refused} rechazadas, marcadas en la
+        tabla'
+      dropped: Más allá de la última fila o columna
+      identity_note: Cambiar la descripción, el importe, la fecha o la cuenta da al
+        movimiento una nueva referencia al guardarlo.
+      new_identity: Nueva referencia
+      refused: Rechazadas
+      refused_empty: Nada que pegar
+      refused_unclosed_quote: 'No pegado: hay unas comillas sin cerrar'
+      single_writes: Guardados uno a uno
+      title: ¿Pegar en la tabla?
+    paused:
+      dismiss: Cerrar
+      found_not_saved: '{movement} no se guardó; sigue preparado'
+      found_saved: '{movement} se guardó'
+      found_undetermined: '{movement}: la lectura no lo aclara; sigue preparado y
+        guardarlo de nuevo es el mismo guardado'
+      reread: Volver a leer
+      title: 'Resultado desconocido: escrituras en pausa'
     period:
       all: Todos los periodos
       choose: Elige un periodo
@@ -1664,6 +1957,7 @@ desktop:
       current: '{key}, {direction}'
       desc: Descendente
       key:
+        account: Cuenta
         amount: Importe
         category: Categoría
         classification: Clasificación
@@ -1704,6 +1998,20 @@ desktop:
       transfer: Traspasos {amount}
     title: Libro
     toolbar: Vista de movimientos
+    tray:
+      actions: '{count} acciones'
+      discard: Descartar
+      edits: '{edits} cambios en {movements} movimientos'
+      in_parts: se guarda por partes
+      name: '{count} sin guardar: {what}'
+      new: '{count} nuevos'
+      paused: escrituras en pausa
+      paused_reason: 'Vuelve a leer primero: un guardado tiene un resultado desconocido'
+      region: Cambios sin guardar
+      review: Revisar
+      review_count: Revisar y guardar {count} cambios
+      undo: Deshacer
+      window_only: solo en esta ventana
     unavailable: Aún no disponible
     view:
       all: Todos
