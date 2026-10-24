@@ -123,6 +123,35 @@ Found while fixing edit-request-bound: the relay action added in `1706f66723` se
 ### hu-navigation-flake | low | One Hungarian scenario failed twice for one lane and never for another
 "modelo 347-0A speaks hu" opened the Profile pane instead of the Declarations list for lane B, alone and in a full run, and passed 27 times for the proof lane on the same tree. The suspected cause is the Declarations rail action toggling a page that was already open; it stays a watch item until a trace reproduces it.
 
+The re-review of the fix commits (`788d9231f0`, `f5a6e55f11`, `5da639c4ba`, `ddecebc18e`, independent opus lane, 2026-10-24) found edit-request-bound, financial-submit-frame, correction-outcomes, create-saved-unread, admission-refusal-words, client-editability-set, export-record-availability, stored-subject-list and record-drift resolved, wipe-coverage, mutation-paths-untested and stale-rebase-divergence partly resolved, and these new findings.
+
+### renew-request-value-digest | high | The renewal request journals an unkeyed per-box digest of each staged box's value
+`state_digest` is SHA-256 over origin, type and value with no key (`src/cadrumo/application/modelo/work_form_models.py:452`); the desktop sends it as `held_state` in `ModeloEditRenewRequest.staged` (`native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts:71`), and `modelo.edit.renew` is journaled credential-free (`_supervisor_submission.py:108`). A single amount's digest is reversible by enumeration, which `2026-08-24-modelo-edit-contract-adr` forbids in operation persistence. Reopens P01.S44 and P04.S46.
+
+### desktop-rebase-restage | medium | The desktop keeps a kept edit staged against the old box after a renewal
+The TUI re-stages each kept change against the renewed field and drops one now equal to the box's own value (`src/cadrumo/entrypoints/tui/modelo/workbench/session.py:228`); the desktop only removes dropped edits (`useEditReview.ts:182`), and its changed marks vanish on the next review.
+
+### rebase-untested | medium | No spec renders a kept, changed or dropped renewal outcome
+`renew-130.json` carries an empty rebase report and the scenario answers it whatever is staged, so "staged edits survive a renewal" would pass with the report ignored.
+
+### live-edit-proof | medium | The live test cannot tell a staging refusal from an operation refusal for edits
+`native/application/src/runtime_client.rs:2124` accepts `invalid` for preflight, apply and renew, which staging also answers for a malformed stream; no well-formed edit operand is admitted live.
+
+### ledger-port-stale-bounds | medium | The ledger port restates the removed request-line and character bounds
+`native/desktop/frontend/src/shell/ledger.ts:165` and `src/dev/ledgerFixture.ts:73` keep 12,032 characters and a 16,383-byte line; the ledger's to change, from host facts as the modelo port does.
+
+### edit-limit-above-relay | low | An edit body the host accepts can exceed the relay's bound and end the session
+`financial_body` and `MODELO_EDIT_BODY_LIMIT` use `REQUEST_LIMIT` (16 MiB + 64 KiB, `native/desktop/src-tauri/src/shell/modelo/mod.rs:307`) while the relay refuses an operand over 16 MiB with an ending refusal (`native/application/src/person_operations.rs:570`).
+
+### fixture-host-reduction-copy | low | The fixtures reimplement the host's path reduction in Python
+`modelo_fixtures.py` reads the host's keys but repeats the reduction; a Rust test should prove the host's own reduction yields the committed envelopes.
+
+### raw-body-framework-copy | low | The framework's own copy of a raw invoke body is not wiped
+`relay::wiped_body` (`native/desktop/src-tauri/src/shell/relay.rs:88`) copies the body into a zeroising buffer but cannot overwrite the framework's buffer; the decision record should state that bound.
+
+### review-package-availability | low | The window still decides when the review package is ready
+`FilingView.tsx:691` keys it on a verified calculation because the export offer does not list the package.
+
 Verified sound by the plan-close review: the closed admitted list pinned to the manifest, exact-profile filling and subject binding, files as session tokens, unknown versus refused on every mutation path with no resend, no logging or web storage in the Modelo host and components, typed entries only through the edit port with the buffer zeroed, list, header, next step, issue lines, sources, AEAT notes and receipt from shared producers, theme-only styling, missing drawn as a dash, and the prototype's interaction design unchanged.
 
 Verified sound: the next-step ladder and missing-value count are identical to the removed TUI code; origin, editability and source wording are faithful moves; no TUI module re-exports a moved name; the public round trip covers the new fields; the list read is exact-profile with whole-profile consent and no commit action; neither relay names a definition, the runtime refuses definitions without a financial operand, and both relays drop or overwrite the input after sending; every moved catalogue key exists in all four languages. Not verified by the reviewer: the full TUI and Rust suites (relying on the ledger's results), the full type and Ruff gates, the S02 mutation claim, and a live end-to-end financial submit through the Rust relay to a worker.
