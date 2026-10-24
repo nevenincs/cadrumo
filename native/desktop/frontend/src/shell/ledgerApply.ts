@@ -555,8 +555,9 @@ export function resolveUnknown(
       break;
     case "action": {
       const action = step.action;
+      // An action over several movements is told by none of them alone.
       const row =
-        action.kind === "merge" ? undefined : fresh.get(action.transactionId);
+        "transactionId" in action ? fresh.get(action.transactionId) : undefined;
       const state = row?.transaction.lifecycle_state;
       const verdict = (saved: boolean): UnknownResolution =>
         saved ? "saved" : "not_saved";
