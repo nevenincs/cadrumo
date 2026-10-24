@@ -310,10 +310,22 @@ test("classifying is one command: hidden selections are held, Business asks a ca
   await expect(cellOf(first, "status")).toContainText(
     label("desktop.ledger.status.pending"),
   );
-  // Mixed asks for a share and refuses a fraction.
+  // Mixed asks for a share and a category a share applies to, and
+  // refuses a fraction.
   await cellOf(first, "description").click();
   await target.keyboard.press("Alt+KeyM");
   await expect(dialog).toBeVisible();
+  await dialog.locator(".ledger-classify-category").click();
+  await expect(
+    target.getByRole("option", {
+      name: label("desktop.ledger.category.material_oficina"),
+    }),
+  ).toHaveCount(0);
+  await target
+    .getByRole("option", {
+      name: label("desktop.ledger.category.telefonia_movil"),
+    })
+    .click();
   await dialog.getByLabel(label("desktop.ledger.classify.share")).fill("0.5");
   await dialog.locator(".ledger-classify-stage").click();
   await expect(dialog).toContainText(

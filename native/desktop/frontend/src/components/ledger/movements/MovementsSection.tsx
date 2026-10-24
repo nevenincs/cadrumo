@@ -21,6 +21,7 @@ import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import {
   CLASSIFY_KINDS,
   categoryCells,
+  categorySplit,
   classifyAvailability,
   classifyCells,
   type ClassifyBlock,
@@ -76,6 +77,7 @@ import {
   serverSortField,
   shownColumns,
   sortRows,
+  stagedClassifyCount,
   type ColumnId,
   type CurrencySum,
   type GroupingId,
@@ -112,6 +114,25 @@ import type { SpendingCategoryFamily } from "../../../shell/ledgerVocabulary";
 /** How long a confirmation stays on screen. */
 const TOAST_MS = 4000;
 
+/** The page's classify chords, by the key they take with Alt. */
+const CHORD_KINDS: Partial<Record<string, ClassifyKind>> = {
+  KeyB: "business",
+  KeyP: "personal",
+  KeyM: "mixed",
+};
+/** Whether `element` takes typed text, so a chord there is its own: a
+ * checkbox or a radio does not. */
+function takesText(element: HTMLElement): boolean {
+  if (element.isContentEditable) return true;
+  if (element instanceof HTMLTextAreaElement) return true;
+  if (element instanceof HTMLSelectElement) return true;
+  if (element instanceof HTMLInputElement)
+    return !["checkbox", "radio", "button", "submit", "reset"].includes(
+      element.type,
+    );
+  return false;
+}
+
 const idOf = (row: LedgerRow) => row.transaction.transaction_id;
 
 /** A classification dialog asked for, and what it would act on. */
@@ -121,6 +142,12 @@ type Asking = {
   skipped: number;
   partial: boolean;
   error: string | null;
+  /** Of `ids`, those that take a spending category and the income. */
+  split: { expenses: number; income: number };
+  /** A share typed beside the control that asked. */
+  share?: string;
+  /** The rows a cell range covers, where they are not the selection. */
+  range?: string[];
   /** A new movement's classification, filled in rather than staged. */
   draft?: string;
 };
@@ -715,6 +742,7 @@ export function MovementsSection({
         skipped: 0,
         partial: false,
         error: null,
+        split: { expenses: 1, income: 0 },
         draft: key,
       }),
     say: (text) => setToast(text),
@@ -749,27 +777,32 @@ export function MovementsSection({
           ? "MIXED"
           : "PERSONAL",
     );
-    const said = answer.category
+    const detail = [
+      answer.share ? `${answer.share.trim().replace(/\s*%$/, "")}%` : "",
+      answer.category && categorySplit(ids, byId).expenses > 0
+        ? categoryLabel(t, answer.category)
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    const said = detail
       ? t("desktop.ledger.classify.staged_detail", {
           classification,
-          detail: categoryLabel(t, answer.category),
+          detail,
           count: outcome.movements,
         })
-      : answer.share
-        ? t("desktop.ledger.classify.staged_detail", {
-            classification,
-            detail: `${answer.share.trim().replace(/\s*%$/, "")}%`,
-            count: outcome.movements,
-          })
-        : t("desktop.ledger.classify.staged", {
-            classification,
-            count: outcome.movements,
-          });
+      : t("desktop.ledger.classify.staged", {
+          classification,
+          count: outcome.movements,
+        });
     edit.stageChecked(outcome.event, () => setToast(said));
     return null;
   }
 
-  /** The page's one classify command: every control calls it. */
+  /** The page's one classify command: every control calls it. Business
+   * asks for a category only where a movement takes one, so income alone
+   * is staged at once; Mixed asks for its share and, where a movement
+   * takes one, a category a share applies to. */
   function classifySelection(kind: ClassifyKind, scope?: ClassifyScope) {
     const availability = classifyAvailability(
       kind,
@@ -780,31 +813,44 @@ export function MovementsSection({
       setToast(blockText(t, availability.block));
       return;
     }
-    // What the control already asked for is not asked again.
-    const given =
-      kind === "business" ? scope?.answer?.category : scope?.answer?.share;
-    if (kind !== "personal" && given) {
-      const error = stageClassified(kind, availability.ids, scope!.answer!);
-      if (error)
-        setAsking({
-          kind,
-          ids: availability.ids,
-          skipped: availability.skipped,
-          partial: availability.partial,
-          error,
-        });
-      return;
-    }
     if (kind === "personal") {
       stageClassified(kind, availability.ids, {});
       return;
     }
+    const answer = scope?.answer ?? {};
+    const split = categorySplit(availability.ids, byId);
+    const outcome = classifyCells(
+      { kind, ids: availability.ids, ...answer },
+      byId,
+    );
+    // What the control already asked for is not asked again, and nothing
+    // is asked of income alone.
+    if (outcome.kind === "staged") {
+      stageClassified(kind, availability.ids, answer);
+      return;
+    }
+    // A cell range over other rows than the selection is said, with the
+    // way to act on the range instead.
+    const drawn = scope?.ids ? null : (grid.current?.cellRange() ?? null);
+    const ranged = drawn ? drawn.rows.filter((id) => byId.has(id)) : [];
+    const differs =
+      ranged.length > 1 &&
+      (ranged.length !== selected.size ||
+        ranged.some((id) => !selected.has(id)));
     setAsking({
       kind,
       ids: availability.ids,
       skipped: availability.skipped,
       partial: availability.partial,
-      error: null,
+      split,
+      error:
+        outcome.kind === "refused"
+          ? t("desktop.ledger.classify.share_refused", {
+              raw: outcome.refusal.raw,
+            })
+          : null,
+      ...(answer.share ? { share: answer.share } : {}),
+      ...(differs ? { range: ranged } : {}),
     });
   }
   const availabilityOf = (kind: ClassifyKind) =>
@@ -828,6 +874,7 @@ export function MovementsSection({
       skipped: ids.length - takes.length,
       partial,
       error: null,
+      split: categorySplit(takes, byId),
     });
   }
 
@@ -907,17 +954,30 @@ export function MovementsSection({
       stepIssue(event.shiftKey ? -1 : 1);
       return;
     }
-    if (!exactly(event, { alt: true })) return;
-    const kind = (
-      { KeyB: "business", KeyP: "personal", KeyM: "mixed" } as const
-    )[event.code as "KeyB" | "KeyP" | "KeyM"];
-    if (!kind) return;
-    // A field keeps its own keys.
-    if ((event.target as HTMLElement).closest("input, textarea, select"))
-      return;
-    event.preventDefault();
-    classifySelection(kind);
   };
+
+  // Alt+B, Alt+P and Alt+M classify the selection wherever focus is on the
+  // Ledger page, as Alt+I opens the inspector: a row checkbox, the toolbar
+  // and the inspector beside the grid included. A text field keeps its keys,
+  // and a dialog over the page is not the page.
+  const chord = useRef<(kind: ClassifyKind) => void>(() => undefined);
+  useEffect(() => {
+    chord.current = (kind) => classifySelection(kind);
+  });
+  useEffect(() => {
+    const onChord = (event: globalThis.KeyboardEvent) => {
+      if (event.defaultPrevented || event.isComposing) return;
+      if (!exactly(event, { alt: true })) return;
+      const kind = CHORD_KINDS[event.code];
+      if (!kind) return;
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest(".ledger-page") || takesText(target)) return;
+      event.preventDefault();
+      chord.current(kind);
+    };
+    document.addEventListener("keydown", onChord);
+    return () => document.removeEventListener("keydown", onChord);
+  }, []);
 
   // ---- The palette -----------------------------------------------------------
   const latest = useRef<() => Action[]>(() => []);
@@ -1126,16 +1186,7 @@ export function MovementsSection({
         });
   const status = [shownNote, selectedNote].filter(Boolean).join(" · ");
   const unsaved = stageTally(stage.content).units;
-  const stagedClassify = [...sets.toClassify].filter(
-    (id) =>
-      stage.content.rows[id]?.business_classification?.kind === "set" ||
-      stage.content.actions.some(
-        (action) =>
-          action.kind === "suggestion" &&
-          action.transactionId === id &&
-          action.decision === "apply",
-      ),
-  ).length;
+  const stagedClassify = stagedClassifyCount(sets.toClassify, stage.content);
   const groupLabels = useMemo(
     () =>
       [
@@ -1407,6 +1458,13 @@ export function MovementsSection({
         <ClassifyDialog
           kind={asking.kind}
           movements={asking.draft ? 1 : asking.ids.length}
+          split={asking.split}
+          {...(asking.share ? { initialShare: asking.share } : {})}
+          onClosed={
+            asking.draft
+              ? undefined
+              : () => inspectorCommands.current.focusActive()
+          }
           skipped={asking.skipped}
           partial={asking.partial}
           error={asking.error}

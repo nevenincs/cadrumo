@@ -11,7 +11,7 @@ import {
   type StageCell,
   type StageEvent,
 } from "./ledgerStage";
-import { isSpendingCategory } from "./ledgerVocabulary";
+import { isSpendingCategory, takesShare } from "./ledgerVocabulary";
 
 export const CLASSIFY_KINDS = ["business", "personal", "mixed"] as const;
 export type ClassifyKind = (typeof CLASSIFY_KINDS)[number];
@@ -60,6 +60,36 @@ export type ClassifyAvailability =
 
 const TRANSFER = "INTERNAL_TRANSFER";
 
+/**
+ * Whether a movement takes a spending category: an expense, or an income
+ * that refunds one, carrying a purchase invoice. A spending category says
+ * what a business expense is; pure income is classified by its direction
+ * alone and never reads one, as the product's readiness check holds.
+ */
+export function takesExpenseCategory(row: LedgerRow): boolean {
+  const { direction, purchase_invoice_evidence_id: evidence } = row.transaction;
+  return (
+    direction === "OUTGOING" || (direction === "INCOMING" && evidence !== null)
+  );
+}
+
+/** How the movements a classify command stages split by what they take: a
+ * spending category, or none, being income. */
+export function categorySplit(
+  ids: readonly string[],
+  rows: ReadonlyMap<string, LedgerRow>,
+): { expenses: number; income: number } {
+  let expenses = 0;
+  let income = 0;
+  for (const id of ids) {
+    const row = rows.get(id);
+    if (!row) continue;
+    if (takesExpenseCategory(row)) expenses += 1;
+    else income += 1;
+  }
+  return { expenses, income };
+}
+
 /** Whether `kind` can classify `target`, and on which movements. */
 export function classifyAvailability(
   kind: ClassifyKind,
@@ -97,8 +127,9 @@ export function classifyAvailability(
   };
 }
 
-/** What the person supplied with the command: Business always names a
- * category, Mixed always a business share, typed as a percentage. */
+/** What the person supplied with the command: Business names a category
+ * where a movement takes one, Mixed a business share, typed as a
+ * percentage, and the category where a movement takes one. */
 export type ClassifyRequest = {
   kind: ClassifyKind;
   ids: readonly string[];
@@ -120,10 +151,13 @@ export type ClassifyOutcome =
 
 /**
  * The cells that classify `request.ids` as asked: the classification, the
- * category with Business, the share with Mixed, and a clear of a stored
- * share where the movement stops being Mixed. A category already stored is
- * left as it is for Personal and Mixed. Movements the rows do not hold are
- * left out.
+ * share with Mixed and a clear of a stored share where the movement stops
+ * being Mixed, and the category with Business or Mixed on the movements
+ * that take a spending category; income takes none. Mixed takes only a
+ * category a share applies to. Where a movement takes a category and none
+ * was given, the category is asked for. A category already stored is left
+ * as it is for Personal, and for income. Movements the rows do not hold
+ * are left out.
  */
 export function classifyCells(
   request: ClassifyRequest,
@@ -131,17 +165,22 @@ export function classifyCells(
 ): ClassifyOutcome {
   let category: string | null = null;
   let share: string | null = null;
-  if (request.kind === "business") {
-    category = request.category ?? null;
-    if (category === null || !isSpendingCategory(category))
-      return { kind: "needs", field: "category" };
-  }
   if (request.kind === "mixed") {
     const parsed = parsePercent(request.share ?? "");
     if (parsed.kind === "empty") return { kind: "needs", field: "share" };
     if (parsed.kind === "refused")
       return { kind: "refused", field: "share", refusal: parsed.refusal };
     share = parsed.value;
+  }
+  if (request.kind !== "personal") {
+    const expenses = categorySplit(request.ids, rows).expenses;
+    const given = request.category ?? null;
+    const fits =
+      given !== null &&
+      isSpendingCategory(given) &&
+      (request.kind === "business" || takesShare(given));
+    if (expenses > 0 && !fits) return { kind: "needs", field: "category" };
+    if (expenses > 0) category = given;
   }
   const cells: StageCell[] = [];
   let movements = 0;
@@ -170,7 +209,7 @@ export function classifyCells(
         value: { kind: "clear" },
         stored: storedShare,
       });
-    if (category !== null)
+    if (category !== null && takesExpenseCategory(row))
       cells.push({
         id,
         field: "category_id",
@@ -210,9 +249,10 @@ export type ClassifyScope = {
 const TAKES_CATEGORY = ["BUSINESS", "MIXED"];
 
 /**
- * The cells that set `category` on those of `ids` that are active and
- * classified Business or Mixed; the others are counted as skipped, since
- * a movement still to classify is classified first, with its category.
+ * The cells that set `category` on those of `ids` that are active,
+ * classified Business or Mixed and take a spending category; the others
+ * are counted as skipped, since a movement still to classify is classified
+ * first, with its category, and income takes none.
  */
 export function categoryCells(
   ids: readonly string[],
@@ -234,6 +274,7 @@ export function categoryCells(
       !row ||
       row.transaction.lifecycle_state !== "ACTIVE" ||
       !TAKES_CATEGORY.includes(row.transaction.business_classification) ||
+      !takesExpenseCategory(row) ||
       !isSpendingCategory(category)
     ) {
       skipped += 1;

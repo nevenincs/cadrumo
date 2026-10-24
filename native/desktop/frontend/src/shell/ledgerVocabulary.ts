@@ -96,6 +96,42 @@ export function isSpendingCategory(id: string): id is SpendingCategory {
   return FAMILY_OF.has(id);
 }
 
+/** The spending categories whose deduction the registry measures by a
+ * usage ratio, personal or home-area, in the registry's order: the ones a
+ * business-use share applies to, so a Mixed movement takes one of them. */
+export const USAGE_RATIO_CATEGORIES = [
+  "arrendamiento_vivienda_afecto",
+  "suministros_home_office_luz",
+  "suministros_home_office_agua",
+  "suministros_home_office_gas",
+  "suministros_home_office_internet",
+  "amortizacion_vivienda_afecto",
+  "ibi_vivienda_afecto",
+  "comunidad_vivienda_afecto",
+  "telefonia_movil",
+  "telefonia_fija",
+  "vehiculo_combustible",
+  "vehiculo_mantenimiento",
+  "vehiculo_seguro",
+  "vehiculo_peaje",
+  "vehiculo_parking",
+] as const satisfies readonly SpendingCategory[];
+
+const TAKES_SHARE = new Set<string>(USAGE_RATIO_CATEGORIES);
+
+/** Whether a business-use share applies to `category`. */
+export const takesShare = (category: string) => TAKES_SHARE.has(category);
+
+/** The families and their members a business-use share applies to, in the
+ * registry's order; a family none of whose members takes one is left out. */
+export const SHARE_CATEGORY_FAMILIES: readonly (readonly [
+  SpendingCategoryFamily,
+  readonly SpendingCategory[],
+])[] = SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) => {
+  const sharing = members.filter((member) => TAKES_SHARE.has(member));
+  return sharing.length ? [[family, sharing] as const] : [];
+});
+
 /** The IVA categories of the registry's regulation catalogue. */
 export const IVA_CATEGORIES = [
   "domestic_general",

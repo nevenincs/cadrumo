@@ -12,6 +12,7 @@ import type {
 } from "../../../shell/ledger";
 import { compareDecimal, sameDecimal } from "../../../shell/ledgerGrammar";
 import { importBatchFilters } from "../../../shell/ledgerImports";
+import type { StagedContent } from "../../../shell/ledgerStage";
 import {
   categoryFamily,
   SPENDING_CATEGORY_FAMILIES,
@@ -292,6 +293,24 @@ export const REASON_FIX: Record<
     column: "iva_category",
   },
 };
+
+/** Movements to classify whose staged change classifies them or approves a
+ * suggestion: the staged progress the to-classify pill draws (M8). */
+export function stagedClassifyCount(
+  toClassify: ReadonlySet<string>,
+  content: StagedContent,
+): number {
+  return [...toClassify].filter(
+    (id) =>
+      content.rows[id]?.business_classification?.kind === "set" ||
+      content.actions.some(
+        (action) =>
+          action.kind === "suggestion" &&
+          action.transactionId === id &&
+          action.decision === "apply",
+      ),
+  ).length;
+}
 
 /** Whether a movement is foreign and has no euro value: the EUR column
  * says "No rate", never zero. */

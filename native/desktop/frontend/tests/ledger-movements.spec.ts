@@ -23,14 +23,18 @@ import { statusWord } from "../src/components/ledger/movements/movementWords";
 import type { LedgerRow, LedgerStatusResult } from "../src/shell/ledger";
 import {
   categoryCells,
+  categorySplit,
   classifyAvailability,
   classifyCells,
+  takesExpenseCategory,
 } from "../src/shell/ledgerCommands";
 import {
   IRPF_CATEGORIES,
   IVA_CATEGORIES,
+  SHARE_CATEGORY_FAMILIES,
   SPENDING_CATEGORIES,
   SPENDING_CATEGORY_FAMILIES,
+  USAGE_RATIO_CATEGORIES,
 } from "../src/shell/ledgerVocabulary";
 import type { ReadinessSnapshot } from "../src/shell/ledgerWindow";
 import { hexId, movement } from "./support/ledger";
@@ -384,9 +388,12 @@ test("classifying asks for what each kind needs and stages it as one step", () =
     [B, "business_classification", { kind: "set", value: "BUSINESS" }],
     [B, "category_id", { kind: "set", value: "material_oficina" }],
   ]);
-  // Mixed stages its share as the fraction the product stores; leaving
-  // Mixed clears the stored share.
-  const mixed = classifyCells({ kind: "mixed", ids: [A], share: "60" }, byId);
+  // Mixed stages its share as the fraction the product stores, with an
+  // expense's category; leaving Mixed clears the stored share.
+  const mixed = classifyCells(
+    { kind: "mixed", ids: [A], share: "60", category: "telefonia_movil" },
+    byId,
+  );
   expect(mixed.kind === "staged" && mixed.event.cells[1]).toEqual({
     id: A,
     field: "business_pct",
@@ -439,6 +446,135 @@ test("the page's vocabularies are the published registry's own lists", () => {
     .exec(registry("facts/0081-irpf-ledger-category-taxonomy.toml"))![1]!
     .split(",");
   expect([...IRPF_CATEGORIES]).toEqual(irpf);
+});
+
+test("income takes no spending category, and Mixed only one a share applies to", () => {
+  const OUT = hexId("10");
+  const IN = hexId("11");
+  const REFUND = hexId("12");
+  const income = new Map(
+    [
+      movement(OUT),
+      movement(IN, { direction: "INCOMING", description: "TALLERES ONDARA" }),
+      movement(REFUND, {
+        direction: "INCOMING",
+        purchase_invoice_evidence_id: "evidence-1",
+      }),
+    ].map((row) => [row.transaction.transaction_id, row]),
+  );
+  // An income that refunds an expense carries its purchase invoice and
+  // takes the expense's category; pure income takes none.
+  expect(takesExpenseCategory(income.get(OUT)!)).toBe(true);
+  expect(takesExpenseCategory(income.get(IN)!)).toBe(false);
+  expect(takesExpenseCategory(income.get(REFUND)!)).toBe(true);
+  expect(categorySplit([OUT, IN, REFUND], income)).toEqual({
+    expenses: 2,
+    income: 1,
+  });
+
+  // Business on income alone is staged at once, with no category.
+  const alone = classifyCells({ kind: "business", ids: [IN] }, income);
+  expect(alone.kind).toBe("staged");
+  if (alone.kind !== "staged") return;
+  expect(alone.event.cells.map((cell) => cell.field)).toEqual([
+    "business_classification",
+  ]);
+  // Business on expenses and income asks for a category, which only the
+  // expenses get.
+  expect(classifyCells({ kind: "business", ids: [OUT, IN] }, income)).toEqual({
+    kind: "needs",
+    field: "category",
+  });
+  const both = classifyCells(
+    { kind: "business", ids: [OUT, IN], category: "vehiculo_combustible" },
+    income,
+  );
+  expect(
+    both.kind === "staged" &&
+      both.event.cells
+        .filter((cell) => cell.field === "category_id")
+        .map((cell) => cell.id),
+  ).toEqual([OUT]);
+
+  // Mixed takes a category a business-use share applies to.
+  expect(
+    classifyCells(
+      {
+        kind: "mixed",
+        ids: [OUT],
+        share: "30",
+        category: "software_suscripcion",
+      },
+      income,
+    ),
+  ).toEqual({ kind: "needs", field: "category" });
+  const phone = classifyCells(
+    { kind: "mixed", ids: [OUT], share: "30", category: "telefonia_movil" },
+    income,
+  );
+  expect(
+    phone.kind === "staged" && phone.event.cells.map((cell) => cell.field),
+  ).toEqual(["business_classification", "business_pct", "category_id"]);
+  expect(
+    classifyCells({ kind: "mixed", ids: [IN], share: "30" }, income).kind,
+  ).toBe("staged");
+
+  // A category alone goes to no income.
+  const classified = new Map(
+    [...income.values()].map((row) => [
+      row.transaction.transaction_id,
+      {
+        ...row,
+        transaction: {
+          ...row.transaction,
+          business_classification: "BUSINESS",
+        },
+      },
+    ]),
+  );
+  expect(
+    categoryCells([OUT, IN, REFUND], "material_oficina", classified),
+  ).toMatchObject({ kind: "staged", movements: 2, skipped: 1 });
+});
+
+test("the categories a share applies to are the registry's usage-ratio ones", () => {
+  const profile = registry("facts/0064-categories-profile.toml");
+  const ratio = new Set(
+    [
+      ...profile.matchAll(
+        /key = "proportionality_kind\.([a-z_]+)\.is_usage_ratio", value = "true"/g,
+      ),
+    ].map((found) => found[1]),
+  );
+  expect(ratio.size).toBeGreaterThan(0);
+  // Every variant of a category names its proportionality kind.
+  const kinds = new Map<string, Set<string>>();
+  for (const variant of profile.split("[[fact.variants]]").slice(1)) {
+    const category = /name = "category", value = "([a-z_]+)"/.exec(
+      variant,
+    )?.[1];
+    const kind = /key = "proportionality_kind", value = "([a-z_]+)"/.exec(
+      variant,
+    )?.[1];
+    if (!category || !kind) continue;
+    const seen = kinds.get(category) ?? new Set<string>();
+    seen.add(kind);
+    kinds.set(category, seen);
+  }
+  const usage = SPENDING_CATEGORIES.filter((category) =>
+    [...(kinds.get(category) ?? [])].some((kind) => ratio.has(kind)),
+  );
+  expect([...USAGE_RATIO_CATEGORIES].sort()).toEqual([...usage].sort());
+  // The families offered with a share are the vocabulary's, narrowed.
+  const offered = SHARE_CATEGORY_FAMILIES.flatMap(([, members]) => members);
+  expect([...offered].sort()).toEqual([...usage].sort());
+  for (const [family, members] of SHARE_CATEGORY_FAMILIES) {
+    const all = SPENDING_CATEGORY_FAMILIES.find(([name]) => name === family);
+    expect(all, family).toBeDefined();
+    expect(members.every((member) => all![1].includes(member as never))).toBe(
+      true,
+    );
+  }
 });
 
 test("a reviewed movement is done only once readiness has measured it", () => {
