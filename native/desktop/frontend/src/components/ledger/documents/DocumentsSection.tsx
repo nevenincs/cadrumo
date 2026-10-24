@@ -80,6 +80,16 @@ export function DocumentsSection({
     "ledger.evidence.review.list",
     {},
   );
+  const pending = useMemo(
+    () =>
+      new Map(
+        (queue.read.value?.rows ?? []).map((row) => [
+          row.evidence_reference,
+          row.drafted_at,
+        ]),
+      ),
+    [queue.read.value],
+  );
   const records = useLedgerRead(
     port,
     reader,
@@ -359,6 +369,7 @@ export function DocumentsSection({
             records={recordList}
             rows={rows}
             inReview={inReview}
+            pending={pending}
             selected={record}
             onSelect={setRecord}
             onWritten={rereadAll}
@@ -374,6 +385,7 @@ export function DocumentsSection({
           port={port}
           locale={locale}
           read={attachments.read}
+          pending={pending}
           onRetry={attachments.reread}
           onReview={openReview}
         />

@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,13 @@ import { useStrings } from "../../../shell/strings";
 import { figureText } from "../invoices/invoiceWords";
 import { write } from "../invoices/invoiceWrites";
 import { dayText } from "../transfer/transferWords";
-import { useWritePause, WriteHold } from "../WritePause";
+import {
+  landingSettle,
+  useWritePause,
+  WriteHold,
+  type LandingCheck,
+} from "../WritePause";
+import { extractionLanding, recordLanding } from "./documentLanding";
 import {
   EVIDENCE_SHAPES,
   fieldWidth,
@@ -43,6 +49,7 @@ function RecordDetail({
   record,
   attachedTo,
   inReview,
+  drafted,
   onWritten,
   onRemoved,
   onReview,
@@ -53,6 +60,9 @@ function RecordDetail({
   record: EvidenceRecord;
   attachedTo: LedgerRow | null;
   inReview: boolean;
+  /** When this record's reading waiting for review was drafted, if one
+   * waits. */
+  drafted: string | null;
   onWritten(): void;
   onRemoved(): void;
   onReview(reference: string): void;
@@ -72,8 +82,12 @@ function RecordDetail({
   const planned = recordUpdate(record, typed);
   const pause = useWritePause();
   const name = fileName(record.source_path);
-  const undetermined = (saved: boolean) =>
-    pause.hold({ what: name, outcome: saved ? "saved_unread" : "unknown" });
+  const undetermined = (saved: boolean, check: LandingCheck) =>
+    pause.hold({
+      what: name,
+      outcome: saved ? "saved_unread" : "unknown",
+      settle: landingSettle(t, name, check),
+    });
   const refused = new Set(planned.kind === "refused" ? planned.fields : []);
   const shown = (field: EvidenceUpdateField) =>
     typed[field] ?? recordValue(record, field) ?? "";
@@ -92,7 +106,10 @@ function RecordDetail({
     } else if (sent.kind === "unknown") {
       setAsked(planned.request);
       setNotice({ kind: "unknown", asked: "update" });
-      undetermined(sent.saved);
+      undetermined(
+        sent.saved,
+        recordLanding(port, record.evidence_id, planned.request),
+      );
     } else
       setNotice({
         kind: "refused",
@@ -112,7 +129,7 @@ function RecordDetail({
       onRemoved();
     } else if (sent.kind === "unknown") {
       setNotice({ kind: "unknown", asked: "remove" });
-      undetermined(sent.saved);
+      undetermined(sent.saved, recordLanding(port, record.evidence_id, null));
     } else
       setNotice({
         kind: "refused",
@@ -129,7 +146,10 @@ function RecordDetail({
     if (sent.kind === "done") onReview(record.evidence_id);
     else if (sent.kind === "unknown") {
       setNotice({ kind: "unknown", asked: "read" });
-      undetermined(sent.saved);
+      undetermined(
+        sent.saved,
+        extractionLanding(port, record.evidence_id, drafted),
+      );
     } else
       setNotice({
         kind: "refused",
@@ -364,6 +384,7 @@ export function EvidenceRecords({
   records,
   rows,
   inReview,
+  pending,
   selected,
   onSelect,
   onWritten,
@@ -375,6 +396,8 @@ export function EvidenceRecords({
   records: EvidenceRecord[];
   rows: LedgerRow[] | null;
   inReview: ReadonlySet<string>;
+  /** When each reading waiting for review was drafted, by reference. */
+  pending: ReadonlyMap<string, string>;
   selected: string | null;
   onSelect(id: string | null): void;
   onWritten(): void;
@@ -385,6 +408,11 @@ export function EvidenceRecords({
   const pause = useWritePause();
   const [adding, setAdding] = useState(false);
   const [addFailed, setAddFailed] = useState<string | null>(null);
+  // The key of an add not seen to settle, by its file's name. Adding a file
+  // of that name again sends the same key, and the product resolves a
+  // repeated key to the record it already made, or refuses it when the
+  // content differs: so the add is repeatable and never doubles a record.
+  const unsettledKeys = useRef(new Map<string, string>());
   const record =
     records.find((found) => found.evidence_id === selected) ?? null;
 
@@ -399,15 +427,26 @@ export function EvidenceRecords({
       );
       const file = picks.files[0];
       if (!file) return;
+      const key = unsettledKeys.current.get(file.name) ?? crypto.randomUUID();
       const sent = await write(port, "ledger.evidence.add", {
         source_path: file.token,
-        idempotency_key: crypto.randomUUID(),
+        idempotency_key: key,
       });
-      if (sent.kind === "unknown")
+      if (sent.kind === "unknown") {
+        unsettledKeys.current.set(file.name, key);
         pause.hold({
           what: file.name,
           outcome: sent.saved ? "saved_unread" : "unknown",
+          // Repeatable by the key kept above; the list answering says the
+          // ledger can be read again.
+          settle: landingSettle(t, file.name, async () => {
+            const read = await port
+              .submit("ledger.evidence.list", {})
+              .catch(() => null);
+            return read?.kind === "settled" ? "repeatable" : null;
+          }),
         });
+      } else unsettledKeys.current.delete(file.name);
       await port.forgetFiles([file.token]).catch(() => undefined);
       if (sent.kind === "done") {
         say(t("desktop.ledger.documents.record_added"));
@@ -512,6 +551,7 @@ export function EvidenceRecords({
               ) ?? null
             }
             inReview={inReview.has(record.evidence_id)}
+            drafted={pending.get(record.evidence_id) ?? null}
             onWritten={onWritten}
             onRemoved={() => {
               onSelect(null);

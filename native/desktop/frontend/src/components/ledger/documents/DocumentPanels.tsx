@@ -29,8 +29,9 @@ import { stampText } from "../movements/movementWords";
 import { applyDocuments, type DocumentsApplied } from "../transfer/importModel";
 import { sizeText } from "../transfer/transferWords";
 import { write } from "../invoices/invoiceWrites";
-import { useWritePause, WriteHold } from "../WritePause";
+import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import { batchStatusLabel, sourceLabel } from "./documentWords";
+import { extractionLanding } from "./documentLanding";
 import { fileName } from "./documentsModel";
 import type { Read } from "./useLedgerRead";
 
@@ -107,12 +108,16 @@ export function AttachmentQueue({
   port,
   locale,
   read,
+  pending,
   onRetry,
   onReview,
 }: {
   port: LedgerPort;
   locale: string;
   read: Read<{ rows?: AttachmentReviewItem[] }>;
+  /** When each reading waiting for review was drafted, by its reference,
+   * for a read not seen to settle to tell its draft from an older one. */
+  pending: ReadonlyMap<string, string>;
   onRetry(): void;
   onReview(reference: string): void;
 }) {
@@ -131,15 +136,23 @@ export function AttachmentQueue({
   async function readIt(item: AttachmentReviewItem) {
     setReading(item.attachment_id);
     setFailed(null);
+    const before = pending.get(item.attachment_id) ?? null;
     const sent = await write(port, "ledger.evidence.extract", {
       attachment_id: item.attachment_id,
     });
     setReading(null);
-    if (sent.kind === "unknown")
+    if (sent.kind === "unknown") {
+      const what = t("desktop.ledger.section.documents");
       pause.hold({
-        what: t("desktop.ledger.section.documents"),
+        what,
         outcome: sent.saved ? "saved_unread" : "unknown",
+        settle: landingSettle(
+          t,
+          what,
+          extractionLanding(port, item.attachment_id, before),
+        ),
       });
+    }
     if (sent.kind === "done") onReview(item.attachment_id);
     else
       setFailed({
@@ -278,11 +291,23 @@ export function FolderIntake({
     const done = await applyDocuments(port, files, direction, setProgress);
     setBusy(null);
     setApplied(done);
-    if (done.stopped?.code === "unknown")
+    if (done.stopped?.code === "unknown") {
+      const what = done.stopped.files.map((file) => file.name).join(", ");
       pause.hold({
-        what: done.stopped.files.map((file) => file.name).join(", "),
+        what,
         outcome: "unknown",
+        // A batch is repeatable: a document the profile already holds by
+        // its content address comes back as a no_op, so sending the batch
+        // again adds only what did not land. The evidence list answering
+        // is what says the ledger can be read again.
+        settle: landingSettle(t, what, async () => {
+          const read = await port
+            .submit("ledger.evidence.list", {})
+            .catch(() => null);
+          return read?.kind === "settled" ? "repeatable" : null;
+        }),
       });
+    }
     await port
       .forgetFiles(files.map((file) => file.token))
       .catch(() => undefined);

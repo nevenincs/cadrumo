@@ -42,7 +42,7 @@ import { seriesAndNumber } from "../invoices/invoiceModel";
 import { figureText, kindChoice, problemText } from "../invoices/invoiceWords";
 import { write } from "../invoices/invoiceWrites";
 import { failureCode } from "../ledgerWords";
-import { useWritePause, WriteHold } from "../WritePause";
+import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import { reconcile, stageLink, stagedLinks } from "../matching/matchingModel";
 import { invoiceLine } from "../matching/matchingWords";
 import { dayText } from "../transfer/transferWords";
@@ -75,6 +75,7 @@ import {
   provenanceText,
   reasonLabel,
 } from "./documentWords";
+import { confirmationLanding, extractionLanding } from "./documentLanding";
 import { DocumentViewer } from "./DocumentViewer";
 import { OffHostDialog } from "./OffHostDialog";
 import { useLedgerRead } from "./useLedgerRead";
@@ -435,9 +436,19 @@ export function DraftReview({
             : { kind: "failed", code: sent.code },
       );
       if (sent.kind === "unknown") {
+        const what = t("desktop.ledger.section.documents");
         pause.hold({
-          what: t("desktop.ledger.section.documents"),
+          what,
           outcome: sent.saved ? "saved_unread" : "unknown",
+          settle: landingSettle(
+            t,
+            what,
+            extractionLanding(
+              port,
+              evidenceReference,
+              view?.drafted_at ?? null,
+            ),
+          ),
         });
         onWritten();
       }
@@ -524,9 +535,20 @@ export function DraftReview({
     }
     if (sent.kind === "unknown") {
       setNotice({ kind: "unknown" });
+      const what = t("desktop.ledger.section.documents");
       pause.hold({
-        what: t("desktop.ledger.section.documents"),
+        what,
         outcome: sent.saved ? "saved_unread" : "unknown",
+        settle: landingSettle(
+          t,
+          what,
+          confirmationLanding(port, evidenceReference, {
+            kind: ready.request.kind,
+            number:
+              ready.request.invoice_number ??
+              readValue(draft, "invoice_number"),
+          }),
+        ),
       });
       return;
     }

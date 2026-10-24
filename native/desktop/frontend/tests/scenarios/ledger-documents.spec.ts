@@ -602,3 +602,63 @@ test("a page the runtime refuses to draw is said in words", async ({
     draft(target).getByRole("heading", { name: ARROYO }),
   ).toBeVisible();
 });
+
+const paused = (target: Page) =>
+  target.locator(".ledger-page .ledger-paused [role=alert]");
+const pauseFindings = (target: Page) =>
+  target.locator(".ledger-page .ledger-findings");
+const nextWrites = (target: Page, outcomes: "unknown"[]) =>
+  target.evaluate(
+    (next) =>
+      (
+        window as unknown as {
+          __scenarioLedger: { nextWrites(outcomes: string[]): void };
+        }
+      ).__scenarioLedger.nextWrites(next),
+    outcomes,
+  );
+
+test("a confirmation not seen to settle is settled by reading the queue and the catalogue", async ({
+  page: target,
+}) => {
+  await openDocuments(target);
+  await choose(target, DOMESTIKA);
+  await kind(target, "received");
+  await draft(target).locator(".ledger-draft-country-read").click();
+  // Bound to a fresh reading first, so the confirmation is the one write.
+  await draft(target).locator(".ledger-draft-reread").click();
+  await expect(draft(target).locator(".ledger-draft-reread")).toBeEnabled();
+  await nextWrites(target, ["unknown"]);
+  await draft(target).locator(".ledger-draft-confirm").click();
+  await expect(paused(target)).toBeVisible();
+  await paused(target).locator(".ledger-paused-reread").click();
+  await expect(pauseFindings(target)).toContainText(
+    label("desktop.ledger.paused.found_saved", {
+      movement: label("desktop.ledger.section.documents"),
+    }),
+  );
+  await expect(paused(target)).toHaveCount(0);
+});
+
+test("a record correction not seen to settle is settled by reading the record back", async ({
+  page: target,
+}) => {
+  await openDocuments(target);
+  await tab(target, "records").click();
+  await section(target)
+    .locator(".ledger-record-item")
+    .filter({ hasText: ARROYO })
+    .click();
+  const detail = section(target).locator(".ledger-record");
+  await detail
+    .getByLabel(label("desktop.ledger.documents.record.supplier"))
+    .fill("Arroyo Asesores SL");
+  await nextWrites(target, ["unknown"]);
+  await detail.locator(".ledger-record-save").click();
+  await expect(paused(target)).toBeVisible();
+  await paused(target).locator(".ledger-paused-reread").click();
+  await expect(pauseFindings(target)).toContainText(
+    label("desktop.ledger.paused.found_saved", { movement: ARROYO }),
+  );
+  await expect(paused(target)).toHaveCount(0);
+});
