@@ -10,6 +10,8 @@ use std::{sync::Mutex, time::Duration};
 
 /// How long a submitted operation is followed before its outcome is unknown.
 pub(crate) const SETTLE_LIMIT: Duration = Duration::from_secs(90);
+/// The runtime's refusal of an operation it no longer knows.
+pub(crate) const UNKNOWN_OPERATION: &str = "unknown_operation";
 
 #[derive(Debug, Serialize)]
 pub struct Failure {
@@ -201,9 +203,12 @@ pub(crate) async fn observe(relayed: &Relayed<'_>) -> Result<Value> {
     )
     .await?;
     // The runtime no longer knows the operation: there is nothing more to
-    // observe of it.
-    if reply["kind"] == "operation_refused" && reply["code"] == "unknown_operation" {
-        return Err(Failure::new("not_admitted"));
+    // observe of it, though a write it no longer knows may still have taken
+    // effect. Its caller says which.
+    if reply["kind"] == "operation_refused" && reply["code"] == UNKNOWN_OPERATION {
+        let mut gone = Failure::new("not_admitted");
+        gone.reason = Some(UNKNOWN_OPERATION.into());
+        return Err(gone);
     }
     let p = &reply["observation"]["projection"];
     if reply["kind"] != "operation_observed"

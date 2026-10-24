@@ -186,13 +186,14 @@ impl Tracked {
     }
     /// Notes what following the operation answered. A review, a running
     /// operation and a write of unknown outcome stay to be followed; one the
-    /// runtime no longer knows leaves nothing to follow.
+    /// runtime no longer knows leaves nothing more to follow, whatever the
+    /// window is told of it.
     pub(super) fn record(&self, followed: &Result<Outcome>) {
         let state = match followed {
             Ok(Outcome::Settled { .. } | Outcome::Refused { .. }) => DONE,
             Ok(Outcome::Review { .. }) => REVIEW,
             Ok(Outcome::Running { .. }) => OPEN,
-            Err(failure) if failure.code == "not_admitted" => DONE,
+            Err(failure) if failure.reason.as_deref() == Some(relay::UNKNOWN_OPERATION) => DONE,
             Err(_) if self.definition.mutation => OPEN,
             Err(_) => DONE,
         };
@@ -442,9 +443,12 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, tracked: &Tracked) -> Result<
     })
 }
 
-/// A lost answer is unknown for a mutation, and names its operation.
+/// A lost answer is unknown for a mutation, and names its operation. So is
+/// a write the runtime no longer knows: that does not show it never took
+/// effect, so it is never offered again as not admitted.
 fn attributed(mut failure: Failure, tracked: &Tracked) -> Failure {
-    if tracked.definition.mutation && failure.code == "unavailable" {
+    let forgotten = failure.reason.as_deref() == Some(relay::UNKNOWN_OPERATION);
+    if tracked.definition.mutation && (failure.code == "unavailable" || forgotten) {
         failure.code = "unknown";
     }
     failure.operation_id = Some(tracked.operation.clone());
@@ -917,14 +921,30 @@ mod tests {
             .collect();
         let (window, identity) = following(&operations);
         assert!(window.room(&identity).is_err());
-        // Following one of them again finds the runtime has none such: it
-        // is done, and makes room.
-        window
-            .find("write7")
-            .unwrap()
-            .record(&Err(Failure::new("not_admitted")));
+        // Following one of them again finds the runtime has none such: the
+        // window is told its outcome is still unknown, and it makes room.
+        let forgotten = window.find("write7").unwrap();
+        let mut gone = Failure::new("not_admitted");
+        gone.reason = Some(relay::UNKNOWN_OPERATION.into());
+        let told = attributed(gone, &forgotten);
+        assert_eq!(
+            (told.code, told.operation_id.as_deref()),
+            ("unknown", Some("write7"))
+        );
+        forgotten.record(&Err(told));
         window.room(&identity).unwrap();
         assert!(window.find("write7").is_err());
+        // A read the runtime no longer knows is simply not admitted.
+        let read = Tracked::new(
+            "read".into(),
+            READ,
+            "profile:p".into(),
+            identity.clone(),
+            Vec::new(),
+        );
+        let mut gone = Failure::new("not_admitted");
+        gone.reason = Some(relay::UNKNOWN_OPERATION.into());
+        assert_eq!(attributed(gone, &read).code, "not_admitted");
         // An unknown outcome still keeps a write followed.
         let unknown = window.find("write8").unwrap();
         unknown.record(&Err(Failure::new("unknown")));
