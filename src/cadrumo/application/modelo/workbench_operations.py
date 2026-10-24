@@ -269,7 +269,8 @@ class ModeloEditPreflightProjectionV1(BaseModel):
     ``operator_entries_unknown`` says whether the filer's earlier entries could
     not be read, which the review says in its own sentence. ``rebase`` says
     what became of each change the submission held, on the declaration as a
-    fresh read of its form shows it; it carries nothing derived from a value.
+    fresh read of its form shows it; it carries nothing derived from a value,
+    and is empty when the preflight was refused.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -554,9 +555,11 @@ class ModeloEditPreflightExecutor:
                 findings=review_findings(found, language),
                 operator_entries_unknown=operator_entries_unknown(found),
                 refusal_words=None if refused is None else edit_refusal_words(refused, language),
-                rebase=self._rebase(
-                    submission, bucket_id=bucket_id, ports=ports, operation=operation, language=language
-                ),
+                # Only a preflight that evaluated the submission against its baseline judges held changes:
+                # a refused one, a stale baseline above all, is about to be replaced by a fresh read.
+                rebase=()
+                if refused is not None
+                else self._rebase(submission, bucket_id=bucket_id, ports=ports, operation=operation, language=language),
             )
 
         async with context.typed_financial_operand.consume(ModeloEditSubmissionV1) as submission:

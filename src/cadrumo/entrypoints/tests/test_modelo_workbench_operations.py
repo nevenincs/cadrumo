@@ -43,6 +43,7 @@ from ...application.modelo.edit_models import (
     ModeloEditParseReason,
     ModeloEditParseRequestV1,
     ModeloEditPreflightEvaluatedV1,
+    ModeloEditRefusedV1,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
     ModeloEditStaleBaselineRefusalV1,
@@ -814,14 +815,41 @@ def test_preflight_reports_what_becomes_of_each_held_change_by_its_box(
             clock=SEEDED_AT,
             casilla_inputs={box.address.casilla_id: Decimal("100")},
         )
-        moved, _ = _run(
+        stale, _ = _run(
             work, executor, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, payload, ModeloEditPreflightProjectionV1
         )
+        # Read again, the declaration admits a fresh baseline; the changes held from the first read go with it.
+        reread, _ = _run(
+            work,
+            ModeloWorkbenchFormExecutor(ports_factory=ports_factory, contracts=lambda: contracts),
+            MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
+            ModeloWorkbenchFormRequest(
+                profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.EN
+            ),
+            ModeloWorkbenchFormProjectionV1,
+        )
+        assert reread.admitted_baseline is not None
+        renewed = reread.admitted_baseline.to_baseline()
+        fresh = ModeloEditOperatorInputV2(
+            submission=ModeloEditApplySubmissionV1.from_submission(
+                ModeloEditSubmissionV1(baseline=renewed, mutation_family=renewed.mutation_family, held=(mine, gone))
+            ),
+            output_language=OutputLanguage.EN,
+        )
+        moved, _ = _run(
+            work, executor, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, fresh, ModeloEditPreflightProjectionV1
+        )
 
+    assert isinstance(unmoved.outcome, ModeloEditPreflightEvaluatedV1)
     assert [(entry.address, entry.outcome) for entry in unmoved.rebase] == [
         (mine.address, ModeloFormRebaseOutcome.KEPT),
         (gone.address, ModeloFormRebaseOutcome.DROPPED),
     ]
+    # A preflight the stale baseline refuses judges nothing: the form it would judge against is about to change.
+    assert isinstance(stale.outcome, ModeloEditRefusedV1)
+    assert isinstance(stale.outcome.refusal, ModeloEditStaleBaselineRefusalV1)
+    assert stale.rebase == ()
+    assert isinstance(moved.outcome, ModeloEditPreflightEvaluatedV1)
     assert [(entry.address, entry.outcome) for entry in moved.rebase] == [
         (mine.address, ModeloFormRebaseOutcome.CHANGED),
         (gone.address, ModeloFormRebaseOutcome.DROPPED),
@@ -829,6 +857,7 @@ def test_preflight_reports_what_becomes_of_each_held_change_by_its_box(
     # The digest stays in the transient submission: neither the journaled requests nor the result carry it.
     assert "held" not in ModeloEditPreflightRequestV2.model_fields
     assert "staged" not in ModeloEditRenewRequest.model_fields
-    assert box.state_digest not in moved.model_dump_json() and box.state_digest not in unmoved.model_dump_json()
+    for result in (unmoved, stale, moved):
+        assert box.state_digest not in result.model_dump_json()
     with pytest.raises(ValidationError):
         ModeloEditApplyRequestV1(operation_id="a" * 64, submission=submission)
