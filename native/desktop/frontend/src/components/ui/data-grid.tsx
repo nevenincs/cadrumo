@@ -229,6 +229,76 @@ const GridSelectionContext = React.createContext<{
 
 const CellStateContext = React.createContext({ focused: false });
 
+/**
+ * The one tooltip a grid shows for text cut short. A cell names its text's
+ * element and words; the tooltip anchors to a box laid over that element, so
+ * nothing about the cell's own element changes as the pointer enters it or a
+ * press lands on it, and a window of rows mounts no tooltip of its own.
+ */
+type TextTips = {
+  show: (element: HTMLElement, text: string) => void;
+  hide: (element: HTMLElement) => void;
+};
+const TextTipContext = React.createContext<TextTips>({
+  show: () => undefined,
+  hide: () => undefined,
+});
+
+function GridTextTip({ children }: { children: React.ReactNode }) {
+  const [tip, setTip] = React.useState<{
+    element: HTMLElement;
+    text: string;
+  } | null>(null);
+  // Dismissed by Escape: it stays away until the pointer or focus leaves it.
+  const dismissed = React.useRef<HTMLElement | null>(null);
+  const tips = React.useMemo<TextTips>(
+    () => ({
+      show: (element, text) => {
+        if (dismissed.current === element) return;
+        setTip({ element, text });
+      },
+      hide: (element) => {
+        if (dismissed.current === element) dismissed.current = null;
+        setTip((held) => (held?.element === element ? null : held));
+      },
+    }),
+    [],
+  );
+  const box = tip?.element.getBoundingClientRect();
+  return (
+    <TextTipContext.Provider value={tips}>
+      {children}
+      <Tooltip
+        open={tip !== null}
+        onOpenChange={(open) => {
+          if (open || !tip) return;
+          dismissed.current = tip.element;
+          setTip(null);
+        }}
+      >
+        <TooltipTrigger asChild>
+          <span
+            aria-hidden="true"
+            data-slot="data-grid-text-tip"
+            className="pointer-events-none fixed"
+            style={
+              box
+                ? {
+                    left: box.left,
+                    top: box.top,
+                    width: box.width,
+                    height: box.height,
+                  }
+                : { display: "none" }
+            }
+          />
+        </TooltipTrigger>
+        <TooltipContent>{tip?.text}</TooltipContent>
+      </Tooltip>
+    </TextTipContext.Provider>
+  );
+}
+
 function rootRemPx(): number {
   return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
 }
@@ -1689,71 +1759,75 @@ function DataGrid<R>({
 
   return (
     <GridSelectionContext.Provider value={selectionContext}>
-      <div
-        data-slot="data-grid"
-        data-density={density}
-        className={cn(
-          "relative flex min-h-0 min-w-0 flex-1 flex-col bg-background text-base text-foreground",
-          density === "compact"
-            ? "[--grid-row:var(--spacing-row-compact)]"
-            : "[--grid-row:var(--spacing-row-comfortable)]",
-          className,
-        )}
-      >
+      <GridTextTip>
         <div
-          ref={scroller}
-          role="grid"
-          aria-label={label}
-          aria-rowcount={rows.length + 1}
-          aria-colcount={ordered.length}
-          aria-multiselectable={selection ? true : undefined}
-          className="isolate min-h-0 flex-1 overflow-auto overscroll-contain"
-          onScroll={onScroll}
-          onKeyDown={onKeyDown}
-          onFocus={() => setFocused(true)}
-          onBlur={(event) => {
-            if (
-              !event.currentTarget.contains(event.relatedTarget as Node | null)
-            )
-              setFocused(false);
-          }}
-          onCopy={(event) => {
-            if (editing || !onCopy) return;
-            const target = currentRange();
-            const text = target ? onCopy(target) : null;
-            if (text === null) return;
-            event.preventDefault();
-            event.clipboardData.setData("text/plain", text);
-          }}
-          onPaste={(event) => {
-            if (editing || !onPaste) return;
-            const target = currentRange();
-            if (!target) return;
-            event.preventDefault();
-            onPaste(target, event.clipboardData.getData("text/plain"));
-          }}
+          data-slot="data-grid"
+          data-density={density}
+          className={cn(
+            "relative flex min-h-0 min-w-0 flex-1 flex-col bg-background text-base text-foreground",
+            density === "compact"
+              ? "[--grid-row:var(--spacing-row-compact)]"
+              : "[--grid-row:var(--spacing-row-comfortable)]",
+            className,
+          )}
         >
-          {headerRow}
           <div
-            role="rowgroup"
-            className="relative"
-            style={{ height: tops[rows.length] ?? 0, width: layout.total }}
+            ref={scroller}
+            role="grid"
+            aria-label={label}
+            aria-rowcount={rows.length + 1}
+            aria-colcount={ordered.length}
+            aria-multiselectable={selection ? true : undefined}
+            className="isolate min-h-0 flex-1 overflow-auto overscroll-contain"
+            onScroll={onScroll}
+            onKeyDown={onKeyDown}
+            onFocus={() => setFocused(true)}
+            onBlur={(event) => {
+              if (
+                !event.currentTarget.contains(
+                  event.relatedTarget as Node | null,
+                )
+              )
+                setFocused(false);
+            }}
+            onCopy={(event) => {
+              if (editing || !onCopy) return;
+              const target = currentRange();
+              const text = target ? onCopy(target) : null;
+              if (text === null) return;
+              event.preventDefault();
+              event.clipboardData.setData("text/plain", text);
+            }}
+            onPaste={(event) => {
+              if (editing || !onPaste) return;
+              const target = currentRange();
+              if (!target) return;
+              event.preventDefault();
+              onPaste(target, event.clipboardData.getData("text/plain"));
+            }}
           >
-            {shown.map(drawRow)}
+            {headerRow}
+            <div
+              role="rowgroup"
+              className="relative"
+              style={{ height: tops[rows.length] ?? 0, width: layout.total }}
+            >
+              {shown.map(drawRow)}
+            </div>
+          </div>
+          {rows.length === 0 && empty && (
+            <div
+              className="absolute inset-x-0 bottom-0 flex"
+              style={{ top: headerPx }}
+            >
+              {empty}
+            </div>
+          )}
+          <div aria-live="polite" aria-atomic="true" className="sr-only">
+            {announcement}
           </div>
         </div>
-        {rows.length === 0 && empty && (
-          <div
-            className="absolute inset-x-0 bottom-0 flex"
-            style={{ top: headerPx }}
-          >
-            {empty}
-          </div>
-        )}
-        <div aria-live="polite" aria-atomic="true" className="sr-only">
-          {announcement}
-        </div>
-      </div>
+      </GridTextTip>
     </GridSelectionContext.Provider>
   );
 }
@@ -1775,46 +1849,30 @@ function DataGridText({
 }) {
   const ref = React.useRef<HTMLSpanElement>(null);
   const { focused } = React.useContext(CellStateContext);
-  const [hover, setHover] = React.useState(false);
-  const [truncated, setTruncated] = React.useState(false);
-  const [dismissed, setDismissed] = React.useState(false);
-  const measure = () => {
+  const tips = React.useContext(TextTipContext);
+  const offer = React.useCallback(() => {
     const element = ref.current;
-    setTruncated(!!element && element.scrollWidth > element.clientWidth);
-  };
+    if (element && element.scrollWidth > element.clientWidth)
+      tips.show(element, children);
+  }, [tips, children]);
   React.useLayoutEffect(() => {
-    setDismissed(false);
-    if (focused) measure();
-  }, [focused, children]);
-  const span = (
+    const element = ref.current;
+    if (!element) return;
+    if (focused) offer();
+    return () => tips.hide(element);
+  }, [focused, offer, tips]);
+  return (
     <span
       ref={ref}
       data-slot="data-grid-text"
       className={cn("min-w-0 truncate", className)}
-      onPointerEnter={() => {
-        measure();
-        setHover(true);
+      onPointerEnter={offer}
+      onPointerLeave={() => {
+        if (ref.current && !focused) tips.hide(ref.current);
       }}
-      onPointerLeave={() => setHover(false)}
     >
       {children}
     </span>
-  );
-  // The text is always the tooltip's trigger, shown or not: swapping the
-  // element as the pointer enters it would remount it between the press
-  // and the release, and the click that selects its row would be lost.
-  return (
-    <Tooltip
-      open={truncated && !dismissed && (hover || focused)}
-      onOpenChange={(open) => {
-        if (open) return;
-        setHover(false);
-        setDismissed(true);
-      }}
-    >
-      <TooltipTrigger asChild>{span}</TooltipTrigger>
-      <TooltipContent>{children}</TooltipContent>
-    </Tooltip>
   );
 }
 

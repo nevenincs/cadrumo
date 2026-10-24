@@ -925,6 +925,13 @@ export function LedgerPage({
             setRuleTarget(null);
           }}
           onClose={() => setRuleTarget(null)}
+          // Opened from the grid, it hands the keyboard back to the grid's
+          // active cell; the Rules section's own opener takes it otherwise.
+          onClosed={
+            ruleTarget.kind === "seed"
+              ? () => inspectorContext?.focusActive()
+              : undefined
+          }
         />
       )}
       {readable && transfer === "import" && (

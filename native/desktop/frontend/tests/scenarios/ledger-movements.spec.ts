@@ -367,6 +367,30 @@ test("a transfer's direction is its glyph, with the word in its name and tooltip
   await expect(target.getByRole("tooltip")).toHaveText(word);
 });
 
+test("text cut short shows whole in the grid's tooltip, and a click on it still selects its row", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const cut = dataRows(target)
+    .locator("[data-column=description] [data-slot=data-grid-text]")
+    .filter({ hasText: "SOFTNUBE" })
+    .first();
+  const whole = (await cut.textContent()) ?? "";
+  expect(
+    await cut.evaluate((element) => element.scrollWidth > element.clientWidth),
+  ).toBe(true);
+  await cut.hover();
+  await expect(target.getByRole("tooltip")).toHaveText(whole);
+  // Escape puts it away until the pointer comes back.
+  await target.keyboard.press("Escape");
+  await expect(target.getByRole("tooltip")).toHaveCount(0);
+  // The press lands on the same element the pointer entered.
+  await cut.click();
+  await expect(
+    dataRows(target).filter({ hasText: "SOFTNUBE" }).first(),
+  ).toHaveAttribute("aria-selected", "true");
+});
+
 test("sorting by a column header orders the stored figures", async ({
   page: target,
 }) => {
