@@ -797,6 +797,67 @@ desktop:
   ledger:
     account:
       none: Sense compte
+    accounts:
+      actions: Accions de {account}
+      add: Afegeix un compte
+      bank_address: Adreça del banc
+      bank_city: Ciutat del banc
+      bank_country: País del banc
+      bank_hint: Necessari per a un banc fora de la zona SEPA.
+      bank_name: Nom del banc
+      close: Tanca en una data…
+      closed_hint: Els seus moviments conserven el compte.
+      closed_on: Data de tancament
+      column:
+        closed: Tancament
+        currency: Moneda
+        designated: Designat per a
+        holding: Ets
+        iban: IBAN
+        label: Compte
+        opened: Obertura
+      currency: Moneda
+      currency_hint: Tres lletres, p. ex. EUR
+      designate: Designa per a càrrecs o devolucions…
+      empty: Encara no hi ha comptes.
+      every_modelo: tots els models
+      holding:
+        cotitular: Cotitular
+        titular: Titular
+      holding_label: Ets
+      iban: IBAN
+      iban_hint: S'envia una vegada per un canal protegit i després es mostra emmascarat.
+      iban_problem:
+        check: Els dígits de control de l'IBAN no quadren.
+        shape: No és un IBAN.
+      label: Nom
+      modelo: Model {modelo}
+      modelo_hint: Tres xifres, p. ex. 303; buit per a tots
+      modelo_label: Model
+      named:
+        close: Tanca {account}
+        designate: Designa {account}
+        update: Canvia {account}
+      not_closed: Sense tancar
+      not_known: Desconeguda
+      opened: Data d'obertura
+      refused: 'Rebutjat: el registre no accepta aquestes dades.'
+      refused_remove: 'No s''ha tret: un compte que fan servir moviments o una designació
+        només es pot tancar.'
+      remove: Treu
+      role:
+        charge: Càrrecs
+        refund: Devolucions
+      role_label: Per a
+      submit:
+        add: Afegeix el compte
+        close: Tanca el compte
+        designate: Designa
+        update: Desa les dades
+      swift_bic: SWIFT/BIC
+      title: Els teus comptes propis
+      undesignate: 'Treu la designació: {designation}'
+      update: Canvia les dades…
     action:
       add: Afegeix
       add_movement: Afegeix un moviment
@@ -956,6 +1017,97 @@ desktop:
       unknown_title: Un desament té un resultat desconegut
       when_read: Quan el vas llegir
       yours: El teu canvi preparat
+    assets:
+      asset_id: Identificador de l'element
+      claim: Reclama-la
+      claim_reused: 'Ja reclamada: no s''ha registrat dues vegades.'
+      claimed: Reclamació registrada.
+      column:
+        amount: Import
+        casilla: Casella
+        claims: Reclamacions
+        in_service: En ús des de
+        number: Revisió
+        revision: Id
+        target: Declaració
+      creating_hint: Amb què es registra, p. ex. la declaració a què va
+      creating_operation: Registrat com a
+      forecast: Amortització {amount} · {days} dies · {from} – {until}
+      forecast_note: Una previsió no registra res fins que la reclames.
+      free: Amortització lliure sol·licitada
+      free_hint: Només per a un mètode d'amortització lliure
+      from: Des de
+      handoff: On van les reclamacions
+      inspect: Consulta
+      quarter: Trimestre del model 130
+      refusal:
+        refused_actividad_asset_accelerated_da18_depreciation_not_computed: 'Rebutjat:
+          l''amortització accelerada no es calcula aquí.'
+        refused_actividad_asset_claim_conflict: 'Rebutjat: xoca amb una reclamació
+          ja registrada.'
+        refused_actividad_asset_incomplete: 'Rebutjat: encara falten dades.'
+        refused_actividad_asset_unsupported: 'Rebutjat: aquest mètode encara no és
+          compatible.'
+        refused_actividad_asset_validation: 'Rebutjat: el registre d''elements no
+          ho accepta.'
+      revision:
+        correct: Revisió que corregeix (JSON)
+        create: Primera revisió (JSON)
+      revision_hint: Omple cada dada buida; una revisió no s'edita un cop desada.
+      revisions: Revisions
+      submit:
+        correct: Desa la correcció
+        create: Crea l'element
+        filing: Mostra
+        forecast: Calcula la previsió
+      target:
+        intangible_m100: Model 100 · intangible
+        intangible_m130: Model 130 · intangible
+        material_m100: Model 100 · material
+        material_m130: Model 130 · material
+      task:
+        correct: Corregeix…
+        create: Crea…
+        filing: Per a les declaracions
+        forecast: Previsió
+      tax_year: Exercici
+      title: Elements afectes a l'activitat
+      until: Fins a
+    capital:
+      art108: Acollit a l'art. 108
+      column:
+        cuota: Quota suportada
+        deducted: Deducció efectuada
+        description: Bé
+        disposal: Transmissió
+        identifier: Referència
+        kind: Tipus
+        prorrata: Prorrata inicial
+        year: Adquirit
+      cuota: Quota suportada
+      declare: Declara un bé d'inversió
+      description: Descripció
+      disposal:
+        exenta_o_no_sujeta: Exempta o no subjecta
+        sujeta_no_exenta: Subjecta i no exempta
+      disposal_hint: Només si es va vendre o transmetre
+      disposal_regime: Règim de la transmissió
+      disposal_year: Any de transmissió
+      empty: No hi ha béns d'inversió declarats.
+      identifier: La teva referència
+      kind:
+        inmueble: Immoble
+        mueble: Moble
+      kind_label: Tipus
+      movement: Identificador del moviment de compra
+      movement_hint: El moviment del llibre amb què es va pagar
+      prorrata: Prorrata inicial
+      refusal:
+        disposal_incomplete: 'Rebutjat: una transmissió necessita any i règim.'
+        duplicate_identifier: 'Rebutjat: aquesta referència ja està declarada.'
+        validation: 'Rebutjat: el registre no accepta aquestes dades.'
+      title: Béns d'inversió
+      year: Any d'adquisició
     category:
       amortizacion_vivienda_afecto: Amortització de l'habitatge afecte a l'activitat
       arrendamiento_local: Lloguer del local de negoci
@@ -1102,11 +1254,56 @@ desktop:
       title: '{count} desats un a un'
     count:
       to_classify: '{count} per classificar'
+    counterparty:
+      answer: El que respon ara el llibre
+      confirm: Confirma
+      confirmed: Confirmada
+      country: País
+      established: Establerta
+      not_confirmed: Encara no
+      note: Nota
+      scope:
+        es_canarias: Canàries
+        es_ceuta_melilla: Ceuta i Melilla
+        es_mainland: Espanya, península i Balears
+        eu_member: Un altre Estat de la UE
+        third_country: Fora de la UE
+      scope_label: Establerta a
+      source:
+        document_evidence: segons documents
+        operator_assertion: confirmat per tu
+        profile_authority: segons el teu perfil
+      state: Estat d'identificació a efectes de l'IVA
+      tax_id: NIF / identificador fiscal
+      title: Contraparts
+      undetermined: Sense determinar
+      vat_state: Identificada a efectes de l'IVA a
+      view: Consulta
+      withdraw: Retira…
+      withdraw_confirm: Retira la confirmació
+      withdraw_what: Retira la teva confirmació; el llibre torna a basar-se en els
+        documents.
     density:
       comfortable: Files àmplies
     describe:
       missing: 'falta: {reason}'
       readiness: 'Preparació: {reasons}'
+    diagnostics:
+      calls: Crides
+      classified: Classificats
+      confidence: Confiança per proveïdor
+      cost: Cost estimat
+      low: Confiança baixa
+      mean: Confiança mitjana
+      provider: Proveïdor
+      read: Llegeix
+      since: Des de
+      threshold: Confiança baixa per sota de
+      title: Diagnòstic del model
+      tokens: Tokens
+      unpriced: '{count} crides sense preu'
+      until: Fins a
+      usage: Ús per proveïdor
     direction:
       incoming: Entrada
       internal_transfer: Traspàs
@@ -1316,6 +1513,27 @@ desktop:
       title: Filtres
       to_match: Moviments empresarials sense factura vinculada
       to_match_chip: Per conciliar
+    form:
+      actions: Accions
+      amount_hint: Decimal amb punt, p. ex. 1500.50
+      cancel: Cancel·la
+      choose: Tria…
+      close: Tanca
+      date_hint: Any-mes-dia, p. ex. 2026-10-31
+      failed: Sense resposta · {code}
+      'no': 'No'
+      none: Cap
+      percent_hint: Escriu 70 per al 70 %
+      points_hint: Percentatge, de 0 a 100
+      reading: S'està llegint…
+      refused: Rebutjat · {code}
+      reread: Torna a llegir
+      save: Desa
+      saving: S'està desant…
+      two_letters: Dues lletres, p. ex. ES
+      unknown: 'Resultat desconegut: potser s''ha desat.'
+      year_hint: Quatre xifres, p. ex. 2024
+      'yes': Sí
     grid: Moviments, {period}
     group:
       account: Compte
@@ -1352,6 +1570,53 @@ desktop:
       status: Estat
       title: Agrupa
       waits: cal llegir-ho tot
+    health:
+      check: Comprova
+      check_again: Torna a comprovar
+      choose_period: Tria un període per comprovar.
+      count:
+        active: Actius
+        archived: Arxivats
+        pending: Per classificar
+        reviewed: Revisats
+        skipped: Omesos per regla
+        split: Dividits
+        stashed: Apartats
+      dry_run: Fes la prova
+      expense: Despeses de l'activitat, EUR
+      income: Ingressos de l'activitat, EUR
+      links: Enllaços amb declaracions
+      links_what: Reconstrueix-los si l'«Usat a» d'un moviment sembla malament. Llegeix
+        totes les declaracions; res més no canvia.
+      missing: El que encara falta · {period}
+      net: Net, EUR
+      no_movements: No hi ha moviments a {period}. No és el mateix que no deure res.
+      not_checked: Encara no comprovat en aquesta finestra.
+      not_run: 'Encara no feta: res no es mostra com a zero fins que es mesura.'
+      one_sided: Enllaços de factura d'un sol costat
+      ready: A punt per calcular · {count} comprovats
+      rebuild: Reconstrueix els enllaços
+      rebuilt: 'Reconstruïts: {links} enllaços en {revisions} revisions · {removed}
+        obsolets trets'
+      reset: Zona de perill · reinicia el llibre
+      reset_blocked: El reinici està bloquejat
+      reset_blocker: Model {modelo} · {year} {period} · {state} cita moviments
+      reset_confirm: Reinicia · treu {movements} moviments
+      reset_reason: Motiu
+      reset_reason_hint: Queda al registre d'auditoria · fins a {limit} caràcters
+      reset_what: Treu tots els moviments i els documents adjunts. Primer es fa una
+        prova.
+      reset_would: Trauria {movements} moviments i {documents} documents.
+      run_check: Fes la comprovació
+      show: 'Mostra els {count} moviments: {reason}'
+      show_short: Mostra
+      stale: Declaracions per recalcular
+      stale_none: 'Cap: cada càlcul cobreix els moviments tal com són.'
+      stale_row: 'Model {modelo} · {year} {period}: {changed} canviats i {removed}
+        trets des del càlcul'
+      status: Estat · {period}
+      unconverted: Estrangers sense canvi
+      whole: Comprova tot el llibre
     import:
       accepts:
         bank: CSV, XLSX, XLS, OFX, QFX o PDF · fins a 128 fitxers · no es llegeixen
@@ -1517,6 +1782,64 @@ desktop:
       gap: Buit a l'extracte
       original_file: Fitxer original
       parser: Llegit amb un avís
+    inventory:
+      actividad: Identificador de l'activitat
+      authority: Registre de l'autoritat del tancament (JSON)
+      authority_hint: La decisió, el recompte físic si n'hi ha i l'enllaç amb el tancament
+        anterior
+      authority_unread: No és un objecte JSON.
+      base: Base imposable
+      book: Llibre
+      books: Llibres d'existències {year}
+      column:
+        actividad: Activitat
+        date: Data
+        kind: Tipus
+        method: Valoració
+        movements: Moviments
+        opening: Existències inicials
+        quantity: Unitats
+        unit_cost: Cost unitari
+      date: Data
+      empty: No hi ha llibre d'existències de {year}.
+      form:
+        closing: Autoritat del tancament de {actividad} · {year}
+        create: Llibre d'existències nou de {year}
+        movement: Afegeix un moviment a {actividad} · {year}
+      kind:
+        cogs: Cost de vendes
+        count: Recompte
+        opening: Existències inicials
+        purchase: Compra
+      kind_label: Tipus
+      method:
+        coste_medio: Cost mitjà
+        fifo: FIFO
+        pmp: Preu mitjà ponderat
+      method_label: Mètode de valoració
+      movement_id: Identificador del moviment
+      movements: Moviments afegits aquí
+      opening: Valor de les existències inicials
+      preview: Valoració prèvia
+      preview_note: 'Una previsualització: no es registra res.'
+      quantity: Unitats
+      refusal:
+        activity_conflict: 'Rebutjat: aquesta activitat ja té llibre aquell any.'
+        activity_not_found: 'Rebutjat: no hi ha llibre per a aquesta activitat i any.'
+        closing_authority_conflict: 'Rebutjat: ja hi ha registrada una altra autoritat
+          del tancament.'
+        closing_authority_invalid: 'Rebutjat: el registre no correspon a aquest llibre.'
+        duplicate_movement_id: 'Rebutjat: aquest identificador ja és al llibre.'
+        invalid_valuation_method: 'Rebutjat: no és un mètode de valoració.'
+        inventory_validation: 'Rebutjat: el llibre no ho accepta.'
+      task:
+        closing: Registra l'autoritat del tancament
+        create: Llibre nou
+        movement: Afegeix un moviment
+      title: Llibres d'existències
+      unit_cost: Cost unitari
+      valuation: Existències finals {closing} · cost de vendes {cogs} · {method}
+      year: Any d'existències
     invoice:
       linked: Vinculada
     invoices:
@@ -1889,6 +2212,110 @@ desktop:
       year_previous: Any anterior
       years_with_movements: Anys amb moviments
     position: Fila {row} de {count}
+    prorrata:
+      accepted: 'S''accepta: {provenances}.'
+      action:
+        declare_sector: Declara un sector
+        elect_especial: Opta per l'especial
+        elect_general: Opta per la general
+        revoke_especial: Revoca l'especial
+        seed: Pren de l'any anterior
+        seed_sector: Pren un sector de l'any anterior
+        settle_sector: Liquida un sector
+      changes: Canvis de {ejercicio}
+      codes: Codis d'activitat
+      codes_hint: Separats per comes
+      column:
+        definitive: Definitiva
+        ejercicio: Exercici
+        provenance: Origen
+        provisional: Provisional
+        regime: Règim
+        sector: Sector
+        volumes: Amb / sense dret a deducció
+      con_derecho: Volum amb dret a deducció
+      ejercicio: Exercici
+      empty: Encara no hi ha entrades de prorrata.
+      evidence: Referència del justificant
+      evidence_hint: El document de l'opció o de la seva revocació
+      form:
+        declare_sector: Declara un sector diferenciat
+        elect_especial: Opta per la prorrata especial el {ejercicio}
+        elect_general: Opta per la prorrata general el {ejercicio}
+        revoke_especial: Revoca la prorrata especial el {ejercicio}
+        seed: Pren {ejercicio} de l'any anterior
+        seed_sector: Pren la prorrata provisional d'un sector el {ejercicio}
+        settle_sector: Liquida la prorrata definitiva d'un sector el {ejercicio}
+      letra:
+        a: a · grups CNAE diferents
+        b: b · règims especials
+        c: c · arrendament financer
+        d: d · cessió de crèdits o préstecs
+      letra_label: Supòsit de l'art. 9.1.c
+      no_sectors: No hi ha sectors declarats
+      not_settled: Sense liquidar
+      percentage: Percentatge provisional
+      provenance:
+        aeat_autorizada: Autoritzada per l'AEAT
+        carried_prior_definitiva: Definitiva de l'any anterior
+        inicio_actividad: Inici d'activitat
+        interrumpida_tres_ultimos: Darrers tres anys d'activitat
+      provenance_label: D'on surt
+      reference: Referència
+      reference_hint: L'autorització o proposta en què es basa
+      refusal:
+        provenance_not_electable: 'Rebutjat: aquest origen es calcula, no es tria.'
+        provenance_required: 'Rebutjat: indica d''on surt el percentatge.'
+        reference_not_permitted: 'Rebutjat: aquest origen no té cap document a què
+          referir-se.'
+        reference_required: 'Rebutjat: aquest origen necessita la referència del seu
+          document.'
+        regulated_override_standing: 'Rebutjat: hi ha un percentatge autoritzat vigent.'
+        sector_prior_definitive_absent: 'Rebutjat: el sector no té definitiva anterior.'
+        sector_settlement_entry_absent: 'Rebutjat: el sector no té cap entrada per
+          liquidar.'
+        seed_existing_blocked: 'Rebutjat: aquest exercici ja té una entrada.'
+        seed_source_absent: 'Rebutjat: l''any anterior no té percentatge definitiu.'
+        seed_source_blocked: 'Rebutjat: l''origen de l''any anterior està bloquejat.'
+        validation: 'Rebutjat: el registre no ho accepta.'
+      regime:
+        especial: Especial
+        general: General
+      sector: Sector
+      sector_id: Identificador del sector
+      sectors: 'Sectors diferenciats:'
+      seed_what: Llegeix el percentatge definitiu registrat de {prior} i el trasllada
+        a {ejercicio}.
+      sin_derecho: Volum sense dret a deducció
+      title: Registre de prorrata
+      whole: Tota l'activitat
+    ratios:
+      censo_mismatch: 'Retinguts: els percentatges no coincideixen amb el cens.'
+      change: Canvia
+      column:
+        category: Categoria
+        kind: Tipus
+        ratio: El teu percentatge
+        standard: Estàndard
+      enter: Introdueix un percentatge
+      findings: '{count} per revisar: {categories}'
+      input: Percentatge de {category}; escriu 50 per al 50 %
+      kind:
+        full_deductible: Deduïble del tot
+        statutory_cap: Límit legal
+        usage_ratio_home_area: Superfície de l'habitatge afecta
+        usage_ratio_personal: Ús en l'activitat
+      not_set: Sense fixar
+      refused: 'Rebutjat: aquesta categoria no té percentatge.'
+      set: Fixa
+      set_named: Fixa el percentatge de {category}
+      table: Percentatges {year}
+      title: Percentatges d'afectació
+      unset: Treu
+      unset_named: Treu el percentatge de {category}
+      valid: Els {count} percentatges fixats són vàlids.
+      validate: Comprova'ls
+      year: Any del percentatge
     readiness:
       checking: S'està comprovant…
       failed: No s'ha pogut comprovar la preparació
@@ -1953,12 +2380,81 @@ desktop:
       missing_taxable_base: Falta la base imposable
       unsupported_currency: Moneda no admesa
       unsupported_period: Període no admès
+    registers:
+      area:
+        accounts: Comptes propis
+        assets: Elements afectes
+        capital: Béns d'inversió
+        inventory: Existències
+        prorrata: Prorrata
+      areas: Apartats de registres
     retry: Torna-ho a provar
     review:
       excluded: Exclòs
       pending: Per classificar
       reviewed: Revisat
       skipped: Omès per una regla
+    rules:
+      adds_new: En desar s'afegeix una regla nova; aquesta es manté, perquè les regles
+        no es poden treure.
+      advanced: 'Avançat: expressió regular'
+      area:
+        counterparties: Contraparts
+        diagnostics: Diagnòstic del model
+        ratios: Percentatges d'afectació
+        rules: Regles
+      areas: Apartats de regles
+      category: Categoria
+      classification: Classifica com a
+      classify_now: Classifica'ls també ara (pendent)
+      column:
+        added: Afegida
+        category: Categoria
+        classification: Classifica com a
+        order: Ordre
+        rule: Regla
+      contains: Conté «{words}»
+      dry_run_counts: '{skipped} ja classificats · {none} sense coincidència'
+      edit: 'Edita: {rule}'
+      edit_title: Regla
+      empty: Encara no hi ha regles.
+      expression: Expressió
+      expression_hint: Es cerca a qualsevol part de la descripció, sense distingir
+        majúscules.
+      expression_unread: Aquesta finestra no pot llegir aquesta expressió.
+      from_selection: Crea una regla a partir de la selecció
+      matches: Coincideix amb {count} carregats
+      matches_unknown: No comptat aquí
+      move_down: 'Baixa: {rule}'
+      move_up: 'Puja: {rule}'
+      new: Crea una regla
+      new_title: Regla nova
+      no_category: Sense categoria
+      order: S'aplica
+      order_after: 'Després de: {rule}'
+      order_first: La primera
+      order_full: 'No hi cap: mou abans una regla veïna.'
+      order_note: S'apliquen per ordre als moviments per classificar; decideix la
+        primera que coincideix.
+      pattern_match: Patró avançat
+      preview: Previsualitza
+      reaffirm: Revisa el que s'ha classificat per regla
+      refusal:
+        category: No és una categoria de despesa.
+        empty_pattern: Escriu les paraules que cal cercar.
+        invalid_command: El llibre ha rebutjat la regla.
+        invalid_pattern: El llibre no pot llegir aquesta expressió.
+      run_note: La previsualització no escriu res; aplicar-les queda pendent com qualsevol
+        canvi.
+      run_staged: Aplicació de regles pendent · {count} moviments · sense desar
+      run_title: Aplica les regles
+      save: Desa la regla
+      stage_run: Deixa-ho pendent
+      title: Regles de classificació
+      what: Cerca paraules a la descripció del moviment i decideix la seva classificació.
+      words: La descripció conté
+      words_hint: Paraules en aquest ordre; tant és majúscules o minúscules.
+      would_classify: Se'n classificarien {count}
     search:
       elsewhere: '{count} més en altres períodes'
       label: Cerca moviments

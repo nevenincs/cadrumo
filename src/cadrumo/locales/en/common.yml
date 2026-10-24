@@ -769,6 +769,67 @@ desktop:
   ledger:
     account:
       none: No account
+    accounts:
+      actions: Actions for {account}
+      add: Add account
+      bank_address: Bank address
+      bank_city: Bank city
+      bank_country: Bank country
+      bank_hint: Needed for a bank outside SEPA.
+      bank_name: Bank name
+      close: Close on a date…
+      closed_hint: Its movements keep the account.
+      closed_on: Closed on
+      column:
+        closed: Closed
+        currency: Currency
+        designated: Designated for
+        holding: You are
+        iban: IBAN
+        label: Account
+        opened: Opened
+      currency: Currency
+      currency_hint: Three letters, e.g. EUR
+      designate: Designate for charges or refunds…
+      empty: No accounts yet.
+      every_modelo: every modelo
+      holding:
+        cotitular: Co-holder
+        titular: Holder
+      holding_label: You are
+      iban: IBAN
+      iban_hint: Sent once through a protected channel and shown masked afterwards.
+      iban_problem:
+        check: The IBAN's check digits don't match.
+        shape: Not an IBAN.
+      label: Name
+      modelo: Modelo {modelo}
+      modelo_hint: Three digits, e.g. 303; blank for every modelo
+      modelo_label: Modelo
+      named:
+        close: Close {account}
+        designate: Designate {account}
+        update: Update {account}
+      not_closed: Not closed
+      not_known: Not known
+      opened: Opened on
+      refused: 'Refused: the register doesn''t accept those details.'
+      refused_remove: 'Not removed: an account movements or a designation use can
+        only be closed.'
+      remove: Remove
+      role:
+        charge: Charges
+        refund: Refunds
+      role_label: For
+      submit:
+        add: Add account
+        close: Close the account
+        designate: Designate
+        update: Save details
+      swift_bic: SWIFT/BIC
+      title: Your own accounts
+      undesignate: 'Remove designation: {designation}'
+      update: Update details…
     action:
       add: Add
       add_movement: Add movement
@@ -926,6 +987,98 @@ desktop:
       unknown_title: One save has an unknown outcome
       when_read: When you read it
       yours: Your staged change
+    assets:
+      asset_id: Asset id
+      claim: Claim it
+      claim_reused: 'Already claimed: nothing was recorded twice.'
+      claimed: Claim recorded.
+      column:
+        amount: Amount
+        casilla: Casilla
+        claims: Claims
+        in_service: In use from
+        number: Revision
+        revision: Id
+        target: Declaration
+      creating_hint: What the claim is recorded under, e.g. the declaration it is
+        for
+      creating_operation: Recorded as
+      forecast: Amortización {amount} · {days} days · {from} – {until}
+      forecast_note: A forecast records nothing until you claim it.
+      free: Free amortización requested
+      free_hint: Only for a free-amortización method
+      from: From
+      handoff: Where the claims go
+      inspect: Inspect
+      quarter: Modelo 130 quarter
+      refusal:
+        refused_actividad_asset_accelerated_da18_depreciation_not_computed: 'Refused:
+          accelerated amortización isn''t worked out here.'
+        refused_actividad_asset_claim_conflict: 'Refused: it conflicts with a claim
+          already recorded.'
+        refused_actividad_asset_incomplete: 'Refused: some facts are still missing.'
+        refused_actividad_asset_unsupported: 'Refused: that method isn''t supported
+          yet.'
+        refused_actividad_asset_validation: 'Refused: the asset register doesn''t
+          accept that.'
+      revision:
+        correct: Correcting revision (JSON)
+        create: First revision (JSON)
+      revision_hint: Fill every empty fact; a revision is never edited once saved.
+      revisions: Revisions
+      submit:
+        correct: Save the correction
+        create: Create the asset
+        filing: Show
+        forecast: Forecast
+      target:
+        intangible_m100: Modelo 100 · intangible
+        intangible_m130: Modelo 130 · intangible
+        material_m100: Modelo 100 · tangible
+        material_m130: Modelo 130 · tangible
+      task:
+        correct: Correct…
+        create: Create…
+        filing: For declarations
+        forecast: Forecast
+      tax_year: Tax year
+      title: Activity assets
+      until: Until
+    capital:
+      art108: Eligible under art. 108
+      column:
+        cuota: Cuota soportada
+        deducted: Deducted
+        description: Good
+        disposal: Disposal
+        identifier: Reference
+        kind: Kind
+        prorrata: Initial prorrata
+        year: Acquired
+      cuota: Cuota soportada
+      declare: Declare a capital good
+      description: Description
+      disposal:
+        exenta_o_no_sujeta: Exempt or not subject
+        sujeta_no_exenta: Subject, not exempt
+      disposal_hint: Only if it was sold or transferred
+      disposal_regime: Disposal regime
+      disposal_year: Disposal year
+      empty: No capital goods declared.
+      identifier: Your reference
+      kind:
+        inmueble: Real estate
+        mueble: Movable
+      kind_label: Kind
+      movement: Purchase movement id
+      movement_hint: The ledger movement that paid for it
+      prorrata: Initial prorrata
+      refusal:
+        disposal_incomplete: 'Refused: a disposal needs both its year and its regime.'
+        duplicate_identifier: 'Refused: that reference is already declared.'
+        validation: 'Refused: the register doesn''t accept those facts.'
+      title: Bienes de inversión
+      year: Acquisition year
     category:
       amortizacion_vivienda_afecto: Depreciation of home used for business
       arrendamiento_local: Business premises rent
@@ -1072,11 +1225,55 @@ desktop:
       title: '{count} saves one at a time'
     count:
       to_classify: '{count} to classify'
+    counterparty:
+      answer: What the ledger answers now
+      confirm: Confirm
+      confirmed: Confirmed
+      country: Country
+      established: Established
+      not_confirmed: Not yet
+      note: Note
+      scope:
+        es_canarias: Canary Islands
+        es_ceuta_melilla: Ceuta and Melilla
+        es_mainland: Spain, mainland and Balearics
+        eu_member: Another EU State
+        third_country: Outside the EU
+      scope_label: Established in
+      source:
+        document_evidence: from documents
+        operator_assertion: confirmed by you
+        profile_authority: from your profile
+      state: VAT-identification State
+      tax_id: Tax id
+      title: Counterparties
+      undetermined: Undetermined
+      vat_state: VAT-identified in
+      view: Look up
+      withdraw: Withdraw…
+      withdraw_confirm: Withdraw the confirmation
+      withdraw_what: Withdraws your confirmation; the ledger falls back to the documents.
     density:
       comfortable: Comfortable rows
     describe:
       missing: 'missing: {reason}'
       readiness: 'Readiness: {reasons}'
+    diagnostics:
+      calls: Calls
+      classified: Classified
+      confidence: Confidence by provider
+      cost: Estimated cost
+      low: Low confidence
+      mean: Mean confidence
+      provider: Provider
+      read: Read
+      since: From
+      threshold: Low confidence below
+      title: Model diagnostics
+      tokens: Tokens
+      unpriced: '{count} calls without a price'
+      until: Until
+      usage: Use by provider
     direction:
       incoming: In
       internal_transfer: Transfer
@@ -1286,6 +1483,27 @@ desktop:
       title: Filters
       to_match: Business movements with no invoice linked
       to_match_chip: To match
+    form:
+      actions: Actions
+      amount_hint: Dot decimal, e.g. 1500.50
+      cancel: Cancel
+      choose: Choose…
+      close: Close
+      date_hint: Year-month-day, e.g. 2026-10-31
+      failed: Not answered · {code}
+      'no': 'No'
+      none: None
+      percent_hint: Write 70 for 70%
+      points_hint: Percentage, 0 to 100
+      reading: Reading…
+      refused: Refused · {code}
+      reread: Read again
+      save: Save
+      saving: Saving…
+      two_letters: Two letters, e.g. ES
+      unknown: 'Outcome unknown: it may have been saved.'
+      year_hint: Four digits, e.g. 2024
+      'yes': 'Yes'
     grid: Movements, {period}
     group:
       account: Account
@@ -1322,6 +1540,53 @@ desktop:
       status: Status
       title: Group
       waits: needs the whole window
+    health:
+      check: Check
+      check_again: Check again
+      choose_period: Choose a period to check.
+      count:
+        active: Active
+        archived: Archived
+        pending: To classify
+        reviewed: Reviewed
+        skipped: Skipped by rule
+        split: Split
+        stashed: Set aside
+      dry_run: Run the dry run
+      expense: Business out, EUR
+      income: Business in, EUR
+      links: Declaration links
+      links_what: Rebuild them if a movement's “Used in” looks wrong. It reads every
+        declaration; nothing else changes.
+      missing: What's still missing · {period}
+      net: Net, EUR
+      no_movements: No movements in {period}. That isn't the same as nothing owed.
+      not_checked: Not checked in this window yet.
+      not_run: 'Not run yet: nothing is shown as zero until it''s measured.'
+      one_sided: One-sided invoice links
+      ready: Ready for calculation · {count} checked
+      rebuild: Rebuild the links
+      rebuilt: 'Rebuilt: {links} links over {revisions} revisions · {removed} stale
+        removed'
+      reset: Danger zone · reset the ledger
+      reset_blocked: Reset is blocked
+      reset_blocker: Modelo {modelo} · {year} {period} · {state} cites movements
+      reset_confirm: Reset · remove {movements} movements
+      reset_reason: Reason
+      reset_reason_hint: Kept in the audit trail · up to {limit} characters
+      reset_what: Removes every movement and the documents attached to them. A dry
+        run comes first.
+      reset_would: It would remove {movements} movements and {documents} documents.
+      run_check: Run the check
+      show: 'Show the {count} movements: {reason}'
+      show_short: Show
+      stale: Declarations to recalculate
+      stale_none: 'None: every calculation covers the movements as they are.'
+      stale_row: 'Modelo {modelo} · {year} {period}: {changed} changed, {removed}
+        removed since it was calculated'
+      status: Status · {period}
+      unconverted: Foreign without a rate
+      whole: Check the whole ledger
     import:
       accepts:
         bank: CSV, XLSX, XLS, OFX, QFX or PDF · up to 128 files · folders inside a
@@ -1486,6 +1751,64 @@ desktop:
       gap: Gap in the statement
       original_file: Original file
       parser: Read with a warning
+    inventory:
+      actividad: Activity id
+      authority: Closing authority record (JSON)
+      authority_hint: The decision, the physical count if any, and the link to the
+        prior closing
+      authority_unread: Not a JSON object.
+      base: Taxable base
+      book: Book
+      books: Inventory books {year}
+      column:
+        actividad: Activity
+        date: Date
+        kind: Kind
+        method: Valuation
+        movements: Movements
+        opening: Opening stock
+        quantity: Units
+        unit_cost: Unit cost
+      date: Date
+      empty: No inventory book for {year}.
+      form:
+        closing: Closing authority for {actividad} · {year}
+        create: New inventory book for {year}
+        movement: Add a movement to {actividad} · {year}
+      kind:
+        cogs: Cost of sales
+        count: Count
+        opening: Opening stock
+        purchase: Purchase
+      kind_label: Kind
+      method:
+        coste_medio: Average cost
+        fifo: FIFO
+        pmp: Weighted average price
+      method_label: Valuation method
+      movement_id: Movement id
+      movements: Movements added here
+      opening: Opening stock value
+      preview: Preview valuation
+      preview_note: 'A preview: nothing is recorded.'
+      quantity: Units
+      refusal:
+        activity_conflict: 'Refused: that activity already has a book for the year.'
+        activity_not_found: 'Refused: no book for that activity and year.'
+        closing_authority_conflict: 'Refused: a different closing authority is already
+          recorded.'
+        closing_authority_invalid: 'Refused: the record doesn''t fit this book.'
+        duplicate_movement_id: 'Refused: that movement id is already in the book.'
+        invalid_valuation_method: 'Refused: not a valuation method.'
+        inventory_validation: 'Refused: the book doesn''t accept that.'
+      task:
+        closing: Record the closing authority
+        create: New book
+        movement: Add a movement
+      title: Inventory books
+      unit_cost: Unit cost
+      valuation: Closing {closing} · cost of sales {cogs} · {method}
+      year: Inventory year
     invoice:
       linked: Linked
     invoices:
@@ -1856,6 +2179,107 @@ desktop:
       year_previous: Previous year
       years_with_movements: Years with movements
     position: Row {row} of {count}
+    prorrata:
+      accepted: 'Accepted: {provenances}.'
+      action:
+        declare_sector: Declare a sector
+        elect_especial: Elect especial
+        elect_general: Elect general
+        revoke_especial: Revoke especial
+        seed: Seed from the prior year
+        seed_sector: Seed a sector
+        settle_sector: Settle a sector
+      changes: Changes for {ejercicio}
+      codes: Activity codes
+      codes_hint: Separated by commas
+      column:
+        definitive: Definitive
+        ejercicio: Ejercicio
+        provenance: Source
+        provisional: Provisional
+        regime: Regime
+        sector: Sector
+        volumes: With / without right to deduct
+      con_derecho: Volume with right to deduct
+      ejercicio: Ejercicio
+      empty: No prorrata entries yet.
+      evidence: Evidence reference
+      evidence_hint: The document of the option or its revocation
+      form:
+        declare_sector: Declare a differentiated sector
+        elect_especial: Elect prorrata especial for {ejercicio}
+        elect_general: Elect prorrata general for {ejercicio}
+        revoke_especial: Revoke prorrata especial for {ejercicio}
+        seed: Seed {ejercicio} from the prior year
+        seed_sector: Seed a sector's provisional prorrata for {ejercicio}
+        settle_sector: Settle a sector's definitive prorrata for {ejercicio}
+      letra:
+        a: a · different CNAE groups
+        b: b · special regimes
+        c: c · financial leasing
+        d: d · assignment of credits or loans
+      letra_label: Art. 9.1.c group
+      no_sectors: No sectors declared
+      not_settled: Not settled
+      percentage: Provisional percentage
+      provenance:
+        aeat_autorizada: Authorised by AEAT
+        carried_prior_definitiva: Prior year's definitive
+        inicio_actividad: Start of activity
+        interrumpida_tres_ultimos: Last three active years
+      provenance_label: Where it comes from
+      reference: Reference
+      reference_hint: The authorisation or proposal it stands on
+      refusal:
+        provenance_not_electable: 'Refused: that source is calculated, not chosen.'
+        provenance_required: 'Refused: say where the percentage comes from.'
+        reference_not_permitted: 'Refused: that source has no document to reference.'
+        reference_required: 'Refused: that source needs its document''s reference.'
+        regulated_override_standing: 'Refused: an authorised percentage stands.'
+        sector_prior_definitive_absent: 'Refused: the sector has no prior definitive.'
+        sector_settlement_entry_absent: 'Refused: the sector has no entry to settle.'
+        seed_existing_blocked: 'Refused: this ejercicio already has an entry.'
+        seed_source_absent: 'Refused: no definitive percentage in the prior year.'
+        seed_source_blocked: 'Refused: the prior year''s source is blocked.'
+        validation: 'Refused: the register doesn''t accept that.'
+      regime:
+        especial: Especial
+        general: General
+      sector: Sector
+      sector_id: Sector id
+      sectors: 'Differentiated sectors:'
+      seed_what: Reads the definitive percentage stamped for {prior} and carries it
+        to {ejercicio}.
+      sin_derecho: Volume without right to deduct
+      title: Prorrata register
+      whole: Whole activity
+    ratios:
+      censo_mismatch: 'Withheld: the ratios don''t match the censo.'
+      change: Change
+      column:
+        category: Category
+        kind: Kind
+        ratio: Your ratio
+        standard: Standard
+      enter: Enter a ratio
+      findings: '{count} to look at: {categories}'
+      input: Ratio for {category}, write 50 for 50%
+      kind:
+        full_deductible: Fully deductible
+        statutory_cap: Statutory cap
+        usage_ratio_home_area: Home office area
+        usage_ratio_personal: Business use
+      not_set: Not set
+      refused: 'Refused: no ratio is set for that category.'
+      set: Set
+      set_named: Set the ratio for {category}
+      table: Ratios {year}
+      title: Business-use ratios
+      unset: Unset
+      unset_named: Unset the ratio for {category}
+      valid: All {count} set ratios are valid.
+      validate: Check them
+      year: Ratio year
     readiness:
       checking: Checking…
       failed: Couldn't check readiness
@@ -1920,12 +2344,78 @@ desktop:
       missing_taxable_base: Taxable base missing
       unsupported_currency: Currency not supported
       unsupported_period: Period not supported
+    registers:
+      area:
+        accounts: Own accounts
+        assets: Activity assets
+        capital: Bienes de inversión
+        inventory: Inventory
+        prorrata: Prorrata
+      areas: Registers areas
     retry: Retry
     review:
       excluded: Excluded
       pending: To classify
       reviewed: Reviewed
       skipped: Skipped by rule
+    rules:
+      adds_new: Saving adds a new rule; this one stays, as rules can't be removed.
+      advanced: 'Advanced: regular expression'
+      area:
+        counterparties: Counterparties
+        diagnostics: Model diagnostics
+        ratios: Business-use ratios
+        rules: Rules
+      areas: Rules areas
+      category: Category
+      classification: Classifies as
+      classify_now: Also classify them now (staged)
+      column:
+        added: Added
+        category: Category
+        classification: Classifies as
+        order: Order
+        rule: Rule
+      contains: Contains “{words}”
+      dry_run_counts: '{skipped} already classified · {none} without a match'
+      edit: 'Edit: {rule}'
+      edit_title: Rule
+      empty: No rules yet.
+      expression: Expression
+      expression_hint: Matched anywhere in the description, ignoring case.
+      expression_unread: This window can't read that expression.
+      from_selection: Make a rule from the selection
+      matches: Matches {count} loaded
+      matches_unknown: Not counted here
+      move_down: 'Move down: {rule}'
+      move_up: 'Move up: {rule}'
+      new: Make a rule
+      new_title: New rule
+      no_category: No category
+      order: Runs
+      order_after: 'After: {rule}'
+      order_first: First
+      order_full: 'No room there: move a rule next to it first.'
+      order_note: They run in order on movements still to classify; the first match
+        decides.
+      pattern_match: Advanced pattern
+      preview: Preview
+      reaffirm: Re-check rule-classified
+      refusal:
+        category: Not a spending category.
+        empty_pattern: Write the words to match.
+        invalid_command: The ledger refused the rule.
+        invalid_pattern: The ledger can't read that expression.
+      run_note: A preview writes nothing; running them is staged like any change.
+      run_staged: Rules run staged · {count} movements · not saved
+      run_title: Run the rules
+      save: Save rule
+      stage_run: Stage the run
+      title: Classification rules
+      what: Matches words in a movement's description and decides its classification.
+      words: Description contains
+      words_hint: Words in this order; capitals don't matter.
+      would_classify: '{count} would be classified'
     search:
       elsewhere: '{count} more in other periods'
       label: Search movements

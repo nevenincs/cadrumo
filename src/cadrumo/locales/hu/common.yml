@@ -785,6 +785,67 @@ desktop:
   ledger:
     account:
       none: Nincs számla
+    accounts:
+      actions: 'Műveletek: {account}'
+      add: Számla hozzáadása
+      bank_address: Bank címe
+      bank_city: Bank városa
+      bank_country: Bank országa
+      bank_hint: SEPA-n kívüli banknál kötelező.
+      bank_name: Bank neve
+      close: Lezárás dátummal…
+      closed_hint: A tételei megtartják a számlát.
+      closed_on: Zárás dátuma
+      column:
+        closed: Zárás
+        currency: Pénznem
+        designated: Kijelölve
+        holding: Szereped
+        iban: IBAN
+        label: Számla
+        opened: Nyitás
+      currency: Pénznem
+      currency_hint: Három betű, pl. EUR
+      designate: Kijelölés terhelésre vagy visszatérítésre…
+      empty: Még nincs számla.
+      every_modelo: minden nyomtatvány
+      holding:
+        cotitular: Társtulajdonos
+        titular: Tulajdonos
+      holding_label: Szereped
+      iban: IBAN
+      iban_hint: Egyszer, védett csatornán megy el, utána csak takarva látszik.
+      iban_problem:
+        check: Az IBAN ellenőrző számjegyei nem egyeznek.
+        shape: Nem IBAN.
+      label: Név
+      modelo: '{modelo}-s nyomtatvány'
+      modelo_hint: Három számjegy, pl. 303; üresen mindegyikre
+      modelo_label: Nyomtatvány
+      named:
+        close: '{account} lezárása'
+        designate: '{account} kijelölése'
+        update: '{account} módosítása'
+      not_closed: Nincs lezárva
+      not_known: Nem ismert
+      opened: Nyitás dátuma
+      refused: 'Elutasítva: a nyilvántartás nem fogadja el ezeket az adatokat.'
+      refused_remove: 'Nem törölhető: amit tételek vagy kijelölés használ, azt csak
+        lezárni lehet.'
+      remove: Törlés
+      role:
+        charge: Terhelések
+        refund: Visszatérítések
+      role_label: Mire
+      submit:
+        add: Számla hozzáadása
+        close: Számla lezárása
+        designate: Kijelölés
+        update: Adatok mentése
+      swift_bic: SWIFT/BIC
+      title: Saját számláid
+      undesignate: 'Kijelölés törlése: {designation}'
+      update: Adatok módosítása…
     action:
       add: Hozzáadás
       add_movement: Tétel hozzáadása
@@ -940,6 +1001,97 @@ desktop:
       unknown_title: Egy mentés eredménye ismeretlen
       when_read: Beolvasáskor
       yours: Az előkészített változásod
+    assets:
+      asset_id: Eszköz azonosítója
+      claim: Elszámolás
+      claim_reused: 'Már elszámolva: semmi sem került kétszer rögzítésre.'
+      claimed: Elszámolás rögzítve.
+      column:
+        amount: Összeg
+        casilla: Mező
+        claims: Elszámolások
+        in_service: Használatban ettől
+        number: Változat
+        revision: Azonosító
+        target: Bevallás
+      creating_hint: Mi alatt kerül rögzítésre, pl. melyik bevalláshoz
+      creating_operation: Rögzítés megnevezése
+      forecast: Értékcsökkenés {amount} · {days} nap · {from} – {until}
+      forecast_note: Az előrejelzés semmit sem rögzít, amíg el nem számolod.
+      free: Kért szabad értékcsökkenés
+      free_hint: Csak szabad értékcsökkenési módszernél
+      from: Ettől
+      handoff: Hová kerülnek az elszámolások
+      inspect: Megtekintés
+      quarter: 130-as negyedév
+      refusal:
+        refused_actividad_asset_accelerated_da18_depreciation_not_computed: 'Elutasítva:
+          a gyorsított értékcsökkenés itt nem számítható.'
+        refused_actividad_asset_claim_conflict: 'Elutasítva: ütközik egy már rögzített
+          elszámolással.'
+        refused_actividad_asset_incomplete: 'Elutasítva: még hiányoznak adatok.'
+        refused_actividad_asset_unsupported: 'Elutasítva: ez a módszer még nem támogatott.'
+        refused_actividad_asset_validation: 'Elutasítva: az eszköznyilvántartás ezt
+          nem fogadja el.'
+      revision:
+        correct: Javító változat (JSON)
+        create: Első változat (JSON)
+      revision_hint: Töltsd ki az összes üres adatot; mentés után egy változat nem
+        szerkeszthető.
+      revisions: Változatok
+      submit:
+        correct: Javítás mentése
+        create: Eszköz létrehozása
+        filing: Megjelenítés
+        forecast: Előrejelzés
+      target:
+        intangible_m100: 100-as · immateriális
+        intangible_m130: 130-as · immateriális
+        material_m100: 100-as · tárgyi
+        material_m130: 130-as · tárgyi
+      task:
+        correct: Javítás…
+        create: Létrehozás…
+        filing: Bevallásokhoz
+        forecast: Előrejelzés
+      tax_year: Adóév
+      title: Tevékenységi eszközök
+      until: Eddig
+    capital:
+      art108: A 108. cikk alá tartozik
+      column:
+        cuota: Előzetesen felszámított adó
+        deducted: Levont összeg
+        description: Jószág
+        disposal: Értékesítés
+        identifier: Hivatkozás
+        kind: Fajta
+        prorrata: Kezdeti prorrata
+        year: Beszerzés
+      cuota: Előzetesen felszámított adó
+      declare: Beruházási jószág bejelentése
+      description: Leírás
+      disposal:
+        exenta_o_no_sujeta: Mentes vagy nem adóköteles
+        sujeta_no_exenta: Adóköteles, nem mentes
+      disposal_hint: Csak ha eladtad vagy átruháztad
+      disposal_regime: Értékesítés rendszere
+      disposal_year: Értékesítés éve
+      empty: Nincs bejelentett beruházási jószág.
+      identifier: Saját hivatkozásod
+      kind:
+        inmueble: Ingatlan
+        mueble: Ingó
+      kind_label: Fajta
+      movement: Vásárlási tétel azonosítója
+      movement_hint: A napló tétele, amellyel kifizetted
+      prorrata: Kezdeti prorrata
+      refusal:
+        disposal_incomplete: 'Elutasítva: az értékesítéshez év és rendszer is kell.'
+        duplicate_identifier: 'Elutasítva: ez a hivatkozás már be van jelentve.'
+        validation: 'Elutasítva: a nyilvántartás nem fogadja el ezeket az adatokat.'
+      title: Beruházási javak
+      year: Beszerzés éve
     category:
       amortizacion_vivienda_afecto: Üzleti célra használt lakás amortizációja
       arrendamiento_local: Üzlethelyiség bérleti díja
@@ -1086,11 +1238,56 @@ desktop:
       title: '{count} egyenkénti mentés'
     count:
       to_classify: '{count} besorolandó'
+    counterparty:
+      answer: Amit a napló most válaszol
+      confirm: Megerősítés
+      confirmed: Megerősítve
+      country: Ország
+      established: Székhely
+      not_confirmed: Még nem
+      note: Megjegyzés
+      scope:
+        es_canarias: Kanári-szigetek
+        es_ceuta_melilla: Ceuta és Melilla
+        es_mainland: Spanyolország, félsziget és Baleár-szigetek
+        eu_member: Másik uniós tagállam
+        third_country: EU-n kívül
+      scope_label: Székhelye
+      source:
+        document_evidence: dokumentum alapján
+        operator_assertion: általad megerősítve
+        profile_authority: a profilod alapján
+      state: ÁFA-azonosító állam
+      tax_id: Adóazonosító
+      title: Partnerek
+      undetermined: Nem meghatározott
+      vat_state: ÁFA-azonosítás helye
+      view: Lekérdezés
+      withdraw: Visszavonás…
+      withdraw_confirm: Megerősítés visszavonása
+      withdraw_what: Visszavonja a megerősítésedet; a napló újra a dokumentumokra
+        támaszkodik.
     density:
       comfortable: Tágas sorok
     describe:
       missing: 'hiányzik: {reason}'
       readiness: 'Készültség: {reasons}'
+    diagnostics:
+      calls: Hívások
+      classified: Besorolt
+      confidence: Bizonyosság szolgáltatónként
+      cost: Becsült költség
+      low: Alacsony bizonyosság
+      mean: Átlagos bizonyosság
+      provider: Szolgáltató
+      read: Lekérdezés
+      since: Ettől
+      threshold: Alacsony bizonyosság határa
+      title: Modelldiagnosztika
+      tokens: Tokenek
+      unpriced: '{count} hívás ár nélkül'
+      until: Eddig
+      usage: Használat szolgáltatónként
     direction:
       incoming: Bejövő
       internal_transfer: Átvezetés
@@ -1298,6 +1495,27 @@ desktop:
       title: Szűrők
       to_match: Üzleti tételek kapcsolt számla nélkül
       to_match_chip: Párosítandó
+    form:
+      actions: Műveletek
+      amount_hint: Pont a tizedesjel, pl. 1500.50
+      cancel: Mégse
+      choose: Válassz…
+      close: Bezárás
+      date_hint: Év-hónap-nap, pl. 2026-10-31
+      failed: Nincs válasz · {code}
+      'no': Nem
+      none: Nincs
+      percent_hint: '70%-hoz írd: 70'
+      points_hint: Százalék, 0 és 100 között
+      reading: Beolvasás…
+      refused: Elutasítva · {code}
+      reread: Újraolvasás
+      save: Mentés
+      saving: Mentés…
+      two_letters: Két betű, pl. ES
+      unknown: 'Ismeretlen eredmény: lehet, hogy mentésre került.'
+      year_hint: Négy számjegy, pl. 2024
+      'yes': Igen
     grid: Tételek, {period}
     group:
       account: Számla
@@ -1334,6 +1552,54 @@ desktop:
       status: Státusz
       title: Csoportosítás
       waits: teljes beolvasás kell
+    health:
+      check: Ellenőrzés
+      check_again: Újraellenőrzés
+      choose_period: Válassz ellenőrzendő időszakot.
+      count:
+        active: Aktív
+        archived: Archivált
+        pending: Besorolandó
+        reviewed: Átnézett
+        skipped: Szabály kihagyta
+        split: Felosztott
+        stashed: Félretett
+      dry_run: Próbafuttatás
+      expense: Üzleti kiadás, EUR
+      income: Üzleti bevétel, EUR
+      links: Bevallási kapcsolatok
+      links_what: Építsd újra, ha egy tétel „Felhasználva” adata hibásnak tűnik. Minden
+        bevallást beolvas; más nem változik.
+      missing: Ami még hiányzik · {period}
+      net: Nettó, EUR
+      no_movements: '{period} időszakban nincs tétel. Ez nem jelenti, hogy nincs fizetnivaló.'
+      not_checked: Ebben az ablakban még nincs ellenőrizve.
+      not_run: 'Még nem futott: amíg nincs mérve, semmi sem jelenik meg nullaként.'
+      one_sided: Egyoldalú számlakapcsolatok
+      ready: Számításra kész · {count} ellenőrizve
+      rebuild: Kapcsolatok újraépítése
+      rebuilt: 'Újraépítve: {links} kapcsolat {revisions} változatban · {removed}
+        elavult törölve'
+      reset: Veszélyzóna · a napló alaphelyzetbe állítása
+      reset_blocked: Az alaphelyzetbe állítás tiltott
+      reset_blocker: '{modelo}-s nyomtatvány · {year} {period} · {state} tételekre
+        hivatkozik'
+      reset_confirm: Alaphelyzet · {movements} tétel eltávolítása
+      reset_reason: Indok
+      reset_reason_hint: A naplóban megmarad · legfeljebb {limit} karakter
+      reset_what: Eltávolít minden tételt és a hozzájuk csatolt dokumentumokat. Előbb
+        próbafuttatás jön.
+      reset_would: '{movements} tételt és {documents} dokumentumot távolítana el.'
+      run_check: Ellenőrzés futtatása
+      show: 'A(z) {count} tétel megjelenítése: {reason}'
+      show_short: Mutasd
+      stale: Újraszámolandó bevallások
+      stale_none: 'Nincs: minden számítás a jelenlegi tételekre épül.'
+      stale_row: '{modelo}-s nyomtatvány · {year} {period}: a számítás óta {changed}
+        módosult, {removed} törlődött'
+      status: Állapot · {period}
+      unconverted: Árfolyam nélküli devizás
+      whole: A teljes napló ellenőrzése
     import:
       accepts:
         bank: CSV, XLSX, XLS, OFX, QFX vagy PDF · legfeljebb 128 fájl · a mappán belüli
@@ -1499,6 +1765,64 @@ desktop:
       gap: Hézag a kivonatban
       original_file: Eredeti fájl
       parser: Figyelmeztetéssel beolvasva
+    inventory:
+      actividad: Tevékenység azonosítója
+      authority: Zárási jogosultság rekordja (JSON)
+      authority_hint: A döntés, az esetleges leltár és a kapcsolat az előző zárással
+      authority_unread: Nem JSON-objektum.
+      base: Adóalap
+      book: Nyilvántartás
+      books: Készletnyilvántartások {year}
+      column:
+        actividad: Tevékenység
+        date: Dátum
+        kind: Fajta
+        method: Értékelés
+        movements: Mozgások
+        opening: Nyitókészlet
+        quantity: Mennyiség
+        unit_cost: Egységköltség
+      date: Dátum
+      empty: '{year}-re nincs készletnyilvántartás.'
+      form:
+        closing: 'Zárási jogosultság: {actividad} · {year}'
+        create: 'Új készletnyilvántartás: {year}'
+        movement: 'Mozgás hozzáadása: {actividad} · {year}'
+      kind:
+        cogs: Eladott áruk költsége
+        count: Leltár
+        opening: Nyitókészlet
+        purchase: Beszerzés
+      kind_label: Fajta
+      method:
+        coste_medio: Átlagköltség
+        fifo: FIFO
+        pmp: Súlyozott átlagár
+      method_label: Értékelési módszer
+      movement_id: Mozgás azonosítója
+      movements: Itt hozzáadott mozgások
+      opening: Nyitókészlet értéke
+      preview: Értékelés előnézete
+      preview_note: 'Előnézet: semmi sem kerül rögzítésre.'
+      quantity: Mennyiség
+      refusal:
+        activity_conflict: 'Elutasítva: ennek a tevékenységnek már van nyilvántartása
+          arra az évre.'
+        activity_not_found: 'Elutasítva: nincs nyilvántartás ehhez a tevékenységhez
+          és évhez.'
+        closing_authority_conflict: 'Elutasítva: már más zárási jogosultság van rögzítve.'
+        closing_authority_invalid: 'Elutasítva: a rekord nem illik ehhez a nyilvántartáshoz.'
+        duplicate_movement_id: 'Elutasítva: ez az azonosító már szerepel a nyilvántartásban.'
+        invalid_valuation_method: 'Elutasítva: nem értékelési módszer.'
+        inventory_validation: 'Elutasítva: a nyilvántartás ezt nem fogadja el.'
+      task:
+        closing: Zárási jogosultság rögzítése
+        create: Új nyilvántartás
+        movement: Mozgás hozzáadása
+      title: Készletnyilvántartások
+      unit_cost: Egységköltség
+      valuation: Zárókészlet {closing} · eladott áruk költsége {cogs} · {method}
+      year: Készlet éve
     invoice:
       linked: Összekapcsolva
     invoices:
@@ -1868,6 +2192,111 @@ desktop:
       year_previous: Előző év
       years_with_movements: Évek tételekkel
     position: '{row}. sor / {count}'
+    prorrata:
+      accepted: 'Elfogadott: {provenances}.'
+      action:
+        declare_sector: Ágazat bejelentése
+        elect_especial: Különleges választása
+        elect_general: Általános választása
+        revoke_especial: Különleges visszavonása
+        seed: Átvétel az előző évből
+        seed_sector: Ágazat átvétele
+        settle_sector: Ágazat elszámolása
+      changes: '{ejercicio} módosításai'
+      codes: Tevékenységkódok
+      codes_hint: Vesszővel elválasztva
+      column:
+        definitive: Végleges
+        ejercicio: Év
+        provenance: Forrás
+        provisional: Ideiglenes
+        regime: Rendszer
+        sector: Ágazat
+        volumes: Levonási joggal / nélkül
+      con_derecho: Levonási joggal járó forgalom
+      ejercicio: Gazdasági év
+      empty: Még nincs prorrata-bejegyzés.
+      evidence: Bizonyíték hivatkozása
+      evidence_hint: A választás vagy a visszavonás dokumentuma
+      form:
+        declare_sector: Elkülönült ágazat bejelentése
+        elect_especial: 'Különleges prorrata választása: {ejercicio}'
+        elect_general: 'Általános prorrata választása: {ejercicio}'
+        revoke_especial: 'Különleges prorrata visszavonása: {ejercicio}'
+        seed: '{ejercicio} átvétele az előző évből'
+        seed_sector: 'Ágazat ideiglenes prorratájának átvétele: {ejercicio}'
+        settle_sector: 'Ágazat végleges prorratájának elszámolása: {ejercicio}'
+      letra:
+        a: a · eltérő CNAE-csoportok
+        b: b · különleges rendszerek
+        c: c · pénzügyi lízing
+        d: d · követelések vagy kölcsönök átruházása
+      letra_label: 9.1.c cikk szerinti csoport
+      no_sectors: Nincs bejelentett ágazat
+      not_settled: Nincs elszámolva
+      percentage: Ideiglenes százalék
+      provenance:
+        aeat_autorizada: AEAT által engedélyezett
+        carried_prior_definitiva: Előző évi végleges
+        inicio_actividad: Tevékenység kezdete
+        interrumpida_tres_ultimos: Utolsó három aktív év
+      provenance_label: Honnan származik
+      reference: Hivatkozás
+      reference_hint: Az engedély vagy javaslat, amelyen alapul
+      refusal:
+        provenance_not_electable: 'Elutasítva: ez a forrás számított, nem választható.'
+        provenance_required: 'Elutasítva: add meg, honnan származik a százalék.'
+        reference_not_permitted: 'Elutasítva: ennek a forrásnak nincs hivatkozható
+          dokumentuma.'
+        reference_required: 'Elutasítva: ehhez a forráshoz meg kell adni a dokumentum
+          hivatkozását.'
+        regulated_override_standing: 'Elutasítva: érvényes engedélyezett százalék
+          van.'
+        sector_prior_definitive_absent: 'Elutasítva: az ágazatnak nincs előző végleges
+          értéke.'
+        sector_settlement_entry_absent: 'Elutasítva: az ágazatnak nincs elszámolható
+          bejegyzése.'
+        seed_existing_blocked: 'Elutasítva: ennek az évnek már van bejegyzése.'
+        seed_source_absent: 'Elutasítva: az előző évnek nincs végleges százaléka.'
+        seed_source_blocked: 'Elutasítva: az előző évi forrás zárolt.'
+        validation: 'Elutasítva: a nyilvántartás ezt nem fogadja el.'
+      regime:
+        especial: Különleges
+        general: Általános
+      sector: Ágazat
+      sector_id: Ágazat azonosítója
+      sectors: 'Elkülönült ágazatok:'
+      seed_what: Beolvassa a(z) {prior}. évi végleges százalékot, és átviszi {ejercicio}-re.
+      sin_derecho: Levonási jog nélküli forgalom
+      title: Prorrata-nyilvántartás
+      whole: Teljes tevékenység
+    ratios:
+      censo_mismatch: 'Visszatartva: az arányok nem egyeznek a cenzussal.'
+      change: Módosítás
+      column:
+        category: Kategória
+        kind: Fajta
+        ratio: A te arányod
+        standard: Alapértelmezett
+      enter: Adj meg egy arányt
+      findings: '{count} átnézendő: {categories}'
+      input: '{category} aránya; 50%-hoz írd: 50'
+      kind:
+        full_deductible: Teljesen levonható
+        statutory_cap: Törvényi felső határ
+        usage_ratio_home_area: Otthoni iroda területe
+        usage_ratio_personal: Üzleti használat
+      not_set: Nincs megadva
+      refused: 'Elutasítva: ennek a kategóriának nincs aránya.'
+      set: Megadás
+      set_named: 'Arány megadása: {category}'
+      table: Arányok {year}
+      title: Üzleti használati arányok
+      unset: Törlés
+      unset_named: 'Arány törlése: {category}'
+      valid: Mind a(z) {count} beállított arány érvényes.
+      validate: Ellenőrzés
+      year: Arány éve
     readiness:
       checking: Ellenőrzés…
       failed: A készültséget nem sikerült ellenőrizni
@@ -1931,12 +2360,79 @@ desktop:
       missing_taxable_base: Hiányzik az adóalap
       unsupported_currency: A pénznem nem támogatott
       unsupported_period: Az időszak nem támogatott
+    registers:
+      area:
+        accounts: Saját számlák
+        assets: Tevékenységi eszközök
+        capital: Beruházási javak
+        inventory: Készlet
+        prorrata: Prorrata
+      areas: A nyilvántartások részei
     retry: Újra
     review:
       excluded: Kizárva
       pending: Besorolandó
       reviewed: Átnézve
       skipped: Szabály kihagyta
+    rules:
+      adds_new: Mentéskor új szabály jön létre; ez megmarad, mert szabályt nem lehet
+        törölni.
+      advanced: 'Haladó: reguláris kifejezés'
+      area:
+        counterparties: Partnerek
+        diagnostics: Modelldiagnosztika
+        ratios: Üzleti használati arányok
+        rules: Szabályok
+      areas: A szabályok részei
+      category: Kategória
+      classification: Besorolás
+      classify_now: Most be is sorolni őket (előkészítve)
+      column:
+        added: Hozzáadva
+        category: Kategória
+        classification: Besorolás
+        order: Sorrend
+        rule: Szabály
+      contains: 'Tartalmazza: „{words}”'
+      dry_run_counts: '{skipped} már besorolva · {none} egyezés nélkül'
+      edit: 'Szerkesztés: {rule}'
+      edit_title: Szabály
+      empty: Még nincs szabály.
+      expression: Kifejezés
+      expression_hint: A leírás bármely részén, kis- és nagybetűtől függetlenül.
+      expression_unread: Ez az ablak nem tudja értelmezni a kifejezést.
+      from_selection: Szabály a kijelölésből
+      matches: '{count} betöltött tételre illik'
+      matches_unknown: Itt nem számolható
+      move_down: 'Lejjebb: {rule}'
+      move_up: 'Feljebb: {rule}'
+      new: Szabály létrehozása
+      new_title: Új szabály
+      no_category: Nincs kategória
+      order: Futás
+      order_after: 'Ez után: {rule}'
+      order_first: Elsőként
+      order_full: 'Ott nincs hely: előbb mozgass el egy szomszédos szabályt.'
+      order_note: Sorrendben futnak a besorolandó tételeken; az első egyezés dönt.
+      pattern_match: Haladó minta
+      preview: Előnézet
+      reaffirm: Szabállyal besoroltak újraellenőrzése
+      refusal:
+        category: Nem kiadási kategória.
+        empty_pattern: Írd be a keresendő szavakat.
+        invalid_command: A napló elutasította a szabályt.
+        invalid_pattern: A napló nem tudja értelmezni a kifejezést.
+      run_note: Az előnézet nem ír semmit; a futtatás a többi változáshoz hasonlóan
+        előkészítve vár.
+      run_staged: Szabályfuttatás előkészítve · {count} tétel · nincs mentve
+      run_title: Szabályok futtatása
+      save: Szabály mentése
+      stage_run: Futtatás előkészítése
+      title: Besorolási szabályok
+      what: Szavakat keres a tétel leírásában, és eldönti a besorolását.
+      words: A leírás tartalmazza
+      words_hint: Szavak ebben a sorrendben; a kis- és nagybetű mindegy.
+      would_classify: '{count} kerülne besorolásra'
     search:
       elsewhere: Még {count} más időszakokban
       label: Tételek keresése

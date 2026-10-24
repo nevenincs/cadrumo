@@ -804,6 +804,67 @@ desktop:
   ledger:
     account:
       none: Sin cuenta
+    accounts:
+      actions: Acciones de {account}
+      add: Añadir cuenta
+      bank_address: Dirección del banco
+      bank_city: Ciudad del banco
+      bank_country: País del banco
+      bank_hint: Necesario para un banco fuera de la zona SEPA.
+      bank_name: Nombre del banco
+      close: Cerrar en una fecha…
+      closed_hint: Sus movimientos conservan la cuenta.
+      closed_on: Fecha de cierre
+      column:
+        closed: Cierre
+        currency: Moneda
+        designated: Designada para
+        holding: Eres
+        iban: IBAN
+        label: Cuenta
+        opened: Apertura
+      currency: Moneda
+      currency_hint: Tres letras, p. ej. EUR
+      designate: Designar para cargos o devoluciones…
+      empty: Aún no hay cuentas.
+      every_modelo: todos los modelos
+      holding:
+        cotitular: Cotitular
+        titular: Titular
+      holding_label: Eres
+      iban: IBAN
+      iban_hint: Se envía una vez por un canal protegido y después se muestra enmascarado.
+      iban_problem:
+        check: Los dígitos de control del IBAN no cuadran.
+        shape: No es un IBAN.
+      label: Nombre
+      modelo: Modelo {modelo}
+      modelo_hint: Tres cifras, p. ej. 303; vacío para todos
+      modelo_label: Modelo
+      named:
+        close: Cerrar {account}
+        designate: Designar {account}
+        update: Cambiar {account}
+      not_closed: Sin cerrar
+      not_known: Desconocida
+      opened: Fecha de apertura
+      refused: 'Rechazado: el registro no acepta esos datos.'
+      refused_remove: 'No se ha quitado: una cuenta que usan movimientos o una designación
+        solo se puede cerrar.'
+      remove: Quitar
+      role:
+        charge: Cargos
+        refund: Devoluciones
+      role_label: Para
+      submit:
+        add: Añadir cuenta
+        close: Cerrar la cuenta
+        designate: Designar
+        update: Guardar datos
+      swift_bic: SWIFT/BIC
+      title: Tus cuentas propias
+      undesignate: 'Quitar la designación: {designation}'
+      update: Cambiar datos…
     action:
       add: Añadir
       add_movement: Añadir movimiento
@@ -964,6 +1025,96 @@ desktop:
       unknown_title: Un guardado tiene un resultado desconocido
       when_read: Cuando lo leíste
       yours: Tu cambio preparado
+    assets:
+      asset_id: Identificador del elemento
+      claim: Reclamarla
+      claim_reused: 'Ya reclamada: no se ha registrado dos veces.'
+      claimed: Reclamación registrada.
+      column:
+        amount: Importe
+        casilla: Casilla
+        claims: Reclamaciones
+        in_service: En uso desde
+        number: Revisión
+        revision: Id
+        target: Declaración
+      creating_hint: Con qué se registra, p. ej. la declaración a la que va
+      creating_operation: Registrado como
+      forecast: Amortización {amount} · {days} días · {from} – {until}
+      forecast_note: Una previsión no registra nada hasta que la reclamas.
+      free: Amortización libre solicitada
+      free_hint: Solo para un método de amortización libre
+      from: Desde
+      handoff: Adónde van las reclamaciones
+      inspect: Consultar
+      quarter: Trimestre del modelo 130
+      refusal:
+        refused_actividad_asset_accelerated_da18_depreciation_not_computed: 'Rechazado:
+          la amortización acelerada no se calcula aquí.'
+        refused_actividad_asset_claim_conflict: 'Rechazado: choca con una reclamación
+          ya registrada.'
+        refused_actividad_asset_incomplete: 'Rechazado: aún faltan datos.'
+        refused_actividad_asset_unsupported: 'Rechazado: ese método aún no está soportado.'
+        refused_actividad_asset_validation: 'Rechazado: el registro de elementos no
+          lo acepta.'
+      revision:
+        correct: Revisión que corrige (JSON)
+        create: Primera revisión (JSON)
+      revision_hint: Rellena cada dato vacío; una revisión no se edita una vez guardada.
+      revisions: Revisiones
+      submit:
+        correct: Guardar la corrección
+        create: Crear el elemento
+        filing: Mostrar
+        forecast: Calcular previsión
+      target:
+        intangible_m100: Modelo 100 · intangible
+        intangible_m130: Modelo 130 · intangible
+        material_m100: Modelo 100 · material
+        material_m130: Modelo 130 · material
+      task:
+        correct: Corregir…
+        create: Crear…
+        filing: Para las declaraciones
+        forecast: Previsión
+      tax_year: Ejercicio
+      title: Elementos afectos a la actividad
+      until: Hasta
+    capital:
+      art108: Acogido al art. 108
+      column:
+        cuota: Cuota soportada
+        deducted: Deducción efectuada
+        description: Bien
+        disposal: Transmisión
+        identifier: Referencia
+        kind: Tipo
+        prorrata: Prorrata inicial
+        year: Adquirido
+      cuota: Cuota soportada
+      declare: Declarar un bien de inversión
+      description: Descripción
+      disposal:
+        exenta_o_no_sujeta: Exenta o no sujeta
+        sujeta_no_exenta: Sujeta y no exenta
+      disposal_hint: Solo si se vendió o transmitió
+      disposal_regime: Régimen de la transmisión
+      disposal_year: Año de transmisión
+      empty: No hay bienes de inversión declarados.
+      identifier: Tu referencia
+      kind:
+        inmueble: Inmueble
+        mueble: Mueble
+      kind_label: Tipo
+      movement: Identificador del movimiento de compra
+      movement_hint: El movimiento del libro con el que se pagó
+      prorrata: Prorrata inicial
+      refusal:
+        disposal_incomplete: 'Rechazado: una transmisión necesita año y régimen.'
+        duplicate_identifier: 'Rechazado: esa referencia ya está declarada.'
+        validation: 'Rechazado: el registro no acepta esos datos.'
+      title: Bienes de inversión
+      year: Año de adquisición
     category:
       amortizacion_vivienda_afecto: Amortización de la vivienda afecta
       arrendamiento_local: Alquiler del local
@@ -1110,11 +1261,55 @@ desktop:
       title: '{count} guardados uno a uno'
     count:
       to_classify: '{count} por clasificar'
+    counterparty:
+      answer: Lo que responde ahora el libro
+      confirm: Confirmar
+      confirmed: Confirmada
+      country: País
+      established: Establecida
+      not_confirmed: Aún no
+      note: Nota
+      scope:
+        es_canarias: Canarias
+        es_ceuta_melilla: Ceuta y Melilla
+        es_mainland: España, península y Baleares
+        eu_member: Otro Estado de la UE
+        third_country: Fuera de la UE
+      scope_label: Establecida en
+      source:
+        document_evidence: según documentos
+        operator_assertion: confirmado por ti
+        profile_authority: según tu perfil
+      state: Estado de identificación a efectos del IVA
+      tax_id: NIF / identificador fiscal
+      title: Contrapartes
+      undetermined: Sin determinar
+      vat_state: Identificada a efectos del IVA en
+      view: Consultar
+      withdraw: Retirar…
+      withdraw_confirm: Retirar la confirmación
+      withdraw_what: Retira tu confirmación; el libro vuelve a basarse en los documentos.
     density:
       comfortable: Filas holgadas
     describe:
       missing: 'falta: {reason}'
       readiness: 'Preparación: {reasons}'
+    diagnostics:
+      calls: Llamadas
+      classified: Clasificados
+      confidence: Confianza por proveedor
+      cost: Coste estimado
+      low: Confianza baja
+      mean: Confianza media
+      provider: Proveedor
+      read: Leer
+      since: Desde
+      threshold: Confianza baja por debajo de
+      title: Diagnóstico del modelo
+      tokens: Tokens
+      unpriced: '{count} llamadas sin precio'
+      until: Hasta
+      usage: Uso por proveedor
     direction:
       incoming: Entrada
       internal_transfer: Traspaso
@@ -1327,6 +1522,27 @@ desktop:
       title: Filtros
       to_match: Movimientos empresariales sin factura vinculada
       to_match_chip: Por conciliar
+    form:
+      actions: Acciones
+      amount_hint: Decimal con punto, p. ej. 1500.50
+      cancel: Cancelar
+      choose: Elige…
+      close: Cerrar
+      date_hint: Año-mes-día, p. ej. 2026-10-31
+      failed: Sin respuesta · {code}
+      'no': 'No'
+      none: Ninguno
+      percent_hint: Escribe 70 para el 70 %
+      points_hint: Porcentaje, de 0 a 100
+      reading: Leyendo…
+      refused: Rechazado · {code}
+      reread: Volver a leer
+      save: Guardar
+      saving: Guardando…
+      two_letters: Dos letras, p. ej. ES
+      unknown: 'Resultado desconocido: puede que se haya guardado.'
+      year_hint: Cuatro cifras, p. ej. 2024
+      'yes': Sí
     grid: Movimientos, {period}
     group:
       account: Cuenta
@@ -1363,6 +1579,53 @@ desktop:
       status: Estado
       title: Agrupar
       waits: necesita leerlo todo
+    health:
+      check: Comprobar
+      check_again: Volver a comprobar
+      choose_period: Elige un periodo que comprobar.
+      count:
+        active: Activos
+        archived: Archivados
+        pending: Por clasificar
+        reviewed: Revisados
+        skipped: Omitidos por regla
+        split: Divididos
+        stashed: Apartados
+      dry_run: Hacer la prueba
+      expense: Gastos de la actividad, EUR
+      income: Ingresos de la actividad, EUR
+      links: Enlaces con declaraciones
+      links_what: Reconstrúyelos si el «Usado en» de un movimiento parece mal. Lee
+        todas las declaraciones; nada más cambia.
+      missing: Lo que aún falta · {period}
+      net: Neto, EUR
+      no_movements: No hay movimientos en {period}. No es lo mismo que no deber nada.
+      not_checked: Aún no comprobado en esta ventana.
+      not_run: 'Aún no hecha: nada se muestra como cero hasta medirlo.'
+      one_sided: Enlaces de factura de un solo lado
+      ready: Listo para calcular · {count} comprobados
+      rebuild: Reconstruir los enlaces
+      rebuilt: 'Reconstruidos: {links} enlaces en {revisions} revisiones · {removed}
+        obsoletos quitados'
+      reset: Zona de peligro · reiniciar el libro
+      reset_blocked: El reinicio está bloqueado
+      reset_blocker: Modelo {modelo} · {year} {period} · {state} cita movimientos
+      reset_confirm: Reiniciar · quitar {movements} movimientos
+      reset_reason: Motivo
+      reset_reason_hint: Queda en el registro de auditoría · hasta {limit} caracteres
+      reset_what: Quita todos los movimientos y los documentos adjuntos. Primero va
+        una prueba.
+      reset_would: Quitaría {movements} movimientos y {documents} documentos.
+      run_check: Hacer la comprobación
+      show: 'Mostrar los {count} movimientos: {reason}'
+      show_short: Mostrar
+      stale: Declaraciones por recalcular
+      stale_none: 'Ninguna: cada cálculo cubre los movimientos tal como están.'
+      stale_row: 'Modelo {modelo} · {year} {period}: {changed} cambiados y {removed}
+        quitados desde el cálculo'
+      status: Estado · {period}
+      unconverted: Extranjeros sin cambio
+      whole: Comprobar todo el libro
     import:
       accepts:
         bank: CSV, XLSX, XLS, OFX, QFX o PDF · hasta 128 archivos · no se leen las
@@ -1528,6 +1791,64 @@ desktop:
       gap: Hueco en el extracto
       original_file: Archivo original
       parser: Leído con un aviso
+    inventory:
+      actividad: Identificador de la actividad
+      authority: Registro de la autoridad del cierre (JSON)
+      authority_hint: La decisión, el recuento físico si lo hay y el enlace con el
+        cierre anterior
+      authority_unread: No es un objeto JSON.
+      base: Base imponible
+      book: Libro
+      books: Libros de existencias {year}
+      column:
+        actividad: Actividad
+        date: Fecha
+        kind: Tipo
+        method: Valoración
+        movements: Movimientos
+        opening: Existencias iniciales
+        quantity: Unidades
+        unit_cost: Coste unitario
+      date: Fecha
+      empty: No hay libro de existencias de {year}.
+      form:
+        closing: Autoridad del cierre de {actividad} · {year}
+        create: Nuevo libro de existencias de {year}
+        movement: Añadir un movimiento a {actividad} · {year}
+      kind:
+        cogs: Coste de ventas
+        count: Recuento
+        opening: Existencias iniciales
+        purchase: Compra
+      kind_label: Tipo
+      method:
+        coste_medio: Coste medio
+        fifo: FIFO
+        pmp: Precio medio ponderado
+      method_label: Método de valoración
+      movement_id: Identificador del movimiento
+      movements: Movimientos añadidos aquí
+      opening: Valor de las existencias iniciales
+      preview: Valoración previa
+      preview_note: 'Una vista previa: no se registra nada.'
+      quantity: Unidades
+      refusal:
+        activity_conflict: 'Rechazado: esa actividad ya tiene libro ese año.'
+        activity_not_found: 'Rechazado: no hay libro para esa actividad y año.'
+        closing_authority_conflict: 'Rechazado: ya hay registrada otra autoridad del
+          cierre.'
+        closing_authority_invalid: 'Rechazado: el registro no corresponde a este libro.'
+        duplicate_movement_id: 'Rechazado: ese identificador ya está en el libro.'
+        invalid_valuation_method: 'Rechazado: no es un método de valoración.'
+        inventory_validation: 'Rechazado: el libro no lo acepta.'
+      task:
+        closing: Registrar la autoridad del cierre
+        create: Nuevo libro
+        movement: Añadir movimiento
+      title: Libros de existencias
+      unit_cost: Coste unitario
+      valuation: Existencias finales {closing} · coste de ventas {cogs} · {method}
+      year: Año de existencias
     invoice:
       linked: Vinculada
     invoices:
@@ -1901,6 +2222,110 @@ desktop:
       year_previous: Año anterior
       years_with_movements: Años con movimientos
     position: Fila {row} de {count}
+    prorrata:
+      accepted: 'Se acepta: {provenances}.'
+      action:
+        declare_sector: Declarar un sector
+        elect_especial: Optar por la especial
+        elect_general: Optar por la general
+        revoke_especial: Revocar la especial
+        seed: Tomar del año anterior
+        seed_sector: Tomar un sector del año anterior
+        settle_sector: Liquidar un sector
+      changes: Cambios de {ejercicio}
+      codes: Códigos de actividad
+      codes_hint: Separados por comas
+      column:
+        definitive: Definitiva
+        ejercicio: Ejercicio
+        provenance: Origen
+        provisional: Provisional
+        regime: Régimen
+        sector: Sector
+        volumes: Con / sin derecho a deducción
+      con_derecho: Volumen con derecho a deducción
+      ejercicio: Ejercicio
+      empty: Aún no hay entradas de prorrata.
+      evidence: Referencia del justificante
+      evidence_hint: El documento de la opción o de su revocación
+      form:
+        declare_sector: Declarar un sector diferenciado
+        elect_especial: Optar por la prorrata especial en {ejercicio}
+        elect_general: Optar por la prorrata general en {ejercicio}
+        revoke_especial: Revocar la prorrata especial en {ejercicio}
+        seed: Tomar {ejercicio} del año anterior
+        seed_sector: Tomar la prorrata provisional de un sector en {ejercicio}
+        settle_sector: Liquidar la prorrata definitiva de un sector en {ejercicio}
+      letra:
+        a: a · grupos CNAE distintos
+        b: b · regímenes especiales
+        c: c · arrendamiento financiero
+        d: d · cesión de créditos o préstamos
+      letra_label: Supuesto del art. 9.1.c
+      no_sectors: No hay sectores declarados
+      not_settled: Sin liquidar
+      percentage: Porcentaje provisional
+      provenance:
+        aeat_autorizada: Autorizada por la AEAT
+        carried_prior_definitiva: Definitiva del año anterior
+        inicio_actividad: Inicio de actividad
+        interrumpida_tres_ultimos: Últimos tres años de actividad
+      provenance_label: De dónde sale
+      reference: Referencia
+      reference_hint: La autorización o propuesta en la que se basa
+      refusal:
+        provenance_not_electable: 'Rechazado: ese origen se calcula, no se elige.'
+        provenance_required: 'Rechazado: indica de dónde sale el porcentaje.'
+        reference_not_permitted: 'Rechazado: ese origen no tiene documento al que
+          referirse.'
+        reference_required: 'Rechazado: ese origen necesita la referencia de su documento.'
+        regulated_override_standing: 'Rechazado: hay un porcentaje autorizado vigente.'
+        sector_prior_definitive_absent: 'Rechazado: el sector no tiene definitiva
+          anterior.'
+        sector_settlement_entry_absent: 'Rechazado: el sector no tiene entrada que
+          liquidar.'
+        seed_existing_blocked: 'Rechazado: este ejercicio ya tiene una entrada.'
+        seed_source_absent: 'Rechazado: el año anterior no tiene porcentaje definitivo.'
+        seed_source_blocked: 'Rechazado: el origen del año anterior está bloqueado.'
+        validation: 'Rechazado: el registro no lo acepta.'
+      regime:
+        especial: Especial
+        general: General
+      sector: Sector
+      sector_id: Identificador del sector
+      sectors: 'Sectores diferenciados:'
+      seed_what: Lee el porcentaje definitivo registrado de {prior} y lo traslada
+        a {ejercicio}.
+      sin_derecho: Volumen sin derecho a deducción
+      title: Registro de prorrata
+      whole: Toda la actividad
+    ratios:
+      censo_mismatch: 'Retenidos: los porcentajes no coinciden con el censo.'
+      change: Cambiar
+      column:
+        category: Categoría
+        kind: Tipo
+        ratio: Tu porcentaje
+        standard: Estándar
+      enter: Introduce un porcentaje
+      findings: '{count} por revisar: {categories}'
+      input: Porcentaje de {category}; escribe 50 para el 50 %
+      kind:
+        full_deductible: Deducible por completo
+        statutory_cap: Límite legal
+        usage_ratio_home_area: Superficie de la vivienda afecta
+        usage_ratio_personal: Uso en la actividad
+      not_set: Sin fijar
+      refused: 'Rechazado: esa categoría no tiene porcentaje.'
+      set: Fijar
+      set_named: Fijar el porcentaje de {category}
+      table: Porcentajes {year}
+      title: Porcentajes de afectación
+      unset: Quitar
+      unset_named: Quitar el porcentaje de {category}
+      valid: Los {count} porcentajes fijados son válidos.
+      validate: Comprobarlos
+      year: Año del porcentaje
     readiness:
       checking: Comprobando…
       failed: No se ha podido comprobar la preparación
@@ -1965,12 +2390,81 @@ desktop:
       missing_taxable_base: Falta la base imponible
       unsupported_currency: Moneda no admitida
       unsupported_period: Periodo no admitido
+    registers:
+      area:
+        accounts: Cuentas propias
+        assets: Elementos afectos
+        capital: Bienes de inversión
+        inventory: Existencias
+        prorrata: Prorrata
+      areas: Apartados de registros
     retry: Reintentar
     review:
       excluded: Excluido
       pending: Por clasificar
       reviewed: Revisado
       skipped: Omitido por una regla
+    rules:
+      adds_new: Al guardar se añade una regla nueva; esta se mantiene, porque las
+        reglas no se pueden quitar.
+      advanced: 'Avanzado: expresión regular'
+      area:
+        counterparties: Contrapartes
+        diagnostics: Diagnóstico del modelo
+        ratios: Porcentajes de afectación
+        rules: Reglas
+      areas: Apartados de reglas
+      category: Categoría
+      classification: Clasifica como
+      classify_now: Clasificarlos también ahora (pendiente)
+      column:
+        added: Añadida
+        category: Categoría
+        classification: Clasifica como
+        order: Orden
+        rule: Regla
+      contains: Contiene «{words}»
+      dry_run_counts: '{skipped} ya clasificados · {none} sin coincidencia'
+      edit: 'Editar: {rule}'
+      edit_title: Regla
+      empty: Aún no hay reglas.
+      expression: Expresión
+      expression_hint: Se busca en cualquier parte de la descripción, sin distinguir
+        mayúsculas.
+      expression_unread: Esta ventana no puede leer esa expresión.
+      from_selection: Crear regla a partir de la selección
+      matches: Coincide con {count} cargados
+      matches_unknown: No contado aquí
+      move_down: 'Bajar: {rule}'
+      move_up: 'Subir: {rule}'
+      new: Crear regla
+      new_title: Nueva regla
+      no_category: Sin categoría
+      order: Se aplica
+      order_after: 'Después de: {rule}'
+      order_first: La primera
+      order_full: 'No cabe ahí: mueve antes una regla vecina.'
+      order_note: Se aplican por orden a los movimientos por clasificar; decide la
+        primera que coincide.
+      pattern_match: Patrón avanzado
+      preview: Vista previa
+      reaffirm: Revisar lo clasificado por regla
+      refusal:
+        category: No es una categoría de gasto.
+        empty_pattern: Escribe las palabras que buscar.
+        invalid_command: El libro rechazó la regla.
+        invalid_pattern: El libro no puede leer esa expresión.
+      run_note: La vista previa no escribe nada; aplicarlas queda pendiente como cualquier
+        cambio.
+      run_staged: Aplicación de reglas pendiente · {count} movimientos · sin guardar
+      run_title: Aplicar las reglas
+      save: Guardar regla
+      stage_run: Dejar pendiente
+      title: Reglas de clasificación
+      what: Busca palabras en la descripción del movimiento y decide su clasificación.
+      words: La descripción contiene
+      words_hint: Palabras en este orden; da igual mayúsculas o minúsculas.
+      would_classify: Se clasificarían {count}
     search:
       elsewhere: '{count} más en otros periodos'
       label: Buscar movimientos
