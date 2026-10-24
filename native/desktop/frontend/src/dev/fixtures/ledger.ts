@@ -917,15 +917,24 @@ export function emptyLedger(): FixtureLedger {
 /** How many movements the large ledger adds to October 2026. */
 export const LARGE_LEDGER_EXTRA = 5_000;
 
+/** The fixture ledger holding `rows` movements in the fourth quarter of
+ * 2026, generated the same way on every run. */
+export function ledgerOfRows(rows: number): FixtureLedger {
+  const held = fixtureLedger().movements.filter((movement) =>
+    /^2026-1[0-2]-/.test(movement.transaction.date),
+  ).length;
+  return largeLedger(Math.max(0, rows - held));
+}
+
 /** The fixture ledger with thousands more movements in October 2026, the
  * size a busy period reaches, for measuring the grid. Each is a copy of an
  * October movement with its own id, day and amount. */
-export function largeLedger(): FixtureLedger {
+export function largeLedger(extra = LARGE_LEDGER_EXTRA): FixtureLedger {
   const ledger = fixtureLedger();
   const october = ledger.movements.filter((movement) =>
     movement.transaction.date.startsWith("2026-10-"),
   );
-  for (let at = 0; at < LARGE_LEDGER_EXTRA; at += 1) {
+  for (let at = 0; at < extra; at += 1) {
     const source = october[at % october.length]!;
     const date = day(10, 1 + (at % 23));
     const amount = money(500 + ((at * 7919) % 250_000));

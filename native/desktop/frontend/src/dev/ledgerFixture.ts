@@ -41,6 +41,7 @@ import {
   emptyLedger,
   fixtureLedger,
   hex64,
+  ledgerOfRows,
   largeLedger,
   money,
   movementId,
@@ -48,6 +49,7 @@ import {
   type FixtureLedger,
   type FixtureMovement,
 } from "./fixtures/ledger";
+import { ledgerClassOf } from "./ledgerClassesFixture";
 import { evidenceOperations } from "./ledgerEvidenceFixture";
 import {
   InvoiceRequestInvalid,
@@ -65,6 +67,43 @@ import {
   SetupStopped,
   setupOperations,
 } from "./ledgerSetupFixture";
+
+/** The longest request line, in bytes, the relay takes: the host refuses a
+ * longer one before it is written. */
+const REQUEST_LINE_LIMIT = 16_383;
+/** The longest reply, in bytes of compact JSON, the host takes from the
+ * relay; one longer is lost. */
+const REPLY_LIMIT = 16 * 1024 * 1024;
+/** What the host puts around a payload on the request line, with the room of
+ * the request id it adds. */
+const LINE_FRAME = {
+  action: "operation_submit",
+  subject_ref: "profile:00000000-0000-4000-8000-000000000000",
+};
+const REQUEST_ID_ROOM = 14 + 36 + 1 + 1;
+const encoder = new TextEncoder();
+
+/** Whether the host refuses the request before sending it: the payload's
+ * characters of compact JSON, or the request line's bytes. */
+export function tooLarge(definition: string, request: JsonObject): boolean {
+  if (JSON.stringify(request).length > LEDGER_PAYLOAD_LIMIT) return true;
+  const line = JSON.stringify({
+    action: LINE_FRAME.action,
+    definition_id: definition,
+    subject_ref: LINE_FRAME.subject_ref,
+    payload: request,
+  });
+  return encoder.encode(line).length + REQUEST_ID_ROOM > REQUEST_LINE_LIMIT;
+}
+
+/** Whether a reply is over the host's bound. */
+export function replyTooLarge(result: JsonValue): boolean {
+  const text = JSON.stringify(result);
+  // Three bytes bound a character here, so only a long text is counted.
+  return (
+    text.length * 3 > REPLY_LIMIT && encoder.encode(text).length > REPLY_LIMIT
+  );
+}
 
 /** How the scenario's ledger answers. */
 export const LEDGER_SHAPES = [
@@ -222,11 +261,6 @@ const CLASSIFICATIONS = [
   "SKIPPED_BY_RULE",
   "FAILED_VALIDATION",
   "REVIEWED_EXCLUDED",
-];
-/** The definitions that pause on a model's review. */
-const REVIEWED: readonly string[] = [
-  "ledger.classify.review",
-  "ledger.split.review",
 ];
 const BULK_COLUMNS = [
   "transaction_id",
@@ -573,12 +607,19 @@ function issues(ledger: FixtureLedger, period: JsonValue | undefined) {
 
 export function ledgerFixture(options: Options): LedgerPort {
   const { say, signedIn, shape } = options;
+  // `ledgerRows` in the page's address sets how many movements the fourth
+  // quarter of 2026 holds, for measuring the grid at any size.
+  const rows = Math.trunc(
+    Number(new URLSearchParams(window.location.search).get("ledgerRows")),
+  );
   const ledger =
     shape === "empty"
       ? emptyLedger()
-      : shape === "large"
-        ? largeLedger()
-        : fixtureLedger();
+      : rows > 0
+        ? ledgerOfRows(rows)
+        : shape === "large"
+          ? largeLedger()
+          : fixtureLedger();
   let clock = 0;
   const now = () => {
     clock += 1;
@@ -1806,15 +1847,10 @@ export function ledgerFixture(options: Options): LedgerPort {
     };
   }
 
-  /** Whether settling `definition` with `request` may change records. */
-  const changes = (definition: LedgerDefinitionId, request: JsonObject) =>
-    (definition in writes &&
-      request.dry_run !== true &&
-      !(definition === "ledger.counterparty" && request.action === "view")) ||
-    REVIEWED.includes(definition) ||
-    (definition === "ledger.own_account" &&
-      request.action !== "list" &&
-      request.action !== "show");
+  /** Whether settling `definition` may change records: the host's class of
+   * the definition alone decides it, whatever the request names. */
+  const changes = (definition: LedgerDefinitionId) =>
+    ledgerClassOf(definition) !== "read";
 
   async function run(
     definition: string,
@@ -1837,14 +1873,13 @@ export function ledgerFixture(options: Options): LedgerPort {
       OWN_ACCOUNT_SECRETS.some((field) => field in request)
     )
       return reject("invalid");
-    if (JSON.stringify(request).length > LEDGER_PAYLOAD_LIMIT)
-      return reject("too_large");
-    const mutation = changes(definition, request);
+    if (tooLarge(definition, request)) return reject("too_large");
+    const mutation = changes(definition);
     if (mutation && shape === "refused")
       return reject("refused", { reason: "operation_unavailable" });
     const operation = nextOperation();
     try {
-      if (REVIEWED.includes(definition)) {
+      if (ledgerClassOf(definition) === "review") {
         const movement = resolve(ledger, request.transaction_id);
         reviews.set(operation, {
           definition: definition as LedgerDefinitionId,
@@ -1882,9 +1917,19 @@ export function ledgerFixture(options: Options): LedgerPort {
         return refused;
       }
       const result = handle(request);
-      // The write landed; its settlement was not observed.
-      if (mutation && (shape === "unknown" || asked === "unknown"))
+      // The write landed; its settlement was not observed, but it can be:
+      // observing the operation answers what it settled.
+      if (mutation && (shape === "unknown" || asked === "unknown")) {
+        settle(operation, result);
         return reject("unknown", { operation_id: operation });
+      }
+      // A reply over the bound is lost: a write may have landed, a read
+      // answered nothing.
+      if (replyTooLarge(result)) {
+        if (!mutation) return reject("unavailable");
+        settle(operation, result);
+        return reject("unknown", { operation_id: operation });
+      }
       return settle(operation, result);
     } catch (error) {
       if (
