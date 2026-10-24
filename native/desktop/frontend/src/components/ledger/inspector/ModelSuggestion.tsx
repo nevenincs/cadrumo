@@ -24,6 +24,7 @@ import { releaseReview } from "../../../shell/ledgerApply";
 import { parsePercent } from "../../../shell/ledgerGrammar";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
+import { useWritePause, WriteHold } from "../WritePause";
 import { fieldName, refusalText, valueText } from "../editing/editingWords";
 import { percentText } from "../movements/movementWords";
 import { needsShare, suggestionWrites } from "./inspectorModel";
@@ -81,6 +82,7 @@ export function ModelSuggestion({
   say: (text: string) => void;
 }) {
   const t = useStrings();
+  const { held: paused } = useWritePause();
   const id = row.transaction.transaction_id;
   const fieldId = useId();
   const [state, setState] = useState<State>({ kind: "idle" });
@@ -128,6 +130,8 @@ export function ModelSuggestion({
     purpose: Ask,
     extra: { business_pct?: string; reason?: string } = {},
   ) {
+    // Asking runs the registered review, a write the page's pause holds.
+    if (paused !== null) return;
     const turn = (asking.current += 1);
     const superseded = () => turn !== asking.current;
     // Asking again, with a share or a reason, replaces the review shown.
@@ -259,16 +263,18 @@ export function ModelSuggestion({
 
   const askButtons = (
     <div className="flex">
-      <Button
-        variant="outline"
-        size="sm"
-        className="rounded-r-none"
-        disabled={locked !== null || state.kind === "asking"}
-        onClick={() => void ask("classification", "suggest")}
-      >
-        {state.kind === "asking" ? <Spinner /> : <Icon name="agent" />}
-        {t("desktop.ledger.inspector.model.ask")}
-      </Button>
+      <WriteHold>
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-r-none"
+          disabled={locked !== null || state.kind === "asking"}
+          onClick={() => void ask("classification", "suggest")}
+        >
+          {state.kind === "asking" ? <Spinner /> : <Icon name="agent" />}
+          {t("desktop.ledger.inspector.model.ask")}
+        </Button>
+      </WriteHold>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -283,14 +289,21 @@ export function ModelSuggestion({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
+            disabled={paused !== null}
             onSelect={() => void ask("classification", "suggest")}
           >
             {t("desktop.ledger.inspector.model.mode.classification")}
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => void ask("saturated", "suggest")}>
+          <DropdownMenuItem
+            disabled={paused !== null}
+            onSelect={() => void ask("saturated", "suggest")}
+          >
             {t("desktop.ledger.inspector.model.mode.saturated")}
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => void ask("split", "suggest")}>
+          <DropdownMenuItem
+            disabled={paused !== null}
+            onSelect={() => void ask("split", "suggest")}
+          >
             {t("desktop.ledger.inspector.model.mode.split")}
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -390,24 +403,28 @@ export function ModelSuggestion({
                   setShareError(null);
                 }}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const parsed = parsePercent(share);
-                  if (parsed.kind !== "value") {
-                    setShareError(
-                      parsed.kind === "refused"
-                        ? refusalText(t, parsed.refusal)
-                        : t("desktop.ledger.inspector.model.share_needed"),
-                    );
-                    return;
-                  }
-                  void ask(shown.mode, "share", { business_pct: parsed.value });
-                }}
-              >
-                {t("desktop.ledger.inspector.model.ask_with_share")}
-              </Button>
+              <WriteHold>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const parsed = parsePercent(share);
+                    if (parsed.kind !== "value") {
+                      setShareError(
+                        parsed.kind === "refused"
+                          ? refusalText(t, parsed.refusal)
+                          : t("desktop.ledger.inspector.model.share_needed"),
+                      );
+                      return;
+                    }
+                    void ask(shown.mode, "share", {
+                      business_pct: parsed.value,
+                    });
+                  }}
+                >
+                  {t("desktop.ledger.inspector.model.ask_with_share")}
+                </Button>
+              </WriteHold>
             </div>
             {shareError && (
               <span id={`${fieldId}-error`} className="text-sm">
@@ -430,16 +447,18 @@ export function ModelSuggestion({
               onChange={(event) => setRejecting(event.target.value)}
             />
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={rejecting.trim() === ""}
-                onClick={() =>
-                  void ask(shown.mode, "reject", { reason: rejecting.trim() })
-                }
-              >
-                {t("desktop.ledger.inspector.model.continue_reject")}
-              </Button>
+              <WriteHold>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={rejecting.trim() === ""}
+                  onClick={() =>
+                    void ask(shown.mode, "reject", { reason: rejecting.trim() })
+                  }
+                >
+                  {t("desktop.ledger.inspector.model.continue_reject")}
+                </Button>
+              </WriteHold>
               <Button
                 variant="ghost"
                 size="sm"

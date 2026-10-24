@@ -159,6 +159,35 @@ test("a Setup write with an unknown outcome holds its form, and pressing it agai
   await expect(moveUp(target)).not.toHaveAttribute("aria-disabled", "true");
 });
 
+test("asking the model waits while writes are paused, as every other writer does", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await openRules(target);
+  await ledgerControls.nextWrites(target, ["unknown"]);
+  await moveUp(target).click();
+  await expect(banner(target)).toBeVisible();
+  await target
+    .getByRole("tab", { name: label("desktop.ledger.section.movements") })
+    .click();
+  await expect(dataRows(target).first()).toBeVisible();
+  await inspect(target, "PAPELERIA TRAZO");
+  const ask = body(target).getByRole("button", {
+    name: label("desktop.ledger.inspector.model.ask"),
+    exact: true,
+  });
+  await expect(ask).toHaveAttribute("aria-disabled", "true");
+  await expect(ask).toHaveAccessibleDescription(
+    label("desktop.ledger.tray.paused_reason"),
+  );
+  // Pressed anyway, it asks nothing.
+  await ask.click({ force: true });
+  await expect(body(target).locator(".ledger-model [role=status]")).toHaveCount(
+    0,
+  );
+  await expect(body(target).locator(".ledger-suggestion")).toHaveCount(0);
+});
+
 test("a saved write whose answer was not read is said as saved, never as failed", async ({
   page: target,
 }) => {

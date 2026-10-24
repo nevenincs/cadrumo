@@ -60,6 +60,7 @@ import {
   skipName,
 } from "./inspectorWords";
 import { useLedgerRead } from "./useInspectorReads";
+import { useWritePause, WriteHold } from "../WritePause";
 
 const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
   business: "BUSINESS",
@@ -309,7 +310,10 @@ export function SelectionInspector({
     );
   };
 
+  const { held: paused } = useWritePause();
   async function askEach() {
+    // Each ask runs the registered review, a write the page's pause holds.
+    if (paused !== null) return;
     const targets = ids
       .filter((id) => visible.has(id))
       .filter((id) => rows.get(id)?.transaction.lifecycle_state === "ACTIVE")
@@ -663,15 +667,17 @@ export function SelectionInspector({
                 {t("desktop.ledger.inspector.selection.make_rule")}…
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={blocked || asking}
-              onClick={() => void askEach()}
-            >
-              {asking ? <Spinner /> : <Icon name="agent" />}
-              {t("desktop.ledger.inspector.selection.ask_each")}
-            </Button>
+            <WriteHold>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={blocked || asking}
+                onClick={() => void askEach()}
+              >
+                {asking ? <Spinner /> : <Icon name="agent" />}
+                {t("desktop.ledger.inspector.selection.ask_each")}
+              </Button>
+            </WriteHold>
             <Button
               variant="outline"
               size="sm"
