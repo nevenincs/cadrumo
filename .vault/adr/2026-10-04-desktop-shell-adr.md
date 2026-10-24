@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-23'
+modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:55c22caa722b1716b6419df1740fd756252748d56c99fbbdc392458a1fc9d4ee'
+body_hash: 'sha256:a7a3bb2b5bc2a18c276a3d75472a8fa0d3681d541eea5679d09ca9cbb360c756'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -410,4 +410,6 @@ Evidence: the register `src/cadrumo_client/contracts/navigation.toml` with its l
 
 Basis: the owner's approval of 2026-10-24, "all approved, implemnet", answering the presented `2026-10-24-rust-component-provisioning-adr` and its two plans.
 
-The host's setup commands call the Rust component engine of `2026-10-24-rust-component-provisioning-adr` in process instead of relaying the `dependencies.*` operations over the person bridge. The window contract (`desktop_setup_*` commands, `DesktopSetup` and the refusal codes) is unchanged, and so are the Settings advisory, the setup flow and the blocked-feature prompts of the 2026-10-19 amendment.
+The host's setup commands call the Rust component engine of `2026-10-24-rust-component-provisioning-adr` in process instead of relaying the `dependencies.*` operations over the person bridge. The `desktop_setup_*` commands and the refusal codes keep their names, and the Settings advisory, the setup flow and the blocked-feature prompts of the 2026-10-19 amendment are unchanged.
+
+Revised the same day, on implementation evidence: the setup snapshot can no longer carry words, because the Python wording module that produced them is retired and the engine emits only codes (constraint 4 of that record). The `DesktopSetup` snapshot therefore carries closed codes and locale-neutral facts, and the window words every item name, state, failure, action, note, retry notice, plan part and licence notice from the `desktop.setup` catalogue subtree in four languages. The host keeps what only the window knows: which check and setup it started, the plan it approved, and whether Resume may skip a second dialog. The prior sentence said the window contract was unchanged.
