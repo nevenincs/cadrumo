@@ -114,7 +114,7 @@ export function DocumentViewer({
   return (
     <section
       aria-label={t("desktop.ledger.documents.viewer.label")}
-      className="ledger-document grid gap-2"
+      className="ledger-document flex min-h-0 flex-1 flex-col gap-2"
     >
       <div className="flex flex-wrap items-center gap-1">
         {count !== null && count > 1 && (
@@ -175,7 +175,7 @@ export function DocumentViewer({
         ref={frame}
         // The page can be wider than its frame: the keyboard scrolls it too.
         tabIndex={0}
-        className="ledger-document-frame relative max-h-96 overflow-auto rounded-md border bg-muted"
+        className="ledger-document-frame relative min-h-0 flex-1 overflow-auto rounded-md border bg-muted"
         aria-busy={reading || undefined}
       >
         {shown && (

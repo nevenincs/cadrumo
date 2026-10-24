@@ -1,4 +1,11 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +19,7 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
+import { ResizeHandle } from "@/components/ui/resize-handle";
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -81,6 +89,63 @@ import { OffHostDialog } from "./OffHostDialog";
 import { useLedgerRead } from "./useLedgerRead";
 
 const KINDS: readonly InvoiceKind[] = ["received", "issued"];
+/** The viewer's share of the review's width, in percent: its limits and a
+ * keyboard step. */
+const VIEWER_MIN = 25;
+const VIEWER_MAX = 70;
+const VIEWER_STEP = 5;
+const clampShare = (share: number) =>
+  Math.min(VIEWER_MAX, Math.max(VIEWER_MIN, share));
+
+/**
+ * The document beside what was read from it: the viewer on the left keeps
+ * its place while the reading, the questions and the confirmation scroll
+ * on the right, so the page is on screen next to the question it answers.
+ */
+function ReviewColumns({
+  viewer,
+  share,
+  onShare,
+  className,
+  children,
+}: {
+  viewer: ReactNode;
+  share: number;
+  onShare(share: number): void;
+  className: string;
+  children: ReactNode;
+}) {
+  const t = useStrings();
+  const columns = useRef<HTMLDivElement>(null);
+  return (
+    <div ref={columns} className="ledger-draft flex min-h-0 min-w-0 flex-1">
+      <div
+        className="ledger-draft-viewer flex min-h-0 shrink-0 flex-col p-3"
+        style={{ width: `${share}%` }}
+      >
+        {viewer}
+      </div>
+      <ResizeHandle
+        orientation="vertical"
+        className="ledger-draft-resize"
+        aria-label={t("desktop.ledger.documents.viewer.resize")}
+        value={share}
+        onDrag={({ x }) => {
+          const box = columns.current?.getBoundingClientRect();
+          if (box && box.width > 0)
+            onShare(clampShare(((x - box.left) / box.width) * 100));
+        }}
+        onStep={(direction) =>
+          onShare(clampShare(share + direction * VIEWER_STEP))
+        }
+        onLimit={(limit) => onShare(limit === "min" ? VIEWER_MIN : VIEWER_MAX)}
+      />
+      <div className={`min-h-0 min-w-0 flex-1 overflow-y-auto ${className}`}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 /** A value as the reading table shows it: rates as percentages. */
 function shownValue(locale: string, field: ReadingField, value: string | null) {
@@ -329,6 +394,8 @@ export function DraftReview({
   onWritten,
   onConfirmed,
   onLinkStaged,
+  viewerShare,
+  onViewerShare,
   say,
 }: {
   port: LedgerPort;
@@ -349,6 +416,9 @@ export function DraftReview({
   /** The confirmed invoice's link was staged: the flow moves on to the
    * next document. */
   onLinkStaged(): void;
+  /** The viewer's share of the width, in percent. */
+  viewerShare: number;
+  onViewerShare(share: number): void;
   say(text: string): void;
 }) {
   const t = useStrings();
@@ -399,6 +469,28 @@ export function DraftReview({
     const at = root.current;
     (at?.querySelector<HTMLElement>(".ledger-match-link") ?? at)?.focus();
   }, [confirmed]);
+
+  // Keyed by the document, so another document's page is never kept. It
+  // stays beside the confirmation, read only, to check what was confirmed.
+  const viewer = (
+    <DocumentViewer
+      key={`${reference.kind}:${reference.id}`}
+      port={port}
+      reader={reader}
+      reference={reference}
+      fileName={fileName}
+    />
+  );
+  const columns = (className: string, body: ReactNode) => (
+    <ReviewColumns
+      viewer={viewer}
+      share={viewerShare}
+      onShare={onViewerShare}
+      className={className}
+    >
+      {body}
+    </ReviewColumns>
+  );
 
   const view = read.value;
   const draft = view?.draft ?? null;
@@ -595,11 +687,12 @@ export function DraftReview({
         ? (reconcile(rows, [invoice], actions).list[0] ?? null)
         : null;
     const linkStaged = staged.invoices.get(invoice.invoice_id);
-    return (
+    return columns(
+      "",
       <div
         ref={root}
         tabIndex={-1}
-        className="ledger-draft-confirmed grid gap-3 p-3"
+        className="ledger-draft-confirmed grid content-start gap-3 p-3"
       >
         <Alert tone="success" icon={<Icon name="check" />}>
           <AlertTitle>
@@ -675,12 +768,13 @@ export function DraftReview({
             </Alert>
           )
         )}
-      </div>
+      </div>,
     );
   }
 
   if (read.phase === "failed")
-    return (
+    return columns(
+      "flex",
       <EmptyState
         className="ledger-draft-failed"
         icon="alert"
@@ -696,16 +790,17 @@ export function DraftReview({
         <Button variant="outline" onClick={reread}>
           {t("desktop.ledger.retry")}
         </Button>
-      </EmptyState>
+      </EmptyState>,
     );
   if (!view || !draft)
-    return (
+    return columns(
+      "flex",
       <EmptyState
         className="ledger-draft-loading"
         role="status"
         busy
         description={t("desktop.ledger.loading")}
-      />
+      />,
     );
 
   const correctable = (field: CorrectionField) => {
@@ -753,8 +848,9 @@ export function DraftReview({
     };
   };
 
-  return (
-    <div ref={root} className="ledger-draft grid gap-4 p-3">
+  return columns(
+    "",
+    <div ref={root} className="ledger-draft-reading grid gap-4 p-3">
       <div className="flex flex-wrap items-start gap-2">
         <div className="grid min-w-0 flex-1 gap-0.5">
           <h3 className="text-md font-semibold [overflow-wrap:anywhere]">
@@ -865,15 +961,6 @@ export function DraftReview({
           </AlertDescription>
         </Alert>
       )}
-
-      {/* Keyed by the document, so another document's page is never kept. */}
-      <DocumentViewer
-        key={`${reference.kind}:${reference.id}`}
-        port={port}
-        reader={reader}
-        reference={reference}
-        fileName={fileName}
-      />
 
       <section aria-labelledby={`${countryId}-read`} className="grid gap-2">
         <h4 id={`${countryId}-read`} className="text-sm font-semibold">
@@ -1200,6 +1287,6 @@ export function DraftReview({
           }}
         />
       )}
-    </div>
+    </div>,
   );
 }

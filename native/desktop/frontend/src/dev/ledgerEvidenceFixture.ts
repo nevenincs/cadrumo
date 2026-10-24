@@ -177,6 +177,41 @@ type Spec = {
   blockers?: Omit<ConfirmationBlocker, "blocker_id">[];
 };
 
+/** The picture of an invented ticket: what its reading read, printed where
+ * its notes say, both tax ids included, so the page can be checked against
+ * the questions. */
+function ticketPage(spec: Spec): {
+  width: number;
+  height: number;
+  image_data_url: string;
+} {
+  const width = 360;
+  const height = 520;
+  const ids = spec.blockers?.find((blocker) => blocker.field === "supplier_tax_id")
+    ?.candidates ?? [];
+  const [top, foot] = [ids[0]?.value ?? "", ids[1]?.value ?? ""];
+  const line = (y: number, text: string, size = 16, weight = 400) =>
+    `<text x="24" y="${y}" font-family="monospace" font-size="${size}" font-weight="${weight}">${text}</text>`;
+  const svg = [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
+    `<rect width="${width}" height="${height}" fill="#fbfaf7"/>`,
+    line(48, spec.party.toUpperCase(), 22, 700),
+    line(76, `NIF ${top}`),
+    line(124, `TICKET ${spec.number}`),
+    line(150, spec.date),
+    line(214, `BASE ${spec.base}`),
+    line(240, `IVA ${spec.rate}% ${spec.iva}`),
+    line(292, `TOTAL ${spec.total} EUR`, 20, 700),
+    line(height - 48, `NIF ${foot}`, 13),
+    `</svg>`,
+  ].join("");
+  return {
+    width,
+    height,
+    image_data_url: `data:image/svg+xml;base64,${btoa(svg)}`,
+  };
+}
+
 /** The documents the `documents` shape adds, every one invented. */
 const DOCUMENTS: Spec[] = [
   {
@@ -1283,9 +1318,10 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       attachments.find((found) => found.attachment_id === id) ?? notFound();
     return { profile_id: profileId, item: item as unknown as JsonObject };
   }
-  /** One page of a stored document, drawn: every page is the same
-   * invented picture. A PDF has two pages and an image one; any other
-   * document cannot be drawn. */
+  /** One page of a stored document, drawn: an invented ticket prints what
+   * its reading read, and every other page is the same invented picture. A
+   * PDF has two pages and an image one; any other document cannot be
+   * drawn. */
   function page(request: JsonObject): JsonObject {
     const evidenceId = text(request.evidence_id);
     const attachmentId = text(request.attachment_id);
@@ -1334,6 +1370,10 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
           ? 1
           : refused("UNSUPPORTED_MEDIA");
     if (number > count) refused("OUT_OF_RANGE");
+    const ticket = DOCUMENTS.find(
+      (spec) => spec.name === facts.name && spec.media === "image",
+    );
+    const drawn = ticket ? ticketPage(ticket) : DOCUMENT_PAGE;
     return {
       profile_id: profileId,
       evidence_id: evidenceId,
@@ -1341,11 +1381,11 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       media_type: facts.media,
       page: number,
       page_count: count,
-      width: DOCUMENT_PAGE.width,
-      height: DOCUMENT_PAGE.height,
+      width: drawn.width,
+      height: drawn.height,
       source_sha256: facts.sha,
       file_name: facts.name,
-      image_data_url: DOCUMENT_PAGE.image_data_url,
+      image_data_url: drawn.image_data_url,
     };
   }
   function consentList(): JsonObject {

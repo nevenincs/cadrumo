@@ -3,8 +3,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
+import { IconButton } from "@/components/ui/icon-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toast } from "@/components/ui/toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
@@ -23,6 +29,8 @@ import { EvidenceRecords } from "./EvidenceRecords";
 import { useLedgerRead } from "./useLedgerRead";
 
 const TOAST_MS = 4000;
+/** The viewer's share of the review's width, in percent, at first. */
+const VIEWER_SHARE = 45;
 export const DOCUMENT_TABS = [
   "review",
   "records",
@@ -67,6 +75,11 @@ export function DocumentsSection({
   // the confirmation and its link offer stay on screen.
   const [done, setDone] = useState<ReadonlySet<string>>(new Set());
   const queueList = useRef<HTMLUListElement>(null);
+  // With a document open the list folds to a rail of its documents and
+  // their open findings, so the page and what was read get the width.
+  const [listOpen, setListOpen] = useState(false);
+  // The viewer's share of the review's width, kept while documents change.
+  const [viewerShare, setViewerShare] = useState(VIEWER_SHARE);
   useEffect(() => {
     if (!toast) return;
     const timer = window.setTimeout(() => setToast(null), TOAST_MS);
@@ -246,59 +259,109 @@ export function DocumentsSection({
   else
     review = (
       <div className="flex min-h-0 flex-1">
-        <ul
-          ref={queueList}
-          className="ledger-review-queue min-h-0 w-1/3 shrink-0 overflow-y-auto border-r border-border"
-          aria-label={t("desktop.ledger.documents.queue")}
+        <div
+          className={`ledger-review-list flex min-h-0 shrink-0 flex-col border-r border-border ${
+            listOpen ? "w-1/3" : "w-rail"
+          }`}
+          data-open={listOpen || undefined}
         >
-          {waiting.map((row) => (
-            <li key={row.evidence_reference}>
-              <button
-                type="button"
-                className="ledger-review-item grid w-full cursor-pointer gap-0.5 border-b border-border px-3 py-2 text-left hover-wash aria-[current=true]:bg-selected"
-                aria-current={
-                  row.evidence_reference === selected?.evidence_reference ||
-                  undefined
-                }
-                data-reference={row.evidence_reference}
-                onClick={() => choose(row.evidence_reference)}
-              >
-                <span className="truncate font-medium">
-                  {nameOf(row.evidence_reference)}
+          <div
+            className={`flex border-b border-border p-1 ${listOpen ? "justify-end" : "justify-center"}`}
+          >
+            <IconButton
+              className="ledger-review-list-toggle"
+              label={
+                listOpen
+                  ? t("desktop.ledger.documents.list_hide")
+                  : t("desktop.ledger.documents.list_show")
+              }
+              aria-expanded={listOpen}
+              onClick={() => setListOpen(!listOpen)}
+            >
+              <Icon name={listOpen ? "back" : "forward"} size="sm" />
+            </IconButton>
+          </div>
+          <ul
+            ref={queueList}
+            className="ledger-review-queue min-h-0 flex-1 overflow-y-auto"
+            aria-label={t("desktop.ledger.documents.queue")}
+          >
+            {waiting.map((row) => {
+              const name = nameOf(row.evidence_reference);
+              const confirmedHere = done.has(row.evidence_reference);
+              const state = confirmedHere ? (
+                <span className="inline-flex items-center gap-1">
+                  <Icon name="check" size="xs" className="text-success" />
+                  {listOpen && t("desktop.ledger.documents.confirmed_short")}
                 </span>
-                <span className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
-                  {done.has(row.evidence_reference) ? (
-                    <span className="inline-flex items-center gap-1">
-                      <Icon name="check" size="xs" className="text-success" />
-                      {t("desktop.ledger.documents.confirmed_short")}
-                    </span>
-                  ) : row.blocking_count > 0 ? (
-                    <Badge
-                      variant="warning"
-                      aria-label={t("desktop.ledger.documents.findings_open", {
-                        count: row.blocking_count,
-                      })}
-                      title={(row.reasons ?? [])
-                        .map((reason) => reasonLabel(t, reason))
-                        .join(" · ")}
-                    >
-                      <Icon name="alert" size="xs" />
-                      {row.blocking_count}
-                    </Badge>
+              ) : row.blocking_count > 0 ? (
+                <Badge
+                  variant="warning"
+                  aria-label={t("desktop.ledger.documents.findings_open", {
+                    count: row.blocking_count,
+                  })}
+                  title={(row.reasons ?? [])
+                    .map((reason) => reasonLabel(t, reason))
+                    .join(" · ")}
+                >
+                  <Icon name="alert" size="xs" />
+                  {row.blocking_count}
+                </Badge>
+              ) : listOpen ? (
+                <span>{t("desktop.ledger.documents.ready_to_confirm")}</span>
+              ) : (
+                <span className="sr-only">
+                  {t("desktop.ledger.documents.ready_to_confirm")}
+                </span>
+              );
+              const item = (
+                <button
+                  type="button"
+                  className={`ledger-review-item grid w-full cursor-pointer gap-0.5 border-b border-border text-left hover-wash aria-[current=true]:bg-selected ${
+                    listOpen ? "px-3 py-2" : "justify-items-center px-1 py-2"
+                  }`}
+                  aria-current={
+                    row.evidence_reference === selected?.evidence_reference ||
+                    undefined
+                  }
+                  data-reference={row.evidence_reference}
+                  onClick={() => choose(row.evidence_reference)}
+                >
+                  {listOpen ? (
+                    <>
+                      <span className="truncate font-medium">{name}</span>
+                      <span className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
+                        {state}
+                        <span className="ml-auto tabular-nums">
+                          {dayText(locale, row.drafted_at.slice(0, 10))}
+                        </span>
+                      </span>
+                    </>
                   ) : (
-                    <span>
-                      {t("desktop.ledger.documents.ready_to_confirm")}
-                    </span>
+                    <>
+                      <Icon name="page" size="sm" />
+                      <span className="sr-only">{name}</span>
+                      {state}
+                    </>
                   )}
-                  <span className="ml-auto tabular-nums">
-                    {dayText(locale, row.drafted_at.slice(0, 10))}
-                  </span>
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+                </button>
+              );
+              return (
+                <li key={row.evidence_reference}>
+                  {listOpen ? (
+                    item
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger asChild>{item}</TooltipTrigger>
+                      <TooltipContent side="right">{name}</TooltipContent>
+                    </Tooltip>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+        <div className="flex min-h-0 min-w-0 flex-1">
           {selected && (
             <DraftReview
               key={selected.evidence_reference}
@@ -325,6 +388,8 @@ export function DocumentsSection({
                 setDone((held) => new Set([...held, reference]))
               }
               onLinkStaged={focusNext}
+              viewerShare={viewerShare}
+              onViewerShare={setViewerShare}
               say={setToast}
             />
           )}

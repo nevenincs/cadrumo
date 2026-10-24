@@ -662,3 +662,64 @@ test("a record correction not seen to settle is settled by reading the record ba
   );
   await expect(paused(target)).toHaveCount(0);
 });
+
+test("the ticket stays on screen beside the question it is needed for, and after it is confirmed", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1440, height: 900 });
+  await openDocuments(target);
+  await choose(target, PLENOIL);
+  // With a document open the list is a rail that keeps the open findings.
+  const list = section(target).locator(".ledger-review-list");
+  const rail = (await list.boundingBox())!;
+  expect(rail.width).toBeLessThan(100);
+  await expect(
+    section(target).locator(".ledger-review-item").filter({ hasText: PLENOIL }),
+  ).toContainText("2");
+  const image = viewer(target).getByRole("img");
+  await expect(image).toBeVisible();
+  await draft(target)
+    .locator("[data-field=supplier_tax_id] .ledger-provenance-question")
+    .click();
+  const finding = draft(target).locator(".ledger-finding:focus");
+  await expect(finding).toBeInViewport();
+  // The page is beside the question, not scrolled away above it.
+  await expect(image).toBeInViewport();
+  const page = (await image.boundingBox())!;
+  const question = (await finding.boundingBox())!;
+  expect(page.x + page.width).toBeLessThanOrEqual(question.x);
+
+  await kind(target, "received");
+  await draft(target).locator(".ledger-draft-country").fill("ES");
+  const findings = draft(target).locator(".ledger-finding");
+  await findings
+    .nth(0)
+    .getByRole("radio", {
+      name: label("desktop.ledger.documents.action.choose_candidate"),
+    })
+    .click();
+  await findings
+    .nth(0)
+    .getByRole("radio", { name: /B87000001/ })
+    .check();
+  await findings
+    .nth(1)
+    .getByRole("radio", {
+      name: label("desktop.ledger.documents.action.attest"),
+    })
+    .click();
+  await findings
+    .nth(1)
+    .getByLabel(label("desktop.ledger.documents.why_right"))
+    .fill("Rounding");
+  await draft(target).locator(".ledger-draft-confirm").click();
+  await expect(
+    section(target).locator(".ledger-draft-confirmed"),
+  ).toBeVisible();
+  await expect(viewer(target).getByRole("img")).toBeInViewport();
+
+  // The list opens again in full, and folds back.
+  await list.locator(".ledger-review-list-toggle").click();
+  await expect(list).toHaveAttribute("data-open", "true");
+  expect((await list.boundingBox())!.width).toBeGreaterThan(rail.width * 3);
+});
