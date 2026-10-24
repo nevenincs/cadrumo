@@ -89,6 +89,7 @@ class EvidenceLabelReadingFallbackPayload(OutputSchema):
     unread_fields: list[str]
     reader_error_type: str
     failed_condition_id: str | None = None
+    recovery_action_id: str | None = None
 
 
 class EvidenceExtractResult(InvoiceDraftIdentityDocumentFields, OutputSchema):

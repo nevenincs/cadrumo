@@ -861,7 +861,7 @@ def test_the_review_summary_declares_only_the_fields_read_for_document_text() ->
             {"blocker_id", "reason", "field", "candidate_count", "detail_withheld"}
         ),
         "LabelReadingFallbackProjectionV1": frozenset(
-            {"cause", "unread_fields", "reader_error_type", "failed_condition_id"}
+            {"cause", "unread_fields", "reader_error_type", "failed_condition_id", "recovery_action_id"}
         ),
         "PartyAttributionAdvisoryProjection": frozenset({"parties"}),
         "PartyAttributionWarningProjection": frozenset({"role", "fields", "scope_if_attributed"}),

@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import base64
 import json
+from collections.abc import Generator
+from contextlib import contextmanager
 from dataclasses import replace
+from http import HTTPStatus
+from typing import ClassVar, override
 
 import pytest
 
@@ -18,20 +22,22 @@ from ....adapters.outbound.llm.tests.load_headroom_support import (
 from ....adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
 from ....adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
 from ....application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence
 from ....application.ledger.llm_classification_ports import EvidenceImage, LLMClassificationPorts
+from ....application.local_reader import configured_role_model
 from ....application.provisioning import (
     AcceleratorReading,
     HardwareProfile,
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from ....application.provisioning_contracts import ProvisioningPreconditionCondition
+from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
 from ....core.config import Settings, load_settings, override_settings
+from ....core.errors.error_codes import build_error_envelope
 from ....core.hardware import AcceleratorKind
 from ....core.image_media_type import ImageMediaType
-from ....core.model_catalogue import model_candidate
+from ....core.model_catalogue import ModelRole, model_candidate
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification
@@ -42,6 +48,7 @@ from ....tests.llm_vision_evidence_support import (
     png_image,
     run_against_loopback_ollama,
 )
+from ....tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
 from ...ledger_llm_composition import TextReader, VisionReader, compose_ledger_llm
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -72,7 +79,8 @@ def _llm_ports(settings: Settings) -> LLMClassificationPorts:
                 spec=spec,
                 settings=settings,
                 client=admitting_text_classify_client(settings=settings),
-            )
+            ),
+            settings=settings,
         ),
         make_vision_classifier=lambda spec, model: VisionReader(
             LocalVisionLLMClassifier(
@@ -80,9 +88,17 @@ def _llm_ports(settings: Settings) -> LLMClassificationPorts:
                 settings=settings,
                 model=model,
                 client=admitting_vision_classify_client(settings=settings, model=model),
-            )
+            ),
+            settings=_reading(settings, model),
         ),
     )
+
+
+def _reading(settings: Settings, vision_model: str | None) -> Settings:
+    """Return settings naming the vision model one read loads."""
+    if vision_model is None:
+        return settings
+    return settings.model_copy(update={"cadrumo_llm_ollama_vision_model": vision_model})
 
 
 def _admissible_measured_hardware_profile(model: str) -> HardwareProfile:
@@ -176,6 +192,8 @@ def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
         assert verdict is not None
         assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
         assert verdict.evidence[0].values["runtime_reachable"] is False
+        assert verdict.action is not None
+        assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
 
 
 def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> None:
@@ -218,6 +236,8 @@ def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> N
         assert verdict is not None
         assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
         assert verdict.evidence[0].values["runtime_reachable"] is False
+        assert verdict.action is not None
+        assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
 
 
 def test_vision_model_override_selects_the_named_model() -> None:
@@ -256,14 +276,112 @@ def test_vision_model_override_selects_the_named_model() -> None:
                 evidence,
                 text_classifier=None,
                 spec=spec,
-                vision_classifier=VisionReader(classifier),
+                vision_classifier=VisionReader(classifier, settings=_reading(settings, "qwen2.5vl:7b")),
                 vision_model="qwen2.5vl:7b",
                 settings=settings,
                 ports=_llm_ports(settings),
             )
 
-        observed, (_response, provenance) = run_against_loopback_ollama(classification_json, _call)
+        observed, (_response, provenance) = run_against_loopback_ollama(
+            classification_json, _call, installed=("qwen2.5vl:7b",)
+        )
     assert provenance == "llm:local-vision:qwen2.5vl:7b"
     body = json_object(observed["body"])
     assert body["model"] == "qwen2.5vl:7b"
-    assert observed["runtime_requests"] == [{"method": "GET", "path": "/api/ps"}]
+    # The overriding model's inventory is asked before the read is admitted.
+    assert observed["runtime_requests"] == [
+        {"method": "GET", "path": "/api/tags"},
+        {"method": "GET", "path": "/api/ps"},
+    ]
+
+
+class _InventoryRuntime(SilentLoopbackHandler):
+    """A real runtime endpoint that answers its inventory and records every read it is sent."""
+
+    installed: ClassVar[tuple[str, ...]] = ()
+    reads: ClassVar[list[str]] = []
+
+    @override
+    def do_GET(self) -> None:
+        names = self.installed if self.path == "/api/tags" else ()
+        write_json_response(self, {"models": [{"name": name, "size": 1} for name in names]}, status=HTTPStatus.OK)
+
+    @override
+    def do_POST(self) -> None:
+        # Recorded, then refused: these cases assert that no read is ever sent.
+        self.reads.append(self.path)
+        self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+@contextmanager
+def _runtime_holding(*installed: str) -> Generator[Settings]:
+    _InventoryRuntime.installed = installed
+    _InventoryRuntime.reads = []
+    with (
+        serving_loopback(_InventoryRuntime, path="/api/chat") as chat_url,
+        override_settings(cadrumo_llm_ollama_chat_url=chat_url) as settings,
+    ):
+        yield settings
+
+
+def _image_evidence() -> ResolvedEvidence:
+    return ResolvedEvidence(
+        reference="ev-1",
+        text=None,
+        images=(EvidenceImage.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),),
+    )
+
+
+def test_a_missing_text_model_refuses_before_any_read_with_the_local_ai_setup() -> None:
+    """The text reader asks the runtime first, so a missing model never reaches the read."""
+    with _indexed_authority_for_test().operation() as operation, _runtime_holding() as settings:
+        installed_vision = configured_role_model(ModelRole.VISION_TRANSCRIPTION, settings)
+        assert installed_vision is not None
+        _InventoryRuntime.installed = (installed_vision,)
+        with pytest.raises(PurchaseInvoiceEvidenceReaderError) as raised:
+            classify_with_evidence(
+                vision_transaction("ev-1"),
+                None,
+                text_classifier=None,
+                spec=prompt_spec_with_saturation_fields(year=2025, operation=operation),
+                vision_classifier=None,
+                vision_model=None,
+                settings=settings,
+                ports=_llm_ports(settings),
+            )
+
+    assert _InventoryRuntime.reads == [], "the read was attempted before the reader was checked"
+    assert build_error_envelope(raised.value).code == "REFUSED_LEDGER_EVIDENCE_READER"
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
+    assert verdict.evidence[0].values["role"] == ModelRole.TEXT_EXTRACTION.value
+    assert verdict.action is not None
+    assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+
+
+def test_a_vision_model_override_is_checked_rather_than_the_configured_model() -> None:
+    """A --vision-model the runtime lacks refuses even though the configured model is installed."""
+    with _indexed_authority_for_test().operation() as operation, _runtime_holding() as settings:
+        installed_vision = configured_role_model(ModelRole.VISION_TRANSCRIPTION, settings)
+        assert installed_vision is not None
+        _InventoryRuntime.installed = (installed_vision,)
+        with pytest.raises(PurchaseInvoiceEvidenceReaderError) as raised:
+            classify_with_evidence(
+                vision_transaction("ev-1"),
+                _image_evidence(),
+                text_classifier=None,
+                spec=prompt_spec_with_saturation_fields(year=2025, operation=operation),
+                vision_classifier=None,
+                vision_model="not-installed-vision:1b",
+                settings=settings,
+                ports=_llm_ports(settings),
+            )
+
+    assert _InventoryRuntime.reads == []
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
+    assert verdict.evidence[0].values["model"] == "not-installed-vision:1b"
+    assert verdict.action is not None
+    assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID

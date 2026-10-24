@@ -37,7 +37,7 @@ from ..adapters.persistence.storage.attachment import AttachmentStore
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ..application.ledger.document_transcription import DocumentTranscription
 from ..application.ledger.evidence import PurchaseInvoiceEvidenceService
-from ..application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ..application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
 from ..application.ledger.evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,
@@ -65,8 +65,11 @@ from ..application.ledger.invoice_draft_records import InvoiceDraft
 from ..application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
 from ..application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from ..application.ledger.structured_invoice_ports import StructuredInvoiceRecord
+from ..application.local_reader import probe_local_reader
+from ..application.operator_actions.models import PreconditionVerdict
 from ..core.config import Settings
 from ..core.config_support import LLMProvider
+from ..core.model_catalogue import ModelRole
 from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.optional_extras import MissingOptionalExtraError
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -102,6 +105,47 @@ def _failed_condition_id(refusal: LLMContentionError | LLMBusyError) -> str | No
     """Return the precondition an admission refusal failed, as the application carries it."""
     verdict = refusal.terminal_precondition_verdict
     return None if verdict is None else str(verdict.failed_condition_id)
+
+
+def _reads_on_host(provider: LLMProvider | None) -> bool:
+    """Return whether this read runs on the local runtime the reader probe measures."""
+    return provider is None or provider is LLMProvider.LOCAL
+
+
+def _require_on_host_reader(role: ModelRole, settings: Settings, provider: LLMProvider | None) -> None:
+    """Refuse an on-host read before any effect when the role's reader cannot run.
+
+    Asked of the runtime ahead of the read rather than inferred from its
+    failure, so a missing model or an unanswering runtime reaches the operator
+    as the probe's own verdict, naming the setup that supplies it, instead of a
+    reader error discovered by trying.
+    """
+    if not _reads_on_host(provider):
+        return
+    status = probe_local_reader(role, settings)
+    if status.available:
+        return
+    raise InvoiceDraftReaderUnavailableError(
+        PurchaseInvoiceEvidenceReaderError(
+            translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
+            precondition_verdict=status.precondition_verdict,
+        ),
+        precondition_verdict=status.precondition_verdict,
+    )
+
+
+def _reader_failure_verdict(
+    exc: Exception, role: ModelRole, settings: Settings, provider: LLMProvider | None
+) -> PreconditionVerdict | None:
+    """Return the reader probe's verdict for an on-host read that failed after its pre-check.
+
+    The runtime can stop or lose the model between the pre-check and the read;
+    the probe then names the cause. A missing optional extra keeps its own
+    dependency identity, and an off-host read is not the local runtime's to explain.
+    """
+    if isinstance(exc, MissingOptionalExtraError) or not _reads_on_host(provider):
+        return None
+    return probe_local_reader(role, settings).precondition_verdict
 
 
 def invoice_draft_extraction_ports(
@@ -233,6 +277,7 @@ def _invoice_read_text(
     operation: PinnedAuthorityOperation | None,
     before_read: Callable[[], None] | None,
 ) -> InvoiceDraft:
+    _require_on_host_reader(ModelRole.TEXT_EXTRACTION, settings, provider)
     if before_read is not None:
         before_read()
     try:
@@ -265,7 +310,9 @@ def _invoice_read_text(
                 ),
             ).extract(transcription=transcription)
     except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
-        raise InvoiceDraftReaderUnavailableError(exc) from exc
+        raise InvoiceDraftReaderUnavailableError(
+            exc, precondition_verdict=_reader_failure_verdict(exc, ModelRole.TEXT_EXTRACTION, settings, provider)
+        ) from exc
     except LLMContentionError as exc:
         raise InvoiceDraftReaderHeadroomRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
     except LLMBusyError as exc:
@@ -300,6 +347,10 @@ def _invoice_transcribe_vision(
     consent_ledger: EvidenceConsentLedger | None,
     before_read: Callable[[], None] | None,
 ) -> DocumentTranscription:
+    _require_on_host_reader(ModelRole.VISION_TRANSCRIPTION, settings, provider)
+    # A transcription is always read by the text model next, so a missing text
+    # model refuses here rather than after the slower vision read has run.
+    _require_on_host_reader(ModelRole.TEXT_EXTRACTION, settings, provider)
     if before_read is not None:
         before_read()
     try:
@@ -324,7 +375,9 @@ def _invoice_transcribe_vision(
             ),
         ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)
     except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
-        raise InvoiceDraftReaderUnavailableError(exc) from exc
+        raise InvoiceDraftReaderUnavailableError(
+            exc, precondition_verdict=_reader_failure_verdict(exc, ModelRole.VISION_TRANSCRIPTION, settings, provider)
+        ) from exc
 
 
 def _invoice_consent_binding_error(facts: dict[str, object]) -> Exception:

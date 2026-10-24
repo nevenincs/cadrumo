@@ -26,7 +26,7 @@ from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputE
 from ....application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence, resolve_llm_evidence
 from ....application.ledger.llm_classification_ports import EvidenceImage
 from ....application.ledger.preconditions import LedgerPreconditionCondition
-from ....application.provisioning_contracts import ProvisioningPreconditionCondition
+from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
 from ....core.config import Settings, override_settings
 from ....core.image_media_type import ImageMediaType
 from ....domain.calculations.registry.tests.published_authority import leased_profile_create_context
@@ -190,7 +190,8 @@ def test_unreachable_reader_preserves_the_provisioning_refusal(
                 spec=spec,
                 settings=settings,
                 client=admitting_vision_classify_client(settings=settings),
-            )
+            ),
+            settings=settings,
         )
 
         # The local adapter reads its endpoint from the process settings when it
@@ -216,3 +217,5 @@ def test_unreachable_reader_preserves_the_provisioning_refusal(
         assert verdict is not None
         assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
         assert verdict.evidence[0].values["runtime_reachable"] is False
+        assert verdict.action is not None
+        assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID

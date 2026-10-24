@@ -96,6 +96,7 @@ from ...core.optional_extras import MissingOptionalExtraError
 from ...domain.attachments.models import normalize_media_type
 from ...domain.iva.supply_nature import SupplyNature
 from ..local_reader import probe_local_reader
+from ..operator_actions.models import PreconditionVerdict
 from ..user_profile.capabilities import resolve_active_capability
 from .document_transcription import DocumentTranscription
 from .evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
@@ -331,7 +332,9 @@ def extract_invoice_draft_from_evidence(
     )
 
 
-def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
+def _refuse_a_text_read_with_no_reader(
+    exc: Exception, *, precondition_verdict: PreconditionVerdict | None = None
+) -> NoReturn:
     """Refuse a text-native document the semantic reader could not be run for.
 
     Deliberately a refusal rather than a fallback, and the distinction is a
@@ -348,19 +351,34 @@ def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
 
     The refusal carries only application-observed machine facts. Recovery is
     resolved later from the canonical action catalogue; this boundary neither
-    invents a command nor copies dependency-owned presentation prose.
+    invents a command nor copies dependency-owned presentation prose. When the
+    reader probe already knows why the reader cannot run, its verdict is the
+    refusal, so the setup it names reaches the operator unchanged.
 
     Args:
         exc: The provider or dependency failure that prevented the read.
+        precondition_verdict: The reader probe's refusal, when it gave one.
 
     Raises:
         PurchaseInvoiceEvidenceInputError: Always.
     """
-    _refuse_with_unavailable_reader(exc, availability_fact="semantic_reader_available")
+    _refuse_with_unavailable_reader(
+        exc, availability_fact="semantic_reader_available", precondition_verdict=precondition_verdict
+    )
 
 
-def _refuse_with_unavailable_reader(exc: Exception, *, availability_fact: str) -> NoReturn:
+def _refuse_with_unavailable_reader(
+    exc: Exception,
+    *,
+    availability_fact: str,
+    precondition_verdict: PreconditionVerdict | None = None,
+) -> NoReturn:
     """Preserve a reader refusal as typed facts, without presentation prose."""
+    if precondition_verdict is not None:
+        raise PurchaseInvoiceEvidenceReaderError(
+            translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
+            precondition_verdict=precondition_verdict,
+        ) from exc
     if isinstance(exc, MissingOptionalExtraError):
         facts: dict[str, str | bool] = {
             "extra": exc.extra.extra,
@@ -438,14 +456,21 @@ def _label_read_after_reader_unavailable(
     labels: LabelReading | None,
     error: InvoiceDraftReaderUnavailableError,
 ) -> tuple[InvoiceDraft, LabelReadingFallback]:
-    """Keep a partial label result, but refuse when no field has an anchor."""
+    """Keep a partial label result, but refuse when no field has an anchor.
+
+    The partial result stays a success. When the reader probe said why the
+    model could not run, the fallback records that condition and the setup
+    action it named, so a surface can offer setup beside the thinner draft.
+    """
+    verdict = error.precondition_verdict
     if labels is None or not labels.read_fields:
-        _refuse_a_text_read_with_no_reader(error.cause)
+        _refuse_a_text_read_with_no_reader(error.cause, precondition_verdict=verdict)
     return labels.draft, _label_reading_fallback(
         labels,
         cause=LabelReadingFallbackCause.READER_UNAVAILABLE,
         reader_error=error.cause,
-        failed_condition_id=None,
+        failed_condition_id=None if verdict is None else verdict.failed_condition_id,
+        recovery_action_id=None if verdict is None or verdict.action is None else verdict.action.action_id,
     )
 
 
@@ -626,6 +651,7 @@ def _label_reading_fallback(
     cause: LabelReadingFallbackCause,
     reader_error: Exception,
     failed_condition_id: str | None,
+    recovery_action_id: str | None = None,
 ) -> LabelReadingFallback:
     """Record that a partial label reading stands because its model fill did not run.
 
@@ -644,6 +670,7 @@ def _label_reading_fallback(
         unread_fields=unread_fields,
         reader_error_type=type(reader_error).__name__,
         failed_condition_id=failed_condition_id,
+        recovery_action_id=recovery_action_id,
     )
 
 
@@ -907,11 +934,13 @@ def _extract_invoice_fields_via_vision(
         cause = exc.cause
         if isinstance(cause, MissingOptionalExtraError):
             _refuse_with_unavailable_reader(cause, availability_fact="vision_reader_available")
-        status = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, settings)
-        if status.precondition_verdict is not None:
+        verdict = exc.precondition_verdict
+        if verdict is None:
+            verdict = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, settings).precondition_verdict
+        if verdict is not None:
             raise PurchaseInvoiceEvidenceReaderError(
                 translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
-                precondition_verdict=status.precondition_verdict,
+                precondition_verdict=verdict,
             ) from cause
         facts: dict[str, str | bool] = {
             "vision_reader_available": False,

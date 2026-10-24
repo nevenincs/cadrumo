@@ -16,6 +16,7 @@ from ...core.config_support import LLMProvider
 from ...core.errors.hierarchy import CadrumoError
 from ...core.image_media_type import ImageMediaType
 from ...domain.iva.supply_nature import SupplyNature
+from ..operator_actions.models import PreconditionVerdict
 from .document_transcription import DocumentTranscription
 from .evidence_input import EvidenceInput
 from .evidence_input_ports import EvidenceInputPorts
@@ -46,12 +47,20 @@ class StructuredInvoiceReadError(CadrumoError):
 
 
 class InvoiceDraftReaderUnavailableError(CadrumoError):
-    """Selected reader or its runtime was unavailable; preserve its cause."""
+    """Selected reader or its runtime was unavailable; preserve its cause.
 
-    def __init__(self, cause: Exception) -> None:
-        """Create an unavailable-reader error while preserving its cause."""
+    ``precondition_verdict`` is the reader probe's own refusal when the probe
+    knows why the reader cannot run -- the runtime does not answer, or the
+    role's model is not installed -- so the extraction refuses, or records its
+    label fallback, with the cause and the setup action the probe named rather
+    than a generic reader failure. ``None`` when no probe answered for it.
+    """
+
+    def __init__(self, cause: Exception, *, precondition_verdict: PreconditionVerdict | None = None) -> None:
+        """Create an unavailable-reader error while preserving its cause and the probe's verdict."""
         super().__init__(str(cause))
         self.cause = cause
+        self.precondition_verdict = precondition_verdict
 
 
 class InvoiceDraftReaderHeadroomRefusedError(CadrumoError):

@@ -21,7 +21,7 @@ from ....application.ledger.batch_ingest import (
 from ....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
 from ....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
-from ....application.provisioning_contracts import ProvisioningPreconditionCondition
+from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.iva.schema import InvoiceKind
@@ -224,3 +224,31 @@ def test_an_already_ingested_degraded_draft_is_still_reported() -> None:
     assert row.status == "no_op"
     assert row.label_reading_fallback is not None
     assert "ledger.evidence.batch.label_reading_degraded" in {notice.code for notice in _run_notices(run)}
+
+
+def test_a_reader_missing_degraded_draft_carries_its_setup_action_to_the_row() -> None:
+    """A fill the reader probe refused names the local AI setup on the row, so a surface can offer it."""
+    address = "d" * 64
+    row = BatchItemResult(
+        content_address=address,
+        identity=batch_item_identity(content_address=address, direction=InvoiceKind.RECEIVED),
+        direction=InvoiceKind.RECEIVED,
+        source_name="ticket.pdf",
+        status="ingested",
+        label_reading_fallback=LabelReadingFallback(
+            cause=LabelReadingFallbackCause.READER_UNAVAILABLE,
+            unread_fields=("supplier_name",),
+            reader_error_type="PurchaseInvoiceEvidenceReaderError",
+            failed_condition_id=ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value,
+            recovery_action_id=LOCAL_AI_PROVISION_ACTION_ID,
+        ),
+    )
+
+    payload = _batch_payload(BatchRunResult(items=(row,)), bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+
+    (projected,) = payload.items
+    assert projected.label_reading_fallback is not None
+    assert projected.label_reading_fallback.failed_condition_id == (
+        ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
+    )
+    assert projected.label_reading_fallback.recovery_action_id == LOCAL_AI_PROVISION_ACTION_ID
