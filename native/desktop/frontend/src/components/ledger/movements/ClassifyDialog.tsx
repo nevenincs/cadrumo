@@ -20,7 +20,7 @@ import {
   SPENDING_CATEGORY_FAMILIES,
 } from "../../../shell/ledgerVocabulary";
 import { useStrings } from "../../../shell/strings";
-import { categoryLabel, familyLabel } from "./movementWords";
+import { categoryLabel, categoryOption } from "./movementWords";
 
 /**
  * What classifying as Business or Mixed asks for, in one step: a category
@@ -85,11 +85,7 @@ export function ClassifyDialog({
     () =>
       (mixed ? SHARE_CATEGORY_FAMILIES : SPENDING_CATEGORY_FAMILIES).flatMap(
         ([family, members]) =>
-          members.map((member) => ({
-            value: member,
-            label: categoryLabel(t, member),
-            group: familyLabel(t, family),
-          })),
+          members.map((member) => categoryOption(t, family, member)),
       ),
     [t, mixed],
   );

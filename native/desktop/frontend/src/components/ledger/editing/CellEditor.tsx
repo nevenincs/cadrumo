@@ -20,10 +20,9 @@ import {
 } from "../../../shell/ledgerVocabulary";
 import { useStrings } from "../../../shell/strings";
 import {
-  categoryLabel,
+  categoryOption,
   classificationLabel,
   directionLabel,
-  familyLabel,
   irpfCategoryLabel,
   ivaCategoryLabel,
 } from "../movements/movementWords";
@@ -288,11 +287,7 @@ function useChoices(
         return {
           label: t("desktop.ledger.column.category"),
           options: SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
-            members.map((value) => ({
-              value,
-              label: categoryLabel(t, value),
-              group: familyLabel(t, family),
-            })),
+            members.map((value) => categoryOption(t, family, value)),
           ),
         };
       case "iva_category":

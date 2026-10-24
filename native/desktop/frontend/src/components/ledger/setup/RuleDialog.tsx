@@ -24,8 +24,8 @@ import { useStrings } from "../../../shell/strings";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
   categoryLabel,
+  categoryOption,
   classificationLabel,
-  familyLabel,
 } from "../movements/movementWords";
 import { CallLine, ChoiceField, TextField, useSetupRead } from "./SetupParts";
 import {
@@ -173,11 +173,7 @@ export function RuleDialog({
     () => [
       { value: "", label: t("desktop.ledger.rules.no_category") },
       ...SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
-        members.map((member) => ({
-          value: member,
-          label: categoryLabel(t, member),
-          group: familyLabel(t, family),
-        })),
+        members.map((member) => categoryOption(t, family, member)),
       ),
     ],
     [t],

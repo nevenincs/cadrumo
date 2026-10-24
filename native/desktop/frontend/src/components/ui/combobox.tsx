@@ -27,6 +27,9 @@ type ComboboxOption = {
   disabled?: boolean;
   /** Why it cannot be chosen; shown in place of the note. */
   reason?: string;
+  /** More words it is found by, never shown: such as the words a bank
+   * statement uses for it. */
+  keywords?: readonly string[];
 };
 
 type ComboboxProps = {
@@ -58,25 +61,90 @@ type ComboboxProps = {
  * Shift+Tab choose and move on, and Escape leaves the value as it was.
  * The hint and the error are read with the field.
  */
+/** Text as it is compared: lower case, without accents, so "telefono"
+ * finds "Teléfono". */
+const folded = (text: string) =>
+  text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase();
+
+/** The score of a scattered-letter match, which counts only where nothing
+ * matches better. */
+const SCATTERED = 0.1;
+
 /**
- * How well an option's words answer what was typed: a word that starts with
- * it first, then a word that holds it, and only then the letters scattered in
- * order, so a typed word never loses to a chance spelling. Zero hides it.
+ * How well an option answers what was typed: its name starting with it
+ * first, then any of its words starting with it, then its words holding
+ * it, and only then its letters scattered in order. Case and accents are
+ * ignored. Zero hides it. `words` are its name first, then the rest.
  */
 export function optionScore(
-  _value: string,
   search: string,
-  keywords: readonly string[] = [],
+  words: readonly string[] = [],
 ): number {
-  const query = search.trim().toLocaleLowerCase();
+  const query = folded(search.trim());
   if (query === "") return 1;
-  const text = keywords.join(" ").toLocaleLowerCase();
-  const words = text.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-  if (words.some((word) => word.startsWith(query))) return 1;
+  const name = folded(words[0] ?? "");
+  const text = words.map(folded).join(" ");
+  if (name.startsWith(query)) return 1;
+  const parts = text.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  if (parts.some((part) => part.startsWith(query))) return 0.8;
   if (text.includes(query)) return 0.6;
   let at = 0;
   for (const letter of text) if (letter === query[at]) at += 1;
-  return at === query.length ? 0.1 : 0;
+  return at === query.length ? SCATTERED : 0;
+}
+
+/**
+ * The options that answer `search`, best first: a scattered-letter match
+ * is dropped where any option matches better, the groups follow their best
+ * option, and within a group the options follow their score. Ties keep
+ * their given order.
+ */
+export function rankOptions(
+  options: readonly ComboboxOption[],
+  search: string,
+): { heading: string | undefined; options: ComboboxOption[] }[] {
+  const scored = options
+    .map((option, at) => ({
+      option,
+      at,
+      score: optionScore(search, [
+        option.label,
+        option.note ?? "",
+        ...(option.keywords ?? []),
+      ]),
+    }))
+    .filter((entry) => entry.score > 0);
+  const better = scored.some((entry) => entry.score > SCATTERED);
+  const kept = better
+    ? scored.filter((entry) => entry.score > SCATTERED)
+    : scored;
+  const groups: {
+    heading: string | undefined;
+    best: number;
+    first: number;
+    entries: typeof kept;
+  }[] = [];
+  for (const entry of kept) {
+    const group = groups.find((found) => found.heading === entry.option.group);
+    if (group) {
+      group.entries.push(entry);
+      group.best = Math.max(group.best, entry.score);
+    } else
+      groups.push({
+        heading: entry.option.group,
+        best: entry.score,
+        first: entry.at,
+        entries: [entry],
+      });
+  }
+  return groups
+    .sort((left, right) => right.best - left.best || left.first - right.first)
+    .map((group) => ({
+      heading: group.heading,
+      options: group.entries
+        .sort((left, right) => right.score - left.score || left.at - right.at)
+        .map((entry) => entry.option),
+    }));
 }
 
 function Combobox({
@@ -112,16 +180,19 @@ function Combobox({
     return () => document.removeEventListener("keydown", note, true);
   }, [open]);
 
-  const groups = React.useMemo(() => {
-    const out: { heading: string | undefined; options: ComboboxOption[] }[] =
-      [];
-    for (const option of options) {
-      const last = out.find((group) => group.heading === option.group);
-      if (last) last.options.push(option);
-      else out.push({ heading: option.group, options: [option] });
-    }
-    return out;
-  }, [options]);
+  // The list is ranked here, not by the command list, so a scattered
+  // match can give way to a better one elsewhere in the list.
+  const groups = React.useMemo(
+    () => rankOptions(options, query),
+    [options, query],
+  );
+  const first =
+    groups.flatMap((group) => group.options).find((option) => !option.disabled)
+      ?.value ?? "";
+  // What is typed moves the highlight to the best answer.
+  React.useEffect(() => {
+    if (query.trim() !== "") setHighlight(first);
+  }, [query, first]);
 
   const close = () => {
     if (triggered) setOpen(false);
@@ -179,7 +250,7 @@ function Combobox({
           onValueChange={setHighlight}
           // Its Control-letter movement keys would take the shell's chords.
           vimBindings={false}
-          filter={optionScore}
+          shouldFilter={false}
           className="min-h-0"
           onKeyDownCapture={(event) => {
             const how = commitKeyOf(event);
@@ -226,7 +297,6 @@ function Combobox({
                   <CommandItem
                     key={option.value}
                     value={option.value}
-                    keywords={[option.label, option.note ?? ""]}
                     disabled={option.disabled}
                     onPointerDown={() => {
                       pressed.current = null;

@@ -26,6 +26,22 @@ export const categoryLabel = (t: Translate, id: string) =>
   isSpendingCategory(id) ? t(`desktop.ledger.category.${id}`) : id;
 export const familyLabel = (t: Translate, family: SpendingCategoryFamily) =>
   t(`desktop.ledger.category_family.${family}`);
+/** The words a category is also found by, such as those a bank statement
+ * prints for it, in the catalogue's language. */
+export const categoryKeywords = (t: Translate, id: string): string[] =>
+  t(`desktop.ledger.category_keywords.${id}`).split(/\s+/).filter(Boolean);
+/** A spending category as a list choice: its name under its family's
+ * heading, found by its keywords too. */
+export const categoryOption = (
+  t: Translate,
+  family: SpendingCategoryFamily,
+  id: string,
+) => ({
+  value: id,
+  label: categoryLabel(t, id),
+  group: familyLabel(t, family),
+  keywords: categoryKeywords(t, id),
+});
 export const ivaCategoryLabel = (t: Translate, id: string) =>
   isIvaCategory(id) ? t(`desktop.ledger.iva_category.${id}`) : id;
 export const irpfCategoryLabel = (t: Translate, id: string) =>

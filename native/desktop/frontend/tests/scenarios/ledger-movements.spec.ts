@@ -1069,3 +1069,37 @@ test("a filter on the grid never changes what the readiness strip counts", async
     await chip.click();
   }
 });
+
+test("the category search highlights a name or word match over scattered letters, and finds a statement's words", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await rowWith(target, "PAPELERIA TRAZO")
+    .locator("[data-column=status]")
+    .click();
+  await target.keyboard.press("Alt+KeyB");
+  const dialog = classify(target);
+  await expect(dialog).toBeVisible();
+  await dialog.locator(".ledger-classify-category").click();
+  const list = target.locator("[data-slot=combobox]");
+  const highlighted = list.locator("[role=option][aria-selected=true]");
+  for (const [typed, expected] of [
+    ["office", "material_oficina"],
+    ["phone", "telefonia_fija"],
+    ["tele", "telefonia_fija"],
+    ["telefono", "telefonia_fija"],
+    ["gasolina", "vehiculo_combustible"],
+  ] as const) {
+    await list.getByRole("combobox").fill(typed);
+    await expect(highlighted).toHaveText(
+      label(`desktop.ledger.category.${expected}`),
+    );
+  }
+  // A scattered match is not offered beside a word match.
+  await list.getByRole("combobox").fill("phone");
+  await expect(
+    list.getByRole("option", {
+      name: label("desktop.ledger.category.ibi_vivienda_afecto"),
+    }),
+  ).toHaveCount(0);
+});

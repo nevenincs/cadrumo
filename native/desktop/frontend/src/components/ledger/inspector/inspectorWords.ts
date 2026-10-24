@@ -9,9 +9,8 @@ import {
 } from "../../../shell/ledgerVocabulary";
 import type { Translate } from "../../../shell/strings";
 import {
-  categoryLabel,
+  categoryOption,
   directionLabel,
-  familyLabel,
   irpfCategoryLabel,
   ivaCategoryLabel,
 } from "../movements/movementWords";
@@ -186,11 +185,7 @@ export function modelFailureText(
 
 export const categoryOptions = (t: Translate): ComboboxOption[] =>
   SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
-    members.map((member) => ({
-      value: member,
-      label: categoryLabel(t, member),
-      group: familyLabel(t, family),
-    })),
+    members.map((member) => categoryOption(t, family, member)),
   );
 export const ivaCategoryOptions = (t: Translate): ComboboxOption[] =>
   IVA_CATEGORIES.map((id) => ({ value: id, label: ivaCategoryLabel(t, id) }));

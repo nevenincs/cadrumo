@@ -48,8 +48,8 @@ import { SPENDING_CATEGORY_FAMILIES } from "../../../shell/ledgerVocabulary";
 import { useStrings, type Translate } from "../../../shell/strings";
 import {
   categoryLabel,
+  categoryOption,
   classificationText,
-  familyLabel,
   ivaCategoryLabel,
   percentText,
 } from "../movements/movementWords";
@@ -294,11 +294,7 @@ function BlockerFixes({
   const categories = useMemo<ComboboxOption[]>(
     () =>
       SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
-        members.map((member) => ({
-          value: member,
-          label: categoryLabel(t, member),
-          group: familyLabel(t, family),
-        })),
+        members.map((member) => categoryOption(t, family, member)),
       ),
     [t],
   );
