@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:37ecf4c88d26233058eab3c3c9b763265a50ef1ee97be5c2d80caaf2cec09818'
+body_hash: 'sha256:a0e08261ac965be69c1f4baa6ba12ed07eeabdba3bb7f7010b94edf2fed9a105'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -451,6 +451,70 @@ related:
 - `S12` `verify:` `playwright ledger-invoices` -> `pass`
 - `S11` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
 - `S11` `verify:` `playwright ledger-transfer` -> `pass`
+- `S16` `A` `native/desktop/frontend/src/dev/ledgerClassesFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S16` `A` `native/desktop/frontend/tests/ledger-classes.spec.ts`
+- `S16` `A` `native/desktop/frontend/tests/ledger-fixture-host.spec.ts`
+- `S16` `A` `native/desktop/frontend/tests/scenarios/ledger-benchmark.spec.ts`
+- `S16` `A` `native/desktop/frontend/tests/scenarios/ledger-sweep.spec.ts`
+- `S16` `M` `native/desktop/frontend/tests/scenarios/ledger-shell.spec.ts`
+- `S16` `verify:` `playwright ledger specs (254 passed, 2 failed: focus return)` -> `pass`
+- `S16` `by:` `implementer`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/movementWords.ts`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S08` `M` `native/desktop/frontend/tests/ledger-movements.spec.ts`
+- `S08` `verify:` `playwright ledger-movements, scenarios ledger-movements and ledger-shell` -> `pass`
+- `S18` `M` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S18` `M` `native/desktop/frontend/tests/ledger-plan.spec.ts`
+- `S18` `M` `native/desktop/frontend/src/shell/ledgerWindow.ts`
+- `S18` `M` `native/desktop/frontend/tests/ledger-window.spec.ts`
+- `S18` `M` `native/desktop/frontend/src/shell/ledgerApply.ts`
+- `S18` `M` `native/desktop/frontend/tests/ledger-apply.spec.ts`
+- `S18` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S18` `verify:` `npx playwright test ledger-plan ledger-apply ledger-window ledger-editing ledger-stage ledger-movements ledger-inspector-model (124 incl. scenarios)` -> `pass`
+- `S18` `by:` `implementation-engineer`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/inspector/ModelSuggestion.tsx`
+- `S09` `verify:` `npx playwright test scenarios/ledger-inspector.spec.ts scenarios/ledger-editing.spec.ts (40)` -> `pass`
+- `S09` `verify:` `npx eslint ModelSuggestion.tsx` -> `pass`
+- `S09` `by:` `implementation-engineer`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/WritePause.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/useSealedMovements.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/documents/EvidenceRecords.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/documents/useLedgerRead.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/ChangesTray.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/LedgerEditing.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/ReviewDialog.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/editingModel.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/useLedgerApply.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/inspector/LedgerInspector.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoiceEditor.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/invoices/invoiceWrites.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/invoices/useInvoiceCatalogue.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/transfer/ExportDialog.tsx`
+- `S09` `M` `native/desktop/frontend/tests/ledger-editing.spec.ts`
+- `S09` `A` `native/desktop/frontend/tests/scenarios/ledger-focus.spec.ts`
+- `S09` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S09` `verify:` `npx playwright test ledger-editing ledger-setup ledger-apply ledger-plan ledger-invoices ledger-documents ledger-transfer ledger-pause ledger-focus` -> `pass`
+- `S09` `by:` `implementation-engineer-high`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/AssetsPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/CapitalGoodsPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/CounterpartiesPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/ProrrataPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/RatiosPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/RuleDialog.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/RulesSection.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/setupWords.ts`
+- `S14` `A` `native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`
+- `S14` `verify:` `npx playwright test scenarios/ledger-pause.spec.ts` -> `pass`
+- `S14` `verify:` `npx playwright test scenarios/ledger-setup.spec.ts` -> `pass`
+- `S14` `by:` `implementation-engineer-high`
+- `S16` `A` `native/desktop/frontend/tests/scenarios/ledger-focus.spec.ts`
+- `S16` `verify:` `playwright ledger-focus` -> `pass`
 
 ## Notes
 
@@ -485,3 +549,7 @@ related:
 - `S14` cd708fab1b folds the reset; 797c4ab08a reads a closing authority or purchase cost from a file (TUI parity)
 - `S12` e451d06c49 pins the total to the end edge
 - `S11` e451d06c49 drops the repeated What to import label
+- `S16` ledger-focus.spec.ts left uncommitted: import and export dialogs lose focus to body on Escape (product defect)
+- `S08` 51fd4ee2b8 resolves P03·status-done-unchecked
+- `S09` Sealed set read per movement through ledger.track, bounded at 400 per window read: no period-level source exists
+- `S16` the Import/Export focus defect S16 found is fixed in eb80a4f385
