@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0e08261ac965be69c1f4baa6ba12ed07eeabdba3bb7f7010b94edf2fed9a105'
+body_hash: 'sha256:9d01a46e099da4400e7a06ab983a43e4052b93250e400bc154a3de28e66dd5e8'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -515,6 +515,69 @@ related:
 - `S14` `by:` `implementation-engineer-high`
 - `S16` `A` `native/desktop/frontend/tests/scenarios/ledger-focus.spec.ts`
 - `S16` `verify:` `playwright ledger-focus` -> `pass`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentsSection.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/documents/EvidenceRecords.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/documents/documentsModel.ts`
+- `S13` `verify:` `npx playwright test scenarios/ledger-documents.spec.ts` -> `pass`
+- `S13` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S14` `verify:` `npx playwright test scenarios/ledger-setup.spec.ts` -> `pass`
+- `S14` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S13` `verify:` `npx playwright test scenarios/ledger-documents.spec.ts` -> `pass`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/CellEditor.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/MovementEditing.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/PasteDialog.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/WritePause.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ui/dialog.tsx`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/ledger-editing.spec.ts`
+- `S09` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S09` `verify:` `npx eslint (touched files)` -> `pass`
+- `S09` `verify:` `npx prettier --check (touched files)` -> `pass`
+- `S09` `verify:` `playwright ledger-editing.spec.ts` -> `fail`
+- `S09` `by:` `implementation-engineer`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/transfer/ExportDialog.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/transfer/importModel.ts`
+- `S11` `M` `native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts`
+- `S11` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S11` `verify:` `npx eslint (touched files)` -> `pass`
+- `S11` `verify:` `npx prettier --check (touched files)` -> `pass`
+- `S11` `verify:` `playwright ledger-transfer.spec.ts ledger-pause.spec.ts ledger-focus.spec.ts` -> `pass`
+- `S11` `by:` `implementation-engineer`
+- `S08` `M` `native/desktop/frontend/src/components/ui/data-grid.tsx`
+- `S08` `M` `native/desktop/frontend/tests/scenarios/data-grid.spec.ts`
+- `S08` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S08` `M` `native/desktop/frontend/src/shell/ledgerVocabulary.ts`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/ClassifyDialog.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsToolbar.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/ReadinessStrip.tsx`
+- `S08` `M` `native/desktop/frontend/tests/scenarios/ledger-movements.spec.ts`
+- `S08` `M` `native/desktop/frontend/tests/scenarios/ledger-editing.spec.ts`
+- `S08` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S08` `verify:` `npx eslint and prettier --check on lane B files` -> `pass`
+- `S08` `verify:` `playwright scenarios/ledger-movements ledger-inspector ledger-setup ledger-editing ledger-pause data-grid accessibility(Ledger) and model specs` -> `pass`
+- `S08` `verify:` `playwright scenarios/ledger-benchmark.spec.ts` -> `fail`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/ActionDialog.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/InspectorField.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/LedgerInspector.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/MovementInspector.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/SelectionInspector.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/inspectorContext.ts`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/movementFields.ts`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/ModelSuggestion.tsx`
+- `S10` `M` `native/desktop/frontend/tests/ledger-inspector-model.spec.ts`
+- `S10` `M` `native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts`
+- `S10` `M` `native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`
+- `S10` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S10` `verify:` `npx eslint and prettier --check on lane B files` -> `pass`
+- `S10` `verify:` `playwright scenarios/ledger-movements ledger-inspector ledger-setup ledger-editing ledger-pause data-grid accessibility(Ledger) and model specs` -> `pass`
+- `S10` `by:` `implementation-engineer-high`
+- `S14` `M` `native/desktop/frontend/tests/ledger-setup-model.spec.ts`
+- `S14` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S14` `verify:` `npx eslint and prettier --check on lane B files` -> `pass`
+- `S14` `verify:` `playwright scenarios/ledger-movements ledger-inspector ledger-setup ledger-editing ledger-pause data-grid accessibility(Ledger) and model specs` -> `pass`
+- `S08` `M` `native/desktop/frontend/src/components/ui/combobox.tsx`
+- `S08` `A` `native/desktop/frontend/tests/combobox-ranking.spec.ts`
+- `S08` `verify:` `playwright data-grid, ledger-movements, ledger-inspector, ledger-invoices, ledger-benchmark` -> `pass`
+- `S15` `verify:` `desktop chrome drift check` -> `pass`
 
 ## Notes
 
@@ -553,3 +616,11 @@ related:
 - `S08` 51fd4ee2b8 resolves P03·status-done-unchecked
 - `S09` Sealed set read per movement through ledger.track, bounded at 400 per window read: no period-level source exists
 - `S16` the Import/Export focus defect S16 found is fixed in eb80a4f385
+- `S13` uxC: 12 of 12 documents scenarios pass (the off-host one on its own re-run); viewer deferred to P03.S19; commit ffc0fd495d
+- `S14` uxC: 16 of 16 setup scenarios pass (the rules dry run passed on its own re-run after a transient vite overlay); Health reuses the readiness strip; commit 5aa92c6e9d
+- `S13` uxC: 13 of 13 documents scenarios pass; flagged-field glyph goes to its question
+- `S09` UX review fixes in commit 01dc4011ca. 16 of 22 editing scenarios pass; the 6 failures all wait for the Group column, which lane B's uncommitted narrow-width preset hides at 1440 with the agent pane open.
+- `S11` UX review fixes in commit 8834d9d5be. Preview duplicate pairing (R12) is not possible: the dry run names no row facts; the chip and its note are done.
+- `S08` ledger-benchmark filter step measured 541-861 ms against its 500 ms budget while a concurrent Release build loaded the machine; the committed grid text without the click fix also measured 599 once, so no lane B cause is established
+- `S08` d7311a0669: one shared grid tooltip; filter after select-all of 5000 rows `~750` ms to `~440` ms; a8e5d5320b combobox ranking; 24016487a6 pinned Description
+- `S15` 67afa01221 adds and rewords 110 keys plural-free; 703653a275 and 8d10ad2e6f retire 18
