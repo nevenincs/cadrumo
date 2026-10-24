@@ -1,5 +1,5 @@
 {
-  "description": "Every navigation register view id ever shipped, in the order it first shipped. Append only: an id stays here after its element is retired.",
+  "description": "Every navigation register view id ever shipped, in the order it first shipped, and which of them are retired. Both lists are append only: an id stays in shipped after its element is retired, and stays in retired once it is.",
   "shipped": [
     "home",
     "ledger",
@@ -26,5 +26,6 @@
     "panel/console",
     "panel/python",
     "panel/logs"
-  ]
+  ],
+  "retired": []
 }

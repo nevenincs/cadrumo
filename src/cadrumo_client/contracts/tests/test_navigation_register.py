@@ -227,13 +227,24 @@ def _shipped_ids() -> tuple[str, ...]:
     return tuple(str(item) for item in shipped)
 
 
-def _lifecycle_breaches(register: NavigationRegister, shipped: tuple[str, ...]) -> list[str]:
+def _retired_baseline() -> tuple[str, ...]:
+    """Every id the baseline records as retired; a subset of the shipped ids."""
+    retired = json.loads(_SHIPPED_VIEWS.read_text(encoding="utf-8"))["retired"]
+    assert isinstance(retired, list)
+    return tuple(str(item) for item in retired)
+
+
+def _lifecycle_breaches(
+    register: NavigationRegister, shipped: tuple[str, ...], retired_baseline: tuple[str, ...] = ()
+) -> list[str]:
     """Return every way ``register`` breaks the shipped baseline; empty when it keeps it.
 
     A shipped id stays answerable for good: either an element declares it or
     ``retired`` lists it. So deleting an element without retiring it, or
     dropping an id from ``retired``, breaks the baseline. A declared or
     retired id the baseline lacks means the baseline was not grown with it.
+    An id the baseline records as retired stays in ``retired``: taking it out
+    and declaring it again would let an old link open something new.
     """
     declared = {element.id for element in register.elements}
     retired = set(register.retired)
@@ -243,6 +254,7 @@ def _lifecycle_breaches(register: NavigationRegister, shipped: tuple[str, ...]) 
     breaches.extend(
         f"id {item!r} is missing from the shipped baseline" for item in sorted((declared | retired) - set(shipped))
     )
+    breaches.extend(f"retired id {item!r} was taken out of retired" for item in retired_baseline if item not in retired)
     return breaches
 
 
@@ -258,7 +270,13 @@ def test_the_shipped_baseline_lists_each_id_once() -> None:
 
 
 def test_every_id_ever_shipped_is_declared_or_retired() -> None:
-    assert _lifecycle_breaches(load_navigation_register(), _shipped_ids()) == []
+    assert _lifecycle_breaches(load_navigation_register(), _shipped_ids(), _retired_baseline()) == []
+
+
+def test_the_retired_baseline_lists_each_id_once_and_only_shipped_ids() -> None:
+    retired = _retired_baseline()
+    assert len(set(retired)) == len(retired)
+    assert set(retired) <= set(_shipped_ids())
 
 
 def test_an_element_deleted_without_retiring_its_id_breaks_the_baseline() -> None:
@@ -281,6 +299,19 @@ def test_an_id_taken_out_of_retired_breaks_the_baseline() -> None:
     assert _lifecycle_breaches(NavigationRegister.model_validate(data), shipped) == [
         "shipped id 'statements' is neither declared nor retired"
     ]
+
+
+def test_a_retired_id_removed_from_retired_and_declared_again_breaks_the_baseline(tmp_path: Path) -> None:
+    shipped = ("ledger", "ledger/invoices", "old")
+    kept = _load(tmp_path, _VALID)
+    assert _lifecycle_breaches(kept, shipped, ("old",)) == []
+
+    (tmp_path / "revived").mkdir()
+    revived = _load(tmp_path / "revived", _VALID.replace('retired = ["old"]', "retired = []") + _element("old"))
+    assert [element.id for element in revived.elements] == ["ledger", "ledger/invoices", "old"]
+    assert _lifecycle_breaches(revived, shipped, ("old",)) == ["retired id 'old' was taken out of retired"]
+    # Without the retired baseline the revival is invisible: every shipped id is declared.
+    assert _lifecycle_breaches(revived, shipped) == []
 
 
 def test_an_element_added_without_growing_the_baseline_breaks_it() -> None:
