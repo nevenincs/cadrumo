@@ -17,6 +17,8 @@ import {
   serverFilters,
   shownColumns,
   sortRows,
+  statusMarks,
+  statusWidth,
   type SortLabels,
 } from "../src/components/ledger/movements/movementsModel";
 import { statusWord } from "../src/components/ledger/movements/movementWords";
@@ -584,4 +586,24 @@ test("a reviewed movement is done only once readiness has measured it", () => {
   expect(statusWord("reviewed", null)).toBe("unmeasured");
   // A movement still to classify says so whatever readiness knows.
   expect(statusWord("pending", null)).toBe("pending");
+});
+
+test("a compact status column widens by one glyph for each kind of mark beside the status", () => {
+  const active = movement(hexId("a"));
+  const archived = movement(hexId("b"), { lifecycle_state: "ARCHIVED" });
+  const none = new Set<string>();
+  expect(statusMarks([active], none)).toBe(0);
+  expect(statusMarks([active, archived], none)).toBe(1);
+  expect(statusMarks([active, archived], new Set([hexId("a")]))).toBe(2);
+  // Two archived movements are one kind of mark.
+  expect(
+    statusMarks(
+      [archived, movement(hexId("c"), { lifecycle_state: "SPLIT" })],
+      none,
+    ),
+  ).toBe(1);
+  expect(statusWidth("compact")).toBe(2.75);
+  expect(statusWidth("compact", 2)).toBe(5.25);
+  // Comfortable rows have room for a mark beside the word.
+  expect(statusWidth("comfortable", 2)).toBe(7.5);
 });

@@ -30,9 +30,18 @@ export const STATUS_ICONS: Record<StatusWord, IconName> = {
   excluded: "eyeOff",
 };
 
+/** The glyph a movement's state other than active draws where the row
+ * has no room for its word. */
+export const LIFECYCLE_ICONS: Readonly<Record<string, IconName>> = {
+  ARCHIVED: "archive",
+  STASHED: "pause",
+  SPLIT: "split",
+};
+
 /** The stored review status: a glyph and the count of what readiness
  * found, with the word shown only where the rows have room for it. A
- * movement that is not active carries its state as a badge. */
+ * movement that is not active carries its state as a badge, or in compact
+ * rows as its glyph, named. */
 export const StatusCell = memo(function StatusCell({
   row,
   issues,
@@ -83,10 +92,35 @@ export const StatusCell = memo(function StatusCell({
         )}
       </span>
       {duplicate && <DuplicateMark />}
-      {state !== "ACTIVE" && <Badge>{lifecycleLabel(t, state)}</Badge>}
+      {state !== "ACTIVE" &&
+        (!wordy && LIFECYCLE_ICONS[state] ? (
+          <LifecycleMark state={state} />
+        ) : (
+          <Badge>{lifecycleLabel(t, state)}</Badge>
+        ))}
     </span>
   );
 });
+
+/** A state other than active as its glyph, named. */
+function LifecycleMark({ state }: { state: string }) {
+  const t = useStrings();
+  const name = lifecycleLabel(t, state);
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          data-lifecycle={state}
+          className="inline-flex items-center text-muted-foreground"
+        >
+          <Icon name={LIFECYCLE_ICONS[state]!} size="xs" />
+          <span className="sr-only">{name}</span>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{name}</TooltipContent>
+    </Tooltip>
+  );
+}
 
 /** An import flagged the movement as a likely duplicate: a glyph, named. */
 function DuplicateMark() {

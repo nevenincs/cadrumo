@@ -117,10 +117,32 @@ export const COLUMN_SPECS: Record<ColumnId, ColumnSpec> = {
   modified: { width: 8, sortable: true, server: "modified_at" },
 };
 
+/** One more glyph in a compact status cell, with the gap before it. */
+const STATUS_MARK_REM = 1.25;
+
 /** The status column's width: a glyph and a count in compact rows, the word
- * beside them in comfortable ones. */
-export const statusWidth = (density: "compact" | "comfortable") =>
-  density === "compact" ? 2.75 : COLUMN_SPECS.status.width;
+ * beside them in comfortable ones. A compact column widens by one glyph for
+ * each kind of mark some movement carries beside its status, so no mark is
+ * cut off. */
+export const statusWidth = (density: "compact" | "comfortable", marks = 0) =>
+  density === "compact"
+    ? 2.75 + marks * STATUS_MARK_REM
+    : COLUMN_SPECS.status.width;
+
+/** How many kinds of mark the movements carry beside their status: the
+ * likely-duplicate flag, and a state other than active. */
+export function statusMarks(
+  rows: readonly LedgerRow[],
+  duplicates: ReadonlySet<string>,
+): number {
+  const lifecycle = rows.some(
+    (row) => row.transaction.lifecycle_state !== "ACTIVE",
+  );
+  const duplicate = rows.some((row) =>
+    duplicates.has(row.transaction.transaction_id),
+  );
+  return Number(lifecycle) + Number(duplicate);
+}
 
 /** Columns that are always drawn: the row's selection box. */
 const FIXED: readonly ColumnId[] = ["select"];

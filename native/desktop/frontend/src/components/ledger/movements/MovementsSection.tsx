@@ -90,6 +90,7 @@ import {
   shownColumns,
   sortRows,
   stagedClassifyCount,
+  statusMarks,
   statusWidth,
   type ColumnId,
   type CurrencySum,
@@ -531,6 +532,10 @@ export function MovementsSection({
     () => rows.some((row) => row.transaction.currency !== "EUR"),
     [rows],
   );
+  const marks = useMemo(
+    () => statusMarks(rows, duplicates),
+    [rows, duplicates],
+  );
 
   // ---- What is shown ---------------------------------------------------------
   const labels = useMemo<SortLabels>(
@@ -799,12 +804,12 @@ export function MovementsSection({
       const rem =
         widths[column] ??
         (column === "status"
-          ? statusWidth(view.density)
+          ? statusWidth(view.density, marks)
           : Math.max(spec.width, spec.minWidth ?? 0));
       return sum + rem * remPx;
     }, 0);
     return needed > room;
-  }, [layout, untouched, room, widths, view.density, remPx]);
+  }, [layout, untouched, room, widths, view.density, marks, remPx]);
   const drawnLayout = useMemo(
     () =>
       narrow
@@ -1592,6 +1597,7 @@ export function MovementsSection({
           ...columnContext,
           duplicates,
           currencySlot,
+          statusMarks: marks,
           editing: edit.editing,
         }}
         byId={byId}

@@ -748,6 +748,85 @@ test("an imported likely duplicate is marked, counted, and offered its archive",
   await expect(target.locator("[role=gridcell]:focus")).toHaveCount(1);
 });
 
+test("compact status cells draw a state as its glyph, named, and widen for the marks they carry", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await head(target).locator(".ledger-period").click();
+  await target.locator(".ledger-period-all").click();
+  const rem = await target.evaluate(() =>
+    parseFloat(getComputedStyle(document.documentElement).fontSize),
+  );
+  const statusHeader = grid(target).getByRole("columnheader", {
+    name: label("desktop.ledger.column.status"),
+  });
+  // One kind of mark, the duplicate flag: one glyph wider than 2.75rem.
+  await expect
+    .poll(async () => Math.round((await statusHeader.boundingBox())!.width))
+    .toBe(Math.round(4 * rem));
+  // The header's glyph names the column; it is not the Done glyph.
+  const done = grid(target).locator("[data-status=done] svg").first();
+  expect(await statusHeader.locator("svg").innerHTML()).not.toBe(
+    await done.innerHTML(),
+  );
+
+  // Archive a movement: its state then shows as a glyph, whole.
+  await choosePeriod(target, 2026, "4T");
+  const description = "PAPELERIA TRAZO";
+  await rowWith(target, description).locator("[data-column=status]").click();
+  await target.keyboard.press("Alt+KeyI");
+  await target
+    .locator("aside.ledger-panel")
+    .getByRole("button", { name: label("desktop.ledger.inspector.actions") })
+    .click();
+  await target
+    .getByRole("menuitem", {
+      name: `${label("desktop.ledger.inspector.action.archive")}…`,
+    })
+    .click();
+  const dialog = target.locator(".ledger-action-dialog");
+  await dialog.getByRole("textbox").fill("Test");
+  await dialog
+    .getByRole("button", { name: label("desktop.ledger.inspector.stage") })
+    .click();
+  await target.locator(".ledger-tray .ledger-tray-review").click();
+  const review = target.locator(".ledger-review");
+  await review.locator(".ledger-apply-save").click();
+  await expect(review.locator(".ledger-apply-done")).toBeVisible({
+    timeout: 20_000,
+  });
+  await target.keyboard.press("Escape");
+  const archived = rowWith(target, description);
+  const mark = archived.locator("[data-column=status] [data-lifecycle]");
+  await expect(mark).toHaveAttribute("data-lifecycle", "ARCHIVED");
+  await expect(mark.locator(".sr-only")).toHaveText(
+    label("desktop.ledger.lifecycle.archived"),
+  );
+  const cell = (await archived.locator("[data-column=status]").boundingBox())!;
+  const glyph = (await mark.boundingBox())!;
+  expect(glyph.x + glyph.width).toBeLessThanOrEqual(cell.x + cell.width);
+});
+
+test("a failed read of the duplicate flags says so instead of marking none", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  // Over all periods the duplicates read asks for the flag alone. The page
+  // may read it more than once as the window settles; each read fails.
+  await target.evaluate(() =>
+    window.__scenarioLedger!.nextReads("ledger.list", 20, {
+      filters: ["issue=duplicate"],
+    }),
+  );
+  await head(target).locator(".ledger-period").click();
+  await target.locator(".ledger-period-all").click();
+  await expect(dataRows(target).first()).toBeVisible();
+  await expect(page(target).locator(".ledger-duplicates-failed")).toHaveText(
+    label("desktop.ledger.duplicate.failed"),
+  );
+  await expect(page(target).locator(".ledger-duplicates")).toHaveCount(0);
+});
+
 test("where the review preset does not fit it gives up Group, and a cue names the columns scrolled away", async ({
   page: target,
 }) => {

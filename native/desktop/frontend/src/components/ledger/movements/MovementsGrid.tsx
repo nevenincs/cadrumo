@@ -87,6 +87,8 @@ export type ColumnContext = {
   duplicates?: ReadonlySet<string>;
   /** Some shown movement is not in euros: amounts keep a currency slot. */
   currencySlot?: boolean;
+  /** How many kinds of mark the movements carry beside their status. */
+  statusMarks?: number;
   /** Staged editing, where the grid takes edits. */
   editing?: ColumnEditing;
 };
@@ -276,8 +278,12 @@ function movementColumns(
         ) : column === "invoice" ||
           (column === "status" && context.density === "compact") ? (
           // A glyph column's header is its glyph; `label` carries the word.
+          // The status header's glyph names the column, not a status.
           <span title={name} className="inline-flex">
-            <Icon name={column === "invoice" ? "link" : "check"} size="xs" />
+            <Icon
+              name={column === "invoice" ? "link" : "selectAll"}
+              size="xs"
+            />
             <span className="sr-only">{name}</span>
           </span>
         ) : (
@@ -285,7 +291,9 @@ function movementColumns(
         ),
       width:
         width ??
-        (column === "status" ? statusWidth(context.density) : spec.width),
+        (column === "status"
+          ? statusWidth(context.density, context.statusMarks)
+          : spec.width),
       ...(spec.minWidth !== undefined ? { minWidth: spec.minWidth } : {}),
       ...(spec.grow !== undefined && width === undefined
         ? { grow: spec.grow }
