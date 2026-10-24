@@ -252,6 +252,14 @@ def _availability(form: ModeloWorkForm, operation: PinnedAuthorityOperation, *, 
     return {option.artefact: option.availability for option in offer.artefacts}, offer.record
 
 
+def _package(form: ModeloWorkForm, operation: PinnedAuthorityOperation, *, verified: bool):
+    offer = form_export_offer(
+        "210", form_snapshot(operation, "210", 2025, "0A"), _EN, form=form, verified=verified, filed=False
+    )
+    assert offer.review_package.words
+    return offer.review_package.availability
+
+
 def _entered_210(operation: PinnedAuthorityOperation, **update: object) -> ModeloWorkForm:
     form = built_form(operation, "210", 2025, "0A", held=_HELD_210, entered=frozenset(_HELD_210))
     return form.model_copy(update=update)
@@ -270,6 +278,8 @@ def test_an_unchecked_calculation_offers_only_the_review_spreadsheet(operation: 
     )
 
     assert artefacts[ModeloExportArtefact.CALCULATION_REVIEW_XLSX].available
+    package = _package(_entered_210(operation, calculation_revision_id="c" * 64), operation, verified=False)
+    assert package.reason is ModeloFormUnavailable.NOT_VERIFIED
     for artefact in (ModeloExportArtefact.FICHERO_BOE, ModeloExportArtefact.CALCULATION_REPORT_CSV):
         assert artefacts[artefact].reason is ModeloFormUnavailable.NOT_VERIFIED, artefact
     assert record.reason is ModeloFormUnavailable.NOT_VERIFIED
@@ -286,6 +296,7 @@ def test_a_checked_clean_calculation_offers_every_artefact_and_the_recording(
 
     assert all(item.available for item in artefacts.values()), artefacts
     assert record.available
+    assert _package(form, operation, verified=True).available
 
 
 def test_what_blocks_filing_withholds_the_file_and_the_recording_but_not_the_reports(
@@ -309,6 +320,7 @@ def test_what_blocks_filing_withholds_the_file_and_the_recording_but_not_the_rep
     assert artefacts[ModeloExportArtefact.FICHERO_BOE].reason is ModeloFormUnavailable.BLOCKS
     assert artefacts[ModeloExportArtefact.FICHERO_BOE].words == hold.words
     assert record.reason is ModeloFormUnavailable.BLOCKS
+    assert _package(form, operation, verified=True).reason is ModeloFormUnavailable.BLOCKS
     assert artefacts[ModeloExportArtefact.CALCULATION_REPORT_CSV].available
 
 

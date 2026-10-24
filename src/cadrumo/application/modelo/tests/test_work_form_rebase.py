@@ -15,6 +15,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..edit_models import ModeloEditHeldChangeV1, ModeloEditHeldKind
 from ..work_form_models import (
     ModeloFormEditability,
     ModeloFormField,
@@ -22,12 +23,7 @@ from ..work_form_models import (
     comparable_entry,
     revised_field,
 )
-from ..work_form_rebase import (
-    ModeloFormRebaseOutcome,
-    ModeloFormStagedChangeV1,
-    ModeloFormStagedKind,
-    rebase_outcome,
-)
+from ..work_form_rebase import ModeloFormRebaseOutcome, held_change, rebase_outcome
 from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -43,8 +39,8 @@ def _entered(operation: PinnedAuthorityOperation) -> ModeloFormField:
     )
 
 
-def _held(field: ModeloFormField, kind: ModeloFormStagedKind) -> ModeloFormStagedChangeV1:
-    return ModeloFormStagedChangeV1(address=field.address, kind=kind, held_state=field.state_digest)
+def _held(field: ModeloFormField, kind: ModeloEditHeldKind) -> ModeloEditHeldChangeV1:
+    return held_change(field, kind)
 
 
 def test_a_box_says_what_it_takes_and_the_filers_own_value_as_a_figure(operation: PinnedAuthorityOperation) -> None:
@@ -63,8 +59,8 @@ def test_a_box_says_what_it_takes_and_the_filers_own_value_as_a_figure(operation
 
 def test_a_held_change_is_kept_changed_or_dropped_by_its_box_now(operation: PinnedAuthorityOperation) -> None:
     entered = _entered(operation)
-    held_set = _held(entered, ModeloFormStagedKind.SET)
-    held_clear = _held(entered, ModeloFormStagedKind.CLEAR)
+    held_set = _held(entered, ModeloEditHeldKind.SET)
+    held_clear = _held(entered, ModeloEditHeldKind.CLEAR)
 
     same_figure = revised_field(entered, value=Decimal("100"))
     moved = revised_field(entered, value=Decimal("250.00"))

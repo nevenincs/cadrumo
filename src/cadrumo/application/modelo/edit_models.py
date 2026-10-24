@@ -935,13 +935,43 @@ class ModeloEditParseRequestV1(EditModel):
     lexeme: Annotated[str, Field(max_length=MAX_EDIT_LEXEME_LENGTH, exclude=True, repr=False)]
 
 
+class ModeloEditHeldKind(StrEnum):
+    """The kind of change a frontend holds on a box."""
+
+    SET = "set"
+    CLEAR = "clear"
+    RESTORE = "restore"
+
+
+type ModeloEditHeldAddressV1 = Annotated[
+    ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1,
+    Field(discriminator="kind"),
+]
+"""The edit address a held change is submitted to."""
+
+
+class ModeloEditHeldChangeV1(EditModel):
+    """One change a frontend holds since it read the form, for a preflight to say what became of it.
+
+    ``held_state`` is the box's state digest when the change was staged. It
+    is derived from the box's value, so it travels only inside the transient
+    submission, in process memory, and never reaches a request, a journal or a
+    result; the preflight answers with what became of the change alone.
+    """
+
+    address: ModeloEditHeldAddressV1
+    kind: ModeloEditHeldKind
+    held_state: Annotated[str, Field(min_length=64, max_length=64, repr=False)]
+
+
 class ModeloEditSubmissionV1(EditModel):
     """One baseline plus its complete normalized ordered intent set.
 
-    Carries no frontend state. Duplicate or contradictory address intents
-    refuse before execution. ``lexemes`` are entries as the filer typed them,
-    which only a preflight reads, through the address's own grammar; an apply
-    refuses a submission carrying any.
+    Duplicate or contradictory address intents refuse before execution.
+    ``lexemes`` are entries as the filer typed them, which only a preflight
+    reads, through the address's own grammar; ``held`` are the changes the
+    frontend holds, which only a preflight judges again against the box as it
+    stands. An apply refuses a submission carrying either.
     """
 
     edit_contract_version: Literal[1] = 1
@@ -952,6 +982,7 @@ class ModeloEditSubmissionV1(EditModel):
     row_intents: Annotated[tuple[ModeloRowEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     detail_row_intents: Annotated[tuple[ModeloDetailRowEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     lexemes: Annotated[tuple[ModeloEditParseRequestV1, ...], Field(max_length=_MAX_INTENTS)] = ()
+    held: Annotated[tuple[ModeloEditHeldChangeV1, ...], Field(max_length=_MAX_INTENTS)] = ()
 
     @model_validator(mode="after")
     def _require_consistent_submission(self) -> ModeloEditSubmissionV1:
@@ -984,8 +1015,8 @@ class ModeloEditApplyRequestV1(EditModel):
 
     @model_validator(mode="after")
     def _apply_only_typed_values(self) -> ModeloEditApplyRequestV1:
-        if self.submission.lexemes:
-            raise ValueError("an applied edit carries typed values only, never entries as typed")
+        if self.submission.lexemes or self.submission.held:
+            raise ValueError("an applied edit carries typed values only, never entries as typed or held changes")
         return self
 
 
@@ -1031,6 +1062,9 @@ __all__ = [
     "ModeloEditExistingRowAddressV1",
     "ModeloEditFindingSeverity",
     "ModeloEditFindingV1",
+    "ModeloEditHeldAddressV1",
+    "ModeloEditHeldChangeV1",
+    "ModeloEditHeldKind",
     "ModeloEditNewRowCorrelationV1",
     "ModeloEditNonWritableBindingOverrideSurfaceEntryV1",
     "ModeloEditNonWritableReason",

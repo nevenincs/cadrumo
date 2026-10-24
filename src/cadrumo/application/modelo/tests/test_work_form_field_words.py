@@ -80,6 +80,9 @@ def test_a_confirmable_box_carries_the_value_a_confirmation_stages(operation: Pi
     assert confirmable(assumed)
     assert assumed.confirm_value == wire_scalar_value(_AMOUNT) == "1234.50"
     assert entered.confirm_value is None
+    # Confirmed, the value becomes the filer's own: the comparable confirm value is what own_value will read.
+    assert assumed.confirm_comparable == entered.own_value == "1234.5"
+    assert entered.confirm_comparable is None
 
 
 @pytest.mark.parametrize("language", [OutputLanguage.EN, OutputLanguage.ES])

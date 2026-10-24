@@ -96,7 +96,7 @@ from .edit_transient_operand import modelo_edit_financial_operand
 from .edit_value_grammar import ModeloEditValueGrammarV1
 from .work_amend_correction import correction_value_grammars
 from .work_form_models import comparable_entry
-from .work_form_rebase import ModeloFormRebaseEntryV1, ModeloFormStagedChangeV1, rebase_report
+from .work_form_rebase import ModeloFormRebaseEntryV1, rebase_report
 from .work_form_service import modelo_form_snapshot
 from .work_lifecycle import get_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
@@ -122,7 +122,6 @@ type OperationContractsProvider = Callable[[], OperationPublicContractSetV1]
 """The public contract set of the registry these definitions are composed into."""
 
 _BoundedText = Annotated[str, Field(min_length=1, max_length=128)]
-_MAX_STAGED: Final[int] = 500
 
 
 # -- requests -----------------------------------------------------------------
@@ -150,15 +149,12 @@ class ModeloCasillaHelpRequest(CredentialFreeOperationRequest):
 class ModeloEditRenewRequest(CredentialFreeOperationRequest):
     """The baseline an edit session holds, to renew before review or submission.
 
-    ``output_language`` is the language a refusal is said in. ``staged`` are
-    the changes the session holds, by box, kind and the box's state when each
-    was staged, never a value; the result says what becomes of each.
+    ``output_language`` is the language a refusal is said in.
     """
 
     profile_id: UUID
     baseline: ModeloEditApplyBaselineV1
     output_language: OutputLanguage
-    staged: Annotated[tuple[ModeloFormStagedChangeV1, ...], Field(max_length=_MAX_STAGED)] = ()
 
 
 class ModeloEditApplyPrerequisiteRequest(CredentialFreeOperationRequest):
@@ -201,8 +197,6 @@ class ModeloEditRenewalProjectionV1(BaseModel):
     refusal: ModeloEditRefusedV1 | None
     #: Why the renewal was refused, in the language the request named; ``None`` when it was renewed.
     refusal_words: str | None = None
-    #: What becomes of each change the request held, on the declaration as it stands, in the order held.
-    rebase: tuple[ModeloFormRebaseEntryV1, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -273,7 +267,9 @@ class ModeloEditPreflightProjectionV1(BaseModel):
     ``findings`` are the check's findings the review lists, in the request's
     language, and ``refusal_words`` says why the whole check was refused;
     ``operator_entries_unknown`` says whether the filer's earlier entries could
-    not be read, which the review says in its own sentence.
+    not be read, which the review says in its own sentence. ``rebase`` says
+    what became of each change the submission held, on the declaration as a
+    fresh read of its form shows it; it carries nothing derived from a value.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -286,6 +282,7 @@ class ModeloEditPreflightProjectionV1(BaseModel):
     findings: tuple[ModeloEditReviewFindingV1, ...] = ()
     operator_entries_unknown: bool = False
     refusal_words: str | None = None
+    rebase: tuple[ModeloFormRebaseEntryV1, ...] = ()
 
 
 class ModeloEditApplyPrerequisiteV1(BaseModel):
@@ -474,33 +471,11 @@ class ModeloEditRenewExecutor:
                     if isinstance(renewal, ModeloEditRefusedV1)
                     else None
                 ),
-                rebase=self._rebase(payload, bucket_id=bucket_id, ports=ports, operation=operation),
             )
 
         return await _read(
             context, phase=MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID, task_name="modelo-edit-renew", read=read
         )
-
-    def _rebase(
-        self,
-        payload: ModeloEditRenewRequest,
-        *,
-        bucket_id: str,
-        ports: ModeloWorkbenchReadPorts,
-        operation: PinnedAuthorityOperation,
-    ) -> tuple[ModeloFormRebaseEntryV1, ...]:
-        """Judge each held change against the declaration as a fresh read of its form shows it."""
-        if not payload.staged:
-            return ()
-        current = read_modelo_workbench_form(
-            payload.baseline.work_unit_id,
-            bucket_id=bucket_id,
-            ports=ports,
-            operation=operation,
-            operation_contracts=self._contracts(),
-            language=payload.output_language,
-        )
-        return rebase_report(payload.staged, current.load.form)
 
 
 def _correction_grammars(
@@ -520,8 +495,11 @@ def _correction_grammars(
 class ModeloEditPreflightExecutor:
     """Check staged intents against the declaration without applying them."""
 
-    def __init__(self, *, ports_factory: ModeloWorkbenchReadPortsFactory) -> None:
+    def __init__(
+        self, *, ports_factory: ModeloWorkbenchReadPortsFactory, contracts: OperationContractsProvider
+    ) -> None:
         self._ports_factory = ports_factory
+        self._contracts = contracts
 
     async def execute(
         self, request: OperationRequest[ModeloEditPreflightRequestV2], context: OperationExecutorContext
@@ -576,6 +554,9 @@ class ModeloEditPreflightExecutor:
                 findings=review_findings(found, language),
                 operator_entries_unknown=operator_entries_unknown(found),
                 refusal_words=None if refused is None else edit_refusal_words(refused, language),
+                rebase=self._rebase(
+                    submission, bucket_id=bucket_id, ports=ports, operation=operation, language=language
+                ),
             )
 
         async with context.typed_financial_operand.consume(ModeloEditSubmissionV1) as submission:
@@ -588,6 +569,28 @@ class ModeloEditPreflightExecutor:
                 )
             finally:
                 del submission
+
+    def _rebase(
+        self,
+        submission: ModeloEditSubmissionV1,
+        *,
+        bucket_id: str,
+        ports: ModeloWorkbenchReadPorts,
+        operation: PinnedAuthorityOperation,
+        language: OutputLanguage,
+    ) -> tuple[ModeloFormRebaseEntryV1, ...]:
+        """Judge each held change against the declaration as a fresh read of its form shows it."""
+        if not submission.held:
+            return ()
+        current = read_modelo_workbench_form(
+            submission.baseline.work_unit_id,
+            bucket_id=bucket_id,
+            ports=ports,
+            operation=operation,
+            operation_contracts=self._contracts(),
+            language=language,
+        )
+        return rebase_report(submission.held, current.load.form)
 
 
 class ModeloEditApplyPrerequisiteExecutor:
@@ -754,7 +757,7 @@ def build_modelo_workbench_operation_definitions(
             _WORK_UNIT_SUBJECT,
             ModeloEditPreflightProjectionV1,
             ModeloEditPreflightExecutor,
-            lambda: ModeloEditPreflightExecutor(ports_factory=ports_factory),
+            lambda: ModeloEditPreflightExecutor(ports_factory=ports_factory, contracts=contracts),
         ),
         _definition(
             MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,

@@ -167,6 +167,15 @@ class ModeloFormElectionQuestion(BaseModel):
         return self
 
 
+class ModeloFormReviewPackageOffer(BaseModel):
+    """The package for the filer's accountant, in the filer's words, and whether it can be built now."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    words: str = Field(min_length=1)
+    availability: ModeloFormAvailability
+
+
 class ModeloFormExportOffer(BaseModel):
     """What the declaration may export, whether the export asks elections, and the file its revision writes.
 
@@ -180,6 +189,8 @@ class ModeloFormExportOffer(BaseModel):
     artefacts: tuple[ModeloFormArtefactOption, ...] = Field(min_length=1)
     #: Whether the filing can be recorded now, and if not why.
     record: ModeloFormAvailability
+    #: The package for the filer's accountant, which carries the file for the AEAT.
+    review_package: ModeloFormReviewPackageOffer
     asks_elections: bool
     elections: tuple[ModeloFormElectionQuestion, ...]
     file_format: ExportLayoutFormat | None
@@ -270,6 +281,7 @@ _NOT_CALCULATED_LOCALE_KEY: Final = "workspace.modelo.next.calculate"
 _NOT_VERIFIED_LOCALE_KEY: Final = "workspace.modelo.export.verify_first"
 _RECORDED_LOCALE_KEY: Final = "workspace.modelo.filed.read_only"
 _FILE_OUT_OF_DATE_LOCALE_KEY: Final = "workspace.modelo.record.refused_file_out_of_date"
+_REVIEW_PACKAGE_LOCALE_KEY: Final = "workspace.modelo.filing.copy.package.title"
 
 
 def _unavailable(reason: ModeloFormUnavailable, words: str) -> ModeloFormAvailability:
@@ -306,6 +318,17 @@ def artefact_availability(
     if not verified:
         return _unavailable(ModeloFormUnavailable.NOT_VERIFIED, tr(_NOT_VERIFIED_LOCALE_KEY, locale=locale))
     return _AVAILABLE
+
+
+def review_package_availability(
+    form: ModeloWorkForm, language: OutputLanguage, *, verified: bool
+) -> ModeloFormAvailability:
+    """Whether the package for the filer's accountant can be built now.
+
+    The package carries the file for the AEAT, built by the same export, so it
+    is available exactly when that file is.
+    """
+    return artefact_availability(ModeloExportArtefact.FICHERO_BOE, form, language, verified=verified)
 
 
 def record_availability(
@@ -348,6 +371,10 @@ def form_export_offer(
             for artefact in offered_export_artefacts()
         ),
         record=record_availability(form, language, verified=verified, filed=filed),
+        review_package=ModeloFormReviewPackageOffer(
+            words=tr(_REVIEW_PACKAGE_LOCALE_KEY, locale=locale),
+            availability=review_package_availability(form, language, verified=verified),
+        ),
         asks_elections=asks,
         elections=(
             (
@@ -409,6 +436,7 @@ __all__ = [
     "ModeloFormElectionQuestion",
     "ModeloFormExportOffer",
     "ModeloFormReceipt",
+    "ModeloFormReviewPackageOffer",
     "ModeloFormUnavailable",
     "artefact_availability",
     "asks_export_elections",
@@ -416,5 +444,6 @@ __all__ = [
     "form_receipt",
     "offered_export_artefacts",
     "record_availability",
+    "review_package_availability",
     "revision_file_format",
 ]

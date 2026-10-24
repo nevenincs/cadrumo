@@ -38,6 +38,8 @@ from ...application.modelo.edit_models import (
     ModeloEditAdmittedV1,
     ModeloEditApplyRequestV1,
     ModeloEditCorrectionAddressV1,
+    ModeloEditHeldChangeV1,
+    ModeloEditHeldKind,
     ModeloEditParseReason,
     ModeloEditParseRequestV1,
     ModeloEditPreflightEvaluatedV1,
@@ -48,6 +50,7 @@ from ...application.modelo.edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
     ModeloScalarEditIntentV1,
 )
+from ...application.modelo.edit_operation_requests import ModeloEditPreflightRequestV2
 from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
 from ...application.modelo.edit_parse_text import parse_refusal_text
 from ...application.modelo.edit_preflight import VALUE_REFUSED_PREFIX
@@ -60,11 +63,7 @@ from ...application.modelo.edit_transient_operand import modelo_edit_financial_o
 from ...application.modelo.value_presentation import format_casilla_value
 from ...application.modelo.work_amend_contracts import ModeloWorkAmendOverride
 from ...application.modelo.work_form_models import ModeloFormCasillaAddressV1, comparable_entry
-from ...application.modelo.work_form_rebase import (
-    ModeloFormRebaseOutcome,
-    ModeloFormStagedChangeV1,
-    ModeloFormStagedKind,
-)
+from ...application.modelo.work_form_rebase import ModeloFormRebaseOutcome, held_change
 from ...application.modelo.work_form_service import load_modelo_work_form
 from ...application.modelo.workbench_operations import (
     MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
@@ -498,7 +497,8 @@ def test_preflight_names_the_address_of_its_findings_without_applying(
             baseline=admission.baseline, mutation_family=ModeloEditMutationFamily.CALCULATE, scalar_intents=(_SET_06,)
         )
         executor = ModeloEditPreflightExecutor(
-            ports_factory=_ports_factory(work, observations=observations, monkeypatch=monkeypatch)
+            ports_factory=_ports_factory(work, observations=observations, monkeypatch=monkeypatch),
+            contracts=lambda: build_production_operation_registry().public_contract_set,
         )
         projection, _ = _run(
             work,
@@ -561,7 +561,8 @@ def test_preflight_reads_each_entry_as_typed_through_its_address_grammar(
             baseline=admission.baseline, mutation_family=ModeloEditMutationFamily.CALCULATE, lexemes=entries
         )
         executor = ModeloEditPreflightExecutor(
-            ports_factory=_ports_factory(work, observations=_OperationLoadObservations(), monkeypatch=monkeypatch)
+            ports_factory=_ports_factory(work, observations=_OperationLoadObservations(), monkeypatch=monkeypatch),
+            contracts=lambda: build_production_operation_registry().public_contract_set,
         )
         projection, _ = _run(
             work,
@@ -734,7 +735,8 @@ def test_preflight_reads_a_correction_typed_for_any_box_the_revision_defines(
             baseline=admission.baseline, mutation_family=ModeloEditMutationFamily.CALCULATE, lexemes=entries
         )
         executor = ModeloEditPreflightExecutor(
-            ports_factory=_ports_factory(work, observations=_OperationLoadObservations(), monkeypatch=monkeypatch)
+            ports_factory=_ports_factory(work, observations=_OperationLoadObservations(), monkeypatch=monkeypatch),
+            contracts=lambda: build_production_operation_registry().public_contract_set,
         )
         projection, _ = _run(
             work,
@@ -758,11 +760,15 @@ def test_preflight_reads_a_correction_typed_for_any_box_the_revision_defines(
     assert after.calculation_revision_id == before.calculation_revision_id
 
 
-def test_renewal_reports_what_becomes_of_each_held_change_by_its_box(
+def test_preflight_reports_what_becomes_of_each_held_change_by_its_box(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A held change on a box that moved reads as changed, one on a box the form no longer has as dropped."""
+    """A held change on a box that moved reads as changed, one on a box the form no longer has as dropped.
+
+    The held changes travel inside the preflight's transient submission only: the journaled request has no
+    place for them, and the result says what became of each without the box's state digest.
+    """
     with seeded_operator_work(tmp_path) as work:
         work.recalculate()
         contracts = build_production_operation_registry().public_contract_set
@@ -784,21 +790,23 @@ def test_renewal_reports_what_becomes_of_each_held_change_by_its_box(
             if field.address == ModeloFormCasillaAddressV1(casilla_id=_SET_06.address.casilla_id)
         )
         assert box.takes_typed_value
-        gone = ModeloFormCasillaAddressV1(casilla_id=validated_casilla_id("999"))
-        staged = (
-            ModeloFormStagedChangeV1(address=box.address, kind=ModeloFormStagedKind.SET, held_state=box.state_digest),
-            ModeloFormStagedChangeV1(address=gone, kind=ModeloFormStagedKind.SET, held_state=box.state_digest),
+        mine = held_change(box, ModeloEditHeldKind.SET)
+        gone = ModeloEditHeldChangeV1(
+            address=ModeloEditScalarAddressV1(casilla_id=validated_casilla_id("999")),
+            kind=ModeloEditHeldKind.SET,
+            held_state=box.state_digest,
         )
         assert read.admitted_baseline is not None
-        request = ModeloEditRenewRequest(
-            profile_id=_profile_id(work),
-            baseline=read.admitted_baseline,
-            output_language=OutputLanguage.EN,
-            staged=staged,
+        baseline = read.admitted_baseline.to_baseline()
+        submission = ModeloEditSubmissionV1(
+            baseline=baseline, mutation_family=baseline.mutation_family, held=(mine, gone)
         )
-        executor = ModeloEditRenewExecutor(ports_factory=ports_factory, contracts=lambda: contracts)
+        payload = ModeloEditOperatorInputV2(
+            submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+        )
+        executor = ModeloEditPreflightExecutor(ports_factory=ports_factory, contracts=lambda: contracts)
         unmoved, _ = _run(
-            work, executor, MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID, request, ModeloEditRenewalProjectionV1
+            work, executor, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, payload, ModeloEditPreflightProjectionV1
         )
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work.work_unit_id,
@@ -807,17 +815,20 @@ def test_renewal_reports_what_becomes_of_each_held_change_by_its_box(
             casilla_inputs={box.address.casilla_id: Decimal("100")},
         )
         moved, _ = _run(
-            work, executor, MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID, request, ModeloEditRenewalProjectionV1
+            work, executor, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, payload, ModeloEditPreflightProjectionV1
         )
 
     assert [(entry.address, entry.outcome) for entry in unmoved.rebase] == [
-        (box.address, ModeloFormRebaseOutcome.KEPT),
-        (gone, ModeloFormRebaseOutcome.DROPPED),
+        (mine.address, ModeloFormRebaseOutcome.KEPT),
+        (gone.address, ModeloFormRebaseOutcome.DROPPED),
     ]
-    assert moved.refusal is not None
     assert [(entry.address, entry.outcome) for entry in moved.rebase] == [
-        (box.address, ModeloFormRebaseOutcome.CHANGED),
-        (gone, ModeloFormRebaseOutcome.DROPPED),
+        (mine.address, ModeloFormRebaseOutcome.CHANGED),
+        (gone.address, ModeloFormRebaseOutcome.DROPPED),
     ]
-    # A held change names its box and the box's digest, never a value.
-    assert all(set(change) == {"address", "kind", "held_state"} for change in request.model_dump()["staged"])
+    # The digest stays in the transient submission: neither the journaled requests nor the result carry it.
+    assert "held" not in ModeloEditPreflightRequestV2.model_fields
+    assert "staged" not in ModeloEditRenewRequest.model_fields
+    assert box.state_digest not in moved.model_dump_json() and box.state_digest not in unmoved.model_dump_json()
+    with pytest.raises(ValidationError):
+        ModeloEditApplyRequestV1(operation_id="a" * 64, submission=submission)

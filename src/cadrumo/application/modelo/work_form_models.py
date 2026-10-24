@@ -449,6 +449,11 @@ def _own_value_of(data: dict[str, Any]) -> ModeloEditWireScalar:
     return comparable_entry(data["value"]) if data["origin"] in _FILERS_OWN_ORIGINS else None
 
 
+def _confirm_comparable_of(data: dict[str, Any]) -> ModeloEditWireScalar:
+    value = data["value"]
+    return comparable_entry(value) if value is not None and _confirmable_of(data) else None
+
+
 def _state_digest_of(data: dict[str, Any]) -> str:
     value = comparable_entry(data["value"])
     seen = json.dumps([data["origin"].value, type(value).__name__, None if value is None else str(value)])
@@ -520,8 +525,12 @@ class ModeloFormField(_FormModel):
     #: The filer's own value as an entry of it compares (see :func:`comparable_entry`); typing it again
     #: changes nothing. ``None`` when the value is not the filer's own.
     own_value: ModeloEditWireScalar = Field(default_factory=_own_value_of)
-    #: A digest of the box's value and origin, so a frontend can tell whether the box moved under a change
-    #: it holds without the value leaving its custody.
+    #: The value confirming the box stages, as an entry of it compares, the form ``own_value`` takes;
+    #: ``None`` when the box is not confirmable.
+    confirm_comparable: ModeloEditWireScalar = Field(default_factory=_confirm_comparable_of)
+    #: A digest of the box's value and origin, so a frontend can tell whether the box moved under a change it
+    #: holds. It is derived from the value and a single amount's digest can be found by trying amounts, so it
+    #: travels only in the form's result and in a preflight's transient submission, never in a plain request.
     state_digest: str = Field(default_factory=_state_digest_of, min_length=64, max_length=64)
     #: Whether the box holds the filer's value over a source, which they can give back to that source.
     restorable: bool = Field(default_factory=_restorable_of)
@@ -565,6 +574,8 @@ class ModeloFormField(_FormModel):
         derived = dict(self)
         if (self.takes_typed_value, self.clearable) != (_takes_typed_value_of(derived), _clearable_of(derived)):
             raise ValueError("whether a field takes typing or clearing is what its own state makes it")
+        if self.confirm_comparable != _confirm_comparable_of(derived):
+            raise ValueError("a field's comparable confirm value is the one its own state lets a confirmation stage")
         if self.own_value != _own_value_of(derived) or self.state_digest != _state_digest_of(derived):
             raise ValueError("a field's own value and state digest are the ones its value and origin give")
         return self
@@ -589,6 +600,7 @@ _SELF_DERIVED: Final[frozenset[str]] = frozenset(
         "takes_typed_value",
         "clearable",
         "own_value",
+        "confirm_comparable",
         "state_digest",
     }
 )

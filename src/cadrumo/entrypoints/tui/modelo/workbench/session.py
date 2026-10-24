@@ -28,6 +28,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from enum import StrEnum
 
+from .....application.modelo.edit_models import ModeloEditHeldChangeV1, ModeloEditHeldKind
 from .....application.modelo.work_form_models import (
     ModeloFormEditability,
     ModeloFormField,
@@ -39,12 +40,7 @@ from .....application.modelo.work_form_models import (
     confirmable,
     edit_address,
 )
-from .....application.modelo.work_form_rebase import (
-    ModeloFormRebaseOutcome,
-    ModeloFormStagedChangeV1,
-    ModeloFormStagedKind,
-    rebase_outcome,
-)
+from .....application.modelo.work_form_rebase import ModeloFormRebaseOutcome, held_change, rebase_outcome
 from .....application.modelo.work_form_typing_effect import ModeloFormDisplacement, field_displacement
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
@@ -87,11 +83,9 @@ class StagedChange:
         return WorkbenchChange(address=edit_address(self.field), kind=self.kind, value=self.value)
 
     @property
-    def held(self) -> ModeloFormStagedChangeV1:
+    def held(self) -> ModeloEditHeldChangeV1:
         """The change as the application judges it again: its box, its kind, and the box as it stood."""
-        return ModeloFormStagedChangeV1(
-            address=self.field.address, kind=ModeloFormStagedKind(self.kind.value), held_state=self.field.state_digest
-        )
+        return held_change(self.field, ModeloEditHeldKind(self.kind.value))
 
 
 @dataclass(frozen=True, slots=True)
