@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:5305dac9e179eb111310e63f6a9c245ed4b27edca1d539d245ae29cdcfc0b438'
+body_hash: 'sha256:72c85d5e9bf36ab5dd7a1538cbae60d7b97480f1735fe669398271f1fad96e5c'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -785,6 +785,37 @@ related:
 - `S48` `verify:` `pytest application modelo suites` -> `pass`
 - `S48` `verify:` `pytest full TUI modelo tree` -> `pass`
 - `S48` `by:` `opus-p01-lanes-1-and-2`
+- `S49` `M` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S49` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S49` `M` `native/desktop/src-tauri/src/shell/settle.rs`
+- `S49` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S49` `M` `native/desktop/scripts/backend-snapshot.mjs`
+- `S49` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S49` `A` `native/desktop/frontend/src/shell/relayBounds.ts`
+- `S49` `M` `native/application/src/runtime_client.rs`
+- `S49` `M` `native/application/tests/data/modelo-303-admitted-baseline.json`
+- `S49` `M` `dev/runtime_lifecycle/native_client_live.py`
+- `S49` `verify:` `native_client_live against a real runtime` -> `pass`
+- `S49` `verify:` `desktop-host unit tests` -> `pass`
+- `S49` `verify:` `desktop-host clippy` -> `pass`
+- `S49` `verify:` `application.rust ctest` -> `pass`
+- `S49` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S49` `by:` `opus-host-lane`
+- `S50` `M` `native/desktop/frontend/src/components/modelo/form/session.ts`
+- `S50` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S50` `M` `native/desktop/frontend/src/components/modelo/dialogs/ReviewDialog.tsx`
+- `S50` `M` `native/desktop/frontend/tests/modelo-form-model.spec.ts`
+- `S50` `verify:` `tsc --noEmit` -> `pass`
+- `S50` `verify:` `playwright modelo, form-model, workspace and declarations specs` -> `pass`
+- `S50` `by:` `opus-p04-lane-b`
+- `S51` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S51` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S51` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S51` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S51` `verify:` `playwright modelo.spec rebase cases` -> `pass`
+- `S51` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
+- `S51` `by:` `opus-p05-lane`
 
 ## Notes
 
@@ -834,3 +865,6 @@ related:
 - `S46` committed in ddecebc18e with S47; my `saved_unread` key and chrome declarations were wiped once by another writer and re-applied before commit
 - `S47` committed in ddecebc18e; no history envelope is written because a reduced receipt path fails the history model's validator; hu 347 navigation failure seen by lane B not reproduced in 27 runs
 - `S48` committed in 5ccbb347f8; held changes ride the preflight's transient operand rather than a value-free token, keeping the exact rebase; lint-imports breaks only through another session's uncommitted diagnostics.py
+- `S49` committed in 7f2a1fd88b with the port lane's regeneration, S50 and S51; the live test admits a real Modelo 303 preflight, apply and renewal
+- `S50` committed in 7f2a1fd88b
+- `S51` committed in 7f2a1fd88b; the renewal-notice defect it caught was fixed in S50 before commit
