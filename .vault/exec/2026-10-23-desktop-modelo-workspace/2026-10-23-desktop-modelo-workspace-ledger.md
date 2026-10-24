@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:3e01dd7c90f8c884445607b4ca60227112de8b07f1bb376471ecf0f15dbd916b'
+body_hash: 'sha256:507050f654823ed7d3975d36ee998a5ec2862a0a3bf76956098a0885152c4016'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -213,6 +213,20 @@ related:
 - `S09` `verify:` `pytest casilla help, formula values, outside figures, workbench operations (39), TUI help, footer, freshness, affects text, installed factory (67)` -> `pass`
 - `S09` `verify:` `basedpyright casilla_help` -> `pass`
 - `S09` `verify:` `operation_contract_manifest.generate` -> `pass`
+- `S10` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S10` `M` `src/cadrumo/application/modelo/edit_parsing.py`
+- `S10` `M` `src/cadrumo/application/modelo/edit_apply_contracts.py`
+- `S10` `M` `src/cadrumo/application/modelo/edit_apply_scalar_contracts.py`
+- `S10` `M` `src/cadrumo/application/modelo/edit_operator_input.py`
+- `S10` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S10` `M` `src/cadrumo/application/modelo/tests/test_edit_parsing.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/factory.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/test_modelo_workbench_operations.py`
+- `S10` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S10` `verify:` `pytest application edit tests (154), TUI editing (161), edit conformance (4), workbench operations incl. typed preflight and apply refusal, native submission stream (3), operation contract manifest tests (136)` -> `pass`
+- `S10` `verify:` `basedpyright edit modules` -> `pass`
+- `S10` `verify:` `operation_contract_manifest.generate` -> `pass`
 
 ## Notes
 
@@ -223,3 +237,4 @@ related:
 - `S07` The list read captures through the generation's own door with a list-only method, so the runtime gains no special case; row words and steps moved from the TUI `row_words`
 - `S08` Scope corrected from `source_policy.py` to the new defining module `work_form_source_groups.py.` Type gate clean for these files; remaining findings are in another session's statement-reading files
 - `S09` Citation text already reached the card's legal basis; this step proves it and adds the off-form figures. lint-imports shows one broken contract from another session's `cadrumo/tests/statement_reader_fixtures.py,` not from this step
+- `S10` The native disconnect/session-lock test failed once under concurrent load and passed on rerun with all three native tests; lint-imports' one broken contract is another session's `cadrumo/tests/statement_reader_fixtures.py`

@@ -62,6 +62,9 @@ def prepare_modelo_edit_operand(
         del checked
         encoded = ModeloEditOperatorInputV2.model_validate_json(input_json)
         operand = encoded.submission.to_submission()
+        if definition_id == "modelo.edit.apply" and operand.lexemes:
+            # Entries as typed are a preflight's to read; an apply takes typed values only.
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_MODEL)
         baseline = operand.baseline
         if baseline.bucket_id != str(profile_id) or baseline.work_unit_id != subject_ref:
             raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_BASELINE)

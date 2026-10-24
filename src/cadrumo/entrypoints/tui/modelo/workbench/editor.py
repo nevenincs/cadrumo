@@ -54,7 +54,7 @@ from textual.message import Message
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
-from .....application.modelo.edit_parsing import MAX_EDIT_LEXEME_LENGTH
+from .....application.modelo.edit_models import MAX_EDIT_LEXEME_LENGTH
 from .....application.modelo.source_policy import SourceSurface
 from .....application.modelo.value_presentation import LOCALE_NUMBER_FORMATS, format_casilla_value
 from .....application.modelo.work_form_models import (

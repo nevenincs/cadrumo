@@ -66,9 +66,20 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .casilla_help import ModeloCasillaHelpCardV1
 from .edit_admission import ModeloEditRenewedV1, renew_modelo_edit_baseline
+from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
-from .edit_models import ModeloEditPreflightEvaluatedV1, ModeloEditRefusedV1, ModeloEditSubmissionV1
+from .edit_models import (
+    ModeloEditNormalisation,
+    ModeloEditParsedValueV1,
+    ModeloEditParseRefusalV1,
+    ModeloEditParseResultV1,
+    ModeloEditPreflightEvaluatedV1,
+    ModeloEditRefusedV1,
+    ModeloEditSubmissionV1,
+    ModeloEditValueAddressV1,
+)
 from .edit_operation_requests import ModeloEditPreflightRequestV2
+from .edit_parsing import parse_modelo_edit_lexeme
 from .edit_preflight import preflight_modelo_edit
 from .edit_refusal_projection import ModeloEditRefusalProjectionStore
 from .edit_transient_operand import modelo_edit_financial_operand
@@ -172,8 +183,43 @@ class ModeloEditRenewalProjectionV1(BaseModel):
         return self
 
 
+class ModeloEditTypedEntryV1(BaseModel):
+    """One entry as the filer typed it, read through its address's grammar; never the text itself.
+
+    A read entry carries the value in the form an edit intent takes it, with
+    what reading it normalised; an entry that cannot be read carries why.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    address: ModeloEditValueAddressV1
+    value: ModeloEditWireScalar = None
+    normalisations: tuple[ModeloEditNormalisation, ...] = ()
+    refusal: ModeloEditParseRefusalV1 | None = None
+
+    @classmethod
+    def from_outcome(cls, outcome: ModeloEditParseResultV1) -> ModeloEditTypedEntryV1:
+        """Mirror one parse outcome onto the wire."""
+        if isinstance(outcome, ModeloEditParsedValueV1):
+            return cls(
+                address=outcome.address,
+                value=wire_scalar_value(outcome.value),
+                normalisations=outcome.normalisations,
+            )
+        refusal = outcome.refusal
+        if not isinstance(refusal, ModeloEditParseRefusalV1):
+            raise TypeError("an entry is refused only by its address's grammar")
+        return cls(address=refusal.address, refusal=refusal)
+
+
 class ModeloEditPreflightProjectionV1(BaseModel):
-    """What checking the staged intents found, naming the address of every finding."""
+    """What checking the staged intents found, naming the address of every finding.
+
+    ``parsed`` reads each entry the submission carried as the filer typed it,
+    through its address's grammar: the value it is, with what reading it
+    normalised, or why it cannot be read. It is empty when nothing was typed
+    and when the submission was refused before anything could be read.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -181,6 +227,7 @@ class ModeloEditPreflightProjectionV1(BaseModel):
     profile_id: UUID
     work_unit_id: str
     outcome: Annotated[ModeloEditPreflightEvaluatedV1 | ModeloEditRefusedV1, Field(discriminator="outcome")]
+    parsed: tuple[ModeloEditTypedEntryV1, ...] = ()
 
 
 class ModeloEditApplyPrerequisiteV1(BaseModel):
@@ -393,14 +440,29 @@ class ModeloEditPreflightExecutor:
             if baseline.bucket_id != bucket_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             ports = self._ports_factory(bucket_id, operation)
+            tax_id_format = runtime_tax_id_format(authority=operation)
             outcome = preflight_modelo_edit(
                 submission,
                 work_catalogue=ports.work_units.load(),
                 calculation_catalogue=ports.calculations.load(operation=operation),
-                tax_id_format=runtime_tax_id_format(authority=operation),
+                tax_id_format=tax_id_format,
+            )
+            parsed = (
+                ()
+                if isinstance(outcome, ModeloEditRefusedV1)
+                else tuple(
+                    ModeloEditTypedEntryV1.from_outcome(
+                        parse_modelo_edit_lexeme(lexeme, baseline=baseline, tax_id_format=tax_id_format)
+                    )
+                    for lexeme in submission.lexemes
+                )
             )
             return ModeloEditPreflightProjectionV1(
-                result_version=1, profile_id=payload.profile_id, work_unit_id=baseline.work_unit_id, outcome=outcome
+                result_version=1,
+                profile_id=payload.profile_id,
+                work_unit_id=baseline.work_unit_id,
+                outcome=outcome,
+                parsed=parsed,
             )
 
         async with context.typed_financial_operand.consume(ModeloEditSubmissionV1) as submission:
@@ -698,6 +760,7 @@ __all__ = [
     "ModeloEditPreflightProjectionV1",
     "ModeloEditRenewRequest",
     "ModeloEditRenewalProjectionV1",
+    "ModeloEditTypedEntryV1",
     "ModeloWorkbenchFormRequest",
     "OperationContractsProvider",
     "build_modelo_workbench_operation_definitions",

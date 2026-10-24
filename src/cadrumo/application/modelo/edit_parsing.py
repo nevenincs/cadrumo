@@ -17,14 +17,8 @@ refusal never echoes the lexeme.
 
 from __future__ import annotations
 
-from typing import Annotated, Final
-
-from pydantic import Field
-
-from ...core.external_constants import OutputLanguage
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...domain.filing.schema import ModeloScalar
-from .edit_contract import EditModel
 from .edit_models import (
     ModeloEditBaselineV1,
     ModeloEditBindingAddressV1,
@@ -32,6 +26,7 @@ from .edit_models import (
     ModeloEditParsedValueV1,
     ModeloEditParseReason,
     ModeloEditParseRefusalV1,
+    ModeloEditParseRequestV1,
     ModeloEditParseResultV1,
     ModeloEditRefusedV1,
     ModeloEditScalarAddressV1,
@@ -43,21 +38,6 @@ from .edit_number_parsing import read_edit_number_lexeme, read_typed_edit_number
 from .edit_parse_errors import ModeloEditParseRefusedError
 from .edit_text_parsing import read_edit_boolean_lexeme, read_typed_edit_boolean, validate_edit_text_value
 from .edit_value_grammar import ModeloEditValueChannel, ModeloEditValueFamily, ModeloEditValueGrammarV1
-
-MAX_EDIT_LEXEME_LENGTH: Final[int] = 512
-"""The longest entry the parser reads; an editor stops the filer typing past it."""
-
-
-class ModeloEditParseRequestV1(EditModel):
-    """One typed lexeme for one address, in the locale the operator typed it in.
-
-    The lexeme is transient: it is excluded from every dump and from ``repr``,
-    so it can never reach a log, a notice or a persisted record.
-    """
-
-    address: ModeloEditValueAddressV1
-    entry_locale: OutputLanguage
-    lexeme: Annotated[str, Field(max_length=MAX_EDIT_LEXEME_LENGTH, exclude=True, repr=False)]
 
 
 def _outcome(
@@ -158,7 +138,6 @@ def parse_modelo_edit_lexeme(
 
 
 __all__ = [
-    "ModeloEditParseRequestV1",
     "modelo_edit_address_grammar",
     "parse_modelo_edit_lexeme",
     "validate_modelo_edit_value",

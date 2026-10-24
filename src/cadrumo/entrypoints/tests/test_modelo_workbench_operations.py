@@ -11,6 +11,7 @@ and to restore the canonical read it was projected from.
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
@@ -33,11 +34,15 @@ from ...application.modelo.edit_baseline_projection import ModeloEditApplyBaseli
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
     ModeloEditAdmittedV1,
+    ModeloEditApplyRequestV1,
+    ModeloEditParseReason,
+    ModeloEditParseRequestV1,
     ModeloEditPreflightEvaluatedV1,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
+    ModeloEditWritableScalarSurfaceEntryV1,
     ModeloScalarEditIntentV1,
 )
 from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
@@ -69,6 +74,10 @@ from ...application.modelo.workbench_operations import (
 )
 from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1, restore_modelo_workbench_form
 from ...application.modelo.workbench_read import ModeloWorkbenchReadPorts, read_modelo_workbench_form
+from ...application.operations.financial_operand_contract import (
+    OperationFinancialOperandRefusalCode,
+    OperationFinancialOperandRefusedError,
+)
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext
 from ...application.operations.tests.financial_operand_delivery import deliver_financial_operand
@@ -147,8 +156,14 @@ def _run[ResultT: BaseModel](
     definition_id: str,
     payload: BaseModel,
     result_type: type[ResultT],
+    *,
+    input_json: str | None = None,
 ) -> tuple[ResultT, _Context]:
-    """Run one executor as the worker does, and prove its result survives its public JSON form."""
+    """Run one executor as the worker does, and prove its result survives its public JSON form.
+
+    ``input_json`` is the operator input exactly as a frontend sends it, when
+    it carries what no dump repeats, such as entries as the filer typed them.
+    """
     context = _Context(
         identity=OperationIdentity(
             operation_id=content_hash_hex({"read": definition_id}),
@@ -166,7 +181,7 @@ def _run[ResultT: BaseModel](
                 definition_id=definition_id,
                 profile_id=UUID(work.work_unit.bucket_id),
                 subject_ref=work.work_unit_id,
-                input_json=payload.model_dump_json(),
+                input_json=payload.model_dump_json() if input_json is None else input_json,
             )
             try:
                 assert prepared.operand is not None
@@ -477,6 +492,100 @@ def test_preflight_names_the_address_of_its_findings_without_applying(
     assert isinstance(projection.outcome, ModeloEditPreflightEvaluatedV1)
     assert all(finding.address in {None, _SET_06.address} for finding in projection.outcome.findings)
     assert after.calculation_revision_id == before.calculation_revision_id
+
+
+def _typed_input(submission: ModeloEditSubmissionV1, typed: tuple[str, ...]) -> str:
+    """The operator input a frontend sends: the submission, with each entry's text as the filer typed it."""
+    document = json.loads(
+        ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)).model_dump_json()
+    )
+    for entry, text in zip(document["submission"]["lexemes"], typed, strict=True):
+        entry["lexeme"] = text
+    return json.dumps(document)
+
+
+def test_preflight_reads_each_entry_as_typed_through_its_address_grammar(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A Spanish amount reads as its value, nonsense and a box nobody may write are refused, nothing applied."""
+    with seeded_operator_work(tmp_path) as work:
+        before = work.recalculate()
+        admission = work.admit()
+        assert isinstance(admission, ModeloEditAdmittedV1)
+        writable = {
+            entry.casilla_id
+            for entry in admission.baseline.permitted_surface
+            if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1)
+        }
+        revision = work.operation.revision_for_context("130", filing_year=2026, period="1T")
+        closed = next(casilla.id for casilla in revision.casillas if casilla.id not in writable)
+        entries = (
+            ModeloEditParseRequestV1(address=_SET_06.address, entry_locale=OutputLanguage.ES, lexeme=""),
+            ModeloEditParseRequestV1(
+                address=ModeloEditScalarAddressV1(casilla_id=closed), entry_locale=OutputLanguage.ES, lexeme=""
+            ),
+        )
+        submission = ModeloEditSubmissionV1(
+            baseline=admission.baseline, mutation_family=ModeloEditMutationFamily.CALCULATE, lexemes=entries
+        )
+        executor = ModeloEditPreflightExecutor(
+            ports_factory=_ports_factory(work, observations=_OperationLoadObservations(), monkeypatch=monkeypatch)
+        )
+        projection, _ = _run(
+            work,
+            executor,
+            MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
+            ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
+            ModeloEditPreflightProjectionV1,
+            input_json=_typed_input(submission, ("1.234,56", "7")),
+        )
+        nonsense, _ = _run(
+            work,
+            executor,
+            MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
+            ModeloEditOperatorInputV2(
+                submission=ModeloEditApplySubmissionV1.from_submission(
+                    submission.model_copy(update={"lexemes": entries[:1]})
+                )
+            ),
+            ModeloEditPreflightProjectionV1,
+            input_json=_typed_input(submission.model_copy(update={"lexemes": entries[:1]}), ("doce",)),
+        )
+        after = work.require_head()
+
+    assert isinstance(projection.outcome, ModeloEditPreflightEvaluatedV1)
+    amount, closed_box = projection.parsed
+    assert (amount.address, amount.value, amount.refusal) == (_SET_06.address, "1234.56", None)
+    assert closed_box.refusal is not None
+    assert closed_box.refusal.reason is ModeloEditParseReason.ADDRESS_NOT_WRITABLE
+    (word,) = nonsense.parsed
+    assert word.value is None and word.refusal is not None and word.refusal.address == _SET_06.address
+    # What the filer typed never comes back, and nothing was applied.
+    assert "1.234,56" not in projection.model_dump_json() and "doce" not in nonsense.model_dump_json()
+    assert after.calculation_revision_id == before.calculation_revision_id
+
+
+def test_an_apply_carrying_entries_as_typed_is_refused_before_it_is_admitted(tmp_path: Path) -> None:
+    with seeded_operator_work(tmp_path) as work:
+        admission = work.admit()
+        assert isinstance(admission, ModeloEditAdmittedV1)
+        submission = ModeloEditSubmissionV1(
+            baseline=admission.baseline,
+            mutation_family=ModeloEditMutationFamily.CALCULATE,
+            lexemes=(ModeloEditParseRequestV1(address=_SET_06.address, entry_locale=OutputLanguage.ES, lexeme=""),),
+        )
+        with pytest.raises(OperationFinancialOperandRefusedError) as refused:
+            prepare_modelo_edit_operand(
+                definition_id="modelo.edit.apply",
+                profile_id=UUID(work.work_unit.bucket_id),
+                subject_ref=work.work_unit_id,
+                input_json=_typed_input(submission, ("100",)),
+            )
+        with pytest.raises(ValidationError):
+            ModeloEditApplyRequestV1(operation_id="a" * 64, submission=submission)
+
+    assert refused.value.reason is OperationFinancialOperandRefusalCode.WRONG_MODEL
 
 
 def test_a_retained_prerequisite_is_handed_out_once_to_its_exact_apply(tmp_path: Path) -> None:

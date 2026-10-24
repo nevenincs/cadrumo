@@ -25,6 +25,7 @@ from .edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditDetailRowAddressV1,
     ModeloEditDetailRowIntentKind,
+    ModeloEditParseRequestV1,
     ModeloEditSubmissionV1,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
@@ -149,6 +150,8 @@ class ModeloEditApplySubmissionV1(BaseModel):
     binding_intents: Annotated[tuple[ModeloEditApplyBindingIntentV1, ...], Field(max_length=500)] = ()
     row_intents: Annotated[tuple[ModeloEditApplyRowIntentV1, ...], Field(max_length=500)] = ()
     detail_row_intents: Annotated[tuple[ModeloEditApplyDetailRowIntentV1, ...], Field(max_length=500)] = ()
+    #: Entries as the filer typed them, for a preflight to read; never applied.
+    lexemes: Annotated[tuple[ModeloEditParseRequestV1, ...], Field(max_length=500)] = ()
 
     @model_validator(mode="after")
     def _require_scalar_amounts_within_declared_operand_bounds(self) -> ModeloEditApplySubmissionV1:
@@ -182,6 +185,7 @@ class ModeloEditApplySubmissionV1(BaseModel):
             binding_intents=tuple(intent.to_intent() for intent in self.binding_intents),
             row_intents=tuple(intent.to_intent() for intent in self.row_intents),
             detail_row_intents=tuple(intent.to_intent() for intent in self.detail_row_intents),
+            lexemes=self.lexemes,
         )
 
     @classmethod
@@ -223,6 +227,7 @@ class ModeloEditApplySubmissionV1(BaseModel):
                 ModeloEditApplyBindingIntentV1.from_intent(intent) for intent in submission.binding_intents
             ),
             row_intents=tuple(ModeloEditApplyRowIntentV1.from_intent(intent) for intent in submission.row_intents),
+            lexemes=submission.lexemes,
         )
 
 

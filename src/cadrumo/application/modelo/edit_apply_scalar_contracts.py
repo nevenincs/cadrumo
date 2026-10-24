@@ -41,10 +41,10 @@ if TYPE_CHECKING:
 #: guarantee -- the registry decides what a casilla holds, not the wire -- but
 #: it does mean a round trip through this mirror is not an identity for
 #: ``Decimal``, and a test asserting that it is will fail correctly.
-type _ModeloEditApplyScalarValue = int | str | bool | date | None
+type ModeloEditWireScalar = int | str | bool | date | None
 
 
-def _wire_scalar_value(value: ModeloScalar) -> _ModeloEditApplyScalarValue:
+def wire_scalar_value(value: ModeloScalar) -> ModeloEditWireScalar:
     """Mirror one domain ``ModeloScalar`` onto the payload-safe wire union.
 
     Only ``Decimal`` needs mirroring, and it becomes the exact characters
@@ -70,7 +70,7 @@ class ModeloEditApplyScalarIntentV1(BaseModel):
 
     address: ModeloEditScalarAddressV1
     kind: ModeloEditScalarIntentKind
-    value: _ModeloEditApplyScalarValue = None
+    value: ModeloEditWireScalar = None
 
     def to_intent(self) -> ModeloScalarEditIntentV1:
         """Translate back to the real, fully re-validated domain intent."""
@@ -79,7 +79,7 @@ class ModeloEditApplyScalarIntentV1(BaseModel):
     @classmethod
     def from_intent(cls, intent: ModeloScalarEditIntentV1) -> ModeloEditApplyScalarIntentV1:
         """Mirror a domain scalar intent onto the wire form ``to_intent`` reverses."""
-        return cls(address=intent.address, kind=intent.kind, value=_wire_scalar_value(intent.value))
+        return cls(address=intent.address, kind=intent.kind, value=wire_scalar_value(intent.value))
 
 
 class ModeloEditApplyBindingIntentV1(BaseModel):
@@ -89,7 +89,7 @@ class ModeloEditApplyBindingIntentV1(BaseModel):
 
     address: ModeloEditBindingAddressV1
     kind: ModeloEditBindingIntentKind
-    value: _ModeloEditApplyScalarValue = None
+    value: ModeloEditWireScalar = None
 
     def to_intent(self) -> ModeloBindingEditIntentV1:
         """Translate back to the real, fully re-validated domain intent."""
@@ -98,7 +98,7 @@ class ModeloEditApplyBindingIntentV1(BaseModel):
     @classmethod
     def from_intent(cls, intent: ModeloBindingEditIntentV1) -> ModeloEditApplyBindingIntentV1:
         """Mirror a domain binding intent onto the wire form ``to_intent`` reverses."""
-        return cls(address=intent.address, kind=intent.kind, value=_wire_scalar_value(intent.value))
+        return cls(address=intent.address, kind=intent.kind, value=wire_scalar_value(intent.value))
 
 
 class ModeloEditApplyRowIntentV1(BaseModel):

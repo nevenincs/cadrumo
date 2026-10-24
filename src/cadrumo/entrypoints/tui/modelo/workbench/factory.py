@@ -40,6 +40,7 @@ from .....application.modelo.edit_models import (
     ModeloEditParsedValueV1,
     ModeloEditParseReason,
     ModeloEditParseRefusalV1,
+    ModeloEditParseRequestV1,
     ModeloEditRefusedV1,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
@@ -47,7 +48,7 @@ from .....application.modelo.edit_models import (
     ModeloScalarEditIntentV1,
 )
 from .....application.modelo.edit_parse_text import parse_refusal_text
-from .....application.modelo.edit_parsing import ModeloEditParseRequestV1, parse_modelo_edit_lexeme
+from .....application.modelo.edit_parsing import parse_modelo_edit_lexeme
 from .....application.modelo.edit_preflight import (
     CLEAR_OF_SOURCE_FED_CASILLA,
     INTENT_NOT_ADMITTED,

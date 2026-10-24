@@ -18,12 +18,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import Field, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -903,11 +904,29 @@ def _intent_address_key(
     return ("new_row", f"{address.binding_id}:{address.client_correlation_id}")
 
 
+MAX_EDIT_LEXEME_LENGTH: Final[int] = 512
+"""The longest entry the parser reads; an editor stops the filer typing past it."""
+
+
+class ModeloEditParseRequestV1(EditModel):
+    """One typed lexeme for one address, in the locale the operator typed it in.
+
+    The lexeme is transient: it is excluded from every dump and from ``repr``,
+    so it can never reach a log, a notice or a persisted record.
+    """
+
+    address: ModeloEditValueAddressV1
+    entry_locale: OutputLanguage
+    lexeme: Annotated[str, Field(max_length=MAX_EDIT_LEXEME_LENGTH, exclude=True, repr=False)]
+
+
 class ModeloEditSubmissionV1(EditModel):
     """One baseline plus its complete normalized ordered intent set.
 
     Carries no frontend state. Duplicate or contradictory address intents
-    refuse before execution.
+    refuse before execution. ``lexemes`` are entries as the filer typed them,
+    which only a preflight reads, through the address's own grammar; an apply
+    refuses a submission carrying any.
     """
 
     edit_contract_version: Literal[1] = 1
@@ -917,6 +936,7 @@ class ModeloEditSubmissionV1(EditModel):
     binding_intents: Annotated[tuple[ModeloBindingEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     row_intents: Annotated[tuple[ModeloRowEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     detail_row_intents: Annotated[tuple[ModeloDetailRowEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
+    lexemes: Annotated[tuple[ModeloEditParseRequestV1, ...], Field(max_length=_MAX_INTENTS)] = ()
 
     @model_validator(mode="after")
     def _require_consistent_submission(self) -> ModeloEditSubmissionV1:
@@ -930,15 +950,28 @@ class ModeloEditSubmissionV1(EditModel):
             raise ValueError(
                 "edit submission must not address the same casilla, binding, row, or detail row more than once"
             )
+        typed = [_intent_address_key(lexeme.address) for lexeme in self.lexemes]
+        if len(set(typed)) != len(typed):
+            raise ValueError("edit submission must not carry two entries for one address")
         return self
 
 
 class ModeloEditApplyRequestV1(EditModel):
-    """The guarded apply request only the enrolled operation executor may invoke."""
+    """The guarded apply request only the enrolled operation executor may invoke.
+
+    Only typed values are applied: a submission carrying entries as the filer
+    typed them is a preflight's, and is refused here.
+    """
 
     edit_contract_version: Literal[1] = 1
     operation_id: OperationId
     submission: ModeloEditSubmissionV1
+
+    @model_validator(mode="after")
+    def _apply_only_typed_values(self) -> ModeloEditApplyRequestV1:
+        if self.submission.lexemes:
+            raise ValueError("an applied edit carries typed values only, never entries as typed")
+        return self
 
 
 class ModeloEditExecutionUpdatedV1(EditModel):
@@ -962,6 +995,7 @@ type ModeloEditExecutionResultV1 = Annotated[
 
 
 __all__ = [
+    "MAX_EDIT_LEXEME_LENGTH",
     "ModeloBindingEditIntentV1",
     "ModeloDetailRowEditIntentV1",
     "ModeloEditAddressV1",
@@ -989,6 +1023,7 @@ __all__ = [
     "ModeloEditNormalisation",
     "ModeloEditParseReason",
     "ModeloEditParseRefusalV1",
+    "ModeloEditParseRequestV1",
     "ModeloEditParseResultV1",
     "ModeloEditParsedValueV1",
     "ModeloEditPermittedSurfaceEntryV1",

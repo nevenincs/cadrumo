@@ -31,6 +31,7 @@ from ..edit_models import (
     ModeloEditParsedValueV1,
     ModeloEditParseReason,
     ModeloEditParseRefusalV1,
+    ModeloEditParseRequestV1,
     ModeloEditRefusedV1,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
@@ -39,7 +40,7 @@ from ..edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from ..edit_parse_text import parse_refusal_text
-from ..edit_parsing import ModeloEditParseRequestV1, parse_modelo_edit_lexeme, validate_modelo_edit_value
+from ..edit_parsing import parse_modelo_edit_lexeme, validate_modelo_edit_value
 from ..edit_value_grammar import (
     ModeloEditChoiceV1,
     ModeloEditValueChannel,
