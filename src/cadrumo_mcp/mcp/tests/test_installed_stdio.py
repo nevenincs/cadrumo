@@ -52,6 +52,7 @@ _UNADMITTED: tuple[tuple[str, dict[str, object]], ...] = (
     _PROFILE_CALL,
     ("authority", {"query": "auth_providers"}),
     ("corpus_search", {"query": "iva"}),
+    ("views", {"query": "ledger"}),
     ("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID, "limit": 3}),
     ("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID}),
 )

@@ -45,6 +45,7 @@ _READ_ONLY = {
     "describe",
     "authority",
     "corpus_search",
+    "views",
     "observe",
     "result",
     "result_page",
@@ -55,7 +56,15 @@ _READ_ONLY = {
 _READING_EXCHANGES = (OperationObserve, OperationReview)
 """The operation requests that only read; every other one submits, starts, resumes or manages."""
 
-_READING_METHODS = {"status", "describe", "operation", "read_result_document", "read_result_page", "close"}
+_READING_METHODS = {
+    "status",
+    "describe",
+    "operation",
+    "read_result_document",
+    "read_result_page",
+    "read_profile_view",
+    "close",
+}
 
 
 class _WatchedLease:
@@ -93,6 +102,10 @@ class _WatchedLease:
     def read_result_page(self, result: Any, page: Any, *, deadline: float) -> object:
         return self._observed.read_result_page(result, page, deadline=deadline)
 
+    def read_profile_view(self, page_kinds: tuple[object, ...]) -> SimpleNamespace:
+        # The profile's language, read through its registered read-only view, which stores none here.
+        return SimpleNamespace(items=lambda _kind: (), record_revision=1, content_digest="0" * 64)
+
     def close(self) -> None:
         self._lease.close()
 
@@ -125,6 +138,7 @@ def _read_only_calls() -> dict[str, dict[str, object]]:
             "page": ProjectionPageRequest().model_dump(mode="json"),
         },
         "review": {"review": review.model_dump(mode="json")},
+        "views": {"query": "ledger"},
     }
 
 

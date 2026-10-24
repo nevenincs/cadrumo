@@ -62,6 +62,7 @@ from .protocol_contract import (
     refusal_code,
     sign_in_remedy,
 )
+from .record_links import record_link
 from .result_request import (
     resolve_result_request,
     stopped_operation_code,
@@ -491,6 +492,8 @@ def _result(client: FrontendClient, binding: _Binding, args: dict[str, Any], dea
     request = resolve_result_request(client, binding.contracts, args["result"], deadline)
     document = client.read_result_document(request, deadline=deadline)
     reply: dict[str, Any] = {"outcome": "reply", "document": document}
+    if (record := record_link(request.result_schema.schema_id, document)) is not None:
+        reply["record"] = record
     if (code := stopped_operation_code(document)) is not None:
         reply["code"] = code
     detail = stopped_operation_detail(client, request, document, deadline)

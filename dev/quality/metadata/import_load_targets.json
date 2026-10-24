@@ -3355,6 +3355,7 @@
         "cadrumo_client.contracts.installation_requests",
         "cadrumo_client.contracts.login",
         "cadrumo_client.contracts.model_runs",
+        "cadrumo_client.contracts.navigation",
         "cadrumo_client.contracts.operation_access",
         "cadrumo_client.contracts.operation_ids",
         "cadrumo_client.contracts.presentation",
@@ -3447,13 +3448,15 @@
         "cadrumo_mcp.mcp.payload_vocabulary",
         "cadrumo_mcp.mcp.progress_relay",
         "cadrumo_mcp.mcp.protocol_contract",
+        "cadrumo_mcp.mcp.record_links",
         "cadrumo_mcp.mcp.request_diagnostics",
         "cadrumo_mcp.mcp.result_request",
         "cadrumo_mcp.mcp.runtime_adapter",
         "cadrumo_mcp.mcp.runtime_admission",
         "cadrumo_mcp.mcp.runtime_cleanup",
         "cadrumo_mcp.mcp.server",
-        "cadrumo_mcp.mcp.surfaces"
+        "cadrumo_mcp.mcp.surfaces",
+        "cadrumo_mcp.mcp.view_register"
       ]
     },
     "cadrumo_runtime": {

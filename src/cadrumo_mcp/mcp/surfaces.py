@@ -105,6 +105,7 @@ _EVERY_TOOL: Final = frozenset(
         "status",
         "authority",
         "corpus_search",
+        "views",
         "search",
         "describe",
         "execute",

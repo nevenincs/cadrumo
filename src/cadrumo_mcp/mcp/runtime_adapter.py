@@ -19,6 +19,7 @@ from cadrumo.core.async_cleanup import (
     await_cancellation_complete,
     close_async_resources,
 )
+from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS, ProfileStatus
@@ -26,6 +27,7 @@ from cadrumo_client.transport.credentials import open_installed_credential_clien
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
+from cadrumo_client.transport.profile_language import read_profile_language
 
 from .access_scope import surface_scope
 from .admitted_operations import call_admitted_operation
@@ -59,6 +61,7 @@ from .runtime_cleanup import (
     retain_cleanup_failure,
 )
 from .surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
+from .view_register import view_register_query
 
 WireResultT = TypeVar("WireResultT")
 _LOGGER = get_logger(__name__)
@@ -386,6 +389,10 @@ class RuntimeMcpAdapter:
             raise (self._admission_denial or AdmissionDenial(AccessDenialCode.AUTHENTICATION_REQUIRED.value)).refusal()
         return self.client
 
+    def _label_language(self) -> str:
+        """The admitted profile's output language, in which view labels are answered."""
+        return (read_profile_language(self._admitted()).language or DEFAULT_OUTPUT_LANGUAGE).value
+
     async def call(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         """Serialize all blocking wire calls; cancellation waits for cleanup."""
         if name not in MCP_TOOL_NAMES or name not in self.surface.tools:
@@ -434,6 +441,8 @@ class RuntimeMcpAdapter:
                 return await self._wire(lambda: authority_query(args))
             if name == "corpus_search":
                 return await self._wire(lambda: corpus_query(args))
+            if name == "views":
+                return await self._wire(lambda: view_register_query(args, self._label_language()))
             return await self._wire(lambda: call_admitted_operation(self, name, args))
         except Exception as error:
             return await self._refusal(name, error)

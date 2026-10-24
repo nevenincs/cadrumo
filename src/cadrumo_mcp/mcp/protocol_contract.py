@@ -34,6 +34,8 @@ from cadrumo_client.contracts.projection_pages import ProjectionPage
 from cadrumo_client.contracts.sign_in_outcomes import SignInRefusal
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
+from .view_register import VIEW_PAGE_MAX
+
 
 class _FieldSchema(TypedDict):
     """One supported JSON Schema property declaration."""
@@ -262,6 +264,29 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         _reads("Search the bundled legal corpus"),
     ),
     (
+        "views",
+        "Find the views of Cadrumo's window and terminal workspace a link can open, and check a link before you "
+        "write one. A link is cadrumo://view/{id}, optionally with a query of the view's declared params and "
+        "prefer=gui or prefer=tui, for example cadrumo://view/ledger/invoices?select={invoice id}: lowercase, at "
+        "most 512 characters, no profile, no fragment, no percent-encoding, each key once. A link only shows, "
+        "selects or focuses; it grants nothing. Pass query to search labels, keywords and ids; id for one view "
+        "exactly (not_found for an id that names none, including a retired one); link to check a whole link, "
+        "answered valid with its parts or invalid with the parser's reason; or nothing to list every view. Each "
+        "view carries id, parent, surfaces (gui is the window, tui the terminal workspace), params (each name "
+        "with its value kind, alphabet and exact length), keywords, label in the profile's language, label_key "
+        "and the link that opens it. Copy the links operation results carry rather than composing record links",
+        _schema(
+            {},
+            {
+                "query": _TEXT,
+                "id": _TEXT,
+                "link": _TEXT,
+                "limit": {"type": "integer", "minimum": 1, "maximum": VIEW_PAGE_MAX},
+            },
+        ),
+        _reads("Find views and check links"),
+    ),
+    (
         "search",
         "Rank currently permitted registered operations by relevance to a query; without one, list them. "
         "Each row is a summary: the operation's definition_id, a one-line description, the kind of subject it "
@@ -323,8 +348,8 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "A refusal with code subject_busy means an earlier operation of this definition on the same subject has "
         "not settled, and holder_operation_id names it; signing in again changes nothing, so report it to the "
         "person with that id rather than retrying. "
-        "A submitted or unresolved reply carries page: the workspace page that shows the operation's records, "
-        "with url, a link for the person to open it; it is navigation, not evidence of a change. "
+        "A submitted or unresolved reply carries page: the workspace view that shows the operation's records, "
+        "with url, a cadrumo://view link for the person to open it; it is navigation, not evidence of a change. "
         "Every call submits a new operation, so two identical calls run twice. "
         "Use wait_seconds=2 for short work: wait on runtime cues and include completion (the authorized "
         "result envelope) when settled. Otherwise retain the receipt and follow next_call; pending human "
@@ -365,7 +390,9 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "recorded about why, which is the registered error code, the message key, the context and any "
         "precondition verdict the command line prints; "
         "when that verdict names its recovery, recovery_action_id carries the action's identifier, for example "
-        "operator.provision.browser when the browser needs setting up",
+        "operator.provision.browser when the browser needs setting up. A succeeded result that names exactly "
+        "one transaction or invoice carries record: its view, params with select, and link, the cadrumo://view "
+        "link that opens that record for the person",
         _schema({"result": _DOC}),
         _reads("Read an operation's result"),
     ),
