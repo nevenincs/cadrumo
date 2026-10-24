@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa1e2393c8313184ebfc79c8a532610550405056ac4dd1469844b906388ebd2f'
+body_hash: 'sha256:fa84ea19f4486da8a622d5aeb9c40d34aa7f428c2ff08b1dbffce0446fb0d1d8'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -357,6 +357,29 @@ related:
 - `S14` `verify:` `ruff, ty, pyrefly, check-operation-contract-manifest` -> `pass`
 - `S09` `verify:` `gate plus a same-process env probe (36)` -> `pass`
 - `S09` `verify:` `falsifier: with the fixture disabled the env probe fails` -> `pass`
+- `S01` `M` `src/cadrumo/adapters/persistence/profile/tests/test_batch_ingest_runner.py`
+- `S01` `M` `src/cadrumo/application/local_reader_setup_items.py`
+- `S01` `M` `src/cadrumo/application/provisioning.py`
+- `S01` `M` `src/cadrumo/entrypoints/tests/conformance_workstation_check_support.py`
+- `S01` `verify:` `test_local_reader (30), 11 related suites under -n 6 (185), workstation conformance (2)` -> `pass`
+- `S01` `verify:` `ruff, ty, lint-imports, check-operation-contract-manifest` -> `pass`
+- `S09` `M` `src/cadrumo/entrypoints/tests/dependency_operation_gating_support.py`
+- `S09` `verify:` `gate under -n 6, two runs (36, 36)` -> `pass`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/import_flow.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_import_setup_offer.py`
+- `S03` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_import.py`
+- `S03` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_import.py`
+- `S03` `verify:` `TUI import door and pilot (12), TUI ledger flow suites under -n 6 (158)` -> `pass`
+- `S13` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_import.py`
+- `S13` `verify:` `TUI import door covers the PDF statement lane (part of S03's correction)` -> `pass`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/import_flow.py`
+- `S07` `verify:` `TUI import setup offer pilot (part of S03's correction)` -> `pass`
+- `S08` `M` `native/desktop/frontend/src/components/setup/SetupOffer.stories.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/setup/SetupOffer.tsx`
+- `S08` `M` `native/desktop/frontend/src/shell/setup.ts`
+- `S08` `M` `native/desktop/frontend/tests/provisioning-recovery.spec.ts`
+- `S08` `verify:` `provisioning-recovery unit (6), ledger-provisioning (12), setup, ledger-pause and ledger-setup scenarios (55)` -> `pass`
 
 ## Notes
 
@@ -383,3 +406,9 @@ related:
 - `S04` review corrections verdict-paths-published and browser-code-key-mismatch: `REFUSED_BROWSER_NOT_USABLE`
 - `S14` The recorded error dropped the verdict, so the fix carries it through RecordedRegisteredError and `OperationErrorDetailV1.recorded_error();` every door using `explain_failure` now keeps the verdict
 - `S09` review correction: the gate's browser drives left `PLAYWRIGHT_BROWSERS_PATH` pointing at their empty root for later tests on the worker; an autouse fixture restores it. The ledger.classify.review row currently fails on another session's uncommitted classification review and settlement edits, not on this plan's code
+- `S01` re-review correction reader-floor-judged-on-free-memory: the no-action floor judges installed memory and total VRAM; momentary shortage stays the load-time contention refusal; local-ai-verdict-publishes-endpoint: `operator_endpoint` boolean replaces the URL
+- `S09` re-review correction gate-extraction-rows-depend-on-host-memory: vision and text rows pin their models
+- `S03` re-review correction tui-import-reader-refusal-not-routed
+- `S13` re-review correction tui-import-reader-refusal-not-routed, TUI leg
+- `S07` re-review correction: the TUI import screen shows the row-gated setup offer
+- `S08` re-review corrections desktop-unreadable-status-offers-setup and desktop-blocked-row-unexplained-inline
