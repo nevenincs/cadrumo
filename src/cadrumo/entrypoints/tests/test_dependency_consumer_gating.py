@@ -588,10 +588,8 @@ def _operation_browser_preflights(modules: Mapping[str, _Module]) -> tuple[froze
 def _operator_named_model(role: ModelRole) -> str:
     """Return a catalogued model for ``role`` other than its default, as an operator would name one.
 
-    The catalogue's own choice is sized to the free memory measured now, and on
-    a busy host it refuses with a verdict setup cannot repair; a named model is
-    honoured, so the rows of the selected roles do not depend on what else is
-    running.
+    A named model is honoured as written, so the rows of the selected roles
+    exercise an operator's setting rather than the catalogue's choice.
     """
     return next(
         candidate.runtime_id
@@ -602,6 +600,11 @@ def _operator_named_model(role: ModelRole) -> str:
 
 _OPERATOR_MAPPING_MODEL = _operator_named_model(ModelRole.COLUMN_ROLE_MAPPING)
 _OPERATOR_SUPPLY_NATURE_MODEL = _operator_named_model(ModelRole.SUPPLY_NATURE_PROPOSAL)
+#: The document readers' models, named as the shipped defaults so no row depends
+#: on this host's settings. The probe judges them against installed memory only,
+#: never against what is free while the gate runs beside other work.
+_VISION_MODEL = default_model_runtime_id(ModelRole.VISION_TRANSCRIPTION)
+_TEXT_MODEL = default_model_runtime_id(ModelRole.TEXT_EXTRACTION)
 
 
 @dataclass(frozen=True)
@@ -631,6 +634,8 @@ def _runtime_holding_nothing(tmp_path: Path) -> Generator[_Runtime]:
         serving_loopback(_EmptyRuntime, path="/api/chat") as chat_url,
         override_settings(
             cadrumo_llm_ollama_chat_url=chat_url,
+            cadrumo_llm_ollama_vision_model=_VISION_MODEL,
+            cadrumo_llm_ollama_text_model=_TEXT_MODEL,
             cadrumo_llm_ollama_mapping_model=_OPERATOR_MAPPING_MODEL,
             cadrumo_llm_ollama_supply_nature_model=_OPERATOR_SUPPLY_NATURE_MODEL,
             cadrumo_llm_cache_dir=tmp_path / "llm-cache",

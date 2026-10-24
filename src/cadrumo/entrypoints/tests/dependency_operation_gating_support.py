@@ -84,13 +84,17 @@ from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write
 from ...tests.pdf_fixtures import text_pdf_bytes
 from . import registered_executor_case_support as conformance
 
-#: An operator-named mapping model. The catalogue's own choice is sized to the
-#: free memory measured now and can refuse without a setup action on a busy host.
+#: An operator-named mapping model, honoured as written.
 _OPERATOR_MAPPING_MODEL = next(
     candidate.runtime_id
     for candidate in candidates_for_role(ModelRole.COLUMN_ROLE_MAPPING)
     if candidate.runtime_id != default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING)
 )
+#: The document readers' models, named as the shipped defaults so no row depends
+#: on this host's settings. The probe judges them against installed memory only,
+#: never against what is free while the gate runs beside other work.
+_VISION_MODEL = default_model_runtime_id(ModelRole.VISION_TRANSCRIPTION)
+_TEXT_MODEL = default_model_runtime_id(ModelRole.TEXT_EXTRACTION)
 _EXPORT_ONLY_THE_MAPPER_READS = FIXTURES_DIR / "financial" / "tabular-dialects" / "expenses_app_export_2026.csv"
 _BOOK_ONLY_THE_MAPPER_READS = FIXTURES_DIR / "financial" / "tabular-dialects" / "libro_facturas_expedidas_2025_2026.csv"
 _READABLE_STATEMENT = (
@@ -227,6 +231,8 @@ def runtime_holding_nothing(posts: list[str]) -> Generator[None]:
         serving_loopback(_EmptyRuntime, path="/api/chat") as chat_url,
         override_settings(
             cadrumo_llm_ollama_chat_url=chat_url,
+            cadrumo_llm_ollama_vision_model=_VISION_MODEL,
+            cadrumo_llm_ollama_text_model=_TEXT_MODEL,
             cadrumo_llm_ollama_mapping_model=_OPERATOR_MAPPING_MODEL,
             # The documented setting for a host whose headroom cannot be
             # measured, so the reader is the only cause a lane can stop for.
