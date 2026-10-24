@@ -369,6 +369,7 @@ export function splitBulk(
 const ACTION_RANK: Record<StagedActionKind, number> = {
   suggestion: 0,
   m210: 0,
+  rule_apply: 0,
   link: 1,
   attach: 1,
   detach: 1,
@@ -464,7 +465,28 @@ function actionStep(action: StagedAction): PlanStep | null {
     case "m210":
       // Sent inside the row's single classification.
       return null;
+    case "rule_apply":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.rule.apply",
+        request: { reaffirm: action.reaffirm, dry_run: false },
+      };
   }
+}
+
+/** Whether a staged rule apply meets a staged classification on a movement
+ * its dry run named: the rules and the person would both decide it, so it
+ * is held back until one of them is dropped. */
+export function ruleApplyClashes(
+  action: Extract<StagedAction, { kind: "rule_apply" }>,
+  content: StagedContent,
+): boolean {
+  return action.transactionIds.some((id) =>
+    Object.keys(content.rows[id] ?? {}).some((field) =>
+      CLASSIFICATION_FIELDS.has(field as StageField),
+    ),
+  );
 }
 
 /** The checks one movement's staged work must pass. */
@@ -868,7 +890,10 @@ export function planApply(
     (a, b) => ACTION_RANK[a.kind] - ACTION_RANK[b.kind],
   );
   for (const action of ranked) {
-    if (actionRows(action).some((id) => blockedRows.has(id))) {
+    if (
+      actionRows(action).some((id) => blockedRows.has(id)) ||
+      (action.kind === "rule_apply" && ruleApplyClashes(action, content))
+    ) {
       heldActions.push(action.id);
       continue;
     }

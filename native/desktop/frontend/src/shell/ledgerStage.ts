@@ -111,11 +111,24 @@ export type StagedAction =
       kind: "m210";
       transactionId: string;
       options: M210Options;
+    }
+  | {
+      /** The stored rules run over the ledger through `ledger.rule.apply`:
+       * on every movement still to classify, and with `reaffirm` on those
+       * a rule classified too. The rules decide at the apply; the
+       * movements its dry run named are kept for showing it and for
+       * checking it against staged classifications only. */
+      id: string;
+      kind: "rule_apply";
+      reaffirm: boolean;
+      transactionIds: string[];
     };
 export type StagedActionKind = StagedAction["kind"];
 
 /** The movements an action names. */
 export function actionRows(action: StagedAction): string[] {
+  // The rules decide their movements at the apply, anywhere in the ledger.
+  if (action.kind === "rule_apply") return [];
   return action.kind === "merge" ? action.childIds : [action.transactionId];
 }
 
@@ -423,7 +436,9 @@ function rekeyContent(
     actions: content.actions.map((action) =>
       action.kind === "merge"
         ? { ...action, childIds: action.childIds.map(swap) }
-        : { ...action, transactionId: swap(action.transactionId) },
+        : action.kind === "rule_apply"
+          ? { ...action, transactionIds: action.transactionIds.map(swap) }
+          : { ...action, transactionId: swap(action.transactionId) },
     ),
   };
 }
