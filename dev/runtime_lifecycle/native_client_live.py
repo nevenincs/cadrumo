@@ -13,7 +13,11 @@ driver arranges exactly that and runs the test:
 3. signs the profile in through ``aeat config login``, which stores the
    sign-in the native client then resumes;
 4. runs ``cargo test`` for the application crate's ignored live test with the
-   root, version, profile and password handed over in the environment;
+   root, version, profile and password handed over in the environment; the test
+   resumes the stored sign-in, signs a window in with the password (not stored:
+   only the installed desktop image may store it), reads the profile's language
+   through a registered operation, and prints how long the resume and the
+   native sign-in took;
 5. stops the runtime by closing its standard input and removes the root.
 
 The password exists only in this process, the CLI's standard input and one

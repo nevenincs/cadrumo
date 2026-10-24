@@ -1867,12 +1867,15 @@ mod live_tests {
             "the harness stored a CLI sign-in first"
         );
 
-        // The stored sign-in is resumed with the proof its receipt names.
-        let proof = stored_sign_in_proof(&live.root, &live.profile_id).unwrap();
+        // The stored sign-in is resumed with the proof its receipt names, as a
+        // window resumes it when it finds the profile signed in; timed from connecting.
+        assert!(stored_sign_in_proof(&live.root, &live.profile_id).is_ok());
+        let started = Instant::now();
         let resumed = Connection::open(&endpoint, &live.cohort, soon()).unwrap();
         let session = resumed
-            .login_receipt(&live.profile_id, Frontend::Cli, &proof, soon())
+            .resume_receipt(&live.root, &live.profile_id, Frontend::Cli, soon())
             .unwrap();
+        let resumed_in = started.elapsed();
         assert_eq!(session.profile_id, live.profile_id);
         assert_eq!(
             resumed.connection_id().as_deref(),
@@ -1882,8 +1885,9 @@ mod live_tests {
         assert_eq!(status["session_id"], json!(session.session_id));
         resumed.note_activity(&session, soon()).unwrap();
 
-        // The window's own password sign-in, on a development root, stored for
-        // the other frontends as the desktop stores it; timed from connecting.
+        // The window's own password sign-in, on a development root, timed from
+        // connecting. Storing it for the other frontends is admitted only from
+        // the installed desktop image, so this sign-in is not stored.
         let started = Instant::now();
         let window = Connection::open(&endpoint, &live.cohort, soon()).unwrap();
         let connected = started.elapsed();
@@ -1893,22 +1897,13 @@ mod live_tests {
                 &live.profile_id,
                 Frontend::Desktop,
                 &live.password,
-                true,
+                false,
                 soon(),
             )
             .unwrap();
         let signed_in = started.elapsed();
-        assert_eq!(held.session_persisted, Some(true));
-        // The window's later sessions resume the sign-in it stored.
-        let started_resume = Instant::now();
-        let again = Connection::open(&endpoint, &live.cohort, soon()).unwrap();
-        let rejoined = again
-            .resume_receipt(&live.root, &live.profile_id, Frontend::Desktop, soon())
-            .unwrap();
-        let resumed_in = started_resume.elapsed();
-        assert_eq!(rejoined.profile_id, live.profile_id);
         println!(
-            "native sign-in: connect {} ms, password sign-in {} ms; resume {} ms",
+            "native sign-in: connect {} ms, password sign-in {} ms; receipt resume {} ms",
             connected.as_millis(),
             signed_in.as_millis(),
             resumed_in.as_millis()
@@ -1937,7 +1932,6 @@ mod live_tests {
         assert!(out.automation_enabled.is_some() || out.automation_access_remains.is_none());
         assert!(out.session_ids.contains(&held.session_id));
         assert!(out.session_ids.contains(&session.session_id));
-        assert!(out.session_ids.contains(&rejoined.session_id));
         assert!(out.receipt_removed);
         let retired = retirements.recv_timeout(Duration::from_secs(10)).unwrap();
         assert!(
@@ -1959,7 +1953,6 @@ mod live_tests {
             matches!(refused, Refusal::Denied { .. } | Refusal::ConnectionClosed),
             "{refused}"
         );
-        again.close();
         window.close();
         watcher.close();
     }
