@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:cfcbb37645c68dbeb50124795855321715037167879ec209356401ccb3fd7c29'
+body_hash: 'sha256:3c769218249ea8f985e90fa3d50dea65ac55b08d2da6663df18bc92dec9a52d8'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
@@ -220,6 +220,23 @@ related:
 - `S10` `verify:` `tsc --noEmit` -> `pass`
 - `S10` `verify:` `eslint+prettier touched files` -> `pass`
 - `S10` `verify:` `playwright scenarios window-close navigation-register navigation-guards palette keyboard agent-page-links` -> `pass`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/overview.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_workspace.py`
+- `S07` `M` `src/cadrumo/locales/en/common.yml`
+- `S07` `M` `src/cadrumo/locales/es/common.yml`
+- `S07` `M` `src/cadrumo/locales/ca/common.yml`
+- `S07` `M` `src/cadrumo/locales/hu/common.yml`
+- `S07` `verify:` `pytest src/cadrumo/entrypoints/tui/ledger/tests src/cadrumo/entrypoints/tui/tests/test_presentation_navigation.py` -> `pass`
+- `S07` `verify:` `lint-imports` -> `pass`
+- `S06` `A` `src/cadrumo_client/contracts/tests/navigation_shipped_views.json`
+- `S06` `M` `src/cadrumo_client/contracts/tests/test_navigation_register.py`
+- `S06` `M` `src/cadrumo_client/contracts/navigation.py`
+- `S06` `verify:` `pytest src/cadrumo_client/contracts/tests` -> `pass`
+- `S06` `verify:` `semgrep --config auto (project exclusions) src/cadrumo_client/contracts/navigation.py` -> `pass`
+- `S08` `M` `src/cadrumo_mcp/mcp/view_register.py`
+- `S08` `M` `src/cadrumo_mcp/mcp/tests/test_views_tool.py`
+- `S08` `verify:` `pytest src/cadrumo_mcp/mcp/tests` -> `pass`
 
 ## Notes
 
@@ -233,3 +250,8 @@ related:
 - `S11` Follow-up b780f0120e: a select link no longer waits silently when the Ledger draws no grid; the page holds the ask and says not found once the read settles empty or fails. A 3-worker run beside other sessions timed out 5 scenarios that pass alone. Commit 8e41b1bc2b carried the S12 rows instead of these.
 - `S12` Follow-up on owner requirement: pane and panel entries toggle again (Show/Hide {view}, same id and chord); commits 42298ef117 and 6e83e8bb24 (CR fix in the two new strings)
 - `S10` review fix: close-guard; window-close fails 3 of 6 on the prior guard
+- `S07` review fix: tui-select-drop (overview says the selection was dropped, new key `tui.ledger.overview.selection_dropped)`
+- `S07` review fix: link-producers-literal `(LEDGER_TRANSACTION_FOCUS` now defined in ledger/controller.py)
+- `S06` review fix: retired-append-only (shipped-id baseline gate with defect fixtures)
+- `S06` review fix: suppression (nosemgrep removed; project runner already excludes the importlib compatibility rule)
+- `S08` review fix: dead-reference (views link check reports opens via `resolve_view)`
