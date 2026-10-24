@@ -53,6 +53,8 @@ export function skipName(t: Translate, reason: SkipReason): string {
       return t("desktop.ledger.inspector.skip.not_active");
     case "sealed":
       return t("desktop.ledger.inspector.skip.sealed");
+    case "sealed_unread":
+      return t("desktop.ledger.inspector.skip.sealed_unread");
     case "transfer":
       return t("desktop.ledger.inspector.skip.transfer");
     case "personal":

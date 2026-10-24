@@ -661,6 +661,49 @@ test("Mixed asks its share and a category a share applies to; Enter stages, and 
   await expect(focused.locator("xpath=..")).toContainText("RECIBO TELEFONIA");
 });
 
+test("Mixed says which movements get a configured usage ratio, and leads to the ratios where none is", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await choosePeriod(target, 2026, "4T");
+  await rowWith(target, "RECIBO TELEFONIA")
+    .locator("[data-column=description]")
+    .click();
+  await target.keyboard.press("Alt+KeyM");
+  const dialog = classify(target);
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel(label("desktop.ledger.classify.share")).fill("30");
+  const pick = async (category: string) => {
+    await dialog.locator(".ledger-classify-category").click();
+    await target.keyboard.type(label(`desktop.ledger.category.${category}`));
+    await target.keyboard.press("Enter");
+    await expect(target.locator("[data-slot=combobox]")).toBeHidden();
+  };
+  // The scenario's ledger has a ratio for the mobile phone.
+  await pick("telefonia_movil");
+  await expect(dialog.locator(".ledger-classify-ratio-staged")).toHaveText(
+    label("desktop.ledger.classify.ratio_staged", { count: 1 }),
+  );
+  await expect(dialog.locator(".ledger-classify-ratio-missing")).toHaveCount(0);
+  // None for vehicle fuel: the dialog says so and offers the ratios.
+  await pick("vehiculo_combustible");
+  await expect(dialog.locator(".ledger-classify-ratio-missing")).toContainText(
+    label("desktop.ledger.classify.ratio_missing", { count: 1 }),
+  );
+  await dialog.locator(".ledger-classify-open-ratios").click();
+  await expect(
+    target.getByRole("tab", {
+      name: label("desktop.ledger.ratios.title"),
+      selected: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    target.getByRole("tabpanel", {
+      name: label("desktop.ledger.ratios.title"),
+    }),
+  ).toBeVisible();
+});
+
 test("the classify chords work after a checkbox selection, and Shift+Space then Shift+arrows select rows", async ({
   page: target,
 }) => {

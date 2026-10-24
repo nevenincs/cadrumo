@@ -124,6 +124,7 @@ export function SelectionInspector({
   stage,
   onStage,
   sealed,
+  unread,
   locale,
   onClearSelection,
   onKeepVisible,
@@ -142,6 +143,8 @@ export function SelectionInspector({
   stage: StageState;
   onStage: (event: StageEvent) => void;
   sealed: ReadonlySet<string>;
+  /** Movements whose sealed state the page could not read. */
+  unread: ReadonlySet<string>;
   locale: string;
   onClearSelection: () => void;
   onKeepVisible: () => void;
@@ -222,6 +225,7 @@ export function SelectionInspector({
     const found = setForAll(field, value, ids, rows, {
       content,
       sealed,
+      unread,
       visible,
     });
     const skipped = Object.entries(found.skipped)
@@ -250,10 +254,11 @@ export function SelectionInspector({
       .filter(Boolean)
       .join(" · ");
     if (!force) {
-      const before = planApply(content, { rows, sealed }).summary;
+      const before = planApply(content, { rows, sealed, unread }).summary;
       const after = planApply(reduceStage(stage, event).content, {
         rows,
         sealed,
+        unread,
       }).summary;
       const writes = after.oneAtATime - before.oneAtATime;
       if (writes > COST_WARNING_WRITES) {
@@ -282,6 +287,7 @@ export function SelectionInspector({
     const preview = setForAll(field, "x", ids, rows, {
       content,
       sealed,
+      unread,
       visible,
     });
     const skipped = Object.values(preview.skipped).reduce(
@@ -612,6 +618,7 @@ export function SelectionInspector({
             const preview = setForAll(field, value || "x", ids, rows, {
               content,
               sealed,
+              unread,
               visible,
             });
             return (

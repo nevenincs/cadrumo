@@ -30,6 +30,7 @@ export function LedgerInspector({
   stage,
   onStage,
   sealed,
+  unread,
   selection,
   onSelection,
   context,
@@ -56,6 +57,8 @@ export function LedgerInspector({
   onStage: (event: StageEvent) => void;
   /** Movements a finalized declaration cites, as far as the page read. */
   sealed: ReadonlySet<string>;
+  /** Movements whose sealed state the page could not read. */
+  unread: ReadonlySet<string>;
   selection: ReadonlySet<string>;
   onSelection: (next: Set<string>) => void;
   context: SectionInspectorContext | null;
@@ -145,6 +148,7 @@ export function LedgerInspector({
         stage={stage}
         onStage={onStage}
         sealed={sealed}
+        unread={unread}
         locale={locale}
         onClearSelection={() => onSelection(new Set())}
         onKeepVisible={() =>

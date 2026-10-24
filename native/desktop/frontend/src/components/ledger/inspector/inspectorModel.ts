@@ -162,7 +162,12 @@ export type SetForAllField = (typeof SET_FOR_ALL_FIELDS)[number];
 
 /** Why a movement is left out of a change set for all. */
 export type SkipReason =
-  "not_active" | "sealed" | "transfer" | "personal" | "unclassified";
+  | "not_active"
+  | "sealed"
+  | "sealed_unread"
+  | "transfer"
+  | "personal"
+  | "unclassified";
 
 const TAX_SETS: ReadonlySet<SetForAllField> = new Set([
   "category_id",
@@ -178,10 +183,13 @@ export function setSkip(
   row: LedgerRow,
   content: StagedContent,
   sealed: ReadonlySet<string>,
+  /** Movements whose sealed state the page could not read. */
+  unread?: ReadonlySet<string>,
 ): SkipReason | null {
   const id = row.transaction.transaction_id;
   if (row.transaction.lifecycle_state !== "ACTIVE") return "not_active";
   if (sealed.has(id)) return "sealed";
+  if (unread?.has(id)) return "sealed_unread";
   if (!TAX_SETS.has(field)) return null;
   const facts = effectiveFacts(row, content.rows[id]);
   if (facts.direction === "INTERNAL_TRANSFER") return "transfer";
@@ -209,6 +217,7 @@ export function setForAll(
   context: {
     content: StagedContent;
     sealed: ReadonlySet<string>;
+    unread?: ReadonlySet<string>;
     visible: ReadonlySet<string>;
   },
 ): SetForAll {
@@ -216,7 +225,13 @@ export function setForAll(
   for (const id of ids) {
     const row = rows.get(id);
     if (!row) continue;
-    const skip = setSkip(field, row, context.content, context.sealed);
+    const skip = setSkip(
+      field,
+      row,
+      context.content,
+      context.sealed,
+      context.unread,
+    );
     if (skip) {
       out.skipped[skip] = (out.skipped[skip] ?? 0) + 1;
       continue;

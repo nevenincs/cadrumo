@@ -33,11 +33,13 @@ import {
   categorySplit,
   classifyAvailability,
   classifyCells,
+  ratioCoverage,
   type ClassifyBlock,
   type ClassifyKind,
   type ClassifyScope,
   type OpenRuleFromSelection,
 } from "../../../shell/ledgerCommands";
+import { useConfiguredRatios } from "../setup/useConfiguredRatios";
 import { ActionDialog, type ActionRequest } from "../inspector/ActionDialog";
 import {
   sameInspectorContext,
@@ -404,6 +406,7 @@ export function MovementsSection({
   editing: pageEditing,
   linked,
   onMakeRule,
+  onOpenRatios,
 }: {
   port: LedgerPort;
   reader: string;
@@ -436,6 +439,8 @@ export function MovementsSection({
   /** Opens the rule dialog prefilled from movements, where the page has
    * one. */
   onMakeRule?: OpenRuleFromSelection;
+  /** Opens the business-use ratios, where the page has them. */
+  onOpenRatios?: () => void;
 }) {
   const t = useStrings();
   const grid = useRef<DataGridHandle>(null);
@@ -536,6 +541,15 @@ export function MovementsSection({
     () => statusMarks(rows, duplicates),
     [rows, duplicates],
   );
+  // The business-use ratios configured for the years of the window's
+  // movements, which the Mixed step stages with its share.
+  const years = useMemo(
+    () => [
+      ...new Set(rows.map((row) => Number(row.transaction.date.slice(0, 4)))),
+    ],
+    [rows],
+  );
+  const { ratios } = useConfiguredRatios(port, reader, years);
 
   // ---- What is shown ---------------------------------------------------------
   const labels = useMemo<SortLabels>(
@@ -895,7 +909,7 @@ export function MovementsSection({
     ids: readonly string[],
     answer: { category?: string; share?: string },
   ): string | null {
-    const outcome = classifyCells({ kind, ids, ...answer }, byId);
+    const outcome = classifyCells({ kind, ids, ...answer, ratios }, byId);
     if (outcome.kind === "refused")
       return t("desktop.ledger.classify.share_refused", {
         raw: outcome.refusal.raw,
@@ -952,7 +966,7 @@ export function MovementsSection({
     const answer = scope?.answer ?? {};
     const split = categorySplit(availability.ids, byId);
     const outcome = classifyCells(
-      { kind, ids: availability.ids, ...answer },
+      { kind, ids: availability.ids, ...answer, ratios },
       byId,
     );
     // What the control already asked for is not asked again, and nothing
@@ -1693,6 +1707,12 @@ export function MovementsSection({
         <ClassifyDialog
           key={asking.ids.join(" ")}
           kind={asking.kind}
+          ratioOf={
+            asking.kind === "mixed"
+              ? (category) => ratioCoverage(asking.ids, byId, category, ratios)
+              : undefined
+          }
+          onOpenRatios={onOpenRatios}
           movements={asking.draft ? 1 : asking.ids.length}
           split={asking.split}
           {...(asking.share ? { initialShare: asking.share } : {})}

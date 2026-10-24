@@ -78,7 +78,7 @@ import type { OpenRuleFromSelection } from "../../shell/ledgerCommands";
 import { HealthSection } from "./setup/HealthSection";
 import { RegistersSection } from "./setup/RegistersSection";
 import { RuleDialog, type RuleDialogTarget } from "./setup/RuleDialog";
-import { RulesSection } from "./setup/RulesSection";
+import { RulesSection, type RulesArea } from "./setup/RulesSection";
 import type { SetupProps } from "./setup/setupProps";
 import {
   NO_FILTERS,
@@ -159,9 +159,17 @@ export function LedgerPage({
     setPeriodNow(next);
   };
   const section = view.section;
+  // The Rules section's area to open on, where another section asked for
+  // one; it is forgotten once the page leaves Rules.
+  const [rulesArea, setRulesArea] = useState<RulesArea>();
   const setSection = (next: LedgerSection) => {
     setPeriodOpen(false);
+    if (next !== "rules") setRulesArea(undefined);
     onViewChange((current) => ({ ...current, section: next }));
+  };
+  const openRatios = () => {
+    setRulesArea("ratios");
+    setSection("rules");
   };
   const readable = reader !== null;
   const linkedMovement = useLinkedRow("ledger/movements");
@@ -315,7 +323,7 @@ export function LedgerPage({
     ],
     [movements.selection, stage.content],
   );
-  const { sealed, sealedOf } = useSealedMovements(
+  const { sealed, unread, sealedOf } = useSealedMovements(
     port,
     reader,
     periodWindow?.phase === "ready" ? periodWindow.generation : null,
@@ -539,6 +547,7 @@ export function LedgerPage({
         {...setupProps}
         onOpenRule={setRuleTarget}
         rulesVersion={rulesVersion}
+        initialArea={rulesArea}
       />
     );
   else if (section === "registers") body = <RegistersSection {...setupProps} />;
@@ -702,6 +711,7 @@ export function LedgerPage({
             onPeriod={setPeriod}
             register={registerMovements}
             onMakeRule={openRuleFromSelection}
+            onOpenRatios={openRatios}
             onOpenInspector={(at) => openInspector(at)}
             onInspector={setInspectorContext}
             shownImport={shownImport}
@@ -872,6 +882,7 @@ export function LedgerPage({
                   stage={stage}
                   onStage={editing.onStage}
                   sealed={sealed}
+                  unread={unread}
                   selection={movements.selection}
                   onSelection={movements.setSelection}
                   context={inspectorContext}

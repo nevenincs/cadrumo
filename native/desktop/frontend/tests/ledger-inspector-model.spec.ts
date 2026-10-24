@@ -118,6 +118,27 @@ test("the selection's tax fields wait for a classification, stored or staged", (
   ).toBe(true);
 });
 
+test("set for all skips a movement whose sealed state was not read, and counts it apart", () => {
+  const read = movement(hexId("rea"), { business_classification: "BUSINESS" });
+  const unread = movement(hexId("unr"), {
+    business_classification: "BUSINESS",
+  });
+  const rows = new Map(
+    [read, unread].map((row) => [row.transaction.transaction_id, row]),
+  );
+  const ids = [...rows.keys()];
+  const found = setForAll("notes", "x", ids, rows, {
+    content: EMPTY_CONTENT,
+    sealed: NONE,
+    unread: new Set([unread.transaction.transaction_id]),
+    visible: new Set(ids),
+  });
+  expect(found.cells.map((cell) => cell.id)).toEqual([
+    read.transaction.transaction_id,
+  ]);
+  expect(found.skipped).toEqual({ sealed_unread: 1 });
+});
+
 test("set for all skips what cannot take it, and counts hidden movements apart", () => {
   const business = movement(hexId("biz"), {
     business_classification: "BUSINESS",
