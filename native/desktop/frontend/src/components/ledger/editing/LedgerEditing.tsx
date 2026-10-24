@@ -17,7 +17,7 @@ import {
   type StageState,
 } from "../../../shell/ledgerStage";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
-import type { SealedRead } from "../useSealedMovements";
+import type { SealedProgress, SealedRead } from "../useSealedMovements";
 import type { WritePause } from "../WritePause";
 import { ChangesTray } from "./ChangesTray";
 import { stageTally } from "./editingModel";
@@ -68,7 +68,10 @@ export function useLedgerEditing({
   /** The page's one write pause. */
   pause: WritePause;
   /** Which of `ids` a finalized declaration cites, read where not known. */
-  sealedOf: (ids: readonly string[]) => Promise<SealedRead>;
+  sealedOf: (
+    ids: readonly string[],
+    progress?: SealedProgress,
+  ) => Promise<SealedRead>;
   /** Puts the focus back on the grid's active cell: false where the page
    * draws no grid. */
   returnFocus?: () => boolean;

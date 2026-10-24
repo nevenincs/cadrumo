@@ -3,8 +3,8 @@
 // answers one movement at a time, through `ledger.track`, and nothing reads
 // it for a period. So the page reads the movements it acts on, the selected
 // and the staged ones, a bounded number per read of the window, and the
-// review reads the staged ones it is about to save, on a budget of its own
-// and asking again what failed. A movement whose participation could not be
+// review reads every staged one it is about to save that the page has not,
+// asking again what failed, and says how far it has got. A movement whose participation could not be
 // read, or was left unread past a budget, is unread: never counted as
 // sealed or as not sealed. One whose index was never built is not known to
 // be sealed; the product refuses a change to a sealed one regardless.
@@ -17,9 +17,6 @@ import { seals } from "./inspector/inspectorWords";
 /** The most movements read for one read of the window, for the selection
  * and the staged movements the page acts on. */
 export const SEALED_READS = 400;
-/** The most movements the review reads each time it opens or reads again,
- * apart from the page's own budget. */
-export const REVIEW_SEALED_READS = 400;
 /** Reads in flight at once. */
 const AT_ONCE = 4;
 
@@ -38,6 +35,9 @@ async function readSealed(
     return null;
   }
 }
+
+/** Hears how many of the movements a read was asked about it has read. */
+export type SealedProgress = (done: number, total: number) => void;
 
 /** Which of the asked movements a finalized declaration seals, and which
  * were not read: failed, or past the budget. */
@@ -62,12 +62,18 @@ export function useSealedMovements(
   sealed: ReadonlySet<string>;
   /** Of the movements wanted, those whose sealed state was not read. */
   unread: ReadonlySet<string>;
-  sealedOf: (ids: readonly string[]) => Promise<SealedRead>;
+  sealedOf: (
+    ids: readonly string[],
+    progress?: SealedProgress,
+  ) => Promise<SealedRead>;
 } {
   const [sealed, setSealed] = useState<ReadonlySet<string>>(new Set());
   const [unread, setUnread] = useState<ReadonlySet<string>>(new Set());
   // What was read, or is being read, for this window and profile.
   const known = useRef(new Map<string, Promise<boolean | null>>());
+  // How much of the page's budget its reads have taken, counted when a read
+  // is planned: reads that overlap share one budget.
+  const spent = useRef(0);
   const scope = useRef({ reader, generation });
   if (
     scope.current.reader !== reader ||
@@ -75,6 +81,7 @@ export function useSealedMovements(
   ) {
     scope.current = { reader, generation };
     known.current = new Map();
+    spent.current = 0;
   }
   useEffect(() => {
     setSealed(new Set());
@@ -82,7 +89,11 @@ export function useSealedMovements(
   }, [reader, generation]);
 
   const read = useCallback(
-    async (ids: readonly string[], review: boolean): Promise<SealedRead> => {
+    async (
+      ids: readonly string[],
+      review: boolean,
+      progress?: SealedProgress,
+    ): Promise<SealedRead> => {
       const map = known.current;
       // The review asks again what failed; the page asks once.
       const settled = await Promise.all(
@@ -96,17 +107,29 @@ export function useSealedMovements(
           ([, value]) => value === undefined || (review && value === null),
         )
         .map(([id]) => id);
+      // The review reads every one it is asked; the page what is left of
+      // its budget, taken now so that a read started meanwhile cannot take
+      // it too.
       const room = review
-        ? REVIEW_SEALED_READS
-        : Math.max(0, SEALED_READS - map.size);
+        ? asking.length
+        : Math.max(0, SEALED_READS - spent.current);
       const queue = asking.slice(0, room);
+      if (!review && map === known.current) spent.current += queue.length;
+      const total = ids.length;
+      let done = total - queue.length;
+      progress?.(done, total);
       const run = async () => {
         for (let id = queue.shift(); id !== undefined; id = queue.shift()) {
           // Another read may have started it since this one looked.
-          if (!review && map.has(id)) continue;
+          if (!review && map.has(id)) {
+            done += 1;
+            continue;
+          }
           const found = readSealed(port, id);
           map.set(id, found);
           await found;
+          done += 1;
+          progress?.(done, total);
         }
       };
       await Promise.all(Array.from({ length: AT_ONCE }, run));
@@ -139,7 +162,8 @@ export function useSealedMovements(
     [port],
   );
   const sealedOf = useCallback(
-    (ids: readonly string[]) => read(ids, true),
+    (ids: readonly string[], progress?: SealedProgress) =>
+      read(ids, true, progress),
     [read],
   );
 

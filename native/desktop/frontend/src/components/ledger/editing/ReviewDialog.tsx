@@ -65,7 +65,7 @@ import {
   type StageTally,
 } from "./editingModel";
 import { fieldName, valueText } from "./editingWords";
-import type { useLedgerApply } from "./useLedgerApply";
+import type { LockProgress, useLedgerApply } from "./useLedgerApply";
 import { useWritePause } from "../WritePause";
 import { WindowedList } from "./WindowedList";
 
@@ -275,6 +275,7 @@ function BlockerFixes({
   onShowRows,
   onGoToDraft,
   onRereadSealed,
+  checking,
 }: {
   kind: PlanBlocker["kind"];
   held: Held[];
@@ -285,6 +286,8 @@ function BlockerFixes({
   onGoToDraft: (key: string) => void;
   /** Reads again the sealed state the review could not read. */
   onRereadSealed: () => void;
+  /** That read is under way. */
+  checking: boolean;
 }) {
   const t = useStrings();
   const [share, setShare] = useState("");
@@ -422,11 +425,17 @@ function BlockerFixes({
     case "sealed_unread":
       return (
         <>
-          {button(
-            t("desktop.ledger.paused.reread"),
-            onRereadSealed,
-            "reread-sealed",
-          )}
+          <Button
+            key="reread-sealed"
+            variant="outline"
+            size="xs"
+            className="ledger-fix-reread-sealed"
+            aria-disabled={checking || undefined}
+            onClick={() => !checking && onRereadSealed()}
+          >
+            {checking ? <Spinner /> : <Icon name="sync" />}
+            {t("desktop.ledger.paused.reread")}
+          </Button>
           {button(
             t("desktop.ledger.apply.fix.drop_changes"),
             dropEdits(false),
@@ -613,6 +622,8 @@ function NeedsYouFirst({
   onShowRows,
   onGoToDraft,
   onRereadSealed,
+  locks,
+  locale,
 }: {
   plan: LedgerPlan;
   content: StagedContent;
@@ -621,6 +632,9 @@ function NeedsYouFirst({
   onShowRows: (ids: string[]) => void;
   onGoToDraft: (key: string) => void;
   onRereadSealed: () => void;
+  /** While the locks not read are read again, how far it has got. */
+  locks: LockProgress | null;
+  locale: string;
 }) {
   const t = useStrings();
   const byKind = new Map<PlanBlocker["kind"], Held[]>();
@@ -675,8 +689,18 @@ function NeedsYouFirst({
                 onShowRows={onShowRows}
                 onGoToDraft={onGoToDraft}
                 onRereadSealed={onRereadSealed}
+                checking={locks !== null}
               />
             </div>
+            {kind === "sealed_unread" && locks && (
+              <p
+                role="status"
+                className="ledger-locks-progress flex items-center gap-2 text-sm text-muted-foreground"
+              >
+                <Spinner />
+                {lockProgress(t, locale, locks)}
+              </p>
+            )}
             {fields && (
               <p className="text-sm text-muted-foreground">
                 {t("desktop.ledger.apply.blocker_fields", { fields })}
@@ -1155,6 +1179,15 @@ function stepTitle(
   }
 }
 
+/** How far a read of the staged movements' locks has got, in words. */
+const lockProgress = (t: Translate, locale: string, locks: LockProgress) => {
+  const numbers = new Intl.NumberFormat(locale);
+  return t("desktop.ledger.apply.checking_locks", {
+    done: numbers.format(locks.done),
+    total: numbers.format(locks.total),
+  });
+};
+
 /** Why a change was refused, in words; its code is under Technical
  * details. */
 function refusalWords(
@@ -1401,10 +1434,12 @@ export function ReviewDialog({
     body = (
       <div
         role="status"
-        className="flex items-center gap-2 text-muted-foreground"
+        className="ledger-apply-reading flex items-center gap-2 text-muted-foreground"
       >
         <Spinner />
-        {t("desktop.ledger.apply.reading")}
+        {state.locks
+          ? lockProgress(t, locale, state.locks)
+          : t("desktop.ledger.apply.reading")}
       </div>
     );
   } else if (state.phase === "failed") {
@@ -1535,6 +1570,8 @@ export function ReviewDialog({
           onShowRows={onShowRows}
           onGoToDraft={onGoToDraft}
           onRereadSealed={() => void apply.rereadSealed()}
+          locks={state.phase === "ready" ? state.locks : null}
+          locale={locale}
         />
         <PermanentLinks
           links={links}

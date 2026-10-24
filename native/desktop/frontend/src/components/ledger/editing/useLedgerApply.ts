@@ -39,14 +39,21 @@ import {
   type LedgerReadFailure,
 } from "../../../shell/ledgerWindow";
 import { useStrings, type Translate } from "../../../shell/strings";
-import type { SealedRead } from "../useSealedMovements";
+import type { SealedProgress, SealedRead } from "../useSealedMovements";
 import type { Finding, WritePause } from "../WritePause";
 import { askedConflicts, type AskedConflict } from "./editingModel";
 import { actionText } from "./ReviewDialog";
 
+/** How far a read of the staged movements' locks has got. */
+export type LockProgress = { done: number; total: number };
+
 export type ReviewState =
   | { phase: "closed" }
-  | { phase: "reading" }
+  | {
+      phase: "reading";
+      /** Once the rows are read, the locks being read. */
+      locks: LockProgress | null;
+    }
   | { phase: "failed"; failure: LedgerReadFailure }
   | {
       phase: "ready";
@@ -63,6 +70,8 @@ export type ReviewState =
       /** The staged movements whose sealed state could not be read: held
        * back until a read answers for them. */
       unread: ReadonlySet<string>;
+      /** While those are read again, how far it has got. */
+      locks: LockProgress | null;
     }
   | {
       phase: "applying";
@@ -260,7 +269,10 @@ export function useLedgerApply({
   /** The page's one write pause. */
   pause: WritePause;
   /** Which of `ids` a finalized declaration cites, read where not known. */
-  sealedOf: (ids: readonly string[]) => Promise<SealedRead>;
+  sealedOf: (
+    ids: readonly string[],
+    progress?: SealedProgress,
+  ) => Promise<SealedRead>;
   locale: string;
 }) {
   const t = useStrings();
@@ -273,7 +285,7 @@ export function useLedgerApply({
   const open = useCallback(async () => {
     asked.current += 1;
     const mine = asked.current;
-    setState({ phase: "reading" });
+    setState({ phase: "reading", locks: null });
     const staged = latest.current;
     const before = read();
     const answer = await readStaged(port, period, staged, before);
@@ -289,7 +301,17 @@ export function useLedgerApply({
     const invoices = staged.actions.some((action) => action.kind === "link")
       ? await readInvoices(port)
       : [];
-    const { sealed, unread } = await sealedOf([...stagedMovements(staged)]);
+    const { sealed, unread } = await sealedOf(
+      [...stagedMovements(staged)],
+      (done, total) => {
+        if (asked.current !== mine) return;
+        setState((current) =>
+          current.phase === "reading"
+            ? { ...current, locks: { done, total } }
+            : current,
+        );
+      },
+    );
     if (asked.current !== mine) return;
     setState({
       phase: "ready",
@@ -298,14 +320,25 @@ export function useLedgerApply({
       invoices,
       sealed,
       unread,
+      locks: null,
     });
   }, [port, period, read, sealedOf]);
 
   /** Reads again the sealed state the review could not read. */
   const rereadSealed = useCallback(async () => {
-    if (state.phase !== "ready" || state.unread.size === 0) return;
+    if (state.phase !== "ready" || state.unread.size === 0 || state.locks)
+      return;
     const mine = asked.current;
-    const found = await sealedOf([...state.unread]);
+    const showing = (locks: LockProgress) =>
+      setState((current) =>
+        current.phase === "ready" && asked.current === mine
+          ? { ...current, locks }
+          : current,
+      );
+    showing({ done: 0, total: state.unread.size });
+    const found = await sealedOf([...state.unread], (done, total) =>
+      showing({ done, total }),
+    );
     if (asked.current !== mine) return;
     setState((current) =>
       current.phase === "ready"
@@ -313,6 +346,7 @@ export function useLedgerApply({
             ...current,
             sealed: new Set([...current.sealed, ...found.sealed]),
             unread: found.unread,
+            locks: null,
           }
         : current,
     );

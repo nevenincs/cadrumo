@@ -607,3 +607,51 @@ test("a bulk save with an unknown outcome is counted, not listed by name, and it
     counted("desktop.ledger.selected"),
   );
 });
+
+test("the review reads the lock of every staged movement before it saves, the same each time", async ({
+  page: target,
+}) => {
+  // Twelve hundred locks are read one movement at a time.
+  test.setTimeout(120_000);
+  await target.goto(
+    "/scenarios.html?scenario=ledger&latency=0&bar=off&ledgerRows=1200",
+  );
+  await target.locator("[data-rail=ledger]").click();
+  await expect(dataRows(target).first()).toBeVisible();
+  await grid(target)
+    .getByRole("checkbox", { name: label("desktop.ledger.select.shown") })
+    .click();
+  await target.keyboard.press("Alt+KeyP");
+  await expect(target.locator(".ledger-tray")).toBeVisible();
+  const summaries: string[] = [];
+  for (let round = 0; round < 2; round += 1) {
+    await target.locator(".ledger-tray-review").click();
+    await expect(review(target)).toBeVisible();
+    if (round === 0)
+      // Reading the locks says how far it has got.
+      await expect(
+        review(target).locator(".ledger-apply-reading"),
+      ).toContainText(
+        label("desktop.ledger.apply.checking_locks", { done: "", total: "" })
+          .split("·")[0]!
+          .trim(),
+        { timeout: 20_000 },
+      );
+    await expect(
+      review(target).locator(".ledger-review-summary"),
+    ).not.toHaveText(label("desktop.ledger.apply.reading"), {
+      timeout: 60_000,
+    });
+    // No staged movement is held back for a lock the review did not read.
+    await expect(
+      review(target).locator("[data-blocker=sealed_unread]"),
+    ).toHaveCount(0);
+    summaries.push(
+      (await review(target).locator(".ledger-review-summary").textContent()) ??
+        "",
+    );
+    await target.keyboard.press("Escape");
+    await expect(review(target)).toHaveCount(0);
+  }
+  expect(summaries[1]).toBe(summaries[0]);
+});
