@@ -2312,19 +2312,19 @@ desktop:
         title: Usat a
         verified: Verificat (segellat)
     inventory:
-      actividad: Identificador de l'activitat
-      authority: Registre de l'autoritat del tancament (JSON)
-      authority_hint: La decisió, el recompte físic si n'hi ha i l'enllaç amb el tancament
-        anterior
-      authority_unread: No és un objecte JSON.
       acquisition: Justificació del cost de compra (JSON)
       acquisition_hint: 'Opcional: la contraprestació i el seu IVA, els costos imputables
         i la seva justificació'
-      base: Base imposable
-      book: Llibre
+      actividad: Identificador de l'activitat
+      authority: Registre de l'autoritat del tancament (JSON)
       authority_file: Llegeix d'un fitxer…
       authority_file_too_large: El fitxer ocupa més d'1 MiB.
       authority_file_unread: No s'ha pogut llegir el fitxer.
+      authority_hint: La decisió, el recompte físic si n'hi ha i l'enllaç amb el tancament
+        anterior
+      authority_unread: No és un objecte JSON.
+      base: Base imposable
+      book: Llibre
       books: Llibres d'existències {year}
       column:
         actividad: Activitat

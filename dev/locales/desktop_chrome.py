@@ -3461,8 +3461,13 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.health.status",
         "desktop.ledger.health.unconverted",
         "desktop.ledger.health.whole",
+        "desktop.ledger.inventory.acquisition",
+        "desktop.ledger.inventory.acquisition_hint",
         "desktop.ledger.inventory.actividad",
         "desktop.ledger.inventory.authority",
+        "desktop.ledger.inventory.authority_file",
+        "desktop.ledger.inventory.authority_file_too_large",
+        "desktop.ledger.inventory.authority_file_unread",
         "desktop.ledger.inventory.authority_hint",
         "desktop.ledger.inventory.authority_unread",
         "desktop.ledger.inventory.base",
@@ -3761,8 +3766,3 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-        "desktop.ledger.inventory.acquisition",
-        "desktop.ledger.inventory.acquisition_hint",
-        "desktop.ledger.inventory.authority_file",
-        "desktop.ledger.inventory.authority_file_too_large",
-        "desktop.ledger.inventory.authority_file_unread",

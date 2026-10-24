@@ -2321,19 +2321,19 @@ desktop:
         title: Usado en
         verified: Verificado (sellado)
     inventory:
-      actividad: Identificador de la actividad
-      authority: Registro de la autoridad del cierre (JSON)
-      authority_hint: La decisión, el recuento físico si lo hay y el enlace con el
-        cierre anterior
-      authority_unread: No es un objeto JSON.
       acquisition: Justificación del coste de compra (JSON)
       acquisition_hint: 'Opcional: la contraprestación y su IVA, los costes imputables
         y su justificación'
-      base: Base imponible
-      book: Libro
+      actividad: Identificador de la actividad
+      authority: Registro de la autoridad del cierre (JSON)
       authority_file: Leer de un archivo…
       authority_file_too_large: El archivo ocupa más de 1 MiB.
       authority_file_unread: No se ha podido leer el archivo.
+      authority_hint: La decisión, el recuento físico si lo hay y el enlace con el
+        cierre anterior
+      authority_unread: No es un objeto JSON.
+      base: Base imponible
+      book: Libro
       books: Libros de existencias {year}
       column:
         actividad: Actividad
