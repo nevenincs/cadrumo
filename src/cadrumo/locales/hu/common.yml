@@ -3218,21 +3218,41 @@ desktop:
         megjeleníteni.'
     pending: Előbb válaszolj a nyitott kérdésre.
     refused:
+      credentials: Ez a hivatkozás felhasználónevet vagy jelszót tartalmaz, ezért
+        nem nyílik meg.
+      fragment: Ez a hivatkozás „#” részt tartalmaz, a Cadrumo hivatkozásaiban viszont
+        soha nincs ilyen.
       link: Ezt a hivatkozást a Cadrumo nem tudja megnyitni.
+      malformed: Ez a hivatkozás nem úgy van írva, ahogy a Cadrumo hivatkozásai.
+      not_a_view_link: Ez a Cadrumo-hivatkozás nem nézetre mutat.
       not_implemented: 'Itt semmi sem tudja megnyitni ezt: {view}.'
       param: Ez a hivatkozás olyasmit kér, amit a nézete nem tud megjeleníteni.
+      param_malformed: Ez a hivatkozás egy elemre mutat, de az elem azonosítója nem
+        megfelelő formájú.
+      param_not_accepted: 'Ez a hivatkozás olyasmit kér, amit ez nem tud megjeleníteni:
+        {view}.'
+      percent_encoding: Ez a hivatkozás kódolt karaktereket tartalmaz, a Cadrumo hivatkozásaiban
+        viszont soha nincs ilyen.
+      query: Ez a hivatkozás a „?” után olyan beállításokat tartalmaz, amelyeket a
+        Cadrumo nem ismer.
+      too_long: Ez a hivatkozás túl hosszú ahhoz, hogy Cadrumo-hivatkozás legyen.
+      too_many_segments: Ennek a hivatkozásnak az útvonala hosszabb bármelyik nézeténél.
+      unknown_param: Ez a hivatkozás olyan beállítást kér, amely egyik nézetnek sincs.
       unknown_view: Ez a hivatkozás olyan nézetre mutat, amely a Cadrumo ezen verziójában
         nincs meg.
+      uppercase: A Cadrumo hivatkozásai csupa kisbetűsek, ez viszont nem az.
     sign_in: 'Jelentkezz be a megnyitáshoz: {view}.'
   palette:
     actions: Műveletek
     close: Keresés bezárása
+    copy_link: A nézet hivatkozásának másolása
     documentation: Dokumentáció
     kind_casilla: Casilla
     kind_cli: Parancs
     kind_term: Fogalom
     label: Keresés
     no_results: 'Egy oldal sem felel meg ennek: „{query}”.'
+    open_link: 'Megnyitás: {view}'
     placeholder: Keress a dokumentációban, vagy futtass egy műveletet
     searching: Keresés…
     type_to_search: Írj a kereséshez.
@@ -3249,7 +3269,6 @@ desktop:
     hide: Alsó panel elrejtése
     label: Alsó panel
     resize: Alsó panel átméretezése
-    show: Alsó panel megjelenítése
   profile:
     action:
       about: 'Tudnivalók: {field}'

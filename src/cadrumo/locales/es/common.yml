@@ -3249,20 +3249,37 @@ desktop:
         aún no se puede mostrar ahí.'
     pending: Responde primero a la pregunta abierta.
     refused:
+      credentials: Este enlace lleva un usuario o una contraseña, así que no se abre.
+      fragment: Este enlace tiene una parte con «#», y los enlaces de Cadrumo nunca
+        la tienen.
       link: Cadrumo no puede abrir este enlace.
+      malformed: Este enlace no está escrito como los enlaces de Cadrumo.
+      not_a_view_link: Este enlace de Cadrumo no lleva a ninguna vista.
       not_implemented: Aquí no hay nada que pueda abrir {view}.
       param: Este enlace pide algo que su vista no puede mostrar.
+      param_malformed: Este enlace apunta a un elemento, pero su identificador no
+        tiene la forma correcta.
+      param_not_accepted: Este enlace pide a {view} algo que no puede mostrar.
+      percent_encoding: Este enlace tiene caracteres codificados, y los enlaces de
+        Cadrumo nunca los tienen.
+      query: Este enlace tiene opciones tras «?» que Cadrumo no entiende.
+      too_long: Este enlace es demasiado largo para ser un enlace de Cadrumo.
+      too_many_segments: La ruta de este enlace es más larga que la de cualquier vista.
+      unknown_param: Este enlace pide una opción que ninguna vista tiene.
       unknown_view: Este enlace lleva a una vista que esta versión de Cadrumo no tiene.
+      uppercase: Los enlaces de Cadrumo van en minúsculas, y este no.
     sign_in: Inicia sesión para abrir {view}.
   palette:
     actions: Acciones
     close: Cerrar la búsqueda
+    copy_link: Copiar el enlace a esta vista
     documentation: Documentación
     kind_casilla: Casilla
     kind_cli: Comando
     kind_term: Término
     label: Buscar
     no_results: Ninguna página coincide con «{query}».
+    open_link: Abrir {view}
     placeholder: Busca en la documentación o ejecuta una acción
     searching: Buscando…
     type_to_search: Escribe para buscar.
@@ -3279,7 +3296,6 @@ desktop:
     hide: Ocultar el panel inferior
     label: Panel inferior
     resize: Cambiar el tamaño del panel inferior
-    show: Mostrar el panel inferior
   profile:
     action:
       about: Información sobre {field}

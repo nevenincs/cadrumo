@@ -20,6 +20,7 @@ import {
   type Implemented,
   type ViewOpened,
   type ViewRefusalReason,
+  type ViewRefused,
 } from "./resolve";
 import {
   WINDOW_VIEWS,
@@ -223,18 +224,24 @@ export function useNavigator(window: NavigatorWindow) {
     [runtime],
   );
 
+  /** Where a request would open now, without opening it. */
+  const resolve = useCallback((request: ViewLink): ViewOpened | ViewRefused => {
+    const window = host.current;
+    const implemented: Implemented = {
+      gui: windowImplementation(window.hasPort),
+      ...(window.presents()
+        ? { tui: declaredImplementation(window.register).tui }
+        : {}),
+    };
+    return resolveView(request, implemented, window.register);
+  }, []);
+
   /** Opens a resolved request: guards, requirements, apply, notice, focus. */
   const open = useCallback(
     (request: ViewLink, options: NavigationOptions = {}) => {
       const window = host.current;
       const { register, say, t } = window;
-      const implemented: Implemented = {
-        gui: windowImplementation(window.hasPort),
-        ...(window.presents()
-          ? { tui: declaredImplementation(register).tui }
-          : {}),
-      };
-      const resolved = resolveView(request, implemented, register);
+      const resolved = resolve(request);
       if (resolved.kind === "refused") {
         say(refusalText(t, register, resolved.reason, request.viewId));
         return;
@@ -291,7 +298,7 @@ export function useNavigator(window: NavigatorWindow) {
         options.opened?.(resolved);
       });
     },
-    [guard, runtime],
+    [guard, resolve, runtime],
   );
 
   /** Opens a `cadrumo:` link, or says why it cannot. */
@@ -319,7 +326,41 @@ export function useNavigator(window: NavigatorWindow) {
     [open],
   );
 
-  return { runtime, prompt, guard, openLink, openView };
+  return { runtime, prompt, guard, openLink, openView, resolve };
+}
+
+/** Why a link or request opens nothing, reason by reason, as the palette
+ * says it beside a pasted link. */
+const REFUSAL_KEYS: Readonly<
+  Record<ViewLinkRefusal | ViewRefusalReason, string>
+> = {
+  too_long: "desktop.navigation.refused.too_long",
+  malformed: "desktop.navigation.refused.malformed",
+  uppercase: "desktop.navigation.refused.uppercase",
+  not_a_view_link: "desktop.navigation.refused.not_a_view_link",
+  credentials: "desktop.navigation.refused.credentials",
+  percent_encoding: "desktop.navigation.refused.percent_encoding",
+  fragment: "desktop.navigation.refused.fragment",
+  query: "desktop.navigation.refused.query",
+  too_many_segments: "desktop.navigation.refused.too_many_segments",
+  unknown_view: "desktop.navigation.refused.unknown_view",
+  unknown_param: "desktop.navigation.refused.unknown_param",
+  param_not_accepted: "desktop.navigation.refused.param_not_accepted",
+  param_malformed: "desktop.navigation.refused.param_malformed",
+  not_implemented: "desktop.navigation.refused.not_implemented",
+};
+
+/** The reason a link or request opens nothing, in the person's words. */
+export function refusalReasonText(
+  t: Translate,
+  register: NavigationRegister,
+  reason: ViewLinkRefusal | ViewRefusalReason,
+  viewId: string | null,
+): string {
+  const element = viewId === null ? undefined : elementOf(register, viewId);
+  return t(REFUSAL_KEYS[reason], {
+    view: element ? t(element.label) : (viewId ?? ""),
+  });
 }
 
 /** The toast for a link or request that opens nothing. */

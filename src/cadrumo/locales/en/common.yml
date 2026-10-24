@@ -3196,20 +3196,36 @@ desktop:
         there yet.'
     pending: Answer the open question first.
     refused:
+      credentials: This link carries a user name or password, so it isn't opened.
+      fragment: This link has a “#” part, which Cadrumo links never have.
       link: This isn't a link Cadrumo can open.
+      malformed: This link isn't written the way Cadrumo links are.
+      not_a_view_link: This Cadrumo link doesn't point to a view.
       not_implemented: Nothing here can open {view}.
       param: This link asks for something its view can't show.
+      param_malformed: This link points to an item, but the item's id isn't in the
+        right form.
+      param_not_accepted: This link asks {view} for something it can't show.
+      percent_encoding: This link has encoded characters, which Cadrumo links never
+        have.
+      query: This link has options after “?” that Cadrumo doesn't understand.
+      too_long: This link is too long to be a Cadrumo link.
+      too_many_segments: This link's path is longer than any view's.
+      unknown_param: This link asks for an option no view has.
       unknown_view: This link points to a view this version of Cadrumo doesn't have.
+      uppercase: Cadrumo links are all lowercase, and this one isn't.
     sign_in: Sign in to open {view}.
   palette:
     actions: Actions
     close: Close search
+    copy_link: Copy the link to this view
     documentation: Documentation
     kind_casilla: Casilla
     kind_cli: Command
     kind_term: Term
     label: Search
     no_results: No pages match “{query}”.
+    open_link: Open {view}
     placeholder: Search the docs or run an action
     searching: Searching…
     type_to_search: Type to search.
@@ -3226,7 +3242,6 @@ desktop:
     hide: Hide the bottom panel
     label: Bottom panel
     resize: Resize the bottom panel
-    show: Show the bottom panel
   profile:
     action:
       about: About {field}

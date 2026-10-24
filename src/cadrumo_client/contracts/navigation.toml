@@ -100,7 +100,7 @@ surfaces = ["tui"]
 id = "declarations"
 label = "navigation.view.declarations.label"
 keywords = "declarations returns modelo filing declaraciones"
-surfaces = ["tui"]
+surfaces = ["gui", "tui"]
 
 [[element]]
 id = "aeat-sync"

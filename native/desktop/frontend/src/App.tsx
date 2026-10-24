@@ -18,7 +18,11 @@ import { IconButton } from "@/components/ui/icon-button";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toast } from "@/components/ui/toast";
-import { CommandPalette, type DocsSearch } from "./components/CommandPalette";
+import {
+  CommandPalette,
+  type DocsSearch,
+  type PastedLink,
+} from "./components/CommandPalette";
 import {
   ContextMenu,
   type MenuAnchor,
@@ -99,8 +103,10 @@ import {
   chordLabel,
   findAction,
   primaryChord,
+  viewActions,
   type Action,
   type FocusArea,
+  type ViewActionSpec,
 } from "./shell/actions";
 import type { Host, TerminalKind } from "./shell/host";
 import type { AgentToolRefusal } from "./shell/agentSession";
@@ -137,11 +143,20 @@ import {
   NavigationContext,
   type NavigationRuntime,
 } from "./shell/navigation/hooks";
+import {
+  formatViewLink,
+  isCadrumoLink,
+  parseViewLink,
+} from "./shell/navigation/links";
 import { NAVIGATION } from "./shell/navigation/projection";
-import type { ViewParams } from "./shell/navigation/register";
-import { useNavigator } from "./shell/navigation/useNavigator";
+import { elementOf, type ViewParams } from "./shell/navigation/register";
+import {
+  refusalReasonText,
+  useNavigator,
+} from "./shell/navigation/useNavigator";
 import {
   mountedNow,
+  pageViewId,
   type WindowViewEntry,
 } from "./shell/navigation/windowViews";
 
@@ -396,7 +411,17 @@ export function App({ host }: { host: Host }) {
       ["profile", profilePage],
       ["calendar", calendarPage],
       ["ledger", ledgerPage],
+      ["declarations", declarationsPage],
       ["agent", agentBody],
+      // The documentation is a frame the window does not hold a ref to.
+      [
+        "docs",
+        {
+          get current() {
+            return document.querySelector<HTMLElement>(".docs-frame");
+          },
+        },
+      ],
     ];
     const releases = targets.map(([id, ref]) =>
       focus.register(id, () => ref.current),
@@ -1371,6 +1396,51 @@ export function App({ host }: { host: Host }) {
     [environment, showDocs],
   );
 
+  const { openView, openLink: openViewLink, resolve: resolveView } = nav;
+  // The register element of the main view shown: the first pane's page, or
+  // its Ledger section; nothing while the first pane is put away.
+  const shownViewId = firstPaneShown
+    ? pageViewId(
+        profileOn || calendarOn || ledgerOn || declarationsOn ? page : "docs",
+        layout.ledgerView.section,
+      )
+    : undefined;
+  // A query that is a `cadrumo:` link is one palette entry: the view it
+  // opens, or why it opens none.
+  const pastedLink = useCallback(
+    (text: string): PastedLink | null => {
+      if (!isCadrumoLink(text)) return null;
+      const parsed = parseViewLink(text, NAVIGATION);
+      if (parsed.kind === "refused")
+        return {
+          label: refusalReasonText(t, NAVIGATION, parsed.reason, null),
+          open: null,
+        };
+      const resolved = resolveView(parsed.link);
+      if (resolved.kind === "refused")
+        return {
+          label: refusalReasonText(
+            t,
+            NAVIGATION,
+            resolved.reason,
+            parsed.link.viewId,
+          ),
+          open: null,
+        };
+      const element = elementOf(NAVIGATION, resolved.opened);
+      return {
+        label: t("desktop.palette.open_link", {
+          view: element ? t(element.label) : resolved.opened,
+        }),
+        ...(resolved.surface === "tui"
+          ? { badge: t("navigation.view.terminal.label") }
+          : {}),
+        open: () => openViewLink(text),
+      };
+    },
+    [t, resolveView, openViewLink],
+  );
+
   // The single action registry.
   const actions = useMemo<Action[]>(
     () => [
@@ -1462,47 +1532,6 @@ export function App({ host }: { host: Host }) {
         run: () => patch({ zoom: 1 }),
       },
       {
-        id: "agent.toggle",
-        label:
-          agentVisible && !maximized
-            ? t("desktop.agent.hide")
-            : t("desktop.agent.show"),
-        group: "layout",
-        icon: "agent",
-        chords: [
-          { mod: true, shift: true, code: "KeyA", key: "A", scope: "global" },
-        ],
-        enabled: () => signedIn,
-        run: () => toggleColumn("agent"),
-      },
-      {
-        id: "tui.toggle",
-        label:
-          tuiVisible && !maximized
-            ? t("desktop.tui.hide")
-            : t("desktop.tui.show"),
-        group: "layout",
-        icon: "tui",
-        chords: [
-          { mod: true, shift: true, code: "KeyT", key: "T", scope: "global" },
-        ],
-        run: () => toggleColumn("tui"),
-      },
-      {
-        id: "docs.toggle",
-        label:
-          docsVisible && !maximized
-            ? t("desktop.docs.hide")
-            : t("desktop.docs.show"),
-        group: "layout",
-        icon: "book",
-        keywords: "documentation help manual",
-        chords: [
-          { mod: true, shift: true, code: "KeyH", key: "H", scope: "global" },
-        ],
-        run: () => toggleColumn("docs"),
-      },
-      {
         id: "view.maximize",
         label: maximized
           ? t("desktop.pane.restore")
@@ -1584,58 +1613,6 @@ export function App({ host }: { host: Host }) {
             ...p,
             order: p.order === "docs" ? "tui" : "docs",
           })),
-      },
-      {
-        id: "panel.toggle",
-        label: layout.panelOpen
-          ? t("desktop.panel.hide")
-          : t("desktop.panel.show"),
-        group: "layout",
-        icon: layout.panelOpen ? "chevronDown" : "chevronUp",
-        chords: [{ ctrl: true, code: "Backquote", key: "`", scope: "global" }],
-        run: () => {
-          if (!layout.panelOpen) openTab(layout.tab, { toggle: false });
-          else {
-            patch({ panelOpen: false });
-            if (maximized === "panel") setMaximized(null);
-          }
-        },
-      },
-      {
-        id: "panel.console",
-        label: t("desktop.rail.console"),
-        group: "panel",
-        icon: "console",
-        keywords: "shell powershell terminal",
-        chords: [
-          { mod: true, shift: true, code: "Digit1", key: "1", scope: "global" },
-        ],
-        run: () => openTab("console"),
-        choose: () => openTab("console", { toggle: false }),
-      },
-      {
-        id: "panel.python",
-        label: t("desktop.rail.python"),
-        group: "panel",
-        icon: "python",
-        keywords: "repl interpreter",
-        chords: [
-          { mod: true, shift: true, code: "Digit2", key: "2", scope: "global" },
-        ],
-        run: () => openTab("python"),
-        choose: () => openTab("python", { toggle: false }),
-      },
-      {
-        id: "panel.logs",
-        label: t("desktop.rail.logs"),
-        group: "panel",
-        icon: "logs",
-        chords: [
-          { mod: true, shift: true, code: "Digit3", key: "3", scope: "global" },
-          { mod: true, shift: true, code: "KeyL", key: "L", scope: "global" },
-        ],
-        run: () => openTab("logs"),
-        choose: () => openTab("logs", { toggle: false }),
       },
       {
         id: "logs.errors",
@@ -1765,91 +1742,217 @@ export function App({ host }: { host: Host }) {
           !setupLive.cancel_requested,
         run: () => setup.cancel(),
       },
+      // Every view the register names, each declared once: its label and
+      // keywords come from the register, and choosing one by name opens it
+      // through the navigator. Only what the window adds is said here: an
+      // older id, an icon, a chord, and for a page or a pane the toggle its
+      // chord and rail button keep. Pages take no chord where none is
+      // declared: the shell's own are spoken for, and a page's grid keeps
+      // the plain and Alt keys.
+      ...viewActions(
+        NAVIGATION,
+        t,
+        {
+          profile: { icon: "user", group: "views" },
+          calendar: {
+            id: "view.calendar",
+            icon: "calendar",
+            group: "views",
+            chords: [
+              {
+                mod: true,
+                shift: true,
+                code: "KeyD",
+                key: "D",
+                scope: "global",
+              },
+            ],
+            run: () => {
+              if (calendarVisible) {
+                setPage("docs");
+                return;
+              }
+              wantsCalendar.current = true;
+              setMaximized((area) => (area === "docs" ? area : null));
+              setPage("calendar");
+            },
+          },
+          ledger: {
+            id: "view.ledger",
+            icon: "ledger",
+            group: "views",
+            run: () => {
+              if (ledgerVisible) {
+                setPage("docs");
+                return;
+              }
+              wantsLedger.current = true;
+              setMaximized((area) => (area === "docs" ? area : null));
+              setPage("ledger");
+            },
+          },
+          ...Object.fromEntries(
+            [
+              "ledger/movements",
+              "ledger/invoices",
+              "ledger/documents",
+              "ledger/rules",
+              "ledger/registers",
+              "ledger/health",
+            ].map((id) => [id, { icon: "ledger", group: "views" } as const]),
+          ),
+          declarations: {
+            id: "view.declarations",
+            icon: "page",
+            group: "views",
+            run: () => {
+              if (declarationsVisible) {
+                setPage("docs");
+                return;
+              }
+              wantsDeclarations.current = true;
+              setMaximized((area) => (area === "docs" ? area : null));
+              setPage("declarations");
+            },
+          },
+          docs: {
+            id: "docs.toggle",
+            icon: "book",
+            group: "layout",
+            chords: [
+              {
+                mod: true,
+                shift: true,
+                code: "KeyH",
+                key: "H",
+                scope: "global",
+              },
+            ],
+            run: () => toggleColumn("docs"),
+          },
+          agent: {
+            id: "agent.toggle",
+            icon: "agent",
+            group: "layout",
+            chords: [
+              {
+                mod: true,
+                shift: true,
+                code: "KeyA",
+                key: "A",
+                scope: "global",
+              },
+            ],
+            enabled: () => signedIn,
+            run: () => toggleColumn("agent"),
+          },
+          terminal: {
+            id: "tui.toggle",
+            icon: "tui",
+            group: "layout",
+            chords: [
+              {
+                mod: true,
+                shift: true,
+                code: "KeyT",
+                key: "T",
+                scope: "global",
+              },
+            ],
+            run: () => toggleColumn("tui"),
+          },
+          panel: {
+            id: "panel.toggle",
+            icon: layout.panelOpen ? "chevronDown" : "chevronUp",
+            group: "layout",
+            chords: [
+              { ctrl: true, code: "Backquote", key: "`", scope: "global" },
+            ],
+            run: () => {
+              if (!layout.panelOpen) openTab(layout.tab, { toggle: false });
+              else {
+                patch({ panelOpen: false });
+                if (maximized === "panel") setMaximized(null);
+              }
+            },
+          },
+          "panel/console": {
+            id: "panel.console",
+            icon: "console",
+            group: "panel",
+            chords: [
+              {
+                mod: true,
+                shift: true,
+                code: "Digit1",
+                key: "1",
+                scope: "global",
+              },
+            ],
+            run: () => openTab("console"),
+          },
+          "panel/python": {
+            id: "panel.python",
+            icon: "python",
+            group: "panel",
+            chords: [
+              {
+                mod: true,
+                shift: true,
+                code: "Digit2",
+                key: "2",
+                scope: "global",
+              },
+            ],
+            run: () => openTab("python"),
+          },
+          "panel/logs": {
+            id: "panel.logs",
+            icon: "logs",
+            group: "panel",
+            chords: [
+              {
+                mod: true,
+                shift: true,
+                code: "Digit3",
+                key: "3",
+                scope: "global",
+              },
+              {
+                mod: true,
+                shift: true,
+                code: "KeyL",
+                key: "L",
+                scope: "global",
+              },
+            ],
+            run: () => openTab("logs"),
+          },
+        } satisfies Record<string, ViewActionSpec>,
+        (id) => {
+          const resolved = resolveView({
+            viewId: id,
+            params: {},
+            prefer: null,
+          });
+          return resolved.kind === "opened" && resolved.opened === id
+            ? resolved.surface
+            : null;
+        },
+        (id) => openView(id),
+      ),
       {
-        id: "view.calendar",
-        label: t("desktop.calendar.title"),
+        // The link to the main view shown: the first pane's page, or its
+        // Ledger section. A pane beside it is not a place a link returns to.
+        id: "view.copyLink",
+        label: t("desktop.palette.copy_link"),
         group: "views",
-        icon: "calendar",
-        keywords: "obligations deadlines modelo plazos",
-        chords: [
-          { mod: true, shift: true, code: "KeyD", key: "D", scope: "global" },
-        ],
-        // Only where the host offers the view: nothing leads to a page that
-        // could not load.
-        enabled: () => views !== undefined,
+        icon: "link",
+        keywords: "cadrumo url address share",
+        enabled: () => shownViewId !== undefined,
         run: () => {
-          if (calendarVisible) {
-            setPage("docs");
-            return;
-          }
-          wantsCalendar.current = true;
-          setMaximized((area) => (area === "docs" ? area : null));
-          setPage("calendar");
-        },
-        choose: () => {
-          if (calendarVisible) {
-            calendarPage.current?.focus();
-            return;
-          }
-          wantsCalendar.current = true;
-          setMaximized((area) => (area === "docs" ? area : null));
-          setPage("calendar");
-        },
-      },
-      {
-        id: "view.ledger",
-        label: t("desktop.ledger.title"),
-        group: "views",
-        icon: "ledger",
-        keywords: "movements transactions invoices bank movimientos facturas",
-        // No chord: the shell's own are spoken for, and the page's grid
-        // keeps the plain and Alt keys.
-        enabled: () => host.ledger !== undefined,
-        run: () => {
-          if (ledgerVisible) {
-            setPage("docs");
-            return;
-          }
-          wantsLedger.current = true;
-          setMaximized((area) => (area === "docs" ? area : null));
-          setPage("ledger");
-        },
-        choose: () => {
-          if (ledgerVisible) {
-            ledgerPage.current?.focus();
-            return;
-          }
-          wantsLedger.current = true;
-          setMaximized((area) => (area === "docs" ? area : null));
-          setPage("ledger");
-        },
-      },
-      {
-        id: "view.declarations",
-        label: t("workspace.declarations.destination.overview"),
-        group: "views",
-        icon: "page",
-        keywords: "modelo declaration return filing declaraciones modelos",
-        // No chord: the shell's own are spoken for, and the page's grid
-        // keeps the plain and Alt keys.
-        enabled: () => host.modelo !== undefined,
-        run: () => {
-          if (declarationsVisible) {
-            setPage("docs");
-            return;
-          }
-          wantsDeclarations.current = true;
-          setMaximized((area) => (area === "docs" ? area : null));
-          setPage("declarations");
-        },
-        choose: () => {
-          if (declarationsVisible) {
-            declarationsPage.current?.focus();
-            return;
-          }
-          wantsDeclarations.current = true;
-          setMaximized((area) => (area === "docs" ? area : null));
-          setPage("declarations");
+          if (shownViewId !== undefined)
+            copy(formatViewLink(NAVIGATION, shownViewId));
         },
       },
       {
@@ -2007,9 +2110,11 @@ export function App({ host }: { host: Host }) {
       about,
       agentVisible,
       tuiVisible,
-      docsVisible,
       firstPaneShown,
       toggleColumn,
+      openView,
+      resolveView,
+      shownViewId,
       layout.panelOpen,
       layout.tab,
       layout.zoom,
@@ -2110,7 +2215,6 @@ export function App({ host }: { host: Host }) {
     } else if (view.kind === "terminal") showTui();
     else openTab(view.tab ?? layout.tab, { toggle: false });
   };
-  const openView = nav.openView;
   // AEAT access is set up on its own view of the profile, in the TUI.
   const openAeatSetup = useCallback(
     () => openView("profile/aeat-access"),
@@ -3505,6 +3609,7 @@ export function App({ host }: { host: Host }) {
             {paletteOpen && (
               <CommandPalette
                 actions={[...paletteExtra, ...actions]}
+                pastedLink={pastedLink}
                 language={languageControl}
                 searchDocs={searchDocs}
                 openDoc={openDoc}

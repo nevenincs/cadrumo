@@ -3240,21 +3240,39 @@ desktop:
         encara no es pot mostrar allà.'
     pending: Respon primer la pregunta oberta.
     refused:
+      credentials: Aquest enllaç porta un usuari o una contrasenya, així que no s'obre.
+      fragment: Aquest enllaç té una part amb «#», i els enllaços de Cadrumo no en
+        tenen mai.
       link: Cadrumo no pot obrir aquest enllaç.
+      malformed: Aquest enllaç no està escrit com els enllaços de Cadrumo.
+      not_a_view_link: Aquest enllaç de Cadrumo no porta a cap vista.
       not_implemented: Aquí no hi ha res que pugui obrir {view}.
       param: Aquest enllaç demana una cosa que la seva vista no pot mostrar.
+      param_malformed: Aquest enllaç apunta a un element, però el seu identificador
+        no té la forma correcta.
+      param_not_accepted: Aquest enllaç demana a {view} una cosa que no pot mostrar.
+      percent_encoding: Aquest enllaç té caràcters codificats, i els enllaços de Cadrumo
+        no en tenen mai.
+      query: Aquest enllaç té opcions després de «?» que Cadrumo no entén.
+      too_long: Aquest enllaç és massa llarg per ser un enllaç de Cadrumo.
+      too_many_segments: El camí d'aquest enllaç és més llarg que el de qualsevol
+        vista.
+      unknown_param: Aquest enllaç demana una opció que cap vista no té.
       unknown_view: Aquest enllaç porta a una vista que aquesta versió de Cadrumo
         no té.
+      uppercase: Els enllaços de Cadrumo van en minúscules, i aquest no.
     sign_in: Inicia la sessió per obrir {view}.
   palette:
     actions: Accions
     close: Tanca la cerca
+    copy_link: Copia l'enllaç a aquesta vista
     documentation: Documentació
     kind_casilla: Casilla
     kind_cli: Ordre
     kind_term: Terme
     label: Cerca
     no_results: Cap pàgina no coincideix amb «{query}».
+    open_link: Obre {view}
     placeholder: Cerca a la documentació o executa una acció
     searching: S'està cercant…
     type_to_search: Escriu per cercar.
@@ -3271,7 +3289,6 @@ desktop:
     hide: Amaga el panell inferior
     label: Panell inferior
     resize: Canvia la mida del panell inferior
-    show: Mostra el panell inferior
   profile:
     action:
       about: Informació sobre {field}

@@ -3,6 +3,12 @@
 
 import type { IconName } from "@/components/ui/icon";
 import type { BridgeChord } from "../ipc/contract";
+import {
+  elementOf,
+  type NavigationRegister,
+  type Surface,
+} from "./navigation/register";
+import type { Translate } from "./strings";
 
 // User-agent client hints where the engine has them (WebView2); the older
 // platform string elsewhere (WebKit), which still reports macOS correctly.
@@ -38,6 +44,13 @@ export type Action = {
   group: string;
   icon: IconName;
   keywords?: string;
+  /** The register element it shows, which the palette also finds it by. */
+  view?: string;
+  /** Said after the label where the label alone is ambiguous: a section's
+   * page. */
+  context?: string;
+  /** Where it opens, when that is not the window. */
+  badge?: string;
   chords?: readonly Chord[];
   /** Kept out of the palette (shortcut-only actions such as terminal copy). */
   hidden?: boolean;
@@ -139,12 +152,86 @@ export function bridgeChords(actions: readonly Action[]): BridgeChord[] {
   return out;
 }
 
-/** Palette relevance: every query word must start or occur in the text. */
+/** How the window offers one register element in the palette. The label,
+ * keywords and the way it opens come from the register; this says only
+ * what the window adds. */
+export type ViewActionSpec = {
+  /** The action's id where it is older than the register; `view.{id}`
+   * otherwise. */
+  readonly id?: string;
+  readonly icon: IconName;
+  readonly group: string;
+  readonly chords?: readonly Chord[];
+  /** What its chord and its rail button do, where that is not opening it:
+   * a pane's toggles. Chosen by name, it opens. */
+  readonly run?: () => void;
+  readonly enabled?: () => boolean;
+};
+
+/**
+ * The palette's view actions, one per register element some surface can
+ * open now: the window's first, in register order, then those only the TUI
+ * implements, badged with where they open. `opensIn` says which surface
+ * opens an element itself, not an ancestor; `open` opens it through the
+ * navigator. A section without a chord of its own is quiet: it is listed
+ * only for a query that finds it.
+ */
+export function viewActions(
+  register: NavigationRegister,
+  t: Translate,
+  specs: Readonly<Record<string, ViewActionSpec>>,
+  opensIn: (id: string) => Surface | null,
+  open: (id: string) => void,
+): Action[] {
+  const window: Action[] = [];
+  const terminal: Action[] = [];
+  for (const element of register.elements) {
+    const spec = Object.hasOwn(specs, element.id)
+      ? specs[element.id]
+      : undefined;
+    const where = opensIn(element.id);
+    const parent =
+      element.parent === null ? undefined : elementOf(register, element.parent);
+    const choose = () => open(element.id);
+    const action: Action = {
+      id: spec?.id ?? `view.${element.id}`,
+      view: element.id,
+      label: t(element.label),
+      ...(parent ? { context: t(parent.label) } : {}),
+      ...(where === "tui"
+        ? { badge: t("navigation.view.terminal.label") }
+        : {}),
+      group: spec?.group ?? "views",
+      icon: spec?.icon ?? (where === "tui" ? "tui" : "page"),
+      keywords: element.keywords,
+      ...(spec?.chords ? { chords: spec.chords } : {}),
+      quiet: element.parent !== null && !spec?.chords?.length,
+      enabled: () => where !== null && (spec?.enabled?.() ?? true),
+      run: spec?.run ?? choose,
+      choose,
+    };
+    (element.surfaces.includes("gui") ? window : terminal).push(action);
+  }
+  return [...window, ...terminal];
+}
+
+/** Palette relevance: every query word must start or occur in the text: the
+ * label, keywords, group, the section's page, where it opens, and the
+ * register id of the element it shows. */
 export function scoreAction(action: Action, query: string): number {
   const q = query.trim().toLowerCase();
   if (!q) return 1;
-  const haystack =
-    `${action.label} ${action.keywords ?? ""} ${action.group}`.toLowerCase();
+  const haystack = [
+    action.label,
+    action.keywords,
+    action.group,
+    action.context,
+    action.badge,
+    action.view,
+  ]
+    .filter((part) => part !== undefined)
+    .join(" ")
+    .toLowerCase();
   const words = haystack.split(/[^\p{L}\p{N}]+/u);
   let score = 0;
   for (const part of q.split(/\s+/)) {

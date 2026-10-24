@@ -26,6 +26,15 @@ import { useStrings } from "../shell/strings";
 export type DocsSearch =
   ((query: string) => Promise<DocsSearchResult[]>) | null;
 
+/** What a pasted `cadrumo:` link offers: the one entry that opens it, or,
+ * with no `open`, the reason it cannot. */
+export type PastedLink = {
+  readonly label: string;
+  /** Where it opens, when that is not the window. */
+  readonly badge?: string;
+  readonly open: (() => void) | null;
+};
+
 // Result kinds the shell names; an unknown kind shows without a label.
 const KIND_LABELS: Record<string, string> = {
   concept: "desktop.palette.kind_term",
@@ -94,9 +103,12 @@ export function CommandPalette({
   close,
   fallbackFocus,
   language,
+  pastedLink,
 }: {
   actions: readonly Action[];
   language?: LanguageControl;
+  /** Reads a query as a `cadrumo:` link; null for any other text. */
+  pastedLink?: (text: string) => PastedLink | null;
   searchDocs: DocsSearch;
   openDoc: (url: string) => void;
   close: () => void;
@@ -118,7 +130,14 @@ export function CommandPalette({
     results: DocsSearchResult[];
   }>({ state: "idle", results: [] });
   const trimmed = query.trim();
-  const searching = trimmed.length >= MIN_QUERY && searchDocs !== null;
+  // A pasted link is the whole answer: neither actions nor the
+  // documentation are searched for it.
+  const pasted = useMemo(
+    () => (trimmed && pastedLink ? pastedLink(trimmed) : null),
+    [trimmed, pastedLink],
+  );
+  const searching =
+    pasted === null && trimmed.length >= MIN_QUERY && searchDocs !== null;
 
   // Debounced; a newer query supersedes an older one.
   useEffect(() => {
@@ -137,6 +156,7 @@ export function CommandPalette({
   }, [trimmed, searching, searchDocs]);
 
   const matched = useMemo(() => {
+    if (pasted) return [];
     const ranked = actions
       .filter(
         (action) =>
@@ -149,7 +169,7 @@ export function CommandPalette({
       .sort((x, y) => y[1] - x[1])
       .map(([action]) => action);
     return trimmed ? ranked.slice(0, ACTIONS_WHEN_SEARCHING) : ranked;
-  }, [actions, query, trimmed]);
+  }, [actions, query, trimmed, pasted]);
   const found = useMemo(
     () =>
       searching
@@ -185,7 +205,7 @@ export function CommandPalette({
       : docs.state === "done"
         ? t("desktop.palette.no_results", { query: trimmed })
         : t("desktop.palette.searching")
-    : !searching && matched.length === 0
+    : !searching && matched.length === 0 && pasted === null
       ? t("desktop.palette.type_to_search")
       : null;
 
@@ -193,6 +213,9 @@ export function CommandPalette({
     <Dialog open onOpenChange={(open) => !open && close()}>
       <DialogContent
         placement="top"
+        // The palette never holds a navigation: what is chosen in it is
+        // a navigation of its own, run once it has closed.
+        modalLayer={false}
         className="palette flex w-palette flex-col gap-0 overflow-hidden rounded-2xl p-0"
         aria-describedby={undefined}
         onOpenAutoFocus={(event) => {
@@ -261,8 +284,31 @@ export function CommandPalette({
               {note}
             </p>
           )}
-          <CommandList hidden={found.length + matched.length === 0}>
+          <CommandList
+            hidden={found.length + matched.length === 0 && pasted === null}
+          >
             <div className="palette-results grid gap-1">
+              {pasted && (
+                <section>
+                  <CommandGroup heading={t("desktop.palette.actions")}>
+                    <CommandItem
+                      value="link"
+                      disabled={pasted.open === null}
+                      onSelect={() => pasted.open && run(pasted.open)}
+                    >
+                      <Icon
+                        name={pasted.open ? "link" : "refused"}
+                        size="md"
+                        className={ROW_ICON}
+                      />
+                      <span className="palette-title min-w-0 flex-1 truncate font-medium">
+                        {pasted.label}
+                      </span>
+                      {pasted.badge && <Badge>{pasted.badge}</Badge>}
+                    </CommandItem>
+                  </CommandGroup>
+                </section>
+              )}
               {/* While a query searches the documentation its section is the
                   first one, results or not: what reads the first section
                   never finds actions there in the meantime. */}
@@ -334,9 +380,17 @@ export function CommandPalette({
                           size="md"
                           className={ROW_ICON}
                         />
-                        <span className="palette-title min-w-0 flex-1 truncate font-medium">
-                          {action.label}
+                        <span className="flex min-w-0 flex-1 items-baseline gap-2">
+                          <span className="palette-title min-w-0 truncate font-medium">
+                            {action.label}
+                          </span>
+                          {action.context && (
+                            <span className="palette-context truncate text-xs text-muted-foreground">
+                              {action.context}
+                            </span>
+                          )}
                         </span>
+                        {action.badge && <Badge>{action.badge}</Badge>}
                         {primaryChord(action) && (
                           <Kbd className="palette-chord">
                             {primaryChord(action)}

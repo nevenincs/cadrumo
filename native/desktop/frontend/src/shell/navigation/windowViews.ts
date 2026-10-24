@@ -6,10 +6,11 @@
 import type { LedgerSection, PanelTab } from "../layout";
 
 /** The window's pages that a register element opens. */
-export type WindowPage = "profile" | "calendar" | "ledger" | "docs";
+export type WindowPage =
+  "profile" | "calendar" | "ledger" | "declarations" | "docs";
 
 /** A host port a view needs; without it the window does not implement it. */
-export type WindowPort = "userProfile" | "views" | "ledger";
+export type WindowPort = "userProfile" | "views" | "ledger" | "modelo";
 
 export type WindowView =
   /** A page of the first pane: opening it unmounts the page shown before. */
@@ -72,6 +73,7 @@ export const WINDOW_VIEWS: Readonly<Record<string, WindowViewEntry>> = {
   "ledger/rules": page("ledger", "rules", "ledger"),
   "ledger/registers": page("ledger", "registers", "ledger"),
   "ledger/health": page("ledger", "health", "ledger"),
+  declarations: page("declarations", null, "modelo"),
   agent: { view: { kind: "agent" }, signedIn: true, port: null, honours: [] },
   terminal: {
     view: { kind: "terminal" },
@@ -88,6 +90,22 @@ export const WINDOW_VIEWS: Readonly<Record<string, WindowViewEntry>> = {
 /** The window's own view of `id`, or undefined where the window has none. */
 export function windowView(id: string): WindowViewEntry | undefined {
   return Object.hasOwn(WINDOW_VIEWS, id) ? WINDOW_VIEWS[id] : undefined;
+}
+
+/** The element of the page shown, the inverse of this table for pages: a
+ * Ledger section's own id, otherwise the page's. Undefined for a page no
+ * element opens. */
+export function pageViewId(
+  page: string,
+  ledgerSection: LedgerSection,
+): string | undefined {
+  const section = page === "ledger" ? ledgerSection : null;
+  return Object.keys(WINDOW_VIEWS).find((id) => {
+    const view = WINDOW_VIEWS[id]?.view;
+    return (
+      view?.kind === "page" && view.page === page && view.section === section
+    );
+  });
 }
 
 /** What the window has mounted that a navigation can take down: the page
