@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:a8497d69af87dbb00355bdff7100e7f7c6e251f3e4a3ec9672838342e3a6858b'
+body_hash: 'sha256:0ac26a91c77cf8080fe4d610b79376dfca261f63bd4926b0ab6d391b409bdd8b'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -192,6 +192,15 @@ related:
 - `S01` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
 - `S01` `verify:` `cargo test --lib provisioning::pins (5 passed), cargo clippy --all-targets with and without --features platform -D warnings, rustfmt --check` -> `pass`
 - `S01` `by:` `implementation-engineer-high`
+- `S05` `A` `native/application/src/provisioning/browser.rs`
+- `S05` `M` `native/application/src/provisioning/receipts.rs`
+- `S05` `M` `native/application/src/provisioning/mod.rs`
+- `S05` `verify:` `cargo test --offline --no-fail-fast on an export of HEAD plus this Step (lib 113, application 25, installation 22; package_inspection linked_root_and_deep_root_ancestor_are_refused pre-existing non-ASCII junction failure)` -> `pass`
+- `S05` `verify:` `cargo test --lib --features platform provisioning::browser (9)` -> `pass`
+- `S05` `verify:` `cargo clippy --all-targets -- -D warnings` -> `pass`
+- `S05` `verify:` `cargo clippy --all-targets --features platform -- -D warnings` -> `pass`
+- `S05` `verify:` `rustfmt --edition 2024 through stdin on browser.rs receipts.rs mod.rs` -> `pass`
+- `S05` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -210,3 +219,5 @@ related:
 - `S02` review correction: transfer-source-fallback, retry-first-wait, http-unbounded-loops
 - `S04` review correction: activity-finish-race, interrupted-hidden-by-observation, receipt-timestamp-interop, setup-selection-vs-button; a `not_in_this_build` block also outranks an interruption beside the hardware block, because Resume cannot change either
 - `S01` review correction: model-pins-without-generator, browser-pin-source-hosts; the load-target inventories gain only this Step's modules `(dev.env.local_ai_model_pins,` plus `dev.env.local_ai_pins` and `cadrumo.core.local_ai_pins` that S01 left out); other sessions' uncommitted inventory lines stay uncommitted
+- `S05` S05 completion marker read from the bundled driver 1.64.0-beta-1791568591000, lib/coreBundle.js: browserDirectoryToMarkerFilePath writes and reads `<build>/INSTALLATION_COMPLETE` (lines 33877-33878, 34056-34057); the out-of-process installer main() removes the build folder, extracts the zip, chmods the executable 0o755 and writes the empty marker last (33939-33951); downloadBrowserWithProgressBar skips a build whose marker exists (33724); launch checks only that the executable exists (executablePathOrDie, 34488-34494) and on win-x64 runs winldd PrintDeps.exe unless a fresh `DEPENDENCIES_VALIDATED` exists (34979-34995), which the engine never writes; .links entries (34887-34906) feed only the vendor's stale-build collection and are not written
+- `S05` S05 component.rs is being reworked by the parallel local AI lane, so the bounded zip extraction is a browser-local copy of its rules rather than a shared factoring; verification ran on an index export because that lane's uncommitted `local_ai` files do not compile yet

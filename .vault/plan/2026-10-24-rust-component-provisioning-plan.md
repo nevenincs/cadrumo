@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:f8d4f303f932e5e457674f75d627f98daa2e24e76aa03422b2f7732b97cf3d5a'
+body_hash: 'sha256:6e09c708b40c341083a37d9a6b344848462f50402178c604ad50c0f1ab290c65'
 ---
 
 # `rust-component-provisioning` plan
@@ -52,7 +52,7 @@ The Rust engine gains declarative pins, a proxy-aware pinned transfer with retry
 
 The engine installs pinned Chromium archives straight into the bundled driver's layout and checks them with its own headless launch; Python only locates the result.
 
-- [ ] `P02.S05` - Install each pending pinned Chromium archive into the build directory browsers.json names, write the driver's completion marker set read from its registry code, and remove superseded builds after the new one verifies; `native/application/src/provisioning/browser.rs and tests against a recorded archive`.
+- [x] `P02.S05` - Install each pending pinned Chromium archive into the build directory browsers.json names, write the driver's completion marker set read from its registry code, and remove superseded builds after the new one verifies; `native/application/src/provisioning/browser.rs and tests against a recorded archive`.
 - [ ] `P02.S06` - Add the browser quick and full checks (marker, executable digest against the receipt, headless launch and version against the pins) and make the Python launch guard read the Rust component record instead of probing; `native/application/src/provisioning/browser.rs, src/cadrumo/application/provisioning_browser.py (locate only), src/cadrumo/adapters/outbound/aeat/browser/session.py and tests`.
 
 ### Phase `P03` - Local AI

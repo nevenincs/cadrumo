@@ -5,6 +5,11 @@
 //! the item last verified and the hosts it came from. It is evidence a check compares
 //! against, never authority: a receipt whose files are gone describes nothing, so
 //! [`observe_install`] only ever reports an item present when its files are.
+//!
+//! A receipt can also say where the item is: its [`ReceiptLocation`] names the folder the
+//! files are relative to, the paths a consumer uses inside it, and the identity facts a
+//! consumer compares with its own. The Python consumers locate a component through this
+//! record and nothing else, so it is the one place both languages agree on a location.
 
 use super::{failure::FailureCategory, items::ItemId, state::Observation};
 use crate::{
@@ -22,6 +27,70 @@ use std::{
 
 pub const RECEIPT_VERSION: u32 = 1;
 const RECEIPT_BYTES_LIMIT: u64 = 4 * 1024 * 1024;
+const LOCATION_ENTRIES_LIMIT: usize = 64;
+const LOCATION_TEXT_LIMIT: usize = 128;
+
+/// Where a verified item is, for the consumers that use it.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ReceiptLocation {
+    /// The absolute folder the receipt's files and these paths are relative to.
+    pub root: String,
+    /// The paths a consumer uses, by name, each relative to `root`.
+    pub paths: BTreeMap<String, RelativePath>,
+    /// Locale-neutral identity facts a consumer compares with its own before using the
+    /// item, such as the driver version a browser build belongs to.
+    pub facts: BTreeMap<String, String>,
+}
+
+impl ReceiptLocation {
+    pub fn new(
+        root: &Path,
+        paths: BTreeMap<String, RelativePath>,
+        facts: BTreeMap<String, String>,
+    ) -> Result<Self, Error> {
+        filesystem::absolute_root(root)?;
+        let root = root
+            .to_str()
+            .ok_or_else(|| Error::Invalid("non-UTF8 component location".into()))?
+            .to_owned();
+        let location = Self { root, paths, facts };
+        location.validate()?;
+        Ok(location)
+    }
+
+    /// The location's folder.
+    pub fn root(&self) -> PathBuf {
+        PathBuf::from(&self.root)
+    }
+
+    fn validate(&self) -> Result<(), Error> {
+        let named = |name: &String| {
+            !name.is_empty()
+                && name.len() <= LOCATION_TEXT_LIMIT
+                && name
+                    .bytes()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || b"_-".contains(&c))
+        };
+        let root = Path::new(&self.root);
+        if !root.is_absolute()
+            || root
+                .components()
+                .any(|part| matches!(part, std::path::Component::ParentDir))
+            || self.paths.is_empty()
+            || self.paths.len() + self.facts.len() > LOCATION_ENTRIES_LIMIT
+            || !self.paths.keys().all(named)
+            || !self.facts.keys().all(named)
+            || self
+                .facts
+                .values()
+                .any(|value| value.is_empty() || value.len() > LOCATION_TEXT_LIMIT)
+        {
+            return Err(Error::Invalid("receipt location".into()));
+        }
+        Ok(())
+    }
+}
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -43,6 +112,9 @@ pub struct Receipt {
     /// fractional seconds, as the earlier setup wrote them, holds them truncated.
     pub verified_at: String,
     pub hosts: Vec<HostName>,
+    /// Where the item is; absent from receipts that only describe files.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub location: Option<ReceiptLocation>,
 }
 
 impl Receipt {
@@ -60,12 +132,23 @@ impl Receipt {
             files,
             verified_at: utc_timestamp(verified_at),
             hosts,
+            location: None,
         };
         receipt.validate()?;
         Ok(receipt)
     }
 
+    /// The same receipt, saying where the item is.
+    pub fn located(mut self, location: ReceiptLocation) -> Result<Self, Error> {
+        self.location = Some(location);
+        self.validate()?;
+        Ok(self)
+    }
+
     fn validate(&self) -> Result<(), Error> {
+        if let Some(location) = &self.location {
+            location.validate()?;
+        }
         let ordered = self
             .files
             .windows(2)
@@ -505,6 +588,56 @@ mod tests {
             store.write(&invalid).is_err(),
             "a receipt is only ever written in the canonical form"
         );
+    }
+
+    #[test]
+    fn a_located_receipt_round_trips_and_a_location_that_could_mislead_is_refused() {
+        let directory = tempfile::tempdir().unwrap();
+        let install_root = directory.path().join("install");
+        install(&install_root);
+        let location = ReceiptLocation::new(
+            &install_root,
+            [("tool".to_owned(), RelativePath::new("bin/tool").unwrap())].into(),
+            [("driver".to_owned(), "1.2.3".to_owned())].into(),
+        )
+        .unwrap();
+        assert_eq!(location.root(), install_root);
+        let located = receipt(&install_root).located(location.clone()).unwrap();
+        let store = ReceiptStore::new(directory.path().join("receipts")).unwrap();
+        store.write(&located).unwrap();
+        assert_eq!(
+            store.read(ItemId::LocalAi),
+            ReceiptReading::Present(located.clone())
+        );
+        let unlocated = serde_json::to_value(receipt(&install_root)).unwrap();
+        assert!(
+            unlocated.get("location").is_none(),
+            "a receipt without a location keeps the earlier shape"
+        );
+
+        assert!(
+            ReceiptLocation::new(Path::new("relative"), location.paths.clone(), [].into()).is_err()
+        );
+        assert!(ReceiptLocation::new(&install_root, [].into(), [].into()).is_err());
+        for (name, value) in [("Driver", "1"), ("driver", ""), ("", "1")] {
+            assert!(
+                ReceiptLocation::new(
+                    &install_root,
+                    location.paths.clone(),
+                    [(name.to_owned(), value.to_owned())].into()
+                )
+                .is_err(),
+                "{name}={value}"
+            );
+        }
+        let mut stored = serde_json::to_value(&located).unwrap();
+        stored["location"]["root"] = "relative/root".into();
+        fs::write(
+            directory.path().join("receipts/local_ai.json"),
+            stored.to_string(),
+        )
+        .unwrap();
+        assert_eq!(store.read(ItemId::LocalAi), ReceiptReading::Unreadable);
     }
 
     fn read_value(text: &str) -> serde_json::Value {

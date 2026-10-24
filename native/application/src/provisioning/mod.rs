@@ -13,8 +13,11 @@
 //! state from what a check observed, `plan` builds the approved plan and its digest with
 //! the free-space rule, `activity` keeps the per-item writer lock and the crash-surviving
 //! activity record, and `receipts` keeps the evidence of what was installed.
+//!
+//! `browser` installs the bundled driver's pinned Chromium builds into the layout it reads.
 
 pub mod activity;
+pub mod browser;
 pub mod connection;
 pub mod failure;
 pub(crate) mod http;
