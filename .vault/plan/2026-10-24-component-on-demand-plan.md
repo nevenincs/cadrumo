@@ -9,7 +9,7 @@ related:
   - '[[2026-10-24-rust-component-provisioning-reference]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:fb8ea710634d94cfd6469ca81af21ba6dc9ef2168bf4bee4b4992fcded96d93e'
+body_hash: 'sha256:a72e76306855b1de3243fdb672e8b05f17983df135a31db28f74a6ee212a35bb'
 ---
 
 # `component-on-demand` plan
@@ -34,8 +34,8 @@ The work is independent of the proposed `2026-10-24-rust-component-provisioning-
 - [x] `S01` - Name operator.provision.local_ai in the reader probe verdicts for runtime unreachable and role model not installed; a role the catalogue cannot serve on this hardware keeps its no-action verdict; `src/cadrumo/application/local_reader.py, src/cadrumo/application/provisioning_contracts.py and tests`.
 - [ ] `S02` - Check the role's reader before the first effect in evidence draft extraction and ledger classification, refusing with that verdict instead of a generic classifier error; `src/cadrumo/application/ledger/invoice_draft_extraction.py, src/cadrumo/entrypoints/ledger_llm_composition.py, src/cadrumo/application/ledger/batch_ingest.py and tests`.
 - [ ] `S03` - Turn a missing column-mapping or supply-nature model into a typed advisory naming the local AI item instead of a silent decline; `src/cadrumo/adapters/outbound/llm/column_role_mapping.py, src/cadrumo/application/ledger/column_roles.py, src/cadrumo/adapters/outbound/llm/supply_nature_proposal.py and tests`.
-- [ ] `S04` - Check the browser item at the start of every tax agency read and sign-in operation, before any certificate or secret loads; `src/cadrumo/adapters/outbound/aeat/browser/session.py, src/cadrumo/adapters/outbound/aeat/browser/factory.py, the live capture operation preflights under src/cadrumo/application/live/ and tests`.
-- [ ] `S05` - Word the browser and reader refusals and the label-fallback notice with the component's name and its setup action in four languages; `the provisioning and ledger subtrees of src/cadrumo/locales/*/ through the dev.locales workflow, src/cadrumo/application/dependency_wording.py`.
+- [x] `S04` - Check the browser item at the start of every tax agency read and sign-in operation, before any certificate or secret loads; `src/cadrumo/adapters/outbound/aeat/browser/session.py, src/cadrumo/adapters/outbound/aeat/browser/factory.py, the live capture operation preflights under src/cadrumo/application/live/ and tests`.
+- [ ] `S05` - Word the browser and reader refusals and the label-fallback notice with the component's name and its setup action in four languages, and register a REFUSED error code with a message key for a missing browser so a no-effect browser refusal settles REFUSED; `src/cadrumo/core/errors/error_codes.py and its catalogue, the provisioning and ledger subtrees of src/cadrumo/locales/*/ through the dev.locales workflow, src/cadrumo/application/dependency_wording.py, src/cadrumo/adapters/outbound/aeat/browser/session.py (code only) and tests`.
 - [ ] `S06` - Render a provisioning verdict on the CLI as the sentence plus the exact setup command instead of raw precondition action lines; `src/cadrumo/entrypoints/cli/config/status_rendering.py, the shared CLI refusal renderer and tests`.
 - [ ] `S07` - Route a provisioning verdict from the TUI operation modal to the Setup screen on that item; `src/cadrumo/entrypoints/tui/operations/run_result.py, src/cadrumo/entrypoints/tui/operations/refusal_explanation.py, src/cadrumo/entrypoints/tui/setup/ and tests`.
 - [ ] `S08` - Route every desktop refusal whose verdict names operator.provision to the setup prompt on that item, and give the Readers tab a set-up action; `native/desktop/frontend/src/shell/ledger.ts, native/desktop/frontend/src/App.tsx, native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx, native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx, scenarios and stories`.

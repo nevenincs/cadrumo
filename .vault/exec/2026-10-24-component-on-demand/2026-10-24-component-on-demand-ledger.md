@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:23539a45016201784d52f3d307c47573f6d6324e4100e739c306206b68129899'
+body_hash: 'sha256:f1553176d1fb8674a84d85c75298c93b52b879ed9171fe9fff55d0b9603eeadf'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -45,3 +45,26 @@ related:
 - `S01` `M` `src/cadrumo/application/tests/test_local_reader.py`
 - `S01` `verify:` `pytest local_reader, provisioning, llm reader, batch ingest and evidence CLI suites (144)` -> `pass`
 - `S01` `verify:` `ruff check/format, ty, lint-imports` -> `pass`
+- `S04` `M` `src/cadrumo/adapters/outbound/aeat/browser/factory.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/aeat/browser/session.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_browser_provisioning_refusal.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_terminal_preconditions.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_working_data.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_auth_operation_definitions.py`
+- `S04` `M` `src/cadrumo/application/auth/operation_definitions.py`
+- `S04` `M` `src/cadrumo/application/auth/protocols.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_operation_definitions.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_passphrase_operation_access.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_provider_configure_operation_access.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_session_acquire_operation_access.py`
+- `S04` `M` `src/cadrumo/entrypoints/live_state_composition.py`
+- `S04` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S04` `A` `src/cadrumo/entrypoints/tests/test_live_browser_readiness_refusal.py`
+- `S04` `verify:` `focused browser readiness pytest (10)` -> `pass`
+- `S04` `verify:` `browser, auth, preflight, runtime auth, provisioning_browser pytest (151 passed; 2 live-only test_live_evasion need CADRUMO_LIVE_TESTS_ENABLED)` -> `pass`
+- `S04` `verify:` `live operation caller pytest (128)` -> `pass`
+- `S04` `verify:` `ruff check/format, ty` -> `pass`
+
+## Notes
+
+- `S04` Start checks sit in entrypoint preflight bindings and an auth port, not under application/live, because application may not import the adapter's BrowserError; the refusal settles FAILED `(FAIL_BROWSER_SESSION_BROWSER)` until S05 adds a REFUSED code
