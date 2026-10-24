@@ -19,14 +19,24 @@ balance rather than as a movement.
 printed without one, as in separate debit and credit columns, the running
 balances decide: the balance before plus or minus the amount must give the
 line's balance. Only when no balance proves it does the reader's direction
-apply. A reader direction that disagrees with a printed sign is reported and
-ignored: the date and amount were anchored to the printed line, and the sign
-printed on that line is the fact.
+apply, and then only when the printed balances confirm the movement: a
+direction resting on the reader alone refuses the statement. A reader
+direction that disagrees with a printed sign is reported and ignored: the date
+and amount were anchored to the printed line, and the sign printed on that
+line is the fact.
 
-**Closure.** Where the statement prints an opening and a closing balance, or a
-running balance on its movement lines, the accepted movements must sum to them
-exactly. A contradiction means a movement is missing, invented or misread, so
-the statement is refused whole rather than imported short.
+**Closure.** Every printed balance is checked against the one before it -- the
+opening balance, a running balance, the closing balance -- across every
+movement between them, whichever order the statement lists them in. A movement
+inside an agreeing span is confirmed. A contradiction means a movement is
+missing, invented or misread, so the statement is refused whole rather than
+imported short.
+
+**Coverage.** A line printing a complete date and a non-zero amount that no
+accepted movement or balance accounts for may be a movement the reader missed.
+Unless the balances chain from the printed opening balance to the printed
+closing balance, which proves nothing is missing, such a line refuses the
+statement.
 
 Every value that reaches a movement is parsed by the shared provider parsers
 from its printed form. No warning produced here quotes a printed value: a
@@ -37,11 +47,10 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from itertools import pairwise
 
 from .....application.ledger.invoice_label_vocabulary import CURRENCY_CODES
 from .....application.ledger.statement_reading import (
@@ -92,6 +101,18 @@ _CURRENCY_BEFORE_RE = re.compile(r"(?:^|[^A-Za-z])([A-Z]{3}|[€£]) ?$")
 #: A numeric date, masked out of a line before its amounts are read.
 _DATE_SPAN_RE = re.compile(r"(?<!\d)\d{1,4}[./-]\d{1,2}[./-]\d{2,4}(?!\d)")
 
+#: A date printed with its month as a name, found within a line; the shared
+#: date parser decides whether the word is a month.
+_NAMED_MONTH_DATE_SPAN_RE = re.compile(
+    r"(?<!\d)\d{1,2}\.?[\s./-]+(?:de\s+|d'\s*)?[^\W\d_]{3,}\.?[\s./-]+(?:de\s+)?\d{4}(?!\d)"
+)
+
+#: A percent sign after an amount-shaped number: a rate, not money.
+_PERCENT_AFTER_RE = re.compile(r"^ ?%")
+
+#: No movement confirmed by a printed balance check.
+_NONE_CONFIRMED = frozenset[int]()
+
 
 class ReconciliationOutcome(StrEnum):
     """What the printed balances said about the accepted movements."""
@@ -140,6 +161,7 @@ class GroundedMovement:
         balance: Running balance printed on the anchoring line, if any.
         direction_source: ``printed_sign``, ``running_balance`` or ``reader``.
         printed: The printed forms the movement was parsed from, for audit.
+        confirmed: Whether a printed balance check spans this movement and agrees.
     """
 
     page_number: int
@@ -153,6 +175,7 @@ class GroundedMovement:
     balance: Decimal | None
     direction_source: str
     printed: Mapping[str, str]
+    confirmed: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -240,11 +263,12 @@ def _page_lines(text: str) -> tuple[str, ...]:
 
 
 def _amount_tokens(line: str) -> tuple[_Token, ...]:
-    """Return every amount the line prints with cents, dates masked out first."""
+    """Return every amount the line prints with cents, dates and percentages left out."""
     masked = _DATE_SPAN_RE.sub(lambda match: " " * len(match.group(0)), line)
     return tuple(
         _Token(text=match.group(0), start=match.start(), digits=_digits(match.group(0)))
         for match in _AMOUNT_TOKEN_RE.finditer(masked)
+        if _PERCENT_AFTER_RE.match(masked[match.end() :]) is None
     )
 
 
@@ -480,10 +504,19 @@ def _draft(item: _Anchored, conventions: _StatementConventions, warnings: list[s
 
 @dataclass(frozen=True, slots=True)
 class _PrintedBalances:
-    """Opening and closing balances read off dated balance lines, before any reader claim."""
+    """Opening and closing balances read off dated balance lines, before any reader claim.
+
+    Attributes:
+        opening: The balance brought in, when a dated balance line prints it.
+        closing: The balance carried on, when a dated balance line prints it.
+        lines: Every dated balance line, as page number and line index.
+        values: The value each of those lines prints.
+    """
 
     opening: Decimal | None
     closing: Decimal | None
+    lines: frozenset[tuple[int, int]]
+    values: frozenset[Decimal]
 
 
 def _signed_value(draft: _Draft) -> Decimal:
@@ -523,17 +556,23 @@ def _separate_balance_lines(drafts: Sequence[_Draft], warnings: list[str]) -> tu
     movements: list[_Draft] = []
     opening: Decimal | None = None
     closing: Decimal | None = None
+    lines: set[tuple[int, int]] = set()
+    values: set[Decimal] = set()
     for index, draft in enumerate(drafts):
         role = _balance_line_role(index, drafts)
         if role is None:
             movements.append(draft)
             continue
         warnings.append(f"{_label(draft.item.page, draft.item.position)}: prints a balance, not a movement; dropped")
+        lines.add((draft.item.page.page_number, draft.item.line_index))
+        values.add(_signed_value(draft))
         if role == "opening" and opening is None:
             opening = _signed_value(draft)
         elif role == "closing":
             closing = _signed_value(draft)
-    return movements, _PrintedBalances(opening=opening, closing=closing)
+    return movements, _PrintedBalances(
+        opening=opening, closing=closing, lines=frozenset(lines), values=frozenset(values)
+    )
 
 
 def _balance_sign(index: int, movements: Sequence[_Draft], opening: Decimal | None) -> int | None:
@@ -629,51 +668,163 @@ def _proposed_balance(
     ordered = pages if opening else tuple(reversed(pages))
     for page in ordered:
         printed = _present(page.proposal.opening_balance if opening else page.proposal.closing_balance)
-        if printed is not None and _compact(printed) in _compact(page.text):
-            value = _parse_signed(printed, separator)
-            if value is not None:
-                return value
+        if printed is None:
+            continue
+        value = _printed_balance_value(printed, page, separator)
+        if value is not None:
+            return value
     return None
 
 
-def _running_balance_findings(movements: Sequence[GroundedMovement]) -> tuple[int, list[str]]:
-    """Check consecutive running balances in whichever order the statement lists them.
+def _printed_balance_value(
+    printed: str,
+    page: StatementPageText,
+    separator: DecimalSeparatorValue | None,
+) -> Decimal | None:
+    """Read a balance the reader named from the amount the page prints for it.
 
-    A statement may list oldest first or newest first. Each order makes a
-    different claim about consecutive lines, so the check passes when every pair
-    agrees under one order; a statement that agrees under neither is
-    contradicted.
+    A reader may copy the amount, the amount with its label, or only the label.
+    Whatever it copied must be printed on the page. Its one amount is read; a
+    copy naming only a label is read from the one amount printed on the one line
+    carrying that label. Anything less definite is no balance.
     """
+    compact = _compact(printed)
+    if not compact or compact not in _compact(page.text):
+        return None
+    tokens = _amount_tokens(printed)
+    if tokens:
+        return _parse_signed(tokens[0].text, separator) if len(tokens) == 1 else None
+    carrying = [line for line in _page_lines(page.text) if compact in _compact(line)]
+    if len(carrying) != 1:
+        return None
+    line_tokens = _amount_tokens(carrying[0])
+    return _parse_signed(line_tokens[0].text, separator) if len(line_tokens) == 1 else None
+
+
+@dataclass(frozen=True, slots=True)
+class _BalanceWalk:
+    """The printed balance checks of one listing order.
+
+    Attributes:
+        checks: How many printed balances were checked against the one before.
+        agreed: Whether every check agreed.
+        confirmed: Positions, in the walked order, of the movements an agreeing
+            check spans.
+        complete: Whether agreeing checks chain from the opening balance to the
+            closing balance, so no movement can be missing between them.
+    """
+
+    checks: int
+    agreed: bool
+    confirmed: frozenset[int]
+    complete: bool
+
+
+def _walk_balances(
+    ordered: Sequence[GroundedMovement], opening: Decimal | None, closing: Decimal | None
+) -> _BalanceWalk:
+    """Check each printed balance, oldest first, against the balance printed before it.
+
+    The movements between two printed balances must carry the earlier into the
+    later exactly. A movement whose line prints no balance is checked inside
+    the span that contains it, so a misread line between two balances cannot
+    pass unnoticed.
+    """
+    running = opening
+    pending: list[int] = []
+    total = Decimal(0)
+    confirmed: set[int] = set()
     checks = 0
-    ascending = True
-    descending = True
-    for previous, current in pairwise(movements):
-        if previous.balance is None or current.balance is None:
+    agreed = True
+    for position, movement in enumerate(ordered):
+        pending.append(position)
+        total += movement.signed_amount
+        if movement.balance is None:
             continue
+        if running is not None:
+            checks += 1
+            if running + total == movement.balance:
+                confirmed.update(pending)
+            else:
+                agreed = False
+        running = movement.balance
+        pending = []
+        total = Decimal(0)
+    if closing is not None and running is not None:
         checks += 1
-        ascending = ascending and previous.balance + current.signed_amount == current.balance
-        descending = descending and current.balance + previous.signed_amount == previous.balance
-    if not checks or ascending or descending:
-        return checks, []
-    return checks, ["the printed running balances do not follow from the movements"]
+        if running + total == closing:
+            confirmed.update(pending)
+        else:
+            agreed = False
+    complete = agreed and opening is not None and closing is not None and len(confirmed) == len(ordered)
+    return _BalanceWalk(checks=checks, agreed=agreed, confirmed=frozenset(confirmed), complete=complete)
 
 
 def _reconcile(
     movements: Sequence[GroundedMovement],
     opening: Decimal | None,
     closing: Decimal | None,
-) -> tuple[ReconciliationOutcome, list[str]]:
-    """Check the accepted movements against every printed balance."""
-    checks, contradictions = _running_balance_findings(movements)
-    if opening is not None and closing is not None:
-        checks += 1
-        if opening + sum((movement.signed_amount for movement in movements), Decimal(0)) != closing:
-            contradictions.append("the movements do not sum from the printed opening balance to the closing balance")
-    if contradictions:
-        return ReconciliationOutcome.CONTRADICTED, contradictions
-    if checks:
-        return ReconciliationOutcome.RECONCILED, []
-    return ReconciliationOutcome.NOT_CHECKABLE, []
+) -> tuple[ReconciliationOutcome, frozenset[int], bool]:
+    """Check the accepted movements against every printed balance, in either listing order.
+
+    A statement may list oldest first or newest first; each order makes a
+    different claim about consecutive balances, so the statement reconciles when
+    every check agrees under one of them.
+
+    Returns:
+        The outcome, the positions of the movements an agreeing check confirms,
+        and whether the balances prove that no movement is missing.
+    """
+    ascending = _walk_balances(movements, opening, closing)
+    newest_first = _walk_balances(tuple(reversed(movements)), opening, closing)
+    last = len(movements) - 1
+    descending = replace(newest_first, confirmed=frozenset(last - position for position in newest_first.confirmed))
+    if not ascending.checks:
+        return ReconciliationOutcome.NOT_CHECKABLE, _NONE_CONFIRMED, False
+    agreeing = [walk for walk in (ascending, descending) if walk.agreed]
+    if not agreeing:
+        return ReconciliationOutcome.CONTRADICTED, _NONE_CONFIRMED, False
+    best = max(agreeing, key=lambda walk: len(walk.confirmed))
+    return ReconciliationOutcome.RECONCILED, best.confirmed, best.complete
+
+
+def _prints_date(line: str, *, day_first: bool) -> bool:
+    """Whether the line prints a complete date the shared parser reads."""
+    for pattern in (_DATE_SPAN_RE, _NAMED_MONTH_DATE_SPAN_RE):
+        for match in pattern.finditer(line):
+            try:
+                parse_date_value(match.group(0), day_first=day_first, label="date")
+            except FinancialProviderError:
+                continue
+            return True
+    return False
+
+
+def _unaccounted_lines(
+    pages: Sequence[StatementPageText],
+    accounted: frozenset[tuple[int, int]],
+    balances: frozenset[Decimal],
+    conventions: _StatementConventions,
+) -> list[str]:
+    """Name every line that prints a date and a non-zero amount nothing accounts for.
+
+    A line is accounted for when an accepted movement or a dated balance line
+    is anchored to it, or when every amount it prints is one of the
+    statement's printed balances, as a ``balance on`` line prints.
+    """
+    found: list[str] = []
+    for page in pages:
+        for index, line in enumerate(_page_lines(page.text)):
+            if (page.page_number, index) in accounted or not _prints_date(line, day_first=conventions.day_first):
+                continue
+            values = {
+                value
+                for token in _amount_tokens(line)
+                if (value := _parse_signed(token.text, conventions.separator)) is not None and value != 0
+            }
+            if values and not values <= balances:
+                found.append(f"page {page.page_number} line {index + 1}")
+    return found
 
 
 def ground_statement(pages: Sequence[StatementPageText], *, default_currency: str) -> GroundedStatement:
@@ -729,12 +880,45 @@ def ground_statement(pages: Sequence[StatementPageText], *, default_currency: st
         warnings.append(
             f"the statement prints no currency the reader could ground; reading amounts as {default_currency}",
         )
-    reconciliation, contradictions = _reconcile(movements, opening, closing)
+    reconciliation, confirmed, complete = _reconcile(movements, opening, closing)
+    contradictions: list[str] = []
+    if reconciliation is ReconciliationOutcome.CONTRADICTED:
+        contradictions.append("the printed balances do not follow from the accepted movements")
+    movements = tuple(
+        replace(
+            movement,
+            confirmed=position in confirmed,
+            printed={**movement.printed, "confirmed": str(position in confirmed).lower()},
+        )
+        for position, movement in enumerate(movements)
+    )
+    unconfirmed = [movement for movement in movements if not movement.confirmed]
     if reconciliation is ReconciliationOutcome.NOT_CHECKABLE and movements:
         warnings.append(
             "the statement prints no balance the movements could be reconciled against; "
             "review every row before importing",
         )
+    elif unconfirmed and reconciliation is ReconciliationOutcome.RECONCILED:
+        warnings.append(f"{len(unconfirmed)} movement(s) are not spanned by a printed balance check; review them")
+    guessed = sum(1 for movement in unconfirmed if movement.direction_source == "reader")
+    if guessed:
+        contradictions.append(
+            f"{guessed} movement(s) print no sign and no printed balance confirms the reader's direction",
+        )
+    accounted = (
+        frozenset((movement.page_number, movement.line_number - 1) for movement in movements) | printed_balances.lines
+    )
+    known_balances = frozenset(
+        value
+        for value in (opening, closing, *(movement.balance for movement in movements), *printed_balances.values)
+        if value is not None
+    )
+    for line in _unaccounted_lines(pages, accounted, known_balances, conventions):
+        finding = f"{line} prints a date and an amount that no accepted movement accounts for"
+        if complete:
+            warnings.append(finding)
+        else:
+            contradictions.append(finding)
     if not movements:
         contradictions.append("no movement proposed for this statement is printed on it")
     return GroundedStatement(

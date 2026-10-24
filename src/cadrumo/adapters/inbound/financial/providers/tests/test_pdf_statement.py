@@ -211,7 +211,7 @@ def test_a_missing_movement_contradicts_the_printed_balances_and_refuses_the_sta
     validation = provider.validate_source(source)
 
     assert not validation.is_valid
-    assert any("do not sum from the printed opening balance" in warning for warning in validation.warnings)
+    assert any("the printed balances do not follow from the accepted movements" in warning for warning in validation.warnings)
 
 
 def test_a_statement_without_printed_balances_imports_with_a_review_warning() -> None:

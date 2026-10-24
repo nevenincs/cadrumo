@@ -93,6 +93,67 @@ def test_catalan_statement_headers_are_part_of_the_vocabulary(tmp_path: Path) ->
     assert [row.raw.description for row in parsed] == ["Rebut aigua", "Transferència rebuda"]
 
 
+def test_a_trailing_summary_row_is_checked_against_the_movements_and_not_imported(tmp_path: Path) -> None:
+    """A ``TOTAL`` row a spreadsheet appends is not a movement; its total must be their sum."""
+    source = tmp_path / "extracto.csv"
+    source.write_text(
+        "Fecha;Concepto;Importe;Saldo;\n08/01/2026;Pago tarjeta;-469,52 EUR;5.730,48 EUR;\n"
+        "12/01/2026;Transferencia recibida;100,00 EUR;5.830,48 EUR;\nTOTAL;;-369,52 EUR;;\n",
+        encoding="utf-8",
+    )
+
+    validation = CsvProvider().validate_source(source)
+    parsed = list(CsvProvider().ingest(source))
+
+    assert validation.is_valid
+    assert any("summary row" in warning for warning in validation.warnings)
+    assert [(row.raw.booked_date.isoformat(), str(row.raw.amount)) for row in parsed] == [
+        ("2026-01-08", "469.52"),
+        ("2026-01-12", "100.00"),
+    ]
+
+
+def test_a_summary_total_the_movements_do_not_sum_to_refuses_the_file(tmp_path: Path) -> None:
+    """A total that disagrees with the rows means a movement was lost or misread."""
+    source = tmp_path / "extracto.csv"
+    source.write_text(
+        "Fecha;Concepto;Importe\n08/01/2026;Pago tarjeta;-469,52\n12/01/2026;Transferencia recibida;100,00\n"
+        "TOTAL;;-469,52\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(InvalidFinancialSourceError, match="does not equal the sum of the movements"):
+        list(CsvProvider().ingest(source))
+
+
+def test_a_row_without_a_date_between_movements_is_still_refused(tmp_path: Path) -> None:
+    """Only the trailing run of word-dated rows is a summary; one between movements is unreadable."""
+    source = tmp_path / "extracto.csv"
+    source.write_text(
+        "Fecha;Concepto;Importe\n08/01/2026;Pago tarjeta;-469,52\nSubtotal;;-469,52\n"
+        "12/01/2026;Transferencia recibida;100,00\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(InvalidFinancialSourceError, match="row 3 could not be parsed"):
+        list(CsvProvider().ingest(source))
+
+
+@pytest.mark.parametrize("amount_header", ["amount_eur", "Amount (EUR)", "Importe EUR"])
+def test_an_amount_header_naming_its_currency_is_the_amount_column(tmp_path: Path, amount_header: str) -> None:
+    """``amount_eur`` and ``Importe (EUR)`` name the amount column with its currency attached."""
+    source = tmp_path / "export.csv"
+    source.write_text(
+        f"booking_date,partner_name,reference,{amount_header},currency\n"
+        "2026-01-08,Suministros Aranda,Pago tarjeta,-469.52,EUR\n",
+        encoding="utf-8",
+    )
+
+    parsed = list(CsvProvider().ingest(source))
+
+    assert [(row.raw.booked_date.isoformat(), str(row.raw.amount)) for row in parsed] == [("2026-01-08", "469.52")]
+
+
 def test_month_first_dates_are_read_month_first(tmp_path: Path) -> None:
     """A date whose second group exceeds 12 reads every date of the file month-first."""
     source = tmp_path / "statement.csv"

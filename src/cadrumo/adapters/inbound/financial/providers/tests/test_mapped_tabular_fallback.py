@@ -22,17 +22,14 @@ from .._tabular_projection import ColumnRoleMapping
 from ..base import InvalidFinancialSourceError
 from ..csv import CsvProvider
 from ..detection import _ordered_candidates, detect_provider
+from .tabular_export_support import write_unknown_header_export
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 _FIXTURES = FIXTURES_DIR / "financial"
-_TABULAR = _FIXTURES / "tabular-dialects"
 
 #: A known bank export the exact CSV provider parses today.
 _KNOWN_BANK_FIXTURE = _FIXTURES / "bbva-sample.csv"
-#: An export of no fixed layout the product recognises: neobank column names,
-#: dot decimals, an ISO date and an exchange-rate column with no role.
-_UNKNOWN_FORMAT_FIXTURE = _TABULAR / "bank_neobank_2026Q1.csv"
 
 #: The role of each column of the unknown-format export, in column order. This
 #: is the data a mapping step supplies; the lane consumes it, it does not
@@ -60,6 +57,12 @@ _KNOWN_BANK_ROLES = (
 )
 
 
+@pytest.fixture
+def unknown_export(tmp_path: Path) -> Path:
+    """An export of no layout the vocabulary names: dot decimals, ISO dates and an exchange-rate column."""
+    return write_unknown_header_export(tmp_path)
+
+
 def _resolver(roles: tuple[FieldRole, ...]):
     """Return a resolver supplying ``roles`` for whatever table it is handed."""
 
@@ -71,14 +74,14 @@ def _resolver(roles: tuple[FieldRole, ...]):
     return resolve
 
 
-def test_mapping_lane_is_last_for_every_source_shape() -> None:
+def test_mapping_lane_is_last_for_every_source_shape(unknown_export: Path) -> None:
     """The fallback trails every exact provider, whatever the file looks like."""
     shapes = (
         Path("statement.csv"),
         Path("statement.xlsx"),
         Path("statement.ofx"),
         Path("statement.pdf"),
-        _UNKNOWN_FORMAT_FIXTURE,
+        unknown_export,
         _KNOWN_BANK_FIXTURE,
     )
     for path in shapes:
@@ -151,22 +154,22 @@ def test_the_mapping_lane_can_read_the_known_bank_fixture_when_it_can_map() -> N
     assert list(lane.ingest(_KNOWN_BANK_FIXTURE))
 
 
-def test_unknown_format_fixture_is_refused_by_every_exact_provider() -> None:
+def test_unknown_format_fixture_is_refused_by_every_exact_provider(unknown_export: Path) -> None:
     """No exact provider claims the unknown export — the precondition for reaching the lane."""
-    for provider in _ordered_candidates(_UNKNOWN_FORMAT_FIXTURE)[:-1]:
-        assert not provider.validate_source(_UNKNOWN_FORMAT_FIXTURE).is_valid, provider.name
+    for provider in _ordered_candidates(unknown_export)[:-1]:
+        assert not provider.validate_source(unknown_export).is_valid, provider.name
 
 
-def test_unknown_format_fixture_reaches_the_mapping_lane() -> None:
+def test_unknown_format_fixture_reaches_the_mapping_lane(unknown_export: Path) -> None:
     """Detection consults the lane for the unknown export, and it imports under a mapping."""
-    candidates = _ordered_candidates(_UNKNOWN_FORMAT_FIXTURE)
+    candidates = _ordered_candidates(unknown_export)
     assert isinstance(candidates[-1], MappedTabularProvider)
 
     lane = MappedTabularProvider(mapping_resolver=_resolver(_NEOBANK_ROLES))
-    validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)
+    validation = lane.validate_source(unknown_export)
     assert validation.is_valid, validation.warnings
 
-    rows = list(lane.ingest(_UNKNOWN_FORMAT_FIXTURE))
+    rows = list(lane.ingest(unknown_export))
     assert len(rows) == 12
     assert rows[0].direction is TransactionDirection.OUTGOING
     assert rows[0].raw.amount == Decimal("469.52")
@@ -175,17 +178,17 @@ def test_unknown_format_fixture_reaches_the_mapping_lane() -> None:
     assert rows[1].raw.amount == Decimal("4596.00")
 
 
-def test_unmapped_columns_are_reported_rather_than_refusing_the_file() -> None:
+def test_unmapped_columns_are_reported_rather_than_refusing_the_file(unknown_export: Path) -> None:
     """Three columns carry no role; the export still imports and says which."""
     lane = MappedTabularProvider(mapping_resolver=_resolver(_NEOBANK_ROLES))
-    validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)
+    validation = lane.validate_source(unknown_export)
     assert validation.is_valid
     unmapped = [warning for warning in validation.warnings if "not mapped to a role" in warning]
     assert len(unmapped) == 3
     assert any("exchange_rate" in warning for warning in unmapped)
 
 
-def test_lane_reports_when_roles_cannot_be_established() -> None:
+def test_lane_reports_when_roles_cannot_be_established(unknown_export: Path) -> None:
     """A host that cannot map declines and says why; it never invents roles.
 
     "No mapping" is what a model that answered and established nothing returns.
@@ -194,22 +197,22 @@ def test_lane_reports_when_roles_cannot_be_established() -> None:
     outcome, and is reported rather than declined.
     """
     lane = MappedTabularProvider(mapping_resolver=lambda table: None)
-    validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)
+    validation = lane.validate_source(unknown_export)
     assert not validation.is_valid
     assert any("column roles could not be established" in warning for warning in validation.warnings)
     with pytest.raises(InvalidFinancialSourceError, match="column roles could not be established"):
-        list(lane.ingest(_UNKNOWN_FORMAT_FIXTURE))
+        list(lane.ingest(unknown_export))
 
 
-def test_lane_with_no_resolver_at_all_reports_rather_than_guesses() -> None:
+def test_lane_with_no_resolver_at_all_reports_rather_than_guesses(unknown_export: Path) -> None:
     """The unwired case is distinct from the unmappable one and names itself."""
     lane = MappedTabularProvider()
     lane.mapping_resolver = None
-    validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)
+    validation = lane.validate_source(unknown_export)
     assert not validation.is_valid
     assert any("no column-role mapping resolver" in warning for warning in validation.warnings)
     with pytest.raises(InvalidFinancialSourceError, match="no column-role mapping resolver"):
-        list(lane.ingest(_UNKNOWN_FORMAT_FIXTURE))
+        list(lane.ingest(unknown_export))
 
 
 def test_the_wiring_point_is_the_lanes_only_production_mapping_source() -> None:
@@ -223,16 +226,16 @@ def test_the_wiring_point_is_the_lanes_only_production_mapping_source() -> None:
     assert MappedTabularProvider().mapping_resolver == default_tabular_mapping_resolver()
 
 
-def test_a_mapping_missing_a_required_role_is_refused_with_the_role_named() -> None:
+def test_a_mapping_missing_a_required_role_is_refused_with_the_role_named(unknown_export: Path) -> None:
     """A mapping with no amount column cannot produce movements, and says so."""
     roles = tuple(FieldRole.UNMAPPED if role is FieldRole.GRAND_TOTAL else role for role in _NEOBANK_ROLES)
     lane = MappedTabularProvider(mapping_resolver=_resolver(roles))
-    validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)
+    validation = lane.validate_source(unknown_export)
     assert not validation.is_valid
     assert any("movement_amount" in warning for warning in validation.warnings)
 
 
-def test_the_statement_roles_are_read_as_a_movement_date_and_amount() -> None:
+def test_the_statement_roles_are_read_as_a_movement_date_and_amount(unknown_export: Path) -> None:
     """A mapping naming the bank-statement roles imports, as one naming the invoice roles does."""
     statement_roles = tuple(
         {FieldRole.INVOICE_DATE: FieldRole.BOOKED_DATE, FieldRole.GRAND_TOTAL: FieldRole.MOVEMENT_AMOUNT}.get(
@@ -243,9 +246,9 @@ def test_the_statement_roles_are_read_as_a_movement_date_and_amount() -> None:
     by_statement_roles = MappedTabularProvider(mapping_resolver=_resolver(statement_roles))
     by_invoice_roles = MappedTabularProvider(mapping_resolver=_resolver(_NEOBANK_ROLES))
 
-    validation = by_statement_roles.validate_source(_UNKNOWN_FORMAT_FIXTURE)
-    statement_rows = list(by_statement_roles.ingest(_UNKNOWN_FORMAT_FIXTURE))
-    invoice_rows = list(by_invoice_roles.ingest(_UNKNOWN_FORMAT_FIXTURE))
+    validation = by_statement_roles.validate_source(unknown_export)
+    statement_rows = list(by_statement_roles.ingest(unknown_export))
+    invoice_rows = list(by_invoice_roles.ingest(unknown_export))
 
     assert validation.is_valid, validation.warnings
     assert statement_rows

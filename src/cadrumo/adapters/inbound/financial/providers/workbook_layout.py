@@ -25,11 +25,13 @@ from .base import (
 )
 from .csv import (
     build_provider_row,
+    check_summary_totals,
     header_lookup,
     infer_statement_conventions,
     layout_score,
     parse_tabular_transaction_row,
     row_is_blank,
+    summary_row_positions,
 )
 
 __all__ = [
@@ -111,11 +113,15 @@ def iter_worksheet_rows(
         )
     except FinancialValidationError as exc:
         raise InvalidFinancialSourceError(str(exc)) from None
-    for source_row_index, row in enumerate(data_rows, start=match.header_index + 2):
-        raw_fields = {
-            header: archive_cell_text(row[index]) if index < len(row) else "" for index, header in enumerate(headers)
-        }
-        if row_is_blank(raw_fields):
+    text_rows = [
+        {header: archive_cell_text(row[index]) if index < len(row) else "" for index, header in enumerate(headers)}
+        for row in data_rows
+    ]
+    summary = summary_row_positions(text_rows, match.lookup)
+    movements: list[ParsedLedgerRow] = []
+    for position, (row, raw_fields) in enumerate(zip(data_rows, text_rows, strict=True)):
+        source_row_index = match.header_index + 2 + position
+        if row_is_blank(raw_fields) or position in summary:
             continue
         typed_fields = {header: row[index] if index < len(row) else "" for index, header in enumerate(headers)}
         try:
@@ -140,11 +146,17 @@ def iter_worksheet_rows(
                 f"worksheet row {source_row_index} could not be parsed: "
                 f"{str(exc) if isinstance(exc, FinancialValidationError) else 'invalid field value'}",
             ) from None
-        yield build_provider_row(
-            provider=provider,
-            path=path,
-            source_sha256=source_sha256,
-            source_row_index=source_row_index,
-            parsed=parsed,
-            raw_fields=raw_fields,
+        movements.append(
+            build_provider_row(
+                provider=provider,
+                path=path,
+                source_sha256=source_sha256,
+                source_row_index=source_row_index,
+                parsed=parsed,
+                raw_fields=raw_fields,
+            )
         )
+    check_summary_totals(
+        (text_rows[position] for position in sorted(summary)), match.lookup, conventions, movements, "worksheet"
+    )
+    yield from movements

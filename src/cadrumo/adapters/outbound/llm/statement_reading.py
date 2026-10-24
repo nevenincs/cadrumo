@@ -110,11 +110,17 @@ def build_statement_page_prompt(page_text: str) -> str:
         page text under a delimiter that marks where the instructions end.
     """
     return (
-        "Read one page of a bank account statement and list every account movement printed on it.\n\n"
+        "Read one page of a bank account statement. Report the balances it prints, then list every "
+        "account movement printed on it.\n\n"
+        "Balances first. opening_balance is the account balance printed for the start of the period "
+        "(the previous, old or brought-forward balance). closing_balance is the balance printed for the "
+        "end of the period (the new or carried-forward balance). A balance is never a movement. Use null "
+        "for a balance this page does not print. currency is the currency code or symbol the amounts are "
+        "printed in.\n\n"
         "A movement is one booked transaction that moves money into or out of the account. A movement "
-        "line prints its own date and its own amount. Never list an opening or closing balance, a total, "
-        "a subtotal, a fee or interest summary, a heading or a note. If the page prints no movement, "
-        "reply with an empty list.\n\n"
+        "line prints its own date and its own amount. Never list a balance, a total, a subtotal, a fee or "
+        "interest summary, a heading or a note as a movement. If the page prints no movement, give an "
+        "empty list.\n\n"
         "Copy every value exactly as printed: the same characters, digits, separators and signs. Never "
         "calculate, convert, translate or reformat a value. Use null for anything the page does not print.\n\n"
         "For each movement give:\n"
@@ -127,13 +133,10 @@ def build_statement_page_prompt(page_text: str) -> str:
         '- direction: "in" when money enters the account, "out" when it leaves; read it from the sign, '
         "the debit or credit column, or the wording printed with the amount\n"
         "- balance: the running account balance printed on the movement's line, if any\n\n"
-        "Also give, when this page prints them: opening_balance (the balance before the first movement), "
-        "closing_balance (the balance after the last movement) and currency (the currency code or symbol "
-        "the amounts are printed in).\n\n"
         "Reply with this JSON object and nothing else:\n"
-        '{"movements": [{"booked_date": "", "value_date": null, "description": "", "counterparty": null, '
-        '"amount": "", "direction": "in", "balance": null}], "opening_balance": null, '
-        '"closing_balance": null, "currency": null}\n\n'
+        '{"opening_balance": null, "closing_balance": null, "currency": null, "movements": '
+        '[{"booked_date": "", "value_date": null, "description": "", "counterparty": null, '
+        '"amount": "", "direction": "in", "balance": null}]}\n\n'
         "PAGE TEXT:\n"
         f"{page_text}"
     )

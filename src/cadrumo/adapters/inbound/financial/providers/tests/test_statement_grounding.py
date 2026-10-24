@@ -286,8 +286,8 @@ def test_running_balances_decide_unsigned_debit_and_credit_columns() -> None:
     assert sum("prints a balance, not a movement" in warning for warning in grounded.warnings) == 2
 
 
-def test_an_unsigned_amount_no_balance_proves_takes_the_reader_direction() -> None:
-    """Without a running balance the reader's direction applies, and is recorded as such."""
+def test_a_reader_direction_no_printed_balance_confirms_refuses_the_statement() -> None:
+    """An unsigned amount with no balance to prove its direction rests on the reader alone."""
     page = _page(
         "05/03/2026 Supplier invoice 40,00\n06/03/2026 Customer payment 15,00",
         _movement("05/03/2026", "40,00", direction=ProposedDirection.OUT),
@@ -296,8 +296,114 @@ def test_an_unsigned_amount_no_balance_proves_takes_the_reader_direction() -> No
 
     grounded = ground_statement((page,), default_currency="EUR")
 
-    assert [m.signed_amount for m in grounded.movements] == [Decimal("-40.00"), Decimal("15.00")]
     assert {m.direction_source for m in grounded.movements} == {"reader"}
+    assert not grounded.importable
+    assert any("no printed balance confirms the reader's direction" in refusal for refusal in grounded.refusals)
+
+
+def test_a_reader_direction_the_opening_and_closing_balances_confirm_is_accepted() -> None:
+    """The balances chain from opening to closing only under the reader's directions."""
+    page = _page(
+        "Saldo anterior 100,00\n05/03/2026 Supplier invoice 40,00\n06/03/2026 Customer payment 15,00\n"
+        "Saldo final 75,00",
+        _movement("05/03/2026", "40,00", direction=ProposedDirection.OUT),
+        _movement("06/03/2026", "15,00", direction=ProposedDirection.IN),
+        opening="100,00",
+        closing="75,00",
+    )
+
+    grounded = ground_statement((page,), default_currency="EUR")
+
+    assert grounded.importable
+    assert grounded.reconciliation is ReconciliationOutcome.RECONCILED
+    assert [m.signed_amount for m in grounded.movements] == [Decimal("-40.00"), Decimal("15.00")]
+    assert all(m.confirmed for m in grounded.movements)
+
+
+def test_a_movement_the_reader_missed_on_a_statement_without_balances_refuses_it() -> None:
+    """A dated line with an amount that nothing accounts for may be a missed movement."""
+    page = _page(
+        "Rent 03/02/2026 -800,00\nGroceries 04/02/2026 -42,10\nRefund 05/02/2026 +12,00",
+        _movement("03/02/2026", "-800,00"),
+        _movement("05/02/2026", "+12,00"),
+    )
+
+    grounded = ground_statement((page,), default_currency="EUR")
+
+    assert not grounded.importable
+    assert grounded.refusals == ("page 1 line 2 prints a date and an amount that no accepted movement accounts for",)
+
+
+def test_a_first_movement_missed_beside_running_balances_refuses_the_statement() -> None:
+    """Running balances alone cannot see a movement missed before the first of them."""
+    page = _page(
+        "Deposit 01/02/2026 +1.000,00 1.000,00\nFee 02/02/2026 -42,00 958,00\nCard 03/02/2026 -8,00 950,00",
+        _movement("02/02/2026", "-42,00", balance="958,00"),
+        _movement("03/02/2026", "-8,00", balance="950,00"),
+    )
+
+    grounded = ground_statement((page,), default_currency="EUR")
+
+    assert grounded.reconciliation is ReconciliationOutcome.RECONCILED
+    assert not grounded.importable
+    assert grounded.refusals == ("page 1 line 1 prints a date and an amount that no accepted movement accounts for",)
+
+
+def test_a_misread_line_without_a_balance_between_two_balances_is_contradicted() -> None:
+    """A line printing no balance is checked inside the span of the balances around it."""
+    page = _page(
+        "Deposit 01/02/2026 +1.000,00 1.000,00\nTransfer 02/02/2026 -40,00 fee -2,00\nCard 03/02/2026 -8,00 950,00",
+        _movement("01/02/2026", "+1.000,00", balance="1.000,00"),
+        _movement("02/02/2026", "-2,00"),
+        _movement("03/02/2026", "-8,00", balance="950,00"),
+    )
+
+    grounded = ground_statement((page,), default_currency="EUR")
+
+    assert grounded.reconciliation is ReconciliationOutcome.CONTRADICTED
+    assert not grounded.importable
+
+
+def test_a_balance_named_by_its_label_is_read_from_its_line() -> None:
+    """A reader copying only a balance's label still names the one amount printed with it."""
+    page = _page(
+        "Old balance +100,00EUR\nCard 02/02/2026 -8,00EUR\nNew balance +92,00EUR",
+        _movement("02/02/2026", "-8,00EUR"),
+        opening="Old balance",
+        closing="New balance",
+    )
+
+    grounded = ground_statement((page,), default_currency="EUR")
+
+    assert grounded.reconciliation is ReconciliationOutcome.RECONCILED
+    assert grounded.importable
+
+
+def test_a_dated_line_printing_a_balance_or_a_rate_is_not_a_missed_movement() -> None:
+    """A ``balance on`` line and an interest rate are accounted for without a movement."""
+    page = _page(
+        "Rent 03/02/2026 -800,00 1.200,00\nBalance on 28/02/2026 1.200,00\nRate 0,50 % until 31/12/2026",
+        _movement("03/02/2026", "-800,00", balance="1.200,00"),
+    )
+
+    grounded = ground_statement((page,), default_currency="EUR")
+
+    assert grounded.importable
+
+
+def test_an_unaccounted_line_is_only_reported_when_the_balances_prove_nothing_is_missing() -> None:
+    """A chain from the opening to the closing balance leaves no room for a missed movement."""
+    page = _page(
+        "Opening 100,00\nCard 02/02/2026 -8,00\nStatement total 28/02/2026 8,00\nClosing 92,00",
+        _movement("02/02/2026", "-8,00"),
+        opening="100,00",
+        closing="92,00",
+    )
+
+    grounded = ground_statement((page,), default_currency="EUR")
+
+    assert grounded.importable
+    assert any("page 1 line 3 prints a date and an amount" in warning for warning in grounded.warnings)
 
 
 def test_a_month_name_date_is_read() -> None:

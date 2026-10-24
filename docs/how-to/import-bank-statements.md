@@ -73,8 +73,12 @@ local language model proposes the movements it finds on each page, and `aeat`
 keeps only the movements whose date and amount are printed together on one
 line of the statement. When the statement prints an opening and closing
 balance, or a running balance on each line, the kept movements must add up to
-it, or the import is refused. Run a dry run first: it lists every proposal that
-was not kept and says when the statement prints no balance to check against.
+it, or the import is refused. A printed line with a date and an amount that no
+kept movement accounts for also refuses the import, unless the opening and
+closing balances prove that nothing is missing, and so does a movement whose
+direction only the model decided when no printed balance confirms it. Run a dry
+run first: it lists every proposal that was not kept and says when the
+statement prints no balance to check against.
 Reading a PDF statement needs the `llm` extra and a local model runtime; a page
 without a text layer is transcribed by the local vision model, and the
 statement never leaves your computer.

@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import csv
 import io
-from collections.abc import Iterable, Iterator, Mapping
+import re
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -29,6 +30,7 @@ from typing import override
 
 from pydantic import BaseModel
 
+from .....application.ledger.invoice_label_vocabulary import CURRENCY_CODES
 from .....core.decimal.grammar import DecimalSeparatorValue
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CoreValidationError
@@ -93,6 +95,9 @@ class CsvColumnMap(BaseModel):
     external_id: tuple[str, ...] = ()
 
 
+#: A header closing with a currency code, bare or bracketed, once normalized.
+_CURRENCY_SUFFIX_RE = re.compile(r"^(.+?) \(?([a-z]{3})\)?$")
+
 STATEMENT_COLUMNS = CsvColumnMap(
     booked_date=(
         "fecha operación",
@@ -110,7 +115,7 @@ STATEMENT_COLUMNS = CsvColumnMap(
         "datum",
     ),
     value_date=("fecha valor", "data valor", "value date", "started date", "valuta", "wertstellung"),
-    amount=("importe", "importe euros", "import", "amount (eur)", "betrag (eur)", "amount", "betrag"),
+    amount=("importe", "importe euros", "import", "amount", "betrag"),
     currency=("moneda", "divisa", "currency", "wahrung", "waehrung"),
     description=(
         "concepto",
@@ -323,6 +328,12 @@ class CsvProvider(FinancialProvider):
         warnings: list[str] = []
         if not bool(find_column(lookup, STATEMENT_COLUMNS.currency)):
             warnings.append(f"CSV has no currency column; falling back to {default_currency()}")
+        summary = summary_row_positions([_row_to_mapping(headers, row) for row in rows[header_index + 1 :]], lookup)
+        if summary:
+            warnings.append(
+                f"CSV ends with {len(summary)} summary row(s) that are not movements; "
+                "a printed total must equal the sum of the movements",
+            )
         return ProviderValidation(
             is_valid=True,
             warnings=tuple(warnings),
@@ -346,9 +357,12 @@ class CsvProvider(FinancialProvider):
             conventions = infer_statement_conventions((_row_to_mapping(headers, row) for row in data_rows), lookup)
         except FinancialValidationError as exc:
             raise InvalidFinancialSourceError(str(exc)) from None
-        for source_row_index, row in enumerate(data_rows, start=header_index + 2):
-            raw_fields = _row_to_mapping(headers, row)
-            if row_is_blank(raw_fields):
+        mapped_rows = [_row_to_mapping(headers, row) for row in data_rows]
+        summary = summary_row_positions(mapped_rows, lookup)
+        movements: list[ParsedLedgerRow] = []
+        for position, raw_fields in enumerate(mapped_rows):
+            source_row_index = header_index + 2 + position
+            if row_is_blank(raw_fields) or position in summary:
                 continue
             try:
                 parsed = parse_tabular_transaction_row(
@@ -371,14 +385,20 @@ class CsvProvider(FinancialProvider):
                     f"CSV row {source_row_index} could not be parsed: "
                     f"{str(exc) if isinstance(exc, FinancialValidationError) else 'invalid field value'}",
                 ) from None
-            yield build_provider_row(
-                provider=self,
-                path=path,
-                source_sha256=source_sha256,
-                source_row_index=source_row_index,
-                parsed=parsed,
-                raw_fields=raw_fields,
+            movements.append(
+                build_provider_row(
+                    provider=self,
+                    path=path,
+                    source_sha256=source_sha256,
+                    source_row_index=source_row_index,
+                    parsed=parsed,
+                    raw_fields=raw_fields,
+                )
             )
+        check_summary_totals(
+            (mapped_rows[position] for position in sorted(summary)), lookup, conventions, movements, "CSV"
+        )
+        yield from movements
 
     def _load_rows(
         self,
@@ -431,8 +451,76 @@ class CsvProvider(FinancialProvider):
 
 
 def header_lookup(headers: list[str]) -> dict[str, str]:
-    """Build normalized->original header lookup for alias resolution."""
-    return {normalize_header(header): header for header in headers if header.strip()}
+    """Build normalized->original header lookup for alias resolution.
+
+    A header closing with a currency code, bare or bracketed (``amount_eur``,
+    ``Importe (EUR)``), also answers to the name before the code, unless
+    another header already carries that name.
+    """
+    lookup = {normalize_header(header): header for header in headers if header.strip()}
+    for normalized, header in tuple(lookup.items()):
+        match = _CURRENCY_SUFFIX_RE.match(normalized)
+        if match is not None and match.group(2).upper() in CURRENCY_CODES:
+            lookup.setdefault(match.group(1), header)
+    return lookup
+
+
+def summary_row_positions(rows: Sequence[Mapping[str, str]], lookup: Mapping[str, str]) -> frozenset[int]:
+    """Return the positions of the summary rows an export appends after its movements.
+
+    A spreadsheet-made export may close with a ``TOTAL`` or ``Saldo final`` row,
+    whose date cell names the row in words instead of printing a date. Only the
+    trailing run of such rows qualifies: a row without a date between movements
+    is still refused as unreadable.
+    """
+    date_header = find_column(lookup, STATEMENT_COLUMNS.booked_date)
+    positions: set[int] = set()
+    for position in range(len(rows) - 1, -1, -1):
+        fields = rows[position]
+        if row_is_blank(fields):
+            continue
+        cell = fields.get(date_header, "") if date_header is not None else ""
+        if not cell.strip() or any(char.isdigit() for char in cell):
+            break
+        positions.add(position)
+    return frozenset(positions)
+
+
+def check_summary_totals(
+    summary_rows: Iterable[Mapping[str, str]],
+    lookup: Mapping[str, str],
+    conventions: StatementConventions,
+    movements: Sequence[ParsedLedgerRow],
+    context: str,
+) -> None:
+    """Refuse a summary row whose printed amount is not the sum of the movements.
+
+    A total the movements do not add up to means a movement was lost or
+    misread, so the export is refused whole rather than imported short.
+
+    Raises:
+        InvalidFinancialSourceError: A summary amount is unreadable or does not
+            equal the signed sum of the movements.
+    """
+    amount_header = find_column(lookup, STATEMENT_COLUMNS.amount)
+    if amount_header is None:
+        return
+    net = sum(
+        (row.raw.amount if row.direction is TransactionDirection.INCOMING else -row.raw.amount for row in movements),
+        Decimal(0),
+    )
+    for fields in summary_rows:
+        printed = fields.get(amount_header, "").strip()
+        if not printed:
+            continue
+        try:
+            total = parse_statement_amount(printed, decimal_separator=conventions.decimal_separator)
+        except (ValueError, FinancialValidationError):
+            raise InvalidFinancialSourceError(f"{context}: the summary row's amount is not a readable amount") from None
+        if total != net:
+            raise InvalidFinancialSourceError(
+                f"{context}: the summary row's total does not equal the sum of the movements",
+            )
 
 
 def layout_score(lookup: Mapping[str, str], columns: CsvColumnMap = STATEMENT_COLUMNS) -> int:
