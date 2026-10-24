@@ -11,6 +11,7 @@ import {
 import {
   cellBox,
   columnLayout,
+  snappedLeft,
   commitKeyOf,
   displayOrder,
   dropColumn,
@@ -583,6 +584,74 @@ function DataGrid<R>({
     () => columnLayout(ordered, remPx, view.width),
     [ordered, remPx, view.width],
   );
+  // A scroll the person ends between columns settles on the nearest column
+  // start at the pinned group's edge. A scroll the grid makes itself, to
+  // show a cell or the columns a cue names, is left where it put it.
+  const layoutRef = React.useRef(layout);
+  layoutRef.current = layout;
+  const steering = React.useRef(false);
+  const restedLeft = React.useRef(0);
+  // Whether the scroll last came to rest where the person left it, so a
+  // change of the columns' widths settles it again; one the grid steered,
+  // to show a cell whole, is left as the grid put it.
+  const personRested = React.useRef(true);
+  const steerLeft = (element: HTMLElement, left: number) => {
+    const before = element.scrollLeft;
+    element.scrollLeft = left;
+    if (element.scrollLeft !== before) {
+      steering.current = true;
+      personRested.current = false;
+    }
+  };
+  React.useEffect(() => {
+    const element = scroller.current;
+    if (!element) return;
+    const rest = () => {
+      const left = element.scrollLeft;
+      if (steering.current) {
+        steering.current = false;
+        restedLeft.current = left;
+        return;
+      }
+      if (Math.abs(left - restedLeft.current) < 1) return;
+      personRested.current = true;
+      const target = snappedLeft(
+        layoutRef.current,
+        left,
+        element.scrollWidth - element.clientWidth,
+        restedLeft.current,
+      );
+      restedLeft.current = target;
+      if (Math.abs(target - left) >= 1) steerLeft(element, target);
+    };
+    // The person's own scrolling, begun while the grid steered, is theirs
+    // to settle when it ends.
+    const own = () => {
+      steering.current = false;
+    };
+    const kinds = ["wheel", "touchstart", "pointerdown"] as const;
+    for (const kind of kinds)
+      element.addEventListener(kind, own, { passive: true });
+    element.addEventListener("scrollend", rest);
+    return () => {
+      for (const kind of kinds) element.removeEventListener(kind, own);
+      element.removeEventListener("scrollend", rest);
+    };
+  }, []);
+  React.useEffect(() => {
+    const element = scroller.current;
+    if (!element || !personRested.current || steering.current) return;
+    const left = element.scrollLeft;
+    const target = snappedLeft(
+      layout,
+      left,
+      element.scrollWidth - element.clientWidth,
+    );
+    restedLeft.current = target;
+    if (Math.abs(target - left) >= 1) steerLeft(element, target);
+    // The person's resting place, kept after the grid steers there.
+    personRested.current = true;
+  }, [layout]);
   // What the grid draws around its columns: its frame and a scroll bar.
   React.useLayoutEffect(() => {
     const element = scroller.current;
@@ -691,10 +760,12 @@ function DataGrid<R>({
     if (box && !box.sticky) {
       const left = element.scrollLeft + layout.startCover;
       const right = element.scrollLeft + element.clientWidth - layout.endCover;
-      if (box.left < left) element.scrollLeft = box.left - layout.startCover;
+      if (box.left < left) steerLeft(element, box.left - layout.startCover);
       else if (box.left + box.width > right)
-        element.scrollLeft =
-          box.left + box.width - element.clientWidth + layout.endCover;
+        steerLeft(
+          element,
+          box.left + box.width - element.clientWidth + layout.endCover,
+        );
     }
     syncView();
   };
@@ -1394,8 +1465,10 @@ function DataGrid<R>({
     const element = scroller.current;
     const first = beyond[0];
     if (!element || !first) return;
-    element.scrollLeft =
-      first.left + first.width - element.clientWidth + layout.endCover;
+    steerLeft(
+      element,
+      first.left + first.width - element.clientWidth + layout.endCover,
+    );
     syncView();
   };
   // And those scrolled out of view under the pinned start group, which a
@@ -1408,7 +1481,7 @@ function DataGrid<R>({
     const element = scroller.current;
     const last = before.at(-1);
     if (!element || !last) return;
-    element.scrollLeft = last.left - layout.startCover;
+    steerLeft(element, last.left - layout.startCover);
     syncView();
   };
   const earlierCue =

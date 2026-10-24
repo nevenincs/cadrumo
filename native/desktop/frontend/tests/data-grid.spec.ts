@@ -22,6 +22,7 @@ import {
   selectionExtent,
   selectOnly,
   selectRange,
+  snappedLeft,
   stepColumn,
   toggleKey,
   visibleRange,
@@ -164,6 +165,37 @@ test("sticky columns know how far from their edge they stick", () => {
   expect(layout.startCover).toBe(70);
   expect(layout.endCover).toBe(100);
   expect(layout.byId.get("body")?.left).toBe(70);
+});
+
+test("a horizontal scroll settles where a scrolling column starts at the pinned group's edge, or at an end", () => {
+  const layout = columnLayout(
+    [
+      { id: "select", width: 2, sticky: "start" },
+      { id: "date", width: 5, sticky: "start" },
+      { id: "a", width: 10 },
+      { id: "b", width: 8 },
+      { id: "c", width: 12 },
+      { id: "amount", width: 6, sticky: "end" },
+    ],
+    10,
+    0,
+  );
+  // Scrolling columns start at 70, 170 and 250: they meet the 70 px start
+  // group's edge at a scroll of 0, 100 and 180.
+  const max = 200;
+  expect(snappedLeft(layout, 37, max)).toBe(0);
+  expect(snappedLeft(layout, 60, max)).toBe(100);
+  expect(snappedLeft(layout, 150, max)).toBe(180);
+  // Past the last column start, the end of the scroll is a place to rest.
+  expect(snappedLeft(layout, 195, max)).toBe(200);
+  // A scroll shorter than a column start ends at the scroll's own end.
+  expect(snappedLeft(layout, 70, 50)).toBe(50);
+  // A small scroll that would settle back where it began moves on by a
+  // column in the way it went, either way.
+  expect(snappedLeft(layout, 20, max, 0)).toBe(100);
+  expect(snappedLeft(layout, 160, max, 180)).toBe(100);
+  // One that reaches nearer another place settles there.
+  expect(snappedLeft(layout, 150, max, 100)).toBe(180);
 });
 
 test("pinned columns stay pinned however narrow the grid, and the rest scroll under them", () => {

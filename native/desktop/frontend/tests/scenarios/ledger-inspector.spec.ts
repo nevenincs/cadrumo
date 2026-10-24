@@ -1198,3 +1198,44 @@ test("in a narrow window the header keeps every section whole: the title and Add
   await add.hover();
   await expect(target.getByRole("tooltip")).toBeVisible();
 });
+
+test("at 1280 with the inspector open, a sideways scroll settles on a whole column, never on a fragment under the pinned ones", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1280, height: 800 });
+  await openLedger(target);
+  await inspect(target, "PAPELERIA TRAZO");
+  const scroller = grid(target);
+  const box = (await scroller.boundingBox())!;
+  await target.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  for (const step of [37, 53, 91]) {
+    await target.mouse.wheel(step, 0);
+    // The scroll settles once it has ended.
+    await expect
+      .poll(() =>
+        scroller.evaluate((element) => {
+          const sticky = [
+            ...element.querySelectorAll<HTMLElement>(
+              "[role=columnheader].sticky",
+            ),
+          ].map((cell) => cell.getBoundingClientRect());
+          const middle = innerWidth / 2;
+          const startEdge = Math.max(
+            ...sticky.filter((at) => at.left < middle).map((at) => at.right),
+          );
+          // Every scrolling column starts at the start group's edge or
+          // after it, or is wholly under it; one the end group cuts is
+          // counted by that group's cue.
+          return [
+            ...element.querySelectorAll<HTMLElement>(
+              "[role=columnheader]:not(.sticky)",
+            ),
+          ].every((cell) => {
+            const at = cell.getBoundingClientRect();
+            return at.right <= startEdge + 1 || at.left >= startEdge - 1;
+          });
+        }),
+      )
+      .toBe(true);
+  }
+});

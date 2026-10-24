@@ -41,6 +41,40 @@ export type ColumnLayout = {
   least: number;
 };
 
+/**
+ * Where a horizontal scroll that came to rest at `left` settles: the
+ * nearest place where a scrolling column's start meets the pinned start
+ * group's inner edge, or either end of the scroll, so a column is either
+ * whole or under a pinned group, never cut mid-word. A scroll that began at
+ * `from` and would settle back there goes on to the next place in the way
+ * it moved instead, so even a small scroll moves by a column.
+ */
+export function snappedLeft(
+  layout: Pick<ColumnLayout, "boxes" | "startCover">,
+  left: number,
+  max: number,
+  from: number = left,
+): number {
+  const end = Math.max(0, max);
+  const stops = [
+    ...new Set([
+      0,
+      end,
+      ...layout.boxes
+        .filter((box) => !box.sticky)
+        .map((box) => Math.min(end, Math.max(0, box.left - layout.startCover))),
+    ]),
+  ].sort((a, b) => a - b);
+  const nearest = stops.reduce((best, stop) =>
+    Math.abs(stop - left) < Math.abs(best - left) ? stop : best,
+  );
+  if (Math.abs(nearest - from) >= 1 || Math.abs(left - from) < 1)
+    return nearest;
+  return left > from
+    ? (stops.find((stop) => stop > from + 1) ?? nearest)
+    : ([...stops].reverse().find((stop) => stop < from - 1) ?? nearest);
+}
+
 /** The smallest a column may be made, in rem, when it names no minimum. */
 export const MIN_COLUMN_REM = 3;
 
