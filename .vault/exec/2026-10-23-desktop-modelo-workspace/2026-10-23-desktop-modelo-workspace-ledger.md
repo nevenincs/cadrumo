@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:db59a02c9abb2a2bb48a77cc4725070ae56b06c8b3a8e3f301554610d17f8216'
+body_hash: 'sha256:270faf332ef6505b1c89c77d58b39ebf4284e2718dc75fc71a1dbed88eb406c8'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -264,6 +264,18 @@ related:
 - `S30` `verify:` `pytest test_work_form_header.py` -> `pass`
 - `S30` `verify:` `pytest TUI header suites` -> `pass`
 - `S30` `by:` `opus-p01-lane`
+- `S34` `A` `src/cadrumo/application/modelo/work_form_issue_lines.py`
+- `S34` `A` `src/cadrumo/application/modelo/tests/test_work_form_issue_lines.py`
+- `S34` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S34` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S34` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issue_projection.py`
+- `S34` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py`
+- `S34` `verify:` `ruff check and format` -> `pass`
+- `S34` `verify:` `lint-imports` -> `pass`
+- `S34` `verify:` `basedpyright touched files` -> `pass`
+- `S34` `verify:` `pytest issue lines and header` -> `pass`
+- `S34` `verify:` `pytest TUI issue suites` -> `pass`
+- `S34` `by:` `opus-p01-lane-2`
 
 ## Notes
 
@@ -279,3 +291,4 @@ related:
 - `S13` The desktop's person session now relays in Rust (another session's 4e256a9e95/8821a09cfe); the same `operation_financial_submit` action is added there, with the encoded input and its request zeroized after sending
 - `S11` First part of S11: `tui.modelo.workbench.*` and `tui.declarations.*` moved to `workspace.modelo.*` and `workspace.declarations.*` through dev.locales move (469 and 201 keys per locale, values unchanged) and 3734 code references repointed in 111 files. `test_audit` still reports catalogue keys with no code reference `(next.check_aeat,` `next.link_aeat,` state.correction) and a missing provenance.source, all unreferenced before this step. The missing list and refusal keys and the key-hint removal follow
 - `S14` Not implemented: the desktop's person session now relays in Rust and another session lifted the person reply bound to the relay's 16 MiB assembled-document bound in 931da66b20, which carries a 390-sized form read in one reply; the bounded-parts mechanism is unnecessary
+- `S34` `contract_manifest.json` left out: the working tree also carries S31, S37 and S38 schema changes; it is regenerated and committed once those steps land

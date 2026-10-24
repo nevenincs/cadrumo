@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:535b4c7b0ff424755e17784e5b2cabdcd467978dd231947765ec1bd125acaaac'
+body_hash: 'sha256:234d03dc2093234e180ab3a5269600e271b97f18e87c2d6b5a73e8099ba975cb'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -51,7 +51,7 @@ Move every classification and wording decision the prototype had to make into th
 - [ ] `P01.S31` - Carry days remaining with tone, group words, creation targets and the AEAT-side steps the read model decides on the declarations list rows, and the zones' and calendar sources' availability on the list read; `src/cadrumo/application/modelo/declarations_list.py`.
 - [ ] `P01.S32` - Fold the retained apply prerequisite and the AEAT receipt step into the form's next step; `src/cadrumo/application/modelo/work_form_next_step.py`.
 - [ ] `P01.S33` - Close the review's lower findings: the TUI reads the stored standing, page applicability words are projected, a design-constant figure shows, the typed-entry apply refusal has its own code, the filed wording keys on the recorded closure, and the gate-agreement test drives the real gates; `src/cadrumo/application/modelo/work_form_models.py`.
-- [ ] `P01.S34` - Move the TUI's issue lines into the application and project them on the form read model in the form's language, with the verdict line, and switch the TUI to them; `src/cadrumo/application/modelo/work_form_issue_lines.py`.
+- [x] `P01.S34` - Move the TUI's issue lines into the application and project them on the form read model in the form's language, with the verdict line, and switch the TUI to them; `src/cadrumo/application/modelo/work_form_issue_lines.py`.
 - [ ] `P01.S35` - Add a worded history read for one declaration in the modelo family, newest first, with a closed kind per event, and switch the TUI history to it; `src/cadrumo/application/modelo/work_history_read.py`.
 - [ ] `P01.S36` - Add envelopes for a verified Modelo 130 with blocking and incomplete findings and one recorded as filed, read through the real producer; `native/desktop/frontend/scripts/modelo_fixtures.py`.
 - [ ] `P01.S37` - Word the typed entry's read-back value and parse refusal in the entry's language, the edit preflight's findings and edit refusals, each repeating-record cell's and context field's value text, and state each box's restore offer and confirm value on the form read model; `src/cadrumo/application/modelo/work_form_wording.py`.
