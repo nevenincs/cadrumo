@@ -156,10 +156,12 @@ def _declaration_result_casilla_reader(
 
     def read(modelo: str, filing_year: int, period: Period) -> str | None:
         from ..application.modelo.settlement_casilla import declaration_result_casilla_id
+        from ..application.modelo.work_form_service import modelo_form_snapshot
         from ..core.errors.hierarchy import CadrumoError
+        from ..domain.modelos.codes import ModeloCode
 
         try:
-            snapshot = operation.snapshot(str(modelo), filing_year=filing_year, period=period.registry_token)
+            snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), filing_year, period)
             return declaration_result_casilla_id(snapshot.revision)
         except (CadrumoError, ValueError, LookupError):
             return None

@@ -26,6 +26,7 @@ from ...domain.modelos.work_unit import WorkUnitState
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .work_form_models import ModeloFormResult
 from .work_form_result import settlement_result_values
+from .work_form_service import modelo_form_snapshot
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -81,9 +82,7 @@ def declaration_summary(
         )
     head = heads[0] if heads else None
     try:
-        snapshot = operation.snapshot(
-            str(declaration.modelo), filing_year=declaration.filing_year, period=declaration.period.registry_token
-        )
+        snapshot = modelo_form_snapshot(operation, declaration.modelo, declaration.filing_year, declaration.period)
         if head is not None:
             _require_selected_calculation_coordinate(head, declaration, snapshot, operation)
     except (CadrumoError, ValueError, LookupError) as exc:

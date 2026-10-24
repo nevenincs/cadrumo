@@ -118,7 +118,8 @@ def test_each_finding_reads_where_the_form_shows_it_most_urgent_first(
     on_box, on_records, off_form = lines
     assert on_box.address == shown.address
     assert on_box.box == shown.box
-    assert on_box.where == f"[{shown.box}] {shown.label.text}"
+    # The place is the box's words alone; the box number travels in ``box``, for each frontend to draw.
+    assert on_box.where == shown.label.text
     assert on_box.message == finding_message_text(blocking, language)
     assert on_box.detail == say(DETAIL_LOCALE_KEYS[ModeloVerificationFindingKind.BLOCKING_RULE])
     assert on_box.surface is shown.bindings[0].policy.surface
@@ -131,7 +132,7 @@ def test_each_finding_reads_where_the_form_shows_it_most_urgent_first(
 
     assert off_form.address is None
     assert off_form.box == _ABSENT_BOX
-    assert off_form.where == f"[{_ABSENT_BOX}]"
+    assert off_form.where is None
     assert off_form.detail is not None
     assert off_form.detail.startswith(say("workspace.modelo.issues.box_not_on_form", box=f"[{_ABSENT_BOX}]"))
 
@@ -310,6 +311,8 @@ def test_every_block_and_check_the_header_counts_has_its_line(
         assert line.level is ModeloFormAttention.BLOCKS
         assert line.box == (field.box or None)
         assert line.message == tr("workspace.modelo.issues.failed_result", locale=OutputLanguage.EN.value)
+        assert line.where in {None, field.label.text}
+    assert all(line.where is None or "[" not in line.where for line in lines)
 
 
 def test_a_failed_result_a_blocking_finding_already_names_is_not_listed_twice(

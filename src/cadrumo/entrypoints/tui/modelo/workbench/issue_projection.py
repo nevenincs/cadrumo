@@ -12,12 +12,19 @@ from .sources import surface_target
 _NO_BOX: str = "·"
 
 
+def _where(line: ModeloFormIssueLine) -> str:
+    """Where the list says a line sits: its box in this terminal's brackets, then the place in words."""
+    if line.box is None:
+        return line.where or f"[{_NO_BOX}]"
+    return f"[{line.box}]" if line.where is None else f"[{line.box}] {line.where}"
+
+
 def _issue_line(line: ModeloFormIssueLine) -> IssueLine:
     surface = line.surface
     return IssueLine(
         level=attention_level(line.level),
         box=line.box or _NO_BOX,
-        where=line.where,
+        where=_where(line),
         message=line.message,
         action=line.action,
         detail=line.detail or "",

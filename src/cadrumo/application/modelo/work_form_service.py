@@ -133,16 +133,22 @@ def _head(
 
 
 def modelo_form_snapshot(
-    operation: PinnedAuthorityOperation, modelo: ModeloCode, filing_year: int, period: Period, revision_id: str
+    operation: PinnedAuthorityOperation,
+    modelo: ModeloCode,
+    filing_year: int,
+    period: Period,
+    revision_id: str | None = None,
 ) -> RegistrySnapshot:
-    """The snapshot a form reads its revision through, at the grade that revision declares.
+    """The snapshot a declaration is read through, at the grade its revision declares.
 
     The law selects the revision for the filing context; ``revision_id``, the
     one the declaration was worked under, is only asserted against that
-    selection, never used to choose it. Asking every revision for filing grade
+    selection, never used to choose it, and a reader with no stored revision
+    reads the law's selection as it is. Asking every revision for filing grade
     would refuse an applicability-only one the filer can still open and
-    inspect, so the form asks for what the revision actually claims, as the
-    work review does.
+    inspect, so every reader of a declaration asks for what the revision
+    actually claims, as the work review does; the filing gates ask for filing
+    grade where they apply.
     """
     selected = law_selected_revision_for_work_target(
         modelo=str(modelo), filing_year=filing_year, period=period, stored_revision_id=revision_id, operation=operation

@@ -65,7 +65,6 @@ from .work_form_models import (
 from .work_form_next_step import applicable_fields, failed_results
 
 _BOX_NUMBER: Final[re.Pattern[str]] = re.compile(r"\d{1,4}[A-Z]?")
-_NO_BOX: Final[str] = "·"
 
 _RECORDS_NONE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.records.none"
 _RECORDS_FIELD_MISSING_LOCALE_KEY: Final[str] = "workspace.modelo.issues.records.field_missing"
@@ -128,7 +127,8 @@ class ModeloFormIssueLine(BaseModel):
 
     level: ModeloFormAttention
     box: str | None
-    where: str = Field(min_length=1)
+    #: The place in words, never the box number; ``None`` when the box alone says where.
+    where: str | None = Field(default=None, min_length=1)
     message: str = Field(min_length=1)
     #: What to do, as one sentence that says so.
     action: str = Field(min_length=1)
@@ -172,7 +172,7 @@ class _RecordValue:
 @dataclass(frozen=True, slots=True)
 class _Target:
     box: str | None
-    where: str
+    where: str | None
     detail: str
     address: ModeloFormAddressV1 | None
     field: ModeloFormField | None
@@ -236,11 +236,11 @@ def _listed_missing(form: ModeloWorkForm) -> frozenset[tuple[str, str]]:
     )
 
 
-def _field_name(field: ModeloFormField) -> str:
-    parts: list[str] = [f"[{field.box}]"] if (field.box is not None and field.box) else []
-    if field.label.disclosure is not ModeloFormTextDisclosure.TECHNICAL:
-        parts.append(field.label.text)
-    return " ".join(parts)
+def _field_words(field: ModeloFormField) -> str | None:
+    """The words the form shows a box with; ``None`` when it shows only a technical name."""
+    if field.label.disclosure is ModeloFormTextDisclosure.TECHNICAL:
+        return None
+    return field.label.text or None
 
 
 def _owning_surface(field: ModeloFormField | None) -> SourceSurface | None:
@@ -307,13 +307,13 @@ def _off_form_target(issue: ModeloFormIssue, context: _Context) -> _Target:
     if number is None:
         return _Target(None, context.tr(_NOT_ON_FORM_WHERE_LOCALE_KEY), kind_detail, None, None)
     not_shown = context.tr(_BOX_NOT_ON_FORM_LOCALE_KEY, box=f"[{number}]")
-    return _Target(number, f"[{number}]", f"{not_shown} {kind_detail}".strip(), None, None)
+    return _Target(number, None, f"{not_shown} {kind_detail}".strip(), None, None)
 
 
 def _shown_target(issue: ModeloFormIssue, field: ModeloFormField, context: _Context) -> _Target:
     box = field.box or issue.box
     detail = context.tr(DETAIL_LOCALE_KEYS[issue.finding.kind])
-    return _Target(box, _field_name(field) or f"[{box or _NO_BOX}]", detail, field.address, field)
+    return _Target(box, _field_words(field), detail, field.address, field)
 
 
 def _target(issue: ModeloFormIssue, context: _Context) -> _Target | None:
@@ -363,7 +363,7 @@ def _failed_result_line(field: ModeloFormField, context: _Context) -> ModeloForm
     return ModeloFormIssueLine(
         level=ModeloFormAttention.BLOCKS,
         box=box,
-        where=_field_name(field) or f"[{box or _NO_BOX}]",
+        where=_field_words(field),
         message=context.tr(_FAILED_RESULT_LOCALE_KEY),
         action=context.tr(_WHAT_TO_DO_LOCALE_KEY, action=context.tr(_FAILED_RESULT_ACTION_LOCALE_KEY)),
         detail=context.tr(_FAILED_RESULT_DETAIL_LOCALE_KEY),
@@ -395,11 +395,11 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
     )
 
 
-def _note_where(note: ModeloFormCalculationNote, field: ModeloFormField | None, context: _Context) -> str:
+def _note_where(note: ModeloFormCalculationNote, field: ModeloFormField | None, context: _Context) -> str | None:
     if field is not None:
-        return _field_name(field) or f"[{note.box}]"
+        return _field_words(field)
     if note.box is not None:
-        return f"[{note.box}]"
+        return None
     if note.reason in RECORDS_REASONS:
         return context.tr(_RECORDS_WHERE_LOCALE_KEY)
     return context.tr(_DECLARATION_WHERE_LOCALE_KEY)
