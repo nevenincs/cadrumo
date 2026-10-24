@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a74b757071993ef34126947be4836e75877ffaf2db507c2e34a397dfd58c17c'
+body_hash: 'sha256:dd831b1df991cbd99a7e9f142c093ec5ad56349bec5ecb9c3949c774592df6d6'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -107,6 +107,14 @@ related:
 - `S02` `verify:` `cargo fmt -- --check` -> `pass`
 - `S02` `verify:` `cargo deny check advisories bans licenses sources` -> `pass`
 - `S02` `by:` `high-implementation-engineer`
+- `S03` `A` `native/application/src/provisioning/network.rs`
+- `S03` `M` `native/application/src/provisioning/mod.rs`
+- `S03` `M` `native/application-environment.toml`
+- `S03` `verify:` `cargo test --offline --manifest-path native/application/Cargo.toml --lib (74, network 6)` -> `pass`
+- `S03` `verify:` `cargo clippy --all-targets -- -D warnings` -> `pass`
+- `S03` `verify:` `cargo fmt -- --check` -> `pass`
+- `S03` `verify:` `pytest dev/packaging/native/tests/test_application_environment.py test_file_contract_json_and_contract_rs_agree[linux-x86-64]` -> `fail`
+- `S03` `by:` `high-implementation-engineer`
 
 ## Notes
 
@@ -115,3 +123,4 @@ related:
 - `S01` lint-imports: 1 broken contract from a concurrent session's `cadrumo.tests.llm_vision_evidence_support` edit, unrelated
 - `S02` `package_inspection` junction fixture failure is the same pre-existing non-ASCII junction path issue as S01
 - `S02` ureq removed: the transfer and preflight need stage-exact classification and a proxy address that never reaches a third-party Debug or log, so the engine speaks HTTP/1.1 over rustls itself; rustls and webpki-roots were already in the graph and ring is a dev-dependency for the in-test certificate
+- `S03` `test_file_contract_json_and_contract_rs_agree[linux-x86-64]` fails on the Linux desktop dependency evidence in `dev/packaging/native/linux_desktop_runtime.py;` all four recorded digests (desktop Cargo.lock and Cargo.toml, application and platform Cargo.toml) were already stale before S01, and S01/S02 add application Cargo.toml and desktop lock drift (toml, rustls, webpki-roots; ureq leaves the application, the desktop keeps its loopback-only ureq without TLS); no native sys crate changed; the refresh needs the evidence owner's review of every drifted input

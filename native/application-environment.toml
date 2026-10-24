@@ -87,10 +87,11 @@ CADRUMO_LLM_VISION_READ_TIMEOUT_S = { kind = "integer", role = "operator" }
 CADRUMO_CLI_REVEAL_IDENTIFIERS = { kind = "boolean", role = "package" }
 CADRUMO_EXTERNAL_BIN_DIRS = { kind = "directory_list", role = "package" }
 
-# The operator's proxy for the downloads Cadrumo starts. The runtime passes them to
+# The operator's proxy for the downloads Cadrumo starts. The native component engine
+# reads them for its network preflight and pinned transfers; the runtime passes them to
 # the profile workers that run setup, and a worker hands them only to the download
 # tools that need them. No credential name is declared: a proxy password travels in
-# the address, which is therefore treated as sensitive.
+# the address, which is therefore treated as sensitive and never logged.
 CADRUMO_PROXY_URL = { kind = "text", role = "pass" }
 CADRUMO_PROXY_USERNAME = { kind = "text", role = "pass" }
 CADRUMO_PROXY_BYPASS = { kind = "text", role = "pass" }
