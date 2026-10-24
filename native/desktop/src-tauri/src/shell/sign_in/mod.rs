@@ -353,6 +353,9 @@ impl SignIn {
             )
         };
         let connection = self.connect().map_err(unavailable)?;
+        // Subscribed first: a push between the sign-in's reply and the
+        // session's router still reaches it.
+        let pushed = connection.subscribe_scoped();
         let admitted = connection.login_password(
             profile_id,
             Frontend::Desktop,
@@ -375,8 +378,13 @@ impl SignIn {
             Err(refusal) => return Err(unavailable(refusal)),
         };
         let persisted = admitted.session_persisted == Some(true);
-        crate::agent::person::Person::native(Arc::new(connection), admitted, Some(persisted))
-            .map_err(NativeSignIn::Unavailable)
+        crate::agent::person::Person::native(
+            Arc::new(connection),
+            pushed,
+            admitted,
+            Some(persisted),
+        )
+        .map_err(NativeSignIn::Unavailable)
     }
 
     #[cfg(not(windows))]
@@ -402,6 +410,7 @@ impl SignIn {
                 .with_reason("person_resume_unavailable")
                 .caused_by(refusal)
         })?;
+        let pushed = connection.subscribe_scoped();
         let admitted = connection
             .resume_receipt(
                 &native.storage_root,
@@ -414,7 +423,7 @@ impl SignIn {
                     .with_reason("person_resume_refused")
                     .caused_by(refusal)
             })?;
-        crate::agent::person::Person::native(Arc::new(connection), admitted, None)
+        crate::agent::person::Person::native(Arc::new(connection), pushed, admitted, None)
     }
 
     #[cfg(not(windows))]

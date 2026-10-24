@@ -61,25 +61,27 @@ pub(super) struct NativeSession {
 }
 
 impl NativeSession {
-    /// Holds `admitted` on `connection` and routes its pushes into `events`;
-    /// returns the session and its held line.
+    /// Holds `admitted` on `connection` and routes into `events` the pushes
+    /// `pushed` receives, subscribed before the sign-in so none in between is
+    /// lost; returns the session and its held line.
     pub(super) fn start(
         connection: Arc<dyn SessionExchange>,
+        pushed: mpsc::Receiver<Pushed>,
         admitted: Admitted,
         persisted: Option<bool>,
         events: EventSlot,
     ) -> Result<(Self, Value)> {
         let shared = Arc::new(Shared::default());
         shared.language_dirty.store(true, Ordering::Release);
-        let pushed = connection.subscribe_scoped();
-        let (routed, profile, session) = (
+        let (routed, profile, session, closing) = (
             shared.clone(),
             admitted.profile_id.clone(),
             admitted.session_id.clone(),
+            Arc::downgrade(&connection),
         );
         thread::Builder::new()
             .name("person-session-events".into())
-            .spawn(move || route(&pushed, &profile, &session, &routed, &events))
+            .spawn(move || route(&pushed, &profile, &session, &routed, &events, &closing))
             .map_err(|error| failed("person_events_spawn").caused_by(error))?;
         let mut identity = json!({
             "kind": "session_held",
@@ -536,7 +538,15 @@ fn route(
     session: &str,
     shared: &Shared,
     events: &EventSlot,
+    connection: &std::sync::Weak<dyn SessionExchange>,
 ) {
+    // A push the runtime could not have meant for this session ends the
+    // connection, and the runtime ends the session it carried.
+    let violated = || {
+        if let Some(connection) = connection.upgrade() {
+            connection.close();
+        }
+    };
     let send = |event: PersonEvent| {
         if let Some(events) = events.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
             let _ = events.send(event);
@@ -555,8 +565,14 @@ fn route(
             // A frontend never holds a service lease, and a push for another
             // profile could not have been meant for it: the connection is not
             // the one the window signed in on.
-            _ if profile_id.as_deref() != Some(profile) => break,
-            Event::ServiceLeaseChanged | Event::ModelRunRequested => break,
+            _ if profile_id.as_deref() != Some(profile) => {
+                violated();
+                break;
+            }
+            Event::ServiceLeaseChanged | Event::ModelRunRequested => {
+                violated();
+                break;
+            }
             Event::SessionRetired { .. } if own => break,
             Event::SessionRetired { .. }
             | Event::AttendanceAnswered
@@ -589,12 +605,14 @@ mod tests {
     use super::super::{Person, PersonEvent};
     use super::*;
     use std::{collections::VecDeque, sync::Mutex};
+    use tokio::sync::broadcast::{self, error::TryRecvError};
 
     const PROFILE: &str = "12345678-1234-4234-8234-123456789abc";
     const SESSION: &str = "22345678-1234-4234-8234-123456789abc";
     const BOOT: &str = "32345678-1234-4234-8234-123456789abc";
     const CONNECTION: &str = "42345678-1234-4234-8234-123456789abc";
     const OTHER: &str = "52345678-1234-4234-8234-123456789abc";
+    const OPERATION: &str = "ab00000000000000000000000000000000000000000000000000000000000001";
 
     /// What the fake runtime answers to the next request.
     enum Answer {
@@ -609,6 +627,7 @@ mod tests {
         script: Mutex<VecDeque<Answer>>,
         asked: Mutex<Vec<Value>>,
         pushes: Mutex<Option<mpsc::Sender<Pushed>>>,
+        closed: AtomicBool,
     }
 
     impl Runtime {
@@ -624,11 +643,15 @@ mod tests {
         }
 
         fn push(&self, event: Event, session: &str) {
+            self.push_for(PROFILE, event, session);
+        }
+
+        fn push_for(&self, profile: &str, event: Event, session: &str) {
             let sender = self.pushes.lock().unwrap().clone().unwrap();
             sender
                 .send(Pushed {
                     event,
-                    profile_id: Some(PROFILE.into()),
+                    profile_id: Some(profile.into()),
                     session_id: Some(session.into()),
                 })
                 .unwrap();
@@ -659,6 +682,10 @@ mod tests {
             *self.pushes.lock().unwrap() = Some(sender);
             receiver
         }
+
+        fn close(&self) {
+            self.closed.store(true, Ordering::Release);
+        }
     }
 
     fn admitted() -> Admitted {
@@ -674,7 +701,8 @@ mod tests {
     }
 
     fn person(runtime: &Arc<Runtime>) -> Person {
-        Person::native(runtime.clone(), admitted(), Some(true)).unwrap()
+        let pushed = runtime.subscribe_scoped();
+        Person::native(runtime.clone(), pushed, admitted(), Some(true)).unwrap()
     }
 
     fn status(session: &str, denial: Value) -> Answer {
@@ -692,9 +720,28 @@ mod tests {
         }))
     }
 
-    /// Waits for the event router to act on what was pushed.
-    fn settle() {
-        thread::sleep(Duration::from_millis(100));
+    /// Waits, within a deadline, until `done` holds.
+    fn eventually(done: impl Fn() -> bool) {
+        let deadline = Instant::now() + Duration::from_secs(10);
+        while !done() {
+            assert!(Instant::now() < deadline, "the router never acted");
+            thread::sleep(Duration::from_millis(5));
+        }
+    }
+
+    /// The next event the window hears, within a deadline.
+    fn next(
+        heard: &mut broadcast::Receiver<PersonEvent>,
+    ) -> std::result::Result<PersonEvent, TryRecvError> {
+        let deadline = Instant::now() + Duration::from_secs(10);
+        loop {
+            match heard.try_recv() {
+                Err(TryRecvError::Empty) if Instant::now() < deadline => {
+                    thread::sleep(Duration::from_millis(5));
+                }
+                heard => return heard,
+            }
+        }
     }
 
     #[test]
@@ -713,7 +760,13 @@ mod tests {
             })
         );
         assert!(held.session_persisted());
-        let resumed = Person::native(runtime.clone(), admitted(), None).unwrap();
+        let resumed = Person::native(
+            runtime.clone(),
+            runtime.subscribe_scoped(),
+            admitted(),
+            None,
+        )
+        .unwrap();
         assert!(resumed.identity.get("session_persisted").is_none());
         assert!(
             runtime.asked().is_empty(),
@@ -905,57 +958,70 @@ mod tests {
     }
 
     #[test]
+    fn nothing_reaches_the_window_before_it_observes() {
+        let runtime = Runtime::answering([]);
+        let pushed = runtime.subscribe_scoped();
+        let (events, mut heard) = broadcast::channel(8);
+        let (session, _) = NativeSession::start(
+            runtime.clone(),
+            pushed,
+            admitted(),
+            None,
+            Arc::new(std::sync::Mutex::new(Some(events))),
+        )
+        .unwrap();
+        session
+            .shared
+            .language_dirty
+            .store(false, Ordering::Release);
+        runtime.push(Event::RecordsChanged, SESSION);
+        runtime.push(Event::LanguageChanged, SESSION);
+        // The router acts on pushes in order: once the language is dirty, both were read.
+        eventually(|| session.shared.language_dirty.load(Ordering::Acquire));
+        assert!(matches!(heard.try_recv(), Err(TryRecvError::Empty)));
+    }
+
+    #[test]
     fn cues_reach_the_window_only_for_this_session_once_it_observes() {
         let runtime = Runtime::answering([]);
         let mut held = person(&runtime);
-        let (events, mut heard) = tokio::sync::broadcast::channel(8);
-        *held.events.lock().unwrap() = Some(events.clone());
-        runtime.push(Event::RecordsChanged, SESSION);
-        settle();
-        assert!(
-            heard.try_recv().is_err(),
-            "nothing is pushed before the window observes"
-        );
+        let (events, mut heard) = broadcast::channel(8);
         held.observe_events(events).unwrap();
         runtime.push(Event::RecordsChanged, OTHER);
         runtime.push(Event::LanguageChanged, SESSION);
         // No operation this session relayed is unsettled, so its cue is not passed on.
         runtime.push(Event::OperationChanged, SESSION);
         runtime.push(Event::AttendanceChanged, SESSION);
-        settle();
-        assert_eq!(heard.try_recv().unwrap(), PersonEvent::LanguageChanged);
-        assert_eq!(heard.try_recv().unwrap(), PersonEvent::AttendanceChanged);
-        assert!(heard.try_recv().is_err());
+        runtime.push(Event::RecordsChanged, SESSION);
+        assert_eq!(next(&mut heard), Ok(PersonEvent::LanguageChanged));
+        assert_eq!(next(&mut heard), Ok(PersonEvent::AttendanceChanged));
+        assert_eq!(next(&mut heard), Ok(PersonEvent::RecordsChanged));
     }
 
     #[test]
     fn retirement_ends_the_session_and_the_next_request_is_session_loss() {
         let runtime = Runtime::answering([]);
         let mut held = person(&runtime);
-        let (events, mut heard) = tokio::sync::broadcast::channel(8);
-        *held.events.lock().unwrap() = Some(events);
-        runtime.push(
-            Event::SessionRetired {
-                kind: "session_retired".into(),
-                reason: "signed_out".into(),
-            },
-            OTHER,
-        );
-        settle();
+        let (events, mut heard) = broadcast::channel(8);
+        held.observe_events(events).unwrap();
+        let retired = || Event::SessionRetired {
+            kind: "session_retired".into(),
+            reason: "signed_out".into(),
+        };
+        runtime.push(retired(), OTHER);
+        runtime.push(Event::RecordsChanged, SESSION);
+        assert_eq!(next(&mut heard), Ok(PersonEvent::RecordsChanged));
         assert!(
             held.is_open(),
             "another session's retirement is not this one's"
         );
-        runtime.push(
-            Event::SessionRetired {
-                kind: "session_retired".into(),
-                reason: "signed_out".into(),
-            },
-            SESSION,
-        );
-        settle();
-        assert_eq!(heard.try_recv().unwrap(), PersonEvent::Retired);
+        runtime.push(retired(), SESSION);
+        assert_eq!(next(&mut heard), Ok(PersonEvent::Retired));
         assert!(!held.is_open());
+        assert!(
+            !runtime.closed.load(Ordering::Acquire),
+            "the runtime ended it"
+        );
         let error = held.exchange(json!({"action": "status"})).unwrap_err();
         assert_eq!(error.code, ErrorCode::SessionUnavailable);
         assert_eq!(error.reason.as_deref(), Some("person_session_retired"));
@@ -963,10 +1029,27 @@ mod tests {
     }
 
     #[test]
+    fn a_push_meant_for_no_session_of_this_window_closes_its_connection() {
+        for violation in [
+            (OTHER, Event::RecordsChanged),
+            (PROFILE, Event::ServiceLeaseChanged),
+            (PROFILE, Event::ModelRunRequested),
+        ] {
+            let runtime = Runtime::answering([]);
+            let held = person(&runtime);
+            let (events, mut heard) = broadcast::channel(8);
+            *held.events.lock().unwrap() = Some(events);
+            runtime.push_for(violation.0, violation.1, SESSION);
+            assert_eq!(next(&mut heard), Ok(PersonEvent::Retired));
+            assert!(runtime.closed.load(Ordering::Acquire));
+        }
+    }
+
+    #[test]
     fn a_session_the_window_gives_up_retires_nobody() {
         let runtime = Runtime::answering([]);
         let held = person(&runtime);
-        let (events, mut heard) = tokio::sync::broadcast::channel(8);
+        let (events, mut heard) = broadcast::channel(8);
         *held.events.lock().unwrap() = Some(events);
         let pushes = runtime.pushes.lock().unwrap().clone().unwrap();
         drop(held);
@@ -976,8 +1059,90 @@ mod tests {
             profile_id: None,
             session_id: None,
         });
-        settle();
-        assert!(heard.try_recv().is_err());
+        // The router ends, and with it the last sender: nothing was heard first.
+        assert_eq!(next(&mut heard), Err(TryRecvError::Closed));
+    }
+
+    fn submit() -> Value {
+        json!({
+            "action": "operation_submit",
+            "definition_id": "ledger.list",
+            "subject_ref": format!("profile:{PROFILE}"),
+            "payload": {"period": "2026-Q3"},
+        })
+    }
+
+    #[test]
+    fn a_relayed_operation_answers_in_the_session_and_its_cues_follow() {
+        let runtime = Runtime::answering([
+            Answer::Reply(json!({
+                "kind": "operation_submitted",
+                "receipt": {"submission_version": 1, "operation_id": OPERATION, "secret_requirement": null},
+            })),
+            Answer::Reply(json!({"kind": "operation_acknowledged", "operation_id": OPERATION})),
+        ]);
+        let mut held = person(&runtime);
+        let (events, mut heard) = broadcast::channel(8);
+        held.observe_events(events).unwrap();
+        let reply = held.exchange(submit()).unwrap();
+        assert_eq!(reply["kind"], "operation_submitted");
+        assert_eq!(reply["operation_id"], OPERATION);
+        assert_eq!(reply["session_id"], SESSION);
+        assert_eq!(reply["connection_id"], CONNECTION);
+        let asked = runtime.asked();
+        assert_eq!(asked[0]["action"], "operation_submit");
+        assert_eq!(asked[1]["action"], "operation_start");
+        // An operation this session relayed is unsettled: its cue now reaches the window.
+        runtime.push(Event::OperationChanged, SESSION);
+        assert_eq!(next(&mut heard), Ok(PersonEvent::OperationChanged));
+    }
+
+    #[test]
+    fn a_relay_refusal_is_the_operations_answer_and_keeps_the_session() {
+        let runtime = Runtime::answering([Answer::Denied("subject_busy"), Answer::Closed]);
+        let mut held = person(&runtime);
+        let busy = held.exchange(submit()).unwrap();
+        assert_eq!(busy["kind"], "operation_refused");
+        assert_eq!(busy["code"], "subject_busy");
+        assert!(held.is_open());
+        // A lost runtime inside the relay is the operation's `unavailable`, as the hold answered.
+        let lost = held.exchange(submit()).unwrap();
+        assert_eq!(lost["code"], "unavailable");
+        assert!(held.is_open());
+    }
+
+    #[test]
+    fn a_malformed_relayed_request_ends_the_session_unasked() {
+        let runtime = Runtime::answering([]);
+        let mut held = person(&runtime);
+        let mut request = submit();
+        request["payload"] = json!(["not", "an", "object"]);
+        let error = held.exchange(request).unwrap_err();
+        assert_eq!(error.reason.as_deref(), Some("person_request_refused"));
+        assert!(!held.is_open());
+        assert!(runtime.asked().is_empty());
+    }
+
+    #[test]
+    fn a_language_outside_the_products_ends_the_session_unasked() {
+        let runtime = Runtime::answering([]);
+        let mut held = person(&runtime);
+        held.exchange(json!({"action": "language_set", "language": "fr"}))
+            .unwrap_err();
+        assert!(!held.is_open());
+        assert!(runtime.asked().is_empty());
+    }
+
+    #[test]
+    fn a_language_read_the_runtime_cannot_answer_ends_the_session() {
+        let runtime = Runtime::answering([Answer::Closed]);
+        let mut held = person(&runtime);
+        let error = held
+            .exchange(json!({"action": "language_observe"}))
+            .unwrap_err();
+        assert_eq!(error.reason.as_deref(), Some("person_request_refused"));
+        assert!(!held.is_open());
+        assert_eq!(runtime.asked()[0]["action"], "operation_contract");
     }
 
     #[test]

@@ -832,6 +832,8 @@ pub trait SessionExchange: Send + Sync {
     fn exchange(&self, request: &Value, deadline: Instant) -> Result<Map<String, Value>, Refusal>;
     /// As [`Connection::subscribe_scoped`].
     fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed>;
+    /// As [`Connection::close`]: for a peer that broke the protocol.
+    fn close(&self);
 }
 
 impl SessionExchange for Connection {
@@ -841,6 +843,10 @@ impl SessionExchange for Connection {
 
     fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
         Connection::subscribe_scoped(self)
+    }
+
+    fn close(&self) {
+        Connection::close(self);
     }
 }
 

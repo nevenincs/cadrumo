@@ -2624,6 +2624,8 @@ mod tests {
     }
 
     impl SessionExchange for Fake {
+        fn close(&self) {}
+
         fn exchange(
             &self,
             request: &Value,

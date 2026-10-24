@@ -154,12 +154,13 @@ impl Person {
     #[cfg(windows)]
     pub(crate) fn native(
         connection: Arc<dyn cadrumo_application::runtime_client::SessionExchange>,
+        pushed: std::sync::mpsc::Receiver<cadrumo_application::runtime_client::Pushed>,
         admitted: cadrumo_application::runtime_client::Admitted,
         persisted: Option<bool>,
     ) -> Result<Self> {
         let events = EventSlot::default();
         let (session, identity) =
-            native::NativeSession::start(connection, admitted, persisted, events.clone())?;
+            native::NativeSession::start(connection, pushed, admitted, persisted, events.clone())?;
         let profile = identity["profile_id"]
             .as_str()
             .unwrap_or_default()
@@ -202,6 +203,7 @@ impl Person {
             .expect("a scripted holder's person")
     }
 
+    #[cfg(any(windows, test))]
     fn held(
         bridge: Box<dyn Bridge>,
         events: EventSlot,
@@ -231,6 +233,7 @@ impl Person {
         self.identity["session_persisted"] == true
     }
 
+    #[cfg(any(windows, test))]
     fn require_held(&self, profile: &str, members: usize) -> Result<()> {
         if !self
             .identity
@@ -336,6 +339,7 @@ impl Person {
                 "present_destination" => Some("person_action_present_destination"),
                 "observe_events" => Some("person_action_observe_events"),
                 "operation_submit" => Some("person_action_operation_submit"),
+                "operation_financial_submit" => Some("person_action_operation_financial_submit"),
                 "operation_observe" => Some("person_action_operation_observe"),
                 "operation_result" => Some("person_action_operation_result"),
                 "operation_review" => Some("person_action_operation_review"),
