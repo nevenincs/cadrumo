@@ -48,6 +48,7 @@ import {
   type FixtureLedger,
   type FixtureMovement,
 } from "./fixtures/ledger";
+import { evidenceOperations } from "./ledgerEvidenceFixture";
 import {
   InvoiceRequestInvalid,
   InvoiceStopped,
@@ -69,6 +70,7 @@ export const LEDGER_SHAPES = [
   "unavailable",
   "slow",
   "large",
+  "documents",
 ] as const;
 export type LedgerShape = (typeof LEDGER_SHAPES)[number];
 
@@ -1494,7 +1496,7 @@ export function ledgerFixture(options: Options): LedgerPort {
           evidence_id: hex64(`evidence:${address}`),
           bucket_id: LEDGER_FIXTURE_PROFILE_ID,
           source_sha256: address,
-          attachment_id: `att-${address.slice(0, 12)}`,
+          attachment_id: address,
           media_kind: image ? "image" : "pdf",
           supplier: null,
           invoice_number: null,
@@ -1655,10 +1657,20 @@ export function ledgerFixture(options: Options): LedgerPort {
     events,
     hex64,
   });
+  const evidenceWork = evidenceOperations(ledger, {
+    profileId: LEDGER_FIXTURE_PROFILE_ID,
+    events,
+    hex64,
+    now,
+    fileOf: (token) => fileOf(token, "documents"),
+    issuesFor: (period) => issues(ledger, period),
+    seed: shape === "documents",
+  });
   const reads: Partial<
     Record<LedgerDefinitionId, (request: JsonObject) => JsonObject>
   > = {
     ...invoiceWork.reads,
+    ...evidenceWork.reads,
     ...setupWork.reads,
     "ledger.list": (request) => list(ledger, request),
     "ledger.view": (request) => {
@@ -1687,14 +1699,6 @@ export function ledgerFixture(options: Options): LedgerPort {
     }),
     "ledger.status": status,
     "ledger.preflight": preflight,
-    "ledger.evidence.list": () => ({
-      profile_id: LEDGER_FIXTURE_PROFILE_ID,
-      result: {
-        profile_id: LEDGER_FIXTURE_PROFILE_ID,
-        count: ledger.evidence.length,
-        rows: ledger.evidence as unknown as JsonValue,
-      },
-    }),
     "ledger.rule.list": () => ({
       profile_id: LEDGER_FIXTURE_PROFILE_ID,
       rules: ledger.rules as unknown as JsonValue,
@@ -1712,6 +1716,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     "ledger.invoice.import": importInvoiceBook,
     "ledger.evidence.batch": addDocuments,
     ...invoiceWork.writes,
+    ...evidenceWork.writes,
     ...setupWork.writes,
   };
 

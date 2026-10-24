@@ -53,6 +53,7 @@ import {
   sectionName,
   sectionTabId,
 } from "./ledgerWords";
+import { DocumentsSection } from "./documents/DocumentsSection";
 import { InvoicesSection } from "./invoices/InvoicesSection";
 import type { EditorTarget } from "./invoices/InvoiceEditor";
 import { MovementsSection } from "./movements/MovementsSection";
@@ -436,6 +437,18 @@ export function LedgerPage({
           reread();
           refreshYears();
         }}
+      />
+    );
+  else if (section === "documents")
+    body = (
+      <DocumentsSection
+        port={port}
+        reader={reader}
+        locale={locale}
+        shown={shown}
+        rows={shownRows(periodWindow)?.rows ?? null}
+        stage={stage}
+        onStage={editing.onStage}
       />
     );
   else if (section !== "movements")

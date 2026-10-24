@@ -460,6 +460,7 @@ export function fixtureLedger(): FixtureLedger {
     extra: Partial<FixtureMovement> & {
       invoice_id?: string | null;
       evidence_id?: string | null;
+      attachment_id?: string | null;
       currency?: string;
       fx_rate?: string;
       value_in_eur?: string;
@@ -539,9 +540,7 @@ export function fixtureLedger(): FixtureLedger {
       prorrata_reference: null,
       purchase_invoice_evidence_id: extra.evidence_id ?? null,
       invoice_id: extra.invoice_id ?? null,
-      attachment_ids: extra.evidence_id
-        ? [`att-${extra.evidence_id.slice(0, 12)}`]
-        : [],
+      attachment_ids: extra.attachment_id ? [extra.attachment_id] : [],
       notes: "",
       lifecycle_state: "ACTIVE",
       classified_by: unprocessed
@@ -699,21 +698,24 @@ export function fixtureLedger(): FixtureLedger {
           evidence_id: evidenceId,
           bucket_id: LEDGER_FIXTURE_PROFILE_ID,
           source_sha256: hex64(`evidence-bytes:${month}`),
-          attachment_id: `att-${evidenceId.slice(0, 12)}`,
+          attachment_id: hex64(`evidence-bytes:${month}`),
           media_kind: month % 3 === 0 ? "image" : "pdf",
           supplier: "Coworking Ribera, S.L.",
           invoice_number: `CR-2026-${String(month).padStart(4, "0")}`,
           invoice_date: day(month, 1),
           taxable_base: money(base),
-          iva_rate: "0.21",
+          iva_rate: "21",
           iva_amount: money(amount - base),
           notes: "",
           created_at: stamp(day(month, 2), 30),
           updated_at: stamp(day(month, 2), 30),
-          source_path: `facturas-recibidas/coworking-ribera-2026-${String(month).padStart(2, "0")}.pdf`,
+          source_path: `coworking-ribera-2026-${String(month).padStart(2, "0")}.pdf`,
         });
       }
-      const paid = push(kind, date, amount, { evidence_id: evidenceId });
+      const paid = push(kind, date, amount, {
+        evidence_id: evidenceId,
+        attachment_id: evidenceId ? hex64(`evidence-bytes:${month}`) : null,
+      });
       if (evidenceId) {
         // The coworking's monthly invoice, received and linked to its payment.
         const base = Math.round((amount * 100) / 121);
