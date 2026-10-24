@@ -1268,6 +1268,15 @@ export interface HostCommands {
     args: Authorized<{ subscription: number }>;
     result: null;
   };
+  /** A close the system raised asks the page first, while it listens. */
+  shell_close_guard_subscribe: {
+    args: Authorized<{ requests: Channel<null> }>;
+    result: number;
+  };
+  shell_close_guard_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
   manager_install: {
     args: Authorized<{ scope: "user" | "machine" }>;
     result: "dispatched" | "unsupported";
@@ -1358,15 +1367,6 @@ export interface HostCommands {
    * model for every role of the local AI. A setup already running is joined.
    * `resume` is the person's Resume click after an interruption: when the
    * new plan is exactly the one approved before, it is approved again
-  /** A close the system raised asks the page first, while it listens. */
-  shell_close_guard_subscribe: {
-    args: Authorized<{ requests: Channel<null> }>;
-    result: number;
-  };
-  shell_close_guard_unsubscribe: {
-    args: Authorized<{ subscription: number }>;
-    result: null;
-  };
    * without a second review; any other plan awaits an answer as usual. */
   desktop_setup_start: {
     args: Authorized<{
