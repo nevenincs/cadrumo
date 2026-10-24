@@ -1193,3 +1193,106 @@ Changes from 2ee7b77c63 to d7311a0669. No critical or high finding: the two P03 
 - **Pre-existing, not introduced here:**
   - The rules dry run draws a null `skipped_already_classified` or `no_match` as 0 (`components/ledger/setup/RulesSection.tsx:343-344`).
   - The combobox ranking is not accent-insensitive, so "telefonia" does not match "Telefonía" as a word.
+
+## P04.S17 integrated review, 2026-10-24
+
+Plan-close review of P01.S01 to P04.S16: revision required, with 2 high, 1 medium and 4 low findings and no critical one. Every earlier P01, P02 and P03 finding marked fixed is fixed. The highs reopen P01.S01 and P03.S10. They are decided by the 2026-10-24 amendment "a model review is held per movement and can be let go" to `2026-10-23-desktop-ledger-editor-adr`.
+
+### P04 · model-review-subject-lease | high | The runtime allows one model review per profile at a time, and the page leaves reviews pending that it cannot cancel. Re-asking, rejecting, "Ask the model for each" and staging a second suggestion are all refused `subject_busy` by the real runtime.
+
+**Failure scenario.**
+
+1. In the inspector the person asks the model about movement A.
+2. They press Reject and enter a reason. R5 requires a reason for a rejection, so the page asks a second time, with `origin: classify_llm_reject`.
+3. The runtime refuses that second `ledger.classify.review` with `subject_busy`, because A's first review is still paused.
+
+The same refusal hits these flows:
+
+- re-asking a Mixed suggestion with a share;
+- asking about movement B while A's suggestion is shown or staged;
+- every ask after the first in "Ask the model for each".
+
+R5 and M5 therefore work only for one ask per profile, until that review is answered or expires. The refusal shows the raw `subject_busy` code. The scenario tests pass because the scenario host keeps any number of reviews pending at once, and nothing in it models `subject_busy`.
+
+**Evidence.**
+
+- The review's contract sets `conflict_scope: definition_subject`, makes the subject the profile, and sets `cancellation: unsupported` (`src/cadrumo/_data/operations/contract_manifest.json`, entry `ledger.classify.review`).
+- A subject held by an operation that has not settled is refused: `src/cadrumo/application/operations/_supervisor_lease.py:192-233`.
+- The lease is released only at settlement: `_supervisor_settlement.py:219-223`.
+- The same rule is tested: `src/cadrumo_runtime/host/tests/test_operation_admitting_frontend_release.py:649-664`.
+- The page asks in a loop and never answers or releases in between: `native/desktop/frontend/src/components/ledger/inspector/SelectionInspector.tsx:327-366`.
+- Re-asking abandons the shown review (`inspector/ModelSuggestion.tsx:136-151`). `releaseReview` returns without cancelling because the review is not cancellable (`src/shell/ledgerApply.ts:652-659`).
+- The scenario host starts reviews without limit: `src/dev/ledgerFixture.ts:1987-2003`.
+- The rejection scenario that passes only against that looser host: `tests/scenarios/ledger-inspector.spec.ts:436`.
+
+**Fix.** This needs a product-contract follow-on decision: make a paused model review cancellable, or scope its lease to the transaction. Until then, give the scenario host the runtime's lease, keep one review open at a time, and word `subject_busy`.
+
+### P04 · tracked-ring-evicts-reviews | high | The host's 64-entry follow list counts every read, so ordinary browsing forgets a staged approval's operation. Its answer is then refused `not_admitted`, and the review is stranded.
+
+**Failure scenario.**
+
+1. The person stages a model approval.
+2. They select a large range of movements. That starts up to 400 `ledger.track` sealed reads, and opening the review re-reads the period page by page.
+3. They press Save. The answer is sent after the bulk and single writes (`ledgerPlan.ts` order).
+4. By then more than 64 submissions have been tracked since the ask, so `operations.find` fails. The approval is reported refused (`not_admitted`) and stays staged, and it can never be sent.
+5. The review stays paused at the runtime. `releaseReview`'s observe fails the same way, so under the finding above every later model ask on the profile is also refused until the review expires.
+
+**Evidence.**
+
+- Every submission, reads included, is tracked: `native/desktop/src-tauri/src/shell/ledger/mod.rs:251-253`.
+- The oldest entry is evicted at 64: `src/shell/settle.rs:17, 182-190`.
+- An answer must find the tracked operation: `ledger/mod.rs:428-436`.
+- The sealed-read budget is 400 per window read: `frontend/src/components/ledger/useSealedMovements.ts:19, 22`.
+- A thrown `not_admitted` becomes a refusal: `src/shell/ledgerApply.ts:263-276`.
+- No test sends an answer after more than 64 other submissions, and the scenario host has no bound.
+
+**Fix.** Track only operations the window can still follow: ones paused at review, running, or of unknown outcome. Never evict one paused at review. Add a host test that answers a review after 64 reads.
+
+### P04 · rules-dry-run-zero | medium | The rules dry run always reads "0 already classified · 0 without a match", because the product never sends those counts in a dry run.
+
+**Failure scenario.** The person runs Setup, Rules, dry run. The product's preview has `skipped_already_classified` and `no_match` set to null, and the page draws each as 0. The person is told that no movement was skipped and every movement matched a rule, whatever is true. This breaks the ADR rule "Unknown is never drawn as zero". It is ranked medium, as the audit ranked status-done-unchecked.
+
+**Evidence.**
+
+- The product's dry run requires both fields to be None: `src/cadrumo/application/ledger/rule_contracts.py:208-225`.
+- The page substitutes 0 for each missing count: `native/desktop/frontend/src/components/ledger/setup/RulesSection.tsx:366-370`.
+- The scenario host returns live counts in a dry run, so the scenario test (`ledger-setup.spec.ts:160`) cannot see this: `src/dev/ledgerSetupFixture.ts:314-337`.
+
+The audit had filed this as "pre-existing". It is not: `RulesSection.tsx` was created by this plan (67c2d154d1).
+
+**Fix.** Show only "would classify n" for a dry run, or show the other counts as not measured. Make the fixture omit them as the product does.
+
+### P04 · crlf-breaks-check | low | `useSealedMovements.ts` was committed with CRLF line endings against `eol=lf`, so `prettier --check` fails and `npm run check` cannot pass.
+
+**Evidence.** `git ls-files --eol` reports `i/crlf ... eol=lf` for `native/desktop/frontend/src/components/ledger/useSealedMovements.ts`, committed in b965c1d394. `prettier --check` flags only this file among the feature's files.
+
+**Fix.** Renormalise the file to LF.
+
+### P04 · documents-saved-unread-still-unknown | low | P03R documents-saved-unread-as-unknown is still open: a documents batch that saved is shown as "Outcome unknown".
+
+**Evidence.**
+
+- `components/ledger/transfer/importModel.ts:470-473` still folds `saved_unread` into `"unknown"`.
+- `ImportDialog.tsx:690-694` and `documents/DocumentPanels.tsx:294-297` then hold it as `unknown`.
+
+**Fix.** Carry `saved_unread` through `stopped.code` and hold it with that outcome.
+
+### P04 · stored-direction-still-read | low | The P03R lower point is still open: the expense-category rule reads the stored direction and evidence, not the staged ones.
+
+**Evidence.**
+
+- `src/shell/ledgerCommands.ts:69-74`.
+- `components/ledger/editing/ReviewDialog.tsx:255` calls `takesExpenseCategory(row)` on the stored row, although the same function builds `effectiveFacts` at line 251.
+
+**Fix.** Pass the effective staged facts.
+
+### P04 · answer-no-post-settle-recheck | low | An answered review is not rechecked against the session after it settles, as a submission is.
+
+**Failure scenario.** The person signs out, or switches profile, while an approval's answer settles. The host returns `settled` with the result instead of `unknown`. The P01 unknown-after-settle fix covers this case for submissions only.
+
+**Evidence.**
+
+- `native/desktop/src-tauri/src/shell/ledger/mod.rs:428-447`: `answer` returns `settle::answer_on` directly.
+- Compare `mod.rs:381`, where `relay` calls `settle::still_held`.
+
+**Fix.** Wrap the answer's outcome in `settle::still_held(..., true)`.

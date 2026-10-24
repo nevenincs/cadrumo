@@ -78,6 +78,15 @@ Accepted under the owner's standing authorization for this feature. The P03 usab
 - **The read joins the admitted list.** Bytes reach the window in memory only. They are dropped when the panel closes or the document changes, and never persisted or logged.
 - **The CLI and MCP reach the same registered read**, as every registered operation does. The CLI writes the rendered page to a file the person names.
 
+### Amendment 2026-10-24: a model review is held per movement and can be let go
+
+Accepted under the owner's standing authorization for this feature. The P04.S17 review (`2026-10-24-desktop-ledger-editor-audit`, `model-review-subject-lease`, `tracked-ring-evicts-reviews`) found that `ledger.classify.review` takes the whole profile as its subject and cannot be cancelled. So only one model review can be pending per profile, and the runtime refuses every further ask while one waits, including the re-asks R5 and M4 call for and "Ask the model for each". A review nobody answers also blocks asks until it settles.
+
+- **The review's subject is its movement.** The registered contract names `transaction_id` from the request as its subject (`payload_field`), so one review can wait per movement while reviews of other movements proceed. Two asks about the same movement still conflict, as they should.
+- **A review waiting for its answer can be cancelled** (cooperative cancellation). It has written nothing yet, so cancelling it releases its subject with no effect. The page cancels a review it supersedes or abandons, and still never retries an unknown outcome.
+- **The host fills the subject from the request**, as it already does for work-unit subjects. It keeps following every operation it can still answer or observe, so ordinary reads never push a waiting review out of memory.
+- **Parity:** this is a registered-contract change, so the CLI, TUI and MCP get the same per-movement scope and cancellation.
+
 ## Rationale
 
 The registered contracts are already the authority for every ledger request, and the relay already carries them for this person in this session. A closed list of ids in the host stops the window from naming arbitrary operations, which is what separated the capabilities record from a general bridge, and it does so without writing each contract twice. Paths and secrets stay with the host, as the shell record requires.
