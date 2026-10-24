@@ -9,7 +9,7 @@ related:
   - '[[2026-10-18-dependency-provisioning-unified-setup-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:e60b1c5405f59ae9cd50210eac1aa784966b31ada400dfa75befe26e3c2ed76e'
+body_hash: 'sha256:68617977ae7d54f9c17358373e0fcfbe4b16a5e1034a41d75397621b1bb5e6c4'
 ---
 
 # `rust-component-provisioning` plan
@@ -18,7 +18,7 @@ One Rust engine downloads, installs, checks and removes the browser and the loca
 
 ## Description
 
-Draft, awaiting the owner's approval. No Step runs before `2026-10-24-rust-component-provisioning-adr` is accepted and this plan is approved.
+Approved 2026-10-24. Basis: the owner's reply "all approved, implemnet", which also accepted `2026-10-24-rust-component-provisioning-adr` and its amendments to prior rulings.
 
 The work replaces the Python provisioning path that `2026-10-24-rust-component-provisioning-reference` maps. That path is the registered `dependencies.*` operations, Playwright's vendor installer behind a loopback server, and winget or Homebrew plus `/api/pull` for Ollama. In its place comes a provisioning engine in `native/application`, built on the existing `component.rs` store. The engine runs as the single binary's `components` role and is linked in process by the desktop.
 

@@ -259,3 +259,21 @@ Basis: the operator's selection of 2026-10-21 ("Pinned digests"), answering a se
 - The vendor installer still extracts each build and writes its completion marker, but its only download host is a loopback server that answers each pending archive's pinned path and nothing else, fetching it once and remembering a failed fetch rather than repeating it behind the setup's retry policy. The server hashes every response as it sends it and withholds the final chunk unless the bytes match the pin. The installer's environment carries no inherited Playwright, Node, npm or proxy variable.
 - When this build pins no archives for the installed driver on this platform, a missing browser reads blocked `not_in_this_build`, so no surface offers its setup, the plan's size is unknown, and setup refuses with `not_in_this_build` before downloading anything. An installed browser stays ready.
 - D7: nothing downloaded is extracted or launched before its bytes have matched a pin, so the full check's launch is never the first check of what was downloaded.
+
+### Amendment 2026-10-24: Rust owns provisioning
+
+Basis: the owner's approval of 2026-10-24, "all approved, implemnet", answering the presented `2026-10-24-rust-component-provisioning-adr` and its two plans.
+
+`2026-10-24-rust-component-provisioning-adr` moves component provisioning out of Python into the Rust engine of `native/application`, run as the single binary's `components` role and linked in process by the desktop. The wording above stays as history; these clauses are replaced:
+
+- D1: the registry lives in `native/application`, not `src/cadrumo/application`. Pins are declarative package data both languages read.
+- D3: the `dependencies.status`, `dependencies.setup` and `dependencies.verify` registered operations, and the provisioning actions of `local-reader.provision`, are replaced by the role's status, plan, setup, verify, cancel and remove commands. The CLI, TUI and MCP become thin clients of the role.
+- D5: delivery is the role's event stream, not the journal commit and `operation_changed` cue. The event vocabulary and the throttling stay.
+- D6: preflight, proxy handling, retry and resume run in Rust with the same classification and limits.
+- D7: role fitness leaves component state and becomes a consumer admission check. The one-token generation stays the model's full check.
+- D12: the local AI program lives at `components/ollama/<version>`, installed from a pinned portable archive.
+- D13: "a Cadrumo-owned model runtime" is narrowed. Cadrumo manages a pinned upstream Ollama archive and does not build one.
+- The 2026-10-18 person-bridge amendment's "operations carry their own words" becomes: the engine emits codes and every surface words them from the canonical catalogues.
+- The 2026-10-21 amendment's vendor installer and loopback server are removed. Rust extracts each pinned archive into the driver's layout and writes its completion marker. Pins, hop rules and the `not_in_this_build` reading stand.
+
+D2, D4, D9, D10 as amended, D11 and the rest of D12 are unchanged.

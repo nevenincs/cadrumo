@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:e43c14a0bf5a089642ebe355209dc2cf51e2ead2e6bff8fac1edb6fb7ff72173'
+body_hash: 'sha256:03950a5c9dcd226d2eee0aaf0c94c6c78a1c26d5896cb7809d782dec786b23b1'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-18-dependency-provisioning-unified-setup-adr]]"
@@ -15,7 +15,7 @@ related:
   - "[[2026-10-04-desktop-shell-adr]]"
 ---
 
-# `rust-component-provisioning` adr: `Rust owns component provisioning` | (**status:** `proposed`)
+# `rust-component-provisioning` adr: `Rust owns component provisioning` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -43,7 +43,7 @@ The owner's requirement, 2026-10-24: "Verify and ensure that product component p
 
 ## Constraints
 
-Proposed 2026-10-24 by the principal on the recommended options, because the owner's answer to the scope, Ollama and sequencing questions did not arrive. The owner must accept it before any Step runs.
+Accepted 2026-10-24. The principal proposed it on the recommended options when the owner's answers to the scope, Ollama and sequencing questions did not arrive; the owner then replied "all approved, implemnet", accepting this record, its amendments to prior rulings and both plans.
 
 1. **Ownership.** `native/application` owns component provisioning: the item declarations, derived states, the plan and its digest, approval binding, network preflight, transfer, retry and resume, extraction, installation, quick and full checks, receipts, locks, cancellation, progress, and cleanup of superseded versions. No Python process downloads, installs, extracts, verifies, removes, or decides the state of a component.
 2. **Exposure.** The engine runs as `cadrumo --role components <status|plan|setup|verify|cancel|remove>`, with a line-delimited JSON protocol. The protocol carries rows, the plan and its digest, phase, progress and notice events, and the result. It is the first role that hosts no interpreter. The desktop host calls the same library in process. The Python CLI (`aeat config provision`, `aeat config check`), the TUI setup screen and the MCP service start this role and render its codes. They make no decision and hold no second state. Where no built `cadrumo` binary exists, as in a source checkout without a native build, every Python surface reads the item as blocked `not_in_this_build`.
@@ -59,7 +59,7 @@ Proposed 2026-10-24 by the principal on the recommended options, because the own
 12. **Removed Python.** The registered `dependencies.status`, `dependencies.setup` and `dependencies.verify` operations are deleted, and so are the provisioning actions (start, remove) of `local-reader.provision`. Their transfer, network, receipt, installer, archive-server, archive-fetch, package-manager and pull modules, and the Python item declarations, go with them. All callers move in the same change, with no aliases. Load, unload and the fitness probe stay in Python as consumption.
 13. **On demand.** Every consumer checks its component before its first effect. A missing, stale, failed or blocked component refuses with a typed verdict that names `operator.provision.<item>`, and every surface routes that verdict to its setup flow. This commitment is already in unified-setup D10. The consumer fixes land under that ruling and do not wait for this record.
 
-Affected prior rulings, to be amended in place only on acceptance:
+Affected prior rulings, amended in place on acceptance 2026-10-24:
 
 - `2026-10-18-dependency-provisioning-unified-setup-adr`: D1 (registry home), D3 (registered operations), D5 delivery (the journal cue is replaced by the role's event stream), D7 (fitness leaves component state), D12 (program location), D13 (runtime bullet), the 2026-10-18 wording amendment, and the 2026-10-21 installer and loopback bullets. Each one points here.
 - `2026-10-13-application-distribution-native-bundle-llm-extra-adr`: "provisioned on demand into profile storage ... through the existing browser provisioning probe and install path" becomes the installation-wide storage root through the Rust engine. The `[browser]` extra still ships, because Playwright's Python package and driver launch the browser at use time.

@@ -11,9 +11,9 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
   - '[[2026-10-04-google-app-identity-adr]]'
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
-modified: '2026-10-21'
+modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:5e270798a423eff60c745bd12e7a5210711c8d6c9563e2bb8313a2d626bd325c'
+body_hash: 'sha256:fea91c4307c20e6881355e3b993e3e9fdf1db677a5164f612ebbfeb019c1306d'
 ---
 
 # `dependency-provisioning` plan
@@ -103,7 +103,7 @@ Lane H adds the cross-cutting gates: registry conformance, transfer fault inject
 - [x] `P08.S24` - Add the registry conformance gate: every item has quick and full checks, wording in four languages and a recovery action, and every surface reads the registry; `src/cadrumo/application/tests/test_dependency_registry_conformance.py`.
 - [x] `P08.S25` - Add transfer fault tests against real local HTTP and TLS servers for reset, timeout, 5xx, 429, truncation, slow transfer, disk full and interruption with resume; `src/cadrumo/application/tests/test_dependency_transfer_faults.py`.
 - [x] `P08.S26` - Point the developer doctor and a just recipe at the registry checks, and add a quick-check time bound test; `dev/env/playwright_doctor.py, justfile doctor recipes, src/cadrumo/entrypoints/tests/test_dependency_quick_check_bound.py (moved from application/tests: the composed registry lives in entrypoints, which application tests may not import)`.
-- [ ] `P08.S27` - Packaged isolated-root setup acceptance on the development host: drive the staged packaged app against a throwaway storage root under build/windows-x64/testing (browser setup with review, forced interruption and Resume, the app's own full check, a no-op second run, verified cleanup and an unchanged real storage); a true vanilla-machine run stays pending because the user has no disposable host and declined machine changes (2026-10-18); `native/desktop/tests/packaged/setup.mjs, native/desktop/tests/packaged.test.mjs`.
+- [ ] `P08.S27` - Re-scoped 2026-10-24 to P05.S15 of 2026-10-24-rust-component-provisioning-plan, because the Python setup path this acceptance would drive is replaced by the Rust components role; the vanilla-machine run stays pending until a disposable host exists; `native/desktop/tests/packaged/setup.mjs, native/desktop/tests/packaged.test.mjs`.
 - [x] `P08.S28` - Add the isolated-environment acquisition lane: a vanilla-machine stand-in that runs the real browser acquisition end to end in one throwaway root under build/windows-x64/testing, with env overrides, a before/after listing of real storage, a free-space floor of required_free_bytes plus 10 GiB, a byte budget that aborts mid-run, opt-in model items, resume, transient retry, offline refusal, the full check, a no-op second run, and verified cleanup of the root and any keychain entries; `dev/smoke/acquisition_lane.py, dev/smoke/tests/test_acquisition_lane.py`.
 
 ## Parallelization

@@ -405,3 +405,9 @@ Accepted by the user on 2026-10-24 ("all lgtm") after review of the link format 
 Rejected: a register outside the repository shared with cadrumo-agent (two release trains for vocabulary only this repository implements; the agent reads the register as Cadrumo's MCP service publishes it instead); a repo-level declaration such as `native/application-environment.toml` (the pip TUI and the relay read the register at runtime without a native package, so it would need a generated module checked into `src`); a typed Python module as owner (it puts the shell's page state under a Python package and cannot type the TUI targets across the client boundary); registering each surface's internal targets in the register (a lower component would define the application's page state); `<window>` or the surface as the first path segment (the same element would have two identities); a profile segment (it only produced a refusal and grants nothing); OS protocol registration and single-instance forwarding; a URL router; and keeping hidden pages mounted to avoid prompts.
 
 Evidence: to be recorded as the plan `2026-10-24-desktop-navigation-register-plan` lands.
+
+### Amendment 2026-10-24: component setup runs in the window's own engine
+
+Basis: the owner's approval of 2026-10-24, "all approved, implemnet", answering the presented `2026-10-24-rust-component-provisioning-adr` and its two plans.
+
+The host's setup commands call the Rust component engine of `2026-10-24-rust-component-provisioning-adr` in process instead of relaying the `dependencies.*` operations over the person bridge. The window contract (`desktop_setup_*` commands, `DesktopSetup` and the refusal codes) is unchanged, and so are the Settings advisory, the setup flow and the blocked-feature prompts of the 2026-10-19 amendment.

@@ -65,3 +65,9 @@ The Chromium browser builds are not bundled. They stay provisioned on demand int
 The other constraints stand: the wheel's default install stays core-only, the added distributions are locked, version-pinned, wheel-only and target-selected, and every remaining extra stays out of the bundle. The bundle grows by the `[browser]` closure, which is dominated by the per-platform Node driver.
 
 Authorization: the owner's ruling of 2026-10-18, "Ship it", choosing to ship the `browser` extra alongside `llm` in the native application package with Chromium left to on-demand storage provisioning.
+
+### Amendment 2026-10-24: Chromium is provisioned by the Rust engine
+
+Basis: the owner's approval of 2026-10-24, "all approved, implemnet", answering the presented `2026-10-24-rust-component-provisioning-adr` and its two plans.
+
+Chromium builds are provisioned on demand into the installation-wide storage root (`components/playwright`) by the Rust component engine of `2026-10-24-rust-component-provisioning-adr`. This replaces "into profile storage ... through the existing browser provisioning probe and install path". The `[browser]` extra still ships, because Playwright's Python package and driver launch the browser at use time; the driver's installer is no longer run.
