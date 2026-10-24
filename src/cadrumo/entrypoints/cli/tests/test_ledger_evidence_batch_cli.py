@@ -3,13 +3,24 @@
 The complete CLI batch journey is exercised through the authenticated profile
 worker in ``test_runtime_ledger_evidence_ingestion_native``. These tests isolate
 the CLI-owned presentation of canonical pause, refusal, review, and unreadable
-source results.
+source results. A pause's text names the local AI and then what the local AI's
+quick-status row allows, derived by the real registry: the setup command for
+an offerable row, the row's sentence for a blocked one. Its raw facts stay in
+JSON.
 """
 
 from __future__ import annotations
 
 import pytest
 
+from ....application.dependency_contracts import (
+    DependencyBlockedReason,
+    DependencyCheckMode,
+    DependencyProbeOutcome,
+    DependencyProbeReading,
+    DependencyStatusRow,
+)
+from ....application.dependency_registry import dependency_item_declarations, derive_dependency_row
 from ....application.ledger.batch_ingest import (
     BatchItemResult,
     BatchItemStatus,
@@ -20,11 +31,15 @@ from ....application.ledger.batch_ingest import (
 )
 from ....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
 from ....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from ....application.local_reader import probe_local_reader
 from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from ....core.config import override_settings
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
+from ....core.model_catalogue import ModelRole
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.iva.schema import InvoiceKind
+from .._component_setup_rendering import setup_status_source
 from ..ledger_evidence_batch_commands import _batch_payload, _batch_text_lines, _run_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -105,8 +120,11 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
     assert pause_payload.inference_pause.facts == _PAUSE.facts
     assert pause_payload.inference_pause.precondition_action.failed_condition_id == _RUNTIME_REACHABLE
 
-    lines = _batch_text_lines(deferred, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
-    assert "paused.facts.runtime_reachable\tfalse" in lines
+    with override_settings(cadrumo_output_language="en"):
+        lines = _batch_text_lines(deferred, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+    assert "paused\tLocal AI could not read the paused documents on this computer." in lines
+    assert not any(line.startswith("paused.facts.") for line in lines)
+    # A pause setup cannot end keeps its typed action record.
     assert any(line.startswith("paused.precondition_action.failed_condition_id\t") for line in lines)
 
     failed = BatchRunResult(items=(_refused_row("broken.pdf"),))
@@ -120,6 +138,58 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
         "ledger.evidence.batch.items_refused",
         "ledger.evidence.batch.work_deferred",
     }
+
+
+def _local_ai_rows(outcome: DependencyProbeOutcome) -> tuple[DependencyStatusRow, ...]:
+    declaration = next(row for row in dependency_item_declarations() if row.item_id == "local_ai")
+    blocked = DependencyBlockedReason.NOT_IN_THIS_BUILD if outcome is DependencyProbeOutcome.BLOCKED else None
+    reading = DependencyProbeReading(
+        item_id="local_ai", mode=DependencyCheckMode.QUICK, outcome=outcome, blocked_reason=blocked
+    )
+    return (derive_dependency_row(declaration, reading),)
+
+
+def _local_ai_pause() -> InferencePause:
+    """The pause the local reader probe gives over an unreachable runtime: it names the local AI's setup."""
+    status = probe_local_reader(ModelRole.TEXT_EXTRACTION, installed=(), model="reader-model:1b")
+    assert status.precondition_verdict is not None
+    return InferencePause(
+        facts={"runtime_reachable": False, "runtime_url": "http://127.0.0.1:11434"},
+        precondition_verdict=status.precondition_verdict,
+    )
+
+
+@pytest.mark.parametrize(
+    ("outcome", "action_line"),
+    [
+        (DependencyProbeOutcome.ABSENT, "paused.precondition_action\tTo fix it, run: aeat config provision pull"),
+        (
+            DependencyProbeOutcome.BLOCKED,
+            "paused.precondition_action\tLocal AI: This version of Cadrumo does not include this.",
+        ),
+    ],
+    ids=["offerable", "not in this build"],
+)
+def test_a_pause_for_the_local_ai_names_it_then_says_what_its_row_allows(
+    outcome: DependencyProbeOutcome, action_line: str
+) -> None:
+    pause = _local_ai_pause()
+    run = BatchRunResult(items=(_paused_row("scan.pdf"),), inference_pause=pause)
+
+    with override_settings(cadrumo_output_language="en"), setup_status_source(lambda: _local_ai_rows(outcome)):
+        lines = _batch_text_lines(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+
+    reason = lines.index("paused\tLocal AI, which reads the paused documents, is not ready.")
+    assert lines[reason + 1] == action_line
+    assert not any(line.startswith("paused.precondition_action.") for line in lines)
+    assert not any("runtime_url" in line or "127.0.0.1" in line for line in lines)
+    # JSON keeps the raw facts and the typed action.
+    payload = _batch_payload(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+    assert payload.inference_pause is not None
+    assert payload.inference_pause.facts == pause.facts
+    action = payload.inference_pause.precondition_action.action
+    assert action is not None
+    assert action.action_id == LOCAL_AI_PROVISION_ACTION_ID
 
 
 def test_pending_review_resolves_the_review_queue_action() -> None:

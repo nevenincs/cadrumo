@@ -107,6 +107,10 @@ cli:
           cada fila indica el motiu. En confirmar un document es torna a llegir, de
           manera que aquests camps s''emplenen llavors si el motiu ja s''ha resolt,
           o pots emplenar-los tu.'
+        batch_paused_local_ai_not_ready: La IA local, que llegeix els documents en
+          pausa, no està a punt.
+        batch_paused_local_ai_unavailable: La IA local no ha pogut llegir els documents
+          en pausa en aquest ordinador.
         batch_pending_review_message: Alguns esborranys contenen una incidència que
           has de resoldre tu abans de crear una factura. Estan retinguts, no fallits.
         batch_progress_message: 'processat %{source}: %{status}'

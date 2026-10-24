@@ -390,14 +390,25 @@ def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: Invoice
 
 
 def _append_batch_pause_lines(run: BatchRunResult, lines: list[str]) -> None:
-    """Append the existing paused facts and precondition actions after unresolved rows."""
+    """Append why the paused documents were not read, then what the pause's action allows.
+
+    Text names the local AI, which reads the paused documents, and then the
+    setup line its verdict resolves to. The pause's raw facts stay in the JSON
+    payload only.
+    """
     pause = run.inference_pause
-    if pause is not None:
-        lines.extend(
-            f"paused.facts.{key}\t{json.dumps(value, ensure_ascii=False, sort_keys=True)}"
-            for key, value in sorted(pause.facts.items())
-        )
-        lines.extend(
-            f"paused.{line}"
-            for line in precondition_action_lines(resolve_cli_precondition_action(pause.precondition_verdict))
-        )
+    if pause is None:
+        return
+    from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
+
+    verdict = pause.precondition_verdict
+    names_setup = verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    reason = (
+        tr("cli.app.ledger.evidence.batch_paused_local_ai_not_ready")
+        if names_setup
+        else tr("cli.app.ledger.evidence.batch_paused_local_ai_unavailable")
+    )
+    # MACHINE-FORMAT-RATIONALE-LEDGER-EVIDENCE-BATCH-PAUSE: tab-separated machine
+    # record (marker, localized reason).
+    lines.append(f"paused\t{reason}")
+    lines.extend(f"paused.{line}" for line in precondition_action_lines(resolve_cli_precondition_action(verdict)))

@@ -104,6 +104,10 @@ cli:
           nem pedig azért, mert a dokumentumokból hiányoznának; minden sor megnevezi
           az okot. A dokumentum megerősítése újra beolvassa azt, így ezek a mezők
           akkor kitöltődnek, ha az ok már megszűnt, vagy te magad is kitöltheted őket.'
+        batch_paused_local_ai_not_ready: A helyi MI, amely a szüneteltetett dokumentumokat
+          olvassa, nem áll készen.
+        batch_paused_local_ai_unavailable: A helyi MI nem tudta beolvasni a szüneteltetett
+          dokumentumokat ezen a számítógépen.
         batch_pending_review_message: Néhány piszkozat olyan problémát hordoz, amelyet
           neked kell rendezned a számla létrehozása előtt. Ezek visszatartva vannak,
           nem hiúsultak meg.

@@ -108,6 +108,10 @@ cli:
           los tengan; cada fila indica el motivo. Al confirmar un documento se vuelve
           a leer, así que esos campos se rellenan entonces si el motivo ya se ha resuelto,
           o puedes rellenarlos tú.'
+        batch_paused_local_ai_not_ready: La IA local, que lee los documentos en pausa,
+          no está lista.
+        batch_paused_local_ai_unavailable: La IA local no ha podido leer los documentos
+          en pausa en este ordenador.
         batch_pending_review_message: Algunos borradores contienen una incidencia
           que debes resolver tú antes de crear una factura. Están retenidos, no fallidos.
         batch_progress_message: 'procesado %{source}: %{status}'
