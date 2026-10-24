@@ -140,7 +140,7 @@ def _validate_create_outcome(
         if not _is_admitted_applicability_refusal(outcome, payload, condition, effect, refusal_code):
             raise RefusalError(RefusalCode.INVALID_FRAME)
         raise ModeloLifecycleActionUnavailableError(
-            translated_message="tui.declarations.work_create.refusal.not_applicable",
+            translated_message="workspace.declarations.work_create.refusal.not_applicable",
             context={
                 "modelo": outcome.modelo,
                 "reason": outcome.reason,
@@ -236,10 +236,12 @@ def compose_runtime_work_create_handoff(
         if client.profile_id != profile_id or client.session_id != session_id:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
         if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
-            raise ModeloLifecycleActionUnavailableError(translated_message="tui.declarations.work_create.refusal.year")
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message="workspace.declarations.work_create.refusal.year"
+            )
         if period.filing_year != filing_year:
             raise ModeloLifecycleActionUnavailableError(
-                translated_message="tui.declarations.work_create.refusal.period"
+                translated_message="workspace.declarations.work_create.refusal.period"
             )
         if (locale_key := modelo_work_create_refusal_locale_key(modelo)) is not None and locale_key != "":
             raise ModeloLifecycleActionUnavailableError(

@@ -101,7 +101,7 @@ def _catalogue_payload(locale: str) -> dict[str, LocaleNode]:
 # This allowlist ratchets: adding a line is a reviewed edit that must state why
 # the namespace is genuinely open-ended.
 OPEN_ENDED_NAMESPACES: dict[str, str] = {
-    "tui.declarations.refusal.reason": (
+    "workspace.declarations.refusal.reason": (
         "Keyed by the free-text reason_code a workbench zone carries; copy is optional "
         "and the page falls back to its generic refusal line for an unauthored reason."
     ),
@@ -246,11 +246,15 @@ def test_dynamic_family_registrations_match_their_producer_sources() -> None:
 def test_declaration_list_families_cover_the_live_producer_vocabularies() -> None:
     """A new choice or row state cannot vanish behind a registered wildcard."""
     from cadrumo.application.modelo.declaration_summary import DeclarationSummaryState
-    from cadrumo.application.modelo.declarations_list import DeclarationListGroup, declaration_list_rows
+    from cadrumo.application.modelo.declarations_list import (
+        DeclarationListGroup,
+        DeclarationListNextStep,
+        declaration_list_rows,
+        state_words,
+    )
     from cadrumo.application.overview.coverage import CoverageAdviceReason
     from cadrumo.entrypoints.tui.declarations.grouped import GroupedDeclarationsScreen
     from cadrumo.entrypoints.tui.declarations.portfolio_rendering import DECLARATION_GROUP_LOCALE_KEYS
-    from cadrumo.entrypoints.tui.declarations.row_words import row_lines
 
     producer_module = inspect.getmodule(declaration_list_rows)
     assert producer_module is not None
@@ -270,19 +274,12 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
             and isinstance(node.args[3].value, str)
         ):
             states.add(node.args[3].value)
-    renderer_module = inspect.getmodule(row_lines)
-    assert renderer_module is not None
-    renderer = ast.parse(inspect.getsource(renderer_module))
-    renderer_functions = {node.name: node for node in renderer.body if isinstance(node, ast.FunctionDef)}
-    next_choices: set[str] = set()
-
-    def choice_values(expression: ast.expr) -> set[str]:
-        if isinstance(expression, ast.IfExp):
-            return choice_values(expression.body) | choice_values(expression.orelse)
-        assert isinstance(expression, ast.Constant) and isinstance(expression.value, str)
-        return {expression.value}
-
-    for node in ast.walk(renderer):
+    # The row's state words branch on the states they say in their own words; only the rest
+    # translate a state tail.
+    worder = next(
+        node for node in ast.walk(producer) if isinstance(node, ast.FunctionDef) and node.name == state_words.__name__
+    )
+    for node in ast.walk(worder):
         if isinstance(node, ast.If) and isinstance(node.test, ast.Compare):
             comparison = node.test
             if (
@@ -294,28 +291,11 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
                 and isinstance(comparison.ops[0], ast.Eq)
                 and isinstance(comparison.comparators[0], ast.Constant)
                 and isinstance(comparison.comparators[0].value, str)
-                and any(isinstance(statement, ast.Assign) for statement in node.body)
+                and any(isinstance(statement, ast.Return) for statement in node.body)
             ):
-                # Unconditional explicit branches never translate a state tail.
                 states.discard(comparison.comparators[0].value)
-        if (
-            isinstance(node, ast.Assign)
-            and any(isinstance(t, ast.Name) and t.id == "key" for t in node.targets)
-            and isinstance(node.value, ast.IfExp)
-        ):
-            next_choices.update(choice_values(node.value))
-        if (
-            isinstance(node, ast.Assign)
-            and any(isinstance(t, ast.Name) and t.id == "key" for t in node.targets)
-            and isinstance(node.value, ast.Call)
-            and isinstance(node.value.func, ast.Name)
-            and node.value.func.id in renderer_functions
-        ):
-            factory = renderer_functions[node.value.func.id]
-            for statement in ast.walk(factory):
-                if isinstance(statement, ast.Return):
-                    assert statement.value is not None
-                    next_choices.update(choice_values(statement.value))
+    # Every step a row can offer is a member of the application's step vocabulary.
+    next_choices = {step.value for step in DeclarationListNextStep}
     assert states and next_choices, "the actual state and action producers must remain discoverable"
     screen_module = inspect.getmodule(GroupedDeclarationsScreen)
     assert screen_module is not None
@@ -334,9 +314,10 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
     assert choices.keys() == {"_FILTERS", "_SORTS"}, "the actual screen choice vocabulary must remain discoverable"
     assert set(DECLARATION_GROUP_LOCALE_KEYS) == set(DeclarationListGroup)
     assert (
-        DECLARATION_GROUP_LOCALE_KEYS[DeclarationListGroup.AEAT_UNLINKED] == "tui.declarations.list.state.aeat_unlinked"
+        DECLARATION_GROUP_LOCALE_KEYS[DeclarationListGroup.AEAT_UNLINKED]
+        == "workspace.declarations.list.state.aeat_unlinked"
     )
-    assert "tui.declarations.list.group.aeat_unlinked" not in get_registered_keys()
+    assert "workspace.declarations.list.group.aeat_unlinked" not in get_registered_keys()
     expected = {
         "advice": {member.value for member in CoverageAdviceReason},
         "filter": choices["_FILTERS"],
@@ -346,7 +327,7 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
     }
     registered = set(get_registered_keys())
     for family, values in expected.items():
-        prefix = f"tui.declarations.list.{family}."
+        prefix = f"workspace.declarations.list.{family}."
         assert {key for key in registered if key.startswith(prefix)} == {prefix + value for value in values}
 
 
@@ -354,7 +335,7 @@ def test_declaration_list_enrolment_keeps_open_reason_namespaces_unbounded() -> 
     """Bounded feature copy must not admit arbitrary optional reason codes."""
     from ..signal_discovery import dynamic_key_families
 
-    bounded = {f"tui.declarations.list.{family}.*" for family in ("advice", "filter", "sort", "state", "next")}
+    bounded = {f"workspace.declarations.list.{family}.*" for family in ("advice", "filter", "sort", "state", "next")}
     open_reasons = {prefix + ".*" for prefix in OPEN_ENDED_NAMESPACES}
     finite, unresolved = dynamic_key_families(bounded | open_reasons)
     assert set(finite) == bounded
@@ -958,7 +939,7 @@ def test_a_key_registry_is_flow_confirmed_through_a_boundary_wrapper(tmp_path) -
         chr(10).join(
             (
                 "_AVAILABILITY_KEYS = {",
-                '    Availability.STALE: "tui.declarations.availability.stale",',
+                '    Availability.STALE: "workspace.declarations.availability.stale",',
                 "}",
                 "_ROUTING_TABLE = {",
                 '    Notice.RETRY: "notice.machine.retry",',
@@ -972,7 +953,7 @@ def test_a_key_registry_is_flow_confirmed_through_a_boundary_wrapper(tmp_path) -
 
     keys = scan_source_tree(tmp_path)
 
-    assert "tui.declarations.availability.stale" in keys, (
+    assert "workspace.declarations.availability.stale" in keys, (
         "a registry read through a boundary wrapper reaches the translator and is confirmed"
     )
     assert "notice.machine.retry" not in keys, (

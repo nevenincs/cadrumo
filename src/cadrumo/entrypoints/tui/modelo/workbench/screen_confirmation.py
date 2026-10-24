@@ -126,7 +126,7 @@ class WorkbenchConfirmationMixin:
             return
         refusals = [refusal for field in confirmed if (refusal := self._session.stage_confirmation(field)) is not None]
         self._refresh_after_staging()
-        self._notice(tr(f"tui.modelo.workbench.stage_refused.{refusals[0].value}") if refusals else "")
+        self._notice(tr(f"workspace.modelo.stage_refused.{refusals[0].value}") if refusals else "")
 
     def on_casilla_list_clear_requested(self: ModeloWorkbenchScreen, message: CasillaList.ClearRequested) -> None:
         """Stage removing the value the filer declared on the casilla under the cursor."""
@@ -170,6 +170,6 @@ class WorkbenchConfirmationMixin:
             navigate = root.navigate_to
         target = surface_target(choice.surface)
         if navigate is None or target is None:
-            self._notice(tr("tui.modelo.workbench.sources.not_here"))
+            self._notice(tr("workspace.modelo.sources.not_here"))
             return
         self._leave_then(lambda: navigate(target))

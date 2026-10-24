@@ -87,7 +87,7 @@ class WorkbenchNextStepMixin:
             self._edit_unavailable()
             return
         if self._session.dirty:
-            self._notice(tr("tui.modelo.workbench.calculate.apply_first"))
+            self._notice(tr("workspace.modelo.calculate.apply_first"))
             return
         self._calculate(actions)
 
@@ -102,18 +102,18 @@ class WorkbenchNextStepMixin:
             if proceed is not None and proceed:
                 self._calculate_now(actions)
             else:
-                self._notice(tr("tui.modelo.workbench.calculate.kept"))
+                self._notice(tr("workspace.modelo.calculate.kept"))
 
         self.app.push_screen(
             ConfirmScreen(
-                title=lambda: tr("tui.modelo.workbench.calculate.at_risk_title"),
+                title=lambda: tr("workspace.modelo.calculate.at_risk_title"),
                 message=lambda: recalculation_risk_text(
                     self._unattributed_boxes(form),
                     console=self.app.console,
                     width=max(self._width() - _DIALOG_FRAME, 1),
                 ),
-                confirm_label=lambda: tr("tui.modelo.workbench.calculate.at_risk_proceed"),
-                cancel_label=lambda: tr("tui.modelo.workbench.calculate.at_risk_cancel"),
+                confirm_label=lambda: tr("workspace.modelo.calculate.at_risk_proceed"),
+                cancel_label=lambda: tr("workspace.modelo.calculate.at_risk_cancel"),
             ),
             closed,
         )
@@ -204,7 +204,7 @@ class WorkbenchNextStepMixin:
             box=field.box or "·",
             where=field.label.text,
             message=message,
-            action=tr("tui.modelo.workbench.apply_prerequisite.action"),
+            action=tr("workspace.modelo.apply_prerequisite.action"),
             detail="",
             technical="",
             key=address_key(field.address),
@@ -221,17 +221,15 @@ class WorkbenchNextStepMixin:
         source = field.source
         filings = () if source is None else source.earlier_filings
         message = tr(
-            "tui.modelo.workbench.apply_prerequisite.earlier"
-            if filings
-            else "tui.modelo.workbench.apply_prerequisite.what"
+            "workspace.modelo.apply_prerequisite.earlier" if filings else "workspace.modelo.apply_prerequisite.what"
         )
         if not form.operator_entries_known:
-            message += "\n" + tr("tui.modelo.workbench.apply_prerequisite.legacy")
+            message += "\n" + tr("workspace.modelo.apply_prerequisite.legacy")
         if filings:
             message += "\n" + earlier_filing_text(filings)
         if prerequisite.source_boxes:
             message += "\n" + tr(
-                "tui.modelo.workbench.apply_prerequisite.source_boxes",
+                "workspace.modelo.apply_prerequisite.source_boxes",
                 boxes=", ".join(f"[{box}]" for box in prerequisite.source_boxes),
             )
         return message
@@ -240,7 +238,7 @@ class WorkbenchNextStepMixin:
         line = self._apply_prerequisite_line()
         if line is None:
             return False
-        self._notice(tr("tui.modelo.workbench.apply_prerequisite.notice", box=f"[{line.box}]"))
+        self._notice(tr("workspace.modelo.apply_prerequisite.notice", box=f"[{line.box}]"))
         self._render_progress()
         return True
 

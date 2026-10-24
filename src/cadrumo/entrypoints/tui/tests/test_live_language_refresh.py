@@ -166,7 +166,7 @@ async def test_copy_metadata_keeps_interpolation_and_leaves_newer_status_alone()
             copy = localized(
                 Static(tr("tui.home.messages_summary", count=7), markup=True), "tui.home.messages_summary", count=7
             )
-            status = localized(Static(tr("tui.modelo.workbench.loading")), "tui.modelo.workbench.loading")
+            status = localized(Static(tr("workspace.modelo.loading")), "workspace.modelo.loading")
             await home.mount(copy, status)
             status.update("ongoing operation detail")
             with override_settings(cadrumo_output_language="ca"):
@@ -234,10 +234,10 @@ async def test_reference_list_rewords_rows_without_replacing_selection() -> None
 async def test_confirmation_resolves_canonical_copy_and_retains_pending_choice() -> None:
     with override_settings(cadrumo_output_language="en"):
         screen = ConfirmScreen(
-            title=lambda: tr("tui.modelo.workbench.leave.title"),
-            message=lambda: tr("tui.modelo.workbench.leave.message", count=7),
-            confirm_label=lambda: tr("tui.modelo.workbench.leave.discard"),
-            cancel_label=lambda: tr("tui.modelo.workbench.leave.stay"),
+            title=lambda: tr("workspace.modelo.leave.title"),
+            message=lambda: tr("workspace.modelo.leave.message", count=7),
+            confirm_label=lambda: tr("workspace.modelo.leave.discard"),
+            cancel_label=lambda: tr("workspace.modelo.leave.stay"),
         )
         app = App[bool]()
         install_cadrumo_themes(app)
@@ -250,9 +250,9 @@ async def test_confirmation_resolves_canonical_copy_and_retains_pending_choice()
                 await screen.refresh_language()
                 await settle(pilot)
                 assert screen.query_one("#confirm-message", Static).content == tr(
-                    "tui.modelo.workbench.leave.message", count=7, locale="es"
+                    "workspace.modelo.leave.message", count=7, locale="es"
                 )
-                assert str(cancel.label) == tr("tui.modelo.workbench.leave.stay", locale="es")
+                assert str(cancel.label) == tr("workspace.modelo.leave.stay", locale="es")
                 assert screen.focused is focused
                 assert screen.is_mounted
 

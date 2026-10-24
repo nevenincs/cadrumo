@@ -80,7 +80,7 @@ export function intentFor(
       ? { kind: "set_override_value", text: text.trim() }
       : { kind: "set_typed_value", text: text.trim() };
   if (atBinding || f.origin !== "entered")
-    return { refused: "tui.modelo.workbench.stage_refused.nothing_to_clear" };
+    return { refused: "workspace.modelo.stage_refused.nothing_to_clear" };
   return { kind: "clear_declared_value" };
 }
 
@@ -166,10 +166,10 @@ export function stagedWords(f: FormField, intent: Intent, locale: string) {
         ? display(f, locale)
         : intent.text;
     case "clear_declared_value":
-      return w("tui.modelo.workbench.staged.clear", locale);
+      return w("workspace.modelo.staged.clear", locale);
     case "restore_source_value":
     case "remove_override":
-      return w("tui.modelo.workbench.staged.restore", locale);
+      return w("workspace.modelo.staged.restore", locale);
   }
 }
 
@@ -193,7 +193,7 @@ export function valueWords(
       return { text: "", tone: "" };
     case "calculation_failed":
       return {
-        text: w("tui.modelo.workbench.origin.calculation_failed", locale),
+        text: w("workspace.modelo.origin.calculation_failed", locale),
         tone: "text-destructive",
       };
     case "not_calculated_yet":
@@ -201,7 +201,7 @@ export function valueWords(
       return {
         text: uncalculated
           ? "—"
-          : w(`tui.modelo.workbench.origin.${field.origin}`, locale),
+          : w(`workspace.modelo.origin.${field.origin}`, locale),
         tone: "text-faint",
       };
     case "not_applicable":
@@ -226,7 +226,7 @@ function OriginMark({
         <Icon name="edit" size="xs" />
         {staged.intent.kind === "restore_source_value" ||
         staged.intent.kind === "remove_override"
-          ? w("tui.modelo.workbench.staged.restore", locale)
+          ? w("workspace.modelo.staged.restore", locale)
           : "Changed, not applied"}
       </span>
     );
@@ -317,7 +317,7 @@ function ReplaceSource({
         </p>
         <p className="text-sm text-muted-foreground">
           {w(
-            "tui.modelo.workbench.legend.meaning.origin.overrides_source",
+            "workspace.modelo.legend.meaning.origin.overrides_source",
             locale,
           )}
         </p>
@@ -486,7 +486,7 @@ export function FieldRow({
           <span className="ml-1.5 text-xs text-faint">
             (
             {w(
-              `tui.modelo.workbench.disclosure.${field.label.disclosure}`,
+              `workspace.modelo.disclosure.${field.label.disclosure}`,
               locale,
             )}
             )
@@ -508,7 +508,7 @@ export function FieldRow({
         <OriginMark field={field} staged={staged} locale={locale} />
         {staged && (
           <span className="text-xs text-faint tabular-nums">
-            {w("tui.modelo.workbench.was", locale, {
+            {w("workspace.modelo.was", locale, {
               value: staged.was || "—",
             })}
           </span>
@@ -555,7 +555,7 @@ function GridValue({
             </span>
           </TooltipTrigger>
           <TooltipContent>
-            {w("tui.modelo.workbench.rate.printed_by_form", p.locale)}
+            {w("workspace.modelo.rate.printed_by_form", p.locale)}
           </TooltipContent>
         </Tooltip>
       </td>
@@ -733,10 +733,10 @@ function Repeating({
         <Icon name="sheet" size="sm" className="text-muted-foreground" />
         <span className="font-medium">
           {block.rows_known
-            ? w("tui.modelo.workbench.repeating", locale, {
+            ? w("workspace.modelo.repeating", locale, {
                 count: block.rows.length,
               })
-            : w("tui.modelo.workbench.grid.records_unknown", locale)}
+            : w("workspace.modelo.grid.records_unknown", locale)}
         </span>
       </div>
       <div className="overflow-x-auto">
@@ -774,7 +774,7 @@ function Repeating({
         </table>
       </div>
       <p className="px-3 py-3 text-sm text-muted-foreground">
-        {w("tui.modelo.workbench.grid.records_read_only", locale)}
+        {w("workspace.modelo.grid.records_read_only", locale)}
       </p>
     </div>
   );
@@ -871,7 +871,7 @@ export function SectionView({
                 type="button"
                 className="text-faint hover:text-muted-foreground"
                 aria-label={w(
-                  "tui.modelo.workbench.disclosure.official_spanish",
+                  "workspace.modelo.disclosure.official_spanish",
                   p.locale,
                 )}
               >
@@ -885,7 +885,7 @@ export function SectionView({
           <span className="text-sm text-faint">
             ·{" "}
             {w(
-              "tui.modelo.workbench.legend.meaning.origin.not_calculated_yet",
+              "workspace.modelo.legend.meaning.origin.not_calculated_yet",
               p.locale,
             )}
           </span>

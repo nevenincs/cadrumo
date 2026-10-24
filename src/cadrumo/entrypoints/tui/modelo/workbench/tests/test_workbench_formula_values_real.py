@@ -128,7 +128,7 @@ async def test_the_zero_floor_and_its_saved_income_are_explained_in_both_editor_
             assert "20 %" in explanation and "=" in explanation
             assert not panel.query(Input), "a calculated box is explained without a writable input"
             label = panel.query_one("#editor-calculation .editor-block-label", Static)
-            assert str(label.render()) == tr("tui.modelo.workbench.editor.block.calculation")
+            assert str(label.render()) == tr("workspace.modelo.editor.block.calculation")
             back = panel.query_one("#editor-cancel", Button)
             assert back.region.y >= 0 and back.region.bottom <= size[1]
             form = screen.form
@@ -197,7 +197,7 @@ async def test_blocked_small_workbench_keeps_help_reachable_and_the_hungarian_qu
             assert screen.form is not None
             assert screen.form.verification is VerificationCompletenessStatus.BLOCKED
             assert blocking_count(screen.form) > 0
-            help_keys = [child for child in keys if tr("tui.modelo.workbench.key.help") in str(child.render())]
+            help_keys = [child for child in keys if tr("workspace.modelo.key.help") in str(child.render())]
             assert help_keys, [str(child.render()) for child in keys]
             assert all(0 <= key.region.x < key.region.right <= 80 and key.region.bottom <= 24 for key in help_keys)
             assert any("f8" in str(key.render()).lower() for key in keys), [str(key.render()) for key in keys]

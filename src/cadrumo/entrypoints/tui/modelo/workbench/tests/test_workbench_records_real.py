@@ -202,11 +202,11 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
             assert screen._empty_listing_note() is None
             heading = str(screen.query_one("#wb-page", Static).render())
             help_text = str(screen.query_one("#wb-help", Static).render())
-            assert tr("tui.modelo.workbench.filter.empty") not in heading
-            assert tr("tui.modelo.workbench.filter.empty_next", page="") not in heading
+            assert tr("workspace.modelo.filter.empty") not in heading
+            assert tr("workspace.modelo.filter.empty_next", page="") not in heading
             assert does_not_apply_text(unit.period) not in heading
-            assert tr("tui.modelo.workbench.help.empty") not in help_text
-            assert tr("tui.modelo.workbench.grid.records_read_only") in help_text
+            assert tr("workspace.modelo.help.empty") not in help_text
+            assert tr("workspace.modelo.grid.records_read_only") in help_text
             assert all(
                 widget.region.right <= size[0] and widget.region.bottom <= size[1]
                 for widget in (listing, screen.query_one("#wb-page", Static))
@@ -315,18 +315,18 @@ async def test_installed_known_empty_records_keep_source_guidance_and_column_fin
             next_line = str(screen.query_one("#wb-next", Static).render())
             named = next_line.rpartition("[")[2].removesuffix("]").lower()
             assert named and named in visible
-            count_text = tr("tui.modelo.workbench.repeating", count=0)
+            count_text = tr("workspace.modelo.repeating", count=0)
             body = "\n".join(listing.render_line(y).text for y in range(listing.size.height))
             assert count_text in body
             for selector in ("#wb-page", "#wb-crumb"):
                 heading = str(screen.query_one(selector, Static).render())
-                assert tr("tui.modelo.workbench.filter.empty") not in heading
-                assert tr("tui.modelo.workbench.filter.empty_next", page="") not in heading
+                assert tr("workspace.modelo.filter.empty") not in heading
+                assert tr("workspace.modelo.filter.empty_next", page="") not in heading
                 assert does_not_apply_text(unit.period) not in heading
             help_text = str(screen.query_one("#wb-help", Static).render())
-            assert tr("tui.modelo.workbench.grid.records_read_only") in help_text
-            assert tr("tui.modelo.workbench.help.empty") not in help_text
-            assert tr("tui.modelo.workbench.grid.records_unknown") not in help_text
+            assert tr("workspace.modelo.grid.records_read_only") in help_text
+            assert tr("workspace.modelo.help.empty") not in help_text
+            assert tr("workspace.modelo.grid.records_unknown") not in help_text
             assert app.focused is listing
             assert listing.focus_address(key) and listing.highlighted is None
             assert not listing.show_horizontal_scrollbar

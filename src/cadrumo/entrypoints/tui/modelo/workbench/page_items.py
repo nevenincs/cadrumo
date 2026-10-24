@@ -64,16 +64,16 @@ from .vocabulary import DONE_MARK, AttentionCounts, WorkbenchMark, field_counts
 
 DETAILS_PAGE_ID: Final[str] = "details"
 _RATIO_DATA_TYPE: Final[str] = "ratio"
-_COLUMN_UNNAMED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.grid.column_unnamed"
+_COLUMN_UNNAMED_LOCALE_KEY: Final[str] = "workspace.modelo.grid.column_unnamed"
 _NAMELESS_DISCLOSURES: Final[frozenset[ModeloFormTextDisclosure]] = frozenset(
     {ModeloFormTextDisclosure.TECHNICAL, ModeloFormTextDisclosure.UNNAMED}
 )
 """Labels that name no column: a technical name, or words saying the form gives the box no name."""
-_RECORDS_LOCALE_KEY: Final[str] = "tui.modelo.workbench.repeating"
+_RECORDS_LOCALE_KEY: Final[str] = "workspace.modelo.repeating"
 #: The kind of address that names a casilla, as a finding about a record column names it.
 _CASILLA_KIND: Final[str] = "casilla"
-_RECORDS_UNKNOWN_LOCALE_KEY: Final[str] = "tui.modelo.workbench.grid.records_unknown"
-_RECORDS_READ_ONLY_LOCALE_KEY: Final[str] = "tui.modelo.workbench.grid.records_read_only"
+_RECORDS_UNKNOWN_LOCALE_KEY: Final[str] = "workspace.modelo.grid.records_unknown"
+_RECORDS_READ_ONLY_LOCALE_KEY: Final[str] = "workspace.modelo.grid.records_read_only"
 
 
 _RECORD_FINDING_LEVELS: Final[Mapping[ModeloFormAttention, str]] = MappingProxyType(
@@ -227,7 +227,7 @@ def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
             WorkbenchPage(
                 id=DETAILS_PAGE_ID,
                 heading=ModeloFormText(
-                    text=tr("tui.modelo.workbench.details_page"), disclosure=ModeloFormTextDisclosure.LOCALIZED
+                    text=tr("workspace.modelo.details_page"), disclosure=ModeloFormTextDisclosure.LOCALIZED
                 ),
                 sections=(),
                 details=details,
@@ -485,7 +485,7 @@ def section_heading_text(
     """Say whether a section is complete, or how many of its fields still need the filer."""
     counts = section_counts(section, recorded=recorded, applies=applies, records=records)
     if counts.pending:
-        pending_text = tr("tui.modelo.workbench.section.pending", heading=section.heading.text, count=counts.pending)
+        pending_text = tr("workspace.modelo.section.pending", heading=section.heading.text, count=counts.pending)
         return f"{counts.mark.glyph} {pending_text}"
     mark = section_mark(section, recorded=recorded, applies=applies, records=records)
     return section.heading.text if mark is None else f"{mark.glyph} {section.heading.text}"

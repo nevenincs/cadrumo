@@ -92,7 +92,7 @@ def test_a_verified_declaration_offers_the_file_first_and_recording_after_one_at
         line = next_action_text(progress, OutputLanguage.EN)
         record = next_action_text(exported, OutputLanguage.EN)
         day = day_text(filed_file.exported_at, OutputLanguage.EN)
-        expected_record = tr("tui.modelo.workbench.next.record_after_file", date=day)
+        expected_record = tr("workspace.modelo.next.record_after_file", date=day)
 
     statuses = _statuses(progress)
     assert statuses[WorkbenchStep.FILL] is StepStatus.DONE

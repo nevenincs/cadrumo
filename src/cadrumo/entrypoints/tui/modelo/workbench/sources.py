@@ -118,11 +118,11 @@ _SURFACE_DESTINATIONS: Final[Mapping[SourceSurface, tuple[TuiDestinationIdV1, st
 }
 _ENTRY_INDENT: Final[int] = 2
 _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = {
-    "escape": "tui.modelo.workbench.key.back",
-    "o": "tui.modelo.workbench.sources.key.open",
+    "escape": "workspace.modelo.key.back",
+    "o": "workspace.modelo.sources.key.open",
 }
-_LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {"enter": "tui.modelo.workbench.sources.key.go"}
-_GROUPS_LOCALE_KEYS: Final[Mapping[str, str]] = {"enter": "tui.modelo.workbench.sources.key.expand"}
+_LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {"enter": "workspace.modelo.sources.key.go"}
+_GROUPS_LOCALE_KEYS: Final[Mapping[str, str]] = {"enter": "workspace.modelo.sources.key.expand"}
 _GROUP_ID_PREFIX: Final[str] = "group-"
 
 
@@ -186,7 +186,7 @@ class BoxNumbers:
         return len(self._tokens)
 
     def _with_rest(self, shown: int) -> str:
-        more = tr("tui.modelo.workbench.sources.and_more", count=len(self._tokens) - shown)
+        more = tr("workspace.modelo.sources.and_more", count=len(self._tokens) - shown)
         return " ".join((*self._tokens[:shown], more))
 
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
@@ -233,7 +233,7 @@ def group_prompt(group: SourceGroup, *, expanded: bool) -> RenderableType:
     repeat them.
     """
     toggle = EXPANDED_MARK if expanded else COLLAPSED_MARK
-    count = tr("tui.modelo.workbench.sources.count", count=len(group.fields))
+    count = tr("workspace.modelo.sources.count", count=len(group.fields))
     head = Text(f"{toggle.glyph} {_group_words(group)} · {count}", style="bold")
     if expanded:
         return head
@@ -378,10 +378,10 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
         with Container(id="sources-backdrop"), Vertical(id="sources-panel"):
             if self._status_line is not None:
                 yield StatusBar(self._status_line, id="sources-status")
-            title = tr("tui.modelo.workbench.sources.title")
-            count = tr("tui.modelo.workbench.sources.count", count=self._boxes)
+            title = tr("workspace.modelo.sources.title")
+            count = tr("workspace.modelo.sources.count", count=self._boxes)
             yield Static(f"{title} · {count}", id="sources-title", markup=False)
-            intro = tr("tui.modelo.workbench.sources.intro" if self._groups else "tui.modelo.workbench.sources.none")
+            intro = tr("workspace.modelo.sources.intro" if self._groups else "workspace.modelo.sources.none")
             yield Static(intro, id="sources-intro", markup=False)
             yield Static("", id="sources-notice", markup=False)
             yield _GroupList(
@@ -402,11 +402,11 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
     async def refresh_language(self) -> None:
         """Reword the open source map while retaining its group and box cursor."""
         self._language = OutputLanguage(output_language())
-        title = tr("tui.modelo.workbench.sources.title")
-        count = tr("tui.modelo.workbench.sources.count", count=self._boxes)
+        title = tr("workspace.modelo.sources.title")
+        count = tr("workspace.modelo.sources.count", count=self._boxes)
         self.query_one("#sources-title", Static).update(f"{title} · {count}")
         self.query_one("#sources-intro", Static).update(
-            tr("tui.modelo.workbench.sources.intro" if self._groups else "tui.modelo.workbench.sources.none")
+            tr("workspace.modelo.sources.intro" if self._groups else "workspace.modelo.sources.none")
         )
         groups = self.query_one(_GroupList)
         for index, group in enumerate(self._groups):
@@ -471,11 +471,11 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
             return
         notice = self.query_one("#sources-notice", Static)
         if not entry.field.bindings:
-            notice.update(tr("tui.modelo.workbench.sources.no_source"))
+            notice.update(tr("workspace.modelo.sources.no_source"))
             return
         policy = entry.field.bindings[0].policy
         if surface_target(policy.surface) is None:
-            notice.update(tr("tui.modelo.workbench.sources.no_surface", source=tr(policy.label_key)))
+            notice.update(tr("workspace.modelo.sources.no_surface", source=tr(policy.label_key)))
             return
         self.dismiss(OpenSourceSurface(policy.surface))
 

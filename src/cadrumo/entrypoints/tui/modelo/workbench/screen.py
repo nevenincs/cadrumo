@@ -422,7 +422,7 @@ class ModeloWorkbenchScreen(
             return
         load = self._load
         if load is None or load.form.calculation_revision_id is None:
-            self._notice(tr("tui.modelo.workbench.export.verify_first"))
+            self._notice(tr("workspace.modelo.export.verify_first"))
             return
         if self._session.dirty:
             self._filing_withheld()
@@ -460,8 +460,8 @@ class ModeloWorkbenchScreen(
                 yield Static(id="wb-crumb", markup=False)
                 yield Static(id="wb-page", markup=False)
                 yield localized(
-                    Static(tr("tui.modelo.workbench.loading"), id="wb-loading", markup=False),
-                    "tui.modelo.workbench.loading",
+                    Static(tr("workspace.modelo.loading"), id="wb-loading", markup=False),
+                    "workspace.modelo.loading",
                 )
                 yield WorkbenchSearchPanel(id="wb-search")
                 yield CasillaList(language=self._language, id="wb-list")
@@ -582,7 +582,7 @@ class ModeloWorkbenchScreen(
             get_logger(__name__).error(
                 "modelo workbench could not read its declaration: %s", type(failure).__qualname__, exc_info=True
             )
-            self.query_one("#wb-loading", Static).update(tr("tui.modelo.workbench.read_failed"))
+            self.query_one("#wb-loading", Static).update(tr("workspace.modelo.read_failed"))
             return
         self.show_load(load)
 

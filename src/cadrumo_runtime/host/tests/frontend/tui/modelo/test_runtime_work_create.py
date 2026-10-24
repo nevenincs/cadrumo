@@ -449,7 +449,7 @@ def test_runtime_create_refresh_failure_keeps_the_known_success_receipt(monkeypa
 
     def fail_refresh() -> None:
         raise ModeloLifecycleActionUnavailableError(
-            translated_message="tui.declarations.refusal.handoff",
+            translated_message="workspace.declarations.refusal.handoff",
             context={"operation_id": "different-operation"},
         )
 

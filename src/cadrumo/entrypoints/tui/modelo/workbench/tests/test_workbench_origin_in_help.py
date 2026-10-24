@@ -58,7 +58,7 @@ async def test_the_help_band_the_panel_and_search_say_the_day_the_aeat_data_was_
     imported = aeat_imported_on(form)
     assert imported is not None
     with override_settings(cadrumo_output_language="en"):
-        dated = tr("tui.modelo.workbench.origin_source.aeat_imported_on", date=date_text(imported, OutputLanguage.EN))
+        dated = tr("workspace.modelo.origin_source.aeat_imported_on", date=date_text(imported, OutputLanguage.EN))
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
@@ -91,7 +91,7 @@ async def test_the_help_band_says_why_a_carry_with_no_earlier_declaration_holds_
     source = ModeloFormValueSource(family=SourceFamily.EARLIER_FILINGS, source_kind=BindingSourceKind.PREVIOUS_FILING)
     form = replace_fields(synthetic_form(needs_input=False), {_INCOME: {"source": source, "value": Decimal("0")}})
     with override_settings(cadrumo_output_language="en"):
-        explanation = tr("tui.modelo.workbench.help.origin_no_earlier_declaration")
+        explanation = tr("workspace.modelo.help.origin_no_earlier_declaration")
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:

@@ -45,7 +45,7 @@ class WorkbenchHelpContentMixin:
             if self.has_class("-short")
             else [self._help_title(entry), self._state_line(entry)]
         )
-        lines.append(description_text(field) or tr("tui.modelo.workbench.help.no_explanation"))
+        lines.append(description_text(field) or tr("workspace.modelo.help.no_explanation"))
         note = rate_note(entry, self._language)
         if note is not None:
             lines.append(note)
@@ -79,7 +79,7 @@ class WorkbenchHelpContentMixin:
         box = f"[{field.box}] " if (field.box is not None and field.box) else ""
         title = f"{box}{grid_cell_title(entry) or field.label.text}"
         if field.label.disclosure is not ModeloFormTextDisclosure.LOCALIZED:
-            title = f"{title} ({tr(f'tui.modelo.workbench.disclosure.{field.label.disclosure.value}')})"
+            title = f"{title} ({tr(f'workspace.modelo.disclosure.{field.label.disclosure.value}')})"
         return title
 
     def _state_line(self: ModeloWorkbenchScreen, entry: CasillaListEntry) -> str:
@@ -125,19 +125,17 @@ class WorkbenchHelpContentMixin:
     def _card_lines(self: ModeloWorkbenchScreen, card: ModeloCasillaHelpCardV1, field: ModeloFormField) -> list[str]:
         lines: list[str] = []
         if card.formula is not None:
-            lines.append(tr("tui.modelo.workbench.help.formula", formula=card.formula.text))
+            lines.append(tr("workspace.modelo.help.formula", formula=card.formula.text))
         said = self._said_by_origin(field)
         for origin in card.origins:
             if origin not in said:
-                lines.append(tr("tui.modelo.workbench.help.origin", origin=origin))
+                lines.append(tr("workspace.modelo.help.origin", origin=origin))
         if card.feeds:
-            lines.append(tr("tui.modelo.workbench.help.feeds", boxes=", ".join(card.feeds)))
+            lines.append(tr("workspace.modelo.help.feeds", boxes=", ".join(card.feeds)))
         for quote in card.quotes:
             quoted = _FRAGMENT_SEPARATOR.join(quote.fragments)
-            lines.append(tr("tui.modelo.workbench.help.official", source=quote.source, text=quoted))
+            lines.append(tr("workspace.modelo.help.official", source=quote.source, text=quoted))
         if card.legal_basis:
-            lines.append(
-                tr("tui.modelo.workbench.help.legal", citations="; ".join(item.text for item in card.legal_basis))
-            )
+            lines.append(tr("workspace.modelo.help.legal", citations="; ".join(item.text for item in card.legal_basis)))
         lines.extend(card.constraints)
         return lines

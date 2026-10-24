@@ -82,7 +82,7 @@ class WorkbenchOperationMixin:
             self._state_apply_prerequisite()
             return True
         if self._session.dirty:
-            action = tr("tui.modelo.workbench.next.apply", count=len(self._session.changes))
+            action = tr("workspace.modelo.next.apply", count=len(self._session.changes))
             self._notice(f"{action} [{_NEXT_KEYS[ModeloFormNextAction.APPLY]}]")
             return True
         progress = self._progress(load)
@@ -120,10 +120,10 @@ class WorkbenchOperationMixin:
         if not artefacts:
             if self._filing_withheld():
                 return
-            self._notice(tr("tui.modelo.workbench.export.verify_first"))
+            self._notice(tr("workspace.modelo.export.verify_first"))
             return
         if load.form.calculation_revision_id is None:
-            self._notice(tr("tui.modelo.workbench.export.verify_first"))
+            self._notice(tr("workspace.modelo.export.verify_first"))
             return
         offer = replace(
             offer,
@@ -142,7 +142,7 @@ class WorkbenchOperationMixin:
             if request.artefact is not ModeloExportArtefact.CALCULATION_REVIEW_XLSX and (
                 self._load is None or not self._load.verified
             ):
-                self._notice(tr("tui.modelo.workbench.export.verify_first"))
+                self._notice(tr("workspace.modelo.export.verify_first"))
                 return
             self._run_operation(partial(actions.export, request))
 
@@ -241,7 +241,7 @@ class WorkbenchOperationMixin:
             if outcome.view_model.receipt_kind == "refusal"
             else None
         )
-        message = tr("tui.modelo.workbench.operation.not_done")
+        message = tr("workspace.modelo.operation.not_done")
         return message if explanation is None else f"{message} {explanation}"
 
     def _settle_succeeded_operation(
@@ -255,7 +255,7 @@ class WorkbenchOperationMixin:
         definition = str(projection.definition_id)
         reports_itself = not applies_changes and definition in _SELF_REPORTING_OPERATIONS
         if not reports_itself:
-            self._notice(tr("tui.modelo.workbench.operation.done"))
+            self._notice(tr("workspace.modelo.operation.done"))
         actions = self._actions
         if actions is not None:
             self.run_worker(partial(asyncio.to_thread, actions.refresh_product), group="workbench-refresh")
@@ -322,7 +322,7 @@ class WorkbenchOperationMixin:
             return
         changes = modelo_work_form_changes(before.form, after.form)
         if not changes:
-            self._notice(tr("tui.modelo.workbench.result_diff.nothing_changed"))
+            self._notice(tr("workspace.modelo.result_diff.nothing_changed"))
             return
         lines = result_lines(
             changes,
@@ -343,13 +343,13 @@ class WorkbenchOperationMixin:
         if definition == str(MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID):
             verdict = form.verification
             if verdict is None:
-                return tr("tui.modelo.workbench.operation.done")
+                return tr("workspace.modelo.operation.done")
             return tr(_CHECKED_LOCALE_KEYS[verdict], key="i")
         view = result_view(form, self._language, staged=0, recorded=self.recorded)
         if view is None or view.settled is None:
-            return tr("tui.modelo.workbench.operation.done")
+            return tr("workspace.modelo.operation.done")
         direction, value = view.settled
-        return tr("tui.modelo.workbench.operation.calculated", direction=direction, value=value)
+        return tr("workspace.modelo.operation.calculated", direction=direction, value=value)
 
     async def _state_export_result(
         self: ModeloWorkbenchScreen, actions: ModeloWorkbenchActionsV1, projection: OperationPublicProjectionV1

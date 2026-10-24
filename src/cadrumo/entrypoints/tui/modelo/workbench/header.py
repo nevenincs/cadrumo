@@ -79,25 +79,25 @@ _REVIEW_KEY: Final[str] = "R"
 
 _DIRECTION_LOCALE_KEYS: Final[Mapping[ModeloFormResultDirection, str]] = MappingProxyType(
     {
-        ModeloFormResultDirection.TO_PAY: "tui.modelo.workbench.header.result.to_pay",
-        ModeloFormResultDirection.TO_REFUND: "tui.modelo.workbench.header.result.to_refund",
-        ModeloFormResultDirection.TO_CARRY_FORWARD: "tui.modelo.workbench.header.result.to_carry_forward",
-        ModeloFormResultDirection.TO_DEDUCT_LATER: "tui.modelo.workbench.header.result.negative_carried",
-        ModeloFormResultDirection.NEGATIVE: "tui.modelo.workbench.header.result.negative",
-        ModeloFormResultDirection.NIL: "tui.modelo.workbench.header.result.zero",
-        ModeloFormResultDirection.UNKNOWN: "tui.modelo.workbench.header.result.unknown",
+        ModeloFormResultDirection.TO_PAY: "workspace.modelo.header.result.to_pay",
+        ModeloFormResultDirection.TO_REFUND: "workspace.modelo.header.result.to_refund",
+        ModeloFormResultDirection.TO_CARRY_FORWARD: "workspace.modelo.header.result.to_carry_forward",
+        ModeloFormResultDirection.TO_DEDUCT_LATER: "workspace.modelo.header.result.negative_carried",
+        ModeloFormResultDirection.NEGATIVE: "workspace.modelo.header.result.negative",
+        ModeloFormResultDirection.NIL: "workspace.modelo.header.result.zero",
+        ModeloFormResultDirection.UNKNOWN: "workspace.modelo.header.result.unknown",
     }
 )
 """The words for each direction the read model states; total over the directions."""
 
-_CHOICE_PENDING_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.choice_pending"
-_CHOICE_PENDING_SHORT_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.choice_pending_short"
-_NOT_CALCULATED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.not_calculated"
-_FAILED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.failed"
-_STALE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.stale.changes"
-_RECALCULATE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.stale.recalculate"
-_FILE_CREATED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.file_created"
-_FILE_OUT_OF_DATE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.file_out_of_date"
+_CHOICE_PENDING_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.choice_pending"
+_CHOICE_PENDING_SHORT_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.choice_pending_short"
+_NOT_CALCULATED_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.not_calculated"
+_FAILED_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.failed"
+_STALE_LOCALE_KEY: Final[str] = "workspace.modelo.header.stale.changes"
+_RECALCULATE_LOCALE_KEY: Final[str] = "workspace.modelo.header.stale.recalculate"
+_FILE_CREATED_LOCALE_KEY: Final[str] = "workspace.modelo.header.file_created"
+_FILE_OUT_OF_DATE_LOCALE_KEY: Final[str] = "workspace.modelo.header.file_out_of_date"
 _EXPORT_KEY: Final[str] = "e"
 
 
@@ -122,10 +122,10 @@ _URGENT_CHIPS: Final[frozenset[ChipLevel]] = frozenset({ChipLevel.BLOCKS, ChipLe
 """Chips the result line never drops to keep itself on one line: it takes a second line first."""
 _CHIP_LOCALE_KEYS: Final[Mapping[ChipLevel, str]] = MappingProxyType(
     {
-        ChipLevel.BLOCKS: "tui.modelo.workbench.header.chip.blocks",
-        ChipLevel.MISSING: "tui.modelo.workbench.header.chip.missing",
-        ChipLevel.CONFIRM: "tui.modelo.workbench.header.chip.confirm",
-        ChipLevel.CHECK: "tui.modelo.workbench.header.chip.check",
+        ChipLevel.BLOCKS: "workspace.modelo.header.chip.blocks",
+        ChipLevel.MISSING: "workspace.modelo.header.chip.missing",
+        ChipLevel.CONFIRM: "workspace.modelo.header.chip.confirm",
+        ChipLevel.CHECK: "workspace.modelo.header.chip.check",
     }
 )
 
@@ -257,26 +257,26 @@ def deadline_view(
         return None
     deadline = form.deadline
     if deadline is None:
-        text = tr("tui.modelo.workbench.header.no_deadline")
+        text = tr("workspace.modelo.header.no_deadline")
         if (
             width is not None
             and cell_len(identity_text(form, language, short=True)) + cell_len(text) + len(_PART_GAP) > width
         ):
-            text = tr("tui.modelo.workbench.header.no_deadline_short")
+            text = tr("workspace.modelo.header.no_deadline_short")
         return DeadlineView(text, DeadlineTone.MUTED)
     closes = date_text(deadline.closes_on, language)
     if deadline.days_overdue is not None:
-        return DeadlineView(tr("tui.modelo.workbench.header.deadline_passed", date=closes), DeadlineTone.URGENT)
+        return DeadlineView(tr("workspace.modelo.header.deadline_passed", date=closes), DeadlineTone.URGENT)
     days = deadline.days_remaining or 0
     if days == 0:
-        return DeadlineView(tr("tui.modelo.workbench.header.deadline_today", date=closes), DeadlineTone.URGENT)
+        return DeadlineView(tr("workspace.modelo.header.deadline_today", date=closes), DeadlineTone.URGENT)
     if days <= _RED_DAYS:
         tone = DeadlineTone.URGENT
     elif days <= _AMBER_DAYS:
         tone = DeadlineTone.SOON
     else:
         tone = DeadlineTone.NORMAL
-    return DeadlineView(tr("tui.modelo.workbench.header.deadline", date=closes, days=days), tone)
+    return DeadlineView(tr("workspace.modelo.header.deadline", date=closes, days=days), tone)
 
 
 def deadline_help(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool) -> str | None:
@@ -285,7 +285,7 @@ def deadline_help(form: ModeloWorkForm, language: OutputLanguage, *, recorded: b
     if recorded or deadline is None or deadline.closes_on == deadline.nominal_closes_on:
         return None
     return tr(
-        "tui.modelo.workbench.header.deadline_shifted_help",
+        "workspace.modelo.header.deadline_shifted_help",
         nominal=date_text(deadline.nominal_closes_on, language),
         date=date_text(deadline.closes_on, language),
     )
@@ -317,7 +317,7 @@ def _other_boxes_help(
         else field.label.text
         for field in others
     )
-    return tr("tui.modelo.workbench.header.result.other_boxes", boxes=named)
+    return tr("workspace.modelo.header.result.other_boxes", boxes=named)
 
 
 def _result_stale_notice(form: ModeloWorkForm, *, staged: int, recorded: bool) -> str | None:
@@ -351,9 +351,7 @@ def _directional_result_presentation(
     if direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
         full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction], amount=_money(abs(value), language))], box)
         if box is not None and box:
-            help_lines.append(
-                tr("tui.modelo.workbench.header.result.sign_help", box=box, value=_money(value, language))
-            )
+            help_lines.append(tr("workspace.modelo.header.result.sign_help", box=box, value=_money(value, language)))
         return _ResultPresentation(full, short)
     if direction is ModeloFormResultDirection.NEGATIVE:
         full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction])], box)
@@ -361,7 +359,7 @@ def _directional_result_presentation(
     if direction is ModeloFormResultDirection.UNKNOWN:
         settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(value, language))
         full, short = _boxed(list(settled), box)
-        help_lines.append(tr("tui.modelo.workbench.header.result.direction_unknown_help"))
+        help_lines.append(tr("workspace.modelo.header.result.direction_unknown_help"))
         return _ResultPresentation(full, short, settled)
     if direction is ModeloFormResultDirection.NIL:
         full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction])], box)
@@ -384,7 +382,7 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, 
     unavailable = _unavailable_result_view(form, selected, stale=stale)
     if unavailable is not None:
         return unavailable
-    help_lines = [tr("tui.modelo.workbench.header.own_calculation")]
+    help_lines = [tr("workspace.modelo.header.own_calculation")]
     presentation = _selected_result_presentation(form, selected, language, help_lines)
     return ResultView(
         text=presentation.text,
@@ -424,7 +422,7 @@ def _unavailable_result_view(
     origin = selected.field.origin if selected.field is not None else None
     if origin is ModeloFormOrigin.CALCULATION_FAILED:
         text = tr(_FAILED_LOCALE_KEY, key=_ISSUES_KEY)
-        help_lines = (tr("tui.modelo.workbench.header.own_calculation"),)
+        help_lines = (tr("workspace.modelo.header.own_calculation"),)
         return ResultView(text=text, short_text=text, stale=stale, failed=True, help=help_lines)
     if form.calculation_revision_id is None or origin is ModeloFormOrigin.NOT_CALCULATED_YET or selected.value is None:
         text = tr(_NOT_CALCULATED_LOCALE_KEY, key=_CALCULATE_KEY)
@@ -452,7 +450,7 @@ def _selected_result_presentation(
         and (selected.box is not None and selected.box)
     ):
         help_lines.append(
-            tr("tui.modelo.workbench.header.result.sign_help", box=selected.box, value=_money(value, language))
+            tr("workspace.modelo.header.result.sign_help", box=selected.box, value=_money(value, language))
         )
     other = _other_boxes_help(form, selected.settling, selected.fields, language)
     if other is not None:

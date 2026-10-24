@@ -143,6 +143,6 @@ async def assert_recorded_reopen(pilot: Any, target: WithholdingWork) -> None:
     await open_withholding_work(pilot, target)
     await wait_for_public_selector(pilot, "#wb-next")
     rendered = str(pilot.app.screen.query_one("#wb-next", Static).render()).strip()
-    pattern = re.escape(tr("tui.modelo.workbench.next.recorded", date="<DATE>"))
+    pattern = re.escape(tr("workspace.modelo.next.recorded", date="<DATE>"))
     if re.fullmatch(pattern.replace(re.escape("<DATE>"), r".+"), rendered) is None:
         raise InstalledTuiChildError("installed withholding fresh reopen did not show the recorded filing state")

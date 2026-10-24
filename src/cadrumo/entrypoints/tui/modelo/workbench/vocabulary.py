@@ -115,10 +115,10 @@ ATTENTION_ROLES: Final[Mapping[Attention, ColourRole]] = MappingProxyType(
 )
 _ATTENTION_WORDS_LOCALE_KEYS: Final[Mapping[Attention, str]] = MappingProxyType(
     {
-        Attention.STAGED: "tui.modelo.workbench.attention.staged",
+        Attention.STAGED: "workspace.modelo.attention.staged",
         # A blocker reads with the same words as the blocking level of every
         # issue list and header chip, so the row never names it differently.
-        Attention.BLOCKED: "tui.modelo.workbench.level.blocks",
+        Attention.BLOCKED: "workspace.modelo.level.blocks",
     }
 )
 
@@ -148,23 +148,21 @@ MISSING_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.NEEDS_INPUT]
 #: A value Cadrumo assumed and only the filer can confirm, wherever it is counted.
 CONFIRM_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.DEFAULT_TO_CONFIRM]
 #: A warning that does not stop the filing.
-CHECK_MARK: Final[WorkbenchMark] = WorkbenchMark("◆", translation_key="tui.modelo.workbench.level.check")
+CHECK_MARK: Final[WorkbenchMark] = WorkbenchMark("◆", translation_key="workspace.modelo.level.check")
 #: An explanation for the filer's information.
-INFO_MARK: Final[WorkbenchMark] = WorkbenchMark("i", translation_key="tui.modelo.workbench.level.info")
+INFO_MARK: Final[WorkbenchMark] = WorkbenchMark("i", translation_key="workspace.modelo.level.info")
 #: A value carried from an earlier declaration, in place of the imported glyph.
-EARLIER_FILING_MARK: Final[WorkbenchMark] = WorkbenchMark(
-    "«", translation_key="tui.modelo.workbench.legend.name.earlier"
-)
+EARLIER_FILING_MARK: Final[WorkbenchMark] = WorkbenchMark("«", translation_key="workspace.modelo.legend.name.earlier")
 #: A step or section with nothing left to do.
-DONE_MARK: Final[WorkbenchMark] = WorkbenchMark("✓", translation_key="tui.modelo.workbench.legend.name.done")
+DONE_MARK: Final[WorkbenchMark] = WorkbenchMark("✓", translation_key="workspace.modelo.legend.name.done")
 #: Where the filer is: the selected box, the page or the step they are on.
-HERE_MARK: Final[WorkbenchMark] = WorkbenchMark("▸", translation_key="tui.modelo.workbench.legend.name.here")
+HERE_MARK: Final[WorkbenchMark] = WorkbenchMark("▸", translation_key="workspace.modelo.legend.name.here")
 #: A navigator section that is closed.
-COLLAPSED_MARK: Final[WorkbenchMark] = WorkbenchMark("▹", translation_key="tui.modelo.workbench.legend.name.collapsed")
+COLLAPSED_MARK: Final[WorkbenchMark] = WorkbenchMark("▹", translation_key="workspace.modelo.legend.name.collapsed")
 #: A navigator section that is open.
-EXPANDED_MARK: Final[WorkbenchMark] = WorkbenchMark("▿", translation_key="tui.modelo.workbench.legend.name.expanded")
+EXPANDED_MARK: Final[WorkbenchMark] = WorkbenchMark("▿", translation_key="workspace.modelo.legend.name.expanded")
 #: A result that does not include the latest changes yet.
-STALE_MARK: Final[WorkbenchMark] = WorkbenchMark("◷", translation_key="tui.modelo.workbench.legend.name.stale")
+STALE_MARK: Final[WorkbenchMark] = WorkbenchMark("◷", translation_key="workspace.modelo.legend.name.stale")
 
 WORKBENCH_MARKS: Final[tuple[WorkbenchMark, ...]] = (
     *ORIGIN_MARKS.values(),

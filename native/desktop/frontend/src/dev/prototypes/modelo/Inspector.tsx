@@ -124,8 +124,8 @@ export function Inspector({
         </span>
         {staged ? (
           <span className="text-sm text-muted-foreground">
-            {w("tui.modelo.workbench.legend.meaning.mark.staged", locale)}{" "}
-            {w("tui.modelo.workbench.was", locale, {
+            {w("workspace.modelo.legend.meaning.mark.staged", locale)}{" "}
+            {w("workspace.modelo.was", locale, {
               value: staged.was || "—",
             })}
           </span>
@@ -164,7 +164,7 @@ export function Inspector({
             {field.origin === "overrides_source" && !staged && (
               <Button size="sm" variant="ghost" onClick={onRestore}>
                 <Icon name="restore" size="xs" />
-                {w("tui.modelo.workbench.review.effect.restore", locale)}
+                {w("workspace.modelo.review.effect.restore", locale)}
               </Button>
             )}
           </div>
@@ -220,7 +220,7 @@ export function Inspector({
           {field.origin === "not_imported_yet" && (
             <span className="text-sm text-warning">
               {w(
-                "tui.modelo.workbench.legend.meaning.origin.not_imported_yet",
+                "workspace.modelo.legend.meaning.origin.not_imported_yet",
                 locale,
               )}
             </span>
@@ -239,7 +239,7 @@ export function Inspector({
           <p className="text-base leading-relaxed">{field.help}</p>
         ) : (
           <p className="text-sm text-muted-foreground">
-            {w("tui.modelo.workbench.help.no_explanation", locale)}
+            {w("workspace.modelo.help.no_explanation", locale)}
           </p>
         )}
       </Part>

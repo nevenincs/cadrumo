@@ -247,7 +247,7 @@ def test_an_operation_never_starts_under_an_earlier_workbench_notice() -> None:
     from cadrumo.core.i18n.render import tr
 
     async def scenario() -> None:
-        app = _WidgetsApp(Static(tr("tui.modelo.workbench.operation.done"), id="wb-notice"))
+        app = _WidgetsApp(Static(tr("workspace.modelo.operation.done"), id="wb-notice"))
         async with app.run_test() as pilot:
             with pytest.raises(TuiJourneyError, match="earlier workbench notice"):
                 await activate_tui_operation(pilot, binding=installed_lifecycle_contract().calculate)
@@ -259,7 +259,7 @@ def test_the_next_step_key_is_refused_while_the_workbench_offers_another_step() 
     """F8 runs whatever step is offered; pressing it while filling is offered would not verify."""
     from cadrumo.core.i18n.render import tr
 
-    fill_offered = tr("tui.modelo.workbench.next_line", action=tr("tui.modelo.workbench.next.fill", count=2), key="n")
+    fill_offered = tr("workspace.modelo.next_line", action=tr("workspace.modelo.next.fill", count=2), key="n")
 
     async def scenario() -> None:
         app = _WidgetsApp(Static("", id="wb-notice"), Static(fill_offered, id="wb-next"))
@@ -439,7 +439,7 @@ def test_the_first_open_greeting_is_no_earlier_notice() -> None:
 
     from ..tui_readback import workbench_notice
 
-    greeting = tr("tui.modelo.workbench.legend.first_open")
+    greeting = tr("workspace.modelo.legend.first_open")
 
     async def scenario() -> str:
         app = _WidgetsApp(Static(greeting, id="wb-notice"))
@@ -454,7 +454,7 @@ def test_the_first_open_greeting_is_no_earlier_notice() -> None:
 def test_the_record_step_is_refused_while_the_workbench_offers_verifying() -> None:
     from cadrumo.core.i18n.render import tr
 
-    verify_offered = tr("tui.modelo.workbench.next_line", action=tr("tui.modelo.workbench.next.verify"), key="F8")
+    verify_offered = tr("workspace.modelo.next_line", action=tr("workspace.modelo.next.verify"), key="F8")
 
     async def scenario() -> None:
         app = _WidgetsApp(Static("", id="wb-notice"), Static(verify_offered, id="wb-next"))
@@ -475,16 +475,16 @@ def _workbench_notice(copy_key: str, explanation: str | None = None) -> str:
 @pytest.mark.parametrize(
     ("copy_key", "explanation", "expected"),
     [
-        ("tui.modelo.workbench.operation.done", None, ("succeeded", AcceptanceOutcome.PROVEN)),
-        ("tui.modelo.workbench.result_diff.nothing_changed", None, ("succeeded", AcceptanceOutcome.PROVEN)),
+        ("workspace.modelo.operation.done", None, ("succeeded", AcceptanceOutcome.PROVEN)),
+        ("workspace.modelo.result_diff.nothing_changed", None, ("succeeded", AcceptanceOutcome.PROVEN)),
         (
-            "tui.modelo.workbench.operation.not_done",
+            "workspace.modelo.operation.not_done",
             "The attestation belongs to another quarter.",
             ("refused", AcceptanceOutcome.BLOCKED),
         ),
-        ("tui.modelo.workbench.operation.not_done", None, ("not_completed", AcceptanceOutcome.FAILED)),
-        ("tui.modelo.workbench.operation.not_done", "   ", None),
-        ("tui.modelo.workbench.operation.done", "and something else", None),
+        ("workspace.modelo.operation.not_done", None, ("not_completed", AcceptanceOutcome.FAILED)),
+        ("workspace.modelo.operation.not_done", "   ", None),
+        ("workspace.modelo.operation.done", "and something else", None),
         ("tui.modelo.m303_evidence.cancelled", None, None),
     ],
 )
@@ -497,15 +497,15 @@ def test_a_settled_workbench_notice_is_its_sentence_alone_or_followed_by_a_refus
 def test_a_notice_that_only_starts_like_a_settled_sentence_is_not_a_terminal() -> None:
     from cadrumo.core.i18n.render import tr
 
-    assert settled_notice_terminal(tr("tui.modelo.workbench.operation.not_done") + "x") is None
+    assert settled_notice_terminal(tr("workspace.modelo.operation.not_done") + "x") is None
     assert settled_notice_terminal("") is None
 
 
 @pytest.mark.parametrize(
     ("copy_key", "explanation", "condition"),
     [
-        ("tui.modelo.workbench.operation.not_done", "The attestation belongs to another quarter.", "refused"),
-        ("tui.modelo.workbench.operation.done", None, "succeeded"),
+        ("workspace.modelo.operation.not_done", "The attestation belongs to another quarter.", "refused"),
+        ("workspace.modelo.operation.done", None, "succeeded"),
     ],
 )
 def test_a_modal_that_dismissed_itself_settles_from_the_workbench_notice(

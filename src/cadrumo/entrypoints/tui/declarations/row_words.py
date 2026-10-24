@@ -38,12 +38,12 @@ def row_lines(
     if row.period is not None:
         left.append(period_words(row.period))
     if row.deadline is not None and row.state != "aeat_unlinked":
-        left.append(tr("tui.declarations.list.column.deadline") + ": " + date_text(row.deadline, language))
+        left.append(tr("workspace.declarations.list.column.deadline") + ": " + date_text(row.deadline, language))
     right = [state_words(row, language)]
     result = result_words(row, language)
     if result is not None:
         right.append(result)
     if row.advice is not None:
-        right.append(tr("tui.declarations.list.advice." + row.advice.value))
+        right.append(tr("workspace.declarations.list.advice." + row.advice.value))
     right.extend(_next_action_lines(row, language, can_open=can_open, can_create=can_create))
     return left, right

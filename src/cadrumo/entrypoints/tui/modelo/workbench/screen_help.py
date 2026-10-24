@@ -103,7 +103,7 @@ class WorkbenchHelpMixin:
                 lines.append(shifted)
             if not self.recorded and form.deadline is not None:
                 lines.append(holiday_coverage_statement(form.deadline.holiday_coverage, None))
-            lines.append(tr("tui.modelo.workbench.help.keys", keys=self._all_keys_text()))
+            lines.append(tr("workspace.modelo.help.keys", keys=self._all_keys_text()))
         band.update(blocks_marked("\n".join(self._band_lines(band, lines))))
 
     def _help_lines(self: ModeloWorkbenchScreen, entry: CasillaListEntry | None, expanded: bool) -> list[str]:
@@ -119,10 +119,10 @@ class WorkbenchHelpMixin:
     def _empty_help_text(self: ModeloWorkbenchScreen) -> str:
         items = self.query_one(CasillaList).items
         if any(isinstance(item, CasillaListRecords) for item in items):
-            return tr("tui.modelo.workbench.grid.records_read_only")
+            return tr("workspace.modelo.grid.records_read_only")
         if any(isinstance(item, CasillaListNote) and item.column_casilla_ids for item in items):
-            return tr("tui.modelo.workbench.grid.records_unknown")
-        return tr("tui.modelo.workbench.help.empty")
+            return tr("workspace.modelo.grid.records_unknown")
+        return tr("workspace.modelo.help.empty")
 
     def _band_lines(self: ModeloWorkbenchScreen, band: Static, lines: list[str]) -> list[str]:
         """The band's lines, a line holding a no-break space broken here so it never breaks there.

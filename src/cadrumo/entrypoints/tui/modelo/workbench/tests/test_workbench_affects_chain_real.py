@@ -104,7 +104,7 @@ async def test_a_130_box_names_its_chain_to_the_result(
             form = await _opened(pilot, screen)
             said = await _affects(pilot, "05")
             in_dialog = isinstance(app.screen, CasillaEditorScreen)
-            others = tr("tui.modelo.workbench.editor.affects.others", count="[15]")
+            others = tr("workspace.modelo.editor.affects.others", count="[15]")
             app.exit(None)
 
     assert in_dialog is (size == _DIALOG)
@@ -130,7 +130,7 @@ async def test_a_303_box_reaches_the_result_and_an_informative_one_says_it_does_
             await pilot.press("escape")
             await settle(pilot)
             informative = await _affects(pilot, "59")
-            not_result = tr("tui.modelo.workbench.editor.affects.not_result")
+            not_result = tr("workspace.modelo.editor.affects.not_result")
             app.exit(None)
 
     assert general.startswith(f"[69] {_label(form, '69')} → [71]"), general

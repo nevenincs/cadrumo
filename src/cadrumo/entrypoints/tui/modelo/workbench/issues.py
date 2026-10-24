@@ -60,19 +60,19 @@ from .issue_screen_components import (
 
 _ENTER_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
-        "go": "tui.modelo.workbench.issues.go_to_box",
-        "records": "tui.modelo.workbench.issues.open_records",
-        "section": "tui.modelo.workbench.issues.open_section",
-        "more": "tui.modelo.workbench.issues.key.more",
-        "less": "tui.modelo.workbench.issues.key.less",
+        "go": "workspace.modelo.issues.go_to_box",
+        "records": "workspace.modelo.issues.open_records",
+        "section": "workspace.modelo.issues.open_section",
+        "more": "workspace.modelo.issues.key.more",
+        "less": "workspace.modelo.issues.key.less",
     }
 )
 
 _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
-        "escape": "tui.modelo.workbench.key.back",
-        "t": "tui.modelo.workbench.issues.technical",
-        "b": "tui.modelo.workbench.key.confirm_section",
+        "escape": "workspace.modelo.key.back",
+        "t": "workspace.modelo.issues.technical",
+        "b": "workspace.modelo.key.confirm_section",
     }
 )
 
@@ -85,7 +85,7 @@ _FOOTER_PRIORITY: Final[tuple[str, ...]] = ("enter", "escape", "a", _CONFIRM_SCO
 
 _FOOTER_KEY_GAP: Final[int] = 1
 
-_OPEN_AREA_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.open_area"
+_OPEN_AREA_LOCALE_KEY: Final[str] = "workspace.modelo.issues.open_area"
 
 
 """Where a finding about the filer's records, rather than a box, sits: in those records."""
@@ -192,8 +192,8 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             yield _IssueList(*self._options(), id="issues-list")
             with Horizontal(id="issues-actions"):
                 yield localized(
-                    Button(tr("tui.modelo.workbench.result_diff.close"), id="issues-close", variant="primary"),
-                    "tui.modelo.workbench.result_diff.close",
+                    Button(tr("workspace.modelo.result_diff.close"), id="issues-close", variant="primary"),
+                    "workspace.modelo.result_diff.close",
                 )
         yield Footer(compact=True)
 

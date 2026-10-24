@@ -281,7 +281,7 @@ def blocking_count(row: DeclarationListRow) -> int:
 
 def next_step_words(row: DeclarationListRow, step: DeclarationListNextStep, language: OutputLanguage) -> str:
     """The step in the filer's language."""
-    return tr(f"tui.declarations.list.next.{step.value}", count=blocking_count(row), locale=language.value)
+    return tr(f"workspace.declarations.list.next.{step.value}", count=blocking_count(row), locale=language.value)
 
 
 def state_words(row: DeclarationListRow, language: OutputLanguage) -> str:
@@ -290,19 +290,21 @@ def state_words(row: DeclarationListRow, language: OutputLanguage) -> str:
     calendar = row.calendar
     if row.state == "aeat_unlinked" and calendar is not None and calendar.aeat_submitted_at is not None:
         return tr(
-            "tui.declarations.list.state.aeat_unlinked_on",
+            "workspace.declarations.list.state.aeat_unlinked_on",
             date=date_text(calendar.aeat_submitted_at, language),
             locale=locale,
         )
     if row.state == "recorded":
-        return tr("tui.declarations.list.group.recorded", locale=locale)
+        return tr("workspace.declarations.list.group.recorded", locale=locale)
     if row.state == "discarded":
-        return tr("tui.declarations.work_state.descartado", locale=locale)
+        return tr("workspace.declarations.work_state.descartado", locale=locale)
     if row.state == "maybe":
-        return tr("tui.declarations.list.maybe.help", locale=locale)
+        return tr("workspace.declarations.list.maybe.help", locale=locale)
     if is_unlinked_local_draft(row):
-        return tr("tui.declarations.list.state.local_draft", locale=locale)
-    return ("▲ " if row.state == "blocked" else "") + tr("tui.declarations.list.state." + row.state, locale=locale)
+        return tr("workspace.declarations.list.state.local_draft", locale=locale)
+    return ("▲ " if row.state == "blocked" else "") + tr(
+        "workspace.declarations.list.state." + row.state, locale=locale
+    )
 
 
 def _valued_result_words(result: ModeloFormResult, value: Decimal, language: OutputLanguage) -> str:
@@ -310,9 +312,9 @@ def _valued_result_words(result: ModeloFormResult, value: Decimal, language: Out
     locale = language.value
     shown_value = value if result.direction is ModeloFormResultDirection.UNKNOWN else abs(value)
     amount = format_casilla_value(shown_value, data_type=CasillaDataType.MONEY, language=language)
-    key = "tui.modelo.workbench.header.result." + _DIRECTION_WORDS[result.direction]
+    key = "workspace.modelo.header.result." + _DIRECTION_WORDS[result.direction]
     if result.election_may_change:
-        key = "tui.modelo.workbench.header.result.choice_pending"
+        key = "workspace.modelo.header.result.choice_pending"
     if result.direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
         return tr(key, amount=amount, locale=locale)
     if result.direction in {ModeloFormResultDirection.NIL, ModeloFormResultDirection.NEGATIVE}:
@@ -336,7 +338,9 @@ def result_words(row: DeclarationListRow, language: OutputLanguage) -> str | Non
         and not declaration.has_current_filing
     )
     key = (
-        "tui.modelo.workbench.origin.not_calculated_yet" if not_calculated else "tui.declarations.value.result_unknown"
+        "workspace.modelo.origin.not_calculated_yet"
+        if not_calculated
+        else "workspace.declarations.value.result_unknown"
     )
     return tr(key, locale=language.value)
 
@@ -414,7 +418,7 @@ def worded_list_row(row: DeclarationListRow, language: OutputLanguage) -> Modelo
         advice=row.advice,
         advice_words=None
         if row.advice is None
-        else tr("tui.declarations.list.advice." + row.advice.value, locale=language.value),
+        else tr("workspace.declarations.list.advice." + row.advice.value, locale=language.value),
         local_draft=is_unlinked_local_draft(row),
         local_filing_state=None if calendar is None else calendar.local_filing_state,
         aeat_submission_state=None if calendar is None else calendar.aeat_submission_state,

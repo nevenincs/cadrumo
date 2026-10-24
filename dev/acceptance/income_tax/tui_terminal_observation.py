@@ -28,8 +28,8 @@ def settled_notice_terminal(notice: str) -> tuple[TerminalCondition, AcceptanceO
     """
     from cadrumo.core.i18n.render import tr
 
-    succeeded = {tr("tui.modelo.workbench.operation.done"), tr("tui.modelo.workbench.result_diff.nothing_changed")}
-    not_done = tr("tui.modelo.workbench.operation.not_done")
+    succeeded = {tr("workspace.modelo.operation.done"), tr("workspace.modelo.result_diff.nothing_changed")}
+    not_done = tr("workspace.modelo.operation.not_done")
     if notice in succeeded:
         return "succeeded", AcceptanceOutcome.PROVEN
     if notice == not_done:

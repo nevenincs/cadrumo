@@ -15,12 +15,12 @@ from .....core.period import Period, PeriodKind
 
 _NOT_APPLYING_LOCALE_KEYS: Final[Mapping[PeriodKind, str]] = MappingProxyType(
     {
-        PeriodKind.QUARTERLY: "tui.modelo.workbench.applicability.quarter",
-        PeriodKind.MONTHLY: "tui.modelo.workbench.applicability.month",
-        PeriodKind.ANNUAL: "tui.modelo.workbench.applicability.year",
+        PeriodKind.QUARTERLY: "workspace.modelo.applicability.quarter",
+        PeriodKind.MONTHLY: "workspace.modelo.applicability.month",
+        PeriodKind.ANNUAL: "workspace.modelo.applicability.year",
     }
 )
-_NOT_APPLYING_PERIOD_LOCALE_KEY: Final[str] = "tui.modelo.workbench.applicability.period"
+_NOT_APPLYING_PERIOD_LOCALE_KEY: Final[str] = "workspace.modelo.applicability.period"
 
 
 def does_not_apply_text(period: Period) -> str:

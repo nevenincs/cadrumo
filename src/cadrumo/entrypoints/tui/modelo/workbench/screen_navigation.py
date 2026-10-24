@@ -101,7 +101,7 @@ class WorkbenchNavigationMixin:
         if self._sort is SortOrder.FORM and self._pages and self._advance_to_page_attention(casilla_list, direction):
             return
         if direction > 0:
-            self._notice(tr("tui.modelo.workbench.browse.last_to_do", action=self._next_words))
+            self._notice(tr("workspace.modelo.browse.last_to_do", action=self._next_words))
 
     def _advance_to_page_attention(self: ModeloWorkbenchScreen, casilla_list: CasillaList, direction: int) -> bool:
         for index in self._attention_page_indices(direction):

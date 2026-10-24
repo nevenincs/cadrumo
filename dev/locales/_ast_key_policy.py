@@ -31,6 +31,7 @@ _DYNAMIC_TRANSLATION_ROOTS = frozenset(
         "topic",
         "tui",
         "wizard",
+        "workspace",
     },
 )
 """Top-level roots that can legitimately identify dynamic i18n namespaces.
@@ -73,6 +74,11 @@ NOT tolerate ``tui.*`` at large: a marker is still emitted only where a
 concrete dotted prefix is written down in source and used as one, which
 :func:`_interpolated_head_prefixes` requires by demanding the segment after the
 interpolation begin with the dot.
+
+The ``"workspace"`` root holds the wording the TUI and the desktop share
+(``workspace.modelo.*``, ``workspace.declarations.*``) and is admitted on the
+same terms: its dynamic keys append an enum member value or a closed reason
+code to a prefix written down in source.
 """
 
 

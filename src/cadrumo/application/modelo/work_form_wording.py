@@ -62,12 +62,12 @@ def period_words(period: Period, language: OutputLanguage | None = None) -> str:
         name = "annual"
     else:
         return f"{code} {year}"
-    return tr(f"tui.modelo.workbench.period.{name}", year=year, locale=_locale(language))
+    return tr(f"workspace.modelo.period.{name}", year=year, locale=_locale(language))
 
 
 def modelo_number(modelo: str, language: OutputLanguage | None = None) -> str:
     """Name a modelo by its number alone, where its title does not fit."""
-    return tr("tui.modelo.workbench.modelo_number", modelo=modelo, locale=_locale(language))
+    return tr("workspace.modelo.modelo_number", modelo=modelo, locale=_locale(language))
 
 
 def modelo_title(modelo: str, language: OutputLanguage) -> str:
@@ -75,7 +75,7 @@ def modelo_title(modelo: str, language: OutputLanguage) -> str:
     for locale in (language.value, OutputLanguage.ES.value):
         title = lookup_translation(f"modelo.schema.{modelo}.field.title", locale=locale)
         if title is not None and title:
-            return tr("tui.modelo.workbench.modelo_title", modelo=modelo, title=title, locale=language.value)
+            return tr("workspace.modelo.modelo_title", modelo=modelo, title=title, locale=language.value)
     return modelo_number(modelo, language)
 
 
@@ -92,7 +92,7 @@ def day_text(moment: datetime, language: OutputLanguage) -> str:
 
 def origin_words_key(origin: ModeloFormOrigin) -> str:
     """The catalogue key naming one origin in a few words."""
-    return f"tui.modelo.workbench.origin.{origin.value}"
+    return f"workspace.modelo.origin.{origin.value}"
 
 
 #: Origins whose value comes from a source, so their words name the kind of place it is.
@@ -106,12 +106,12 @@ _FORM_SET_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.INFORMATIONAL}
 )
 """Origins whose value, when the form's own design is the source, is the value the form sets."""
-_FORM_SET_WORDS_LOCALE_KEY: Final[str] = "tui.modelo.workbench.origin_source.imported.fixed_by_design"
+_FORM_SET_WORDS_LOCALE_KEY: Final[str] = "workspace.modelo.origin_source.imported.fixed_by_design"
 HELD_ZERO_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
-    {ModeloFormOrigin.OPTIONAL_EMPTY: "tui.modelo.workbench.origin_held_zero.optional_empty"}
+    {ModeloFormOrigin.OPTIONAL_EMPTY: "workspace.modelo.origin_held_zero.optional_empty"}
 )
 """Words for an origin that says nobody entered the box, when the box still holds a zero: never "empty"."""
-_AEAT_IMPORTED_ON_LOCALE_KEY: Final[str] = "tui.modelo.workbench.origin_source.aeat_imported_on"
+_AEAT_IMPORTED_ON_LOCALE_KEY: Final[str] = "workspace.modelo.origin_source.aeat_imported_on"
 
 
 def holds_nothing(value: ModeloFormScalar) -> bool:
@@ -160,8 +160,8 @@ _FROM_EARLIER_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
 )
 """Origins whose words say where a carried value comes from, so they must not name a declaration that does not exist."""
 
-_NO_EARLIER_WORDS_LOCALE_KEY: Final[str] = "tui.modelo.workbench.origin_source.imported.earlier_filings_none"
-_NO_EARLIER_EXPLANATION_LOCALE_KEY: Final[str] = "tui.modelo.workbench.help.origin_no_earlier_declaration"
+_NO_EARLIER_WORDS_LOCALE_KEY: Final[str] = "workspace.modelo.origin_source.imported.earlier_filings_none"
+_NO_EARLIER_EXPLANATION_LOCALE_KEY: Final[str] = "workspace.modelo.help.origin_no_earlier_declaration"
 
 
 def no_earlier_filing(field: ModeloFormField) -> bool:
@@ -193,9 +193,9 @@ def origin_explanation(field: ModeloFormField, language: OutputLanguage | None =
 
 NAMED_FILING_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
     {
-        ModeloFormOrigin.IMPORTED: "tui.modelo.workbench.origin_source.imported.named_filing",
-        ModeloFormOrigin.NOT_IMPORTED_YET: "tui.modelo.workbench.origin_source.not_imported_yet.named_filing",
-        ModeloFormOrigin.OVERRIDES_SOURCE: "tui.modelo.workbench.origin_source.overrides_source.named_filing",
+        ModeloFormOrigin.IMPORTED: "workspace.modelo.origin_source.imported.named_filing",
+        ModeloFormOrigin.NOT_IMPORTED_YET: "workspace.modelo.origin_source.not_imported_yet.named_filing",
+        ModeloFormOrigin.OVERRIDES_SOURCE: "workspace.modelo.origin_source.overrides_source.named_filing",
     }
 )
 """Words for a value tied to one named earlier declaration, per origin; they take ``{modelo}`` and ``{period}``."""
@@ -203,13 +203,13 @@ NAMED_FILING_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyTy
 
 def origin_source_words_key(origin: ModeloFormOrigin, family: SourceFamily) -> str:
     """The catalogue key naming an origin together with the kind of place its value comes from."""
-    return f"tui.modelo.workbench.origin_source.{origin.value}.{family.value}"
+    return f"workspace.modelo.origin_source.{origin.value}.{family.value}"
 
 
 FILED_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
     {
-        ModeloFormOrigin.NEEDS_INPUT: "tui.modelo.workbench.origin_filed.needs_input",
-        ModeloFormOrigin.DEFAULT_TO_CONFIRM: "tui.modelo.workbench.origin_filed.default_to_confirm",
+        ModeloFormOrigin.NEEDS_INPUT: "workspace.modelo.origin_filed.needs_input",
+        ModeloFormOrigin.DEFAULT_TO_CONFIRM: "workspace.modelo.origin_filed.default_to_confirm",
     }
 )
 """Words for an origin that asks for a value, on a declaration recorded as filed: what the value is, not a request."""
@@ -287,8 +287,8 @@ def editability_text(field: ModeloFormField, language: OutputLanguage | None = N
     """Say what may be done about a field; one that cannot be edited here says why."""
     locale = _locale(language)
     if field.editability is ModeloFormEditability.NOT_WRITABLE and field.not_writable_reason is not None:
-        return tr(f"tui.modelo.workbench.not_writable.{field.not_writable_reason}", locale=locale)
-    return tr(f"tui.modelo.workbench.editability.{field.editability.value}", locale=locale)
+        return tr(f"workspace.modelo.not_writable.{field.not_writable_reason}", locale=locale)
+    return tr(f"workspace.modelo.editability.{field.editability.value}", locale=locale)
 
 
 _RATIO_DATA_TYPE: Final[str] = "ratio"

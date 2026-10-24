@@ -57,7 +57,7 @@ def test_a_box_on_the_way_names_the_chain_and_the_few_other_boxes_it_changes(lan
 
     with override_settings(cadrumo_output_language=language.value):
         text = affects_text(card)
-        others = tr("tui.modelo.workbench.editor.affects.others", count="[13], [15]")
+        others = tr("workspace.modelo.editor.affects.others", count="[13], [15]")
 
     assert text == f"[07] → [12] → [19]\n{others}"
 
@@ -69,7 +69,7 @@ def test_past_three_other_boxes_the_chain_counts_them(language: OutputLanguage) 
 
     with override_settings(cadrumo_output_language=language.value):
         text = affects_text(card)
-        others = tr("tui.modelo.workbench.editor.affects.others", count=4)
+        others = tr("workspace.modelo.editor.affects.others", count=4)
 
     assert text == f"[07] → [19]\n{others}"
 
@@ -88,8 +88,8 @@ def test_a_box_that_does_not_reach_the_result_says_so_with_where_it_is_used(lang
     with override_settings(cadrumo_output_language=language.value):
         said_alone = affects_text(alone)
         said_used = affects_text(used)
-        not_result = tr("tui.modelo.workbench.editor.affects.not_result")
-        used_in = tr("tui.modelo.workbench.help.feeds", boxes="[45]")
+        not_result = tr("workspace.modelo.editor.affects.not_result")
+        used_in = tr("workspace.modelo.help.feeds", boxes="[45]")
 
     assert said_alone == not_result
     assert said_used == f"{not_result}\n{used_in}"
@@ -97,7 +97,7 @@ def test_a_box_that_does_not_reach_the_result_says_so_with_where_it_is_used(lang
 
 def test_the_result_box_says_it_is_the_result() -> None:
     with override_settings(cadrumo_output_language="en"):
-        assert affects_text(_card(is_result=True)) == tr("tui.modelo.workbench.editor.affects.is_result")
+        assert affects_text(_card(is_result=True)) == tr("workspace.modelo.editor.affects.is_result")
 
 
 def test_a_form_without_a_result_lists_the_boxes_a_box_is_used_in() -> None:

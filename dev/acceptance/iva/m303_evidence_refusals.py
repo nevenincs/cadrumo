@@ -80,7 +80,7 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
     from cadrumo.core.i18n.render import tr
     from cadrumo.entrypoints.tui.operations.modal import OperationModal
 
-    not_done = tr("tui.modelo.workbench.operation.not_done")
+    not_done = tr("workspace.modelo.operation.not_done")
     query_public_selector(pilot, activation_id, Button).focus()
     await pilot.press("enter")
     applied = False

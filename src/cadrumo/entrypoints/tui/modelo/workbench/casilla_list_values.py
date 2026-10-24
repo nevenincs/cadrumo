@@ -106,17 +106,17 @@ _ABSENT_WHEN_NONE: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.OPTIONAL_EMPTY, ModeloFormOrigin.NEEDS_INPUT}
 )
 """Origins whose words say there is no value only when the field holds none; a held zero is still shown."""
-_NOT_APPLICABLE_VALUE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.value.not_applicable"
-_IN_SPANISH_LOCALE_KEY: Final[str] = "tui.modelo.workbench.in_spanish"
-_RATE_NOT_GROUNDED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.rate.not_grounded"
-_RATE_PRINTED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.rate.printed_by_form"
-_RATE_ROW_LOCALE_KEY: Final[str] = "tui.modelo.workbench.rate.of_row"
-_RATE_ROW_PRINTED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.rate.of_row_printed"
-_ROW_BOXES_LOCALE_KEY: Final[str] = "tui.modelo.workbench.grid.row_boxes"
+_NOT_APPLICABLE_VALUE_LOCALE_KEY: Final[str] = "workspace.modelo.value.not_applicable"
+_IN_SPANISH_LOCALE_KEY: Final[str] = "workspace.modelo.in_spanish"
+_RATE_NOT_GROUNDED_LOCALE_KEY: Final[str] = "workspace.modelo.rate.not_grounded"
+_RATE_PRINTED_LOCALE_KEY: Final[str] = "workspace.modelo.rate.printed_by_form"
+_RATE_ROW_LOCALE_KEY: Final[str] = "workspace.modelo.rate.of_row"
+_RATE_ROW_PRINTED_LOCALE_KEY: Final[str] = "workspace.modelo.rate.of_row_printed"
+_ROW_BOXES_LOCALE_KEY: Final[str] = "workspace.modelo.grid.row_boxes"
 _SPANISH_DISCLOSURES: Final[frozenset[ModeloFormTextDisclosure]] = frozenset(
     {ModeloFormTextDisclosure.SPANISH_FALLBACK, ModeloFormTextDisclosure.OFFICIAL_SPANISH}
 )
-_BOX_OPENING_LOCALE_KEY: Final[str] = "tui.modelo.workbench.help.box_opening"
+_BOX_OPENING_LOCALE_KEY: Final[str] = "workspace.modelo.help.box_opening"
 """How a description opens by naming its box, in each language the catalogue writes: the row already shows it."""
 
 

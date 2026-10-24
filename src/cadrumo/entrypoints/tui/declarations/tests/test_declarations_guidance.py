@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def _refuse_creation(modelo: str, year: int, period: Period) -> ModeloWorkCreateResultV1:
     raise ModeloLifecycleActionUnavailableError(
-        translated_message="tui.declarations.refusal.handoff",
+        translated_message="workspace.declarations.refusal.handoff",
         context={"modelo": modelo, "year": year, "period": period.registry_token},
     )
 
@@ -69,11 +69,11 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
             table = screen.query_one("#declarations-list", DataTable)
             guidance = screen.query_one("#declarations-keys", Static)
             page = screen.query_one("#declarations-page", VerticalScroll)
-            assert "Enter " + tr("tui.declarations.list.key.toggle_group") in str(guidance.render())
-            assert "+ " + tr("tui.declarations.list.key.new") in str(guidance.render())
+            assert "Enter " + tr("workspace.declarations.list.key.toggle_group") in str(guidance.render())
+            assert "+ " + tr("workspace.declarations.list.key.new") in str(guidance.render())
             for key, label in (("/", "search"), ("f", "filter"), ("s", "sort")):
-                assert key + " " + tr("tui.modelo.workbench.key." + label) in str(guidance.render())
-            assert "t " + tr("tui.modelo.workbench.issues.technical") in str(guidance.render())
+                assert key + " " + tr("workspace.modelo.key." + label) in str(guidance.render())
+            assert "t " + tr("workspace.modelo.issues.technical") in str(guidance.render())
             assert guidance.region.bottom <= page.region.y
             original_region = guidance.region
             page.scroll_end(animate=False)
@@ -122,16 +122,16 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
 
             select(str(draft.work_unit_id))
             await settle(pilot)
-            assert "Enter " + tr("tui.declarations.list.next.open_local_draft") in str(guidance.render())
-            assert tr("tui.modelo.workbench.origin.not_calculated_yet") in str(table.get_row_at(table.cursor_row)[1])
+            assert "Enter " + tr("workspace.declarations.list.next.open_local_draft") in str(guidance.render())
+            assert tr("workspace.modelo.origin.not_calculated_yet") in str(table.get_row_at(table.cursor_row)[1])
             external = next(row for row in screen.rows if row.state == "aeat_unlinked")
             select(external.key)
             await settle(pilot)
-            assert "Enter " + tr("tui.declarations.calendar.action.open") in str(guidance.render())
+            assert "Enter " + tr("workspace.declarations.calendar.action.open") in str(guidance.render())
             select("group:aeat_unlinked")
             await settle(pilot)
             selected_row_is_visible()
-            assert tr("tui.declarations.list.state.aeat_unlinked") in str(
+            assert tr("workspace.declarations.list.state.aeat_unlinked") in str(
                 table.get_row_at(table.cursor_row)[0]
             ).replace("\n", " ")
             await pilot.press("enter")
@@ -145,7 +145,7 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
             due = next(row for row in screen.rows if row.state == "not_started")
             select(due.key)
             await settle(pilot)
-            assert "Enter " + tr("tui.declarations.list.next.start") in str(guidance.render())
+            assert "Enter " + tr("workspace.declarations.list.next.start") in str(guidance.render())
 
             for _ in range(3):
                 await pilot.press("f")

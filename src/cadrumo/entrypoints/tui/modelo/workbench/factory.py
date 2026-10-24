@@ -263,7 +263,7 @@ class InstalledModeloWorkbench:
         """Assemble one casilla's help for the revision and calculation of the form last read."""
         state = self._state
         if state is None:
-            raise ModeloLifecycleActionUnavailableError(translated_message="tui.modelo.workbench.read_failed")
+            raise ModeloLifecycleActionUnavailableError(translated_message="workspace.modelo.read_failed")
         return self._source.help_card(
             casilla_id,
             registry_revision_id=state.read.registry_revision_id,
@@ -277,7 +277,7 @@ class InstalledModeloWorkbench:
         """Read what the filer typed through the application grammar of the field's address."""
         state = self._state
         if state is None or state.baseline is None:
-            return WorkbenchRefused(message=tr("tui.modelo.workbench.editability.no_admission"))
+            return WorkbenchRefused(message=tr("workspace.modelo.editability.no_admission"))
         target = edit_address(field)
         address = (
             ModeloEditScalarAddressV1(casilla_id=target.casilla_id)
@@ -484,7 +484,7 @@ def _finding(finding: ModeloEditFindingV1, language: OutputLanguage) -> Workbenc
         )
         return WorkbenchFinding(address=address, message=parse_refusal_text(refusal, language), blocking=blocking)
     return WorkbenchFinding(
-        address=address, message=tr(f"tui.modelo.workbench.review.finding.{finding.code}"), blocking=blocking
+        address=address, message=tr(f"workspace.modelo.review.finding.{finding.code}"), blocking=blocking
     )
 
 

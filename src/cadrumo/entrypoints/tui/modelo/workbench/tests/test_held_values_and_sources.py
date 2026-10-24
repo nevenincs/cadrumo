@@ -98,9 +98,9 @@ from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synt
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _LANGUAGES = tuple(OutputLanguage)
-_EMPTY_KEY = "tui.modelo.workbench.origin.optional_empty"
-_HELD_ZERO_KEY = "tui.modelo.workbench.origin_held_zero.optional_empty"
-_FORM_SET_KEY = "tui.modelo.workbench.origin_source.imported.fixed_by_design"
+_EMPTY_KEY = "workspace.modelo.origin.optional_empty"
+_HELD_ZERO_KEY = "workspace.modelo.origin_held_zero.optional_empty"
+_FORM_SET_KEY = "workspace.modelo.origin_source.imported.fixed_by_design"
 _ZERO = "0.00\u00a0€"
 _IMPORTED_AT = datetime(2026, 4, 2, 10, 30, tzinfo=UTC)
 
@@ -307,7 +307,7 @@ async def test_a_box_no_entry_can_reach_names_no_source_and_says_it_is_empty_onc
             has_where = bool(panel.query("#editor-where"))
     assert not has_where
     assert now == "○ Optional, empty"
-    assert tr("tui.modelo.workbench.origin_source.imported.your_entries") not in now
+    assert tr("workspace.modelo.origin_source.imported.your_entries") not in now
 
 
 # ── AEAT data names the day it was imported ──────────────────────────────
@@ -328,8 +328,8 @@ async def test_a_value_from_aeat_data_names_the_day_it_was_imported_on_every_sur
     field = _from_aeat()
     with override_settings(cadrumo_output_language=language.value):
         written = date_text(imported, language)
-        dated = tr("tui.modelo.workbench.origin_source.aeat_imported_on", date=written)
-        undated = tr("tui.modelo.workbench.origin_source.imported.aeat_draft")
+        dated = tr("workspace.modelo.origin_source.aeat_imported_on", date=written)
+        undated = tr("workspace.modelo.origin_source.imported.aeat_draft")
         assert written in dated
         # The help band's words and search.
         assert origin_text(field, aeat_imported=imported, language=language).endswith(dated)
@@ -343,12 +343,10 @@ async def test_a_value_from_aeat_data_names_the_day_it_was_imported_on_every_sur
         # The sources map's group heading, closed and open.
         group = next(item for item in source_groups(form) if item.kind is ModeloFormSourceGroupKind.AEAT_DATA)
         assert group.imported_on == imported
-        heading = tr("tui.modelo.workbench.sources.group.aeat_data_imported_on", date=written)
+        heading = tr("workspace.modelo.sources.group.aeat_data_imported_on", date=written)
         assert written in heading
         assert str(group_prompt(group, expanded=True)).startswith(f"▿ {SOURCE_GROUP_MARKS[group.kind].glyph} {heading}")
-        assert group_words(ModeloFormSourceGroupKind.AEAT_DATA).endswith(
-            tr("tui.modelo.workbench.sources.group.aeat_data")
-        )
+        assert group_words(ModeloFormSourceGroupKind.AEAT_DATA).endswith(tr("workspace.modelo.sources.group.aeat_data"))
         # The panel's "Now" line and where the value comes from.
         panel = CasillaEditorScreen(
             CasillaEditorPanel(
@@ -395,7 +393,7 @@ async def test_the_panel_says_what_a_box_affects_before_the_new_value_and_a_file
         async with ScreenHostApp(filed).run_test(size=(140, 40)) as pilot:
             await settle(pilot)
             can_change = _text(filed, "#editor-can-change-text")
-        correction = tr("tui.modelo.workbench.editor.can_change.recorded")
+        correction = tr("workspace.modelo.editor.can_change.recorded")
     assert affects.bottom <= entry.y
     assert can_change == correction
 
@@ -466,9 +464,9 @@ def test_a_carry_with_no_earlier_declaration_says_so_and_names_no_filing(languag
     named = _carried(filings=(ModeloFormEarlierFiling(modelo="130", period=Period.from_year_and_code(2026, "1T")),))
     form = _with_fields(synthetic_form(), {"01": none.model_copy(update={"box": "01"})})
     with override_settings(cadrumo_output_language=language.value):
-        words = tr("tui.modelo.workbench.origin_source.imported.earlier_filings_none")
-        explanation = tr("tui.modelo.workbench.help.origin_no_earlier_declaration")
-        generic = tr("tui.modelo.workbench.origin_source.imported.earlier_filings")
+        words = tr("workspace.modelo.origin_source.imported.earlier_filings_none")
+        explanation = tr("workspace.modelo.help.origin_no_earlier_declaration")
+        generic = tr("workspace.modelo.origin_source.imported.earlier_filings")
         assert no_earlier_filing(none) and not no_earlier_filing(named)
         # The row, help band and panel words say there is none, never "from an earlier declaration".
         assert origin_words(none) == words != generic
@@ -487,13 +485,11 @@ def test_a_carry_with_no_earlier_declaration_says_so_and_names_no_filing(languag
         )
         assert group.none_to_carry
         heading = str(group_prompt(group, expanded=True))
-        assert tr("tui.modelo.workbench.sources.group.earlier_declarations_none") in heading
-        assert tr("tui.modelo.workbench.sources.group.earlier_declarations") not in heading
+        assert tr("workspace.modelo.sources.group.earlier_declarations_none") in heading
+        assert tr("workspace.modelo.sources.group.earlier_declarations") not in heading
         (reading,) = group.readings
         assert reading.state is ModeloFormSourceState.NONE_FOUND
-        assert reading_text(reading) == tr(
-            "tui.modelo.workbench.sources.none_found", source=tr(reading.policy.label_key)
-        )
+        assert reading_text(reading) == tr("workspace.modelo.sources.none_found", source=tr(reading.policy.label_key))
 
 
 def test_the_real_first_quarter_130_carries_from_no_earlier_declaration(operation: PinnedAuthorityOperation) -> None:
@@ -617,8 +613,8 @@ async def test_enter_on_a_finding_about_the_operator_records_lands_on_the_operat
     # The screen starts three pages on, away from the table, so landing there is the finding's doing.
     assert min(3, len(pages) - 1) != target
     with override_settings(cadrumo_output_language="en"):
-        heading = tr("tui.modelo.workbench.repeating", count=0)
-        unknown = tr("tui.modelo.workbench.grid.records_unknown")
+        heading = tr("workspace.modelo.repeating", count=0)
+        unknown = tr("workspace.modelo.grid.records_unknown")
         screen = ModeloWorkbenchScreen(FakeReader(form=form))
         async with ScreenHostApp(screen).run_test(size=(120, 36)) as pilot:
             await settle(pilot)
@@ -662,4 +658,4 @@ def test_a_calculated_rate_box_reads_its_rows_grounded_rate_and_one_with_no_grou
     )
     assert ungrounded.field.grounded_rate is None and ungrounded.row_base_empty is True
     assert ungrounded_text == "·"
-    assert ungrounded_note == tr("tui.modelo.workbench.rate.not_grounded", locale="en")
+    assert ungrounded_note == tr("workspace.modelo.rate.not_grounded", locale="en")

@@ -132,9 +132,9 @@ class WorkbenchEditSession:
         self._language = language
         for key, change in tuple(self._changes.items()):
             if change.kind is WorkbenchChangeKind.CLEAR:
-                text = tr("tui.modelo.workbench.staged.clear")
+                text = tr("workspace.modelo.staged.clear")
             elif change.kind is WorkbenchChangeKind.RESTORE:
-                text = tr("tui.modelo.workbench.staged.restore")
+                text = tr("workspace.modelo.staged.restore")
             else:
                 text = value_text(CasillaListEntry(change.field.model_copy(update={"value": change.value})), language)
             self._changes[key] = replace(change, text=text, previous_text=self._before(change.field))
@@ -205,7 +205,7 @@ class WorkbenchEditSession:
             field=field,
             kind=WorkbenchChangeKind.CLEAR,
             value=None,
-            text=tr("tui.modelo.workbench.staged.clear"),
+            text=tr("workspace.modelo.staged.clear"),
             previous_text=self._before(field),
             displaces=Displacement.FILER,
         )
@@ -224,7 +224,7 @@ class WorkbenchEditSession:
             field=field,
             kind=WorkbenchChangeKind.RESTORE,
             value=None,
-            text=tr("tui.modelo.workbench.staged.restore"),
+            text=tr("workspace.modelo.staged.restore"),
             previous_text=self._before(field),
             displaces=Displacement.FILER,
         )

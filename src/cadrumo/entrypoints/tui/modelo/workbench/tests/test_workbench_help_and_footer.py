@@ -59,7 +59,7 @@ from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_fo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _WIDTHS = [80, 120, 200]
-_RECORDED_REASON = lookup_translation("tui.modelo.workbench.editor.can_change.recorded", locale="en")
+_RECORDED_REASON = lookup_translation("workspace.modelo.editor.can_change.recorded", locale="en")
 _CHANGE_KEY_WORDS = ("Review changes", "Next step", "Calculate", "Confirm assumed values", "Next to do")
 
 
@@ -257,7 +257,7 @@ async def test_the_help_band_says_why_a_rows_rate_box_shows_no_rate() -> None:
             other = await _band_on(pilot, screen, "07")
             app.exit(None)
 
-    note = lookup_translation("tui.modelo.workbench.rate.not_grounded", locale="en")
+    note = lookup_translation("workspace.modelo.rate.not_grounded", locale="en")
     assert note is not None
     assert note in rate
     assert note not in other
@@ -435,15 +435,13 @@ async def test_record_only_content_names_scroll_without_promising_field_actions(
             named = next_line.rpartition("[")[2].removesuffix("]").lower()
             assert named and named in visible
             keys, palette = _footer(screen)
-            assert any(tr("tui.modelo.workbench.key.scroll") in words for words, _, _ in keys)
+            assert any(tr("workspace.modelo.key.scroll") in words for words, _, _ in keys)
             edge = width if palette is None else palette[0]
             assert all(right <= edge for _, _, right in keys)
             all_keys = screen._all_keys_text()
-            assert screen._key_label("enter", "tui.modelo.workbench.key.edit") not in all_keys
-            assert screen._key_label("s", "tui.modelo.workbench.key.sources") not in all_keys
-            assert tr("tui.modelo.workbench.grid.records_read_only") in str(
-                screen.query_one("#wb-help", Static).render()
-            )
+            assert screen._key_label("enter", "workspace.modelo.key.edit") not in all_keys
+            assert screen._key_label("s", "workspace.modelo.key.sources") not in all_keys
+            assert tr("workspace.modelo.grid.records_read_only") in str(screen.query_one("#wb-help", Static).render())
             await pilot.press("home")
             await settle(pilot)
             await pilot.press("down")
@@ -457,8 +455,8 @@ async def test_record_only_content_names_scroll_without_promising_field_actions(
             await pilot.press("question_mark")
             await settle(pilot)
             expanded = str(screen.query_one("#wb-help", Static).render())
-            assert tr("tui.modelo.workbench.key.scroll") in expanded
-            assert screen._key_label("enter", "tui.modelo.workbench.key.edit") not in expanded
+            assert tr("workspace.modelo.key.scroll") in expanded
+            assert screen._key_label("enter", "workspace.modelo.key.edit") not in expanded
             app.exit(None)
 
 

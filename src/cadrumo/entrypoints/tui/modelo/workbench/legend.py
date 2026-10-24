@@ -44,7 +44,7 @@ from .vocabulary import (
 _ENTRY_SEPARATOR: Final[str] = " · "
 _RULE: Final[str] = "──"
 _NAME_LOCALE_KEYS: Final[dict[WorkbenchMark, str]] = {
-    ORIGIN_MARKS[ModeloFormOrigin.IMPORTED]: "tui.modelo.workbench.legend.name.from_your_data",
+    ORIGIN_MARKS[ModeloFormOrigin.IMPORTED]: "workspace.modelo.legend.name.from_your_data",
 }
 """Names the legend gives a mark in place of the mark's own words.
 
@@ -76,56 +76,54 @@ def _origin(origin: ModeloFormOrigin, meaning_key: str, key: str | None = None) 
 
 LEGEND_LOCALE_KEYS: Final[tuple[LegendGroup, ...]] = (
     LegendGroup(
-        "tui.modelo.workbench.legend.group.needs_you",
+        "workspace.modelo.legend.group.needs_you",
         (
-            LegendEntry(BLOCKS_MARK, "tui.modelo.workbench.legend.meaning.level.blocks", "i"),
-            _origin(ModeloFormOrigin.NEEDS_INPUT, "tui.modelo.workbench.legend.meaning.origin.needs_input", "n"),
+            LegendEntry(BLOCKS_MARK, "workspace.modelo.legend.meaning.level.blocks", "i"),
+            _origin(ModeloFormOrigin.NEEDS_INPUT, "workspace.modelo.legend.meaning.origin.needs_input", "n"),
             _origin(
                 ModeloFormOrigin.DEFAULT_TO_CONFIRM,
-                "tui.modelo.workbench.legend.meaning.origin.default_to_confirm",
+                "workspace.modelo.legend.meaning.origin.default_to_confirm",
                 "b",
             ),
             _origin(
                 ModeloFormOrigin.CALCULATION_FAILED,
-                "tui.modelo.workbench.legend.meaning.origin.calculation_failed",
+                "workspace.modelo.legend.meaning.origin.calculation_failed",
                 "i",
             ),
-            LegendEntry(CHECK_MARK, "tui.modelo.workbench.legend.meaning.level.check"),
-            LegendEntry(INFO_MARK, "tui.modelo.workbench.legend.meaning.level.info"),
+            LegendEntry(CHECK_MARK, "workspace.modelo.legend.meaning.level.check"),
+            LegendEntry(INFO_MARK, "workspace.modelo.legend.meaning.level.info"),
         ),
     ),
     LegendGroup(
-        "tui.modelo.workbench.legend.group.origin",
+        "workspace.modelo.legend.group.origin",
         (
-            _origin(ModeloFormOrigin.ENTERED, "tui.modelo.workbench.legend.meaning.origin.entered"),
-            _origin(ModeloFormOrigin.OVERRIDES_SOURCE, "tui.modelo.workbench.legend.meaning.origin.overrides_source"),
-            _origin(ModeloFormOrigin.CALCULATED, "tui.modelo.workbench.legend.meaning.origin.calculated"),
-            _origin(ModeloFormOrigin.IMPORTED, "tui.modelo.workbench.legend.meaning.origin.imported"),
-            LegendEntry(EARLIER_FILING_MARK, "tui.modelo.workbench.legend.meaning.mark.earlier"),
-            _origin(ModeloFormOrigin.INFORMATIONAL, "tui.modelo.workbench.legend.meaning.origin.informational"),
+            _origin(ModeloFormOrigin.ENTERED, "workspace.modelo.legend.meaning.origin.entered"),
+            _origin(ModeloFormOrigin.OVERRIDES_SOURCE, "workspace.modelo.legend.meaning.origin.overrides_source"),
+            _origin(ModeloFormOrigin.CALCULATED, "workspace.modelo.legend.meaning.origin.calculated"),
+            _origin(ModeloFormOrigin.IMPORTED, "workspace.modelo.legend.meaning.origin.imported"),
+            LegendEntry(EARLIER_FILING_MARK, "workspace.modelo.legend.meaning.mark.earlier"),
+            _origin(ModeloFormOrigin.INFORMATIONAL, "workspace.modelo.legend.meaning.origin.informational"),
         ),
     ),
     LegendGroup(
-        "tui.modelo.workbench.legend.group.empty",
+        "workspace.modelo.legend.group.empty",
         (
-            _origin(ModeloFormOrigin.OPTIONAL_EMPTY, "tui.modelo.workbench.legend.meaning.origin.optional_empty"),
-            _origin(ModeloFormOrigin.CLEARED, "tui.modelo.workbench.legend.meaning.origin.cleared"),
-            _origin(ModeloFormOrigin.NOT_APPLICABLE, "tui.modelo.workbench.legend.meaning.origin.not_applicable"),
-            _origin(
-                ModeloFormOrigin.NOT_CALCULATED_YET, "tui.modelo.workbench.legend.meaning.origin.not_calculated_yet"
-            ),
-            _origin(ModeloFormOrigin.NOT_IMPORTED_YET, "tui.modelo.workbench.legend.meaning.origin.not_imported_yet"),
+            _origin(ModeloFormOrigin.OPTIONAL_EMPTY, "workspace.modelo.legend.meaning.origin.optional_empty"),
+            _origin(ModeloFormOrigin.CLEARED, "workspace.modelo.legend.meaning.origin.cleared"),
+            _origin(ModeloFormOrigin.NOT_APPLICABLE, "workspace.modelo.legend.meaning.origin.not_applicable"),
+            _origin(ModeloFormOrigin.NOT_CALCULATED_YET, "workspace.modelo.legend.meaning.origin.not_calculated_yet"),
+            _origin(ModeloFormOrigin.NOT_IMPORTED_YET, "workspace.modelo.legend.meaning.origin.not_imported_yet"),
         ),
     ),
     LegendGroup(
-        "tui.modelo.workbench.legend.group.progress",
+        "workspace.modelo.legend.group.progress",
         (
-            LegendEntry(ATTENTION_MARKS[Attention.STAGED], "tui.modelo.workbench.legend.meaning.mark.staged", "R"),
-            LegendEntry(STALE_MARK, "tui.modelo.workbench.legend.meaning.mark.stale", "R"),
-            LegendEntry(DONE_MARK, "tui.modelo.workbench.legend.meaning.mark.done"),
-            LegendEntry(HERE_MARK, "tui.modelo.workbench.legend.meaning.mark.here"),
-            LegendEntry(COLLAPSED_MARK, "tui.modelo.workbench.legend.meaning.mark.collapsed"),
-            LegendEntry(EXPANDED_MARK, "tui.modelo.workbench.legend.meaning.mark.expanded"),
+            LegendEntry(ATTENTION_MARKS[Attention.STAGED], "workspace.modelo.legend.meaning.mark.staged", "R"),
+            LegendEntry(STALE_MARK, "workspace.modelo.legend.meaning.mark.stale", "R"),
+            LegendEntry(DONE_MARK, "workspace.modelo.legend.meaning.mark.done"),
+            LegendEntry(HERE_MARK, "workspace.modelo.legend.meaning.mark.here"),
+            LegendEntry(COLLAPSED_MARK, "workspace.modelo.legend.meaning.mark.collapsed"),
+            LegendEntry(EXPANDED_MARK, "workspace.modelo.legend.meaning.mark.expanded"),
         ),
     ),
 )
@@ -170,17 +168,17 @@ def _entry(mark: WorkbenchMark, count: int | None) -> str:
 def on_screen_text(boxes: Iterable[WorkbenchMark], others: Iterable[WorkbenchMark] = ()) -> str:
     """The help band's first line: the symbols on screen with their names, and how many boxes show each state."""
     entries = _ENTRY_SEPARATOR.join(_entry(mark, count) for mark, count in on_screen(boxes, others))
-    return f"{tr('tui.modelo.workbench.legend.on_screen')}: {entries}"
+    return f"{tr('workspace.modelo.legend.on_screen')}: {entries}"
 
 
 def more_text() -> str:
     """The line that says the next ``?`` opens every symbol and key."""
-    return tr("tui.modelo.workbench.legend.more")
+    return tr("workspace.modelo.legend.more")
 
 
 def first_open_text() -> str:
     """The notice a filer sees the first time the workbench opens in a session."""
-    return tr("tui.modelo.workbench.legend.first_open")
+    return tr("workspace.modelo.legend.first_open")
 
 
 def _heading(text: str) -> Text:
@@ -196,11 +194,11 @@ def legend_panel(
 ) -> Text:
     """The full "Symbols and keys" reference: what is on screen, then every symbol, then the keys."""
     panel = Text()
-    panel.append(f"{tr('tui.modelo.workbench.legend.title')}   {close}\n", style="bold")
-    panel.append(f"{tr('tui.modelo.workbench.legend.intro')}\n")
+    panel.append(f"{tr('workspace.modelo.legend.title')}   {close}\n", style="bold")
+    panel.append(f"{tr('workspace.modelo.legend.intro')}\n")
     shown = on_screen(boxes, others)
     if shown:
-        panel.append_text(_heading(tr("tui.modelo.workbench.legend.on_screen")))
+        panel.append_text(_heading(tr("workspace.modelo.legend.on_screen")))
         panel.append("\n")
         panel.append(_ENTRY_SEPARATOR.join(_entry(mark, count) for mark, count in shown) + "\n")
     for group in LEGEND_LOCALE_KEYS:
@@ -209,8 +207,8 @@ def legend_panel(
         for entry in group.entries:
             key = f"  [{entry.key}]" if (entry.key is not None and entry.key) else ""
             panel.append(f" {entry.mark.glyph} {mark_name(entry.mark)}: {tr(entry.meaning_key)}{key}\n")
-    panel.append_text(_heading(tr("tui.modelo.workbench.legend.group.keys")))
-    panel.append(f"\n{keys}\n{_GRID_KEYS}  {tr('tui.modelo.workbench.legend.keys.grid')}")
+    panel.append_text(_heading(tr("workspace.modelo.legend.group.keys")))
+    panel.append(f"\n{keys}\n{_GRID_KEYS}  {tr('workspace.modelo.legend.keys.grid')}")
     return panel
 
 

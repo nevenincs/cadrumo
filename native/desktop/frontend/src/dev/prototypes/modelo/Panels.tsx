@@ -80,16 +80,16 @@ export function CheckView({
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <Heading
-        title={w("tui.modelo.workbench.issues.title", locale)}
+        title={w("workspace.modelo.issues.title", locale)}
         lead={
           verdict
-            ? w(`tui.modelo.workbench.issues.verdict.${verdict}`, locale)
-            : w("tui.modelo.workbench.issues.verdict.none", locale)
+            ? w(`workspace.modelo.issues.verdict.${verdict}`, locale)
+            : w("workspace.modelo.issues.verdict.none", locale)
         }
       />
       {verdict === "complete" && stop === 0 && (
         <Alert tone="success" icon={<Icon name="check" />}>
-          {w("tui.modelo.workbench.operation.checked.complete", locale)}
+          {w("workspace.modelo.operation.checked.complete", locale)}
         </Alert>
       )}
       {LEVELS.map(({ level, word, tone }) => {
@@ -171,12 +171,12 @@ const STAGE_TONE: Record<Stage["state"], string> = {
 };
 
 const aeatWords = (state: AeatSide["state"], locale: string) =>
-  w(`tui.declarations.calendar.aeat.${state}`, locale);
+  w(`workspace.declarations.calendar.aeat.${state}`, locale);
 
 /** Why an action cannot be taken yet, in the product's words, or null. */
 export function exportBlock(form: ModeloForm, locale: string): string | null {
   const hint = (key: string, values: Record<string, string | number> = {}) =>
-    w(`tui.modelo.workbench.export.${key}`, locale, values).replace(
+    w(`workspace.modelo.export.${key}`, locale, values).replace(
       /\s*\[.*?\]/g,
       "",
     );
@@ -305,7 +305,7 @@ export function FilingView({
         )}
         {file && !file.current && !recorded && (
           <Alert tone="warning" icon={<Icon name="alert" />}>
-            {w("tui.modelo.workbench.header.file_out_of_date", locale, {
+            {w("workspace.modelo.header.file_out_of_date", locale, {
               date: timeWords(file.exported_at, locale),
             })}
           </Alert>
@@ -439,7 +439,7 @@ export function SourcesView({
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <Heading
-        title={w("tui.modelo.workbench.sources.title", locale)}
+        title={w("workspace.modelo.sources.title", locale)}
         lead="Boxes are filled from these when you calculate. Correct a value where it is kept, then calculate again."
       />
       {groups.map((g) => (
@@ -570,11 +570,11 @@ export function HistoryView({
               <span className="text-base">
                 {e.kind === "changed"
                   ? "Changes applied"
-                  : w(`tui.declarations.lifecycle.${e.kind}`, locale)}
+                  : w(`workspace.declarations.lifecycle.${e.kind}`, locale)}
               </span>
               <span className="text-sm text-muted-foreground">
                 {e.amount
-                  ? `${money(e.amount, locale)} · ${w("tui.modelo.workbench.header.result.to_pay", locale)}`
+                  ? `${money(e.amount, locale)} · ${w("workspace.modelo.header.result.to_pay", locale)}`
                   : e.detail}
               </span>
             </span>

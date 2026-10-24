@@ -173,11 +173,11 @@ def advisory_notice(
 
 _LEVEL_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
-        "blocks": "tui.modelo.workbench.level.blocks",
-        "missing": "tui.modelo.workbench.origin.needs_input",
-        "confirm": "tui.modelo.workbench.origin.default_to_confirm",
-        "check": "tui.modelo.workbench.level.check",
-        "info": "tui.modelo.workbench.level.info",
+        "blocks": "workspace.modelo.level.blocks",
+        "missing": "workspace.modelo.origin.needs_input",
+        "confirm": "workspace.modelo.origin.default_to_confirm",
+        "check": "workspace.modelo.level.check",
+        "info": "workspace.modelo.level.info",
     }
 )
 """The words of each level, by the level's value, the ones the editor's findings list heads them with."""

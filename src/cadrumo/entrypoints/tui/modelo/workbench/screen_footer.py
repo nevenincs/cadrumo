@@ -65,10 +65,10 @@ class WorkbenchFooterMixin:
 
         self.app.push_screen(
             ConfirmScreen(
-                title=lambda: tr("tui.modelo.workbench.leave.title"),
-                message=lambda: tr("tui.modelo.workbench.leave.message", count=len(self._session.changes)),
-                confirm_label=lambda: tr("tui.modelo.workbench.leave.discard"),
-                cancel_label=lambda: tr("tui.modelo.workbench.leave.stay"),
+                title=lambda: tr("workspace.modelo.leave.title"),
+                message=lambda: tr("workspace.modelo.leave.message", count=len(self._session.changes)),
+                confirm_label=lambda: tr("workspace.modelo.leave.discard"),
+                cancel_label=lambda: tr("workspace.modelo.leave.stay"),
             ),
             closed,
         )
@@ -85,10 +85,10 @@ class WorkbenchFooterMixin:
 
     def _edit_unavailable(self: ModeloWorkbenchScreen) -> None:
         if self.recorded:
-            self._notice(tr("tui.modelo.workbench.filed.read_only"))
+            self._notice(tr("workspace.modelo.filed.read_only"))
             return
         refusal = self._reader.edit_refusal()
-        self._notice(refusal or tr("tui.modelo.workbench.editability.no_admission"))
+        self._notice(refusal or tr("workspace.modelo.editability.no_admission"))
 
     def _refresh_after_staging(self: ModeloWorkbenchScreen) -> None:
         self._render_header()

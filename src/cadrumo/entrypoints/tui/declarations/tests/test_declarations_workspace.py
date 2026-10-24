@@ -440,7 +440,7 @@ async def test_declarations_create_selects_only_supported_targets_and_reopens_ex
         notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
         assert "Modelo 111" in notice
         assert "2025" in notice
-        assert tr("tui.declarations.work_create.reused", address="")[:10] in notice
+        assert tr("workspace.declarations.work_create.reused", address="")[:10] in notice
 
 
 @pytest.mark.asyncio
@@ -489,7 +489,7 @@ async def test_declarations_create_shows_the_application_refusal_as_itself(
 ) -> None:
     def create(modelo: str, year: int, period: Period) -> ModeloWorkCreateResultV1:
         raise ModeloLifecycleActionUnavailableError(
-            translated_message="tui.declarations.work_create.refusal.not_applicable",
+            translated_message="workspace.declarations.work_create.refusal.not_applicable",
             context={"modelo": modelo, "reason": "synthetic-reason"},
         )
 
@@ -505,7 +505,9 @@ async def test_declarations_create_shows_the_application_refusal_as_itself(
         await _select_creation(pilot, "200", Period.from_year_and_code(2025, "0A"))
         await settle(pilot)
         notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
-    assert notice == tr("tui.declarations.work_create.refusal.not_applicable", modelo="200", reason="synthetic-reason")
+    assert notice == tr(
+        "workspace.declarations.work_create.refusal.not_applicable", modelo="200", reason="synthetic-reason"
+    )
     assert "--allow-not-applicable" not in notice
 
 
@@ -638,7 +640,7 @@ async def test_unavailable_is_refusal_empty_is_measured_and_missing_handoff_refu
     app = ScreenHostApp[None](empty)
     async with app.run_test(size=(80, 24)) as pilot:
         await settle(pilot)
-        assert tr("tui.declarations.list.empty") in _copy(empty)
+        assert tr("workspace.declarations.list.empty") in _copy(empty)
     screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation)))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
@@ -647,7 +649,7 @@ async def test_unavailable_is_refusal_empty_is_measured_and_missing_handoff_refu
         _select_declaration(table, screen.controller.projection.declarations[0].work_unit_id)
         await pilot.press("enter")
         await settle(pilot)
-        assert tr("tui.declarations.refusal.handoff") in _copy(screen)
+        assert tr("workspace.declarations.refusal.handoff") in _copy(screen)
 
 
 class _ModeloChild(Screen[None]):
@@ -737,8 +739,8 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         assert len(set(rows)) == 3
         assert all("03/09/2026" in row[1] and "UTC" in row[1] for row in rows)
         assert {row[-2:] for row in rows} == {
-            (tr("tui.declarations.value.yes"), tr("tui.declarations.value.yes")),
-            (tr("tui.declarations.value.no"), tr("tui.declarations.value.no")),
+            (tr("workspace.declarations.value.yes"), tr("workspace.declarations.value.yes")),
+            (tr("workspace.declarations.value.no"), tr("workspace.declarations.value.no")),
         }
         drafts = tuple(row for row in projection.calculation_revisions if not row.is_current and not row.is_filed)
         assert len(drafts) == 2
@@ -764,9 +766,9 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         filing_key = f"filing:{projection.filings[0].filing_record_id}"
         row = tuple(str(cell) for cell in table.get_row(filing_key))
         assert row[1] == "03/09/2026 10:00 UTC"
-        assert row[2] == tr("tui.declarations.filing_state.vigente")
-        assert row[3] == tr("tui.declarations.confirmation.confirmada")
-        assert row[4] == tr("tui.declarations.evidence.aeat_justificante_pdf")
+        assert row[2] == tr("workspace.declarations.filing_state.vigente")
+        assert row[3] == tr("workspace.declarations.confirmation.confirmada")
+        assert row[4] == tr("workspace.declarations.evidence.aeat_justificante_pdf")
 
 
 @pytest.mark.asyncio
@@ -790,7 +792,7 @@ async def test_real_locales_change_copy_without_changing_semantic_rows(
                 await settle(pilot)
                 rendered = _copy(screen)
                 assert expected in rendered
-                assert "tui.declarations." not in rendered
+                assert "workspace.declarations." not in rendered
                 assert "work_unit" not in rendered.lower()
                 if not isinstance(screen, DeclarationsOverviewScreen):
                     assert tuple(
@@ -851,8 +853,8 @@ async def test_initial_grouped_controls_remain_visible_above_the_scrolling_atten
                 assert control.region.y >= screen.query_one(".cadrumo-banner", Static).region.bottom
                 assert control.region.bottom <= page.region.y
             initial_regions = (search.region, context.region)
-            assert tr("tui.declarations.list.filter.all") in str(context.render())
-            assert tr("tui.declarations.list.sort.deadline") in str(context.render())
+            assert tr("workspace.declarations.list.filter.all") in str(context.render())
+            assert tr("workspace.declarations.list.sort.deadline") in str(context.render())
             assert page.max_scroll_y > 0
             page.scroll_end(animate=False)
             await settle(pilot)
@@ -936,7 +938,7 @@ async def test_grouped_keyboard_filter_search_sort_and_fold_preserve_declaration
             await pilot.press("f")
             await settle(pilot)
             assert local_keys() == ()
-            assert tr("tui.declarations.list.filter.attention") in _copy(screen)
+            assert tr("workspace.declarations.list.filter.attention") in _copy(screen)
             for _ in range(4):
                 await pilot.press("f")
                 await settle(pilot)
@@ -967,7 +969,7 @@ async def test_grouped_keyboard_filter_search_sort_and_fold_preserve_declaration
             table.focus()
             assert geometry_band(app, 80) == []
             assert table.max_scroll_x == 0
-            assert "tui.declarations." not in _copy(screen)
+            assert "workspace.declarations." not in _copy(screen)
 
 
 @pytest.mark.asyncio

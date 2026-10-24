@@ -208,7 +208,7 @@ class WorkbenchEditorMixin:
 
     def _after_stage(self: ModeloWorkbenchScreen, refusal: StageRefusal | None) -> None:
         if refusal is not None:
-            self._notice(tr(f"tui.modelo.workbench.stage_refused.{refusal.value}"))
+            self._notice(tr(f"workspace.modelo.stage_refused.{refusal.value}"))
             return
         self._notice("")
         self._refresh_after_staging()

@@ -44,7 +44,7 @@ async def wait_for_workbench(pilot: Pilot[Any], *, seconds: float = 300.0) -> Mo
     from cadrumo.core.i18n.render import tr
     from cadrumo.entrypoints.tui.modelo.workbench import screen as workbench_screen
 
-    read_failed = tr("tui.modelo.workbench.read_failed")
+    read_failed = tr("workspace.modelo.read_failed")
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         # The top of the stack is the screen on display; unlike ``app.screen`` it is
@@ -235,8 +235,8 @@ def _next_line_source(action: str, key: str) -> str:
     from cadrumo.core.i18n.render import tr
 
     line = tr(
-        "tui.modelo.workbench.next_line",
-        action=tr(f"tui.modelo.workbench.next.{action}", count=_COUNT_PLACEHOLDER, date=_DATE_PLACEHOLDER),
+        "workspace.modelo.next_line",
+        action=tr(f"workspace.modelo.next.{action}", count=_COUNT_PLACEHOLDER, date=_DATE_PLACEHOLDER),
         key=key,
     )
     source = re.escape(line).replace(_COUNT_PLACEHOLDER, r"\d+")

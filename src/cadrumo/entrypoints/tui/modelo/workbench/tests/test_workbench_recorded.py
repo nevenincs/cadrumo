@@ -104,7 +104,7 @@ async def test_a_small_terminal_says_recorded_as_filed_once() -> None:
                 if widget.display and widget.region.area and widget.id != "wb-help"
             )
             band = str(screen.query_one("#wb-help", Static).render())
-            correction = tr("tui.modelo.workbench.editor.can_change.recorded")
+            correction = tr("workspace.modelo.editor.can_change.recorded")
             app.exit(None)
 
     assert notices.lower().count("recorded as filed") == 1, notices
@@ -113,11 +113,11 @@ async def test_a_small_terminal_says_recorded_as_filed_once() -> None:
 
 
 _CHANGE_KEY_WORDS = (
-    "tui.modelo.workbench.bulk_confirm.title",
-    "tui.modelo.workbench.key.next_step",
-    "tui.modelo.workbench.key.review",
-    "tui.modelo.workbench.key.calculate",
-    "tui.modelo.workbench.key.next_attention",
+    "workspace.modelo.bulk_confirm.title",
+    "workspace.modelo.key.next_step",
+    "workspace.modelo.key.review",
+    "workspace.modelo.key.calculate",
+    "workspace.modelo.key.next_attention",
 )
 """What the keys that change a declaration, or lead to something left to do, are called."""
 
@@ -139,8 +139,8 @@ async def test_the_help_and_the_legend_of_a_recorded_declaration_name_no_key_tha
             app.exit(None)
 
     words = [lookup_translation(key, locale="en") for key in _CHANGE_KEY_WORDS]
-    open_box = lookup_translation("tui.modelo.workbench.sources.key.go", locale="en")
-    edit = lookup_translation("tui.modelo.workbench.key.edit", locale="en")
+    open_box = lookup_translation("workspace.modelo.sources.key.go", locale="en")
+    edit = lookup_translation("workspace.modelo.key.edit", locale="en")
     assert all(words)
     assert open_box is not None and edit is not None
     assert open_box in band, "the help band still names the keys a reader uses"
@@ -171,8 +171,8 @@ async def test_on_a_recorded_declaration_enter_is_named_for_opening_the_box_not_
             filed_enter = filed.query_one(CasillaList).binding_for("enter")
             filed_app.exit(None)
 
-    assert draft_enter is not None and draft_enter.description == tr("tui.modelo.workbench.key.edit", locale="en")
-    assert filed_enter is not None and filed_enter.description == tr("tui.modelo.workbench.sources.key.go", locale="en")
+    assert draft_enter is not None and draft_enter.description == tr("workspace.modelo.key.edit", locale="en")
+    assert filed_enter is not None and filed_enter.description == tr("workspace.modelo.sources.key.go", locale="en")
 
 
 def test_readonly_form_can_reword_only_when_every_held_fact_matches() -> None:

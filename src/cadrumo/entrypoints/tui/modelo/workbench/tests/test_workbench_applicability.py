@@ -111,7 +111,7 @@ def test_the_words_for_a_page_that_does_not_apply_name_the_period_in_every_langu
         english = [does_not_apply_text(period) for period in periods]
     with override_settings(cadrumo_output_language=language):
         words = [does_not_apply_text(period) for period in periods]
-        fallback = tr("tui.modelo.workbench.applicability.period")
+        fallback = tr("workspace.modelo.applicability.period")
 
     assert len(set(words)) == len(words), "a quarter, a month and a year are each named"
     assert all(text and not text.startswith("tui.") for text in (*words, fallback))

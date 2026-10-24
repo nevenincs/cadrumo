@@ -75,9 +75,7 @@ def test_a_known_direction_reads_as_its_word_and_the_magnitude(
     signed = [line for line in help_lines if "without its sign" in line]
     if value < 0:
         with override_settings(cadrumo_output_language="en"):
-            sign_help = tr(
-                "tui.modelo.workbench.header.result.sign_help", box="19", value=f"−{expected.split('  ')[1]}"
-            )
+            sign_help = tr("workspace.modelo.header.result.sign_help", box="19", value=f"−{expected.split('  ')[1]}")
         assert signed == [sign_help]
     else:
         assert not signed
@@ -94,7 +92,7 @@ def test_a_nil_return_and_a_negative_result_nothing_carries_read_as_words_alone(
     nil, _ = _view(with_result(synthetic_form(), ModeloFormResultDirection.NIL, Decimal("0")))
     negative, help_lines = _view(with_result(synthetic_form(), ModeloFormResultDirection.NEGATIVE, Decimal("-40")))
     with override_settings(cadrumo_output_language="en"):
-        words = tr("tui.modelo.workbench.header.result.negative")
+        words = tr("workspace.modelo.header.result.negative")
 
     assert nil == "Result zero  [19]"
     assert negative == f"{words}  [19]"
@@ -110,8 +108,8 @@ def test_a_negative_instalment_to_deduct_later_names_its_amount_and_the_signed_b
     )
     text, help_lines = _view(form)
     with override_settings(cadrumo_output_language="en"):
-        words = tr("tui.modelo.workbench.header.result.negative_carried", amount=f"100.00{_NBSP}€")
-        sign_help = tr("tui.modelo.workbench.header.result.sign_help", box="19", value=f"−100.00{_NBSP}€")
+        words = tr("workspace.modelo.header.result.negative_carried", amount=f"100.00{_NBSP}€")
+        sign_help = tr("workspace.modelo.header.result.sign_help", box="19", value=f"−100.00{_NBSP}€")
 
     assert text == f"{words}  [19]"
     assert "100.00" in words

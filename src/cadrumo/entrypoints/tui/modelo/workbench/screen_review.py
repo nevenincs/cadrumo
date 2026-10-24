@@ -33,7 +33,7 @@ class WorkbenchReviewMixin:
     def action_review(self: ModeloWorkbenchScreen) -> None:
         """Check every staged change with the application, then open their review."""
         if not self._session.dirty:
-            self._notice(tr("tui.modelo.workbench.review.none"))
+            self._notice(tr("workspace.modelo.review.none"))
             return
         self.run_worker(self._open_review, group="workbench-review", exclusive=True)
 
@@ -59,13 +59,13 @@ class WorkbenchReviewMixin:
                 type(failure).__qualname__,
                 exc_info=True,
             )
-            self._notice(tr("tui.modelo.workbench.review.check_failed"))
+            self._notice(tr("workspace.modelo.review.check_failed"))
             return None
 
     async def _review_is_stale(self: ModeloWorkbenchScreen, preflight: WorkbenchPreflight, rebased: bool) -> bool:
         if preflight.stale:
             if rebased:
-                self._notice(tr("tui.modelo.workbench.rebase.still_moving"))
+                self._notice(tr("workspace.modelo.rebase.still_moving"))
                 return True
             if await self._rebase() and self._session.dirty:
                 await self._open_review(rebased=True)
@@ -142,7 +142,7 @@ class WorkbenchReviewMixin:
             get_logger(__name__).error(
                 "modelo workbench could not read its declaration again: %s", type(failure).__qualname__, exc_info=True
             )
-            self._notice(tr("tui.modelo.workbench.read_failed"))
+            self._notice(tr("workspace.modelo.read_failed"))
             return False
         outcome = self._session.rebase(load.form)
         self.show_load(load)
@@ -151,11 +151,11 @@ class WorkbenchReviewMixin:
 
     @staticmethod
     def _rebase_text(outcome: Rebase) -> str:
-        parts = [tr("tui.modelo.workbench.rebase.moved")]
+        parts = [tr("workspace.modelo.rebase.moved")]
         if outcome.changed:
-            parts.append(tr("tui.modelo.workbench.rebase.changed", count=len(outcome.changed)))
+            parts.append(tr("workspace.modelo.rebase.changed", count=len(outcome.changed)))
         if outcome.dropped:
-            parts.append(tr("tui.modelo.workbench.rebase.dropped", count=len(outcome.dropped)))
+            parts.append(tr("workspace.modelo.rebase.dropped", count=len(outcome.dropped)))
         return " ".join(parts)
 
     def _review_closed(self: ModeloWorkbenchScreen, decision: ReviewDecision | None) -> None:
@@ -166,5 +166,5 @@ class WorkbenchReviewMixin:
             self._run_operation(partial(actions.apply, changes), applies_changes=True)
         elif decision is ReviewDecision.DISCARD:
             self._session.discard()
-            self._notice(tr("tui.modelo.workbench.review.discarded"))
+            self._notice(tr("workspace.modelo.review.discarded"))
             self._refresh_after_staging()

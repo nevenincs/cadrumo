@@ -104,7 +104,7 @@ class CasillaListLayoutMixin:
         if self._density == "compact":
             return None
         if entry.previous_text is not None and not columns.detail:
-            return tr("tui.modelo.workbench.was", value=entry.previous_text)
+            return tr("workspace.modelo.was", value=entry.previous_text)
         if entry.attention is Attention.BLOCKED and not columns.detail:
             return tr(attention_words_key(Attention.BLOCKED))
         if index in self._stacked:

@@ -54,17 +54,17 @@ def test_negative_result_keeps_its_sign_until_a_declared_direction_carries_it(
         _, words = row_lines(row, language, can_open=True, can_create=False)
         key = "unknown" if direction is ModeloFormResultDirection.UNKNOWN else "to_refund"
         sign = "−" if direction is ModeloFormResultDirection.UNKNOWN else ""
-        assert words[1] == tr("tui.modelo.workbench.header.result." + key) + " · " + sign + amount
+        assert words[1] == tr("workspace.modelo.header.result." + key) + " · " + sign + amount
 
 
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
 @pytest.mark.parametrize(
     ("state", "has_calculation", "expected_key"),
     [
-        (DeclarationSummaryState.DRAFT, False, "tui.modelo.workbench.origin.not_calculated_yet"),
-        (DeclarationSummaryState.DRAFT, True, "tui.declarations.value.result_unknown"),
-        (DeclarationSummaryState.CALCULATED, True, "tui.declarations.value.result_unknown"),
-        (DeclarationSummaryState.UNREADABLE, False, "tui.declarations.value.result_unknown"),
+        (DeclarationSummaryState.DRAFT, False, "workspace.modelo.origin.not_calculated_yet"),
+        (DeclarationSummaryState.DRAFT, True, "workspace.declarations.value.result_unknown"),
+        (DeclarationSummaryState.CALCULATED, True, "workspace.declarations.value.result_unknown"),
+        (DeclarationSummaryState.UNREADABLE, False, "workspace.declarations.value.result_unknown"),
     ],
 )
 def test_only_proven_uncalculated_drafts_use_not_calculated_yet(

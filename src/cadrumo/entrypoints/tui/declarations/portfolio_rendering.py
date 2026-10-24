@@ -21,13 +21,13 @@ from .row_words import row_lines
 
 DECLARATION_GROUP_LOCALE_KEYS: Final[Mapping[DeclarationListGroup, str]] = MappingProxyType(
     {
-        DeclarationListGroup.ATTENTION: "tui.declarations.list.group.attention",
-        DeclarationListGroup.IN_PROGRESS: "tui.declarations.list.group.in_progress",
-        DeclarationListGroup.READY: "tui.declarations.list.group.ready",
-        DeclarationListGroup.NOT_STARTED: "tui.declarations.list.group.not_started",
-        DeclarationListGroup.RECORDED: "tui.declarations.list.group.recorded",
-        DeclarationListGroup.AEAT_UNLINKED: "tui.declarations.list.state.aeat_unlinked",
-        DeclarationListGroup.MAYBE: "tui.declarations.list.group.maybe",
+        DeclarationListGroup.ATTENTION: "workspace.declarations.list.group.attention",
+        DeclarationListGroup.IN_PROGRESS: "workspace.declarations.list.group.in_progress",
+        DeclarationListGroup.READY: "workspace.declarations.list.group.ready",
+        DeclarationListGroup.NOT_STARTED: "workspace.declarations.list.group.not_started",
+        DeclarationListGroup.RECORDED: "workspace.declarations.list.group.recorded",
+        DeclarationListGroup.AEAT_UNLINKED: "workspace.declarations.list.state.aeat_unlinked",
+        DeclarationListGroup.MAYBE: "workspace.declarations.list.group.maybe",
     }
 )
 
@@ -45,18 +45,18 @@ def portfolio_source_lines(controller: DeclarationsWorkspaceController) -> list[
             observed = (
                 timestamp_label(source.observed_at)
                 if source.observed_at is not None
-                else tr("tui.declarations.calendar.never_observed")
+                else tr("workspace.declarations.calendar.never_observed")
             )
             lines.append(
                 tr(
-                    "tui.declarations.calendar.detail.source",
-                    source=tr("tui.declarations.calendar.source." + source.source.value),
-                    availability=tr("tui.declarations.availability." + source.availability.value),
+                    "workspace.declarations.calendar.detail.source",
+                    source=tr("workspace.declarations.calendar.source." + source.source.value),
+                    availability=tr("workspace.declarations.availability." + source.availability.value),
                     observed=observed,
                 )
             )
     if any(zone.availability.value == "stale" for zone in controller.projection.zones):
-        lines.append(tr("tui.declarations.refusal.source"))
+        lines.append(tr("workspace.declarations.refusal.source"))
     return lines
 
 
@@ -66,8 +66,8 @@ def configure_portfolio_columns(table: ContentDataTable[Text | str], width: int)
     table.fill_column = None
     selected = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value if table.row_count else None
     table.clear(columns=True)
-    table.add_column(tr("tui.declarations.list.column.declaration"), width=width)
-    table.add_column(tr("tui.declarations.list.column.state"), width=width)
+    table.add_column(tr("workspace.declarations.list.column.declaration"), width=width)
+    table.add_column(tr("workspace.declarations.list.column.state"), width=width)
     return selected
 
 
@@ -116,13 +116,13 @@ def portfolio_shortcuts(controller: DeclarationsWorkspaceController) -> list[str
     """List only supported list actions."""
     shortcuts = []
     if controller.work_create_handoff is not None:
-        shortcuts.append("+ " + tr("tui.declarations.list.key.new"))
+        shortcuts.append("+ " + tr("workspace.declarations.list.key.new"))
     shortcuts.extend(
         (
-            "/ " + tr("tui.modelo.workbench.key.search"),
-            "f " + tr("tui.modelo.workbench.key.filter"),
-            "s " + tr("tui.modelo.workbench.key.sort"),
-            "t " + tr("tui.modelo.workbench.issues.technical"),
+            "/ " + tr("workspace.modelo.key.search"),
+            "f " + tr("workspace.modelo.key.filter"),
+            "s " + tr("workspace.modelo.key.sort"),
+            "t " + tr("workspace.modelo.issues.technical"),
         )
     )
     return shortcuts
@@ -133,7 +133,7 @@ def portfolio_enter_action(
 ) -> str:
     """Describe the Enter action for exactly the current semantic row."""
     if key is not None and key.startswith("group:"):
-        return "Enter " + tr("tui.declarations.list.key.toggle_group")
+        return "Enter " + tr("workspace.declarations.list.key.toggle_group")
     row = next((item for item in rows if item.key == key), None)
     if row is None:
         return ""
@@ -145,14 +145,14 @@ def row_enter_action(row: DeclarationListRow, controller: DeclarationsWorkspaceC
     if row.declaration is not None and row.state != "unreadable":
         if controller.modelo_workspace_factory is not None:
             return "Enter " + tr(
-                "tui.declarations.list.next.open_local_draft"
+                "workspace.declarations.list.next.open_local_draft"
                 if is_unlinked_local_draft(row)
-                else "tui.declarations.calendar.action.open"
+                else "workspace.declarations.calendar.action.open"
             )
     elif row.state == "not_started" and row.period is not None and controller.work_create_handoff is not None:
-        return "Enter " + tr("tui.declarations.list.next.start")
+        return "Enter " + tr("workspace.declarations.list.next.start")
     elif row.state == "aeat_unlinked":
-        return "Enter " + tr("tui.declarations.calendar.action.open")
+        return "Enter " + tr("workspace.declarations.calendar.action.open")
     return ""
 
 
@@ -183,12 +183,12 @@ def add_portfolio_row(
 def portfolio_row_refusal(row: DeclarationListRow) -> str:
     """Keep the exact state-specific refusal after row routing."""
     key = (
-        "tui.declarations.list.aeat_unlinked.help.confirmed"
+        "workspace.declarations.list.aeat_unlinked.help.confirmed"
         if row.state == "aeat_unlinked"
-        else "tui.declarations.list.unreadable.help"
+        else "workspace.declarations.list.unreadable.help"
         if row.state == "unreadable"
-        else "tui.declarations.list.maybe.help"
+        else "workspace.declarations.list.maybe.help"
         if row.state == "maybe"
-        else "tui.declarations.list.aeat_needs_check.help"
+        else "workspace.declarations.list.aeat_needs_check.help"
     )
     return tr(key)

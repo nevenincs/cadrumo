@@ -664,8 +664,8 @@ _RECORDS: Final[tuple[tuple[int, Mapping[str | None, ModeloFormScalar]], ...]] =
 async def test_records_whose_number_is_not_known_are_never_counted_as_none(operation: PinnedAuthorityOperation) -> None:
     form = _form(operation, "349", 2026, "1T")
     lines = await _drawn(page_items(_records_page(form, None), staged={}), 120)
-    unknown = lookup_translation("tui.modelo.workbench.grid.records_unknown", locale="en")
-    counted = lookup_translation("tui.modelo.workbench.repeating", locale="en")
+    unknown = lookup_translation("workspace.modelo.grid.records_unknown", locale="en")
+    counted = lookup_translation("workspace.modelo.repeating", locale="en")
 
     assert unknown is not None and counted is not None
     assert any(unknown in line for line in lines), lines
@@ -683,9 +683,9 @@ async def test_an_unknown_record_source_is_visible_content_in_the_screen_header_
         await settle(pilot)
         help_text = str(screen.query_one("#wb-help", Static).render())
         heading = str(screen.query_one("#wb-page", Static).render())
-        unknown = lookup_translation("tui.modelo.workbench.grid.records_unknown", locale="en")
-        empty_help = lookup_translation("tui.modelo.workbench.help.empty", locale="en")
-        empty_page = lookup_translation("tui.modelo.workbench.filter.empty", locale="en")
+        unknown = lookup_translation("workspace.modelo.grid.records_unknown", locale="en")
+        empty_help = lookup_translation("workspace.modelo.help.empty", locale="en")
+        empty_page = lookup_translation("workspace.modelo.filter.empty", locale="en")
         assert unknown is not None and unknown in help_text
         assert empty_help is not None and empty_help not in help_text
         assert empty_page is not None and empty_page not in heading
@@ -707,7 +707,7 @@ async def test_known_records_are_a_read_only_table_with_an_index_column(
     )
 
     assert "Detail rows: 2" in text
-    read_only = lookup_translation("tui.modelo.workbench.grid.records_read_only", locale="en")
+    read_only = lookup_translation("workspace.modelo.grid.records_read_only", locale="en")
     assert read_only is not None and read_only in text
     first = next(line for line in lines if "1,500.00" in line)
     second = next(line for line in lines if "250.50" in line)

@@ -191,7 +191,7 @@ async def test_missing_handoff_refuses_and_escape_dismisses_only_child() -> None
         await pilot.press("enter")
         await settle(pilot)
         notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
-        assert notice == tr("tui.declarations.refusal.handoff")
+        assert notice == tr("workspace.declarations.refusal.handoff")
         await pilot.press("escape")
         await settle(pilot)
         assert app.return_value is None
@@ -302,15 +302,15 @@ async def test_recovery_handoff_failure_is_localized_without_exposing_host_error
             await settle(pilot)
             modal = app.screen
             assert str(modal.query_one("#btn-confirm-accept", Button).label) == tr(
-                "tui.declarations.calendar.recovery.confirm"
+                "workspace.declarations.calendar.recovery.confirm"
             )
             assert str(modal.query_one("#btn-confirm-cancel", Button).label) == tr(
-                "tui.declarations.calendar.recovery.cancel"
+                "workspace.declarations.calendar.recovery.cancel"
             )
             await pilot.click("#btn-confirm-accept")
             await settle(pilot)
             notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
-            assert tr("tui.declarations.calendar.recovery.failure") in notice
+            assert tr("workspace.declarations.calendar.recovery.failure") in notice
             assert "host-secret" not in notice
 
 
@@ -389,8 +389,8 @@ async def test_real_locales_change_copy_but_not_natural_semantics(locale: Output
             from .....application.modelo.work_form_wording import period_words
 
             assert "Modelo 130 · " + period_words(screen.controller.projection.entries[0].period) in rendered
-            assert tr("tui.declarations.list.not_openable.help") in rendered
-            assert "tui.declarations" not in rendered
+            assert tr("workspace.declarations.list.not_openable.help") in rendered
+            assert "workspace.declarations" not in rendered
             assert "not_observed" not in rendered
 
 

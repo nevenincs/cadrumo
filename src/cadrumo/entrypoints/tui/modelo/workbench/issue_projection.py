@@ -44,15 +44,15 @@ from .issue_scale import _ATTENTION_LEVELS, _DETAIL_LOCALE_KEYS, IssueLevel, Iss
 
 _BOX_NUMBER: Final[re.Pattern[str]] = re.compile(r"\d{1,4}[A-Z]?")
 
-_RECORDS_NONE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.records.none"
+_RECORDS_NONE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.records.none"
 
-_RECORDS_FIELD_MISSING_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.records.field_missing"
+_RECORDS_FIELD_MISSING_LOCALE_KEY: Final[str] = "workspace.modelo.issues.records.field_missing"
 
-_RECORDS_ACTION_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.action.records_at_source"
+_RECORDS_ACTION_LOCALE_KEY: Final[str] = "workspace.modelo.issues.action.records_at_source"
 
-_RECORD_VALUE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.where.record_value"
+_RECORD_VALUE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.where.record_value"
 
-_RECORDS_WHERE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.where.records"
+_RECORDS_WHERE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.where.records"
 
 _UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_unnumbered"
 
@@ -136,7 +136,7 @@ def technical_text(finding: ModeloVerificationFinding) -> str:
         *(str(ref) for ref in finding.source_refs),
         finding.message_locale_key,
     ]
-    label = tr("tui.modelo.workbench.issues.technical")
+    label = tr("workspace.modelo.issues.technical")
     return f"{label}: {' · '.join(codes)}"
 
 
@@ -144,8 +144,8 @@ def _not_on_form(finding_box: str | None, casilla_id: str) -> tuple[str, str, st
     """The box column, where words and detail of a finding whose box the form does not show."""
     number = finding_box or (casilla_id if _BOX_NUMBER.fullmatch(casilla_id) else None)
     if number is None:
-        return "·", tr("tui.modelo.workbench.issues.where.not_on_form"), ""
-    return number, f"[{number}]", tr("tui.modelo.workbench.issues.box_not_on_form", box=f"[{number}]")
+        return "·", tr("workspace.modelo.issues.where.not_on_form"), ""
+    return number, f"[{number}]", tr("workspace.modelo.issues.box_not_on_form", box=f"[{number}]")
 
 
 def _record_issue_line(issue: ModeloFormIssue, value: _RecordValue, *, message: str) -> IssueLine:
@@ -161,7 +161,7 @@ def _record_issue_line(issue: ModeloFormIssue, value: _RecordValue, *, message: 
         box="·",
         where=value.heading,
         message=message,
-        action=tr("tui.modelo.workbench.issues.what_to_do", action=tr(action_key)),
+        action=tr("workspace.modelo.issues.what_to_do", action=tr(action_key)),
         detail=tr(_DETAIL_LOCALE_KEYS[finding.kind]),
         technical=technical_text(finding),
         key=key,
@@ -201,7 +201,7 @@ def _declaration_target(issue: ModeloFormIssue, box: str) -> _FindingTarget:
     locale_key = (
         _RECORDS_WHERE_LOCALE_KEY
         if finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION
-        else "tui.modelo.workbench.issues.where.declaration"
+        else "workspace.modelo.issues.where.declaration"
     )
     return _FindingTarget(box, tr(locale_key), tr(_DETAIL_LOCALE_KEYS[finding.kind]), None, None)
 
@@ -251,7 +251,7 @@ def _finding_line(
         box=target.box,
         where=target.where,
         message=message,
-        action=tr("tui.modelo.workbench.issues.what_to_do", action=tr(issue.action_locale_key)),
+        action=tr("workspace.modelo.issues.what_to_do", action=tr(issue.action_locale_key)),
         detail=target.detail,
         technical=technical_text(finding),
         key=target.key,
@@ -303,11 +303,9 @@ def _note_line(
         box=note.box or "·",
         where=_note_where(note, field),
         message=tr(what_locale_key(note.reason), box=box_text),
-        action=tr(
-            "tui.modelo.workbench.issues.what_to_do", action=tr(what_to_do_locale_key(note.reason), box=box_text)
-        ),
+        action=tr("workspace.modelo.issues.what_to_do", action=tr(what_to_do_locale_key(note.reason), box=box_text)),
         detail="",
-        technical=f"{tr('tui.modelo.workbench.issues.technical')}: {' · '.join(technical_codes)}",
+        technical=f"{tr('workspace.modelo.issues.technical')}: {' · '.join(technical_codes)}",
         key=candidate if field is not None else None,
         area=SourceSurface.LEDGER if note.reason in RECORDS_REASONS else None,
         from_calculation=True,
@@ -326,7 +324,7 @@ def _note_where(note: ModeloFormCalculationNote, field: ModeloFormField | None) 
         return f"[{note.box}]"
     if note.reason in RECORDS_REASONS:
         return tr(_RECORDS_WHERE_LOCALE_KEY)
-    return tr("tui.modelo.workbench.issues.where.declaration")
+    return tr("workspace.modelo.issues.where.declaration")
 
 
 def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:

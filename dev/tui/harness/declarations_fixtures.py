@@ -33,7 +33,7 @@ _PERIOD = Period.from_year_and_code(2025, "1T")
 
 def _refuse_fixture_write(modelo: str, year: int, period: Period) -> ModeloWorkCreateResultV1:
     raise ModeloLifecycleActionUnavailableError(
-        translated_message="tui.declarations.refusal.handoff",
+        translated_message="workspace.declarations.refusal.handoff",
         context={"modelo": modelo, "year": year, "period": period.registry_token},
     )
 

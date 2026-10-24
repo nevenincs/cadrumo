@@ -38,10 +38,10 @@ def _calendar_words(effective: date) -> str:
     """What the header should say for a calendar row closing on ``effective``, counted from the same day."""
     shown = date_text(effective, OutputLanguage.EN)
     if effective < _TODAY:
-        return tr("tui.modelo.workbench.header.deadline_passed", locale="en", date=shown)
+        return tr("workspace.modelo.header.deadline_passed", locale="en", date=shown)
     if effective == _TODAY:
-        return tr("tui.modelo.workbench.header.deadline_today", locale="en", date=shown)
-    return tr("tui.modelo.workbench.header.deadline", locale="en", date=shown, days=(effective - _TODAY).days)
+        return tr("workspace.modelo.header.deadline_today", locale="en", date=shown)
+    return tr("workspace.modelo.header.deadline", locale="en", date=shown, days=(effective - _TODAY).days)
 
 
 def test_the_header_names_the_calendar_rows_date_and_counts_its_days_from_the_same_day() -> None:

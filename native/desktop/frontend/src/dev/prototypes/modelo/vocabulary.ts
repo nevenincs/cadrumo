@@ -49,7 +49,7 @@ export function originWords(f: FormField, locale: string) {
   const look = ORIGIN_LOOK[f.origin];
   const family = f.source?.family;
   const filings = f.source?.earlier_filings ?? [];
-  let word = w(`tui.modelo.workbench.origin.${f.origin}`, locale);
+  let word = w(`workspace.modelo.origin.${f.origin}`, locale);
   if (
     family &&
     (f.origin === "imported" ||
@@ -59,7 +59,7 @@ export function originWords(f: FormField, locale: string) {
     word =
       filings.length === 1 && family === "earlier_filings"
         ? w(
-            `tui.modelo.workbench.origin_source.${f.origin}.named_filing`,
+            `workspace.modelo.origin_source.${f.origin}.named_filing`,
             locale,
             {
               modelo: filings[0]!.modelo,
@@ -70,22 +70,22 @@ export function originWords(f: FormField, locale: string) {
               ),
             },
           )
-        : w(`tui.modelo.workbench.origin_source.${f.origin}.${family}`, locale);
+        : w(`workspace.modelo.origin_source.${f.origin}.${family}`, locale);
   if (
     f.origin === "imported" &&
     family === "earlier_filings" &&
     filings.length === 0
   )
     word = w(
-      "tui.modelo.workbench.origin_source.imported.earlier_filings_none",
+      "workspace.modelo.origin_source.imported.earlier_filings_none",
       locale,
     );
   if (f.origin === "optional_empty" && holdsValue(f))
-    word = w("tui.modelo.workbench.origin_held_zero.optional_empty", locale);
+    word = w("workspace.modelo.origin_held_zero.optional_empty", locale);
   return {
     word,
     sentence: w(
-      `tui.modelo.workbench.legend.meaning.origin.${f.origin}`,
+      `workspace.modelo.legend.meaning.origin.${f.origin}`,
       locale,
     ),
     ...look,
@@ -103,7 +103,7 @@ export const FAMILY_ICON: Record<SourceFamily, IconName> = {
 };
 
 export const familyWords = (family: SourceFamily, locale: string) =>
-  w(`tui.modelo.workbench.origin_source.imported.${family}`, locale);
+  w(`workspace.modelo.origin_source.imported.${family}`, locale);
 
 export const SURFACE_WORD: Record<string, string> = {
   ledger: "Open your records",
@@ -124,10 +124,10 @@ export function editing(field: FormField, locale: string) {
   const editable = EDITABLE.has(field.editability);
   const why = field.not_writable_reason
     ? w(
-        `tui.modelo.workbench.not_writable.${field.not_writable_reason}`,
+        `workspace.modelo.not_writable.${field.not_writable_reason}`,
         locale,
       )
-    : w(`tui.modelo.workbench.editability.${field.editability}`, locale);
+    : w(`workspace.modelo.editability.${field.editability}`, locale);
   return { editable, why };
 }
 
@@ -143,16 +143,16 @@ export const confirmable = (f: FormField) =>
 
 export const resultWords = (direction: ResultDirection, locale: string) =>
   ({
-    to_pay: w("tui.modelo.workbench.header.result.to_pay", locale),
-    to_refund: w("tui.modelo.workbench.header.result.to_refund", locale),
+    to_pay: w("workspace.modelo.header.result.to_pay", locale),
+    to_refund: w("workspace.modelo.header.result.to_refund", locale),
     to_carry_forward: w(
-      "tui.modelo.workbench.header.result.to_carry_forward",
+      "workspace.modelo.header.result.to_carry_forward",
       locale,
     ),
     to_deduct_later: "To deduct in later periods",
-    negative: w("tui.modelo.workbench.header.result.negative", locale),
-    nil: w("tui.modelo.workbench.header.result.zero", locale),
-    unknown: w("tui.modelo.workbench.header.result.unknown", locale),
+    negative: w("workspace.modelo.header.result.negative", locale),
+    nil: w("workspace.modelo.header.result.zero", locale),
+    unknown: w("workspace.modelo.header.result.unknown", locale),
   })[direction];
 
 /** A period in words: "3rd quarter 2026", "March 2026", "Annual 2026". */
@@ -163,11 +163,11 @@ export function periodWords(
 ): string {
   const q = /^([1-4])T$/.exec(code);
   if (q)
-    return w(`tui.modelo.workbench.period.quarter_${q[1]}`, locale, { year });
+    return w(`workspace.modelo.period.quarter_${q[1]}`, locale, { year });
   if (/^(0[1-9]|1[0-2])$/.test(code))
-    return w(`tui.modelo.workbench.period.month_${code}`, locale, { year });
+    return w(`workspace.modelo.period.month_${code}`, locale, { year });
   if (code === "0A")
-    return w("tui.modelo.workbench.period.annual", locale, { year });
+    return w("workspace.modelo.period.annual", locale, { year });
   return `${code} ${year}`;
 }
 
@@ -212,7 +212,7 @@ export function display(field: FormField, locale: string): string {
   }
   if (v.kind === "boolean")
     return w(
-      `tui.declarations.value.${v.text === "true" ? "yes" : "no"}`,
+      `workspace.declarations.value.${v.text === "true" ? "yes" : "no"}`,
       locale,
     );
   if (v.kind === "date") return dateWords(v.text, locale);

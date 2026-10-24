@@ -62,16 +62,16 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
             yield Static(id="declaration-picker-selection", markup=False)
             with Horizontal(id="declaration-picker-buttons"):
                 yield localized(
-                    Button(tr("tui.declarations.list.new.show_all"), id="declaration-picker-all"),
-                    "tui.declarations.list.new.show_all",
+                    Button(tr("workspace.declarations.list.new.show_all"), id="declaration-picker-all"),
+                    "workspace.declarations.list.new.show_all",
                 )
                 yield localized(
-                    Button(tr("tui.declarations.list.new.create"), id="declaration-picker-create", disabled=True),
-                    "tui.declarations.list.new.create",
+                    Button(tr("workspace.declarations.list.new.create"), id="declaration-picker-create", disabled=True),
+                    "workspace.declarations.list.new.create",
                 )
                 yield localized(
-                    Button(tr("tui.modelo.workbench.editor.cancel"), id="declaration-picker-cancel"),
-                    "tui.modelo.workbench.editor.cancel",
+                    Button(tr("workspace.modelo.editor.cancel"), id="declaration-picker-cancel"),
+                    "workspace.modelo.editor.cancel",
                 )
 
     def on_mount(self) -> None:
@@ -83,14 +83,14 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
         table.clear(columns=True)
         language = OutputLanguage(output_language())
         title = (
-            "tui.declarations.list.new.choose_modelo"
+            "workspace.declarations.list.new.choose_modelo"
             if self.modelo is None
-            else "tui.declarations.list.new.choose_period"
+            else "workspace.declarations.list.new.choose_period"
         )
         self.query_one("#declaration-picker-title", Static).update(tr(title))
         hint = self.query_one("#declaration-picker-hint", Static)
         hint.display = self.modelo is not None and self.selected is None and not self.confirmation
-        hint.update(tr("tui.declarations.list.new.period_selection_hint") if hint.display else "")
+        hint.update(tr("workspace.declarations.list.new.period_selection_hint") if hint.display else "")
         self.query_one("#declaration-picker-all", Button).display = self.modelo is None and not self.confirmation
         # The first step has no filing address to create. Keep its two actions
         # within a narrow terminal even when Show all has a long translation.
@@ -106,7 +106,7 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
 
     def _populate_modelos(self, table: DataTable[str], language: OutputLanguage) -> None:
         """List the admitted Modelo choices and restore the preferred one."""
-        table.add_column(tr("tui.declarations.list.column.declaration"))
+        table.add_column(tr("workspace.declarations.list.column.declaration"))
         model_numbers = sorted(
             {target.modelo for target in self.targets if self.show_all or target.modelo in self.applicable}
         )
@@ -117,7 +117,7 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
 
     def _populate_periods(self, table: DataTable[str]) -> None:
         """List canonical periods for the selected Modelo."""
-        table.add_column(tr("tui.declarations.list.column.period"))
+        table.add_column(tr("workspace.declarations.list.column.period"))
         self.visible_targets = tuple(target for target in self.targets if target.modelo == self.modelo)
         for index, target in enumerate(self.visible_targets):
             table.add_row(period_words(target.period), key=str(index))
@@ -129,7 +129,7 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
         table.display = False
         self.query_one("#declaration-picker-selection", Static).update(
             tr(
-                "tui.declarations.list.new.start_confirm",
+                "workspace.declarations.list.new.start_confirm",
                 modelo=modelo_title(modelo, language),
                 period=period_words(self.preferred.period) if self.preferred is not None else "",
             )

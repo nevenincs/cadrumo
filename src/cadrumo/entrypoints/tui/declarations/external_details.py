@@ -46,25 +46,25 @@ class ExternalFilingDetailsScreen(ModalScreen[None]):
             with ContentScroll(id="external-filing-body"):
                 yield Static("\n".join(left + right), id="external-filing-summary", markup=False)
                 yield localized(
-                    Static(tr("tui.declarations.list.aeat_unlinked.help.confirmed"), markup=False),
-                    "tui.declarations.list.aeat_unlinked.help.confirmed",
+                    Static(tr("workspace.declarations.list.aeat_unlinked.help.confirmed"), markup=False),
+                    "workspace.declarations.list.aeat_unlinked.help.confirmed",
                 )
                 yield localized(
-                    Static(tr("tui.declarations.list.aeat_unlinked.help.no_refile"), markup=False),
-                    "tui.declarations.list.aeat_unlinked.help.no_refile",
+                    Static(tr("workspace.declarations.list.aeat_unlinked.help.no_refile"), markup=False),
+                    "workspace.declarations.list.aeat_unlinked.help.no_refile",
                 )
                 yield localized(
-                    Static(tr("tui.declarations.list.aeat_unlinked.help.unavailable"), markup=False),
-                    "tui.declarations.list.aeat_unlinked.help.unavailable",
+                    Static(tr("workspace.declarations.list.aeat_unlinked.help.unavailable"), markup=False),
+                    "workspace.declarations.list.aeat_unlinked.help.unavailable",
                 )
                 yield Static(id="external-filing-technical", markup=False)
             yield localized(
-                Button(tr("tui.modelo.workbench.issues.technical"), id="external-filing-more"),
-                "tui.modelo.workbench.issues.technical",
+                Button(tr("workspace.modelo.issues.technical"), id="external-filing-more"),
+                "workspace.modelo.issues.technical",
             )
             yield localized(
-                Button(tr("tui.modelo.workbench.key.close"), id="external-filing-close"),
-                "tui.modelo.workbench.key.close",
+                Button(tr("workspace.modelo.key.close"), id="external-filing-close"),
+                "workspace.modelo.key.close",
             )
 
     def on_mount(self) -> None:
@@ -83,7 +83,7 @@ class ExternalFilingDetailsScreen(ModalScreen[None]):
         detail = self.query_one("#external-filing-technical", Static)
         detail.display = not detail.display
         reference = None if self.row.calendar is None else self.row.calendar.aeat_reference_id
-        detail.update(reference or tr("tui.declarations.calendar.none"))
+        detail.update(reference or tr("workspace.declarations.calendar.none"))
 
     def action_close(self) -> None:
         """Return to the selected portfolio row."""

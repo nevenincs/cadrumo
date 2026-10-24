@@ -121,22 +121,22 @@ function nextStep(
 ): Next | null {
   const f = e.form.form;
   const next = (key: string, values: Record<string, string | number> = {}) =>
-    label(w(`tui.modelo.workbench.next.${key}`, locale, values));
+    label(w(`workspace.modelo.next.${key}`, locale, values));
   if (f.edit_closure)
     return aeat?.state === "justificante_verified"
       ? {
           kind: "status",
-          word: `${w("tui.modelo.workbench.next.recorded", locale, {
+          word: `${w("workspace.modelo.next.recorded", locale, {
             date: f.filing?.recorded_at
               ? dateWords(f.filing.recorded_at, locale)
               : "",
-          })} · ${w("tui.declarations.calendar.aeat.justificante_verified", locale)}`,
+          })} · ${w("workspace.declarations.calendar.aeat.justificante_verified", locale)}`,
         }
       : { kind: "act", word: "Add the AEAT receipt", view: "file" };
   if (rulesIncomplete(e))
     return {
       kind: "status",
-      word: w("tui.modelo.workbench.editability.no_admission", locale),
+      word: w("workspace.modelo.editability.no_admission", locale),
     };
   if (staged) return null;
   const stale = f.issues.some((i) => i.finding.kind === "stale_calculation");
@@ -193,13 +193,13 @@ function ResultLine({
   if (!form.calculation_revision_id)
     return (
       <span className="text-base text-muted-foreground">
-        {w("tui.modelo.workbench.header.result.not_calculated", locale)}
+        {w("workspace.modelo.header.result.not_calculated", locale)}
       </span>
     );
   if (!r.value)
     return (
       <span className="text-base font-medium text-destructive">
-        {w("tui.modelo.workbench.header.result.failed", locale)}
+        {w("workspace.modelo.header.result.failed", locale)}
       </span>
     );
   return (
@@ -242,7 +242,7 @@ function AboutForm({ form, locale }: { form: ModeloForm; locale: string }) {
         </p>
         {!form.filing && (
           <p className="text-muted-foreground">
-            {w("tui.modelo.workbench.header.own_calculation", locale)}
+            {w("workspace.modelo.header.own_calculation", locale)}
           </p>
         )}
       </PopoverContent>
@@ -319,12 +319,12 @@ function TodoRail({
   );
   const groups: [string, FormField[], string][] = [
     [
-      w("tui.modelo.workbench.legend.group.needs_you", locale),
+      w("workspace.modelo.legend.group.needs_you", locale),
       todo.input,
       "text-warning",
     ],
     [
-      w("tui.modelo.workbench.origin.default_to_confirm", locale),
+      w("workspace.modelo.origin.default_to_confirm", locale),
       todo.confirm,
       "text-warning",
     ],
@@ -432,7 +432,7 @@ function effectWords(f: FormField, intent: Intent, locale: string) {
             : f.origin === "calculated"
               ? "set_calculation"
               : "set_nothing";
-  return w(`tui.modelo.workbench.review.effect.${key}`, locale);
+  return w(`workspace.modelo.review.effect.${key}`, locale);
 }
 
 function ReviewDialog({
@@ -463,12 +463,12 @@ function ReviewDialog({
       <DialogContent className="w-palette" closeLabel="Close">
         <DialogHeader>
           <DialogTitle>
-            {w("tui.modelo.workbench.review.title", locale, {
+            {w("workspace.modelo.review.title", locale, {
               count: entries.length,
             })}
           </DialogTitle>
           <DialogDescription>
-            {w("tui.modelo.workbench.review.nothing_saved", locale)}
+            {w("workspace.modelo.review.nothing_saved", locale)}
           </DialogDescription>
         </DialogHeader>
         <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
@@ -508,14 +508,14 @@ function ReviewDialog({
         </ul>
         {displacing > 0 && (
           <Alert tone="warning" icon={<Icon name="swap" />}>
-            {w("tui.modelo.workbench.review.displacing", locale, {
+            {w("workspace.modelo.review.displacing", locale, {
               count: displacing,
             })}
           </Alert>
         )}
         {!form.operator_entries_known && (
           <Alert tone="warning" icon={<Icon name="alert" />}>
-            {w("tui.modelo.workbench.review.operator_entries_unknown", locale)}
+            {w("workspace.modelo.review.operator_entries_unknown", locale)}
           </Alert>
         )}
         <DialogFooter>
@@ -523,10 +523,10 @@ function ReviewDialog({
             Kept on this computer only.
           </span>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            {w("tui.modelo.workbench.review.back", locale)}
+            {w("workspace.modelo.review.back", locale)}
           </Button>
           <Button onClick={() => onOpenChange(false)}>
-            {w("tui.modelo.workbench.review.apply", locale)}
+            {w("workspace.modelo.review.apply", locale)}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -836,8 +836,8 @@ export function ModeloWorkspace({
           <Icon name="lock" size="xs" className="text-muted-foreground" />
           <span>
             {form.edit_closure
-              ? w("tui.modelo.workbench.filed.read_only", locale)
-              : `${w("tui.modelo.workbench.editability.no_admission", locale)} ${envelope.admission_refusal?.refusal.reconsideration_condition ? "It will open once Cadrumo's rules for this modelo are complete." : ""}`}
+              ? w("workspace.modelo.filed.read_only", locale)
+              : `${w("workspace.modelo.editability.no_admission", locale)} ${envelope.admission_refusal?.refusal.reconsideration_condition ? "It will open once Cadrumo's rules for this modelo are complete." : ""}`}
           </span>
           {form.edit_closure && (
             <Button
@@ -947,7 +947,7 @@ export function ModeloWorkspace({
                     >
                       {page.heading.text}:{" "}
                       {w(
-                        "tui.modelo.workbench.applicability.period",
+                        "workspace.modelo.applicability.period",
                         locale,
                       ).toLowerCase()}
                     </p>
@@ -1022,13 +1022,13 @@ export function ModeloWorkspace({
               <div className="flex items-center gap-3 border-t border-border bg-card px-6 py-3 shadow-raised">
                 <Icon name="edit" size="sm" />
                 <span className="text-base font-medium">
-                  {w("tui.modelo.workbench.next.apply", locale, {
+                  {w("workspace.modelo.next.apply", locale, {
                     count: stagedCount,
                   })}
                 </span>
                 <div className="ml-auto flex gap-2">
                   <Button variant="ghost" onClick={() => setStaged({})}>
-                    {w("tui.modelo.workbench.review.discard", locale)}
+                    {w("workspace.modelo.review.discard", locale)}
                   </Button>
                   <Button onClick={() => setReviewing(true)}>
                     Review and apply

@@ -81,7 +81,7 @@ def _source_where_from_text(field: ModeloFormField, source: ModeloFormValueSourc
             lines.append(" · ".join(labels))
         lines.extend(
             tr(
-                "tui.modelo.workbench.origin_source.imported.named_filing",
+                "workspace.modelo.origin_source.imported.named_filing",
                 modelo=filing.modelo,
                 period=period_words(filing.period),
             )
@@ -148,7 +148,7 @@ def _calculated_result_text(
         return None
     if result.settled is not None:
         words, amount = result.settled
-        now = tr("tui.modelo.workbench.editor.affects.now", amount=amount)
+        now = tr("workspace.modelo.editor.affects.now", amount=amount)
         return f"{step.box} {words} {now}"
     return f"{step.box} {result.short_text}"
 
@@ -165,9 +165,9 @@ def _result_step(form: ModeloWorkForm | None, step: ModeloHelpBoxV1, result: Res
 def _non_result_affects_text(card: ModeloCasillaHelpCardV1, reach: ModeloHelpReachV1 | None) -> str | None:
     if reach is None:
         return ", ".join(card.feeds) or None
-    lines = [tr("tui.modelo.workbench.editor.affects.not_result")]
+    lines = [tr("workspace.modelo.editor.affects.not_result")]
     if card.feeds:
-        lines.append(tr("tui.modelo.workbench.help.feeds", boxes=", ".join(card.feeds)))
+        lines.append(tr("workspace.modelo.help.feeds", boxes=", ".join(card.feeds)))
     return "\n".join(lines)
 
 
@@ -185,7 +185,7 @@ def _reachable_affects_text(
     lines = [_CHAIN_JOIN.join(steps)]
     if reach.others:
         named = ", ".join(box.box for box in reach.others) if len(reach.others) <= _OTHERS_NAMED else len(reach.others)
-        lines.append(tr("tui.modelo.workbench.editor.affects.others", count=named))
+        lines.append(tr("workspace.modelo.editor.affects.others", count=named))
     return "\n".join(lines)
 
 
@@ -205,7 +205,7 @@ def affects_text(
     if card is None:
         return None
     if card.is_result:
-        return tr("tui.modelo.workbench.editor.affects.is_result")
+        return tr("workspace.modelo.editor.affects.is_result")
     if card.reach is None or not card.reach.path:
         return _non_result_affects_text(card, card.reach)
     return _reachable_affects_text(card.reach, form, result)

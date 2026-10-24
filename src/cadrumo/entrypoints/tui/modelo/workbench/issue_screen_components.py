@@ -36,7 +36,7 @@ _CALCULATE_KEY: Final[str] = "c"
 
 _OPEN_AREA_KEY: Final[str] = "a"
 
-_CONFIRM_SCOPE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.confirm_all"
+_CONFIRM_SCOPE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.confirm_all"
 
 _BOXES_SUFFIX: Final[str] = "-boxes"
 
@@ -85,12 +85,12 @@ def _action_with_key(line: IssueLine) -> str:
 
 
 def _what_to_do(key: str) -> Text | None:
-    return _paragraph(tr("tui.modelo.workbench.issues.what_to_do", action=tr(key)), "italic")
+    return _paragraph(tr("workspace.modelo.issues.what_to_do", action=tr(key)), "italic")
 
 
 def _unentered_prompt(boxes: UnenteredBoxes) -> RenderableType:
     what, action, _ = _UNENTERED_LOCALE_KEYS[boxes.level]
-    unnumbered = tr("tui.modelo.workbench.issues.where.unnumbered", count=boxes.unnumbered) if boxes.unnumbered else ""
+    unnumbered = tr("workspace.modelo.issues.where.unnumbered", count=boxes.unnumbered) if boxes.unnumbered else ""
     return _entry(
         BoxNumbers(boxes.boxes, style="bold") if boxes.boxes else None,
         _paragraph(unnumbered, "bold"),
@@ -167,7 +167,7 @@ def options_for_screen(
     if reopen_hint:
         options.append(Option(Text(tr(REOPEN_HINT_LOCALE_KEY), style="italic"), id=_REOPEN_ID, disabled=True))
     if not options:
-        options.append(Option(tr("tui.modelo.workbench.issues.empty"), id="empty", disabled=True))
+        options.append(Option(tr("workspace.modelo.issues.empty"), id="empty", disabled=True))
     return options
 
 

@@ -124,9 +124,9 @@ _UNFILED_STATUS_LOCALE_KEYS: Final = {
 }
 _LINK_LABEL_LOCALE_KEYS: Final = {
     HomeLinkV1.DECLARATIONS: "tui.destination.declarations",
-    HomeLinkV1.NEW_DECLARATION: "tui.declarations.list.key.new",
+    HomeLinkV1.NEW_DECLARATION: "workspace.declarations.list.key.new",
     HomeLinkV1.SEARCH_DECLARATIONS: "tui.home.link.search_declarations",
-    HomeLinkV1.CALENDAR: "tui.declarations.destination.calendar",
+    HomeLinkV1.CALENDAR: "workspace.declarations.destination.calendar",
     HomeLinkV1.LEDGER: "tui.destination.ledger",
     HomeLinkV1.AEAT_SYNC: "tui.destination.aeat_sync",
     HomeLinkV1.REFERENCE: "tui.destination.reference",

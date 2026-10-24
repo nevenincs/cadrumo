@@ -322,13 +322,13 @@ def test_every_box_carries_its_origin_and_editability_in_the_forms_language(
 
     assert all(field.origin_words and field.editability_words for field in form.fields())
     assert form_casilla(form, "rendimientos_integros").origin_words == _catalogue(
-        "tui.modelo.workbench.origin.needs_input", language
+        "workspace.modelo.origin.needs_input", language
     )
     assert form_casilla(form, optional).origin_words == _catalogue(
-        "tui.modelo.workbench.origin_held_zero.optional_empty", language
+        "workspace.modelo.origin_held_zero.optional_empty", language
     )
     assert form_casilla(form, optional).editability_words == _catalogue(
-        f"tui.modelo.workbench.editability.{form_casilla(form, optional).editability.value}", language
+        f"workspace.modelo.editability.{form_casilla(form, optional).editability.value}", language
     )
 
 
@@ -338,7 +338,7 @@ def test_on_a_declaration_recorded_as_filed_an_empty_box_says_what_it_holds(
     filed = built_form(operation, "210", 2025, "0A", lifecycle=CalculationRevisionState.PRESENTADO)
 
     assert form_casilla(filed, "rendimientos_integros").origin_words == _catalogue(
-        "tui.modelo.workbench.origin_filed.needs_input", OutputLanguage.EN
+        "workspace.modelo.origin_filed.needs_input", OutputLanguage.EN
     )
 
 

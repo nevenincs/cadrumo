@@ -92,7 +92,7 @@ async def test_the_named_recovery_key_leads_to_the_source_box_and_keeps_the_stag
             assert diagnostic.key == address_key(source.address)
             assert diagnostic.technical == "" and "prior-general-loss" not in diagnostic.message
             assert "[1391]" in diagnostic.message and "2024" in diagnostic.message
-            assert diagnostic.action == tr("tui.modelo.workbench.apply_prerequisite.action")
+            assert diagnostic.action == tr("workspace.modelo.apply_prerequisite.action")
             assert diagnostic.action_targets_box
             await pilot.press("enter")
             await settle(pilot)
@@ -142,13 +142,13 @@ def test_a_staged_clear_or_restore_keeps_its_own_semantics_instead_of_becoming_a
         declared = form_field("06", "Answer", ModeloFormOrigin.ENTERED, Decimal(42))
         assert session.stage_clear(declared) is None
         clear = session.display()[address_key(declared.address)]
-        assert not clear.concrete_value and clear.text == tr("tui.modelo.workbench.staged.clear")
+        assert not clear.concrete_value and clear.text == tr("workspace.modelo.staged.clear")
         overridden = declared.model_copy(
             update={"origin": ModeloFormOrigin.OVERRIDES_SOURCE, "editability": ModeloFormEditability.EDITABLE_OVERRIDE}
         )
         assert session.stage_restore(overridden) is None
         restore = session.display()[address_key(overridden.address)]
-        assert not restore.concrete_value and restore.text == tr("tui.modelo.workbench.staged.restore")
+        assert not restore.concrete_value and restore.text == tr("workspace.modelo.staged.restore")
         empty = form_field("07", "Empty", ModeloFormOrigin.OPTIONAL_EMPTY)
         assert session.stage_value(empty, None, "") is None
         absent = session.display()[address_key(empty.address)]
@@ -178,14 +178,14 @@ async def test_reentering_a_staged_value_shows_and_prefills_the_draft_in_both_ed
             await settle(pilot)
             listing = screen.query_one(CasillaList)
             assert listing.highlighted is not None
-            assert tr("tui.modelo.workbench.attention.staged") in screen._state_line(listing.highlighted)
+            assert tr("workspace.modelo.attention.staged") in screen._state_line(listing.highlighted)
             assert "○" not in screen._state_line(listing.highlighted)
             await pilot.press("enter")
             await settle(pilot)
             panel = open_panel(app.screen)
             assert panel is not None and not panel.read_only
             now = str(panel.query_one("#editor-now-text", Static).render())
-            assert display in now and tr("tui.modelo.workbench.attention.staged") in now
+            assert display in now and tr("workspace.modelo.attention.staged") in now
             assert "○" not in now
             saved = str(panel.query_one("#editor-saved-text", Static).render())
             assert "○" in saved
@@ -206,7 +206,7 @@ def test_only_a_saved_complete_check_gets_the_unapplied_changes_qualifier(
         original = verdict_text(form)
         changed = verdict_text(form, changes_unapplied=True)
         if verdict is VerificationCompletenessStatus.COMPLETE:
-            assert changed == tr("tui.modelo.workbench.issues.verdict.saved_with_changes")
+            assert changed == tr("workspace.modelo.issues.verdict.saved_with_changes")
             assert original != changed
         else:
             assert changed == original
@@ -246,9 +246,7 @@ async def test_reentering_clear_and_restore_displays_the_intent_separately_from_
             panel = open_panel(app.screen)
             assert panel is not None
             assert staged.text in str(panel.query_one("#editor-now-text", Static).render())
-            assert tr("tui.modelo.workbench.attention.staged") in str(
-                panel.query_one("#editor-now-text", Static).render()
-            )
+            assert tr("workspace.modelo.attention.staged") in str(panel.query_one("#editor-now-text", Static).render())
             assert panel.query_one("#editor-input", Input).value == ""
             assert panel.field.value == Decimal("300.00") and screen.staged_changes[0] == staged
             assert panel.query_one("#editor-saved-text", Static).render()

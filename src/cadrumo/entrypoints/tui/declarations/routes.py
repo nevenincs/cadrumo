@@ -51,19 +51,19 @@ class DeclarationsUnavailableScreen(DeclarationsWorkspaceScreen):
     @override
     def compose(self) -> ComposeResult:
         yield localized(
-            Static(tr("tui.declarations.unavailable.title"), classes="cadrumo-banner", markup=False),
-            "tui.declarations.unavailable.title",
+            Static(tr("workspace.declarations.unavailable.title"), classes="cadrumo-banner", markup=False),
+            "workspace.declarations.unavailable.title",
         )
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
             yield localized(
                 Static(
-                    tr("tui.declarations.refusal.source"),
+                    tr("workspace.declarations.refusal.source"),
                     id="declarations-refusal",
                     classes="declarations-refusal",
                     markup=False,
                 ),
-                "tui.declarations.refusal.source",
+                "workspace.declarations.refusal.source",
             )
 
     def on_mount(self) -> None:

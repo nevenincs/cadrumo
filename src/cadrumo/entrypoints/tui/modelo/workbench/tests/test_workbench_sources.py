@@ -266,7 +266,7 @@ def test_a_filed_declaration_keeps_its_unentered_values_in_their_own_groups_and_
             for item in group_items(recorded_groups[kind], staged={})
             if isinstance(item, CasillaListEntry)
         ]
-        needs_you = tr("tui.modelo.workbench.sources.group.needs_you")
+        needs_you = tr("workspace.modelo.sources.group.needs_you")
 
     # A value nobody entered was held, never calculated, so filing does not move it to the calculated group.
     for kind, box in zip(_ASKING_GROUPS, ("07", "06"), strict=True):

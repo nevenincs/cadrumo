@@ -206,21 +206,21 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
         )
         assert row_value_text(stated, OutputLanguage.EN) == f"1.75{_PERCENT}"
         assert row_value_text(stated, OutputLanguage.ES) == f"1,75{_PERCENT}"
-        assert rate_note(stated) == lookup_translation("tui.modelo.workbench.rate.printed_by_form", locale="en")
+        assert rate_note(stated) == lookup_translation("workspace.modelo.rate.printed_by_form", locale="en")
         for box, rate in _PRINTED.items():
             entry = entries[box]
             assert entry.rate_of_row, box
             assert entry.field.printed_rate is not None, box
             assert entry.field.printed_rate.ratio == Decimal(rate) / 100, box
             assert row_value_text(entry, OutputLanguage.EN) == f"{rate}{_PERCENT}", box
-            assert rate_note(entry) == lookup_translation("tui.modelo.workbench.rate.printed_by_form", locale="en")
+            assert rate_note(entry) == lookup_translation("workspace.modelo.rate.printed_by_form", locale="en")
         for box in _UNGROUNDED:
             entry = entries[box]
             assert entry.rate_of_row, box
             assert entry.field.grounded_rate is None, box
             assert entry.field.printed_rate is None, box
             assert row_value_text(entry, OutputLanguage.EN) == "·", box
-            assert rate_note(entry) == lookup_translation("tui.modelo.workbench.rate.not_grounded", locale="en")
+            assert rate_note(entry) == lookup_translation("workspace.modelo.rate.not_grounded", locale="en")
         # A box that is not a row's rate box never carries the note.
         assert rate_note(entries["01"]) is None
 

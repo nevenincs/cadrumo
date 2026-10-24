@@ -30,14 +30,14 @@ class DeclarationsRevisionsScreen(DeclarationsProjectionScreen):
     @override
     def compose(self) -> ComposeResult:
         yield localized(
-            Static(tr("tui.declarations.revisions.title"), classes="cadrumo-banner", markup=False),
-            "tui.declarations.revisions.title",
+            Static(tr("workspace.declarations.revisions.title"), classes="cadrumo-banner", markup=False),
+            "workspace.declarations.revisions.title",
         )
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
             yield localized(
-                Static(tr("tui.declarations.revisions.explanation"), markup=False),
-                "tui.declarations.revisions.explanation",
+                Static(tr("workspace.declarations.revisions.explanation"), markup=False),
+                "workspace.declarations.revisions.explanation",
             )
             yield ContentDataTable[str](id="declarations-revisions", cursor_type="row", zebra_stripes=True)
             yield from self.compose_notices()
@@ -47,18 +47,18 @@ class DeclarationsRevisionsScreen(DeclarationsProjectionScreen):
         """Populate calculation revisions from the safe projection."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#declarations-revisions", DataTable))
-        table.add_column(tr("tui.declarations.column.declaration"), key="declaration", width=18)
-        table.add_column(tr("tui.declarations.column.updated"), key="updated", width=20)
-        table.add_column(tr("tui.declarations.column.local_state"), key="state", width=13)
-        table.add_column(tr("tui.declarations.column.current"), key="current", width=7)
-        table.add_column(tr("tui.declarations.column.filed"), key="filed", width=7)
+        table.add_column(tr("workspace.declarations.column.declaration"), key="declaration", width=18)
+        table.add_column(tr("workspace.declarations.column.updated"), key="updated", width=20)
+        table.add_column(tr("workspace.declarations.column.local_state"), key="state", width=13)
+        table.add_column(tr("workspace.declarations.column.current"), key="current", width=7)
+        table.add_column(tr("workspace.declarations.column.filed"), key="filed", width=7)
         for row in self.controller.projection.calculation_revisions:
             table.add_row(
                 natural_address(row.modelo, row.filing_year, row.period),
                 timestamp_label(row.updated_at),
                 revision_state_label(row.state),
-                tr("tui.declarations.value.yes" if row.is_current else "tui.declarations.value.no"),
-                tr("tui.declarations.value.yes" if row.is_filed else "tui.declarations.value.no"),
+                tr("workspace.declarations.value.yes" if row.is_current else "workspace.declarations.value.no"),
+                tr("workspace.declarations.value.yes" if row.is_filed else "workspace.declarations.value.no"),
                 key=row.calculation_revision_id,
             )
         if not table.row_count:

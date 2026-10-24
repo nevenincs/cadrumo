@@ -47,8 +47,8 @@ const GROUPS: ListRow["group"][] = [
 
 const groupWords = (g: ListRow["group"], locale: string) =>
   g === "aeat_unlinked"
-    ? w("tui.declarations.list.state.aeat_unlinked", locale)
-    : w(`tui.declarations.list.group.${g}`, locale);
+    ? w("workspace.declarations.list.state.aeat_unlinked", locale)
+    : w(`workspace.declarations.list.group.${g}`, locale);
 
 /** The row's own state in the product's words, and its next step. */
 function status(
@@ -65,31 +65,31 @@ function status(
         : (s?.state ?? row.state);
   const word =
     state === "recorded"
-      ? w("tui.declarations.list.group.recorded", locale)
+      ? w("workspace.declarations.list.group.recorded", locale)
       : state === "discarded"
-        ? w("tui.declarations.work_state.descartado", locale)
+        ? w("workspace.declarations.work_state.descartado", locale)
         : state === "maybe"
-          ? w("tui.declarations.list.group.maybe", locale)
-          : w(`tui.declarations.list.state.${state}`, locale);
+          ? w("workspace.declarations.list.group.maybe", locale)
+          : w(`workspace.declarations.list.state.${state}`, locale);
   switch (state) {
     case "blocked":
       return {
         word,
-        next: w("tui.declarations.list.next.fix", locale, { count: blocking }),
+        next: w("workspace.declarations.list.next.fix", locale, { count: blocking }),
         tone: "danger",
         icon: "alert",
       };
     case "calculated":
       return {
         word,
-        next: w("tui.modelo.workbench.next.verify", locale),
+        next: w("workspace.modelo.next.verify", locale),
         tone: "source",
         icon: null,
       };
     case "checked":
       return {
         word,
-        next: w("tui.declarations.list.next.create_file", locale),
+        next: w("workspace.declarations.list.next.create_file", locale),
         tone: "source",
         icon: "check",
       };
@@ -98,27 +98,27 @@ function status(
     case "aeat_needs_check":
       return {
         word,
-        next: w("tui.declarations.list.next.check_aeat", locale),
+        next: w("workspace.declarations.list.next.check_aeat", locale),
         tone: "attention",
         icon: "alert",
       };
     case "aeat_unlinked":
       return {
         word,
-        next: w("tui.declarations.list.next.link_aeat", locale),
+        next: w("workspace.declarations.list.next.link_aeat", locale),
         tone: "attention",
         icon: "office",
       };
     case "not_started":
       return {
         word,
-        next: w("tui.declarations.list.next.start", locale),
+        next: w("workspace.declarations.list.next.start", locale),
         tone: "quiet",
         icon: null,
       };
     case "maybe":
       return {
-        word: w("tui.declarations.list.group.maybe", locale),
+        word: w("workspace.declarations.list.group.maybe", locale),
         next: "",
         tone: "quiet",
         icon: null,
@@ -128,7 +128,7 @@ function status(
     default:
       return {
         word,
-        next: w("tui.declarations.list.next.continue", locale),
+        next: w("workspace.declarations.list.next.continue", locale),
         tone: "quiet",
         icon: null,
       };
@@ -157,7 +157,7 @@ function aeatWords(row: ListRow, locale: string): string | null {
   )
     return null;
   const word = w(
-    `tui.declarations.calendar.aeat.${cal.aeat_submission_state}`,
+    `workspace.declarations.calendar.aeat.${cal.aeat_submission_state}`,
     locale,
   );
   return cal.evidence_conflicted ? `${word} · evidence disagrees` : word;
@@ -188,7 +188,7 @@ function Row({ row, locale }: { row: ListRow; locale: string }) {
           <span className="text-sm text-muted-foreground">
             {row.period
               ? periodWords(row.period.code, row.period.filing_year, locale)
-              : w("tui.declarations.list.group.maybe", locale)}
+              : w("workspace.declarations.list.group.maybe", locale)}
           </span>
         </span>
         <span className="hidden flex-col @3xl:flex">
@@ -236,7 +236,7 @@ function Row({ row, locale }: { row: ListRow; locale: string }) {
             </>
           ) : row.declaration && s_calculated(row) ? (
             <span className="text-sm text-faint">
-              {w("tui.declarations.value.result_unknown", locale)}
+              {w("workspace.declarations.value.result_unknown", locale)}
             </span>
           ) : null}
         </span>

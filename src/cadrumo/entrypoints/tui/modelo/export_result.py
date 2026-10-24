@@ -202,8 +202,8 @@ class ModeloExportResultScreen(ModalScreen[None]):
             with Horizontal(id="modelo-export-result-actions"):
                 if self._result is not None:
                     yield localized(
-                        Button(tr("tui.modelo.workbench.issues.technical"), id="modelo-export-result-technical"),
-                        "tui.modelo.workbench.issues.technical",
+                        Button(tr("workspace.modelo.issues.technical"), id="modelo-export-result-technical"),
+                        "workspace.modelo.issues.technical",
                     )
                 yield localized(
                     Button(tr("tui.modelo.export.result.close"), id="modelo-export-result-close"),

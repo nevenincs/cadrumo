@@ -25,7 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _filter_words(item: WorkbenchFilter) -> str:
-    return tr(f"tui.modelo.workbench.filter.{item.value}", locale="en")
+    return tr(f"workspace.modelo.filter.{item.value}", locale="en")
 
 
 @pytest.mark.asyncio
@@ -65,8 +65,8 @@ async def test_a_page_the_filter_empties_says_so_and_names_the_next_page_with_so
 
     first_page = form.pages[0].heading.text
     assert _filter_words(WorkbenchFilter.MINE) in empty
-    assert tr("tui.modelo.workbench.filter.empty_next", locale="en", page=first_page) in empty
-    assert tr("tui.modelo.workbench.filter.empty", locale="en") not in listed
+    assert tr("workspace.modelo.filter.empty_next", locale="en", page=first_page) in empty
+    assert tr("workspace.modelo.filter.empty", locale="en") not in listed
 
 
 @pytest.mark.asyncio

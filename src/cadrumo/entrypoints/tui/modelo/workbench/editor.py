@@ -109,23 +109,23 @@ _AREA_LOCALE_KEYS: Final[Mapping[SourceSurface, str]] = MappingProxyType(
         SourceSurface.WITHHOLDING: "tui.destination.withholding",
         SourceSurface.PROFILE: "tui.destination.profile",
         SourceSurface.DECLARATIONS: "tui.destination.declarations",
-        SourceSurface.NONE: "tui.modelo.workbench.editor.area.none",
+        SourceSurface.NONE: "workspace.modelo.editor.area.none",
     }
 )
 """The words naming the place a sourced value is changed: an owning area by its name in the app menu."""
 
 _CAN_CHANGE_LOCALE_KEYS: Final[Mapping[ModeloFormEditability, str]] = MappingProxyType(
     {
-        ModeloFormEditability.EDITABLE_VALUE: "tui.modelo.workbench.editor.can_change.here",
-        ModeloFormEditability.EDITABLE_OVERRIDE: "tui.modelo.workbench.editor.can_change.here",
-        ModeloFormEditability.CALCULATED: "tui.modelo.workbench.editor.can_change.calculated",
-        ModeloFormEditability.DESIGN_CONSTANT: "tui.modelo.workbench.editor.can_change.fixed",
+        ModeloFormEditability.EDITABLE_VALUE: "workspace.modelo.editor.can_change.here",
+        ModeloFormEditability.EDITABLE_OVERRIDE: "workspace.modelo.editor.can_change.here",
+        ModeloFormEditability.CALCULATED: "workspace.modelo.editor.can_change.calculated",
+        ModeloFormEditability.DESIGN_CONSTANT: "workspace.modelo.editor.can_change.fixed",
     }
 )
 """The answers to "can you change it?" that need nothing but the box's editability."""
 
 #: What a declaration recorded as filed allows: no change here, and a correction to change it.
-_RECORDED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.editor.can_change.recorded"
+_RECORDED_LOCALE_KEY: Final[str] = "workspace.modelo.editor.can_change.recorded"
 
 
 def source_surface(field: ModeloFormField) -> SourceSurface:
@@ -155,14 +155,14 @@ def can_change_text(field: ModeloFormField, language: OutputLanguage) -> str:
     if editability is ModeloFormEditability.OVERRIDABLE_SOURCE:
         if field.origin is ModeloFormOrigin.IMPORTED and field.value is not None:
             source_value = value_text(CasillaListEntry(field), language)
-            return tr("tui.modelo.workbench.editor.can_change.replace", value=source_value)
-        return tr("tui.modelo.workbench.editor.can_change.replace_unknown")
+            return tr("workspace.modelo.editor.can_change.replace", value=source_value)
+        return tr("workspace.modelo.editor.can_change.replace_unknown")
     if editability is ModeloFormEditability.LOCKED_SOURCE:
-        return tr("tui.modelo.workbench.editor.can_change.not_here", area=_area_words(field))
+        return tr("workspace.modelo.editor.can_change.not_here", area=_area_words(field))
     if editability is ModeloFormEditability.EDIT_AT_PROFILE:
-        return tr("tui.modelo.workbench.editor.can_change.not_here", area=tr(_AREA_LOCALE_KEYS[SourceSurface.PROFILE]))
+        return tr("workspace.modelo.editor.can_change.not_here", area=tr(_AREA_LOCALE_KEYS[SourceSurface.PROFILE]))
     if editability is ModeloFormEditability.SOURCE_POLICY_UNDECIDED:
-        return tr("tui.modelo.workbench.editor.can_change.not_yet", area=_area_words(field))
+        return tr("workspace.modelo.editor.can_change.not_yet", area=_area_words(field))
     return editability_text(field)
 
 
@@ -396,7 +396,7 @@ class CasillaEditorPanel(Vertical):
     def _now_text(self) -> str:
         """What the box holds and who put it there; a box holding nothing says only that, once, in its origin words."""
         if self._staged is not None:
-            return f"{self._staged.text} · Δ {tr('tui.modelo.workbench.attention.staged')}"
+            return f"{self._staged.text} · Δ {tr('workspace.modelo.attention.staged')}"
         return self._saved_text()
 
     def _saved_text(self) -> str:
@@ -408,18 +408,16 @@ class CasillaEditorPanel(Vertical):
 
     def _answers(self) -> list[Horizontal]:
         field = self._field
-        asks = description_text(field) or tr("tui.modelo.workbench.help.no_explanation")
+        asks = description_text(field) or tr("workspace.modelo.help.no_explanation")
         blocks = [
-            self._block("editor-asks", "tui.modelo.workbench.editor.block.asks", asks),
-            self._block("editor-now", "tui.modelo.workbench.editor.block.now", self._now_text()),
+            self._block("editor-asks", "workspace.modelo.editor.block.asks", asks),
+            self._block("editor-now", "workspace.modelo.editor.block.now", self._now_text()),
         ]
         if self._staged is not None:
-            blocks.append(
-                self._block("editor-saved", "tui.modelo.workbench.editor.block.saved_value", self._saved_text())
-            )
+            blocks.append(self._block("editor-saved", "workspace.modelo.editor.block.saved_value", self._saved_text()))
         if self._calculation is not None:
             blocks.append(
-                self._block("editor-calculation", "tui.modelo.workbench.editor.block.calculation", self._calculation)
+                self._block("editor-calculation", "workspace.modelo.editor.block.calculation", self._calculation)
             )
         where = _editor_explanations.where_from_text(
             field,
@@ -427,29 +425,29 @@ class CasillaEditorPanel(Vertical):
             language=self._language,
         )
         if where is not None:
-            blocks.append(self._block("editor-where", "tui.modelo.workbench.editor.block.where_from", where))
+            blocks.append(self._block("editor-where", "workspace.modelo.editor.block.where_from", where))
         if self._recorded:
             can_change = tr(_RECORDED_LOCALE_KEY)
         else:
             can_change = self._read_only_reason or can_change_text(field, self._language)
-        blocks.append(self._block("editor-can-change", "tui.modelo.workbench.editor.block.can_change", can_change))
+        blocks.append(self._block("editor-can-change", "workspace.modelo.editor.block.can_change", can_change))
         return blocks
 
     def _entry(self) -> ComposeResult:
         with Horizontal(id="editor-entry"):
             yield localized(
-                Static(tr("tui.modelo.workbench.editor.block.new_value"), classes="editor-block-label", markup=False),
-                "tui.modelo.workbench.editor.block.new_value",
+                Static(tr("workspace.modelo.editor.block.new_value"), classes="editor-block-label", markup=False),
+                "workspace.modelo.editor.block.new_value",
             )
             with Vertical(id="editor-field"):
                 yield localized(
                     Input(
                         value=self._prefill or "",
-                        placeholder=tr(f"tui.modelo.workbench.editor.placeholder.{self._hint_kind()}"),
+                        placeholder=tr(f"workspace.modelo.editor.placeholder.{self._hint_kind()}"),
                         max_length=MAX_EDIT_LEXEME_LENGTH,
                         id="editor-input",
                     ),
-                    f"tui.modelo.workbench.editor.placeholder.{self._hint_kind()}",
+                    f"workspace.modelo.editor.placeholder.{self._hint_kind()}",
                 )
                 yield Static(self._hint(), id="editor-hint", markup=False)
                 yield Static("", id="editor-readback", markup=False)
@@ -457,27 +455,27 @@ class CasillaEditorPanel(Vertical):
     def _keys_text(self) -> str | None:
         if not self.read_only:
             return tr(
-                "tui.modelo.workbench.editor.keys",
-                save_next=tr("tui.modelo.workbench.editor.save_next"),
-                save=tr("tui.modelo.workbench.editor.save"),
+                "workspace.modelo.editor.keys",
+                save_next=tr("workspace.modelo.editor.save_next"),
+                save=tr("workspace.modelo.editor.save"),
             )
         if self._open_area is None:
             return None
         return tr(
-            "tui.modelo.workbench.editor.open_keys",
+            "workspace.modelo.editor.open_keys",
             open=self._open_label(self._open_area),
-            back=tr("tui.modelo.workbench.key.back"),
+            back=tr("workspace.modelo.key.back"),
         )
 
     @staticmethod
     def _open_label(surface: SourceSurface) -> str:
-        return tr("tui.modelo.workbench.editor.open_area", area=area_words(surface))
+        return tr("workspace.modelo.editor.open_area", area=area_words(surface))
 
     def _actions(self) -> ComposeResult:
         if self.read_only:
             with Horizontal(id="editor-actions"):
                 yield localized(
-                    Button(tr("tui.modelo.workbench.key.back"), id="editor-cancel"), "tui.modelo.workbench.key.back"
+                    Button(tr("workspace.modelo.key.back"), id="editor-cancel"), "workspace.modelo.key.back"
                 )
                 if self._open_area is not None:
                     yield Button(self._open_label(self._open_area), id="editor-open", variant="primary")
@@ -486,28 +484,28 @@ class CasillaEditorPanel(Vertical):
             with Horizontal(id="editor-alternatives"):
                 if self._can_clear:
                     yield localized(
-                        Button(tr("tui.modelo.workbench.editor.clear"), id="editor-clear"),
-                        "tui.modelo.workbench.editor.clear",
+                        Button(tr("workspace.modelo.editor.clear"), id="editor-clear"),
+                        "workspace.modelo.editor.clear",
                     )
                 if self._can_restore:
                     yield localized(
-                        Button(tr("tui.modelo.workbench.editor.restore"), id="editor-restore"),
-                        "tui.modelo.workbench.editor.restore",
+                        Button(tr("workspace.modelo.editor.restore"), id="editor-restore"),
+                        "workspace.modelo.editor.restore",
                     )
         with Horizontal(id="editor-actions"):
             yield localized(
-                Button(tr("tui.modelo.workbench.editor.cancel"), id="editor-cancel"),
-                "tui.modelo.workbench.editor.cancel",
+                Button(tr("workspace.modelo.editor.cancel"), id="editor-cancel"),
+                "workspace.modelo.editor.cancel",
             )
             yield localized(
-                Button(tr("tui.modelo.workbench.editor.save"), id="editor-save", disabled=True),
-                "tui.modelo.workbench.editor.save",
+                Button(tr("workspace.modelo.editor.save"), id="editor-save", disabled=True),
+                "workspace.modelo.editor.save",
             )
             yield localized(
                 Button(
-                    tr("tui.modelo.workbench.editor.save_next"), id="editor-save-next", variant="primary", disabled=True
+                    tr("workspace.modelo.editor.save_next"), id="editor-save-next", variant="primary", disabled=True
                 ),
-                "tui.modelo.workbench.editor.save_next",
+                "workspace.modelo.editor.save_next",
             )
 
     @override
@@ -520,7 +518,7 @@ class CasillaEditorPanel(Vertical):
             yield Static(f"{box}{field.label.text}", id="editor-title", markup=False)
         with Vertical(id="editor-foot"):
             if self._affects is not None:
-                yield self._block("editor-affects", "tui.modelo.workbench.editor.block.affects", self._affects)
+                yield self._block("editor-affects", "workspace.modelo.editor.block.affects", self._affects)
             if not self.read_only:
                 yield from self._entry()
             keys = self._keys_text()
@@ -545,7 +543,7 @@ class CasillaEditorPanel(Vertical):
         refresh_localized_widgets(self)
         if not self.read_only:
             self.query_one("#editor-input", Input).placeholder = tr(
-                f"tui.modelo.workbench.editor.placeholder.{self._hint_kind()}", locale=self._entry_language.value
+                f"workspace.modelo.editor.placeholder.{self._hint_kind()}", locale=self._entry_language.value
             )
             self.query_one("#editor-hint", Static).update(self._hint())
         for selector, text in (("#editor-now-text", self._now_text()), ("#editor-saved-text", self._saved_text())):
@@ -560,7 +558,7 @@ class CasillaEditorPanel(Vertical):
         return data_type if data_type in EDITOR_HINT_KINDS else "text"
 
     def _hint(self) -> str:
-        parts = [tr(f"tui.modelo.workbench.editor.format.{self._hint_kind()}", locale=self._entry_language.value)]
+        parts = [tr(f"workspace.modelo.editor.format.{self._hint_kind()}", locale=self._entry_language.value)]
         parts.extend(self._limits)
         return " ".join(parts)
 
@@ -578,7 +576,7 @@ class CasillaEditorPanel(Vertical):
         readback.display = bool(lexeme)
         self._parsed = None
         if self._confirming(lexeme):
-            readback.update(tr("tui.modelo.workbench.editor.confirm_hint", value=self._current()))
+            readback.update(tr("workspace.modelo.editor.confirm_hint", value=self._current()))
             readback.add_class("-confirm")
             self._allow_keep(True)
             return
@@ -590,10 +588,10 @@ class CasillaEditorPanel(Vertical):
             outcome = self._parse(self._field, lexeme, self._entry_language)
         except Exception as failure:
             get_logger(__name__).error("the casilla parser failed: %s", type(failure).__qualname__, exc_info=True)
-            outcome = WorkbenchRefused(message=tr("tui.modelo.workbench.editor.unreadable"))
+            outcome = WorkbenchRefused(message=tr("workspace.modelo.editor.unreadable"))
         if isinstance(outcome, WorkbenchParsed):
             self._parsed = outcome
-            readback.update(tr("tui.modelo.workbench.editor.read_as", value=outcome.display))
+            readback.update(tr("workspace.modelo.editor.read_as", value=outcome.display))
             readback.add_class("-parsed")
             self._allow_keep(True)
             return

@@ -253,17 +253,17 @@ def _product_labels() -> dict[str, str]:
     from cadrumo.core.i18n.render import tr
 
     labels = {
-        "none": tr("tui.declarations.calendar.none"),
-        "receipt.verified": tr("tui.declarations.calendar.justificante.verified"),
-        "receipt.not_verified": tr("tui.declarations.calendar.justificante.not_verified"),
-        "receipt.unknown": tr("tui.declarations.calendar.justificante.unknown"),
-        "aeat.unknown": tr("tui.declarations.calendar.aeat.unknown"),
-        "local.unknown": tr("tui.declarations.calendar.local.unknown"),
+        "none": tr("workspace.declarations.calendar.none"),
+        "receipt.verified": tr("workspace.declarations.calendar.justificante.verified"),
+        "receipt.not_verified": tr("workspace.declarations.calendar.justificante.not_verified"),
+        "receipt.unknown": tr("workspace.declarations.calendar.justificante.unknown"),
+        "aeat.unknown": tr("workspace.declarations.calendar.aeat.unknown"),
+        "local.unknown": tr("workspace.declarations.calendar.local.unknown"),
     }
     for local in OverviewLocalFilingState:
-        labels[f"local.{local.value}"] = tr(f"tui.declarations.calendar.local.{local.value}")
+        labels[f"local.{local.value}"] = tr(f"workspace.declarations.calendar.local.{local.value}")
     for aeat in OverviewAeatSubmissionState:
-        labels[f"aeat.{aeat.value}"] = tr(f"tui.declarations.calendar.aeat.{aeat.value}")
+        labels[f"aeat.{aeat.value}"] = tr(f"workspace.declarations.calendar.aeat.{aeat.value}")
     return labels
 
 

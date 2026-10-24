@@ -71,12 +71,12 @@ def test_the_shipped_marks_give_each_glyph_one_meaning_and_each_meaning_one_glyp
     require_one_meaning_per_glyph(WORKBENCH_MARKS)
 
     # A glyph repeats across surfaces only as the same meaning: the row's blocker is the stepper's.
-    assert BLOCKS_MARK.translation_key == "tui.modelo.workbench.level.blocks"
+    assert BLOCKS_MARK.translation_key == "workspace.modelo.level.blocks"
     # The marks that used to mean two things now mean one.
     by_glyph = {mark.glyph: mark.translation_key for mark in WORKBENCH_MARKS}
-    assert by_glyph["●"] == "tui.modelo.workbench.origin.entered"
-    assert by_glyph["○"] == "tui.modelo.workbench.origin.optional_empty"
-    assert by_glyph["!"] == "tui.modelo.workbench.origin.needs_input"
+    assert by_glyph["●"] == "workspace.modelo.origin.entered"
+    assert by_glyph["○"] == "workspace.modelo.origin.optional_empty"
+    assert by_glyph["!"] == "workspace.modelo.origin.needs_input"
     assert HERE_MARK.glyph == "▸"
     assert CHECK_MARK.glyph == "◆"
 
@@ -89,7 +89,7 @@ def test_every_mark_has_words_in_every_language() -> None:
 
 def test_a_glyph_given_a_second_meaning_is_refused() -> None:
     entered = ORIGIN_MARKS[ModeloFormOrigin.ENTERED]
-    current_step = WorkbenchMark(entered.glyph, translation_key="tui.modelo.workbench.legend.name.here")
+    current_step = WorkbenchMark(entered.glyph, translation_key="workspace.modelo.legend.name.here")
 
     with pytest.raises(ValueError, match="means more than one thing"):
         require_one_meaning_per_glyph((*WORKBENCH_MARKS, current_step))

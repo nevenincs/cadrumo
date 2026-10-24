@@ -50,35 +50,35 @@ from .work_form_wording import aeat_imported_on, date_text, modelo_number, no_ea
 
 _GROUP_LOCALE_KEYS: Final[Mapping[ModeloFormSourceGroupKind, str]] = MappingProxyType(
     {
-        ModeloFormSourceGroupKind.RECORDS: "tui.modelo.workbench.sources.group.records",
-        ModeloFormSourceGroupKind.REGISTERS: "tui.modelo.workbench.sources.group.registers",
-        ModeloFormSourceGroupKind.PROFILE: "tui.modelo.workbench.sources.group.profile",
-        ModeloFormSourceGroupKind.EARLIER_DECLARATIONS: "tui.modelo.workbench.sources.group.earlier_declarations",
-        ModeloFormSourceGroupKind.AEAT_DATA: "tui.modelo.workbench.sources.group.aeat_data",
-        ModeloFormSourceGroupKind.YOURS: "tui.modelo.workbench.sources.group.yours",
-        ModeloFormSourceGroupKind.REPLACED: "tui.modelo.workbench.sources.group.replaced",
-        ModeloFormSourceGroupKind.ASSUMED: "tui.modelo.workbench.sources.group.assumed",
-        ModeloFormSourceGroupKind.NEEDS_YOU: "tui.modelo.workbench.sources.group.needs_you",
-        ModeloFormSourceGroupKind.CALCULATED: "tui.modelo.workbench.sources.group.calculated",
-        ModeloFormSourceGroupKind.SET_BY_FORM: "tui.modelo.workbench.sources.group.set_by_form",
-        ModeloFormSourceGroupKind.INFORMATION: "tui.modelo.workbench.sources.group.information",
-        ModeloFormSourceGroupKind.BLANK: "tui.modelo.workbench.sources.group.blank",
-        ModeloFormSourceGroupKind.UNNAMED: "tui.modelo.workbench.sources.group.unnamed",
+        ModeloFormSourceGroupKind.RECORDS: "workspace.modelo.sources.group.records",
+        ModeloFormSourceGroupKind.REGISTERS: "workspace.modelo.sources.group.registers",
+        ModeloFormSourceGroupKind.PROFILE: "workspace.modelo.sources.group.profile",
+        ModeloFormSourceGroupKind.EARLIER_DECLARATIONS: "workspace.modelo.sources.group.earlier_declarations",
+        ModeloFormSourceGroupKind.AEAT_DATA: "workspace.modelo.sources.group.aeat_data",
+        ModeloFormSourceGroupKind.YOURS: "workspace.modelo.sources.group.yours",
+        ModeloFormSourceGroupKind.REPLACED: "workspace.modelo.sources.group.replaced",
+        ModeloFormSourceGroupKind.ASSUMED: "workspace.modelo.sources.group.assumed",
+        ModeloFormSourceGroupKind.NEEDS_YOU: "workspace.modelo.sources.group.needs_you",
+        ModeloFormSourceGroupKind.CALCULATED: "workspace.modelo.sources.group.calculated",
+        ModeloFormSourceGroupKind.SET_BY_FORM: "workspace.modelo.sources.group.set_by_form",
+        ModeloFormSourceGroupKind.INFORMATION: "workspace.modelo.sources.group.information",
+        ModeloFormSourceGroupKind.BLANK: "workspace.modelo.sources.group.blank",
+        ModeloFormSourceGroupKind.UNNAMED: "workspace.modelo.sources.group.unnamed",
     }
 )
 FILED_GROUP_LOCALE_KEYS: Final[Mapping[ModeloFormSourceGroupKind, str]] = MappingProxyType(
     {
-        ModeloFormSourceGroupKind.ASSUMED: "tui.modelo.workbench.sources.group_filed.assumed",
-        ModeloFormSourceGroupKind.NEEDS_YOU: "tui.modelo.workbench.sources.group_filed.needs_you",
+        ModeloFormSourceGroupKind.ASSUMED: "workspace.modelo.sources.group_filed.assumed",
+        ModeloFormSourceGroupKind.NEEDS_YOU: "workspace.modelo.sources.group_filed.needs_you",
     }
 )
 """Names for the groups that ask for a value, on a declaration recorded as filed: what they hold, not a request."""
-_AEAT_IMPORTED_ON_LOCALE_KEY: Final[str] = "tui.modelo.workbench.sources.group.aeat_data_imported_on"
-_NO_EARLIER_GROUP_LOCALE_KEY: Final[str] = "tui.modelo.workbench.sources.group.earlier_declarations_none"
+_AEAT_IMPORTED_ON_LOCALE_KEY: Final[str] = "workspace.modelo.sources.group.aeat_data_imported_on"
+_NO_EARLIER_GROUP_LOCALE_KEY: Final[str] = "workspace.modelo.sources.group.earlier_declarations_none"
 _STATE_LOCALE_KEYS: Final[Mapping[ModeloFormSourceState, str]] = MappingProxyType(
     {
-        ModeloFormSourceState.NONE_FOUND: "tui.modelo.workbench.sources.none_found",
-        ModeloFormSourceState.NOT_YET: "tui.modelo.workbench.sources.not_yet",
+        ModeloFormSourceState.NONE_FOUND: "workspace.modelo.sources.none_found",
+        ModeloFormSourceState.NOT_YET: "workspace.modelo.sources.not_yet",
     }
 )
 _FAMILY_GROUPS: Final[Mapping[SourceFamily, ModeloFormSourceGroupKind]] = MappingProxyType(

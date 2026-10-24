@@ -85,4 +85,4 @@ _REVIEW_FINDINGS: Final = "#review-findings"
 
 
 #: The greeting the first workbench of a session shows on its notice line.
-_FIRST_OPEN_GREETING: Final = "tui.modelo.workbench.legend.first_open"
+_FIRST_OPEN_GREETING: Final = "workspace.modelo.legend.first_open"

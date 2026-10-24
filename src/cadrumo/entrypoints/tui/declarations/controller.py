@@ -63,30 +63,30 @@ _ZONE_BY_DESTINATION: Final = {
     "declarations.modelo_workspace": DeclarationsWorkspaceZone.DECLARATIONS,
 }
 _DESTINATION_LOCALE_KEYS: Final = {
-    "declarations.overview": "tui.declarations.destination.overview",
-    "declarations.revisions": "tui.declarations.destination.revisions",
-    "declarations.filing_history": "tui.declarations.destination.filing_history",
-    "declarations.calendar": "tui.declarations.destination.calendar",
-    "declarations.modelo_workspace": "tui.declarations.destination.modelo_workspace",
+    "declarations.overview": "workspace.declarations.destination.overview",
+    "declarations.revisions": "workspace.declarations.destination.revisions",
+    "declarations.filing_history": "workspace.declarations.destination.filing_history",
+    "declarations.calendar": "workspace.declarations.destination.calendar",
+    "declarations.modelo_workspace": "workspace.declarations.destination.modelo_workspace",
 }
 _REVISION_STATE_KEYS: Final = {
-    state: f"tui.declarations.revision_state.{state.value}" for state in CalculationRevisionState
+    state: f"workspace.declarations.revision_state.{state.value}" for state in CalculationRevisionState
 }
 _FILING_STATE_LOCALE_KEYS: Final = {
-    ModeloRecordStatus.VIGENTE: "tui.declarations.filing_state.vigente",
-    ModeloRecordStatus.SUPERSEDIDO: "tui.declarations.filing_state.supersedido",
+    ModeloRecordStatus.VIGENTE: "workspace.declarations.filing_state.vigente",
+    ModeloRecordStatus.SUPERSEDIDO: "workspace.declarations.filing_state.supersedido",
 }
 _EVIDENCE_LOCALE_KEYS: Final = {
-    ExternalEvidenceKind.AEAT_CSV_REGISTER: "tui.declarations.evidence.aeat_csv_register",
-    ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF: "tui.declarations.evidence.aeat_justificante_pdf",
-    ExternalEvidenceKind.AEAT_LIVE_CAPTURE: "tui.declarations.evidence.aeat_live_capture",
+    ExternalEvidenceKind.AEAT_CSV_REGISTER: "workspace.declarations.evidence.aeat_csv_register",
+    ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF: "workspace.declarations.evidence.aeat_justificante_pdf",
+    ExternalEvidenceKind.AEAT_LIVE_CAPTURE: "workspace.declarations.evidence.aeat_live_capture",
 }
 
 
 _WORK_CREATE_REFUSAL_LOCALE_KEYS: Final = {
     # The application's wording names the CLI command; here the same fix is a key away.
     "application.modelo.errors.profile_readiness_setup_incomplete": (
-        "tui.declarations.calendar.recovery.setup_incomplete"
+        "workspace.declarations.calendar.recovery.setup_incomplete"
     ),
 }
 
@@ -112,7 +112,7 @@ def timestamp_label(value: datetime) -> str:
 
 def calendar_date_label(value: date | None) -> str:
     """Render one non-ambiguous legal date."""
-    return tr("tui.declarations.calendar.none") if value is None else value.strftime("%d/%m/%Y")
+    return tr("workspace.declarations.calendar.none") if value is None else value.strftime("%d/%m/%Y")
 
 
 def revision_state_label(value: CalculationRevisionState) -> str:
@@ -127,7 +127,7 @@ def filing_state_label(value: ModeloRecordStatus) -> str:
 
 def evidence_label(value: ExternalEvidenceKind | None) -> str:
     """Render separately observed AEAT evidence metadata."""
-    return tr("tui.declarations.evidence.none") if value is None else tr(_EVIDENCE_LOCALE_KEYS[value])
+    return tr("workspace.declarations.evidence.none") if value is None else tr(_EVIDENCE_LOCALE_KEYS[value])
 
 
 class DeclarationsWorkspaceController:
@@ -265,14 +265,14 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
     def populate_navigation(self) -> None:
         """Populate every closed internal destination exactly once."""
         table = cast("DataTable[str]", self.query_one("#declarations-navigation", DataTable))
-        table.add_column(tr("tui.declarations.column.destination"), key="destination")
-        table.add_column(tr("tui.declarations.column.availability"), key="availability")
+        table.add_column(tr("workspace.declarations.column.destination"), key="destination")
+        table.add_column(tr("workspace.declarations.column.availability"), key="availability")
         for raw_destination in _DESTINATION_LOCALE_KEYS:
             destination = cast("DeclarationsDestinationIdV1", raw_destination)
             availability = self.controller.destination_availability(destination)
             table.add_row(
                 tr(_DESTINATION_LOCALE_KEYS[destination]),
-                tr(f"tui.declarations.availability.{availability.value}"),
+                tr(f"workspace.declarations.availability.{availability.value}"),
                 key=destination,
             )
 
@@ -305,18 +305,18 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
         """
         reason = self.controller.destination_reason_code(destination)
         if reason is not None:
-            key = f"tui.declarations.refusal.reason.{reason}"
+            key = f"workspace.declarations.refusal.reason.{reason}"
             if lookup_translation(key, locale=output_language()) is not None:
                 return tr(key)
-        return tr("tui.declarations.refusal.source")
+        return tr("workspace.declarations.refusal.source")
 
     def show_empty(self) -> None:
         """Say that a table has nothing in it, on the muted line, not the warning one."""
-        self.query_one("#declarations-empty", Static).update(tr("tui.declarations.empty"))
+        self.query_one("#declarations-empty", Static).update(tr("workspace.declarations.empty"))
 
     def refuse_handoff(self) -> None:
         """Show an explicit refusal when the host omitted a target."""
-        self.query_one("#declarations-refusal", Static).update(tr("tui.declarations.refusal.handoff"))
+        self.query_one("#declarations-refusal", Static).update(tr("workspace.declarations.refusal.handoff"))
 
     def action_back(self) -> None:
         """Return an area to the Declarations overview; leave the workspace only from the overview."""
@@ -534,24 +534,24 @@ def _scope_matches(
 
 def calendar_legal_label(value: ObligationStatus) -> str:
     """Render legal deadline status."""
-    return tr(f"tui.declarations.calendar.legal.{value.value.lower()}")
+    return tr(f"workspace.declarations.calendar.legal.{value.value.lower()}")
 
 
 def calendar_user_label(value: OverviewPeriodState) -> str:
     """Render the safe derived user-facing schedule state."""
-    return tr(f"tui.declarations.calendar.user.{value.value}")
+    return tr(f"workspace.declarations.calendar.user.{value.value}")
 
 
 def calendar_local_label(value: OverviewLocalFilingState | None) -> str:
     """Render local filing state without implying AEAT acceptance."""
     key = "unknown" if value is None else value.value
-    return tr(f"tui.declarations.calendar.local.{key}")
+    return tr(f"workspace.declarations.calendar.local.{key}")
 
 
 def calendar_aeat_label(value: OverviewAeatSubmissionState | None) -> str:
     """Render observed AEAT evidence state without inference."""
     key = "unknown" if value is None else value.value
-    return tr(f"tui.declarations.calendar.aeat.{key}")
+    return tr(f"workspace.declarations.calendar.aeat.{key}")
 
 
 __all__ = [

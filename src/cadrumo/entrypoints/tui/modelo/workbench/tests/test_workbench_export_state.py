@@ -101,9 +101,7 @@ async def test_each_file_state_reads_in_the_header_and_leads_f8_to_its_one_step(
             app.exit(None)
 
         def next_words(key: str, action: str, **values: object) -> str:
-            return tr(
-                "tui.modelo.workbench.next_line", action=tr(f"tui.modelo.workbench.next.{action}", **values), key=key
-            )
+            return tr("workspace.modelo.next_line", action=tr(f"workspace.modelo.next.{action}", **values), key=key)
 
         if state == "no-file":
             assert not shown
@@ -112,17 +110,17 @@ async def test_each_file_state_reads_in_the_header_and_leads_f8_to_its_one_step(
             assert actions.requested == []
         elif state == "current-file":
             assert shown and not warned
-            assert file_text == tr("tui.modelo.workbench.header.file_created", date=day)
+            assert file_text == tr("workspace.modelo.header.file_created", date=day)
             assert next_line == next_words("F8", "record_after_file", date=day)
             assert isinstance(after_f8, ConfirmScreen), "F8 asks before recording the filing"
             assert actions.requested == ["file"]
         else:
             assert shown and warned
             assert file_colour == warning, "a file that no longer matches reads as a warning"
-            assert file_text == tr("tui.modelo.workbench.header.file_out_of_date", date=day, key="e")
+            assert file_text == tr("workspace.modelo.header.file_out_of_date", date=day, key="e")
             assert next_line == next_words("e", "export_again", date=day)
             assert after_f8 is screen, "F8 neither records the filing nor asks to"
-            assert notice == tr("tui.modelo.workbench.record.refused_file_out_of_date", date=day)
+            assert notice == tr("workspace.modelo.record.refused_file_out_of_date", date=day)
             assert actions.requested == []
             assert actions.exports == []
 
@@ -184,7 +182,7 @@ def test_a_file_exported_for_real_reaches_the_header_through_the_installed_workb
         assert unit is not None
         installed = application_workbench(unit, operation=operation)
         read = installed.load(_EN).form.last_export
-        expected = tr("tui.modelo.workbench.header.file_created", date=day_text(exported_at, _EN))
+        expected = tr("workspace.modelo.header.file_created", date=day_text(exported_at, _EN))
 
         async def header() -> str:
             screen = ModeloWorkbenchScreen(installed)

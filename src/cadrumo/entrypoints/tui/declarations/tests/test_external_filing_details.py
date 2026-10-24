@@ -82,7 +82,7 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
             assert local.declaration is not None and local.declaration.summary is not None
             assert local.declaration.summary.result == private_amount
             local_text = "\n".join(str(cell) for cell in table.get_row(local.key))
-            assert tr("tui.declarations.list.state.local_draft") in local_text
+            assert tr("workspace.declarations.list.state.local_draft") in local_text
             table.move_cursor(row=next(i for i, row in enumerate(table.ordered_rows) if row.key.value == external.key))
             table.focus()
             await pilot.press("enter")
@@ -92,7 +92,7 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
             assert app.focused is modal.query_one("#external-filing-close", Button)
             text = "\n".join(str(widget.render()) for widget in modal.query(Static))
             for key in ("confirmed", "no_refile", "unavailable"):
-                assert tr("tui.declarations.list.aeat_unlinked.help." + key) in text
+                assert tr("workspace.declarations.list.aeat_unlinked.help." + key) in text
             assert "7900" not in text and "7,900" not in text and "7.900" not in text and "7 900" not in text
             assert "2025" in text and "15" in text
             assert external.calendar is not None and external.calendar.aeat_reference_id is not None
@@ -139,6 +139,6 @@ async def test_mounted_external_details_reword_preserves_row_disclosure_and_focu
                 assert detail.display and detail.content == reference
                 assert modal.focused is focused
                 assert str(modal.query_one("#external-filing-close", Button).label) == tr(
-                    "tui.modelo.workbench.key.close", locale="es"
+                    "workspace.modelo.key.close", locale="es"
                 )
                 assert modal.is_mounted

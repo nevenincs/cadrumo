@@ -183,7 +183,7 @@ async def test_the_boxes_it_affects_come_between_can_you_change_it_and_the_new_v
             field_input = editor.query_one("#editor-input", Input).region
             hint = editor.query_one("#editor-hint").region
             hint_text = _text(editor, "#editor-hint")
-            money_format = tr("tui.modelo.workbench.editor.format.money")
+            money_format = tr("workspace.modelo.editor.format.money")
             affects = editor.query_one("#editor-affects").region
 
     assert affects.y == can_change.bottom, "'Affects' comes straight after 'Can you change it?'"
@@ -278,7 +278,7 @@ async def test_the_highlighted_button_keeps_and_goes_to_the_next_box(language: s
             primary = [str(button.label) for button in editor.query(Button) if button.variant == "primary"]
             keep = editor.query_one("#editor-save", Button)
             keep_variant = keep.variant
-            save_next = tr("tui.modelo.workbench.editor.save_next")
+            save_next = tr("workspace.modelo.editor.save_next")
             await pilot.click("#editor-save-next")
             await settle(pilot)
 
@@ -456,9 +456,7 @@ def test_where_it_comes_from_names_the_earlier_declarations_a_value_is_carried_f
     period = Period.from_year_and_code(2025, "4T")
     with override_settings(cadrumo_output_language="es"):
         where = where_from_text(carried)
-        filing = tr(
-            "tui.modelo.workbench.origin_source.imported.named_filing", modelo="130", period=period_words(period)
-        )
+        filing = tr("workspace.modelo.origin_source.imported.named_filing", modelo="130", period=period_words(period))
 
     assert where == f"Declaración anterior\n{filing}"
     assert "130" in filing
@@ -483,7 +481,7 @@ def test_a_recorded_declaration_makes_even_a_typed_box_read_only() -> None:
     with override_settings(cadrumo_output_language="en"):
         typed = read_only_reason(_assumed(), OutputLanguage.EN)
         recorded = read_only_reason(_assumed(), OutputLanguage.EN, recorded=True)
-        correction = tr("tui.modelo.workbench.editor.can_change.recorded")
+        correction = tr("workspace.modelo.editor.can_change.recorded")
 
     assert typed is None
     # A filed declaration's answer says how to change it: by starting a correction.

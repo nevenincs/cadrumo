@@ -130,9 +130,9 @@ async def _listed_revision(pilot: Any, *, calculation_revision_id: str) -> tuple
             (
                 member.value
                 for member in CalculationRevisionState
-                if tr(f"tui.declarations.revision_state.{member.value}") == str(cells[2])
+                if tr(f"workspace.declarations.revision_state.{member.value}") == str(cells[2])
             ),
             None,
         )
-        return str(cells[3]) == tr("tui.declarations.value.yes"), state
+        return str(cells[3]) == tr("workspace.declarations.value.yes"), state
     return False, None

@@ -35,10 +35,10 @@ class SortOrder(StrEnum):
 
 SORT_LOCALE_KEYS: Final[Mapping[SortOrder, str]] = MappingProxyType(
     {
-        SortOrder.FORM: "tui.modelo.workbench.sort.form",
-        SortOrder.BOX: "tui.modelo.workbench.sort.box",
-        SortOrder.AMOUNT: "tui.modelo.workbench.sort.amount",
-        SortOrder.ATTENTION: "tui.modelo.workbench.sort.attention",
+        SortOrder.FORM: "workspace.modelo.sort.form",
+        SortOrder.BOX: "workspace.modelo.sort.box",
+        SortOrder.AMOUNT: "workspace.modelo.sort.amount",
+        SortOrder.ATTENTION: "workspace.modelo.sort.attention",
     }
 )
 """The words naming each order on the page title line; total over the orders."""

@@ -82,25 +82,25 @@ _ATTENTION_LEVELS: Final[Mapping[ModeloFormAttention, IssueLevel]] = MappingProx
 _DETAIL_LOCALE_KEYS: Final[Mapping[ModeloVerificationFindingKind, str]] = MappingProxyType(
     {
         ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA: (
-            "tui.modelo.workbench.issues.detail.missing_required_casilla"
+            "workspace.modelo.issues.detail.missing_required_casilla"
         ),
         ModeloVerificationFindingKind.RECONCILIATION_MISMATCH: (
-            "tui.modelo.workbench.issues.detail.reconciliation_mismatch"
+            "workspace.modelo.issues.detail.reconciliation_mismatch"
         ),
         ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN: (
-            "tui.modelo.workbench.issues.detail.cross_period_dependency_unclean"
+            "workspace.modelo.issues.detail.cross_period_dependency_unclean"
         ),
-        ModeloVerificationFindingKind.BLOCKING_RULE: "tui.modelo.workbench.issues.detail.blocking_rule",
-        ModeloVerificationFindingKind.ADVISORY: "tui.modelo.workbench.issues.detail.advisory",
-        ModeloVerificationFindingKind.STALE_CALCULATION: "tui.modelo.workbench.issues.detail.stale_calculation",
+        ModeloVerificationFindingKind.BLOCKING_RULE: "workspace.modelo.issues.detail.blocking_rule",
+        ModeloVerificationFindingKind.ADVISORY: "workspace.modelo.issues.detail.advisory",
+        ModeloVerificationFindingKind.STALE_CALCULATION: "workspace.modelo.issues.detail.stale_calculation",
     }
 )
 
 _VERDICT_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = MappingProxyType(
     {
-        VerificationCompletenessStatus.COMPLETE: "tui.modelo.workbench.issues.verdict.complete",
-        VerificationCompletenessStatus.INCOMPLETE: "tui.modelo.workbench.issues.verdict.incomplete",
-        VerificationCompletenessStatus.BLOCKED: "tui.modelo.workbench.issues.verdict.blocked",
+        VerificationCompletenessStatus.COMPLETE: "workspace.modelo.issues.verdict.complete",
+        VerificationCompletenessStatus.INCOMPLETE: "workspace.modelo.issues.verdict.incomplete",
+        VerificationCompletenessStatus.BLOCKED: "workspace.modelo.issues.verdict.blocked",
     }
 )
 
@@ -115,14 +115,14 @@ _UNENTERED_ORIGINS: Final[Mapping[IssueLevel, ModeloFormOrigin]] = MappingProxyT
 _UNENTERED_LOCALE_KEYS: Final[Mapping[IssueLevel, tuple[str, str, str]]] = MappingProxyType(
     {
         IssueLevel.MISSING: (
-            "tui.modelo.workbench.issues.missing",
-            "tui.modelo.workbench.issues.action.fill",
-            "tui.modelo.workbench.issues.action.fill_by_section",
+            "workspace.modelo.issues.missing",
+            "workspace.modelo.issues.action.fill",
+            "workspace.modelo.issues.action.fill_by_section",
         ),
         IssueLevel.CONFIRM: (
-            "tui.modelo.workbench.issues.assumed",
-            "tui.modelo.workbench.issues.action.confirm",
-            "tui.modelo.workbench.issues.action.confirm_by_section",
+            "workspace.modelo.issues.assumed",
+            "workspace.modelo.issues.action.confirm",
+            "workspace.modelo.issues.action.confirm_by_section",
         ),
     }
 )
@@ -321,16 +321,16 @@ def title_text(counts: Mapping[IssueLevel, int], *, recorded: bool = False) -> s
         for level, count in counts.items()
         if count and not (recorded and level in TO_DO_LEVELS)
     )
-    title = tr("tui.modelo.workbench.issues.title")
+    title = tr("workspace.modelo.issues.title")
     return f"{title}   {chips}" if chips else title
 
 
 def verdict_text(form: ModeloWorkForm, *, changes_unapplied: bool = False) -> str:
     """Say what the last check concluded, or that the declaration has not been checked."""
     if form.verification is None:
-        return tr("tui.modelo.workbench.issues.verdict.none")
+        return tr("workspace.modelo.issues.verdict.none")
     if changes_unapplied and form.verification is VerificationCompletenessStatus.COMPLETE:
-        return tr("tui.modelo.workbench.issues.verdict.saved_with_changes")
+        return tr("workspace.modelo.issues.verdict.saved_with_changes")
     return tr(_VERDICT_LOCALE_KEYS[form.verification])
 
 

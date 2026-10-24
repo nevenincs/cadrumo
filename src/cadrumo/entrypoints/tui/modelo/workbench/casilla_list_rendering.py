@@ -211,7 +211,7 @@ class CasillaListRenderingMixin:
 
     def _detail(self: CasillaList, entry: _models.CasillaListEntry) -> str:
         if entry.previous_text is not None:
-            return tr("tui.modelo.workbench.was", value=entry.previous_text)
+            return tr("workspace.modelo.was", value=entry.previous_text)
         if entry.attention is Attention.BLOCKED:
             return tr(attention_words_key(Attention.BLOCKED))
         bindings = entry.field.bindings

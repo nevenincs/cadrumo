@@ -49,7 +49,7 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
             assert not create.display
             assert not picker.query_one("#declaration-picker-hint", Static).display
             assert str(picker.query_one("#declaration-picker-cancel", Button).label) == tr(
-                "tui.modelo.workbench.editor.cancel"
+                "workspace.modelo.editor.cancel"
             )
             assert not picker.query(Input)
             assert geometry_band(app, size[0]) == []
@@ -69,7 +69,7 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
             assert create.disabled and picker.selected is None
             assert create.display
             hint = picker.query_one("#declaration-picker-hint", Static)
-            assert hint.display and str(hint.render()) == tr("tui.declarations.list.new.period_selection_hint")
+            assert hint.display and str(hint.render()) == tr("workspace.declarations.list.new.period_selection_hint")
             assert picker.region.contains_region(hint.region) and hint.region.bottom <= table.region.y
             assert "2025" in str(table.get_row_at(0)[0])
             assert "2025" in str(table.get_row_at(1)[0])

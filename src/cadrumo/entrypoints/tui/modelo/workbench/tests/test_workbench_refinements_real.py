@@ -190,7 +190,7 @@ async def test_the_help_band_never_breaks_a_citation_between_art_and_its_number(
         assert isinstance(field.address, ModeloFormCasillaAddressV1)
         card = annual_iva.help_card(field.address.casilla_id, OutputLanguage.EN)
         assert any(item.text.endswith(_ART_71_TEXT) for item in card.legal_basis)
-        line = tr("tui.modelo.workbench.help.legal", citations="; ".join(item.text for item in card.legal_basis))
+        line = tr("workspace.modelo.help.legal", citations="; ".join(item.text for item in card.legal_basis))
         width = next(width for width in range(76, 200) if _splits_the_citation(line, width))
         screen = ModeloWorkbenchScreen(annual_iva, actions=annual_iva)
         app = ScreenHostApp(screen)

@@ -115,11 +115,11 @@ def section_title(section: ModeloFormSection, *, page_number: int, part_number: 
 
 def _section_location_title(boxes: list[str], *, page_number: int, part_number: int) -> ModeloFormText:
     if len(boxes) == 1:
-        text = tr("tui.modelo.workbench.section.box", box=boxes[0])
+        text = tr("workspace.modelo.section.box", box=boxes[0])
     elif boxes and all(box.isascii() and box.isdecimal() for box in boxes):
-        text = tr("tui.modelo.workbench.section.boxes", first=min(boxes, key=int), last=max(boxes, key=int))
+        text = tr("workspace.modelo.section.boxes", first=min(boxes, key=int), last=max(boxes, key=int))
     else:
-        text = tr("tui.modelo.workbench.section.part", page=page_number, part=part_number)
+        text = tr("workspace.modelo.section.part", page=page_number, part=part_number)
     return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.LOCALIZED)
 
 
@@ -128,7 +128,7 @@ def page_title(heading: ModeloFormText, *, page_number: int) -> ModeloFormText:
     if readable_text(heading) is not None:
         return heading
     return ModeloFormText(
-        text=tr("tui.modelo.workbench.page_number", page=page_number), disclosure=ModeloFormTextDisclosure.LOCALIZED
+        text=tr("workspace.modelo.page_number", page=page_number), disclosure=ModeloFormTextDisclosure.LOCALIZED
     )
 
 
@@ -512,7 +512,7 @@ def breadcrumb(
     ``not_applying`` is said, dimmed, in place of the counts of a page that does not apply this period.
     """
     page = pages[current]
-    parts = [tr("tui.modelo.workbench.page_position", current=current + 1, total=len(pages)), page.heading.text]
+    parts = [tr("workspace.modelo.page_position", current=current + 1, total=len(pages)), page.heading.text]
     if section is not None:
         parts.append(section.heading.text)
     line = Text(" · ".join(parts))

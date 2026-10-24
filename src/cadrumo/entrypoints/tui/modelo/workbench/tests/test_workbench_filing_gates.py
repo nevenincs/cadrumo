@@ -128,11 +128,11 @@ async def test_the_file_and_the_recording_are_withheld_by_each_cause_and_say_whi
     if cause == "one-assumed":
         assert isinstance(after_export, BulkConfirmScreen), "the confirm step is offered in place of the export"
         assert [field.address for field in offered] == [ModeloFormCasillaAddressV1(casilla_id=_WITHHOLDING)]
-        assert export_notice == tr("tui.modelo.workbench.export.confirm_first", locale="en", count=1)
+        assert export_notice == tr("workspace.modelo.export.confirm_first", locale="en", count=1)
         assert isinstance(after_f8, BulkConfirmScreen), "F8 goes to the confirm step"
     elif cause in {"one-blocking", "one-blocking-note"}:
         assert isinstance(after_export, WorkbenchIssuesScreen), "what blocks filing is shown in place of the export"
-        assert export_notice == tr("tui.modelo.workbench.export.resolve_first", locale="en", count=1)
+        assert export_notice == tr("workspace.modelo.export.resolve_first", locale="en", count=1)
         assert isinstance(after_f8, WorkbenchIssuesScreen), "F8 goes to what blocks filing"
     else:
         assert isinstance(after_export, WorkbenchExportScreen)
@@ -278,7 +278,7 @@ async def test_the_bulk_confirm_tick_reads_unticked_until_the_filer_ticks_it() -
             value = tick.value
             app.exit(None)
 
-    label = tr("tui.modelo.workbench.bulk_confirm.tick", locale="en")
+    label = tr("workspace.modelo.bulk_confirm.tick", locale="en")
     assert unticked.startswith("[ ]") and label in unticked
     assert "✓" not in unticked and "X" not in unticked
     assert value

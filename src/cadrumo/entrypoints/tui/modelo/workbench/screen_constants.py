@@ -56,8 +56,8 @@ _HELP_ONLY_KEYS: Final[tuple[str, ...]] = ("space",)
 _CHANGE_KEYS: Final[frozenset[str]] = frozenset({"R", "b", "c", "f8", "n"})
 """Footer keys that change a declaration or lead to what is left to do; a declaration recorded as filed shows none."""
 _NONE_TO_CONFIRM_LOCALE_KEYS: Final[Mapping[bool, str]] = {
-    True: "tui.modelo.workbench.bulk_confirm.none_in_section",
-    False: "tui.modelo.workbench.bulk_confirm.none_on_page",
+    True: "workspace.modelo.bulk_confirm.none_in_section",
+    False: "workspace.modelo.bulk_confirm.none_on_page",
 }
 """What ``b`` says with nothing assumed in the section under the cursor (``True``) or on the page."""
 _VALUE_CHANGING_OPERATIONS: Final[frozenset[str]] = frozenset(
@@ -96,9 +96,9 @@ _NEXT_KEYS: Final[Mapping[ModeloFormNextAction, str]] = {
 _FINDINGS_KEY: Final[str] = _NEXT_KEYS[ModeloFormNextAction.RESOLVE]
 """The key the next-action line names when the findings list leads to what is left, whichever step it is."""
 _CHECKED_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = {
-    VerificationCompletenessStatus.COMPLETE: "tui.modelo.workbench.operation.checked.complete",
-    VerificationCompletenessStatus.INCOMPLETE: "tui.modelo.workbench.operation.checked.incomplete",
-    VerificationCompletenessStatus.BLOCKED: "tui.modelo.workbench.operation.checked.blocked",
+    VerificationCompletenessStatus.COMPLETE: "workspace.modelo.operation.checked.complete",
+    VerificationCompletenessStatus.INCOMPLETE: "workspace.modelo.operation.checked.incomplete",
+    VerificationCompletenessStatus.BLOCKED: "workspace.modelo.operation.checked.blocked",
 }
 _DEADLINE_TONE_CLASSES: Final[Mapping[DeadlineTone, str]] = {
     DeadlineTone.NORMAL: "-normal",
@@ -107,42 +107,42 @@ _DEADLINE_TONE_CLASSES: Final[Mapping[DeadlineTone, str]] = {
     DeadlineTone.MUTED: "-muted",
 }
 _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = {
-    "left_square_bracket": "tui.modelo.workbench.key.previous_page",
-    "right_square_bracket": "tui.modelo.workbench.key.next_page",
-    "f": "tui.modelo.workbench.key.filter",
-    "question_mark": "tui.modelo.workbench.key.help",
-    "escape": "tui.modelo.workbench.key.back",
-    "R": "tui.modelo.workbench.key.review",
-    "f8": "tui.modelo.workbench.key.next_step",
-    "c": "tui.modelo.workbench.key.calculate",
-    "e": "tui.modelo.workbench.key.export",
-    "i": "tui.modelo.workbench.key.issues",
-    "n": "tui.modelo.workbench.key.next_attention",
-    "slash": "tui.modelo.workbench.key.search",
-    "g": "tui.modelo.workbench.key.go_to",
-    "o": "tui.modelo.workbench.key.sort",
-    "b": "tui.modelo.workbench.bulk_confirm.title",
-    "space": "tui.modelo.workbench.key.fold",
+    "left_square_bracket": "workspace.modelo.key.previous_page",
+    "right_square_bracket": "workspace.modelo.key.next_page",
+    "f": "workspace.modelo.key.filter",
+    "question_mark": "workspace.modelo.key.help",
+    "escape": "workspace.modelo.key.back",
+    "R": "workspace.modelo.key.review",
+    "f8": "workspace.modelo.key.next_step",
+    "c": "workspace.modelo.key.calculate",
+    "e": "workspace.modelo.key.export",
+    "i": "workspace.modelo.key.issues",
+    "n": "workspace.modelo.key.next_attention",
+    "slash": "workspace.modelo.key.search",
+    "g": "workspace.modelo.key.go_to",
+    "o": "workspace.modelo.key.sort",
+    "b": "workspace.modelo.bulk_confirm.title",
+    "space": "workspace.modelo.key.fold",
 }
 _LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {
-    "enter": "tui.modelo.workbench.key.edit",
-    "s": "tui.modelo.workbench.key.sources",
-    "up": "tui.modelo.workbench.key.scroll",
+    "enter": "workspace.modelo.key.edit",
+    "s": "workspace.modelo.key.sources",
+    "up": "workspace.modelo.key.scroll",
 }
-_RECORDED_ENTER_LOCALE_KEY: Final[str] = "tui.modelo.workbench.sources.key.go"
+_RECORDED_ENTER_LOCALE_KEY: Final[str] = "workspace.modelo.sources.key.go"
 """What Enter does on a declaration recorded as filed: it opens the box, to read it, never to edit it."""
-_CLOSE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.close"
-_EMPTY_LOCALE_KEY: Final[str] = "tui.modelo.workbench.filter.empty"
-_EMPTY_NEXT_LOCALE_KEY: Final[str] = "tui.modelo.workbench.filter.empty_next"
+_CLOSE_LOCALE_KEY: Final[str] = "workspace.modelo.key.close"
+_EMPTY_LOCALE_KEY: Final[str] = "workspace.modelo.filter.empty"
+_EMPTY_NEXT_LOCALE_KEY: Final[str] = "workspace.modelo.filter.empty_next"
 _CRUMB_SEPARATOR: Final[str] = " · "
-_FILE_OUT_OF_DATE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.record.refused_file_out_of_date"
+_FILE_OUT_OF_DATE_LOCALE_KEY: Final[str] = "workspace.modelo.record.refused_file_out_of_date"
 """Why recording the filing is refused while the latest file was made from an earlier calculation."""
-_WITHHELD_LOCALE_KEY: Final[str] = "tui.modelo.workbench.export.confirm_first"
+_WITHHELD_LOCALE_KEY: Final[str] = "workspace.modelo.export.confirm_first"
 """Why neither the file for the AEAT nor recording the filing is offered while an assumed value remains."""
-_BLOCKED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.export.resolve_first"
+_BLOCKED_LOCALE_KEY: Final[str] = "workspace.modelo.export.resolve_first"
 """Why neither is offered while something blocks filing."""
 _LEGEND_KEYS: Final[frozenset[str]] = frozenset({"escape"})
-_SCROLL_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.scroll"
+_SCROLL_LOCALE_KEY: Final[str] = "workspace.modelo.key.scroll"
 """The only keys the footer shows while the symbols panel is open."""
 _GREETED: Final[WeakSet[object]] = WeakSet()
 """The applications whose filer has already been told once where to find what the symbols mean."""

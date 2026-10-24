@@ -84,12 +84,12 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
     @override
     def compose(self) -> ComposeResult:
         yield localized(
-            Static(tr("tui.declarations.list.title"), classes="cadrumo-banner", markup=False),
-            "tui.declarations.list.title",
+            Static(tr("workspace.declarations.list.title"), classes="cadrumo-banner", markup=False),
+            "workspace.declarations.list.title",
         )
         yield localized(
-            Input(placeholder=tr("tui.declarations.list.search.hint"), id="declarations-search"),
-            "tui.declarations.list.search.hint",
+            Input(placeholder=tr("workspace.declarations.list.search.hint"), id="declarations-search"),
+            "workspace.declarations.list.search.hint",
         )
         yield Static(id="declarations-list-context", classes="cadrumo-heading", markup=False)
         yield Static(id="declarations-keys", markup=False)
@@ -102,19 +102,20 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             yield Static(id="declarations-sources", markup=False)
             with Horizontal(id="declarations-links"):
                 yield localized(
-                    Button(tr("tui.declarations.list.key.new"), id="declarations-new"), "tui.declarations.list.key.new"
+                    Button(tr("workspace.declarations.list.key.new"), id="declarations-new"),
+                    "workspace.declarations.list.key.new",
                 )
                 yield localized(
-                    Button(tr("tui.declarations.destination.revisions"), id="declarations-revisions"),
-                    "tui.declarations.destination.revisions",
+                    Button(tr("workspace.declarations.destination.revisions"), id="declarations-revisions"),
+                    "workspace.declarations.destination.revisions",
                 )
                 yield localized(
-                    Button(tr("tui.declarations.destination.filing_history"), id="declarations-filings"),
-                    "tui.declarations.destination.filing_history",
+                    Button(tr("workspace.declarations.destination.filing_history"), id="declarations-filings"),
+                    "workspace.declarations.destination.filing_history",
                 )
                 yield localized(
-                    Button(tr("tui.declarations.destination.calendar"), id="declarations-calendar"),
-                    "tui.declarations.destination.calendar",
+                    Button(tr("workspace.declarations.destination.calendar"), id="declarations-calendar"),
+                    "workspace.declarations.destination.calendar",
                 )
 
     def on_mount(self) -> None:
@@ -144,7 +145,7 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
     async def refresh_language(self) -> None:
         """Reword the portfolio without changing its query, folds or selection."""
         await super().refresh_language()
-        self.query_one("#declarations-search", Input).placeholder = tr("tui.declarations.list.search.hint")
+        self.query_one("#declarations-search", Input).placeholder = tr("workspace.declarations.list.search.hint")
         self._populate()
         self._render_sources()
 
@@ -173,11 +174,11 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         populate_portfolio_groups(table, visible, self.folded, width, language, self.controller)
         table.absorb_surplus_width()
         self.query_one("#declarations-list-context", Static).update(
-            tr("tui.declarations.list.filter." + _FILTERS[self.filter_index])
+            tr("workspace.declarations.list.filter." + _FILTERS[self.filter_index])
             + " · "
-            + tr("tui.declarations.list.sort." + _SORTS[self.sort_index])
+            + tr("workspace.declarations.list.sort." + _SORTS[self.sort_index])
         )
-        self.query_one("#declarations-empty", Static).update("" if visible else tr("tui.declarations.list.empty"))
+        self.query_one("#declarations-empty", Static).update("" if visible else tr("workspace.declarations.list.empty"))
         index = next((i for i, row in enumerate(table.ordered_rows) if row.key.value == selected), None)
         if index is not None:
             table.move_cursor(row=index)
@@ -284,10 +285,10 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             if existing is not None:
                 self.app.push_screen(
                     ConfirmScreen(
-                        title=lambda: tr("tui.declarations.list.new.exists"),
+                        title=lambda: tr("workspace.declarations.list.new.exists"),
                         message=lambda: natural_address(target.modelo, target.period.filing_year, target.period),
-                        confirm_label=lambda: tr("tui.declarations.calendar.action.open"),
-                        cancel_label=lambda: tr("tui.modelo.workbench.editor.cancel"),
+                        confirm_label=lambda: tr("workspace.declarations.calendar.action.open"),
+                        cancel_label=lambda: tr("workspace.modelo.editor.cancel"),
                     ),
                     lambda confirmed: self._open(existing) if confirmed is True else None,
                 )
@@ -301,7 +302,7 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             self._creating = False
             return
         notice = self.query_one("#declarations-work-create-notice", Static)
-        notice.update(tr("tui.declarations.work_create.progress"))
+        notice.update(tr("workspace.declarations.work_create.progress"))
         try:
             result = await asyncio.to_thread(handoff, target.modelo, target.period.filing_year, target.period)
             # Obligations the new declaration brings with it are said whether or not it opens.

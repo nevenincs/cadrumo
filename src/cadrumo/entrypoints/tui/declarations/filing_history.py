@@ -28,35 +28,35 @@ from .controller import (
 )
 
 _ORIGIN_LOCALE_KEYS: Final[Mapping[FilingOrigin, str]] = {
-    FilingOrigin.LOCAL: "tui.declarations.origin.local",
-    FilingOrigin.AEAT: "tui.declarations.origin.aeat",
+    FilingOrigin.LOCAL: "workspace.declarations.origin.local",
+    FilingOrigin.AEAT: "workspace.declarations.origin.aeat",
 }
 _CONFIRMATION_LOCALE_KEYS: Final[Mapping[AeatConfirmationState, str]] = {
-    AeatConfirmationState.PENDIENTE: "tui.declarations.confirmation.pendiente",
-    AeatConfirmationState.CONFIRMADA: "tui.declarations.confirmation.confirmada",
-    AeatConfirmationState.DISCREPANTE: "tui.declarations.confirmation.discrepante",
-    AeatConfirmationState.DESCARTADA: "tui.declarations.confirmation.descartada",
+    AeatConfirmationState.PENDIENTE: "workspace.declarations.confirmation.pendiente",
+    AeatConfirmationState.CONFIRMADA: "workspace.declarations.confirmation.confirmada",
+    AeatConfirmationState.DISCREPANTE: "workspace.declarations.confirmation.discrepante",
+    AeatConfirmationState.DESCARTADA: "workspace.declarations.confirmation.descartada",
 }
 _DECLARATION_KIND_LOCALE_KEYS: Final[Mapping[FilingDeclarationKind, str]] = {
-    FilingDeclarationKind.ORIGINAL: "tui.declarations.declaration_kind.original",
-    FilingDeclarationKind.COMPLEMENTARIA: "tui.declarations.declaration_kind.complementaria",
-    FilingDeclarationKind.SUSTITUTIVA: "tui.declarations.declaration_kind.sustitutiva",
-    FilingDeclarationKind.RECTIFICATIVA: "tui.declarations.declaration_kind.rectificativa",
+    FilingDeclarationKind.ORIGINAL: "workspace.declarations.declaration_kind.original",
+    FilingDeclarationKind.COMPLEMENTARIA: "workspace.declarations.declaration_kind.complementaria",
+    FilingDeclarationKind.SUSTITUTIVA: "workspace.declarations.declaration_kind.sustitutiva",
+    FilingDeclarationKind.RECTIFICATIVA: "workspace.declarations.declaration_kind.rectificativa",
 }
 
 
 def _lifecycle_label(row: DeclarationsWorkspaceLifecycleRefV1) -> str:
     """Render sanitized lifecycle meaning without exposing its transport token."""
-    return tr(f"tui.declarations.lifecycle.{row.kind.value}")
+    return tr(f"workspace.declarations.lifecycle.{row.kind.value}")
 
 
 def _configure_filing_table(table: DataTable[str]) -> None:
     """Declare the fixed filing-history columns from the authored catalogue."""
-    table.add_column(tr("tui.declarations.column.declaration"), key="declaration", width=16)
-    table.add_column(tr("tui.declarations.column.when"), key="when", width=20)
-    table.add_column(tr("tui.declarations.column.local_filing"), key="local", width=13)
-    table.add_column(tr("tui.declarations.column.aeat_confirmation"), key="confirmation", width=10)
-    table.add_column(tr("tui.declarations.column.aeat_evidence"), key="evidence", width=10)
+    table.add_column(tr("workspace.declarations.column.declaration"), key="declaration", width=16)
+    table.add_column(tr("workspace.declarations.column.when"), key="when", width=20)
+    table.add_column(tr("workspace.declarations.column.local_filing"), key="local", width=13)
+    table.add_column(tr("workspace.declarations.column.aeat_confirmation"), key="confirmation", width=10)
+    table.add_column(tr("workspace.declarations.column.aeat_evidence"), key="evidence", width=10)
 
 
 def _add_lifecycle_row(
@@ -65,7 +65,7 @@ def _add_lifecycle_row(
     lifecycle: DeclarationsWorkspaceLifecycleRefV1,
 ) -> None:
     """Project one sanitized lifecycle fact into the shared history table."""
-    not_applicable = tr("tui.declarations.value.not_applicable")
+    not_applicable = tr("workspace.declarations.value.not_applicable")
     table.add_row(
         natural_address(lifecycle.modelo, lifecycle.filing_year, lifecycle.period),
         timestamp_label(occurred_at),
@@ -95,11 +95,13 @@ def _add_filing_row(
 def _chain_detail(filing: DeclarationsWorkspaceFilingRefV1) -> str:
     """Describe where a chain entry came from, what kind it is and whether it corrects another."""
     return tr(
-        "tui.declarations.filing_history.chain_detail",
+        "workspace.declarations.filing_history.chain_detail",
         origin=tr(_ORIGIN_LOCALE_KEYS[filing.origin]),
         kind=tr(_DECLARATION_KIND_LOCALE_KEYS[filing.declaration_kind]),
         confirmation=tr(_CONFIRMATION_LOCALE_KEYS[filing.confirmation]),
-        amends=tr("tui.declarations.value.yes" if filing.amends_prior_entry else "tui.declarations.value.no"),
+        amends=tr(
+            "workspace.declarations.value.yes" if filing.amends_prior_entry else "workspace.declarations.value.no"
+        ),
     )
 
 
@@ -142,13 +144,14 @@ class DeclarationsFilingHistoryScreen(DeclarationsProjectionScreen):
     @override
     def compose(self) -> ComposeResult:
         yield localized(
-            Static(tr("tui.declarations.filing_history.title"), classes="cadrumo-banner", markup=False),
-            "tui.declarations.filing_history.title",
+            Static(tr("workspace.declarations.filing_history.title"), classes="cadrumo-banner", markup=False),
+            "workspace.declarations.filing_history.title",
         )
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
             yield localized(
-                Static(tr("tui.declarations.filing_history.axes"), markup=False), "tui.declarations.filing_history.axes"
+                Static(tr("workspace.declarations.filing_history.axes"), markup=False),
+                "workspace.declarations.filing_history.axes",
             )
             yield ContentDataTable[str](id="declarations-filings", cursor_type="row", zebra_stripes=True)
             yield Static(id="declarations-filing-chain", markup=False)

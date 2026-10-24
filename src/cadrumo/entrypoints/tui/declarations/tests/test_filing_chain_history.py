@@ -251,18 +251,18 @@ async def test_history_shows_chain_columns_and_reconciliation_and_override_event
             row_key = f"filing:{entry.filing_record_id}"
             cells = tuple(str(cell) for cell in table.get_row(row_key))
             assert cells[2:] == (
-                tr(f"tui.declarations.filing_state.{local_state}"),
-                tr(f"tui.declarations.confirmation.{confirmation}"),
-                tr(f"tui.declarations.{evidence}"),
+                tr(f"workspace.declarations.filing_state.{local_state}"),
+                tr(f"workspace.declarations.confirmation.{confirmation}"),
+                tr(f"workspace.declarations.{evidence}"),
             )
             table.move_cursor(row=table.get_row_index(row_key))
             await settle(pilot)
             assert str(detail.render()) == tr(
-                "tui.declarations.filing_history.chain_detail",
-                origin=tr(f"tui.declarations.origin.{origin}"),
-                kind=tr(f"tui.declarations.declaration_kind.{kind}"),
-                confirmation=tr(f"tui.declarations.confirmation.{confirmation}"),
-                amends=tr(f"tui.declarations.value.{amends}"),
+                "workspace.declarations.filing_history.chain_detail",
+                origin=tr(f"workspace.declarations.origin.{origin}"),
+                kind=tr(f"workspace.declarations.declaration_kind.{kind}"),
+                confirmation=tr(f"workspace.declarations.confirmation.{confirmation}"),
+                amends=tr(f"workspace.declarations.value.{amends}"),
             )
 
         keys = tuple(str(row.key.value) for row in table.ordered_rows)
@@ -275,11 +275,11 @@ async def test_history_shows_chain_columns_and_reconciliation_and_override_event
         )
         event_labels = [str(table.get_row(key)[2]) for key in keys[:3]]
         assert event_labels == [
-            tr("tui.declarations.lifecycle.observation_override_cleared"),
-            tr("tui.declarations.lifecycle.observation_overridden"),
-            tr("tui.declarations.lifecycle.reconciled"),
+            tr("workspace.declarations.lifecycle.observation_override_cleared"),
+            tr("workspace.declarations.lifecycle.observation_overridden"),
+            tr("workspace.declarations.lifecycle.reconciled"),
         ]
-        assert all("tui.declarations." not in label for label in event_labels)
+        assert all("workspace.declarations." not in label for label in event_labels)
         table.move_cursor(row=table.get_row_index("lifecycle:event-reconciled"))
         await settle(pilot)
         assert str(detail.render()) == ""

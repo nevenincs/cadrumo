@@ -64,9 +64,9 @@ async def test_records_changed_after_the_calculation_mark_it_out_of_date_and_lea
         form = _records_changed(form)
     actions = FakeActions()
     with override_settings(cadrumo_output_language="en"):
-        stale_words = f"{STALE_MARK.glyph} {tr('tui.modelo.workbench.header.stale.recalculate', key='c')}"
-        next_words = tr("tui.modelo.workbench.next_line", action=tr("tui.modelo.workbench.next.recalculate"), key="c")
-        calculate = tr("tui.modelo.workbench.step.calculate")
+        stale_words = f"{STALE_MARK.glyph} {tr('workspace.modelo.header.stale.recalculate', key='c')}"
+        next_words = tr("workspace.modelo.next_line", action=tr("workspace.modelo.next.recalculate"), key="c")
+        calculate = tr("workspace.modelo.step.calculate")
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(160, 40)) as pilot:

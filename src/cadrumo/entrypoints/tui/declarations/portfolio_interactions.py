@@ -30,7 +30,9 @@ def creation_notice(result: ModeloWorkCreateResultV1, target: DeclarationTarget,
     return "\n".join(
         (
             tr(
-                "tui.declarations.work_create.reused" if result.reused else "tui.declarations.work_create.created",
+                "workspace.declarations.work_create.reused"
+                if result.reused
+                else "workspace.declarations.work_create.created",
                 address=natural_address(target.modelo, target.period.filing_year, target.period),
             ),
             *advisories,

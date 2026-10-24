@@ -49,8 +49,8 @@ from .status_bar import StatusBar
 if TYPE_CHECKING:
     from .header import StatusLine
 
-_LEFT_OUT_SOURCED_LOCALE_KEY = "tui.modelo.workbench.bulk_confirm.left_out.sourced"
-_LEFT_OUT_NOT_CHANGEABLE_LOCALE_KEY = "tui.modelo.workbench.bulk_confirm.left_out.not_changeable"
+_LEFT_OUT_SOURCED_LOCALE_KEY = "workspace.modelo.bulk_confirm.left_out.sourced"
+_LEFT_OUT_NOT_CHANGEABLE_LOCALE_KEY = "workspace.modelo.bulk_confirm.left_out.not_changeable"
 _UNTICKED: Final[str] = "[ ]"
 _TICKED: Final[str] = "[✓]"
 
@@ -82,9 +82,9 @@ def left_out_notes(fields: tuple[ModeloFormField, ...]) -> tuple[str, ...]:
 def confirmation_table(fields: tuple[ModeloFormField, ...], language: OutputLanguage) -> Table:
     """The boxes to confirm as rows of box, concept and assumed value; long concepts wrap."""
     table = Table(box=None, expand=True, pad_edge=False, show_edge=False)
-    table.add_column(tr("tui.modelo.workbench.review.column.box"), no_wrap=True)
-    table.add_column(tr("tui.modelo.workbench.review.column.concept"), ratio=1, overflow="fold")
-    table.add_column(tr("tui.modelo.workbench.bulk_confirm.column.value"), no_wrap=True, justify="right")
+    table.add_column(tr("workspace.modelo.review.column.box"), no_wrap=True)
+    table.add_column(tr("workspace.modelo.review.column.concept"), ratio=1, overflow="fold")
+    table.add_column(tr("workspace.modelo.bulk_confirm.column.value"), no_wrap=True, justify="right")
     for field in fields:
         table.add_row(
             f"[{field.box}]" if (field.box is not None and field.box) else "",
@@ -194,20 +194,20 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
             if self._status_line is not None:
                 yield StatusBar(self._status_line, id="bulk-status")
             yield localized(
-                Static(tr("tui.modelo.workbench.bulk_confirm.title"), id="bulk-title", markup=False),
-                "tui.modelo.workbench.bulk_confirm.title",
+                Static(tr("workspace.modelo.bulk_confirm.title"), id="bulk-title", markup=False),
+                "workspace.modelo.bulk_confirm.title",
             )
             yield localized(
-                Static(tr("tui.modelo.workbench.bulk_confirm.intro"), id="bulk-intro", markup=False),
-                "tui.modelo.workbench.bulk_confirm.intro",
+                Static(tr("workspace.modelo.bulk_confirm.intro"), id="bulk-intro", markup=False),
+                "workspace.modelo.bulk_confirm.intro",
             )
             yield localized(
                 Static(
-                    tr("tui.modelo.workbench.bulk_confirm.count", count=len(self._fields)),
+                    tr("workspace.modelo.bulk_confirm.count", count=len(self._fields)),
                     id="bulk-count",
                     markup=False,
                 ),
-                "tui.modelo.workbench.bulk_confirm.count",
+                "workspace.modelo.bulk_confirm.count",
                 count=len(self._fields),
             )
             with VerticalScroll(id="bulk-body", can_focus=True):
@@ -215,24 +215,24 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
                 if self._left_out:
                     yield Static("\n".join(self._left_out), id="bulk-left-out", markup=False)
             yield TickBox(
-                tr("tui.modelo.workbench.bulk_confirm.tick"),
+                tr("workspace.modelo.bulk_confirm.tick"),
                 id="bulk-tick",
                 compact=True,
                 disabled=not self._fields,
             )
             with Horizontal(id="bulk-actions"):
                 yield localized(
-                    Button(tr("tui.modelo.workbench.editor.cancel"), id="bulk-cancel"),
-                    "tui.modelo.workbench.editor.cancel",
+                    Button(tr("workspace.modelo.editor.cancel"), id="bulk-cancel"),
+                    "workspace.modelo.editor.cancel",
                 )
                 yield localized(
                     Button(
-                        tr("tui.modelo.workbench.bulk_confirm.confirm"),
+                        tr("workspace.modelo.bulk_confirm.confirm"),
                         id="bulk-confirm",
                         variant="primary",
                         disabled=True,
                     ),
-                    "tui.modelo.workbench.bulk_confirm.confirm",
+                    "workspace.modelo.bulk_confirm.confirm",
                 )
 
     def on_resize(self, event: events.Resize) -> None:

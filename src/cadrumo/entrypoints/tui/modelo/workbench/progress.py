@@ -97,7 +97,7 @@ _STATUS_MARKS: Final[dict[StepStatus, WorkbenchMark | None]] = {
     StepStatus.PENDING: None,
 }
 _PENDING_STYLE: Final[str] = "dim"
-_NEXT_LINE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.next_line"
+_NEXT_LINE_LOCALE_KEY: Final[str] = "workspace.modelo.next_line"
 _DATED_ACTIONS: Final[frozenset[ModeloFormNextAction]] = frozenset(
     {ModeloFormNextAction.EXPORT_AGAIN, ModeloFormNextAction.RECORD_AFTER_FILE}
 )
@@ -223,7 +223,7 @@ def _step_states(
 
 
 def _step_name(step: WorkbenchStep) -> str:
-    return tr(f"tui.modelo.workbench.step.{step.value}")
+    return tr(f"workspace.modelo.step.{step.value}")
 
 
 def stepper_text(progress: WorkbenchProgress) -> Content:
@@ -253,10 +253,10 @@ def next_action_text(progress: WorkbenchProgress, language: OutputLanguage) -> s
     if action is ModeloFormNextAction.RECORDED:
         if progress.recorded_at is None:
             return f"{DONE_MARK.glyph} {_step_name(WorkbenchStep.FILE)}"
-        return tr("tui.modelo.workbench.next.recorded", date=date_text(progress.recorded_at.date(), language))
+        return tr("workspace.modelo.next.recorded", date=date_text(progress.recorded_at.date(), language))
     if action in _DATED_ACTIONS and progress.file_created_at is not None:
-        return tr(f"tui.modelo.workbench.next.{action.value}", date=day_text(progress.file_created_at, language))
-    return tr(f"tui.modelo.workbench.next.{action.value}", count=progress.count)
+        return tr(f"workspace.modelo.next.{action.value}", date=day_text(progress.file_created_at, language))
+    return tr(f"workspace.modelo.next.{action.value}", count=progress.count)
 
 
 def fit_next_line(action: str, key: str, width: int) -> str:

@@ -152,8 +152,8 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
     def compose(self) -> ComposeResult:
         with Container(id="export-backdrop"), VerticalScroll(id="export-panel"):
             yield localized(
-                Static(tr("tui.modelo.workbench.export.title"), id="export-title", markup=False),
-                "tui.modelo.workbench.export.title",
+                Static(tr("workspace.modelo.export.title"), id="export-title", markup=False),
+                "workspace.modelo.export.title",
             )
             yield localized(
                 Input(placeholder=tr("application.modelo.lifecycle.export_destination_placeholder"), id="export-path"),
@@ -178,8 +178,8 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
             yield Static("", id="export-notice", markup=False)
             with Horizontal(id="export-actions"):
                 yield localized(
-                    Button(tr("tui.modelo.workbench.editor.cancel"), id="export-cancel"),
-                    "tui.modelo.workbench.editor.cancel",
+                    Button(tr("workspace.modelo.editor.cancel"), id="export-cancel"),
+                    "workspace.modelo.editor.cancel",
                 )
                 yield localized(
                     Button(tr("application.modelo.lifecycle.export"), id="export-submit", variant="primary"),

@@ -525,7 +525,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.entrypoints.tui.modelo.workbench.review import REVIEW_EFFECTS
     from cadrumo.entrypoints.tui.modelo.workbench.session import StageRefusal
 
-    root = "tui.modelo.workbench"
+    root = "workspace.modelo"
     vocabularies: tuple[tuple[str, tuple[str, ...]], ...] = (
         ("origin", _enum_values(ModeloFormOrigin)),
         (
@@ -722,6 +722,7 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
     """
     from cadrumo.application.modelo.declaration_summary import DeclarationSummaryState
     from cadrumo.application.modelo.declarations_calendar import DeclarationsCalendarSource
+    from cadrumo.application.modelo.declarations_list import DeclarationListNextStep
     from cadrumo.application.modelo.declarations_workspace_contracts import (
         DeclarationsLifecycleKind,
         DeclarationsWorkspaceAvailability,
@@ -742,23 +743,23 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
 
     return (
         FStringKeyRegistration(
-            description="tui.declarations.list.advice.* (CoverageAdviceReason)",
-            key_factory=lambda v: f"tui.declarations.list.advice.{v}",
+            description="workspace.declarations.list.advice.* (CoverageAdviceReason)",
+            key_factory=lambda v: f"workspace.declarations.list.advice.{v}",
             values=_values(CoverageAdviceReason),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.list.filter.* (grouped declarations filter choices)",
-            key_factory=lambda v: f"tui.declarations.list.filter.{v}",
+            description="workspace.declarations.list.filter.* (grouped declarations filter choices)",
+            key_factory=lambda v: f"workspace.declarations.list.filter.{v}",
             values=("all", "attention", "this_year", "recorded", "not_started"),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.list.sort.* (grouped declarations sort choices)",
-            key_factory=lambda v: f"tui.declarations.list.sort.{v}",
+            description="workspace.declarations.list.sort.* (grouped declarations sort choices)",
+            key_factory=lambda v: f"workspace.declarations.list.sort.{v}",
             values=("deadline", "modelo", "result", "state"),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.list.state.* (summary states plus calendar-only states)",
-            key_factory=lambda v: f"tui.declarations.list.state.{v}",
+            description="workspace.declarations.list.state.* (summary states plus calendar-only states)",
+            key_factory=lambda v: f"workspace.declarations.list.state.{v}",
             # Recorded/discarded rows use explicit group/work-state keys.
             values=(
                 *(
@@ -776,58 +777,58 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
             ),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.list.next.* (row_words conditional action choices)",
-            key_factory=lambda v: f"tui.declarations.list.next.{v}",
-            values=("open_local_draft", "create_file", "none", "continue"),
+            description="workspace.declarations.list.next.* (DeclarationListNextStep)",
+            key_factory=lambda v: f"workspace.declarations.list.next.{v}",
+            values=_values(DeclarationListNextStep),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.availability.* (DeclarationsWorkspaceAvailability)",
-            key_factory=lambda v: f"tui.declarations.availability.{v}",
+            description="workspace.declarations.availability.* (DeclarationsWorkspaceAvailability)",
+            key_factory=lambda v: f"workspace.declarations.availability.{v}",
             values=_values(DeclarationsWorkspaceAvailability),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.lifecycle.* (DeclarationsLifecycleKind)",
-            key_factory=lambda v: f"tui.declarations.lifecycle.{v}",
+            description="workspace.declarations.lifecycle.* (DeclarationsLifecycleKind)",
+            key_factory=lambda v: f"workspace.declarations.lifecycle.{v}",
             values=_values(DeclarationsLifecycleKind),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.work_state.* (WorkUnitState)",
-            key_factory=lambda v: f"tui.declarations.work_state.{v}",
+            description="workspace.declarations.work_state.* (WorkUnitState)",
+            key_factory=lambda v: f"workspace.declarations.work_state.{v}",
             values=_values(WorkUnitState),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.revision_state.* (CalculationRevisionState)",
-            key_factory=lambda v: f"tui.declarations.revision_state.{v}",
+            description="workspace.declarations.revision_state.* (CalculationRevisionState)",
+            key_factory=lambda v: f"workspace.declarations.revision_state.{v}",
             values=_values(CalculationRevisionState),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.calendar.scope.* (DeclarationsCalendarScopeV1)",
-            key_factory=lambda v: f"tui.declarations.calendar.scope.{v}",
+            description="workspace.declarations.calendar.scope.* (DeclarationsCalendarScopeV1)",
+            key_factory=lambda v: f"workspace.declarations.calendar.scope.{v}",
             values=_values(DeclarationsCalendarScopeV1),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.calendar.source.* (DeclarationsCalendarSource)",
-            key_factory=lambda v: f"tui.declarations.calendar.source.{v}",
+            description="workspace.declarations.calendar.source.* (DeclarationsCalendarSource)",
+            key_factory=lambda v: f"workspace.declarations.calendar.source.{v}",
             values=_values(DeclarationsCalendarSource),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.calendar.legal.* (ObligationStatus, lowercased)",
-            key_factory=lambda v: f"tui.declarations.calendar.legal.{v.lower()}",
+            description="workspace.declarations.calendar.legal.* (ObligationStatus, lowercased)",
+            key_factory=lambda v: f"workspace.declarations.calendar.legal.{v.lower()}",
             values=_values(ObligationStatus),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.calendar.user.* (OverviewPeriodState)",
-            key_factory=lambda v: f"tui.declarations.calendar.user.{v}",
+            description="workspace.declarations.calendar.user.* (OverviewPeriodState)",
+            key_factory=lambda v: f"workspace.declarations.calendar.user.{v}",
             values=_values(OverviewPeriodState),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.calendar.local.* (OverviewLocalFilingState plus the None sentinel)",
-            key_factory=lambda v: f"tui.declarations.calendar.local.{v}",
+            description="workspace.declarations.calendar.local.* (OverviewLocalFilingState plus the None sentinel)",
+            key_factory=lambda v: f"workspace.declarations.calendar.local.{v}",
             values=(*_values(OverviewLocalFilingState), "unknown"),
         ),
         FStringKeyRegistration(
-            description="tui.declarations.calendar.aeat.* (OverviewAeatSubmissionState plus the None sentinel)",
-            key_factory=lambda v: f"tui.declarations.calendar.aeat.{v}",
+            description="workspace.declarations.calendar.aeat.* (OverviewAeatSubmissionState plus the None sentinel)",
+            key_factory=lambda v: f"workspace.declarations.calendar.aeat.{v}",
             values=(*_values(OverviewAeatSubmissionState), "unknown"),
         ),
     )

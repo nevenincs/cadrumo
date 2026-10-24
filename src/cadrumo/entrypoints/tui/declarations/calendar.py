@@ -39,7 +39,7 @@ from .models import CalendarRecoveryHandoffV1, DeclarationsCalendarScopeV1
 _TUI_REFUSAL_LOCALE_KEYS: dict[str, str] = {
     # The application's wording names the CLI command; here the same fix is a key away.
     "application.modelo.errors.profile_readiness_setup_incomplete": (
-        "tui.declarations.calendar.recovery.setup_incomplete"
+        "workspace.declarations.calendar.recovery.setup_incomplete"
     ),
 }
 
@@ -82,11 +82,11 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
     def compose(self) -> ComposeResult:
         yield localized(
             Static(
-                tr("tui.declarations.calendar.title"),
+                tr("workspace.declarations.calendar.title"),
                 classes="cadrumo-banner",
                 markup=False,
             ),
-            "tui.declarations.calendar.title",
+            "workspace.declarations.calendar.title",
         )
         with ContentScroll(
             id="declarations-calendar-page",
@@ -94,15 +94,15 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         ):
             yield localized(
                 Input(
-                    placeholder=tr("tui.declarations.calendar.search.placeholder"),
+                    placeholder=tr("workspace.declarations.calendar.search.placeholder"),
                     id="declarations-calendar-search",
                 ),
-                "tui.declarations.calendar.search.placeholder",
+                "workspace.declarations.calendar.search.placeholder",
             )
             yield Select[str](
                 tuple(
                     (
-                        tr(f"tui.declarations.calendar.scope.{scope.value}"),
+                        tr(f"workspace.declarations.calendar.scope.{scope.value}"),
                         scope.value,
                     )
                     for scope in DeclarationsCalendarScopeV1
@@ -132,14 +132,14 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         """Reword the agenda in place, keeping scope, query and semantic selection."""
         await super().refresh_language()
         self.query_one("#declarations-calendar-search", Input).placeholder = tr(
-            "tui.declarations.calendar.search.placeholder"
+            "workspace.declarations.calendar.search.placeholder"
         )
         scope = self.query_one("#declarations-calendar-scope", Select)
         chosen = scope.value
         with self.prevent(Select.Changed):
             scope.set_options(
                 tuple(
-                    (tr(f"tui.declarations.calendar.scope.{item.value}"), item.value)
+                    (tr(f"workspace.declarations.calendar.scope.{item.value}"), item.value)
                     for item in DeclarationsCalendarScopeV1
                 )
             )
@@ -156,11 +156,11 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             "ContentDataTable[str]",
             self.query_one("#declarations-calendar-agenda", ContentDataTable),
         )
-        table.add_column(tr("tui.declarations.calendar.column.close"), width=10)
-        table.add_column(tr("tui.declarations.calendar.column.declaration"), width=16)
-        table.add_column(tr("tui.declarations.calendar.column.legal"), width=13)
-        table.add_column(tr("tui.declarations.calendar.column.local"), width=13)
-        table.add_column(tr("tui.declarations.calendar.column.aeat"), width=12)
+        table.add_column(tr("workspace.declarations.calendar.column.close"), width=10)
+        table.add_column(tr("workspace.declarations.calendar.column.declaration"), width=16)
+        table.add_column(tr("workspace.declarations.calendar.column.legal"), width=13)
+        table.add_column(tr("workspace.declarations.calendar.column.local"), width=13)
+        table.add_column(tr("workspace.declarations.calendar.column.aeat"), width=12)
 
     def _refresh(self) -> None:
         table = cast("DataTable[str]", self.query_one("#declarations-calendar-agenda", DataTable))
@@ -231,12 +231,12 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             if observed_at is None:
                 raise ValueError("stale calendar schedule requires an observation time")
             return tr(
-                "tui.declarations.calendar.empty.stale",
+                "workspace.declarations.calendar.empty.stale",
                 observed=timestamp_label(observed_at),
             )
         if query or self.controller.projection.entries:
-            return tr("tui.declarations.calendar.empty.search")
-        return tr("tui.declarations.calendar.empty.known")
+            return tr("workspace.declarations.calendar.empty.search")
+        return tr("workspace.declarations.calendar.empty.known")
 
     def _selected_row(self, table: DataTable[str]) -> DeclarationsCalendarEntryRefV1 | None:
         if table.row_count == 0 or table.cursor_row < 0:
@@ -252,16 +252,16 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             if state.observed_at is not None:
                 observed = timestamp_label(state.observed_at)
             elif state.availability is HomeAvailability.NEVER_CAPTURED:
-                observed = tr("tui.declarations.calendar.never_observed")
+                observed = tr("workspace.declarations.calendar.never_observed")
             elif state.availability is HomeAvailability.AVAILABLE:
-                observed = tr("tui.declarations.calendar.observation.not_recorded")
+                observed = tr("workspace.declarations.calendar.observation.not_recorded")
             else:
-                observed = tr("tui.declarations.calendar.observation.time_not_recorded")
+                observed = tr("workspace.declarations.calendar.observation.time_not_recorded")
             lines.append(
                 tr(
-                    "tui.declarations.calendar.detail.source",
-                    source=tr(f"tui.declarations.calendar.source.{source.value}"),
-                    availability=tr(f"tui.declarations.availability.{state.availability.value}"),
+                    "workspace.declarations.calendar.detail.source",
+                    source=tr(f"workspace.declarations.calendar.source.{source.value}"),
+                    availability=tr(f"workspace.declarations.availability.{state.availability.value}"),
                     observed=observed,
                 )
             )
@@ -271,50 +271,52 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         lines = [
             natural_address(row.modelo, row.filing_year, row.period),
             tr(
-                "tui.declarations.calendar.detail.dates",
+                "workspace.declarations.calendar.detail.dates",
                 opening=calendar_date_label(row.opens_on),
                 payment=calendar_date_label(row.payment_cutoff_on),
                 original=calendar_date_label(row.closes_on),
                 effective=calendar_date_label(row.adjusted_closes_on),
                 evaluated=calendar_date_label(row.evaluated_on),
-                overdue=row.days_overdue if row.days_overdue is not None else tr("tui.declarations.calendar.none"),
+                overdue=row.days_overdue
+                if row.days_overdue is not None
+                else tr("workspace.declarations.calendar.none"),
                 shift=shift_reason_statement(row.shift_reason),
             ),
             tr(
-                "tui.declarations.calendar.detail.holidays",
+                "workspace.declarations.calendar.detail.holidays",
                 coverage=holiday_coverage_statement(row.holiday_coverage, row.holiday_territory),
             ),
             tr(
-                "tui.declarations.calendar.detail.axes",
+                "workspace.declarations.calendar.detail.axes",
                 legal=calendar_legal_label(row.legal_status),
                 local=calendar_local_label(row.local_filing_state),
                 aeat=calendar_aeat_label(row.aeat_submission_state),
                 receipt=tr(
-                    "tui.declarations.calendar.justificante.unknown"
+                    "workspace.declarations.calendar.justificante.unknown"
                     if row.justificante_verified is None
                     else (
-                        "tui.declarations.calendar.justificante.verified"
+                        "workspace.declarations.calendar.justificante.verified"
                         if row.justificante_verified
-                        else "tui.declarations.calendar.justificante.not_verified"
+                        else "workspace.declarations.calendar.justificante.not_verified"
                     )
                 ),
                 conflict=tr(
-                    "tui.declarations.calendar.evidence.conflicted"
+                    "workspace.declarations.calendar.evidence.conflicted"
                     if row.evidence_conflicted
-                    else "tui.declarations.calendar.evidence.clear"
+                    else "workspace.declarations.calendar.evidence.clear"
                 ),
             ),
         ]
         lines.extend(self._source_detail_lines())
         lines.append(
             tr(
-                "tui.declarations.calendar.detail.action",
+                "workspace.declarations.calendar.detail.action",
                 action=tr(
-                    "tui.declarations.calendar.action.create"
+                    "workspace.declarations.calendar.action.create"
                     if row.recovery_action is not None and self.controller.recovery_handoff is not None
-                    else "tui.declarations.calendar.action.open"
+                    else "workspace.declarations.calendar.action.open"
                     if self.controller.can_open(row)
-                    else "tui.declarations.list.not_openable.help"
+                    else "workspace.declarations.list.not_openable.help"
                 ),
             )
         )
@@ -348,16 +350,16 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
     def _confirm_recovery(self, action: DeclaredNextAction, row: DeclarationsCalendarEntryRefV1) -> None:
         """Offer one pending recovery while preserving handoff admission."""
         if self.controller.recovery_handoff is None:
-            self.query_one("#declarations-calendar-notice", Static).update(tr("tui.declarations.refusal.handoff"))
+            self.query_one("#declarations-calendar-notice", Static).update(tr("workspace.declarations.refusal.handoff"))
         elif self._pending_recovery is None and not self._recovery_in_flight:
             self._pending_recovery = (action, row)
             app = self.app
             app.push_screen(
                 ConfirmScreen(
-                    title=lambda: tr("tui.declarations.calendar.action.create"),
+                    title=lambda: tr("workspace.declarations.calendar.action.create"),
                     message=lambda: natural_address(row.modelo, row.filing_year, row.period),
-                    confirm_label=lambda: tr("tui.declarations.calendar.recovery.confirm"),
-                    cancel_label=lambda: tr("tui.declarations.calendar.recovery.cancel"),
+                    confirm_label=lambda: tr("workspace.declarations.calendar.recovery.confirm"),
+                    cancel_label=lambda: tr("workspace.declarations.calendar.recovery.cancel"),
                 ),
                 self._resolve_recovery_confirmation,
             )
@@ -380,7 +382,7 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             except CadrumoError as refusal:
                 self.query_one("#declarations-calendar-notice", Static).update(resolve_error_message(refusal))
         else:
-            self.query_one("#declarations-calendar-notice", Static).update(tr("tui.declarations.refusal.handoff"))
+            self.query_one("#declarations-calendar-notice", Static).update(tr("workspace.declarations.refusal.handoff"))
 
     def _resolve_recovery_confirmation(self, confirmed: bool | None) -> None:
         """Submit one pending recovery only after the local modal explicitly approves it."""
@@ -391,13 +393,13 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         action, row = pending
         handoff = self.controller.recovery_handoff
         if handoff is None:
-            self.query_one("#declarations-calendar-notice", Static).update(tr("tui.declarations.refusal.handoff"))
+            self.query_one("#declarations-calendar-notice", Static).update(tr("workspace.declarations.refusal.handoff"))
             return
         notice = self.query_one("#declarations-calendar-notice", Static)
         # The handoff reads the profile and writes the work unit, so it runs on
         # a worker thread; another row pressed meanwhile waits for it.
         self._recovery_in_flight = True
-        notice.update(tr("tui.declarations.calendar.recovery.progress"))
+        notice.update(tr("workspace.declarations.calendar.recovery.progress"))
         self.run_worker(self._submit_recovery(handoff, action, row), group="declarations-calendar-recovery")
 
     async def _submit_recovery(
@@ -417,13 +419,13 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             notice.update(tr(tui_key) if tui_key is not None else resolve_error_message(refusal))
             return
         except Exception:
-            notice.update(tr("tui.declarations.calendar.recovery.failure"))
+            notice.update(tr("workspace.declarations.calendar.recovery.failure"))
             return
         finally:
             self._recovery_in_flight = False
         notice.update(
             tr(
-                "tui.declarations.calendar.recovery.success",
+                "workspace.declarations.calendar.recovery.success",
                 address=natural_address(row.modelo, row.filing_year, row.period),
             )
         )

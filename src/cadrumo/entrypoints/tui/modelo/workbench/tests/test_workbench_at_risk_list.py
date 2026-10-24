@@ -135,9 +135,7 @@ async def test_a_modelo_100_whose_values_nobody_typed_names_sections_with_counts
                 str(dialog.query_one("#confirm-message", Static).render()) if isinstance(dialog, ConfirmScreen) else ""
             )
             app.exit(None)
-        lead = tr("tui.modelo.workbench.calculate.operator_entries_at_risk", count=total, boxes="\u0000").split(
-            "\u0000"
-        )
+        lead = tr("workspace.modelo.calculate.operator_entries_at_risk", count=total, boxes="\u0000").split("\u0000")
 
     assert isinstance(dialog, ConfirmScreen)
     listed = message.removeprefix(lead[0]).removesuffix(lead[1])

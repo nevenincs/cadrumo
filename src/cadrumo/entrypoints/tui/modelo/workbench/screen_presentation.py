@@ -144,7 +144,7 @@ class WorkbenchPresentationMixin:
         self._drawn["stepper"] = stepper_marks(progress)
         key = _FINDINGS_KEY if progress.findings_lead else _NEXT_KEYS[progress.next_action]
         action = (
-            tr("tui.modelo.workbench.apply_prerequisite.next")
+            tr("workspace.modelo.apply_prerequisite.next")
             if self._active_apply_prerequisite() is not None
             else next_action_text(progress, self._language)
         )
@@ -230,7 +230,7 @@ class WorkbenchPresentationMixin:
         if self._sort is not SortOrder.FORM:
             notes.append(tr(SORT_LOCALE_KEYS[self._sort]))
         if name_every_filter or self._filter is not WorkbenchFilter.ALL:
-            notes.append(tr(f"tui.modelo.workbench.filter.{self._filter.value}"))
+            notes.append(tr(f"workspace.modelo.filter.{self._filter.value}"))
         empty = self._empty_listing_note()
         if empty is not None:
             notes.append(empty)
@@ -264,17 +264,17 @@ class WorkbenchPresentationMixin:
         if self._sort is SortOrder.FORM:
             page = self._pages[self._page_index]
             title = page.heading.text
-            notes.append(tr("tui.modelo.workbench.page_position", current=self._page_index + 1, total=len(self._pages)))
+            notes.append(tr("workspace.modelo.page_position", current=self._page_index + 1, total=len(self._pages)))
             if not self._applies(self._page_index):
                 notes.append(self._not_applying_text())
             casilla_list.set_items(page_items(page, staged=staged, mode=self._filter), language=self._language)
         else:
-            title = tr("tui.modelo.workbench.sort.all_pages")
+            title = tr("workspace.modelo.sort.all_pages")
             items = sorted_items(self._pages, order=self._sort, staged=staged, mode=self._filter)
             casilla_list.set_items(items, language=self._language)
         notes.extend(self._listing_notes(name_every_filter=True))
         if form is not None and form.layout_provenance is not ModeloFormLayoutProvenance.REVIEWED:
-            notes.append(tr(f"tui.modelo.workbench.layout.{form.layout_provenance.value}"))
+            notes.append(tr(f"workspace.modelo.layout.{form.layout_provenance.value}"))
         self.query_one("#wb-page", Static).update(f"{title}   " + " · ".join(notes))
         self._render_breadcrumb()
         if casilla_list.highlighted is None:

@@ -88,13 +88,13 @@ REVIEW_EFFECTS: Final[tuple[str, ...]] = (
 """Every effect the review can state for a change; a replaced source is named by its family."""
 _NOTE_MARKS: Final[Mapping[bool, WorkbenchMark]] = {True: BLOCKS_MARK, False: CHECK_MARK}
 """A finding that refuses the changes blocks; any other is worth checking, marked as every surface marks it."""
-_AND_MORE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.review.and_more"
+_AND_MORE_LOCALE_KEY: Final[str] = "workspace.modelo.review.and_more"
 _NAMED_BOXES_UP_TO: Final[int] = 20
 """Past this many boxes a list of their numbers stops helping; the sections that hold them are named instead."""
 
 
 def _effect_key(effect: str) -> str:
-    return f"tui.modelo.workbench.review.effect.{effect}"
+    return f"workspace.modelo.review.effect.{effect}"
 
 
 def change_effect_key(change: StagedChange) -> str:
@@ -174,9 +174,9 @@ def unattributed_words(unattributed: UnattributedBoxes, *, console: Console, wid
 def at_risk_text(unattributed: UnattributedBoxes, *, console: Console, width: int) -> str:
     """Say what applying does to values nobody is recorded as having typed, naming their boxes at ``width``."""
     if not unattributed.boxes:
-        return tr("tui.modelo.workbench.review.operator_entries_unknown")
+        return tr("workspace.modelo.review.operator_entries_unknown")
     return tr(
-        "tui.modelo.workbench.review.operator_entries_at_risk",
+        "workspace.modelo.review.operator_entries_at_risk",
         count=len(unattributed.boxes),
         boxes=unattributed_words(unattributed, console=console, width=width),
     )
@@ -185,9 +185,9 @@ def at_risk_text(unattributed: UnattributedBoxes, *, console: Console, width: in
 def recalculation_risk_text(unattributed: UnattributedBoxes, *, console: Console, width: int) -> str:
     """Say what recalculating does to values nobody is recorded as having typed, naming their boxes at ``width``."""
     if not unattributed.boxes:
-        return tr("tui.modelo.workbench.calculate.operator_entries_unknown")
+        return tr("workspace.modelo.calculate.operator_entries_unknown")
     return tr(
-        "tui.modelo.workbench.calculate.operator_entries_at_risk",
+        "workspace.modelo.calculate.operator_entries_at_risk",
         count=len(unattributed.boxes),
         boxes=unattributed_words(unattributed, console=console, width=width),
     )
@@ -199,9 +199,9 @@ def change_line(change: StagedChange) -> str:
     box = f"[{field.box}] " if (field.box is not None and field.box) else ""
     effect = change_effect_text(change)
     if change.before_changed:
-        effect = f"{effect} · {tr('tui.modelo.workbench.review.before_changed')}"
+        effect = f"{effect} · {tr('workspace.modelo.review.before_changed')}"
     return tr(
-        "tui.modelo.workbench.review.change_line",
+        "workspace.modelo.review.change_line",
         box=box,
         concept=field.label.text,
         before=change.previous_text,
@@ -334,15 +334,13 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
             if self._status_line is not None:
                 yield StatusBar(self._status_line, id="review-status")
             yield localized(
-                Static(
-                    tr("tui.modelo.workbench.review.title", count=len(self._changes)), id="review-title", markup=False
-                ),
-                "tui.modelo.workbench.review.title",
+                Static(tr("workspace.modelo.review.title", count=len(self._changes)), id="review-title", markup=False),
+                "workspace.modelo.review.title",
                 count=len(self._changes),
             )
             yield localized(
-                Static(tr("tui.modelo.workbench.review.nothing_saved"), id="review-subtitle", markup=False),
-                "tui.modelo.workbench.review.nothing_saved",
+                Static(tr("workspace.modelo.review.nothing_saved"), id="review-subtitle", markup=False),
+                "workspace.modelo.review.nothing_saved",
             )
             with VerticalScroll(id="review-body", can_focus=True):
                 for index, change in enumerate(self._changes):
@@ -352,21 +350,21 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
                 if displacing:
                     yield localized(
                         Static(
-                            tr("tui.modelo.workbench.review.displacing", count=displacing),
+                            tr("workspace.modelo.review.displacing", count=displacing),
                             id="review-warning",
                             markup=False,
                         ),
-                        "tui.modelo.workbench.review.displacing",
+                        "workspace.modelo.review.displacing",
                         count=displacing,
                     )
                 if self._rebased:
                     yield localized(
                         Static(
-                            tr("tui.modelo.workbench.review.rebased", count=self._rebased),
+                            tr("workspace.modelo.review.rebased", count=self._rebased),
                             id="review-rebased",
                             markup=False,
                         ),
-                        "tui.modelo.workbench.review.rebased",
+                        "workspace.modelo.review.rebased",
                         count=self._rebased,
                     )
                 if self._at_risk is not None:
@@ -378,32 +376,32 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
                 if self._notes:
                     yield Static(self._notes_text(), id="review-findings", markup=False)
             if self._needs_acknowledgement:
-                yield TickBox(tr("tui.modelo.workbench.review.acknowledge"), id="review-acknowledge", compact=True)
+                yield TickBox(tr("workspace.modelo.review.acknowledge"), id="review-acknowledge", compact=True)
             with Horizontal(id="review-actions"):
                 yield localized(
-                    Button(tr("tui.modelo.workbench.review.back"), id="review-back"), "tui.modelo.workbench.review.back"
+                    Button(tr("workspace.modelo.review.back"), id="review-back"), "workspace.modelo.review.back"
                 )
                 yield localized(
-                    Button(tr("tui.modelo.workbench.review.discard"), id="review-discard", variant="error"),
-                    "tui.modelo.workbench.review.discard",
+                    Button(tr("workspace.modelo.review.discard"), id="review-discard", variant="error"),
+                    "workspace.modelo.review.discard",
                 )
                 yield localized(
                     Button(
-                        tr("tui.modelo.workbench.review.apply"),
+                        tr("workspace.modelo.review.apply"),
                         id="review-apply",
                         variant="primary",
                         disabled=not self._may_apply(acknowledged=False),
                     ),
-                    "tui.modelo.workbench.review.apply",
+                    "workspace.modelo.review.apply",
                 )
 
     def _notes_text(self) -> Content:
-        lines = [tr("tui.modelo.workbench.review.findings_heading")]
+        lines = [tr("workspace.modelo.review.findings_heading")]
         for note in self._notes:
             box = f"[{note.box}] " if (note.box is not None and note.box) else ""
             lines.append(f"{_NOTE_MARKS[note.blocking].glyph} {box}{note.message}")
         if self._blocked:
-            lines.append(tr("tui.modelo.workbench.review.blocked"))
+            lines.append(tr("workspace.modelo.review.blocked"))
         return blocks_marked("\n".join(lines))
 
     def _may_apply(self, *, acknowledged: bool) -> bool:
