@@ -66,7 +66,7 @@ from ...domain.modelos.verification_report import (
     VerificationCompletenessStatus,
 )
 from .calculation_report import CalculationReportRowRole
-from .source_policy import SourceFamily, SourceOverridePolicy, SourcePolicyV1
+from .source_policy import SourceFamily, SourceOverridePolicy, SourcePolicyV1, SourceSurface
 from .work_review import ModeloWorkProgress
 
 type ModeloFormScalar = Decimal | int | str | bool | date | None
@@ -941,6 +941,62 @@ class ModeloFormIssue(_FormModel):
         return self
 
 
+class ModeloFormSourceGroupKind(StrEnum):
+    """Where a box's value comes from, as the filer thinks of it; one per box."""
+
+    RECORDS = "records"
+    REGISTERS = "registers"
+    PROFILE = "profile"
+    EARLIER_DECLARATIONS = "earlier_declarations"
+    AEAT_DATA = "aeat_data"
+    YOURS = "yours"
+    REPLACED = "replaced"
+    ASSUMED = "assumed"
+    NEEDS_YOU = "needs_you"
+    CALCULATED = "calculated"
+    SET_BY_FORM = "set_by_form"
+    INFORMATION = "information"
+    BLANK = "blank"
+    UNNAMED = "unnamed"
+
+
+class ModeloFormSourceState(StrEnum):
+    """What a source gave this declaration."""
+
+    PRODUCED = "produced"
+    NONE_FOUND = "none_found"
+    NOT_YET = "not_yet"
+
+
+class ModeloFormSourceReading(_FormModel):
+    """One source feeding a group, what it gave, and the boxes listed under it, in the form's language."""
+
+    source_kind: BindingSourceKind
+    #: The product area that owns the source's data, which a frontend may open.
+    surface: SourceSurface
+    state: ModeloFormSourceState
+    words: str
+    addresses: tuple[ModeloFormAddressV1, ...]
+
+
+class ModeloFormSourceGroup(_FormModel):
+    """One group of where the form's values come from: its boxes, its sources, and its words.
+
+    ``boxes`` are the box numbers a closed group lists, for a group that asks
+    something of the filer; ``summary`` names its sources, or the earlier
+    declarations its boxes are carried from.
+    """
+
+    kind: ModeloFormSourceGroupKind
+    name: str
+    summary: str = ""
+    boxes: tuple[str, ...] = ()
+    #: The declaration is recorded as filed, so a group that would ask for a value asks nothing.
+    recorded: bool = False
+    addresses: tuple[ModeloFormAddressV1, ...]
+    readings: tuple[ModeloFormSourceReading, ...] = ()
+
+
 class ModeloFormCalculationNote(_FormModel):
     """One thing the latest calculation noticed, on the filer's scale, with the box it names.
 
@@ -1095,6 +1151,8 @@ class ModeloWorkForm(_FormModel):
     calculation_notes: tuple[ModeloFormCalculationNote, ...] = ()
     #: ``False`` when this session did not run the latest calculation, so only its durable notes are known.
     calculation_notes_held: bool = True
+    #: Where every value comes from, grouped as the filer thinks of it, each box in exactly one group.
+    source_groups: tuple[ModeloFormSourceGroup, ...] = ()
     #: The settlement box and its direction; ``None`` when the registry names no settlement box.
     result: ModeloFormResult | None = None
     #: The last day to file; ``None`` when the registry declares no window for this declaration.
@@ -1244,6 +1302,10 @@ __all__ = [
     "ModeloFormResultDirection",
     "ModeloFormScalar",
     "ModeloFormSection",
+    "ModeloFormSourceGroup",
+    "ModeloFormSourceGroupKind",
+    "ModeloFormSourceReading",
+    "ModeloFormSourceState",
     "ModeloFormStanding",
     "ModeloFormText",
     "ModeloFormTextDisclosure",

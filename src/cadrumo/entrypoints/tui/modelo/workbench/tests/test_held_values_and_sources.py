@@ -35,11 +35,14 @@ from ......application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormOrigin,
+    ModeloFormSourceGroupKind,
+    ModeloFormSourceState,
     ModeloFormValueSource,
     ModeloWorkForm,
     address_key,
 )
 from ......application.modelo.work_form_service import modelo_form_snapshot
+from ......application.modelo.work_form_source_groups import reading_text, source_group_kind, source_groups
 from ......application.modelo.work_form_wording import (
     aeat_imported_on,
     date_text,
@@ -88,16 +91,7 @@ from ..grid import CasillaListRecords
 from ..page_items import StagedDisplay, WorkbenchFilter, WorkbenchPage, page_items, page_of, workbench_pages
 from ..screen import ModeloWorkbenchScreen
 from ..search import search_entries
-from ..sources import (
-    SOURCE_GROUP_MARKS,
-    SourceGroupKind,
-    SourceState,
-    group_prompt,
-    group_words,
-    reading_text,
-    source_group_kind,
-    source_groups,
-)
+from ..sources import SOURCE_GROUP_MARKS, group_prompt, group_words
 from ..vocabulary import FORM_SET_MARK, ORIGIN_MARKS, origin_glyph, origin_text
 from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
 
@@ -271,7 +265,7 @@ def test_a_value_the_form_sets_draws_the_same_mark_on_its_row_and_in_the_sources
     with override_settings(cadrumo_output_language="en"):
         words = origin_words(field)
     kind = source_group_kind(field)
-    assert kind is SourceGroupKind.SET_BY_FORM
+    assert kind is ModeloFormSourceGroupKind.SET_BY_FORM
     assert origin_glyph(field) == SOURCE_GROUP_MARKS[kind].glyph == FORM_SET_MARK.glyph
     assert origin_glyph(field) != ORIGIN_MARKS[ModeloFormOrigin.IMPORTED].glyph
     assert words == lookup_translation(_FORM_SET_KEY, locale="en")
@@ -287,8 +281,8 @@ def test_a_value_the_form_sets_draws_the_same_mark_on_its_row_and_in_the_sources
     information = form_field("99", "Reference", ModeloFormOrigin.INFORMATIONAL, Decimal("5.00")).model_copy(
         update={"editability": ModeloFormEditability.INFORMATIONAL}
     )
-    assert source_group_kind(information) is SourceGroupKind.INFORMATION
-    assert SOURCE_GROUP_MARKS[SourceGroupKind.INFORMATION].glyph == origin_glyph(information)
+    assert source_group_kind(information) is ModeloFormSourceGroupKind.INFORMATION
+    assert SOURCE_GROUP_MARKS[ModeloFormSourceGroupKind.INFORMATION].glyph == origin_glyph(information)
 
 
 # ── a source the filer cannot use is not named ───────────────────────────
@@ -347,12 +341,14 @@ async def test_a_value_from_aeat_data_names_the_day_it_was_imported_on_every_sur
         )
         assert hit.origin.endswith(dated)
         # The sources map's group heading, closed and open.
-        group = next(item for item in source_groups(form) if item.kind is SourceGroupKind.AEAT_DATA)
+        group = next(item for item in source_groups(form) if item.kind is ModeloFormSourceGroupKind.AEAT_DATA)
         assert group.imported_on == imported
         heading = tr("tui.modelo.workbench.sources.group.aeat_data_imported_on", date=written)
         assert written in heading
         assert str(group_prompt(group, expanded=True)).startswith(f"▿ {SOURCE_GROUP_MARKS[group.kind].glyph} {heading}")
-        assert group_words(SourceGroupKind.AEAT_DATA).endswith(tr("tui.modelo.workbench.sources.group.aeat_data"))
+        assert group_words(ModeloFormSourceGroupKind.AEAT_DATA).endswith(
+            tr("tui.modelo.workbench.sources.group.aeat_data")
+        )
         # The panel's "Now" line and where the value comes from.
         panel = CasillaEditorScreen(
             CasillaEditorPanel(
@@ -486,13 +482,15 @@ def test_a_carry_with_no_earlier_declaration_says_so_and_names_no_filing(languag
         assert "130" in origin_words(named)
         assert origin_explanation(named) is None
         # The sources map: the group says there is none, and its source found nothing although it resolved.
-        group = next(item for item in source_groups(form) if item.kind is SourceGroupKind.EARLIER_DECLARATIONS)
+        group = next(
+            item for item in source_groups(form) if item.kind is ModeloFormSourceGroupKind.EARLIER_DECLARATIONS
+        )
         assert group.none_to_carry
         heading = str(group_prompt(group, expanded=True))
         assert tr("tui.modelo.workbench.sources.group.earlier_declarations_none") in heading
         assert tr("tui.modelo.workbench.sources.group.earlier_declarations") not in heading
         (reading,) = group.readings
-        assert reading.state is SourceState.NONE_FOUND
+        assert reading.state is ModeloFormSourceState.NONE_FOUND
         assert reading_text(reading) == tr(
             "tui.modelo.workbench.sources.none_found", source=tr(reading.policy.label_key)
         )

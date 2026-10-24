@@ -1,29 +1,11 @@
-"""Where every value in the declaration comes from, as one map grouped the way a filer thinks.
+"""Where every value in the declaration comes from, drawn as one map grouped the way a filer thinks.
 
-Every box sits in exactly one group, so each group counts boxes, never the
-bindings behind them: your records, registers you keep, your profile, earlier
-declarations, AEAT data, values you entered or confirmed, your values
-replacing another origin, assumed values waiting for confirmation, values that
-still need you, calculated values, values the form sets, figures shown for
-information, and boxes left blank or that do not apply. The group follows the
-box's origin and, for a value that comes from elsewhere, the family the form
-names for it, so a value the calculation took from imported AEAT data reads as
-AEAT data whatever its binding would otherwise fetch; the view reads both from
-the form and decides nothing else.
-
-A group fed by sources names each source and whether it produced anything; a
-value carried from an earlier declaration names that declaration when the form
-does, and the AEAT data by the day it was imported when the form knows it. A
-carry with no earlier declaration to read from names none: the group says
-there is none, and its source reads as having found nothing.
-"None found" means the last calculation read that source and it gave
-nothing, which differs from a source not read yet because nothing has been
-calculated, and from a zero the source did give, which the box shows as its
-value. A closed group that asks something of the filer lists its box numbers
-in at most two lines, then says how many more there are. A declaration
-recorded as filed asks nothing more, so its assumed values and the values it
-was filed without keep their own groups, named for what they hold rather than
-for what they ask, without the mark that asks.
+The groups, their sources and what each source gave are the application's
+(:mod:`cadrumo.application.modelo.work_form_source_groups`); this screen draws
+them with the workbench's own marks and row vocabulary and decides nothing
+else. A closed group that asks something of the filer lists its box numbers
+in at most two lines, then says how many more there are; on a declaration
+recorded as filed such a group draws no mark, as its boxes' rows draw none.
 
 The groups are a list; Enter opens one and shows its boxes below with the
 workbench's own row vocabulary, staged changes included, and the open group
@@ -35,10 +17,9 @@ box under the cursor, such as your records.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
-from enum import StrEnum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, Final, override
 
@@ -55,23 +36,23 @@ from textual.screen import ModalScreen
 from textual.widgets import Footer, OptionList, Static
 from textual.widgets.option_list import Option
 
-from .....application.modelo.source_policy import SourceFamily, SourcePolicyV1, SourceSurface
+from .....application.modelo.source_policy import SourceSurface
 from .....application.modelo.work_form_models import (
-    ModeloFormEarlierFiling,
-    ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
+    ModeloFormSourceGroupKind,
     ModeloWorkForm,
     address_key,
 )
-from .....application.modelo.work_form_wording import (
-    aeat_imported_on,
-    date_text,
-    modelo_number,
-    no_earlier_filing,
-    period_words,
+from .....application.modelo.work_form_source_groups import (
+    FILED_GROUP_LOCALE_KEYS,
+    SourceGroup,
+    group_boxes,
+    group_name,
+    group_summary,
+    reading_text,
+    source_groups,
 )
-from .....core.aggregation import BindingSourceKind
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from ...components.theme import tokenised
@@ -104,123 +85,29 @@ if TYPE_CHECKING:
     from .header import StatusLine
 
 
-class SourceGroupKind(StrEnum):
-    """Where a box's value comes from, as the filer thinks of it; one per box."""
-
-    RECORDS = "records"
-    REGISTERS = "registers"
-    PROFILE = "profile"
-    EARLIER_DECLARATIONS = "earlier_declarations"
-    AEAT_DATA = "aeat_data"
-    YOURS = "yours"
-    REPLACED = "replaced"
-    ASSUMED = "assumed"
-    NEEDS_YOU = "needs_you"
-    CALCULATED = "calculated"
-    SET_BY_FORM = "set_by_form"
-    INFORMATION = "information"
-    BLANK = "blank"
-    UNNAMED = "unnamed"
-
-
-class SourceState(StrEnum):
-    """What a source gave this declaration."""
-
-    PRODUCED = "produced"
-    NONE_FOUND = "none_found"
-    NOT_YET = "not_yet"
-
-
 _IMPORTED_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.IMPORTED]
 
-SOURCE_GROUP_MARKS: Final[Mapping[SourceGroupKind, WorkbenchMark]] = MappingProxyType(
+SOURCE_GROUP_MARKS: Final[Mapping[ModeloFormSourceGroupKind, WorkbenchMark]] = MappingProxyType(
     {
-        SourceGroupKind.RECORDS: _IMPORTED_MARK,
-        SourceGroupKind.REGISTERS: _IMPORTED_MARK,
-        SourceGroupKind.PROFILE: _IMPORTED_MARK,
-        SourceGroupKind.EARLIER_DECLARATIONS: EARLIER_FILING_MARK,
-        SourceGroupKind.AEAT_DATA: _IMPORTED_MARK,
-        SourceGroupKind.YOURS: ORIGIN_MARKS[ModeloFormOrigin.ENTERED],
-        SourceGroupKind.REPLACED: ORIGIN_MARKS[ModeloFormOrigin.OVERRIDES_SOURCE],
-        SourceGroupKind.ASSUMED: CONFIRM_MARK,
-        SourceGroupKind.NEEDS_YOU: MISSING_MARK,
-        SourceGroupKind.CALCULATED: ORIGIN_MARKS[ModeloFormOrigin.CALCULATED],
-        SourceGroupKind.SET_BY_FORM: FORM_SET_MARK,
-        SourceGroupKind.INFORMATION: ORIGIN_MARKS[ModeloFormOrigin.INFORMATIONAL],
-        SourceGroupKind.BLANK: ORIGIN_MARKS[ModeloFormOrigin.NOT_APPLICABLE],
-        SourceGroupKind.UNNAMED: _IMPORTED_MARK,
+        ModeloFormSourceGroupKind.RECORDS: _IMPORTED_MARK,
+        ModeloFormSourceGroupKind.REGISTERS: _IMPORTED_MARK,
+        ModeloFormSourceGroupKind.PROFILE: _IMPORTED_MARK,
+        ModeloFormSourceGroupKind.EARLIER_DECLARATIONS: EARLIER_FILING_MARK,
+        ModeloFormSourceGroupKind.AEAT_DATA: _IMPORTED_MARK,
+        ModeloFormSourceGroupKind.YOURS: ORIGIN_MARKS[ModeloFormOrigin.ENTERED],
+        ModeloFormSourceGroupKind.REPLACED: ORIGIN_MARKS[ModeloFormOrigin.OVERRIDES_SOURCE],
+        ModeloFormSourceGroupKind.ASSUMED: CONFIRM_MARK,
+        ModeloFormSourceGroupKind.NEEDS_YOU: MISSING_MARK,
+        ModeloFormSourceGroupKind.CALCULATED: ORIGIN_MARKS[ModeloFormOrigin.CALCULATED],
+        ModeloFormSourceGroupKind.SET_BY_FORM: FORM_SET_MARK,
+        ModeloFormSourceGroupKind.INFORMATION: ORIGIN_MARKS[ModeloFormOrigin.INFORMATIONAL],
+        ModeloFormSourceGroupKind.BLANK: ORIGIN_MARKS[ModeloFormOrigin.NOT_APPLICABLE],
+        ModeloFormSourceGroupKind.UNNAMED: _IMPORTED_MARK,
     }
 )
 """The mark in front of each group: the one its boxes' rows draw, from the workbench's one vocabulary of marks."""
 
-_GROUP_LOCALE_KEYS: Final[Mapping[SourceGroupKind, str]] = MappingProxyType(
-    {
-        SourceGroupKind.RECORDS: "tui.modelo.workbench.sources.group.records",
-        SourceGroupKind.REGISTERS: "tui.modelo.workbench.sources.group.registers",
-        SourceGroupKind.PROFILE: "tui.modelo.workbench.sources.group.profile",
-        SourceGroupKind.EARLIER_DECLARATIONS: "tui.modelo.workbench.sources.group.earlier_declarations",
-        SourceGroupKind.AEAT_DATA: "tui.modelo.workbench.sources.group.aeat_data",
-        SourceGroupKind.YOURS: "tui.modelo.workbench.sources.group.yours",
-        SourceGroupKind.REPLACED: "tui.modelo.workbench.sources.group.replaced",
-        SourceGroupKind.ASSUMED: "tui.modelo.workbench.sources.group.assumed",
-        SourceGroupKind.NEEDS_YOU: "tui.modelo.workbench.sources.group.needs_you",
-        SourceGroupKind.CALCULATED: "tui.modelo.workbench.sources.group.calculated",
-        SourceGroupKind.SET_BY_FORM: "tui.modelo.workbench.sources.group.set_by_form",
-        SourceGroupKind.INFORMATION: "tui.modelo.workbench.sources.group.information",
-        SourceGroupKind.BLANK: "tui.modelo.workbench.sources.group.blank",
-        SourceGroupKind.UNNAMED: "tui.modelo.workbench.sources.group.unnamed",
-    }
-)
-_FILED_GROUP_LOCALE_KEYS: Final[Mapping[SourceGroupKind, str]] = MappingProxyType(
-    {
-        SourceGroupKind.ASSUMED: "tui.modelo.workbench.sources.group_filed.assumed",
-        SourceGroupKind.NEEDS_YOU: "tui.modelo.workbench.sources.group_filed.needs_you",
-    }
-)
-"""Names for the groups that ask for a value, on a declaration recorded as filed: what they hold, not a request."""
-_AEAT_IMPORTED_ON_LOCALE_KEY: Final[str] = "tui.modelo.workbench.sources.group.aeat_data_imported_on"
-_NO_EARLIER_GROUP_LOCALE_KEY: Final[str] = "tui.modelo.workbench.sources.group.earlier_declarations_none"
-_STATE_LOCALE_KEYS: Final[Mapping[SourceState, str]] = MappingProxyType(
-    {
-        SourceState.NONE_FOUND: "tui.modelo.workbench.sources.none_found",
-        SourceState.NOT_YET: "tui.modelo.workbench.sources.not_yet",
-    }
-)
-_FAMILY_GROUPS: Final[Mapping[SourceFamily, SourceGroupKind]] = MappingProxyType(
-    {
-        SourceFamily.RECORDS: SourceGroupKind.RECORDS,
-        SourceFamily.REGISTERS: SourceGroupKind.REGISTERS,
-        SourceFamily.PROFILE: SourceGroupKind.PROFILE,
-        SourceFamily.EARLIER_FILINGS: SourceGroupKind.EARLIER_DECLARATIONS,
-        SourceFamily.AEAT_DRAFT: SourceGroupKind.AEAT_DATA,
-        SourceFamily.YOUR_ENTRIES: SourceGroupKind.YOURS,
-        SourceFamily.FIXED_BY_DESIGN: SourceGroupKind.SET_BY_FORM,
-    }
-)
-_ORIGIN_GROUPS: Final[Mapping[ModeloFormOrigin, SourceGroupKind]] = MappingProxyType(
-    {
-        ModeloFormOrigin.ENTERED: SourceGroupKind.YOURS,
-        ModeloFormOrigin.CLEARED: SourceGroupKind.YOURS,
-        ModeloFormOrigin.OVERRIDES_SOURCE: SourceGroupKind.REPLACED,
-        ModeloFormOrigin.DEFAULT_TO_CONFIRM: SourceGroupKind.ASSUMED,
-        ModeloFormOrigin.NEEDS_INPUT: SourceGroupKind.NEEDS_YOU,
-        ModeloFormOrigin.CALCULATED: SourceGroupKind.CALCULATED,
-        ModeloFormOrigin.NOT_CALCULATED_YET: SourceGroupKind.CALCULATED,
-        ModeloFormOrigin.CALCULATION_FAILED: SourceGroupKind.CALCULATED,
-        ModeloFormOrigin.NOT_APPLICABLE: SourceGroupKind.BLANK,
-        ModeloFormOrigin.OPTIONAL_EMPTY: SourceGroupKind.BLANK,
-    }
-)
-"""Origins that say by themselves who puts the value there; the rest depend on the source."""
 
-#: Origins whose value, when a source feeds the box, comes from that source.
-_SOURCED_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET, ModeloFormOrigin.INFORMATIONAL}
-)
-#: Groups that ask something of the filer, so a closed group lists their box numbers.
-_BOX_LISTING_GROUPS: Final[frozenset[SourceGroupKind]] = frozenset(
-    {SourceGroupKind.REPLACED, SourceGroupKind.ASSUMED, SourceGroupKind.NEEDS_YOU}
-)
 #: A list of box numbers wraps to at most this many lines, then says how many more there are.
 BOX_LIST_LINES: Final[int] = 2
 _SURFACE_DESTINATIONS: Final[Mapping[SourceSurface, tuple[TuiDestinationIdV1, str]]] = {
@@ -240,42 +127,6 @@ _GROUP_ID_PREFIX: Final[str] = "group-"
 
 
 @dataclass(frozen=True, slots=True)
-class SourceReading:
-    """One source feeding a group: what it gave, and the boxes listed under it."""
-
-    policy: SourcePolicyV1
-    state: SourceState
-    fields: tuple[ModeloFormField, ...]
-    #: The earlier declarations its boxes are carried from, when the form names them.
-    earlier_filings: tuple[ModeloFormEarlierFiling, ...] = ()
-
-
-@dataclass(frozen=True, slots=True)
-class SourceGroup:
-    """One group of the map: every box whose value comes from there, and the sources that feed them."""
-
-    kind: SourceGroupKind
-    fields: tuple[ModeloFormField, ...]
-    readings: tuple[SourceReading, ...] = ()
-    #: The declaration is recorded as filed, so the group asks nothing of the filer.
-    recorded: bool = False
-    #: For the AEAT data group, the day the data was imported, when the form knows it.
-    imported_on: date | None = None
-
-    @property
-    def keys(self) -> frozenset[AddressKey]:
-        """The boxes in this group."""
-        return frozenset(address_key(field.address) for field in self.fields)
-
-    @property
-    def none_to_carry(self) -> bool:
-        """Whether this is the earlier-declarations group and none of its boxes has an earlier declaration to read."""
-        return self.kind is SourceGroupKind.EARLIER_DECLARATIONS and all(
-            no_earlier_filing(field) for field in self.fields
-        )
-
-
-@dataclass(frozen=True, slots=True)
 class GoToCasilla:
     """The filer chose a box: return to the workbench on it, in its editor where it can be changed."""
 
@@ -290,134 +141,6 @@ class OpenSourceSurface:
 
 
 type SourcesChoice = GoToCasilla | OpenSourceSurface
-
-
-def value_family(field: ModeloFormField) -> SourceFamily | None:
-    """The kind of place a box's value comes from, as the form names it, or ``None`` when nothing feeds it."""
-    if field.source is not None:
-        return field.source.family
-    return field.bindings[0].policy.family if field.bindings else None
-
-
-def source_group_kind(field: ModeloFormField) -> SourceGroupKind:
-    """Place one box in the one group its origin and, for a sourced value, its source family name.
-
-    A value nobody entered stays in its own group on a declaration recorded as
-    filed too: it was never calculated, only held, and the group's name then
-    says so without asking for a confirmation.
-    """
-    if field.editability is ModeloFormEditability.DESIGN_CONSTANT:
-        return SourceGroupKind.SET_BY_FORM
-    by_origin = _ORIGIN_GROUPS.get(field.origin)
-    if by_origin is not None:
-        return by_origin
-    family = value_family(field)
-    if family is not None:
-        return _FAMILY_GROUPS[family]
-    if field.origin is ModeloFormOrigin.INFORMATIONAL:
-        return SourceGroupKind.INFORMATION
-    return SourceGroupKind.UNNAMED
-
-
-def _collect_field_sources(
-    field: ModeloFormField,
-    family: SourceFamily | None,
-    policies: dict[BindingSourceKind, SourcePolicyV1],
-    produced: dict[BindingSourceKind, bool],
-    led: dict[BindingSourceKind, list[ModeloFormField]],
-) -> None:
-    matching = [binding for binding in field.bindings if binding.policy.family is family]
-    for position, binding in enumerate(matching):
-        kind = binding.policy.source_kind
-        policies.setdefault(kind, binding.policy)
-        produced[kind] = produced.get(kind, False) or binding.resolved
-        listed = led.setdefault(kind, [])
-        if position == 0:
-            listed.append(field)
-
-
-def _reading_state(
-    kind: BindingSourceKind,
-    fields: list[ModeloFormField],
-    produced: Mapping[BindingSourceKind, bool],
-    *,
-    calculated: bool,
-) -> SourceState:
-    if fields and all(no_earlier_filing(field) for field in fields):
-        # A carry with no earlier declaration to read produced nothing, whatever zero it resolved to.
-        return SourceState.NONE_FOUND
-    if produced[kind]:
-        return SourceState.PRODUCED
-    return SourceState.NONE_FOUND if calculated else SourceState.NOT_YET
-
-
-def _readings(fields: tuple[ModeloFormField, ...], *, calculated: bool) -> tuple[SourceReading, ...]:
-    """Each source of the family a box's value comes from, the boxes it leads for and what it gave.
-
-    A box sits under the first of its sources in that family. A value the AEAT
-    data supplied names no source of that family, so its box is listed on its
-    own rather than under the source its binding would otherwise read.
-    """
-    policies: dict[BindingSourceKind, SourcePolicyV1] = {}
-    produced: dict[BindingSourceKind, bool] = {}
-    led: dict[BindingSourceKind, list[ModeloFormField]] = {}
-    for field in fields:
-        family = value_family(field)
-        _collect_field_sources(field, family, policies, produced, led)
-    readings = []
-    for kind, policy in policies.items():
-        state = _reading_state(kind, led[kind], produced, calculated=calculated)
-        readings.append(
-            SourceReading(
-                policy=policy, state=state, fields=tuple(led[kind]), earlier_filings=earlier_filings(led[kind])
-            )
-        )
-    return tuple(readings)
-
-
-def earlier_filings(fields: Iterable[ModeloFormField]) -> tuple[ModeloFormEarlierFiling, ...]:
-    """The earlier declarations the form names as the origin of these boxes, each once, in form order."""
-    named: dict[ModeloFormEarlierFiling, None] = {}
-    for field in fields:
-        source = field.source
-        if source is not None and source.family is SourceFamily.EARLIER_FILINGS:
-            named.update(dict.fromkeys(source.earlier_filings))
-    return tuple(named)
-
-
-def earlier_filing_text(filings: Sequence[ModeloFormEarlierFiling]) -> str:
-    """Name earlier declarations by their modelo and period in words."""
-    return ", ".join(f"{modelo_number(filing.modelo)} · {period_words(filing.period)}" for filing in filings)
-
-
-def source_groups(form: ModeloWorkForm) -> tuple[SourceGroup, ...]:
-    """Every box of the form in exactly one group, groups in the filer's order, boxes in form order."""
-    recorded = form.filing is not None
-    placed: dict[SourceGroupKind, list[ModeloFormField]] = {}
-    for field in form.fields():
-        placed.setdefault(source_group_kind(field), []).append(field)
-    calculated = form.calculation_revision_id is not None
-    groups = []
-    for kind in SourceGroupKind:
-        fields = tuple(placed.get(kind, ()))
-        if not fields:
-            continue
-        sourced = kind in _FAMILY_GROUPS.values() and any(
-            field.origin in _SOURCED_ORIGINS and field.bindings for field in fields
-        )
-        readings = _readings(fields, calculated=calculated) if sourced else ()
-        imported_on = aeat_imported_on(form) if kind is SourceGroupKind.AEAT_DATA else None
-        groups.append(
-            SourceGroup(kind=kind, fields=fields, readings=readings, recorded=recorded, imported_on=imported_on)
-        )
-    return tuple(groups)
-
-
-def reading_text(reading: SourceReading) -> str:
-    """Name one source, by the earlier declaration when the form names it, saying when it found nothing yet."""
-    label = earlier_filing_text(reading.earlier_filings) if reading.earlier_filings else tr(reading.policy.label_key)
-    state_key = _STATE_LOCALE_KEYS.get(reading.state)
-    return label if state_key is None else tr(state_key, source=label)
 
 
 class BoxNumbers:
@@ -476,24 +199,8 @@ class BoxNumbers:
         return Measurement(widest, max(widest, cell_len(" ".join(self._tokens)))).clamp(max_width=options.max_width)
 
 
-def group_boxes(group: SourceGroup) -> tuple[str, ...]:
-    """The box numbers a closed group lists, for the groups that ask something of the filer."""
-    if group.kind not in _BOX_LISTING_GROUPS:
-        return ()
-    return tuple(field.box for field in group.fields if (field.box is not None and field.box))
-
-
-def group_summary(group: SourceGroup) -> str:
-    """The sources of a group in words, or the earlier declarations its boxes are carried from."""
-    if group.readings:
-        return " · ".join(reading_text(reading) for reading in group.readings)
-    if group.kind is SourceGroupKind.EARLIER_DECLARATIONS:
-        return earlier_filing_text(earlier_filings(group.fields))
-    return ""
-
-
 def group_words(
-    kind: SourceGroupKind,
+    kind: ModeloFormSourceGroupKind,
     *,
     recorded: bool = False,
     imported_on: date | None = None,
@@ -502,21 +209,12 @@ def group_words(
 ) -> str:
     """A group's mark and name; on a declaration ``recorded`` as filed, a group that would ask names what it holds.
 
-    Such a group draws no mark, as its boxes' rows draw none there. The AEAT
-    data group names the day ``imported_on`` the data was imported, written
-    for ``language``, the active output language when not given. An
-    earlier-declarations group with ``none_to_carry`` says there is no earlier
-    declaration to read.
+    Such a group draws no mark, as its boxes' rows draw none there.
     """
-    if recorded and kind in _FILED_GROUP_LOCALE_KEYS:
-        return f"  {tr(_FILED_GROUP_LOCALE_KEYS[kind])}"
-    glyph = SOURCE_GROUP_MARKS[kind].glyph
-    if kind is SourceGroupKind.EARLIER_DECLARATIONS and none_to_carry:
-        return f"{glyph} {tr(_NO_EARLIER_GROUP_LOCALE_KEY)}"
-    if kind is SourceGroupKind.AEAT_DATA and imported_on is not None:
-        written = date_text(imported_on, OutputLanguage(output_language()) if language is None else language)
-        return f"{glyph} {tr(_AEAT_IMPORTED_ON_LOCALE_KEY, date=written)}"
-    return f"{glyph} {tr(_GROUP_LOCALE_KEYS[kind])}"
+    name = group_name(kind, language=language, recorded=recorded, imported_on=imported_on, none_to_carry=none_to_carry)
+    if recorded and kind in FILED_GROUP_LOCALE_KEYS:
+        return f"  {name}"
+    return f"{SOURCE_GROUP_MARKS[kind].glyph} {name}"
 
 
 def _group_words(group: SourceGroup) -> str:
@@ -584,6 +282,10 @@ def surface_target(surface: SourceSurface) -> TuiNavigationTargetV1 | None:
         destination=destination_id,
         focus=TuiFocusIdentityV1(destination=destination_id, semantic_key=semantic_key),
     )
+
+
+def _group_keys(group: SourceGroup) -> frozenset[AddressKey]:
+    return frozenset(address_key(field.address) for field in group.fields)
 
 
 class _GroupList(OptionList):
@@ -668,7 +370,7 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
         self._language = language
         self._focus = focus
         self._expanded = next(
-            (index for index, group in enumerate(self._groups) if focus is not None and focus in group.keys), 0
+            (index for index, group in enumerate(self._groups) if focus is not None and focus in _group_keys(group)), 0
         )
 
     @override
@@ -782,17 +484,13 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
         self.dismiss(None)
 
 
-def _require_total_tables() -> None:
-    """Refuse a group without a mark or name, or a source family without a group."""
-    if set(SOURCE_GROUP_MARKS) != set(SourceGroupKind) or set(_GROUP_LOCALE_KEYS) != set(SourceGroupKind):
-        raise ValueError("every source group needs one mark and one name")
-    if set(_FAMILY_GROUPS) != set(SourceFamily):
-        raise ValueError("every source family needs a group")
-    if set(_ORIGIN_GROUPS) | _SOURCED_ORIGINS != set(ModeloFormOrigin):
-        raise ValueError("every origin needs a group, or a source to take one from")
+def _require_total_marks() -> None:
+    """Refuse a group without a mark."""
+    if set(SOURCE_GROUP_MARKS) != set(ModeloFormSourceGroupKind):
+        raise ValueError("every source group needs one mark")
 
 
-_require_total_tables()
+_require_total_marks()
 
 
 __all__ = [
@@ -801,22 +499,10 @@ __all__ = [
     "BoxNumbers",
     "GoToCasilla",
     "OpenSourceSurface",
-    "SourceGroup",
-    "SourceGroupKind",
-    "SourceReading",
-    "SourceState",
     "SourcesChoice",
     "WorkbenchSourcesScreen",
-    "earlier_filing_text",
-    "earlier_filings",
-    "group_boxes",
     "group_items",
     "group_prompt",
-    "group_summary",
     "group_words",
-    "reading_text",
-    "source_group_kind",
-    "source_groups",
     "surface_target",
-    "value_family",
 ]

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from .....application.modelo.work_form_models import ModeloFormField, ModeloWorkForm, address_key
 from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
+from .....application.modelo.work_form_source_groups import earlier_filing_text
 from .....core.i18n.render import tr
 from ...components.dialogs import ConfirmScreen
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
@@ -21,7 +22,7 @@ from .review import recalculation_risk_text
 from .screen_constants import (
     _DIALOG_FRAME,
 )
-from .sources import OpenSourceSurface, earlier_filing_text
+from .sources import OpenSourceSurface
 
 if TYPE_CHECKING:
     from .screen import ModeloWorkbenchScreen

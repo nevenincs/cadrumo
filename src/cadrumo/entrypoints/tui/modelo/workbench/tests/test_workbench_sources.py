@@ -25,10 +25,13 @@ from ......application.modelo.work_form_models import (
     ModeloFormEarlierFiling,
     ModeloFormEditability,
     ModeloFormOrigin,
+    ModeloFormSourceGroupKind,
+    ModeloFormSourceState,
     ModeloFormValueSource,
     ModeloWorkForm,
     address_key,
 )
+from ......application.modelo.work_form_source_groups import SourceGroup, group_boxes, group_summary, source_groups
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -41,18 +44,7 @@ from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry
 from ..screen import ModeloWorkbenchScreen
-from ..sources import (
-    SourceGroup,
-    SourceGroupKind,
-    SourceState,
-    WorkbenchSourcesScreen,
-    group_boxes,
-    group_items,
-    group_prompt,
-    group_summary,
-    source_groups,
-    surface_target,
-)
+from ..sources import WorkbenchSourcesScreen, group_items, group_prompt, surface_target
 from .declaration_states import recorded_as_filed
 from .editor_panel import open_panel
 from .form_edits import replace_fields
@@ -97,10 +89,10 @@ def test_every_box_sits_in_exactly_one_group_and_groups_count_boxes() -> None:
     groups = source_groups(form)
 
     assert [(group.kind, [field.box for field in group.fields]) for group in groups] == [
-        (SourceGroupKind.RECORDS, ["01", "02"]),
-        (SourceGroupKind.YOURS, ["07"]),
-        (SourceGroupKind.NEEDS_YOU, ["06"]),
-        (SourceGroupKind.CALCULATED, ["03", "09", "19", "99"]),
+        (ModeloFormSourceGroupKind.RECORDS, ["01", "02"]),
+        (ModeloFormSourceGroupKind.YOURS, ["07"]),
+        (ModeloFormSourceGroupKind.NEEDS_YOU, ["06"]),
+        (ModeloFormSourceGroupKind.CALCULATED, ["03", "09", "19", "99"]),
     ]
     placed = Counter(address_key(field.address) for group in groups for field in group.fields)
     assert placed == Counter(address_key(field.address) for field in form.fields())
@@ -116,9 +108,15 @@ def test_a_source_that_found_nothing_differs_from_one_not_read_yet_and_from_a_ze
         after_summary = group_summary(after)
         before_summary = group_summary(before)
 
-    assert after.kind is before.kind is SourceGroupKind.RECORDS
-    assert [reading.state for reading in after.readings] == [SourceState.PRODUCED, SourceState.NONE_FOUND]
-    assert [reading.state for reading in before.readings] == [SourceState.PRODUCED, SourceState.NOT_YET]
+    assert after.kind is before.kind is ModeloFormSourceGroupKind.RECORDS
+    assert [reading.state for reading in after.readings] == [
+        ModeloFormSourceState.PRODUCED,
+        ModeloFormSourceState.NONE_FOUND,
+    ]
+    assert [reading.state for reading in before.readings] == [
+        ModeloFormSourceState.PRODUCED,
+        ModeloFormSourceState.NOT_YET,
+    ]
     assert after_summary.endswith(": none found")
     assert before_summary.endswith(": not read yet")
     assert "none found" not in after_summary.split(" · ")[0]
@@ -132,15 +130,15 @@ def test_a_value_taken_from_aeat_data_reads_as_aeat_data_not_as_the_source_its_b
     )
     groups = {group.kind: group for group in source_groups(form)}
     with override_settings(cadrumo_output_language="en"):
-        records = group_summary(groups[SourceGroupKind.RECORDS])
-        items = group_items(groups[SourceGroupKind.AEAT_DATA], staged={})
+        records = group_summary(groups[ModeloFormSourceGroupKind.RECORDS])
+        items = group_items(groups[ModeloFormSourceGroupKind.AEAT_DATA], staged={})
         texts = [
             item.field.box if isinstance(item, CasillaListEntry) else getattr(item, "text", None) for item in items
         ]
 
-    assert [field.box for field in groups[SourceGroupKind.RECORDS].fields] == ["01"]
-    assert [field.box for field in groups[SourceGroupKind.AEAT_DATA].fields] == ["02"]
-    assert groups[SourceGroupKind.AEAT_DATA].readings == ()
+    assert [field.box for field in groups[ModeloFormSourceGroupKind.RECORDS].fields] == ["01"]
+    assert [field.box for field in groups[ModeloFormSourceGroupKind.AEAT_DATA].fields] == ["02"]
+    assert groups[ModeloFormSourceGroupKind.AEAT_DATA].readings == ()
     assert "expenses" not in records.casefold()
     assert texts == ["↓ AEAT data", "02"]
 
@@ -157,15 +155,15 @@ def test_assumed_replaced_fixed_and_blank_boxes_each_have_their_own_group() -> N
     )
     groups = {group.kind: group for group in source_groups(form)}
     with override_settings(cadrumo_output_language="en"):
-        assumed = group_summary(groups[SourceGroupKind.ASSUMED])
-        replaced = group_summary(groups[SourceGroupKind.REPLACED])
+        assumed = group_summary(groups[ModeloFormSourceGroupKind.ASSUMED])
+        replaced = group_summary(groups[ModeloFormSourceGroupKind.REPLACED])
 
-    assert [field.box for field in groups[SourceGroupKind.ASSUMED].fields] == ["07"]
-    assert [field.box for field in groups[SourceGroupKind.REPLACED].fields] == ["02"]
-    assert [field.box for field in groups[SourceGroupKind.SET_BY_FORM].fields] == ["09"]
-    assert [field.box for field in groups[SourceGroupKind.BLANK].fields] == ["99"]
-    assert (assumed, group_boxes(groups[SourceGroupKind.ASSUMED])) == ("", ("07",))
-    assert (replaced, group_boxes(groups[SourceGroupKind.REPLACED])) == ("", ("02",))
+    assert [field.box for field in groups[ModeloFormSourceGroupKind.ASSUMED].fields] == ["07"]
+    assert [field.box for field in groups[ModeloFormSourceGroupKind.REPLACED].fields] == ["02"]
+    assert [field.box for field in groups[ModeloFormSourceGroupKind.SET_BY_FORM].fields] == ["09"]
+    assert [field.box for field in groups[ModeloFormSourceGroupKind.BLANK].fields] == ["99"]
+    assert (assumed, group_boxes(groups[ModeloFormSourceGroupKind.ASSUMED])) == ("", ("07",))
+    assert (replaced, group_boxes(groups[ModeloFormSourceGroupKind.REPLACED])) == ("", ("02",))
 
 
 def test_a_group_lists_its_boxes_under_each_of_its_sources() -> None:
@@ -197,11 +195,11 @@ def test_a_group_opens_with_the_open_mark_and_drops_the_summary_its_list_repeats
     )
     groups = {group.kind: group for group in source_groups(form)}
     with override_settings(cadrumo_output_language="en"):
-        closed = _prompt_lines(groups[SourceGroupKind.ASSUMED], expanded=False)
-        opened = _prompt_lines(groups[SourceGroupKind.ASSUMED], expanded=True)
-        records_closed = _prompt_lines(groups[SourceGroupKind.RECORDS], expanded=False)
-        records_opened = _prompt_lines(groups[SourceGroupKind.RECORDS], expanded=True)
-        blank = _prompt_lines(groups[SourceGroupKind.BLANK], expanded=False)
+        closed = _prompt_lines(groups[ModeloFormSourceGroupKind.ASSUMED], expanded=False)
+        opened = _prompt_lines(groups[ModeloFormSourceGroupKind.ASSUMED], expanded=True)
+        records_closed = _prompt_lines(groups[ModeloFormSourceGroupKind.RECORDS], expanded=False)
+        records_opened = _prompt_lines(groups[ModeloFormSourceGroupKind.RECORDS], expanded=True)
+        blank = _prompt_lines(groups[ModeloFormSourceGroupKind.BLANK], expanded=False)
 
     assert closed == ["▹ ◐ Assumed, please confirm · Boxes: 1", "  [07]"]
     assert opened == ["▿ ◐ Assumed, please confirm · Boxes: 1"]
@@ -216,7 +214,7 @@ def test_a_closed_group_lists_its_boxes_in_two_lines_then_counts_the_rest() -> N
         form_field(str(number), "Importe", ModeloFormOrigin.DEFAULT_TO_CONFIRM, Decimal("5.00"))
         for number in range(1000, 1030)
     )
-    group = SourceGroup(kind=SourceGroupKind.ASSUMED, fields=fields)
+    group = SourceGroup(kind=ModeloFormSourceGroupKind.ASSUMED, fields=fields)
     with override_settings(cadrumo_output_language="en"):
         lines = _prompt_lines(group, expanded=False, width=40)
 
@@ -236,10 +234,12 @@ def test_a_value_carried_from_an_earlier_declaration_names_that_declaration() ->
     )
     unbound = replace_fields(synthetic_form(), {"02": {"source": carried, "bindings": ()}})
     with override_settings(cadrumo_output_language="en"):
-        group = {group.kind: group for group in source_groups(bound)}[SourceGroupKind.EARLIER_DECLARATIONS]
+        group = {group.kind: group for group in source_groups(bound)}[ModeloFormSourceGroupKind.EARLIER_DECLARATIONS]
         summary = group_summary(group)
         headings = [getattr(item, "text", None) for item in group_items(group, staged={})]
-        unbound_group = {group.kind: group for group in source_groups(unbound)}[SourceGroupKind.EARLIER_DECLARATIONS]
+        unbound_group = {group.kind: group for group in source_groups(unbound)}[
+            ModeloFormSourceGroupKind.EARLIER_DECLARATIONS
+        ]
         unbound_summary = group_summary(unbound_group)
         generic = tr(source_policy(BindingSourceKind.PREVIOUS_FILING).label_key)
 
@@ -272,13 +272,13 @@ def test_a_filed_declaration_keeps_its_unentered_values_in_their_own_groups_and_
     for kind, box in zip(_ASKING_GROUPS, ("07", "06"), strict=True):
         assert [field.box for field in open_groups[kind].fields] == [box]
         assert [field.box for field in recorded_groups[kind].fields] == [box]
-    assert "07" not in [field.box for field in recorded_groups[SourceGroupKind.CALCULATED].fields]
+    assert "07" not in [field.box for field in recorded_groups[ModeloFormSourceGroupKind.CALCULATED].fields]
     assert open_names == ["▿ ◐ Assumed, please confirm · Boxes: 1", f"▿ ! {needs_you} · Boxes: 1"]
     assert filed_names == ["▿   Assumed, nobody entered them · Boxes: 1", "▿   Empty, nobody filled them in · Boxes: 1"]
     assert filed_rows == ["Assumed, nobody entered it", "Empty, nobody filled it in"]
 
 
-_ASKING_GROUPS = (SourceGroupKind.ASSUMED, SourceGroupKind.NEEDS_YOU)
+_ASKING_GROUPS = (ModeloFormSourceGroupKind.ASSUMED, ModeloFormSourceGroupKind.NEEDS_YOU)
 
 
 def test_every_owning_surface_opens_a_declared_destination_and_none_opens_nothing() -> None:

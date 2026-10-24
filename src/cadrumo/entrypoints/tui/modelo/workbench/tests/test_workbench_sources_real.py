@@ -17,6 +17,7 @@ from textual.widgets import OptionList, Static
 
 from ......application.modelo.source_policy import SourceFamily, source_policy
 from ......application.modelo.work_form_models import address_key
+from ......application.modelo.work_form_source_groups import source_groups
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.i18n.render import tr
@@ -24,7 +25,7 @@ from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
 from ....tests.settling import settle, settle_until
 from ..screen import ModeloWorkbenchScreen
-from ..sources import WorkbenchSourcesScreen, source_groups
+from ..sources import WorkbenchSourcesScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

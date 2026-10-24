@@ -66,6 +66,7 @@ from .work_form_models import (
     ModeloFormOrigin,
     ModeloFormRateUnit,
     ModeloFormResultDirection,
+    ModeloFormSourceGroup,
     ModeloFormStanding,
     ModeloFormText,
 )
@@ -336,6 +337,7 @@ class PublicModeloWorkForm(BaseModel):
     issues: tuple[PublicModeloFormIssue, ...]
     calculation_notes: tuple[ModeloFormCalculationNote, ...]
     calculation_notes_held: bool
+    source_groups: tuple[ModeloFormSourceGroup, ...]
     result: PublicModeloFormResult | None
     deadline: ModeloFormDeadline | None
     aeat_data: ModeloFormAeatData | None

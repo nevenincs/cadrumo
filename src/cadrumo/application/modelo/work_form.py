@@ -97,6 +97,7 @@ from .work_form_models import (
     section_fields,
 )
 from .work_form_notes import collect_note_sources, project_calculation_notes, project_verification_issues
+from .work_form_source_groups import worded_source_groups
 from .work_form_wording import worded_form
 from .work_review import ModeloWorkReview
 
@@ -166,7 +167,7 @@ def build_modelo_work_form(
         notes=(sources, held),
     )
     if inspection is not None:
-        return worded_form(inspection)
+        return _worded(inspection)
     usable_layout = cast(FormLayoutDefinition, layout)
     pages, working, unplaced = _project_layout(usable_layout, context)
     form_fields = [field for page in pages for section in page.sections for field in section_fields(section)]
@@ -187,7 +188,7 @@ def build_modelo_work_form(
         sources=sources,
         held=held,
     )
-    return worded_form(form)
+    return _worded(form)
 
 
 def _inspection_only_for_unusable_layout(
@@ -317,6 +318,12 @@ def _assemble_work_form(
         filing=project_filing_summary(context),
         edit_closure=ModeloFormEditClosure.RECORDED_AS_FILED if context.filed else None,
     )
+
+
+def _worded(form: ModeloWorkForm) -> ModeloWorkForm:
+    """The form said in its language: every field's words, then where every value comes from."""
+    worded = worded_form(form)
+    return worded.model_copy(update={"source_groups": worded_source_groups(worded)})
 
 
 __all__ = ["build_modelo_work_form"]
