@@ -918,7 +918,6 @@ desktop:
         too_large: 'Massa grans per enviar: {count}'
         transfer_with_tax: 'Traspassos amb dades fiscals: {count}'
       blocker_fields: 'Camps: {fields}'
-      checked_again: La preparació es torna a comprovar.
       close: Fet
       conflict_choice: Què conservar
       conflicts_description: Una altra finestra va desar aquests moviments després
@@ -926,10 +925,6 @@ desktop:
       conflicts_looked: He revisat el que va canviar
       conflicts_title: Canviat des que ho vas llegir
       continue: Continua desant
-      done: Desat
-      done_description: El que va respondre el llibre, canvi a canvi.
-      done_nothing: No s'ha desat res
-      done_partly: Desat en part
       drop: Treu els canvis de {movement}
       filter: Filtra els canvis
       fix:
@@ -998,7 +993,6 @@ desktop:
         res d''aquesta part.'
       part_unknown: Resultat desconegut per a aquesta part sencera. Les escriptures
         estan en pausa.
-      paused_footer: Les escriptures estan en pausa fins que tornis a llegir.
       permanent: Permanent
       permanent_note: Un vincle no es pot treure després, ni aquí ni enlloc. Marca
         cadascun del qual estiguis segur.
@@ -1041,7 +1035,6 @@ desktop:
       together: 'Desats junts: {count}'
       unknown_note: 'Pot ser que s''hagi desat o no. No es reintenta res: les escriptures
         esperen que tornis a llegir.'
-      unknown_title: Un desament té un resultat desconegut
       when_read: Quan el vas llegir
       yours: El teu canvi preparat
     assets:
@@ -1661,7 +1654,6 @@ desktop:
       copy_failed: No s'ha pogut copiar. Torna-ho a provar.
       copy_invoices: Copia també les factures (TSV)
       copy_selection: Copia com a TSV
-      count: 'Moviments a exportar: {shown}.'
       count_unknown: No s'ha pogut llegir el nombre de moviments.
       counting: S'està comptant…
       description: Un fitxer local per a tu o el teu gestor. No s'envia res a l'AEAT.
@@ -1833,7 +1825,6 @@ desktop:
       check: Comprova
       check_again: Torna a comprovar
       checked_at: 'Darrera comprovació: {time}'
-      choose_period: Tria un període per comprovar.
       count:
         active: Actius
         archived: Arxivats
@@ -1851,11 +1842,9 @@ desktop:
       missing: El que encara falta · {period}
       net: Net, EUR
       no_movements: No hi ha moviments a {period}. No és el mateix que no deure res.
-      not_checked: Encara no comprovat en aquesta finestra.
       not_run: 'Encara no feta: res no es mostra com a zero fins que es mesura.'
       of_active: Dels actius
       one_sided: Enllaços de factura d'un sol costat
-      ready: A punt per calcular · {count} comprovats
       rebuild: Reconstrueix els enllaços
       rebuilt: 'Reconstruït · enllaços: {links} · revisions: {revisions} · obsolets
         trets: {removed}'
@@ -1869,8 +1858,6 @@ desktop:
         prova.
       reset_would: 'Trauria · moviments: {movements} · documents: {documents}'
       run_check: Fes la comprovació
-      show: 'Mostra els {count} moviments: {reason}'
-      show_short: Mostra
       stale: Declaracions per recalcular
       stale_none: 'Cap: cada càlcul cobreix els moviments tal com són.'
       stale_row: 'Model {modelo} · {year} {period} · des del càlcul, canviats: {changed},
@@ -2772,7 +2759,6 @@ desktop:
       refused_empty: Res a enganxar
       refused_unclosed_quote: 'No enganxat: hi ha unes cometes sense tancar'
       single_writes: Desats un a un
-      title: Enganxar a la taula?
       title_into: Enganxar a {columns}?
     paused:
       dismiss: Tanca

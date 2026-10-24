@@ -925,7 +925,6 @@ desktop:
         too_large: 'Demasiado grandes para enviar: {count}'
         transfer_with_tax: 'Traspasos con datos fiscales: {count}'
       blocker_fields: 'Campos: {fields}'
-      checked_again: La preparación se vuelve a comprobar.
       close: Hecho
       conflict_choice: Qué conservar
       conflicts_description: Otra ventana guardó estos movimientos después de que
@@ -933,10 +932,6 @@ desktop:
       conflicts_looked: He revisado lo que cambió
       conflicts_title: Cambiado desde que lo leíste
       continue: Seguir guardando
-      done: Guardado
-      done_description: Lo que respondió el libro, cambio a cambio.
-      done_nothing: No se ha guardado nada
-      done_partly: Guardado en parte
       drop: Quitar los cambios de {movement}
       filter: Filtrar los cambios
       fix:
@@ -1004,7 +999,6 @@ desktop:
         nada de esta parte.'
       part_unknown: Resultado desconocido para esta parte entera. Las escrituras están
         en pausa.
-      paused_footer: Las escrituras están en pausa hasta que vuelvas a leer.
       permanent: Permanente
       permanent_note: Un vínculo no se puede quitar después, ni aquí ni en ningún
         otro sitio. Marca cada uno del que estés seguro.
@@ -1047,7 +1041,6 @@ desktop:
       together: 'Guardados juntos: {count}'
       unknown_note: 'Puede que se haya guardado o no. No se reintenta nada: las escrituras
         esperan a que vuelvas a leer.'
-      unknown_title: Un guardado tiene un resultado desconocido
       when_read: Cuando lo leíste
       yours: Tu cambio preparado
     assets:
@@ -1667,7 +1660,6 @@ desktop:
       copy_failed: No se ha podido copiar. Vuelve a intentarlo.
       copy_invoices: Copiar también las facturas (TSV)
       copy_selection: Copiar como TSV
-      count: 'Movimientos a exportar: {shown}.'
       count_unknown: No se ha podido leer el número de movimientos.
       counting: Contando…
       description: Un archivo local para ti o tu gestor. No se envía nada a la AEAT.
@@ -1839,7 +1831,6 @@ desktop:
       check: Comprobar
       check_again: Volver a comprobar
       checked_at: 'Última comprobación: {time}'
-      choose_period: Elige un periodo que comprobar.
       count:
         active: Activos
         archived: Archivados
@@ -1857,11 +1848,9 @@ desktop:
       missing: Lo que aún falta · {period}
       net: Neto, EUR
       no_movements: No hay movimientos en {period}. No es lo mismo que no deber nada.
-      not_checked: Aún no comprobado en esta ventana.
       not_run: 'Aún no hecha: nada se muestra como cero hasta medirlo.'
       of_active: De los activos
       one_sided: Enlaces de factura de un solo lado
-      ready: Listo para calcular · {count} comprobados
       rebuild: Reconstruir los enlaces
       rebuilt: 'Reconstruido · enlaces: {links} · revisiones: {revisions} · obsoletos
         quitados: {removed}'
@@ -1875,8 +1864,6 @@ desktop:
         una prueba.
       reset_would: 'Quitaría · movimientos: {movements} · documentos: {documents}'
       run_check: Hacer la comprobación
-      show: 'Mostrar los {count} movimientos: {reason}'
-      show_short: Mostrar
       stale: Declaraciones por recalcular
       stale_none: 'Ninguna: cada cálculo cubre los movimientos tal como están.'
       stale_row: 'Modelo {modelo} · {year} {period} · desde el cálculo, cambiados:
@@ -2778,7 +2765,6 @@ desktop:
       refused_empty: Nada que pegar
       refused_unclosed_quote: 'No pegado: hay unas comillas sin cerrar'
       single_writes: Guardados uno a uno
-      title: ¿Pegar en la tabla?
       title_into: ¿Pegar en {columns}?
     paused:
       dismiss: Cerrar

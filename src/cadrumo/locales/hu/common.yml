@@ -905,7 +905,6 @@ desktop:
         too_large: 'Túl nagy a küldéshez: {count}'
         transfer_with_tax: 'Átvezetés adóadattal: {count}'
       blocker_fields: 'Mezők: {fields}'
-      checked_again: Az készültség újra ellenőrizve.
       close: Kész
       conflict_choice: Mit tartasz meg
       conflicts_description: Egy másik ablak elmentette ezeket a tételeket, miután
@@ -913,10 +912,6 @@ desktop:
       conflicts_looked: Megnéztem, mi változott
       conflicts_title: Megváltozott, mióta beolvastad
       continue: Mentés folytatása
-      done: Mentve
-      done_description: A könyv válasza változásonként.
-      done_nothing: Semmi sem lett mentve
-      done_partly: Részben mentve
       drop: '{movement} változásainak elvetése'
       filter: Változások szűrése
       fix:
@@ -981,7 +976,6 @@ desktop:
       part_refused: 'Nincs mentve: a könyv mentés közben megváltozott. Ebből a részből
         semmi sem mentődött.'
       part_unknown: E rész egészének eredménye ismeretlen. Az írás szünetel.
-      paused_footer: Az írás az újraolvasásig szünetel.
       permanent: Végleges
       permanent_note: Egy kapcsolat később sem itt, sem máshol nem szüntethető meg.
         Jelöld be mindegyiket, amelyikben biztos vagy.
@@ -1024,7 +1018,6 @@ desktop:
       together: 'Együtt mentve: {count}'
       unknown_note: 'Lehet, hogy mentődött, lehet, hogy nem. Semmi sem ismétlődik:
         az írás az újraolvasásig szünetel.'
-      unknown_title: Egy mentés eredménye ismeretlen
       when_read: Beolvasáskor
       yours: Az előkészített változásod
     assets:
@@ -1644,7 +1637,6 @@ desktop:
       copy_failed: Nem sikerült másolni. Próbáld újra.
       copy_invoices: Számlák másolása is (TSV)
       copy_selection: Másolás TSV-ként
-      count: 'Exportálandó tételek: {shown}.'
       count_unknown: A tételek számát nem sikerült beolvasni.
       counting: Számolás…
       description: Helyi fájl neked vagy a gestorodnak. Semmi sem megy az AEAT-nek.
@@ -1816,7 +1808,6 @@ desktop:
       check: Ellenőrzés
       check_again: Újraellenőrzés
       checked_at: 'Utolsó ellenőrzés: {time}'
-      choose_period: Válassz ellenőrzendő időszakot.
       count:
         active: Aktív
         archived: Archivált
@@ -1834,11 +1825,9 @@ desktop:
       missing: Ami még hiányzik · {period}
       net: Nettó, EUR
       no_movements: '{period} időszakban nincs tétel. Ez nem jelenti, hogy nincs fizetnivaló.'
-      not_checked: Ebben az ablakban még nincs ellenőrizve.
       not_run: 'Még nem futott: amíg nincs mérve, semmi sem jelenik meg nullaként.'
       of_active: Az aktívak közül
       one_sided: Egyoldalú számlakapcsolatok
-      ready: Számításra kész · {count} ellenőrizve
       rebuild: Kapcsolatok újraépítése
       rebuilt: 'Újraépítve · kapcsolatok: {links} · változatok: {revisions} · törölt
         elavultak: {removed}'
@@ -1853,8 +1842,6 @@ desktop:
         próbafuttatás jön.
       reset_would: 'Eltávolítaná · tételek: {movements} · dokumentumok: {documents}'
       run_check: Ellenőrzés futtatása
-      show: 'A(z) {count} tétel megjelenítése: {reason}'
-      show_short: Mutasd
       stale: Újraszámolandó bevallások
       stale_none: 'Nincs: minden számítás a jelenlegi tételekre épül.'
       stale_row: '{modelo}-s nyomtatvány · {year} {period} · a számítás óta módosult:
@@ -2755,7 +2742,6 @@ desktop:
       refused_empty: Nincs mit beilleszteni
       refused_unclosed_quote: 'Nincs beillesztve: egy idézőjel nincs lezárva'
       single_writes: Egyenként mentve
-      title: Beilleszted a táblázatba?
       title_into: 'Beillesztés ide: {columns}?'
     paused:
       dismiss: Bezárás

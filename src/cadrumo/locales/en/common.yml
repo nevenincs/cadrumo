@@ -889,7 +889,6 @@ desktop:
         too_large: 'Too large to send: {count}'
         transfer_with_tax: 'Transfers with tax fields: {count}'
       blocker_fields: 'Fields: {fields}'
-      checked_again: Readiness is checked again.
       close: Done
       conflict_choice: What to keep
       conflicts_description: Another window saved these movements after you read them.
@@ -897,10 +896,6 @@ desktop:
       conflicts_looked: I have looked at what changed
       conflicts_title: Changed since you read it
       continue: Continue saving
-      done: Saved
-      done_description: What the ledger answered, change by change.
-      done_nothing: Nothing saved
-      done_partly: Partly saved
       drop: Drop the changes to {movement}
       filter: Filter the changes
       fix:
@@ -966,7 +961,6 @@ desktop:
       part_refused: 'Not saved: the ledger changed while saving. Nothing in this part
         was saved.'
       part_unknown: Outcome unknown for this part as a whole. Writes are paused.
-      paused_footer: Writes are paused until you re-read.
       permanent: Permanent
       permanent_note: A link cannot be removed later, here or anywhere else. Tick
         each one you are sure of.
@@ -1009,7 +1003,6 @@ desktop:
       together: 'Saved together: {count}'
       unknown_note: 'It may or may not have saved. Nothing is retried: writes pause
         until you re-read.'
-      unknown_title: One save has an unknown outcome
       when_read: When you read it
       yours: Your staged change
     assets:
@@ -1629,7 +1622,6 @@ desktop:
       copy_failed: Couldn't copy. Try again.
       copy_invoices: Also copy invoices (TSV)
       copy_selection: Copy as TSV
-      count: 'Movements to export: {shown}.'
       count_unknown: The number of movements couldn't be read.
       counting: Counting…
       description: A local file for you or your gestor. Nothing is sent to the AEAT.
@@ -1801,7 +1793,6 @@ desktop:
       check: Check
       check_again: Check again
       checked_at: Last checked {time}
-      choose_period: Choose a period to check.
       count:
         active: Active
         archived: Archived
@@ -1819,11 +1810,9 @@ desktop:
       missing: What's still missing · {period}
       net: Net, EUR
       no_movements: No movements in {period}. That isn't the same as nothing owed.
-      not_checked: Not checked in this window yet.
       not_run: 'Not run yet: nothing is shown as zero until it''s measured.'
       of_active: Of the active
       one_sided: One-sided invoice links
-      ready: Ready for calculation · {count} checked
       rebuild: Rebuild the links
       rebuilt: 'Rebuilt · links: {links} · revisions: {revisions} · stale removed:
         {removed}'
@@ -1837,8 +1826,6 @@ desktop:
         run comes first.
       reset_would: 'It would remove · movements: {movements} · documents: {documents}'
       run_check: Run the check
-      show: 'Show the {count} movements: {reason}'
-      show_short: Show
       stale: Declarations to recalculate
       stale_none: 'None: every calculation covers the movements as they are.'
       stale_row: 'Modelo {modelo} · {year} {period} · since it was calculated, changed:
@@ -2736,7 +2723,6 @@ desktop:
       refused_empty: Nothing to paste
       refused_unclosed_quote: 'Not pasted: a quote is left open'
       single_writes: Saves one at a time
-      title: Paste into the grid?
       title_into: Paste into {columns}?
     paused:
       dismiss: Dismiss
