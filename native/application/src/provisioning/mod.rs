@@ -14,6 +14,8 @@
 //! the free-space rule, `activity` keeps the per-item writer lock and the crash-surviving
 //! activity record, and `receipts` keeps the evidence of what was installed.
 //!
+//! `local_ai` installs, runs and checks the local AI's program and models.
+//!
 //! `browser` installs the bundled driver's pinned Chromium builds into the layout it reads.
 
 pub mod activity;
@@ -22,6 +24,7 @@ pub mod connection;
 pub mod failure;
 pub(crate) mod http;
 pub mod items;
+pub mod local_ai;
 pub mod network;
 pub mod pins;
 pub mod plan;

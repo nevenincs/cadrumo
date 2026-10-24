@@ -20,7 +20,7 @@ use crate::{
     filesystem,
     value::{HostName, RelativePath, Sha256Digest},
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, BTreeSet},
     path::Path,
@@ -189,8 +189,9 @@ impl BrowserArchivePins {
 }
 
 /// How a program archive is packed.
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ArchiveFormat {
+    #[default]
     #[serde(rename = "zip")]
     Zip,
     #[serde(rename = "tar.gz")]

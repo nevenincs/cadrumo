@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:0ac26a91c77cf8080fe4d610b79376dfca261f63bd4926b0ab6d391b409bdd8b'
+body_hash: 'sha256:2517bebb1cc6e4d6d282194892c1ba2833a8ab890556eee9d6af2dd54aefd0a7'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -201,6 +201,29 @@ related:
 - `S05` `verify:` `cargo clippy --all-targets --features platform -- -D warnings` -> `pass`
 - `S05` `verify:` `rustfmt --edition 2024 through stdin on browser.rs receipts.rs mod.rs` -> `pass`
 - `S05` `by:` `implementation-engineer-high`
+- `S07` `A` `native/application/src/provisioning/local_ai/mod.rs`
+- `S07` `A` `native/application/src/provisioning/local_ai/loopback.rs`
+- `S07` `A` `native/application/src/provisioning/local_ai/program.rs`
+- `S07` `A` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S07` `A` `native/application/src/provisioning/local_ai/fake_ollama.rs`
+- `S07` `M` `native/application/src/provisioning/mod.rs`
+- `S07` `M` `native/application/src/provisioning/pins.rs`
+- `S07` `M` `native/application/src/provisioning/proxy.rs`
+- `S07` `M` `native/application/src/component.rs`
+- `S07` `M` `native/application/tests/application.rs`
+- `S07` `M` `native/application/Cargo.toml`
+- `S07` `M` `native/application/Cargo.lock`
+- `S07` `M` `native/desktop/src-tauri/Cargo.lock`
+- `S07` `M` `native/installer/Cargo.lock`
+- `S07` `M` `native/interpreter_host/Cargo.lock`
+- `S07` `M` `native/launch_guard/Cargo.lock`
+- `S07` `M` `native/manager/Cargo.lock`
+- `S07` `verify:` `cargo test --no-fail-fast (lib 125, application 25; package_inspection linked_root_and_deep_root_ancestor_are_refused pre-existing non-ASCII junction failure)` -> `pass`
+- `S07` `verify:` `cargo clippy --all-targets -- -D warnings` -> `pass`
+- `S07` `verify:` `cargo clippy --all-targets --features platform -- -D warnings` -> `pass`
+- `S07` `verify:` `rustfmt --edition 2024 --check through stdin on the touched files` -> `pass`
+- `S07` `verify:` `cargo deny --locked check advisories bans licenses sources (application, desktop, manager)` -> `pass`
+- `S07` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -221,3 +244,6 @@ related:
 - `S01` review correction: model-pins-without-generator, browser-pin-source-hosts; the load-target inventories gain only this Step's modules `(dev.env.local_ai_model_pins,` plus `dev.env.local_ai_pins` and `cadrumo.core.local_ai_pins` that S01 left out); other sessions' uncommitted inventory lines stay uncommitted
 - `S05` S05 completion marker read from the bundled driver 1.64.0-beta-1791568591000, lib/coreBundle.js: browserDirectoryToMarkerFilePath writes and reads `<build>/INSTALLATION_COMPLETE` (lines 33877-33878, 34056-34057); the out-of-process installer main() removes the build folder, extracts the zip, chmods the executable 0o755 and writes the empty marker last (33939-33951); downloadBrowserWithProgressBar skips a build whose marker exists (33724); launch checks only that the executable exists (executablePathOrDie, 34488-34494) and on win-x64 runs winldd PrintDeps.exe unless a fresh `DEPENDENCIES_VALIDATED` exists (34979-34995), which the engine never writes; .links entries (34887-34906) feed only the vendor's stale-build collection and are not written
 - `S05` S05 component.rs is being reworked by the parallel local AI lane, so the bounded zip extraction is a browser-local copy of its rules rather than a shared factoring; verification ran on an index export because that lane's uncommitted `local_ai` files do not compile yet
+- `S07` S07 archive bounds measured on the 0.40.10 archives by streaming each through its decompressor (zip central directory by range request) and summing members, links counted at their target's size: win 2230768655 B/80, linux-x64 5001030082 B/80, linux-arm64 3819535364 B/51, mac 610445869 B/59; bound is 6x the pinned download and 1024 members
+- `S07` S07 the Linux and macOS archives carry 28, 17 and 10 symbolic links for versioned libraries; extraction creates no link: each link that resolves inside the archive to a regular file is placed as a hard link of that file, and any other link is refused
+- `S07` S07 the server inherits the engine's containment: a crash ends it only where the owner hosts the engine in a kill-on-close job (the crate forbids unsafe and has no job API); an orderly stop unloads models, then ends the server

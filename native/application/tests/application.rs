@@ -6,6 +6,7 @@ use cadrumo_application::{
     package::{PackageManifest, Readiness},
     provisioning::{
         connection::Network,
+        pins::ArchiveFormat,
         transfer::{RetryPolicy, SystemPacing, Transfer},
     },
     value::{RelativePath, Sha256Digest},
@@ -47,6 +48,7 @@ fn artifact(bytes: &[u8], revision: &str) -> Artifact {
         max_entries: 100,
         executable: RelativePath::new("chrome/browser").unwrap(),
         url: None,
+        format: ArchiveFormat::Zip,
     }
 }
 

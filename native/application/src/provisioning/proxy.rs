@@ -111,6 +111,35 @@ impl ProxySettings {
         self.port
     }
 
+    /// The standard proxy variables for a program the engine starts that downloads on
+    /// its own: the whole address with its credentials, and loopback always reached
+    /// directly beside the bypass entries. Every value is a credential.
+    pub(crate) fn child_environment(&self) -> Vec<(&'static str, Zeroizing<String>)> {
+        let mut address = Zeroizing::new(String::from("http://"));
+        if !self.username.is_empty() {
+            address.push_str(&percent_encoded(&self.username));
+            if !self.password.is_empty() {
+                address.push(':');
+                address.push_str(&percent_encoded(&self.password));
+            }
+            address.push('@');
+        }
+        address.push_str(&self.host);
+        address.push(':');
+        address.push_str(&self.port.to_string());
+        let mut bypass: Vec<&str> = self.bypass.iter().map(String::as_str).collect();
+        for loopback in ["localhost", "127.0.0.1", "::1"] {
+            if !bypass.contains(&loopback) {
+                bypass.push(loopback);
+            }
+        }
+        vec![
+            ("HTTPS_PROXY", address.clone()),
+            ("HTTP_PROXY", address),
+            ("NO_PROXY", Zeroizing::new(bypass.join(","))),
+        ]
+    }
+
     /// The `Proxy-Authorization` value, when the settings carry a user name.
     pub(crate) fn authorization(&self) -> Option<Zeroizing<String>> {
         if self.username.is_empty() {
@@ -136,6 +165,20 @@ fn proxy_host(host: &str) -> bool {
                     .bytes()
                     .all(|c| c.is_ascii_alphanumeric() || c == b'-')
         })
+}
+
+/// `value` with every byte but the unreserved characters percent-encoded, for the user
+/// information of an address.
+fn percent_encoded(value: &str) -> Zeroizing<String> {
+    let mut out = Zeroizing::new(String::with_capacity(value.len()));
+    for byte in value.bytes() {
+        if byte.is_ascii_alphanumeric() || b"-._~".contains(&byte) {
+            out.push(char::from(byte));
+        } else {
+            out.push_str(&format!("%{byte:02X}"));
+        }
+    }
+    out
 }
 
 fn percent_decoded(value: &str) -> Option<Zeroizing<String>> {
@@ -280,6 +323,40 @@ mod tests {
         assert!(proxy.bypasses("localhost"));
         assert!(!proxy.bypasses("notcorp.example"));
         assert!(!proxy.bypasses("cdn.playwright.dev"));
+    }
+
+    #[test]
+    fn a_started_program_downloads_through_the_same_proxy_and_never_proxies_loopback() {
+        let proxy = settings(&[
+            (PROXY_URL, "http://al%40ice:p%3Ass@proxy.corp.example:3128"),
+            (PROXY_BYPASS, "corp.example,localhost"),
+        ])
+        .unwrap()
+        .unwrap();
+        let environment: Vec<(&str, String)> = proxy
+            .child_environment()
+            .into_iter()
+            .map(|(name, value)| (name, value.as_str().to_owned()))
+            .collect();
+        let address = "http://al%40ice:p%3Ass@proxy.corp.example:3128".to_owned();
+        assert_eq!(
+            environment,
+            [
+                ("HTTPS_PROXY", address.clone()),
+                ("HTTP_PROXY", address),
+                (
+                    "NO_PROXY",
+                    "corp.example,localhost,127.0.0.1,::1".to_owned()
+                ),
+            ]
+        );
+        let anonymous = settings(&[(PROXY_URL, "http://10.0.0.1")])
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            anonymous.child_environment()[0].1.as_str(),
+            "http://10.0.0.1:80"
+        );
     }
 
     #[test]

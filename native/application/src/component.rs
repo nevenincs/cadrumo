@@ -3,6 +3,7 @@ use crate::{
     filesystem,
     package::Readiness,
     provisioning::{
+        pins::ArchiveFormat,
         transfer::{Pinned, Transfer},
         url::HttpsUrl,
     },
@@ -13,7 +14,7 @@ use sha2::{Digest, Sha256};
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs::{self, File},
-    io::{Read, Write},
+    io::{BufRead, BufReader, Read, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicBool, Ordering},
 };
@@ -31,6 +32,9 @@ pub struct Artifact {
     pub max_entries: usize,
     pub executable: RelativePath,
     pub url: Option<String>,
+    /// How the archive is packed; receipts written before formats existed held zips.
+    #[serde(default)]
+    pub format: ArchiveFormat,
 }
 
 impl Artifact {
@@ -90,6 +94,19 @@ pub struct ActiveComponent {
 pub struct ComponentInspection {
     pub readiness: Readiness,
     pub active: Option<ActiveComponent>,
+}
+
+/// What [`ComponentStore::inspect_quick`] finds.
+#[derive(Debug)]
+pub enum QuickInspection {
+    /// No version is active.
+    Missing,
+    /// The artifact's version is active and its executable holds its recorded bytes.
+    Active(ActiveComponent),
+    /// Another revision is active and its executable holds its recorded bytes.
+    Other { revision: String },
+    /// The active metadata, its receipt or the executable cannot be trusted.
+    Damaged,
 }
 
 /// Owner-resolved location. Construction and inspection never create directories.
@@ -193,6 +210,132 @@ impl ComponentStore {
         }
     }
 
+    /// A look at the active version that hashes only its executable, for a check that
+    /// must stay fast: the pointer, the receipt's identity and the executable's recorded
+    /// bytes. [`Self::inspect`] remains the check of every installed file.
+    pub fn inspect_quick(&self, artifact: &Artifact) -> Result<QuickInspection, Error> {
+        artifact.validate(&self.target)?;
+        filesystem::absolute_root(&self.root)?;
+        let directory = self.root.join(&artifact.id);
+        let pointer: ActivePointer = match filesystem::json_file(&directory.join("active.json")) {
+            Ok(pointer) => pointer,
+            Err(Error::Io(e)) if e.kind() == std::io::ErrorKind::NotFound => {
+                return Ok(QuickInspection::Missing);
+            }
+            Err(Error::Json(_) | Error::Integrity(_) | Error::Invalid(_)) => {
+                return Ok(QuickInspection::Damaged);
+            }
+            Err(e) => return Err(e),
+        };
+        if pointer.schema != 1 || pointer.version.as_str().contains('/') {
+            return Ok(QuickInspection::Damaged);
+        }
+        let version = pointer.version.under(&directory.join("versions"));
+        let receipt: Receipt = match filesystem::json_file(&version.join("receipt.json")) {
+            Ok(receipt) => receipt,
+            Err(Error::Io(e)) if e.kind() == std::io::ErrorKind::NotFound => {
+                return Ok(QuickInspection::Missing);
+            }
+            Err(Error::Json(_) | Error::Integrity(_) | Error::Invalid(_)) => {
+                return Ok(QuickInspection::Damaged);
+            }
+            Err(e) => return Err(e),
+        };
+        let recorded = &receipt.artifact;
+        if receipt.schema != 1
+            || recorded.sha256 != pointer.sha256
+            || recorded.id != artifact.id
+            || recorded.target != artifact.target
+        {
+            return Ok(QuickInspection::Damaged);
+        }
+        let executable = recorded.executable.under(&version.join("payload"));
+        let intact = receipt
+            .files
+            .get(&recorded.executable)
+            .is_some_and(|expected| {
+                filesystem::digest(&executable).is_ok_and(|found| found == *expected)
+                    && filesystem::require_executable(&executable).is_ok()
+            });
+        if !intact {
+            return Ok(QuickInspection::Damaged);
+        }
+        if recorded.sha256 == artifact.sha256 && recorded.executable == artifact.executable {
+            Ok(QuickInspection::Active(active(&version, artifact)))
+        } else {
+            Ok(QuickInspection::Other {
+                revision: recorded.revision.clone(),
+            })
+        }
+    }
+
+    /// Removes every stored version but the active one, under the writer lock. The caller
+    /// first stops anything running from a superseded version.
+    pub fn prune(&self, artifact: &Artifact) -> Result<(), Error> {
+        artifact.validate(&self.target)?;
+        let (directory, _writer) = self.writer(&artifact.id)?;
+        let pointer: ActivePointer = filesystem::json_file(&directory.join("active.json"))?;
+        let versions = directory.join("versions");
+        filesystem::refuse_links(&versions)?;
+        for entry in fs::read_dir(&versions)? {
+            let entry = entry?;
+            if entry.file_name().to_str() != Some(pointer.version.as_str()) {
+                remove_tree(&entry.path(), &versions)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Removes the component's active pointer first, so no reader finds a half-removed
+    /// version, then every version, partial download and staging tree, under the writer
+    /// lock. Anything else the owner keeps in the component's folder stays. The caller
+    /// first stops anything running from it.
+    pub fn remove(&self, id: &str) -> Result<(), Error> {
+        let (directory, _writer) = self.writer(id)?;
+        for pointer in ["active.json", "active.next.json"] {
+            let path = directory.join(pointer);
+            filesystem::refuse_links(&path)?;
+            match fs::remove_file(&path) {
+                Err(e) if e.kind() != std::io::ErrorKind::NotFound => return Err(e.into()),
+                _ => {}
+            }
+        }
+        for tree in ["versions", "downloads", "staging"] {
+            let path = directory.join(tree);
+            if path.exists() {
+                remove_tree(&path, &directory)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// The component's folder, created if needed, with its writer lock held.
+    fn writer(&self, id: &str) -> Result<(PathBuf, WriterLock), Error> {
+        let identity = RelativePath::new(id)?;
+        if identity.as_str().contains('/') {
+            return Err(Error::Invalid("nested component identity".into()));
+        }
+        filesystem::absolute_root(&self.root)?;
+        let directory = self.root.join(identity.as_str());
+        filesystem::refuse_links(&directory)?;
+        fs::create_dir_all(&directory)?;
+        filesystem::refuse_links(&directory)?;
+        let lock_path = directory.join("writer.lock");
+        filesystem::refuse_links(&lock_path)?;
+        // Keep the lock inode in place: unlinking it allows two independent writers.
+        let lock = File::options()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(false)
+            .open(lock_path)?;
+        lock.try_lock().map_err(|e| match e {
+            std::fs::TryLockError::WouldBlock => Error::Busy,
+            std::fs::TryLockError::Error(e) => Error::Io(e),
+        })?;
+        Ok((directory, WriterLock(lock)))
+    }
+
     /// Explicit acquisition. The source is opened only after target admission and writer locking.
     pub fn provision<R: Read>(
         &self,
@@ -216,25 +359,7 @@ impl ComponentStore {
     ) -> Result<ActiveComponent, Error> {
         artifact.validate(&self.target)?;
         cancellation.check()?;
-        filesystem::absolute_root(&self.root)?;
-        let directory = self.root.join(&artifact.id);
-        filesystem::refuse_links(&directory)?;
-        fs::create_dir_all(&directory)?;
-        filesystem::refuse_links(&directory)?;
-        let lock_path = directory.join("writer.lock");
-        filesystem::refuse_links(&lock_path)?;
-        // Keep the lock inode in place: unlinking it allows two independent writers.
-        let lock = File::options()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(false)
-            .open(lock_path)?;
-        lock.try_lock().map_err(|e| match e {
-            std::fs::TryLockError::WouldBlock => Error::Busy,
-            std::fs::TryLockError::Error(e) => Error::Io(e),
-        })?;
-        let _writer = WriterLock(lock);
+        let (directory, _writer) = self.writer(&artifact.id)?;
         let stage = directory.join("staging");
         remove_staging(&stage, &directory)?;
         let next_pointer = directory.join("active.next.json");
@@ -252,7 +377,7 @@ impl ComponentStore {
         let version = reusable_or_fresh_version(&versions, artifact)?;
         if !version.exists() {
             fs::create_dir(&stage)?;
-            let archive = stage.join("download.zip");
+            let archive = stage.join("download.archive");
             let result = fill(&archive, &directory)
                 .and_then(|()| self.stage(artifact, &archive, cancellation, &stage, &version));
             let cleanup = remove_staging(&stage, &directory);
@@ -408,46 +533,68 @@ fn remove_staging(stage: &Path, owner: &Path) -> Result<(), Error> {
     }
     filesystem::refuse_links(stage)?;
     if stage.exists() {
-        // Validate descendants too; the application-owned tree must not contain junctions.
-        let mut pending = vec![stage.to_path_buf()];
-        while let Some(directory) = pending.pop() {
-            for entry in fs::read_dir(directory)? {
-                let path = entry?.path();
-                filesystem::refuse_links(&path)?;
-                if path.is_dir() {
-                    pending.push(path);
-                }
-            }
-        }
-        fs::remove_dir_all(stage)?;
+        remove_tree(stage, owner)?;
     }
     Ok(())
 }
+
+/// Removes `tree`, a direct child of `owner`, once no link is found anywhere inside it.
+fn remove_tree(tree: &Path, owner: &Path) -> Result<(), Error> {
+    if tree.parent() != Some(owner) {
+        return Err(Error::Invalid("removal outside the component".into()));
+    }
+    filesystem::refuse_links(tree)?;
+    if !fs::symlink_metadata(tree)?.is_dir() {
+        fs::remove_file(tree)?;
+        return Ok(());
+    }
+    // Validate descendants too; the application-owned tree must not contain junctions.
+    let mut pending = vec![tree.to_path_buf()];
+    while let Some(directory) = pending.pop() {
+        for entry in fs::read_dir(directory)? {
+            let path = entry?.path();
+            filesystem::refuse_links(&path)?;
+            if path.is_dir() {
+                pending.push(path);
+            }
+        }
+    }
+    fs::remove_dir_all(tree)?;
+    Ok(())
+}
+
+type Extracted = (BTreeMap<RelativePath, Sha256Digest>, usize);
 
 fn extract(
     archive: &Path,
     destination: &Path,
     artifact: &Artifact,
     cancellation: &Cancellation,
-) -> Result<(BTreeMap<RelativePath, Sha256Digest>, usize), Error> {
-    let mut zip = zip::ZipArchive::new(File::open(archive)?)?;
-    if zip.len() > artifact.max_entries {
-        return Err(Error::LimitExceeded);
+) -> Result<Extracted, Error> {
+    match artifact.format {
+        ArchiveFormat::Zip => extract_zip(archive, destination, artifact, cancellation),
+        ArchiveFormat::TarGz => {
+            let source = flate2::bufread::MultiGzDecoder::new(BufReader::new(File::open(archive)?));
+            extract_tar(source, destination, artifact, cancellation)
+        }
+        ArchiveFormat::TarZst => {
+            let source = ZstdFrames::new(BufReader::new(File::open(archive)?))?;
+            extract_tar(source, destination, artifact, cancellation)
+        }
     }
-    let mut files = BTreeMap::new();
-    let mut seen = BTreeSet::new();
-    let mut spellings = BTreeMap::new();
-    let mut total = 0u64;
-    for index in 0..zip.len() {
-        cancellation.check()?;
-        let mut member = zip.by_index(index)?;
-        let name = member.name()?;
-        let relative = RelativePath::new(if member.is_dir() {
-            name.trim_end_matches('/')
-        } else {
-            &name
-        })?;
-        if !seen.insert(relative.as_str().to_lowercase()) {
+}
+
+/// Every member name an archive declares, refused when two spell one path, or one
+/// directory, differently only by case: they would collide on a case-insensitive volume.
+#[derive(Default)]
+struct MemberNames {
+    seen: BTreeSet<String>,
+    spellings: BTreeMap<String, String>,
+}
+
+impl MemberNames {
+    fn admit(&mut self, relative: &RelativePath) -> Result<(), Error> {
+        if !self.seen.insert(relative.as_str().to_lowercase()) {
             return Err(Error::Invalid("duplicate archive member".into()));
         }
         let mut prefix = String::new();
@@ -456,12 +603,74 @@ fn extract(
                 prefix.push('/');
             }
             prefix.push_str(part);
-            if let Some(previous) = spellings.insert(prefix.to_lowercase(), prefix.clone())
+            if let Some(previous) = self.spellings.insert(prefix.to_lowercase(), prefix.clone())
                 && previous != prefix
             {
                 return Err(Error::Invalid("archive directory casing differs".into()));
             }
         }
+        Ok(())
+    }
+}
+
+/// Streams one member's bytes into a new file at `path`, counting them against the
+/// artifact's unpacked bound, and returns their digest.
+fn write_member(
+    mut member: impl Read,
+    path: &Path,
+    mode: Option<u32>,
+    artifact: &Artifact,
+    total: &mut u64,
+    cancellation: &Cancellation,
+) -> Result<Sha256Digest, Error> {
+    fs::create_dir_all(
+        path.parent()
+            .ok_or_else(|| Error::Invalid("archive path has no parent".into()))?,
+    )?;
+    let mut out = File::options().write(true).create_new(true).open(path)?;
+    let mut hash = Sha256::new();
+    let mut buffer = [0u8; 65536];
+    loop {
+        cancellation.check()?;
+        let n = member.read(&mut buffer)?;
+        if n == 0 {
+            break;
+        }
+        *total += n as u64;
+        if *total > artifact.max_unpacked_bytes {
+            return Err(Error::LimitExceeded);
+        }
+        hash.update(&buffer[..n]);
+        out.write_all(&buffer[..n])?;
+    }
+    out.sync_all()?;
+    filesystem::archive_permissions(path, mode)?;
+    Sha256Digest::from_hash(hash.finalize())
+}
+
+fn extract_zip(
+    archive: &Path,
+    destination: &Path,
+    artifact: &Artifact,
+    cancellation: &Cancellation,
+) -> Result<Extracted, Error> {
+    let mut zip = zip::ZipArchive::new(File::open(archive)?)?;
+    if zip.len() > artifact.max_entries {
+        return Err(Error::LimitExceeded);
+    }
+    let mut files = BTreeMap::new();
+    let mut names = MemberNames::default();
+    let mut total = 0u64;
+    for index in 0..zip.len() {
+        cancellation.check()?;
+        let member = zip.by_index(index)?;
+        let name = member.name()?;
+        let relative = RelativePath::new(if member.is_dir() {
+            name.trim_end_matches('/')
+        } else {
+            &name
+        })?;
+        names.admit(&relative)?;
         let kind = member.unix_mode().unwrap_or(0) & 0o170000;
         if member.is_symlink() || !matches!(kind, 0 | 0o040000 | 0o100000) {
             return Err(Error::Invalid(
@@ -476,31 +685,182 @@ fn extract(
         if member.size() > artifact.max_unpacked_bytes.saturating_sub(total) {
             return Err(Error::LimitExceeded);
         }
+        let mode = member.unix_mode();
+        let digest = write_member(member, &path, mode, artifact, &mut total, cancellation)?;
+        files.insert(relative, digest);
+    }
+    Ok((files, zip.len()))
+}
+
+/// A tar stream extracted with the same bounds as a zip: member count, unpacked bytes,
+/// safe relative names and no special files. No link is ever created on disk. A
+/// symbolic or hard link member names another member, as the publisher's archives do
+/// for versioned shared libraries; it is admitted only when it resolves, inside the
+/// archive and through at most a few other links, to a regular file member, and that
+/// file is then also placed at the link's path as a hard link of the same bytes, which
+/// count again against the unpacked bound. A link to a directory, outside the archive or
+/// to nothing is refused.
+fn extract_tar(
+    source: impl Read,
+    destination: &Path,
+    artifact: &Artifact,
+    cancellation: &Cancellation,
+) -> Result<Extracted, Error> {
+    let mut archive = tar::Archive::new(source);
+    let mut files: BTreeMap<RelativePath, Sha256Digest> = BTreeMap::new();
+    let mut sizes: BTreeMap<RelativePath, u64> = BTreeMap::new();
+    let mut links: BTreeMap<RelativePath, RelativePath> = BTreeMap::new();
+    let mut names = MemberNames::default();
+    let mut total = 0u64;
+    let mut entries = 0usize;
+    for entry in archive.entries()? {
+        cancellation.check()?;
+        let entry = entry?;
+        let kind = entry.header().entry_type();
+        if kind.is_pax_global_extensions() {
+            continue;
+        }
+        entries += 1;
+        if entries > artifact.max_entries {
+            return Err(Error::LimitExceeded);
+        }
+        let raw = std::str::from_utf8(&entry.path_bytes())
+            .map_err(|_| Error::Invalid("non-UTF8 archive member".into()))?
+            .to_owned();
+        let name = raw.strip_prefix("./").unwrap_or(&raw).trim_end_matches('/');
+        if name.is_empty() || name == "." {
+            if kind.is_dir() {
+                continue;
+            }
+            return Err(Error::Invalid("unnamed archive member".into()));
+        }
+        let relative = RelativePath::new(name)?;
+        names.admit(&relative)?;
+        let path = relative.under(destination);
+        if kind.is_dir() {
+            fs::create_dir_all(&path)?;
+        } else if kind.is_file() || kind.is_contiguous() {
+            let size = entry.size();
+            if size > artifact.max_unpacked_bytes.saturating_sub(total) {
+                return Err(Error::LimitExceeded);
+            }
+            let mode = entry.header().mode().ok();
+            let digest = write_member(entry, &path, mode, artifact, &mut total, cancellation)?;
+            files.insert(relative.clone(), digest);
+            sizes.insert(relative, size);
+        } else if kind.is_symlink() || kind.is_hard_link() {
+            let target = entry
+                .link_name_bytes()
+                .ok_or_else(|| Error::Invalid("archive link without a target".into()))?;
+            let target = std::str::from_utf8(&target)
+                .map_err(|_| Error::Invalid("non-UTF8 archive link".into()))?;
+            // A symbolic link is read from its own folder, a hard link from the root.
+            let base = if kind.is_symlink() {
+                relative
+                    .as_str()
+                    .rsplit_once('/')
+                    .map_or("", |(base, _)| base)
+            } else {
+                ""
+            };
+            let resolved = resolve_member(base, target)?;
+            links.insert(relative, resolved);
+        } else {
+            return Err(Error::Invalid("archive special files are forbidden".into()));
+        }
+    }
+    for (link, target) in &links {
+        cancellation.check()?;
+        let mut file = target;
+        for _ in 0..=links.len() {
+            match links.get(file) {
+                Some(next) => file = next,
+                None => break,
+            }
+        }
+        let (Some(digest), Some(size)) = (files.get(file).cloned(), sizes.get(file)) else {
+            return Err(Error::Invalid(
+                "archive link does not name a regular file in the archive".into(),
+            ));
+        };
+        total = total.saturating_add(*size);
+        if total > artifact.max_unpacked_bytes {
+            return Err(Error::LimitExceeded);
+        }
+        let path = link.under(destination);
         fs::create_dir_all(
             path.parent()
                 .ok_or_else(|| Error::Invalid("archive path has no parent".into()))?,
         )?;
-        let mut out = File::options().write(true).create_new(true).open(&path)?;
-        let mut hash = Sha256::new();
-        let mut buffer = [0u8; 65536];
-        loop {
-            cancellation.check()?;
-            let n = member.read(&mut buffer)?;
-            if n == 0 {
-                break;
-            }
-            total += n as u64;
-            if total > artifact.max_unpacked_bytes {
-                return Err(Error::LimitExceeded);
-            }
-            hash.update(&buffer[..n]);
-            out.write_all(&buffer[..n])?;
-        }
-        out.sync_all()?;
-        filesystem::archive_permissions(&path, member.unix_mode())?;
-        files.insert(relative, Sha256Digest::from_hash(hash.finalize())?);
+        fs::hard_link(file.under(destination), &path)?;
+        files.insert(link.clone(), digest);
     }
-    Ok((files, zip.len()))
+    Ok((files, entries))
+}
+
+/// The archive member `target` names, read lexically from the folder `base`; refused when
+/// it is absolute or climbs above the archive's root.
+fn resolve_member(base: &str, target: &str) -> Result<RelativePath, Error> {
+    if target.starts_with('/') || target.contains('\\') {
+        return Err(Error::Invalid("archive link leaves the archive".into()));
+    }
+    let mut parts: Vec<&str> = base.split('/').filter(|part| !part.is_empty()).collect();
+    for part in target.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                parts
+                    .pop()
+                    .ok_or_else(|| Error::Invalid("archive link leaves the archive".into()))?;
+            }
+            part => parts.push(part),
+        }
+    }
+    RelativePath::new(parts.join("/"))
+}
+
+/// A zstd stream of one or more frames, decoded one frame after another with the
+/// decoder's default window bound.
+struct ZstdFrames<R: BufRead> {
+    decoder: Option<ruzstd::decoding::StreamingDecoder<R, ruzstd::decoding::FrameDecoder>>,
+}
+
+impl<R: BufRead> ZstdFrames<R> {
+    fn new(source: R) -> Result<Self, Error> {
+        Ok(Self {
+            decoder: Some(Self::frame(source).map_err(Error::Io)?),
+        })
+    }
+
+    fn frame(
+        source: R,
+    ) -> std::io::Result<ruzstd::decoding::StreamingDecoder<R, ruzstd::decoding::FrameDecoder>>
+    {
+        ruzstd::decoding::StreamingDecoder::new(source)
+            .map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidData, "invalid zstd frame"))
+    }
+}
+
+impl<R: BufRead> Read for ZstdFrames<R> {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        loop {
+            let Some(decoder) = self.decoder.as_mut() else {
+                return Ok(0);
+            };
+            let read = decoder.read(buffer)?;
+            if read > 0 || buffer.is_empty() {
+                return Ok(read);
+            }
+            let Some(decoder) = self.decoder.take() else {
+                return Ok(0);
+            };
+            let mut source = decoder.into_inner();
+            if source.fill_buf()?.is_empty() {
+                return Ok(0);
+            }
+            self.decoder = Some(Self::frame(source)?);
+        }
+    }
 }
 
 fn verify_version(version: &Path, artifact: &Artifact) -> Result<(), Error> {
@@ -657,6 +1017,7 @@ mod tests {
             max_entries: 10,
             executable: RelativePath::new("bin/tool").unwrap(),
             url: Some("https://cdn.example.com/tool.zip".into()),
+            format: ArchiveFormat::Zip,
         };
         let downloads = directory.path().join("tool/downloads");
         fs::create_dir_all(&downloads).unwrap();
@@ -697,5 +1058,307 @@ mod tests {
             Readiness::Ready
         ));
         assert!(progress.get() > 0);
+    }
+
+    /// One tar member written field by field, so a test can spell names and link targets
+    /// a well-behaved archiver would refuse to write.
+    #[derive(Clone, Copy)]
+    struct Member<'a> {
+        name: &'a str,
+        kind: tar::EntryType,
+        link: &'a str,
+        data: &'a [u8],
+        mode: u32,
+    }
+
+    fn file<'a>(name: &'a str, data: &'a [u8], mode: u32) -> Member<'a> {
+        Member {
+            name,
+            kind: tar::EntryType::Regular,
+            link: "",
+            data,
+            mode,
+        }
+    }
+
+    fn link<'a>(name: &'a str, kind: tar::EntryType, target: &'a str) -> Member<'a> {
+        Member {
+            name,
+            kind,
+            link: target,
+            data: b"",
+            mode: 0o777,
+        }
+    }
+
+    fn folder(name: &str) -> Member<'_> {
+        Member {
+            name,
+            kind: tar::EntryType::Directory,
+            link: "",
+            data: b"",
+            mode: 0o755,
+        }
+    }
+
+    fn tar_of(members: &[Member<'_>]) -> Vec<u8> {
+        let mut builder = tar::Builder::new(Vec::new());
+        for member in members {
+            let mut header = tar::Header::new_gnu();
+            let old = header.as_old_mut();
+            old.name[..member.name.len()].copy_from_slice(member.name.as_bytes());
+            old.linkname[..member.link.len()].copy_from_slice(member.link.as_bytes());
+            header.set_entry_type(member.kind);
+            header.set_size(member.data.len() as u64);
+            header.set_mode(member.mode);
+            header.set_cksum();
+            builder.append(&header, member.data).unwrap();
+        }
+        builder.into_inner().unwrap()
+    }
+
+    fn packed(format: ArchiveFormat, tar: &[u8]) -> Vec<u8> {
+        match format {
+            ArchiveFormat::TarGz => {
+                let mut encoder =
+                    flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+                encoder.write_all(tar).unwrap();
+                encoder.finish().unwrap()
+            }
+            ArchiveFormat::TarZst => ruzstd::encoding::compress_to_vec(
+                std::io::Cursor::new(tar.to_vec()),
+                ruzstd::encoding::CompressionLevel::Fastest,
+            ),
+            ArchiveFormat::Zip => unreachable!("a tar test"),
+        }
+    }
+
+    fn tar_artifact(bytes: &[u8], format: ArchiveFormat) -> Artifact {
+        Artifact {
+            id: "ollama".into(),
+            revision: "1".into(),
+            target: "fixture-target".into(),
+            sha256: Sha256Digest::of(bytes),
+            archive_bytes: bytes.len() as u64,
+            max_unpacked_bytes: 1_000_000,
+            max_entries: 20,
+            executable: RelativePath::new("bin/ollama").unwrap(),
+            url: None,
+            format,
+        }
+    }
+
+    fn provision_tar(
+        format: ArchiveFormat,
+        members: &[Member<'_>],
+        adjust: impl FnOnce(&mut Artifact),
+    ) -> (tempfile::TempDir, Result<ActiveComponent, Error>) {
+        let bytes = packed(format, &tar_of(members));
+        let mut artifact = tar_artifact(&bytes, format);
+        adjust(&mut artifact);
+        let directory = tempfile::tempdir().unwrap();
+        let store = ComponentStore::new(directory.path().into(), "fixture-target".into()).unwrap();
+        let result = store.provision(
+            &artifact,
+            || Ok(std::io::Cursor::new(bytes.clone())),
+            &Cancellation::default(),
+        );
+        if result.is_ok() {
+            assert!(matches!(
+                store.inspect(&artifact).unwrap().readiness,
+                Readiness::Ready
+            ));
+        }
+        (directory, result)
+    }
+
+    const LIBRARY: &[u8] = b"shared library bytes";
+
+    /// The publisher's Linux layout in miniature: versioned libraries reached through a
+    /// chain of links, one of them listed before what it names.
+    fn publisher_layout() -> Vec<Member<'static>> {
+        vec![
+            folder("./"),
+            folder("./bin/"),
+            file("./bin/ollama", b"program", 0o755),
+            folder("lib/ollama/"),
+            link(
+                "lib/ollama/libggml.so",
+                tar::EntryType::Symlink,
+                "libggml.so.0",
+            ),
+            link(
+                "lib/ollama/libggml.so.0",
+                tar::EntryType::Symlink,
+                "./libggml.so.0.27.0",
+            ),
+            file("lib/ollama/libggml.so.0.27.0", LIBRARY, 0o644),
+            link(
+                "lib/ollama/cuda/libggml.so",
+                tar::EntryType::Symlink,
+                "../libggml.so.0.27.0",
+            ),
+            link(
+                "lib/ollama/copy.so",
+                tar::EntryType::Link,
+                "lib/ollama/libggml.so.0.27.0",
+            ),
+        ]
+    }
+
+    #[test]
+    fn tar_archives_extract_their_links_as_files_of_the_same_bytes_and_no_link() {
+        for format in [ArchiveFormat::TarGz, ArchiveFormat::TarZst] {
+            let (_directory, result) = provision_tar(format, &publisher_layout(), |_| {});
+            let active = result.unwrap();
+            assert_eq!(fs::read(&active.executable).unwrap(), b"program");
+            filesystem::require_executable(&active.executable).unwrap();
+            for name in [
+                "lib/ollama/libggml.so",
+                "lib/ollama/libggml.so.0",
+                "lib/ollama/libggml.so.0.27.0",
+                "lib/ollama/cuda/libggml.so",
+                "lib/ollama/copy.so",
+            ] {
+                let path = active.root.join(name);
+                assert!(
+                    !fs::symlink_metadata(&path).unwrap().is_symlink(),
+                    "{format:?} {name}"
+                );
+                filesystem::refuse_links(&path).unwrap();
+                assert_eq!(fs::read(&path).unwrap(), LIBRARY, "{format:?} {name}");
+            }
+        }
+    }
+
+    #[test]
+    fn tar_links_out_of_the_archive_or_to_no_file_and_special_members_are_refused() {
+        let refused: Vec<Vec<Member<'static>>> = vec![
+            // Each escape names a member that exists, so only the escape is refused.
+            vec![
+                file("outside", b"x", 0o644),
+                link("bin/escape", tar::EntryType::Symlink, "../../outside"),
+            ],
+            vec![
+                file("etc/passwd", b"x", 0o644),
+                link("bin/absolute", tar::EntryType::Symlink, "/etc/passwd"),
+            ],
+            vec![link("bin/nothing", tar::EntryType::Symlink, "missing")],
+            vec![
+                folder("lib/"),
+                link("bin/folder", tar::EntryType::Symlink, "../lib"),
+            ],
+            vec![
+                link("bin/a", tar::EntryType::Symlink, "b"),
+                link("bin/b", tar::EntryType::Symlink, "a"),
+            ],
+            vec![
+                file("outside", b"x", 0o644),
+                link("bin/hard", tar::EntryType::Link, "../outside"),
+            ],
+            vec![Member {
+                name: "bin/pipe",
+                kind: tar::EntryType::Fifo,
+                link: "",
+                data: b"",
+                mode: 0o644,
+            }],
+            vec![file("../outside", b"x", 0o644)],
+            vec![file("/absolute", b"x", 0o644)],
+            vec![file("bin/OLLAMA", b"x", 0o755)],
+        ];
+        for format in [ArchiveFormat::TarGz, ArchiveFormat::TarZst] {
+            for extra in &refused {
+                let mut members = vec![file("bin/ollama", b"program", 0o755)];
+                members.extend(extra.iter().copied());
+                let (directory, result) = provision_tar(format, &members, |_| {});
+                assert!(
+                    matches!(result, Err(Error::Invalid(_))),
+                    "{format:?} {}: {result:?}",
+                    extra[extra.len() - 1].name
+                );
+                assert!(!directory.path().join("outside").exists());
+                assert!(!directory.path().join("ollama/active.json").exists());
+            }
+        }
+    }
+
+    #[test]
+    fn tar_archives_keep_the_member_and_unpacked_bounds_links_included() {
+        for format in [ArchiveFormat::TarGz, ArchiveFormat::TarZst] {
+            let layout = publisher_layout();
+            let (_directory, result) =
+                provision_tar(format, &layout, |artifact| artifact.max_entries = 8);
+            assert!(matches!(result, Err(Error::LimitExceeded)), "{format:?}");
+            // Four links place the library's bytes four more times.
+            let files = b"program".len() + LIBRARY.len();
+            let placed = (files + 4 * LIBRARY.len()) as u64;
+            let (_directory, result) = provision_tar(format, &layout, |artifact| {
+                artifact.max_unpacked_bytes = placed - 1;
+            });
+            assert!(matches!(result, Err(Error::LimitExceeded)), "{format:?}");
+            let (_directory, result) = provision_tar(format, &layout, |artifact| {
+                artifact.max_unpacked_bytes = placed;
+            });
+            result.unwrap();
+        }
+    }
+
+    #[test]
+    fn quick_inspection_hashes_the_executable_and_tells_another_revision_apart() {
+        let bytes = packed(
+            ArchiveFormat::TarGz,
+            &tar_of(&[
+                file("bin/ollama", b"program", 0o755),
+                file("data", b"d", 0o644),
+            ]),
+        );
+        let artifact = tar_artifact(&bytes, ArchiveFormat::TarGz);
+        let directory = tempfile::tempdir().unwrap();
+        let store = ComponentStore::new(directory.path().into(), "fixture-target".into()).unwrap();
+        assert!(matches!(
+            store.inspect_quick(&artifact).unwrap(),
+            QuickInspection::Missing
+        ));
+        let active = store
+            .provision(
+                &artifact,
+                || Ok(std::io::Cursor::new(bytes.clone())),
+                &Cancellation::default(),
+            )
+            .unwrap();
+        assert!(matches!(
+            store.inspect_quick(&artifact).unwrap(),
+            QuickInspection::Active(_)
+        ));
+        let mut newer = artifact.clone();
+        newer.revision = "2".into();
+        newer.sha256 = Sha256Digest::of(b"other bytes");
+        assert!(matches!(
+            store.inspect_quick(&newer).unwrap(),
+            QuickInspection::Other { revision } if revision == "1"
+        ));
+        // A changed data file is the full inspection's to find; a changed executable is
+        // found quickly.
+        fs::write(active.root.join("data"), b"e").unwrap();
+        assert!(matches!(
+            store.inspect_quick(&artifact).unwrap(),
+            QuickInspection::Active(_)
+        ));
+        assert!(!matches!(
+            store.inspect(&artifact).unwrap().readiness,
+            Readiness::Ready
+        ));
+        fs::write(&active.executable, b"changed").unwrap();
+        assert!(matches!(
+            store.inspect_quick(&artifact).unwrap(),
+            QuickInspection::Damaged
+        ));
+        store.remove(&artifact.id).unwrap();
+        assert!(matches!(
+            store.inspect_quick(&artifact).unwrap(),
+            QuickInspection::Missing
+        ));
+        assert!(!directory.path().join("ollama/versions").exists());
     }
 }
