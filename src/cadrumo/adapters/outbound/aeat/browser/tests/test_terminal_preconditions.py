@@ -125,8 +125,7 @@ _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
 # recovery action, is the provisioning probe's own rather than a browser-authored one.
 _PROVISIONING_DELEGATED_CARRIERS: frozenset[str] = frozenset(
     {
-        "session:BrowserSession._require_bundled_browser_provisioned:BrowserError:"
-        "Chromium browser build is not provisioned",
+        "session:require_browser_ready:BrowserError:Chromium browser build is not provisioned",
     }
 )
 

@@ -69,6 +69,34 @@ from .site_health_records import (
 logger = get_logger(__name__)
 
 
+def require_browser_ready(settings: Settings, *, profile_name: str) -> None:
+    """Refuse browser work while the browser setup item is not ready.
+
+    This is the one browser readiness check. Tax agency read and sign-in
+    operations call it when they start, before they load a certificate or a
+    secret, and :class:`BrowserSession` calls it again before every launch.
+    The refusal carries the setup probe's own verdict, which names the browser
+    setup action, so every caller refuses the same way.
+    """
+    from .....application.provisioning_browser import probe_playwright_browser
+
+    status = probe_playwright_browser(settings=settings)
+    if status.available:
+        return
+    logger.error(
+        "browser work refused failure_mode=%s profile=%s",
+        BrowserFailureMode.BROWSER_NOT_PROVISIONED,
+        profile_name,
+    )
+    raise BrowserError(
+        "Chromium browser build is not provisioned",
+        failure_mode=BrowserFailureMode.BROWSER_NOT_PROVISIONED,
+        context={"profile": profile_name},
+        translated_message=tr("adapters.browser.errors.not_provisioned"),
+        precondition_verdict=status.precondition_verdict,
+    )
+
+
 class BrowserSession:
     """Factory and lifecycle manager for one Playwright browser context.
 
@@ -215,37 +243,16 @@ class BrowserSession:
             proxy["bypass"] = self.settings.cadrumo_proxy_bypass
         return proxy
 
-    def _require_bundled_browser_provisioned(self) -> None:
-        """Refuse a bundled-Chromium launch before Playwright reports a missing executable.
-
-        Playwright-managed Chromium is the only supported browser, so the
-        check runs before every launch.
-        """
-        from .....application.provisioning_browser import probe_playwright_browser
-
-        status = probe_playwright_browser(settings=self.settings)
-        if status.available:
-            return
-        logger.error(
-            "browser launch refused failure_mode=%s profile=%s",
-            BrowserFailureMode.BROWSER_NOT_PROVISIONED,
-            self.profile.name,
-        )
-        raise BrowserError(
-            "Chromium browser build is not provisioned",
-            failure_mode=BrowserFailureMode.BROWSER_NOT_PROVISIONED,
-            context={"profile": self.profile.name},
-            translated_message=tr("adapters.browser.errors.not_provisioned"),
-            precondition_verdict=status.precondition_verdict,
-        )
-
     async def _launch_owned_chromium(self, proxy: ProxySettings | None) -> None:
         """Retain the browser before deferred launch cancellation can escape."""
         self._browser = await self._launch_chromium(proxy)
 
     async def _launch_chromium(self, proxy: ProxySettings | None) -> Browser:
         """Launch Chromium with the profile's headless/proxy config; raise BrowserError on failure."""
-        self._require_bundled_browser_provisioned()
+        # Playwright-managed Chromium is the only supported browser. Checking
+        # again here keeps a missing build from surfacing as Playwright's raw
+        # missing-executable error when a caller skipped its own start check.
+        require_browser_ready(self.settings, profile_name=self.profile.name)
         try:
             root = self.settings.cadrumo_chromium_data_root
             root.mkdir(parents=True, exist_ok=True, mode=0o700)

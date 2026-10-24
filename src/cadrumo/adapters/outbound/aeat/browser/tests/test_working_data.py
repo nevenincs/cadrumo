@@ -11,7 +11,11 @@ if TYPE_CHECKING:
 import psutil
 import pytest
 
-from ......application.provisioning_browser import playwright_browsers_root, probe_playwright_browser
+from ......application.provisioning_browser import (
+    playwright_browsers_root,
+    probe_playwright_browser,
+    required_browser_builds,
+)
 from ......core.config import Settings, override_settings
 from ..errors import BrowserError
 from ..factory import create_browser_session
@@ -134,16 +138,25 @@ async def test_chromium_child_data_paths_are_scoped_to_session(tmp_path: Path, m
             captured.update(kwargs)
             return SimpleNamespace(browser=FakeBrowser())
 
+    # The launch guard reads the real setup probe; completion markers satisfy
+    # it without any executable, since the launch itself is captured above.
+    browsers_root = tmp_path / "browsers"
+    builds = required_browser_builds()
+    assert builds is not None
+    for build in builds:
+        (browsers_root / build.directory_name).mkdir(parents=True)
+        (browsers_root / build.directory_name / "INSTALLATION_COMPLETE").write_text("", encoding="utf-8")
+
     session = BrowserSession(
         playwright=cast("Playwright", SimpleNamespace(chromium=FakeChromium())),
         settings=Settings(
             cadrumo_local_storage_root=storage_root,
             cadrumo_chromium_data_root=managed_root,
             cadrumo_temp_dir=temporary_root,
+            cadrumo_playwright_browsers_dir=browsers_root,
         ),
         profile=Profile(name="isolated-environment"),
     )
-    monkeypatch.setattr(session, "_require_bundled_browser_provisioned", lambda: None)
     try:
         await session._launch_chromium(None)
         environment = captured["env"]

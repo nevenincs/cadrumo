@@ -58,10 +58,17 @@ async def _unopened_browser_session(settings: Settings) -> BrowserSessionPort:
     raise AssertionError("configure tests never open an auth browser session")
 
 
+def _unchecked_browser_readiness(settings: Settings, *, profile_name: str) -> None:
+    """The configure tests never check the auth browser."""
+    del settings, profile_name
+    raise AssertionError("configure tests never check the auth browser")
+
+
 def _ports() -> AuthOperationPorts:
     return AuthOperationPorts(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
         browser_session_factory=_unopened_browser_session,
+        browser_readiness=_unchecked_browser_readiness,
         operator_probe_ports=fake_operator_probe_ports(),
         operator_scope_ports=build_inward_operator_scope_ports(session=None),
     )

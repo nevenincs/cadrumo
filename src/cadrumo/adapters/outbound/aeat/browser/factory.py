@@ -45,7 +45,7 @@ from .....core.logging import get_logger
 from .....core.operator_action_enums import NoRecoveryOutcome
 from .errors import BrowserError, BrowserFailureMode, BrowserPreconditionCondition, browser_no_action_verdict
 from .profile import Profile
-from .session import BrowserSession
+from .session import BrowserSession, require_browser_ready
 
 if TYPE_CHECKING:
     from playwright.async_api import BrowserContext, Page, Playwright, Response
@@ -332,8 +332,10 @@ async def create_browser_session(settings: Settings, profile: Profile) -> Defaul
     Wraps a :class:`BrowserSession` for ``profile`` after the optional
     ``browser`` extra has been checked by ``_start_playwright``. If wrapper
     construction fails after Playwright starts, the partially opened runtime is
-    stopped before the original failure is re-raised.
+    stopped before the original failure is re-raised. A browser that is not
+    set up is refused before the Playwright driver starts.
     """
+    require_browser_ready(settings, profile_name=profile.name)
     playwright = await _start_playwright(settings)
     runtime_owner = _SharedPlaywrightRuntimeOwner(playwright)
     try:
@@ -401,8 +403,10 @@ async def opened_browser_page(
     The helper builds a short-lived :class:`BrowserSession` around the supplied
     Playwright runtime, forwards ``provisioner`` and storage-state arguments to
     :meth:`BrowserSession.create_context`, yields the fresh ``(page, context)``
-    pair, and closes the context and browser session during teardown.
+    pair, and closes the context and browser session during teardown. A
+    browser that is not set up is refused before any session is built.
     """
+    require_browser_ready(settings, profile_name=profile.name)
     browser_session = BrowserSession(playwright=playwright, settings=settings, profile=profile)
     context: BrowserContext | None = None
     try:

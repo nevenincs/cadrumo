@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, SecretStr, model_validator
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.config import load_settings
 from ...core.hashing import reject_duplicate_json_members, reject_json_constant
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -66,7 +67,7 @@ from .operator import configure_operator_auth, login_operator_auth, logout_opera
 from .operator_probe_ports import OperatorProbePorts
 from .operator_results import AuthConfigureResult, AuthLoginResult, AuthLogoutResult, AuthResetResult
 from .operator_scope_ports import OperatorScopePorts
-from .protocols import BrowserSessionFactoryPort
+from .protocols import BrowserReadinessPort, BrowserSessionFactoryPort
 
 AUTH_CONFIGURE_OPERATION_DEFINITION_ID = "auth.provider.configure"
 AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID = "auth.session.acquire"
@@ -85,6 +86,7 @@ class AuthOperationPorts:
 
     certificate_secret_backend_factory: CertificateSecretBackendFactory
     browser_session_factory: BrowserSessionFactoryPort
+    browser_readiness: BrowserReadinessPort
     operator_probe_ports: OperatorProbePorts
     operator_scope_ports: OperatorScopePorts
 
@@ -309,8 +311,11 @@ class AuthSessionAcquireOperationExecutor:
         request: OperationRequest[AuthSessionAcquireOperationRequest],
         context: OperationExecutorContext,
     ) -> str:
-        _require_active_profile_subject(request)
+        bucket_id = _require_active_profile_subject(request)
         await context.events.phase("auth.acquire.preflight")
+        # Every sign-in drives the browser. Refuse a browser that is not set up
+        # before any credential is read or any session state is touched.
+        self._ports.browser_readiness(load_settings(), profile_name=bucket_id)
         await context.events.phase("auth.acquire.execute")
         effect_started = False
 
