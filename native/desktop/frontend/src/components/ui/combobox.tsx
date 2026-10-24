@@ -58,6 +58,27 @@ type ComboboxProps = {
  * Shift+Tab choose and move on, and Escape leaves the value as it was.
  * The hint and the error are read with the field.
  */
+/**
+ * How well an option's words answer what was typed: a word that starts with
+ * it first, then a word that holds it, and only then the letters scattered in
+ * order, so a typed word never loses to a chance spelling. Zero hides it.
+ */
+export function optionScore(
+  _value: string,
+  search: string,
+  keywords: readonly string[] = [],
+): number {
+  const query = search.trim().toLocaleLowerCase();
+  if (query === "") return 1;
+  const text = keywords.join(" ").toLocaleLowerCase();
+  const words = text.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  if (words.some((word) => word.startsWith(query))) return 1;
+  if (text.includes(query)) return 0.6;
+  let at = 0;
+  for (const letter of text) if (letter === query[at]) at += 1;
+  return at === query.length ? 0.1 : 0;
+}
+
 function Combobox({
   label,
   value,
@@ -142,7 +163,11 @@ function Combobox({
         align="start"
         sideOffset={4}
         data-slot="combobox"
-        className={cn("flex w-field flex-col overflow-hidden p-0", className)}
+        // Never narrower than the field that opened it.
+        className={cn(
+          "flex w-field min-w-(--radix-popover-trigger-width) flex-col overflow-hidden p-0",
+          className,
+        )}
         // A cell editor hands focus back to its grid, which chooses the cell.
         onCloseAutoFocus={(event) => {
           if (!triggered) event.preventDefault();
@@ -154,6 +179,7 @@ function Combobox({
           onValueChange={setHighlight}
           // Its Control-letter movement keys would take the shell's chords.
           vimBindings={false}
+          filter={optionScore}
           className="min-h-0"
           onKeyDownCapture={(event) => {
             const how = commitKeyOf(event);
@@ -213,7 +239,9 @@ function Combobox({
                     className="min-h-control-md py-1.5"
                   >
                     <span className="grid min-w-0 flex-1">
-                      <span className="truncate">{option.label}</span>
+                      <span className="[overflow-wrap:anywhere]">
+                        {option.label}
+                      </span>
                       {(option.reason ?? option.note) && (
                         <span className="text-sm text-muted-foreground">
                           {option.reason ?? option.note}
