@@ -63,7 +63,7 @@ from .actions_common import (
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
 )
-from .import_ports import LedgerImportPorts, LedgerParsedRow
+from .import_ports import LedgerImportPorts, LedgerImportReaderUnavailableError, LedgerParsedRow
 from .models import (
     LedgerImportDiagnosticReport,
     LedgerImportOperationResult,
@@ -739,6 +739,15 @@ def _validate_import_source(provider: FinancialProviderProtocol, path: Path) -> 
     validation = provider.validate_source(path)
     if not validation.is_valid:
         reason = "; ".join(validation.warnings) or render_translation("errors.transaction.import_source_invalid")
+        verdict = validation.reader_unavailable_verdict
+        if verdict is not None:
+            # The file was never read: the lane that reads it needs a model
+            # that could not be asked, and the verdict names what sets it up.
+            raise LedgerImportReaderUnavailableError(
+                translated_message="errors.transaction.ledger_import_failed",
+                context={"reason": reason},
+                precondition_verdict=verdict,
+            )
         raise TransactionValidationError(
             translated_message="errors.transaction.ledger_import_failed",
             context={"reason": reason},

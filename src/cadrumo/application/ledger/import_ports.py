@@ -18,7 +18,10 @@ from pathlib import Path
 from typing import Protocol, runtime_checkable
 
 from ...domain.transactions.enums import TransactionDirection
+from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.raw_transaction import RawTransaction
+from ..operator_actions.models import PreconditionVerdict
+from .preconditions import LedgerPreconditionErrorMixin
 from .protocols import FinancialProviderProtocol
 
 
@@ -44,6 +47,18 @@ class LedgerProviderValidation:
     detected_encoding: str | None = None
     detected_dialect: str | None = None
     unavailable_optional_extra: Mapping[str, str | bool] | None = None
+    reader_unavailable_verdict: PreconditionVerdict | None = None
+
+
+class LedgerImportReaderUnavailableError(LedgerPreconditionErrorMixin, TransactionValidationError):
+    """Refuse a source whose reading lane needs a model that could not be asked.
+
+    The file is not the problem: the lane that reads it needs the local AI, and
+    the runtime does not answer, its model is not installed, or this computer
+    cannot run one. The carried verdict says which and, when setup can supply
+    it, names the setup action. A subclass, so every caller that handles an
+    import validation refusal keeps handling this one.
+    """
 
 
 @runtime_checkable
@@ -78,6 +93,7 @@ class LedgerImportPorts:
 
 __all__ = [
     "LedgerImportPorts",
+    "LedgerImportReaderUnavailableError",
     "LedgerParsedRow",
     "LedgerProviderResolverProtocol",
     "LedgerProviderValidation",

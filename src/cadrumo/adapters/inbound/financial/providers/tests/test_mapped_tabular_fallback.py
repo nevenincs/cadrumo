@@ -188,10 +188,10 @@ def test_unmapped_columns_are_reported_rather_than_refusing_the_file() -> None:
 def test_lane_reports_when_roles_cannot_be_established() -> None:
     """A host that cannot map declines and says why; it never invents roles.
 
-    The mapping may be unavailable for several reasons — no resolver wired, the
-    optional extra absent, no model configured, an unusable reply — and every
-    one of them arrives here as "no mapping". The lane must report that and
-    refuse, rather than fall back to guessing column meanings.
+    "No mapping" is what a model that answered and established nothing returns.
+    The lane must report that and refuse, rather than fall back to guessing
+    column meanings. A reader that could not be asked at all is a different
+    outcome, and is reported rather than declined.
     """
     lane = MappedTabularProvider(mapping_resolver=lambda table: None)
     validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)

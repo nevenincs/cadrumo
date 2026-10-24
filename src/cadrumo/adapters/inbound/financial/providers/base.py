@@ -57,6 +57,7 @@ from typing import ClassVar, Final, Literal
 from pydantic import BaseModel
 
 from .....application.ledger.invoice_label_vocabulary import MONTHS
+from .....application.operator_actions.models import PreconditionVerdict
 from .....core.config import load_settings
 from .....core.decimal.coercion import coerce_decimal
 from .....core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, european_thousands_reading_is_ambiguous
@@ -181,6 +182,10 @@ class ProviderValidation(BaseModel):
             an installation instruction. Present only when a provider declined
             because its extra is not installed; the operator-facing recovery is
             resolved downstream from these facts, never rendered here.
+        reader_unavailable_verdict: Why the model this provider reads with
+            could not be asked. Present only when the provider declined because
+            its reader is unavailable, so the source was never looked at; the
+            verdict names the setup action when setup can supply the reader.
     """
 
     model_config = _STRICT_FROZEN
@@ -190,6 +195,7 @@ class ProviderValidation(BaseModel):
     detected_encoding: str | None = None
     detected_dialect: str | None = None
     unavailable_optional_extra: Mapping[str, str | bool] | None = None
+    reader_unavailable_verdict: PreconditionVerdict | None = None
 
 
 #: One import stamps every row of a file with the same resolved source path, and

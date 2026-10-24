@@ -33,7 +33,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import override
 
-from .....application.ledger.column_roles import resolve_column_roles
+from .....application.ledger.column_roles import ColumnRoleReaderUnavailable, resolve_column_roles
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.field_role import FieldRole
@@ -77,8 +77,16 @@ def _first_value(row: ProjectedRow, roles: tuple[FieldRole, ...]) -> str | None:
     return next((value for role in roles if (value := row.value_for(role)) is not None), None)
 
 
-TabularMappingResolver = Callable[[NormalizedTable], ColumnRoleMapping | None]
-"""Supplies one role per column for a normalized table, or ``None`` when it cannot."""
+TabularMappingResolver = Callable[[NormalizedTable], ColumnRoleMapping | ColumnRoleReaderUnavailable | None]
+"""Supplies one role per column for a normalized table, or says why it could not.
+
+:class:`~application.ledger.column_roles.ColumnRoleReaderUnavailable` means the
+model was never asked; ``None`` means no mapping was established.
+"""
+
+#: Diagnostic for a table whose column-naming model could not be asked. It is
+#: the reason a refusal prints, so it names the missing reader, not the file.
+_READER_UNAVAILABLE_WARNING = "the local AI that reads this table's column names is not ready, so the file was not read"
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,17 +101,20 @@ class _MappedRowFields:
     external_id: str | None
 
 
-def _resolve_roles_semantically(table: NormalizedTable) -> ColumnRoleMapping | None:
+def _resolve_roles_semantically(table: NormalizedTable) -> ColumnRoleMapping | ColumnRoleReaderUnavailable | None:
     """Establish ``table``'s column roles with the semantic column-role mapper.
 
     The application-owned port is bound by an outer composition root. This
     inbound adapter never reaches across to the concrete outbound LLM adapter;
     a host without a bound optional capability receives ``None`` and reports
     that no role mapping was established. A composed LLM implementation keeps
-    the typed missing-extra refusal at its own boundary.
+    the typed missing-extra refusal at its own boundary, and reports a reader
+    it could not ask as unavailable rather than as an unmappable table.
     """
     proposal = resolve_column_roles(table)
-    return None if proposal is None else ColumnRoleMapping(roles=tuple(proposal.roles))
+    if proposal is None or isinstance(proposal, ColumnRoleReaderUnavailable):
+        return proposal
+    return ColumnRoleMapping(roles=tuple(proposal.roles))
 
 
 def default_tabular_mapping_resolver() -> TabularMappingResolver | None:
@@ -158,6 +169,14 @@ class MappedTabularProvider(FinancialProvider):
                 detected_dialect=dialect_note,
             )
         mapping = resolver(table)
+        if isinstance(mapping, ColumnRoleReaderUnavailable):
+            return ProviderValidation(
+                is_valid=False,
+                warnings=(_READER_UNAVAILABLE_WARNING,),
+                detected_encoding=table.dialect.encoding,
+                detected_dialect=dialect_note,
+                reader_unavailable_verdict=mapping.precondition_verdict,
+            )
         if mapping is None:
             return ProviderValidation(
                 is_valid=False,
@@ -242,8 +261,9 @@ class MappedTabularProvider(FinancialProvider):
         A row that will not parse is logged and skipped; the rest still import.
 
         Raises:
-            InvalidFinancialSourceError: The source does not normalize, or no
-                column-role mapping could be established for it.
+            InvalidFinancialSourceError: The source does not normalize, its
+                column-naming reader could not be asked, or no column-role
+                mapping could be established for it.
         """
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
@@ -256,6 +276,8 @@ class MappedTabularProvider(FinancialProvider):
                 "no column-role mapping resolver is installed for the tabular mapping lane",
             )
         mapping = self.mapping_resolver(table)
+        if isinstance(mapping, ColumnRoleReaderUnavailable):
+            raise InvalidFinancialSourceError(f"{path.name}: {_READER_UNAVAILABLE_WARNING}")
         if mapping is None:
             raise InvalidFinancialSourceError(
                 f"column roles could not be established for {path.name}",

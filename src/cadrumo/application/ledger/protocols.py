@@ -20,6 +20,7 @@ from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawTransaction
+from ..operator_actions.models import PreconditionVerdict
 
 
 @runtime_checkable
@@ -69,6 +70,11 @@ class ProviderValidationProtocol(Protocol):
     @property
     def unavailable_optional_extra(self) -> Mapping[str, str | bool] | None:
         """Optional-extra facts when the provider cannot run locally."""
+        ...
+
+    @property
+    def reader_unavailable_verdict(self) -> PreconditionVerdict | None:
+        """Why the model this provider reads with could not be asked, when it could not."""
         ...
 
 

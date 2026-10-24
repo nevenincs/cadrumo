@@ -61,6 +61,7 @@ class _FinancialProviderBoundary(FinancialProviderProtocol):
             unavailable_optional_extra=(
                 None if result.unavailable_optional_extra is None else dict(result.unavailable_optional_extra)
             ),
+            reader_unavailable_verdict=result.reader_unavailable_verdict,
         )
 
 

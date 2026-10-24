@@ -61,7 +61,7 @@ if TYPE_CHECKING:
     from ..application.inventory.ports import InventoryServicePorts, InventoryServicePortsFactory
     from ..application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
     from ..application.invoices.catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
-    from ..application.ledger.column_roles import ColumnRoleMappingPort
+    from ..application.ledger.column_roles import ColumnRoleMappingPort, ColumnRoleReaderUnavailable
     from ..application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryFactory
     from ..application.ledger.evidence_ports import LedgerEvidencePorts, LedgerEvidencePortsFactory
     from ..application.ledger.invoice_confirmation_ports import InvoiceConfirmationPortsFactory
@@ -1628,7 +1628,7 @@ def _modelo_reconciliation_persistence() -> ModeloReconciliationPersistencePort:
     return build_modelo_reconciliation_persistence()
 
 
-def _resolve_column_roles(table: NormalizedTable) -> ColumnRoleMappingPort | None:
+def _resolve_column_roles(table: NormalizedTable) -> ColumnRoleMappingPort | ColumnRoleReaderUnavailable | None:
     from ..adapters.outbound.llm.column_role_mapping import resolve_column_roles
 
     return resolve_column_roles(table)

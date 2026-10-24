@@ -50,9 +50,11 @@ from collections.abc import Mapping, Sequence
 from functools import cache
 from typing import TYPE_CHECKING
 
+import httpx
 from pydantic import BaseModel, Field
 
-from ....application.ledger.column_roles import ColumnRoleMappingPort
+from ....application.ledger.column_roles import ColumnRoleReaderUnavailable
+from ....application.operator_actions.models import PreconditionVerdict
 from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
 from ....core.errors.hierarchy import CadrumoError
@@ -548,7 +550,9 @@ class SemanticColumnRoleMapper:
         # mapping call and refuses with the install hint.
         require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
+        self._settings = resolved_settings
         self._provider = provider if provider is not None else LLMProvider.LOCAL
+        self._model_pinned = model is not None
         self._model: str | None = (
             (model if model is not None else self._role_model(resolved_settings))
             if self._provider is LLMProvider.LOCAL
@@ -589,6 +593,24 @@ class SemanticColumnRoleMapper:
                 precondition_verdict=selection.precondition_verdict,
             )
         return selection.runtime_id
+
+    def reader_refusal(self) -> PreconditionVerdict | None:
+        """Return why the on-host model this mapper loads cannot answer now, or ``None``.
+
+        Asked of the runtime itself through the reader probe, so a runtime that
+        does not answer and a role model that is not installed each come back
+        as the probe's verdict naming the local AI setup. ``None`` when the
+        reader can run, and whenever the probe cannot speak for this mapper: an
+        off-host transport, or a model the caller pinned rather than the role's.
+
+        Deferred import for the same reason as :meth:`_role_model`.
+        """
+        if self._provider is not LLMProvider.LOCAL or self._model_pinned:
+            return None
+        from ....application.local_reader import probe_local_reader
+
+        status = probe_local_reader(ModelRole.COLUMN_ROLE_MAPPING, self._settings)
+        return None if status.available else status.precondition_verdict
 
     @property
     def decided_by(self) -> str:
@@ -671,22 +693,69 @@ def map_column_roles(
     return SemanticColumnRoleMapper(model=model, provider=provider, settings=settings).map(headers)
 
 
-def resolve_column_roles(table: NormalizedTable) -> ColumnRoleMappingPort | None:
+def _carried_verdict(error: BaseException) -> PreconditionVerdict | None:
+    """Return the typed verdict a reader refusal carries, such as missing load headroom."""
+    verdict = getattr(error, "terminal_precondition_verdict", None)
+    return verdict if isinstance(verdict, PreconditionVerdict) else None
+
+
+def resolve_column_roles(
+    table: NormalizedTable,
+    *,
+    mapper: SemanticColumnRoleMapper | None = None,
+) -> ColumnRoleProposal | ColumnRoleReaderUnavailable | None:
     """Resolve a normalized table for the inward column-role port.
 
     The concrete mapper stays owned by this outbound adapter.  Composition
     roots bind this function to the application port, while inbound financial
     providers consume only the inward contract.  Missing optional capability
-    remains a typed refusal; an installed mapper that cannot establish roles
-    declines the table.
+    remains a typed refusal.
+
+    A reader that could not be asked is reported, not declined: the role's
+    runtime and model are checked before the call and again after a failed
+    one, and an unavailable reader returns
+    :class:`~application.ledger.column_roles.ColumnRoleReaderUnavailable`
+    carrying the verdict, which names the local AI setup when setup can
+    supply what is missing. A catalogue that names no model this computer can
+    run is reported the same way, with its no-action verdict. Only a model
+    that answered and established nothing declines the table with ``None``.
+
+    Args:
+        table: The normalized table whose headers are mapped.
+        mapper: The mapper to ask; built against the current settings when
+            omitted.
     """
     try:
-        proposal = SemanticColumnRoleMapper().map(table.headers)
+        resolved = mapper if mapper is not None else SemanticColumnRoleMapper()
     except MissingOptionalExtraError:
         raise
+    except LLMConfigError as exc:
+        verdict = _carried_verdict(exc)
+        if verdict is None:
+            _logger.warning("semantic column-role mapping is not configured on this host", exc_info=True)
+            return None
+        return ColumnRoleReaderUnavailable(precondition_verdict=verdict)
     except CadrumoError:
+        _logger.warning("semantic column-role mapping could not be prepared for this table", exc_info=True)
+        return None
+    refusal = resolved.reader_refusal()
+    if refusal is not None:
+        return ColumnRoleReaderUnavailable(precondition_verdict=refusal)
+    try:
+        proposal = resolved.map(table.headers)
+    except MissingOptionalExtraError:
+        raise
+    except LLMValidationError:
         _logger.warning("semantic column-role mapping could not establish roles for this table", exc_info=True)
         return None
+    except (CadrumoError, httpx.HTTPError) as exc:
+        # The runtime can stop or lose the model between the check and the
+        # call; asked again, the probe names that cause.
+        verdict = resolved.reader_refusal() or _carried_verdict(exc)
+        if verdict is None:
+            _logger.warning("semantic column-role mapping could not establish roles for this table", exc_info=True)
+            return None
+        return ColumnRoleReaderUnavailable(precondition_verdict=verdict)
     for rejected in proposal.rejected_role_proposals:
         _logger.warning(
             "column %d %r was proposed the role %r, which is not a permitted role",

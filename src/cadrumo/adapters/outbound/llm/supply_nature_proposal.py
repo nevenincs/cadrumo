@@ -51,8 +51,10 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Final
 
+import httpx
 from pydantic import BaseModel, Field
 
+from ....application.operator_actions.models import PreconditionVerdict
 from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
 from ....core.model_catalogue import ModelRole
@@ -62,7 +64,7 @@ from ....core.provenance_stamp import build_provenance_stamp
 from ....domain.iva.supply_nature import SupplyNature
 from .client import LLMClient
 from .consent import EvidenceConsentToken
-from .errors import LLMConfigError
+from .errors import LLMConfigError, LLMProviderError
 from .models import LLMRequest
 from .response_json import first_json_object as _first_json_object
 
@@ -130,6 +132,12 @@ class SupplyNatureProposal(BaseModel):
             the document rather than about the reply.
         note: The model's own short reason, kept verbatim for the operator and
             never parsed. Empty when nothing usable arrived.
+        reader_unavailable: Why no model was asked, when the on-host reader
+            could not answer: the runtime does not answer or the role's model is
+            not installed. The verdict names the local AI setup, so the person
+            learns that the proposal is missing because a component is, not
+            because the document said nothing. ``None`` whenever a model was
+            asked or nothing needed asking.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -137,6 +145,7 @@ class SupplyNatureProposal(BaseModel):
     nature: SupplyNature | None = None
     declined: bool = False
     note: str = ""
+    reader_unavailable: PreconditionVerdict | None = None
 
 
 class _ProposalReply(BaseModel):
@@ -288,7 +297,9 @@ class SupplyNatureProposer:
         """Build the proposer against a model and settings."""
         require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
+        self._settings = resolved_settings
         self._provider = provider if provider is not None else LLMProvider.LOCAL
+        self._model_pinned = model is not None
         self._model: str | None = (
             (model if model is not None else self._role_model(resolved_settings))
             if self._provider is LLMProvider.LOCAL
@@ -326,6 +337,24 @@ class SupplyNatureProposer:
             )
         return selection.runtime_id
 
+    def reader_refusal(self) -> PreconditionVerdict | None:
+        """Return why the on-host model this proposer loads cannot answer now, or ``None``.
+
+        Asked of the runtime through the reader probe, so an unanswering
+        runtime and an uninstalled role model each come back as the probe's
+        verdict naming the local AI setup. ``None`` when the reader can run,
+        and whenever the probe cannot speak for this proposer: an off-host
+        transport, or a model the caller pinned rather than the role's.
+
+        Deferred import for the same reason as :meth:`_role_model`.
+        """
+        if self._provider is not LLMProvider.LOCAL or self._model_pinned:
+            return None
+        from ....application.local_reader import probe_local_reader
+
+        status = probe_local_reader(ModelRole.SUPPLY_NATURE_PROPOSAL, self._settings)
+        return None if status.available else status.precondition_verdict
+
     @property
     def decided_by(self) -> str:
         """Provenance stamp naming the transport and model a proposal was reached with."""
@@ -348,12 +377,25 @@ class SupplyNatureProposer:
         Returns:
             The proposal. Empty whenever nothing was asked, the model declined,
             or its reply did not survive containment -- all of which leave the
-            operator asked exactly as they were.
+            operator asked exactly as they were. When the on-host reader could
+            not be asked, checked before the call and again after a failed one,
+            the proposal carries that refusal on ``reader_unavailable``.
         """
         prompt = build_supply_nature_prompt(descriptions)
         if not prompt:
             return SupplyNatureProposal()
-        response = asyncio.run(self._client.complete(self._build_request(prompt)))
+        refusal = self.reader_refusal()
+        if refusal is not None:
+            return SupplyNatureProposal(reader_unavailable=refusal)
+        try:
+            response = asyncio.run(self._client.complete(self._build_request(prompt)))
+        except (LLMProviderError, httpx.HTTPError):
+            # The runtime can stop or lose the model between the check and the
+            # call; asked again, the probe names that cause.
+            refusal = self.reader_refusal()
+            if refusal is None:
+                raise
+            return SupplyNatureProposal(reader_unavailable=refusal)
         return parse_supply_nature_response(response.text)
 
     def _build_request(self, prompt: str) -> LLMRequest:

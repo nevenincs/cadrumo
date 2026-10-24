@@ -508,6 +508,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger.import_ports.LedgerImportReaderUnavailableError",
+        ErrorCode(
+            code="REFUSED_LEDGER_IMPORT_READER",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.transaction.ledger_import_failed",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.evidence.models.EvidenceBundleNotFoundError",
         ErrorCode(
             code="REFUSED_EVIDENCE_BUNDLE_NOT_FOUND",

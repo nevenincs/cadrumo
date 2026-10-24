@@ -65,12 +65,18 @@ def detect_provider(path: Path) -> FinancialProvider | None:
     The shared size and file-kind guard runs before any header sniff or
     provider probe reads the source.
 
+    When none validates but one declined only because the model it reads
+    with could not be asked, that provider is returned: the file is one it
+    reads, and its own validation then tells the caller which component is
+    missing instead of the source being reported as unsupported.
+
     Args:
         path: Source document to classify.
 
     Returns:
-        The matching :class:`FinancialProvider`, or ``None`` when no
-        provider can interpret ``path``.
+        The matching :class:`FinancialProvider`, the first provider blocked
+        only by an unavailable reader, or ``None`` when no provider can
+        interpret ``path``.
 
     Raises:
         InvalidFinancialSourceError: When the source is a symlink, missing,
@@ -78,10 +84,17 @@ def detect_provider(path: Path) -> FinancialProvider | None:
     """
     require_admissible_source(path)
     providers = _ordered_candidates(path)
+    blocked_by_reader: FinancialProvider | None = None
     for provider in providers:
-        if provider.validate_source(path).is_valid:
+        validation = provider.validate_source(path)
+        if validation.is_valid:
             _logger.debug("detect_provider: matched %s for %s", provider.name, path.name)
             return provider
+        if blocked_by_reader is None and validation.reader_unavailable_verdict is not None:
+            blocked_by_reader = provider
+    if blocked_by_reader is not None:
+        _logger.warning("detect_provider: %s reads %s but its reader is unavailable", blocked_by_reader.name, path.name)
+        return blocked_by_reader
     _logger.warning("detect_provider: no provider matched %s", path.name)
     return None
 
