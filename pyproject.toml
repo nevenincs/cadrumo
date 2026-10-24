@@ -1486,22 +1486,11 @@ ignore_names = [
 # distributions with no importable code the scanner can see; the corpus locator
 # reaches their shared `cadrumo_data` namespace package dynamically through
 # `importlib.resources` (the corpus-binary resolution seam).
-# `pillow`: the one dependency here whose declaration is deliberately NOT
-# backed by an import statement. The page rasteriser reaches Pillow from inside
-# pypdfium2's `to_pil()` and then calls `save()` on the result, so the reliance
-# is real while no module under `src/cadrumo/` writes `import PIL` — the exact
-# asymmetry that let Pillow arrive as an incidental transitive of pdfplumber and
-# pikepdf. Deptry sees only the absent import and reads both declarations (base
-# and the `llm` extra) as unused. Suppressed here rather than resolved by
-# deleting a declaration: the declaration is the fix, and
-# `dev/packaging/tests/test_inference_imports_are_declared.py` asserts it
-# directly for this reason.
 DEP002 = [
   "cadrumo",
   "cadrumo-data-manuals",
   "cadrumo-data-official",
   "cadrumo-data-normatives",
-  "pillow",
   "python-dotenv",
   # Typer imports Rich for runtime help/error rendering. The application
   # intentionally reaches it through Typer's public rich_utils boundary rather
