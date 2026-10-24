@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:326c9d45a46e18559174867b65fd85ae621b75b77814e0e660cdbb24f694d47f'
+body_hash: 'sha256:c91dc1d2ff72da3fc7155a68b7f6a48cdbc7e05eb5412ccc1f7c7583ff8572b2'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -159,9 +159,26 @@ related:
 - `S05` `verify:` `dev.quality.types --count` -> `pass`
 - `S05` `verify:` `lint-imports` -> `pass`
 - `S05` `verify:` `operation_contract_manifest.generate` -> `pass`
+- `S06` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S06` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S06` `M` `src/cadrumo/application/modelo/work_form_wording.py`
+- `S06` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/declarations/picker.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/declarations/portfolio_rows.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/declarations/row_words.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_header.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`
+- `S06` `verify:` `pytest form identity words (en/es), declarations TUI tests and workbench header (229), filer attention, workbench operations` -> `pass`
+- `S06` `verify:` `dev.quality.types --count` -> `pass`
+- `S06` `verify:` `lint-imports` -> `pass`
+- `S06` `verify:` `operation_contract_manifest.generate` -> `pass`
 
 ## Notes
 
 - `S02` Fixes an S01 defect: a design-constant cell kept the standing of its pre-copy origin; field copies that change state now go through `revised_field`
 - `S03` Also moved period and date wording from the TUI (needed by origin words); the frontend-neutral key namespace remains P02
 - `S05` Scope corrected from `work_form.py` to the new defining module `work_form_next_step.py;` TUI counters and ladder moved there with every consumer repointed
+- `S06` Period words already moved in S03; this step moved modelo titles and put title, number and period words on the form. The list projection that uses them is S07

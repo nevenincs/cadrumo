@@ -8,10 +8,9 @@ from decimal import Decimal
 from ....application.modelo.declaration_targets import DeclarationTarget
 from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
-from ....application.modelo.work_form_wording import period_words
+from ....application.modelo.work_form_wording import modelo_title, period_words
 from ....core.external_constants import OutputLanguage
 from ....core.text_fold import fold_for_matching
-from ..modelo.workbench.wording import modelo_title
 
 
 def _sort_portfolio_rows(rows: list[DeclarationListRow], sort: str) -> None:

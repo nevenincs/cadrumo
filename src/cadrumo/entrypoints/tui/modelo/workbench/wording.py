@@ -1,8 +1,7 @@
-"""The workbench's words for a declaration: its modelo's name, its period and its dates.
+"""The workbench's words for a page that does not apply, naming the period the way the filer counts it.
 
-A filer reads "1st quarter 2026" and "Modelo 130 · Income tax instalment", never
-the transport tokens ``1T`` or ``0A``. A period kind without words of its own is
-shown as its official code rather than guessed at.
+A filer reads "does not apply this quarter", never the transport tokens ``1T``
+or ``0A``. A period kind without words of its own is said as "this period".
 """
 
 from __future__ import annotations
@@ -11,8 +10,7 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Final
 
-from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import lookup_translation, tr
+from .....core.i18n.render import tr
 from .....core.period import Period, PeriodKind
 
 _NOT_APPLYING_LOCALE_KEYS: Final[Mapping[PeriodKind, str]] = MappingProxyType(
@@ -30,22 +28,6 @@ def does_not_apply_text(period: Period) -> str:
     return tr(_NOT_APPLYING_LOCALE_KEYS.get(period.kind, _NOT_APPLYING_PERIOD_LOCALE_KEY))
 
 
-def modelo_number(modelo: str) -> str:
-    """Name a modelo by its number alone, for narrow terminals."""
-    return tr("tui.modelo.workbench.modelo_number", modelo=modelo)
-
-
-def modelo_title(modelo: str, language: OutputLanguage) -> str:
-    """Return the modelo's own title in the filer's language, or its number alone."""
-    for locale in (language.value, OutputLanguage.ES.value):
-        title = lookup_translation(f"modelo.schema.{modelo}.field.title", locale=locale)
-        if title is not None and title:
-            return tr("tui.modelo.workbench.modelo_title", modelo=modelo, title=title)
-    return modelo_number(modelo)
-
-
 __all__ = [
     "does_not_apply_text",
-    "modelo_number",
-    "modelo_title",
 ]

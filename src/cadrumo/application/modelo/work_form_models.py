@@ -1107,6 +1107,10 @@ class ModeloWorkForm(_FormModel):
     last_export: ModeloFormExport | None = None
     #: Why nothing may be edited, when something other than the admission closes the form.
     edit_closure: ModeloFormEditClosure | None = None
+    #: The modelo's number and title, its number alone, and the period, in the form's language.
+    modelo_title: str | None = None
+    modelo_number: str | None = None
+    period_words: str | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

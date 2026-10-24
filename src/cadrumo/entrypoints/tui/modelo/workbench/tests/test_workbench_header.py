@@ -21,7 +21,7 @@ from rich.cells import cell_len
 from textual.widgets import Static
 
 from ......application.modelo.work_form_models import ModeloFormOrigin, ModeloFormResultDirection, ModeloWorkForm
-from ......application.modelo.work_form_wording import period_words
+from ......application.modelo.work_form_wording import modelo_number, period_words
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
@@ -39,7 +39,6 @@ from ..header import (
     status_line,
 )
 from ..screen import ModeloWorkbenchScreen
-from ..wording import modelo_number
 from .declaration_states import recorded_as_filed, with_deadline, with_findings, with_result
 from .form_edits import replace_fields
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form

@@ -58,7 +58,7 @@ from .....application.modelo.work_form_next_step import (
     missing_count,
     result_fields,
 )
-from .....application.modelo.work_form_wording import date_text, day_text, period_words
+from .....application.modelo.work_form_wording import date_text, day_text, modelo_number, modelo_title, period_words
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from ...components.cell_text import ellipsize
@@ -66,7 +66,6 @@ from .casilla_list_models import CasillaListEntry
 from .casilla_list_values import value_text
 from .issue_scale import levels_marked
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, MISSING_MARK, STALE_MARK, WorkbenchMark
-from .wording import modelo_number, modelo_title
 
 _MONEY: Final[str] = "money"
 _PART_GAP: Final[str] = "   "

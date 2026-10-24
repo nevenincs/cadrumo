@@ -17,7 +17,7 @@ from typing import Final
 
 from ...core.aggregation import BindingSourceKind
 from ...core.external_constants import OutputLanguage
-from ...core.i18n.render import output_language, tr
+from ...core.i18n.render import lookup_translation, output_language, tr
 from ...core.period import Period, PeriodKind
 from .edit_models import ModeloEditNonWritableReason
 from .edit_value_grammar import ModeloEditRatioUnit, ratio_unit
@@ -63,6 +63,20 @@ def period_words(period: Period, language: OutputLanguage | None = None) -> str:
     else:
         return f"{code} {year}"
     return tr(f"tui.modelo.workbench.period.{name}", year=year, locale=_locale(language))
+
+
+def modelo_number(modelo: str, language: OutputLanguage | None = None) -> str:
+    """Name a modelo by its number alone, where its title does not fit."""
+    return tr("tui.modelo.workbench.modelo_number", modelo=modelo, locale=_locale(language))
+
+
+def modelo_title(modelo: str, language: OutputLanguage) -> str:
+    """The modelo's number and its own title in the filer's language, else in Spanish, else its number alone."""
+    for locale in (language.value, OutputLanguage.ES.value):
+        title = lookup_translation(f"modelo.schema.{modelo}.field.title", locale=locale)
+        if title is not None and title:
+            return tr("tui.modelo.workbench.modelo_title", modelo=modelo, title=title, locale=language.value)
+    return modelo_number(modelo, language)
 
 
 def date_text(value: date, language: OutputLanguage) -> str:
@@ -399,7 +413,7 @@ def field_value_text(field: ModeloFormField, language: OutputLanguage) -> str | 
 
 
 def worded_form(form: ModeloWorkForm) -> ModeloWorkForm:
-    """Return ``form`` with every field's value, origin and editability said in the form's own language.
+    """Return ``form`` named in its own language, with every field's value, origin and editability said in it.
 
     The words are the ones :func:`origin_words`, :func:`origin_explanation` and
     :func:`editability_text` give for the declaration as it stands: recorded as
@@ -419,7 +433,15 @@ def worded_form(form: ModeloWorkForm) -> ModeloWorkForm:
             }
         )
 
-    return map_form_fields(form, word)
+    worded = map_form_fields(form, word)
+    modelo = str(form.modelo)
+    return worded.model_copy(
+        update={
+            "modelo_title": modelo_title(modelo, language),
+            "modelo_number": modelo_number(modelo, language),
+            "period_words": period_words(form.period, language),
+        }
+    )
 
 
 def _require_closed_words() -> None:
@@ -446,6 +468,8 @@ __all__ = [
     "editability_text",
     "field_value_text",
     "holds_nothing",
+    "modelo_number",
+    "modelo_title",
     "no_earlier_filing",
     "origin_explanation",
     "origin_source_words_key",

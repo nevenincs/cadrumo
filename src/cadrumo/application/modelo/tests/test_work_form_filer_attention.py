@@ -380,6 +380,21 @@ def test_every_box_carries_the_figure_it_shows_in_the_forms_language(
     )
 
 
+@pytest.mark.parametrize(
+    ("language", "title", "period"),
+    [
+        (OutputLanguage.EN, "Modelo 130 · IRPF instalment payment, direct assessment", "1st quarter 2026"),
+        (OutputLanguage.ES, "Modelo 130 · IRPF pago fraccionado estimación directa", "1.er trimestre 2026"),
+    ],
+)
+def test_the_form_names_its_modelo_and_period_in_its_own_language(
+    operation: PinnedAuthorityOperation, language: OutputLanguage, title: str, period: str
+) -> None:
+    form = built_form(operation, "130", 2026, "1T", language=language)
+
+    assert (form.modelo_title, form.modelo_number, form.period_words) == (title, "Modelo 130", period)
+
+
 def test_a_printed_rate_shows_as_the_form_prints_it_and_a_waiting_box_shows_no_figure(
     operation: PinnedAuthorityOperation,
 ) -> None:

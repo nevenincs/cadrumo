@@ -342,6 +342,9 @@ class PublicModeloWorkForm(BaseModel):
     filing: ModeloFormFiling | None
     last_export: ModeloFormExport | None
     edit_closure: ModeloFormEditClosure | None
+    modelo_title: str | None
+    modelo_number: str | None
+    period_words: str | None
 
 
 class PublicModeloWorkFormLoadV1(BaseModel):
