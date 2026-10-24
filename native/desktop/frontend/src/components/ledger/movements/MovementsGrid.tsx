@@ -15,12 +15,14 @@ import {
   CountCell,
   DirectionCell,
   EuroCell,
+  MatchCell,
   SelectShownBox,
   StatusCell,
   TextCell,
 } from "./MovementCells";
 import {
   COLUMN_SPECS,
+  needsInvoice,
   type ColumnId,
   type ReadinessSets,
 } from "./movementsModel";
@@ -203,13 +205,12 @@ function movementColumns(
         <TextCell text={irpfCategoryLabel(t, category)} />
       ) : null;
     },
-    invoice: (row) =>
-      row.transaction.invoice_id === null ? null : (
-        <span className="inline-flex items-center gap-1">
-          <Icon name="link" size="xs" className="text-muted-foreground" />
-          {t("desktop.ledger.invoice.linked")}
-        </span>
-      ),
+    invoice: (row) => (
+      <MatchCell
+        linked={row.transaction.invoice_id !== null}
+        waiting={needsInvoice(row)}
+      />
+    ),
     documents: (row) => {
       const count =
         (row.transaction.purchase_invoice_evidence_id ? 1 : 0) +
@@ -261,6 +262,12 @@ function movementColumns(
             extent={context.extent}
             onSelect={context.onSelectShown}
           />
+        ) : column === "invoice" ? (
+          // A glyph column's header is its glyph; `label` carries the word.
+          <span title={name} className="inline-flex">
+            <Icon name="link" size="xs" />
+            <span className="sr-only">{name}</span>
+          </span>
         ) : (
           name
         ),

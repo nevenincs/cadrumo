@@ -170,6 +170,36 @@ export const TextCell = memo(function TextCell({
   );
 });
 
+/**
+ * A movement's invoice, as one glyph beside its amount: linked, or still
+ * waiting for one. Its words are the tooltip and what a screen reader hears.
+ * A movement that needs no invoice draws nothing.
+ */
+export const MatchCell = memo(function MatchCell({
+  linked,
+  waiting,
+}: {
+  linked: boolean;
+  waiting: boolean;
+}) {
+  const t = useStrings();
+  if (!linked && !waiting) return null;
+  const words = linked
+    ? t("desktop.ledger.invoice.linked")
+    : t("desktop.ledger.filters.to_match");
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="ledger-match inline-flex items-center justify-center text-muted-foreground">
+          <Icon name={linked ? "link" : "unlinked"} size="xs" />
+          <span className="sr-only">{words}</span>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{words}</TooltipContent>
+    </Tooltip>
+  );
+});
+
 /** A count beside its icon, with what it counts in its name. */
 export const CountCell = memo(function CountCell({
   icon,

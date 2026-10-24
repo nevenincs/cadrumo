@@ -32,6 +32,7 @@ export const COLUMN_IDS = [
   "counterparty",
   "direction",
   "amount",
+  "invoice",
   "eur",
   "classification",
   "category",
@@ -40,7 +41,6 @@ export const COLUMN_IDS = [
   "iva_rate",
   "iva_amount",
   "irpf_category",
-  "invoice",
   "documents",
   "group_label",
   "account",
@@ -98,7 +98,8 @@ export const COLUMN_SPECS: Record<ColumnId, ColumnSpec> = {
   iva_rate: { width: 4.5, align: "end", sortable: true },
   iva_amount: { width: 6, align: "end", sortable: true },
   irpf_category: { width: 9, sortable: true },
-  invoice: { width: 6, sortable: false },
+  // The match beside the amount it accounts for: a glyph, kept in view.
+  invoice: { width: 3, sticky: "end", sortable: false },
   documents: { width: 4.5, align: "end", sortable: false },
   group_label: { width: 8, sortable: true },
   account: { width: 8, sortable: true },
@@ -126,6 +127,7 @@ export const COLUMN_PRESETS: Record<PresetId, readonly ColumnId[]> = {
     "counterparty",
     "direction",
     "amount",
+    "invoice",
     "classification",
     "category",
     "group_label",
@@ -477,17 +479,20 @@ export function keepsRow(
   if (filters.readiness === "no_rate" && !readiness.noRate.has(id))
     return false;
   if (filters.foreignOnly && t.currency === "EUR") return false;
-  if (
-    filters.toMatch &&
-    !(
-      t.lifecycle_state === "ACTIVE" &&
-      t.direction !== "INTERNAL_TRANSFER" &&
-      t.invoice_id === null &&
-      DECIDED_BUSINESS.includes(t.business_classification)
-    )
-  )
-    return false;
+  if (filters.toMatch && !needsInvoice(row)) return false;
   return true;
+}
+
+/** Whether a movement still waits for its invoice: an active business
+ * movement, not a transfer, with none linked. */
+export function needsInvoice(row: LedgerRow): boolean {
+  const t = row.transaction;
+  return (
+    t.lifecycle_state === "ACTIVE" &&
+    t.direction !== "INTERNAL_TRANSFER" &&
+    t.invoice_id === null &&
+    DECIDED_BUSINESS.includes(t.business_classification)
+  );
 }
 
 // ---- Saved views -------------------------------------------------------------
