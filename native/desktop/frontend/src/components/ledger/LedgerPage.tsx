@@ -53,6 +53,8 @@ import {
   sectionName,
   sectionTabId,
 } from "./ledgerWords";
+import { InvoicesSection } from "./invoices/InvoicesSection";
+import type { EditorTarget } from "./invoices/InvoiceEditor";
 import { MovementsSection } from "./movements/MovementsSection";
 import {
   useMovementsView,
@@ -163,6 +165,9 @@ export function LedgerPage({
     periodWindow?.phase === "ready" ? periodWindow.generation : null,
   );
   const [periodOpen, setPeriodOpen] = useState(false);
+  // The invoice being added or corrected; it goes with the profile.
+  const [invoiceEditor, setInvoiceEditor] = useState<EditorTarget | null>(null);
+  useEffect(() => setInvoiceEditor(null), [reader]);
   const [transfer, setTransfer] = useState<"import" | "export" | null>(null);
   // What an import brought in, as the person asked to see it.
   const [shownImport, setShownImport] = useState<ImportedBatches | null>(null);
@@ -187,6 +192,9 @@ export function LedgerPage({
     ? { run: () => setTransfer("export") }
     : unavailable();
   const addAction = unavailable();
+  const addInvoiceAction: LedgerHeaderAction = readable
+    ? { run: () => setInvoiceEditor({ kind: "new" }) }
+    : unavailable();
 
   const shownWindow = periodWindow ? shownRows(periodWindow) : null;
   const toClassify = shownWindow
@@ -274,6 +282,16 @@ export function LedgerPage({
               () => addAction.run?.(),
               { enabled: runs(addAction) },
             ),
+            action(
+              "add_invoice",
+              t("desktop.ledger.invoices.action.add"),
+              "plus",
+              () => {
+                setSection("invoices");
+                addInvoiceAction.run?.();
+              },
+              { enabled: runs(addInvoiceAction) },
+            ),
             ...LEDGER_SECTIONS.map((value) =>
               action(
                 `section.${value}`,
@@ -302,6 +320,19 @@ export function LedgerPage({
   const isTab = (TAB_SECTIONS as readonly string[]).includes(section);
   let body: ReactNode;
   if (!readable || periodWindow === null) body = withheld;
+  else if (section === "invoices")
+    body = (
+      <InvoicesSection
+        port={port}
+        reader={reader}
+        locale={locale}
+        period={period}
+        shown={shown}
+        editor={invoiceEditor}
+        onEditor={setInvoiceEditor}
+        copy={copy}
+      />
+    );
   else if (section !== "movements")
     body = (
       <EmptyState
@@ -443,7 +474,18 @@ export function LedgerPage({
         }
         importAction={importAction}
         exportAction={exportAction}
-        addAction={section === "movements" ? addAction : undefined}
+        addAction={
+          section === "movements"
+            ? addAction
+            : section === "invoices"
+              ? addInvoiceAction
+              : undefined
+        }
+        addName={
+          section === "invoices"
+            ? t("desktop.ledger.invoices.action.add")
+            : undefined
+        }
       />
       <section
         ref={page}

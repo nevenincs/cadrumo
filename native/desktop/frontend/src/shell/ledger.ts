@@ -564,6 +564,131 @@ export type InvoiceListResult = {
   invoices: CatalogueInvoice[];
 };
 
+/** One structured line of a new invoice. `iva_rate` is the registry's rate
+ * slot (`RATE_21`, `EXEMPT`, ...); subtotal and IVA must agree with the
+ * quantity, price and rate to the cent. */
+export type InvoiceAddLine = {
+  description: string;
+  quantity: PublicDecimal;
+  unit_price: PublicDecimal;
+  subtotal: PublicDecimal;
+  iva_rate: string;
+  iva_amount: PublicDecimal;
+  spending_category_id?: string | null;
+  oss_rate_kind?: string | null;
+};
+/** A new invoice. Its kind, number, issue date, counterparty tax id,
+ * currency and total are its identity, fixed once it is in the catalogue. */
+export type InvoiceAddRequest = {
+  kind: InvoiceKind;
+  counterparty_name: string;
+  counterparty_tax_id?: string | null;
+  counterparty_country: string;
+  invoice_number: string;
+  issued_at: string;
+  taxable_base?: PublicDecimal | null;
+  iva_rate?: PublicDecimal | null;
+  currency: string;
+  notes?: string;
+  iva_category?: string | null;
+  operation_type?: string | null;
+  operation_date?: string | null;
+  retention_rate?: PublicDecimal | null;
+  retention_amount?: PublicDecimal | null;
+  invoice_class?: string | null;
+  series?: string | null;
+  rectifies_invoice_number?: string | null;
+  recargo_amount?: PublicDecimal | null;
+  business_premises_lease?: {
+    situacion_inmueble?: string | null;
+    referencia_catastral?: string | null;
+  } | null;
+  lines?: InvoiceAddLine[];
+};
+export type InvoiceAddValidation = "invalid_invoice" | "duplicate_invoice";
+/** A created invoice. A refused one settles as a refusal whose detail is
+ * this shape with `outcome: "validation_error"`. */
+export type InvoiceAddResult = {
+  outcome: "created" | "validation_error";
+  profile_id: string;
+  invoice: CatalogueInvoice | null;
+  /** The invoice already in the catalogue, for a duplicate. */
+  invoice_id: string | null;
+  bucket_event_ids: string[];
+  euro_value_pending: boolean;
+  simplificada_tax_id_advisory_required: boolean;
+  validation_code: InvoiceAddValidation | null;
+};
+
+/** The fields a stored invoice may be corrected in; its identity and lines
+ * are not among them. */
+export const INVOICE_UPDATE_FIELDS = [
+  "counterparty_name",
+  "counterparty_country",
+  "notes",
+  "payment_status",
+  "iva_category",
+  "operation_type",
+  "operation_date",
+  "retention_rate",
+  "retention_amount",
+  "series",
+  "invoice_class",
+  "rectifies_invoice_number",
+  "payment_id",
+] as const;
+export type InvoiceUpdateField = (typeof INVOICE_UPDATE_FIELDS)[number];
+export type InvoiceUpdateValues = {
+  counterparty_name?: string | null;
+  counterparty_country?: string | null;
+  notes?: string | null;
+  payment_status?: PaymentStatus | null;
+  iva_category?: string | null;
+  operation_type?: string | null;
+  operation_date?: string | null;
+  retention_rate?: PublicDecimal | null;
+  retention_amount?: PublicDecimal | null;
+  series?: string | null;
+  invoice_class?: string | null;
+  rectifies_invoice_number?: string | null;
+  payment_id?: string | null;
+};
+/** A correction: `fields` names what changes, and a named field sent as
+ * null clears it. A value outside `fields` is refused. */
+export type InvoiceUpdateRequest = {
+  invoice_id: string;
+  patch: { values: InvoiceUpdateValues; fields: InvoiceUpdateField[] };
+};
+export type InvoiceUpdateResult = {
+  profile_id: string;
+  invoice_id: string;
+  invoice: CatalogueInvoice;
+  bucket_event_ids: string[];
+};
+
+/** Removes an invoice that no movement is linked to. */
+export type InvoiceRemoveRequest = { invoice_id: string };
+export type InvoiceRemoveResult = {
+  profile_id: string;
+  invoice_id: string;
+  invoice: CatalogueInvoice;
+};
+
+/** One invoice by its id or an unambiguous prefix of it. A lookup that
+ * finds none or several settles as a refusal whose detail is this shape. */
+export type InvoiceViewRequest = { invoice_id: string };
+export type InvoiceViewResult = {
+  profile_id: string;
+  invoice_id: string;
+  outcome:
+    | { kind: "success"; invoice: CatalogueInvoice }
+    | {
+        kind: "refused";
+        reason: "required" | "not_found" | "ambiguous";
+        candidate_ids: string[];
+      };
+};
+
 export type LedgerStatusRequest = { period?: PublicPeriod | null };
 export type LedgerStatusResult = {
   profile_id: string;
@@ -858,6 +983,10 @@ export interface LedgerRequests {
   "ledger.classify.review": LedgerLlmReviewRequest;
   "ledger.add": LedgerAddRequest;
   "ledger.invoice.list": InvoiceListRequest;
+  "ledger.invoice.view": InvoiceViewRequest;
+  "ledger.invoice.add": InvoiceAddRequest;
+  "ledger.invoice.update": InvoiceUpdateRequest;
+  "ledger.invoice.remove": InvoiceRemoveRequest;
   "ledger.status": LedgerStatusRequest;
   "ledger.preflight": LedgerPreflightRequest;
   "ledger.import": LedgerImportRequest;
@@ -873,6 +1002,10 @@ export interface LedgerResults {
   "ledger.classify.bulk": LedgerBulkClassifyResult;
   "ledger.add": LedgerAddResult;
   "ledger.invoice.list": InvoiceListResult;
+  "ledger.invoice.view": InvoiceViewResult;
+  "ledger.invoice.add": InvoiceAddResult;
+  "ledger.invoice.update": InvoiceUpdateResult;
+  "ledger.invoice.remove": InvoiceRemoveResult;
   "ledger.status": LedgerStatusResult;
   "ledger.preflight": LedgerPreflightResult;
   "ledger.import": LedgerImportResult;

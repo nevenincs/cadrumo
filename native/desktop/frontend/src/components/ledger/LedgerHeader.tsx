@@ -86,6 +86,7 @@ export function LedgerHeader({
   importAction,
   exportAction,
   addAction,
+  addName,
 }: {
   title: string;
   controls: PaneControl[];
@@ -102,6 +103,8 @@ export function LedgerHeader({
   exportAction?: LedgerHeaderAction;
   /** Adding, where the section shown adds anything. */
   addAction?: LedgerHeaderAction;
+  /** What Add adds, in full; a movement unless said. */
+  addName?: string;
 }) {
   const t = useStrings();
   const inSetup =
@@ -226,7 +229,7 @@ export function LedgerHeader({
           {addAction && (
             <HeldButton
               action={addAction}
-              name={t("desktop.ledger.action.add_movement")}
+              name={addName ?? t("desktop.ledger.action.add_movement")}
               className="ledger-add shrink-0"
             >
               <Icon name="plus" />

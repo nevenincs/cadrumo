@@ -20,6 +20,7 @@ import {
   type JsonValue,
   type LedgerDefinitionId,
   type LedgerDropSignal,
+  type LedgerErrorDetail,
   type LedgerFailure,
   type LedgerFailureCode,
   type LedgerOutcome,
@@ -47,6 +48,12 @@ import {
   type FixtureLedger,
   type FixtureMovement,
 } from "./fixtures/ledger";
+import {
+  InvoiceRequestInvalid,
+  InvoiceStopped,
+  InvoiceUnsettled,
+  invoiceOperations,
+} from "./ledgerInvoiceFixture";
 
 /** How the scenario's ledger answers. */
 export const LEDGER_SHAPES = [
@@ -221,9 +228,17 @@ const OWN_ACCOUNT_SECRETS = [
 const SEALED_MESSAGE =
   "A finalized Modelo 303 revision for 2026 1T cites this movement; correct it through an amendment.";
 
+/** A rejected call, shaped as the host rejects one: its code, operation and
+ * reason are the error's own fields, as `ledgerFailure` reads them. */
 class Refusal extends Error {
+  readonly code: LedgerFailureCode;
+  readonly operation_id: string | null;
+  readonly reason?: string;
   constructor(readonly failure: LedgerFailure) {
     super(failure.code);
+    this.code = failure.code;
+    this.operation_id = failure.operation_id;
+    if (failure.reason !== undefined) this.reason = failure.reason;
   }
 }
 const reject = (
@@ -1599,9 +1614,15 @@ export function ledgerFixture(options: Options): LedgerPort {
     return reject("unavailable");
   }
 
+  const invoiceWork = invoiceOperations(ledger, {
+    profileId: LEDGER_FIXTURE_PROFILE_ID,
+    events,
+    hex64,
+  });
   const reads: Partial<
     Record<LedgerDefinitionId, (request: JsonObject) => JsonObject>
   > = {
+    ...invoiceWork.reads,
     "ledger.list": (request) => list(ledger, request),
     "ledger.view": (request) => {
       const movement = resolve(ledger, request.transaction_prefix);
@@ -1653,6 +1674,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     "ledger.export": exportLedger,
     "ledger.invoice.import": importInvoiceBook,
     "ledger.evidence.batch": addDocuments,
+    ...invoiceWork.writes,
   };
 
   function suggestion(pending: Pending, operation: string) {
@@ -1754,6 +1776,20 @@ export function ledgerFixture(options: Options): LedgerPort {
         return reject("unknown", { operation_id: operation });
       return settle(operation, result);
     } catch (error) {
+      if (error instanceof InvoiceRequestInvalid) return invalid();
+      if (error instanceof InvoiceUnsettled)
+        return reject("unknown", { operation_id: operation });
+      if (error instanceof InvoiceStopped) {
+        const refused: LedgerOutcome = {
+          kind: "refused",
+          operation_id: operation,
+          revision: 3,
+          reason: error.reason,
+          detail: error.detail as unknown as LedgerErrorDetail,
+        };
+        outcomes.set(operation, refused);
+        return refused;
+      }
       if (!(error instanceof Stopped)) throw error;
       const stopped: LedgerOutcome = {
         kind: "refused",
