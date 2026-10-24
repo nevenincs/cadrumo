@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:4afc5d5c524b824109424573516042d93e1a832420e220679406ed23c95e7f5c'
+body_hash: 'sha256:16c726e2e00e4cc028c631ab533c481484aa08b4575f8b2fc15f8ac29444d776'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -659,6 +659,29 @@ related:
 - `S27` `verify:` `modelo-fixtures.mjs --check` -> `pass`
 - `S27` `verify:` `tsc --noEmit` -> `pass`
 - `S27` `by:` `opus-p05-lane`
+- `S44` `M` `src/cadrumo/application/modelo/work_form_export_offer.py`
+- `S44` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S44` `M` `src/cadrumo/application/modelo/work_form_typing_effect.py`
+- `S44` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S44` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S44` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S44` `A` `src/cadrumo/application/modelo/work_form_rebase.py`
+- `S44` `A` `src/cadrumo/application/modelo/tests/test_work_form_rebase.py`
+- `S44` `A` `src/cadrumo/application/modelo/tests/test_workbench_read_admission.py`
+- `S44` `M` `src/cadrumo/application/modelo/tests/test_work_form_export_offer.py`
+- `S44` `M` `src/cadrumo/entrypoints/tests/test_modelo_workbench_operations.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/session.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/factory.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_operation.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S44` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S44` `verify:` `ruff check and format` -> `pass`
+- `S44` `verify:` `lint-imports` -> `pass`
+- `S44` `verify:` `basedpyright application files` -> `pass`
+- `S44` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S44` `verify:` `pytest application modelo suites` -> `pass`
+- `S44` `verify:` `pytest full TUI modelo tree` -> `pass`
+- `S44` `by:` `opus-p01-lanes-1-and-2`
 
 ## Notes
 
@@ -700,3 +723,4 @@ related:
 - `S41` the row field half of S41, committed in 46f9e9219b; the AEAT reference stays out of the public row by its owner's custody decision, a known gap against the TUI's technical toggle
 - `S42` also carries the issue-line where fix that removes the box from place words
 - `S27` committed in 35fff18be9; no modelo yields a missing-value finding through the real executors, so missing values are proven by the drawn dash
+- `S44` committed in f5a6e55f11; items a and d by lane 1, b and c by lane 2

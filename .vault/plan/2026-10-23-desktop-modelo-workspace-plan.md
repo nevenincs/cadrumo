@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:60fad0c86e6e49473384ceaac68d10b012b91fb75816e0a0c1b0ac1a43a548d6'
+body_hash: 'sha256:dae4c83cd57f575a5c33b9e43a22ef8b141ef829876039e3d61a191006921a9d'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -59,7 +59,7 @@ Move every classification and wording decision the prototype had to make into th
 - [x] `P01.S39` - Project what typing a value over each box does in words, the export offer with its artefacts, elections and their words, the revision's file format, and the recorded filing's receipt state on the form read model, and switch the TUI to them; `src/cadrumo/application/modelo/work_form_export_offer.py`.
 - [x] `P01.S40` - Derive the form's export hold and next step from the filing gate's own predicate so no frontend offers a file the gate refuses, test gate agreement over every note kind and working figure, and remove the unused field_needs_filer route; `src/cadrumo/application/modelo/work_form_next_step.py`.
 - [x] `P01.S42` - Read each declaration list row at the authority grade its revision declares, as the form does, so an applicability-graded revision shows its real state rather than unreadable; `src/cadrumo/application/modelo/declaration_summary.py`.
-- [ ] `P01.S44` - Project the edit admission refusal's words and whether a box takes a typed value on the form read model, report per staged address what a renewal dropped or changed, and give the export offer per-artefact and record availability from the gate predicates, switching the TUI to each; `src/cadrumo/application/modelo/workbench_projection.py`.
+- [x] `P01.S44` - Project the edit admission refusal's words and whether a box takes a typed value on the form read model, report per staged address what a renewal dropped or changed, and give the export offer per-artefact and record availability from the gate predicates, switching the TUI to each; `src/cadrumo/application/modelo/workbench_projection.py`.
 
 ### Phase `P02` - One shared Modelo wording for every frontend
 
