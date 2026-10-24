@@ -6,6 +6,7 @@ date: '2026-10-23'
 tier: L2
 related:
   - '[[2026-10-23-desktop-ledger-editor-adr]]'
+  - '[[2026-10-24-desktop-ledger-editor-audit]]'
 modified: '2026-10-24'
 body_schema: body-v2
 body_hash: 'sha256:6c9399bc2a9eb196f9c74a6d9476253b609a14175c36eaf267d05818c3071052'
