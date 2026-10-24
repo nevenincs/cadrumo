@@ -960,7 +960,10 @@ def _extract_invoice_fields_via_vision(
         if isinstance(cause, MissingOptionalExtraError):
             _refuse_with_unavailable_reader(cause, availability_fact="vision_reader_available")
         verdict = exc.precondition_verdict
-        if verdict is None:
+        # Only an on-host read is the local runtime's to explain: a failed
+        # off-host read probed here would send the person to set up a local AI
+        # they did not choose to read with.
+        if verdict is None and off_host_provider in (None, LLMProvider.LOCAL):
             verdict = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, settings).precondition_verdict
         if verdict is not None:
             _refuse_with_reader_verdict(verdict, cause=cause)
