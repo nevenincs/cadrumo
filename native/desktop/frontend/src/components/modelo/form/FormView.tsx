@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -161,11 +162,12 @@ function Keys() {
   );
 }
 
-function PageTab({ page }: { page: DrawnPage }) {
+function PageTab({ page, panel }: { page: DrawnPage; panel: string }) {
   const todo = page.counts ? page.counts.needs_input + page.counts.blocked : 0;
   return (
     <TabsTrigger
       value={page.id}
+      aria-controls={panel}
       className={page.applies === false ? "text-faint" : undefined}
     >
       <span className="max-w-48 truncate" title={page.heading}>
@@ -209,6 +211,8 @@ export function FormView({
     request: EditRequest;
   } | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
+  // The page tabs control the one scroller the chosen page is drawn in.
+  const panel = useId();
   const admitted = editsAdmitted(envelope);
 
   const onPage = useMemo(
@@ -440,13 +444,14 @@ export function FormView({
               className="overflow-x-auto"
             >
               {pages.map((candidate) => (
-                <PageTab key={candidate.id} page={candidate} />
+                <PageTab key={candidate.id} page={candidate} panel={panel} />
               ))}
             </TabsList>
           </Tabs>
         )}
         <div
           ref={scroller}
+          id={panel}
           data-modelo-form=""
           role="region"
           aria-label={page?.heading ?? t("desktop.modelo.view.form")}

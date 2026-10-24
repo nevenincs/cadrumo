@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -59,7 +59,13 @@ function TodoList({
     return (
       <p className="flex gap-2 p-4 text-sm text-muted-foreground">
         <Icon name="lock" size="xs" className="mt-0.5" />
-        {t("workspace.modelo.editability.no_admission")}
+        {/* The read model names no next step when the registry rules cannot
+            calculate the declaration at all; the header's banner says the same. */}
+        {t(
+          envelope.admission_refusal && envelope.next_step === null
+            ? "workspace.modelo.editor.rules_incomplete"
+            : "workspace.modelo.editability.no_admission",
+        )}
       </p>
     );
   const todo = todoOf(envelope.form.form, session);
@@ -190,6 +196,7 @@ export function TodoRail({
 }) {
   const t = useStrings();
   const [rail, setRail] = useState<Rail>("todo");
+  const panel = useId();
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <Tabs
@@ -198,15 +205,19 @@ export function TodoRail({
         className="flex-none px-2"
       >
         <TabsList aria-label={t("desktop.modelo.side.label")}>
-          <TabsTrigger value="todo">
+          <TabsTrigger value="todo" aria-controls={panel}>
             {t("workspace.modelo.todo.title")}
           </TabsTrigger>
-          <TabsTrigger value="outline">
+          <TabsTrigger value="outline" aria-controls={panel}>
             {t("desktop.modelo.side.outline")}
           </TabsTrigger>
         </TabsList>
       </Tabs>
-      <div className="min-h-0 flex-1 overflow-y-auto border-t border-border">
+      <div
+        id={panel}
+        role="tabpanel"
+        className="min-h-0 flex-1 overflow-y-auto border-t border-border"
+      >
         {rail === "todo" ? (
           <TodoList envelope={envelope} session={session} onPicked={onPicked} />
         ) : (

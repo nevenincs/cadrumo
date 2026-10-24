@@ -194,9 +194,9 @@ export function SectionView({
       style={drawn ? undefined : { minHeight: estimate(section) }}
     >
       <header className="mb-1 flex items-center gap-2 border-b border-border px-2 pb-2">
-        <h3 className="font-serif text-md text-foreground">
+        <h2 className="font-serif text-md text-foreground">
           {calm(section.heading.text)}
-        </h3>
+        </h2>
         {official && (
           <Tooltip>
             <TooltipTrigger asChild>

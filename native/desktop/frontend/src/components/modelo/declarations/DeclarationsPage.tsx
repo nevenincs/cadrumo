@@ -443,7 +443,9 @@ export function DeclarationsPage({
               <SegmentedControlItem key={v} value={v} className="flex-none">
                 {t(VIEW_KEYS[v])}
                 {v === "todo" && (
-                  <span className="ml-1 text-faint tabular-nums">{todo}</span>
+                  <span className="ml-1 text-muted-foreground tabular-nums">
+                    {todo}
+                  </span>
                 )}
               </SegmentedControlItem>
             ))}

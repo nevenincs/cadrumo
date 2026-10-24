@@ -59,9 +59,6 @@ function Line({
         {line.detail && (
           <span className="text-sm text-muted-foreground">{line.detail}</span>
         )}
-        {line.technical && (
-          <span className="font-mono text-xs text-faint">{line.technical}</span>
-        )}
       </span>
       {line.address && <Icon name="forward" size="xs" className="text-faint" />}
     </>
@@ -101,6 +98,16 @@ function Line({
         <div className={grid}>{body}</div>
       )}
       {actions}
+      {/* The codes are for the filer who asks for them, as in the TUI; they
+          stay outside the line's button, which leads to the box. */}
+      <details className="px-4 pb-3 text-sm">
+        <summary className="cursor-pointer text-muted-foreground">
+          {t("workspace.modelo.issues.technical")}
+        </summary>
+        <p className="mt-1 font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]">
+          {line.technical}
+        </p>
+      </details>
     </li>
   );
 }

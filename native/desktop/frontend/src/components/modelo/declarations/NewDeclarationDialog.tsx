@@ -371,7 +371,7 @@ function Chooser({
                       {target.deadline_text}
                     </span>
                   )}
-                  <span className="text-xs text-faint">
+                  <span className="text-xs text-muted-foreground">
                     {target.existing
                       ? target.existing.state_words
                       : t("workspace.declarations.list.state.not_started")}

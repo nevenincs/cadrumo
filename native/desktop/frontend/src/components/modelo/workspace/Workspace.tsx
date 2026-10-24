@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
@@ -214,6 +214,8 @@ export function ModeloWorkspace({
   onBack(): void;
 }) {
   const t = useStrings();
+  // The views share one panel, whose content follows the chosen tab.
+  const panel = useId();
   const form = envelope.form.form;
   const header = envelope.header;
   const next = envelope.next_step;
@@ -274,7 +276,7 @@ export function ModeloWorkspace({
       return entry ? <AttentionMark key={level} entry={entry} /> : null;
     });
   const tab = (value: WorkspaceView, name: string, extra?: ReactNode) => (
-    <TabsTrigger value={value}>
+    <TabsTrigger value={value} aria-controls={panel}>
       {name}
       {marks(value)}
       {extra}
@@ -417,13 +419,15 @@ export function ModeloWorkspace({
       {notice}
       {view === "form" ? (
         <div
+          id={panel}
+          role="tabpanel"
           className="relative grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] @4xl:grid-cols-[--spacing(60)_minmax(0,1fr)] @6xl:data-[details=true]:grid-cols-[--spacing(64)_minmax(0,1fr)_--spacing(88)]"
           data-details={detailsOpen && slots.details !== undefined}
         >
           <aside className="hidden min-h-0 flex-col border-r border-border bg-chrome @4xl:flex">
             {slots.rail}
           </aside>
-          <main className="flex min-h-0 flex-col">
+          <div className="flex min-h-0 flex-col">
             {slots.form}
             {detailsOpen && slots.details && (
               <div className="h-2/5 flex-none overflow-y-auto border-t border-border bg-card @6xl:hidden">
@@ -446,7 +450,7 @@ export function ModeloWorkspace({
                 </div>
               </div>
             )}
-          </main>
+          </div>
           {detailsOpen && slots.details && (
             <aside className="hidden min-h-0 overflow-y-auto border-l border-border bg-card @6xl:block">
               {slots.details}
@@ -454,7 +458,11 @@ export function ModeloWorkspace({
           )}
         </div>
       ) : (
-        <div className="@container min-h-0 flex-1 overflow-y-auto px-6 py-6">
+        <div
+          id={panel}
+          role="tabpanel"
+          className="@container min-h-0 flex-1 overflow-y-auto px-6 py-6"
+        >
           {view === "check" && slots.check}
           {view === "file" && slots.filing}
           {view === "sources" && slots.sources}
