@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:8aaafad433f70802beae63dd1e95d27216927096765252269addc4779ecfb816'
+body_hash: 'sha256:c9dacffb7a7e67e58c14edfddb2aca9deaa43c6ff508d3f029bc1fbbe5d1b18f'
 ---
 
 # `rust-component-provisioning` plan
@@ -53,7 +53,7 @@ The Rust engine gains declarative pins, a proxy-aware pinned transfer with retry
 The engine installs pinned Chromium archives straight into the bundled driver's layout and checks them with its own headless launch; Python only locates the result.
 
 - [x] `P02.S05` - Install each pending pinned Chromium archive into the build directory browsers.json names, write the driver's completion marker set read from its registry code, and remove superseded builds after the new one verifies; `native/application/src/provisioning/browser.rs and tests against a recorded archive`.
-- [ ] `P02.S06` - Add the browser quick and full checks (marker, executable digest against the receipt, headless launch and version against the pins), the engine's location record, and the item-generic Python reader of component records; `native/application/src/provisioning/browser.rs, browser/launch.rs, receipts.rs, src/cadrumo/core/component_records.py and tests`.
+- [x] `P02.S06` - Add the browser quick and full checks (marker, executable digest against the receipt, headless launch and version against the pins), the engine's location record, and the item-generic Python reader of component records; `native/application/src/provisioning/browser.rs, browser/launch.rs, receipts.rs, src/cadrumo/core/component_records.py and tests`.
 - [ ] `P02.S18` - Share one bounded extractor between the component store and the browser, and admit only relative symbolic links that resolve inside the build folder, created after the regular files and verified afterwards, so platform archives that carry them install; `native/application/src/component.rs, native/application/src/provisioning/browser.rs and tests`.
 
 ### Phase `P03` - Local AI

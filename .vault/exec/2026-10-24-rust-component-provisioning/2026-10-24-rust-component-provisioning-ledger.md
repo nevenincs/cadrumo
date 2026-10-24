@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:027d8a764f3cb229a808c658004d9222bb48b62b5f026af905aee1293dc73940'
+body_hash: 'sha256:7505dc3eed7c3ea8e2f4f7497f4de0ca8361d88faf049d90bf4a7d0e5ff8c561'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -254,6 +254,7 @@ related:
 - `S06` `verify:` `cargo clippy --all-targets --features platform -- -D warnings` -> `pass`
 - `S06` `verify:` `rustfmt --edition 2024 through stdin on browser.rs and browser/launch.rs` -> `pass`
 - `S06` `by:` `implementation-engineer-high`
+- `S06` `verify:` `browser checks and record reader verified in 07a0457000 and 25d1f4c659 (lib 143, platform browser 16, reader pytest 9)` -> `pass`
 
 ## Notes
 
@@ -279,3 +280,4 @@ related:
 - `S07` S07 the server inherits the engine's containment: a crash ends it only where the owner hosts the engine in a kill-on-close job (the crate forbids unsafe and has no job API); an orderly stop unloads models, then ends the server
 - `S08` S08 total memory comes from /proc/meminfo on Linux, sysctl hw.memsize on macOS and a PowerShell CIM query on Windows (0.44 s measured here), NVIDIA VRAM from nvidia-smi; each is a separate bounded program with no console window, since the crate forbids unsafe; macOS code paths are compiled only on a macOS host
 - `S06` S06 open: the Python launch guard re-point `(provisioning_browser.py` `probe_playwright_browser,` session.py) is held back. Records live under each storage root (components/receipts, fixed), while the test bootstrap shares one relocated browser cache across private storage roots; with the guard reading records, 25 real-browser tests that build their own storage roots refuse (auth real lifecycle, clave movil recovery, authenticator real boundary, representation alert race, justificante capture authenticity). The guard patch and its test updates are kept outside the tree pending the decision
+- `S06` Rescoped: the Python launch guard re-point moves to P04.S19, after the components role can adopt existing builds; records stay per storage root (D12) and test support writes the engine's fixture record
