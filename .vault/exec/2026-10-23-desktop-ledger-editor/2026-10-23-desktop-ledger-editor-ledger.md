@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:7b76e1e39550e2e5173ec0661885641fb46da8c4ae2f8797133c99f8fe7f5c2d'
+body_hash: 'sha256:8407d29e8294d4296f945ec8645b4e1c1bba9d5a90401d490372c87015e57d5f'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -103,6 +103,13 @@ related:
 - `S05` `verify:` `npx prettier --check <touched files>` -> `pass`
 - `S05` `verify:` `node --test dev/eslint/tests/` -> `pass`
 - `S05` `by:` `vaultspec-high-executor`
+- `S06` `A` `native/desktop/frontend/tests/data-grid.spec.ts`
+- `S06` `A` `native/desktop/frontend/tests/scenarios/data-grid.spec.ts`
+- `S06` `verify:` `npx playwright test tests/data-grid.spec.ts (19 pure tests, server-free config)` -> `pass`
+- `S06` `verify:` `npx playwright test tests/scenarios/data-grid.spec.ts (16 tests on /primitives.html, dev server started and stopped by this run)` -> `pass`
+- `S06` `verify:` `npx playwright test tests/scenarios/accessibility.spec.ts design-system.spec.ts keyboard.spec.ts` -> `pass`
+- `S06` `verify:` `npx tsc --noEmit; npx eslint; npx prettier --check` -> `pass`
+- `S06` `by:` `vaultspec-high-executor`
 
 ## Notes
 

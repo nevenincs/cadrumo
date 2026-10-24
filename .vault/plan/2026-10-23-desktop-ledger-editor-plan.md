@@ -8,7 +8,7 @@ related:
   - '[[2026-10-23-desktop-ledger-editor-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:f1fa6873ef9991be5db372e8538e9d5fbe6fd45ec4390e8ce72da733f3822749'
+body_hash: 'sha256:9ffe5f8c0aab3aebe2b45e60f49bbb13e894145bb788276f94f5aef50530ac09'
 ---
 
 # `desktop-ledger-editor` plan
@@ -35,7 +35,7 @@ Give the window a closed, typed way to run the ledger family's registered operat
 Add a virtualised, keyboard-first data grid primitive to the design system that every ledger table builds on.
 
 - [x] `P02.S05` - Add the data grid primitive: windowed rows, sticky header and columns, resizable columns, cell focus, range and row selection, keyboard model; `native/desktop/frontend/src/components/ui/data-grid.tsx`.
-- [ ] `P02.S06` - Add grid tests for keyboard, selection, windowing and accessibility; `native/desktop/frontend/tests/`.
+- [x] `P02.S06` - Add grid tests for keyboard, selection, windowing and accessibility; `native/desktop/frontend/tests/`.
 
 ### Phase `P03` - Ledger page
 
