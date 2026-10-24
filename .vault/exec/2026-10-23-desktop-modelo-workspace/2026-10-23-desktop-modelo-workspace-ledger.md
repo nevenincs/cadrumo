@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:051c3164e4b66c4d28de62f139ca6917199526a227944fb9abd7b73f3b516b74'
+body_hash: 'sha256:64118f3a63125784e880d02b67152e2adc356d27ffd1965ac4b4294a5469376b'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -242,6 +242,7 @@ related:
 - `S11` `M` `dev/locales/_ast_key_policy.py`
 - `S11` `verify:` `TUI declarations, header, progress, sources, filing gates, casilla list, live language refresh (291)` -> `pass`
 - `S11` `verify:` `dev/locales test_dynamic_prefix_registry_coverage (32)` -> `pass`
+- `S14` `M` `.vault/plan/2026-10-23-desktop-modelo-workspace-plan.md`
 
 ## Notes
 
@@ -256,3 +257,4 @@ related:
 - `S13` The relay names no definition: it forwards `operation_financial_submit` as the runtime's financial input and the runtime refuses any definition whose contract takes no financial operand, so the product-neutral bridge gate still holds. Python strings cannot be zeroed; the relay drops its references to the input after transfer
 - `S13` The desktop's person session now relays in Rust (another session's 4e256a9e95/8821a09cfe); the same `operation_financial_submit` action is added there, with the encoded input and its request zeroized after sending
 - `S11` First part of S11: `tui.modelo.workbench.*` and `tui.declarations.*` moved to `workspace.modelo.*` and `workspace.declarations.*` through dev.locales move (469 and 201 keys per locale, values unchanged) and 3734 code references repointed in 111 files. `test_audit` still reports catalogue keys with no code reference `(next.check_aeat,` `next.link_aeat,` state.correction) and a missing provenance.source, all unreferenced before this step. The missing list and refusal keys and the key-hint removal follow
+- `S14` Not implemented: the desktop's person session now relays in Rust and another session lifted the person reply bound to the relay's 16 MiB assembled-document bound in 931da66b20, which carries a 390-sized form read in one reply; the bounded-parts mechanism is unnecessary
