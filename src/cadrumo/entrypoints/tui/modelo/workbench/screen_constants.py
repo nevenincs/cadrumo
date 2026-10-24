@@ -135,8 +135,6 @@ _CLOSE_LOCALE_KEY: Final[str] = "workspace.modelo.key.close"
 _EMPTY_LOCALE_KEY: Final[str] = "workspace.modelo.filter.empty"
 _EMPTY_NEXT_LOCALE_KEY: Final[str] = "workspace.modelo.filter.empty_next"
 _CRUMB_SEPARATOR: Final[str] = " · "
-_FILE_OUT_OF_DATE_LOCALE_KEY: Final[str] = "workspace.modelo.record.refused_file_out_of_date"
-"""Why recording the filing is refused while the latest file was made from an earlier calculation."""
 _LEGEND_KEYS: Final[frozenset[str]] = frozenset({"escape"})
 _SCROLL_LOCALE_KEY: Final[str] = "workspace.modelo.key.scroll"
 """The only keys the footer shows while the symbols panel is open."""

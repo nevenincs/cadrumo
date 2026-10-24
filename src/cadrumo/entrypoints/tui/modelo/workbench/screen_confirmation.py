@@ -11,7 +11,6 @@ from .....application.modelo.work_form_models import (
     confirmable,
     section_fields,
 )
-from .....application.modelo.work_form_typing_effect import TYPED_EDITABILITIES
 from .....core.i18n.render import tr
 from ...search import TuiSearchHostV1
 from .bulk_confirm import BulkConfirmScreen
@@ -158,7 +157,7 @@ class WorkbenchConfirmationMixin:
         if isinstance(choice, GoToCasilla):
             self._go_to(choice.key)
             entry = self.query_one(CasillaList).highlighted
-            if entry is not None and entry.key == choice.key and entry.field.editability in TYPED_EDITABILITIES:
+            if entry is not None and entry.key == choice.key and entry.field.takes_typed_value:
                 self._open_editor(entry)
         elif isinstance(choice, OpenSourceSurface):
             self._open_surface(choice)

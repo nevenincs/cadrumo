@@ -33,6 +33,8 @@ facts, so a frontend only renders it.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import Callable, Mapping
 from datetime import date, datetime
 from decimal import Decimal
@@ -414,6 +416,44 @@ def _default_held_zero(data: dict[str, Any]) -> bool:
 
 _FILERS_OWN_ORIGINS = frozenset({ModeloFormOrigin.OVERRIDES_SOURCE, ModeloFormOrigin.ENTERED})
 
+TYPED_EDITABILITIES: Final[frozenset[ModeloFormEditability]] = frozenset(
+    {
+        ModeloFormEditability.EDITABLE_VALUE,
+        ModeloFormEditability.EDITABLE_OVERRIDE,
+        ModeloFormEditability.OVERRIDABLE_SOURCE,
+    }
+)
+"""Editabilities under which the filer may type a value on the field itself."""
+
+
+def comparable_entry(value: ModeloFormScalar) -> ModeloEditWireScalar:
+    """A value as two entries of it compare: an amount by its figure, whatever trailing zeros it was written with.
+
+    ``1234.5`` and ``1234.50`` are the same figure, so they compare equal here,
+    as they do as numbers; every other kind of value compares as it is.
+    """
+    if isinstance(value, Decimal):
+        return format(value.normalize(), "f")
+    return None if value is None else wire_scalar_value(value)
+
+
+def _takes_typed_value_of(data: dict[str, Any]) -> bool:
+    return data["editability"] in TYPED_EDITABILITIES
+
+
+def _clearable_of(data: dict[str, Any]) -> bool:
+    return data["editability"] is ModeloFormEditability.EDITABLE_VALUE and data["origin"] is ModeloFormOrigin.ENTERED
+
+
+def _own_value_of(data: dict[str, Any]) -> ModeloEditWireScalar:
+    return comparable_entry(data["value"]) if data["origin"] in _FILERS_OWN_ORIGINS else None
+
+
+def _state_digest_of(data: dict[str, Any]) -> str:
+    value = comparable_entry(data["value"])
+    seen = json.dumps([data["origin"].value, type(value).__name__, None if value is None else str(value)])
+    return hashlib.sha256(seen.encode("utf-8")).hexdigest()
+
 
 def _filers_own_of(data: dict[str, Any]) -> bool:
     return data["origin"] in _FILERS_OWN_ORIGINS
@@ -473,6 +513,16 @@ class ModeloFormField(_FormModel):
     confirmable: bool = Field(default_factory=_confirmable_of)
     #: Whether the box holds an amount of exactly zero: a figure the form holds, never the same as nothing.
     held_zero: bool = Field(default_factory=_default_held_zero)
+    #: Whether the filer may type a value on the box itself.
+    takes_typed_value: bool = Field(default_factory=_takes_typed_value_of)
+    #: Whether the box holds a value the filer entered that they can remove.
+    clearable: bool = Field(default_factory=_clearable_of)
+    #: The filer's own value as an entry of it compares (see :func:`comparable_entry`); typing it again
+    #: changes nothing. ``None`` when the value is not the filer's own.
+    own_value: ModeloEditWireScalar = Field(default_factory=_own_value_of)
+    #: A digest of the box's value and origin, so a frontend can tell whether the box moved under a change
+    #: it holds without the value leaving its custody.
+    state_digest: str = Field(default_factory=_state_digest_of, min_length=64, max_length=64)
     #: Whether the box holds the filer's value over a source, which they can give back to that source.
     restorable: bool = Field(default_factory=_restorable_of)
     #: Whether the box holds the filer's own value: typed here, or replacing its source's.
@@ -512,6 +562,11 @@ class ModeloFormField(_FormModel):
             raise ValueError("a field can go back to its source exactly when its own state makes it so")
         if self.confirm_value != _confirm_value_of(dict(self)):
             raise ValueError("a field's confirm value is the value its own state lets a confirmation stage")
+        derived = dict(self)
+        if (self.takes_typed_value, self.clearable) != (_takes_typed_value_of(derived), _clearable_of(derived)):
+            raise ValueError("whether a field takes typing or clearing is what its own state makes it")
+        if self.own_value != _own_value_of(derived) or self.state_digest != _state_digest_of(derived):
+            raise ValueError("a field's own value and state digest are the ones its value and origin give")
         return self
 
     @model_validator(mode="after")
@@ -524,7 +579,18 @@ class ModeloFormField(_FormModel):
 
 
 _SELF_DERIVED: Final[frozenset[str]] = frozenset(
-    {"edit_address", "confirmable", "held_zero", "restorable", "filers_own", "confirm_value"}
+    {
+        "edit_address",
+        "confirmable",
+        "held_zero",
+        "restorable",
+        "filers_own",
+        "confirm_value",
+        "takes_typed_value",
+        "clearable",
+        "own_value",
+        "state_digest",
+    }
 )
 
 

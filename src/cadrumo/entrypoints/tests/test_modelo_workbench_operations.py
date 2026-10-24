@@ -59,6 +59,12 @@ from ...application.modelo.edit_review_wording import STATED_BY_THE_REVIEW
 from ...application.modelo.edit_transient_operand import modelo_edit_financial_operand
 from ...application.modelo.value_presentation import format_casilla_value
 from ...application.modelo.work_amend_contracts import ModeloWorkAmendOverride
+from ...application.modelo.work_form_models import ModeloFormCasillaAddressV1, comparable_entry
+from ...application.modelo.work_form_rebase import (
+    ModeloFormRebaseOutcome,
+    ModeloFormStagedChangeV1,
+    ModeloFormStagedKind,
+)
 from ...application.modelo.work_form_service import load_modelo_work_form
 from ...application.modelo.workbench_operations import (
     MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
@@ -599,6 +605,9 @@ def test_preflight_reads_each_entry_as_typed_through_its_address_grammar(
         Decimal("1234.56"), data_type=six.grammar.data_type, language=OutputLanguage.ES
     )
     assert amount.refusal_words is None
+    # The entry compares as a figure, the form a box's own value takes, so "1.234,560" would compare equal too.
+    assert amount.comparable_value == comparable_entry(Decimal("1234.560")) == "1234.56"
+    assert closed_box.comparable_value is None
     assert closed_box.refusal_words == parse_refusal_text(closed_box.refusal, OutputLanguage.ES)
     assert word.refusal_words == parse_refusal_text(word.refusal, OutputLanguage.ES)
     # What the filer typed never comes back, only the value it is read as, and nothing was applied.
@@ -747,3 +756,68 @@ def test_preflight_reads_a_correction_typed_for_any_box_the_revision_defines(
     assert too_fine.refusal.reason is ModeloEditParseReason.TOO_MANY_DECIMALS
     assert "1.234,567" not in projection.model_dump_json(exclude={"parsed": {"__all__": {"value_text"}}})
     assert after.calculation_revision_id == before.calculation_revision_id
+
+
+def test_renewal_reports_what_becomes_of_each_held_change_by_its_box(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A held change on a box that moved reads as changed, one on a box the form no longer has as dropped."""
+    with seeded_operator_work(tmp_path) as work:
+        work.recalculate()
+        contracts = build_production_operation_registry().public_contract_set
+        observations = _OperationLoadObservations()
+        ports_factory = _ports_factory(work, observations=observations, monkeypatch=monkeypatch)
+        read, _ = _run(
+            work,
+            ModeloWorkbenchFormExecutor(ports_factory=ports_factory, contracts=lambda: contracts),
+            MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
+            ModeloWorkbenchFormRequest(
+                profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.EN
+            ),
+            ModeloWorkbenchFormProjectionV1,
+        )
+        form = restore_modelo_workbench_form(read).load.form
+        box = next(
+            field
+            for field in form.fields()
+            if field.address == ModeloFormCasillaAddressV1(casilla_id=_SET_06.address.casilla_id)
+        )
+        assert box.takes_typed_value
+        gone = ModeloFormCasillaAddressV1(casilla_id=validated_casilla_id("999"))
+        staged = (
+            ModeloFormStagedChangeV1(address=box.address, kind=ModeloFormStagedKind.SET, held_state=box.state_digest),
+            ModeloFormStagedChangeV1(address=gone, kind=ModeloFormStagedKind.SET, held_state=box.state_digest),
+        )
+        assert read.admitted_baseline is not None
+        request = ModeloEditRenewRequest(
+            profile_id=_profile_id(work),
+            baseline=read.admitted_baseline,
+            output_language=OutputLanguage.EN,
+            staged=staged,
+        )
+        executor = ModeloEditRenewExecutor(ports_factory=ports_factory, contracts=lambda: contracts)
+        unmoved, _ = _run(
+            work, executor, MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID, request, ModeloEditRenewalProjectionV1
+        )
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work.work_unit_id,
+            ports=work.ports,
+            clock=SEEDED_AT,
+            casilla_inputs={box.address.casilla_id: Decimal("100")},
+        )
+        moved, _ = _run(
+            work, executor, MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID, request, ModeloEditRenewalProjectionV1
+        )
+
+    assert [(entry.address, entry.outcome) for entry in unmoved.rebase] == [
+        (box.address, ModeloFormRebaseOutcome.KEPT),
+        (gone, ModeloFormRebaseOutcome.DROPPED),
+    ]
+    assert moved.refusal is not None
+    assert [(entry.address, entry.outcome) for entry in moved.rebase] == [
+        (box.address, ModeloFormRebaseOutcome.CHANGED),
+        (gone, ModeloFormRebaseOutcome.DROPPED),
+    ]
+    # A held change names its box and the box's digest, never a value.
+    assert all(set(change) == {"address", "kind", "held_state"} for change in request.model_dump()["staged"])

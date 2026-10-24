@@ -40,6 +40,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormValueSource,
     ModeloWorkForm,
     address_key,
+    revised_field,
 )
 from ......application.modelo.work_form_service import modelo_form_snapshot
 from ......application.modelo.work_form_source_groups import reading_text, source_group_kind, source_groups
@@ -143,20 +144,17 @@ def _from_aeat() -> ModeloFormField:
 
 def _unreachable_entry() -> ModeloFormField:
     """A binding input the filer's entries feed but that no entry can reach here, holding nothing."""
-    return form_field(
-        "900",
-        "Unnamed box",
-        ModeloFormOrigin.OPTIONAL_EMPTY,
-        bindings=(fed_by("m.manual", BindingSourceKind.MANUAL_INPUT),),
-    ).model_copy(
-        update={
-            "box": None,
-            "editability": ModeloFormEditability.NOT_WRITABLE,
-            "not_writable_reason": "absent_from_admission",
-            "source": ModeloFormValueSource(
-                family=SourceFamily.YOUR_ENTRIES, source_kind=BindingSourceKind.MANUAL_INPUT
-            ),
-        }
+    return revised_field(
+        form_field(
+            "900",
+            "Unnamed box",
+            ModeloFormOrigin.OPTIONAL_EMPTY,
+            bindings=(fed_by("m.manual", BindingSourceKind.MANUAL_INPUT),),
+        ),
+        box=None,
+        editability=ModeloFormEditability.NOT_WRITABLE,
+        not_writable_reason="absent_from_admission",
+        source=ModeloFormValueSource(family=SourceFamily.YOUR_ENTRIES, source_kind=BindingSourceKind.MANUAL_INPUT),
     )
 
 

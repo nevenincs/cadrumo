@@ -2,7 +2,14 @@
 
 The artefacts offered are the ones this installation can publish, probed in
 the worker that runs the export, so the filer never picks an export the
-installation would refuse. The payment and refund elections are asked for a
+installation would refuse. Each says whether it can be created now, and why
+not, by the same rules the export and the filing gates apply: the
+spreadsheet for review needs a calculation, the calculation report a checked
+calculation, and the file for the AEAT, like recording the filing, nothing
+that blocks filing or waits to be confirmed, as the header's hold says.
+Recording the filing also refuses while the latest file was made from an
+earlier calculation. Changes a frontend holds unapplied withhold both too; only
+that frontend knows them, so it adds that itself. The payment and refund elections are asked for a
 modelo whose official design declares both carrying a credit forward and
 asking for its refund, which is where the refund election exists; every other
 modelo exports with the neutral defaults. The file format is the one the
@@ -32,6 +39,8 @@ from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition, result_disposition_declares
 from ...domain.modelos.filing_record import AeatConfirmationState, ModeloRecordStatus
+from .work_form_header import ModeloFormExportHoldReason, export_hold, form_recorded
+from .work_form_models import ModeloWorkForm
 from .work_form_wording import day_text
 
 if TYPE_CHECKING:
@@ -89,13 +98,47 @@ class ModeloFormElection(StrEnum):
     PRIOR_DOMICILIATION = "prior_domiciliation"
 
 
+class ModeloFormUnavailable(StrEnum):
+    """Why an export, or recording the filing, cannot be done now."""
+
+    #: There is no calculation to export or record yet.
+    NOT_CALCULATED = "not_calculated"
+    #: The current calculation has not been checked.
+    NOT_VERIFIED = "not_verified"
+    #: Something blocks filing, found by the check or by the calculation.
+    BLOCKS = "blocks"
+    #: An assumed value waits for the filer to confirm it.
+    CONFIRM = "confirm"
+    #: The latest file for the AEAT was made from an earlier calculation, so it must be created again first.
+    FILE_OUT_OF_DATE = "file_out_of_date"
+    #: The declaration is already recorded as filed; changing it starts a correction.
+    RECORDED = "recorded"
+
+
+class ModeloFormAvailability(BaseModel):
+    """Whether an export, or recording the filing, can be done now, and if not why, in the filer's words."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    available: bool
+    reason: ModeloFormUnavailable | None = None
+    words: str | None = None
+
+    @model_validator(mode="after")
+    def _a_reason_exactly_when_unavailable(self) -> ModeloFormAvailability:
+        if (self.reason is None) is not self.available or (self.words is None) is not self.available:
+            raise ValueError("an unavailable action carries its reason and its words, and an available one neither")
+        return self
+
+
 class ModeloFormArtefactOption(BaseModel):
-    """One artefact the export offers, in the filer's words."""
+    """One artefact the export offers, in the filer's words, and whether it can be created now."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     artefact: ModeloExportArtefact
     words: str = Field(min_length=1)
+    availability: ModeloFormAvailability
 
 
 class ModeloFormElectionChoice(BaseModel):
@@ -135,6 +178,8 @@ class ModeloFormExportOffer(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     artefacts: tuple[ModeloFormArtefactOption, ...] = Field(min_length=1)
+    #: Whether the filing can be recorded now, and if not why.
+    record: ModeloFormAvailability
     asks_elections: bool
     elections: tuple[ModeloFormElectionQuestion, ...]
     file_format: ExportLayoutFormat | None
@@ -213,16 +258,96 @@ def _question[ElectionT: StrEnum](
     )
 
 
-def form_export_offer(modelo: str, snapshot: RegistrySnapshot, language: OutputLanguage) -> ModeloFormExportOffer:
-    """What exporting the declaration offers, in ``language``."""
+_AVAILABLE: Final = ModeloFormAvailability(available=True)
+_HOLD_REASONS: Final[Mapping[ModeloFormExportHoldReason, ModeloFormUnavailable]] = MappingProxyType(
+    {
+        ModeloFormExportHoldReason.BLOCKS: ModeloFormUnavailable.BLOCKS,
+        ModeloFormExportHoldReason.CONFIRM: ModeloFormUnavailable.CONFIRM,
+        ModeloFormExportHoldReason.VERIFY: ModeloFormUnavailable.NOT_VERIFIED,
+    }
+)
+_NOT_CALCULATED_LOCALE_KEY: Final = "workspace.modelo.next.calculate"
+_NOT_VERIFIED_LOCALE_KEY: Final = "workspace.modelo.export.verify_first"
+_RECORDED_LOCALE_KEY: Final = "workspace.modelo.filed.read_only"
+_FILE_OUT_OF_DATE_LOCALE_KEY: Final = "workspace.modelo.record.refused_file_out_of_date"
+
+
+def _unavailable(reason: ModeloFormUnavailable, words: str) -> ModeloFormAvailability:
+    return ModeloFormAvailability(available=False, reason=reason, words=words)
+
+
+def _held(form: ModeloWorkForm, language: OutputLanguage, *, verified: bool) -> ModeloFormAvailability | None:
+    """What withholds the file for the AEAT and recording the filing, as the header's hold says; ``None`` if nothing."""
+    locale = language.value
+    if form.calculation_revision_id is None:
+        return _unavailable(ModeloFormUnavailable.NOT_CALCULATED, tr(_NOT_CALCULATED_LOCALE_KEY, locale=locale))
+    hold = export_hold(form, language, verified=verified, recorded=False)
+    if hold is None:
+        return None
+    return _unavailable(_HOLD_REASONS[hold.reason], hold.words)
+
+
+def artefact_availability(
+    artefact: ModeloExportArtefact, form: ModeloWorkForm, language: OutputLanguage, *, verified: bool
+) -> ModeloFormAvailability:
+    """Whether ``artefact`` can be created from the declaration now, by the rules its export applies.
+
+    The spreadsheet for review is made from any calculation; a calculation
+    report only from a checked one; the file for the AEAT only once nothing
+    withholds filing.
+    """
+    locale = language.value
+    if form.calculation_revision_id is None:
+        return _unavailable(ModeloFormUnavailable.NOT_CALCULATED, tr(_NOT_CALCULATED_LOCALE_KEY, locale=locale))
+    if artefact is ModeloExportArtefact.CALCULATION_REVIEW_XLSX:
+        return _AVAILABLE
+    if artefact is ModeloExportArtefact.FICHERO_BOE:
+        return _held(form, language, verified=verified) or _AVAILABLE
+    if not verified:
+        return _unavailable(ModeloFormUnavailable.NOT_VERIFIED, tr(_NOT_VERIFIED_LOCALE_KEY, locale=locale))
+    return _AVAILABLE
+
+
+def record_availability(
+    form: ModeloWorkForm, language: OutputLanguage, *, verified: bool, filed: bool
+) -> ModeloFormAvailability:
+    """Whether the filing can be recorded now: not again, not while anything withholds it, not from a stale file."""
+    locale = language.value
+    if form_recorded(form, filed=filed):
+        return _unavailable(ModeloFormUnavailable.RECORDED, tr(_RECORDED_LOCALE_KEY, locale=locale))
+    held = _held(form, language, verified=verified)
+    if held is not None:
+        return held
+    export = form.last_export
+    if export is not None and not export.current:
+        words = tr(_FILE_OUT_OF_DATE_LOCALE_KEY, date=day_text(export.exported_at, language), locale=locale)
+        return _unavailable(ModeloFormUnavailable.FILE_OUT_OF_DATE, words)
+    return _AVAILABLE
+
+
+def form_export_offer(
+    modelo: str,
+    snapshot: RegistrySnapshot,
+    language: OutputLanguage,
+    *,
+    form: ModeloWorkForm,
+    verified: bool,
+    filed: bool,
+) -> ModeloFormExportOffer:
+    """What exporting the declaration offers, in ``language``, and what of it can be done now."""
     locale = language.value
     asks = asks_export_elections(modelo)
     file_format = revision_file_format(snapshot)
     return ModeloFormExportOffer(
         artefacts=tuple(
-            ModeloFormArtefactOption(artefact=artefact, words=tr(EXPORT_ARTEFACT_LOCALE_KEYS[artefact], locale=locale))
+            ModeloFormArtefactOption(
+                artefact=artefact,
+                words=tr(EXPORT_ARTEFACT_LOCALE_KEYS[artefact], locale=locale),
+                availability=artefact_availability(artefact, form, language, verified=verified),
+            )
             for artefact in offered_export_artefacts()
         ),
+        record=record_availability(form, language, verified=verified, filed=filed),
         asks_elections=asks,
         elections=(
             (
@@ -278,14 +403,18 @@ __all__ = [
     "PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS",
     "REFUND_ELECTION_LOCALE_KEYS",
     "ModeloFormArtefactOption",
+    "ModeloFormAvailability",
     "ModeloFormElection",
     "ModeloFormElectionChoice",
     "ModeloFormElectionQuestion",
     "ModeloFormExportOffer",
     "ModeloFormReceipt",
+    "ModeloFormUnavailable",
+    "artefact_availability",
     "asks_export_elections",
     "form_export_offer",
     "form_receipt",
     "offered_export_artefacts",
+    "record_availability",
     "revision_file_format",
 ]

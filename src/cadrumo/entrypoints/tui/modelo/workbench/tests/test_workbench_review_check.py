@@ -35,6 +35,7 @@ from ......application.modelo.work_form_models import (
     ModeloWorkForm,
     address_key,
     edit_address,
+    revised_field,
 )
 from ......application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_work_form_changes
 from ......application.modelo.work_form_wording import editability_text
@@ -293,7 +294,7 @@ def _with_withholding(form: ModeloWorkForm, value: Decimal, origin: ModeloFormOr
                         update={
                             "blocks": tuple(
                                 block.model_copy(
-                                    update={"field": block.field.model_copy(update={"value": value, "origin": origin})}
+                                    update={"field": revised_field(block.field, value=value, origin=origin)}
                                 )
                                 if isinstance(block, ModeloFormFieldBlock) and block.field.box == "06"
                                 else block
@@ -351,8 +352,8 @@ def test_a_change_that_no_longer_applies_is_dropped_on_rebase() -> None:
                             "blocks": tuple(
                                 block.model_copy(
                                     update={
-                                        "field": block.field.model_copy(
-                                            update={"editability": ModeloFormEditability.LOCKED_SOURCE}
+                                        "field": revised_field(
+                                            block.field, editability=ModeloFormEditability.LOCKED_SOURCE
                                         )
                                     }
                                 )

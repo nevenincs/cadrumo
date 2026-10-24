@@ -36,19 +36,32 @@ from ....domain.modelos.filing_record import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
+from ....domain.modelos.verification_report import VerificationCompletenessStatus
+from ..calculation_note_gate import gate_refuses
+from ..calculation_notes import CALCULATION_NOTE_ATTENTION, CHECK_REFUSED_REASONS, GATE_REFUSED_REASONS
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..work_form_export_offer import (
     ModeloFormElection,
+    ModeloFormUnavailable,
     asks_export_elections,
     form_export_offer,
     form_receipt,
     revision_file_format,
 )
-from ..work_form_models import ModeloFormEditability, ModeloFormOrigin, map_form_fields, revised_field
+from ..work_form_header import export_hold
+from ..work_form_models import (
+    TYPED_EDITABILITIES,
+    ModeloFormCalculationNote,
+    ModeloFormEditability,
+    ModeloFormExport,
+    ModeloFormOrigin,
+    ModeloWorkForm,
+    map_form_fields,
+    revised_field,
+)
 from ..work_form_service import ModeloWorkFormLoadV1
 from ..work_form_typing_effect import (
-    TYPED_EDITABILITIES,
     ModeloFormDisplacement,
     form_typing_effects,
     typing_effect_words,
@@ -64,6 +77,13 @@ _FILED_AT = datetime(2026, 4, 18, 9, 0, tzinfo=UTC)
 _VERIFIED_AT = datetime(2026, 4, 20, 10, 0, tzinfo=UTC)
 
 
+def _offer(operation: PinnedAuthorityOperation, modelo: str, year: int, code: str):
+    form = built_form(operation, modelo, year, code, entered=frozenset())
+    return form_export_offer(
+        modelo, form_snapshot(operation, modelo, year, code), _EN, form=form, verified=False, filed=False
+    )
+
+
 def test_elections_are_asked_exactly_where_the_terminal_asked_them(operation: PinnedAuthorityOperation) -> None:
     """The workbench asked the payment and refund elections for Modelo 303 and no other modelo."""
     asked = {modelo for modelo in operation.modelo_ids() if asks_export_elections(modelo)}
@@ -74,8 +94,8 @@ def test_elections_are_asked_exactly_where_the_terminal_asked_them(operation: Pi
 def test_a_modelo_303_asks_its_three_elections_preset_to_their_neutral_defaults(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    offer = form_export_offer("303", form_snapshot(operation, "303", 2026, "1T"), _EN)
-    other = form_export_offer("130", form_snapshot(operation, "130", 2026, "1T"), _EN)
+    offer = _offer(operation, "303", 2026, "1T")
+    other = _offer(operation, "130", 2026, "1T")
 
     questions = {question.election: question for question in offer.elections}
     assert offer.asks_elections and set(questions) == set(ModeloFormElection)
@@ -90,7 +110,7 @@ def test_a_modelo_303_asks_its_three_elections_preset_to_their_neutral_defaults(
 
 
 def test_the_artefacts_offered_follow_the_installed_extras(operation: PinnedAuthorityOperation) -> None:
-    offer = form_export_offer("130", form_snapshot(operation, "130", 2026, "1T"), _EN)
+    offer = _offer(operation, "130", 2026, "1T")
 
     artefacts = tuple(option.artefact for option in offer.artefacts)
     assert artefacts[0] is ModeloExportArtefact.FICHERO_BOE
@@ -110,7 +130,7 @@ def test_the_file_format_is_the_one_the_revisions_export_layout_declares(
     operation: PinnedAuthorityOperation, modelo: str, year: int, code: str, expected: ExportLayoutFormat
 ) -> None:
     snapshot = form_snapshot(operation, modelo, year, code)
-    offer = form_export_offer(modelo, snapshot, _EN)
+    offer = _offer(operation, modelo, year, code)
 
     assert revision_file_format(snapshot) is expected
     assert offer.file_format is expected and offer.file_format_words
@@ -208,7 +228,9 @@ def test_the_public_read_carries_the_offer_receipt_and_typing_words(operation: P
         asks_modelo_390=False,
         registry_revision_id=form.registry_revision_id,
         tax_id_format=runtime_tax_id_format(authority=operation),
-        export_offer=form_export_offer("303", form_snapshot(operation, "303", 2026, "1T"), _EN),
+        export_offer=form_export_offer(
+            "303", form_snapshot(operation, "303", 2026, "1T"), _EN, form=form, verified=True, filed=True
+        ),
         receipt=form_receipt(_record(), recorded_at=_FILED_AT, language=_EN),
     )
 
@@ -218,3 +240,91 @@ def test_the_public_read_carries_the_offer_receipt_and_typing_words(operation: P
     assert projection.export_offer == read.export_offer and projection.receipt == read.receipt
     assert projection.typing_effects == read.typing_effects
     assert restored == read and restored.receipt_confirmed is False
+
+
+_HELD_210: dict[str, Decimal | str] = {"rendimientos_integros": Decimal("1200.00"), "tipo_renta": "01"}
+
+
+def _availability(form: ModeloWorkForm, operation: PinnedAuthorityOperation, *, verified: bool, filed: bool = False):
+    offer = form_export_offer(
+        "210", form_snapshot(operation, "210", 2025, "0A"), _EN, form=form, verified=verified, filed=filed
+    )
+    return {option.artefact: option.availability for option in offer.artefacts}, offer.record
+
+
+def _entered_210(operation: PinnedAuthorityOperation, **update: object) -> ModeloWorkForm:
+    form = built_form(operation, "210", 2025, "0A", held=_HELD_210, entered=frozenset(_HELD_210))
+    return form.model_copy(update=update)
+
+
+def test_nothing_is_offered_before_a_calculation(operation: PinnedAuthorityOperation) -> None:
+    artefacts, record = _availability(_entered_210(operation), operation, verified=False)
+
+    assert {item.reason for item in (*artefacts.values(), record)} == {ModeloFormUnavailable.NOT_CALCULATED}
+    assert all(item.words for item in (*artefacts.values(), record))
+
+
+def test_an_unchecked_calculation_offers_only_the_review_spreadsheet(operation: PinnedAuthorityOperation) -> None:
+    artefacts, record = _availability(
+        _entered_210(operation, calculation_revision_id="c" * 64), operation, verified=False
+    )
+
+    assert artefacts[ModeloExportArtefact.CALCULATION_REVIEW_XLSX].available
+    for artefact in (ModeloExportArtefact.FICHERO_BOE, ModeloExportArtefact.CALCULATION_REPORT_CSV):
+        assert artefacts[artefact].reason is ModeloFormUnavailable.NOT_VERIFIED, artefact
+    assert record.reason is ModeloFormUnavailable.NOT_VERIFIED
+
+
+def test_a_checked_clean_calculation_offers_every_artefact_and_the_recording(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    form = _entered_210(
+        operation, calculation_revision_id="c" * 64, verification=VerificationCompletenessStatus.COMPLETE
+    )
+
+    artefacts, record = _availability(form, operation, verified=True)
+
+    assert all(item.available for item in artefacts.values()), artefacts
+    assert record.available
+
+
+def test_what_blocks_filing_withholds_the_file_and_the_recording_but_not_the_reports(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    reason = sorted(GATE_REFUSED_REASONS - CHECK_REFUSED_REASONS)[0]
+    note = ModeloFormCalculationNote(
+        reason=reason, attention=CALCULATION_NOTE_ATTENTION[reason], withholds_filing=gate_refuses(reason, None)
+    )
+    form = _entered_210(
+        operation,
+        calculation_revision_id="c" * 64,
+        verification=VerificationCompletenessStatus.COMPLETE,
+        calculation_notes=(note,),
+    )
+
+    artefacts, record = _availability(form, operation, verified=True)
+    hold = export_hold(form, _EN, verified=True, recorded=False)
+
+    assert hold is not None
+    assert artefacts[ModeloExportArtefact.FICHERO_BOE].reason is ModeloFormUnavailable.BLOCKS
+    assert artefacts[ModeloExportArtefact.FICHERO_BOE].words == hold.words
+    assert record.reason is ModeloFormUnavailable.BLOCKS
+    assert artefacts[ModeloExportArtefact.CALCULATION_REPORT_CSV].available
+
+
+def test_a_file_from_an_earlier_calculation_withholds_the_recording_and_a_recorded_one_is_not_recorded_again(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    clean = _entered_210(
+        operation, calculation_revision_id="c" * 64, verification=VerificationCompletenessStatus.COMPLETE
+    )
+    stale = clean.model_copy(
+        update={"last_export": ModeloFormExport(exported_at=_FILED_AT, calculation_revision_id="d" * 64, current=False)}
+    )
+
+    artefacts, record = _availability(stale, operation, verified=True)
+    _, recorded = _availability(clean, operation, verified=True, filed=True)
+
+    assert artefacts[ModeloExportArtefact.FICHERO_BOE].available
+    assert record.reason is ModeloFormUnavailable.FILE_OUT_OF_DATE
+    assert recorded.reason is ModeloFormUnavailable.RECORDED

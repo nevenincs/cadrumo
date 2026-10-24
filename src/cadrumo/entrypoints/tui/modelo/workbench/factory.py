@@ -183,9 +183,7 @@ class InstalledModeloWorkbench:
         self._state = _ReadState(
             read=read,
             baseline=admission.baseline if isinstance(admission, ModeloEditAdmittedV1) else None,
-            edit_refusal=(
-                edit_refusal_words(admission.refusal, language) if isinstance(admission, ModeloEditRefusedV1) else None
-            ),
+            edit_refusal=read.admission_refusal_words,
         )
         return read.load
 

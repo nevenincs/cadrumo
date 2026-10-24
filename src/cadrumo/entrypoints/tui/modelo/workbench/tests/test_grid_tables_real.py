@@ -571,8 +571,9 @@ def test_a_box_the_form_sets_shows_its_figure_or_a_dot_and_never_a_word(operatio
 async def test_a_box_the_design_fixes_without_a_figure_reads_as_a_dot_in_a_grid(width: int) -> None:
     form = synthetic_form()
     page = workbench_pages(form)[0]
-    fixed_box = form_field("98", "Clave fija", ModeloFormOrigin.INFORMATIONAL, None).model_copy(
-        update={"editability": ModeloFormEditability.DESIGN_CONSTANT}
+    fixed_box = revised_field(
+        form_field("98", "Clave fija", ModeloFormOrigin.INFORMATIONAL, None),
+        editability=ModeloFormEditability.DESIGN_CONSTANT,
     )
     grid_section = page.sections[1]
     grid = grid_section.blocks[0]

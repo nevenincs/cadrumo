@@ -173,6 +173,10 @@ class PublicModeloFormField(BaseModel):
     restorable: bool
     filers_own: bool
     confirm_value: ModeloEditWireScalar
+    takes_typed_value: bool
+    clearable: bool
+    own_value: ModeloEditWireScalar
+    state_digest: str
 
 
 class PublicModeloFormFieldBlock(BaseModel):
@@ -406,6 +410,10 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
     form: PublicModeloWorkFormLoadV1
     admitted_baseline: ModeloEditApplyBaselineV1 | None
     admission_refusal: ModeloEditRefusedV1 | None
+    #: Why the declaration cannot be edited, as one sentence in the form's language; ``None`` once admitted.
+    admission_refusal_words: str | None = None
+    #: Whether the registry rules for the revision stop short of calculation grade, so nothing can be worked out.
+    rules_incomplete: bool = False
     #: The one action the form offers next, ``None`` when the registry rules for the revision cannot calculate it.
     next_step: ModeloFormNextStep | None
     #: What the header states: the attention counts, the result, the deadline, the latest file and any hold.
@@ -520,6 +528,8 @@ def project_modelo_workbench_form(
             else None
         ),
         admission_refusal=admission if isinstance(admission, ModeloEditRefusedV1) else None,
+        admission_refusal_words=read.admission_refusal_words,
+        rules_incomplete=read.rules_incomplete,
         next_step=read.next_step,
         header=read.header,
         issue_lines=read.issue_lines,
@@ -539,6 +549,8 @@ def project_modelo_workbench_form(
         restored != read
         or restored.typing_effects != projection.typing_effects
         or restored.next_step != projection.next_step
+        or restored.admission_refusal_words != projection.admission_refusal_words
+        or restored.rules_incomplete is not projection.rules_incomplete
         or restored.header != projection.header
         or restored.issue_lines != projection.issue_lines
         or restored.verdict != projection.verdict

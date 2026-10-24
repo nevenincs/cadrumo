@@ -95,11 +95,14 @@ from .edit_review_wording import (
 from .edit_transient_operand import modelo_edit_financial_operand
 from .edit_value_grammar import ModeloEditValueGrammarV1
 from .work_amend_correction import correction_value_grammars
+from .work_form_models import comparable_entry
+from .work_form_rebase import ModeloFormRebaseEntryV1, ModeloFormStagedChangeV1, rebase_report
 from .work_form_service import modelo_form_snapshot
 from .work_lifecycle import get_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .workbench_projection import ModeloWorkbenchFormProjectionV1, project_modelo_workbench_form
 from .workbench_read import (
+    ModeloWorkbenchReadPorts,
     ModeloWorkbenchReadPortsFactory,
     modelo_edit_prerequisite_source_boxes,
     read_modelo_casilla_help,
@@ -119,6 +122,7 @@ type OperationContractsProvider = Callable[[], OperationPublicContractSetV1]
 """The public contract set of the registry these definitions are composed into."""
 
 _BoundedText = Annotated[str, Field(min_length=1, max_length=128)]
+_MAX_STAGED: Final[int] = 500
 
 
 # -- requests -----------------------------------------------------------------
@@ -146,12 +150,15 @@ class ModeloCasillaHelpRequest(CredentialFreeOperationRequest):
 class ModeloEditRenewRequest(CredentialFreeOperationRequest):
     """The baseline an edit session holds, to renew before review or submission.
 
-    ``output_language`` is the language a refusal is said in.
+    ``output_language`` is the language a refusal is said in. ``staged`` are
+    the changes the session holds, by box, kind and the box's state when each
+    was staged, never a value; the result says what becomes of each.
     """
 
     profile_id: UUID
     baseline: ModeloEditApplyBaselineV1
     output_language: OutputLanguage
+    staged: Annotated[tuple[ModeloFormStagedChangeV1, ...], Field(max_length=_MAX_STAGED)] = ()
 
 
 class ModeloEditApplyPrerequisiteRequest(CredentialFreeOperationRequest):
@@ -194,6 +201,8 @@ class ModeloEditRenewalProjectionV1(BaseModel):
     refusal: ModeloEditRefusedV1 | None
     #: Why the renewal was refused, in the language the request named; ``None`` when it was renewed.
     refusal_words: str | None = None
+    #: What becomes of each change the request held, on the declaration as it stands, in the order held.
+    rebase: tuple[ModeloFormRebaseEntryV1, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -226,6 +235,9 @@ class ModeloEditTypedEntryV1(BaseModel):
     value_text: str | None = None
     #: Why the entry cannot be read, as one sentence in the entry's language.
     refusal_words: str | None = None
+    #: The value as two entries of it compare, the form a box's ``own_value`` takes: an entry whose
+    #: comparable value is the box's own value changes nothing. ``None`` for an entry that cannot be read.
+    comparable_value: ModeloEditWireScalar = None
 
     @classmethod
     def from_outcome(
@@ -239,6 +251,7 @@ class ModeloEditTypedEntryV1(BaseModel):
                 address=outcome.address,
                 value=wire_scalar_value(outcome.value),
                 normalisations=outcome.normalisations,
+                comparable_value=comparable_entry(outcome.value),
                 value_text=entry_read_back(
                     outcome.value, data_type=grammar_data_type(grammar, outcome.address), language=language
                 ),
@@ -461,11 +474,33 @@ class ModeloEditRenewExecutor:
                     if isinstance(renewal, ModeloEditRefusedV1)
                     else None
                 ),
+                rebase=self._rebase(payload, bucket_id=bucket_id, ports=ports, operation=operation),
             )
 
         return await _read(
             context, phase=MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID, task_name="modelo-edit-renew", read=read
         )
+
+    def _rebase(
+        self,
+        payload: ModeloEditRenewRequest,
+        *,
+        bucket_id: str,
+        ports: ModeloWorkbenchReadPorts,
+        operation: PinnedAuthorityOperation,
+    ) -> tuple[ModeloFormRebaseEntryV1, ...]:
+        """Judge each held change against the declaration as a fresh read of its form shows it."""
+        if not payload.staged:
+            return ()
+        current = read_modelo_workbench_form(
+            payload.baseline.work_unit_id,
+            bucket_id=bucket_id,
+            ports=ports,
+            operation=operation,
+            operation_contracts=self._contracts(),
+            language=payload.output_language,
+        )
+        return rebase_report(payload.staged, current.load.form)
 
 
 def _correction_grammars(

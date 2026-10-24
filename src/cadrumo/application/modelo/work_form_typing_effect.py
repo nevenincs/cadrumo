@@ -20,22 +20,12 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from .source_policy import SourceFamily
 from .work_form_models import (
     ModeloFormAddressV1,
-    ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
     ModeloWorkForm,
     address_key,
 )
 from .work_form_wording import period_words
-
-#: Editabilities under which the filer may type a value on the field itself.
-TYPED_EDITABILITIES: Final[frozenset[ModeloFormEditability]] = frozenset(
-    {
-        ModeloFormEditability.EDITABLE_VALUE,
-        ModeloFormEditability.EDITABLE_OVERRIDE,
-        ModeloFormEditability.OVERRIDABLE_SOURCE,
-    }
-)
 
 
 class ModeloFormDisplacement(StrEnum):
@@ -102,7 +92,7 @@ def typing_effect_words(field: ModeloFormField, language: OutputLanguage | None 
 
 def field_typing_effect_words(field: ModeloFormField, language: OutputLanguage) -> str | None:
     """What typing over ``field`` does, or ``None`` when the filer cannot type a value on it."""
-    if field.editability not in TYPED_EDITABILITIES:
+    if not field.takes_typed_value:
         return None
     return typing_effect_words(field, language)
 
@@ -137,7 +127,6 @@ def form_typing_effects(form: ModeloWorkForm, language: OutputLanguage) -> tuple
 __all__ = [
     "CLEAR_EFFECT_LOCALE_KEY",
     "RESTORE_EFFECT_LOCALE_KEY",
-    "TYPED_EDITABILITIES",
     "TYPING_EFFECTS",
     "ModeloFormDisplacement",
     "ModeloFormTypingEffect",

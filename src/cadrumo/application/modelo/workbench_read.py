@@ -28,8 +28,9 @@ from ...domain.modelos.work_unit import WorkUnit
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .casilla_help import ModeloCasillaHelpCardV1, build_casilla_help_card
 from .edit_admission import admit_modelo_edit_baseline
-from .edit_models import ModeloEditAdmissionResultV1
+from .edit_models import ModeloEditAdmissionResultV1, ModeloEditRefusedV1
 from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1
+from .edit_review_wording import edit_refusal_words
 from .m303_exonerado_390_applicability_attestation import modelo_390_question_asked
 from .verification_report_facts import granting_verification_report
 from .work_form_export_offer import ModeloFormExportOffer, ModeloFormReceipt, form_export_offer, form_receipt
@@ -121,9 +122,22 @@ class ModeloWorkbenchFormReadV1:
         return None if receipt is None else receipt.verified
 
     @property
+    def rules_incomplete(self) -> bool:
+        """Whether the registry rules for the revision stop short of calculation grade, so nothing can be worked out."""
+        return registry_grade_refusal(self.admission)
+
+    @property
+    def admission_refusal_words(self) -> str | None:
+        """Why the declaration cannot be edited, as one sentence in the form's language; ``None`` once admitted."""
+        admission = self.admission
+        if not isinstance(admission, ModeloEditRefusedV1):
+            return None
+        return edit_refusal_words(admission.refusal, self.load.form.language)
+
+    @property
     def next_step(self) -> ModeloFormNextStep | None:
         """The one action the form offers next; ``None`` when the registry rules cannot calculate it at all."""
-        if registry_grade_refusal(self.admission):
+        if self.rules_incomplete:
             return None
         load = self.load
         return form_next_step(
@@ -215,6 +229,9 @@ def read_modelo_workbench_form(
             str(unit.modelo),
             modelo_form_snapshot(operation, unit.modelo, unit.filing_year, unit.period, form.registry_revision_id),
             language,
+            form=form,
+            verified=loaded.verified,
+            filed=loaded.filed,
         ),
         receipt=_receipt(unit, loaded, ports=ports, language=language),
     )

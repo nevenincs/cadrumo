@@ -15,7 +15,6 @@ from .....application.modelo.work_form_models import (
     ModeloFormValueSource,
     ModeloWorkForm,
 )
-from .....application.modelo.work_form_typing_effect import TYPED_EDITABILITIES
 from .....application.modelo.work_form_wording import (
     SOURCE_WORDED_ORIGINS,
     holds_nothing,
@@ -51,7 +50,7 @@ def _unreachable_entry(field: ModeloFormField) -> bool:
     return (
         source is not None
         and source.family is SourceFamily.YOUR_ENTRIES
-        and field.editability not in TYPED_EDITABILITIES
+        and not field.takes_typed_value
         and holds_nothing(field.value)
     )
 

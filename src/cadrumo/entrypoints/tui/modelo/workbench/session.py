@@ -35,14 +35,17 @@ from .....application.modelo.work_form_models import (
     ModeloFormScalar,
     ModeloWorkForm,
     address_key,
+    comparable_entry,
     confirmable,
     edit_address,
 )
-from .....application.modelo.work_form_typing_effect import (
-    TYPED_EDITABILITIES,
-    ModeloFormDisplacement,
-    field_displacement,
+from .....application.modelo.work_form_rebase import (
+    ModeloFormRebaseOutcome,
+    ModeloFormStagedChangeV1,
+    ModeloFormStagedKind,
+    rebase_outcome,
 )
+from .....application.modelo.work_form_typing_effect import ModeloFormDisplacement, field_displacement
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .casilla_list_models import AddressKey, CasillaListEntry
@@ -82,6 +85,13 @@ class StagedChange:
     def change(self) -> WorkbenchChange:
         """The typed change the application receives."""
         return WorkbenchChange(address=edit_address(self.field), kind=self.kind, value=self.value)
+
+    @property
+    def held(self) -> ModeloFormStagedChangeV1:
+        """The change as the application judges it again: its box, its kind, and the box as it stood."""
+        return ModeloFormStagedChangeV1(
+            address=self.field.address, kind=ModeloFormStagedKind(self.kind.value), held_state=self.field.state_digest
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,10 +155,10 @@ class WorkbenchEditSession:
         when unchanged: an assumed value kept unchanged is staged, because
         keeping it is how the filer confirms it.
         """
-        if field.editability not in TYPED_EDITABILITIES:
+        if not field.takes_typed_value:
             return StageRefusal.NOT_EDITABLE
         key = address_key(field.address)
-        if value == field.value and field.origin in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}:
+        if field.own_value is not None and comparable_entry(value) == field.own_value:
             self._changes.pop(key, None)
             return None
         self._changes[key] = StagedChange(
@@ -184,7 +194,7 @@ class WorkbenchEditSession:
         """
         if field.editability is not ModeloFormEditability.EDITABLE_VALUE:
             return StageRefusal.NOT_EDITABLE
-        if field.origin is not ModeloFormOrigin.ENTERED:
+        if not field.clearable:
             return StageRefusal.NOTHING_TO_CLEAR
         self._changes[address_key(field.address)] = StagedChange(
             field=field,
@@ -224,11 +234,17 @@ class WorkbenchEditSession:
         dropped: list[StagedChange] = []
         for key, change in staged.items():
             field = fields.get(key)
-            if field is None or self._restage(change, field) is not None or key not in self._changes:
+            outcome = rebase_outcome(change.held, field)
+            if (
+                field is None
+                or outcome is ModeloFormRebaseOutcome.DROPPED
+                or self._restage(change, field) is not None
+                or key not in self._changes
+            ):
                 self._changes.pop(key, None)
                 dropped.append(change)
                 continue
-            if (field.value, field.origin) != (change.field.value, change.field.origin):
+            if outcome is ModeloFormRebaseOutcome.CHANGED:
                 marked = self._changes[key]
                 self._changes[key] = StagedChange(
                     field=marked.field,

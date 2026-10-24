@@ -14,11 +14,15 @@ from .....application.modelo.operation_definitions import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
+from .....application.modelo.work_form_export_offer import (
+    ModeloFormUnavailable,
+    artefact_availability,
+    record_availability,
+)
 from .....application.modelo.work_form_header import ModeloFormExportHoldReason, export_hold
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_work_form_changes
-from .....application.modelo.work_form_wording import day_text
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
@@ -37,7 +41,6 @@ from .ports import ModeloWorkbenchActionsV1, WorkbenchExportRequest
 from .result import WorkbenchResultScreen, result_lines
 from .screen_constants import (
     _CHECKED_LOCALE_KEYS,
-    _FILE_OUT_OF_DATE_LOCALE_KEY,
     _NEXT_KEYS,
     _SELF_REPORTING_OPERATIONS,
     _VALUE_CHANGING_OPERATIONS,
@@ -59,11 +62,13 @@ class WorkbenchOperationMixin:
         again; there is no way past this but a new file, or a correction when
         the older file was already filed.
         """
-        form = self.form
-        export = None if form is None else form.last_export
-        if export is None or export.current:
+        load = self._load
+        if load is None:
             return False
-        self._notice(tr(_FILE_OUT_OF_DATE_LOCALE_KEY, date=day_text(export.exported_at, self._language)))
+        record = record_availability(load.form, self._language, verified=load.verified, filed=self.recorded)
+        if record.reason is not ModeloFormUnavailable.FILE_OUT_OF_DATE:
+            return False
+        self._notice(record.words or "")
         return True
 
     def _filing_withheld(self: ModeloWorkbenchScreen) -> bool:
@@ -108,14 +113,10 @@ class WorkbenchOperationMixin:
             self._filing_withheld()
             return
         offer = actions.export_offer()
-        filing_ready = load.verified and not self._progress(load).filing_withheld
         artefacts = tuple(
             artefact
             for artefact in offer.artefacts
-            if (
-                artefact is ModeloExportArtefact.CALCULATION_REVIEW_XLSX
-                or (filing_ready if artefact is ModeloExportArtefact.FICHERO_BOE else load.verified)
-            )
+            if artefact_availability(artefact, load.form, self._language, verified=load.verified).available
         )
         if not artefacts:
             if self._filing_withheld():

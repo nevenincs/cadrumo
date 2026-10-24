@@ -63,7 +63,6 @@ from .....application.modelo.work_form_models import (
     ModeloFormOrigin,
     ModeloFormScalar,
 )
-from .....application.modelo.work_form_typing_effect import TYPED_EDITABILITIES
 from .....application.modelo.work_form_wording import editability_text
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
@@ -175,7 +174,7 @@ def read_only_reason(field: ModeloFormField, language: OutputLanguage, *, record
     """
     if recorded:
         return tr(_RECORDED_LOCALE_KEY)
-    if field.editability in TYPED_EDITABILITIES:
+    if field.takes_typed_value:
         return None
     return can_change_text(field, language)
 
