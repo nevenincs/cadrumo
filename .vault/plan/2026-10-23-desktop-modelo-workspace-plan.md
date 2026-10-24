@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:3ba225f61b693c0e5f1bc42845168292864fa5219d51fc4e61d1000b427e164a'
+body_hash: 'sha256:5c5ed07130a2877c205bb5a87230d02fa526cb9ca2559e3246b2b0a2a09495a3'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -101,6 +101,7 @@ Promote the round-3 prototype into product components on the application's field
 - [x] `P04.S50` - Re-stage each kept edit against the renewed box through the staging path after a renewal, keep changed marks until acknowledged, and carry the staged kind on the intent; `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`.
 - [x] `P04.S53` - Act on a rebase report only from an evaluated preflight, render the export offer's review package availability, and correct the staged field's comment; `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`.
 - [x] `P04.S55` - Recover from a refused renewal as the application allows, by re-reading the form and checking the held changes on its fresh baseline, remove the renewal-keyed report branch, and let a check that loses the renewal claim adopt the renewal's outcome; `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`.
+- [ ] `P04.S57` - Re-read once after a refused renewal and say the declaration is still changing on a second stale check, as the TUI does, and key the notice by the box rather than its edit address; `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`.
 
 ### Phase `P05` - Proof
 
@@ -113,6 +114,7 @@ Prove the workspace in the browser and the packaged window over real envelopes, 
 - [x] `P05.S51` - Produce renewal envelopes from real staged changes with kept, changed and dropped outcomes and prove the window renders and applies each; `native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [x] `P05.S54` - Produce the stale preflight with the held changes and prove the real two-preflight renewal sequence renews once and keeps the dropped notice; `native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [x] `P05.S56` - Produce the stale check and the refused renewal from the baseline the window holds before the declaration moved, check the renewal request's baseline in the scenario host, and prove the refused-renewal, re-read and evaluated-check recovery; `native/desktop/frontend/scripts/modelo_fixtures.py`.
+- [ ] `P05.S58` - Compare held states in the scenario host, prove a check stale again after a refused renewal stops, seed the renewal profile on its frozen clock, and assert the granted-renewal call sequence; `native/desktop/frontend/src/dev/modeloFixture.ts`.
 
 ## Parallelization
 

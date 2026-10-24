@@ -174,6 +174,23 @@ The review of the stale-preflight fixes (`9a503d410f`, `790d21f36f`, independent
 ### renewal-guard-loser-wedge | low | A check that loses the renewal claim waits on a renewal whose failure it never sees
 `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts:89` returns checking for the losing check, whose ticket then discards the winning renewal's failure, leaving the dialog busy with Back and Discard disabled; a re-read failure after a renewal is discarded the same way.
 
+The review of the refused-renewal recovery (`4c1b5c81da`, independent opus lane, 2026-10-25) passed: renewal-scenario-not-the-applications and renewal-guard-loser-wedge are resolved, and Apply stays disabled while a report is pending. New findings follow.
+
+### rerenewal-unbounded | medium | After a refused renewal, a check stale again renews and re-reads without limit
+`native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts:92` treats a stale check as final only after a granted renewal, so while the declaration keeps moving each refused renewal is followed by another journaled renewal; the TUI re-reads once and then says the declaration is still changing (`src/cadrumo/entrypoints/tui/modelo/workbench/screen_review.py:65`).
+
+### host-held-state-unchecked | medium | The scenario host does not compare a held change's state, which alone decides kept versus changed
+`native/desktop/frontend/src/dev/modeloFixture.ts:284` keys held changes on address and kind while `rebase_outcome` turns on `held_state` (`src/cadrumo/application/modelo/work_form_rebase.py:108`), so a window sending a stale held state would still be served a recorded answer.
+
+### frozen-profile-real-seed | low | The renewal profile is recalculated on the real clock and read earlier on the frozen one
+`native/desktop/frontend/scripts/modelo_fixtures.py:1500` against the docstring at `:1123`.
+
+### moved-key-by-address | low | The notice keys a box by its edit address, which a restage can change
+`native/desktop/frontend/src/components/modelo/form/session.ts:487`.
+
+### renewal-spec-weak | low | The granted-renewal scenario does not assert its call sequence or final check
+`native/desktop/frontend/tests/scenarios/modelo.spec.ts:646`.
+
 Verified sound by the plan-close review: the closed admitted list pinned to the manifest, exact-profile filling and subject binding, files as session tokens, unknown versus refused on every mutation path with no resend, no logging or web storage in the Modelo host and components, typed entries only through the edit port with the buffer zeroed, list, header, next step, issue lines, sources, AEAT notes and receipt from shared producers, theme-only styling, missing drawn as a dash, and the prototype's interaction design unchanged.
 
 Verified sound: the next-step ladder and missing-value count are identical to the removed TUI code; origin, editability and source wording are faithful moves; no TUI module re-exports a moved name; the public round trip covers the new fields; the list read is exact-profile with whole-profile consent and no commit action; neither relay names a definition, the runtime refuses definitions without a financial operand, and both relays drop or overwrite the input after sending; every moved catalogue key exists in all four languages. Not verified by the reviewer: the full TUI and Rust suites (relying on the ledger's results), the full type and Ruff gates, the S02 mutation claim, and a live end-to-end financial submit through the Rust relay to a worker.
