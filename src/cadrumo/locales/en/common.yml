@@ -2992,7 +2992,6 @@ desktop:
         order: Order
         rule: Rule
       contains: Contains “{words}”
-      dry_run_counts: '{skipped} already classified · {none} without a match'
       edit: 'Edit: {rule}'
       edit_title: Rule
       empty: No rules yet.

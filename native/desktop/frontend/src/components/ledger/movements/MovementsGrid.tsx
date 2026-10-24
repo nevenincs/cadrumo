@@ -1,7 +1,13 @@
-import type { ComponentProps, ReactNode, Ref } from "react";
+import {
+  useContext,
+  type ComponentProps,
+  type ReactNode,
+  type Ref,
+} from "react";
 import {
   DataGrid,
   DataGridRowCheckbox,
+  type CellContext,
   type CellDescription,
   type DataGridHandle,
   type EditorContext,
@@ -10,6 +16,7 @@ import {
 import { Icon } from "@/components/ui/icon";
 import type { LedgerRow } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { GridRoomContext } from "../gridRoom";
 import {
   AmountCell,
   CountCell,
@@ -131,7 +138,10 @@ function movementColumns(
     (column: ColumnId, draw: (row: LedgerRow) => ReactNode) =>
     (row: LedgerRow) =>
       isMissing(context, row, column) ? <Missing t={t} /> : draw(row);
-  const draw: Record<ColumnId, (row: LedgerRow) => ReactNode> = {
+  const draw: Record<
+    ColumnId,
+    (row: LedgerRow, cell?: CellContext) => ReactNode
+  > = {
     select: (row) => (
       <DataGridRowCheckbox
         rowKey={id(row)}
@@ -140,7 +150,8 @@ function movementColumns(
         })}
       />
     ),
-    status: (row) => (
+    // Narrowed beside a tight grid, the status draws its glyph alone.
+    status: (row, cell) => (
       <StatusCell
         row={row}
         issues={
@@ -148,7 +159,7 @@ function movementColumns(
             ? (context.readiness.issues.get(id(row))?.length ?? 0)
             : null
         }
-        wordy={context.density === "comfortable"}
+        wordy={context.density === "comfortable" && !cell?.narrowed}
         duplicate={context.duplicates?.has(id(row)) ?? false}
       />
     ),
@@ -266,6 +277,16 @@ function movementColumns(
     const spec = COLUMN_SPECS[column];
     const name = t(`desktop.ledger.column.${column}`);
     const width = context.widths[column];
+    // A glyph column's header is its glyph; `label` carries the word. The
+    // status header's glyph names the column, not a status.
+    const glyph = (
+      <span title={name} className="inline-flex">
+        <Icon name={column === "invoice" ? "link" : "selectAll"} size="xs" />
+        <span className="sr-only">{name}</span>
+      </span>
+    );
+    const wordyStatus =
+      column === "status" && context.density === "comfortable";
     return {
       id: column,
       label: name,
@@ -276,20 +297,21 @@ function movementColumns(
             extent={context.extent}
             onSelect={context.onSelectShown}
           />
-        ) : column === "invoice" ||
-          (column === "status" && context.density === "compact") ? (
-          // A glyph column's header is its glyph; `label` carries the word.
-          // The status header's glyph names the column, not a status.
-          <span title={name} className="inline-flex">
-            <Icon
-              name={column === "invoice" ? "link" : "selectAll"}
-              size="xs"
-            />
-            <span className="sr-only">{name}</span>
-          </span>
+        ) : column === "invoice" || column === "status" ? (
+          wordyStatus ? (
+            name
+          ) : (
+            glyph
+          )
         ) : (
           name
         ),
+      ...(wordyStatus
+        ? {
+            narrowWidth: statusWidth("compact", context.statusMarks),
+            narrowHeader: glyph,
+          }
+        : {}),
       width:
         width ??
         (column === "status"
@@ -302,12 +324,12 @@ function movementColumns(
         ? { grow: spec.grow }
         : {}),
       ...(spec.sticky ? { sticky: spec.sticky } : {}),
-      ...(spec.yields ? { yields: true } : {}),
       ...(spec.align ? { align: spec.align } : {}),
       sortable: spec.sortable && context.sortable(column),
       resizable: column !== "select",
       cell: editing
-        ? (row) => editing.decorate(row, column, () => draw[column](row))
+        ? (row, cell) =>
+            editing.decorate(row, column, () => draw[column](row, cell))
         : draw[column],
       ...(editing?.editor(column) ? { editor: editing.editor(column) } : {}),
       ...(editing?.readOnlyReason(column)
@@ -371,6 +393,7 @@ export function MovementsGrid({
       .filter(Boolean)
       .join(" · ");
   };
+  const { onLeast } = useContext(GridRoomContext);
   const describeCell = (key: string, column: string) => {
     const edited = context.editing?.describeCell(key, column);
     if (edited) return edited;
@@ -387,6 +410,7 @@ export function MovementsGrid({
     <DataGrid
       ref={gridRef}
       columns={columns}
+      onLeast={onLeast}
       positionLabel={(row, count) =>
         t("desktop.ledger.position", { row, count })
       }

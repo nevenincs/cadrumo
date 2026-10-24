@@ -1625,6 +1625,9 @@ export function MovementsSection({
         moreColumnsLabel={(count) =>
           t("desktop.ledger.columns.more_name", { count })
         }
+        earlierColumnsLabel={(count) =>
+          t("desktop.ledger.columns.earlier_name", { count })
+        }
         className="ledger-grid rounded-md"
         label={t("desktop.ledger.grid", { period: shownPeriod })}
         rows={drawnGridRows}

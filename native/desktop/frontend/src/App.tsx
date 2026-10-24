@@ -275,6 +275,8 @@ export function App({ host }: { host: Host }) {
   const initial = useMemo(loadState, []);
   const [prefs, setPrefs] = useState<Prefs>(initial.prefs);
   const [layout, setLayout] = useState<Layout>(initial.layout);
+  // The least width the Ledger page asks beside the agent, while it shows.
+  const [ledgerFloor, setLedgerFloor] = useState<number | null>(null);
   const setMaximized = useCallback((update: SetStateAction<Maximized>) => {
     setLayout((current) => ({
       ...current,
@@ -615,7 +617,9 @@ export function App({ host }: { host: Host }) {
   // floor beside the main area's shows the agent only on its own: alone in
   // the window, or maximized.
   const besideRail = Math.max(0, viewportWidth - railWidth);
-  const agentFits = besideRail >= agentMin + splitMinA;
+  // The main area's floor: the split's, or more where the page shown asks.
+  const mainMin = Math.max(splitMinA, ledgerVisible ? (ledgerFloor ?? 0) : 0);
+  const agentFits = besideRail >= agentMin + mainMin;
   const mainOccupied = firstPaneShown || tuiVisible || panelVisible;
   // The agent works only for a profile signed in here: signed out, it is
   // not there at all, and it comes back as it was laid out on signing in.
@@ -2622,9 +2626,9 @@ export function App({ host }: { host: Host }) {
   // window too narrow for its floor and the split's shares the room between
   // them in proportion, as the bottom panel shares the height.
   const clampAgent = (width: number) =>
-    besideRail < agentMin + splitMinA
-      ? Math.round((besideRail * agentMin) / (agentMin + splitMinA))
-      : Math.max(agentMin, Math.min(besideRail - splitMinA, width));
+    besideRail < agentMin + mainMin
+      ? Math.round((besideRail * agentMin) / (agentMin + mainMin))
+      : Math.max(agentMin, Math.min(besideRail - mainMin, width));
   const agentWidth = clampAgent(Math.round(layout.agentRatio * besideRail));
   const setAgentWidth = (width: number) =>
     besideRail > 0 &&
@@ -2635,7 +2639,7 @@ export function App({ host }: { host: Host }) {
   const orientation =
     prefs.orientation === "row" &&
     besideRail - (agentVisible && !maximized ? agentWidth : 0) <
-      splitMinA + splitMinBRow
+      mainMin + splitMinBRow
       ? "column"
       : prefs.orientation;
 
@@ -2952,6 +2956,7 @@ export function App({ host }: { host: Host }) {
             memory={ledgerKept.memory}
             contribute={contribute}
             copy={(text) => host.writeClipboard(text)}
+            onFloor={setLedgerFloor}
             pane={{
               title: t("desktop.ledger.title"),
               onToggleMaximize: () => toggleMaximize("docs"),
@@ -3373,7 +3378,7 @@ export function App({ host }: { host: Host }) {
                     }
                     onLimit={(limit) =>
                       setAgentWidth(
-                        limit === "min" ? agentMin : besideRail - splitMinA,
+                        limit === "min" ? agentMin : besideRail - mainMin,
                       )
                     }
                     onReset={() =>
@@ -3401,7 +3406,7 @@ export function App({ host }: { host: Host }) {
                       reversed={prefs.order === "tui"}
                       ratio={layout.splitRatio}
                       onRatio={(ratio) => patch({ splitRatio: ratio })}
-                      minA={splitMinA}
+                      minA={orientation === "row" ? mainMin : splitMinA}
                       minB={orientation === "row" ? splitMinBRow : splitMinBCol}
                       a={docsPane}
                       b={tuiPane}

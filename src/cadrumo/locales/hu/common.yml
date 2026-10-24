@@ -3017,7 +3017,6 @@ desktop:
         order: Sorrend
         rule: Szabály
       contains: 'Tartalmazza: „{words}”'
-      dry_run_counts: '{skipped} már besorolva · {none} egyezés nélkül'
       edit: 'Szerkesztés: {rule}'
       edit_title: Szabály
       empty: Még nincs szabály.

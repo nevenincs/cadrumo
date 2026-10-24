@@ -60,8 +60,6 @@ export type ColumnSpec = {
   minWidth?: number;
   grow?: number;
   sticky?: "start" | "end";
-  /** Pinned only while the grid leaves the scrolling columns room. */
-  yields?: true;
   align?: "end";
   /** Sortable on a window read whole. */
   sortable: boolean;
@@ -74,14 +72,12 @@ export const COLUMN_SPECS: Record<ColumnId, ColumnSpec> = {
   // Compact rows draw the status as a glyph alone; see `statusWidth`.
   status: { width: 7.5, sticky: "start", sortable: true },
   date: { width: 4.5, sticky: "start", sortable: true, server: "date" },
-  // What a movement is stays in view while its other columns scroll,
-  // unless the grid is too narrow to show a scrolling cell whole beside it.
+  // What a movement is stays in view while its other columns scroll.
   description: {
     width: 12,
     minWidth: 12,
     grow: 2,
     sticky: "start",
-    yields: true,
     sortable: true,
     server: "description",
   },

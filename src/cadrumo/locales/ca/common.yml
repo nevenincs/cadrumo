@@ -3036,7 +3036,6 @@ desktop:
         order: Ordre
         rule: Regla
       contains: Conté «{words}»
-      dry_run_counts: '{skipped} ja classificats · {none} sense coincidència'
       edit: 'Edita: {rule}'
       edit_title: Regla
       empty: Encara no hi ha regles.

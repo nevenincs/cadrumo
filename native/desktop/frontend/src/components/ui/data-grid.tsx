@@ -40,7 +40,13 @@ import {
 } from "@/components/ui/dataGridModel";
 
 /** What a cell's renderer knows of where it stands. */
-type CellContext = { key: string; active: boolean; selected: boolean };
+type CellContext = {
+  key: string;
+  active: boolean;
+  selected: boolean;
+  /** The column is drawn at its narrower width. */
+  narrowed: boolean;
+};
 
 /** What an editor needs: the key that opened it, its accessible name and
  * description, and the two ways out. */
@@ -72,9 +78,11 @@ type GridColumn<R> = {
   grow?: number;
   /** Pinned at an inline edge while the rest scrolls. */
   sticky?: "start" | "end";
-  /** A start column that scrolls with the rest where pinning it would leave
-   * too narrow a band to show a scrolling cell whole. */
-  yields?: boolean;
+  /** The narrower width, in rem, a pinned column takes where the pinned
+   * groups would otherwise leave no scrolling column room to show whole. */
+  narrowWidth?: number;
+  /** The header drawn at the narrower width. */
+  narrowHeader?: React.ReactNode;
   /** `end` for figures, which also take tabular numerals. */
   align?: "start" | "end";
   sortable?: boolean;
@@ -214,6 +222,12 @@ type DataGridProps<R> = {
   /** Names the header's cue for columns scrolled out of view under the
    * pinned end group; without it no cue is drawn. */
   moreColumnsLabel?: (count: number) => string;
+  /** Names the cue for columns scrolled out of view under the pinned start
+   * group; without it no cue is drawn. */
+  earlierColumnsLabel?: (count: number) => string;
+  /** Told the least width, in CSS pixels of the whole grid, at which any
+   * scrolling column can be shown whole beside the pinned ones. */
+  onLeast?: (width: number) => void;
 };
 
 type Active = { key: string | null; column: string };
@@ -423,6 +437,8 @@ function DataGrid<R>({
   overscan = 6,
   className,
   moreColumnsLabel,
+  earlierColumnsLabel,
+  onLeast,
 }: DataGridProps<R>) {
   const gridId = React.useId();
   const scroller = React.useRef<HTMLDivElement>(null);
@@ -567,6 +583,13 @@ function DataGrid<R>({
     () => columnLayout(ordered, remPx, view.width),
     [ordered, remPx, view.width],
   );
+  // What the grid draws around its columns: its frame and a scroll bar.
+  React.useLayoutEffect(() => {
+    const element = scroller.current;
+    if (!onLeast || !element?.parentElement) return;
+    const frame = element.parentElement.offsetWidth - element.clientWidth;
+    onLeast(Math.ceil(layout.least + Math.max(0, frame)));
+  }, [onLeast, layout.least, view.width]);
 
   const bodyHeight = Math.max(0, view.height - headerPx);
   const range = visibleRange(tops, view.top, bodyHeight, overscan);
@@ -1340,7 +1363,6 @@ function DataGrid<R>({
   // ── Drawing ───────────────────────────────────────────────────────────
   // Where columns scroll under a pinned group, the group's inner edge shows,
   // so nothing seems to begin mid-word.
-  // Pinned as laid out: a yielding column may scroll in a narrow grid.
   const pinned = (id: string) => layout.byId.get(id)?.sticky;
   const lastStart = layout.boxes
     .filter((placed) => placed.sticky === "start")
@@ -1376,6 +1398,42 @@ function DataGrid<R>({
       first.left + first.width - element.clientWidth + layout.endCover;
     syncView();
   };
+  // And those scrolled out of view under the pinned start group, which a
+  // cue at its inner edge names and scrolls back to, the nearest first.
+  const shownLeft = view.left + layout.startCover;
+  const before = layout.boxes.filter(
+    (placed) => !placed.sticky && placed.left < shownLeft - 1,
+  );
+  const revealBefore = () => {
+    const element = scroller.current;
+    const last = before.at(-1);
+    if (!element || !last) return;
+    element.scrollLeft = last.left - layout.startCover;
+    syncView();
+  };
+  const earlierCue =
+    earlierColumnsLabel && before.length > 0 && view.width > 0 ? (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            tabIndex={-1}
+            data-slot="data-grid-earlier-columns"
+            aria-label={earlierColumnsLabel(before.length)}
+            className="absolute inset-y-0 start-full inline-flex items-center gap-0.5 border-e border-border bg-background px-1.5 text-xs font-medium text-muted-foreground tabular-nums hover:text-foreground"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation();
+              revealBefore();
+            }}
+          >
+            <Icon name="back" size="xs" />
+            <span aria-hidden="true">+{before.length}</span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{earlierColumnsLabel(before.length)}</TooltipContent>
+      </Tooltip>
+    ) : null;
   const moreCue =
     moreColumnsLabel && beyond.length > 0 && view.width > 0 ? (
       <Tooltip>
@@ -1462,7 +1520,13 @@ function DataGrid<R>({
               }}
             >
               {column.id === firstEnd && moreCue}
-              <span className="min-w-0 truncate">{column.header}</span>
+              {column.id === lastStart && earlierCue}
+              <span className="min-w-0 truncate">
+                {layout.byId.get(column.id)?.narrowed &&
+                column.narrowHeader !== undefined
+                  ? column.narrowHeader
+                  : column.header}
+              </span>
               {sorted && (
                 <Icon
                   name={sorted === "asc" ? "sortAsc" : "sortDesc"}
@@ -1633,6 +1697,7 @@ function DataGrid<R>({
                       key: row.key,
                       active: activeHere,
                       selected,
+                      narrowed: layout.byId.get(column.id)?.narrowed === true,
                     })}
                   </CellStateContext.Provider>
                 )}

@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useReducer,
   useRef,
@@ -91,7 +92,8 @@ import type { SectionInspectorContext } from "./inspector/inspectorContext";
 import type { InspectorSection } from "./inspector/inspectorModel";
 import { LedgerInspector } from "./inspector/LedgerInspector";
 import type { InspectorFocus } from "./inspector/MovementInspector";
-import type { RightPanelMode } from "./inspector/RightPanel";
+import { panelRowFloor, type RightPanelMode } from "./inspector/RightPanel";
+import { GridRoomContext } from "./gridRoom";
 import { MatchQueue } from "./matching/MatchQueue";
 import { useSealedMovements } from "./useSealedMovements";
 import { PausedBanner, usePagePause, WritePauseContext } from "./WritePause";
@@ -123,6 +125,7 @@ export function LedgerPage({
   pane,
   contribute,
   copy,
+  onFloor,
 }: {
   port: LedgerPort;
   /** Whose ledger, or null while the account withholds it. */
@@ -145,6 +148,9 @@ export function LedgerPage({
   contribute(actions: (() => Action[]) | null): void;
   /** Puts text on the clipboard through the host. */
   copy(text: string): Promise<void>;
+  /** Tells the window the least width the page needs beside the agent, in
+   * CSS pixels, or null where it needs no more than any pane. */
+  onFloor?(width: number | null): void;
 }) {
   const t = useStrings();
   const panel = useId();
@@ -732,6 +738,30 @@ export function LedgerPage({
     !(periodWindow.phase === "failed" && periodWindow.failure) &&
     drawnRows !== null &&
     !(drawnRows.total === 0 && stage.content.drafts.length === 0);
+  // The grid keeps beside the panel the least it needs to show any
+  // scrolling column whole, with what its column draws around it; the
+  // window makes the room from the agent column rather than squeezing it.
+  const row = useRef<HTMLDivElement>(null);
+  const [gridLeast, setGridLeast] = useState<number | null>(null);
+  const [columnFloor, setColumnFloor] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const column = row.current?.firstElementChild;
+    const drawn = column?.querySelector<HTMLElement>("[data-slot=data-grid]");
+    setColumnFloor(
+      inspectorShown && gridLeast !== null && column && drawn
+        ? gridLeast + Math.max(0, column.clientWidth - drawn.offsetWidth)
+        : null,
+    );
+  }, [inspectorShown, gridLeast]);
+  const gridRoom = useMemo(
+    () => ({ columnFloor, onLeast: setGridLeast }),
+    [columnFloor],
+  );
+  useLayoutEffect(() => {
+    if (!onFloor) return;
+    onFloor(inspectorShown ? panelRowFloor(columnFloor) : null);
+    return () => onFloor(null);
+  }, [inspectorShown, columnFloor, onFloor]);
 
   // A link's movement is asked of the page, which holds it until the grid
   // draws it. A read that ends empty or fails draws no grid, so the page
@@ -857,75 +887,84 @@ export function LedgerPage({
             className="flex min-h-0 flex-1 flex-col"
           >
             {readable && <PausedBanner pause={pause} />}
-            <div className="flex min-h-0 flex-1" onKeyDown={onInspectorKey}>
-              {/* The grid scrolls within what the panel leaves it; resizing
+            <GridRoomContext.Provider value={gridRoom}>
+              <div
+                ref={row}
+                className="flex min-h-0 flex-1"
+                onKeyDown={onInspectorKey}
+              >
+                {/* The grid scrolls within what the panel leaves it; resizing
                 the panel keeps it its own width. */}
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                {movementMissing && (
-                  <div className="px-3 pt-3">
-                    <RowRevealNotice
-                      notice={{ kind: "missing" }}
-                      dismiss={() => setMovementMissing(false)}
-                      hidden={t("desktop.ledger.reveal.movement_hidden")}
-                      missing={t("desktop.ledger.reveal.movement_missing")}
-                    />
-                  </div>
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                  {movementMissing && (
+                    <div className="px-3 pt-3">
+                      <RowRevealNotice
+                        notice={{ kind: "missing" }}
+                        dismiss={() => setMovementMissing(false)}
+                        hidden={t("desktop.ledger.reveal.movement_hidden")}
+                        missing={t("desktop.ledger.reveal.movement_missing")}
+                      />
+                    </div>
+                  )}
+                  {body}
+                </div>
+                {inspectorShown && periodWindow && (
+                  <LedgerInspector
+                    port={port}
+                    reader={reader}
+                    rows={shownRows(periodWindow)?.rows ?? []}
+                    generation={periodWindow.generation}
+                    stage={stage}
+                    onStage={editing.onStage}
+                    sealed={sealed}
+                    unread={unread}
+                    selection={movements.selection}
+                    onSelection={movements.setSelection}
+                    context={inspectorContext}
+                    mode={panelMode}
+                    onMode={setPanelMode}
+                    matchPanel={
+                      <MatchQueue
+                        port={port}
+                        reader={reader}
+                        shown={panelMode === "match"}
+                        rows={shownRows(periodWindow)?.rows ?? null}
+                        generation={
+                          periodWindow.phase === "ready"
+                            ? periodWindow.generation
+                            : null
+                        }
+                        stage={stage}
+                        onStage={editing.onStage}
+                        onChoose={(id) => {
+                          movements.setSelection(new Set([id]));
+                          openInspector("invoice");
+                        }}
+                        locale={locale}
+                      />
+                    }
+                    width={view.inspectorWidth}
+                    onWidth={(inspectorWidth) =>
+                      onViewChange((current) => ({
+                        ...current,
+                        inspectorWidth,
+                      }))
+                    }
+                    focus={inspectorFocus}
+                    locale={locale}
+                    panelRef={inspectorPanel}
+                    onClose={closeInspector}
+                    onOpenInvoice={(invoiceId) => {
+                      setSection("invoices");
+                      setInvoiceEditor({ kind: "open", invoiceId });
+                    }}
+                    onExport={() => setTransfer("export")}
+                    onMakeRule={openRuleFromSelection}
+                    copy={copy}
+                  />
                 )}
-                {body}
               </div>
-              {inspectorShown && periodWindow && (
-                <LedgerInspector
-                  port={port}
-                  reader={reader}
-                  rows={shownRows(periodWindow)?.rows ?? []}
-                  generation={periodWindow.generation}
-                  stage={stage}
-                  onStage={editing.onStage}
-                  sealed={sealed}
-                  unread={unread}
-                  selection={movements.selection}
-                  onSelection={movements.setSelection}
-                  context={inspectorContext}
-                  mode={panelMode}
-                  onMode={setPanelMode}
-                  matchPanel={
-                    <MatchQueue
-                      port={port}
-                      reader={reader}
-                      shown={panelMode === "match"}
-                      rows={shownRows(periodWindow)?.rows ?? null}
-                      generation={
-                        periodWindow.phase === "ready"
-                          ? periodWindow.generation
-                          : null
-                      }
-                      stage={stage}
-                      onStage={editing.onStage}
-                      onChoose={(id) => {
-                        movements.setSelection(new Set([id]));
-                        openInspector("invoice");
-                      }}
-                      locale={locale}
-                    />
-                  }
-                  width={view.inspectorWidth}
-                  onWidth={(inspectorWidth) =>
-                    onViewChange((current) => ({ ...current, inspectorWidth }))
-                  }
-                  focus={inspectorFocus}
-                  locale={locale}
-                  panelRef={inspectorPanel}
-                  onClose={closeInspector}
-                  onOpenInvoice={(invoiceId) => {
-                    setSection("invoices");
-                    setInvoiceEditor({ kind: "open", invoiceId });
-                  }}
-                  onExport={() => setTransfer("export")}
-                  onMakeRule={openRuleFromSelection}
-                  copy={copy}
-                />
-              )}
-            </div>
+            </GridRoomContext.Provider>
           </div>
         </section>
         {readable && editing.dock}

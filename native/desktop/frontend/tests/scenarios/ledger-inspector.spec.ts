@@ -972,8 +972,13 @@ test("at 1280 with the agent open, the inspector narrows the agent so the grid k
     "aria-pressed",
     "true",
   );
+  // The agent laid out as wide as it goes, which leaves the page the least
+  // any pane keeps.
   const agent = target.locator("aside.agent-column");
+  await target.locator(".agent-separator").focus();
+  await target.keyboard.press("End");
   const agentBefore = (await agent.boundingBox())!.width;
+  expect(agentBefore).toBeGreaterThan(640);
   await inspect(target, "PAPELERIA TRAZO");
   // The agent stays open, narrower, and the room is the grid's.
   await expect(agent).toBeVisible();
@@ -1016,6 +1021,7 @@ test("at 1280 with the agent open, the inspector narrows the agent so the grid k
   expect(Math.abs(description.x - pinnedAt)).toBeLessThan(1);
   expect(cell.x).toBeGreaterThanOrEqual(description.x + description.width - 1);
   // Closed, the panel gives the agent back the width it was laid out at.
+  await body(target).focus();
   await target.keyboard.press("Escape");
   await expect(panel(target)).toHaveCount(0);
   await expect

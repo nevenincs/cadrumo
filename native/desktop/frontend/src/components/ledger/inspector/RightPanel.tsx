@@ -1,4 +1,5 @@
 import {
+  useContext,
   useLayoutEffect,
   useRef,
   useState,
@@ -12,6 +13,7 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { useStrings } from "../../../shell/strings";
+import { GridRoomContext } from "../gridRoom";
 
 /** What the panel beside the grid shows: the pair queue of the To match
  * view, or the inspector of the selected movements. */
@@ -29,6 +31,18 @@ const MAX_SHARE = 0.6;
 const remPx = () =>
   parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
 
+/** The least the grid's column keeps beside the panel, in CSS pixels: its
+ * own, or more where the grid needs it to show a scrolling column whole. */
+const columnLeast = (columnFloor: number | null, rem: number) =>
+  Math.max(GRID_MIN_REM * rem, columnFloor ?? 0);
+
+/** The least the row of grid and panel takes, in CSS pixels: both at their
+ * least, and the separator's line between them. */
+export const panelRowFloor = (columnFloor: number | null) => {
+  const rem = remPx();
+  return Math.ceil(columnLeast(columnFloor, rem) + MIN_REM * rem) + 1;
+};
+
 /** The width the panel is drawn at, in CSS pixels: the person's, or the
  * token's, narrowed toward its least where the row would otherwise leave the
  * grid less than its own. Null keeps the token's width. */
@@ -36,12 +50,13 @@ export function fittedPanelWidth(
   width: number | null,
   room: number | null,
   rem: number,
+  columnFloor: number | null = null,
 ): number | null {
   const wanted = width ?? DEFAULT_REM * rem;
   if (room === null) return width;
   const fitted = Math.max(
     MIN_REM * rem,
-    Math.min(wanted, room - GRID_MIN_REM * rem),
+    Math.min(wanted, room - columnLeast(columnFloor, rem)),
   );
   return fitted === wanted ? width : Math.round(fitted);
 }
@@ -77,6 +92,7 @@ export function RightPanel({
   children: ReactNode;
 }) {
   const t = useStrings();
+  const { columnFloor } = useContext(GridRoomContext);
   const aside = useRef<HTMLElement | null>(null);
   // What the row leaves the grid and the panel: its width less the
   // separator's.
@@ -103,7 +119,10 @@ export function RightPanel({
     const min = MIN_REM * rem;
     const max = Math.max(
       min,
-      Math.min(window.innerWidth * MAX_SHARE, row - GRID_MIN_REM * rem),
+      Math.min(
+        window.innerWidth * MAX_SHARE,
+        row - columnLeast(columnFloor, rem),
+      ),
     );
     return { min, max, rem };
   };
@@ -119,7 +138,7 @@ export function RightPanel({
   const rem = remPx();
   const least = MIN_REM * rem;
   const most = Math.max(least, window.innerWidth * MAX_SHARE);
-  const fitted = fittedPanelWidth(width, room, rem);
+  const fitted = fittedPanelWidth(width, room, rem, columnFloor);
   const drawn = fitted ?? DEFAULT_REM * rem;
   const value = Math.max(
     0,

@@ -3041,7 +3041,6 @@ desktop:
         order: Orden
         rule: Regla
       contains: Contiene «{words}»
-      dry_run_counts: '{skipped} ya clasificados · {none} sin coincidencia'
       edit: 'Editar: {rule}'
       edit_title: Regla
       empty: Aún no hay reglas.
