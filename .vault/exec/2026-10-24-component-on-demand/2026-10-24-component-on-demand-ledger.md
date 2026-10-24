@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:f1553176d1fb8674a84d85c75298c93b52b879ed9171fe9fff55d0b9603eeadf'
+body_hash: 'sha256:3a975859fc8be40238cbb3aafaf3d3a00a07ab30cf34bcc784fd54ac3f7bed2e'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -64,7 +64,48 @@ related:
 - `S04` `verify:` `browser, auth, preflight, runtime auth, provisioning_browser pytest (151 passed; 2 live-only test_live_evasion need CADRUMO_LIVE_TESTS_ENABLED)` -> `pass`
 - `S04` `verify:` `live operation caller pytest (128)` -> `pass`
 - `S04` `verify:` `ruff check/format, ty` -> `pass`
+- `S03` `M` `src/cadrumo/adapters/inbound/financial/ledger_import.py`
+- `S03` `M` `src/cadrumo/adapters/inbound/financial/providers/_mapped_tabular.py`
+- `S03` `M` `src/cadrumo/adapters/inbound/financial/providers/base.py`
+- `S03` `M` `src/cadrumo/adapters/inbound/financial/providers/detection.py`
+- `S03` `M` `src/cadrumo/adapters/inbound/financial/providers/tests/test_mapped_tabular_fallback.py`
+- `S03` `A` `src/cadrumo/adapters/inbound/financial/providers/tests/test_mapped_tabular_reader_unavailable.py`
+- `S03` `A` `src/cadrumo/adapters/inbound/financial/tests/test_column_reader_unavailable_import.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/llm/column_role_mapping.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/llm/supply_nature_proposal.py`
+- `S03` `A` `src/cadrumo/adapters/outbound/llm/tests/test_role_reader_unavailable_is_reported.py`
+- `S03` `M` `src/cadrumo/application/ledger/actions_import.py`
+- `S03` `M` `src/cadrumo/application/ledger/column_roles.py`
+- `S03` `M` `src/cadrumo/application/ledger/import_ports.py`
+- `S03` `M` `src/cadrumo/application/ledger/protocols.py`
+- `S03` `M` `src/cadrumo/core/errors/registry/_domain_part1.py`
+- `S03` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S03` `verify:` `new reader-unavailable llm/import/lane pytest (11+3+3)` -> `pass`
+- `S03` `verify:` `covering callers pytest (430 passed; 1 failure from another session's uncommitted LocalStatementReader)` -> `pass`
+- `S03` `verify:` `ruff, ty, pyrefly, basedpyright, lint-imports, check-operation-contract-manifest` -> `pass`
+- `S02` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S02` `M` `src/cadrumo/application/ledger/invoice_draft_extraction.py`
+- `S02` `M` `src/cadrumo/application/ledger/invoice_draft_extraction_ports.py`
+- `S02` `M` `src/cadrumo/application/ledger/invoice_draft_payloads.py`
+- `S02` `M` `src/cadrumo/application/ledger/invoice_draft_records.py`
+- `S02` `M` `src/cadrumo/application/ledger/invoice_evidence_operation_dtos.py`
+- `S02` `M` `src/cadrumo/application/ledger/tests/test_evidence_followup_operation.py`
+- `S02` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_operation_dtos.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/ledger_evidence_batch_results.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_batch_cli.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_llm_vision_classifier.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_llm_vision_evidence.py`
+- `S02` `M` `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/ledger_llm_composition.py`
+- `S02` `A` `src/cadrumo/entrypoints/tests/test_evidence_reader_precheck.py`
+- `S02` `M` `src/cadrumo/tests/llm_vision_evidence_support.py`
+- `S02` `verify:` `extraction, classification, batch, label-reader, DTO, CLI, TUI and runtime-host pytest (474)` -> `pass`
+- `S02` `verify:` `runtime host ledger suites (202)` -> `pass`
+- `S02` `verify:` `pre-check removed: new tests fail (mutation check)` -> `pass`
+- `S02` `verify:` `ruff, ty, lint-imports` -> `pass`
 
 ## Notes
 
 - `S04` Start checks sit in entrypoint preflight bindings and an auth port, not under application/live, because application may not import the adapter's BrowserError; the refusal settles FAILED `(FAIL_BROWSER_SESSION_BROWSER)` until S05 adds a REFUSED code
+- `S03` Supply-nature proposals have no production caller, so their `reader_unavailable` verdict reaches no operation result yet; invoice bulk intake's silent decline moves to S10; the mapping refusal reason is an English adapter sentence until S05 words it
+- `S02` Pre-checks sit in the reader wiring (entrypoints) so injected test readers stay unaffected; the label fallback stays a success and now carries `recovery_action_id;` batch ingest unchanged
