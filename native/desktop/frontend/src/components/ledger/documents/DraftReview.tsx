@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,9 +46,11 @@ import { reconcile, stageLink, stagedLinks } from "../matching/matchingModel";
 import { invoiceLine } from "../matching/matchingWords";
 import { dayText } from "../transfer/transferWords";
 import {
+  CORRECTION_SHAPES,
   confirmation,
   countryAdmitted,
   duplicateOf,
+  fieldWidth,
   provenanceOf,
   readCorrection,
   readValue,
@@ -298,6 +300,7 @@ export function DraftReview({
   onStage,
   onWritten,
   onConfirmed,
+  onLinkStaged,
   say,
 }: {
   port: LedgerPort;
@@ -315,6 +318,9 @@ export function DraftReview({
   onWritten(): void;
   /** The reading was confirmed: it leaves the queue. */
   onConfirmed(reference: string): void;
+  /** The confirmed invoice's link was staged: the flow moves on to the
+   * next document. */
+  onLinkStaged(): void;
   say(text: string): void;
 }) {
   const t = useStrings();
@@ -356,6 +362,15 @@ export function DraftReview({
   );
   const countryId = useId();
   const currencyId = useId();
+  const root = useRef<HTMLDivElement>(null);
+  // After a confirmation the next step is its link, when one is offered;
+  // otherwise the confirmation itself, so the focus is never left behind
+  // on the button that went away.
+  useEffect(() => {
+    if (!confirmed) return;
+    const at = root.current;
+    (at?.querySelector<HTMLElement>(".ledger-match-link") ?? at)?.focus();
+  }, [confirmed]);
 
   const view = read.value;
   const draft = view?.draft ?? null;
@@ -532,7 +547,11 @@ export function DraftReview({
         : null;
     const linkStaged = staged.invoices.get(invoice.invoice_id);
     return (
-      <div className="ledger-draft-confirmed grid gap-3 p-3">
+      <div
+        ref={root}
+        tabIndex={-1}
+        className="ledger-draft-confirmed grid gap-3 p-3"
+      >
         <Alert tone="success" icon={<Icon name="check" />}>
           <AlertTitle>
             {confirmed.confirmation.created
@@ -596,6 +615,7 @@ export function DraftReview({
                         ),
                       );
                       say(t("desktop.ledger.matching.staged_toast"));
+                      onLinkStaged();
                     }}
                   >
                     <Icon name="lock" size="xs" />
@@ -671,7 +691,7 @@ export function DraftReview({
   ).length;
 
   return (
-    <div className="ledger-draft grid gap-4 p-3">
+    <div ref={root} className="ledger-draft grid gap-4 p-3">
       <div className="flex flex-wrap items-start gap-2">
         <div className="grid min-w-0 flex-1 gap-0.5">
           <h3 className="text-md font-semibold [overflow-wrap:anywhere]">
@@ -843,7 +863,10 @@ export function DraftReview({
                   <td className="py-1 pr-2">
                     <Input
                       controlSize="sm"
-                      className="ledger-draft-input tabular-nums"
+                      className={`ledger-draft-input tabular-nums ${fieldWidth(
+                        CORRECTION_SHAPES[row.field],
+                        row.field === "counterparty_name",
+                      )}`}
                       aria-label={fieldLabel(t, row.field)}
                       aria-invalid={refused ? true : undefined}
                       maxLength={1024}
@@ -959,7 +982,13 @@ export function DraftReview({
                 size="xs"
                 variant="link"
                 className="ledger-draft-country-read w-fit"
-                onClick={() => setCountry(readCountry)}
+                onClick={() => {
+                  setCountry(readCountry);
+                  // The country was the last thing asked: confirming is next.
+                  root.current
+                    ?.querySelector<HTMLElement>(".ledger-draft-confirm")
+                    ?.focus();
+                }}
               >
                 {t("desktop.ledger.documents.as_read", { value: readCountry })}
               </Button>

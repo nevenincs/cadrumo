@@ -40,6 +40,24 @@ export const NOTE_MAX = 16_384;
 /** What a field holds, which decides how a typed value is read. */
 export type FieldShape = "text" | "date" | "amount" | "percent" | "currency";
 
+/** How wide a field of `shape` is drawn, as a spacing utility: a figure
+ * or a rate needs a few digits, a date its ten characters; a name takes
+ * the row and other text the theme's field width. Never wider than where
+ * it sits. */
+export function fieldWidth(shape: FieldShape | "note", name = false): string {
+  const width =
+    shape === "amount" || shape === "percent"
+      ? "w-32"
+      : shape === "date"
+        ? "w-40"
+        : shape === "currency"
+          ? "w-24"
+          : name || shape === "note"
+            ? "w-full"
+            : "w-field";
+  return `${width} max-w-full`;
+}
+
 /** A field the reading table shows. `party` fields belong to the
  * supplier or the customer, and which is the counterparty depends on the
  * invoice's kind. */

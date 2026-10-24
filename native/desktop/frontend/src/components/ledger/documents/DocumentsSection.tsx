@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
@@ -66,6 +66,7 @@ export function DocumentsSection({
   // Readings confirmed here, kept in the list until another is chosen so
   // the confirmation and its link offer stay on screen.
   const [done, setDone] = useState<ReadonlySet<string>>(new Set());
+  const queueList = useRef<HTMLUListElement>(null);
   useEffect(() => {
     if (!toast) return;
     const timer = window.setTimeout(() => setToast(null), TOAST_MS);
@@ -159,6 +160,24 @@ export function DocumentsSection({
           id: reference.slice(0, 12),
         });
   };
+  /** Moves the focus on to the next document still to review after the
+   * one shown, wrapping round; with none left, to the one shown. */
+  const focusNext = () => {
+    const items = [
+      ...(queueList.current?.querySelectorAll<HTMLElement>(
+        ".ledger-review-item",
+      ) ?? []),
+    ];
+    const at = items.findIndex(
+      (item) => item.dataset.reference === selected?.evidence_reference,
+    );
+    const after = [...items.slice(at + 1), ...items.slice(0, Math.max(at, 0))];
+    const next =
+      after.find((item) => !done.has(item.dataset.reference ?? "")) ??
+      items[at] ??
+      null;
+    next?.focus();
+  };
   const openReview = (reference: string) => {
     rereadAll();
     setDone(new Set());
@@ -218,6 +237,7 @@ export function DocumentsSection({
     review = (
       <div className="flex min-h-0 flex-1">
         <ul
+          ref={queueList}
           className="ledger-review-queue min-h-0 w-1/3 shrink-0 overflow-y-auto border-r border-border"
           aria-label={t("desktop.ledger.documents.queue")}
         >
@@ -294,6 +314,7 @@ export function DocumentsSection({
               onConfirmed={(reference) =>
                 setDone((held) => new Set([...held, reference]))
               }
+              onLinkStaged={focusNext}
               say={setToast}
             />
           )}

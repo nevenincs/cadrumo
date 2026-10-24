@@ -114,8 +114,10 @@ test("a clean reading is confirmed only with a kind and a country, then offers i
   await expect(draft(target).locator(".ledger-draft-country")).toHaveValue(
     "ES",
   );
+  // The button that answered the country went away: confirming is next.
+  await expect(confirm).toBeFocused();
   await expect(holds).toHaveCount(0);
-  await confirm.click();
+  await target.keyboard.press("Enter");
 
   const done = section(target).locator(".ledger-draft-confirmed");
   await expect(done).toContainText(
@@ -130,9 +132,37 @@ test("a clean reading is confirmed only with a kind and a country, then offers i
   // The movement that settles it is offered as a permanent link.
   const offer = done.locator(".ledger-draft-link-offer");
   await expect(offer).toContainText("DOMESTIKA CURSO LETTERING");
-  await offer.locator(".ledger-match-link").click();
+  // The confirm button is gone: its link is the next step.
+  const link = offer.locator(".ledger-match-link");
+  await expect(link).toBeFocused();
+  await target.keyboard.press("Enter");
   await expect(done.locator(".ledger-draft-link-staged")).toBeVisible();
   await expect(target.locator(".ledger-tray")).toBeVisible();
+  // And once linked, the next document still to review.
+  const focused = section(target).locator(".ledger-review-item:focus");
+  await expect(focused).toHaveCount(1);
+  await expect(focused).not.toContainText(DOMESTIKA);
+});
+
+test("fields are as wide as what they hold", async ({ page: target }) => {
+  await openDocuments(target);
+  await choose(target, DOMESTIKA);
+  await kind(target, "received");
+  const width = async (field: string) =>
+    (await draft(target)
+      .locator(`[data-field=${field}] .ledger-draft-input`)
+      .boundingBox())!.width;
+  const amount = await width("taxable_base");
+  const rate = await width("iva_rate");
+  const date = await width("invoice_date");
+  const number = await width("invoice_number");
+  const name = await width("counterparty_name");
+  // A figure and a rate share one narrow width; a date is wider, other text
+  // wider still, and a name takes the row.
+  expect(Math.abs(amount - rate)).toBeLessThan(1);
+  expect(date).toBeGreaterThan(amount);
+  expect(number).toBeGreaterThan(date);
+  expect(name).toBeGreaterThan(number);
 });
 
 test("a reading that changed before confirming is shown again instead of confirmed", async ({

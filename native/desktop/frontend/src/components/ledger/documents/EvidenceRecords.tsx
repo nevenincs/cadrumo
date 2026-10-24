@@ -22,6 +22,8 @@ import { write } from "../invoices/invoiceWrites";
 import { dayText } from "../transfer/transferWords";
 import { useWritePause, WriteHold } from "../WritePause";
 import {
+  EVIDENCE_SHAPES,
+  fieldWidth,
   fileName,
   holdsUpdate,
   recordUpdate,
@@ -249,7 +251,10 @@ function RecordDetail({
               <Input
                 id={`${base}-${field}`}
                 controlSize="sm"
-                className="ledger-record-input tabular-nums"
+                className={`ledger-record-input tabular-nums ${fieldWidth(
+                  EVIDENCE_SHAPES[field],
+                  field === "supplier",
+                )}`}
                 maxLength={1024}
                 aria-invalid={refused.has(field) || undefined}
                 value={shown(field)}
