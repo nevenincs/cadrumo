@@ -1703,6 +1703,7 @@ desktop:
     export:
       cancel: Cancel
       change_file: Change…
+      checked: I've checked it
       choose_file: Choose…
       close: Close
       copied_invoices: 'Invoices copied: {count}'
@@ -1732,6 +1733,7 @@ desktop:
       inactive: Include archived and set-aside movements
       left_out: Left out · archived {archived} · set aside {aside} · split {split}
       no_file: No file chosen
+      not_there: '{file} is not where it was saved'
       period: Export period
       refused: Not exported
       review_staged: Review and save
@@ -1741,6 +1743,8 @@ desktop:
         a spreadsheet, copy it.
       send: Export ({shown})
       send_unknown: Export
+      show_failed: The file couldn't be shown
+      show_in_folder: Show in folder
       staged: 'Unsaved changes not in this file: {count}'
       staged_note: The export reads what is saved.
       staged_short: 'Unsaved: {count} · not in this file'
@@ -1768,6 +1772,9 @@ desktop:
       unknown: Outcome unknown
       unknown_note: 'The file may have been written. Nothing is sent again: check
         the file before exporting once more.'
+      unknown_title: 'Export outcome unknown: writes paused'
+      unknown_untold: '{file}: a re-read can''t tell whether it was written; check
+        the file'
       without_staged: Export without them
     failed: Couldn't read the ledger.
     field:

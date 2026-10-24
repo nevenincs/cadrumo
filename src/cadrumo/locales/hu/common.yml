@@ -1716,6 +1716,7 @@ desktop:
     export:
       cancel: Mégse
       change_file: Módosítás…
+      checked: Ellenőriztem
       choose_file: Kiválasztás…
       close: Bezárás
       copied_invoices: 'Kimásolt számlák: {count}'
@@ -1745,6 +1746,7 @@ desktop:
       inactive: Archivált és félretett tételekkel együtt
       left_out: Kimarad · archivált {archived} · félretett {aside} · felosztott {split}
       no_file: Nincs kiválasztott fájl
+      not_there: '{file} nincs ott, ahová mentetted'
       period: Exportálási időszak
       refused: Nincs exportálva
       review_staged: Áttekintés és mentés
@@ -1754,6 +1756,8 @@ desktop:
         vinnéd táblázatba, másold ki.
       send: Exportálás ({shown})
       send_unknown: Exportálás
+      show_failed: A fájlt nem sikerült megmutatni
+      show_in_folder: Megjelenítés a mappában
       staged: 'Mentetlen változások, amelyek nincsenek a fájlban: {count}'
       staged_note: Az exportálás a mentett adatokat olvassa.
       staged_short: 'Mentetlen: {count} · nincs a fájlban'
@@ -1781,6 +1785,9 @@ desktop:
       unknown: Ismeretlen eredmény
       unknown_note: 'Lehet, hogy a fájl már elkészült. Semmi sem megy el újra: ellenőrizd
         a fájlt, mielőtt ismét exportálsz.'
+      unknown_title: 'Az exportálás eredménye ismeretlen: írás szüneteltetve'
+      unknown_untold: '{file}: az újraolvasásból nem derül ki, elkészült-e; ellenőrizd
+        a fájlt'
       without_staged: Exportálás nélkülük
     failed: A naplót nem sikerült beolvasni.
     field:

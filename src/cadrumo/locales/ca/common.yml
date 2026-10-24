@@ -1732,6 +1732,7 @@ desktop:
     export:
       cancel: Cancel·la
       change_file: Canvia…
+      checked: Ja l'he revisat
       choose_file: Tria…
       close: Tanca
       copied_invoices: 'Factures copiades: {count}'
@@ -1761,6 +1762,7 @@ desktop:
       inactive: Inclou moviments arxivats i apartats
       left_out: Fora · arxivats {archived} · apartats {aside} · dividits {split}
       no_file: Cap fitxer triat
+      not_there: '{file} no és on es va desar'
       period: Període d'exportació
       refused: No exportat
       review_staged: Revisa i desa
@@ -1770,6 +1772,8 @@ desktop:
         a un full de càlcul, copia-la.
       send: Exporta ({shown})
       send_unknown: Exporta
+      show_failed: No s'ha pogut mostrar el fitxer
+      show_in_folder: Mostrar a la carpeta
       staged: 'Canvis sense desar que no van en aquest fitxer: {count}'
       staged_note: L'exportació llegeix el que s'ha desat.
       staged_short: 'Sense desar: {count} · no van en aquest fitxer'
@@ -1797,6 +1801,9 @@ desktop:
       unknown: Resultat desconegut
       unknown_note: 'Pot ser que el fitxer s''hagi escrit. No es torna a enviar res:
         revisa el fitxer abans d''exportar un altre cop.'
+      unknown_title: 'Resultat de l''exportació desconegut: escriptures en pausa'
+      unknown_untold: '{file}: tornar a llegir no aclareix si es va escriure; revisa
+        el fitxer'
       without_staged: Exporta sense ells
     failed: No s'ha pogut llegir el llibre.
     field:

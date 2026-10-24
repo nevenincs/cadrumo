@@ -1738,6 +1738,7 @@ desktop:
     export:
       cancel: Cancelar
       change_file: Cambiar…
+      checked: Ya lo he revisado
       choose_file: Elegir…
       close: Cerrar
       copied_invoices: 'Facturas copiadas: {count}'
@@ -1767,6 +1768,7 @@ desktop:
       inactive: Incluir movimientos archivados y apartados
       left_out: Fuera · archivados {archived} · apartados {aside} · divididos {split}
       no_file: Ningún archivo elegido
+      not_there: '{file} no está donde se guardó'
       period: Periodo de exportación
       refused: No exportado
       review_staged: Revisar y guardar
@@ -1776,6 +1778,8 @@ desktop:
         selección a una hoja de cálculo, cópiala.
       send: Exportar ({shown})
       send_unknown: Exportar
+      show_failed: No se ha podido mostrar el archivo
+      show_in_folder: Mostrar en la carpeta
       staged: 'Cambios sin guardar que no van en este archivo: {count}'
       staged_note: La exportación lee lo guardado.
       staged_short: 'Sin guardar: {count} · no van en este archivo'
@@ -1803,6 +1807,8 @@ desktop:
       unknown: Resultado desconocido
       unknown_note: 'Puede que el archivo se haya escrito. No se vuelve a enviar nada:
         revisa el archivo antes de exportar otra vez.'
+      unknown_title: 'Resultado de la exportación desconocido: escrituras en pausa'
+      unknown_untold: '{file}: volver a leer no aclara si se escribió; revisa el archivo'
       without_staged: Exportar sin ellos
     failed: No se ha podido leer el libro.
     field:
