@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:e2f4b0facb05cd2ce6f9af2b7ca4a27bd07964e3600ddba8da09684245fadb92'
+body_hash: 'sha256:3eef40186fb86135f748aac6a45e9d8eac0ffe4a34961b68e2ecffb919ea6be5'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
@@ -154,6 +154,24 @@ related:
 - `S10` `verify:` `tsc eslint prettier on S10 index export` -> `pass`
 - `S10` `verify:` `pytest desktop chrome and navigation label tests` -> `pass`
 - `S10` `verify:` `cmake --target desktop-host-unit-clippy` -> `pass`
+- `S08` `A` `src/cadrumo_mcp/mcp/view_register.py`
+- `S08` `A` `src/cadrumo_mcp/mcp/record_links.py`
+- `S08` `M` `src/cadrumo_mcp/mcp/protocol_contract.py`
+- `S08` `M` `src/cadrumo_mcp/mcp/runtime_adapter.py`
+- `S08` `M` `src/cadrumo_mcp/mcp/admitted_operations.py`
+- `S08` `M` `src/cadrumo_mcp/mcp/surfaces.py`
+- `S08` `A` `src/cadrumo_mcp/mcp/tests/test_views_tool.py`
+- `S08` `A` `src/cadrumo_mcp/mcp/tests/test_record_links.py`
+- `S08` `M` `src/cadrumo_mcp/mcp/tests/test_tool_annotations.py`
+- `S08` `M` `src/cadrumo_mcp/mcp/tests/test_mcp_surface_pins.py`
+- `S08` `M` `src/cadrumo_mcp/mcp/tests/test_installed_stdio.py`
+- `S08` `M` `dev/quality/metadata/import_load_targets.cadrumo_client.json`
+- `S08` `M` `dev/quality/metadata/import_load_targets.cadrumo_mcp.json`
+- `S08` `M` `dev/quality/metadata/import_load_targets.json`
+- `S08` `verify:` `pytest src/cadrumo_mcp and src/cadrumo_client/contracts (724 passed)` -> `pass`
+- `S08` `verify:` `ruff check, ruff format --check and ty on S08 files` -> `pass`
+- `S08` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S08` `verify:` `just check-import-boundaries (contracts kept; fails on other sessions' files: modelo vocabulary import, catalogue intake test syntax, dev registry private imports)` -> `fail`
 
 ## Notes
 
@@ -162,3 +180,4 @@ related:
 - `S07` Follow-up 7ba285bd05 closes a wire gap the desktop lane found: PresentationDelivered and the session hold's `destination_presented` line now echo the request's params, and the client refuses a reply whose params differ
 - `S09` commits e7301548b6 and 70ae70915f; the first was written from an index read before five other commits and dropped their files, the second restores them; the host requires the runtime delivery to echo params, added by the Python lane in 7ba285bd05
 - `S10` commit 53098ff2ca; App.tsx committed as HEAD plus only these hunks, another session's provisioning hunks stay uncommitted in the worktree; six scenario specs timed out under concurrent clippy load and passed on rerun at two workers
+- `S08` Surface rows updated in place under the orchestrator's ruling (B): no consumer has pinned a release; the views tool is a local read on both surfaces. Record links cover ledger.add, ledger.update, ledger.classify.single, ledger.invoice.add, ledger.invoice.update, ledger.invoice.wizard and ledger.evidence.confirm; ledger.link (two records), ledger.invoice.import and ledger.classify.bulk (several) and ledger.invoice.remove (removed record) carry none
