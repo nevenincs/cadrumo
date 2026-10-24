@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import re
 from decimal import Decimal
-from pathlib import Path
 from typing import ClassVar
 
 from .....core.aeat_csv import AEAT_CSV_PATTERN, normalise_aeat_csv
@@ -34,8 +33,7 @@ from .....core.identity.digest import ContentDigest
 from .....core.time.clock import now
 from ...pdf.extracted_casilla import ExtractedCasilla
 from ...pdf.label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
-from ...pdf.source_provenance import sha256_file, source_pdf_reference_path
-from .._parsers.pdfplumber_backend import extract_pages_text
+from ...pdf.source_provenance import source_pdf_reference_path
 from ..errors import BorradorParseError
 from ..schema import ArtefactKind, BorradorExtractionProfile, InboundBorradorObservation
 
@@ -57,8 +55,8 @@ _CSV_RE = re.compile(
 class Modelo100ObservedV2025Extractor:
     """Concrete Modelo 100 observed-value extractor implementation.
 
-    Reads the printed text via the backend facade's ``extract_pages_text``
-    primitive, locates printed casilla rows, and returns a strict
+    Receives the printed page text the parser has read, locates printed
+    casilla rows, and returns a strict
     :class:`~adapters.inbound.borrador.schema.InboundBorradorObservation`.
 
     Attributes:
@@ -68,40 +66,6 @@ class Modelo100ObservedV2025Extractor:
     """
 
     año: ClassVar[int] = 2025
-
-    def extract(
-        self,
-        pdf_path: Path,
-        artefact_kind: ArtefactKind,
-        extraction_profile: BorradorExtractionProfile | None = None,
-    ) -> InboundBorradorObservation:
-        """Parse ``pdf_path`` into a :class:`~adapters.inbound.borrador.schema.InboundBorradorObservation`.
-
-        Args:
-            pdf_path: Path to the Modelo 100 PDF.
-            artefact_kind: The artefact kind discovered by
-                :func:`~adapters.inbound.borrador._detect.detect_artefact_kind`
-                (or supplied by the caller as an override).
-            extraction_profile: Optional caller-supplied registry-profile
-                projection that declares target casillas and minimum coverage
-                for this parse.
-
-        Returns:
-            The strict :class:`~adapters.inbound.borrador.schema.InboundBorradorObservation`
-            with observed casillas extracted.
-
-        Raises:
-            BorradorParseError: When required header fields are missing, when a
-                ``DECLARACION`` artefact lacks a CSV stamp, or when a supplied
-                registry-profile projection does not meet its minimum coverage.
-        """
-        pages = extract_pages_text(pdf_path)
-        return self.extract_pages(
-            pages,
-            artefact_kind,
-            source_pdf_sha256=sha256_file(pdf_path),
-            extraction_profile=extraction_profile,
-        )
 
     def extract_pages(
         self,

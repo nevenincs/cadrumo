@@ -3,19 +3,17 @@
 This module classifies the printed text extracted from a Renta borrador,
 predeclaración, or declaración PDF into an
 :class:`~adapters.inbound.borrador.schema.ArtefactKind`. It is a local
-adapter helper: it reads PDF text through
-:func:`adapters.inbound.borrador._parsers.pdfplumber_backend.extract_pages_text`, applies the
-documented marker precedence ladder, and returns the artefact kind consumed by
-:func:`~adapters.inbound.borrador.parser.parse_borrador`.
+adapter helper: it receives the page text
+:func:`~adapters.inbound.borrador.parser.parse_borrador` has already read, applies the
+documented marker precedence ladder, and returns the artefact kind the parser
+hands to the extractor.
 """
 
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 from ..pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
-from ._parsers.pdfplumber_backend import extract_pages_text
 from .errors import ArtefactNotRecognisedError
 from .schema import ArtefactKind
 
@@ -24,8 +22,8 @@ _BORRADOR_RE = re.compile(r"\bBORRADOR\b", re.IGNORECASE)
 _CSV_RE = re.compile(r"C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n", re.IGNORECASE)
 
 
-def detect_artefact_kind(pdf_path: Path) -> ArtefactKind:
-    """Return the detected Modelo 100 artefact kind for ``pdf_path``.
+def detect_artefact_kind_from_pages(pages: tuple[str, ...]) -> ArtefactKind:
+    """Return the detected Modelo 100 artefact kind for extracted page text.
 
     Precedence when markers overlap is
     :attr:`~adapters.inbound.borrador.schema.ArtefactKind.PREDECLARACION`
@@ -35,22 +33,10 @@ def detect_artefact_kind(pdf_path: Path) -> ArtefactKind:
     status; the CSV stamp trumps the BORRADOR header because a filed
     declaración always ships with a CSV.
 
-    Args:
-        pdf_path: Path to the Modelo 100 PDF to inspect.
-
-    Returns:
-        The detected :class:`~adapters.inbound.borrador.schema.ArtefactKind`.
-
     Raises:
         ArtefactNotRecognisedError: When none of the three markers
             (VISTA PREVIA watermark, BORRADOR header, CSV stamp) match.
     """
-    pages = extract_pages_text(pdf_path)
-    return detect_artefact_kind_from_pages(pages)
-
-
-def detect_artefact_kind_from_pages(pages: tuple[str, ...]) -> ArtefactKind:
-    """Apply the same marker precedence to already extracted page text."""
     text = "\n".join(pages)
 
     if _VISTA_PREVIA_RE.search(text):

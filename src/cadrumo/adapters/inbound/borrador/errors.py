@@ -68,6 +68,6 @@ class ArtefactNotRecognisedError(BorradorParseError):
     """Raised when the PDF does not match any known Modelo 100 artefact shape.
 
     Surfaced by
-    :func:`~adapters.inbound.borrador._detect.detect_artefact_kind` when
+    :func:`~adapters.inbound.borrador._detect.detect_artefact_kind_from_pages` when
     none of the BORRADOR / VISTA PREVIA / CSV markers can be located.
     """

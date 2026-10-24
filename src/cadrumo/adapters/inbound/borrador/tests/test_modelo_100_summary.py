@@ -334,6 +334,34 @@ class TestSparseExtraction:
         assert {value.casilla_id for value in filing.values} == set(sparse)
 
 
+class TestSingleTextRead:
+    """The path route reads page text once and agrees with the bytes route."""
+
+    def test_detection_and_extraction_share_one_read(
+        self,
+        tmp_path: Path,
+        default_borrador_pdf_bytes: bytes,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from .. import parser as borrador_parser
+
+        real_extract = borrador_parser.extract_pages_text
+        reads: list[Path] = []
+
+        def counting_extract(pdf_path: Path) -> tuple[str, ...]:
+            reads.append(pdf_path)
+            return real_extract(pdf_path)
+
+        monkeypatch.setattr(borrador_parser, "extract_pages_text", counting_extract)
+        pdf = _write_borrador_pdf(tmp_path, default_borrador_pdf_bytes)
+
+        from_path = parse_borrador(pdf)
+
+        assert len(reads) == 1
+        from_bytes = parse_borrador(default_borrador_pdf_bytes)
+        assert from_path.model_dump(exclude={"parsed_at"}) == from_bytes.model_dump(exclude={"parsed_at"})
+
+
 class TestOverrides:
     """Verify the explicit ``artefact_kind_override`` entry-point arg."""
 

@@ -1,7 +1,7 @@
 """Public :func:`parse_borrador` entry point for Modelo 100 PDFs.
 
-Composes the artefact-kind detector
-(:func:`~adapters.inbound.borrador._detect.detect_artefact_kind`) with the
+Reads the PDF's page text once and composes the artefact-kind detector
+(:func:`~adapters.inbound.borrador._detect.detect_artefact_kind_from_pages`) with the
 per-año extractor registry (:mod:`adapters.inbound.borrador._extractors`)
 into the single function callers should depend on. The parser does not infer
 the tax year from the PDF today; callers that need a non-default year must pass
@@ -21,8 +21,10 @@ from pathlib import Path
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ..pdf.page_text_extraction import extract_pages_text_from_bytes
-from ._detect import detect_artefact_kind, detect_artefact_kind_from_pages
+from ..pdf.source_provenance import sha256_file
+from ._detect import detect_artefact_kind_from_pages
 from ._extractors.selection import get_extractor
+from ._parsers.pdfplumber_backend import extract_pages_text
 from .errors import BorradorParseError
 from .schema import (
     ArtefactKind,
@@ -79,12 +81,24 @@ def parse_borrador(
     if parse_mode is BorradorParseMode.REGISTRY_PROFILE and extraction_profile is None:
         raise BorradorParseError("registry-profile parsing requires a registry extraction profile")
 
-    artefact_kind = artefact_kind_override or detect_artefact_kind(path)
+    pages: tuple[str, ...] | None = None
+    if artefact_kind_override is None:
+        pages = extract_pages_text(path)
+        artefact_kind = detect_artefact_kind_from_pages(pages)
+    else:
+        artefact_kind = artefact_kind_override
     año = año_override or 2025
     _logger.debug("parse_borrador: source=<input-pdf> kind=%s año=%d", artefact_kind, año)
 
     extractor = get_extractor(año)
-    result = extractor.extract(path, artefact_kind, extraction_profile=extraction_profile)
+    if pages is None:
+        pages = extract_pages_text(path)
+    result = extractor.extract_pages(
+        pages,
+        artefact_kind,
+        source_pdf_sha256=sha256_file(path),
+        extraction_profile=extraction_profile,
+    )
     _logger.info(
         "parse_borrador: parsed source=<input-pdf> kind=%s año=%d",
         artefact_kind,
