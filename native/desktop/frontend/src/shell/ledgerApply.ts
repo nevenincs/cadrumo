@@ -728,7 +728,14 @@ export async function askReview(
   return port.submit(definition, request);
 }
 
-export type UnknownResolution = "saved" | "not_saved" | "undetermined";
+/** What a re-read can say of a write whose outcome was unknown, in the
+ * order the page reports it. */
+export const UNKNOWN_RESOLUTIONS = [
+  "saved",
+  "not_saved",
+  "undetermined",
+] as const;
+export type UnknownResolution = (typeof UNKNOWN_RESOLUTIONS)[number];
 
 /**
  * What a re-read says about a step whose outcome was unknown, per movement:

@@ -16,8 +16,10 @@ import {
   resolveUnknown,
   runPlan,
   stageAfterApply,
+  UNKNOWN_RESOLUTIONS,
   type ApplyReport,
   type StepReport,
+  type UnknownResolution,
 } from "../../../shell/ledgerApply";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import type { LedgerPlan, PlanStep } from "../../../shell/ledgerPlan";
@@ -38,7 +40,7 @@ import {
 } from "../../../shell/ledgerWindow";
 import { useStrings, type Translate } from "../../../shell/strings";
 import type { SealedRead } from "../useSealedMovements";
-import type { WritePause } from "../WritePause";
+import type { Finding, WritePause } from "../WritePause";
 import { askedConflicts, type AskedConflict } from "./editingModel";
 import { actionText } from "./ReviewDialog";
 
@@ -110,7 +112,7 @@ function stepName(
           : actionRows(step.action);
   return ids.length === 1
     ? movementName(ids[0]!, rows, content)
-    : t("desktop.ledger.paused.staged");
+    : t("desktop.ledger.paused.what_movements", { count: ids.length });
 }
 
 /** Reads the catalogue for the invoices staged links name; null where it
@@ -384,7 +386,7 @@ export function useLedgerApply({
       step: PlanStep,
       staged: StagedContent,
       seen: ReadonlySet<string>,
-    ): Promise<string[] | null> => {
+    ): Promise<Finding[] | null> => {
       const answer = await readStaged(port, period, staged, read());
       if (answer.kind === "failed") return null;
       const found = resolveUnknown(step, staged, answer.rows);
@@ -401,11 +403,30 @@ export function useLedgerApply({
           ? actionText(t, locale, action)
           : movementName(id, answer.rows, staged);
       };
-      return [...found].map(([id, resolution]) =>
-        t(`desktop.ledger.paused.found_${resolution}`, {
-          movement: nameOf(id),
-        }),
-      );
+      // One movement is named; several are counted by outcome, and the
+      // banner shows them, since a name does not tell one from another.
+      if (found.size === 1)
+        return [...found].map(([id, resolution]) =>
+          t(`desktop.ledger.paused.found_${resolution}`, {
+            movement: nameOf(id),
+          }),
+        );
+      const by = new Map<UnknownResolution, string[]>();
+      for (const [id, resolution] of found)
+        by.set(resolution, [...(by.get(resolution) ?? []), id]);
+      return UNKNOWN_RESOLUTIONS.flatMap((resolution): Finding[] => {
+        const ids = by.get(resolution) ?? [];
+        return ids.length
+          ? [
+              {
+                text: t(`desktop.ledger.paused.counted_${resolution}`, {
+                  count: ids.length,
+                }),
+                ids,
+              },
+            ]
+          : [];
+      });
     },
     [port, period, read, dropSaved, rebase, t, locale],
   );

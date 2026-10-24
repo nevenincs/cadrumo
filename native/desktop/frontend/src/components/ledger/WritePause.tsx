@@ -30,9 +30,15 @@ import { useStrings, type Translate } from "../../shell/strings";
  * sent and not observed, or saved with its answer not read. */
 export type HeldOutcome = "unknown" | "saved_unread";
 
+/** One thing a re-read found: a line, or a count of movements with the
+ * movements it counts, which the banner can show. */
+export type Finding = string | { text: string; ids: readonly string[] };
+const findingText = (finding: Finding) =>
+  typeof finding === "string" ? finding : finding.text;
+
 /** What a re-read found that still does not settle a write: it stays
  * held, and these lines say why. */
-export type StillHeld = { held: string[] };
+export type StillHeld = { held: Finding[] };
 
 /** A write whose outcome the page does not know. */
 export type HeldWrite = {
@@ -43,7 +49,7 @@ export type HeldWrite = {
    * thing, which settles it; `StillHeld` where the read answered but
    * cannot tell, and null while it could not be read, both of which keep
    * it held. No other read settles it. */
-  settle: () => Promise<string[] | StillHeld | null>;
+  settle: () => Promise<Finding[] | StillHeld | null>;
   /** Called once the re-read settled it. */
   onSettled?: () => void;
 };
@@ -62,7 +68,7 @@ export function landingSettle(
   t: Translate,
   what: string,
   check: LandingCheck,
-): () => Promise<string[] | StillHeld | null> {
+): () => Promise<Finding[] | StillHeld | null> {
   return async () => {
     const found = await check();
     if (found === null) return null;
@@ -94,7 +100,7 @@ export type WritePause = {
   reread(): void;
   rereading: boolean;
   /** What the last re-read found, one line each, until dismissed. */
-  findings: readonly string[] | null;
+  findings: readonly Finding[] | null;
   dismissFindings(): void;
   /** Counts the re-reads, so a read keyed on it reads again after one. */
   round: number;
@@ -129,7 +135,7 @@ export function usePagePause({
 }): WritePause {
   const t = useStrings();
   const [writes, setWrites] = useState<Held[]>([]);
-  const [findings, setFindings] = useState<string[] | null>(null);
+  const [findings, setFindings] = useState<Finding[] | null>(null);
   const [rereading, setRereading] = useState(false);
   const [round, setRound] = useState(0);
   const next = useRef(0);
@@ -155,7 +161,7 @@ export function usePagePause({
     void (async () => {
       const asked = latest.current;
       const settled = new Set<number>();
-      const lines: string[] = [];
+      const lines: Finding[] = [];
       for (const write of asked) {
         const found = await write.settle();
         if (found === null) continue;
@@ -196,10 +202,36 @@ export function usePagePause({
 
 /** The page's banner, in the Alert pattern with its one action at its end:
  * what waits and the re-read that settles it, then what the re-read found
- * until it is dismissed. */
-export function PausedBanner({ pause }: { pause: WritePause }) {
+ * until it is dismissed, with the movements its counts name to show. */
+export function PausedBanner({
+  pause,
+  onShow,
+}: {
+  pause: WritePause;
+  /** Shows these movements, where the page draws them. */
+  onShow?: (ids: string[]) => void;
+}) {
   const t = useStrings();
   if (pause.writes.length === 0 && !pause.findings) return null;
+  const said = (pause.findings ?? []).map(findingText).join(" · ");
+  const counted = [
+    ...new Set(
+      (pause.findings ?? []).flatMap((finding) =>
+        typeof finding === "string" ? [] : finding.ids,
+      ),
+    ),
+  ];
+  const show =
+    onShow && counted.length > 0 ? (
+      <Button
+        variant="link"
+        size="xs"
+        className="ledger-findings-show shrink-0"
+        onClick={() => onShow(counted)}
+      >
+        {t("desktop.ledger.inspector.show")}
+      </Button>
+    ) : null;
   const unknown = pause.writes.some((write) => write.outcome === "unknown");
   const names = [...new Set(pause.writes.map((write) => write.what))];
   // The banner names the first; the rest are counted.
@@ -233,8 +265,9 @@ export function PausedBanner({ pause }: { pause: WritePause }) {
             </Button>
           </div>
           {pause.findings && (
-            <p className="ledger-findings-held mt-1 text-sm">
-              {pause.findings.join(" · ")}
+            <p className="ledger-findings-held mt-1 flex flex-wrap items-center gap-x-2 text-sm">
+              {said}
+              {show}
             </p>
           )}
         </Alert>
@@ -246,9 +279,8 @@ export function PausedBanner({ pause }: { pause: WritePause }) {
           className="ledger-findings"
         >
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="min-w-0 flex-1">
-              {(pause.findings ?? []).join(" · ")}
-            </span>
+            <span className="min-w-0 flex-1">{said}</span>
+            {show}
             <Button
               variant="ghost"
               size="xs"

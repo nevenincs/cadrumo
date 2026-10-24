@@ -903,7 +903,15 @@ export function LedgerPage({
             }
             className="flex min-h-0 flex-1 flex-col"
           >
-            {readable && <PausedBanner pause={pause} />}
+            {readable && (
+              <PausedBanner
+                pause={pause}
+                onShow={(ids) => {
+                  setSection("movements");
+                  movements.setSelection(new Set(ids));
+                }}
+              />
+            )}
             <GridRoomContext.Provider value={gridRoom}>
               <div
                 ref={row}

@@ -571,3 +571,39 @@ test("a staged movement whose sealed state was not read is held as unread until 
     review(target).locator(".ledger-apply-save"),
   ).not.toHaveAttribute("aria-disabled", "true");
 });
+
+test("a bulk save with an unknown outcome is counted, not listed by name, and its movements can be shown", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await grid(target)
+    .getByRole("checkbox", { name: label("desktop.ledger.select.shown") })
+    .click();
+  await target.keyboard.press("Alt+KeyP");
+  await expect(target.locator(".ledger-tray")).toBeVisible();
+  await openReview(target);
+  await ledgerControls.nextWrites(target, ["unknown"]);
+  await review(target).locator(".ledger-apply-save").click();
+  await expect(review(target).locator(".ledger-apply-done")).toBeVisible({
+    timeout: 20_000,
+  });
+  await review(target).locator(".ledger-apply-done").click();
+  // The banner names what is unknown by its count.
+  const counted = (key: string) =>
+    new RegExp(
+      escape(label(key, { count: 999_999 })).replace("999999", "[\\d,.]+"),
+    );
+  await expect(banner(target)).toContainText(
+    counted("desktop.ledger.paused.what_movements"),
+  );
+  await banner(target).locator(".ledger-paused-reread").click();
+  const found = findings(target);
+  await expect(found).toContainText(
+    counted("desktop.ledger.paused.counted_saved"),
+  );
+  await expect(found).not.toContainText("PAPELERIA TRAZO");
+  await found.locator(".ledger-findings-show").click();
+  await expect(page(target).locator(".ledger-count")).toContainText(
+    counted("desktop.ledger.selected"),
+  );
+});
