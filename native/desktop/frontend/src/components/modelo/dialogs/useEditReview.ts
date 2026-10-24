@@ -54,6 +54,7 @@ async function preflight(
   renewedBefore: boolean,
   onRenewed: (baseline: ModeloEditApplyBaselineV1) => Promise<void>,
   onRebase: (report: ModeloFormRebaseEntryV1[]) => void,
+  renewal: { claim(): boolean; release(): void },
 ): Promise<ReviewPhase> {
   try {
     const outcome = await port.edit(
@@ -66,21 +67,26 @@ async function preflight(
       return { kind: "check_failed", code: "refused" };
     const read = outcome.result;
     const answer = read.outcome;
-    // What became of each held change: a box that moved under it marks it,
-    // and one that no longer takes it drops it.
-    if (read.rebase.some((entry) => entry.outcome !== "kept"))
-      onRebase(read.rebase);
-    if (answer.outcome === "evaluated")
+    if (answer.outcome === "evaluated") {
+      // What became of each held change, as a check of them says: a box that
+      // moved under it marks it, and one that no longer takes it drops it.
+      // A refused check says nothing about them.
+      if (read.rebase.some((entry) => entry.outcome !== "kept"))
+        onRebase(read.rebase);
       return {
         kind: "checked",
         findings: read.findings,
         operatorEntriesUnknown: read.operator_entries_unknown,
       };
+    }
     if (answer.refusal.kind !== "stale_edit_baseline" || renewedBefore)
       return { kind: "refused", words: read.refusal_words };
   } catch (error) {
     return { kind: "check_failed", code: ledgerFailure(error).code };
   }
+  // One renewal at a time: a check that finds the baseline stale while a
+  // renewal is under way waits for the check that renewal starts.
+  if (!renewal.claim()) return { kind: "checking" };
   try {
     const outcome = await port.submit("modelo.edit.renew", {
       baseline,
@@ -94,6 +100,8 @@ async function preflight(
     return { kind: "checking" };
   } catch (error) {
     return { kind: "check_failed", code: ledgerFailure(error).code };
+  } finally {
+    renewal.release();
   }
 }
 
@@ -128,6 +136,7 @@ export function useEditReview({
   const checks = useRef(0);
   // The declaration as read before the last renewal, until its report.
   const renewedFrom = useRef<ModeloWorkbenchFormProjectionV1 | null>(null);
+  const renewing = useRef(false);
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -167,6 +176,16 @@ export function useEditReview({
       (report) => {
         session.rebase(report, renewedFrom.current);
         renewedFrom.current = null;
+      },
+      {
+        claim: () => {
+          if (renewing.current) return false;
+          renewing.current = true;
+          return true;
+        },
+        release: () => {
+          renewing.current = false;
+        },
       },
     );
     if (alive.current && ticket === checks.current) setPhase(answer);

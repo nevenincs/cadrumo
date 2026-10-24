@@ -1092,3 +1092,52 @@ test("a changed edit stays marked until the filer acknowledges it", async ({
     .check();
   await expect(applyButton(again)).toBeEnabled();
 });
+
+test("a stale check renews once, reads again and is checked again, and the report it then gives stands", async ({
+  page: target,
+}) => {
+  const stale = envelope<{
+    outcome: { refusal?: { kind: string } };
+    rebase: RebaseEntry[];
+  }>("preflight-130-rebase-stale");
+  // The stale refusal says nothing of the held changes; only the check on
+  // the renewed baseline does.
+  expect(stale.outcome.refusal?.kind).toBe("stale_edit_baseline");
+  expect(stale.rebase).toEqual([]);
+  const dialog = await stageUnderRebase(target);
+  // Stale check, one renewal, the form read again, the check again.
+  const sequence = (
+    await target.evaluate(() => window.__scenarioHostCalls ?? [])
+  ).filter(
+    (call) =>
+      call === "modelo edit modelo.edit.preflight" ||
+      call === "modelo submit modelo.edit.renew" ||
+      call.startsWith("modelo form "),
+  );
+  const renewal = sequence.indexOf("modelo submit modelo.edit.renew");
+  expect(renewal).toBeGreaterThan(0);
+  expect(sequence[renewal - 1]).toBe("modelo edit modelo.edit.preflight");
+  expect(sequence[renewal + 1]).toMatch(/^modelo form /);
+  expect(sequence.slice(renewal + 2)).toContain(
+    "modelo edit modelo.edit.preflight",
+  );
+  expect(await calls(target, "modelo submit modelo.edit.renew")).toHaveLength(
+    1,
+  );
+  // What the report said stands: the dropped change is said, the changed one
+  // is marked and holds the apply until it is acknowledged.
+  await expect(dialog).toContainText(
+    label("workspace.modelo.rebase.dropped", { count: 1 }),
+  );
+  const changed = dialog.getByRole("listitem").filter({ hasText: "08" });
+  await expect(changed).toContainText(
+    label("workspace.modelo.review.before_changed"),
+  );
+  await expect(applyButton(dialog)).toBeDisabled();
+  await dialog
+    .getByRole("checkbox", {
+      name: label("workspace.modelo.review.acknowledge"),
+    })
+    .check();
+  await expect(applyButton(dialog)).toBeEnabled();
+});

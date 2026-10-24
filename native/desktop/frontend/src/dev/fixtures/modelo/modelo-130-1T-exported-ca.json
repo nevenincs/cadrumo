@@ -1573,7 +1573,7 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-10-24T20:27:26.341117Z",
+        "exported_at": "2026-10-24T21:41:32.551416Z",
         "calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
         "current": true
       },
@@ -1591,7 +1591,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "83be9fba7d75f8a7e927b93e40593289414ef82c8cd3d44495307c74cf1a7bb0",
+      "contract_set_digest": "b59aca26061bd111db90d33fe2ec98e54a1b1171f10e3e4bc735e08a4164d4a2",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
       "request_schema": {
@@ -1626,8 +1626,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "6695baa1a68d6e639ddc201caa4d50ce937ca6a9d88c0cbdce92c88f9f195c40",
-    "calculation_head_digest": "79c7e0776af78c602738157682ec5b027c689aabb706761fbbcee1354a4f2fa7",
+    "work_unit_record_digest": "d1d378f17db002e8f3c3c1250459f60a015841daf95863f6c6afd139e6ab0b2c",
+    "calculation_head_digest": "b59615099b4c0300b3fd10839d4d9d7a968fd211ec27f87c9ef7685f3fd52e38",
     "current_calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1931,9 +1931,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T20:27:30.933787Z",
-    "expires_at": "2026-10-24T20:32:30.933787Z",
-    "baseline_id": "ff4beab0841733c678e886fc60ca28f552d96e1168c01b6ea08b2f3e52557a1a"
+    "issued_at": "2026-10-24T21:41:36.887928Z",
+    "expires_at": "2026-10-24T21:46:36.887928Z",
+    "baseline_id": "51aa14bd30845ee74ddd342a0c181a38ad8471d0a4408c9bbfbc8912b8c0c75e"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1943,7 +1943,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-10-24T20:27:26.341117Z",
+    "file_created_at": "2026-10-24T21:41:32.551416Z",
     "receipt_to_add": false
   },
   "header": {
@@ -1969,7 +1969,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-10-24T20:27:26.341117Z",
+      "exported_at": "2026-10-24T21:41:32.551416Z",
       "created_on": "24/10/2026",
       "current": true,
       "words": "Fitxer generat el 24/10/2026"

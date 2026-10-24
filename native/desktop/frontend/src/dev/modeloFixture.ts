@@ -223,8 +223,14 @@ export function modeloFixture(options: Options): ModeloPort {
       case "export-unknown":
         return recorded ? "130-1T-filed" : "130-1T-exported";
       case "edit":
-      case "renewal":
         return applied ? "130-1T-applied" : LATER_STATES;
+      // Read again after its renewal, the declaration admits a fresh baseline.
+      case "renewal":
+        return applied
+          ? "130-1T-applied"
+          : renewed
+            ? "130-1T-renewed"
+            : LATER_STATES;
       case "rebase":
         return renewed ? "130-1T-rebased" : "130-1T-rebase";
       case "prerequisite":
@@ -321,7 +327,7 @@ export function modeloFixture(options: Options): ModeloPort {
             const renewal =
               modelo &&
               (await envelope<ModeloEditRenewalProjectionV1>(
-                `renew-${modelo}`,
+                `renew-${modelo}${shape === "rebase" ? "-rebase" : ""}`,
               ));
             if (!renewal) return unserved();
             renewed = renewal.renewed_baseline?.baseline_id ?? null;
@@ -404,7 +410,9 @@ export function modeloFixture(options: Options): ModeloPort {
             : entries.length > 0
               ? `preflight-${modelo}`
               : stale
-                ? `preflight-${modelo}-stale`
+                ? shape === "rebase"
+                  ? `preflight-${modelo}-rebase-stale`
+                  : `preflight-${modelo}-stale`
                 : shape === "rebase"
                   ? `preflight-${modelo}-rebase-review`
                   : `preflight-${modelo}-review`;

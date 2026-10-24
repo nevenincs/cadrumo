@@ -268,8 +268,11 @@ export function ReviewDialog({
       : !form.operator_entries_known;
   const mustAcknowledge = entriesUnknown || changed.size > 0;
   const busy = phase.kind === "checking" || phase.kind === "applying";
+  // A renewal's report not yet applied leaves the marks unknown: nothing is
+  // applied until the declaration it waits for is read.
   const mayApply =
     phase.kind === "checked" &&
+    !session.rebasePending &&
     edits.length > 0 &&
     !blocked &&
     (acknowledged || !mustAcknowledge);

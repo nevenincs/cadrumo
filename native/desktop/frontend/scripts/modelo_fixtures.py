@@ -1368,12 +1368,19 @@ def _write_rebase(directory: Path, work: Any) -> None:
     one box and typing into two others. The declaration then moves under
     those changes, as another session's apply would move it: the cleared
     box's typed value is taken back, so it no longer takes a clear, and a figure is
-    typed into one of the typed boxes. The review's preflight, on a fresh
-    baseline, carries the changes as they were held, and reports one
-    dropped, one changed and one kept.
+    typed into one of the typed boxes. The review's first check, on a
+    baseline whose lifetime has run out, carries the changes as they were
+    held and is refused as stale, saying nothing of them; the baseline is
+    renewed, and the check on the renewed baseline reports one dropped, one
+    changed and one kept.
     """
+    from cadrumo.application.modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
     from cadrumo.application.modelo.operation_definitions import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
-    from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
+    from cadrumo.application.modelo.workbench_operations import (
+        MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
+        MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
+    )
+    from cadrumo.core.time.clock import now
 
     modelo = str(work.work_unit.modelo)
     _write_form(directory, work, f"modelo-{modelo}-1T-rebase")
@@ -1394,11 +1401,43 @@ def _write_rebase(directory: Path, work: Any) -> None:
     )
     _expect_model(moved)
     _write_form(directory, work, f"modelo-{modelo}-1T-rebased")
+    # The review's first check runs on a baseline whose lifetime has run out,
+    # with the changes the window holds: it is refused as stale, and the
+    # renewal re-admits the baseline, nothing else having moved under it.
+    expired = _admitted(work, issued_at=now() - timedelta(minutes=30))
+    stale = _expect_model(
+        _edit(
+            work,
+            MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
+            _edit_document(expired, intents=REBASE_TYPED, held=held),
+        )
+    )
+    refusal = getattr(getattr(stale, "outcome", None), "refusal", None)
+    if getattr(refusal, "kind", None) != "stale_edit_baseline":
+        raise SystemExit(f"the check on the expired baseline was not refused as stale: {stale!r}")
+    if getattr(stale, "rebase", ()):
+        raise SystemExit("a stale check reported what became of the held changes")
+    _write(directory, f"preflight-{modelo}-rebase-stale.json", stale)
+    renewal = _operate(
+        work,
+        MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
+        _request(
+            MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
+            {
+                "profile_id": work.work_unit.bucket_id,
+                "baseline": ModeloEditApplyBaselineV1.from_baseline(expired).model_dump(mode="json"),
+                "output_language": "en",
+            },
+        ),
+    )
+    if getattr(renewal, "renewed_baseline", None) is None:
+        raise SystemExit("the expired baseline was not renewed")
+    _write(directory, f"renew-{modelo}-rebase.json", renewal)
     reviewed = _expect_model(
         _edit(
             work,
             MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
-            _edit_document(_admitted(work), intents=REBASE_TYPED, held=held),
+            _edit_document(renewal.renewed_baseline, intents=REBASE_TYPED, held=held),
         )
     )
     outcomes = sorted(entry.outcome.value for entry in getattr(reviewed, "rebase", ()))
@@ -1451,6 +1490,8 @@ def write_envelopes(directory: Path) -> None:
             directory, "preflight-130.json", _preflight(first, admission.baseline, (("06", "1.234,56"), ("01", "doce")))
         )
         _write(directory, "renew-130.json", _renew(first, admission.baseline))
+        # Read again after the renewal, as an editor reads it: a fresh baseline, the declaration unchanged.
+        _write_form(directory, first, "modelo-130-1T-renewed")
         # Checked after everything above was read, so those envelopes stay unchecked.
         _verify(first)
         _write_form(directory, first, "modelo-130-1T-checked")

@@ -177,7 +177,6 @@ export function FilingView({
   const recorded = form.filing;
   const hold = header.export_hold;
   const calculation = envelope.calculation_revision_id;
-  const verified = envelope.form.verified;
   const offer = envelope.export_offer;
   const receipt = envelope.receipt;
   const verifiedReceipt = receipt?.verified === true;
@@ -675,20 +674,14 @@ export function FilingView({
         <ul className="grid grid-cols-1 gap-3 @3xl:grid-cols-2">
           {[
             ...copies,
-            {
-              artefact: "package" as const,
-              words: t("workspace.modelo.filing.copy.package.title"),
-            },
+            ...(offer
+              ? [{ artefact: "package" as const, ...offer.review_package }]
+              : []),
           ].map((option) => {
-            const { artefact: copy, words } = option;
-            // A copy is offered as the read model says; the review package,
-            // which the export offer does not list, needs a checked
-            // calculation, as its operation does.
-            const availability =
-              "availability" in option ? option.availability : null;
-            const ready = availability
-              ? availability.available
-              : calculation !== null && verified;
+            const { artefact: copy, words, availability } = option;
+            // Each copy, the review package too, is offered as the read
+            // model says.
+            const ready = availability.available;
             return (
               <li
                 key={copy}

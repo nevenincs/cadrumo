@@ -3366,7 +3366,8 @@ export type ModeloEditPreflightEvaluatedV1 = {
  * `operator_entries_unknown` says whether the filer's earlier entries could
  * not be read, which the review says in its own sentence. `rebase` says what
  * became of each change the submission held, on the declaration as a fresh
- * read of its form shows it; it carries nothing derived from a value.
+ * read of its form shows it; it carries nothing derived from a value, and is
+ * empty when the preflight was refused.
  */
 export type ModeloEditPreflightProjectionV1 = {
   result_version: 1;

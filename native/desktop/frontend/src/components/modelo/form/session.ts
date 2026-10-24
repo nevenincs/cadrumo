@@ -78,8 +78,8 @@ export type StagedEdit = {
   /** `editKey` of the box. */
   key: string;
   address: ModeloEditValueAddressV1;
-  /** The box as the form read it when the edit was staged; never
-   * rewritten, so a later read can be compared with it. */
+  /** The box as the edit was last staged on it: as the form read it when
+   * the filer staged it, or as a renewal's read restaged it. */
   field: PublicModeloFormField;
   intent: StagedIntent;
   /** What the filer typed, shown as typed until the edit is applied. */
@@ -331,6 +331,9 @@ export type FormSession = {
   ): void;
   /** What the last renewal did, until acknowledged; null when nothing. */
   rebased: Rebased | null;
+  /** A report waits for the declaration's next read: until it is applied,
+   * the staged edits do not yet carry what it says. */
+  rebasePending: boolean;
   /** Takes the renewal's marks off the edits the filer has looked at. */
   acknowledge(): void;
   /** Reads what the filer typed into a box through the application and
@@ -630,6 +633,7 @@ export function useFormSession({
     discardAll,
     rebase,
     rebased,
+    rebasePending: pendingRebase !== null,
     acknowledge,
     enter,
     selectedKey,
