@@ -156,6 +156,15 @@ setup-browser:
 pin-browser-archives *args:
     uv run --no-sync python -m dev.env.browser_archive_pins {{args}}
 
+# Regenerate the local AI program pins: the address, format, executable, size
+# and SHA-256 of the official standalone archive per platform of one release,
+# each downloaded once. The component engine accepts no other bytes.
+# `--check` validates the committed table without downloading.
+[doc('Pin the local AI program archives the component engine installs.')]
+[group('setup')]
+pin-local-ai *args:
+    uv run --no-sync python -m dev.env.local_ai_pins {{args}}
+
 # Verify the managed browser with the browser setup item's own full check,
 # the one `dependencies.verify` runs: required builds, receipt digests and a
 # headless launch whose version must match the bundled Playwright manifest.

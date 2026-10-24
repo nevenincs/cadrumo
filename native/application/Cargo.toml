@@ -21,6 +21,7 @@ zip = { version = "9.0", default-features = false, features = ["deflate"] }
 ureq = { version = "3", default-features = false, features = ["rustls"] }
 object = { version = "0.40", default-features = false, features = ["read", "std"] }
 tokio = { version = "1", features = ["process", "io-util", "time", "rt", "macros"] }
+toml = { version = "1", default-features = false, features = ["std", "serde", "parse"] }
 
 [dev-dependencies]
 tempfile = "3"

@@ -3,6 +3,11 @@
 # and the exact bytes the product's browser setup accepts for it.
 
 playwright_driver = "1.64.0-beta-1791568591000"
+hosts = [
+  "cdn.playwright.dev",
+  "playwright.download.prss.microsoft.com",
+  "storage.googleapis.com",
+]
 
 [[archives]]
 platform = "linux-arm64"

@@ -54,6 +54,7 @@ from typing import Final
 from pydantic import BaseModel, Field, model_validator
 
 from .errors.hierarchy import pydantic_validation_boundary
+from .local_ai_pins import load_local_ai_model_pins
 from .models import STRICT_FROZEN_CONFIG
 from .source_locator import OptionalSourceUrl
 
@@ -259,7 +260,9 @@ class ModelWeightsPin(BaseModel):
     the candidate was pinned, which is the identity the local runtime reports
     for the installed weights. ``download_bytes`` is the sum of that manifest's
     layer and configuration sizes, the figure a setup plan shows and checks free
-    space against.
+    space against. Both come from the packaged model pin table
+    (:mod:`~cadrumo.core.local_ai_pins`), which the native component engine reads
+    too; the catalogue keeps no copy of its own.
 
     Upstream tags are mutable, so a different installed digest is not refused:
     it marks the model as a different version from the one Cadrumo was tested
@@ -450,24 +453,52 @@ unchecked.
 """
 
 
-# Memory requirements are the publishers' stated weight sizes for the pulled
-# quantisation (decimal GB as published by the runtime library), NOT an
-# estimate: the figure a contention check compares must be traceable to a
-# published number. Context windows are the publishers' stated windows for the
-# same tag. Each weights pin was read from the model registry's manifest for the
-# tag on 2026-10-18: the digest is the SHA-256 of the manifest bytes and the
-# download size the sum of its layer and configuration sizes.
-MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
-    ModelCandidate(
-        runtime_id="moondream:1.8b",
+_MODEL_PINS: Final = load_local_ai_model_pins()
+
+
+def _local_candidate(
+    *,
+    runtime_id: str,
+    roles: frozenset[ModelRole],
+    max_context_tokens: int,
+    licence: ModelLicence,
+    notes: str,
+) -> ModelCandidate:
+    """Return a local candidate whose memory floor and tested weights come from the model pin table.
+
+    The table also states each model's licence for the native engine, which
+    shows licence notices before a download; it must say what this catalogue
+    verified, so a disagreement refuses the import rather than drifting.
+    """
+    pin = _MODEL_PINS.model(runtime_id)
+    if pin is None:
+        msg = f"local candidate {runtime_id!r} has no entry in the model pin table"
+        raise ValueError(msg)
+    if pin.licence != licence.spdx_id or pin.commercial_use_permitted != licence.commercial_use_permitted:
+        msg = f"the model pin table states another licence for {runtime_id!r} than the catalogue verified"
+        raise ValueError(msg)
+    return ModelCandidate(
+        runtime_id=runtime_id,
         runtime=ModelRuntime.LOCAL_OLLAMA,
+        roles=roles,
+        memory_requirement_bytes=pin.memory_bytes,
+        max_context_tokens=max_context_tokens,
+        licence=licence,
+        weights_pin=ModelWeightsPin(digest=pin.manifest_digest, download_bytes=pin.download_bytes),
+        notes=notes,
+    )
+
+
+# Context windows are the publishers' stated windows for the pulled tag. A local
+# candidate's memory requirement and tested weights come from the packaged model
+# pin table, where each is traceable to a published number or a registry
+# manifest; see ``_data/dependencies/local_ai_models.toml``.
+MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
+    _local_candidate(
+        runtime_id="moondream:1.8b",
         roles=frozenset({ModelRole.VISION_TRANSCRIPTION}),
-        memory_requirement_bytes=1_700_000_000,
         max_context_tokens=2_048,
         licence=APACHE_2_0,
-        weights_pin=ModelWeightsPin(
-            digest="55fc3abd386771e5b5d1bbcc732f3c3f4df6e9f9f08f1131f9cc27ba2d1eec5b", download_bytes=1_738_451_197
-        ),
         notes=(
             "The smallest vision-capable candidate, and the worked example of why the "
             "capability floor is a filter rather than a preference: its 2K window cannot "
@@ -476,32 +507,22 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
             "Licence read at https://huggingface.co/vikhyatk/moondream2"
         ),
     ),
-    ModelCandidate(
+    _local_candidate(
         runtime_id="qwen3-vl:2b",
-        runtime=ModelRuntime.LOCAL_OLLAMA,
         roles=frozenset({ModelRole.VISION_TRANSCRIPTION}),
-        memory_requirement_bytes=1_900_000_000,
         max_context_tokens=256_000,
         licence=APACHE_2_0,
-        weights_pin=ModelWeightsPin(
-            digest="0635d9d857d497aeadba3d7d27485746c50554446f9f6ec01ef39788221adbe8", download_bytes=1_889_519_687
-        ),
         notes=(
             "The vision default. Smaller than the research-licensed incumbent it replaces "
             "and permissively licensed, which is why the licence correction costs nothing "
             "in capability. Licence read at https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct"
         ),
     ),
-    ModelCandidate(
+    _local_candidate(
         runtime_id="qwen2.5vl:3b",
-        runtime=ModelRuntime.LOCAL_OLLAMA,
         roles=frozenset({ModelRole.VISION_TRANSCRIPTION}),
-        memory_requirement_bytes=3_200_000_000,
         max_context_tokens=125_000,
         licence=QWEN_RESEARCH,
-        weights_pin=ModelWeightsPin(
-            digest="fb90415cde1ef08aa669ae74b082d49b158729b6db1ab183c941417d507e71a1", download_bytes=3_200_627_168
-        ),
         notes=(
             "The former shipped vision default, retained so an operator whose deployment is "
             "genuinely non-commercial can still name it -- and so the reason it stopped "
@@ -509,32 +530,22 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
             "https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct"
         ),
     ),
-    ModelCandidate(
+    _local_candidate(
         runtime_id="qwen2.5vl:7b",
-        runtime=ModelRuntime.LOCAL_OLLAMA,
         roles=frozenset({ModelRole.VISION_TRANSCRIPTION}),
-        memory_requirement_bytes=6_000_000_000,
         max_context_tokens=125_000,
         licence=APACHE_2_0,
-        weights_pin=ModelWeightsPin(
-            digest="5ced39dfa4bac325dc183dd1e4febaa1c46b3ea28bce48896c8e69c1e79611cc", download_bytes=5_969_245_856
-        ),
         notes=(
             "An upward override for an 8 GB-class device. Never selected automatically: "
             "selection is bounded from below, so a larger model is an operator's choice. "
             "Licence read at https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct"
         ),
     ),
-    ModelCandidate(
+    _local_candidate(
         runtime_id="qwen3:1.7b",
-        runtime=ModelRuntime.LOCAL_OLLAMA,
         roles=frozenset({ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING, ModelRole.SUPPLY_NATURE_PROPOSAL}),
-        memory_requirement_bytes=1_400_000_000,
         max_context_tokens=40_000,
         licence=APACHE_2_0,
-        weights_pin=ModelWeightsPin(
-            digest="8f68893c685c3ddff2aa3fffce2aa60a30bb2da65ca488b61fff134a4d1730e7", download_bytes=1_359_293_444
-        ),
         notes=(
             "The default for both text roles. Replaces qwen2.5:3b for the same reason the "
             "vision default flipped: the incumbent carries the Qwen Research licence. It "
@@ -544,16 +555,11 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
             "read at https://huggingface.co/Qwen/Qwen3-1.7B"
         ),
     ),
-    ModelCandidate(
+    _local_candidate(
         runtime_id="qwen2.5:3b",
-        runtime=ModelRuntime.LOCAL_OLLAMA,
         roles=frozenset({ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING, ModelRole.SUPPLY_NATURE_PROPOSAL}),
-        memory_requirement_bytes=1_900_000_000,
         max_context_tokens=32_768,
         licence=QWEN_RESEARCH,
-        weights_pin=ModelWeightsPin(
-            digest="357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b", download_bytes=1_929_912_432
-        ),
         notes=(
             "The former shipped text default. Its licence bar is easy to miss because most "
             "Qwen2.5 sizes ARE Apache-2.0 -- the 3B is one of the two that are not, which "
@@ -592,12 +598,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
 )
 
 DEFAULT_MODEL_BY_RUNTIME_AND_ROLE: Final[Mapping[ModelRuntime, Mapping[ModelRole, str]]] = {
-    ModelRuntime.LOCAL_OLLAMA: {
-        ModelRole.VISION_TRANSCRIPTION: "qwen3-vl:2b",
-        ModelRole.TEXT_EXTRACTION: "qwen3:1.7b",
-        ModelRole.COLUMN_ROLE_MAPPING: "qwen3:1.7b",
-        ModelRole.SUPPLY_NATURE_PROPOSAL: "qwen3:1.7b",
-    },
+    ModelRuntime.LOCAL_OLLAMA: {ModelRole(role): model for role, model in _MODEL_PINS.roles.items()},
     ModelRuntime.CLOUD_ANTHROPIC: {
         ModelRole.VISION_TRANSCRIPTION: "claude-haiku-4-5",
         ModelRole.TEXT_EXTRACTION: "claude-haiku-4-5",
@@ -611,7 +612,9 @@ Keyed by runtime as well as role because the two runtimes are configured
 separately and a role's answer differs between them. Declared here rather than
 as literals on :class:`~core.config.Settings` so the licence gate has ONE place
 to read every shipped default from, across both runtimes, and so a default
-cannot name a model the catalogue does not describe.
+cannot name a model the catalogue does not describe. The local defaults are the
+model pin table's roles, so the native engine sets up exactly the models the
+settings default to.
 
 That completeness is the point. A per-role gate that only knew about local
 defaults would have passed while every cloud route fell through to a
@@ -651,6 +654,11 @@ def _validate_catalogue() -> None:
     ids = [candidate.runtime_id for candidate in MODEL_CATALOGUE]
     if len(ids) != len(set(ids)):
         msg = "the model catalogue declares a duplicate runtime id"
+        raise ValueError(msg)
+    local = {candidate.runtime_id for candidate in MODEL_CATALOGUE if candidate.runtime is ModelRuntime.LOCAL_OLLAMA}
+    orphaned = sorted({pin.name for pin in _MODEL_PINS.models} - local)
+    if orphaned:
+        msg = f"the model pin table pins models the catalogue does not describe: {orphaned}"
         raise ValueError(msg)
     for runtime in ModelRuntime:
         defaults = DEFAULT_MODEL_BY_RUNTIME_AND_ROLE.get(runtime)

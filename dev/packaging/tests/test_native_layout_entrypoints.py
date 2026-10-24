@@ -1,4 +1,4 @@
-"""Native console entrypoints must name declared console scripts."""
+"""Native console entrypoints must name declared console scripts; the layout locates the component pins."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
 from dev.packaging.native.layout import entrypoint_files, load_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -61,3 +62,14 @@ def test_checkout_layout_declares_the_runtime_entrypoint() -> None:
     layout = load_layout("windows-x64")
 
     assert entrypoint_files(layout)["cadrumo-runtime"] == "bin/cadrumo-runtime.exe"
+
+
+@pytest.mark.parametrize("platform", ["windows-x64", "linux-x86-64", "linux-aarch64", "macos-arm64"])
+def test_every_platform_locates_the_component_pins_inside_its_staged_product_package(platform: str) -> None:
+    paths = load_layout(platform)["paths"]
+
+    assert paths["component_pins"] == f"{paths['packages']}/cadrumo/_data/dependencies"
+    staged = REPO_ROOT / "src" / Path(paths["component_pins"]).relative_to(paths["packages"])
+    assert {"browser_archives.toml", "local_ai_models.toml", "local_ai_program.toml"} <= {
+        child.name for child in staged.iterdir()
+    }

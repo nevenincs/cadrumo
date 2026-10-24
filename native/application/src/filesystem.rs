@@ -102,15 +102,18 @@ pub(crate) fn json_file_cancellable<T: serde::de::DeserializeOwned>(
 }
 
 pub(crate) fn json_bytes(path: &Path) -> Result<Vec<u8>, Error> {
+    bounded_bytes(path, JSON_BYTES_LIMIT)
+}
+
+/// The whole of a regular, unlinked file, refused when it is longer than `limit`.
+pub(crate) fn bounded_bytes(path: &Path, limit: u64) -> Result<Vec<u8>, Error> {
     refuse_links(path)?;
     if !fs::metadata(path)?.is_file() {
-        return Err(Error::Integrity("expected a regular JSON file".into()));
+        return Err(Error::Integrity("expected a regular file".into()));
     }
     let mut bytes = Vec::new();
-    File::open(path)?
-        .take(JSON_BYTES_LIMIT + 1)
-        .read_to_end(&mut bytes)?;
-    if bytes.len() as u64 > JSON_BYTES_LIMIT {
+    File::open(path)?.take(limit + 1).read_to_end(&mut bytes)?;
+    if bytes.len() as u64 > limit {
         return Err(Error::LimitExceeded);
     }
     Ok(bytes)

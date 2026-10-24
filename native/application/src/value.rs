@@ -116,3 +116,53 @@ impl fmt::Display for Sha256Digest {
         f.write_str(&self.0)
     }
 }
+
+/// A lowercase, fully qualified DNS host name with no port, as declared in package data.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
+pub struct HostName(String);
+
+impl HostName {
+    pub fn new(value: impl Into<String>) -> Result<Self, Error> {
+        let value = value.into();
+        let labels: Vec<&str> = value.split('.').collect();
+        // A top-level label is never all digits, which keeps IPv4 literals out.
+        if value.len() > 253
+            || labels.len() < 2
+            || labels
+                .last()
+                .is_some_and(|label| label.bytes().all(|c| c.is_ascii_digit()))
+            || labels.iter().any(|label| {
+                label.is_empty()
+                    || label.len() > 63
+                    || label.starts_with('-')
+                    || label.ends_with('-')
+                    || !label
+                        .bytes()
+                        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
+            })
+        {
+            return Err(Error::Invalid("expected a lowercase host name".into()));
+        }
+        Ok(Self(value))
+    }
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+impl TryFrom<String> for HostName {
+    type Error = Error;
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+impl From<HostName> for String {
+    fn from(value: HostName) -> Self {
+        value.0
+    }
+}
+impl fmt::Display for HostName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}

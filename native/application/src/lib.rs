@@ -33,6 +33,7 @@ pub mod package;
 #[cfg(all(windows, feature = "platform"))]
 pub mod person_operations;
 pub mod process;
+pub mod provisioning;
 pub mod python;
 pub mod role;
 pub mod runtime;

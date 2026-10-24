@@ -49,6 +49,7 @@ type _ArchivePath = Annotated[
 ]
 type _ArchiveUrl = Annotated[str, StringConstraints(pattern=r"^https://[a-z0-9.-]+/\S+$", max_length=2048)]
 type _Sha256 = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
+type _Host = Annotated[str, StringConstraints(pattern=r"^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$", max_length=253)]
 
 
 class BrowserArchivePin(BaseModel):
@@ -87,14 +88,19 @@ class BrowserArchivePin(BaseModel):
 
 
 class BrowserArchivePins(BaseModel):
-    """Every pinned archive of one Playwright driver version, across the supported platforms."""
+    """Every pinned archive of one Playwright driver version, across the supported platforms.
+
+    ``hosts`` are the declared browser hosts, the only ones a download may pass
+    through; the native component engine reads them from this table.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     playwright_driver: Annotated[str, StringConstraints(min_length=1, max_length=128)]
+    hosts: tuple[_Host, ...] = Field(min_length=1)
     archives: tuple[BrowserArchivePin, ...] = Field(min_length=1)
 
-    @field_validator("archives", mode="before")
+    @field_validator("hosts", "archives", mode="before")
     @classmethod
     @pydantic_validation_boundary
     def _archives_from_toml_array(cls, value: object) -> object:
@@ -107,6 +113,8 @@ class BrowserArchivePins(BaseModel):
         paths = [(pin.platform, pin.path) for pin in self.archives]
         if len(set(directories)) != len(directories) or len(set(paths)) != len(paths):
             raise ValueError("a platform pins each build directory and each path once")
+        if len(set(self.hosts)) != len(self.hosts):
+            raise ValueError("the table names each host once")
         return self
 
     def for_platform(self, platform: str) -> tuple[BrowserArchivePin, ...]:

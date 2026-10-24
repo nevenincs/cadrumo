@@ -75,6 +75,7 @@ def _pinned(directory: str, size: int) -> BrowserArchivePin:
 
 _PINS = BrowserArchivePins(
     playwright_driver=_DRIVER,
+    hosts=("cdn.playwright.dev",),
     archives=(_pinned(_FULL.directory_name, 200), _pinned("ffmpeg-1013", 7), _pinned(_SHELL.directory_name, 120)),
 )
 

@@ -149,6 +149,8 @@ def check_pins(pins: BrowserArchivePins | None, listed: Sequence[ListedArchive],
     problems: list[str] = []
     if pins.playwright_driver != driver:
         problems.append(f"pins are for driver {pins.playwright_driver}, the locked driver is {driver}")
+    if pins.hosts != dependency_hosts("browser"):
+        problems.append("the pinned hosts are not the declared browser hosts")
     expected: dict[tuple[str, str], tuple[str, tuple[str, ...]]] = {
         (a.platform, a.directory_name): (a.path, a.urls) for a in listed
     }
@@ -197,6 +199,9 @@ def render_pins(pins: BrowserArchivePins) -> str:
         "# and the exact bytes the product's browser setup accepts for it.",
         "",
         f"playwright_driver = {json.dumps(pins.playwright_driver)}",
+        "hosts = [",
+        *(f"  {json.dumps(host)}," for host in pins.hosts),
+        "]",
     ]
     for pin in pins.archives:
         lines += [
@@ -236,7 +241,7 @@ def generate() -> BrowserArchivePins:
                 }
             )
         )
-    return BrowserArchivePins(playwright_driver=driver, archives=tuple(pins))
+    return BrowserArchivePins(playwright_driver=driver, hosts=dependency_hosts("browser"), archives=tuple(pins))
 
 
 def run_check() -> int:

@@ -18,8 +18,8 @@ _SHA = "ab" * 32
 _PATH = "builds/cft/156.0.8078.4/win64/chrome-win64.zip"
 
 
-def _table(*archives: str, driver: str = "1.64.0") -> str:
-    return f'playwright_driver = "{driver}"\n' + "".join(archives)
+def _table(*archives: str, driver: str = "1.64.0", hosts: str = '["cdn.playwright.dev"]') -> str:
+    return f'playwright_driver = "{driver}"\nhosts = {hosts}\n' + "".join(archives)
 
 
 def _archive(
@@ -86,6 +86,12 @@ def test_a_platform_pins_each_build_once() -> None:
         load_browser_archive_pins(_table(_archive(), _archive(sha="cd" * 32)))
 
 
+@pytest.mark.parametrize("hosts", ("[]", '["cdn.playwright.dev", "cdn.playwright.dev"]', '["CDN.example"]'))
+def test_a_table_without_one_spelling_of_each_host_is_refused(hosts: str) -> None:
+    with pytest.raises(ValidationError):
+        load_browser_archive_pins(_table(_archive(), hosts=hosts))
+
+
 def _pins() -> BrowserArchivePins:
     pins = load_browser_archive_pins(
         _table(
@@ -118,6 +124,7 @@ def test_the_bundled_table_pins_the_installed_driver_from_declared_hosts_only() 
 
     assert pins is not None
     assert pins.playwright_driver == installed_playwright_driver_version(manifest)
+    assert pins.hosts == dependency_hosts("browser")
     declared = set(dependency_hosts("browser"))
     for pin in pins.archives:
         assert all(url.split("/")[2] in declared for url in pin.urls)
