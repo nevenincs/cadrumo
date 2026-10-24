@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
-import type { JsonObject, LedgerRow } from "../src/shell/ledger";
+import type { JsonObject, LedgerOutcome, LedgerRow } from "../src/shell/ledger";
 import {
   changedSinceRead,
   keepAfterApply,
   prepareApply,
+  releaseReview,
   resolveUnknown,
   runPlan,
   stageAfterApply,
@@ -666,6 +667,68 @@ test("a split's parts are classified one by one once the split settles, by their
   expect(keepAfterApply(content, refused.report).actions).toEqual(["split"]);
 });
 
+test("a split whose result does not name its parts says their classifications were not sent", async () => {
+  const split: StagedAction = {
+    id: "split",
+    kind: "split",
+    transactionId: A,
+    reason: "",
+    children: [
+      {
+        amount: "10.00",
+        description: "uno",
+        classify: { classification: "PERSONAL" },
+      },
+      { amount: "26.30", description: "dos" },
+    ],
+  };
+  const content: StagedContent = { rows: {}, drafts: [], actions: [split] };
+  for (const named of [undefined, [hexId("c1")]]) {
+    const done = await apply(content, rowsOf(movement(A)), {
+      "ledger.split.manual": [
+        {
+          settle: {
+            profile_id: PROFILE,
+            ...(named ? { child_transaction_ids: named } : {}),
+          },
+        },
+      ],
+    });
+    // Nothing is sent to a part no result named.
+    expect(done.calls).toHaveLength(1);
+    expect(
+      done.report.steps.map((step) => [step.outcome, step.follows ?? null]),
+    ).toEqual([
+      [{ kind: "applied", newId: null }, null],
+      [{ kind: "not_sent", why: "parts_unnamed" }, "split"],
+    ]);
+    // The row says so for no movement: the split itself saved and leaves
+    // the stage, and nothing is paused or held back by it.
+    expect(done.report.steps[1]!.rows).toEqual([]);
+    expect(done.report.paused).toBeNull();
+    expect(done.report.reread).toEqual([A]);
+    expect(keepAfterApply(content, done.report).actions).toEqual([]);
+  }
+  // A split with no part classification staged has nothing to report.
+  const plain: StagedContent = {
+    rows: {},
+    drafts: [],
+    actions: [
+      {
+        ...split,
+        children: split.children.map(({ amount, description }) => ({
+          amount,
+          description,
+        })),
+      },
+    ],
+  };
+  const quiet = await apply(plain, rowsOf(movement(A)), {
+    "ledger.split.manual": [{ settle: { profile_id: PROFILE } }],
+  });
+  expect(quiet.report.steps).toHaveLength(1);
+});
+
 test("a document added as evidence is attached by the evidence id it settled with", async () => {
   const add: StagedAction = {
     id: "doc",
@@ -738,4 +801,68 @@ test("a rule apply is one call, and the movements a rule classified are what sav
   ]);
   expect(done.report.reread.sort()).toEqual([A, B].sort());
   expect(keepAfterApply(content, done.report).actions).toEqual([]);
+});
+
+test("a rule apply whose outcome is unknown is reported by its action, never as no finding", () => {
+  const rules: StagedAction = {
+    id: "rules",
+    kind: "rule_apply",
+    reaffirm: false,
+    transactionIds: [A, B],
+  };
+  const content: StagedContent = { rows: {}, drafts: [], actions: [rules] };
+  const plan = planApply(content, { rows: rowsOf(movement(A), movement(B)) });
+  const step = plan.steps[0]!;
+  // The rules decide their movements as they run: a classified movement
+  // does not tell whether the rules or someone else classified it.
+  for (const fresh of [
+    rowsOf(movement(A), movement(B)),
+    rowsOf(movement(A, { business_classification: "PERSONAL" }), movement(B)),
+  ])
+    expect(resolveUnknown(step, content, fresh)).toEqual(
+      new Map([["rules", "undetermined"]]),
+    );
+});
+
+test("a review the page will not answer is cancelled at the revision observed now, where the host can", async () => {
+  const asked: [string, number][] = [];
+  const portAt = (now: LedgerOutcome | Error) => ({
+    ...fakePort(() => ({ refuse: "unused" })).port,
+    observe: async () => {
+      if (now instanceof Error) throw now;
+      return now;
+    },
+    cancel: async (operation: string, revision: number) => {
+      asked.push([operation, revision]);
+      throw new Error("refused");
+    },
+  });
+  await releaseReview(
+    portAt({
+      kind: "review",
+      operation_id: "op-1",
+      revision: 7,
+      cancellable: true,
+    }),
+    "op-1",
+  );
+  // A refused cancel is left to expire, without an error.
+  expect(asked).toEqual([["op-1", 7]]);
+  for (const now of [
+    {
+      kind: "review" as const,
+      operation_id: "op-2",
+      revision: 3,
+      cancellable: false,
+    },
+    {
+      kind: "settled" as const,
+      operation_id: "op-2",
+      revision: 9,
+      result: {},
+    },
+    new Error("unavailable"),
+  ])
+    await releaseReview(portAt(now), "op-2");
+  expect(asked).toEqual([["op-1", 7]]);
 });

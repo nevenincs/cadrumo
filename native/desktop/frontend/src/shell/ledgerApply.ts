@@ -44,7 +44,10 @@ export type NotSentWhy =
   /** An earlier step for the same movement did not save. */
   | "after_refusal"
   /** An earlier part of the same bulk was refused whole. */
-  | "after_part";
+  | "after_part"
+  /** A split saved, but its result did not name its parts, so the parts'
+   * own classifications had no movement to go to. */
+  | "parts_unnamed";
 
 /** Where one step, or one row of a bulk part, stands after the apply. */
 export type StepOutcome =
@@ -314,11 +317,23 @@ async function send(
   }
 }
 
+/** Whether a settled split had part classifications to send but its
+ * result did not name the parts they belong to. */
+export function partsUnnamed(step: PlanStep, result: JsonObject): boolean {
+  if (step.kind !== "action" || step.action.kind !== "split") return false;
+  const action = step.action;
+  return (
+    action.children.some((child) => child.classify) &&
+    texts(result.child_transaction_ids).length !== action.children.length
+  );
+}
+
 /**
  * The writes an action's settled result asks for next: each split part's
  * own classification, by the part's new id in order, and the attach of a
  * document just added as evidence, by its evidence id. None is sent when
- * the result does not name what it needs.
+ * the result does not name what it needs; `partsUnnamed` says so for a
+ * split.
  */
 export function followUps(step: PlanStep, result: JsonObject): PlanStep[] {
   if (step.kind !== "action") return [];
@@ -408,11 +423,16 @@ export async function runPlan(
   let paused: ApplyReport["paused"] = null;
   let stopped: LedgerFailureCode | null = null;
   let partRefused = false;
-  const queue: { index: number; step: PlanStep; follows?: string }[] =
-    plan.steps.map((step, index) => ({ index, step }));
+  const queue: {
+    index: number;
+    step: PlanStep;
+    follows?: string;
+    /** Reported as not sent, for no movement, without sending anything. */
+    unsent?: NotSentWhy;
+  }[] = plan.steps.map((step, index) => ({ index, step }));
   for (let at = 0; at < queue.length; at += 1) {
-    const { index, step, follows } = queue[at]!;
-    const rows = stepRows(step);
+    const { index, step, follows, unsent } = queue[at]!;
+    const rows = unsent ? [] : stepRows(step);
     let settled: { outcome: StepOutcome; rows: RowResult[] };
     const hold = (why: NotSentWhy) => {
       const outcome: StepOutcome = { kind: "not_sent", why };
@@ -421,7 +441,8 @@ export async function runPlan(
         rows: rows.map((transactionId) => ({ transactionId, outcome })),
       };
     };
-    if (paused) settled = hold("paused");
+    if (unsent) settled = hold(unsent);
+    else if (paused) settled = hold("paused");
     else if (stopped) settled = hold("stopped");
     else if (step.kind === "bulk" && partRefused) settled = hold("after_part");
     else if (rows.some((id) => failedRows.has(id)))
@@ -431,11 +452,13 @@ export async function runPlan(
         const answered = await send(port, step, current);
         settled = outcomeOf(step, answered);
         if (answered.kind === "settled" && DONE.has(settled.outcome.kind)) {
-          const next = followUps(step, answered.result).map((found) => ({
-            index,
-            step: found,
-            follows: step.kind === "action" ? step.action.id : undefined,
-          }));
+          const follows = step.kind === "action" ? step.action.id : undefined;
+          const next: (typeof queue)[number][] = followUps(
+            step,
+            answered.result,
+          ).map((found) => ({ index, step: found, follows }));
+          if (partsUnnamed(step, answered.result))
+            next.push({ index, step, follows, unsent: "parts_unnamed" });
           queue.splice(at + 1, 0, ...next);
         }
       } catch (error) {
@@ -622,12 +645,26 @@ export async function prepareApply(
   };
 }
 
+/** Asks the host to cancel a review the page will not answer, at the
+ * revision it is observed at now. A review that already settled, that the
+ * host says cannot be cancelled now, or that cannot be observed is left as
+ * it is: it expires on its own. */
+export async function releaseReview(
+  port: LedgerPort,
+  operation: string,
+): Promise<void> {
+  const now = await port.observe(operation).catch(() => null);
+  if (now?.kind !== "review" || !now.cancellable) return;
+  await port.cancel(operation, now.revision).catch(() => null);
+}
+
 export type UnknownResolution = "saved" | "not_saved" | "undetermined";
 
 /**
  * What a re-read says about a step whose outcome was unknown, per movement:
  * found saved, found not saved, or not told by the read. An add is never
  * told: it stays staged with its key, so sending it again is the same add.
+ * A rules apply is never told either, and is keyed by its action id.
  */
 export function resolveUnknown(
   step: PlanStep,
@@ -681,6 +718,12 @@ export function resolveUnknown(
       break;
     case "action": {
       const action = step.action;
+      // The rules decide their movements as they run, so no read of the
+      // movements tells whether they ran: the apply itself is reported.
+      if (action.kind === "rule_apply") {
+        found.set(action.id, "undetermined");
+        break;
+      }
       // An action over several movements is told by none of them alone.
       const row =
         "transactionId" in action ? fresh.get(action.transactionId) : undefined;
