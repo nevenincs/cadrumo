@@ -6,12 +6,14 @@
 //! without credentials, a host that is both declared and in the approved plan, and at most
 //! five redirects in one chain. An unapproved hop is `blocked_by_network`, and bytes that
 //! do not match the pin are `damaged_download`; neither is retried, and no other source is
-//! tried after them. A network failure on one source gives way to the next source.
+//! tried after them; nor after a full disk, a refused permission or a cancellation. Every
+//! other failure on one source gives way to the next source, and a source whose failure
+//! was final is not asked again when the others are retried.
 //!
 //! Retry follows the setup contract: a transient fault (a reset, refused or timed-out
 //! connection, a resolver failure, an HTTP 5xx or 429, a body that ended early) waits from
-//! 2 s, doubling to at most 60 s, with jitter in the upper half of each wait, for at most 6
-//! attempts inside 15 minutes. Each wait is announced before it starts and observes
+//! 2 s, doubling to at most 60 s, with jitter adding up to half of each wait but never
+//! passing 60 s, for at most 6 attempts inside 15 minutes. Each wait is announced before it starts and observes
 //! cancellation. Cancellation is checked between chunks, not during a blocked read; the
 //! connection's own I/O bound ends such a read.
 //!
@@ -66,19 +68,20 @@ impl Default for RetryPolicy {
 
 impl RetryPolicy {
     /// The wait before retry number `retry` (1 for the first) with `jitter` in `[0, 1]`:
-    /// the ceiling doubles from the initial delay to the maximum, and the wait lands in its
-    /// upper half, so retries never bunch together and never come sooner than half the
-    /// backoff.
+    /// the base doubles from the initial delay to the maximum, and jitter adds up to half
+    /// the base on top, so retries never bunch together, never come sooner than the base,
+    /// and never wait longer than the maximum.
     pub fn delay(&self, retry: u32, jitter: f64) -> Duration {
         let doubling = 1u32
             .checked_shl(retry.saturating_sub(1))
             .unwrap_or(u32::MAX);
-        let ceiling = self
+        let base = self
             .initial_delay
             .checked_mul(doubling)
             .unwrap_or(self.max_delay)
             .min(self.max_delay);
-        ceiling.mul_f64(0.5 + 0.5 * jitter.clamp(0.0, 1.0))
+        base.mul_f64(1.0 + 0.5 * jitter.clamp(0.0, 1.0))
+            .min(self.max_delay)
     }
 }
 
@@ -175,19 +178,31 @@ impl Transfer<'_> {
                 "a pinned transfer needs a source and a size".into(),
             ));
         }
+        // A source whose failure was final is not asked again; the others are retried.
+        let mut exhausted = vec![false; pinned.sources.len()];
+        let mut last = None;
         for attempt in 1..=self.policy.max_attempts {
             self.cancellation.check()?;
-            let mut failure = None;
-            for source in pinned.sources {
+            let mut retryable = false;
+            for (source, done) in pinned.sources.iter().zip(exhausted.iter_mut()) {
+                if *done {
+                    continue;
+                }
                 match self.attempt(source, pinned, partial)? {
                     Attempt::Done => return Ok(()),
-                    Attempt::Failed(found) if found.transient => failure = Some(found),
-                    Attempt::Failed(found) => return Err(final_failure(found, attempt)),
+                    Attempt::Failed(found) if stops_every_source(found.category) => {
+                        return Err(final_failure(found, attempt));
+                    }
+                    Attempt::Failed(found) => {
+                        retryable |= found.transient;
+                        *done = !found.transient;
+                        last = Some(found);
+                    }
                 }
             }
             let failure =
-                failure.unwrap_or_else(|| TransferFailure::final_(FailureCategory::Unexpected));
-            if attempt == self.policy.max_attempts {
+                last.unwrap_or_else(|| TransferFailure::final_(FailureCategory::Unexpected));
+            if !retryable || attempt == self.policy.max_attempts {
                 return Err(final_failure(failure, attempt));
             }
             let delay = self.policy.delay(attempt, self.pacing.jitter());
@@ -240,6 +255,8 @@ impl Transfer<'_> {
         if held == pinned.size {
             return finish(file, hash, pinned, partial);
         }
+        let cancellation = self.cancellation;
+        let stop = move || cancellation.check().is_err();
         let mut url = source.clone();
         let mut redirects = 0;
         loop {
@@ -261,7 +278,9 @@ impl Transfer<'_> {
                 return Ok(Attempt::Failed(network_failure(&error)));
             }
             let mut reader = BufReader::with_capacity(CHUNK_BYTES, stream);
-            let head = match http::read_head(&mut reader) {
+            let head = http::read_head(&mut reader, &stop);
+            self.cancellation.check()?;
+            let head = match head {
                 Ok(head) => head,
                 Err(error) => return Ok(Attempt::Failed(network_failure(&error))),
             };
@@ -319,7 +338,7 @@ impl Transfer<'_> {
             if let Err(error) = file.seek(SeekFrom::End(0)) {
                 return Ok(Attempt::Failed(file_failure(&error)));
             }
-            let mut body = Body::new(reader, framing);
+            let mut body = Body::new(reader, framing, &stop);
             match self.stream(&mut body, &mut file, &mut hash, held, pinned.size)? {
                 Some(failure) => return Ok(Attempt::Failed(failure)),
                 None => return finish(file, hash, pinned, partial),
@@ -366,6 +385,19 @@ impl Transfer<'_> {
             });
         }
     }
+}
+
+/// Failures no other source can cure: the bytes, the network's policy, the disk, the
+/// permissions or the person decided. Every other failure gives way to the next source.
+fn stops_every_source(category: FailureCategory) -> bool {
+    matches!(
+        category,
+        FailureCategory::DamagedDownload
+            | FailureCategory::BlockedByNetwork
+            | FailureCategory::DiskFull
+            | FailureCategory::NoPermission
+            | FailureCategory::Cancelled
+    )
 }
 
 fn final_failure(mut failure: TransferFailure, attempts: u32) -> Error {
@@ -464,11 +496,9 @@ fn connect_failure(failure: &ConnectFailure) -> TransferFailure {
             _ => TransferFailure::final_(FailureCategory::HostUnreachable),
         }
         .with_status(status),
-        // A name that does not exist is final on Windows (WSAHOST_NOT_FOUND); elsewhere the
-        // resolver does not say, so it is treated as a temporary failure.
-        Stage::Resolve if failure.os_code == Some(11001) => {
-            TransferFailure::final_(FailureCategory::HostUnreachable)
-        }
+        // Resolver failures are temporary on every platform: only Windows reports a missing
+        // name apart from a temporary one, and the same fault must not retry on one system
+        // and stop on another.
         Stage::Resolve | Stage::Connect | Stage::Tunnel(None) | Stage::Io => {
             TransferFailure::transient(FailureCategory::HostUnreachable)
         }
@@ -740,10 +770,10 @@ mod tests {
         let run = run(&network, &HOSTS[..1], &[SOURCE], &bytes, &partial);
         run.result.unwrap();
         assert_eq!(std::fs::read(&partial).unwrap(), bytes);
-        assert_eq!(run.waits, [Duration::from_millis(1500)]);
+        assert_eq!(run.waits, [Duration::from_millis(2500)]);
         assert!(run.events.contains(&TransferEvent::Retrying {
             attempt: 2,
-            delay: Duration::from_millis(1500)
+            delay: Duration::from_millis(2500)
         }));
         let requests = server.requests.lock().unwrap();
         assert_eq!(requests.len(), 2);
@@ -771,7 +801,7 @@ mod tests {
         assert_eq!((failure.attempts, failure.http_status), (6, Some(503)));
         assert_eq!(
             run.waits,
-            [2, 4, 8, 16, 32].map(|seconds| Duration::from_secs(seconds).mul_f64(0.75))
+            [2, 4, 8, 16, 32].map(|seconds| Duration::from_secs(seconds).mul_f64(1.25))
         );
         assert_eq!(server.targets().len(), 6);
 
@@ -814,7 +844,7 @@ mod tests {
             policy,
         );
         assert_eq!(failure(&run).attempts, 2);
-        assert_eq!(run.waits, [Duration::from_millis(1500)]);
+        assert_eq!(run.waits, [Duration::from_millis(2500)]);
     }
 
     #[test]
@@ -874,6 +904,183 @@ mod tests {
             );
             assert_eq!(failure(&run).category, FailureCategory::DamagedDownload);
             assert_eq!(server.targets().len(), 1);
+        }
+    }
+
+    const MIRROR: &str = "https://mirror.example.com/a.zip";
+
+    /// Serves the archive at `/a.zip` and answers every other target with `status`.
+    fn archive_or(
+        status: &'static str,
+        bytes: Vec<u8>,
+    ) -> impl Fn(&Request) -> Reply + Send + Sync + 'static {
+        let ok = serving(bytes);
+        move |request: &Request| match request.target() {
+            "/a.zip" => ok(request),
+            _ => empty(status),
+        }
+    }
+
+    #[test]
+    fn a_final_status_on_one_source_gives_way_to_the_next_source() {
+        let bytes = payload(8_000);
+        for status in ["404 Not Found", "416 Range Not Satisfiable", "410 Gone"] {
+            let (certificate, server, directory) = setup(archive_or(status, bytes.clone()));
+            let network = network_to(certificate.roots(), server.address(), None);
+            let partial = directory.path().join("a.part");
+            let run = run(
+                &network,
+                &HOSTS[..2],
+                &["https://cdn.example.com/missing", MIRROR],
+                &bytes,
+                &partial,
+            );
+            run.result.unwrap();
+            assert_eq!(std::fs::read(&partial).unwrap(), bytes, "{status}");
+            assert_eq!(server.targets(), ["/missing", "/a.zip"], "{status}");
+            assert!(run.waits.is_empty(), "{status}");
+        }
+    }
+
+    #[test]
+    fn a_refused_certificate_or_an_unresolvable_name_gives_way_to_the_next_source() {
+        let bytes = payload(8_000);
+        let mirror_only = TestCertificate::new(&["mirror.example.com"]);
+        let server = TlsServer::start(&mirror_only, serving(bytes.clone()));
+        let directory = tempfile::tempdir().unwrap();
+        let network = network_to(mirror_only.roots(), server.address(), None);
+        let partial = directory.path().join("tls.part");
+        let run = run(&network, &HOSTS[..2], &[SOURCE, MIRROR], &bytes, &partial);
+        run.result.unwrap();
+        assert_eq!(std::fs::read(&partial).unwrap(), bytes);
+        assert!(run.waits.is_empty());
+        assert_eq!(server.targets(), ["/a.zip"]);
+
+        let (certificate, server, directory) = setup(serving(bytes.clone()));
+        let address = server.address();
+        // The Windows code for a name that does not exist: it must read as on any system.
+        let resolve: Arc<crate::provisioning::connection::Resolve> =
+            Arc::new(move |host: &str, _: u16| {
+                if host == "cdn.example.com" {
+                    Err(io::Error::from_raw_os_error(11001))
+                } else {
+                    Ok(vec![address])
+                }
+            });
+        let network = Network::with_parts(certificate.roots(), resolve, None);
+        let partial = directory.path().join("dns.part");
+        let run = super::tests::run(&network, &HOSTS[..2], &[SOURCE, MIRROR], &bytes, &partial);
+        run.result.unwrap();
+        assert_eq!(std::fs::read(&partial).unwrap(), bytes);
+        assert!(run.waits.is_empty());
+    }
+
+    #[test]
+    fn a_resolver_failure_classifies_alike_on_every_system() {
+        for os_code in [None, Some(11001), Some(11002), Some(-2)] {
+            let found = connect_failure(&ConnectFailure {
+                stage: Stage::Resolve,
+                connected: false,
+                io_kind: None,
+                os_code,
+            });
+            assert_eq!(
+                (found.category, found.transient),
+                (FailureCategory::HostUnreachable, true),
+                "{os_code:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn every_source_failing_reports_the_last_and_retries_only_the_transient_ones() {
+        let (certificate, server, directory) = setup(|request: &Request| match request.target() {
+            "/missing" => empty("404 Not Found"),
+            "/gone" => empty("416 Range Not Satisfiable"),
+            _ => empty("503 Busy"),
+        });
+        let network = network_to(certificate.roots(), server.address(), None);
+        let run = run(
+            &network,
+            &HOSTS[..2],
+            &[
+                "https://cdn.example.com/missing",
+                "https://mirror.example.com/gone",
+            ],
+            b"bytes",
+            &directory.path().join("a.part"),
+        );
+        let found = failure(&run);
+        assert_eq!(
+            (found.category, found.attempts, found.http_status),
+            (FailureCategory::Unexpected, 1, Some(416))
+        );
+        assert!(!found.transient);
+        assert!(run.waits.is_empty());
+        assert_eq!(server.targets(), ["/missing", "/gone"]);
+
+        server.requests.lock().unwrap().clear();
+        let run = super::tests::run(
+            &network,
+            &HOSTS[..2],
+            &[
+                "https://cdn.example.com/missing",
+                "https://mirror.example.com/busy",
+            ],
+            b"bytes",
+            &directory.path().join("b.part"),
+        );
+        let found = failure(&run);
+        assert_eq!(
+            (found.category, found.attempts, found.http_status),
+            (FailureCategory::HostUnreachable, 6, Some(503))
+        );
+        let targets = server.targets();
+        assert_eq!(targets.iter().filter(|t| *t == "/missing").count(), 1);
+        assert_eq!(targets.iter().filter(|t| *t == "/busy").count(), 6);
+        assert_eq!(run.waits.len(), 5);
+    }
+
+    #[test]
+    fn a_damaged_or_blocked_first_source_stops_every_source() {
+        let bytes = payload(4_000);
+        let mut damaged = bytes.clone();
+        damaged[7] ^= 0xff;
+        let ok = serving(bytes.clone());
+        let bad = serving(damaged);
+        let (certificate, server, directory) =
+            setup(move |request: &Request| match request.target() {
+                "/damaged" => bad(request),
+                "/forbidden" => empty("403 Forbidden"),
+                "/away" => Reply::Bytes(response(
+                    "302 Found",
+                    &[("Location", "https://elsewhere.example.com/a.zip".into())],
+                    b"",
+                )),
+                _ => ok(request),
+            });
+        let network = network_to(certificate.roots(), server.address(), None);
+        for (start, category) in [
+            ("damaged", FailureCategory::DamagedDownload),
+            ("forbidden", FailureCategory::BlockedByNetwork),
+            ("away", FailureCategory::BlockedByNetwork),
+        ] {
+            server.requests.lock().unwrap().clear();
+            let source = format!("https://cdn.example.com/{start}");
+            let run = run(
+                &network,
+                &HOSTS[..2],
+                &[source.as_str(), MIRROR],
+                &bytes,
+                &directory.path().join(format!("{start}.part")),
+            );
+            let found = failure(&run);
+            assert_eq!((found.category, found.attempts), (category, 1), "{start}");
+            assert!(run.waits.is_empty(), "{start}");
+            assert!(
+                !server.targets().contains(&"/a.zip".to_owned()),
+                "{start}: no other source after it"
+            );
         }
     }
 
@@ -1150,13 +1357,16 @@ mod tests {
     }
 
     #[test]
-    fn delays_double_from_two_seconds_to_a_minute_in_the_upper_half() {
+    fn delays_start_at_two_seconds_double_and_never_pass_a_minute() {
         let policy = RetryPolicy::default();
-        assert_eq!(policy.delay(1, 0.0), Duration::from_secs(1));
-        assert_eq!(policy.delay(1, 1.0), Duration::from_secs(2));
-        assert_eq!(policy.delay(3, 1.0), Duration::from_secs(8));
+        assert_eq!(policy.delay(1, 0.0), Duration::from_secs(2));
+        assert_eq!(policy.delay(1, 1.0), Duration::from_secs(3));
+        assert_eq!(policy.delay(2, 0.0), Duration::from_secs(4));
+        assert_eq!(policy.delay(3, 1.0), Duration::from_secs(12));
+        assert_eq!(policy.delay(5, 1.0), Duration::from_secs(48));
+        assert_eq!(policy.delay(6, 0.0), Duration::from_secs(60));
         assert_eq!(policy.delay(6, 1.0), Duration::from_secs(60));
-        assert_eq!(policy.delay(40, 0.0), Duration::from_secs(30));
+        assert_eq!(policy.delay(40, 1.0), Duration::from_secs(60));
         let mut pacing = SystemPacing::default();
         for _ in 0..64 {
             assert!((0.0..=1.0).contains(&pacing.jitter()));

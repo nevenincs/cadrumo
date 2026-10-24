@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:c1a6fd6a0d9978dcf6b72e26c5658ed55468f31bf4d32abecda7639af7691103'
+body_hash: 'sha256:4eddbe4a24ac948d7ec85d8eb139e53d9789226ee9c60782c22f1f1f02d95eae'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -153,6 +153,15 @@ related:
 - `S16` `verify:` `withdrawal, setup, access, conformance, contracts, provision parity, MCP relay, session hold, server start authority, local reader operation, operation composition pytest (222)` -> `pass`
 - `S16` `verify:` `runtime server containment pytest (6)` -> `pass`
 - `S16` `verify:` `ruff, ty, lint-imports (30 kept)` -> `pass`
+- `S02` `M` `native/application/src/provisioning/transfer.rs`
+- `S02` `M` `native/application/src/provisioning/http.rs`
+- `S02` `M` `native/application/src/provisioning/connection.rs`
+- `S02` `M` `native/application/src/provisioning/network.rs`
+- `S02` `verify:` `cargo test --no-fail-fast (lib 100 passed; package_inspection linked_root_and_deep_root_ancestor_are_refused pre-existing non-ASCII junction failure)` -> `pass`
+- `S02` `verify:` `cargo clippy --all-targets -- -D warnings` -> `pass`
+- `S02` `verify:` `cargo clippy --all-targets --features platform -- -D warnings` -> `pass`
+- `S02` `verify:` `rustfmt --edition 2024 --check src/provisioning/*.rs` -> `pass`
+- `S02` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -168,3 +177,4 @@ related:
 - `S04` `package_inspection` junction fixture failure is the pre-existing non-ASCII junction path issue
 - `S16` Owner ruling 2026-10-24: Python must not provision; the Python path is withdrawn now, ahead of its P05.S14 deletion. Setup is unavailable on every surface until the components role lands; status still names what is missing. The local AI quick check takes about 1.1 s warm and 2.2 s cold with or without withdrawal, near its 2 s bound (pre-existing).
 - `S16` review correction withdrawn-full-check-relabelled: a registry without full checks answers a full request with its quick check and labels the rows quick; review correction runtime-owner-start-residual: the runtime admits no operation's request to start the local model program
+- `S02` review correction: transfer-source-fallback, retry-first-wait, http-unbounded-loops

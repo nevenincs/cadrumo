@@ -171,7 +171,7 @@ fn check(network: &Network, host: &HostName, timeout: Duration) -> HostCheck {
     if http::write_request(&mut stream, "HEAD", url.target(), &url.authority(), &[]).is_err() {
         return answer;
     }
-    if let Ok(head) = http::read_head(&mut BufReader::new(stream)) {
+    if let Ok(head) = http::read_head(&mut BufReader::new(stream), &http::never) {
         answer.outcome = Reachability::Reachable;
         answer.status = Some(head.status);
     }

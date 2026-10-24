@@ -259,7 +259,7 @@ fn tunnel(
         .map_err(|error| (None, Some(error)))?;
     // Read the answer byte by byte so no tunnelled byte is consumed into a buffer.
     let mut reader = BufReader::with_capacity(1, ByteReader(tcp));
-    let answer = http::read_head(&mut reader).map_err(|error| (None, Some(error)))?;
+    let answer = http::read_head(&mut reader, &http::never).map_err(|error| (None, Some(error)))?;
     if (200..300).contains(&answer.status) {
         Ok(())
     } else {
