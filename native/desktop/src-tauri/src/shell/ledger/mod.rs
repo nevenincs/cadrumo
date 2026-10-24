@@ -360,10 +360,11 @@ fn substitute(
 }
 
 /// Result fields that name a file the worker read or wrote.
-const RESULT_PATH_KEYS: [&str; 7] = [
+const RESULT_PATH_KEYS: [&str; 8] = [
     "files",
     "output_path",
     "path",
+    "provider_locator",
     "source_directory",
     "source_path",
     "source_reference",
@@ -382,7 +383,11 @@ fn file_names(value: &mut Value) {
             && bytes[0].is_ascii_alphabetic()
             && bytes[1] == b':'
             && matches!(bytes[2], b'\\' | b'/');
-        if drive || text.starts_with(['/', '\\']) {
+        // A local attachment's locator can also be a file URI.
+        let uri = text
+            .get(..5)
+            .is_some_and(|scheme| scheme.eq_ignore_ascii_case("file:"));
+        if drive || uri || text.starts_with(['/', '\\']) {
             let name = text
                 .rsplit(['/', '\\'])
                 .next()

@@ -302,6 +302,11 @@ fn results_name_files_and_never_where_they_are() {
         "output_path": r"\\server\share\ledger.xlsx",
         "files": [r"D:\export\a.ofx", "b.ofx"],
         "review": {"path": "lines[0].iva_amount"},
+        "queue": [
+            {"provider_locator": r"C:\Users\alba\Facturas\gasolina.pdf"},
+            {"provider_locator": "file:///home/alba/facturas/luz.pdf"},
+            {"provider_locator": "drive:1AbCdEf"},
+        ],
     });
     super::file_names(&mut result);
     assert_eq!(result["sources"][0]["path"], "n26-2026.csv");
@@ -311,6 +316,9 @@ fn results_name_files_and_never_where_they_are() {
     assert_eq!(result["output_path"], "ledger.xlsx");
     assert_eq!(result["files"], json!(["a.ofx", "b.ofx"]));
     assert_eq!(result["review"]["path"], "lines[0].iva_amount");
+    assert_eq!(result["queue"][0]["provider_locator"], "gasolina.pdf");
+    assert_eq!(result["queue"][1]["provider_locator"], "luz.pdf");
+    assert_eq!(result["queue"][2]["provider_locator"], "drive:1AbCdEf");
 }
 
 fn projection(lifecycle: &str) -> Value {
