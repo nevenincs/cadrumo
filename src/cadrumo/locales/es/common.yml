@@ -907,6 +907,8 @@ desktop:
         share_needs_mixed: '{count} con parte pero no Mixtos'
         suggestion_and_edits: '{count} con una aprobación del modelo y ediciones a
           la vez'
+        suggestion_and_rules: '{count} con una aprobación del modelo y una aplicación
+          de reglas que los incluye'
         suggestion_needs_share: '{count} aprobaciones Mixtas: indica una parte para
           aprobar'
         too_large: '{count} demasiado grandes para enviar'
@@ -932,6 +934,7 @@ desktop:
         drop_approval: Quitar la aprobación
         drop_changes: Quitar los cambios
         drop_edits: Quitar las ediciones
+        drop_rules: Quitar la aplicación de reglas
         drop_share: Quitar la parte
         go_to_draft: Ir al movimiento nuevo
         keep_first: Conservar la primera acción
@@ -950,9 +953,11 @@ desktop:
       link:
         amount_differs: El importe difiere en {amount}
         counterparty_differs: Contraparte distinta
+        currency_differs: 'Moneda distinta: {movement} ↔ {invoice}'
         differ: Sé que difieren
         linked_elsewhere: Factura ya vinculada a {count} movimientos
         sure: Vincular estos · permanente
+        unread: No se ha podido leer la factura
       mine: Conservar el mío
       more: '{count} más'
       needs_you: Primero necesita tu atención
@@ -965,6 +970,9 @@ desktop:
         not_sent_after_part: 'No enviado: se rechazó entera una parte anterior.'
         not_sent_after_refusal: 'No enviado: se rechazó un cambio anterior de este
           movimiento.'
+        not_sent_parts_unnamed: 'No enviado: la división se guardó sin nombrar sus
+          partes, así que sus clasificaciones no tienen adónde ir. Clasifica las partes
+          en la tabla.'
         not_sent_paused: 'No enviado: escrituras en pausa tras un resultado desconocido.
           Sigue preparado.'
         not_sent_stopped: 'No enviado: la sesión se cerró. Sigue preparado.'
@@ -2740,8 +2748,13 @@ desktop:
       found_saved: '{movement} se guardó'
       found_undetermined: '{movement}: la lectura no lo aclara; sigue preparado y
         guardarlo de nuevo es el mismo guardado'
+      read_again: '{movement}: leído de nuevo, comprueba lo guardado'
       reread: Volver a leer
+      saved_unread: 'Guardado, respuesta sin leer: escrituras en pausa'
+      saved_unread_reason: 'Vuelve a leer primero: no se leyó la respuesta de un guardado'
+      staged: Cambios preparados
       title: 'Resultado desconocido: escrituras en pausa'
+      unsaved: '{movement} no se guardó'
     period:
       all: Todos los periodos
       choose: Elige un periodo

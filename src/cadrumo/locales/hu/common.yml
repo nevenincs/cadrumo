@@ -887,6 +887,8 @@ desktop:
         sealed: '{count} lezárva véglegesített bevallás miatt'
         share_needs_mixed: '{count} aránnyal, de nem Vegyes'
         suggestion_and_edits: '{count} modell-jóváhagyással és szerkesztéssel együtt'
+        suggestion_and_rules: '{count} modell-jóváhagyással és egy rájuk is kiterjedő
+          szabályalkalmazással'
         suggestion_needs_share: '{count} Vegyes jóváhagyás: add meg az arányt'
         too_large: '{count} túl nagy a küldéshez'
         transfer_with_tax: '{count} átvezetés adóadattal'
@@ -911,6 +913,7 @@ desktop:
         drop_approval: Jóváhagyás elvetése
         drop_changes: Változások elvetése
         drop_edits: Szerkesztések elvetése
+        drop_rules: Szabályalkalmazás elvetése
         drop_share: Arány elvetése
         go_to_draft: Ugrás az új tételre
         keep_first: Az első művelet marad
@@ -929,9 +932,11 @@ desktop:
       link:
         amount_differs: 'Az összeg eltérése: {amount}'
         counterparty_differs: Eltérő partner
+        currency_differs: 'Eltérő pénznem: {movement} ↔ {invoice}'
         differ: Tudom, hogy eltérnek
         linked_elsewhere: A számla már {count} tételhez kapcsolódik
         sure: Összekapcsolás · végleges
+        unread: A számla nem olvasható
       mine: Az enyém marad
       more: további {count}
       needs_you: Előbb a te döntésed kell
@@ -943,6 +948,9 @@ desktop:
         applied_new_id: Új hivatkozással mentve
         not_sent_after_part: 'Nem ment el: egy korábbi részt egészében elutasítottak.'
         not_sent_after_refusal: 'Nem ment el: e tétel egy korábbi változását elutasították.'
+        not_sent_parts_unnamed: 'Nem ment el: a felosztás a részek megnevezése nélkül
+          mentődött, így a besorolásuknak nincs hová mennie. Sorold be a részeket
+          a táblázatban.'
         not_sent_paused: 'Nem ment el: ismeretlen eredmény után szünetel az írás.
           Előkészítve marad.'
         not_sent_stopped: 'Nem ment el: a munkamenet megszakadt. Előkészítve marad.'
@@ -2712,8 +2720,13 @@ desktop:
       found_saved: '{movement} mentve lett'
       found_undetermined: '{movement}: az olvasásból nem derül ki; előkészítve marad,
         az újramentés ugyanaz a mentés'
+      read_again: '{movement}: újra beolvasva, ellenőrizd, mi van mentve'
       reread: Újraolvasás
+      saved_unread: 'Mentve, a válasz nem olvasható: írás szüneteltetve'
+      saved_unread_reason: 'Előbb olvasd be újra: egy mentés válasza nem olvasható'
+      staged: Előkészített változások
       title: 'Ismeretlen eredmény: írás szüneteltetve'
+      unsaved: '{movement} nem lett mentve'
     period:
       all: Minden időszak
       choose: Válassz időszakot

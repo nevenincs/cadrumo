@@ -871,6 +871,8 @@ desktop:
         sealed: '{count} sealed by a finalised declaration'
         share_needs_mixed: '{count} with a share but not Mixed'
         suggestion_and_edits: '{count} with a model approval and edits together'
+        suggestion_and_rules: '{count} with a model approval and a rules apply that
+          names them'
         suggestion_needs_share: '{count} Mixed approvals: enter a share to approve'
         too_large: '{count} too large to send'
         transfer_with_tax: '{count} transfers with tax fields'
@@ -895,6 +897,7 @@ desktop:
         drop_approval: Drop the approval
         drop_changes: Drop the changes
         drop_edits: Drop the edits
+        drop_rules: Drop the rules apply
         drop_share: Drop the share
         go_to_draft: Go to the new movement
         keep_first: Keep the first action
@@ -913,9 +916,11 @@ desktop:
       link:
         amount_differs: Amount differs by {amount}
         counterparty_differs: Different counterparty
+        currency_differs: 'Different currency: {movement} ↔ {invoice}'
         differ: I know they differ
         linked_elsewhere: Invoice also linked to {count} movements
         sure: Link these · permanent
+        unread: Invoice could not be read
       mine: Keep mine
       more: '{count} more'
       needs_you: Needs you first
@@ -928,6 +933,8 @@ desktop:
         not_sent_after_part: 'Not sent: an earlier part was refused whole.'
         not_sent_after_refusal: 'Not sent: an earlier change to this movement was
           refused.'
+        not_sent_parts_unnamed: 'Not sent: the split saved without naming its parts,
+          so their classifications have nowhere to go. Classify the parts in the grid.'
         not_sent_paused: 'Not sent: writes paused after an unknown outcome. It stays
           staged.'
         not_sent_stopped: 'Not sent: the session went away. It stays staged.'
@@ -2696,8 +2703,13 @@ desktop:
       found_saved: '{movement} was saved'
       found_undetermined: '{movement}: the read can''t tell; it stays staged, saving
         it again is the same save'
+      read_again: '{movement}: read again, check what is stored'
       reread: Re-read
+      saved_unread: 'Saved, answer not read: writes paused'
+      saved_unread_reason: 'Re-read first: a save''s answer was not read'
+      staged: Staged changes
       title: 'Outcome unknown: writes paused'
+      unsaved: '{movement} was not saved'
     period:
       all: All periods
       choose: Choose a period

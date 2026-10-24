@@ -899,6 +899,8 @@ desktop:
         sealed: '{count} segellats per una declaració finalitzada'
         share_needs_mixed: '{count} amb part però no Mixtos'
         suggestion_and_edits: '{count} amb una aprovació del model i edicions alhora'
+        suggestion_and_rules: '{count} amb una aprovació del model i una aplicació
+          de regles que els inclou'
         suggestion_needs_share: '{count} aprovacions Mixtes: indica una part per aprovar'
         too_large: '{count} massa grans per enviar'
         transfer_with_tax: '{count} traspassos amb dades fiscals'
@@ -923,6 +925,7 @@ desktop:
         drop_approval: Treu l'aprovació
         drop_changes: Treu els canvis
         drop_edits: Treu les edicions
+        drop_rules: Treu l'aplicació de regles
         drop_share: Treu la part
         go_to_draft: Ves al moviment nou
         keep_first: Conserva la primera acció
@@ -941,9 +944,11 @@ desktop:
       link:
         amount_differs: L'import difereix en {amount}
         counterparty_differs: Contrapart diferent
+        currency_differs: 'Moneda diferent: {movement} ↔ {invoice}'
         differ: Sé que difereixen
         linked_elsewhere: Factura ja vinculada a {count} moviments
         sure: Vincula aquests · permanent
+        unread: No s'ha pogut llegir la factura
       mine: Conserva el meu
       more: '{count} més'
       needs_you: Primer necessita la teva atenció
@@ -956,6 +961,9 @@ desktop:
         not_sent_after_part: 'No enviat: es va rebutjar sencera una part anterior.'
         not_sent_after_refusal: 'No enviat: es va rebutjar un canvi anterior d''aquest
           moviment.'
+        not_sent_parts_unnamed: 'No enviat: la divisió es va desar sense anomenar
+          les seves parts, així que les seves classificacions no tenen on anar. Classifica
+          les parts a la taula.'
         not_sent_paused: 'No enviat: escriptures en pausa després d''un resultat desconegut.
           Continua preparat.'
         not_sent_stopped: 'No enviat: la sessió s''ha tancat. Continua preparat.'
@@ -2730,8 +2738,14 @@ desktop:
       found_saved: '{movement} es va desar'
       found_undetermined: '{movement}: la lectura no ho aclareix; continua preparat
         i desar-lo de nou és el mateix desament'
+      read_again: '{movement}: llegit de nou, comprova el que hi ha desat'
       reread: Torna a llegir
+      saved_unread: 'Desat, resposta sense llegir: escriptures en pausa'
+      saved_unread_reason: 'Torna a llegir primer: no es va llegir la resposta d''un
+        desament'
+      staged: Canvis preparats
       title: 'Resultat desconegut: escriptures en pausa'
+      unsaved: '{movement} no es va desar'
     period:
       all: Tots els períodes
       choose: Tria un període

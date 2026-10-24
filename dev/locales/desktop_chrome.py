@@ -593,6 +593,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "action_and_edits",
             "exclude_and_classification",
             "suggestion_and_edits",
+            "suggestion_and_rules",
             "suggestion_needs_share",
             "actions_conflict",
             "too_large",
@@ -612,7 +613,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "suggestion",
             "m210",
         ),
-        "desktop.ledger.apply.outcome.not_sent_": ("paused", "stopped", "after_refusal", "after_part"),
+        "desktop.ledger.apply.outcome.not_sent_": ("paused", "stopped", "after_refusal", "after_part", "parts_unnamed"),
         "desktop.ledger.apply.tally.": (
             "applied",
             "unchanged",
@@ -2993,6 +2994,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.apply.blocker.sealed",
         "desktop.ledger.apply.blocker.share_needs_mixed",
         "desktop.ledger.apply.blocker.suggestion_and_edits",
+        "desktop.ledger.apply.blocker.suggestion_and_rules",
         "desktop.ledger.apply.blocker.suggestion_needs_share",
         "desktop.ledger.apply.blocker.too_large",
         "desktop.ledger.apply.blocker.transfer_with_tax",
@@ -3013,6 +3015,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.apply.fix.business",
         "desktop.ledger.apply.fix.drop_action",
         "desktop.ledger.apply.fix.drop_approval",
+        "desktop.ledger.apply.fix.drop_rules",
         "desktop.ledger.apply.fix.drop_changes",
         "desktop.ledger.apply.fix.drop_edits",
         "desktop.ledger.apply.fix.drop_share",
@@ -3032,9 +3035,11 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.apply.keep_editing",
         "desktop.ledger.apply.link.amount_differs",
         "desktop.ledger.apply.link.counterparty_differs",
+        "desktop.ledger.apply.link.currency_differs",
         "desktop.ledger.apply.link.differ",
         "desktop.ledger.apply.link.linked_elsewhere",
         "desktop.ledger.apply.link.sure",
+        "desktop.ledger.apply.link.unread",
         "desktop.ledger.apply.mine",
         "desktop.ledger.apply.more",
         "desktop.ledger.apply.needs_you",
@@ -3046,6 +3051,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.apply.outcome.not_sent_after_part",
         "desktop.ledger.apply.outcome.not_sent_after_refusal",
         "desktop.ledger.apply.outcome.not_sent_paused",
+        "desktop.ledger.apply.outcome.not_sent_parts_unnamed",
         "desktop.ledger.apply.outcome.not_sent_stopped",
         "desktop.ledger.apply.outcome.refused",
         "desktop.ledger.apply.outcome.saved_unread",
@@ -3216,8 +3222,13 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.paused.found_not_saved",
         "desktop.ledger.paused.found_saved",
         "desktop.ledger.paused.found_undetermined",
+        "desktop.ledger.paused.read_again",
         "desktop.ledger.paused.reread",
+        "desktop.ledger.paused.saved_unread",
+        "desktop.ledger.paused.saved_unread_reason",
+        "desktop.ledger.paused.staged",
         "desktop.ledger.paused.title",
+        "desktop.ledger.paused.unsaved",
         "desktop.ledger.sort.key.account",
         "desktop.ledger.tray.actions",
         "desktop.ledger.tray.discard",
@@ -3671,7 +3682,9 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
 #: check holds the rest of the declaration to an exact match with the shell
 #: source and refuses any key here once the shell names it, so a key leaves
 #: this set when its view lands and the set only shrinks.
-DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.signin.unsupported"})
+DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset(
+    {"desktop.signin.unsupported", "desktop.ledger.apply.fix.drop_rules"}
+)
 
 # The only placeholder form the shell substitutes: ``{name}``.
 _SHELL_PLACEHOLDER: Final[re.Pattern[str]] = re.compile(r"\{(\w+)\}")
