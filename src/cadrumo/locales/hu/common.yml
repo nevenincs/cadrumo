@@ -1540,6 +1540,26 @@ desktop:
       unknown: Ismeretlen eredmény
       unknown_note: Lehet, hogy mentésre került. Semmit nem küldünk újra.
       unread: Néhány mezőt nem olvastunk be
+      viewer:
+        failed: Az oldalt nem sikerült megjeleníteni.
+        fit: Szélességhez igazítás
+        image: '{file}, oldal: {page}'
+        label: Dokumentum
+        next: Következő oldal
+        page: 'Oldal: {page} / {count}'
+        previous: Előző oldal
+        reading: Az oldal rajzolása…
+        refused:
+          digest_mismatch: A tárolt fájl nem egyezik a rekordjával, ezért nem jelenik
+            meg.
+          not_found: Ez a dokumentum már nincs a profilban tárolva.
+          out_of_range: A dokumentumnak nincs ilyen oldala.
+          too_large: A dokumentum túl nagy ahhoz, hogy itt megjelenjen.
+          unreadable: A fájl nem nyitható meg azként a típusként, amellyel mentették.
+          unsupported_media: Itt csak PDF-, JPEG- és PNG-dokumentum jeleníthető meg.
+        zoom: 'Nagyítás: {percent}%'
+        zoom_in: Nagyítás
+        zoom_out: Kicsinyítés
       what_was_read: Mit olvastunk be
       why_right: Miért helyes a beolvasott érték
     draft:
@@ -1552,6 +1572,7 @@ desktop:
       archive: Archiválás ismétlődésként
       chip: Ismétlődések
       chip_name: 'Lehetséges ismétlődések: {count} · megjelenítés'
+      failed: 'Lehetséges ismétlődések: nincs beolvasva'
     edit:
       changed_was: 'módosítva, nincs mentve, korábban: {was}'
       cleared: törölve

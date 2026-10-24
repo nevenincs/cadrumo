@@ -1555,6 +1555,26 @@ desktop:
       unknown: Resultat desconegut
       unknown_note: Pot ser que s'hagi desat. No es torna a enviar res.
       unread: Alguns camps no s'han llegit
+      viewer:
+        failed: No s'ha pogut mostrar la pàgina.
+        fit: Ajusta a l'amplada
+        image: '{file}, pàgina: {page}'
+        label: Document
+        next: Pàgina següent
+        page: 'Pàgina: {page} / {count}'
+        previous: Pàgina anterior
+        reading: Dibuixant la pàgina…
+        refused:
+          digest_mismatch: El fitxer desat no coincideix amb el seu registre, així
+            que no es mostra.
+          not_found: Aquest document ja no està desat al perfil.
+          out_of_range: El document no té aquesta pàgina.
+          too_large: El document és massa gran per mostrar-lo aquí.
+          unreadable: El fitxer no es pot obrir com el tipus amb què es va desar.
+          unsupported_media: Aquí només es poden mostrar documents PDF, JPEG i PNG.
+        zoom: 'Zoom: {percent} %'
+        zoom_in: Apropa
+        zoom_out: Allunya
       what_was_read: Què s'ha llegit
       why_right: Per què és correcte el valor llegit
     draft:
@@ -1567,6 +1587,7 @@ desktop:
       archive: Arxiva com a duplicat
       chip: Duplicats
       chip_name: 'Possibles duplicats: {count} · mostra''ls'
+      failed: 'Possibles duplicats: no llegits'
     edit:
       changed_was: canviat, sense desar, abans {was}
       cleared: buidat

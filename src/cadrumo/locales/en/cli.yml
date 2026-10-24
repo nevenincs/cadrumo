@@ -255,6 +255,12 @@ cli:
           again, or fill in those fields yourself.'
         list_help: List registered purchase invoice evidence
         notes_help: Internal notes about the evidence
+        page_help: Draw one page of a stored document as a PNG image and write it
+          to --output.
+        page_max_width_help: Widest image to draw, in pixels.
+        page_number_help: Page to draw, counting from 1.
+        page_output_failed: Could not write the page image to {path}.
+        page_output_help: PNG file to write the page to.
         pull_actor_help: Your name or label.
         pull_id_help: Transaction id in your records.
         remove_help: Delete purchase invoice evidence

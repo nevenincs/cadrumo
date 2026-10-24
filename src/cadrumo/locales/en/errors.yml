@@ -1126,6 +1126,18 @@ errors:
       was read. Set it up, then try again.
     refused_ledger_evidence_not_found: No purchase-invoice evidence exists with the
       identifier provided.
+    refused_ledger_evidence_page_digest_mismatch: The stored document does not match
+      the digest its record names, so it is not shown.
+    refused_ledger_evidence_page_not_found: This profile holds no stored document
+      with that identifier.
+    refused_ledger_evidence_page_out_of_range: The document has no page with that
+      number.
+    refused_ledger_evidence_page_too_large: The document, or its page as an image,
+      is too large to show.
+    refused_ledger_evidence_page_unreadable: The stored document cannot be read as
+      the type it was saved as.
+    refused_ledger_evidence_page_unsupported_media: Only PDF, JPEG and PNG documents
+      can be shown as a page.
     refused_ledger_evidence_reader_unavailable: The automatic reader could not run,
       so nothing was read.
     refused_ledger_evidence_reader_unreadable_answer: The document reader answered

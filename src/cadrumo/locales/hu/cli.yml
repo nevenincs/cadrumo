@@ -269,6 +269,12 @@ cli:
           a kinyerést, vagy töltsd ki ezeket a mezőket te magad.'
         list_help: Regisztrált vásárlásiszámla-bizonyítékok listázása.
         notes_help: Belső megjegyzések a bizonyítékról.
+        page_help: Egy tárolt dokumentum egy oldalát PNG-képként rajzolja meg, és
+          az --output fájlba írja.
+        page_max_width_help: A kép legnagyobb szélessége, képpontban.
+        page_number_help: A megrajzolandó oldal, 1-től számozva.
+        page_output_failed: 'Nem sikerült az oldal képét ide írni: {path}.'
+        page_output_help: A PNG-fájl, amelybe az oldal kerül.
         pull_actor_help: A neved vagy címkéd.
         pull_id_help: A nyilvántartás tranzakciójának azonosítója.
         remove_help: Vásárlásiszámla-bizonyíték törlése.

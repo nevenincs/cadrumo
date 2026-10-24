@@ -1444,10 +1444,6 @@ desktop:
         text_layer: Read from the PDF
         text_rules: Read from the text
         vision: Read from the image
-      paused_local_ai: Local AI, which reads the paused documents, is not ready. Add
-        them again once it is ready to finish them.
-      paused_unavailable: Local AI could not read the paused documents on this computer.
-        Add them again later to finish them.
       printed_differs: The document prints {printed}; the invoice records {recorded}.
       provenance: '{origin}, {grounding}'
       queue: Readings to review
@@ -1523,6 +1519,26 @@ desktop:
       unknown: Outcome unknown
       unknown_note: It may have been saved. Nothing is sent again.
       unread: Some fields were not read
+      viewer:
+        failed: The page could not be shown.
+        fit: Fit to width
+        image: '{file}, page: {page}'
+        label: Document
+        next: Next page
+        page: 'Page: {page} / {count}'
+        previous: Previous page
+        reading: Drawing the page…
+        refused:
+          digest_mismatch: The stored file does not match its record, so it is not
+            shown.
+          not_found: This document is no longer stored in the profile.
+          out_of_range: The document has no such page.
+          too_large: The document is too large to show here.
+          unreadable: The file cannot be opened as the type it was saved as.
+          unsupported_media: Only PDF, JPEG and PNG documents can be shown here.
+        zoom: 'Zoom: {percent}%'
+        zoom_in: Zoom in
+        zoom_out: Zoom out
       what_was_read: What was read
       why_right: Why the value as read is right
     draft:
@@ -1535,6 +1551,7 @@ desktop:
       archive: Archive as duplicate
       chip: Duplicates
       chip_name: 'Possible duplicates: {count} · show them'
+      failed: 'Possible duplicates: not read'
     edit:
       changed_was: changed, not saved, was {was}
       cleared: cleared
@@ -5706,10 +5723,8 @@ tui:
           partial: 'This batch was partial: some documents were stored and others
             were not. Run it again after fixing the refused ones; stored documents
             are not stored twice.'
-          paused: Local AI could not read the paused documents on this computer. Run
-            the batch again later to finish them.
-          paused_local_ai_not_ready: Local AI, which reads the paused documents, is
-            not ready. Run the batch again once it is ready to finish them.
+          paused: Reading paused because the model reader could not be admitted. Run
+            the batch again later to finish the paused documents.
           writes: 'Records written: {count}.'
         prompt: Add every document directly inside one folder as invoice evidence.
           Documents are read on this machine.

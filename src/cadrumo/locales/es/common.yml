@@ -1559,6 +1559,26 @@ desktop:
       unknown: Resultado desconocido
       unknown_note: Puede que se haya guardado. No se vuelve a enviar nada.
       unread: Algunos campos no se leyeron
+      viewer:
+        failed: No se ha podido mostrar la página.
+        fit: Ajustar al ancho
+        image: '{file}, página: {page}'
+        label: Documento
+        next: Página siguiente
+        page: 'Página: {page} / {count}'
+        previous: Página anterior
+        reading: Dibujando la página…
+        refused:
+          digest_mismatch: El archivo guardado no coincide con su registro, así que
+            no se muestra.
+          not_found: Este documento ya no está guardado en el perfil.
+          out_of_range: El documento no tiene esa página.
+          too_large: El documento es demasiado grande para mostrarlo aquí.
+          unreadable: El archivo no se puede abrir como el tipo con el que se guardó.
+          unsupported_media: Aquí solo se pueden mostrar documentos PDF, JPEG y PNG.
+        zoom: 'Zoom: {percent} %'
+        zoom_in: Acercar
+        zoom_out: Alejar
       what_was_read: Qué se leyó
       why_right: Por qué es correcto el valor leído
     draft:
@@ -1571,6 +1591,7 @@ desktop:
       archive: Archivar como duplicado
       chip: Duplicados
       chip_name: 'Posibles duplicados: {count} · muéstralos'
+      failed: 'Posibles duplicados: no leídos'
     edit:
       changed_was: cambiado, sin guardar, antes {was}
       cleared: vaciado

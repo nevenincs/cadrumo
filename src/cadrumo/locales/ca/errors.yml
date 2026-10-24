@@ -1226,6 +1226,18 @@ errors:
       no s'ha llegit res. Configura-la i torna-ho a provar.
     refused_ledger_evidence_not_found: No existeix cap evidència de factura de compra
       amb l'identificador indicat.
+    refused_ledger_evidence_page_digest_mismatch: El document desat no coincideix
+      amb l'empremta que indica el seu registre, així que no es mostra.
+    refused_ledger_evidence_page_not_found: Aquest perfil no desa cap document amb
+      aquest identificador.
+    refused_ledger_evidence_page_out_of_range: El document no té cap pàgina amb aquest
+      número.
+    refused_ledger_evidence_page_too_large: El document, o la seva pàgina com a imatge,
+      és massa gran per mostrar-lo.
+    refused_ledger_evidence_page_unreadable: El document desat no es pot llegir com
+      el tipus amb què es va desar.
+    refused_ledger_evidence_page_unsupported_media: Només els documents PDF, JPEG
+      i PNG es poden mostrar com a pàgina.
     refused_ledger_evidence_reader_unavailable: El lector automàtic no ha pogut funcionar,
       així que no s'ha llegit res.
     refused_ledger_evidence_reader_unreadable_answer: El lector de documents ha respost

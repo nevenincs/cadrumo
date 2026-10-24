@@ -275,6 +275,12 @@ cli:
           a extraer, o rellena tú esos campos.'
         list_help: Lista los justificantes de facturas de compra registrados
         notes_help: Notas internas sobre el justificante
+        page_help: Dibuja una página de un documento guardado como imagen PNG y la
+          escribe en --output.
+        page_max_width_help: Ancho máximo de la imagen, en píxeles.
+        page_number_help: Página que se dibuja, contando desde 1.
+        page_output_failed: No se ha podido escribir la imagen de la página en {path}.
+        page_output_help: Archivo PNG en el que se escribe la página.
         pull_actor_help: Tu nombre o etiqueta.
         pull_id_help: Identificador de transacción de tus registros.
         remove_help: Elimina un justificante de factura de compra

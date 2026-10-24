@@ -1216,6 +1216,18 @@ errors:
       no se ha leído nada. Configura la IA local y vuelve a intentarlo.
     refused_ledger_evidence_not_found: No existe ninguna evidencia de factura de compra
       con el identificador indicado.
+    refused_ledger_evidence_page_digest_mismatch: El documento guardado no coincide
+      con la huella que indica su registro, así que no se muestra.
+    refused_ledger_evidence_page_not_found: Este perfil no guarda ningún documento
+      con ese identificador.
+    refused_ledger_evidence_page_out_of_range: El documento no tiene ninguna página
+      con ese número.
+    refused_ledger_evidence_page_too_large: El documento, o su página como imagen,
+      es demasiado grande para mostrarlo.
+    refused_ledger_evidence_page_unreadable: El documento guardado no se puede leer
+      como el tipo con el que se guardó.
+    refused_ledger_evidence_page_unsupported_media: Solo los documentos PDF, JPEG
+      y PNG se pueden mostrar como página.
     refused_ledger_evidence_reader_unavailable: El lector automático no ha podido
       funcionar, así que no se ha leído nada.
     refused_ledger_evidence_reader_unreadable_answer: El lector de documentos respondió

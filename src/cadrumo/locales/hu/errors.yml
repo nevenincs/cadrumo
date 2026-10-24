@@ -1146,6 +1146,17 @@ errors:
       sem lett beolvasva. Állítsd be, majd próbáld újra.
     refused_ledger_evidence_not_found: Nem létezik vásárlási számla igazolás a megadott
       azonosítóval.
+    refused_ledger_evidence_page_digest_mismatch: A tárolt dokumentum nem egyezik
+      a rekordjában szereplő lenyomattal, ezért nem jelenik meg.
+    refused_ledger_evidence_page_not_found: Ebben a profilban nincs ilyen azonosítójú
+      tárolt dokumentum.
+    refused_ledger_evidence_page_out_of_range: A dokumentumnak nincs ilyen számú oldala.
+    refused_ledger_evidence_page_too_large: A dokumentum vagy az oldala képként túl
+      nagy a megjelenítéshez.
+    refused_ledger_evidence_page_unreadable: A tárolt dokumentum nem olvasható be
+      azként a típusként, amellyel mentették.
+    refused_ledger_evidence_page_unsupported_media: Oldalként csak PDF-, JPEG- és
+      PNG-dokumentum jeleníthető meg.
     refused_ledger_evidence_reader_unavailable: Az automatikus olvasó nem tudott elindulni,
       ezért semmi sem lett beolvasva.
     refused_ledger_evidence_reader_unreadable_answer: A dokumentumolvasó olyan formában
