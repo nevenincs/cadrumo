@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:ace0d4d9924c64688ecb423ab30f2e5067a1e2360bf55261c42ffe30f17eaaf7'
+body_hash: 'sha256:455c72a9c6c72a93f76e4c8854180abd82c709fe99ffe1b4762086277fa1ceec'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
@@ -212,6 +212,23 @@ related:
 - `S11` `verify:` `playwright scenarios navigation-guards 9/9` -> `pass`
 - `S11` `verify:` `playwright scenarios ledger-editing ledger-shell user-profile navigation-register agent-page-links ledger-invoices ledger-movements ledger-setup ledger-documents keyboard 152/152` -> `pass`
 - `S11` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py 23` -> `pass`
+- `S12` `M` `native/desktop/frontend/src/App.tsx`
+- `S12` `M` `native/desktop/frontend/src/shell/actions.ts`
+- `S12` `M` `native/desktop/frontend/src/components/CommandPalette.tsx`
+- `S12` `M` `native/desktop/frontend/src/shell/navigation/useNavigator.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/navigation/windowViews.ts`
+- `S12` `M` `dev/locales/desktop_chrome.py`
+- `S12` `M` `src/cadrumo/locales/ca/common.yml`
+- `S12` `M` `src/cadrumo/locales/en/common.yml`
+- `S12` `M` `src/cadrumo/locales/es/common.yml`
+- `S12` `M` `src/cadrumo/locales/hu/common.yml`
+- `S12` `M` `src/cadrumo_client/contracts/navigation.toml`
+- `S12` `M` `src/cadrumo_client/contracts/tests/test_navigation_register.py`
+- `S12` `A` `native/desktop/frontend/tests/scenarios/palette.spec.ts`
+- `S12` `verify:` `npx tsc --noEmit` -> `pass`
+- `S12` `verify:` `npx playwright test --project=scenarios tests/scenarios/palette.spec.ts` -> `pass`
+- `S12` `verify:` `npx playwright test --project=scenarios navigation-register navigation-guards agent-page-links keyboard profiles` -> `pass`
+- `S12` `verify:` `uv run pytest src/cadrumo_client/contracts/tests dev/packaging/native/tests/test_desktop_navigation.py dev/locales/tests/test_desktop_chrome.py` -> `pass`
 
 ## Notes
 
@@ -221,3 +238,4 @@ related:
 - `S09` commits e7301548b6 and 70ae70915f; the first was written from an index read before five other commits and dropped their files, the second restores them; the host requires the runtime delivery to echo params, added by the Python lane in 7ba285bd05
 - `S10` commit 53098ff2ca; App.tsx committed as HEAD plus only these hunks, another session's provisioning hunks stay uncommitted in the worktree; six scenario specs timed out under concurrent clippy load and passed on rerun at two workers
 - `S08` Surface rows updated in place under the orchestrator's ruling (B): no consumer has pinned a release; the views tool is a local read on both surfaces. Record links cover ledger.add, ledger.update, ledger.classify.single, ledger.invoice.add, ledger.invoice.update, ledger.invoice.wizard and ledger.evidence.confirm; ledger.link (two records), ledger.invoice.import and ledger.classify.bulk (several) and ledger.invoice.remove (removed record) carry none
+- `S12` panel.spec.ts:5 and scenarios.spec.ts:2137 (rail order now has Declarations) fail independently of S12; eslint/prettier fail only on an untracked .ux-a-lib.mjs
