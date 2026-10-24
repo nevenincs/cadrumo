@@ -29,7 +29,6 @@ warning names the page and the position of the proposal it concerns.
 from __future__ import annotations
 
 import re
-from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
@@ -42,10 +41,16 @@ from .....application.ledger.statement_reading import (
     ProposedStatementMovement,
     ProposedStatementPage,
 )
-from .....core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, european_thousands_reading_is_ambiguous
+from .....core.decimal.grammar import DecimalSeparatorValue
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.parsing.codes import normalise_iso_4217_currency
-from .base import FinancialProviderError, parse_amount_value, parse_date_value
+from .base import (
+    FinancialProviderError,
+    infer_day_first,
+    infer_decimal_separator,
+    parse_date_value,
+    parse_statement_amount,
+)
 
 __all__ = [
     "GroundedMovement",
@@ -54,9 +59,6 @@ __all__ = [
     "StatementPageText",
     "ground_statement",
 ]
-
-#: Day, month and year groups of a printed numeric date.
-_NUMERIC_DATE_RE = re.compile(r"^\s*(\d{1,4})[./-](\d{1,2})[./-](\d{1,4})")
 
 #: A word for the description check: a run of letters or digits.
 _WORD_RE = re.compile(r"\w+", re.UNICODE)
@@ -229,69 +231,29 @@ def _anchor_page(page: StatementPageText, warnings: list[str]) -> list[_Anchored
 
 
 def _day_first(anchored: Sequence[_Anchored]) -> bool | None:
-    """Infer the statement's day order from its printed dates, or ``None`` on conflict.
-
-    A first group above 12 can only be a day and a second group above 12 can
-    only be a day too, read the other way. A statement printing both is not one
-    convention, and choosing either would misdate half its movements. With no
-    evidence either way the European day-first reading applies.
-    """
-    day_first_votes = 0
-    month_first_votes = 0
-    for item in anchored:
-        for printed in (item.movement.booked_date, item.movement.value_date):
-            match = _NUMERIC_DATE_RE.match(printed or "")
-            if match is None or len(match.group(1)) == 4:
-                continue
-            first, second = int(match.group(1)), int(match.group(2))
-            if first > 12:
-                day_first_votes += 1
-            elif second > 12:
-                month_first_votes += 1
-    if day_first_votes and month_first_votes:
-        return None
-    return not month_first_votes
-
-
-def _decimal_vote(printed: str) -> DecimalSeparatorValue | None:
-    """Return which separator one printed amount proves is decimal, if any."""
-    body = "".join(char for char in printed if char.isdigit() or char in ",.")
-    has_comma = "," in body
-    has_dot = "." in body
-    if has_comma and has_dot:
-        return DecimalSeparator.COMMA if body.rfind(",") > body.rfind(".") else DecimalSeparator.PERIOD
-    if has_comma:
-        return DecimalSeparator.COMMA
-    if has_dot and not european_thousands_reading_is_ambiguous(body):
-        return DecimalSeparator.PERIOD
-    return None
+    """Infer the statement's day order from its printed dates, or ``None`` on conflict."""
+    return infer_day_first(
+        printed
+        for item in anchored
+        for printed in (item.movement.booked_date, item.movement.value_date)
+        if printed is not None
+    )
 
 
 def _decimal_separator(anchored: Sequence[_Anchored], warnings: list[str]) -> DecimalSeparatorValue | None:
     """Infer the statement's decimal convention from every printed amount and balance."""
-    votes: Counter[DecimalSeparatorValue] = Counter()
-    for item in anchored:
-        for printed in (item.movement.amount, item.movement.balance):
-            vote = _decimal_vote(printed or "")
-            if vote is not None:
-                votes[vote] += 1
-    if not votes:
-        return None
-    ranked = votes.most_common()
-    if len(ranked) > 1:
-        warnings.append(
-            f"amounts print both decimal conventions; reading them as {ranked[0][0]!r}-decimal",
-        )
-    return ranked[0][0]
+    separator, mixed = infer_decimal_separator(
+        printed for item in anchored for printed in (item.movement.amount, item.movement.balance) if printed is not None
+    )
+    if mixed:
+        warnings.append(f"amounts print both decimal conventions; reading them as {separator!r}-decimal")
+    return separator
 
 
 def _parse_signed(printed: str, separator: DecimalSeparatorValue | None) -> Decimal | None:
-    """Parse one printed amount, or ``None`` when it is not a readable amount."""
-    body = "".join(char for char in printed if char.isdigit() or char in ",.")
-    if separator is None and european_thousands_reading_is_ambiguous(body):
-        return None
+    """Parse one printed amount, or ``None`` when it is unreadable or its separator stays ambiguous."""
     try:
-        return parse_amount_value(printed, decimal_separator=separator)
+        return parse_statement_amount(printed, decimal_separator=separator)
     except FinancialProviderError:
         return None
 

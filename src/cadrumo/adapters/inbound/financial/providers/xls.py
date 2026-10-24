@@ -28,7 +28,7 @@ from .base import (
     ProviderValidation,
     default_currency,
 )
-from .csv import find_column
+from .csv import STATEMENT_COLUMNS, find_column
 from .workbook_layout import (
     LAYOUT_SAMPLE_ROWS,
     MIN_LAYOUT_SCORE,
@@ -42,7 +42,7 @@ __all__ = ["XlsProvider"]
 
 @dataclass(frozen=True, slots=True)
 class _SelectedWorksheet:
-    """The worksheet whose opening rows best match a known bank layout."""
+    """The worksheet whose opening rows best name the statement columns."""
 
     name: str
     rows: tuple[tuple[object, ...], ...]
@@ -52,7 +52,7 @@ class _SelectedWorksheet:
 class XlsProvider(FinancialProvider):
     """Ingest raw transactions from legacy ``.xls`` bank statement exports.
 
-    Every worksheet's first rows are scored against the bank-layout catalogue,
+    Every worksheet's first rows are scored against the statement vocabulary,
     and the best-scoring worksheet and header row are read. A formula cell in a
     data row below the header refuses the source rather than trusting its
     cached value.
@@ -68,7 +68,7 @@ class XlsProvider(FinancialProvider):
 
     @override
     def validate_source(self, path: Path) -> ProviderValidation:
-        """Validate that ``path`` is a readable ``.xls`` workbook with a known bank layout and data rows."""
+        """Validate that ``path`` is a readable ``.xls`` workbook with a statement header and data rows."""
         try:
             selected = self._select_worksheet(self._read_source_bytes(path), path=path)
         except InvalidFinancialSourceError as exc:
@@ -77,13 +77,11 @@ class XlsProvider(FinancialProvider):
         if len(selected.rows) <= match.header_index + 1:
             return ProviderValidation(
                 is_valid=False,
-                warnings=(f"{match.layout.bank_name} worksheet has no data rows after the header",),
+                warnings=("Worksheet has no data rows after the header",),
             )
         warnings: tuple[str, ...] = ()
-        if not bool(find_column(match.lookup, match.layout.columns.currency)):
-            warnings = (
-                f"{match.layout.bank_name} worksheet has no currency column; falling back to {default_currency()}",
-            )
+        if not bool(find_column(match.lookup, STATEMENT_COLUMNS.currency)):
+            warnings = (f"Worksheet has no currency column; falling back to {default_currency()}",)
         return ProviderValidation(
             is_valid=True,
             warnings=warnings,

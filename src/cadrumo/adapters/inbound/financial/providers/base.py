@@ -46,7 +46,8 @@ import csv
 import os
 import re
 from abc import ABC, abstractmethod
-from collections.abc import Iterator, Mapping, Sequence
+from collections import Counter
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
@@ -57,7 +58,7 @@ from pydantic import BaseModel
 
 from .....core.config import load_settings
 from .....core.decimal.coercion import coerce_decimal
-from .....core.decimal.grammar import DecimalSeparatorValue
+from .....core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, european_thousands_reading_is_ambiguous
 from .....core.errors.hierarchy import CadrumoError, CoreValidationError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -559,6 +560,91 @@ def parse_amount_value(
         # would otherwise admit non-finite values into the ledger.
         raise FinancialValidationError("non-finite amount value")
     return -amount if negative else amount
+
+
+#: Day, month and year groups of a printed numeric date.
+_NUMERIC_DATE_RE = re.compile(r"^\s*(\d{1,4})[./-](\d{1,2})[./-](\d{1,4})")
+
+#: Day numbers above this can only be a day, never a month.
+_LAST_MONTH = 12
+
+
+def infer_day_first(printed_dates: Iterable[str]) -> bool | None:
+    """Infer one statement's day order from its printed dates, or ``None`` on conflict.
+
+    No bank or layout supplies the convention; the statement's own dates do. A
+    first group above 12 can only be a day, and so can a second group above 12
+    read the other way. A statement printing both is not one convention, and
+    choosing either would misdate half its movements, so the caller refuses it.
+    With no evidence either way the European day-first reading applies; ISO
+    dates read the same under both.
+    """
+    day_first_votes = 0
+    month_first_votes = 0
+    for printed in printed_dates:
+        match = _NUMERIC_DATE_RE.match(printed)
+        if match is None or len(match.group(1)) == 4:
+            continue
+        first, second = int(match.group(1)), int(match.group(2))
+        if first > _LAST_MONTH:
+            day_first_votes += 1
+        elif second > _LAST_MONTH:
+            month_first_votes += 1
+    if day_first_votes and month_first_votes:
+        return None
+    return not month_first_votes
+
+
+def _decimal_vote(printed: str) -> DecimalSeparatorValue | None:
+    """Return which separator one printed amount proves is decimal, if any."""
+    body = "".join(char for char in printed if char.isdigit() or char in ",.")
+    has_comma = "," in body
+    has_dot = "." in body
+    if has_comma and has_dot:
+        return DecimalSeparator.COMMA if body.rfind(",") > body.rfind(".") else DecimalSeparator.PERIOD
+    if has_comma:
+        return DecimalSeparator.COMMA
+    if has_dot and not european_thousands_reading_is_ambiguous(body):
+        return DecimalSeparator.PERIOD
+    return None
+
+
+def infer_decimal_separator(printed_amounts: Iterable[str]) -> tuple[DecimalSeparatorValue | None, bool]:
+    """Infer one statement's decimal separator from its printed amounts.
+
+    Returns:
+        The separator most printed amounts prove, or ``None`` when no amount
+        proves either, and whether both conventions appeared.
+    """
+    votes: Counter[DecimalSeparatorValue] = Counter()
+    for printed in printed_amounts:
+        vote = _decimal_vote(printed)
+        if vote is not None:
+            votes[vote] += 1
+    if not votes:
+        return None, False
+    ranked = votes.most_common()
+    return ranked[0][0], len(ranked) > 1
+
+
+def parse_statement_amount(value: object, *, decimal_separator: DecimalSeparatorValue | None) -> Decimal:
+    """Parse one statement amount under the statement's inferred decimal separator.
+
+    A printed amount such as ``1.234`` reads as one thousand two hundred and
+    thirty-four or as one point two three four. When nothing on the statement
+    decides between them, the amount is refused rather than guessed.
+
+    Raises:
+        FinancialValidationError: The amount is unreadable, or its separator is
+            ambiguous and the statement does not decide it.
+    """
+    if decimal_separator is None and isinstance(value, str):
+        body = "".join(char for char in value if char.isdigit() or char in ",.")
+        if european_thousands_reading_is_ambiguous(body):
+            raise FinancialValidationError(
+                "amount reads as either a thousands group or a decimal and the statement does not decide which",
+            )
+    return parse_amount_value(value, decimal_separator=decimal_separator)
 
 
 def _already_numeric_amount(value: object) -> Decimal | None:

@@ -25,8 +25,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 _FIXTURES = FIXTURES_DIR / "financial"
 
 
-def test_csv_provider_ingests_supported_bank_layouts() -> None:
-    """The CSV provider should ingest each supported bank layout."""
+def test_csv_provider_reads_bank_exports_through_the_one_statement_vocabulary() -> None:
+    """Exports from several banks read through the bank-neutral vocabulary; the banks are only test data."""
     for fixture_name, expected_currency, expected_description in (
         ("bbva-sample.csv", "EUR", "Transferencia recibida CLIENTE UNO"),
         ("santander-sample.csv", "EUR", "Pago cuota autonomos"),
@@ -51,8 +51,58 @@ def test_csv_provider_synthesizes_ids_when_source_has_none() -> None:
     provider = CsvProvider()
     parsed_rows = tuple(provider.ingest(_FIXTURES / "synthetic-transactions.csv"))
     assert len(parsed_rows) == 2
-    assert parsed_rows[0].raw.provider_transaction_id.startswith("bbva-")
+    assert parsed_rows[0].raw.provider_transaction_id.startswith("csv-provider-")
     assert parsed_rows[0].raw.provenance.source_row_index == 2
+
+
+@pytest.mark.parametrize(
+    ("header", "rows", "expected"),
+    [
+        ("Fecha;Concepto;Importe", ("02/01/2026;Compra;-1.234,56", "03/01/2026;Venta;20,00"), ["1234.56", "20.00"]),
+        ("Date,Description,Amount", ('2026-01-02,Purchase,"-1,234.56"', "2026-01-03,Sale,20.00"), ["1234.56", "20.00"]),
+    ],
+    ids=["comma-decimal", "period-decimal"],
+)
+def test_the_decimal_separator_is_read_from_the_file_itself(
+    tmp_path: Path, header: str, rows: tuple[str, ...], expected: list[str]
+) -> None:
+    """No bank tells the reader the convention; the printed amounts do."""
+    source = tmp_path / "statement.csv"
+    source.write_text("\n".join((header, *rows)) + "\n", encoding="utf-8")
+
+    parsed = list(CsvProvider().ingest(source))
+
+    assert [str(row.raw.amount) for row in parsed] == expected
+
+
+def test_month_first_dates_are_read_month_first(tmp_path: Path) -> None:
+    """A date whose second group exceeds 12 reads every date of the file month-first."""
+    source = tmp_path / "statement.csv"
+    source.write_text("Date,Description,Amount\n01/31/2026,Rent,-800.00\n02/03/2026,Fee,-2.00\n", encoding="utf-8")
+
+    parsed = list(CsvProvider().ingest(source))
+
+    assert [row.raw.booked_date.isoformat() for row in parsed] == ["2026-01-31", "2026-02-03"]
+
+
+def test_dates_printed_in_both_orders_refuse_the_file(tmp_path: Path) -> None:
+    """A 13th in either group cannot be one convention, so the file is not guessed at."""
+    source = tmp_path / "statement.csv"
+    source.write_text("Date,Description,Amount\n13/01/2026,Rent,-800.00\n01/14/2026,Fee,-2.00\n", encoding="utf-8")
+
+    validation = CsvProvider().validate_source(source)
+
+    assert not validation.is_valid
+    assert validation.warnings == ("the statement prints dates in both day-month and month-day order",)
+
+
+def test_an_amount_no_printed_value_decides_is_refused(tmp_path: Path) -> None:
+    """``1.234`` with nothing else to decide by is either a thousand or one point two; it is refused."""
+    source = tmp_path / "statement.csv"
+    source.write_text("Fecha;Concepto;Importe\n02/01/2026;Compra;-1.234\n", encoding="utf-8")
+
+    with pytest.raises(InvalidFinancialSourceError, match="does not decide"):
+        list(CsvProvider().ingest(source))
 
 
 def test_csv_provider_explicit_direction_column_overrides_positive_amount_sign(tmp_path: Path) -> None:

@@ -1,12 +1,12 @@
-"""Bank-layout matching and row parsing shared by the spreadsheet statement providers.
+"""Statement header matching and row parsing shared by the spreadsheet statement providers.
 
 A spreadsheet statement is a grid of typed cells whatever file format carries
 it. Once each format's reader has produced that grid, choosing the worksheet
 and header row, and turning each data row into a
 :class:`~adapters.inbound.financial.providers.base.ParsedLedgerRow`, is the same
-work. It is done here once, against the bank-layout catalogue and parse rules of
-:mod:`adapters.inbound.financial.providers.csv`, so ``.xlsx`` and ``.xls``
-exports of the same bank read identically.
+work. It is done here once, against the bank-neutral statement vocabulary and
+parse rules of :mod:`adapters.inbound.financial.providers.csv`, so ``.xlsx``
+and ``.xls`` exports of the same statement read identically.
 """
 
 from __future__ import annotations
@@ -24,10 +24,9 @@ from .base import (
     archive_cell_text,
 )
 from .csv import (
-    CSV_LAYOUTS,
-    CsvBankLayout,
     build_provider_row,
     header_lookup,
+    infer_statement_conventions,
     layout_score,
     parse_tabular_transaction_row,
     row_is_blank,
@@ -46,43 +45,38 @@ _logger = get_logger(__name__)
 #: A header row further down than this is not a statement header.
 LAYOUT_SAMPLE_ROWS = 10
 
-#: The fewest matching column aliases that identify a known bank layout.
+#: The fewest matching column aliases that identify a statement header row.
 MIN_LAYOUT_SCORE = 3
 
 
 @dataclass(frozen=True, slots=True)
 class WorksheetLayoutMatch:
-    """The best bank layout one worksheet's opening rows satisfy.
+    """The header row of one worksheet that best names the statement columns.
 
     Attributes:
-        score: Number of the layout's column aliases the header row matched.
+        score: Number of statement column aliases the header row matched.
         header_index: 0-based index of the header row in the worksheet.
         headers: The header row's cell text.
         lookup: Lower-cased header text mapped back to the header as written.
-        layout: The matched bank layout.
     """
 
     score: int
     header_index: int
     headers: list[str]
     lookup: dict[str, str]
-    layout: CsvBankLayout
 
 
 def best_layout_match(sample_rows: Iterable[Sequence[object]]) -> WorksheetLayoutMatch | None:
-    """Score each non-blank row of ``sample_rows`` against every bank layout and keep the best."""
+    """Score each non-blank row of ``sample_rows`` against the statement vocabulary and keep the best."""
     best: WorksheetLayoutMatch | None = None
     for index, row in enumerate(sample_rows):
         texts = [archive_cell_text(cell) for cell in row]
         if not any(text.strip() for text in texts):
             continue
         lookup = header_lookup(texts)
-        for layout in CSV_LAYOUTS:
-            score = layout_score(lookup, layout)
-            if best is None or score > best.score:
-                best = WorksheetLayoutMatch(
-                    score=score, header_index=index, headers=texts, lookup=lookup, layout=layout
-                )
+        score = layout_score(lookup)
+        if best is None or score > best.score:
+            best = WorksheetLayoutMatch(score=score, header_index=index, headers=texts, lookup=lookup)
     return best
 
 
@@ -102,11 +96,22 @@ def iter_worksheet_rows(
     application.
 
     Raises:
-        InvalidFinancialSourceError: A data row cannot be parsed under the
-            matched layout.
+        InvalidFinancialSourceError: The worksheet prints dates in both
+            orders, or a data row cannot be parsed.
     """
     headers = match.headers
-    for source_row_index, row in enumerate(rows[match.header_index + 1 :], start=match.header_index + 2):
+    data_rows = rows[match.header_index + 1 :]
+    try:
+        conventions = infer_statement_conventions(
+            (
+                {header: row[index] if index < len(row) else "" for index, header in enumerate(headers)}
+                for row in data_rows
+            ),
+            match.lookup,
+        )
+    except FinancialValidationError as exc:
+        raise InvalidFinancialSourceError(str(exc)) from None
+    for source_row_index, row in enumerate(data_rows, start=match.header_index + 2):
         raw_fields = {
             header: archive_cell_text(row[index]) if index < len(row) else "" for index, header in enumerate(headers)
         }
@@ -115,11 +120,11 @@ def iter_worksheet_rows(
         typed_fields = {header: row[index] if index < len(row) else "" for index, header in enumerate(headers)}
         try:
             parsed = parse_tabular_transaction_row(
-                layout=match.layout,
+                conventions=conventions,
                 lookup=match.lookup,
                 raw_fields=raw_fields,
                 typed_fields=typed_fields,
-                synthetic_provider_name=f"{match.layout.bank_name}-{sheet_name}",
+                synthetic_provider_name=f"{provider.name}-{sheet_name}",
                 source_sha256=source_sha256,
                 source_row_index=source_row_index,
                 required_field_context="worksheet row",

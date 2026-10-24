@@ -5,49 +5,19 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:fb301a0ca07a7f4366f80a2c497dcef58489dde307245322f699f64202a0d101'
+body_hash: 'sha256:d0e5567ea1cb043b79a2e1e314af7dcc949be2649ca65addcaa8763915a179e7'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-adr]]"
   - "[[2026-06-02-ledger-operator-hardening-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #reference) and one feature tag.
-     Replace bank-agnostic-statement-import with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
-
-# `bank-agnostic-statement-import` reference: `Bank-specific statement import code and the AI extraction seams it can move onto`
-
-<!-- Brief description of what was researched and what sources were consulted.
-
-Include any concrete references to files, line numbers, modules, etc. This is
-the information that coding agents will consult during implementation. -->
-
-## Summary
-
-<!-- Findings pertinent to `bank-agnostic-statement-import` being considered. Include implementation
-details and architecture overviews considered insightful, essential, or
-relevant. Adapt format to content. -->
-
-## Context
-
 # `bank-agnostic-statement-import` reference: `Bank-specific statement import code and the AI extraction seams it can move onto`
 
 Static code map taken on 2026-10-24 at `feature/tui` 043755a891, from four discovery passes (provider layer, operator interfaces, AI extraction, tests and docs) confirmed by direct reads.
+
+## Summary
+
+Statement import was pegged to named banks: one N26-only PDF reader, an N26-labelled generic CSV vocabulary, and private BBVA, Santander, CaixaBank and Revolut layouts in the CSV and spreadsheet readers. The product already holds the bank-neutral seams to replace them: a local-model column-role mapping lane, a transcription-anchored invoice reader, and on-host text and vision models. The measured local model needs deterministic anchoring and balance checks before its proposals can reach the ledger.
 
 ## Bank-specific product code
 
@@ -55,7 +25,7 @@ Static code map taken on 2026-10-24 at `feature/tui` 043755a891, from four disco
 - `src/cadrumo/adapters/inbound/financial/providers/detection.py:41-55`, `:106-113`: the N26 provider sits in every candidate ordering and leads every PDF ordering. Without it a PDF has no reader at all.
 - `src/cadrumo/application/ledger/actions_import.py:100`: operator token `pdf-n26`, mapped in `src/cadrumo/adapters/inbound/financial/ledger_import.py:91-92`, offered in `src/cadrumo/entrypoints/tui/ledger/import_flow.py:35`, `:48` and mirrored in the desktop frontend type union.
 - `src/cadrumo/adapters/inbound/financial/providers/csv.py:162-182`: an `N26` CSV layout listed first in `CSV_LAYOUTS`. Its aliases are generic English and German header words (`date`, `amount`, `description`, `datum`, `betrag`), so every plain `Date,Description,Amount` export scores against it and receives `n26-` synthetic ids (`csv.py:317`, `:496-502`). The `N26 CSV` warning label special case lives at `csv.py:445-470`.
-- The same file also carries BBVA, Santander, CaixaBank and Revolut layouts (`csv.py:112-161`), reused by the workbook providers through `workbook_layout.py:72`, `:122`.
+- The same file also carries BBVA, Santander, CaixaBank and Revolut layouts (`csv.py:112-161`), each fixing a date order and decimal separator by bank, reused by the workbook providers through `workbook_layout.py:72`, `:122`, which stamp the bank name into synthetic ids and warnings.
 - Product locale keys: `tui.ledger.import.provider.pdf_n26` and `adapters.inbound.financial.providers.pdf_n26.errors.parse_failed` in all four catalogues.
 
 Stored provenance carries `provider_name` as free text (`src/cadrumo/domain/transactions/raw_transaction.py:78`); no record persists the operator token, so retiring it breaks no stored record.
@@ -77,4 +47,4 @@ A prototype prompt run against `qwen3:1.7b` over the synthetic statement fixture
 - Product tests asserting bank-specific behaviour: `providers/tests/test_pdf_n26.py`, `test_detection_ordered.py`, `test_base.py:81`, `:175`, `test_source_byte_binding.py:117`, `test_csv.py:111-122`, `src/cadrumo/adapters/inbound/financial/tests/test_provider_id_dispatch.py:28`, `src/cadrumo/application/ledger/tests/test_provider_id_enum.py:63`, `src/cadrumo/entrypoints/cli/tests/test_ledger_corpus_import_export.py:114-116`, `dev/acceptance/ledger/tests/test_provenance_fixtures.py:18`, `:31`.
 - Fixtures under `src/cadrumo/tests/fixtures/financial/n26/` and the corpus account `ledger-corpus/n26-savings.csv` are synthetic test data; the accepted ledger-operator-hardening decision names the latter as corpus data only.
 - Documents presenting N26 as supported: `docs/how-to/import-bank-statements.md:34-35`, `:61`; `docs/reference/import-export-and-evidence.md:47`; `docs/technical/topics/document-and-financial-imports.md:32`; `docs/technical/articles/002-inbound-document-and-financial-adapters.md:24`; `docs/technical/articles/003-financial-providers-receipts-and-notification-pdfs.md:18`, `:34`, `:51`; their es, ca and hu catalogues; the captured help in `docs/_sequences/how-to/first-quarterly-filing/import-provider-list.json:17`.
-- No accepted decision commits the product to an N26 reader.
+- No accepted decision commits the product to an N26 reader or to any bank's CSV layout.

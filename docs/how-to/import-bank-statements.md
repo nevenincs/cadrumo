@@ -30,13 +30,16 @@ Confirm the active profile before you write transaction data:
 
 ## Statement file format
 
-`--provider csv` reads bank exports whose header row matches a known layout:
-the generic English and German header vocabulary (`Date`, `Amount`,
-`Description`, `Datum`, `Betrag` and similar), or the BBVA, Santander, CaixaBank
-and Revolut layouts. `aeat` detects the delimiter and matches the header row to
-a layout. The Spanish layouts use comma decimals; Revolut and the generic
-vocabulary use period decimals. The first line is the column header; each later
-line is one movement. A BBVA-style file looks like this:
+`--provider csv` reads a bank export from any bank whose header row names its
+columns in ordinary statement terms, in Spanish, English or German: a date such
+as `Fecha operación` or `Date`, an amount such as `Importe` or `Amount`, and a
+description such as `Concepto` or `Description`. `aeat` detects the delimiter,
+finds the header row, and reads the date order and decimal separator from the
+file's own values; an amount it cannot read either way is refused, not guessed.
+Under `--provider auto`, an export whose headers use other names is read by the
+local language model, which names each column once. The first line is the
+column header; each later line is one movement. A file with Spanish headers
+looks like this:
 
 ```text
 Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda

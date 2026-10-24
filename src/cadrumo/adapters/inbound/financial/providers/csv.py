@@ -1,13 +1,14 @@
-"""CSV financial provider with bank-layout-aware parsing.
+"""CSV financial provider over one bank-neutral statement header vocabulary.
 
 Provides :class:`CsvProvider`, an implementation of
 :class:`~adapters.inbound.financial.providers.base.FinancialProvider`
-that ingests bank CSV exports whose headers match a known layout: the
-generic English and German header vocabulary, or the BBVA, Santander,
-CaixaBank and Revolut layouts. Each layout is described by a frozen
-:class:`CsvBankLayout` carrying the header aliases, date-format
-hint, and decimal-separator hint the parser needs. An export matching none
-of them is left to the column-role mapping lane.
+that ingests bank CSV exports whose header row names its columns in the
+statement vocabulary of :data:`STATEMENT_COLUMNS`: booking and value dates,
+amount, currency, description, counterparty and reference, in Spanish, English
+and German. No bank is named and no bank's layout is assumed; each file's date
+order and decimal separator are inferred from its own printed values. An
+export whose headers fall outside the vocabulary is left to the column-role
+mapping lane, which reads any layout.
 
 Successful rows become :class:`~adapters.inbound.financial.providers.base.ParsedLedgerRow`
 objects: the stored :class:`~domain.transactions.raw_transaction.RawTransaction` carries
@@ -19,16 +20,16 @@ from __future__ import annotations
 
 import csv
 import io
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import override
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from .....core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue
+from .....core.decimal.grammar import DecimalSeparatorValue
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.logging import get_logger
@@ -51,9 +52,11 @@ from .base import (
     build_raw_transaction,
     default_currency,
     describe_dialect,
+    infer_day_first,
+    infer_decimal_separator,
     normalize_header,
-    parse_amount_value,
     parse_date_value,
+    parse_statement_amount,
     synthesize_transaction_id,
 )
 
@@ -61,7 +64,7 @@ _logger = get_logger(__name__)
 
 
 class CsvColumnMap(BaseModel):
-    """Alias sets for one bank CSV layout.
+    """Alias sets for the bank-neutral statement header vocabulary.
 
     Each tuple lists the lower-cased header strings the parser will
     treat as equivalent for the corresponding logical column. The
@@ -90,100 +93,113 @@ class CsvColumnMap(BaseModel):
     external_id: tuple[str, ...] = ()
 
 
-class CsvBankLayout(BaseModel):
-    """Named CSV layout supported by the provider.
+STATEMENT_COLUMNS = CsvColumnMap(
+    booked_date=(
+        "fecha operación",
+        "fecha operacion",
+        "fecha movimiento",
+        "fecha",
+        "completed date",
+        "booking date",
+        "transaction date",
+        "date",
+        "datum",
+    ),
+    value_date=("fecha valor", "value date", "started date", "valuta", "wertstellung"),
+    amount=("importe", "importe euros", "amount (eur)", "betrag (eur)", "amount", "betrag"),
+    currency=("moneda", "divisa", "currency", "wahrung", "waehrung"),
+    description=(
+        "concepto",
+        "descripción",
+        "descripcion",
+        "movimiento",
+        "description",
+        "payment reference",
+        "verwendungszweck",
+        "reference",
+        "transaction type",
+    ),
+    counterparty=(
+        "beneficiario",
+        "ordenante",
+        "contraparte",
+        "contrapartida",
+        "payee",
+        "counterparty",
+        "partner name",
+        "empfanger",
+        "empfaenger",
+    ),
+    external_id=(
+        "referencia",
+        "referencia operación",
+        "referencia operacion",
+        "id operación",
+        "id operacion",
+        "número de referencia",
+        "numero de referencia",
+        "transaction id",
+        "reference id",
+        "id",
+    ),
+)
+"""The statement header vocabulary, most specific alias first within each column.
+
+Bank-neutral by construction: every alias is an ordinary statement column name
+in Spanish, English or German, never one bank's private label. Within a column
+the order decides which header wins when a file prints several, so a booking
+date outranks a plain date and a completion date outranks a start date.
+"""
+
+
+@dataclass(frozen=True, slots=True)
+class StatementConventions:
+    """How one statement prints its dates and amounts, inferred from the statement itself.
 
     Attributes:
-        bank_name: Human-readable layout identifier embedded in
-            synthetic transaction ids and detection diagnostics; ``Generic``
-            for the vocabulary no single bank owns.
-        columns: Header aliases for every logical column.
-        day_first_dates: Whether the bank prints dates in
-            ``DD/MM/YYYY`` (the European default) or ``YYYY-MM-DD``.
-        decimal_separator: Decimal separator the bank uses; ``,`` for
-            Spanish banks, ``.`` for Revolut.
+        day_first: Whether numeric dates read day before month.
+        decimal_separator: The decimal separator the printed amounts prove, or
+            ``None`` when no amount proves either; an amount that is then
+            ambiguous is refused.
     """
 
-    model_config = _STRICT_FROZEN
-
-    bank_name: str = Field(min_length=1)
-    columns: CsvColumnMap
-    day_first_dates: bool = True
-    decimal_separator: DecimalSeparatorValue = DecimalSeparator.COMMA
+    day_first: bool
+    decimal_separator: DecimalSeparatorValue | None
 
 
-BBVA_LAYOUT = CsvBankLayout(
-    bank_name="BBVA",
-    columns=CsvColumnMap(
-        booked_date=("fecha operación", "fecha operacion"),
-        value_date=("fecha valor",),
-        amount=("importe", "importe euros"),
-        currency=("moneda", "divisa"),
-        description=("concepto", "descripcion"),
-        counterparty=("beneficiario", "ordenante", "contraparte"),
-        external_id=("referencia", "id operación", "id operacion"),
-    ),
-)
-SANTANDER_LAYOUT = CsvBankLayout(
-    bank_name="Santander",
-    columns=CsvColumnMap(
-        booked_date=("fecha", "fecha operación", "fecha operacion"),
-        value_date=("fecha valor",),
-        amount=("importe",),
-        currency=("divisa", "moneda"),
-        description=("concepto", "descripción", "descripcion"),
-        counterparty=("beneficiario", "ordenante", "contrapartida"),
-        external_id=("referencia", "número de referencia", "numero de referencia"),
-    ),
-)
-CAIXABANK_LAYOUT = CsvBankLayout(
-    bank_name="CaixaBank",
-    columns=CsvColumnMap(
-        booked_date=("fecha", "fecha movimiento"),
-        value_date=("fecha valor",),
-        amount=("importe",),
-        currency=("divisa", "moneda"),
-        description=("concepto", "descripción", "descripcion", "movimiento"),
-        counterparty=("beneficiario", "ordenante", "contrapartida"),
-        external_id=("referencia", "referencia operación", "referencia operacion"),
-    ),
-)
-REVOLUT_LAYOUT = CsvBankLayout(
-    bank_name="Revolut",
-    columns=CsvColumnMap(
-        booked_date=("completed date",),
-        value_date=("started date",),
-        amount=("amount",),
-        currency=("currency",),
-        description=("description",),
-        counterparty=("payee", "counterparty"),
-        external_id=("id", "reference"),
-    ),
-    day_first_dates=False,
-    decimal_separator=DecimalSeparator.PERIOD,
-)
-GENERIC_LAYOUT = CsvBankLayout(
-    bank_name="Generic",
-    columns=CsvColumnMap(
-        booked_date=("date", "datum", "booking date", "transaction date"),
-        value_date=("value date", "valuta", "wertstellung"),
-        amount=("amount (eur)", "betrag (eur)", "amount", "betrag"),
-        currency=("currency", "wahrung", "waehrung"),
-        description=("payment reference", "reference", "description", "verwendungszweck", "transaction type"),
-        counterparty=("payee", "empfanger", "empfaenger", "counterparty", "partner name"),
-        external_id=("id", "transaction id", "reference id"),
-    ),
-    day_first_dates=False,
-    decimal_separator=DecimalSeparator.PERIOD,
-)
-CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
-    GENERIC_LAYOUT,
-    BBVA_LAYOUT,
-    SANTANDER_LAYOUT,
-    CAIXABANK_LAYOUT,
-    REVOLUT_LAYOUT,
-)
-"""Ordered tuple of layouts the CSV provider will try to match; the generic vocabulary wins ties."""
+def infer_statement_conventions(
+    rows: Iterable[Mapping[str, object]],
+    lookup: Mapping[str, str],
+    columns: CsvColumnMap = STATEMENT_COLUMNS,
+) -> StatementConventions:
+    """Infer one statement's date order and decimal separator from its data rows.
+
+    Only cells holding printed text vote; a typed spreadsheet date or number
+    carries no convention to infer.
+
+    Raises:
+        FinancialValidationError: The statement prints dates in both day-month
+            and month-day order.
+    """
+    candidates = (find_column(lookup, columns.booked_date), find_column(lookup, columns.value_date))
+    date_headers = tuple(header for header in candidates if header is not None)
+    amount_header = find_column(lookup, columns.amount)
+    printed_dates: list[str] = []
+    printed_amounts: list[str] = []
+    for row in rows:
+        for header in date_headers:
+            value = row.get(header)
+            if isinstance(value, str):
+                printed_dates.append(value)
+        amount = row.get(amount_header) if amount_header is not None else None
+        if isinstance(amount, str):
+            printed_amounts.append(amount)
+    day_first = infer_day_first(printed_dates)
+    if day_first is None:
+        raise FinancialValidationError("the statement prints dates in both day-month and month-day order")
+    separator, _ = infer_decimal_separator(printed_amounts)
+    return StatementConventions(day_first=day_first, decimal_separator=separator)
+
 
 _AEAT_LEDGER_EXPORT_HEADERS = frozenset(
     normalize_header(header)
@@ -200,11 +216,12 @@ _AEAT_LEDGER_EXPORT_HEADERS = frozenset(
     )
 )
 _AEAT_LEDGER_EXPORT_REFUSAL = "AEAT ledger CSV exports cannot be imported through the raw bank CSV provider"
+_UNRECOGNISED_HEADERS = "CSV headers do not name a statement's date, amount and description columns"
 
 
 @dataclass(frozen=True, slots=True)
 class ParsedTabularTransactionRow:
-    """Typed projection shared by CSV and spreadsheet bank-layout rows."""
+    """Typed projection shared by CSV and spreadsheet statement rows."""
 
     provider_transaction_id: str
     booked_date: date
@@ -219,14 +236,15 @@ class ParsedTabularTransactionRow:
 class CsvProvider(FinancialProvider):
     """Ingest raw transactions from bank CSV exports.
 
-    Detects the bank layout by scoring the first ten rows of the
-    decoded text against every entry in :data:`CSV_LAYOUTS`, then
-    streams the data rows through :func:`build_raw_transaction`. The
+    Finds the header row by scoring the first ten rows of the decoded text
+    against :data:`STATEMENT_COLUMNS`, infers the file's date order and decimal
+    separator from its data rows, then streams the rows through
+    :func:`build_raw_transaction`. The
     decoder honours the ``financial_default_csv_encoding`` setting as the
     preferred encoding before falling back to a fixed
     UTF-8 / CP-1252 / ISO-8859-1 sequence.
 
-    CSV layouts can provide either a source-signed amount or an explicit
+    A CSV can provide either a source-signed amount or an explicit
     ``direction`` column. The adapter resolves that flow once at the parse
     boundary and emits magnitude-only raw transactions.
     """
@@ -266,27 +284,34 @@ class CsvProvider(FinancialProvider):
                 detected_encoding=encoding,
                 detected_dialect=describe_dialect(dialect),
             )
-        header_index, layout, _, _ = self._locate_header(rows)
-        if layout is None:
+        located = self._locate_header(rows)
+        if located is None:
             return ProviderValidation(
                 is_valid=False,
-                warnings=("CSV headers do not match any supported bank layout",),
+                warnings=(_UNRECOGNISED_HEADERS,),
                 detected_encoding=encoding,
                 detected_dialect=describe_dialect(dialect),
             )
+        header_index, headers, lookup = located
         if len(rows) <= header_index + 1:
             return ProviderValidation(
                 is_valid=False,
-                warnings=(f"{layout.bank_name} CSV has no data rows after the header",),
+                warnings=("CSV has no data rows after the header",),
+                detected_encoding=encoding,
+                detected_dialect=describe_dialect(dialect),
+            )
+        try:
+            infer_statement_conventions((_row_to_mapping(headers, row) for row in rows[header_index + 1 :]), lookup)
+        except FinancialValidationError as exc:
+            return ProviderValidation(
+                is_valid=False,
+                warnings=(str(exc),),
                 detected_encoding=encoding,
                 detected_dialect=describe_dialect(dialect),
             )
         warnings: list[str] = []
-        lookup = header_lookup(rows[header_index])
-        if not bool(find_column(lookup, layout.columns.currency)):
-            warnings.append(
-                f"{_currency_warning_subject(layout)} has no currency column; falling back to {default_currency()}",
-            )
+        if not bool(find_column(lookup, STATEMENT_COLUMNS.currency)):
+            warnings.append(f"CSV has no currency column; falling back to {default_currency()}")
         return ProviderValidation(
             is_valid=True,
             warnings=tuple(warnings),
@@ -301,22 +326,26 @@ class CsvProvider(FinancialProvider):
         rows, source_sha256, _, _ = self._load_rows(path)
         if _has_aeat_ledger_export_header(rows):
             raise InvalidFinancialSourceError(_AEAT_LEDGER_EXPORT_REFUSAL)
-        header_index, layout, headers, lookup = self._locate_header(rows)
-        if layout is None or headers is None or lookup is None:
-            raise InvalidFinancialSourceError("CSV headers do not match any supported bank layout")
-        _logger.info("csv_provider ingest: matched layout=%s", layout.bank_name)
+        located = self._locate_header(rows)
+        if located is None:
+            raise InvalidFinancialSourceError(_UNRECOGNISED_HEADERS)
+        header_index, headers, lookup = located
         data_rows = rows[header_index + 1 :]
+        try:
+            conventions = infer_statement_conventions((_row_to_mapping(headers, row) for row in data_rows), lookup)
+        except FinancialValidationError as exc:
+            raise InvalidFinancialSourceError(str(exc)) from None
         for source_row_index, row in enumerate(data_rows, start=header_index + 2):
             raw_fields = _row_to_mapping(headers, row)
             if row_is_blank(raw_fields):
                 continue
             try:
                 parsed = parse_tabular_transaction_row(
-                    layout=layout,
+                    conventions=conventions,
                     lookup=lookup,
                     raw_fields=raw_fields,
                     typed_fields=raw_fields,
-                    synthetic_provider_name=layout.bank_name,
+                    synthetic_provider_name=self.name,
                     source_sha256=source_sha256,
                     source_row_index=source_row_index,
                     required_field_context="CSV row",
@@ -373,31 +402,21 @@ class CsvProvider(FinancialProvider):
         _DetectedDialect.delimiter = delimiter
         return _DetectedDialect
 
-    def _locate_header(
-        self,
-        rows: list[list[str]],
-    ) -> tuple[int, CsvBankLayout | None, list[str] | None, Mapping[str, str] | None]:
-        """Locate the best header row and matching bank layout."""
-        best_index = -1
-        best_layout: CsvBankLayout | None = None
-        best_headers: list[str] | None = None
-        best_lookup: Mapping[str, str] | None = None
+    def _locate_header(self, rows: list[list[str]]) -> tuple[int, list[str], Mapping[str, str]] | None:
+        """Locate the row that best names the statement columns, or ``None`` when none does."""
+        best: tuple[int, list[str], Mapping[str, str]] | None = None
         best_score = -1
         for index, row in enumerate(rows[:10]):
             if not any(cell.strip() for cell in row):
                 continue
             lookup = header_lookup(row)
-            for layout in CSV_LAYOUTS:
-                score = layout_score(lookup, layout)
-                if score > best_score:
-                    best_index = index
-                    best_layout = layout
-                    best_headers = row
-                    best_lookup = lookup
-                    best_score = score
+            score = layout_score(lookup)
+            if score > best_score:
+                best = (index, row, lookup)
+                best_score = score
         if best_score < 3:
-            return 0, None, None, None
-        return best_index, best_layout, best_headers, best_lookup
+            return None
+        return best
 
 
 def header_lookup(headers: list[str]) -> dict[str, str]:
@@ -405,21 +424,21 @@ def header_lookup(headers: list[str]) -> dict[str, str]:
     return {normalize_header(header): header for header in headers if header.strip()}
 
 
-def layout_score(lookup: Mapping[str, str], layout: CsvBankLayout) -> int:
-    """Return a match score for one layout against one header row."""
+def layout_score(lookup: Mapping[str, str], columns: CsvColumnMap = STATEMENT_COLUMNS) -> int:
+    """Return how well one header row names the statement columns."""
     required = (
-        find_column(lookup, layout.columns.booked_date),
-        find_column(lookup, layout.columns.amount),
-        find_column(lookup, layout.columns.description),
+        find_column(lookup, columns.booked_date),
+        find_column(lookup, columns.amount),
+        find_column(lookup, columns.description),
     )
     if any(column is None for column in required):
         return 0
     score = 3
     optional_groups = (
-        layout.columns.value_date,
-        layout.columns.currency,
-        layout.columns.counterparty,
-        layout.columns.external_id,
+        columns.value_date,
+        columns.currency,
+        columns.counterparty,
+        columns.external_id,
     )
     for aliases in optional_groups:
         if aliases and bool(find_column(lookup, aliases)):
@@ -441,15 +460,6 @@ def find_column(lookup: Mapping[str, str], aliases: tuple[str, ...]) -> str | No
     return None
 
 
-def _currency_warning_subject(layout: CsvBankLayout) -> str:
-    """Return the provider label for a missing-currency warning.
-
-    The generic vocabulary names no bank, so its warning names only the
-    format; a bank-named layout keeps its bank in the label.
-    """
-    return "CSV" if layout is GENERIC_LAYOUT else f"{layout.bank_name} CSV"
-
-
 def _row_to_mapping(headers: list[str], row: list[str]) -> dict[str, str]:
     """Convert one parsed CSV row into the stored raw-field mapping."""
     padded = row + [""] * max(0, len(headers) - len(row))
@@ -463,7 +473,7 @@ def row_is_blank(raw_fields: Mapping[str, str]) -> bool:
 
 def parse_tabular_transaction_row(
     *,
-    layout: CsvBankLayout,
+    conventions: StatementConventions,
     lookup: Mapping[str, str],
     raw_fields: Mapping[str, str],
     typed_fields: Mapping[str, object],
@@ -472,8 +482,9 @@ def parse_tabular_transaction_row(
     source_row_index: int,
     required_field_context: str,
 ) -> ParsedTabularTransactionRow:
-    """Project one bank-layout row into typed transaction fields."""
-    transaction_id = _value_from_aliases(raw_fields, lookup, layout.columns.external_id)
+    """Project one statement row into typed transaction fields."""
+    columns = STATEMENT_COLUMNS
+    transaction_id = _value_from_aliases(raw_fields, lookup, columns.external_id)
     if not (transaction_id is not None and transaction_id):
         transaction_id = synthesize_transaction_id(
             provider_name=synthetic_provider_name,
@@ -483,33 +494,33 @@ def parse_tabular_transaction_row(
     booked_date_header, booked_date_raw = _required_typed_value_and_header(
         typed_fields,
         lookup,
-        layout.columns.booked_date,
+        columns.booked_date,
         "booked_date",
         required_field_context,
     )
     booked_date = parse_date_value(
         booked_date_raw,
-        day_first=layout.day_first_dates,
+        day_first=conventions.day_first,
         label=booked_date_header,
     )
-    value_date_resolved = _typed_value_and_header_from_aliases(typed_fields, lookup, layout.columns.value_date)
+    value_date_resolved = _typed_value_and_header_from_aliases(typed_fields, lookup, columns.value_date)
     value_date: date | None = None
     if value_date_resolved is not None:
         value_date_header, value_raw = value_date_resolved
-        value_date = parse_date_value(value_raw, day_first=layout.day_first_dates, label=value_date_header)
-    amount = parse_amount_value(
-        _required_typed_value(typed_fields, lookup, layout.columns.amount, "amount", required_field_context),
-        decimal_separator=layout.decimal_separator,
+        value_date = parse_date_value(value_raw, day_first=conventions.day_first, label=value_date_header)
+    amount = parse_statement_amount(
+        _required_typed_value(typed_fields, lookup, columns.amount, "amount", required_field_context),
+        decimal_separator=conventions.decimal_separator,
     )
-    direction = _direction_from_aliases(raw_fields, lookup, layout.columns.direction)
+    direction = _direction_from_aliases(raw_fields, lookup, columns.direction)
     currency = _currency_from_aliases(
         raw_fields,
         lookup,
-        layout.columns.currency,
+        columns.currency,
         required_field_context,
     )
-    description = _required_value(raw_fields, lookup, layout.columns.description, "description")
-    counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
+    description = _required_value(raw_fields, lookup, columns.description, "description")
+    counterparty = _value_from_aliases(raw_fields, lookup, columns.counterparty)
     return ParsedTabularTransactionRow(
         provider_transaction_id=transaction_id,
         booked_date=booked_date,
@@ -531,7 +542,7 @@ def build_provider_row(
     parsed: ParsedTabularTransactionRow,
     raw_fields: Mapping[str, str],
 ) -> ParsedLedgerRow:
-    """Emit the ledger row for one parsed tabular bank-layout row.
+    """Emit the ledger row for one parsed tabular statement row.
 
     Shared post-parse tail for the CSV and spreadsheet providers. Delegates to
     :func:`build_raw_transaction` for the magnitude/provenance
