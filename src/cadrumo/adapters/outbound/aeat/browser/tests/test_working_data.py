@@ -11,12 +11,14 @@ if TYPE_CHECKING:
 import psutil
 import pytest
 
-from ......application.provisioning_browser import (
-    playwright_browsers_root,
-    probe_playwright_browser,
-    required_browser_builds,
-)
+from ......application.provisioning_browser import playwright_browsers_root, probe_playwright_browser
+from ......core.component_records import component_records_root
 from ......core.config import Settings, override_settings
+from ......tests.component_record_support import (
+    installed_driver_version,
+    record_shared_browser,
+    write_engine_browser_record,
+)
 from ..errors import BrowserError
 from ..factory import create_browser_session
 from ..profile import Profile
@@ -26,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def test_provisioned_binary_cache_survives_private_storage_isolation(tmp_path: Path) -> None:
-    """Direct drivers and product probes retain the same provisioned assets."""
+    """Direct drivers and product probes use the same provisioned binary cache under every storage root."""
     binary_root = Path(os.environ["CADRUMO_PLAYWRIGHT_BROWSERS_DIR"])
     assert binary_root.is_absolute()
     assert Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"]) == binary_root
@@ -36,6 +38,8 @@ def test_provisioned_binary_cache_survives_private_storage_isolation(tmp_path: P
         assert playwright_browsers_root(settings=settings) == binary_root
         assert settings.cadrumo_chromium_data_root == storage_root / "chromium-data"
         assert not binary_root.is_relative_to(storage_root)
+        # The engine's record lives under each storage root; the binaries it names do not.
+        record_shared_browser(settings)
         assert probe_playwright_browser(settings=settings).available
 
 
@@ -138,14 +142,14 @@ async def test_chromium_child_data_paths_are_scoped_to_session(tmp_path: Path, m
             captured.update(kwargs)
             return SimpleNamespace(browser=FakeBrowser())
 
-    # The launch guard reads the real setup probe; completion markers satisfy
-    # it without any executable, since the launch itself is captured above.
+    # The launch guard locates the browser from the engine's record; the
+    # executables it names need not run, since the launch itself is captured above.
     browsers_root = tmp_path / "browsers"
-    builds = required_browser_builds()
-    assert builds is not None
-    for build in builds:
-        (browsers_root / build.directory_name).mkdir(parents=True)
-        (browsers_root / build.directory_name / "INSTALLATION_COMPLETE").write_text("", encoding="utf-8")
+    write_engine_browser_record(
+        records_root=component_records_root(Settings(cadrumo_local_storage_root=storage_root)),
+        browsers_root=browsers_root,
+        driver_version=installed_driver_version(),
+    )
 
     session = BrowserSession(
         playwright=cast("Playwright", SimpleNamespace(chromium=FakeChromium())),

@@ -10,9 +10,10 @@ import psutil
 import pytest
 
 from ......application.auth.protocols import BrowserSessionPort
-from ......application.provisioning_browser import required_browser_builds
+from ......core.component_records import component_records_root
 from ......core.config import Settings
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ......tests.component_record_support import engine_browser_record, installed_driver_version
 from ...tests.process_support import playwright_driver_pid, wait_for_process_exit, wait_for_task_readiness
 from ..errors import BrowserError, BrowserPreconditionCondition
 from ..factory import (
@@ -252,19 +253,20 @@ async def test_default_browser_session_reaps_browser_after_real_context_failure(
 async def test_launch_failure_is_a_factual_typed_safety_outcome(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A cache that claims provisioning but holds no executable fails the real launch.
+    """A recorded browser whose executables cannot run fails the real launch.
 
-    The completion markers satisfy the provisioning probe, so the refusal does
-    not fire and Playwright itself reports the missing executable.
+    The engine's record locates the browser, so the refusal does not fire and
+    the launch itself fails on executables that are not programs.
     """
-    builds = required_browser_builds()
-    assert builds is not None
-    cache = tmp_path / "marked-but-empty-cache"
-    for build in builds:
-        directory = cache / build.directory_name
-        directory.mkdir(parents=True)
-        (directory / "INSTALLATION_COMPLETE").write_text("", encoding="utf-8")
+    cache = tmp_path / "recorded-but-unrunnable-cache"
     monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", str(cache))
+    with engine_browser_record(
+        records_root=component_records_root(Settings()), browsers_root=cache, driver_version=installed_driver_version()
+    ):
+        await _assert_the_launch_fails()
+
+
+async def _assert_the_launch_fails() -> None:
     session = await create_browser_session(Settings(), _profile("launch-hint"))
     try:
         with pytest.raises(BrowserError) as excinfo:

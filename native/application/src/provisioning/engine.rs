@@ -920,9 +920,14 @@ impl Engine {
             None => return Err(Stop::Failed(FailureCategory::NotInThisBuild)),
         };
         let observer = |step| sink.emit(Event::Phase { item, step });
-        let writer = self
-            .activity
-            .begin_observed(item, SetupStep::Download, &observer)?;
+        // Builds already in place with nothing to fetch are adopted: the full check below
+        // launches them, and only a passing check records them, so no download is announced.
+        let first = if entry.download_bytes == Some(0) {
+            SetupStep::Verify
+        } else {
+            SetupStep::Download
+        };
+        let writer = self.activity.begin_observed(item, first, &observer)?;
         self.clear_cancel_request(item)?;
         let hosts: BTreeSet<HostName> = entry.source_hosts.iter().cloned().collect();
         let outcome = (|| -> Result<(), Stop> {

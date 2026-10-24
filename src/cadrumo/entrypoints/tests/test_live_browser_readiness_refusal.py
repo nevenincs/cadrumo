@@ -40,11 +40,13 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.provisioning_browser import BROWSER_PROVISION_ACTION_ID, required_browser_builds
+from ...application.provisioning_browser import BROWSER_PROVISION_ACTION_ID
 from ...application.provisioning_contracts import ProvisioningPreconditionCondition
+from ...core.component_records import component_records_root
 from ...core.config import Settings, override_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...tests.component_record_support import engine_browser_record, installed_driver_version
 from ..live_state_composition import compose_live_state, preflight_filed_history_provider
 from ..operation_composition import build_production_operation_registry
 
@@ -53,15 +55,18 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _BROWSER_REFUSAL_CODE = "REFUSED_BROWSER_NOT_READY"
 
 
-def _marked_browser_root(root: Path) -> Path:
-    """A browsers root whose completion markers satisfy the setup probe without any executable."""
-    builds = required_browser_builds()
-    assert builds is not None
-    for build in builds:
-        directory = root / build.directory_name
-        directory.mkdir(parents=True)
-        (directory / "INSTALLATION_COMPLETE").write_text("", encoding="utf-8")
-    return root
+@contextmanager
+def _recorded_browser(browsers: Path) -> Generator[None]:
+    """Hand Playwright ``browsers``, holding builds the engine recorded for the installed driver."""
+    with (
+        override_settings(cadrumo_playwright_browsers_dir=browsers) as settings,
+        engine_browser_record(
+            records_root=component_records_root(settings),
+            browsers_root=browsers,
+            driver_version=installed_driver_version(),
+        ),
+    ):
+        yield
 
 
 @contextmanager
@@ -137,7 +142,7 @@ def test_live_capture_refuses_a_missing_browser_before_provider_readiness(tmp_pa
         with _supervisor(profile, registry, tmp_path / "operations") as supervisor:
             with override_settings(cadrumo_playwright_browsers_dir=tmp_path / "browsers-empty"):
                 refused = _settle(supervisor, request, "3" * 64)
-            with override_settings(cadrumo_playwright_browsers_dir=_marked_browser_root(tmp_path / "browsers-marked")):
+            with _recorded_browser(tmp_path / "browsers-recorded"):
                 reached_provider = _settle(supervisor, request, "4" * 64)
 
         # This profile has no tax agency access configured, so provider

@@ -5,7 +5,8 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
@@ -54,19 +55,21 @@ from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.provisioning_browser import BROWSER_PROVISION_ACTION_ID, required_browser_builds
+from cadrumo.application.provisioning_browser import BROWSER_PROVISION_ACTION_ID
 from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.auth_provider import AuthProviderKind
+from cadrumo.core.component_records import component_records_root
 from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.operations import (
     OperationEffect,
     OperationTerminalCondition,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.tests.component_record_support import engine_browser_record, installed_driver_version
 
 from .supervision_support import run_to_settlement
 
@@ -304,15 +307,18 @@ class _RecordingCertificateSecretBackendFactory:
         return build_certificate_secret_backend(bucket_id=bucket_id, settings=settings)
 
 
-def _marked_browser_root(root: Path) -> Path:
-    """A browsers root whose completion markers satisfy the setup probe without any executable."""
-    builds = required_browser_builds()
-    assert builds is not None
-    for build in builds:
-        directory = root / build.directory_name
-        directory.mkdir(parents=True)
-        (directory / "INSTALLATION_COMPLETE").write_text("", encoding="utf-8")
-    return root
+@contextmanager
+def _recorded_browser(browsers: Path) -> Generator[None]:
+    """Hand Playwright ``browsers``, holding builds the engine recorded for the installed driver."""
+    with (
+        override_settings(cadrumo_playwright_browsers_dir=browsers) as settings,
+        engine_browser_record(
+            records_root=component_records_root(settings),
+            browsers_root=browsers,
+            driver_version=installed_driver_version(),
+        ),
+    ):
+        yield
 
 
 def test_sign_in_without_the_browser_refuses_before_any_credential_loads(
@@ -387,7 +393,7 @@ def test_sign_in_without_the_browser_refuses_before_any_credential_loads(
 
         # With the browser set up, the same sign-in goes on to read credentials
         # and stops at the provider's own local precondition instead.
-        with override_settings(cadrumo_playwright_browsers_dir=_marked_browser_root(tmp_path / "browsers-marked")):
+        with _recorded_browser(tmp_path / "browsers-recorded"):
             reached_provider = acquire("b" * 64)
         assert reached_provider.terminal_condition is OperationTerminalCondition.REFUSED
         assert reached_provider.effect is OperationEffect.NONE

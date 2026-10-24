@@ -505,6 +505,41 @@ def _evict_test_bound_profile_record_session() -> Iterator[None]:
         close_active_profile_record_session()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _record_the_shared_browser_as_the_engine_would() -> None:
+    """Stand in for the component engine's record of the shared provisioned browser.
+
+    Every test shares the one provisioned browser cache pinned above, but the
+    launch guard locates a browser only from the record the engine writes under
+    a storage root, and each test's storage root is private. When the shared
+    cache holds every build the installed driver launches, this registers the
+    record the engine would write after adopting those builds and writes it for
+    the run's own storage root; a test with a storage root of its own writes it
+    there through ``record_shared_browser``.
+    """
+    from cadrumo.application.provisioning_browser import (
+        browser_executable,
+        browser_host_platform,
+        required_browser_builds,
+    )
+    from cadrumo.tests.component_record_support import register_shared_browser
+
+    browsers = Path(os.environ["CADRUMO_PLAYWRIGHT_BROWSERS_DIR"])
+    builds = required_browser_builds()
+    platform = browser_host_platform()
+    if builds is None or platform is None:
+        return
+    paths: dict[str, str] = {}
+    for build in builds:
+        executable = browser_executable(browsers, build, platform)
+        if executable is None or not executable.is_file():
+            return
+        if not (browsers / build.directory_name / "INSTALLATION_COMPLETE").is_file():
+            return
+        paths[build.name] = executable.relative_to(browsers).as_posix()
+    register_shared_browser(browsers_root=browsers, paths=paths, version=builds[0].browser_version)
+
+
 register_collection_storage_root_cleanup(collection_storage_root())
 
 # A publish into the checkout's live authority during the run would swap the

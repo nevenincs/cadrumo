@@ -10,7 +10,7 @@
 use super::*;
 use crate::provisioning::{
     browser::{
-        DriverManifest,
+        self, DriverManifest,
         tests::{
             Archives, BROWSER_VERSION, HOST, driver_package, fake_environment, fake_leading,
             launchable_archives,
@@ -724,6 +724,79 @@ fn a_setup_runs_only_under_the_plan_digest_the_person_approved() {
             .join("components/receipts/browser.json")
             .exists()
     );
+}
+
+#[test]
+fn builds_already_in_place_are_adopted_by_an_approved_setup_that_downloads_nothing() {
+    let world = World::browser();
+    let digest = world.run(&["plan"]).result["plan_digest"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let installed = world.run(&["setup", "--approve", &digest]);
+    assert_eq!(installed.result["outcome"], "completed");
+    // The builds stay and only their record is gone, as an earlier installer leaves them.
+    let record = world.root().join("components/receipts/browser.json");
+    fs::remove_file(&record).unwrap();
+
+    let status = world.run(&["status"]);
+    let browser = row(&status.result, "browser");
+    assert_eq!(
+        browser["state"], "absent",
+        "builds no record describes are not believed"
+    );
+    assert_eq!(browser["recovery"], "set_up");
+    assert_eq!(browser["size_estimate_bytes"], 0);
+    let plan = world.run(&["plan"]);
+    assert_eq!(plan.result["plan"]["entries"][0]["download_bytes"], 0);
+    let digest = plan.result["plan_digest"].as_str().unwrap().to_owned();
+
+    let requests = world.server.targets().len();
+    let adopted = world.run(&["setup", "--approve", &digest]);
+    assert_eq!(adopted.result["outcome"], "completed", "{}", adopted.result);
+    assert_eq!(
+        world.server.targets().len(),
+        requests,
+        "adoption neither preflights nor downloads"
+    );
+    assert_eq!(
+        phases(&adopted.events, "browser"),
+        ["plan", "verify", "cleanup"]
+    );
+    assert!(
+        adopted
+            .events
+            .iter()
+            .all(|event| event["type"] != "progress")
+    );
+    assert!(record.is_file(), "the passing check recorded the builds");
+    assert_eq!(row(&adopted.result, "browser")["state"], "ready");
+    assert_eq!(
+        row(&world.run(&["status"]).result, "browser")["state"],
+        "ready"
+    );
+
+    // A build the driver would not read as installed is fetched again, and only it.
+    fs::remove_file(&record).unwrap();
+    fs::remove_file(
+        world
+            .root()
+            .join("components/playwright/chromium-1248")
+            .join(browser::COMPLETION_MARKER),
+    )
+    .unwrap();
+    let plan = world.run(&["plan"]);
+    assert!(plan.result["plan"]["entries"][0]["download_bytes"].as_u64() > Some(0));
+    let digest = plan.result["plan_digest"].as_str().unwrap().to_owned();
+    let archives = world.archive_requests();
+    let repaired = world.run(&["setup", "--approve", &digest]);
+    assert_eq!(
+        repaired.result["outcome"], "completed",
+        "{}",
+        repaired.result
+    );
+    assert_eq!(world.archive_requests(), archives + 1);
+    assert_eq!(row(&repaired.result, "browser")["state"], "ready");
 }
 
 /// How many builds the browser's plan installs, one archive each: the test pins' families.

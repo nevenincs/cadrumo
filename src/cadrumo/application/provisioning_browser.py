@@ -1,11 +1,14 @@
 """Provisioning of the Playwright Chromium build Cadrumo's browser automation drives.
 
 The installed ``playwright`` package pins exact browser revisions in its bundled
-``browsers.json`` manifest, and launches only those revisions. The probe here
-therefore reads that manifest and checks the revision-exact cache directories
-and their completion markers, so a stale build left by an earlier Playwright
-version never reads as installed. It is a filesystem read: the Playwright driver
-can hang inside the CLI process, so nothing here launches it.
+``browsers.json`` manifest, and launches only those revisions. The native
+component engine installs them and, once they verify, writes the browser's
+record. :func:`probe_playwright_browser` only locates the browser from that
+record (:mod:`~cadrumo.core.component_records`): the record must be for the
+browsers folder Playwright is given and for the installed driver's version, and
+the executables it names must exist, so builds left by an earlier Playwright
+version, or builds no engine checked, never read as installed. Nothing here
+launches the driver.
 
 :class:`PlaywrightBrowserItem` is the ``browser`` setup item of the dependency
 registry. Its quick check reads the manifest, the completion markers and the
@@ -44,6 +47,7 @@ from pydantic import BaseModel, StringConstraints, ValidationError, model_valida
 
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
+from ..core.component_records import ComponentItem, component_records_root, locate_component
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.models import STRICT_FROZEN_CONFIG
@@ -98,6 +102,7 @@ from .provisioning_contracts import (
 __all__ = [
     "BROWSER_FULL_CHECK_LAUNCH_TIMEOUT_S",
     "BROWSER_PROVISION_ACTION_ID",
+    "BROWSER_RECORD_DRIVER_FACT",
     "PLAYWRIGHT_BROWSER_INSTALL_TIMEOUT_S",
     "PLAYWRIGHT_BROWSER_SERVICE",
     "BrowserBuild",
@@ -274,11 +279,8 @@ def browser_not_provisioned_verdict(facts: Mapping[str, ProvisioningFactValue]) 
     )
 
 
-def _build_installed(root: Path, build: BrowserBuild) -> bool:
-    try:
-        return (root / build.directory_name / _INSTALLATION_COMPLETE_MARKER).is_file()
-    except OSError:
-        return False
+#: The identity fact the engine's browser record carries: the driver version its builds belong to.
+BROWSER_RECORD_DRIVER_FACT: Final = "playwright_driver"
 
 
 def probe_playwright_browser(
@@ -286,18 +288,26 @@ def probe_playwright_browser(
     *,
     manifest_path: Path | None = None,
     settings: Settings | None = None,
+    records_root: Path | None = None,
 ) -> DependencyStatus:
-    """Report whether every Chromium build the installed Playwright launches is present.
+    """Locate the browser the component engine installed, from the record it wrote.
 
-    Missing builds are refused with the provisioning action. An unreadable
-    manifest (Playwright absent or its layout unrecognised) is refused without a
-    recovery action, because installing a browser cannot repair it.
+    This only locates: it reads the engine's browser record and confirms that
+    the executables it names exist. The record must be for the browsers folder
+    this process hands Playwright and for the installed driver's version,
+    because the driver launches only the builds it names. A browser without
+    such a record is refused with the browser setup action, which installs it
+    or records builds already in place. An unreadable driver (Playwright absent
+    or its manifest unrecognised) is refused without a recovery action, because
+    setting the browser up cannot repair it.
     """
-    # No fact names the browsers folder: the verdict is published with every
+    # No fact names a folder or a path: the verdict is published with every
     # refusal, and a path outside the storage root is never published.
     root = playwright_browsers_root(cache_root, settings=settings)
-    builds = required_browser_builds(manifest_path)
-    if builds is None:
+    manifest = manifest_path if manifest_path is not None else _installed_manifest_path()
+    builds = required_browser_builds(manifest)
+    driver = None if manifest is None or builds is None else installed_playwright_driver_version(manifest)
+    if builds is None or driver is None:
         facts: dict[str, ProvisioningFactValue] = {
             "browser_manifest_readable": False,
             "chromium_installed": False,
@@ -311,13 +321,23 @@ def probe_playwright_browser(
                 facts=facts,
             ),
         )
-    missing = [build.directory_name for build in builds if not _build_installed(root, build)]
+    located = locate_component(
+        ComponentItem.BROWSER,
+        records_root=component_records_root(settings) if records_root is None else records_root,
+        expected_folder=root,
+        expected_facts={BROWSER_RECORD_DRIVER_FACT: driver},
+    )
     facts = {
         "required_builds": ",".join(build.directory_name for build in builds),
-        "chromium_installed": not missing,
+        "browser_record": located.outcome.value,
+        "chromium_installed": located.located,
     }
-    if missing:
-        facts["missing_builds"] = ",".join(missing)
+    if located.version is not None:
+        facts["browser_version"] = located.version
+    if located.missing:
+        # The names of the record's paths, never the paths themselves.
+        facts["missing_builds"] = ",".join(located.missing)
+    if not located.located:
         return DependencyStatus(
             service=PLAYWRIGHT_BROWSER_SERVICE,
             available=False,

@@ -82,11 +82,13 @@ def require_browser_ready(settings: Settings, *, profile_name: str) -> None:
     This is the one browser readiness check. Tax agency read and sign-in
     operations call it when they start, before they load a certificate or a
     secret, and :class:`BrowserSession` calls it again before every launch.
-    The refusal carries the setup probe's own verdict, which names the browser
-    setup action when setting the browser up repairs it, so every caller
-    refuses the same way. The registered code and message key follow the
-    verdict: a browser setup can install says so, and one it cannot repair
-    refuses with its own code, whose sentence offers no setup.
+    It locates the browser from the record the component engine wrote after
+    installing and checking it, and probes nothing itself. The refusal carries
+    the locate step's verdict, which names the browser setup action when
+    setting the browser up repairs it, so every caller refuses the same way.
+    The registered code and message key follow the verdict: a browser setup
+    can install says so, and one it cannot repair refuses with its own code,
+    whose sentence offers no setup.
     """
     from .....application.provisioning_browser import probe_playwright_browser
 

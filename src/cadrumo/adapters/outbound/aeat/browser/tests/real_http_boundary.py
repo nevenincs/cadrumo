@@ -35,6 +35,7 @@ from ......core.async_cleanup import await_cancellation_complete, close_async_re
 from ......core.config import Settings
 from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_PATH, AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.errors.hierarchy import InternalInvariantError
+from ......tests.component_record_support import record_shared_browser
 from ..evasion import PlaywrightStealthEvasion
 from ..factory import DefaultBrowserSession
 from ..profile import Profile
@@ -488,12 +489,18 @@ async def open_real_browser_session(
     settings, so a redirect hop the route never sees is still served locally;
     the route's own loopback fetches bypass it.
 
+    The launch guard locates the browser from the component engine's record
+    under the storage root ``settings`` name, so the shared browser cache's
+    record is written there first, as the engine writes it once the builds
+    verify.
+
     The browser always launches headless. The routed pages are read by the
     test, never by a person, and a provider that asks for a visible window (a
     fresh Cl@ve Movil login, so the operator can scan its QR) would otherwise
     need a display server that a headless host does not have. That request is
     the provider's own contract and is pinned by the provider's unit tests.
     """
+    record_shared_browser(settings)
     playwright: Playwright | None = None
     manager = async_playwright()
 

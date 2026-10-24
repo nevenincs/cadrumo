@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc78cd8642210dc43ddb45ee27573d156ed404223312bab4cdf98ceb79e4ee7b'
+body_hash: 'sha256:7ba80bb324a0cc1a9df9d402688f22dff842187cfdf1095bf0b4e5306d1008ba'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -415,6 +415,28 @@ related:
 - `S11` `verify:` `pytest test_dependency_registry_conformance.py and dev/locales/tests/test_desktop_chrome.py (60; the shell drift failure is uncommitted workspace keys of other work, and the drift on HEAD plus this Step is empty)` -> `pass`
 - `S11` `verify:` `dev.locales status --check (blocking backlog is desktop.attendance.* and inventory violations from other work; the new desktop.setup keys exist in all four locales)` -> `fail`
 - `S11` `by:` `implementation-engineer-high`
+- `S19` `M` `native/application/src/provisioning/engine.rs`
+- `S19` `M` `native/application/src/provisioning/protocol/tests.rs`
+- `S19` `M` `src/cadrumo/application/provisioning_browser.py`
+- `S19` `M` `src/cadrumo/adapters/outbound/aeat/browser/session.py`
+- `S19` `A` `src/cadrumo/tests/component_record_support.py`
+- `S19` `M` `conftest.py`
+- `S19` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/real_http_boundary.py`
+- `S19` `M` `src/cadrumo/application/tests/test_provisioning_browser.py`
+- `S19` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_browser_provisioning_refusal.py`
+- `S19` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_working_data.py`
+- `S19` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_factory.py`
+- `S19` `M` `src/cadrumo/adapters/persistence/operations/tests/test_auth_operation_definitions.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/test_live_browser_readiness_refusal.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/test_live_auth_refusal_detail.py`
+- `S19` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_command_aeat_capability_probe.py`
+- `S19` `verify:` `cargo test --offline --lib on an export of HEAD 838f35cfba plus this Step, Windows (168; role adoption test included)` -> `pass`
+- `S19` `verify:` `WSL Linux cargo test --lib on the export (168; local_ai program record fixture fails identically on pure HEAD)` -> `pass`
+- `S19` `verify:` `cargo clippy --all-targets -D warnings with and without --features platform (Windows export), WSL clippy, rustfmt through stdin byte-compared` -> `pass`
+- `S19` `verify:` `pytest 93 browser-dependent files (-n 6, not aeat_live/os_keychain/external_tool): 42 tests in 10 files that the re-point turned red now pass; consumer gate test_dependency_consumer_gating passes; remaining failures are baseline ones or other lanes' uncommitted CLI provision, check_cli, local AI wording and command-spec edits` -> `pass`
+- `S19` `verify:` `ruff check, ruff format --check, ty check on the 15 touched Python files` -> `pass`
+- `S19` `verify:` `lint-imports (28 kept; 2 broken through uncommitted application/diagnostics.py, no chain touches this Step's modules)` -> `pass`
+- `S19` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -463,3 +485,7 @@ related:
 - `S11` S11 `desktop_setup_start` keeps its model argument but refuses any value: the engine pins every role's model
 - `S11` S11 application gains a test-support feature exposing the local TLS test servers; the desktop enables it only as a dev-dependency, so its Cargo.lock adds ring to the application's dependencies; the Linux desktop dependency evidence digests (already stale since S01) drift further
 - `S11` S11 on Linux and macOS the window keeps a process scope for its engines' browser checks and hardware queries; those paths compile only on those hosts and were not built here
+- `S19` S19 adoption already followed from the zero-byte plan: complete builds without a record read absent with a 0-byte entry, setup skips preflight, the full check launches them and only a passing check records them; the Step makes that setup start at verify instead of announcing a download, and proves it end to end through the role; engine.rs carries the change rather than browser.rs
+- `S19` S19 the shared browser cache's record is registered once per test run by the root conftest and written into each real-browser test's storage root by `open_real_browser_session` and three explicit call sites; the widely shared storage-root helpers in `secure_sql.py` are left unchanged so no unrelated storage inventory sees an extra file
+- `S19` S19 the consumer gate's `shared_playwright_runtime` driver sets `PLAYWRIGHT_BROWSERS_PATH` to its empty root before the page factory refuses, and nothing restores it outside adapters/outbound/aeat, so later Chromium docs tests on the same xdist worker fail; they pass alone; the gate file belongs to the on-demand lane
+- `S19` S19 this checkout's dev storage var/storage holds browser builds but no engine record, so product browser work there refuses until cadrumo --role components setup adopts them (0 bytes)

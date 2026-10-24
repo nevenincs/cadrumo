@@ -1,6 +1,6 @@
 """Browser work without a provisioned build is a typed, recoverable refusal.
 
-The readiness check reads a real browsers root through the setup probe. The
+The readiness check locates the browser through the engine's record. The
 launch guard runs a real Playwright driver against an empty browser cache, so
 its refusal must come from the session's own provisioning check rather than
 from Playwright's missing-executable error. The factory refuses before the
@@ -22,7 +22,7 @@ from playwright.async_api import async_playwright
 
 from ......application.operations.error_detail import build_operation_error_detail
 from ......application.operator_actions.catalogue import lookup_action
-from ......application.provisioning_browser import BROWSER_PROVISION_ACTION_ID, required_browser_builds
+from ......application.provisioning_browser import BROWSER_PROVISION_ACTION_ID
 from ......application.provisioning_contracts import ProvisioningPreconditionCondition
 from ......core.config import Settings
 from ......core.errors.error_codes import (
@@ -32,6 +32,7 @@ from ......core.errors.error_codes import (
     render_error_text,
     resolve_error_message,
 )
+from ......tests.component_record_support import installed_driver_version, write_engine_browser_record
 from ..errors import BrowserError, BrowserFailureMode, BrowserNotReadyError, BrowserNotUsableError
 from ..factory import create_browser_session, opened_browser_page, shared_playwright_runtime
 from ..profile import Profile
@@ -56,15 +57,16 @@ def _profile(name: str) -> Profile:
     return Profile(name=name, locale="es-ES", timezone_id="Europe/Madrid")
 
 
-def _marked_browser_root(root: Path) -> Path:
-    """A browsers root whose completion markers satisfy the setup probe without any executable."""
-    builds = required_browser_builds()
-    assert builds is not None
-    for build in builds:
-        directory = root / build.directory_name
-        directory.mkdir(parents=True)
-        (directory / "INSTALLATION_COMPLETE").write_text("", encoding="utf-8")
-    return root
+def _recorded_browser(tmp_path: Path) -> Settings:
+    """Settings whose browsers root holds the builds the engine recorded for the installed driver."""
+    storage = tmp_path / "storage"
+    browsers = tmp_path / "recorded-cache"
+    write_engine_browser_record(
+        records_root=storage / "components" / "receipts",
+        browsers_root=browsers,
+        driver_version=installed_driver_version(),
+    )
+    return Settings(cadrumo_local_storage_root=storage, cadrumo_playwright_browsers_dir=browsers)
 
 
 def _assert_names_the_browser_setup(error: BrowserError, browsers_root: Path) -> None:
@@ -81,8 +83,9 @@ def _assert_names_the_browser_setup(error: BrowserError, browsers_root: Path) ->
     verdict = error.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
-    # The verdict is published with every refusal, so it names the missing builds, never the folder.
-    assert verdict.evidence[0].values["missing_builds"]
+    # The verdict is published with every refusal, so it names why the browser was not
+    # located, never the folder.
+    assert verdict.evidence[0].values["browser_record"] != "located"
     assert not [value for value in verdict.evidence[0].values.values() if str(browsers_root) in str(value)]
     assert verdict.action is not None
     assert verdict.action.action_id == BROWSER_PROVISION_ACTION_ID
@@ -105,8 +108,7 @@ def test_readiness_check_refuses_an_empty_root_and_admits_a_complete_one(tmp_pat
         require_browser_ready(Settings(cadrumo_playwright_browsers_dir=empty), profile_name="readiness")
     _assert_names_the_browser_setup(raised.value, empty)
 
-    marked = _marked_browser_root(tmp_path / "marked-cache")
-    require_browser_ready(Settings(cadrumo_playwright_browsers_dir=marked), profile_name="readiness")
+    require_browser_ready(_recorded_browser(tmp_path), profile_name="readiness")
 
 
 def test_session_factory_refuses_before_the_playwright_driver_starts(
