@@ -1037,7 +1037,7 @@ export function AgentColumn({
                   if (
                     origin &&
                     link.kind === "page" &&
-                    link.destination === "aeat_auth"
+                    link.destination === "profile/aeat-access"
                   )
                     setSetupCheck(origin);
                 });

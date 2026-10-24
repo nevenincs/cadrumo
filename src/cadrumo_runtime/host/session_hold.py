@@ -364,7 +364,6 @@ async def _hold(
                             "runtime_boot_id": str(status.runtime_boot_id),
                             "connection_id": str(status.connection_id),
                             "destination": presented.destination,
-                            "params": dict(presented.params),
                             "delivered": presented.delivered,
                         }
                     )

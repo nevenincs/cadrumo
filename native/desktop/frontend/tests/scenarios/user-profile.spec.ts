@@ -218,7 +218,7 @@ test("details open for editing by double click, Enter, F2 and the hover button",
   await page.keyboard.press("Enter");
   await expect
     .poll(() => page.evaluate(() => window.__scenarioHostCalls ?? []))
-    .toContain("presentDestination aeat_auth presented");
+    .toContain("presentView profile/aeat-access presented");
 });
 
 test("the keyboard walks details and sections, and finds search and help", async ({
@@ -697,7 +697,7 @@ test("saved Cl@ve setup asks specifically for the NIE support number", async ({
   // Setting up AEAT access is the workspace's own page, for this profile.
   await expect
     .poll(() => page.evaluate(() => window.__scenarioHostCalls ?? []))
-    .toContain("presentDestination aeat_auth presented");
+    .toContain("presentView profile/aeat-access presented");
   await expect(page.locator('[data-terminal="tui"]')).toBeVisible();
 });
 

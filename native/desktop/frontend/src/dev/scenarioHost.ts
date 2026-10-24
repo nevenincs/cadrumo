@@ -24,6 +24,8 @@ import { modeloFixture, type ModeloShape } from "./modeloFixture";
 import { SCENARIO_PASSWORD } from "./fixtures/password";
 import { userProfileFixture } from "./userProfileFixture";
 import type { Host } from "../shell/host";
+import { NAVIGATION } from "../shell/navigation/projection";
+import { admitsTuiView } from "../shell/navigation/register";
 import type { AgentServiceStatus } from "../shell/agentSession";
 import type { ProfileAccounts } from "../shell/profiles";
 import type { ProfileViews } from "../shell/views";
@@ -153,11 +155,6 @@ function failure(
 ): HostFailure {
   return { code, operation, message: `${SCENARIO_HOST_MARKER}: ${code}` };
 }
-
-const PROFILE_ID =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-/** The id of the profile the profile fixture reads. */
-const FIXTURE_PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
 // One set of password-change controls per page, whichever host instance
 // answers: a scenario may build its host more than once.
@@ -529,22 +526,21 @@ export function scenarioHost(
     userProfile,
     censo: censoFixture(userProfile, scenario.censo),
     presentation: {
-      async present(profile, destination) {
+      async present(view, params) {
         await wait(options.latencyMs);
-        // The window knows the signed-in profile by its label; its id is
-        // the one the profile fixture reads, unless the scenario signs in
-        // with an id for a label.
-        const signedInId =
-          active !== null && PROFILE_ID.test(active)
-            ? active
-            : FIXTURE_PROFILE_ID;
+        // As the host does: only a TUI view of the projection, with only
+        // its declared parameters, is ever sent.
+        if (!admitsTuiView(NAVIGATION, view, params))
+          throw failure("invalid_arguments", "cli");
         const outcome: PresentationOutcome =
           presence !== "present"
             ? { outcome: "signed_out" }
-            : profile !== signedInId
-              ? { outcome: "other_profile" }
-              : { outcome: "presented", delivered: 1 };
-        say(`presentDestination ${destination} ${outcome.outcome}`);
+            : { outcome: "presented", delivered: 1 };
+        const shown = Object.entries(params)
+          .sort(([a], [b]) => (a < b ? -1 : 1))
+          .map(([name, value]) => ` ${name}=${value}`)
+          .join("");
+        say(`presentView ${view}${shown} ${outcome.outcome}`);
         return outcome;
       },
     },

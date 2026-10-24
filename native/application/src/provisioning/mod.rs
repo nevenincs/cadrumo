@@ -5,14 +5,12 @@
 //! `url` reduces an address to what a download hop is judged by. `proxy` reads the
 //! operator's proxy settings, `connection` reaches a publisher through them, `http` is the
 //! small client codec spoken over that connection, and `transfer` fetches one pinned
-//! archive with the hop, retry and resume rules; `network` is the preflight that classifies
-//! whether an item's hosts can be reached. `failure` holds the closed failure
+//! archive with the hop, retry and resume rules. `failure` holds the closed failure
 //! categories every outcome is reported in.
 
 pub mod connection;
 pub mod failure;
 pub(crate) mod http;
-pub mod network;
 pub mod pins;
 pub mod proxy;
 pub mod transfer;

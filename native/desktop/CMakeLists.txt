@@ -155,19 +155,32 @@ set(desktop_icons_inputs
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/hashing.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py")
+# The navigation register, read through its validating client loader. Its label
+# keys are chrome strings too, so the chrome regenerates when it changes.
+set(desktop_navigation_register "${CADRUMO_SOURCE_ROOT}/src/cadrumo_client/contracts/navigation.toml"
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo_client/contracts/navigation.py")
+set(desktop_navigation_inputs ${desktop_navigation_register}
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/desktop_navigation.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py")
+list(APPEND desktop_chrome_inputs ${desktop_navigation_register})
 set(desktop_chrome_output chrome-strings.json)
 set(desktop_palette_output palette.css)
 set(desktop_icons_output provider-icons.json)
+set(desktop_navigation_output navigation.json)
 set(desktop_chrome_module dev.locales.desktop_chrome)
 set(desktop_palette_module dev.docs.desktop_palette)
 set(desktop_icons_module dev.packaging.native.provider_icon_assets)
+set(desktop_navigation_module dev.packaging.native.desktop_navigation)
 set(desktop_chrome_description "chrome strings from the locale catalogues")
 set(desktop_palette_description "palette from the documentation theme")
 set(desktop_icons_description "pinned provider marks from the admitted agent wheel")
+set(desktop_navigation_description "navigation register projection")
 set(desktop_chrome_arguments --shell-source "${CMAKE_CURRENT_SOURCE_DIR}/frontend/src")
 set(desktop_icons_arguments --build "${PROJECT_BINARY_DIR}")
 set(desktop_icons_dependencies agent_project)
-foreach(generator IN ITEMS chrome palette icons)
+foreach(generator IN ITEMS chrome palette icons navigation)
   set(generator_input_json "[]")
   set(generator_inputs ${desktop_${generator}_inputs}
     "${CADRUMO_DEV_PYTHON}" "${CADRUMO_SOURCE_ROOT}/uv.lock"
@@ -196,7 +209,8 @@ cadrumo_build_step(step_comment desktop-frontend-generated GROUP desktop
   SUMMARY "every generated shell input"
   OUTPUTS "${desktop_generated}")
 add_custom_target(desktop-frontend-generated
-  DEPENDS desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons COMMENT "${step_comment}")
+  DEPENDS desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons desktop-frontend-navigation
+  COMMENT "${step_comment}")
 foreach(action IN ITEMS build test)
   add_dependencies(desktop-frontend-${action} desktop-frontend-generated)
 endforeach()
@@ -270,7 +284,8 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
   set(host_dependencies desktop-frontend-build ${desktop_user_docs})
   set(host_fixture_check)
   if(action STREQUAL "unit-test" OR action STREQUAL "unit-clippy")
-    set(host_dependencies desktop-frontend-install)
+    # build.rs embeds the navigation projection, so even backend-only runs generate it.
+    set(host_dependencies desktop-frontend-install desktop-frontend-navigation)
     if(action STREQUAL "unit-test")
       set(host_driver_action test-unit)
     else()
@@ -410,13 +425,13 @@ add_custom_target(desktop-packaged-harness-test
 # caches unless the operator explicitly selects their own clean target.
 cadrumo_register_clean(TARGET desktop-frontend-build PATHS
   "${CADRUMO_PATH_DESKTOP_FRONTEND}" "${CADRUMO_PATH_DESKTOP_CACHE}/frontend-build.json")
-foreach(generator IN ITEMS chrome palette icons)
+foreach(generator IN ITEMS chrome palette icons navigation)
   cadrumo_register_clean(TARGET desktop-frontend-${generator} PATHS
     "${desktop_generated}/${desktop_${generator}_output}"
     "${CADRUMO_PATH_DESKTOP_CACHE}/frontend-${generator}-build.json")
 endforeach()
 cadrumo_register_clean(TARGET desktop-frontend-generated DEPENDS
-  desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons)
+  desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons desktop-frontend-navigation)
 cadrumo_register_clean(TARGET desktop-host-prepare PATHS
   "${CADRUMO_PATH_DESKTOP_HOST}" "${CADRUMO_PATH_DESKTOP_ICONS}"
   "${CADRUMO_PATH_DESKTOP_CACHE}/icons-build.json")

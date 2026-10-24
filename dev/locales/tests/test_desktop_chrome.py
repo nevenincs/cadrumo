@@ -180,7 +180,7 @@ def test_every_declared_key_is_authored_in_all_four_canonical_catalogues(tmp_pat
     written = json.loads(output.read_text(encoding="utf-8"))
     assert list(written) == sorted(DESKTOP_LOCALES)
     for locale in DESKTOP_LOCALES:
-        assert set(written[locale]) == DESKTOP_CHROME_KEYS, locale
+        assert set(written[locale]) == DESKTOP_CHROME_KEYS | desktop_chrome.DESKTOP_NAVIGATION_LABEL_KEYS, locale
     assert written == desktop_chrome_strings(LOCALES_DIR)
 
 

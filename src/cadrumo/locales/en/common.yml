@@ -3511,8 +3511,6 @@ desktop:
     link_invalid: That link doesn't open a page in the workspace.
     link_not_received: The workspace didn't get the page. Wait for it to finish loading,
       then try again.
-    link_other_profile: That link is for another profile. Sign in to it to open the
-      page.
     link_sign_in: Sign in to open that page in the workspace.
     open_failed: Couldn't open that.
     paste_failed: Could not paste that.

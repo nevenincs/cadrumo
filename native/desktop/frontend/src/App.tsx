@@ -33,7 +33,6 @@ import type {
   ContextMenuItem,
   DocsTheme,
   HostFailure,
-  PresentationDestination,
   PresentationOutcome,
   SetupItemId,
   SetupRow,
@@ -941,11 +940,7 @@ export function App({ host }: { host: Host }) {
   // shown with the keyboard, on the page. A page that cannot open says why,
   // and a page for another profile disturbs nothing.
   const presentPage = useCallback(
-    async (
-      profile: string,
-      destination: PresentationDestination,
-      presented: () => void = () => undefined,
-    ) => {
+    async (destination: string, presented: () => void = () => undefined) => {
       void host.window?.action("focus").catch(() => undefined);
       if (!signedIn) {
         showTui();
@@ -968,13 +963,9 @@ export function App({ host }: { host: Host }) {
       }
       let outcome: PresentationOutcome;
       try {
-        outcome = await presentation.present(profile, destination);
+        outcome = await presentation.present(destination, {});
       } catch {
         say(t("desktop.toast.link_failed"));
-        return;
-      }
-      if (outcome.outcome === "other_profile") {
-        say(t("desktop.toast.link_other_profile"));
         return;
       }
       showTui();
@@ -990,8 +981,7 @@ export function App({ host }: { host: Host }) {
   const openPage = useCallback(
     (url: string, presented?: () => void) => {
       const link = cadrumoLink(url);
-      if (link.kind === "page")
-        void presentPage(link.profile, link.destination, presented);
+      if (link.kind === "page") void presentPage(link.destination, presented);
       else say(t("desktop.toast.link_invalid"));
     },
     [presentPage, say, t],
@@ -1978,7 +1968,7 @@ export function App({ host }: { host: Host }) {
     [setLayout],
   );
   const openAeatSetup = useCallback(
-    (profile: string) => void presentPage(profile, "aeat_auth"),
+    () => void presentPage("profile/aeat-access"),
     [presentPage],
   );
   const runAction = useCallback(

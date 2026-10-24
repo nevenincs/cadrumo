@@ -61,6 +61,11 @@ const environment = {
     ? resolve(buildPath("desktop_testing"), "backend-cargo")
     : buildPath("desktop_cargo"),
   CADRUMO_NATIVE_CONTRACT: contract,
+  // The host admits only the TUI views this navigation projection declares.
+  CADRUMO_DESKTOP_NAVIGATION: resolve(
+    buildPath("desktop_frontend_generated"),
+    "navigation.json",
+  ),
   CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
   // The linked manager crate embeds the process manifest of this build kind on Windows.
   CADRUMO_PROCESS_MANIFEST: resolve(

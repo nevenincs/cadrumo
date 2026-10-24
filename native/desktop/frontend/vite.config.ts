@@ -22,6 +22,7 @@ const GENERATED_INPUTS: Record<string, string> = {
   "virtual:desktop-strings": "chrome-strings.json",
   "virtual:desktop-palette.css": "palette.css",
   "virtual:desktop-provider-icons": "provider-icons.json",
+  "virtual:desktop-navigation": "navigation.json",
 };
 
 export default defineConfig(({ command, mode }) => {

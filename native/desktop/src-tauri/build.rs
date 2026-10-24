@@ -8,6 +8,16 @@ fn main() {
         std::path::PathBuf::from(std::env::var_os("OUT_DIR").unwrap()).join("contract.json"),
     )
     .expect("copy generated package contract");
+    // The navigation register's projection: the host admits a TUI view only by it.
+    let navigation = std::env::var("CADRUMO_DESKTOP_NAVIGATION")
+        .expect("CADRUMO_DESKTOP_NAVIGATION must select the generated navigation projection");
+    println!("cargo:rerun-if-env-changed=CADRUMO_DESKTOP_NAVIGATION");
+    println!("cargo:rerun-if-changed={navigation}");
+    std::fs::copy(
+        &navigation,
+        std::path::PathBuf::from(std::env::var_os("OUT_DIR").unwrap()).join("navigation.json"),
+    )
+    .expect("copy the generated navigation projection");
     // The desktop component's identity for `env!`/`option_env!`: CADRUMO_ID_VERSION and
     // CADRUMO_DESKTOP_BUILD_{ID,SEQUENCE,DATE} come from the build, the type from the profile.
     // Only the desktop's own variables are watched, so another component's identity moving

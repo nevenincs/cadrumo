@@ -20,6 +20,7 @@ for (const name of [
   "chrome-strings.json",
   "palette.css",
   "provider-icons.json",
+  "navigation.json",
 ])
   if (!existsSync(resolve(generated, name)))
     throw new Error(

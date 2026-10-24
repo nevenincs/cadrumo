@@ -1422,13 +1422,14 @@ export interface HostCommands {
     args: Authorized<{ language: string }>;
     result: DesktopLanguage;
   };
-  /** Opens `destination` in the person's own TUI, where `profileId` is the
-   * profile signed in here. Refuses `invalid_arguments` for any other profile
-   * shape or page. */
-  desktop_present_destination: {
+  /** Shows register view `view` in the person's own TUI on the profile
+   * signed in here. Refuses `invalid_arguments` for a view the navigation
+   * projection does not give the TUI, or a parameter it does not declare
+   * with a value of its kind. */
+  desktop_present_view: {
     args: Authorized<{
-      profileId: string;
-      destination: PresentationDestination;
+      view: string;
+      params: Readonly<Record<string, string>>;
     }>;
     result: PresentationOutcome;
   };
@@ -1769,29 +1770,13 @@ export type WindowAction =
   | "close_now"
   | "keep_open";
 
-/** A page of the TUI a link may open, in the runtime's closed vocabulary. */
-export type PresentationDestination =
-  | "home"
-  | "ledger"
-  | "withholding"
-  | "declarations"
-  | "aeat_sync"
-  | "operations"
-  | "installation"
-  | "setup"
-  | "reference"
-  | "profile"
-  | "aeat_auth";
-
 /**
- * What became of a page asked for. `delivered` counts the person's signed-in
- * TUIs on the profile that were passed it; none is zero. A page is only where
- * to look, never access to anything.
+ * What became of a TUI view asked for. `delivered` counts the person's
+ * signed-in TUIs on the profile that were passed it; none is zero. A view is
+ * only where to look, never access to anything.
  */
 export type PresentationOutcome =
-  | { outcome: "presented"; delivered: number }
-  | { outcome: "signed_out" }
-  | { outcome: "other_profile" };
+  { outcome: "presented"; delivered: number } | { outcome: "signed_out" };
 
 export type HostCommand = keyof HostCommands;
 export type HostArguments<C extends HostCommand> = HostCommands[C]["args"];

@@ -23,7 +23,6 @@ import type {
   SetupItemId,
   WindowAction,
   WindowPresentation,
-  PresentationDestination,
   PresentationOutcome,
 } from "../ipc/contract";
 import type { ProfileAccounts } from "./profiles";
@@ -135,12 +134,12 @@ export interface Host {
     set(language: string): Promise<DesktopLanguage>;
     observe(listener: (state: DesktopLanguage) => void): Promise<() => void>;
   };
-  /** Opens a page in the person's own TUI on `profile`, a profile id, where
-   * this host can reach it. */
+  /** Shows a register view whose surfaces include the TUI in the person's
+   * own TUI, on the profile signed in here, where this host can reach it. */
   readonly presentation?: {
     present(
-      profile: string,
-      destination: PresentationDestination,
+      view: string,
+      params: Readonly<Record<string, string>>,
     ): Promise<PresentationOutcome>;
   };
   signInStatus(): Promise<SignInStatus>;

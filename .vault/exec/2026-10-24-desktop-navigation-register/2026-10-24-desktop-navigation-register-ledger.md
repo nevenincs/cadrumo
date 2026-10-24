@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:14f5c543e2b247cab9367068db5129c2122b08f316b59c2771693d9b7beb132c'
+body_hash: 'sha256:630f3e72fd4fb356f1b517dec5a24cc650013e58069fb2a8898d029ee1561af9'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
@@ -91,11 +91,8 @@ related:
 - `S07` `verify:` `pytest client, runtime TUI frontend, MCP, auth, operations and locale suites (3606 passed, 9 failed outside the touched code)` -> `fail`
 - `S07` `verify:` `ruff check, ruff format --check and ty on touched files` -> `pass`
 - `S07` `verify:` `lint-imports --config .importlinter --no-cache (1 broken: cadrumo.tests to application.local_reader, pre-existing uncommitted edit)` -> `fail`
-- `S07` `verify:` `pytest presentation contract, client events, runtime routing and session hold tests (53 passed)` -> `pass`
-- `S07` `verify:` `ruff check, ruff format --check and ty on the follow-up files` -> `pass`
 
 ## Notes
 
 - `S06` dev/locales/tests: 4 failures in `test_desktop_chrome,` `test_dict_constant_naming_convention,` `test_modelo_schema_runtime_localization` and `test_audit` product identity; none names a navigation key; they sit in files other sessions are editing. Locale spelling flags ca Instal·lació and es/ca Python shell for navigation labels exactly as for the existing tui.destination.installation and desktop.rail.python cells.
 - `S07` The 9 broader failures are outside S07: `desktop_chrome` and dict-naming and catalogue-identity locale gates over other sessions' edits, and runtime TUI automation-inventory and restored-login settle timeouts; locale key `tui.ledger.entries.selection_absent` landed inside another session's commit 44d85df020
-- `S07` Follow-up 7ba285bd05 closes a wire gap the desktop lane found: PresentationDelivered and the session hold's `destination_presented` line now echo the request's params, and the client refuses a reply whose params differ

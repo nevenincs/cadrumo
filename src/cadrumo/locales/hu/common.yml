@@ -3539,8 +3539,6 @@ desktop:
     link_invalid: Ez a hivatkozás nem nyit meg oldalt a munkaterületen.
     link_not_received: A munkaterület nem kapta meg az oldalt. Várd meg, amíg betöltődik,
       majd próbáld újra.
-    link_other_profile: Ez a hivatkozás egy másik profilhoz tartozik. Jelentkezz be
-      abba a profilba az oldal megnyitásához.
     link_sign_in: Jelentkezz be, hogy megnyithasd ezt az oldalt a munkaterületen.
     open_failed: Nem sikerült megnyitni.
     paste_failed: Nem sikerült a beillesztés.

@@ -1,18 +1,17 @@
-import type { PresentationDestination } from "../../ipc/contract";
-
-/** The pages a link may open, by the word the link spells them with. */
-const PAGES: Readonly<Record<string, PresentationDestination>> = {
+/** The pages a link may open, by the word the link spells them with, as
+ * the navigation register's TUI views. */
+const PAGES: Readonly<Record<string, string>> = {
   home: "home",
   ledger: "ledger",
   withholding: "withholding",
   declarations: "declarations",
-  "aeat-sync": "aeat_sync",
+  "aeat-sync": "aeat-sync",
   operations: "operations",
   installation: "installation",
   setup: "setup",
   reference: "reference",
   profile: "profile",
-  "aeat-auth": "aeat_auth",
+  "aeat-auth": "profile/aeat-access",
 };
 
 /** Only this exact shape is a page: no arguments, credentials or other hosts. */
@@ -25,7 +24,7 @@ export type CadrumoLink =
   | { kind: "other" }
   /** Cadrumo's scheme, but no page this window can open. */
   | { kind: "malformed" }
-  | { kind: "page"; profile: string; destination: PresentationDestination };
+  | { kind: "page"; profile: string; destination: string };
 
 export function cadrumoLink(url: string): CadrumoLink {
   if (!/^cadrumo:/i.test(url)) return { kind: "other" };

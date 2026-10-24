@@ -3576,8 +3576,6 @@ desktop:
     link_invalid: Ese enlace no abre ninguna página del espacio de trabajo.
     link_not_received: El espacio de trabajo no ha recibido la página. Espera a que
       termine de cargar y vuelve a intentarlo.
-    link_other_profile: Ese enlace es de otro perfil. Inicia sesión en él para abrir
-      la página.
     link_sign_in: Inicia sesión para abrir esa página en el espacio de trabajo.
     open_failed: No se ha podido abrir.
     paste_failed: No se ha podido pegar.

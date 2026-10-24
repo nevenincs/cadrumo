@@ -20,13 +20,13 @@ test("a page link names one exact profile and one closed page", () => {
     ["ledger", "ledger"],
     ["withholding", "withholding"],
     ["declarations", "declarations"],
-    ["aeat-sync", "aeat_sync"],
+    ["aeat-sync", "aeat-sync"],
     ["operations", "operations"],
     ["installation", "installation"],
     ["setup", "setup"],
     ["reference", "reference"],
     ["profile", "profile"],
-    ["aeat-auth", "aeat_auth"],
+    ["aeat-auth", "profile/aeat-access"],
   ])
     expect(cadrumoLink(`cadrumo://profiles/${PROFILE}/${page}`)).toEqual({
       kind: "page",
@@ -65,7 +65,7 @@ test("a setup link shows the TUI with the keyboard on its page and offers a fres
     .click();
   await expect
     .poll(() => calls(page))
-    .toContain("presentDestination aeat_auth presented");
+    .toContain("presentView profile/aeat-access presented");
   const tui = page.locator('[data-terminal="tui"]');
   await expect(tui).toBeVisible();
   await expect(tui.locator(".xterm-helper-textarea")).toBeFocused();
@@ -82,29 +82,4 @@ test("a setup link shows the TUI with the keyboard on its page and offers a fres
   expect(made.some((call) => call.startsWith("openExternal cadrumo:"))).toBe(
     false,
   );
-});
-
-test("a link to another profile's page says so and opens nothing", async ({
-  page,
-}) => {
-  await page.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
-  await ask(page, "Respóndeme con formato");
-  await settled(page);
-  await agentTurns(page)
-    .getByRole("link", { name: "Set up AEAT access" })
-    .click();
-  await expect(
-    page.getByText(label("desktop.toast.link_other_profile")),
-  ).toBeVisible();
-  const made = await calls(page);
-  expect(made).toContain("presentDestination aeat_auth other_profile");
-  expect(made.some((call) => call.endsWith(" presented"))).toBe(false);
-  expect(made.some((call) => call.startsWith("openExternal cadrumo:"))).toBe(
-    false,
-  );
-  await expect(
-    agentColumn(page).getByRole("button", {
-      name: label("desktop.agent.aeat_setup_check"),
-    }),
-  ).toHaveCount(0);
 });
