@@ -80,6 +80,8 @@ __all__ = [
 LOCAL_READER_REQUEST_SCHEMA_VERSION = 3
 LOCAL_READER_RESULT_SCHEMA_VERSION = 3
 
+_ENGINE_ACTIONS = frozenset({LocalReaderProvisionAction.START, LocalReaderProvisionAction.REMOVE})
+
 _PHASES = (
     LOCAL_READER_PREFLIGHT_PHASE,
     LOCAL_READER_EXECUTE_PHASE,
@@ -188,9 +190,15 @@ def resolve_local_reader_provision_access(
 ) -> ResolvedOperationAccess:
     """Bind access to the machine's reader, with COMMIT for every action but verify.
 
-    Verify measures and changes nothing; every other action can start, load or
-    remove something.
+    Verify measures and changes nothing; load changes what the running program
+    holds in memory. Starting the program and removing a model belong to the
+    native component engine, so they are refused here before anything runs.
     """
+    payload = require_access_request_payload(
+        request, definition_id=LOCAL_READER_OPERATION_DEFINITION_ID, payload_type=LocalReaderProvisionRequest
+    )
+    if payload.action in _ENGINE_ACTIONS:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return bind_machine_provisioning_access(
         request,
         context,

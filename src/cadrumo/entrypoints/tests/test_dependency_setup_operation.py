@@ -14,6 +14,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import override
 
 import pytest
 from pydantic import BaseModel
@@ -54,6 +55,7 @@ from ...application.dependency_setup_operation import (
     build_dependency_operation_definitions,
     build_dependency_operation_registrations,
 )
+from ...application.dependency_withdrawal import WithdrawnSetupItem
 from ...application.dependency_wording import dependency_name_key, dependency_sentence_key
 from ...application.operations.interactions import OperationApplyResponse, OperationRejectResponse
 from ...application.operations.models import OperationIdentity, OperationRequest
@@ -491,3 +493,100 @@ def test_results_and_the_review_carry_their_words_in_the_requested_language(root
 
 def _unused(identity: OperationIdentity, loop: asyncio.AbstractEventLoop) -> DependencyRegistry:
     raise AssertionError("the review projector builds no registry")
+
+
+def _withdrawn(items: dict[str, _Item]) -> OperationRegistry:
+    def factory(identity: OperationIdentity, loop: asyncio.AbstractEventLoop) -> DependencyRegistry:
+        del identity, loop
+        return DependencyRegistry(WithdrawnSetupItem(item) for item in items.values())
+
+    definitions = build_dependency_operation_definitions(factory)
+    return OperationRegistry(
+        definitions=definitions, public_registrations=build_dependency_operation_registrations(definitions)
+    )
+
+
+@pytest.mark.parametrize("requested", [None, ("browser", "local_ai")])
+def test_a_withdrawn_build_refuses_setup_before_any_plan_review_or_effect(
+    root: Path, requested: tuple[str, ...] | None
+) -> None:
+    """With acquisition withdrawn from Python, neither the default nor a named setup plans or provisions."""
+    items = _items(absent=("browser", "local_ai"))
+
+    async def scenario() -> None:
+        async with _running(root, _withdrawn(items)) as host:
+            supervisor = host.supervisor
+            snapshot = await _submit_to_review(supervisor, "e" * 64, DependencySetupRequest(item_ids=requested))
+            terminal = await supervisor.await_terminal("e" * 64)
+            result = await _result(host, terminal)
+        assert snapshot.pending_interaction is None
+        assert terminal.terminal_receipt is not None
+        assert terminal.terminal_receipt.effect is OperationEffect.NONE
+        assert result.outcome is DependencySetupOutcome.NOTHING_TO_DO
+        assert result.complete is False
+        assert {row.item_id: row.state for row in result.rows} == {
+            "browser": DependencyState.BLOCKED,
+            "local_ai": DependencyState.BLOCKED,
+        }
+        expected = () if requested is None else requested
+        assert tuple(item.item_id for item in result.items) == expected
+        assert all(item.failure_category is DependencyFailureCategory.NOT_IN_THIS_BUILD for item in result.items)
+        assert all(item.provisions == 0 for item in items.values())
+
+    asyncio.run(scenario())
+
+
+def test_a_withdrawn_item_keeps_reporting_what_is_already_usable(root: Path) -> None:
+    """Withdrawal holds back only what is missing; an installed item still reads ready."""
+    items = _items(absent=("local_ai",))
+
+    async def scenario() -> None:
+        async with _running(root, _withdrawn(items)) as host:
+            supervisor = host.supervisor
+            await supervisor.submit(
+                _request(DependencyStatusRequest(), DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID),
+                operation_id="f" * 64,
+            )
+            await supervisor.start("f" * 64)
+            terminal = await supervisor.await_terminal("f" * 64)
+            assert terminal.terminal_receipt is not None and terminal.terminal_receipt.result_ref is not None
+            status = await host.operands.resolve(terminal.terminal_receipt.result_ref, DependencyStatusResultV1)
+        states = {row.item_id: row.state for row in status.rows}
+        assert states == {"browser": DependencyState.READY, "local_ai": DependencyState.BLOCKED}
+
+    asyncio.run(scenario())
+
+
+@dataclass
+class _Unreadable(_Provisioned):
+    """An item whose check does not read, as a slow local AI check reads when it overruns its bound."""
+
+    @override
+    async def check(self, mode: DependencyCheckMode) -> DependencyProbeReading:
+        return DependencyProbeReading(
+            item_id=self.declaration.item_id, mode=mode, outcome=DependencyProbeOutcome.UNREADABLE
+        )
+
+
+def test_a_withdrawn_build_refuses_an_unreadable_item_without_a_review_or_effect(root: Path) -> None:
+    """An unknown item is still offered by the default selection; planning it refuses as not in this build."""
+    items = _items(absent=("browser",))
+    local_ai = items["local_ai"]
+    items["local_ai"] = _Unreadable(local_ai.declaration, present=False, size=local_ai.size)
+
+    async def scenario() -> None:
+        async with _running(root, _withdrawn(items)) as host:
+            supervisor = host.supervisor
+            snapshot = await _submit_to_review(supervisor, "d" * 64, DependencySetupRequest())
+            terminal = await supervisor.await_terminal("d" * 64)
+            result = await _result(host, terminal)
+        assert snapshot.pending_interaction is None
+        assert terminal.terminal_receipt is not None
+        assert terminal.terminal_receipt.effect is OperationEffect.NONE
+        assert result.outcome is DependencySetupOutcome.NOTHING_TO_DO
+        assert [(item.item_id, item.failure_category) for item in result.items] == [
+            ("local_ai", DependencyFailureCategory.NOT_IN_THIS_BUILD)
+        ]
+        assert all(item.provisions == 0 for item in items.values())
+
+    asyncio.run(scenario())

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:37f0f24b1e537c248af2b7bffe100cf7a6d110ddd16b613f8ea5a3f9afa6839e'
+body_hash: 'sha256:fc039fd49a99113b24757fd6aa0b44d69cab815bc9661703ce3e3a30dab8b458'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -133,6 +133,17 @@ related:
 - `S04` `verify:` `cargo clippy --all-targets --features platform -- -D warnings` -> `pass`
 - `S04` `verify:` `cargo fmt -- --check` -> `pass`
 - `S04` `by:` `high-implementation-engineer`
+- `S16` `A` `src/cadrumo/application/dependency_withdrawal.py`
+- `S16` `M` `src/cadrumo/application/dependency_setup_operation.py`
+- `S16` `M` `src/cadrumo/application/local_reader_operation.py`
+- `S16` `M` `src/cadrumo/entrypoints/dependency_operation_composition.py`
+- `S16` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S16` `A` `src/cadrumo/entrypoints/tests/test_python_provisioning_withdrawn.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_dependency_setup_operation.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_dependency_quick_check_bound.py`
+- `S16` `M` `src/cadrumo/application/tests/test_local_reader_operation_access.py`
+- `S16` `verify:` `withdrawal, setup operation, quick check, local reader access, registry conformance, wording, contracts, CLI provision parity, MCP progress relay, session hold, local reader operation, operation composition pytest (221)` -> `pass`
+- `S16` `verify:` `ruff, ty, lint-imports (30 kept), check-operation-contract-manifest` -> `pass`
 
 ## Notes
 
@@ -146,3 +157,4 @@ related:
 - `S04` canonical JSON writer moved out of `person_operations` into `canonical_json` so the ungated plan digest and the relay share one spelling
 - `S04` free space is measured by the host and passed in: the crate forbids unsafe code and no safe volume query is in its graph; an unmeasured volume is never enough
 - `S04` `package_inspection` junction fixture failure is the pre-existing non-ASCII junction path issue
+- `S16` Owner ruling 2026-10-24: Python must not provision; the Python path is withdrawn now, ahead of its P05.S14 deletion. Setup is unavailable on every surface until the components role lands; status still names what is missing. The local AI quick check takes about 1.1 s warm and 2.2 s cold with or without withdrawal, near its 2 s bound (pre-existing).

@@ -567,6 +567,24 @@ class DependencySetupExecutor:
         space = _space_check(tuple(entries))
         return build_setup_plan(entries, free_bytes=space.free_bytes)
 
+    async def _plan_unless_withheld(
+        self,
+        registry: DependencyRegistry,
+        request: DependencySetupRequest,
+        rows: Iterable[DependencyStatusRow],
+        item_ids: tuple[str, ...],
+    ) -> DependencySetupPlan | tuple[DependencySetupItemResultV1, ...]:
+        """Return the plan for ``item_ids``, or a no-change refusal per item when this build cannot set them up."""
+        withheld = _withheld_items(rows, item_ids)
+        if withheld:
+            return withheld
+        try:
+            return await self._plan(registry, request, item_ids)
+        except DependencyTransferError as error:
+            if error.category is not DependencyFailureCategory.NOT_IN_THIS_BUILD:
+                raise
+            return _not_in_this_build(item_ids)
+
     async def _settled(
         self,
         context: OperationExecutorContext,
@@ -616,7 +634,19 @@ class DependencySetupExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from error
         if not selected:
             return await self._settled(context, registry, DependencySetupOutcome.NOTHING_TO_DO, payload.locale)
-        plan = await self._plan(registry, payload, tuple(declaration.item_id for declaration in selected))
+        planned = await self._plan_unless_withheld(
+            registry, payload, rows, tuple(declaration.item_id for declaration in selected)
+        )
+        if not isinstance(planned, DependencySetupPlan):
+            return await self._settled(
+                context,
+                registry,
+                DependencySetupOutcome.NOTHING_TO_DO,
+                payload.locale,
+                items=planned,
+                effect=OperationEffect.NONE,
+            )
+        plan = planned
         proposal = DependencySetupProposal(
             identity=context.identity, revision=context.revision + 1, request=payload, plan=plan
         )
@@ -700,7 +730,18 @@ class DependencySetupExecutor:
         language = proposal.request.locale
         item_ids = tuple(entry.item_id for entry in approved.entries)
         await context.events.phase(DEPENDENCIES_SETUP_PLAN_PHASE)
-        current = await self._plan(registry, proposal.request, item_ids)
+        rows = await _read_status(registry, DependencyCheckMode.QUICK)
+        current = await self._plan_unless_withheld(registry, proposal.request, rows, item_ids)
+        if not isinstance(current, DependencySetupPlan):
+            return await self._settled(
+                context,
+                registry,
+                DependencySetupOutcome.NOTHING_TO_DO,
+                language,
+                plan=approved,
+                items=current,
+                effect=OperationEffect.NONE,
+            )
         if dependency_plan_digest(current) != dependency_plan_digest(approved):
             return await self._settled(context, registry, DependencySetupOutcome.PLAN_CHANGED, language, plan=current)
         if not current.space.sufficient:
@@ -800,6 +841,24 @@ def _item_result(
         changed=provisioned.changed,
         failure_category=failure,
         transferred_bytes=provisioned.transferred_bytes,
+    )
+
+
+def _withheld_items(
+    rows: Iterable[DependencyStatusRow], item_ids: tuple[str, ...]
+) -> tuple[DependencySetupItemResultV1, ...]:
+    """Return a refusal for each of ``item_ids`` this build cannot set up, which nothing may plan or download."""
+    blocked = {row.item_id for row in rows if row.blocked_reason is DependencyBlockedReason.NOT_IN_THIS_BUILD}
+    return _not_in_this_build(tuple(item_id for item_id in item_ids if item_id in blocked))
+
+
+def _not_in_this_build(item_ids: tuple[str, ...]) -> tuple[DependencySetupItemResultV1, ...]:
+    """Return a no-change refusal for each of ``item_ids``, for an item this build cannot set up."""
+    return tuple(
+        DependencySetupItemResultV1(
+            item_id=item_id, changed=False, failure_category=DependencyFailureCategory.NOT_IN_THIS_BUILD
+        )
+        for item_id in item_ids
     )
 
 

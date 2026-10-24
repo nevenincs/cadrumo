@@ -68,13 +68,17 @@ def _provision(action: LocalReaderProvisionAction, **values: object) -> _Case:
     )
 
 
-_CASES = {
+_ENGINE_CASES = {
     "start": _provision(LocalReaderProvisionAction.START),
+    "remove": _provision(LocalReaderProvisionAction.REMOVE, role=ModelRole.TEXT_EXTRACTION),
+}
+"""Starting the program and removing a model belong to the native component engine."""
+
+_CASES = {
     "load": _provision(LocalReaderProvisionAction.LOAD, role=ModelRole.TEXT_EXTRACTION),
     "load-model": _provision(LocalReaderProvisionAction.LOAD, model="qwen3:4b"),
     "verify": _provision(LocalReaderProvisionAction.VERIFY, role=ModelRole.TEXT_EXTRACTION),
     "verify-model": _provision(LocalReaderProvisionAction.VERIFY, model="qwen3:4b"),
-    "remove": _provision(LocalReaderProvisionAction.REMOVE, role=ModelRole.TEXT_EXTRACTION),
     "status": _Case(
         LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
         LOCAL_READER_OPERATION_SUBJECT,
@@ -140,7 +144,8 @@ def _context(
 
 
 def test_the_cases_cover_every_provisioning_action_and_every_operation_of_the_family() -> None:
-    actions = {case.payload.action for case in _CASES.values() if isinstance(case.payload, LocalReaderProvisionRequest)}
+    cases = (*_CASES.values(), *_ENGINE_CASES.values())
+    actions = {case.payload.action for case in cases if isinstance(case.payload, LocalReaderProvisionRequest)}
 
     assert actions == set(LocalReaderProvisionAction)
     assert {case.definition_id for case in _CASES.values()} == {
@@ -167,6 +172,20 @@ def test_every_frontend_resolves_each_request_to_the_same_period_independent_acc
         )
         assert on_frontend.policy == on_cli.policy, frontend
         assert on_frontend.request == on_cli.request.model_copy(update={"frontend": frontend}), frontend
+
+
+@pytest.mark.parametrize("access", [AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT])
+@pytest.mark.parametrize("name", sorted(_ENGINE_CASES))
+def test_starting_the_program_or_removing_a_model_is_refused_on_every_frontend(name: str, access: AccessAction) -> None:
+    case = _ENGINE_CASES[name]
+    registry = _registry()
+    context = _context(registry, case, access)
+    for frontend in OperationFrontendProjection:
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            resolve_operation_access(
+                registry=registry, request=_request(case), context=replace(context, frontend=frontend)
+            )
+        assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE, frontend
 
 
 @pytest.mark.parametrize("name", sorted(_CASES))

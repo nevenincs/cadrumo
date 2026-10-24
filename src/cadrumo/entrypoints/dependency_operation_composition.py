@@ -1,13 +1,11 @@
-"""Compose the setup registry and the ``dependencies.*`` operations from the item adapters.
+"""Compose the setup registry and the ``dependencies.*`` operations.
 
-Each invocation gets its own registry, because a contained profile worker
-starts the local AI program's server by asking the runtime that owns it, which
-admits that request for the one operation it names. The local AI item is
-therefore built per invocation with that operation's identity. The registry
-holds software only; the profile's Google sign-in is not one of its items.
-
-The network preflight of a full check runs once per host group in the
-registry, so no item is bound to run its own.
+Acquiring the browser and the local AI belongs to the native component engine.
+The registry composed here only reads what is already on this computer: each
+item's effect ports refuse, and each item is withdrawn, so a status still
+names what is missing while a setup refuses as not in this build before
+anything is planned or downloaded. The registry holds software only; the
+profile's Google sign-in is not one of its items.
 """
 
 from __future__ import annotations
@@ -15,14 +13,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 
-from ..adapters.outbound.browser_runtime.installer import (
-    remove_browser_builds,
-    run_browser_install,
-)
-from ..adapters.outbound.browser_runtime.launch_check import launch_headless_browser
-from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
-from ..adapters.outbound.model_runtime.process_control import run_runtime_installer, spawn_runtime_server
-from ..application.dependency_network import dependency_host_reachability, dependency_hosts
+from ..application.dependency_network import dependency_hosts
 from ..application.dependency_receipts import DependencyReceiptStore, dependency_receipts_root
 from ..application.dependency_registry import DependencyRegistry
 from ..application.dependency_setup_operation import (
@@ -31,7 +22,14 @@ from ..application.dependency_setup_operation import (
     build_dependency_operation_registrations,
 )
 from ..application.dependency_transfer import dependency_retry_delay
-from ..application.local_reader_provisioning import RuntimeServerOwnerStart, owner_started_spawner
+from ..application.dependency_withdrawal import (
+    WithdrawnSetupItem,
+    refused_browser_install,
+    refused_browser_launch,
+    refused_build_removal,
+    refused_runtime_install,
+    refused_runtime_spawn,
+)
 from ..application.local_reader_setup_items import local_ai_setup_item
 from ..application.operations.models import OperationIdentity
 from ..application.operations.operation_definition import OperationDefinition
@@ -49,43 +47,34 @@ class DependencyOperations:
     registrations: tuple[OperationPublicDefinitionRegistrationV1, ...]
 
 
-def build_dependency_registry_factory(
-    *, owner_start: RuntimeServerOwnerStart | None = None
-) -> DependencyRegistryFactory:
-    """Return the per-invocation registry factory.
-
-    ``owner_start`` is bound by a contained process, whose model program
-    server must be started by its owner on behalf of the running operation.
-    """
+def build_dependency_registry_factory() -> DependencyRegistryFactory:
+    """Return the per-invocation registry factory of withdrawn, read-only items."""
 
     def build(identity: OperationIdentity, loop: asyncio.AbstractEventLoop) -> DependencyRegistry:
-        spawn = spawn_runtime_server if owner_start is None else owner_started_spawner(owner_start, identity, loop)
+        del identity, loop
+        # Acquisition belongs to the native component engine: these items only
+        # read what is on this computer, and every effect port refuses.
         browser = PlaywrightBrowserItem(
-            install=run_browser_install,
-            launch=launch_headless_browser,
-            remove_builds=remove_browser_builds,
+            install=refused_browser_install,
+            launch=refused_browser_launch,
+            remove_builds=refused_build_removal,
             receipts=DependencyReceiptStore(dependency_receipts_root()),
         )
         local_ai = local_ai_setup_item(
             runtime_hosts=dependency_hosts("model_runtime"),
             model_hosts=dependency_hosts("model_registry"),
-            run_installer=run_runtime_installer,
-            spawn=spawn,
+            run_installer=refused_runtime_install,
+            spawn=refused_runtime_spawn,
             retry_delay=dependency_retry_delay,
-            text_probe=probe_text_extraction_fitness,
         )
-        return DependencyRegistry(
-            (browser, local_ai),
-            reachability=dependency_host_reachability,
-            hosts_for=dependency_hosts,
-        )
+        return DependencyRegistry((WithdrawnSetupItem(browser), WithdrawnSetupItem(local_ai)))
 
     return build
 
 
-def build_dependency_operations(*, owner_start: RuntimeServerOwnerStart | None = None) -> DependencyOperations:
+def build_dependency_operations() -> DependencyOperations:
     """Bind the item adapters to ``dependencies.status``, ``dependencies.setup`` and ``dependencies.verify``."""
-    definitions = build_dependency_operation_definitions(build_dependency_registry_factory(owner_start=owner_start))
+    definitions = build_dependency_operation_definitions(build_dependency_registry_factory())
     return DependencyOperations(
         definitions=definitions, registrations=build_dependency_operation_registrations(definitions)
     )

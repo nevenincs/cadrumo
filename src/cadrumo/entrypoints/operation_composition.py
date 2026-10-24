@@ -636,7 +636,8 @@ def _diagnostics_repair_composition(inputs: OperationCompositionInputs) -> Opera
 def _dependency_operation_composition(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     from .dependency_operation_composition import build_dependency_operations
 
-    operations = build_dependency_operations(owner_start=inputs.runtime_server_owner_start)
+    del inputs
+    operations = build_dependency_operations()
     return _built(operations.definitions, operations.registrations)
 
 

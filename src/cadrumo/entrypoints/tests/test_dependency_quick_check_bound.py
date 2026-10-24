@@ -32,6 +32,7 @@ import pytest
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.dependency_contracts import (
     DEPENDENCY_QUICK_CHECK_BUDGET_S,
+    DependencyBlockedReason,
     DependencyCheckMode,
     DependencyItemKind,
     DependencyState,
@@ -227,7 +228,9 @@ def test_quick_check_on_a_clean_root_answers_every_item_inside_the_bound(storage
         )
     findings = bound_findings(rows, elapsed_s=elapsed, expected_items=len(dependency_item_declarations()))
     assert not findings, "\n".join(findings)
-    assert next(row for row in rows if row.item_id == "browser").state is DependencyState.ABSENT
+    browser = next(row for row in rows if row.item_id == "browser")
+    assert browser.state is DependencyState.BLOCKED, browser
+    assert browser.blocked_reason is DependencyBlockedReason.NOT_IN_THIS_BUILD
     assert observed.proxy_connections == 0
     assert not [path for path in observed.program_paths if path.startswith(_MODEL_WORK_PATHS)]
 
