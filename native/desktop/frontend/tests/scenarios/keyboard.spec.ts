@@ -204,16 +204,20 @@ test("an action run from the palette keeps the focus it takes", async ({
   await expect(
     target.locator('[data-terminal="python"] textarea'),
   ).toBeFocused();
-  // Chosen by name, a view is shown, not toggled: choosing it again keeps it.
+  // Shown, the tab's entry offers to hide it, as its chord would.
   await target.keyboard.press("Control+Shift+KeyK");
   await palette
     .getByRole("combobox", { name: label("desktop.palette.label") })
     .fill(label("desktop.rail.python"));
-  await target.keyboard.press("Enter");
-  await expect(target.locator('[data-terminal="python"]')).toBeVisible();
   await expect(
-    target.locator('[data-terminal="python"] textarea'),
-  ).toBeFocused();
+    palette.getByRole("listbox").getByRole("option").first(),
+  ).toContainText(
+    label("desktop.palette.hide_view", {
+      view: label("navigation.view.panel.python.label"),
+    }),
+  );
+  await target.keyboard.press("Enter");
+  await expect(target.locator('[data-terminal="python"]')).toBeHidden();
 });
 
 test("settings opened from the palette inside a terminal stays open", async ({

@@ -1829,6 +1829,7 @@ export function App({ host }: { host: Host }) {
               },
             ],
             run: () => toggleColumn("docs"),
+            shown: docsVisible && !maximized,
           },
           agent: {
             id: "agent.toggle",
@@ -1845,6 +1846,7 @@ export function App({ host }: { host: Host }) {
             ],
             enabled: () => signedIn,
             run: () => toggleColumn("agent"),
+            shown: agentVisible && !maximized,
           },
           terminal: {
             id: "tui.toggle",
@@ -1860,6 +1862,7 @@ export function App({ host }: { host: Host }) {
               },
             ],
             run: () => toggleColumn("tui"),
+            shown: tuiVisible && !maximized,
           },
           panel: {
             id: "panel.toggle",
@@ -1875,6 +1878,7 @@ export function App({ host }: { host: Host }) {
                 if (maximized === "panel") setMaximized(null);
               }
             },
+            shown: layout.panelOpen,
           },
           "panel/console": {
             id: "panel.console",
@@ -1890,6 +1894,7 @@ export function App({ host }: { host: Host }) {
               },
             ],
             run: () => openTab("console"),
+            shown: layout.panelOpen && layout.tab === "console",
           },
           "panel/python": {
             id: "panel.python",
@@ -1905,6 +1910,7 @@ export function App({ host }: { host: Host }) {
               },
             ],
             run: () => openTab("python"),
+            shown: layout.panelOpen && layout.tab === "python",
           },
           "panel/logs": {
             id: "panel.logs",
@@ -1927,6 +1933,7 @@ export function App({ host }: { host: Host }) {
               },
             ],
             run: () => openTab("logs"),
+            shown: layout.panelOpen && layout.tab === "logs",
           },
         } satisfies Record<string, ViewActionSpec>,
         (id) => {
@@ -2110,6 +2117,7 @@ export function App({ host }: { host: Host }) {
       about,
       agentVisible,
       tuiVisible,
+      docsVisible,
       firstPaneShown,
       toggleColumn,
       openView,

@@ -51,6 +51,8 @@ export type Action = {
   context?: string;
   /** Where it opens, when that is not the window. */
   badge?: string;
+  /** The view's own name, where the label wraps it in "Show" or "Hide". */
+  name?: string;
   chords?: readonly Chord[];
   /** Kept out of the palette (shortcut-only actions such as terminal copy). */
   hidden?: boolean;
@@ -166,6 +168,10 @@ export type ViewActionSpec = {
    * a pane's toggles. Chosen by name, it opens. */
   readonly run?: () => void;
   readonly enabled?: () => boolean;
+  /** For a pane or the panel, whether it is on screen now: its entry then
+   * offers to hide it, with the same toggle its chord runs, and otherwise
+   * to show it. A page has none: its entry only opens it. */
+  readonly shown?: boolean;
 };
 
 /**
@@ -173,8 +179,9 @@ export type ViewActionSpec = {
  * open now: the window's first, in register order, then those only the TUI
  * implements, badged with where they open. `opensIn` says which surface
  * opens an element itself, not an ancestor; `open` opens it through the
- * navigator. A section without a chord of its own is quiet: it is listed
- * only for a query that finds it.
+ * navigator. A pane or the panel names whether it is shown, and its entry
+ * then hides or shows it. A section without a chord of its own is quiet:
+ * it is listed only for a query that finds it.
  */
 export function viewActions(
   register: NavigationRegister,
@@ -192,11 +199,21 @@ export function viewActions(
     const where = opensIn(element.id);
     const parent =
       element.parent === null ? undefined : elementOf(register, element.parent);
-    const choose = () => open(element.id);
+    const show = () => open(element.id);
+    const name = t(element.label);
     const action: Action = {
       id: spec?.id ?? `view.${element.id}`,
       view: element.id,
-      label: t(element.label),
+      label:
+        spec?.shown === undefined
+          ? name
+          : t(
+              spec.shown
+                ? "desktop.palette.hide_view"
+                : "desktop.palette.show_view",
+              { view: name },
+            ),
+      ...(spec?.shown === undefined ? {} : { name }),
       ...(parent ? { context: t(parent.label) } : {}),
       ...(where === "tui"
         ? { badge: t("navigation.view.terminal.label") }
@@ -207,8 +224,8 @@ export function viewActions(
       ...(spec?.chords ? { chords: spec.chords } : {}),
       quiet: element.parent !== null && !spec?.chords?.length,
       enabled: () => where !== null && (spec?.enabled?.() ?? true),
-      run: spec?.run ?? choose,
-      choose,
+      run: spec?.run ?? show,
+      choose: spec?.shown === true && spec.run ? spec.run : show,
     };
     (element.surfaces.includes("gui") ? window : terminal).push(action);
   }
@@ -240,5 +257,8 @@ export function scoreAction(action: Action, query: string): number {
     else return 0;
   }
   // Of equal matches, the one named by what was typed comes first.
-  return action.label.toLowerCase().startsWith(q) ? score + 1 : score;
+  return action.label.toLowerCase().startsWith(q) ||
+    (action.name?.toLowerCase().startsWith(q) ?? false)
+    ? score + 1
+    : score;
 }

@@ -280,12 +280,60 @@ test("two views of one name are told apart by the page they are on", async ({
       name: label("desktop.palette.label", {}, "es"),
     })
     .fill(name);
-  const named = optionTitled(target, name);
-  await expect(named).toHaveCount(2);
-  await expect(named.locator(".palette-context")).toHaveText([
+  // The Ledger section by its name; the panel tab, which can be shown or
+  // hidden, by its name inside "Mostrar". Each says the page it is on.
+  const section = optionTitled(target, name);
+  await expect(section).toHaveCount(1);
+  await expect(section.locator(".palette-context")).toHaveText(
     label("navigation.view.ledger.label", {}, "es"),
+  );
+  const tab = optionTitled(
+    target,
+    label("desktop.palette.show_view", { view: name }, "es"),
+  );
+  await expect(tab).toHaveCount(1);
+  await expect(tab.locator(".palette-context")).toHaveText(
     label("navigation.view.panel.label", {}, "es"),
-  ]);
+  );
+});
+
+test("a shown pane's entry hides it, and a hidden one's shows it with the keyboard", async ({
+  page: target,
+}) => {
+  await seedLayout(target, {
+    layout: { agentShown: true, docsShown: true, tuiShown: true, page: "docs" },
+  });
+  await open(target);
+  const agent = target.locator(".pane-agent");
+  const name = label("navigation.view.agent.label");
+  const hide = label("desktop.palette.hide_view", { view: name });
+  const show = label("desktop.palette.show_view", { view: name });
+  await expect(agent).toBeVisible();
+  await search(target, name);
+  await expect(optionTitled(target, hide)).toHaveCount(1);
+  await expect(optionTitled(target, show)).toHaveCount(0);
+  await expect(options(target).first()).toContainText(hide);
+  await target.keyboard.press("Enter");
+  await expect(palette(target)).toHaveCount(0);
+  await expect(agent).toBeHidden();
+  await search(target, name);
+  await expect(optionTitled(target, show)).toHaveCount(1);
+  await expect(options(target).first()).toContainText(show);
+  await target.keyboard.press("Enter");
+  await expect(palette(target)).toHaveCount(0);
+  await expect(agent).toBeVisible();
+  await expect(agent.locator(":focus")).toHaveCount(1);
+  // The chord still toggles, under the same action.
+  await target.keyboard.press("ControlOrMeta+Shift+KeyA");
+  await expect(agent).toBeHidden();
+  await target.keyboard.press("ControlOrMeta+Shift+KeyA");
+  await expect(agent).toBeVisible();
+  await target.keyboard.press("ControlOrMeta+Shift+KeyK");
+  await expect(
+    palette(target).locator(
+      '[data-value="action:agent.toggle"] .palette-title',
+    ),
+  ).toHaveText(hide);
 });
 
 test("a pasted link to a movement opens the Ledger on that row", async ({

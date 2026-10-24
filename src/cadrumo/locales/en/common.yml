@@ -3220,6 +3220,7 @@ desktop:
     close: Close search
     copy_link: Copy the link to this view
     documentation: Documentation
+    hide_view: Hide {view}
     kind_casilla: Casilla
     kind_cli: Command
     kind_term: Term
@@ -3228,6 +3229,7 @@ desktop:
     open_link: Open {view}
     placeholder: Search the docs or run an action
     searching: Searching…
+    show_view: Show {view}
     type_to_search: Type to search.
     unavailable: Docs search isn't available.
   pane:

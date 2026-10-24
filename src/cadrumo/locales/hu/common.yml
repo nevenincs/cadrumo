@@ -3247,6 +3247,7 @@ desktop:
     close: Keresés bezárása
     copy_link: A nézet hivatkozásának másolása
     documentation: Dokumentáció
+    hide_view: 'Elrejtés: {view}'
     kind_casilla: Casilla
     kind_cli: Parancs
     kind_term: Fogalom
@@ -3255,6 +3256,7 @@ desktop:
     open_link: 'Megnyitás: {view}'
     placeholder: Keress a dokumentációban, vagy futtass egy műveletet
     searching: Keresés…
+    show_view: 'Megjelenítés: {view}'
     type_to_search: Írj a kereséshez.
     unavailable: A dokumentáció keresése nem érhető el.
   pane:

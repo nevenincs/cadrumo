@@ -3267,6 +3267,7 @@ desktop:
     close: Tanca la cerca
     copy_link: Copia l'enllaç a aquesta vista
     documentation: Documentació
+    hide_view: Amaga {view}
     kind_casilla: Casilla
     kind_cli: Ordre
     kind_term: Terme
@@ -3275,6 +3276,7 @@ desktop:
     open_link: Obre {view}
     placeholder: Cerca a la documentació o executa una acció
     searching: S'està cercant…
+    show_view: Mostra {view}
     type_to_search: Escriu per cercar.
     unavailable: La cerca a la documentació no està disponible.
   pane:

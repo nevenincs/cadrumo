@@ -3274,6 +3274,7 @@ desktop:
     close: Cerrar la búsqueda
     copy_link: Copiar el enlace a esta vista
     documentation: Documentación
+    hide_view: Ocultar {view}
     kind_casilla: Casilla
     kind_cli: Comando
     kind_term: Término
@@ -3282,6 +3283,7 @@ desktop:
     open_link: Abrir {view}
     placeholder: Busca en la documentación o ejecuta una acción
     searching: Buscando…
+    show_view: Mostrar {view}
     type_to_search: Escribe para buscar.
     unavailable: La búsqueda en la documentación no está disponible.
   pane:
