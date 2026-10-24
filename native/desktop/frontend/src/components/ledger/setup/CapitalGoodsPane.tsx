@@ -21,6 +21,7 @@ import {
   Reading,
   SetupTable,
   TextField,
+  useSetupDraft,
   useSetupRead,
   useSetupWrite,
   type Column,
@@ -58,6 +59,20 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
   const [art108, setArt108] = useState("");
   const [disposalYear, setDisposalYear] = useState("");
   const [disposalRegime, setDisposalRegime] = useState("");
+  // A form with anything typed into it that is not yet written.
+  useSetupDraft(
+    [
+      identifier,
+      description,
+      kind,
+      movement,
+      cuota,
+      pct,
+      art108,
+      disposalYear,
+      disposalRegime,
+    ].some(Boolean),
+  );
 
   const cuotaParsed = parseDecimal(cuota, TAX_AMOUNT_RULE);
   const pctParsed = parsePoints(pct);

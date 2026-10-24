@@ -29,6 +29,7 @@ export function RegistersSection(props: SetupProps) {
     <div className="ledger-setup-registers flex min-h-0 flex-1 flex-col">
       <SetupTabs<Area>
         label={t("desktop.ledger.registers.areas")}
+        owner="ledger/registers"
         value={area}
         onValue={setArea}
         tabs={AREAS.map((value) => ({

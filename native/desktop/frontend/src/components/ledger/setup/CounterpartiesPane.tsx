@@ -12,6 +12,7 @@ import {
   FormGrid,
   Panel,
   TextField,
+  useSetupDraft,
   useSetupWrite,
 } from "./SetupParts";
 import type { SetupProps } from "./setupProps";
@@ -45,6 +46,8 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
   const [state, setState] = useState("");
   const [note, setNote] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
+  // A form with anything typed into it that is not yet written.
+  useSetupDraft([country, scope, state, note].some(Boolean));
   const write = useSetupWrite(t("desktop.ledger.counterparty.title"));
 
   const view = async (id = taxId) => {

@@ -29,6 +29,7 @@ import type {
   PaymentStatus,
 } from "../../../shell/ledger";
 import { IVA_CATEGORIES, isIvaCategory } from "../../../shell/ledgerVocabulary";
+import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
 import { amountText, dayText } from "../transfer/transferWords";
@@ -178,6 +179,13 @@ export function InvoiceEditor({
   const dirty = isNew
     ? JSON.stringify(draft) !== initialDraft.current
     : (corrected?.changed.length ?? 0) > 0;
+  // The editor weighs its own work before a navigation takes the section
+  // down, instead of holding the window as a sheet does.
+  useNavigationGuard(
+    "ledger/invoices",
+    sending ? "busy" : dirty ? "dirty" : "clean",
+    { discard: onClose },
+  );
 
   const touch = (field: string) =>
     setTouched((held) => (held.has(field) ? held : new Set(held).add(field)));
@@ -482,6 +490,7 @@ export function InvoiceEditor({
   return (
     <Sheet open onOpenChange={(open) => !open && close()}>
       <SheetContent
+        modalLayer={false}
         closeLabel={t("desktop.ledger.invoices.close")}
         className="ledger-invoice-editor gap-5"
         aria-describedby={undefined}

@@ -1,0 +1,112 @@
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { useViewParams } from "../../shell/navigation/hooks";
+import { useStrings } from "../../shell/strings";
+
+/** What a grid tells the reveal of a row a link selects. */
+export type RevealGrid = {
+  /** Whether the row is drawn now. */
+  shown(id: string): boolean;
+  /** For a row that is read but not drawn, what shows it by clearing only
+   * what the person chose that hides it; null for a row not read. */
+  hiding(id: string): (() => void) | null;
+  /** Whether what is read is all there is to wait for, so a row not in it
+   * is not found here. */
+  settled: boolean;
+  /** Selects the drawn row, and gives it the keyboard when `focus`. */
+  reveal(id: string, focus: boolean): void;
+  /** Changes whenever the grid draws other rows. */
+  drawn: unknown;
+  /** Inside the page: the keyboard is taken only from where the page has
+   * it, never from where the person put it meanwhile. */
+  within: RefObject<HTMLElement | null>;
+};
+
+type Notice =
+  | { readonly kind: "hidden"; readonly show: () => void }
+  | { readonly kind: "missing" };
+
+/**
+ * Reveals the row a navigation's `select` names in the grid of register
+ * element `view`: once it is drawn, it is scrolled into view, selected and
+ * given the keyboard. The navigation hands the row over when the grid has
+ * mounted, and the grid's own draws settle it, never a delay. A row the
+ * person's view hides, or one not found, is said in a notice instead.
+ */
+export function useRowReveal(view: string, grid: RevealGrid) {
+  const [ask, setAsk] = useState<{ readonly id: string } | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  useViewParams(view, (params) => {
+    setNotice(null);
+    setAsk(params.select ? { id: params.select } : null);
+  });
+  const latest = useRef(grid);
+  latest.current = grid;
+  const { drawn, settled } = grid;
+  useEffect(() => {
+    if (!ask) return;
+    const now = latest.current;
+    if (now.shown(ask.id)) {
+      setAsk(null);
+      setNotice(null);
+      const held = document.activeElement;
+      const page = now.within.current?.closest(".ledger-page");
+      now.reveal(
+        ask.id,
+        !held || held === document.body || !!page?.contains(held),
+      );
+      return;
+    }
+    const show = now.hiding(ask.id);
+    if (show) setNotice({ kind: "hidden", show });
+    else if (now.settled) {
+      setAsk(null);
+      setNotice({ kind: "missing" });
+    }
+  }, [ask, drawn, settled]);
+  return {
+    notice,
+    dismiss: () => {
+      setAsk(null);
+      setNotice(null);
+    },
+  };
+}
+
+/** What `useRowReveal` has to say: a row the person's view hides, with the
+ * one action that shows it, or a row that is not found here. */
+export function RowRevealNotice({
+  notice,
+  dismiss,
+  hidden,
+  missing,
+}: ReturnType<typeof useRowReveal> & { hidden: string; missing: string }) {
+  const t = useStrings();
+  if (!notice) return null;
+  return (
+    <div className="ledger-reveal-notice flex flex-wrap items-center gap-2">
+      <Alert
+        tone={notice.kind === "hidden" ? "warning" : "neutral"}
+        icon={<Icon name={notice.kind === "hidden" ? "alert" : "info"} />}
+        className="flex-1"
+      >
+        {notice.kind === "hidden" ? hidden : missing}
+      </Alert>
+      {notice.kind === "hidden" && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="ledger-reveal-show"
+          onClick={notice.show}
+        >
+          {t("desktop.ledger.reveal.show")}
+        </Button>
+      )}
+      <Button variant="ghost" size="sm" onClick={dismiss}>
+        {t("desktop.ledger.reveal.dismiss")}
+      </Button>
+    </div>
+  );
+}

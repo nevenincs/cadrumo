@@ -102,6 +102,9 @@ import {
   statusWord,
 } from "./movementWords";
 import { ReadinessStrip } from "./ReadinessStrip";
+import { useFocusTarget } from "../../../shell/navigation/hooks";
+import { RowRevealNotice, useRowReveal } from "../RowReveal";
+import { movementHiding, withoutHiding } from "./movementReveal";
 import type { MovementsView } from "./useMovementsView";
 import type { ImportedBatches } from "../../../shell/ledgerImports";
 import type { SpendingCategoryFamily } from "../../../shell/ledgerVocabulary";
@@ -547,6 +550,51 @@ export function MovementsSection({
     [drafts, visible],
   );
   const visibleSet = useMemo(() => new Set(visible), [visible]);
+
+  // ---- A link's row ------------------------------------------------------------
+  // A link that selects a movement reveals it once the grid draws it; one
+  // the person's own view hides is announced with what shows it.
+  const within = useRef<HTMLDivElement>(null);
+  useFocusTarget(
+    "ledger/movements",
+    () =>
+      within.current?.querySelector<HTMLElement>(
+        '[role="grid"] [tabindex="0"]',
+      ) ?? null,
+  );
+  const reveal = useRowReveal("ledger/movements", {
+    shown: (id) => visibleSet.has(id),
+    hiding: (id) => {
+      const row = byId.get(id);
+      if (!row || membership.kind === "reading") return null;
+      const hiding = movementHiding(row, {
+        filters,
+        sets,
+        members,
+        terms,
+        search: { months, category: labels.category },
+        grouping,
+        collapsed,
+      });
+      if (!hiding) return null;
+      return () => {
+        if (hiding.filters.length) setFilters(withoutHiding(filters, hiding));
+        if (hiding.search) setSearch("");
+        if (hiding.group !== null)
+          setCollapsed(
+            new Set([...collapsed].filter((key) => key !== hiding.group)),
+          );
+      };
+    },
+    settled: periodWindow.phase === "ready" && membership.kind !== "reading",
+    reveal: (id, focus) => {
+      setSelection(new Set([id]));
+      if (focus) grid.current?.focusCell(id);
+      else grid.current?.scrollToKey(id, "center");
+    },
+    drawn: visible,
+    within,
+  });
 
   // ---- Selection -------------------------------------------------------------
   const selected = useMemo(
@@ -1099,6 +1147,7 @@ export function MovementsSection({
 
   return (
     <div
+      ref={within}
       className="ledger-movements flex min-h-0 flex-1 flex-col gap-2 p-3"
       onKeyDown={onKeyDown}
       onKeyDownCapture={edit.onKeyDownCapture}
@@ -1160,6 +1209,11 @@ export function MovementsSection({
           {t("desktop.ledger.filters.failed")}
         </Alert>
       )}
+      <RowRevealNotice
+        {...reveal}
+        hidden={t("desktop.ledger.reveal.movement_hidden")}
+        missing={t("desktop.ledger.reveal.movement_missing")}
+      />
       {hiddenSelected.length > 0 && (
         <div
           role="alert"

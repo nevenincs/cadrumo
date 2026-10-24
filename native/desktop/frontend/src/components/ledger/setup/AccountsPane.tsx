@@ -28,6 +28,7 @@ import {
   Reading,
   SetupTable,
   TextField,
+  useSetupDraft,
   useSetupRead,
   useSetupWrite,
   type Column,
@@ -135,6 +136,13 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
   };
   const secret = (field: keyof Secrets) => (value: string) =>
     setSecrets((current) => ({ ...current, [field]: value }));
+  // An open form with anything typed into it, beyond the label it opened on.
+  useSetupDraft(
+    form !== null &&
+      (label !== (form.kind === "update" ? form.account.label : "") ||
+        [holding, currency, opened, closedOn, role, modelo].some(Boolean) ||
+        Object.values(secrets).some(Boolean)),
+  );
 
   const iban = ibanText(secrets.iban);
   const ibanWrong = iban !== "" ? ibanProblem(iban) : null;

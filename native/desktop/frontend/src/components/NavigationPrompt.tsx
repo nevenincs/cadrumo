@@ -22,6 +22,8 @@ export function NavigationPrompt({ prompt }: { prompt: NavigatorPrompt }) {
   return (
     <Dialog open onOpenChange={(open) => !open && prompt.stay()}>
       <DialogContent
+        // It hands on the very navigation it asks about.
+        modalLayer={false}
         className="navigation-prompt w-dialog-md"
         closeLabel={t(
           leave

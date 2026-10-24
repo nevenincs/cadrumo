@@ -2949,6 +2949,17 @@ desktop:
         prorrata: Prorrata
       areas: Apartats de registres
     retry: Torna-ho a provar
+    reveal:
+      dismiss: Descarta l’avís
+      invoice_hidden: Els teus filtres, la teva cerca o el període mostrat amaguen
+        la factura que selecciona aquest enllaç.
+      invoice_missing: Cap de les factures que es mostren aquí no coincideix amb aquest
+        enllaç.
+      movement_hidden: Els teus filtres, la teva cerca o un grup plegat amaguen el
+        moviment que selecciona aquest enllaç.
+      movement_missing: Cap dels moviments que es mostren aquí no coincideix amb aquest
+        enllaç.
+      show: Mostra'l
     review:
       excluded: Exclòs
       pending: Per classificar

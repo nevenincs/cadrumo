@@ -37,6 +37,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { chordLabel, primaryChord, type Action } from "../../shell/actions";
 import type { Host } from "../../shell/host";
 import type { ProfileView } from "../../shell/layout";
+import { useNavigationGuard } from "../../shell/navigation/hooks";
 import { useCensoSync, type CensoSnapshot } from "../../shell/profileCenso";
 import {
   columns,
@@ -157,6 +158,21 @@ export const UserProfilePage = memo(function UserProfilePage({
   const incoming = useMemo(
     () => new Map(review?.fields.map((field) => [field.path, field])),
     [review],
+  );
+  // Leaving the page loses a save or a Censo pull in flight, whose outcome
+  // only this page shows, and a Censo review not yet answered. A field
+  // draft is its editor's own to weigh.
+  const censoState = sync.snapshot?.state;
+  useNavigationGuard(
+    "profile",
+    profile.saving ||
+      sync.busy ||
+      censoState === "reading" ||
+      censoState === "device"
+      ? "busy"
+      : review
+        ? "dirty"
+        : "clean",
   );
 
   const setView = useCallback(

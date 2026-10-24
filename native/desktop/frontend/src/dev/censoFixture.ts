@@ -10,6 +10,9 @@ declare global {
       answers(): number;
       statuses(): number;
       burst(): void;
+      /** Holds every answer in flight until `release`. */
+      hold(): void;
+      release(): void;
     };
   }
 }
@@ -25,6 +28,9 @@ export function censoFixture(
   let snapshot: CensoSnapshot | null = null;
   let statuses = 0;
   const listeners = new Set<() => void>();
+  // An answer waits here while held: released by the scenario, not a timer.
+  let held: Promise<void> | null = null;
+  let release = () => {};
   const controls = {
     ready() {
       ready = true;
@@ -38,6 +44,15 @@ export function censoFixture(
     burst() {
       for (let i = 0; i < 25; i++) listeners.forEach((listener) => listener());
     },
+    hold() {
+      held ??= new Promise<void>((resolve) => {
+        release = () => {
+          held = null;
+          resolve();
+        };
+      });
+    },
+    release: () => release(),
   };
   return {
     async observe(changed) {
@@ -118,6 +133,7 @@ export function censoFixture(
     },
     async answer(_, operation, digest, decision) {
       answers++;
+      await held;
       if (failure) throw { code: "unknown" };
       if (
         !snapshot ||

@@ -1,5 +1,7 @@
 import {
+  createContext,
   useCallback,
+  useContext,
   useEffect,
   useId,
   useRef,
@@ -26,6 +28,7 @@ import type {
   LedgerRequest,
   LedgerResult,
 } from "../../../shell/ledger";
+import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import { useStrings } from "../../../shell/strings";
 import { useWritePause } from "../WritePause";
 import { setupCall, type SetupCall } from "./setupModel";
@@ -105,15 +108,22 @@ export function Panel({
   );
 }
 
-/** The sub-areas of a Setup section, as a tab row. */
+/** The Ledger section a Setup form is drawn in, by its register id: what a
+ * navigation that leaves the section would take down. */
+const SetupOwner = createContext("ledger");
+
+/** The sub-areas of a Setup section, as a tab row. `owner` is the section's
+ * register id, which the forms inside weigh their work under. */
 export function SetupTabs<Value extends string>({
   label,
+  owner,
   value,
   onValue,
   tabs,
   children,
 }: {
   label: string;
+  owner: string;
   value: Value;
   onValue(value: Value): void;
   tabs: readonly { value: Value; label: string }[];
@@ -143,7 +153,7 @@ export function SetupTabs<Value extends string>({
         value={value}
         className="flex flex-col gap-3 overflow-y-auto p-3"
       >
-        {children}
+        <SetupOwner.Provider value={owner}>{children}</SetupOwner.Provider>
       </TabsContent>
     </Tabs>
   );
@@ -451,13 +461,23 @@ export function useSetupRead<D extends LedgerDefinitionId>(
   return { read, reload };
 }
 
+/** Typed values of a Setup form not yet written: a navigation that leaves
+ * the section asks before they go. */
+export function useSetupDraft(drafted: boolean): void {
+  useNavigationGuard(useContext(SetupOwner), drafted ? "dirty" : "clean");
+}
+
 /** A write in flight and how the last one ended, for one form. A write
  * whose outcome was not seen, or whose answer was not read, holds every
  * write on the page under `what` until the page's re-read settles it; the
- * form's line about it goes once that read has run. */
-export function useSetupWrite(what: string) {
+ * form's line about it goes once that read has run. A navigation that
+ * leaves the section is refused while the write is in flight; `owner` names
+ * the section where it is not drawn inside `SetupTabs`. */
+export function useSetupWrite(what: string, owner?: string) {
   const { hold } = useWritePause();
   const [busy, setBusy] = useState(false);
+  const section = useContext(SetupOwner);
+  useNavigationGuard(owner ?? section, busy ? "busy" : "clean");
   const [last, setLast] = useState<SetupCall<unknown> | null>(null);
   const run = useCallback(
     async <R,>(write: () => Promise<SetupCall<R>>): Promise<SetupCall<R>> => {

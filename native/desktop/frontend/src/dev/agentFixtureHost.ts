@@ -384,6 +384,9 @@ const LINKS_REPLY = [
   "- [una vista que no existe](cadrumo://view/nowhere)",
   "- [un enlace antiguo](cadrumo://profiles/5aa00000-0000-4000-8000-0000000000aa/ledger)",
 ].join("\n");
+// A reply that links to exactly the view the person names, so a scenario
+// can link to a row it read from the page.
+const LINK_TO = /^enlaza (cadrumo:\S+)$/i;
 // A tool the product refuses, as the host passes the refusal on: for a
 // component that is not set up, for something setup does not recover, and
 // one whose recovery is not an action the window knows, as though it got
@@ -850,6 +853,15 @@ export function fixtureAgent({
           refusal,
         ),
         ...write(held, "La herramienta no ha podido seguir."),
+        finish(held),
+      ]);
+      return;
+    }
+    const linked = LINK_TO.exec(text.trim());
+    if (linked) {
+      schedule(held, [
+        started(held),
+        ...write(held, `[el enlace](${linked[1]})`),
         finish(held),
       ]);
       return;

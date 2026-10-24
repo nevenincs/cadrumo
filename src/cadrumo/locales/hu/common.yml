@@ -2930,6 +2930,15 @@ desktop:
         prorrata: Prorrata
       areas: A nyilvántartások részei
     retry: Újra
+    reveal:
+      dismiss: Elrejtés
+      invoice_hidden: A hivatkozás által kijelölt számlát a szűrőid, a keresésed vagy
+        a mutatott időszak elrejti.
+      invoice_missing: Az itt mutatott számlák közül egyik sem egyezik ezzel a hivatkozással.
+      movement_hidden: A hivatkozás által kijelölt tételt a szűrőid, a keresésed vagy
+        egy összecsukott csoport elrejti.
+      movement_missing: Az itt mutatott tételek közül egyik sem egyezik ezzel a hivatkozással.
+      show: Mutasd
     review:
       excluded: Kizárva
       pending: Besorolandó

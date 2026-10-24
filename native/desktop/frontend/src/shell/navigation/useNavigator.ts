@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { modalLayerOpen } from "@/components/ui/dialog";
 import type { LedgerSection } from "../layout";
 import type { Translate } from "../strings";
 import { FocusRegister } from "./focus";
@@ -12,6 +13,7 @@ import {
   type Surface,
   type ViewParams,
 } from "./register";
+import { RevealRegister } from "./reveal";
 import {
   declaredImplementation,
   resolveView,
@@ -106,7 +108,11 @@ function windowImplementation(hasPort: (port: WindowPort) => boolean) {
  */
 export function useNavigator(window: NavigatorWindow) {
   const runtime: NavigationRuntime = useMemo(
-    () => ({ guards: new GuardRegister(), focus: new FocusRegister() }),
+    () => ({
+      guards: new GuardRegister(),
+      focus: new FocusRegister(),
+      reveal: new RevealRegister(),
+    }),
     [],
   );
   const host = useRef(window);
@@ -121,6 +127,16 @@ export function useNavigator(window: NavigatorWindow) {
   useEffect(() => {
     runtime.focus.flush();
   });
+  // Every open dialog or sheet holds the window, wherever it is drawn; the
+  // primitives mark them, so none registers on its own.
+  useEffect(
+    () =>
+      runtime.guards.register({
+        owner: "window",
+        state: () => (modalLayerOpen() ? "modal" : "clean"),
+      }),
+    [runtime],
+  );
   useEffect(() => {
     // Whatever the person presses next decides where focus is.
     const drop = (event: Event) => runtime.focus.dropBefore(event.timeStamp);
@@ -260,6 +276,11 @@ export function useNavigator(window: NavigatorWindow) {
       );
       guard({ kind: "navigate", unmounted }, () => {
         window.showInWindow(resolved.opened, entry);
+        // A page is handed what the link asks of it, such as a row to
+        // select, once it is mounted; a page opened without drops an ask
+        // still waiting.
+        if (entry.view.kind === "page")
+          runtime.reveal.request(resolved.opened, resolved.params);
         if (entry.view.kind === "page" || entry.view.kind === "agent")
           runtime.focus.request(
             lineage(register, resolved.opened).map((element) => element.id),

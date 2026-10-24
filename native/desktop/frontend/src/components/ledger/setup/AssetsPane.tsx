@@ -28,6 +28,7 @@ import {
   Panel,
   SetupTable,
   TextField,
+  useSetupDraft,
   useSetupWrite,
 } from "./SetupParts";
 import type { SetupProps } from "./setupProps";
@@ -69,6 +70,11 @@ export function AssetsPane({ port, locale }: SetupProps) {
   const [quarter, setQuarter] = useState("");
   const [handoff, setHandoff] = useState<ActivityAssetFilingResult | null>(
     null,
+  );
+  // A form with anything typed into it that is not yet written.
+  useSetupDraft(
+    task !== null &&
+      [from, until, free, creatingOperation, taxYear, quarter].some(Boolean),
   );
 
   const inspect = async (id = assetId) => {

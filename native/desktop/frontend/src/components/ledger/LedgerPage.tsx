@@ -515,6 +515,7 @@ export function LedgerPage({
         editor={invoiceEditor}
         onEditor={setInvoiceEditor}
         copy={copy}
+        onPeriod={setPeriod}
       />
     );
   else if (section === "rules")

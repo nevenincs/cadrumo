@@ -2910,6 +2910,15 @@ desktop:
         prorrata: Prorrata
       areas: Registers areas
     retry: Retry
+    reveal:
+      dismiss: Dismiss
+      invoice_hidden: The invoice this link selects is hidden by your filters, your
+        search or the period shown.
+      invoice_missing: No invoice shown here matches this link.
+      movement_hidden: The movement this link selects is hidden by your filters, your
+        search or a folded group.
+      movement_missing: No movement shown here matches this link.
+      show: Show it
     review:
       excluded: Excluded
       pending: To classify

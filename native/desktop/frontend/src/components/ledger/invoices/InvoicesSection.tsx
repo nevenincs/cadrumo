@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DataGrid,
   DataGridText,
+  type DataGridHandle,
   type GridColumn,
   type GridRow,
 } from "@/components/ui/data-grid";
@@ -18,8 +19,10 @@ import {
 import { Toast } from "@/components/ui/toast";
 import type { CatalogueInvoice, LedgerPort } from "../../../shell/ledger";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
+import { useFocusTarget } from "../../../shell/navigation/hooks";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { failureCode } from "../ledgerWords";
+import { RowRevealNotice, useRowReveal } from "../RowReveal";
 import { INVOICE_TSV_COLUMNS, invoicesTsv } from "../transfer/tsv";
 import { dayText } from "../transfer/transferWords";
 import { InvoiceEditor, type EditorTarget } from "./InvoiceEditor";
@@ -39,6 +42,7 @@ import {
   kindLabel,
   paymentLabel,
 } from "./invoiceWords";
+import { invoiceHiding, withoutHiding } from "./invoiceReveal";
 import { useInvoiceCatalogue } from "./useInvoiceCatalogue";
 
 const TOAST_MS = 4000;
@@ -228,6 +232,7 @@ export function InvoicesSection({
   editor,
   onEditor,
   copy,
+  onPeriod,
 }: {
   port: LedgerPort;
   reader: string | null;
@@ -237,6 +242,8 @@ export function InvoicesSection({
   editor: EditorTarget | null;
   onEditor(target: EditorTarget | null): void;
   copy(text: string): Promise<void>;
+  /** Shows another period, to show an invoice the period shown hides. */
+  onPeriod?: (period: LedgerPeriod | null) => void;
 }) {
   const t = useStrings();
   const { read, reread, settle } = useInvoiceCatalogue(port, reader, shown);
@@ -287,6 +294,36 @@ export function InvoicesSection({
     key: invoice.invoice_id,
     data: invoice,
   }));
+  // A link that selects an invoice reveals it once the grid draws it; one
+  // the person's own view hides is announced with what shows it.
+  const grid = useRef<DataGridHandle>(null);
+  const within = useRef<HTMLDivElement>(null);
+  useFocusTarget(
+    "ledger/invoices",
+    () =>
+      within.current?.querySelector<HTMLElement>(
+        '[role="grid"] [tabindex="0"]',
+      ) ?? null,
+  );
+  const reveal = useRowReveal("ledger/invoices", {
+    shown: (id) => rows.some((invoice) => invoice.invoice_id === id),
+    hiding: (id) => {
+      const invoice = invoices?.find((found) => found.invoice_id === id);
+      const hiding = invoice ? invoiceHiding(invoice, filter, period) : null;
+      if (!hiding || (hiding.period && !onPeriod)) return null;
+      return () => {
+        setFilter((held) => withoutHiding(held, hiding));
+        if (hiding.period) onPeriod?.(null);
+      };
+    },
+    settled: invoices !== null,
+    reveal: (id, focus) => {
+      if (focus) grid.current?.focusCell(id);
+      else grid.current?.scrollToKey(id, "center");
+    },
+    drawn: rows,
+    within,
+  });
   const set = <K extends keyof typeof filter>(
     key: K,
     value: (typeof filter)[K],
@@ -330,6 +367,7 @@ export function InvoicesSection({
   else
     body = (
       <DataGrid
+        ref={grid}
         className="ledger-invoices-grid rounded-md"
         label={t("desktop.ledger.invoices.grid")}
         columns={columns}
@@ -369,7 +407,10 @@ export function InvoicesSection({
     );
 
   return (
-    <div className="ledger-invoices flex min-h-0 flex-1 flex-col gap-2 p-3">
+    <div
+      ref={within}
+      className="ledger-invoices flex min-h-0 flex-1 flex-col gap-2 p-3"
+    >
       <div
         role="group"
         aria-label={t("desktop.ledger.invoices.toolbar")}
@@ -482,6 +523,11 @@ export function InvoicesSection({
           <Icon name="copy" />
         </IconButton>
       </div>
+      <RowRevealNotice
+        {...reveal}
+        hidden={t("desktop.ledger.reveal.invoice_hidden")}
+        missing={t("desktop.ledger.reveal.invoice_missing")}
+      />
       <div className="flex min-h-0 flex-1 flex-col">{body}</div>
       {editor && invoices !== null && (
         <InvoiceEditor

@@ -2958,6 +2958,17 @@ desktop:
         prorrata: Prorrata
       areas: Apartados de registros
     retry: Reintentar
+    reveal:
+      dismiss: Descartar el aviso
+      invoice_hidden: Tus filtros, tu búsqueda o el periodo mostrado ocultan la factura
+        que selecciona este enlace.
+      invoice_missing: Ninguna factura de las que se muestran aquí coincide con este
+        enlace.
+      movement_hidden: Tus filtros, tu búsqueda o un grupo plegado ocultan el movimiento
+        que selecciona este enlace.
+      movement_missing: Ningún movimiento de los que se muestran aquí coincide con
+        este enlace.
+      show: Muéstralo
     review:
       excluded: Excluido
       pending: Por clasificar

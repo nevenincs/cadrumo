@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useNavigationGuard } from "../../shell/navigation/hooks";
 import { useStrings } from "../../shell/strings";
 import { profileInput } from "../../shell/profileInput";
 import type {
@@ -58,6 +59,19 @@ export function ProfileEditor({
     ),
   );
   const { fields, section, kind } = draft;
+  // A draft that differs from what is stored is asked about before a
+  // navigation takes the page down; the editor does not otherwise hold the
+  // window as a dialog does. The page itself weighs a save in flight.
+  const drafted =
+    kind !== "remove_row" &&
+    fields.some(
+      (field) =>
+        (values[field.path] ?? "") !==
+        (kind === "add_row" ? "" : (field.value ?? "")),
+    );
+  useNavigationGuard("profile", drafted ? "dirty" : "clean", {
+    discard: onClose,
+  });
   const key = (field: ProfileField) =>
     field.path.slice(
       section.key.length +
@@ -115,6 +129,7 @@ export function ProfileEditor({
       }}
     >
       <DialogContent
+        modalLayer={false}
         closeLabel={busy ? undefined : t("desktop.profile.cancel")}
         onCloseAutoFocus={(event) => {
           if (returnFocus instanceof HTMLElement && returnFocus.isConnected) {

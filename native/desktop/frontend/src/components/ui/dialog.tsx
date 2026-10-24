@@ -38,11 +38,23 @@ function DialogOverlay({
   );
 }
 
+/** Whether a dialog or sheet that holds the window is open in `root`: one
+ * marked `data-modal-layer`, as each is unless it opts out. One that is
+ * closing no longer holds it. */
+function modalLayerOpen(root: ParentNode = document): boolean {
+  return root.querySelector('[data-modal-layer][data-state="open"]') !== null;
+}
+
 /**
  * The dialog surface, portalled to the document body over a scrim. Focus is
  * trapped inside while it is open and returns to the opener when it closes.
  * `closeLabel` names the corner close button; leave it out for a dialog that
  * offers its own way out.
+ *
+ * While open it holds the window (see `modalLayerOpen`). `modalLayer={false}`
+ * is for a surface that must not: one that hands on the very choice it asks
+ * for, such as a palette or a question about leaving, or an editor that
+ * weighs its own unsaved work.
  *
  * Escape closes it at the first press. The foundation gives the key to the
  * topmost layer only, so a tooltip open on a focused button inside the
@@ -53,12 +65,15 @@ function DialogContent({
   children,
   closeLabel,
   placement = "center",
+  modalLayer = true,
   onFocusCapture,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   closeLabel?: string;
   /** `top` suits a surface whose height changes as it is used. */
   placement?: "center" | "top";
+  /** False for a surface that does not hold the window while open. */
+  modalLayer?: boolean;
 }) {
   const dismiss = React.useRef<HTMLButtonElement>(null);
   return (
@@ -66,6 +81,7 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        data-modal-layer={modalLayer ? "" : undefined}
         // Tall content scrolls inside: what takes focus is brought into view.
         onFocusCapture={(event) => {
           onFocusCapture?.(event);
@@ -157,6 +173,7 @@ function DialogDescription({
 }
 
 export {
+  modalLayerOpen,
   Dialog,
   DialogClose,
   DialogContent,

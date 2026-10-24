@@ -22,6 +22,7 @@ import {
   Panel,
   Reading,
   SetupTable,
+  useSetupDraft,
   useSetupRead,
   useSetupWrite,
   type Column,
@@ -76,6 +77,13 @@ export function RatiosPane({
   );
   const mismatch =
     list.read?.kind === "done" && list.read.result.outcome === "censo_mismatch";
+  // A ratio typed but not saved differs from the one its editor opened on.
+  useSetupDraft(
+    Object.entries(editing).some(([category, text]) => {
+      const set = overrides.get(category);
+      return text !== (set ? (percentOf(set) ?? "") : "");
+    }),
+  );
 
   const save = async (category: string) => {
     const parsed = parsePercent(editing[category] ?? "");

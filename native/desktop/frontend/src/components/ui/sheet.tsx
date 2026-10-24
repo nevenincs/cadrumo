@@ -25,18 +25,22 @@ function SheetClose(props: React.ComponentProps<typeof DialogPrimitive.Close>) {
  * from the right for a record's editor, from the bottom on a narrow window.
  * It is a dialog in every other way: focus is trapped inside, Escape closes
  * it at the first press, and focus returns to the opener. `closeLabel` names
- * its corner close button.
+ * its corner close button. While open it holds the window, unless
+ * `modalLayer={false}`, as for a dialog.
  */
 function SheetContent({
   className,
   children,
   side = "right",
   closeLabel,
+  modalLayer = true,
   onFocusCapture,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   side?: "right" | "bottom";
   closeLabel: string;
+  /** False for a surface that does not hold the window while open. */
+  modalLayer?: boolean;
 }) {
   const dismiss = React.useRef<HTMLButtonElement>(null);
   return (
@@ -45,6 +49,7 @@ function SheetContent({
       <DialogPrimitive.Content
         data-slot="sheet-content"
         data-side={side}
+        data-modal-layer={modalLayer ? "" : undefined}
         onFocusCapture={(event) => {
           onFocusCapture?.(event);
           revealFocused(event);

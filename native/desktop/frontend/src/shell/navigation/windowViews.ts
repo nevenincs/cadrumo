@@ -53,16 +53,21 @@ const panel = (tab: PanelTab | null): WindowViewEntry => ({
   honours: [],
 });
 
-/** Register id to how the window opens it. Row selection (`select`) is not
- * honoured yet: resolution drops it with a notice until the Ledger reveals
- * a row. */
+/** Register id to how the window opens it. The movements and invoices
+ * grids reveal the row a `select` names. */
 export const WINDOW_VIEWS: Readonly<Record<string, WindowViewEntry>> = {
   profile: page("profile", null, "userProfile"),
   calendar: page("calendar", null, "views"),
   docs: page("docs", null, null),
   ledger: page("ledger", null, "ledger"),
-  "ledger/movements": page("ledger", "movements", "ledger"),
-  "ledger/invoices": page("ledger", "invoices", "ledger"),
+  "ledger/movements": {
+    ...page("ledger", "movements", "ledger"),
+    honours: ["select"],
+  },
+  "ledger/invoices": {
+    ...page("ledger", "invoices", "ledger"),
+    honours: ["select"],
+  },
   "ledger/documents": page("ledger", "documents", "ledger"),
   "ledger/rules": page("ledger", "rules", "ledger"),
   "ledger/registers": page("ledger", "registers", "ledger"),

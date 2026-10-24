@@ -36,6 +36,7 @@ import {
   Reading,
   SetupTable,
   TextField,
+  useSetupDraft,
   useSetupRead,
   useSetupWrite,
   type Column,
@@ -174,6 +175,23 @@ export function InventoryPane({
   const [preview, setPreview] =
     useState<SetupCall<InventoryValuationResult> | null>(null);
   const [lastBook, setLastBook] = useState<InventoryBook | null>(null);
+  // A form with anything typed into it that is not yet written.
+  useSetupDraft(
+    task !== null &&
+      [
+        actividad,
+        method,
+        opening,
+        movementId,
+        movementDate,
+        kind,
+        quantity,
+        unitCost,
+        base,
+        authority,
+        acquisition,
+      ].some(Boolean),
+  );
 
   const books = (read?.kind === "done" ? read.result.rows : []).filter(
     (book) => book.year === year,

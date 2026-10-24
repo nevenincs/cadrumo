@@ -64,6 +64,7 @@ export function RulesSection(
     <div className="ledger-setup-rules flex min-h-0 flex-1 flex-col">
       <SetupTabs<Area>
         label={t("desktop.ledger.rules.areas")}
+        owner="ledger/rules"
         value={area}
         onValue={setArea}
         tabs={AREAS.map((value) => ({

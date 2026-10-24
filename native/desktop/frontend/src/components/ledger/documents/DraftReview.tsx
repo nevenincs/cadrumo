@@ -33,6 +33,7 @@ import type {
 } from "../../../shell/ledger";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { readAnswer } from "../../../shell/ledgerWindow";
+import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import { provisionActionOf } from "../../../shell/provisioningRecovery";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { SetupOffer } from "../../setup/SetupOffer";
@@ -342,6 +343,17 @@ export function DraftReview({
     null,
   );
   const [offHost, setOffHost] = useState(false);
+  // Corrections and answers not yet confirmed are asked about before a
+  // navigation takes the section down; a read or confirmation in flight
+  // holds it.
+  useNavigationGuard(
+    "ledger/documents",
+    busy !== null
+      ? "busy"
+      : Object.keys(corrections).length > 0 || Object.keys(answers).length > 0
+        ? "dirty"
+        : "clean",
+  );
   const countryId = useId();
   const currencyId = useId();
 

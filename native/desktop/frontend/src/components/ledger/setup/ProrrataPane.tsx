@@ -19,6 +19,7 @@ import {
   Reading,
   SetupTable,
   TextField,
+  useSetupDraft,
   useSetupRead,
   useSetupWrite,
   type Column,
@@ -81,6 +82,21 @@ export function ProrrataPane({
   const [codes, setCodes] = useState("");
   const [con, setCon] = useState("");
   const [sin, setSin] = useState("");
+  // A form with anything typed into it that is not yet written.
+  useSetupDraft(
+    action !== null &&
+      [
+        percentage,
+        provenance,
+        reference,
+        sector,
+        evidence,
+        letra,
+        codes,
+        con,
+        sin,
+      ].some(Boolean),
+  );
 
   const listed = read?.kind === "done" ? read.result : null;
   const choose = (next: Action) => {

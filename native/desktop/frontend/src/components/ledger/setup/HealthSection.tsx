@@ -84,7 +84,10 @@ export function HealthSection({
   const [preflighting, setPreflighting] = useState(false);
   const [check, setCheck] = useState<SetupCall<LedgerCheckResult> | null>(null);
   const [checking, setChecking] = useState(false);
-  const rebuild = useSetupWrite(t("desktop.ledger.health.links"));
+  const rebuild = useSetupWrite(
+    t("desktop.ledger.health.links"),
+    "ledger/health",
+  );
   const [rebuilt, setRebuilt] =
     useState<LedgerParticipationRebuildResult | null>(null);
   const [reason, setReason] = useState("");
@@ -94,7 +97,10 @@ export function HealthSection({
     reason: string;
     call: SetupCall<LedgerResetResult>;
   } | null>(null);
-  const resetting = useSetupWrite(t("desktop.ledger.section.health"));
+  const resetting = useSetupWrite(
+    t("desktop.ledger.section.health"),
+    "ledger/health",
+  );
 
   const runPreflight = async () => {
     if (!period) return;
