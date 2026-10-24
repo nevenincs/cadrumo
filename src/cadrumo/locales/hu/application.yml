@@ -1944,6 +1944,11 @@ application:
         újra.
       column_names_local_ai_unavailable: a helyi MI ezen a számítógépen nem tudja
         beolvasni a fájl oszlopneveit, ezért a fájl nem lett beolvasva.
+      statement_local_ai_not_ready: a helyi MI, amely ezt a PDF-bankszámlakivonatot
+        olvassa, nem áll készen, ezért a kivonat nem lett beolvasva. Állítsd be, majd
+        próbáld újra.
+      statement_local_ai_unavailable: a helyi MI ezen a számítógépen nem tudja beolvasni
+        ezt a PDF-bankszámlakivonatot, ezért a kivonat nem lett beolvasva.
     retry: Kapcsolati hiba. Újrapróbálkozás %{seconds} másodperc múlva (%{attempt}.
       próbálkozás).
     space_needed: A beállításhoz %{required} szabad hely kell, és %{free} érhető el.

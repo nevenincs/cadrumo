@@ -46,6 +46,7 @@ from .....application.ledger.invoice_draft_extraction_ports import (
     InvoiceDraftExtractionPorts,
     InvoiceDraftReaderUnavailableError,
     StructuredInvoiceReadError,
+    SupplyNatureProposalResult,
     VisionImage,
 )
 from .....application.ledger.invoice_draft_records import InvoiceDraft
@@ -57,7 +58,6 @@ from .....core.operator_action_enums import ActionEvidenceProvenance
 from .....core.optional_extras import MissingOptionalExtraError
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.iva.regime_legend import RegimeLegend
-from .....domain.iva.supply_nature import SupplyNature
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .....tests.loopback_llm import (
@@ -226,7 +226,9 @@ def _invoice_draft_extraction_ports(
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
 
-    def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNature | None:
+    def propose_supply_nature(
+        transcription: DocumentTranscription, settings: Settings
+    ) -> SupplyNatureProposalResult | None:
         try:
             return propose_supply_nature_under_admitted_load(transcription.text.splitlines(), settings=settings)
         except Exception:

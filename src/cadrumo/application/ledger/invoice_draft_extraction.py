@@ -460,15 +460,21 @@ def _proposed_supply_nature(
     make an optional convenience able to lose a document, so every failure --
     an absent extra, an unreachable provider, a reply that did not survive
     containment -- yields no proposal and leaves the operator asked exactly as
-    they were.
+    they were. A reader that could not be asked is logged with the condition
+    its verdict names.
     """
     try:
         proposal = ports.propose_supply_nature(transcription, settings)
     except Exception:
         proposal = None
-    if proposal is None:
-        get_logger(__name__).info("supply-nature proposal unavailable; the operator is asked as before")
-    return proposal
+    nature = None if proposal is None else proposal.nature
+    if nature is None:
+        unavailable = None if proposal is None else proposal.reader_unavailable
+        get_logger(__name__).info(
+            "supply-nature proposal unavailable (reader condition %s); the operator is asked as before",
+            None if unavailable is None else unavailable.failed_condition_id,
+        )
+    return nature
 
 
 def _label_read_after_reader_unavailable(

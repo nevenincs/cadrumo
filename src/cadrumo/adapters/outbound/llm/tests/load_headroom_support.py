@@ -37,13 +37,12 @@ from .....core.hardware import AcceleratorKind
 from .....core.model_catalogue import ModelRole, model_candidate
 from .....core.optional_extras import MissingOptionalExtraError
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from .....domain.iva.supply_nature import SupplyNature
 from ..client import LLMClient
 from ..errors import LLMProviderError
 from ..evidence_draft_text import TextInvoiceFieldExtractor
 from ..evidence_draft_vision import VISION_TRANSCRIPTION_PROMPT_ID, LocalVisionDocumentTranscriber
 from ..models import MultimodalImageInput
-from ..supply_nature_proposal import SUPPLY_NATURE_PROMPT_ID, SupplyNatureProposer
+from ..supply_nature_proposal import SUPPLY_NATURE_PROMPT_ID, SupplyNatureProposal, SupplyNatureProposer
 
 
 def measured_hardware_profile(
@@ -183,10 +182,10 @@ def transcribe_document_images_under_admitted_load(
     ).transcribe(evidence_images=evidence_images, source_content_sha256=source_content_sha256)
 
 
-def propose_supply_nature_under_admitted_load(lines: Sequence[str], *, settings: Settings) -> SupplyNature | None:
+def propose_supply_nature_under_admitted_load(lines: Sequence[str], *, settings: Settings) -> SupplyNatureProposal:
     """Propose an invoice's supply nature on the LOCAL route, under an admitting measurement."""
     proposer = SupplyNatureProposer(settings=settings, client=admitting_supply_nature_client(settings=settings))
-    return proposer.propose(list(lines)).nature
+    return proposer.propose(list(lines))
 
 
 def extraction_ports_under_admitted_load(ports: InvoiceDraftExtractionPorts) -> InvoiceDraftExtractionPorts:
@@ -226,7 +225,7 @@ def extraction_ports_under_admitted_load(ports: InvoiceDraftExtractionPorts) -> 
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
 
-    def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNature | None:
+    def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNatureProposal | None:
         try:
             return propose_supply_nature_under_admitted_load(transcription.text.splitlines(), settings=settings)
         except Exception:

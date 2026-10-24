@@ -1978,6 +1978,11 @@ application:
         i torna-ho a provar.
       column_names_local_ai_unavailable: la IA local no pot llegir els noms de les
         columnes d'aquest fitxer en aquest ordinador, així que no s'ha llegit el fitxer.
+      statement_local_ai_not_ready: la IA local, que llegeix aquest extracte bancari
+        en PDF, no està a punt, així que no s'ha llegit l'extracte. Configura-la i
+        torna-ho a provar.
+      statement_local_ai_unavailable: la IA local no pot llegir aquest extracte bancari
+        en PDF en aquest ordinador, així que no s'ha llegit l'extracte.
     retry: Problema de connexió. Es tornarà a provar d'aquí a %{seconds} segons (intent
       %{attempt}).
     space_needed: La configuració necessita %{required} lliures i n'hi ha %{free}

@@ -154,12 +154,24 @@ def _prompt(body: dict[str, object]) -> str:
 
 
 class _ScriptedRuntime(SilentLoopbackHandler):
-    """A real local endpoint answering text requests in order and vision requests with a transcription."""
+    """A real local endpoint holding both reader models.
+
+    It answers text requests in order and vision requests with a transcription.
+    """
 
     text_replies: ClassVar[Queue[str]]
     transcription: ClassVar[str] = ""
     empty_transcriptions: ClassVar[int] = 0
     requests: ClassVar[Queue[dict[str, object]]]
+
+    @override
+    def do_GET(self) -> None:
+        if self.path != "/api/tags":
+            self.send_error(HTTPStatus.NOT_FOUND)
+            return
+        settings = load_settings()
+        models = (settings.cadrumo_llm_ollama_text_model, settings.cadrumo_llm_ollama_vision_model)
+        write_json_response(self, {"models": [{"name": name, "size": 1} for name in models]}, status=HTTPStatus.OK)
 
     @override
     def do_POST(self) -> None:

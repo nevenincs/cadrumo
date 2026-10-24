@@ -63,6 +63,20 @@ class InvoiceDraftReaderUnavailableError(CadrumoError):
         self.precondition_verdict = precondition_verdict
 
 
+class SupplyNatureProposalResult(Protocol):
+    """What a supply-nature proposer answers: the nature it proposed, or why no model was asked."""
+
+    @property
+    def nature(self) -> SupplyNature | None:
+        """Return the proposed nature, or ``None`` when nothing was proposed."""
+        ...
+
+    @property
+    def reader_unavailable(self) -> PreconditionVerdict | None:
+        """Return the reader probe's verdict when the on-host reader could not be asked."""
+        ...
+
+
 class InvoiceDraftReaderHeadroomRefusedError(CadrumoError):
     """Admission control refused to load the selected reader's model for lack of headroom.
 
@@ -113,7 +127,13 @@ class InvoiceDraftExtractionPorts:
     read_text: Callable[
         [DocumentTranscription, Settings, LLMProvider | None, EvidenceConsentProof | None, object], InvoiceDraft
     ]
-    propose_supply_nature: Callable[[DocumentTranscription, Settings], SupplyNature | None]
+    propose_supply_nature: Callable[[DocumentTranscription, Settings], SupplyNatureProposalResult | None]
+    """Propose goods-or-services for a person to confirm; ``None`` when there is nothing to report.
+
+    A reader that could not be asked answers with its verdict on
+    ``reader_unavailable`` rather than raising: the proposal is optional, so
+    its absence never refuses a read.
+    """
     rasterise_pdf: Callable[[bytes], tuple[str, ...]]
     transcribe_vision: Callable[
         [tuple[VisionImage, ...], str, Settings, LLMProvider | None, EvidenceConsentProof | None], DocumentTranscription
@@ -128,5 +148,6 @@ __all__ = [
     "InvoiceDraftReaderHeadroomRefusedError",
     "InvoiceDraftReaderUnavailableError",
     "StructuredInvoiceReadError",
+    "SupplyNatureProposalResult",
     "VisionImage",
 ]

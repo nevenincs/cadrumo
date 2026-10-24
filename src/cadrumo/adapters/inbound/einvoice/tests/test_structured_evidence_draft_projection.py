@@ -23,6 +23,7 @@ from .....application.ledger.invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
     StructuredInvoiceReadError,
+    SupplyNatureProposalResult,
     VisionImage,
 )
 from .....application.ledger.invoice_draft_records import InvoiceDraft
@@ -33,7 +34,6 @@ from .....core.config_support import LLMProvider
 from .....core.document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
-from .....domain.iva.supply_nature import SupplyNature
 from ..application_translation import translate_parsed_einvoice
 from ..parsers import parse_einvoice_document
 from ..xml import EInvoiceXmlParseError
@@ -86,7 +86,7 @@ def _unused_text_reader(
 def _unused_supply_nature(
     _transcription: DocumentTranscription,
     _settings: Settings,
-) -> SupplyNature | None:
+) -> SupplyNatureProposalResult | None:
     raise AssertionError("supply-nature proposal is not part of this structured-record test")
 
 

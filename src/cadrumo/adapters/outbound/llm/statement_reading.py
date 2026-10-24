@@ -23,6 +23,12 @@ whatever language the page uses. No bank, heading or narrative is named.
 **Scanned pages.** A page that carries no text layer is rasterised on-host and
 transcribed by the local vision model in transcription role; the text model
 then reads that transcription exactly as it reads a text layer.
+
+**Asked before it is used.** Each reader role is checked with the reader probe
+before its first request, and again after a request that failed, so a runtime
+that does not answer or a model that is not installed refuses the statement
+with the probe's verdict, naming the local AI setup, instead of surfacing as a
+transport error after the retries.
 """
 
 from __future__ import annotations
@@ -31,15 +37,19 @@ import asyncio
 import json
 from collections.abc import Mapping
 
+import httpx
 from pydantic import TypeAdapter, ValidationError
 
+from ....application.dependency_wording import statement_reader_refusal_reason
 from ....application.ledger.document_transcription import DocumentTranscription
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ....application.ledger.import_ports import LedgerImportReaderUnavailableError
 from ....application.ledger.statement_reading import (
     ProposedDirection,
     ProposedStatementMovement,
     ProposedStatementPage,
 )
+from ....application.operator_actions.models import PreconditionVerdict
 from ....application.user_profile.capabilities import resolve_active_capability
 from ....core.capabilities import ServiceCapability
 from ....core.config import Settings, load_settings
@@ -49,6 +59,7 @@ from ....core.model_catalogue import ModelRole
 from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
 from .client import LLMClient
+from .errors import LLMProviderError
 from .evidence_draft_vision import LocalVisionDocumentTranscriber
 from .models import LLMRequest, MultimodalImageInput
 from .providers.local import rasterise_pdf_pages_to_base64_png
@@ -221,6 +232,15 @@ def parse_statement_page_response(text: str) -> ProposedStatementPage:
     )
 
 
+def _reader_unavailable(verdict: PreconditionVerdict) -> LedgerImportReaderUnavailableError:
+    """Return the import refusal for a statement whose reader could not be asked."""
+    return LedgerImportReaderUnavailableError(
+        translated_message="errors.transaction.ledger_import_failed",
+        context={"reason": statement_reader_refusal_reason(verdict)},
+        precondition_verdict=verdict,
+    )
+
+
 def _transcribe_with_retries(
     transcriber: LocalVisionDocumentTranscriber,
     image: MultimodalImageInput,
@@ -250,6 +270,12 @@ class LocalStatementReader:
         settings: Injected settings; defaults to ``load_settings()``.
         vision_transcriber: Injected vision transcriber for scanned pages;
             built on first use otherwise.
+
+    Raises:
+        LedgerImportReaderUnavailableError: From a read, when the on-host
+            reader the page needs cannot run. Its verdict is the reader
+            probe's, and names the local AI setup when setup can supply what
+            is missing.
     """
 
     def __init__(
@@ -263,6 +289,7 @@ class LocalStatementReader:
         """Build the reader, refusing first when the ``llm`` extra is absent."""
         require_optional_extra(LLM_EXTRA)
         self._settings = settings if settings is not None else load_settings()
+        self._model_pinned = model is not None
         self._model = model if model is not None else self._settings.cadrumo_llm_ollama_text_model
         self._client = (
             client
@@ -274,6 +301,7 @@ class LocalStatementReader:
             )
         )
         self._vision_transcriber = vision_transcriber
+        self._ready_roles: set[ModelRole] = set()
 
     @property
     def decided_by(self) -> str:
@@ -292,7 +320,12 @@ class LocalStatementReader:
         """
         if not transcription.text.strip():
             return _EMPTY_PAGE
-        response = asyncio.run(self._client.complete(self._build_request(transcription.text)))
+        self._require_reader(ModelRole.TEXT_EXTRACTION)
+        try:
+            response = asyncio.run(self._client.complete(self._build_request(transcription.text)))
+        except (LLMProviderError, httpx.HTTPError) as exc:
+            self._refuse_if_reader_lost(ModelRole.TEXT_EXTRACTION, exc)
+            raise
         return parse_statement_page_response(response.text)
 
     def transcribe_scanned_pages(
@@ -313,16 +346,67 @@ class LocalStatementReader:
             return transcriptions
         if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=self._settings).enabled:
             return transcriptions
+        self._require_reader(ModelRole.VISION_TRANSCRIPTION)
         renders = rasterise_pdf_pages_to_base64_png(pdf_bytes)
         transcriber = self._vision()
         for page_number in page_numbers:
             if not 1 <= page_number <= len(renders):
                 continue
             image = MultimodalImageInput.from_base64(renders[page_number - 1], ImageMediaType.PNG)
-            transcription = _transcribe_with_retries(transcriber, image, source_content_sha256)
+            try:
+                transcription = _transcribe_with_retries(transcriber, image, source_content_sha256)
+            except (LLMProviderError, httpx.HTTPError) as exc:
+                self._refuse_if_reader_lost(ModelRole.VISION_TRANSCRIPTION, exc)
+                raise
             if transcription is not None:
                 transcriptions[page_number] = transcription
         return transcriptions
+
+    def _reader_refusal(self, role: ModelRole) -> PreconditionVerdict | None:
+        """Return why the on-host reader for ``role`` cannot run now, or ``None``.
+
+        Asked of the runtime through the reader probe, about the model this
+        reader sends for the text role and the role's configured model for
+        scanned pages. ``None`` when the reader can run, and when the caller
+        pinned a text model rather than the role's, which setup would not
+        install.
+
+        Deferred import: the probe sits in the application tier, which reaches
+        back into this package, so an eager binding would close that loop at
+        import time.
+        """
+        if role is ModelRole.TEXT_EXTRACTION and self._model_pinned:
+            return None
+        from ....application.local_reader import probe_local_reader
+
+        model = self._model if role is ModelRole.TEXT_EXTRACTION else None
+        status = probe_local_reader(role, self._settings, model=model)
+        return None if status.available else status.precondition_verdict
+
+    def _require_reader(self, role: ModelRole) -> None:
+        """Refuse before the first request when the reader for ``role`` cannot run.
+
+        One check per role per reader: a reader serves one statement, so the
+        later pages of it read under the answer its first page got.
+        """
+        if role in self._ready_roles:
+            return
+        verdict = self._reader_refusal(role)
+        if verdict is not None:
+            raise _reader_unavailable(verdict)
+        self._ready_roles.add(role)
+
+    def _refuse_if_reader_lost(self, role: ModelRole, error: Exception) -> None:
+        """Refuse with the probe's verdict when the reader went away after its check.
+
+        The runtime can stop, or lose the model, between the check and a
+        request; asked again, the probe names that cause. Returns when the
+        reader still answers, so the caller re-raises the original failure.
+        """
+        self._ready_roles.discard(role)
+        verdict = self._reader_refusal(role)
+        if verdict is not None:
+            raise _reader_unavailable(verdict) from error
 
     def _vision(self) -> LocalVisionDocumentTranscriber:
         """Return the vision transcriber, building it on first use."""

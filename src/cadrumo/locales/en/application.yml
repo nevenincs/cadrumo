@@ -1860,6 +1860,10 @@ application:
         is not ready, so the file was not read. Set it up, then try again.
       column_names_local_ai_unavailable: Local AI cannot read this file's column names
         on this computer, so the file was not read.
+      statement_local_ai_not_ready: Local AI, which reads this PDF statement, is not
+        ready, so the statement was not read. Set it up, then try again.
+      statement_local_ai_unavailable: Local AI cannot read this PDF statement on this
+        computer, so the statement was not read.
     retry: Connection problem. Trying again in %{seconds} seconds (attempt %{attempt}).
     space_needed: Setup needs %{required} free and %{free} is available.
     stale:

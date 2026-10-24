@@ -16,8 +16,10 @@ from ..adapters.outbound.llm.client import LLMClient
 from ..adapters.outbound.llm.consent import EvidenceConsentToken
 from ..adapters.outbound.llm.errors import (
     LLMBusyError,
+    LLMConfigError,
     LLMConsentError,
     LLMContentionError,
+    LLMError,
     LLMPdfRasterisationError,
     LLMProviderError,
 )
@@ -30,7 +32,7 @@ from ..adapters.outbound.llm.evidence_draft_vision import (
 from ..adapters.outbound.llm.models import MultimodalImageInput
 from ..adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from ..adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
-from ..adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
+from ..adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposal, SupplyNatureProposer
 from ..adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
 from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ..adapters.persistence.storage.attachment import AttachmentStore
@@ -77,7 +79,6 @@ from ..core.model_catalogue import ModelRole
 from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.optional_extras import MissingOptionalExtraError
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..domain.iva.supply_nature import SupplyNature
 
 
 def evidence_text_layer_ports() -> EvidenceTextLayerPorts:
@@ -192,7 +193,7 @@ def invoice_draft_extraction_ports(
             before_read=before_read,
         )
 
-    def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNature | None:
+    def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNatureProposal | None:
         return _invoice_propose_supply_nature(transcription, settings, before_read=before_read)
 
     def transcribe_vision(
@@ -325,12 +326,23 @@ def _invoice_read_text(
 
 def _invoice_propose_supply_nature(
     transcription: DocumentTranscription, settings: Settings, *, before_read: Callable[[], None] | None
-) -> SupplyNature | None:
+) -> SupplyNatureProposal | None:
+    """Ask the on-host proposer, keeping its reader verdict; ``None`` when it failed without one.
+
+    The proposal is optional, so no failure refuses the read. A reader that
+    could not be asked answers with the probe's verdict on the proposal, and a
+    role this computer cannot select a model for answers with the selection's
+    verdict, so the caller can tell why no proposal was made. Any other model
+    error, transport failure or missing optional extra leaves no proposal.
+    """
     if before_read is not None:
         before_read()
     try:
-        return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines()).nature
-    except Exception:
+        return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines())
+    except LLMConfigError as exc:
+        verdict = exc.terminal_precondition_verdict
+        return None if verdict is None else SupplyNatureProposal(reader_unavailable=verdict)
+    except (MissingOptionalExtraError, LLMError, httpx.HTTPError):
         return None
 
 

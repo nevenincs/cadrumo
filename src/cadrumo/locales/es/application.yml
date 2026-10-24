@@ -1981,6 +1981,11 @@ application:
       column_names_local_ai_unavailable: la IA local no puede leer los nombres de
         las columnas de este archivo en este ordenador, así que no se ha leído el
         archivo.
+      statement_local_ai_not_ready: la IA local, que lee este extracto bancario en
+        PDF, no está lista, así que no se ha leído el extracto. Configura la IA local
+        y vuelve a intentarlo.
+      statement_local_ai_unavailable: la IA local no puede leer este extracto bancario
+        en PDF en este ordenador, así que no se ha leído el extracto.
     retry: Problema de conexión. Se volverá a intentar en %{seconds} segundos (intento
       %{attempt}).
     space_needed: La configuración necesita %{required} libres y hay %{free} disponibles.

@@ -62,6 +62,7 @@ __all__ = [
     "dependency_sentence_key",
     "dependency_space_sentence",
     "dependency_wording_view",
+    "statement_reader_refusal_reason",
 ]
 
 DEPENDENCY_WORDING_ROOT: Final = "application.provisioning"
@@ -179,6 +180,19 @@ def column_reader_refusal_reason(verdict: PreconditionVerdict, *, locale: str | 
     if verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID:
         return tr("application.provisioning.refusal.column_names_local_ai_not_ready", locale=locale)
     return tr("application.provisioning.refusal.column_names_local_ai_unavailable", locale=locale)
+
+
+def statement_reader_refusal_reason(verdict: PreconditionVerdict, *, locale: str | None = None) -> str:
+    """Word why a PDF statement that only the local AI reads was not read.
+
+    One reason whether the text or the scanned-page reader could not be asked,
+    because the person meets one statement, not two readers. It says to set the
+    local AI up only when ``verdict`` names that setup; a role this computer
+    cannot run is told so without an action.
+    """
+    if verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID:
+        return tr("application.provisioning.refusal.statement_local_ai_not_ready", locale=locale)
+    return tr("application.provisioning.refusal.statement_local_ai_unavailable", locale=locale)
 
 
 def dependency_copy_details(
