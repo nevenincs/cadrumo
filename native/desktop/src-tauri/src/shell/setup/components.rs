@@ -14,6 +14,14 @@
 //! approved, so a Resume whose plan is one of them applies without a second
 //! dialog.
 //!
+//! A setup of an item another process or window is already setting up follows
+//! that setup: the engine reports it as followed, so the window shows it running
+//! with its steps and bytes, asks for no review, and settles with the result the
+//! other setup reached. Cancelling a followed setup is the person's act in this
+//! window, so it asks the other setup to stop through the engine's cancel
+//! request, and the window keeps following until that setup ends. Closing the
+//! window stops only its following; the setup it followed goes on.
+//!
 //! The engine words nothing; every value here is a code or a locale-neutral
 //! fact, and the window words them. A browser check's process ends with the
 //! window: on Windows it runs inside the window's kill-on-close job, and on
@@ -121,6 +129,8 @@ struct SetupTrack {
     answers: Option<mpsc::Sender<Answer>>,
     /// The person answered; the engine is checking the plan again.
     answered: bool,
+    /// The setup follows one another process or window runs.
+    following: bool,
     items: Vec<ItemTrack>,
     phases: Vec<String>,
     hosts: BTreeSet<String>,
@@ -352,6 +362,7 @@ impl Components {
                 review: None,
                 answers: None,
                 answered: false,
+                following: false,
                 items: Vec::new(),
                 phases: Vec::new(),
                 hosts: BTreeSet::new(),
@@ -456,9 +467,11 @@ impl Components {
     }
 
     /// Stops the setup this window started at its next transfer chunk, or
-    /// declines the plan it waits on.
-    pub fn cancel(&self, operation_id: &str) -> Result<(), Refusal> {
-        self.shared.update(|window| {
+    /// declines the plan it waits on. A setup the window follows is asked to
+    /// stop through the engine's cancel request, which is in place when this
+    /// returns; the window follows it until it ends.
+    pub async fn cancel(&self, operation_id: &str) -> Result<(), Refusal> {
+        let followed = self.shared.update(|window| {
             let Some(track) = window.setup_of(operation_id).filter(|track| track.live()) else {
                 return Err(Refusal::NotPending);
             };
@@ -466,10 +479,33 @@ impl Components {
                 return Err(Refusal::NotCancellable);
             }
             track.cancel_requested = true;
+            if track.following {
+                return Ok(Some(
+                    track.items.iter().map(|item| item.item).collect::<Vec<_>>(),
+                ));
+            }
             track.cancellation.cancel();
             track.decline();
-            Ok(())
+            Ok(None)
+        })?;
+        let Some(items) = followed else {
+            return Ok(());
+        };
+        let engines = self.engines.clone();
+        let asked = tokio::task::spawn_blocking(move || {
+            engines().map(|installation| installation.engine.ask_to_stop(&items))
         })
+        .await;
+        match asked {
+            Ok(Ok(_)) => Ok(()),
+            // Nothing was asked of the followed setup, so the person may ask again.
+            _ => self.shared.update(|window| {
+                if let Some(track) = window.setup_of(operation_id) {
+                    track.cancel_requested = false;
+                }
+                Err(Refusal::Unavailable)
+            }),
+        }
     }
 
     /// Stops everything this window started and waits for its workers.
@@ -600,7 +636,8 @@ fn run_setup(
                 window.rows = Some((CheckMode::Quick, report.rows.clone()));
             }
             if report.outcome == Ended::Busy {
-                // Another setup changes the item; this one never started.
+                // A removal changes the item, or the window stopped following
+                // another setup as it closed; this one set nothing up.
                 if window.setup_of(id).is_some() {
                     window.setup = None;
                 }
@@ -615,7 +652,12 @@ fn run_setup(
 }
 
 fn take_event(track: &mut SetupTrack, event: Event) {
-    if track.answered && track.stage == RunStage::Planning {
+    if let Event::Following { item, .. } = &event {
+        // Another setup holds the item: there is no plan to review here.
+        track.following = true;
+        track.item(*item);
+    }
+    if (track.answered || track.following) && track.stage == RunStage::Planning {
         track.stage = RunStage::Running;
     }
     match event {
@@ -647,7 +689,7 @@ fn take_event(track: &mut SetupTrack, event: Event) {
                 track.item(item).retry = Some((attempt, seconds.max(1)));
             }
         }
-        Event::WaitingForServer { .. } => {}
+        Event::WaitingForServer { .. } | Event::Following { .. } => {}
     }
 }
 

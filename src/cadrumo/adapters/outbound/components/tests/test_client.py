@@ -42,6 +42,8 @@ from ..protocol import (
     ComponentsCommand,
     ComponentsDecline,
     ComponentsEvent,
+    ComponentsNoticeCode,
+    ComponentsNoticeLine,
     ComponentsOutcome,
     ComponentsProgressLine,
     ComponentsReviewLine,
@@ -134,6 +136,50 @@ def test_a_cancellation_sends_the_cancel_line_whenever_it_is_asked(image: Path) 
     assert launcher.launch.written == CANCEL_LINE
     assert early.requested
     assert result.outcome is ComponentsOutcome.OK
+
+
+def test_a_setup_that_follows_another_relays_its_events_and_is_never_reviewed(image: Path) -> None:
+    launcher = ReplayLauncher("setup_followed_completed")
+    events: list[ComponentsEvent] = []
+    reviews: list[ComponentsReviewLine] = []
+
+    def decline(review: ComponentsReviewLine) -> ComponentsDecline:
+        reviews.append(review)
+        return ComponentsDecline()
+
+    result = run_components_role(
+        ComponentsRequest(ComponentsCommand.SETUP, items=(DependencyItemKind.BROWSER,)),
+        on_event=events.append,
+        review=decline,
+        image=image,
+        launcher=launcher,
+    )
+
+    assert reviews == []
+    assert launcher.launch.written == b""
+    recorded = [json.loads(line) for line in transcript_lines("setup_followed_completed")]
+    relayed = [line for line in recorded if line["type"] in {"phase", "progress", "notice"}]
+    assert [event.model_dump(mode="json", exclude_unset=True) for event in events] == relayed
+    first = events[0]
+    assert isinstance(first, ComponentsNoticeLine)
+    assert first.notice_code is ComponentsNoticeCode.FOLLOWING
+    assert result.outcome is ComponentsOutcome.COMPLETED
+
+
+def test_a_cancellation_of_a_following_setup_stops_only_the_following(image: Path) -> None:
+    cancellation = ComponentsCancellation()
+    cancellation.cancel()
+    launcher = ReplayLauncher("setup_follow_stopped")
+
+    result = run_components_role(
+        ComponentsRequest(ComponentsCommand.SETUP, items=(DependencyItemKind.BROWSER,)),
+        cancellation=cancellation,
+        image=image,
+        launcher=launcher,
+    )
+
+    assert launcher.launch.written == CANCEL_LINE
+    assert (result.outcome, result.item_id) == (ComponentsOutcome.BUSY, "browser")
 
 
 def test_a_reviewer_that_fails_leaves_the_role_without_input_and_ended(image: Path) -> None:

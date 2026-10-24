@@ -10,8 +10,12 @@ It reads the role's lines strictly (:mod:`.protocol`) and relays each event to
 the caller. A review is answered by the caller's reviewer with an approval of
 exactly the reviewed digest or a decline; with no reviewer it is declined. A
 cancellation sends the role its cancel line, and leaving the call for any other
-reason closes the role's input, which cancels a running setup. The client
-decides nothing about a component: the result is the role's.
+reason closes the role's input, which cancels a running setup. A setup of an
+item another process is already setting up follows that setup: the caller sees
+a ``following`` notice and the other setup's events, no review, and that
+setup's result. Cancelling or leaving it stops only the following, with the
+result ``busy``; a ``cancel`` command is the act that stops the followed setup.
+The client decides nothing about a component: the result is the role's.
 
 Where this build has no Cadrumo binary, or its role speaks another protocol or
 plan contract version, :func:`not_in_this_build_result` is the answer: every
@@ -143,7 +147,7 @@ class ComponentsCancellation:
             return self._requested
 
     def cancel(self) -> None:
-        """Ask the role to stop at its next transfer chunk."""
+        """Ask the role to stop at its next transfer chunk, or a following setup to stop following."""
         with self._lock:
             self._requested = True
             send = self._send

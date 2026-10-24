@@ -212,7 +212,7 @@ impl SetupHost {
                     .answer(operation_id, plan_digest, *decision)
                     .await
             }
-            Action::Cancel { operation_id } => self.components.cancel(operation_id),
+            Action::Cancel { operation_id } => self.components.cancel(operation_id).await,
         }
     }
 

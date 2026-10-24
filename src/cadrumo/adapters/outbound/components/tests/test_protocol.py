@@ -208,6 +208,72 @@ def test_an_approved_browser_setup_moves_through_its_steps_with_byte_progress() 
     assert browser.recovery is None
 
 
+def _following(lines: list[ComponentsLine]) -> ComponentsNoticeLine:
+    notice = lines[1]
+    assert isinstance(notice, ComponentsNoticeLine)
+    assert notice.notice_code is ComponentsNoticeCode.FOLLOWING
+    return notice
+
+
+def test_a_setup_of_an_item_another_role_sets_up_follows_it_to_the_result_it_reached() -> None:
+    lines = _decoded("setup_followed_completed")
+    result = _result("setup_followed_completed")
+
+    assert _TRANSCRIPTS["setup_followed_completed"]["answers"] == []
+    assert not any(isinstance(line, ComponentsReviewLine) for line in lines)
+    following = _following(lines)
+    assert following.subject_code == "browser"
+    assert following.plan_digest is not None
+    steps = [line.step for line in lines if isinstance(line, ComponentsPhaseLine)]
+    assert steps[0] is DependencySetupStep.DOWNLOAD
+    assert DependencySetupStep.PLAN not in steps
+    assert DependencySetupStep.PREFLIGHT not in steps
+    assert steps[-2:] == [DependencySetupStep.VERIFY, DependencySetupStep.CLEANUP]
+    progress = [line for line in lines if isinstance(line, ComponentsProgressLine)]
+    assert [line.completed for line in progress] == sorted(line.completed for line in progress)
+    assert progress[-1].completed == progress[-1].total
+    assert result.outcome is ComponentsOutcome.COMPLETED
+    assert (result.plan, result.plan_digest) == (None, None)
+    browser = next(row for row in result.status_rows() if row.item_id == "browser")
+    assert browser.state is DependencyState.READY
+
+
+def test_a_follower_that_stops_following_ends_busy_while_the_setup_goes_on() -> None:
+    lines = _decoded("setup_follow_stopped")
+    result = _result("setup_follow_stopped")
+
+    assert _TRANSCRIPTS["setup_follow_stopped"]["answers"] == [CANCEL_LINE.decode().strip()]
+    assert not any(isinstance(line, ComponentsReviewLine) for line in lines)
+    notices = [line.notice_code for line in lines if isinstance(line, ComponentsNoticeLine)]
+    assert notices == [ComponentsNoticeCode.FOLLOWING, ComponentsNoticeCode.CANCEL_REQUESTED]
+    assert (result.outcome, result.item_id, result.failure_category) == (ComponentsOutcome.BUSY, "browser", None)
+    browser = next(row for row in result.status_rows() if row.item_id == "browser")
+    assert browser.state is DependencyState.PROVISIONING
+
+
+def test_a_following_notice_carries_the_followed_plan_digest_and_no_other_notice_does() -> None:
+    raw = _raw("setup_followed_completed")
+    following = json.loads(raw[1])
+    retrying = {"type": "notice", "notice_code": "retrying", "subject_code": "browser", "attempt": 2, "delay_ms": 900}
+
+    decode_components_line(_line(retrying))
+    _refused(_line({key: value for key, value in following.items() if key != "plan_digest"}))
+    _refused(_line({key: value for key, value in following.items() if key != "subject_code"}))
+    _refused(_line({**retrying, "plan_digest": following["plan_digest"]}))
+    _refused(_line({"type": "notice", "notice_code": "cancel_requested", "plan_digest": following["plan_digest"]}))
+
+
+def test_a_cancelled_setup_names_only_the_cancelled_category() -> None:
+    result = json.loads(_raw("setup_follow_stopped")[-1])
+    cancelled = {**result, "outcome": "cancelled", "failure_category": "cancelled"}
+
+    decoded = decode_components_line(_line(cancelled))
+    assert isinstance(decoded, ComponentsResultLine)
+    assert decoded.failure_category is DependencyFailureCategory.CANCELLED
+    _refused(_line({**cancelled, "failure_category": "offline"}))
+    _refused(_line({**result, "failure_category": "cancelled"}))
+
+
 def test_cancel_and_removal_name_the_items_they_touched() -> None:
     cancel = _result("cancel_nothing_running")
     removal = _result("remove_absent_browser")

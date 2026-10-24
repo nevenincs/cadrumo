@@ -17,6 +17,13 @@
 //! locale-neutral fact (item ids, step and category codes, byte counts, versions,
 //! digests); no line carries words, so each surface words the codes from its catalogue.
 //!
+//! A setup of an item another process is already setting up follows that setup: it sends
+//! a `following` notice with the item and the digest of the plan that setup was approved
+//! under, then that setup's phases, progress and notices as it publishes them, and its
+//! result for the item. It sends no review and downloads nothing. A `cancel` line, or the
+//! end of input, stops only the following, which then ends `busy`; to stop the setup it
+//! follows, the client runs the `cancel` command, the person's act wherever it is asked.
+//!
 //! A setup without `--approve` sends a `review` with the plan and its digest and waits
 //! for one input line: `{"type":"approve","plan_digest":"<digest>"}` approves exactly
 //! that plan, and `{"type":"decline"}` declines it. `{"type":"cancel"}` stops a running
@@ -201,6 +208,12 @@ pub fn event_value(event: Event) -> Value {
             "type": "notice",
             "notice_code": "waiting_for_server",
             "subject_code": item,
+        }),
+        Event::Following { item, plan_digest } => json!({
+            "type": "notice",
+            "notice_code": "following",
+            "subject_code": item,
+            "plan_digest": plan_digest,
         }),
     }
 }

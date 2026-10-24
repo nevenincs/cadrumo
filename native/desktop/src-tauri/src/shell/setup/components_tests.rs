@@ -461,8 +461,11 @@ async fn a_cancel_stops_a_running_setup_at_its_next_chunk() {
     let progress = &run.items[0];
     assert_eq!(progress.step, Some(wire::Step::Download));
     assert!(progress.completed.unwrap() <= progress.total.unwrap());
-    components.cancel(&operation).unwrap();
-    assert_eq!(components.cancel(&operation), Err(Refusal::NotCancellable));
+    components.cancel(&operation).await.unwrap();
+    assert_eq!(
+        components.cancel(&operation).await,
+        Err(Refusal::NotCancellable)
+    );
     let asked = components.view().setup.unwrap();
     assert!(asked.cancel_requested && !asked.cancellable);
     gate.release();
@@ -473,7 +476,115 @@ async fn a_cancel_stops_a_running_setup_at_its_next_chunk() {
         run.items[0].result.as_ref().unwrap().failure,
         Some(wire::Failure::Cancelled)
     );
-    assert_eq!(components.cancel(&operation), Err(Refusal::NotPending));
+    assert_eq!(
+        components.cancel(&operation).await,
+        Err(Refusal::NotPending)
+    );
+}
+
+/// Whether the window shows bytes moving for an item of its setup.
+fn moving(view: &View) -> bool {
+    view.setup
+        .as_ref()
+        .is_some_and(|run| run.items.iter().any(|item| item.completed.is_some()))
+}
+
+/// A window whose approved setup holds at the gate halfway through its first archive.
+async fn running(fixture: &Fixture) -> Components {
+    let owner = Components::new(fixture.engines());
+    let (operation, plan) = reviewing(&owner).await;
+    owner
+        .answer(&operation, &plan.plan_digest, wire::Decision::Apply)
+        .await
+        .unwrap();
+    until(&owner, moving).await;
+    owner
+}
+
+/// A second window of the same installation, following the setup the first runs.
+async fn following(fixture: &Fixture) -> (Components, wire::Run) {
+    let follower = Components::new(fixture.engines());
+    follower.start(None, false).await.unwrap();
+    let run = until(&follower, moving).await.setup.unwrap();
+    (follower, run)
+}
+
+#[tokio::test]
+async fn a_second_window_follows_the_running_setup_to_its_result_without_a_review() {
+    let gate = Arc::new(Released::default());
+    let fixture = Fixture::new(Serving::Gated(gate.clone()));
+    let owner = running(&fixture).await;
+
+    // A window that closes while it follows leaves the setup running.
+    let (leaving, _) = following(&fixture).await;
+    leaving.close().await;
+    assert!(leaving.view().setup.is_none());
+    assert_eq!(stage(&owner.view()), Some(RunStage::Running));
+
+    let (follower, run) = following(&fixture).await;
+    assert_eq!(run.stage, RunStage::Running);
+    assert!(run.review.is_none() && run.cancellable);
+    let browser = &run.items[0];
+    assert_eq!(
+        (browser.item.as_str(), browser.step),
+        ("browser", Some(wire::Step::Download))
+    );
+    assert!(browser.completed.unwrap() <= browser.total.unwrap());
+    gate.release();
+    let owned = until(&owner, |view| stage(view) == Some(RunStage::Settled))
+        .await
+        .setup
+        .unwrap();
+    let followed = until(&follower, |view| stage(view) == Some(RunStage::Settled)).await;
+    let run = followed.setup.unwrap();
+    // The bytes matched their pin but were no archive, so the owner's install failed.
+    assert_eq!(owned.outcome, Some(Outcome::Failed));
+    assert_eq!((run.outcome, run.failure), (owned.outcome, owned.failure));
+    assert_eq!(
+        run.items[0].result.as_ref().unwrap().failure,
+        owned.failure,
+        "the item the run stopped at carries its failure"
+    );
+    assert_eq!(fixture.downloads(), 1, "only the owner downloaded");
+    assert_eq!(followed.rows[0].state, wire::State::Failed);
+}
+
+#[tokio::test]
+async fn a_following_window_cancels_the_setup_it_follows_as_the_persons_act() {
+    let gate = Arc::new(Released::default());
+    let fixture = Fixture::new(Serving::Gated(gate.clone()));
+    let owner = running(&fixture).await;
+    let (follower, run) = following(&fixture).await;
+    follower.cancel(&run.operation_id).await.unwrap();
+    assert_eq!(
+        follower.cancel(&run.operation_id).await,
+        Err(Refusal::NotCancellable)
+    );
+    let asked = follower.view().setup.unwrap();
+    assert!(asked.cancel_requested && !asked.cancellable);
+    assert_eq!(
+        asked.stage,
+        RunStage::Running,
+        "it follows until the setup ends"
+    );
+    gate.release();
+    let owned = until(&owner, |view| stage(view) == Some(RunStage::Settled))
+        .await
+        .setup
+        .unwrap();
+    assert_eq!(owned.outcome, Some(Outcome::Cancelled));
+    let followed = until(&follower, |view| stage(view) == Some(RunStage::Settled))
+        .await
+        .setup
+        .unwrap();
+    assert_eq!(
+        (followed.outcome, followed.failure),
+        (Some(Outcome::Cancelled), None)
+    );
+    assert_eq!(
+        followed.items[0].result.as_ref().unwrap().failure,
+        Some(wire::Failure::Cancelled)
+    );
 }
 
 #[tokio::test]
@@ -481,7 +592,7 @@ async fn a_cancel_declines_the_plan_a_setup_waits_on() {
     let fixture = Fixture::new(Serving::Whole);
     let components = Components::new(fixture.engines());
     let (operation, _) = reviewing(&components).await;
-    components.cancel(&operation).unwrap();
+    components.cancel(&operation).await.unwrap();
     let settled = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
     assert_eq!(settled.setup.unwrap().outcome, Some(Outcome::Cancelled));
     assert_eq!(fixture.downloads(), 0);

@@ -17,7 +17,10 @@ use std::{
     fs::{self, File},
     io::{Read, Write},
     path::{Path, PathBuf},
-    sync::atomic::{AtomicBool, Ordering},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, AtomicU64, Ordering},
+    },
 };
 
 /// Supplied by trusted release metadata. A digest checks integrity, not publisher identity.
@@ -69,14 +72,72 @@ impl Artifact {
     }
 }
 
+/// Called once when its cancellation is set.
+pub type CancelWake = Arc<dyn Fn() + Send + Sync>;
+
+/// A stop asked of running work. Work that checks between steps reads the flag; work that
+/// waits for a signal instead registers a wake ([`Cancellation::on_cancel`]), so the stop
+/// ends its wait at once.
 #[derive(Default)]
-pub struct Cancellation(AtomicBool);
+pub struct Cancellation {
+    cancelled: AtomicBool,
+    wakes: Mutex<Vec<(u64, CancelWake)>>,
+    next_wake: AtomicU64,
+}
+
+/// Keeps a wake registered with its [`Cancellation`] until dropped.
+pub struct CancelHook<'c> {
+    cancellation: &'c Cancellation,
+    id: u64,
+}
+
+impl Drop for CancelHook<'_> {
+    fn drop(&mut self) {
+        self.cancellation
+            .wakes
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .retain(|(id, _)| *id != self.id);
+    }
+}
+
 impl Cancellation {
     pub fn cancel(&self) {
-        self.0.store(true, Ordering::Release);
+        self.cancelled.store(true, Ordering::Release);
+        let wakes: Vec<CancelWake> = self
+            .wakes
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .iter()
+            .map(|(_, wake)| wake.clone())
+            .collect();
+        for wake in wakes {
+            wake();
+        }
+    }
+
+    /// Calls `wake` when this is cancelled, at once if it already is, for as long as the
+    /// returned hook lives.
+    pub fn on_cancel(&self, wake: CancelWake) -> CancelHook<'_> {
+        let id = self.next_wake.fetch_add(1, Ordering::Relaxed);
+        self.wakes
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .push((id, wake.clone()));
+        if self.cancelled.load(Ordering::Acquire) {
+            wake();
+        }
+        CancelHook {
+            cancellation: self,
+            id,
+        }
+    }
+
+    pub fn is_cancelled(&self) -> bool {
+        self.cancelled.load(Ordering::Acquire)
     }
     pub(crate) fn check(&self) -> Result<(), Error> {
-        if self.0.load(Ordering::Acquire) {
+        if self.is_cancelled() {
             Err(Error::Cancelled)
         } else {
             Ok(())

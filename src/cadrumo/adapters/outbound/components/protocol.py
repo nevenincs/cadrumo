@@ -13,6 +13,13 @@ items as not in this build instead of approving a plan it cannot read.
 The client answers on the role's standard input with
 :class:`ComponentsApprove` or :class:`ComponentsDecline` to a review, and
 :data:`CANCEL_LINE` to stop a running setup or check.
+
+A setup of an item another process is already setting up follows it: a
+``following`` notice names the item and the digest of the plan that setup was
+approved under, the other setup's phases, progress and notices follow, and the
+result is the one it reached for the item. A follower is sent no review. Its
+:data:`CANCEL_LINE` stops only the following, which ends ``busy``; the
+``cancel`` command asks the followed setup itself to stop.
 """
 
 from __future__ import annotations
@@ -89,7 +96,7 @@ MAX_LINE_BYTES: Final = 1024 * 1024
 """The longest output line accepted, newline included; the role's largest line, a plan, is a few kilobytes."""
 
 CANCEL_LINE: Final = b'{"type":"cancel"}\n'
-"""The input line that stops a running setup or check at its next transfer chunk."""
+"""The input line that stops a running setup or check at its next transfer chunk, or a follower's following."""
 
 type _Sha256Hex = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 type _Version = Annotated[str, StringConstraints(min_length=1, max_length=128)]
@@ -152,6 +159,7 @@ class ComponentsNoticeCode(StrEnum):
 
     RETRYING = "retrying"
     WAITING_FOR_SERVER = "waiting_for_server"
+    FOLLOWING = "following"
     CANCEL_REQUESTED = "cancel_requested"
     INPUT_REFUSED = "input_refused"
 
@@ -325,7 +333,11 @@ class ComponentsProgressLine(BaseModel):
 
 
 class ComponentsNoticeLine(BaseModel):
-    """A notice: a retry before its wait, a wait for the local AI server, a cancel acknowledged, a refused input."""
+    """A notice: a retry, a wait for the local AI server, a followed setup, an acknowledged cancel, a refused input.
+
+    A ``following`` notice names the item another process is setting up and the
+    digest of the plan that setup was approved under.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -334,6 +346,7 @@ class ComponentsNoticeLine(BaseModel):
     subject_code: DependencyItemId | None = None
     attempt: Annotated[int, Field(ge=1)] | None = None
     delay_ms: NonNegativeInt | None = None
+    plan_digest: _Sha256Hex | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -341,9 +354,16 @@ class ComponentsNoticeLine(BaseModel):
         retrying = self.notice_code is ComponentsNoticeCode.RETRYING
         if retrying != (self.attempt is not None and self.delay_ms is not None):
             raise ValueError("a retry notice carries its attempt and wait, and only it does")
-        about_item = self.notice_code in {ComponentsNoticeCode.RETRYING, ComponentsNoticeCode.WAITING_FOR_SERVER}
+        following = self.notice_code is ComponentsNoticeCode.FOLLOWING
+        if following != (self.plan_digest is not None):
+            raise ValueError("a following notice carries the followed plan's digest, and only it does")
+        about_item = self.notice_code in {
+            ComponentsNoticeCode.RETRYING,
+            ComponentsNoticeCode.WAITING_FOR_SERVER,
+            ComponentsNoticeCode.FOLLOWING,
+        }
         if about_item != (self.subject_code is not None):
-            raise ValueError("a retry or server wait names its item, and only they do")
+            raise ValueError("a retry, a server wait or a followed setup names its item, and only they do")
         return self
 
 
@@ -361,7 +381,10 @@ class ComponentsResultLine(BaseModel):
     """The last line: how the command ended, every item's row and, where they apply, its plan and failure.
 
     A refusal before the engine could start, and an unreadable command line,
-    carry no rows and no mode.
+    carry no rows and no mode. A cancelled setup names the item it stopped at
+    and the ``cancelled`` category. A setup that followed another reports that
+    setup's result for the items it followed, with no plan of its own, and
+    ``busy`` when it stopped following first.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -390,8 +413,14 @@ class ComponentsResultLine(BaseModel):
         if self.failure_category is not None and self.outcome not in {
             ComponentsOutcome.REFUSED,
             ComponentsOutcome.FAILED,
+            ComponentsOutcome.CANCELLED,
         }:
-            raise ValueError("only a refusal or a failure names a failure category")
+            raise ValueError("only a refusal, a failure or a cancellation names a failure category")
+        if self.outcome is ComponentsOutcome.CANCELLED and self.failure_category not in {
+            None,
+            DependencyFailureCategory.CANCELLED,
+        }:
+            raise ValueError("a cancellation names only the cancelled category")
         return self
 
     def status_rows(self) -> tuple[DependencyStatusRow, ...]:

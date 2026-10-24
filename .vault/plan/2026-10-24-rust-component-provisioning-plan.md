@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:9857e3212adc183c798b9397d5e6874f6190510fa53700bd9a2f0178bc675855'
+body_hash: 'sha256:23c575dc5122fe0e7979c3ec0a8fadafc4881c0dd829da41d4dba67f0d2456b5'
 ---
 
 # `rust-component-provisioning` plan
@@ -76,7 +76,7 @@ The single binary gains the components role; the desktop calls the engine in pro
 - [x] `P04.S17` - Have the runtime manager supervise the engine's local AI server on one fixed Cadrumo loopback address declared in the canonical environment definition: start it while the local AI is set up, restart it after a crash, stop it on exit, at session end and before the engine replaces or removes the program, contain it, and record the address in the local AI component record; `native/manager/src/supervision/, native/application/src/provisioning/local_ai/, native/application-environment.toml, src/cadrumo/core/config_runtime_fields.py (default derived from the declaration) and tests`.
 - [x] `P04.S19` - Let the components role adopt browser builds already installed without downloading, then point the Python launch guard at the Rust component record, with test support writing the engine's fixture record into each test storage root; `native/application/src/provisioning/browser.rs, src/cadrumo/application/provisioning_browser.py (locate only), src/cadrumo/adapters/outbound/aeat/browser/session.py, the real-browser test support and conftest, and tests`.
 - [x] `P04.S21` - Contain the manager's local AI server on Linux and macOS as the Windows job does, so a crashed or killed manager leaves no server behind; `native/manager/src/supervision/local_ai.rs, native/platform process scope and tests`.
-- [ ] `P04.S23` - Let a second setup of an item that is already being set up follow the running one instead of refusing busy, on the role, the desktop host and the Python client, and cover the busy path in tests; `native/application/src/provisioning/engine.rs, protocol.rs, native/desktop/src-tauri/src/shell/setup/components.rs, src/cadrumo/adapters/outbound/components/ and tests`.
+- [x] `P04.S23` - Let a second setup of an item that is already being set up follow the running one instead of refusing busy, on the role, the desktop host and the Python client, and cover the busy path in tests; `native/application/src/provisioning/engine.rs, protocol.rs, native/desktop/src-tauri/src/shell/setup/components.rs, src/cadrumo/adapters/outbound/components/ and tests`.
 - [x] `P04.S24` - Word the licence notice of a pinned role model for what it is and show the licence's display name from the pins instead of its SPDX id; `src/cadrumo/_data/dependencies/local_ai_models.toml, dev/env/local_ai_model_pins.py, native/application/src/provisioning/pins.rs and plan.rs, the desktop.setup licence keys, and tests`.
 - [ ] `P04.S25` - Point config provision remove at the components role and retire config provision start, whose server the manager now owns; pass the CADRUMO_PROXY settings to the role from every packaged profile that starts it; find and fix the cause of the intermittent refusing-proxy real-role test; and bring the workstation setup guide in line with the Rust setup; `src/cadrumo/entrypoints/cli/config/provision_cli.py, _provision_command_specs.py, the CLI command policy declarations, native/application-environment.toml, src/cadrumo/adapters/outbound/components/ tests, docs/workstation-setup.md and its translations, and tests`.
 

@@ -51,6 +51,26 @@
     ],
     "exit": 1
   },
+  "setup_follow_stopped": {
+    "answers": [
+      "{\"type\":\"cancel\"}"
+    ],
+    "arguments": [
+      "setup",
+      "--item",
+      "browser"
+    ],
+    "exit": 1
+  },
+  "setup_followed_completed": {
+    "answers": [],
+    "arguments": [
+      "setup",
+      "--item",
+      "browser"
+    ],
+    "exit": 0
+  },
   "setup_input_refused": {
     "answers": [
       "not json\n{\"type\": \"decline\"}"

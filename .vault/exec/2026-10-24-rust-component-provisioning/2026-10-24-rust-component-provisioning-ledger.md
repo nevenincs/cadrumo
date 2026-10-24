@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:d8d8c6d6faae75d0c59238567b142825b8ea995dfa3826f43728bfa52ba0a4e6'
+body_hash: 'sha256:381de1d5d6585b2fe30136920c11e29b8a32f1c18203d569d7ab62ee5475a8b1'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -559,6 +559,36 @@ related:
 - `S12` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
 - `S12` `verify:` `just check-operation-contract-manifest` -> `pass`
 - `S12` `by:` `implementation-engineer-high`
+- `S23` `M` `native/application/src/component.rs`
+- `S23` `M` `native/application/src/provisioning/activity.rs`
+- `S23` `M` `native/application/src/provisioning/engine.rs`
+- `S23` `A` `native/application/src/provisioning/follow.rs`
+- `S23` `M` `native/application/src/provisioning/mod.rs`
+- `S23` `M` `native/application/src/provisioning/protocol.rs`
+- `S23` `M` `native/application/src/provisioning/protocol/tests.rs`
+- `S23` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S23` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S23` `M` `native/desktop/src-tauri/src/shell/setup/mod.rs`
+- `S23` `M` `native/CONTRACT.md`
+- `S23` `M` `src/cadrumo/adapters/outbound/components/protocol.py`
+- `S23` `M` `src/cadrumo/adapters/outbound/components/client.py`
+- `S23` `M` `src/cadrumo/adapters/outbound/components/tests/test_protocol.py`
+- `S23` `M` `src/cadrumo/adapters/outbound/components/tests/test_client.py`
+- `S23` `A` `src/cadrumo/tests/fixtures/components_role/setup_follow_stopped.jsonl`
+- `S23` `A` `src/cadrumo/tests/fixtures/components_role/setup_followed_completed.jsonl`
+- `S23` `M` `src/cadrumo/tests/fixtures/components_role/transcripts.json`
+- `S23` `verify:` `cargo test --offline --lib provisioning:: on native/application, no features (124 before the Step, all pass after; activity 10 and protocol 8 incl. 2 new activity and 2 new two-role follow tests)` -> `pass`
+- `S23` `verify:` `cargo test --offline --lib --features platform provisioning:: (129), and protocol plus activity three more times (18 each; one run failed the pre-existing 2 s quick-check bound in the local AI test while a 4-worker pytest ran beside it, the other two passed)` -> `pass`
+- `S23` `verify:` `cargo clippy --offline --all-targets -D warnings on native/application, without features and with platform,test-support` -> `pass`
+- `S23` `verify:` `desktop cargo test --offline --bin cadrumo shell::setup on an export of HEAD f5d1f2c62d plus this Step with read-only generated inputs (33, incl. 2 new busy-path tests), twice` -> `pass`
+- `S23` `verify:` `desktop cargo clippy --offline --all-targets -D warnings on the same export` -> `pass`
+- `S23` `verify:` `rustfmt --edition 2024 through stdin, byte-compared on the ten touched Rust files` -> `pass`
+- `S23` `verify:` `follow transcripts recorded from two real role processes (cargo-built role harness of the export, staged package, throwaway root, pinned Chromium through a local CONNECT proxy holding the tunnel)` -> `pass`
+- `S23` `verify:` `pytest -m '' test_protocol.py test_client.py (74)` -> `pass`
+- `S23` `verify:` `pytest -m '' -n 4 test_check_setup_rows.py test_provision_components_role.py test_setup_screen.py (27 passed; 4 setup-screen tests of the uncommitted TUI work timed out at their 180 s settle under load; one rerun alone passes)` -> `pass`
+- `S23` `verify:` `ruff check, ruff format --check, ty check on the four touched Python files` -> `pass`
+- `S23` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S23` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -619,3 +649,8 @@ related:
 - `S12` S12 config provision remove, start, load and report still submit local-reader operations; remove was not re-pointed at the role because no profile-free policy admits a local-state effect without a network capability
 - `S12` S12 config repair connectivity fails `test_repair_verb_runs_clean_without_session_on_fresh_root` on a fresh root with the browser setup refusal; the refusal predates this Step (browser guard reads the engine record)
 - `S12` S12 docs/workstation-setup.md still describes winget, Homebrew, --confirm and pull --model from before the Python withdrawal; left for the documentation owner
+- `S23` S23 a setup that finds any item it covers (--item, or every item by default) being set up elsewhere follows it: following notice with the approved plan digest, the owner's phases, progress and notices from its activity record, then the owner's result for those items; no review, no download; a removal is not followed and answers busy
+- `S23` S23 a run now takes every planned item's writer lock before the first starts, so a queued item reads provisioning from the run's start and a follower follows the whole run; items the run never reaches are released untouched with an end record naming where it stopped
+- `S23` S23 cancel semantics: a follower's cancel line or input end stops only the following (result busy); the cancel command stops the followed setup; a desktop window that follows asks the followed setup to stop through the engine's cancel request `(Engine::ask_to_stop)` and keeps following, and closing the window stops only its following
+- `S23` S23 wake sources: the platform folder change notification on Windows, the kernel granting a shared lock on a thread when the writer ends or dies, and the follower's cancellation through a new Cancellation wake hook; on Linux and macOS, and without the platform feature, the wait is bounded at 100 ms because the platform layer has no notification source there yet
+- `S23` S23 the Python decoder now accepts the cancelled category on a cancelled result, which the role already sent and the decoder refused; the Linux and macOS follow paths were not compiled here

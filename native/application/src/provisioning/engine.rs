@@ -21,6 +21,17 @@
 //! a cancel request another process leaves beside the item's lock: the request is looked
 //! for at every chunk, so no timer runs.
 //!
+//! A setup of an item another engine is already setting up follows that setup instead of
+//! starting its own: it plans nothing, asks for no review and downloads nothing. It
+//! reports a `Following` event with the digest of the plan the other setup was approved
+//! under, then the other setup's steps, byte progress, retries and server wait as that
+//! setup publishes them in the item's activity record, and ends with the result that setup
+//! reached for the item, read from the end it leaves beside the record. When the follower
+//! is cancelled it stops following and ends `Busy`; the setup it followed goes on. A run
+//! takes the writer locks of all its items before the first one starts, so a follower sees
+//! the whole run as running, follows each of its items in turn, and learns where the run
+//! stopped from the items it never reached.
+//!
 //! The engine never runs the local AI server: the runtime manager runs the one server of
 //! the installation on its fixed address while the program is set up. A local AI setup
 //! installs the program, which waits for the manager to stop any server it runs from the
@@ -30,10 +41,13 @@
 //! fail as `program_not_running`.
 
 use super::{
-    activity::{ActivityStore, ItemWriter},
+    activity::{
+        ActivityStore, Bytes, EndedOutcome, ItemWriter, Published, Retry, RunMark, RunStop, Watched,
+    },
     browser::{self, BrowserLayout, DriverManifest, LaunchContext},
     connection::Network,
     failure::FailureCategory,
+    follow::{self, Changes},
     items::{Destination, ItemId, Locations, MODEL_ROLES, PROGRAM_PART},
     local_ai::{
         self, LocalAiError,
@@ -63,6 +77,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     ffi::OsString,
     fs,
+    hash::{BuildHasher, Hasher},
     net::SocketAddr,
     path::{Path, PathBuf},
     time::{Duration, Instant, SystemTime},
@@ -80,8 +95,14 @@ const SERVER_LOOK_FIRST: Duration = Duration::from_millis(250);
 const SERVER_LOOK_LONGEST: Duration = Duration::from_secs(2);
 
 /// What the engine reports while it works.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Event {
+    /// The setup follows another engine's setup of `item`, approved under `plan_digest`,
+    /// instead of setting the item up itself; reported once per item, before its steps.
+    Following {
+        item: ItemId,
+        plan_digest: Sha256Digest,
+    },
     /// `item` reached `step`; its phase code is [`SetupStep::phase_code`].
     Phase { item: ItemId, step: SetupStep },
     /// Bytes held so far out of the item's whole known download.
@@ -115,7 +136,8 @@ pub enum Outcome {
     NeedsApproval,
     /// The plan is not the one approved; it is reported for a new approval.
     PlanChanged,
-    /// Another setup is changing the item.
+    /// Another setup or removal is changing the item, and this command did not follow it
+    /// to its end.
     Busy,
     /// The setup was refused before anything changed, for `failure`.
     Refused,
@@ -267,6 +289,26 @@ enum Stop {
     Failed(FailureCategory),
 }
 
+/// How following another engine's setup of one item ended.
+enum Followed {
+    /// The item was set up.
+    Completed,
+    /// The followed run did not set the item up: it stopped at `item` for `outcome`.
+    Stopped(RunStop),
+    /// The follower's own cancellation stopped it following; the followed setup goes on.
+    Abandoned,
+    /// What changes the item publishes no setup to follow, as a removal.
+    Unfollowable,
+}
+
+/// One planned item of a run: its writer lock is this run's, another engine's setup holds
+/// it, or taking it failed.
+enum Slot<'a> {
+    Own(ItemWriter<'a>),
+    Follow,
+    Failed(FailureCategory),
+}
+
 impl From<Error> for Stop {
     fn from(error: Error) -> Self {
         match error {
@@ -314,6 +356,7 @@ impl<'e> Sink<'e> {
 /// throttled, and retry notices; and looks for a cancel request at every chunk.
 struct Reporter<'s, 'e> {
     sink: &'s Sink<'e>,
+    writer: &'s ItemWriter<'s>,
     item: ItemId,
     cancel_request: PathBuf,
     cancellation: &'s Cancellation,
@@ -335,6 +378,9 @@ impl Reporter<'_, '_> {
                 let total = self.total.unwrap_or(total).max(completed);
                 if self.due(completed, total) {
                     self.last = Some((Instant::now(), completed));
+                    // Published for followers on a best effort: a record that cannot be
+                    // replaced leaves them the previous figure, and the setup goes on.
+                    let _ = self.writer.progress(completed, total);
                     self.sink.emit(Event::Progress {
                         item: self.item,
                         completed,
@@ -342,11 +388,15 @@ impl Reporter<'_, '_> {
                     });
                 }
             }
-            TransferEvent::Retrying { attempt, delay } => self.sink.emit(Event::Retrying {
-                item: self.item,
-                attempt,
-                delay,
-            }),
+            TransferEvent::Retrying { attempt, delay } => {
+                // Best effort, as the progress figure.
+                let _ = self.writer.retrying(attempt, delay);
+                self.sink.emit(Event::Retrying {
+                    item: self.item,
+                    attempt,
+                    delay,
+                });
+            }
         }
     }
 
@@ -374,6 +424,79 @@ fn failure_of(observation: Observation) -> FailureCategory {
         Observation::Blocked(BlockedReason::NotInThisBuild) => FailureCategory::NotInThisBuild,
         Observation::Absent => FailureCategory::DamagedDownload,
         _ => FailureCategory::Unexpected,
+    }
+}
+
+/// An id no other run of this installation has: two independently keyed hashes of this
+/// moment and process.
+fn run_id() -> String {
+    let state = std::collections::hash_map::RandomState::new();
+    let moment = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map_or(0, |since| since.as_nanos());
+    (0u8..2)
+        .map(|part| {
+            let mut hasher = state.build_hasher();
+            hasher.write_u8(part);
+            hasher.write_u128(moment);
+            hasher.write_u32(std::process::id());
+            format!("{:016x}", hasher.finish())
+        })
+        .collect()
+}
+
+fn ended_outcome(outcome: EndedOutcome) -> Outcome {
+    match outcome {
+        EndedOutcome::Completed => Outcome::Completed,
+        EndedOutcome::Failed => Outcome::Failed,
+        EndedOutcome::Cancelled => Outcome::Cancelled,
+        EndedOutcome::Busy => Outcome::Busy,
+    }
+}
+
+/// What a follower has already relayed of one item's published record.
+#[derive(Default)]
+struct Relayed {
+    steps: usize,
+    progress: Option<Bytes>,
+    retry: Option<Retry>,
+    waiting_for_server: bool,
+}
+
+impl Relayed {
+    /// Reports what `published` holds that was not reported yet: each step reached since,
+    /// then a changed byte figure, a new retry and the start of a server wait.
+    fn relay(&mut self, item: ItemId, published: &Published, sink: &Sink<'_>) {
+        for step in published.steps.iter().skip(self.steps) {
+            sink.emit(Event::Phase { item, step: *step });
+        }
+        self.steps = self.steps.max(published.steps.len());
+        if published.progress != self.progress {
+            self.progress = published.progress;
+            if let Some(Bytes { completed, total }) = published.progress
+                && total > 0
+            {
+                sink.emit(Event::Progress {
+                    item,
+                    completed: completed.min(total),
+                    total,
+                });
+            }
+        }
+        if published.retry != self.retry {
+            self.retry = published.retry;
+            if let Some(Retry { attempt, delay_ms }) = published.retry {
+                sink.emit(Event::Retrying {
+                    item,
+                    attempt,
+                    delay: Duration::from_millis(delay_ms),
+                });
+            }
+        }
+        if published.waiting_for_server && !self.waiting_for_server {
+            sink.emit(Event::WaitingForServer { item });
+        }
+        self.waiting_for_server = published.waiting_for_server;
     }
 }
 
@@ -457,6 +580,9 @@ impl Engine {
         let (rows, plan) = match self.planned(items) {
             Ok((rows, Some(plan))) => (rows, plan),
             Ok((rows, None)) => return Report::new(Outcome::NothingToDo, rows),
+            Err(report) if report.outcome == Outcome::Busy => {
+                return self.follow_only(&report.items, &sink, cancellation);
+            }
             Err(report) => return report,
         };
         for entry in &plan.entries {
@@ -489,6 +615,9 @@ impl Engine {
                         return Report::new(Outcome::PlanChanged, rows).with_plan(again);
                     }
                     Ok((rows, None)) => return Report::new(Outcome::NothingToDo, rows),
+                    Err(report) if report.outcome == Outcome::Busy => {
+                        return self.follow_only(&report.items, &sink, cancellation);
+                    }
                     Err(report) => return report,
                 },
             },
@@ -500,25 +629,7 @@ impl Engine {
                 .with_plan(plan)
                 .disk_full();
         }
-        let mut stopped = None;
-        for entry in &plan.entries {
-            let item = entry.item;
-            let done = match item {
-                ItemId::Browser => self.set_up_browser(entry, &sink, cancellation),
-                ItemId::LocalAi => self.set_up_local_ai(entry, &sink, cancellation),
-            };
-            let report =
-                |outcome, failure| Report::new(outcome, Vec::new()).for_item(item, failure);
-            stopped = match done {
-                Ok(()) => continue,
-                Err(Stop::Busy) => Some(report(Outcome::Busy, None)),
-                Err(Stop::Failed(FailureCategory::Cancelled)) => {
-                    Some(report(Outcome::Cancelled, Some(FailureCategory::Cancelled)))
-                }
-                Err(Stop::Failed(category)) => Some(report(Outcome::Failed, Some(category))),
-            };
-            break;
-        }
+        let stopped = self.run_plan(&plan, &sink, cancellation);
         let rows = self.quick_rows(&ItemId::ALL);
         let report = stopped.unwrap_or_else(|| Report::new(Outcome::Completed, Vec::new()));
         Report { rows, ..report }.with_plan(plan)
@@ -527,17 +638,12 @@ impl Engine {
     /// Asks every setup running in another process of this installation to stop at its
     /// next transfer chunk.
     pub fn request_cancel(&mut self) -> Report {
-        let mut asked = Vec::new();
-        for item in ItemId::ALL {
-            if !matches!(self.activity.activity(item), Ok(Activity::Running(_))) {
-                continue;
-            }
-            let written = filesystem::refuse_links(&self.config.locations.activity)
-                .and_then(|()| Ok(fs::write(self.cancel_request(item), b"")?));
-            if written.is_ok() {
-                asked.push(item);
-            }
-        }
+        self.request_cancel_of(&ItemId::ALL)
+    }
+
+    /// [`Self::request_cancel`] for the setups of `items` alone.
+    pub fn request_cancel_of(&mut self, items: &[ItemId]) -> Report {
+        let asked = self.ask_to_stop(items);
         let outcome = if asked.is_empty() {
             Outcome::NothingRunning
         } else {
@@ -575,6 +681,23 @@ impl Engine {
             items: removed,
             ..Report::new(Outcome::Removed, self.quick_rows(&ItemId::ALL))
         }
+    }
+
+    /// Leaves a cancel request beside each of `items` a setup is running, reading nothing
+    /// else, and returns the items asked. The setup stops at its next transfer chunk.
+    pub fn ask_to_stop(&self, items: &[ItemId]) -> Vec<ItemId> {
+        let mut asked = Vec::new();
+        for item in ItemId::ALL.into_iter().filter(|item| items.contains(item)) {
+            if !matches!(self.activity.activity(item), Ok(Activity::Running(_))) {
+                continue;
+            }
+            let written = filesystem::refuse_links(&self.config.locations.activity)
+                .and_then(|()| Ok(fs::write(self.cancel_request(item), b"")?));
+            if written.is_ok() {
+                asked.push(item);
+            }
+        }
+        asked
     }
 
     fn cancel_request(&self, item: ItemId) -> PathBuf {
@@ -821,9 +944,10 @@ impl Engine {
     }
 
     /// Every item's quick row, and the plan for the requested items, or by default for
-    /// every item whose row offers an action. A requested item this computer or build
-    /// cannot hold refuses; one being set up elsewhere is busy; one already set up is left
-    /// out.
+    /// every item whose row offers an action. When any requested item, or by default any
+    /// item, is being set up or removed elsewhere, the answer is busy with those items, for a
+    /// setup to follow. A requested item this computer or build cannot hold refuses; one
+    /// already set up is left out.
     fn planned(
         &mut self,
         items: Option<&[ItemId]>,
@@ -836,6 +960,18 @@ impl Engine {
             .iter()
             .map(|(item, survey)| self.row(*item, survey))
             .collect();
+        let running: Vec<ItemId> = rows
+            .iter()
+            .filter(|row| items.is_none_or(|requested| requested.contains(&row.item)))
+            .filter(|row| matches!(row.state, ItemState::Provisioning | ItemState::Verifying))
+            .map(|row| row.item)
+            .collect();
+        if let Some(first) = running.first() {
+            return Err(Report {
+                items: running.clone(),
+                ..Report::new(Outcome::Busy, rows.clone()).for_item(*first, None)
+            });
+        }
         let chosen: Vec<ItemId> = match items {
             None => state::items_to_set_up(&rows),
             Some(requested) => {
@@ -843,11 +979,6 @@ impl Engine {
                 for row in rows.iter().filter(|row| requested.contains(&row.item)) {
                     let refusal = match row.state {
                         ItemState::Ready => continue,
-                        ItemState::Provisioning | ItemState::Verifying => {
-                            return Err(
-                                Report::new(Outcome::Busy, rows.clone()).for_item(row.item, None)
-                            );
-                        }
                         ItemState::Blocked(BlockedReason::NotInThisBuild)
                         | ItemState::Failed(FailureCategory::NotInThisBuild) => {
                             Some(FailureCategory::NotInThisBuild)
@@ -907,19 +1038,202 @@ impl Engine {
         None
     }
 
+    /// Runs the approved plan's items in setup order under one run. Every item's writer
+    /// lock is taken first, so the whole run reads as running from its start; an item
+    /// another engine holds is followed in its turn instead. The first item that does not
+    /// finish stops the run, and the items after it are released as they were, each naming
+    /// where the run stopped.
+    fn run_plan(
+        &mut self,
+        plan: &SetupPlan,
+        sink: &Sink<'_>,
+        cancellation: &Cancellation,
+    ) -> Option<Report> {
+        let hardware = self.hardware();
+        let run = RunMark {
+            id: run_id(),
+            plan_digest: plan.digest(),
+        };
+        let observers: Vec<Box<dyn Fn(SetupStep) + '_>> = plan
+            .entries
+            .iter()
+            .map(|entry| {
+                let item = entry.item;
+                Box::new(move |step| sink.emit(Event::Phase { item, step }))
+                    as Box<dyn Fn(SetupStep) + '_>
+            })
+            .collect();
+        let slots: Vec<Slot<'_>> = plan
+            .entries
+            .iter()
+            .zip(&observers)
+            .map(|(entry, observer)| {
+                match self.activity.queue(entry.item, &run, observer.as_ref()) {
+                    Ok(writer) => match self.clear_cancel_request(entry.item) {
+                        Ok(()) => Slot::Own(writer),
+                        Err(error) => {
+                            let category = browser::failure_category(&error);
+                            match writer.failed(category) {
+                                Ok(()) => Slot::Failed(category),
+                                Err(error) => Slot::Failed(browser::failure_category(&error)),
+                            }
+                        }
+                    },
+                    Err(Error::Busy) => Slot::Follow,
+                    Err(error) => Slot::Failed(browser::failure_category(&error)),
+                }
+            })
+            .collect();
+        let mut slots = slots.into_iter();
+        let mut stopped = None;
+        for (entry, slot) in plan.entries.iter().zip(&mut slots) {
+            let item = entry.item;
+            let done = match slot {
+                Slot::Own(writer) => match item {
+                    ItemId::Browser => self.set_up_browser(entry, writer, sink, cancellation),
+                    ItemId::LocalAi => {
+                        self.set_up_local_ai(entry, writer, hardware, sink, cancellation)
+                    }
+                },
+                Slot::Follow => match self.follow_item(item, sink, cancellation) {
+                    Followed::Completed => Ok(()),
+                    Followed::Stopped(RunStop {
+                        outcome: EndedOutcome::Busy,
+                        ..
+                    })
+                    | Followed::Unfollowable => Err(Stop::Busy),
+                    Followed::Stopped(stop) => Err(Stop::Failed(
+                        stop.failure.unwrap_or(FailureCategory::Unexpected),
+                    )),
+                    Followed::Abandoned => Err(Stop::Failed(FailureCategory::Cancelled)),
+                },
+                Slot::Failed(category) => Err(Stop::Failed(category)),
+            };
+            let (outcome, failure) = match done {
+                Ok(()) => continue,
+                Err(Stop::Busy) => (Outcome::Busy, None),
+                Err(Stop::Failed(FailureCategory::Cancelled)) => {
+                    (Outcome::Cancelled, Some(FailureCategory::Cancelled))
+                }
+                Err(Stop::Failed(category)) => (Outcome::Failed, Some(category)),
+            };
+            stopped = Some(RunStop {
+                outcome: match outcome {
+                    Outcome::Busy => EndedOutcome::Busy,
+                    Outcome::Cancelled => EndedOutcome::Cancelled,
+                    _ => EndedOutcome::Failed,
+                },
+                item,
+                failure,
+            });
+            break;
+        }
+        let stop = stopped?;
+        for slot in slots {
+            if let Slot::Own(writer) = slot {
+                // The item is left as it was; a record that cannot be removed reads as an
+                // interrupted setup, which offers the person Resume.
+                let _ = writer.not_reached(stop);
+            }
+        }
+        Some(Report::new(ended_outcome(stop.outcome), Vec::new()).for_item(stop.item, stop.failure))
+    }
+
+    /// A setup that found `items` being set up by other engines follows each of them in
+    /// setup order and reports the result they reached: completed when every one was set
+    /// up, otherwise how and where the first that was not set up stopped.
+    fn follow_only(
+        &mut self,
+        items: &[ItemId],
+        sink: &Sink<'_>,
+        cancellation: &Cancellation,
+    ) -> Report {
+        let mut report = None;
+        for item in ItemId::ALL.into_iter().filter(|item| items.contains(item)) {
+            let stopped = match self.follow_item(item, sink, cancellation) {
+                Followed::Completed => continue,
+                Followed::Stopped(stop) => Report::new(ended_outcome(stop.outcome), Vec::new())
+                    .for_item(stop.item, stop.failure),
+                Followed::Abandoned | Followed::Unfollowable => {
+                    Report::new(Outcome::Busy, Vec::new()).for_item(item, None)
+                }
+            };
+            report = Some(stopped);
+            break;
+        }
+        let rows = self.quick_rows(&ItemId::ALL);
+        let report = report.unwrap_or_else(|| Report::new(Outcome::Completed, Vec::new()));
+        Report { rows, ..report }
+    }
+
+    /// Follows another engine's setup of `item` until it is done with the item: relays what
+    /// it publishes and returns how it ended. The wait between two looks ends on a change
+    /// in the activity folder, on the writer letting go of the item's lock, or on this
+    /// setup's cancellation.
+    fn follow_item(&self, item: ItemId, sink: &Sink<'_>, cancellation: &Cancellation) -> Followed {
+        let mut changes = Changes::new(self.activity.root().to_path_buf());
+        let wake = changes.waker();
+        let _hook = cancellation.on_cancel(wake.clone());
+        let bound = (!follow::wake_on_release(self.activity.lock_path(item), wake))
+            .then_some(follow::OBSERVATION);
+        let mut followed: Option<RunMark> = None;
+        let mut relayed = Relayed::default();
+        loop {
+            if cancellation.is_cancelled() {
+                return Followed::Abandoned;
+            }
+            match self.activity.watch(item) {
+                Ok(Watched::Running(Some(published))) => {
+                    match &followed {
+                        None => {
+                            sink.emit(Event::Following {
+                                item,
+                                plan_digest: published.run.plan_digest.clone(),
+                            });
+                            followed = Some(published.run.clone());
+                        }
+                        // Another run holds the item now, so the one followed is done with it.
+                        Some(run) if run.id != published.run.id => break,
+                        Some(_) => {}
+                    }
+                    relayed.relay(item, &published, sink);
+                }
+                Ok(Watched::Running(None)) if followed.is_none() => return Followed::Unfollowable,
+                Ok(Watched::Running(None) | Watched::Idle) => break,
+                Ok(Watched::Interrupted) => {
+                    return Followed::Stopped(RunStop {
+                        outcome: EndedOutcome::Failed,
+                        item,
+                        failure: Some(FailureCategory::Interrupted),
+                    });
+                }
+                Err(_) => return Followed::Unfollowable,
+            }
+            changes.wait(bound);
+        }
+        match self.activity.ended(item) {
+            Some(ended) if followed.as_ref().is_none_or(|run| run.id == ended.run) => {
+                match (ended.outcome, ended.stopped_at) {
+                    (EndedOutcome::Completed, _) => Followed::Completed,
+                    (outcome, stopped_at) => Followed::Stopped(RunStop {
+                        outcome,
+                        item: stopped_at.unwrap_or(item),
+                        failure: ended.failure,
+                    }),
+                }
+            }
+            _ => Followed::Unfollowable,
+        }
+    }
+
     fn set_up_browser(
         &self,
         entry: &PlanEntry,
+        writer: ItemWriter<'_>,
         sink: &Sink<'_>,
         cancellation: &Cancellation,
     ) -> Result<(), Stop> {
         let item = ItemId::Browser;
-        let layout = match self.browser_layout() {
-            Some(Ok(layout)) => layout,
-            Some(Err(error)) => return Err(error.into()),
-            None => return Err(Stop::Failed(FailureCategory::NotInThisBuild)),
-        };
-        let observer = |step| sink.emit(Event::Phase { item, step });
         // Builds already in place with nothing to fetch are adopted: the full check below
         // launches them, and only a passing check records them, so no download is announced.
         let first = if entry.download_bytes == Some(0) {
@@ -927,13 +1241,18 @@ impl Engine {
         } else {
             SetupStep::Download
         };
-        let writer = self.activity.begin_observed(item, first, &observer)?;
-        self.clear_cancel_request(item)?;
         let hosts: BTreeSet<HostName> = entry.source_hosts.iter().cloned().collect();
         let outcome = (|| -> Result<(), Stop> {
+            let layout = match self.browser_layout() {
+                Some(Ok(layout)) => layout,
+                Some(Err(error)) => return Err(error.into()),
+                None => return Err(Stop::Failed(FailureCategory::NotInThisBuild)),
+            };
+            writer.step(first)?;
             let receipt = self.receipts.read(item);
             let mut reporter = Reporter {
                 sink,
+                writer: &writer,
                 item,
                 cancel_request: self.cancel_request(item),
                 cancellation,
@@ -971,26 +1290,18 @@ impl Engine {
     }
 
     fn set_up_local_ai(
-        &mut self,
+        &self,
         entry: &PlanEntry,
+        writer: ItemWriter<'_>,
+        hardware: Hardware,
         sink: &Sink<'_>,
         cancellation: &Cancellation,
     ) -> Result<(), Stop> {
         let item = ItemId::LocalAi;
-        let hardware = self.hardware();
-        let (mut program, models) = match self.local_ai_parts() {
-            Some(Ok(parts)) => parts,
-            Some(Err(error)) => return Err(error.into()),
-            None => return Err(Stop::Failed(FailureCategory::NotInThisBuild)),
-        };
-        let observer = |step| sink.emit(Event::Phase { item, step });
-        let writer = self
-            .activity
-            .begin_observed(item, SetupStep::Download, &observer)?;
-        self.clear_cancel_request(item)?;
         let present = Observation::Present { note: None };
         let mut reporter = Reporter {
             sink,
+            writer: &writer,
             item,
             cancel_request: self.cancel_request(item),
             cancellation,
@@ -1000,6 +1311,12 @@ impl Engine {
         };
         let mut pacing = SystemPacing::default();
         let outcome = (|| -> Result<(), Stop> {
+            let (mut program, models) = match self.local_ai_parts() {
+                Some(Ok(parts)) => parts,
+                Some(Err(error)) => return Err(error.into()),
+                None => return Err(Stop::Failed(FailureCategory::NotInThisBuild)),
+            };
+            writer.step(SetupStep::Download)?;
             let program_part = entry.parts.iter().find(|part| part.part_id == PROGRAM_PART);
             if let Some(part) = program_part {
                 let hosts: BTreeSet<HostName> = part.source_hosts.iter().cloned().collect();
@@ -1033,7 +1350,7 @@ impl Engine {
                 )?;
             }
             writer.step(SetupStep::Download)?;
-            let server = wait_for_server(&program, &mut pacing, cancellation, sink, item)?;
+            let server = wait_for_server(&program, &mut pacing, cancellation, sink, &writer)?;
             let mut pulled = BTreeSet::new();
             for part in &entry.parts {
                 let Some(pin) = models.for_role(&part.part_id) else {
@@ -1110,8 +1427,9 @@ fn wait_for_server(
     pacing: &mut dyn Pacing,
     cancellation: &Cancellation,
     sink: &Sink<'_>,
-    item: ItemId,
+    writer: &ItemWriter<'_>,
 ) -> Result<Server, Stop> {
+    let item = writer.item();
     let started = Instant::now();
     let mut delay = SERVER_LOOK_FIRST;
     loop {
@@ -1122,6 +1440,8 @@ fn wait_for_server(
             return Err(Stop::Failed(FailureCategory::ProgramNotRunning));
         }
         if delay == SERVER_LOOK_FIRST {
+            // Best effort, as the progress figure.
+            let _ = writer.waiting_for_server();
             sink.emit(Event::WaitingForServer { item });
         }
         pacing.wait(delay, cancellation)?;
@@ -1139,7 +1459,7 @@ fn finish(writer: ItemWriter<'_>, outcome: Result<(), Stop>) -> Result<(), Stop>
             Err(Stop::Failed(category))
         }
         Err(Stop::Busy) => {
-            writer.finished()?;
+            writer.held()?;
             Err(Stop::Busy)
         }
     }

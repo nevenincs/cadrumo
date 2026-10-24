@@ -684,8 +684,9 @@ Standard output carries one JSON object per line, each with a `type`: `started`
 events are `phase` (`phase_code` `dependencies.setup.<item>.<step>`, `item_id`,
 `step`), `progress` (`subject_code`, `unit_code` `bytes`, `completed`, `total`, at
 most one per item every 500 ms and only on a 1 % change), `notice` (`notice_code`
-`retrying` with `attempt` and `delay_ms`; `waiting_for_server`; `cancel_requested`;
-`input_refused`) and `review` (`plan_digest` and `plan`). The `result` carries the
+`retrying` with `attempt` and `delay_ms`; `waiting_for_server`; `following` with
+`subject_code` and `plan_digest`; `cancel_requested`; `input_refused`) and `review`
+(`plan_digest` and `plan`). The `result` carries the
 `outcome`, every item's `rows` with `setup_complete`, and, where they apply, the
 `plan` with its `plan_digest`, the `item_id` and `failure_category` a refusal or
 failure is for, and the `items` a cancel or removal touched. Every value is a closed
@@ -694,7 +695,7 @@ code or a locale-neutral fact; each surface words them from its locale catalogue
 | Outcome | Exit | Meaning |
 | --- | --- | --- |
 | `ok`, `nothing_to_do`, `completed`, `cancel_requested`, `nothing_running`, `removed` | 0 | The command did what was asked |
-| `needs_approval`, `plan_changed`, `busy`, `refused`, `failed`, `cancelled` | 1 | It did not; `plan_changed` reports the current plan for a new approval |
+| `needs_approval`, `plan_changed`, `busy`, `refused`, `failed`, `cancelled` | 1 | It did not; `plan_changed` reports the current plan for a new approval, and `busy` that another process changes the item and this command did not follow it to its end |
 | `invalid_request` | 64 | The command line names no command; this is the only line written |
 
 A setup's approval binds its plan's digest. With `--approve`, the setup runs only while
@@ -706,7 +707,33 @@ approves that plan, which is computed again and must still match, and
 its next transfer chunk. Closing standard input declines a waiting review and cancels a
 running setup. An offline computer, an unreachable host or too little free space
 refuses before any review; the free space must cover the download plus a fifth plus
-1 GiB.
+1 GiB. A cancelled setup's `result` names the item it stopped at and the `cancelled`
+category.
+
+A second setup of an item another process is already setting up follows that setup
+instead of refusing. With `--item`, it follows the named items another process holds;
+without, every item another process holds. It plans nothing, sends no `review` and
+downloads nothing. It sends a `following` notice for each item, naming the digest of the
+plan the other setup was approved under, then that setup's `phase`, `progress` and
+`notice` lines as it reaches them, and ends with the `result` that setup reached for the
+items: `completed`, or the `outcome`, `item_id` and `failure_category` of the item it
+stopped at. A followed setup whose process dies reads `failed` `interrupted`. The
+result carries every item's rows and no plan. The follower's `{"type":"cancel"}` line,
+or the end of its input, stops only the following, which ends `busy` while the other
+setup goes on; the `cancel` command asks the followed setup itself to stop, as the
+person's act from any surface. An item being removed is not followed and answers
+`busy`.
+
+The engine coordinates through `components/activity` under the storage root. A setup
+takes the writer lock of every item it will change before the first starts, so its
+whole run reads as running, and keeps each item's activity record current with the run
+id, the approved plan digest, every step reached, the latest byte figure, any retry
+and any wait for the local AI server. Before it removes the record it writes the item's
+end record, which names how the run ended for that item. A follower reads the record
+again when the folder's change notification fires on Windows, and within 100 ms
+elsewhere, where no notification source is used yet; it learns that the setup ended or
+died by taking the item's lock shared once the kernel releases it, on a thread of its
+own, and a follower's cancellation ends its wait at once.
 
 The role resolves the installation from its own image: the package's pin tables and
 bundled browser driver, and the storage root with its relocatable browsers, models and

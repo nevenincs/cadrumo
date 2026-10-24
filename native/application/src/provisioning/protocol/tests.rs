@@ -918,6 +918,124 @@ fn a_cancel_stops_a_setup_at_its_next_chunk_from_its_client_or_another_process()
     );
 }
 
+/// A role that finds its item being set up by another role follows that setup: it waits
+/// for the follow notice and the first byte figure it relays.
+fn following(world: &World, arguments: &[&str], digest: &str) -> (Role, Vec<Value>) {
+    let follower = world.start(arguments);
+    let (before, notice) = follower.until("notice");
+    assert_eq!(notice["notice_code"], "following", "{notice}");
+    assert_eq!(notice["subject_code"], "browser");
+    assert_eq!(notice["plan_digest"], digest);
+    assert!(before.is_empty(), "a follower plans nothing: {before:?}");
+    let (relayed, progress) = follower.until("progress");
+    assert_eq!(progress["subject_code"], "browser");
+    (follower, [vec![notice], relayed, vec![progress]].concat())
+}
+
+#[test]
+fn a_second_setup_follows_the_running_one_to_its_result_with_no_review_or_download() {
+    let world = World::browser();
+    let plan = world.run(&["plan"]).result;
+    let digest = plan["plan_digest"].as_str().unwrap().to_owned();
+    let gate = world.gate();
+    let owner = world.start(&["setup", "--approve", &digest]);
+    owner.until("progress");
+
+    // A follower that stops following ends busy and leaves the setup running.
+    let (mut leaving, _) = following(&world, &["setup", "--item", "browser"], &digest);
+    leaving.send(json!({"type": "cancel"}));
+    let left = leaving.finish();
+    assert_eq!(left.result["outcome"], "busy", "{}", left.result);
+    assert_eq!(left.result["item_id"], "browser");
+    assert_eq!(left.code, 1);
+    assert_eq!(row(&left.result, "browser")["state"], "provisioning");
+
+    // Without --approve it would ask for a review; following asks for none.
+    let (follower, seen) = following(&world, &["setup"], &digest);
+    gate.open();
+    let owned = owner.finish();
+    let followed = follower.finish();
+    assert_eq!(owned.result["outcome"], "completed", "{}", owned.result);
+    assert_eq!(
+        followed.result["outcome"], "completed",
+        "{}",
+        followed.result
+    );
+    assert_eq!(followed.code, 0);
+    let events = [seen, followed.events].concat();
+    assert!(events.iter().all(|event| event["type"] != "review"));
+    assert_eq!(
+        phases(&events, "browser"),
+        ["download", "install"]
+            .into_iter()
+            .chain(std::iter::repeat_n(["download", "install"], builds() - 1).flatten())
+            .chain(["verify", "cleanup"])
+            .collect::<Vec<_>>(),
+        "every step the owner reached, in order"
+    );
+    let (completed, total) = last_progress(&events);
+    assert_eq!(completed, total);
+    assert_eq!(
+        Some(total),
+        plan["plan"]["entries"][0]["download_bytes"].as_u64()
+    );
+    assert_eq!(row(&followed.result, "browser")["state"], "ready");
+    assert_eq!(
+        world.archive_requests(),
+        builds(),
+        "each archive was fetched once, by the owner"
+    );
+    assert!(followed.result.get("plan").is_none());
+}
+
+#[test]
+fn a_follower_reports_the_cancel_the_person_asked_for_and_a_setup_whose_process_died() {
+    let world = World::browser();
+    let digest = world.run(&["plan"]).result["plan_digest"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let gate = world.gate();
+    let owner = world.start(&["setup", "--approve", &digest]);
+    owner.until("progress");
+    let (follower, _) = following(&world, &["setup", "--item", "browser"], &digest);
+    let asked = world.run(&["cancel"]);
+    assert_eq!(asked.result["outcome"], "cancel_requested");
+    gate.open();
+    assert_eq!(owner.finish().result["outcome"], "cancelled");
+    let followed = follower.finish();
+    assert_eq!(
+        (
+            &followed.result["outcome"],
+            &followed.result["item_id"],
+            &followed.result["failure_category"]
+        ),
+        (&json!("cancelled"), &json!("browser"), &json!("cancelled")),
+        "{}",
+        followed.result
+    );
+
+    // The partial download would let the next setup resume past the gate.
+    fs::remove_dir_all(world.root().join("components/playwright/.cadrumo-staging")).unwrap();
+    let gate = world.gate();
+    let owner = world.start(&["setup", "--approve", &digest]);
+    owner.until("progress");
+    let (follower, _) = following(&world, &["setup", "--item", "browser"], &digest);
+    owner.kill();
+    let followed = follower.finish();
+    gate.open();
+    assert_eq!(
+        (
+            &followed.result["outcome"],
+            &followed.result["failure_category"]
+        ),
+        (&json!("failed"), &json!("interrupted")),
+        "{}",
+        followed.result
+    );
+    assert_eq!(row(&followed.result, "browser")["recovery"], "resume");
+}
+
 #[test]
 fn an_offline_computer_and_a_full_disk_refuse_before_any_review_or_download() {
     let world = World::browser();

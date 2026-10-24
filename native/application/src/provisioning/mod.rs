@@ -19,7 +19,8 @@
 //! `browser` installs the bundled driver's pinned Chromium builds into the layout it reads.
 //!
 //! `engine` composes the items into status, plan, setup, verify, cancel and remove, the
-//! one engine every surface reads. `protocol` is the `components` role's line protocol
+//! one engine every surface reads; `follow` is what a setup that follows another engine's
+//! running setup waits on. `protocol` is the `components` role's line protocol
 //! over it, and `role_host` resolves an installation for the role from its own process.
 
 pub mod activity;
@@ -27,6 +28,7 @@ pub mod browser;
 pub mod connection;
 pub mod engine;
 pub mod failure;
+pub mod follow;
 pub(crate) mod http;
 pub mod items;
 pub mod local_ai;
