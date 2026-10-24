@@ -1651,3 +1651,37 @@ P03 re-review items with a UX surface, re-checked live:
 - **Why.** A reading's candidates (`AmbiguityCandidate`: value, anchor, note) carry no page, box or offset. Inferring one from the note's text would be a heuristic second route beside the extractor's own provenance.
 - **Recommendation.** A follow-on decision on the reading contract: whether extractors report a page and a box for each candidate, and how a box from an image or a PDF is expressed. The viewer then scrolls to it. Until then the person reads the page beside the questions.
 - **Also deferred and listed with it:** rule matching on counterparty or amount range (S14), and import duplicate pairing in the preview and "Keep both" (`deferred-contract-gaps`).
+
+## P04.S17 plan-close re-review, 2026-10-25
+
+Independent static review of every ledger commit from `9e4f9b9eb0` to `15cd032f4b` against the P04.S17 integrated-review and usability re-walk findings and `2026-10-23-desktop-ledger-editor-adr` with both 2026-10-24 amendments. No critical or high finding; no Step is reopened. All seven P04.S17 findings are fixed. Of the UX2 findings, all are fixed except two partial ones below; `viewer-scrolls-away` keeps its recorded deferral `viewer-reading-place`, and `total-answer-not-kept` is fixed by wording because the product derives the total by design (`domain/invoices/models.py:755-759`). The reveal resolves only this session's export token once the file exists, and no path reaches the window.
+
+Pending verification, apart from defects: the packaged-window privacy check (`294041c3f0`) has not run in a real window; the full scenario suite is running; nothing covers a review ask longer than the host's follow against the real runtime, the 1280 and 1440 layouts with agent and inspector after the floor change, or a visual check of `unknown-pill-shape` and `export-saveas-clipped`.
+
+### P04R · review-ask-in-flight-not-released | medium | A model ask that outlasts the host's follow, or is still in flight when the next ask is made, is never cancelled, so the movement is refused `subject_busy` again
+
+- **Failure scenario.** A local model takes longer than the host's settle bound (`relay.rs:12`). The review is a mutation, so the page gets `unknown` with an `operation_id` (`settle.rs:449-455`), but the catch paths in `ModelSuggestion.tsx:146-148,184-186` and `SelectionInspector.tsx:415-437` record the operation only from a returned review, so nothing is released. The review later pauses holding the movement, and every further ask about it is refused. Separately, asking about A, moving to B and back while A's ask is running, then asking again, is refused: `askReview` waits only for releases already registered (`ledgerApply.ts:726`), and `cancelReview` cancels only an observed review, not a running one (`ledgerApply.ts:669`), though the executor accepts a cancel after the model answers (`llm_review_execution.py:343`).
+- **Fix.** Release by the failure's `operation_id` in both catch paths; cancel a cancellable running outcome; register an ask in flight so the next ask waits for it.
+
+### P04R · grid-least-includes-growth | low | The grid's least width counts the growth its columns take from spare room, so the page floor follows the current width
+
+- **Failure scenario.** `dataGridModel.ts:120,142-149` computes `least` from the narrowed placement, which still shares the spare width among growing columns. With spare room the floor is about the current width, so opening the agent at 1440 or wider clamps it for a render before it reaches its remembered width, and the agent's and the split's limits land short until the next render.
+- **Fix.** Compute `least` from the widths before growth, as its comment says.
+
+### P04R · follow-ring-unbounded-residents | low | Unknown writes and unanswered reviews stay in the host's follow list for the session, and the ceiling check is apart from tracking
+
+- **Failure scenario.** A write that ended in an error stays open (`settle.rs:194`) unless the window follows it again; the page re-reads the ledger instead. After 256 such entries every submission is refused `unavailable` (`settle.rs:228-243`). `room()` and `track()` take the lock separately with the submit between them (`ledger/mod.rs:273-276`), so concurrent submissions can pass the ceiling. Neither is likely in practice.
+- **Recommendation.** Re-observe open entries when the page re-reads, or bound their age; take the room check inside tracking.
+
+### P04R · derived-fields-hand-list | low | The page's list of fields the product works out is a hand copy of the domain rule
+
+- **Evidence.** `documentsModel.ts:283` lists `grand_total`, restating `domain/invoices/models.py:755-759`. A change to the domain rule would leave the page's wording wrong without a failing test.
+- **Fix.** Take it from a product contract field, or pin it to the domain rule with a test.
+
+### P04R · partial-fixes | low | Two re-walk fixes are partial
+
+- `partial-column-fragments`: scrolling now settles on a column start at the pinned start group (`dataGridModel.ts:52-76`), but the reported symptom was the end group: a column cut under the pinned Amount is still drawn as a fragment (`data-grid.tsx:1458-1463`). Masking it blank broke clicks on cells under the end group, so it was kept and counted by the `+n ›` cue.
+- `reread-banner-lists-every-name`: "Show them" selects the movements (`LedgerPage.tsx` `onShow`) but applies no filter, so rows the current view hides stay hidden.
+- `colon-count-copy`: the cited strings are fixed; other "Label: {count}" strings remain, such as "Saved together: {count}" and "Held back: {count}".
+
+Recommendation for a follow-on decision, not a finding: a cancel of a waiting review settles at once only when its executor ran under the current supervisor (`_supervisor_settlement.py:113-129`); after a runtime restart it waits for the lease to lapse and ends interrupted with an unknown effect.
