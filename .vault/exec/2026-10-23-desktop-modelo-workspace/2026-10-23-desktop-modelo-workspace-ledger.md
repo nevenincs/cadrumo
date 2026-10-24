@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:72c85d5e9bf36ab5dd7a1538cbae60d7b97480f1735fe669398271f1fad96e5c'
+body_hash: 'sha256:fa447961e7c35b0b56617aace6e5e1a82ecd1719815da5afed1ebd322d843ce9'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -816,6 +816,14 @@ related:
 - `S51` `verify:` `playwright modelo.spec rebase cases` -> `pass`
 - `S51` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
 - `S51` `by:` `opus-p05-lane`
+- `S52` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S52` `M` `src/cadrumo/entrypoints/tests/test_modelo_workbench_operations.py`
+- `S52` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S52` `verify:` `ruff check and format` -> `pass`
+- `S52` `verify:` `basedpyright` -> `pass`
+- `S52` `verify:` `pytest test_modelo_workbench_operations` -> `pass`
+- `S52` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S52` `by:` `opus-p01-lane-2`
 
 ## Notes
 
@@ -868,3 +876,4 @@ related:
 - `S49` committed in 7f2a1fd88b with the port lane's regeneration, S50 and S51; the live test admits a real Modelo 303 preflight, apply and renewal
 - `S50` committed in 7f2a1fd88b
 - `S51` committed in 7f2a1fd88b; the renewal-notice defect it caught was fixed in S50 before commit
+- `S52` committed in 9a503d410f

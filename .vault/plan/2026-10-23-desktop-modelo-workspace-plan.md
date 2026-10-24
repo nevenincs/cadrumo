@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:08fde8e286e88df9bb20cc22bef9e2f5ea1b289110e25119f2b1d9499b3ab0c0'
+body_hash: 'sha256:a9db9aafa72b92461875e96ddf2971bd170a794897fd10a07299d82c6065e26c'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -61,7 +61,7 @@ Move every classification and wording decision the prototype had to make into th
 - [x] `P01.S42` - Read each declaration list row at the authority grade its revision declares, as the form does, so an applicability-graded revision shows its real state rather than unreadable; `src/cadrumo/application/modelo/declaration_summary.py`.
 - [x] `P01.S44` - Project the edit admission refusal's words and whether a box takes a typed value on the form read model, report per staged address what a renewal dropped or changed, and give the export offer per-artefact and record availability from the gate predicates, switching the TUI to each; `src/cadrumo/application/modelo/workbench_projection.py`.
 - [x] `P01.S48` - Replace the per-box state digest with a token derived from no typed or stored value, so the journaled renewal request carries nothing reversible, and list the review package with its availability in the export offer; `src/cadrumo/application/modelo/work_form_models.py`.
-- [ ] `P01.S52` - Omit the rebase report from a preflight the stale baseline refuses, so only an evaluated preflight judges held changes; `src/cadrumo/application/modelo/workbench_operations.py`.
+- [x] `P01.S52` - Omit the rebase report from a preflight the stale baseline refuses, so only an evaluated preflight judges held changes; `src/cadrumo/application/modelo/workbench_operations.py`.
 
 ### Phase `P02` - One shared Modelo wording for every frontend
 
