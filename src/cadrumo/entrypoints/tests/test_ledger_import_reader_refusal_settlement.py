@@ -224,7 +224,7 @@ def test_a_folder_imports_its_readable_statement_and_names_the_local_ai_for_the_
     exit_code, text = _cli_import_text(monkeypatch, result, effect, folder)
     assert exit_code == 0, text
     lines = text.splitlines()
-    assert "  refused	b_expenses_export.csv	reader_unavailable" in lines
+    assert "  refused\tb_expenses_export.csv\treader_unavailable" in lines
     assert f"  {_LOCAL_AI_FIX}" in lines
 
 
