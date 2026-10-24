@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:d0abbf21690f31864b72e6143e8d0811d6683d31062070da4ef234dd1d97976c'
+body_hash: 'sha256:73537dfed56fa5c1233efa33de37ea362a62eed4fb3e8f66f0a90d0f7acbe6da'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -631,6 +631,20 @@ related:
 - `S41` `M` `src/cadrumo/_data/operations/contract_manifest.json`
 - `S41` `verify:` `pytest test_declarations_list` -> `pass`
 - `S41` `by:` `opus-p01-lane`
+- `S42` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S42` `M` `src/cadrumo/application/modelo/declaration_summary.py`
+- `S42` `M` `src/cadrumo/entrypoints/workbench_generation_composition.py`
+- `S42` `A` `src/cadrumo/application/modelo/tests/test_declaration_summary_grade.py`
+- `S42` `M` `src/cadrumo/application/modelo/work_form_issue_lines.py`
+- `S42` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issue_projection.py`
+- `S42` `M` `src/cadrumo/application/modelo/tests/test_work_form_issue_lines.py`
+- `S42` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S42` `verify:` `ruff check and format` -> `pass`
+- `S42` `verify:` `lint-imports` -> `pass`
+- `S42` `verify:` `basedpyright` -> `pass`
+- `S42` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S42` `verify:` `pytest application, profile persistence and TUI suites` -> `pass`
+- `S42` `by:` `opus-p01-lane-2`
 
 ## Notes
 
@@ -670,3 +684,4 @@ related:
 - `S12` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
 - `S40` committed in 46f9e9219b with the `aeat_filing` row field for P04.S41
 - `S41` the row field half of S41, committed in 46f9e9219b; the AEAT reference stays out of the public row by its owner's custody decision, a known gap against the TUI's technical toggle
+- `S42` also carries the issue-line where fix that removes the box from place words

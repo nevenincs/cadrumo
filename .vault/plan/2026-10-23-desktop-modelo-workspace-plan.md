@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:a000f3cf7cb40fab563a32729ce3ee7cb62e72872812812f1231167e434af0ee'
+body_hash: 'sha256:0ab4b666dc36d0ac5e2690bdf45ec90d411ee0aa0aeea0441751b6526275c1e6'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -58,7 +58,7 @@ Move every classification and wording decision the prototype had to make into th
 - [x] `P01.S38` - Project a worded amendment context for a recorded declaration, with the filed record, the permitted kinds and motives in words and each box's filed value text and edit hints, and parse the corrected values typed by the filer through the canonical typed-entry path, matching the CLI amend wizard; `src/cadrumo/application/modelo/work_amend_contracts.py`.
 - [x] `P01.S39` - Project what typing a value over each box does in words, the export offer with its artefacts, elections and their words, the revision's file format, and the recorded filing's receipt state on the form read model, and switch the TUI to them; `src/cadrumo/application/modelo/work_form_export_offer.py`.
 - [x] `P01.S40` - Derive the form's export hold and next step from the filing gate's own predicate so no frontend offers a file the gate refuses, test gate agreement over every note kind and working figure, and remove the unused field_needs_filer route; `src/cadrumo/application/modelo/work_form_next_step.py`.
-- [ ] `P01.S42` - Read each declaration list row at the authority grade its revision declares, as the form does, so an applicability-graded revision shows its real state rather than unreadable; `src/cadrumo/application/modelo/declaration_summary.py`.
+- [x] `P01.S42` - Read each declaration list row at the authority grade its revision declares, as the form does, so an applicability-graded revision shows its real state rather than unreadable; `src/cadrumo/application/modelo/declaration_summary.py`.
 
 ### Phase `P02` - One shared Modelo wording for every frontend
 
