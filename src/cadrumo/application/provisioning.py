@@ -66,6 +66,7 @@ __all__ = [
     "SystemMemoryReading",
     "UnloadOutcome",
     "assess_model_load_contention",
+    "below_capacity_floor",
     "binding_free_bytes",
     "cadrumo_selected_models",
     "model_licence_notice",
@@ -567,6 +568,31 @@ def binding_free_bytes(profile: HardwareProfile) -> int | None:
     return None
 
 
+def below_capacity_floor(profile: HardwareProfile, requirement_bytes: int) -> bool:
+    """Return whether this computer cannot hold a model needing ``requirement_bytes`` at all.
+
+    A capacity judgement, never a momentary one: the installed system memory
+    and the largest NVIDIA card's installed memory are compared against the
+    model's floor, the same rule the native component engine applies to a
+    role's quick status. Free memory is not consulted, because a model already
+    resident, or another program's load, lowers it for a while without changing
+    what the computer can hold; that is :func:`assess_model_load_contention`'s
+    question at the load. A computer whose total memory was not measured is
+    never held back, and neither is one whose accelerator could not be read,
+    because an unread value must not invent a shortfall.
+    """
+    total = profile.memory.total_bytes
+    if total is None or total >= requirement_bytes:
+        return False
+    kind = profile.accelerator.kind
+    if kind is AcceleratorKind.NONE:
+        return True
+    if kind is not AcceleratorKind.NVIDIA_CUDA:
+        return False
+    cards = [device.total_vram_bytes for device in profile.accelerator.devices if device.total_vram_bytes is not None]
+    return bool(cards) and max(cards) < requirement_bytes
+
+
 def probe_local_inference_hardware(profile: HardwareProfile | None = None) -> DependencyStatus:
     """Report the measured hardware profile as a diagnostic row, unknown shown as unverified.
 
@@ -669,6 +695,25 @@ class ModelSelection(ProvisioningOutcome):
             return None
         requirement = self.candidate.memory_requirement_bytes
         return None if requirement is None else (self.runtime_id, requirement)
+
+    @property
+    def capacity_runtime_id(self) -> str | None:
+        """Return the model this role reads with on this computer, whatever its free memory says now.
+
+        The selected model, or, when only the headroom bar refused, the
+        smallest eligible model that bar measured. Candidates are ordered by
+        ascending requirement and the first that fits wins, so headroom never
+        changes which model a role uses; it only says whether that model fits
+        this moment. ``None`` when the capability or licence bars left no
+        candidate, which no amount of memory changes.
+        """
+        if self.selected:
+            return self.runtime_id
+        verdict = self.precondition_verdict
+        if verdict is None or verdict.failed_condition_id != ProvisioningPreconditionCondition.SELECTED_MODEL_FITS:
+            return None
+        named = self.facts.get("selected_model")
+        return named if isinstance(named, str) and named else None
 
     @property
     def licence_advisory(self) -> str:

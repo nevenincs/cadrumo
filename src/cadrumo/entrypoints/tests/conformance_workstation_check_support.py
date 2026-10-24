@@ -14,6 +14,7 @@ from ...application.workstation_check_operation import (
 from ...application.workstation_contention import CONTENTION_ROW_ID
 from ...core.auth_provider import AuthProviderKind
 from ...core.capabilities import ServiceCapability
+from ...core.component_records import uses_managed_local_ai
 from ...core.config import load_settings
 from ...core.model_catalogue import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -67,7 +68,8 @@ def _prepare_check(context: ConformanceFamilyContext) -> ConformancePreparation:
             assert reader.available is False, service
             assert _fact(reader.facts, "role") == role.value
             assert _fact(reader.facts, "runtime_reachable") is False
-            assert _fact(reader.facts, "runtime_url") == runtime_url
+            assert _fact(reader.facts, "operator_endpoint") is not uses_managed_local_ai(load_settings())
+            assert all(item.value != runtime_url for item in reader.facts), "the row never publishes the address"
             assert reader.precondition_verdict is not None, service
         checks = [row.check for row in projection.preflight]
         provider_checks = [f"auth-provider:{kind.value}" for kind in AuthProviderKind]

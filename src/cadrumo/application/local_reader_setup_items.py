@@ -472,7 +472,7 @@ class LocalAiModelPart:
         return select_role_model(self._role, settings, explicit=explicit)
 
     def _model(self, settings: Settings) -> str | None:
-        return _selected_model(self._selection(settings))
+        return self._selection(settings).capacity_runtime_id
 
     def _local_reading(self, mode: DependencyCheckMode) -> DependencyProbeReading:
         settings = load_settings()
@@ -613,7 +613,7 @@ class LocalAiModelPart:
         """Plan the fetch of this role's model, or of ``model_name`` when the person named one."""
         settings = await asyncio.to_thread(load_settings)
         selection = await asyncio.to_thread(lambda: self._selection(settings, explicit=model_name))
-        model = _selected_model(selection)
+        model = selection.capacity_runtime_id
         candidate = None if model is None else model_candidate(model)
         pin = None if candidate is None else candidate.weights_pin
         target = None if model is None else (model if pin is None else f"{model}@{pin.digest}")
@@ -694,23 +694,6 @@ class LocalAiModelPart:
             transferred_bytes=transferred,
             facts={} if facts is None else dict(facts),
         )
-
-
-def _selected_model(selection: ModelSelection) -> str | None:
-    """Return the model a role is set up with, or ``None`` when no catalogued model can serve it.
-
-    Selection also refuses when free memory is short this moment. That says
-    nothing about which model to download, so the smallest eligible model it
-    names is still the one set up; whether it may load is decided when it
-    loads, and until then it reads as downloaded but not loaded.
-    """
-    if selection.selected:
-        return selection.runtime_id
-    verdict = selection.precondition_verdict
-    if verdict is None or verdict.failed_condition_id != ProvisioningPreconditionCondition.SELECTED_MODEL_FITS.value:
-        return None
-    named = selection.facts.get("selected_model")
-    return named if isinstance(named, str) and named else None
 
 
 def _requirement_bytes(role: ModelRole, model: str, settings: Settings) -> int | None:

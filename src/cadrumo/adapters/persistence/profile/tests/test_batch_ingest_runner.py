@@ -698,7 +698,8 @@ class TestInferencePacing:
             ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
         )
         assert result.inference_pause.facts["runtime_reachable"] is False
-        assert result.inference_pause.facts["runtime_url"] == "http://127.0.0.1:1/api/chat"
+        assert result.inference_pause.facts["operator_endpoint"] is True
+        assert "runtime_url" not in result.inference_pause.facts, "the pause never publishes the address"
 
     def test_a_document_needing_a_reader_is_read_when_one_is_there(
         self,

@@ -15,11 +15,16 @@ surface renders and the per-role probe a consumer consults before spending a
 document. An operator who configured an endpoint of their own runs that server
 themselves, and it is used as written.
 
-The per-role probe judges in a fixed order: a role this computer's hardware or
-the catalogue cannot serve refuses first and offers nothing, because setup
-cannot change either; then a local AI the record does not locate, or a server
-that does not answer at its address, refuses with the local AI setup; then a
-missing model does too. Role fitness, the answer quality of the text model, is
+The per-role probe judges in a fixed order: a role the catalogue cannot serve,
+or whose model this computer's installed memory cannot hold, refuses first and
+offers nothing, because setup cannot change either; then a local AI the record
+does not locate, or a server that does not answer at its address, refuses with
+the local AI setup; then a missing model does too. The probe never judges free
+memory: a model already resident, or another program's load, lowers it for a
+while, and whether a load fits at that moment is decided at the load by
+:func:`.provisioning_runtime.assess_model_load_contention`, whose refusal says
+memory is busy and is retried rather than read as this computer's limit. Role
+fitness, the answer quality of the text model, is
 the consumer's admission and not part of the component's state. A consumer
 admits its read through :func:`admit_local_reader`, which measures the model's
 fitness at the first use of its current weights and records the verdict in
@@ -56,6 +61,7 @@ from .provisioning import (
     DependencyStatus,
     HardwareProfile,
     ModelSelection,
+    below_capacity_floor,
     probe_hardware_profile,
     select_model_for_role,
 )
@@ -356,12 +362,18 @@ def configured_role_model(role: ModelRole, settings: Settings | None = None) -> 
     and the supply-nature proposer resolve through :func:`select_role_model`,
     so this returns whatever that selection names -- the operator's setting
     when it differs from the shipped default, otherwise the catalogue's pick
-    for this machine -- or ``None`` when nothing is selectable.
+    for this machine, whatever its free memory says this moment -- or ``None``
+    when no catalogued model can serve the role.
     """
     resolved = settings if settings is not None else load_settings()
+    return _role_model(role, resolved, select_role_model(role, resolved))
+
+
+def _role_model(role: ModelRole, settings: Settings, selection: ModelSelection) -> str | None:
+    """Return the model ``role``'s reader sends, which momentary headroom never changes."""
     if role in EXTRACTION_READER_ROLES:
-        return _role_setting(role, resolved)
-    return select_role_model(role, resolved).runtime_id
+        return _role_setting(role, settings)
+    return selection.capacity_runtime_id
 
 
 class RoleModelTarget(BaseModel):
@@ -505,13 +517,19 @@ def probe_local_reader(
     hidden behind an installed vision model. The judgement runs in a fixed
     order, each step only when the one before passed:
 
-    * A role this computer's hardware or the catalogue cannot serve refuses and
-      names no action, because setup cannot change either.
+    * A role the catalogue cannot serve, or whose model needs more memory than
+      this computer has installed, refuses and names no action, because setup
+      cannot change either.
     * A local AI its record does not locate, a server that does not answer at
       the recorded address, or a model it does not hold refuses with the local
       AI setup.
     * A fitness verdict recorded against the text model's current weights that
       found it unfit or too slow refuses and names no action.
+
+    Free memory decides nothing here. It changes with every resident model and
+    every other program, so whether a load fits now is judged at the load by
+    :func:`.provisioning_runtime.assess_model_load_contention`, as busy memory
+    to retry rather than as this computer's limit.
 
     It never measures fitness, so a model with no verdict is admitted here; a
     consumer about to read admits through :func:`admit_local_reader`, which
@@ -539,6 +557,7 @@ class _ReaderJudgement:
     settings: Settings
     located: LocatedLocalAi | None
     selection: ModelSelection
+    hardware: HardwareProfile
     model: str | None
     inventory: tuple[InstalledModel, ...] | None
     status: DependencyStatus
@@ -553,17 +572,25 @@ def _judge_reader(
     hardware: HardwareProfile | None,
 ) -> _ReaderJudgement:
     resolved, located = local_ai_settings(settings if settings is not None else load_settings())
-    selection = select_role_model(role, resolved, profile=hardware)
+    measured = hardware if hardware is not None else probe_hardware_profile()
+    selection = select_role_model(role, resolved, profile=measured)
     if model is None:
-        model = _role_setting(role, resolved) if role in EXTRACTION_READER_ROLES else selection.runtime_id
+        model = _role_model(role, resolved, selection)
     inventory = installed
-    if inventory is None and _selection_refusal(role, selection) is None and _locates(located):
+    floor = _floor_refusal(role, selection, model=model, hardware=measured)
+    if inventory is None and floor is None and _locates(located):
         inventory = read_installed_models(resolved)
     status = _reader_status_from_inventory(
-        role, resolved, model=model, inventory=inventory, selection=selection, located=located
+        role, resolved, model=model, inventory=inventory, selection=selection, hardware=measured, located=located
     )
     return _ReaderJudgement(
-        settings=resolved, located=located, selection=selection, model=model, inventory=inventory, status=status
+        settings=resolved,
+        located=located,
+        selection=selection,
+        hardware=measured,
+        model=model,
+        inventory=inventory,
+        status=status,
     )
 
 
@@ -631,6 +658,7 @@ def admit_local_reader(
         model=reader_model,
         inventory=judged.inventory,
         selection=judged.selection,
+        hardware=judged.hardware,
         located=judged.located,
     )
 
@@ -704,20 +732,46 @@ def _locates(located: LocatedLocalAi | None) -> bool:
     return located is None or located.located
 
 
-def _selection_refusal(role: ModelRole, selection: ModelSelection) -> DependencyStatus | None:
-    """Return the refusal for a role the catalogue cannot serve on this computer, which no setup changes."""
-    if selection.selected and selection.runtime_id is not None:
+def _floor_refusal(
+    role: ModelRole,
+    selection: ModelSelection,
+    *,
+    model: str | None,
+    hardware: HardwareProfile,
+) -> DependencyStatus | None:
+    """Return the refusal for a role this computer cannot serve at all, which no setup changes.
+
+    Either the catalogue has no model the role may use, or the role's model
+    needs more memory than this computer has installed. A selection refused only
+    because free memory is short this moment is neither: its model still reads
+    here once memory frees up.
+    """
+    if selection.capacity_runtime_id is None:
+        failed = selection.precondition_verdict
+        facts: dict[str, ProvisioningFactValue] = {"role": role.value, "role_model_selected": False}
+        if failed is not None:
+            facts["selection_condition"] = failed.failed_condition_id
+        return DependencyStatus(
+            service=local_reader_service(role),
+            available=False,
+            facts=facts,
+            precondition_verdict=provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE, facts=facts
+            ),
+        )
+    candidate = None if model is None else model_candidate(model)
+    requirement = None if candidate is None else candidate.memory_requirement_bytes
+    if model is None or requirement is None or not below_capacity_floor(hardware, requirement):
         return None
-    failed = selection.precondition_verdict
-    facts: dict[str, ProvisioningFactValue] = {"role": role.value, "role_model_selected": False}
-    if failed is not None:
-        facts["selection_condition"] = failed.failed_condition_id
+    floor_facts: dict[str, ProvisioningFactValue] = {"role": role.value, "model": model, "required_bytes": requirement}
+    if hardware.memory.total_bytes is not None:
+        floor_facts["total_memory_bytes"] = hardware.memory.total_bytes
     return DependencyStatus(
         service=local_reader_service(role),
         available=False,
-        facts=facts,
+        facts=floor_facts,
         precondition_verdict=provisioning_no_recovery_verdict(
-            ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE, facts=facts
+            ProvisioningPreconditionCondition.HARDWARE_FLOOR_MET, facts=floor_facts
         ),
     )
 
@@ -767,10 +821,11 @@ def _reader_status_from_inventory(
     model: str | None,
     inventory: tuple[InstalledModel, ...] | None,
     selection: ModelSelection,
+    hardware: HardwareProfile,
     located: LocatedLocalAi | None,
 ) -> DependencyStatus:
     """Judge ``role``'s reader in the probe's order; ``inventory`` ``None`` means the server did not answer."""
-    refused = _selection_refusal(role, selection)
+    refused = _floor_refusal(role, selection, model=model, hardware=hardware)
     if refused is not None:
         return refused
     if located is not None and not located.located:
@@ -783,7 +838,9 @@ def _reader_status_from_inventory(
         return _setup_refusal(
             role,
             ProvisioningPreconditionCondition.RUNTIME_REACHABLE,
-            {"role": role.value, "runtime_reachable": False, "runtime_url": resolved.cadrumo_llm_ollama_chat_url},
+            # Whether the server is the managed one, never its address: an
+            # operator's own endpoint can name a host or carry credentials.
+            {"role": role.value, "runtime_reachable": False, "operator_endpoint": located is None},
         )
     if model is None:
         facts: dict[str, ProvisioningFactValue] = {"role": role.value, "runtime_reachable": True}
@@ -945,11 +1002,17 @@ class _Measured:
 def _role_runtime_status(role: ModelRole, measured: _Measured, *, assess_load: bool) -> _RoleRuntimeStatus:
     settings, inventory, residents = measured.settings, measured.inventory, measured.residents
     selection = select_role_model(role, settings, profile=measured.hardware)
-    model = _role_setting(role, settings) if role in EXTRACTION_READER_ROLES else selection.runtime_id
+    model = _role_model(role, settings, selection)
     # Judged by the probe's own verdicts even when the runtime did not answer,
     # so the row names the same setup action a refused read would.
     probe = _reader_status_from_inventory(
-        role, settings, model=model, inventory=inventory, selection=selection, located=measured.located
+        role,
+        settings,
+        model=model,
+        inventory=inventory,
+        selection=selection,
+        hardware=measured.hardware,
+        located=measured.located,
     )
     verdict = probe.precondition_verdict
     installed = None if model is None else _present(model, None if inventory is None else _names(inventory))

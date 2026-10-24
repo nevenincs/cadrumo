@@ -18,8 +18,8 @@ import pytest
 from ...core.component_records import component_records_root, local_ai_chat_url
 from ...core.config import Settings, load_settings, override_settings
 from ...core.config_runtime_fields import LOCAL_AI_CHAT_URL
-from ...core.hardware import AcceleratorKind
-from ...core.model_catalogue import ModelRole, default_model_runtime_id
+from ...core.hardware import AcceleratorKind, ContentionCause
+from ...core.model_catalogue import ModelRole, default_model_runtime_id, model_candidate
 from ...tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
 from ..local_reader import (
     EXTRACTION_READER_ROLES,
@@ -30,9 +30,11 @@ from ..local_reader import (
     probe_local_reader,
     read_local_reader_status,
     role_model_targets,
+    select_role_model,
     verify_role_target,
 )
 from ..provisioning import (
+    AcceleratorDevice,
     AcceleratorReading,
     HardwareProfile,
     SystemMemoryReading,
@@ -44,7 +46,7 @@ from ..provisioning_contracts import (
     provisioning_no_recovery_verdict,
 )
 from ..provisioning_fitness import RoleFitnessVerdict, read_fitness_verdict
-from ..provisioning_runtime import InstalledModel, runtime_model_names_match
+from ..provisioning_runtime import InstalledModel, assess_model_load_contention, runtime_model_names_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -310,12 +312,17 @@ _LOCAL_AI_RECORD = Path(__file__).parents[2] / "core" / "tests" / "_component_re
 _GIB = 1024**3
 
 
-def _below_every_floor() -> HardwareProfile:
-    """A computer measured with no accelerator and too little free memory for any catalogued model."""
+def _computer(*, total: int, free: int) -> HardwareProfile:
+    """A computer measured with no accelerator, ``total`` memory installed and ``free`` of it free now."""
     return probe_hardware_profile(
-        memory=SystemMemoryReading(total_bytes=2 * _GIB, free_bytes=_GIB // 4),
+        memory=SystemMemoryReading(total_bytes=total, free_bytes=free),
         accelerator=AcceleratorReading(kind=AcceleratorKind.NONE),
     )
+
+
+def _below_every_floor() -> HardwareProfile:
+    """A computer with less memory installed than any catalogued local model needs."""
+    return _computer(total=_GIB, free=_GIB // 4)
 
 
 @pytest.mark.parametrize("role", list(ModelRole))
@@ -330,10 +337,84 @@ def test_a_role_below_this_computers_floor_offers_nothing_even_with_no_runtime(r
         status = probe_local_reader(role, hardware=_below_every_floor())
     assert status.available is False
     assert status.facts["role"] == role.value
+    assert status.facts["total_memory_bytes"] == _GIB
     assert status.precondition_verdict is not None
-    assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE
+    assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.HARDWARE_FLOOR_MET
     assert status.precondition_verdict.action is None
-    assert status.facts["selection_condition"] == ProvisioningPreconditionCondition.SELECTED_MODEL_FITS
+
+
+def _requirement(model: str) -> int:
+    candidate = model_candidate(model)
+    assert candidate is not None and candidate.memory_requirement_bytes is not None, model
+    return candidate.memory_requirement_bytes
+
+
+def test_an_installed_reader_stays_admitted_while_its_own_resident_model_holds_the_free_memory() -> None:
+    """Free memory is not this computer's limit: 2 GiB free on 8 GiB installed is a busy moment, not a floor."""
+    busy_moment = _computer(total=8 * _GIB, free=2 * _GIB)
+    with _runtime(installed=[_VISION, _TEXT], residents=[_VISION, _TEXT]):
+        settings = load_settings()
+        statuses = {role: probe_local_reader(role, hardware=busy_moment) for role in EXTRACTION_READER_ROLES}
+        vision = select_role_model(ModelRole.VISION_TRANSCRIPTION, settings, profile=busy_moment)
+    # The control: the catalogue's headroom bar, which the probe used to judge on, does refuse here.
+    assert vision.selected is False
+    assert vision.precondition_verdict is not None
+    assert vision.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.SELECTED_MODEL_FITS
+    for role, status in statuses.items():
+        assert status.available is True, (role, status.precondition_verdict)
+        assert status.facts["model"] == (_VISION if role is ModelRole.VISION_TRANSCRIPTION else _TEXT)
+
+
+def test_a_model_larger_than_the_installed_memory_refuses_with_no_action_however_much_is_free() -> None:
+    model = _VISION
+    tight = _computer(total=_requirement(model) - 1, free=_requirement(model) - 1)
+    with _runtime(installed=[_VISION, _TEXT], residents=[]):
+        status = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, hardware=tight)
+    assert status.available is False
+    assert status.facts["model"] == model
+    assert status.facts["required_bytes"] == _requirement(model)
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.HARDWARE_FLOOR_MET
+    assert status.precondition_verdict.action is None
+
+
+def test_a_card_large_enough_holds_the_model_on_a_computer_with_little_memory() -> None:
+    model = _VISION
+    card = AcceleratorDevice(index=0, name="card", total_vram_bytes=_requirement(model), free_vram_bytes=_GIB // 4)
+    small_memory_large_card = probe_hardware_profile(
+        memory=SystemMemoryReading(total_bytes=_GIB, free_bytes=_GIB // 4),
+        accelerator=AcceleratorReading(kind=AcceleratorKind.NVIDIA_CUDA, devices=(card,)),
+    )
+    small_card = card.model_copy(update={"total_vram_bytes": _requirement(model) - 1})
+    small_memory_small_card = small_memory_large_card.model_copy(
+        update={"accelerator": AcceleratorReading(kind=AcceleratorKind.NVIDIA_CUDA, devices=(small_card,))}
+    )
+    with _runtime(installed=[_VISION], residents=[_VISION]):
+        held = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, hardware=small_memory_large_card)
+        refused = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, hardware=small_memory_small_card)
+    assert held.available is True
+    assert refused.precondition_verdict is not None
+    assert refused.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.HARDWARE_FLOOR_MET
+
+
+def test_a_busy_computer_admits_the_reader_and_the_load_reads_as_busy_memory_to_retry() -> None:
+    """Another program holding the memory is contention at the load, never this computer's limit."""
+    model = _VISION
+    busy = _computer(total=8 * _GIB, free=_GIB)
+    with _runtime(installed=[_VISION, _TEXT], residents=[]):
+        settings = load_settings()
+        status = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, hardware=busy)
+        load = assess_model_load_contention(model, _requirement(model), profile=busy, settings=settings)
+    assert status.available is True, status.precondition_verdict
+    assert load.admitted is False
+    assert load.causes == (ContentionCause.PEER_PROCESS,)
+    assert load.precondition_verdict is not None
+    assert load.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE
+    assert load.precondition_verdict.action is None
+    freed = _computer(total=8 * _GIB, free=8 * _GIB)
+    with _runtime(installed=[_VISION, _TEXT], residents=[]):
+        retried = assess_model_load_contention(model, _requirement(model), profile=freed, settings=load_settings())
+    assert retried.admitted is True, "the same load is admitted once the memory is free again"
 
 
 def _install_local_ai(storage_root: Path, address: str) -> None:
@@ -371,7 +452,8 @@ def test_a_located_local_ai_whose_server_no_manager_runs_refuses_with_its_setup(
         _install_local_ai(tmp_path, f"127.0.0.1:{port}")
         status = probe_local_reader(ModelRole.TEXT_EXTRACTION)
     assert status.available is False
-    assert status.facts["runtime_url"] == _CLOSED_ENDPOINT
+    assert status.facts["operator_endpoint"] is False
+    assert _CLOSED_ENDPOINT not in status.model_dump_json(), "the verdict never publishes the address"
     assert status.precondition_verdict is not None
     assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE
     assert status.precondition_verdict.action is not None
