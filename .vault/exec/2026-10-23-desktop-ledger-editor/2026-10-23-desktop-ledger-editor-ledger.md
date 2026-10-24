@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:02834aea9c4742e2a7ce2c902aefa1df28b3a80832ad023d7304cd605bc162ad'
+body_hash: 'sha256:1489fc6d6652f10cfa61b8a8c5ef99feaba634de5603fab2218857ce86d315ad'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -383,6 +383,56 @@ related:
 - `S06` `M` `native/desktop/frontend/tests/scenarios/data-grid.spec.ts`
 - `S06` `M` `native/desktop/frontend/tests/scenarios/ledger-editing.spec.ts`
 - `S06` `verify:` `playwright data-grid.spec.ts scenarios/data-grid.spec.ts scenarios/ledger-editing.spec.ts` -> `pass`
+- `S01` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S01` `verify:` `desktop-host-unit-test` -> `pass`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/ActionDialog.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/ClassifySection.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/DetailsSection.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/DocumentsSection.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/HistorySection.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/InspectorField.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/InvoiceSection.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/JumpIndex.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/LedgerInspector.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/ModelSuggestion.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/MovementInspector.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/RightPanel.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/SelectionInspector.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/SplitDialog.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/inspectorContext.ts`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/inspectorModel.ts`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/inspectorWords.ts`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/movementFields.ts`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/useInspectorReads.ts`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S10` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S10` `A` `native/desktop/frontend/src/dev/ledgerMovementActionFixture.ts`
+- `S10` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S10` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S10` `M` `native/desktop/frontend/src/styles/tokens.css`
+- `S10` `A` `native/desktop/frontend/tests/ledger-inspector-model.spec.ts`
+- `S10` `A` `native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts`
+- `S10` `M` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S10` `M` `native/desktop/frontend/src/shell/ledgerStage.ts`
+- `S10` `M` `dev/locales/desktop_chrome.py`
+- `S10` `M` `src/cadrumo/locales/ca/common.yml`
+- `S10` `M` `src/cadrumo/locales/en/common.yml`
+- `S10` `M` `src/cadrumo/locales/es/common.yml`
+- `S10` `M` `src/cadrumo/locales/hu/common.yml`
+- `S10` `verify:` `npx tsc --noEmit` -> `pass`
+- `S10` `verify:` `npx eslint and prettier --check on touched files` -> `pass`
+- `S10` `verify:` `playwright tests/ledger-inspector-model.spec.ts ledger-plan ledger-stage` -> `pass`
+- `S10` `verify:` `playwright tests/scenarios/ledger-inspector.spec.ts ledger-movements ledger-shell` -> `pass`
+- `S10` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `fail`
+- `S10` `by:` `implementation-high`
+- `S15` `M` `dev/locales/desktop_chrome.py`
+- `S15` `M` `src/cadrumo/locales/en/common.yml`
+- `S15` `M` `src/cadrumo/locales/es/common.yml`
+- `S15` `M` `src/cadrumo/locales/ca/common.yml`
+- `S15` `M` `src/cadrumo/locales/hu/common.yml`
+- `S15` `verify:` `dev/locales/tests/test_desktop_chrome.py` -> `fail`
 
 ## Notes
 
@@ -409,3 +459,6 @@ related:
 - `S13` Commits 3f8439a34f, 1af741c564, ec6a40e5b0, bc1b6a3eb3, 16cbd0f2aa.
 - `S05` 9fe5eef35d fixes the P02 mediums (shell chord copy, AltGr, select-all) and lows (combobox enter, position count); tsc is clean on these files, the only errors are CADRUMO-UX-MODELO's untracked workspace files
 - `S01` 434aaab711 reduced `provider_locator` and file: URIs in results; recorded here as the review asked
+- `S01` 81e11327f6 derives the payload bound from the native relay; the native wipe landed in a61193c467; all four P01 highs and the relay-bound-pin medium are resolved
+- `S10` `test_desktop_chrome:` the one failure is `test_the_shell_source_names_exactly_the_declared_keys,` whose drift is only S13's undeclared `desktop.ledger.documents.*` keys and the unused `desktop.ledger.matching.open_named;` every `desktop.ledger.inspector.*` key is declared and generated.
+- `S15` 797c4ab08a; no desktop.ledger key drifts, every ledger key is authored in four catalogues, no hard-coded ledger text; the one failing test flags only CADRUMO-UX-MODELO's uncommitted declarations, modelo and workspace keys
