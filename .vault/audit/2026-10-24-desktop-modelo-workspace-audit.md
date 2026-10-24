@@ -191,6 +191,17 @@ The review of the refused-renewal recovery (`4c1b5c81da`, independent opus lane,
 ### renewal-spec-weak | low | The granted-renewal scenario does not assert its call sequence or final check
 `native/desktop/frontend/tests/scenarios/modelo.spec.ts:646`.
 
+The narrow re-review of the renewal bound (`e4db8638d4`, independent opus lane, 2026-10-25) passed: rerenewal-unbounded, host-held-state-unchecked, frozen-profile-real-seed, moved-key-by-address and renewal-spec-weak are resolved. Three low findings remain.
+
+### reopen-keeps-moving | low | Reopening the review after "still changing" stops again without the TUI's one re-read
+`native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts:178` keeps `moved` across closes, while the TUI's review starts unrebased every time (`src/cadrumo/entrypoints/tui/modelo/workbench/screen_review.py:38`).
+
+### superseded-check-renews | low | A check overtaken before any renewal began can start one extra renewal of an old baseline
+`useEditReview.ts:202` renews before testing that its ticket is still the latest.
+
+### host-review-first-match | low | The scenario host takes the first review named for a held set instead of the one for the staged-on form
+`native/desktop/frontend/src/dev/modeloFixture.ts:453`; no negative scenario proves a stale held state is refused.
+
 Verified sound by the plan-close review: the closed admitted list pinned to the manifest, exact-profile filling and subject binding, files as session tokens, unknown versus refused on every mutation path with no resend, no logging or web storage in the Modelo host and components, typed entries only through the edit port with the buffer zeroed, list, header, next step, issue lines, sources, AEAT notes and receipt from shared producers, theme-only styling, missing drawn as a dash, and the prototype's interaction design unchanged.
 
 Verified sound: the next-step ladder and missing-value count are identical to the removed TUI code; origin, editability and source wording are faithful moves; no TUI module re-exports a moved name; the public round trip covers the new fields; the list read is exact-profile with whole-profile consent and no commit action; neither relay names a definition, the runtime refuses definitions without a financial operand, and both relays drop or overwrite the input after sending; every moved catalogue key exists in all four languages. Not verified by the reviewer: the full TUI and Rust suites (relying on the ledger's results), the full type and Ruff gates, the S02 mutation claim, and a live end-to-end financial submit through the Rust relay to a worker.
