@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:43f579725dd9f315d181e5237b492b3ef586dfb5ace64b3214c8043d3c81e61a'
+body_hash: 'sha256:535b4c7b0ff424755e17784e5b2cabdcd467978dd231947765ec1bd125acaaac'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -47,10 +47,16 @@ Move every classification and wording decision the prototype had to make into th
 - [x] `P01.S08` - Move the sources grouping (family, state, boxes fed, owning surface) from the TUI into an application read; `src/cadrumo/application/modelo/work_form_source_groups.py`.
 - [x] `P01.S09` - Name the figures outside the form a failed box waits on, with their owning surface, in the casilla help card, and carry citation text for legal references; `src/cadrumo/application/modelo/casilla_help.py`.
 - [x] `P01.S10` - Accept raw typed text in edit preflight and return the parsed value, its normalisations and parse refusals per address; `src/cadrumo/application/modelo/edit_operator_input.py`.
-- [ ] `P01.S30` - Project the header's attention counts, result view, deadline view with its tone, file view and export-gate reason on the form read model, and switch the TUI header to them; `src/cadrumo/application/modelo/work_form_header.py`.
+- [x] `P01.S30` - Project the header's attention counts, result view, deadline view with its tone, file view and export-gate reason on the form read model, and switch the TUI header to them; `src/cadrumo/application/modelo/work_form_header.py`.
 - [ ] `P01.S31` - Carry days remaining with tone, group words, creation targets and the AEAT-side steps the read model decides on the declarations list rows, and the zones' and calendar sources' availability on the list read; `src/cadrumo/application/modelo/declarations_list.py`.
 - [ ] `P01.S32` - Fold the retained apply prerequisite and the AEAT receipt step into the form's next step; `src/cadrumo/application/modelo/work_form_next_step.py`.
 - [ ] `P01.S33` - Close the review's lower findings: the TUI reads the stored standing, page applicability words are projected, a design-constant figure shows, the typed-entry apply refusal has its own code, the filed wording keys on the recorded closure, and the gate-agreement test drives the real gates; `src/cadrumo/application/modelo/work_form_models.py`.
+- [ ] `P01.S34` - Move the TUI's issue lines into the application and project them on the form read model in the form's language, with the verdict line, and switch the TUI to them; `src/cadrumo/application/modelo/work_form_issue_lines.py`.
+- [ ] `P01.S35` - Add a worded history read for one declaration in the modelo family, newest first, with a closed kind per event, and switch the TUI history to it; `src/cadrumo/application/modelo/work_history_read.py`.
+- [ ] `P01.S36` - Add envelopes for a verified Modelo 130 with blocking and incomplete findings and one recorded as filed, read through the real producer; `native/desktop/frontend/scripts/modelo_fixtures.py`.
+- [ ] `P01.S37` - Word the typed entry's read-back value and parse refusal in the entry's language, the edit preflight's findings and edit refusals, each repeating-record cell's and context field's value text, and state each box's restore offer and confirm value on the form read model; `src/cadrumo/application/modelo/work_form_wording.py`.
+- [ ] `P01.S38` - Project a worded amendment context for a recorded declaration, with the filed record, the permitted kinds and motives in words and each box's filed value text and edit hints, and parse the corrected values typed by the filer through the canonical typed-entry path, matching the CLI amend wizard; `src/cadrumo/application/modelo/work_amend_contracts.py`.
+- [ ] `P01.S39` - Project what typing a value over each box does in words, the export offer with its artefacts, elections and their words, the revision's file format, and the recorded filing's receipt state on the form read model, and switch the TUI to them; `src/cadrumo/application/modelo/work_form_export_offer.py`.
 
 ### Phase `P02` - One shared Modelo wording for every frontend
 

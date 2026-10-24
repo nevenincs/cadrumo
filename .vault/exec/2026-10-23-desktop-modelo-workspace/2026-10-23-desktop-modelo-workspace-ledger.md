@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:64118f3a63125784e880d02b67152e2adc356d27ffd1965ac4b4294a5469376b'
+body_hash: 'sha256:db59a02c9abb2a2bb48a77cc4725070ae56b06c8b3a8e3f301554610d17f8216'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -243,6 +243,27 @@ related:
 - `S11` `verify:` `TUI declarations, header, progress, sources, filing gates, casilla list, live language refresh (291)` -> `pass`
 - `S11` `verify:` `dev/locales test_dynamic_prefix_registry_coverage (32)` -> `pass`
 - `S14` `M` `.vault/plan/2026-10-23-desktop-modelo-workspace-plan.md`
+- `S30` `A` `src/cadrumo/application/modelo/work_form_header.py`
+- `S30` `A` `src/cadrumo/application/modelo/tests/test_work_form_header.py`
+- `S30` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S30` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_constants.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_footer.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_operation.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_applicability.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_header.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_issues.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_marks.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_missing_count.py`
+- `S30` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S30` `verify:` `ruff check and format` -> `pass`
+- `S30` `verify:` `lint-imports` -> `pass`
+- `S30` `verify:` `basedpyright touched files` -> `pass`
+- `S30` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S30` `verify:` `pytest test_work_form_header.py` -> `pass`
+- `S30` `verify:` `pytest TUI header suites` -> `pass`
+- `S30` `by:` `opus-p01-lane`
 
 ## Notes
 
