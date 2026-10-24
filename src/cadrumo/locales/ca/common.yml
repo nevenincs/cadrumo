@@ -5663,6 +5663,10 @@ tui:
             no té prou memòria lliure. {count} camps que les etiquetes no cobrien
             encara no s''han llegit i queden buits: {fields}. Allibera memòria i torna
             a llegir el document.'
+          local_ai_not_ready: 'La IA local no està a punt, així que el lector automàtic
+            no s''ha executat. {count} camps que les etiquetes no cobrien encara no
+            s''han llegit i queden buits: {fields}. Configura la IA local i torna
+            a llegir el document.'
           reader_unavailable: 'El lector automàtic no s''ha pogut iniciar. {count}
             camps que les etiquetes no cobrien encara no s''han llegit i queden buits:
             {fields}. Torna a llegir el document més tard.'

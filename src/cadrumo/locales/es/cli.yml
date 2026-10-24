@@ -273,10 +273,6 @@ cli:
           que las etiquetas no cubrían aún no se han leído y siguen vacíos: {fields}.
           El documento se leyó solo a partir de sus etiquetas; libera memoria y vuelve
           a extraer, o rellena tú esos campos.'
-        label_reading_reader_unavailable: 'El lector automático no pudo iniciarse
-          ({error_type}). Los {count} campo(s) que las etiquetas no cubrían aún no
-          se han leído y siguen vacíos: {fields}. El documento se leyó solo a partir
-          de sus etiquetas; vuelve a extraer más tarde, o rellena tú esos campos.'
         list_help: Lista los justificantes de facturas de compra registrados
         notes_help: Notas internas sobre el justificante
         pull_actor_help: Tu nombre o etiqueta.

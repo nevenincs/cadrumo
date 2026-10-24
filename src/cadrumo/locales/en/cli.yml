@@ -253,10 +253,6 @@ cli:
           the labels did not cover have not been read yet and stay empty: {fields}.
           The document was read from its labels only; free some memory and extract
           again, or fill in those fields yourself.'
-        label_reading_reader_unavailable: 'The automatic reader could not start ({error_type}).
-          The {count} field(s) the labels did not cover have not been read yet and
-          stay empty: {fields}. The document was read from its labels only; extract
-          again later, or fill in those fields yourself.'
         list_help: List registered purchase invoice evidence
         notes_help: Internal notes about the evidence
         pull_actor_help: Your name or label.

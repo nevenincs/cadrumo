@@ -5634,6 +5634,10 @@ tui:
             nincs elég szabad memória hozzá. A címkék által nem lefedett {count} mező
             még nem lett beolvasva, ezért üres marad: {fields}. Szabadíts fel memóriát,
             és olvasd be újra a dokumentumot.'
+          local_ai_not_ready: 'A helyi MI nem áll készen, ezért az automatikus olvasó
+            nem futott le. A címkék által nem lefedett {count} mező még nem lett beolvasva,
+            ezért üres marad: {fields}. Állítsd be a helyi MI-t, majd olvasd be újra
+            a dokumentumot.'
           reader_unavailable: 'Az automatikus olvasó nem indult el. A címkék által
             nem lefedett {count} mező még nem lett beolvasva, ezért üres marad: {fields}.
             Olvasd be újra a dokumentumot később.'

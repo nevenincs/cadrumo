@@ -279,7 +279,12 @@ def _label_reading_line(fallback: LabelReadingFallback) -> str:
     """Name what stopped model fill and list every unread field."""
     match fallback.cause:
         case LabelReadingFallbackCause.READER_UNAVAILABLE:
-            key = "tui.ledger.evidence.draft.label_reading.reader_unavailable"
+            # The line offers the local AI setup only when the reader probe named it.
+            key = (
+                "tui.ledger.evidence.draft.label_reading.local_ai_not_ready"
+                if fallback.recovery_action_id is not None
+                else "tui.ledger.evidence.draft.label_reading.reader_unavailable"
+            )
         case LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED:
             key = "tui.ledger.evidence.draft.label_reading.headroom_refused"
         case LabelReadingFallbackCause.INFERENCE_SLOT_BUSY:

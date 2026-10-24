@@ -5566,6 +5566,10 @@ tui:
             does not have enough free memory for it. {count} field(s) the labels did
             not cover have not been read yet and stay empty: {fields}. Free some memory
             and read the document again.'
+          local_ai_not_ready: 'Local AI is not ready, so the automatic reader did
+            not run. {count} field(s) the labels did not cover have not been read
+            yet and stay empty: {fields}. Set up the local AI, then read the document
+            again.'
           reader_unavailable: 'The automatic reader could not start. {count} field(s)
             the labels did not cover have not been read yet and stay empty: {fields}.
             Read the document again later.'
