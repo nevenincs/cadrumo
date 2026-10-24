@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a03d0fe8c9c4cb57970a3ae0ec032cf51640907bc605f70ad280ad28e797cf9'
+body_hash: 'sha256:e2f4b0facb05cd2ce6f9af2b7ca4a27bd07964e3600ddba8da09684245fadb92'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
@@ -126,6 +126,34 @@ related:
 - `S09` `verify:` `pytest dev/locales/tests/test_desktop_navigation_labels.py` -> `pass`
 - `S09` `verify:` `cmake --target desktop-host-unit-test` -> `pass`
 - `S09` `verify:` `tsc --noEmit on S09 index export` -> `pass`
+- `S10` `A` `native/desktop/frontend/src/shell/navigation/links.ts`
+- `S10` `A` `native/desktop/frontend/src/shell/navigation/resolve.ts`
+- `S10` `A` `native/desktop/frontend/src/shell/navigation/windowViews.ts`
+- `S10` `A` `native/desktop/frontend/src/shell/navigation/guards.ts`
+- `S10` `A` `native/desktop/frontend/src/shell/navigation/focus.ts`
+- `S10` `A` `native/desktop/frontend/src/shell/navigation/hooks.ts`
+- `S10` `A` `native/desktop/frontend/src/shell/navigation/useNavigator.ts`
+- `S10` `A` `native/desktop/frontend/src/components/NavigationPrompt.tsx`
+- `S10` `A` `native/desktop/frontend/tests/scenarios/navigation-register.spec.ts`
+- `S10` `D` `native/desktop/frontend/src/components/agent/cadrumoLink.ts`
+- `S10` `M` `native/desktop/frontend/src/App.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/agent/Markdown.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/editing/LedgerEditing.tsx`
+- `S10` `M` `native/desktop/frontend/src/dev/agentFixtureHost.ts`
+- `S10` `M` `native/desktop/frontend/tests/scenarios/agent-page-links.spec.ts`
+- `S10` `M` `dev/locales/desktop_chrome.py`
+- `S10` `M` `src/cadrumo/locales/en/common.yml`
+- `S10` `M` `src/cadrumo/locales/es/common.yml`
+- `S10` `M` `src/cadrumo/locales/ca/common.yml`
+- `S10` `M` `src/cadrumo/locales/hu/common.yml`
+- `S10` `verify:` `playwright scenarios navigation-register and agent-page-links` -> `pass`
+- `S10` `verify:` `playwright scenarios ledger-editing ledger-shell user-profile agent-markdown` -> `pass`
+- `S10` `verify:` `npm run check tsc and eslint` -> `pass`
+- `S10` `verify:` `tsc eslint prettier on S10 index export` -> `pass`
+- `S10` `verify:` `pytest desktop chrome and navigation label tests` -> `pass`
+- `S10` `verify:` `cmake --target desktop-host-unit-clippy` -> `pass`
 
 ## Notes
 
@@ -133,3 +161,4 @@ related:
 - `S07` The 9 broader failures are outside S07: `desktop_chrome` and dict-naming and catalogue-identity locale gates over other sessions' edits, and runtime TUI automation-inventory and restored-login settle timeouts; locale key `tui.ledger.entries.selection_absent` landed inside another session's commit 44d85df020
 - `S07` Follow-up 7ba285bd05 closes a wire gap the desktop lane found: PresentationDelivered and the session hold's `destination_presented` line now echo the request's params, and the client refuses a reply whose params differ
 - `S09` commits e7301548b6 and 70ae70915f; the first was written from an index read before five other commits and dropped their files, the second restores them; the host requires the runtime delivery to echo params, added by the Python lane in 7ba285bd05
+- `S10` commit 53098ff2ca; App.tsx committed as HEAD plus only these hunks, another session's provisioning hunks stay uncommitted in the worktree; six scenario specs timed out under concurrent clippy load and passed on rerun at two workers
