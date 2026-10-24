@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9486e693ab637c18e296178082baf6b23d80a78994eb92d0ff653f1582f3a94'
+body_hash: 'sha256:aa1e2393c8313184ebfc79c8a532610550405056ac4dd1469844b906388ebd2f'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -355,6 +355,8 @@ related:
 - `S14` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_evidence.py`
 - `S14` `verify:` `new TUI pilot tests (6), runtime evidence door (10), TUI ledger evidence suites (159)` -> `pass`
 - `S14` `verify:` `ruff, ty, pyrefly, check-operation-contract-manifest` -> `pass`
+- `S09` `verify:` `gate plus a same-process env probe (36)` -> `pass`
+- `S09` `verify:` `falsifier: with the fixture disabled the env probe fails` -> `pass`
 
 ## Notes
 
@@ -380,3 +382,4 @@ related:
 - `S09` review correction gate-stops-at-consumer and the supply-nature row flake: operation drives through the real supervisor, a declared operation set with coverage checks, and an operator supply-nature model setting the gate pins
 - `S04` review corrections verdict-paths-published and browser-code-key-mismatch: `REFUSED_BROWSER_NOT_USABLE`
 - `S14` The recorded error dropped the verdict, so the fix carries it through RecordedRegisteredError and `OperationErrorDetailV1.recorded_error();` every door using `explain_failure` now keeps the verdict
+- `S09` review correction: the gate's browser drives left `PLAYWRIGHT_BROWSERS_PATH` pointing at their empty root for later tests on the worker; an autouse fixture restores it. The ledger.classify.review row currently fails on another session's uncommitted classification review and settlement edits, not on this plan's code

@@ -90,6 +90,7 @@ import ast
 import asyncio
 import base64
 import importlib
+import os
 import re
 import traceback
 from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
@@ -192,6 +193,17 @@ from .dependency_operation_gating_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _restore_playwright_browsers_path(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Undo the browser root the Playwright start points the whole process at, for later tests on this worker."""
+    current = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
+    if current is None:
+        monkeypatch.delenv("PLAYWRIGHT_BROWSERS_PATH", raising=False)
+    else:
+        monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", current)
+
 
 _PACKAGE = "cadrumo"
 _PACKAGE_ROOT = Path(__file__).resolve().parents[2]
