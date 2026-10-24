@@ -24,6 +24,7 @@ pub mod runtime_pipe;
 pub mod storage;
 #[cfg(target_os = "macos")]
 pub mod transport;
+pub mod volume;
 
 #[repr(C)]
 pub struct Buffer {

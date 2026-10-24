@@ -657,6 +657,68 @@ are the release version and `OriginalFilename` is `cadrumo-manager.exe`. The
 crate's build script writes that resource and the process manifest without a
 resource compiler, from the `CADRUMO_ID_*` identity projection.
 
+### The components role
+
+`cadrumo --role components <command> [options]` runs the native component engine:
+it reports, plans, sets up, checks and removes the browser and the local AI for the
+command line, the TUI and the MCP service. It is the one role that hosts no
+interpreter. The desktop links the same engine in process, so every surface reads the
+same rows, plans and plan digests.
+
+| Command | Options | Does |
+| --- | --- | --- |
+| `status` | `--full`, `--item <id>`... | Every item's row; a quick check unless `--full` |
+| `plan` | `--item <id>`... | The plan a setup would ask the person to approve |
+| `setup` | `--item <id>`..., `--approve <digest>` | Sets the items up under an approval of their plan |
+| `verify` | `--item <id>`... | A full check, of every item by default |
+| `cancel` | none | Asks setups running in other processes to stop |
+| `remove` | `--item <id>`..., at least one | Removes the items |
+
+The item ids are `browser` and `local_ai`. Without `--item`, a setup covers every
+item whose row offers an action. A quick check reads local files only: no network and
+no model load, within 2 s. A full check also runs each item's network preflight, one
+headless launch of the browser, and one generated token for each role's model.
+
+Standard output carries one JSON object per line, each with a `type`: `started`
+(with `protocol` and `command`) first, then the events, then one `result` last. The
+events are `phase` (`phase_code` `dependencies.setup.<item>.<step>`, `item_id`,
+`step`), `progress` (`subject_code`, `unit_code` `bytes`, `completed`, `total`, at
+most one per item every 500 ms and only on a 1 % change), `notice` (`notice_code`
+`retrying` with `attempt` and `delay_ms`; `waiting_for_server`; `cancel_requested`;
+`input_refused`) and `review` (`plan_digest` and `plan`). The `result` carries the
+`outcome`, every item's `rows` with `setup_complete`, and, where they apply, the
+`plan` with its `plan_digest`, the `item_id` and `failure_category` a refusal or
+failure is for, and the `items` a cancel or removal touched. Every value is a closed
+code or a locale-neutral fact; each surface words them from its locale catalogue.
+
+| Outcome | Exit | Meaning |
+| --- | --- | --- |
+| `ok`, `nothing_to_do`, `completed`, `cancel_requested`, `nothing_running`, `removed` | 0 | The command did what was asked |
+| `needs_approval`, `plan_changed`, `busy`, `refused`, `failed`, `cancelled` | 1 | It did not; `plan_changed` reports the current plan for a new approval |
+| `invalid_request` | 64 | The command line names no command; this is the only line written |
+
+A setup's approval binds its plan's digest. With `--approve`, the setup runs only while
+the plan still has that digest, and asks for no review, which is how a Resume after an
+interruption proceeds without a second review. Without it, the role sends a `review`
+and reads one line from standard input: `{"type":"approve","plan_digest":"<digest>"}`
+approves that plan, which is computed again and must still match, and
+`{"type":"decline"}` declines. `{"type":"cancel"}` stops a running setup or check at
+its next transfer chunk. Closing standard input declines a waiting review and cancels a
+running setup. An offline computer, an unreachable host or too little free space
+refuses before any review; the free space must cover the download plus a fifth plus
+1 GiB.
+
+The role resolves the installation from its own image: the package's pin tables and
+bundled browser driver, and the storage root with its relocatable browsers, models and
+server-home members, by the same rules every other Cadrumo process uses. It honours the
+`CADRUMO_PROXY_*` settings. On Windows the role places itself in a kill-on-close job
+before it starts anything, so a browser it launches for a check ends with it, however
+the role ends. The role never runs the local AI server: the runtime manager runs it on
+the fixed local AI address while the program is set up. A local AI setup installs the
+program, records it with that address, and waits up to 35 s for the manager's server
+before it pulls the models through it; without a manager the setup fails with
+`program_not_running`.
+
 ## Mutable data and reconciliation
 
 The native bootstrap applies the storage-root rule that

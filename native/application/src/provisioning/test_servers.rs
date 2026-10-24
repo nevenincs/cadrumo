@@ -160,6 +160,13 @@ pub(crate) enum Reply {
     Cut(Vec<u8>),
     /// These bytes, then nothing until the server is dropped.
     Hold(Vec<u8>),
+    /// `first`, then `rest` once `gate` is released, then an orderly close. A test that
+    /// gates a reply releases the gate before it drops the server.
+    Gated {
+        first: Vec<u8>,
+        rest: Vec<u8>,
+        gate: Arc<Released>,
+    },
 }
 
 pub(crate) fn response(status: &str, headers: &[(&str, String)], body: &[u8]) -> Vec<u8> {
@@ -201,14 +208,14 @@ pub(crate) struct Released {
 }
 
 impl Released {
-    fn wait(&self) {
+    pub(crate) fn wait(&self) {
         let mut done = self.done.lock().unwrap();
         while !*done {
             done = self.signal.wait(done).unwrap();
         }
     }
 
-    fn release(&self) {
+    pub(crate) fn release(&self) {
         *self.done.lock().unwrap() = true;
         self.signal.notify_all();
     }
@@ -317,6 +324,14 @@ impl TlsServer {
                     let _ = stream.write_all(&bytes);
                     let _ = stream.flush();
                     released.wait();
+                }
+                Reply::Gated { first, rest, gate } => {
+                    let _ = stream.write_all(&first);
+                    let _ = stream.flush();
+                    gate.wait();
+                    let _ = stream.write_all(&rest);
+                    stream.conn.send_close_notify();
+                    let _ = stream.flush();
                 }
             }
         });

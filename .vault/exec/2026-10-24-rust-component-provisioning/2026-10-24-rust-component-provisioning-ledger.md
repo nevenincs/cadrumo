@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd3c6e1e87ff57541ae676ae6a197b37d9f538c3dcb72a17bd1d937a1b4120a3'
+body_hash: 'sha256:bbcb58b898163979c2b7f70e9c4b5ed927f326d83197563886a8703cf5038180'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -298,6 +298,33 @@ related:
 - `S09` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
 - `S09` `verify:` `just check-operation-contract-manifest (drift is ledger.evidence.page, modelo.edit.renew and modelo.work.form from uncommitted work outside this Step; no local reader or dependency operation changed)` -> `fail`
 - `S09` `by:` `implementation-engineer-high`
+- `S10` `A` `native/application/src/provisioning/engine.rs`
+- `S10` `A` `native/application/src/provisioning/protocol.rs`
+- `S10` `A` `native/application/src/provisioning/protocol/tests.rs`
+- `S10` `A` `native/application/src/provisioning/role_host.rs`
+- `S10` `A` `native/platform/src/volume.rs`
+- `S10` `M` `native/application/src/role.rs`
+- `S10` `M` `native/application/src/provisioning/mod.rs`
+- `S10` `M` `native/application/src/provisioning/activity.rs`
+- `S10` `M` `native/application/src/provisioning/browser.rs`
+- `S10` `M` `native/application/src/provisioning/test_servers.rs`
+- `S10` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S10` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S10` `M` `native/platform/src/lib.rs`
+- `S10` `M` `native/platform/Cargo.toml`
+- `S10` `M` `native/manager/src/supervision/environment.rs`
+- `S10` `M` `native/desktop/src-tauri/src/role.rs`
+- `S10` `M` `native/CONTRACT.md`
+- `S10` `verify:` `cargo test --offline --lib on an export of HEAD d54ca8af31 plus this Step (160; protocol 7 over pipes), twice` -> `pass`
+- `S10` `verify:` `cargo test --offline --lib --features platform (202, 1 ignored), twice` -> `pass`
+- `S10` `verify:` `cargo test --offline --no-fail-fast integration targets (package_inspection linked_root_and_deep_root_ancestor_are_refused pre-existing non-ASCII junction failure)` -> `pass`
+- `S10` `verify:` `cargo clippy --all-targets -D warnings, with and without --features platform` -> `pass`
+- `S10` `verify:` `cargo test -p cadrumo-platform volume (1) and clippy --all-targets -D warnings` -> `pass`
+- `S10` `verify:` `manager cargo clippy --all-targets -D warnings and cargo test --lib supervision (45)` -> `pass`
+- `S10` `verify:` `desktop cargo clippy --locked --bin cadrumo -D warnings on a scratch host tree; built cadrumo.exe --role components status against a staged package: quick check 0.6 s, exit 0; unknown command exit 64` -> `pass`
+- `S10` `verify:` `rustfmt --edition 2024 --check through stdin on the touched files` -> `pass`
+- `S10` `verify:` `cargo deny check (platform; application --features platform)` -> `pass`
+- `S10` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -331,3 +358,5 @@ related:
 - `S09` S09 review finding hardware-refusal-unreachable (2026-10-24-component-on-demand-audit): the probe now judges a role the hardware or catalogue cannot serve first, for every role including vision transcription and text extraction, with a no-action verdict, then the local AI record and reachability, then the installed model
 - `S09` S09 fitness is consumer admission: a verdict recorded against the current weights that found the text model unfit or too slow refuses with no action; a model with no verdict is admitted, since the withdrawn Python verify is the only writer of a verdict; `local_reader_setup_items` keeps its own fitness use until P05.S14 deletes it
 - `S09` S09 the record is consulted only while the chat URL is the managed default; an operator-configured endpoint is used as written; providers/local.py needed no change because the client resolves the URL before the consent gate and the adapter posts only to what it is given
+- `S10` S10 the containment of a killed role rests on the kill-on-close job the binary entry takes on Windows; no test kills a role during a browser check, and Linux and macOS have no job yet
+- `S10` S10 a local AI setup waits up to 35 s for the manager's server; without a manager it fails `program_not_running` after installing and recording the program

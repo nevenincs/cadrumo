@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:5e3416eda73e5464fd5ae782996390e765be9da5a56472ba6589b036cb87fb1e'
+body_hash: 'sha256:4924cd0aa91dc6d771fcef6230ba370d70c62ae1a719ff072d38b3ada1a38dcd'
 ---
 
 # `rust-component-provisioning` plan
@@ -69,7 +69,7 @@ The engine installs a pinned portable Ollama, runs it as its own child, pulls an
 
 The single binary gains the components role; the desktop calls the engine in process, and the CLI, TUI and MCP become thin clients of the role.
 
-- [ ] `P04.S10` - Add the components role to the single binary with its line-delimited JSON protocol for status, plan, setup, verify, cancel and remove, and document it in the package contract; `native/application/src/role.rs, native/application/src/provisioning/protocol.rs, the binary entry, native/CONTRACT.md and tests`.
+- [x] `P04.S10` - Add the components role to the single binary with its line-delimited JSON protocol for status, plan, setup, verify, cancel and remove, and document it in the package contract; `native/application/src/role.rs, native/application/src/provisioning/protocol.rs, the binary entry, native/CONTRACT.md and tests`.
 - [ ] `P04.S11` - Point the desktop setup host at the in-process engine and drop its relay of dependencies operations, keeping the window contract unchanged; `native/desktop/src-tauri/src/shell/setup/, native/desktop/src-tauri/src/app.rs and Rust tests`.
 - [ ] `P04.S12` - Add a Python client that starts the components role and decodes its protocol, and make config provision, config check and the health report thin clients of it with words from the canonical catalogues; `src/cadrumo/adapters/outbound/components/, src/cadrumo/entrypoints/cli/config/provision_cli.py, src/cadrumo/entrypoints/cli/config/check_cli.py, src/cadrumo/application/preflight.py, src/cadrumo/application/diagnostics.py, src/cadrumo/entrypoints/cli/command_operation_table.py and tests`.
 - [ ] `P04.S13` - Make the TUI setup screen and the MCP service clients of the same role, with MCP approval bound to the plan digest and progress relayed as notifications; `src/cadrumo/entrypoints/tui/setup/, src/cadrumo_mcp/ and tests`.

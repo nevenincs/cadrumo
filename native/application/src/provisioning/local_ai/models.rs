@@ -33,7 +33,7 @@ use crate::{
 };
 use serde::Deserialize;
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     io,
     path::{Path, PathBuf},
 };
@@ -203,6 +203,72 @@ impl Models {
             }
         }
         Err(LocalAiError::Failed(FailureCategory::HostUnreachable))
+    }
+
+    /// Removes every pinned model the models folder holds: its manifest, then each layer
+    /// that no manifest left there uses. A model kept beside them keeps its layers, and
+    /// when any kept manifest cannot be read, every layer stays.
+    pub fn remove(&self) -> Result<(), Error> {
+        let manifests = self.root.join("manifests");
+        filesystem::refuse_links(&manifests)?;
+        if std::fs::symlink_metadata(&manifests).is_err() {
+            return Ok(());
+        }
+        let pinned: BTreeSet<PathBuf> = self
+            .pins
+            .models
+            .iter()
+            .filter_map(|pin| self.manifest_path(&pin.name))
+            .collect();
+        let mut released = BTreeSet::new();
+        let mut kept = BTreeSet::new();
+        let mut unreadable = false;
+        let mut pending = vec![manifests];
+        while let Some(folder) = pending.pop() {
+            for entry in std::fs::read_dir(&folder)? {
+                let path = entry?.path();
+                let meta = std::fs::symlink_metadata(&path)?;
+                filesystem::refuse_metadata_links(&meta)?;
+                if meta.is_dir() {
+                    pending.push(path);
+                    continue;
+                }
+                let layers = filesystem::bounded_bytes(&path, MANIFEST_BYTES_LIMIT)
+                    .ok()
+                    .and_then(|bytes| serde_json::from_slice::<Manifest>(&bytes).ok())
+                    .map(|manifest| {
+                        std::iter::once(manifest.config)
+                            .chain(manifest.layers)
+                            .map(|layer| layer.digest)
+                            .collect::<Vec<_>>()
+                    });
+                if pinned.contains(&path) {
+                    released.extend(layers.into_iter().flatten());
+                    std::fs::remove_file(&path)?;
+                } else {
+                    unreadable |= layers.is_none();
+                    kept.extend(layers.into_iter().flatten());
+                }
+            }
+        }
+        if unreadable {
+            return Ok(());
+        }
+        for digest in released.difference(&kept) {
+            let Some(hex) = digest.strip_prefix("sha256:") else {
+                continue;
+            };
+            if Sha256Digest::new(hex).is_err() {
+                continue;
+            }
+            let blob = self.root.join("blobs").join(format!("sha256-{hex}"));
+            filesystem::refuse_links(&blob)?;
+            match std::fs::remove_file(&blob) {
+                Err(error) if error.kind() != io::ErrorKind::NotFound => return Err(error.into()),
+                _ => {}
+            }
+        }
+        Ok(())
     }
 
     fn manifest_path(&self, name: &str) -> Option<PathBuf> {

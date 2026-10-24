@@ -702,6 +702,43 @@ impl BrowserLayout {
         Ok(self.remove_superseded())
     }
 
+    /// Removes the item: its receipt first, so no consumer locates a build being removed,
+    /// then every build of the families this layout installs, whatever its revision, and
+    /// the staging folder with its partial downloads. `writer` holds the browser's writer
+    /// lock. A link inside a build is refused, and that build stays.
+    pub fn remove(&self, writer: &ItemWriter<'_>, receipts: &ReceiptStore) -> Result<(), Error> {
+        if writer.item() != ItemId::Browser {
+            return Err(Error::Invalid(
+                "browser removal under another item's lock".into(),
+            ));
+        }
+        receipts.remove(ItemId::Browser)?;
+        if fs::symlink_metadata(&self.root).is_err() {
+            return Ok(());
+        }
+        filesystem::refuse_links(&self.root)?;
+        let families: BTreeSet<&str> = self
+            .builds
+            .iter()
+            .filter_map(|build| Family::of_directory(&build.directory_name))
+            .map(|(family, _)| family.directory_prefix())
+            .collect();
+        let mut removed: Vec<String> = fs::read_dir(&self.root)?
+            .filter_map(Result::ok)
+            .filter_map(|entry| entry.file_name().into_string().ok())
+            .filter(|name| {
+                name == STAGING
+                    || Family::of_directory(name)
+                        .is_some_and(|(family, _)| families.contains(family.directory_prefix()))
+            })
+            .collect();
+        removed.sort();
+        for name in removed {
+            remove_tree(&self.root.join(name), &self.root)?;
+        }
+        Ok(())
+    }
+
     /// Removes every other revision of the families this layout installs. A folder that is
     /// a link, or that cannot be removed, stays and is counted.
     fn remove_superseded(&self) -> Settled {
@@ -757,7 +794,7 @@ pub struct LaunchContext<'a> {
     pub scratch: &'a Path,
     pub budget: Duration,
     /// Arguments before the browser switches; only a test's stand-in browser takes any.
-    leading: Vec<OsString>,
+    pub(crate) leading: Vec<OsString>,
 }
 
 impl<'a> LaunchContext<'a> {
@@ -1046,9 +1083,11 @@ pub(crate) mod tests {
     };
     use zip::write::SimpleFileOptions;
 
+    pub(crate) use super::launch::tests::{fake_environment, fake_leading};
+
     pub(crate) const DRIVER: &str = "1.64.0-beta-1791568591000";
     pub(crate) const BROWSER_VERSION: &str = "156.0.8078.4";
-    const HOST: &str = "cdn.example.com";
+    pub(crate) const HOST: &str = "cdn.example.com";
 
     pub(crate) fn platform() -> Platform {
         Platform::current().expect("tests run on a supported platform")
@@ -1131,6 +1170,33 @@ pub(crate) mod tests {
         let mut served = BTreeMap::new();
         for (family, directory) in families() {
             let bytes = archive(family.executable(platform).unwrap(), tag);
+            let path = format!("builds/{directory}/{}.zip", family.directory_prefix());
+            table.push_str(&pin_entry(platform, directory, &path, &bytes));
+            served.insert(format!("/{path}"), bytes);
+        }
+        Archives { table, served }
+    }
+
+    /// [`archives`], with this test binary as the headless build's executable, so a full
+    /// check of the installed builds can launch it as the stand-in browser.
+    pub(crate) fn launchable_archives(tag: &str) -> Archives {
+        let platform = platform();
+        let mut table = format!("playwright_driver = \"{DRIVER}\"\nhosts = [\"{HOST}\"]\n");
+        let mut served = BTreeMap::new();
+        let program = fs::read(std::env::current_exe().unwrap()).unwrap();
+        for (family, directory) in families() {
+            let executable = family.executable(platform).unwrap();
+            let bytes = if family == Family::HeadlessShell {
+                let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
+                let stored = SimpleFileOptions::default()
+                    .compression_method(zip::CompressionMethod::Stored)
+                    .unix_permissions(0o755);
+                zip.start_file(executable, stored).unwrap();
+                zip.write_all(&program).unwrap();
+                zip.finish().unwrap().into_inner()
+            } else {
+                archive(executable, tag)
+            };
             let path = format!("builds/{directory}/{}.zip", family.directory_prefix());
             table.push_str(&pin_entry(platform, directory, &path, &bytes));
             served.insert(format!("/{path}"), bytes);

@@ -154,7 +154,11 @@ pub fn runtime_environment(
         DefineError::Failed(message) => io::Error::new(io::ErrorKind::InvalidInput, message),
     };
     // The runtime role's declared image owns the runtime's launch profile.
-    let profile = launch::select(Role::Runtime.hosted().image, &[]).map_err(failed)?;
+    let image = Role::Runtime
+        .hosted()
+        .map(|hosted| hosted.image)
+        .ok_or_else(|| io::Error::from(io::ErrorKind::Unsupported))?;
+    let profile = launch::select(image, &[]).map_err(failed)?;
     let defined = launch::define_environment(profile, &ambient, package.unwrap_or(root), &|_| {
         Ok(root.to_path_buf())
     })

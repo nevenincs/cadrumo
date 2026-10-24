@@ -17,10 +17,15 @@
 //! `local_ai` installs, runs and checks the local AI's program and models.
 //!
 //! `browser` installs the bundled driver's pinned Chromium builds into the layout it reads.
+//!
+//! `engine` composes the items into status, plan, setup, verify, cancel and remove, the
+//! one engine every surface reads. `protocol` is the `components` role's line protocol
+//! over it, and `role_host` resolves an installation for the role from its own process.
 
 pub mod activity;
 pub mod browser;
 pub mod connection;
+pub mod engine;
 pub mod failure;
 pub(crate) mod http;
 pub mod items;
@@ -28,8 +33,11 @@ pub mod local_ai;
 pub mod network;
 pub mod pins;
 pub mod plan;
+pub mod protocol;
 pub mod proxy;
 pub mod receipts;
+#[cfg(feature = "platform")]
+pub mod role_host;
 pub mod state;
 pub mod transfer;
 pub mod url;

@@ -102,6 +102,16 @@ impl ActivityStore {
     /// Takes the item's writer lock without waiting and records the first step. `Busy`
     /// when another writer holds the lock.
     pub fn begin(&self, item: ItemId, step: SetupStep) -> Result<ItemWriter<'_>, Error> {
+        self.begin_observed(item, step, &unobserved)
+    }
+
+    /// [`Self::begin`], telling `observer` each step once it is recorded, the first included.
+    pub fn begin_observed<'a>(
+        &'a self,
+        item: ItemId,
+        step: SetupStep,
+        observer: &'a dyn Fn(SetupStep),
+    ) -> Result<ItemWriter<'a>, Error> {
         let lock = self.lock_file(item)?;
         lock.try_lock().map_err(|error| match error {
             fs::TryLockError::WouldBlock => Error::Busy,
@@ -111,6 +121,7 @@ impl ActivityStore {
             store: self,
             item,
             _lock: WriterLock(lock),
+            observer,
         };
         writer.step(step)?;
         Ok(writer)
@@ -170,12 +181,15 @@ impl ActivityStore {
     }
 }
 
+fn unobserved(_: SetupStep) {}
+
 /// The one writer of an item. Dropping it without finishing leaves the activity record
 /// behind, which is how a crash reads: the item is then interrupted.
 pub struct ItemWriter<'a> {
     store: &'a ActivityStore,
     item: ItemId,
     _lock: WriterLock,
+    observer: &'a dyn Fn(SetupStep),
 }
 
 impl ItemWriter<'_> {
@@ -192,7 +206,9 @@ impl ItemWriter<'_> {
                 item: self.item,
                 step,
             },
-        )
+        )?;
+        (self.observer)(step);
+        Ok(())
     }
 
     /// The setup left the item ready: no failure and no activity remain.
@@ -224,6 +240,26 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let store = ActivityStore::new(directory.path().join("activity")).unwrap();
         (directory, store)
+    }
+
+    #[test]
+    fn an_observed_writer_reports_each_step_once_it_is_recorded() {
+        let (_directory, store) = store();
+        let seen = std::cell::RefCell::new(Vec::new());
+        let observer = |step| {
+            assert_eq!(
+                store.activity(ItemId::Browser).unwrap(),
+                Activity::Running(step),
+                "a step is reported after its record"
+            );
+            seen.borrow_mut().push(step);
+        };
+        let writer = store
+            .begin_observed(ItemId::Browser, SetupStep::Download, &observer)
+            .unwrap();
+        writer.step(SetupStep::Install).unwrap();
+        writer.finished().unwrap();
+        assert_eq!(*seen.borrow(), [SetupStep::Download, SetupStep::Install]);
     }
 
     #[test]

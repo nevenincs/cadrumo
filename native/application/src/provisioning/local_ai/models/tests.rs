@@ -556,3 +556,64 @@ fn the_local_ai_reads_as_the_worst_of_its_program_and_models() {
         version
     );
 }
+
+#[test]
+fn removal_takes_the_pinned_models_and_only_the_layers_nothing_else_uses() {
+    let fixture = fixture();
+    let root = fixture.models_root();
+    fixture.text.write(&root, "qwen3:1.7b");
+    fixture.vision.write(&root, "qwen3-vl:2b");
+    // A model the person keeps beside them shares the text model's first layer.
+    let shared = &fixture.text.blobs[0];
+    let own = vec![9u8; 11];
+    let own_digest = format!("sha256:{}", Sha256Digest::of(&own));
+    let kept_manifest = json!({
+        "schemaVersion": 2,
+        "config": { "digest": shared.0, "size": shared.1.len() },
+        "layers": [{ "digest": own_digest, "size": own.len() }],
+    })
+    .to_string();
+    let kept = root.join("manifests/registry.ollama.ai/library/kept/latest");
+    fs::create_dir_all(kept.parent().unwrap()).unwrap();
+    fs::write(&kept, kept_manifest).unwrap();
+    let own_blob = root.join(format!(
+        "blobs/sha256-{}",
+        own_digest.strip_prefix("sha256:").unwrap()
+    ));
+    fs::write(&own_blob, &own).unwrap();
+
+    fixture.models.remove().unwrap();
+    let hardware = Hardware::default();
+    for role in MODEL_ROLES {
+        assert_eq!(
+            fixture.models.observe_quick(role, &hardware),
+            Observation::Absent,
+            "{role}"
+        );
+    }
+    let remaining = |stored: &Stored, name: &str| {
+        stored
+            .files(&root, name)
+            .into_iter()
+            .filter(|(path, _)| path.exists())
+            .count()
+    };
+    assert_eq!(remaining(&fixture.vision, "qwen3-vl:2b"), 0);
+    assert_eq!(
+        remaining(&fixture.text, "qwen3:1.7b"),
+        1,
+        "only the layer the kept model uses stays"
+    );
+    assert!(kept.is_file() && own_blob.is_file());
+
+    fs::write(&kept, b"{").unwrap();
+    fixture.text.write(&root, "qwen3:1.7b");
+    fixture.models.remove().unwrap();
+    assert_eq!(
+        remaining(&fixture.text, "qwen3:1.7b"),
+        3,
+        "an unreadable kept manifest keeps every layer"
+    );
+    fs::remove_dir_all(&root).unwrap();
+    fixture.models.remove().unwrap();
+}
