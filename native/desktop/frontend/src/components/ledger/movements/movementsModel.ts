@@ -68,12 +68,15 @@ export type ColumnSpec = {
 
 export const COLUMN_SPECS: Record<ColumnId, ColumnSpec> = {
   select: { width: 2.25, sticky: "start", sortable: false },
+  // Compact rows draw the status as a glyph alone; see `statusWidth`.
   status: { width: 7.5, sticky: "start", sortable: true },
   date: { width: 4.5, sticky: "start", sortable: true, server: "date" },
+  // What a movement is stays in view while its other columns scroll.
   description: {
     width: 12,
     minWidth: 12,
     grow: 2,
+    sticky: "start",
     sortable: true,
     server: "description",
   },
@@ -112,6 +115,11 @@ export const COLUMN_SPECS: Record<ColumnId, ColumnSpec> = {
   classified_by: { width: 8, sortable: true },
   modified: { width: 8, sortable: true, server: "modified_at" },
 };
+
+/** The status column's width: a glyph and a count in compact rows, the word
+ * beside them in comfortable ones. */
+export const statusWidth = (density: "compact" | "comfortable") =>
+  density === "compact" ? 2.75 : COLUMN_SPECS.status.width;
 
 /** Columns that are always drawn: the row's selection box. */
 const FIXED: readonly ColumnId[] = ["select"];

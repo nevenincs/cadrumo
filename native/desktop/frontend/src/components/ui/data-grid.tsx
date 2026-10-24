@@ -1218,6 +1218,19 @@ function DataGrid<R>({
   };
 
   // ── Drawing ───────────────────────────────────────────────────────────
+  // Where columns scroll under a pinned group, the group's inner edge shows,
+  // so nothing seems to begin mid-word.
+  const lastStart = ordered
+    .filter((column) => column.sticky === "start")
+    .at(-1)?.id;
+  const firstEnd = ordered.find((column) => column.sticky === "end")?.id;
+  const pinnedEdge = (id: string) =>
+    cn(
+      id === lastStart && view.left > 0 && "border-e border-border",
+      id === firstEnd &&
+        view.left + view.width < layout.total - 1 &&
+        "border-s border-border",
+    );
   const stickyStyle = (id: string): React.CSSProperties => {
     const placed = layout.byId.get(id);
     if (!placed?.sticky) return {};
@@ -1273,6 +1286,7 @@ function DataGrid<R>({
                   "cursor-pointer hover:text-foreground",
                 column.sticky &&
                   "sticky z-(--layer-grid-head-sticky) bg-background",
+                pinnedEdge(column.id),
                 "data-[drop]:shadow-[inset_var(--selection-edge)_0_0_0_var(--ring)] forced-colors:data-[drop]:outline-[Highlight] forced-colors:data-[drop]:outline-solid",
               )}
               style={{ width, ...stickyStyle(column.id) }}
@@ -1427,6 +1441,7 @@ function DataGrid<R>({
                   position === 0 && LEADING_EDGE,
                   column.align === "end" && "justify-end text-end tabular-nums",
                   column.sticky && STICKY_CELL,
+                  pinnedEdge(column.id),
                 )}
                 style={{
                   width: layout.byId.get(column.id)?.width,

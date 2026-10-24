@@ -23,6 +23,7 @@ import {
 import {
   COLUMN_SPECS,
   needsInvoice,
+  statusWidth,
   type ColumnId,
   type ReadinessSets,
 } from "./movementsModel";
@@ -266,16 +267,19 @@ function movementColumns(
             extent={context.extent}
             onSelect={context.onSelectShown}
           />
-        ) : column === "invoice" ? (
+        ) : column === "invoice" ||
+          (column === "status" && context.density === "compact") ? (
           // A glyph column's header is its glyph; `label` carries the word.
           <span title={name} className="inline-flex">
-            <Icon name="link" size="xs" />
+            <Icon name={column === "invoice" ? "link" : "check"} size="xs" />
             <span className="sr-only">{name}</span>
           </span>
         ) : (
           name
         ),
-      width: width ?? spec.width,
+      width:
+        width ??
+        (column === "status" ? statusWidth(context.density) : spec.width),
       ...(spec.minWidth !== undefined ? { minWidth: spec.minWidth } : {}),
       ...(spec.grow !== undefined && width === undefined
         ? { grow: spec.grow }
