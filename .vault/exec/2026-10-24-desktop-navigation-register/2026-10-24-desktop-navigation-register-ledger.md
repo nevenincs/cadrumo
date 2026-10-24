@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:455c72a9c6c72a93f76e4c8854180abd82c709fe99ffe1b4762086277fa1ceec'
+body_hash: 'sha256:b46f801bbfba88537206836d4c691022cf5917161720c3032cc8b0e06ad6a982'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
@@ -229,6 +229,11 @@ related:
 - `S12` `verify:` `npx playwright test --project=scenarios tests/scenarios/palette.spec.ts` -> `pass`
 - `S12` `verify:` `npx playwright test --project=scenarios navigation-register navigation-guards agent-page-links keyboard profiles` -> `pass`
 - `S12` `verify:` `uv run pytest src/cadrumo_client/contracts/tests dev/packaging/native/tests/test_desktop_navigation.py dev/locales/tests/test_desktop_chrome.py` -> `pass`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/RowReveal.tsx`
+- `S11` `M` `native/desktop/frontend/tests/scenarios/navigation-guards.spec.ts`
+- `S11` `verify:` `tsc and eslint on the ledger components` -> `pass`
+- `S11` `verify:` `playwright scenarios navigation-guards 10/10 twice at 2 workers` -> `pass`
+- `S11` `verify:` `playwright scenarios ledger-shell ledger-invoices ledger-movements agent-page-links rerun alone` -> `pass`
 
 ## Notes
 
@@ -239,3 +244,4 @@ related:
 - `S10` commit 53098ff2ca; App.tsx committed as HEAD plus only these hunks, another session's provisioning hunks stay uncommitted in the worktree; six scenario specs timed out under concurrent clippy load and passed on rerun at two workers
 - `S08` Surface rows updated in place under the orchestrator's ruling (B): no consumer has pinned a release; the views tool is a local read on both surfaces. Record links cover ledger.add, ledger.update, ledger.classify.single, ledger.invoice.add, ledger.invoice.update, ledger.invoice.wizard and ledger.evidence.confirm; ledger.link (two records), ledger.invoice.import and ledger.classify.bulk (several) and ledger.invoice.remove (removed record) carry none
 - `S12` panel.spec.ts:5 and scenarios.spec.ts:2137 (rail order now has Declarations) fail independently of S12; eslint/prettier fail only on an untracked .ux-a-lib.mjs
+- `S11` Follow-up b780f0120e: a select link no longer waits silently when the Ledger draws no grid; the page holds the ask and says not found once the read settles empty or fails. A 3-worker run beside other sessions timed out 5 scenarios that pass alone. Commit 8e41b1bc2b carried the S12 rows instead of these.
