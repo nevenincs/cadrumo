@@ -8,7 +8,7 @@ import {
   type Ref,
 } from "react";
 import { Button } from "@/components/ui/button";
-import { cadrumoLink } from "./agent/cadrumoLink";
+import { isCadrumoLink } from "../shell/navigation/links";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { failureCode } from "../errors";
@@ -173,7 +173,7 @@ export function AgentColumn({
   onMenu,
   onToolRefused,
   onOpenLink,
-  onOpenPage,
+  onOpenView,
 }: {
   agent: AgentViews | undefined;
   /** Sending and the live stream, where the host offers them. */
@@ -204,9 +204,9 @@ export function AgentColumn({
   onToolRefused?: (key: string, refusal: AgentToolRefusal) => void;
   /** Opens an address a reply links to, in the system browser. */
   onOpenLink?: (url: string) => void;
-  /** Opens a Cadrumo page a reply links to, in the workspace. `presented`
-   * runs once the workspace was passed the page. */
-  onOpenPage?: (url: string, presented: () => void) => void;
+  /** Opens a `cadrumo:` link a reply carries, or says why it cannot.
+   * `opened` is told the register view that opened, once it is shown. */
+  onOpenView?: (url: string, opened?: (view: string) => void) => void;
 }) {
   const t = useStrings();
   const [setupCheck, setSetupCheck] = useState<{
@@ -1021,9 +1021,8 @@ export function AgentColumn({
               locale={locale}
               onOpenProviderSettings={openSettings}
               onOpenLink={(url) => {
-                const link = cadrumoLink(url);
                 // Cadrumo's own addresses never reach the browser.
-                if (link.kind === "other") {
+                if (!isCadrumoLink(url)) {
                   onOpenLink?.(url);
                   return;
                 }
@@ -1031,14 +1030,10 @@ export function AgentColumn({
                   reader === null
                     ? null
                     : { reader, conversation: conversationId };
-                onOpenPage?.(url, () => {
+                onOpenView?.(url, (opened) => {
                   // Back from setting up AEAT access, the person can have
                   // the agent check it again.
-                  if (
-                    origin &&
-                    link.kind === "page" &&
-                    link.destination === "profile/aeat-access"
-                  )
+                  if (origin && opened === "profile/aeat-access")
                     setSetupCheck(origin);
                 });
               }}

@@ -3187,6 +3187,34 @@ desktop:
       form: Nyomtatvány
     views:
       label: Bevallásnézetek
+  navigation:
+    busy: Itt még fut valami. Várd meg, amíg befejeződik, aztán próbáld újra.
+    close_busy:
+      close: Bezárás mindenképp
+      description: Még fut valami. Ha most bezárod, lehet, hogy nem látod, hogyan
+        ért véget.
+      stay: Nyitva hagyom
+      title: Bezárod, miközben még fut valami?
+    leave:
+      description: Ha továbblépsz, elvész, amit itt nem mentettél.
+      discard: Elvetés és továbblépés
+      stay: Maradok
+      title: Elveted a mentetlen módosításokat?
+    modal: Előbb fejezd be vagy zárd be a nyitott párbeszédablakot.
+    notice:
+      ancestor: '{requested} itt nem nyitható meg, ezért ez nyílt meg helyette: {view}.'
+      in_tui: 'Megnyílt a munkaterületen: {view}.'
+      in_window: 'Megnyílt az ablakban: {view}.'
+      params_dropped: 'Megnyílt: {view}, de a hivatkozott elemet ott még nem lehet
+        megjeleníteni.'
+    pending: Előbb válaszolj a nyitott kérdésre.
+    refused:
+      link: Ezt a hivatkozást a Cadrumo nem tudja megnyitni.
+      not_implemented: 'Itt semmi sem tudja megnyitni ezt: {view}.'
+      param: Ez a hivatkozás olyasmit kér, amit a nézete nem tud megjeleníteni.
+      unknown_view: Ez a hivatkozás olyan nézetre mutat, amely a Cadrumo ezen verziójában
+        nincs meg.
+    sign_in: 'Jelentkezz be a megnyitáshoz: {view}.'
   palette:
     actions: Műveletek
     close: Keresés bezárása
@@ -3536,7 +3564,6 @@ desktop:
     copied: Másolva
     copy_failed: Nem sikerült a másolás.
     link_failed: Nem sikerült megnyitni ezt az oldalt a munkaterületen.
-    link_invalid: Ez a hivatkozás nem nyit meg oldalt a munkaterületen.
     link_not_received: A munkaterület nem kapta meg az oldalt. Várd meg, amíg betöltődik,
       majd próbáld újra.
     link_sign_in: Jelentkezz be, hogy megnyithasd ezt az oldalt a munkaterületen.

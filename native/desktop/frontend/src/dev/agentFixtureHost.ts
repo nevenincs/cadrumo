@@ -369,8 +369,21 @@ const RICH_REPLY = [
   "- 42 apuntes leídos\n- 1 factura por revisar: `2026-031`",
   "| Casilla | Importe |\n|:--|--:|\n| 27 | 3.150,00 |",
   "Más en [la sede electrónica](https://sede.agenciatributaria.gob.es).",
-  "[Set up AEAT access](cadrumo://profiles/5aa00000-0000-4000-8000-0000000000aa/aeat-auth).",
+  "[Set up AEAT access](cadrumo://view/profile/aeat-access).",
 ].join("\n\n");
+// A reply that links to views of the window and of the TUI, with a fallback,
+// a refusal and a link in the retired profile form.
+const LINKS = /con enlaces/i;
+const LINKS_REPLY = [
+  "Puedes seguir en:",
+  "- [el calendario](cadrumo://view/calendar)",
+  "- [los movimientos](cadrumo://view/ledger/movements)",
+  "- [la sincronización con la AEAT](cadrumo://view/aeat-sync)",
+  "- [los registros, en el espacio de trabajo](cadrumo://view/panel/logs?prefer=tui)",
+  "- [el espacio de trabajo](cadrumo://view/terminal)",
+  "- [una vista que no existe](cadrumo://view/nowhere)",
+  "- [un enlace antiguo](cadrumo://profiles/5aa00000-0000-4000-8000-0000000000aa/ledger)",
+].join("\n");
 // A tool the product refuses, as the host passes the refusal on: for a
 // component that is not set up, for something setup does not recover, and
 // one whose recovery is not an action the window knows, as though it got
@@ -837,6 +850,14 @@ export function fixtureAgent({
           refusal,
         ),
         ...write(held, "La herramienta no ha podido seguir."),
+        finish(held),
+      ]);
+      return;
+    }
+    if (LINKS.test(text)) {
+      schedule(held, [
+        started(held),
+        ...write(held, LINKS_REPLY),
         finish(held),
       ]);
       return;

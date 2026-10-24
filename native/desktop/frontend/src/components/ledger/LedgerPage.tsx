@@ -69,7 +69,7 @@ import {
 } from "./movements/useMovementsView";
 import { PeriodSelector } from "./PeriodSelector";
 import { ExportDialog } from "./transfer/ExportDialog";
-import { useLedgerEditing, type LeaveGuard } from "./editing/LedgerEditing";
+import { useLedgerEditing } from "./editing/LedgerEditing";
 import { ImportDialog } from "./transfer/ImportDialog";
 import { dayText } from "./transfer/transferWords";
 import type { OpenRuleFromSelection } from "../../shell/ledgerCommands";
@@ -116,7 +116,6 @@ export function LedgerPage({
   pane,
   contribute,
   copy,
-  guardLeave,
 }: {
   port: LedgerPort;
   /** Whose ledger, or null while the account withholds it. */
@@ -139,8 +138,6 @@ export function LedgerPage({
   contribute(actions: (() => Action[]) | null): void;
   /** Puts text on the clipboard through the host. */
   copy(text: string): Promise<void>;
-  /** Hands the shell the guard that asks before staged work is dropped. */
-  guardLeave?: (guard: LeaveGuard | null) => void;
 }) {
   const t = useStrings();
   const panel = useId();
@@ -340,7 +337,6 @@ export function LedgerPage({
       setSection("movements");
       setFocusDraft(key);
     },
-    guardLeave,
     locale,
     pause,
     sealedOf,

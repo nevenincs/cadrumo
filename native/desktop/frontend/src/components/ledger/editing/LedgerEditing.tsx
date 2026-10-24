@@ -16,6 +16,7 @@ import {
   type StageEvent,
   type StageState,
 } from "../../../shell/ledgerStage";
+import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import type { WritePause } from "../WritePause";
 import { ChangesTray } from "./ChangesTray";
 import { stageTally } from "./editingModel";
@@ -24,7 +25,9 @@ import { ReviewDialog } from "./ReviewDialog";
 import { useLedgerApply } from "./useLedgerApply";
 
 /** Asks before staged work is dropped: true when it asked, and runs
- * `proceed` once the person chose to leave, or `stay` once they did not. */
+ * `proceed` once the person chose to leave, or `stay` once they did not.
+ * The shell registers an owner's guard of this shape as dirty work of the
+ * page it was shown on. */
 export type LeaveGuard = (proceed: () => void, stay?: () => void) => boolean;
 
 /**
@@ -43,7 +46,6 @@ export function useLedgerEditing({
   onRekey,
   onShowRows,
   onGoToDraft,
-  guardLeave,
   locale,
   pause,
   sealedOf,
@@ -60,8 +62,6 @@ export function useLedgerEditing({
   onRekey: (from: string, to: string) => void;
   onShowRows: (ids: string[]) => void;
   onGoToDraft: (key: string) => void;
-  /** Hands the shell the guard its navigation, sign-out and close ask. */
-  guardLeave?: (guard: LeaveGuard | null) => void;
   locale: string;
   /** The page's one write pause. */
   pause: WritePause;
@@ -150,17 +150,16 @@ export function useLedgerEditing({
     stay?: () => void;
   } | null>(null);
   const staged = tally.units > 0;
-  const guard = useRef<LeaveGuard>(() => false);
-  guard.current = (proceed, stay) => {
-    if (!staged) return false;
-    setLeaving({ proceed, stay });
-    return true;
-  };
-  useEffect(() => {
-    if (!guardLeave) return;
-    guardLeave((proceed, stay) => guard.current(proceed, stay));
-    return () => guardLeave(null);
-  }, [guardLeave]);
+  // The page's staged work is dirty work of the Ledger: leaving the page, a
+  // sign-out, a profile switch or the window's close asks here first.
+  useNavigationGuard("ledger", staged ? "dirty" : "clean", {
+    ask: (proceed, stay) => {
+      if (!staged) return false;
+      setLeaving({ proceed, stay });
+      return true;
+    },
+    discard: () => dispatch({ type: "discard" }),
+  });
   // A browser asks on its own before a page with staged work unloads.
   useEffect(() => {
     if (!staged) return;

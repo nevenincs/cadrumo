@@ -3207,6 +3207,34 @@ desktop:
       form: Formulari
     views:
       label: Vistes de la declaració
+  navigation:
+    busy: Aquí encara hi ha alguna cosa en curs. Espera que acabi i torna-ho a provar.
+    close_busy:
+      close: Tanca igualment
+      description: Encara hi ha alguna cosa en curs. Si tanques ara, potser no veuràs
+        com ha acabat.
+      stay: Mantén-la oberta
+      title: Vols tancar amb feina en curs?
+    leave:
+      description: Si te'n vas, es perd el que no hagis desat aquí.
+      discard: Descarta i surt
+      stay: Continua aquí
+      title: Vols descartar els canvis sense desar?
+    modal: Acaba o tanca primer el quadre de diàleg obert.
+    notice:
+      ancestor: '{requested} no es pot obrir aquí, així que s''ha obert {view}.'
+      in_tui: '{view} s''ha obert a l''espai de treball.'
+      in_window: '{view} s''ha obert a la finestra.'
+      params_dropped: '{view} s''ha obert, però l''element al qual apunta l''enllaç
+        encara no es pot mostrar allà.'
+    pending: Respon primer la pregunta oberta.
+    refused:
+      link: Cadrumo no pot obrir aquest enllaç.
+      not_implemented: Aquí no hi ha res que pugui obrir {view}.
+      param: Aquest enllaç demana una cosa que la seva vista no pot mostrar.
+      unknown_view: Aquest enllaç porta a una vista que aquesta versió de Cadrumo
+        no té.
+    sign_in: Inicia la sessió per obrir {view}.
   palette:
     actions: Accions
     close: Tanca la cerca
@@ -3566,7 +3594,6 @@ desktop:
     copied: Copiat
     copy_failed: No s'ha pogut copiar.
     link_failed: No s'ha pogut obrir aquesta pàgina a l'espai de treball.
-    link_invalid: Aquest enllaç no obre cap pàgina de l'espai de treball.
     link_not_received: L'espai de treball no ha rebut la pàgina. Espera que acabi
       de carregar i torna-ho a provar.
     link_sign_in: Inicia la sessió per obrir aquesta pàgina a l'espai de treball.

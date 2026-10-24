@@ -3165,6 +3165,33 @@ desktop:
       form: Form
     views:
       label: Declaration views
+  navigation:
+    busy: Something here is still running. Wait for it to finish, then try again.
+    close_busy:
+      close: Close anyway
+      description: Something is still running. If you close now, you may not see how
+        it ended.
+      stay: Keep open
+      title: Close while work is running?
+    leave:
+      description: What you haven't saved here is lost if you leave.
+      discard: Discard and leave
+      stay: Stay
+      title: Discard unsaved changes?
+    modal: Finish or close the open dialog first.
+    notice:
+      ancestor: '{requested} can''t be opened here, so {view} opened instead.'
+      in_tui: '{view} opened in the workspace.'
+      in_window: '{view} opened in the window.'
+      params_dropped: '{view} opened, but the item the link points to can''t be shown
+        there yet.'
+    pending: Answer the open question first.
+    refused:
+      link: This isn't a link Cadrumo can open.
+      not_implemented: Nothing here can open {view}.
+      param: This link asks for something its view can't show.
+      unknown_view: This link points to a view this version of Cadrumo doesn't have.
+    sign_in: Sign in to open {view}.
   palette:
     actions: Actions
     close: Close search
@@ -3508,7 +3535,6 @@ desktop:
     copied: Copied
     copy_failed: Couldn't copy that.
     link_failed: Couldn't open that page in the workspace.
-    link_invalid: That link doesn't open a page in the workspace.
     link_not_received: The workspace didn't get the page. Wait for it to finish loading,
       then try again.
     link_sign_in: Sign in to open that page in the workspace.

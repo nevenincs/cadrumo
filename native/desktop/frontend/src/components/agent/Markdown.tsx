@@ -1,6 +1,6 @@
 import { Fragment, useMemo, type ReactNode } from "react";
 import { cn } from "@/components/ui/cn";
-import { cadrumoLink } from "./cadrumoLink";
+import { isCadrumoLink } from "../../shell/navigation/links";
 
 // The agent writes Markdown. This reads the part of it a reply uses (the
 // CommonMark blocks, GitHub's tables and strikethrough, and bare addresses)
@@ -339,8 +339,9 @@ function Link({
   children: ReactNode;
 }) {
   // An address the host would refuse is not a door that does not open: its
-  // words stay, and the address is there to read.
-  if (!OPENABLE.test(url) && cadrumoLink(url).kind !== "page")
+  // words stay, and the address is there to read. A `cadrumo:` link is the
+  // window's own and always opens, or says why it cannot.
+  if (!OPENABLE.test(url) && !isCadrumoLink(url))
     return <span title={url}>{children}</span>;
   return (
     <a

@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
   type SetStateAction,
 } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +41,7 @@ import type {
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
 import { AgentColumn } from "./components/AgentColumn";
-import { cadrumoLink } from "./components/agent/cadrumoLink";
+import { NavigationPrompt } from "./components/NavigationPrompt";
 import { AttendanceRequests } from "./components/AttendanceRequests";
 import { HostRecordList } from "./components/HostRecordList";
 import type { RecordMenuRequest } from "./components/RecordList";
@@ -126,6 +127,17 @@ import {
   LIGHT_TUI,
 } from "./shell/terminalThemes";
 import { failureCode } from "./errors";
+import {
+  NavigationContext,
+  type NavigationRuntime,
+} from "./shell/navigation/hooks";
+import { NAVIGATION } from "./shell/navigation/projection";
+import type { ViewParams } from "./shell/navigation/register";
+import { useNavigator } from "./shell/navigation/useNavigator";
+import {
+  mountedNow,
+  type WindowViewEntry,
+} from "./shell/navigation/windowViews";
 
 const COUNT_LIMIT = 99;
 const TOAST_MS = 2400;
@@ -195,6 +207,25 @@ const typingInto = (element: Element | null): boolean =>
     element.matches("input, textarea, select") ||
     element.closest("[data-terminal]") !== null);
 
+/** The window's own contexts: its strings and its navigation runtime. */
+function ShellContexts({
+  t,
+  navigation,
+  children,
+}: {
+  t: Translate;
+  navigation: NavigationRuntime;
+  children: ReactNode;
+}) {
+  return (
+    <StringsContext.Provider value={t}>
+      <NavigationContext.Provider value={navigation}>
+        {children}
+      </NavigationContext.Provider>
+    </StringsContext.Provider>
+  );
+}
+
 export function App({ host }: { host: Host }) {
   const account = useSignIn(host);
   const environment = useDesktopEnvironment(host);
@@ -238,16 +269,59 @@ export function App({ host }: { host: Host }) {
   // What the first pane shows: the documentation, or a view of the profile
   // where the host offers one. The documentation stays loaded underneath.
   const page = layout.page;
-  // The Ledger page and a declaration's workspace ask before what they have
-  // staged is dropped: by another page, a sign-out, a profile switch or the
-  // window's close. Only one of them is shown at a time.
-  const ledgerGuard = useRef<LeaveGuard | null>(null);
-  const guardLeave = useCallback((guard: LeaveGuard | null) => {
-    ledgerGuard.current = guard;
-  }, []);
-  const guarded = useCallback((proceed: () => void, stay?: () => void) => {
-    if (!ledgerGuard.current?.(proceed, stay)) proceed();
-  }, []);
+  // Every navigation passes one guard register and one navigator: a link,
+  // the palette, the rail, a page, sign-out, a profile switch and the
+  // window's close. What it calls back is read when it runs, after render.
+  const layoutNow = useRef(layout);
+  layoutNow.current = layout;
+  const nav = useNavigator({
+    register: NAVIGATION,
+    t: (key, values) => t(key, values),
+    say: (text) => say(text),
+    shown: () => ({
+      page: layoutNow.current.page,
+      ledgerSection: layoutNow.current.ledgerView.section,
+    }),
+    hasPort: (port) => host[port] !== undefined,
+    signedIn: () => accountRef.current.phase === "signed-in",
+    presents: () => host.presentation !== undefined,
+    showInWindow: (id, entry) => showInWindow(id, entry),
+    showInTui: (view, params) => presentView(view, params),
+    askSignIn: () => askSignIn(),
+  });
+  const guardNavigation = nav.guard;
+  // An owner that hands the shell a leave guard of its own is registered as
+  // dirty work of the page it was shown on; its guard asks only when it has
+  // something staged. `guarded` leaves the page shown.
+  const ownerGuard = useRef<(() => void) | null>(null);
+  const guardLeave = useCallback(
+    (guard: LeaveGuard | null) => {
+      ownerGuard.current?.();
+      ownerGuard.current = guard
+        ? nav.runtime.guards.register({
+            owner: layoutNow.current.page,
+            state: () => "dirty",
+            ask: guard,
+          })
+        : null;
+    },
+    [nav.runtime],
+  );
+  const guarded = useCallback(
+    (proceed: () => void, stay?: () => void) =>
+      guardNavigation(
+        {
+          kind: "navigate",
+          unmounted: mountedNow(
+            layoutNow.current.page,
+            layoutNow.current.ledgerView.section,
+          ),
+        },
+        proceed,
+        stay,
+      ),
+    [guardNavigation],
+  );
   // A close the system raised (the window's own close, Alt+F4) asks the
   // page through the host, which holds the window until the page answers.
   useEffect(() => {
@@ -257,7 +331,8 @@ export function App({ host }: { host: Host }) {
     let current = true;
     void windowPort
       .guardClose(() =>
-        guarded(
+        guardNavigation(
+          { kind: "close" },
           () => void windowPort.action("close_now"),
           () => void windowPort.action("keep_open"),
         ),
@@ -271,18 +346,27 @@ export function App({ host }: { host: Host }) {
       current = false;
       release?.();
     };
-  }, [host, guarded]);
-  const shownPage = useRef(page);
-  shownPage.current = page;
+  }, [host, guardNavigation]);
+  // Shows a page through the layout store; only the navigator, past the
+  // guards, calls it directly.
+  const showPage = useCallback(
+    (page: Layout["page"]) => setLayout((current) => ({ ...current, page })),
+    [],
+  );
+  // Leaving the page shown takes it down, so its owners are asked first.
   const setPage = useCallback(
-    (page: Layout["page"]) => {
-      const go = () => setLayout((current) => ({ ...current, page }));
-      const staging =
-        shownPage.current === "ledger" || shownPage.current === "declarations";
-      if (staging && page !== shownPage.current) guarded(go);
-      else go();
+    (next: Layout["page"]) => {
+      const shown = layoutNow.current;
+      if (next === shown.page) return;
+      guardNavigation(
+        {
+          kind: "navigate",
+          unmounted: mountedNow(shown.page, shown.ledgerView.section),
+        },
+        () => showPage(next),
+      );
     },
-    [guarded],
+    [guardNavigation, showPage],
   );
   const calendarPage = useRef<HTMLElement>(null);
   const profilePage = useRef<HTMLElement>(null);
@@ -297,6 +381,22 @@ export function App({ host }: { host: Host }) {
   const wantsAgent = useRef(false);
   const agentColumn = useRef<HTMLElement>(null);
   const agentBody = useRef<HTMLElement>(null);
+  // Where the keyboard goes when a navigation opens each page or the agent.
+  // The window provides the navigation context, so it registers its own
+  // targets on the runtime directly; its commits are their mount signal.
+  useEffect(() => {
+    const focus = nav.runtime.focus;
+    const targets: [string, { current: HTMLElement | null }][] = [
+      ["profile", profilePage],
+      ["calendar", calendarPage],
+      ["ledger", ledgerPage],
+      ["agent", agentBody],
+    ];
+    const releases = targets.map(([id, ref]) =>
+      focus.register(id, () => ref.current),
+    );
+    return () => releases.forEach((release) => release());
+  }, [nav.runtime]);
   // The calendar was asked for: it takes focus once it is laid out.
   const wantsCalendar = useRef(false);
   // What held focus when the sign-in dialog was asked for, and whether
@@ -425,21 +525,21 @@ export function App({ host }: { host: Host }) {
   const accountRef = useRef(account);
   accountRef.current = account;
   const signOut = useCallback(() => {
-    guarded(() => {
+    guardNavigation({ kind: "sign_out" }, () => {
       // Signing out here is not a reason to ask for the password again.
       setSignInDismissed(true);
       void accountRef.current.signOut();
     });
-  }, [guarded]);
+  }, [guardNavigation]);
   // The palette shortcut enters the same account flow as the header.
   const switchProfile = useCallback(() => {
-    guarded(() => {
+    guardNavigation({ kind: "switch" }, () => {
       setSettingsOpen(false);
       signInOpener.current = null;
       setSignInDismissed(false);
       void accountRef.current.signOut();
     });
-  }, [guarded]);
+  }, [guardNavigation]);
   useEffect(() => {
     if (gated) return;
     // Admitted: the next time the gate closes, the dialog opens again, and
@@ -936,55 +1036,48 @@ export function App({ host }: { host: Host }) {
       }),
     [],
   );
-  // A page of the person's own TUI: the window comes forward and the TUI is
-  // shown with the keyboard, on the page. A page that cannot open says why,
-  // and a page for another profile disturbs nothing.
-  const presentPage = useCallback(
-    async (destination: string, presented: () => void = () => undefined) => {
+  // A view of the person's own TUI: the window comes forward and the TUI is
+  // shown with the keyboard, on the view, for the profile signed in here.
+  // A view that cannot open says why. True once a TUI was passed it.
+  const presentView = useCallback(
+    async (view: string, params: ViewParams): Promise<boolean> => {
       void host.window?.action("focus").catch(() => undefined);
+      // The TUI pane first, with the keyboard; then the view is asked for.
+      showTui();
       if (!signedIn) {
-        showTui();
         say(t("desktop.toast.link_sign_in"));
-        return;
+        return false;
       }
       const presentation = host.presentation;
       if (!presentation) {
         say(t("desktop.toast.link_failed"));
-        return;
+        return false;
       }
-      // Only a running TUI hears the page: one still starting is shown, so
-      // its start is seen, and waited for.
+      // Only a running TUI hears the view: one still starting is waited for.
       if (tuiPhase.current !== "running") {
-        showTui();
         if (!(await tuiRunning(TUI_START_WAIT_MS))) {
           say(t("desktop.toast.link_not_received"));
-          return;
+          return false;
         }
       }
       let outcome: PresentationOutcome;
       try {
-        outcome = await presentation.present(destination, {});
+        outcome = await presentation.present(view, params);
       } catch {
         say(t("desktop.toast.link_failed"));
-        return;
+        return false;
       }
-      showTui();
-      if (outcome.outcome === "signed_out")
+      if (outcome.outcome === "signed_out") {
         say(t("desktop.toast.link_sign_in"));
-      else if (outcome.delivered === 0)
+        return false;
+      }
+      if (outcome.delivered === 0) {
         say(t("desktop.toast.link_not_received"));
-      else presented();
+        return false;
+      }
+      return true;
     },
     [host, signedIn, showTui, say, t, tuiRunning],
-  );
-  // A link a reply carries to a Cadrumo page. It never reaches the browser.
-  const openPage = useCallback(
-    (url: string, presented?: () => void) => {
-      const link = cadrumoLink(url);
-      if (link.kind === "page") void presentPage(link.destination, presented);
-      else say(t("desktop.toast.link_invalid"));
-    },
-    [presentPage, say, t],
   );
   // Whether the last render showed a gate the person could act on, with
   // the dialog put aside. The first status read is a gate too, but not one
@@ -1967,9 +2060,30 @@ export function App({ host }: { host: Host }) {
       })),
     [setLayout],
   );
+  // A register element the navigator let through, applied to the layout
+  // store. A page and the agent take the keyboard through the focus
+  // register; the terminals and the panel through their own focus wishes.
+  const showInWindow = (_id: string, entry: WindowViewEntry) => {
+    const view = entry.view;
+    if (view.kind === "page") {
+      const section = view.section;
+      if (section !== null)
+        changeLedgerView((current) => ({ ...current, section }));
+      setMaximized((area) => (area === "docs" ? area : null));
+      if (view.page === "docs") patch({ docsShown: true });
+      showPage(view.page);
+    } else if (view.kind === "agent") {
+      if (agentFits) setMaximized((area) => (area === "agent" ? area : null));
+      else setMaximized(mainOccupied ? "agent" : null);
+      patch({ agentShown: true });
+    } else if (view.kind === "terminal") showTui();
+    else openTab(view.tab ?? layout.tab, { toggle: false });
+  };
+  const openView = nav.openView;
+  // AEAT access is set up on its own view of the profile, in the TUI.
   const openAeatSetup = useCallback(
-    () => void presentPage("profile/aeat-access"),
-    [presentPage],
+    () => openView("profile/aeat-access"),
+    [openView],
   );
   const runAction = useCallback(
     (id: string) =>
@@ -2690,7 +2804,6 @@ export function App({ host }: { host: Host }) {
           memory={ledgerKept.memory}
           contribute={contribute}
           copy={(text) => host.writeClipboard(text)}
-          guardLeave={guardLeave}
           pane={{
             title: t("desktop.ledger.title"),
             onToggleMaximize: () => toggleMaximize("docs"),
@@ -2939,7 +3052,11 @@ export function App({ host }: { host: Host }) {
         onMenu={openMenu}
         onToolRefused={onToolRefused}
         onOpenLink={openLink}
-        onOpenPage={openPage}
+        onOpenView={(url, opened) =>
+          nav.openLink(url, {
+            opened: (shown) => opened?.(shown.opened),
+          })
+        }
         trailing={[
           maximizeControl("agent", "desktop.pane.maximize_agent"),
           {
@@ -3000,12 +3117,14 @@ export function App({ host }: { host: Host }) {
   const panelMax = maximizeControl("panel", "desktop.pane.maximize_panel");
 
   return (
-    <StringsContext.Provider value={t}>
+    <ShellContexts t={t} navigation={nav.runtime}>
       <TooltipProvider>
         <div className="desktop-window flex h-dvh min-w-0 flex-col bg-chrome">
           <Titlebar
             host={host}
-            guardClose={guarded}
+            guardClose={(proceed) =>
+              guardNavigation({ kind: "close" }, proceed)
+            }
             onFailure={() => say(t("desktop.titlebar.failed"))}
           >
             <AccountMenu
@@ -3388,6 +3507,7 @@ export function App({ host }: { host: Host }) {
               />
             )}
             <Toast>{toast}</Toast>
+            {nav.prompt && <NavigationPrompt prompt={nav.prompt} />}
             {setupOffered && (
               <>
                 <SetupDialog
@@ -3492,6 +3612,6 @@ export function App({ host }: { host: Host }) {
           profile={signedIn ? (account.status?.active_profile ?? null) : null}
         />
       </TooltipProvider>
-    </StringsContext.Provider>
+    </ShellContexts>
   );
 }

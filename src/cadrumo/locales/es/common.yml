@@ -3216,6 +3216,33 @@ desktop:
       form: Formulario
     views:
       label: Vistas de la declaración
+  navigation:
+    busy: Aquí todavía hay algo en curso. Espera a que termine y vuelve a intentarlo.
+    close_busy:
+      close: Cerrar de todos modos
+      description: Todavía hay algo en curso. Si cierras ahora, puede que no veas
+        cómo terminó.
+      stay: Mantener abierta
+      title: ¿Cerrar con trabajo en curso?
+    leave:
+      description: Si te vas, se pierde lo que no hayas guardado aquí.
+      discard: Descartar y salir
+      stay: Seguir aquí
+      title: ¿Descartar los cambios sin guardar?
+    modal: Termina o cierra primero el cuadro de diálogo abierto.
+    notice:
+      ancestor: '{requested} no se puede abrir aquí, así que se ha abierto {view}.'
+      in_tui: '{view} se ha abierto en el espacio de trabajo.'
+      in_window: '{view} se ha abierto en la ventana.'
+      params_dropped: '{view} se ha abierto, pero el elemento al que apunta el enlace
+        aún no se puede mostrar ahí.'
+    pending: Responde primero a la pregunta abierta.
+    refused:
+      link: Cadrumo no puede abrir este enlace.
+      not_implemented: Aquí no hay nada que pueda abrir {view}.
+      param: Este enlace pide algo que su vista no puede mostrar.
+      unknown_view: Este enlace lleva a una vista que esta versión de Cadrumo no tiene.
+    sign_in: Inicia sesión para abrir {view}.
   palette:
     actions: Acciones
     close: Cerrar la búsqueda
@@ -3573,7 +3600,6 @@ desktop:
     copied: Copiado
     copy_failed: No se ha podido copiar.
     link_failed: No se ha podido abrir esa página en el espacio de trabajo.
-    link_invalid: Ese enlace no abre ninguna página del espacio de trabajo.
     link_not_received: El espacio de trabajo no ha recibido la página. Espera a que
       termine de cargar y vuelve a intentarlo.
     link_sign_in: Inicia sesión para abrir esa página en el espacio de trabajo.
