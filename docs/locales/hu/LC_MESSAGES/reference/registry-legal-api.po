@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 11:51+0200\n"
+"POT-Creation-Date: 2026-10-24 11:16+0200\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -224,25 +224,34 @@ msgid ""
 "The descriptor format is `cadrumo-authority-descriptor-v1`; its exact "
 "members are `format`, `database`, `database_size`, `database_sha256`, and"
 " `logical_generation`. The database format is `cadrumo-authority-"
-"sqlite-v4`. Its manifest binds the logical generation and the complete "
-"component directory; it records nothing about the compiler or the "
-"environment that built it. A database in an older format is refused "
-"rather than read. The physical database digest is both the descriptor's "
+"sqlite-v5`, which adds the snapshot-proof tables. Its manifest binds the "
+"logical generation and the complete component directory; it records "
+"nothing about the compiler or the environment that built it. The proof "
+"tables record the validator closure digest and the fact-date window under"
+" which the published proofs hold. Runtime still admits the preceding "
+"`cadrumo-authority-sqlite-v4` as a database without proofs, which makes "
+"every snapshot take full validation, and refuses anything older rather "
+"than reading it. The physical database digest is both the descriptor's "
 "admission check and the content-addressed filename, so a changed or "
 "colliding payload is refused before runtime work begins."
 msgstr ""
 "A leíró formátuma `cadrumo-authority-descriptor-v1`; pontos tagjai a "
 "`format`, `database`, `database_size`, `database_sha256` és "
 "`logical_generation`. Az adatbázis formátuma `cadrumo-authority-"
-"sqlite-v4`. Manifestje a logikai generációt és a teljes "
-"komponensjegyzéket köti össze; semmit sem rögzít a fordítóról vagy arról "
-"a környezetről, amely létrehozta. A régebbi formátumú adatbázist a "
-"rendszer elutasítja ahelyett, hogy beolvasná. Az adatbázis fizikai "
-"lenyomata egyszerre a leíró befogadási ellenőrzése és a tartalomcímzett "
-"fájlnév, így a módosított vagy ütköző adatcsomag elutasításra kerül, még "
-"mielőtt a futásidejű munka elkezdődne."
+"sqlite-v5`, amely hozzáadja a pillanatkép-bizonyítékok tábláit. "
+"Manifestje a logikai generációt és a teljes komponensjegyzéket köti "
+"össze; semmit sem rögzít a fordítóról vagy arról a környezetről, amely "
+"létrehozta. A bizonyítéktáblák rögzítik az érvényesítő zárásának "
+"lenyomatát és azt a ténydátum-ablakot, amelyben a közzétett bizonyítékok "
+"érvényesek. A futtatókörnyezet továbbra is befogadja az előző `cadrumo-"
+"authority-sqlite-v4` formátumot bizonyítékok nélküli adatbázisként, ezért"
+" minden pillanatkép teljes érvényesítésen megy át, a régebbi formátumot "
+"pedig elutasítja ahelyett, hogy beolvasná. Az adatbázis fizikai lenyomata"
+" egyszerre a leíró befogadási ellenőrzése és a tartalomcímzett fájlnév, "
+"így a módosított vagy ütköző adatcsomag elutasításra kerül, még mielőtt a"
+" futásidejű munka elkezdődne."
 
-#: ../../reference/registry-legal-api.md:62
+#: ../../reference/registry-legal-api.md:66
 msgid ""
 "The development publication command is `python -m dev.registry.pipeline "
 "publish-authority`. It writes to the configured authority root, and "
@@ -261,7 +270,7 @@ msgstr ""
 " nincs olyan parancs, amely ezt a közzétételt lefordítaná vagy "
 "megjavítaná."
 
-#: ../../reference/registry-legal-api.md:71
+#: ../../reference/registry-legal-api.md:75
 msgid ""
 "The source receipt folds each registry and source-evidence file's root-"
 "relative path and content digest, and the profile schema. Registry files "
@@ -293,7 +302,7 @@ msgstr ""
 "futtatja, és ugyanazon források friss klónja ugyanazt az identitást "
 "állítja elő."
 
-#: ../../reference/registry-legal-api.md:84
+#: ../../reference/registry-legal-api.md:88
 msgid ""
 "Each component payload is a compact canonical projection of one typed "
 "authority value. Required fields are always written; a field is omitted "
@@ -372,7 +381,7 @@ msgstr "Szöveg"
 msgid "The bare JSON string, for example `\"0.40\"`"
 msgstr "A címke nélküli JSON-karakterlánc, például `\"0.40\"`"
 
-#: ../../reference/registry-legal-api.md:102
+#: ../../reference/registry-legal-api.md:106
 msgid ""
 "Runtime decodes the payload under the same strict schema the development "
 "compiler uses. It refuses an unknown tag, a malformed or non-canonical "
@@ -385,7 +394,7 @@ msgstr ""
 "címke nélküli, nem szöveges ténybeli értéket; soha nem következtet a "
 "típusra egy karakterlánc alakjából."
 
-#: ../../reference/registry-legal-api.md:107
+#: ../../reference/registry-legal-api.md:111
 msgid ""
 "The compiler, not the product runtime, expands authoring deltas into "
 "complete canonical revisions. The database also carries typed runtime "
@@ -404,7 +413,7 @@ msgstr ""
 "Egy autoritás írását vagy olvasását a rendszer elutasítja, ha bármely "
 "kötelező futásidejű katalógus üres."
 
-#: ../../reference/registry-legal-api.md:114
+#: ../../reference/registry-legal-api.md:118
 msgid ""
 "Modelo and tax-domain types validate stable identifier syntax without "
 "loading the authored tree. The compiled authority owns membership and "
@@ -420,7 +429,7 @@ msgstr ""
 "burkot - `floor`, `horizon` és az opcionális `hard_ceiling` -, amelyet a "
 "támogatott koordináták befogadásához használunk."
 
-#: ../../reference/registry-legal-api.md:120
+#: ../../reference/registry-legal-api.md:124
 msgid ""
 "The `IndexedRegistryAuthority.operation()` path has no source "
 "compilation, raw authored-tree loader, repair path, eager JSON runtime "
@@ -443,7 +452,7 @@ msgstr ""
 "művelet kéri őket; a sikeres értékek egy korlátos, generációra szűkített "
 "gyorsítótárban maradnak."
 
-#: ../../reference/registry-legal-api.md:130
+#: ../../reference/registry-legal-api.md:134
 msgid ""
 "The runtime contract is for ordinary filesystem-installed wheels, where "
 "the descriptor and SQLite database have stable physical paths. Direct "
@@ -456,7 +465,7 @@ msgstr ""
 "támogatott: az SQLite nem tud archívumtagot csak olvasható adatbázisként "
 "megnyitni."
 
-#: ../../reference/registry-legal-api.md:135
+#: ../../reference/registry-legal-api.md:139
 msgid ""
 "`python -m dev.registry.conformance integrity` refuses a "
 "descriptor/database publication whose recorded identity digest differs "
@@ -472,11 +481,11 @@ msgstr ""
 "a helyreállítási útról lásd: [Érvényesített futtatókörnyezeti autoritás "
 "közzététele](../how-to/publish-runtime-authority.md)."
 
-#: ../../reference/registry-legal-api.md:142
+#: ../../reference/registry-legal-api.md:146
 msgid "Filing-input contract shapes"
 msgstr "A benyújtási bemeneti szerződések alakzatai"
 
-#: ../../reference/registry-legal-api.md:144
+#: ../../reference/registry-legal-api.md:148
 msgid ""
 "The validated registry snapshot is the read-model authority for one "
 "modelo, filing year, and period. It defines the casillas, formulas, "
@@ -544,7 +553,7 @@ msgstr "Típusos operandusok és registry-hivatkozásokkal megalapozott művelet
 msgid "A calculated casilla observation"
 msgstr "Egy kiszámított casilla-megfigyelés"
 
-#: ../../reference/registry-legal-api.md:155
+#: ../../reference/registry-legal-api.md:159
 msgid ""
 "A binding is not an attachable data blob. It is the contract by which an "
 "enrolled source resolver projects an owned source record into one of "
@@ -561,7 +570,7 @@ msgstr ""
 "bejegyezve, amely a Modelo 100 2025-ös casilláit, a 0177-et, a 0181-et és"
 " a 0182-t vetíti tevékenységenként."
 
-#: ../../reference/registry-legal-api.md:162
+#: ../../reference/registry-legal-api.md:166
 #, python-brace-format
 msgid ""
 "Use the generated [application command reference](../cli/app.rst) to look"
@@ -574,11 +583,11 @@ msgstr ""
 "kikereséséhez. Az adózóknak szóló definíciókhoz használd a "
 "{doc}`szójegyzéket </_generated/glossary>`."
 
-#: ../../reference/registry-legal-api.md:166
+#: ../../reference/registry-legal-api.md:170
 msgid "Python public API lookup"
 msgstr "Python nyilvános API kikeresése"
 
-#: ../../reference/registry-legal-api.md:168
+#: ../../reference/registry-legal-api.md:172
 msgid ""
 "The [Cadrumo Python API overview](../api/index.md) is the entry point for"
 " Python lookup. The `cadrumo` package and its subpackages export nothing."
@@ -592,7 +601,7 @@ msgstr ""
 "definiálja. A generált csomagfa felsorolja a támogatott adapter-, "
 "alkalmazás-, core-, domain-, entrypoint- és locale-felületeket."
 
-#: ../../reference/registry-legal-api.md:173
+#: ../../reference/registry-legal-api.md:177
 msgid ""
 "There is no `aeat` Python import compatibility package. Names containing "
 "`aeat` inside the `cadrumo` package identify the external authority "
@@ -602,4 +611,3 @@ msgstr ""
 "belüli, `aeat`-et tartalmazó nevek a külső hatósági adaptert vagy a "
 "hatóság tulajdonában lévő szókincset azonosítják, nem egy második termék-"
 "API-t."
-
