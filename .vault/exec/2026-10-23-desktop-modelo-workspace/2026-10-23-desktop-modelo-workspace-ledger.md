@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:40b4a8194739937bfe4a8d3fda0a90d415afbb5cf5aafb958aa0444ddf48501a'
+body_hash: 'sha256:4e8148efc4f6304092feeee3b91daf1456ac5d4b96e25d67818b2f89ec5d0c3f'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -313,6 +313,19 @@ related:
 - `S11` `verify:` `ruff check and format` -> `pass`
 - `S11` `verify:` `pytest translator wrapper scope and dynamic prefix registry` -> `pass`
 - `S11` `by:` `opus-wording-lane`
+- `S16` `A` `native/desktop/src-tauri/src/shell/settle.rs`
+- `S16` `R` `native/desktop/src-tauri/src/shell/modelo/scripted.rs` -> `native/desktop/src-tauri/src/shell/scripted.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/modelo/admitted.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/modelo/files.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.json`
+- `S16` `M` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.py`
+- `S16` `D` `native/desktop/src-tauri/src/shell/modelo/settle.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
 
 ## Notes
 
@@ -329,3 +342,4 @@ related:
 - `S11` First part of S11: `tui.modelo.workbench.*` and `tui.declarations.*` moved to `workspace.modelo.*` and `workspace.declarations.*` through dev.locales move (469 and 201 keys per locale, values unchanged) and 3734 code references repointed in 111 files. `test_audit` still reports catalogue keys with no code reference `(next.check_aeat,` `next.link_aeat,` state.correction) and a missing provenance.source, all unreferenced before this step. The missing list and refusal keys and the key-hint removal follow
 - `S14` Not implemented: the desktop's person session now relays in Rust and another session lifted the person reply bound to the relay's 16 MiB assembled-document bound in 931da66b20, which carries a 390-sized form read in one reply; the bounded-parts mechanism is unnecessary
 - `S34` `contract_manifest.json` left out: the working tree also carries S31, S37 and S38 schema changes; it is regenerated and committed once those steps land
+- `S16` follow-up to S16: the duplicated settle layer moved into shell/settle.rs, reviewed by the desktop ledger session; adds `modelo_files_reveal`
