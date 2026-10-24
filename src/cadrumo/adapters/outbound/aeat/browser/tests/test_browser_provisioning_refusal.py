@@ -32,7 +32,7 @@ from ......core.errors.error_codes import (
     render_error_text,
     resolve_error_message,
 )
-from ..errors import BrowserError, BrowserFailureMode, BrowserNotReadyError
+from ..errors import BrowserError, BrowserFailureMode, BrowserNotReadyError, BrowserNotUsableError
 from ..factory import create_browser_session, opened_browser_page, shared_playwright_runtime
 from ..profile import Profile
 from ..session import BrowserSession, require_browser_ready
@@ -69,7 +69,11 @@ def _marked_browser_root(root: Path) -> Path:
 
 def _assert_names_the_browser_setup(error: BrowserError, browsers_root: Path) -> None:
     assert isinstance(error, BrowserNotReadyError)
-    assert get_registered_error_code(error).category is ErrorCategory.REFUSED
+    assert not isinstance(error, BrowserNotUsableError)
+    registered = get_registered_error_code(error)
+    assert registered.category is ErrorCategory.REFUSED
+    assert registered.code == "REFUSED_BROWSER_NOT_READY"
+    assert registered.message_key == "adapters.browser.errors.not_provisioned"
     assert error.failure_mode == BrowserFailureMode.BROWSER_NOT_PROVISIONED.value
     assert error.__cause__ is None
     # A catalogue key, not rendered text: the stored detail renders it in the reader's language.
@@ -145,11 +149,15 @@ def test_a_browser_setup_cannot_repair_is_refused_without_offering_setup(
     module.__spec__ = ModuleSpec("playwright", None, origin=str(damaged / "__init__.py"))
     monkeypatch.setitem(sys.modules, "playwright", module)
 
-    with pytest.raises(BrowserNotReadyError) as raised:
+    with pytest.raises(BrowserNotUsableError) as raised:
         require_browser_ready(Settings(cadrumo_playwright_browsers_dir=tmp_path / "cache"), profile_name="damaged")
 
     error = raised.value
-    assert get_registered_error_code(error).category is ErrorCategory.REFUSED
+    registered = get_registered_error_code(error)
+    assert registered.category is ErrorCategory.REFUSED
+    assert registered.code == "REFUSED_BROWSER_NOT_USABLE"
+    # A reader holding only the code renders the code's own sentence, which offers no setup.
+    assert registered.message_key == "adapters.browser.errors.not_usable"
     verdict = error.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_MANIFEST_READABLE.value

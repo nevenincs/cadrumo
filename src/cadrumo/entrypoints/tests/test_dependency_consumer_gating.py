@@ -86,6 +86,7 @@ from PIL import Image
 
 from ...adapters.outbound.aeat.browser.errors import (
     BrowserNotReadyError,
+    BrowserNotUsableError,
     BrowserPreconditionCondition,
     browser_no_action_verdict,
 )
@@ -1256,7 +1257,7 @@ def test_a_browser_operation_without_a_browser_first_preflight_is_reported(tmp_p
 
 def test_a_browser_consumer_that_does_not_refuse_or_names_no_action_is_reported(tmp_path: Path) -> None:
     def names_no_action() -> object:
-        raise BrowserNotReadyError(
+        raise BrowserNotUsableError(
             "fixture",
             translated_message="adapters.browser.errors.not_usable",
             precondition_verdict=browser_no_action_verdict(

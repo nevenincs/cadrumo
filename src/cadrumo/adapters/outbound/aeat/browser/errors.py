@@ -165,3 +165,12 @@ class BrowserNotReadyError(BrowserError):
         """Construct the refusal from its message key and the setup probe's verdict."""
         super().__init__(message, translated_message=translated_message, precondition_verdict=precondition_verdict)
         del self.failure_mode
+
+
+class BrowserNotUsableError(BrowserNotReadyError):
+    """Raised when browser work starts and setting the browser up cannot make it usable.
+
+    Its own registered code carries the sentence that offers no setup, so a
+    reader that holds only the code, without the recorded detail, does not tell
+    the person to set up a browser setup cannot repair.
+    """

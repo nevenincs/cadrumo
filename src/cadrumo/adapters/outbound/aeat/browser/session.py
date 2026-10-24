@@ -55,6 +55,7 @@ from .errors import (
     BrowserError,
     BrowserFailureMode,
     BrowserNotReadyError,
+    BrowserNotUsableError,
     BrowserPreconditionCondition,
     browser_no_action_verdict,
 )
@@ -83,8 +84,9 @@ def require_browser_ready(settings: Settings, *, profile_name: str) -> None:
     secret, and :class:`BrowserSession` calls it again before every launch.
     The refusal carries the setup probe's own verdict, which names the browser
     setup action when setting the browser up repairs it, so every caller
-    refuses the same way. The message key follows the verdict: a browser setup
-    can install says so, and one it cannot repair offers no setup.
+    refuses the same way. The registered code and message key follow the
+    verdict: a browser setup can install says so, and one it cannot repair
+    refuses with its own code, whose sentence offers no setup.
     """
     from .....application.provisioning_browser import probe_playwright_browser
 
@@ -96,10 +98,15 @@ def require_browser_ready(settings: Settings, *, profile_name: str) -> None:
         BrowserFailureMode.BROWSER_NOT_PROVISIONED,
         profile_name,
     )
-    setup_repairs = status.precondition_verdict is not None and status.precondition_verdict.action is not None
+    if status.precondition_verdict is None or status.precondition_verdict.action is None:
+        raise BrowserNotUsableError(
+            "Chromium browser build cannot be used",
+            translated_message=_BROWSER_NOT_USABLE_KEY,
+            precondition_verdict=status.precondition_verdict,
+        )
     raise BrowserNotReadyError(
         "Chromium browser build is not provisioned",
-        translated_message=_BROWSER_NOT_SET_UP_KEY if setup_repairs else _BROWSER_NOT_USABLE_KEY,
+        translated_message=_BROWSER_NOT_SET_UP_KEY,
         precondition_verdict=status.precondition_verdict,
     )
 
