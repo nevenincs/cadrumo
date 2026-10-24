@@ -778,15 +778,19 @@ desktop:
       section: 'Ledger: {section}'
     apply:
       action:
+        allocate: Business share · {share}
         archive: Archive
         attach: Attach
+        attach_file: Attach {name}
         detach: Detach
         exclude: Exclude
+        iva_derive: Work out IVA · {category}
         link: Link · permanent
         m210: Modelo 210 income
         merge: Merge parts
         remove: Remove
         restore: Restore
+        rule_apply: Apply rules · {count} movements
         split: Split
         stash: Set aside
         suggestion: Model approval

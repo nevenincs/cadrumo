@@ -813,15 +813,19 @@ desktop:
       section: 'Libro: {section}'
     apply:
       action:
+        allocate: Parte profesional · {share}
         archive: Archivar
         attach: Adjuntar
+        attach_file: Adjuntar {name}
         detach: Separar
         exclude: Excluir
+        iva_derive: Calcular el IVA · {category}
         link: Vincular · permanente
         m210: Renta del modelo 210
         merge: Unir partes
         remove: Eliminar
         restore: Restaurar
+        rule_apply: Aplicar reglas · {count} movimientos
         split: Dividir
         stash: Apartar
         suggestion: Aprobación del modelo

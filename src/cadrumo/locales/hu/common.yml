@@ -794,15 +794,19 @@ desktop:
       section: 'Napló: {section}'
     apply:
       action:
+        allocate: Üzleti arány · {share}
         archive: Archiválás
         attach: Csatolás
+        attach_file: '{name} csatolása'
         detach: Leválasztás
         exclude: Kizárás
+        iva_derive: IVA kiszámítása · {category}
         link: Összekapcsolás · végleges
         m210: 210-es modell jövedelme
         merge: Részek egyesítése
         remove: Eltávolítás
         restore: Visszaállítás
+        rule_apply: Szabályok alkalmazása · {count} tétel
         split: Felosztás
         stash: Félretevés
         suggestion: Modell-jóváhagyás

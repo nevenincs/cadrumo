@@ -806,15 +806,19 @@ desktop:
       section: 'Llibre: {section}'
     apply:
       action:
+        allocate: Part professional · {share}
         archive: Arxiva
         attach: Adjunta
+        attach_file: Adjunta {name}
         detach: Separa
         exclude: Exclou
+        iva_derive: Calcula l'IVA · {category}
         link: Vincula · permanent
         m210: Renda del model 210
         merge: Uneix parts
         remove: Elimina
         restore: Restaura
+        rule_apply: Aplica regles · {count} moviments
         split: Divideix
         stash: Aparta
         suggestion: Aprovació del model
