@@ -17,6 +17,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormValueSource,
     address_key,
 )
+from ......application.modelo.work_form_next_step import ModeloFormNextAction
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -31,7 +32,6 @@ from ..casilla_list_values import row_value_text
 from ..issue_scale import verdict_text
 from ..issues import WorkbenchIssuesScreen
 from ..ports import WorkbenchApplyPrerequisite
-from ..progress import NextAction
 from ..screen import ModeloWorkbenchScreen
 from ..session import WorkbenchEditSession
 from .editor_panel import open_panel
@@ -112,7 +112,7 @@ async def test_the_named_recovery_key_leads_to_the_source_box_and_keeps_the_stag
             screen._refresh_after_staging()
             assert screen._active_apply_prerequisite() is None
             assert screen._load is not None
-            assert screen._progress(screen._load).next_action is not NextAction.APPLY
+            assert screen._progress(screen._load).next_action is not ModeloFormNextAction.APPLY
             app.exit(None)
 
 

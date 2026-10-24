@@ -17,6 +17,7 @@ from ......application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ......application.modelo.work_form_models import address_key
+from ......application.modelo.work_form_next_step import blocking_count
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
@@ -35,7 +36,7 @@ from ....tests.modelo_workbench_session import application_workbench
 from ....tests.settling import settle, settle_until
 from ..editor import CasillaEditorPanel, CasillaEditorScreen
 from ..factory import InstalledModeloWorkbench
-from ..header import blocking_count, deadline_view, fit_identity
+from ..header import deadline_view, fit_identity
 from ..issues import WorkbenchIssuesScreen
 from ..screen import ModeloWorkbenchScreen
 

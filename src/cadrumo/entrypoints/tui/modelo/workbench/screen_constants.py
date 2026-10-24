@@ -11,11 +11,11 @@ from .....application.modelo.operation_definitions import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
+from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
 from ...components.theme import CADRUMO_CSS_TOKENS
 from .header import DeadlineTone
 from .page_items import WorkbenchFilter
-from .progress import NextAction
 
 _NARROW: Final[int] = 110
 _SHORT: Final[int] = 30
@@ -80,20 +80,20 @@ _FILTER_ORDER: Final[tuple[WorkbenchFilter, ...]] = (
     WorkbenchFilter.CALCULATED,
     WorkbenchFilter.AMOUNT,
 )
-_NEXT_KEYS: Final[Mapping[NextAction, str]] = {
-    NextAction.APPLY: "R",
-    NextAction.FILL: "n",
-    NextAction.CONFIRM: "n",
-    NextAction.RESOLVE: "i",
-    NextAction.CALCULATE: "F8",
-    NextAction.RECALCULATE: "c",
-    NextAction.VERIFY: "F8",
-    NextAction.EXPORT: "e",
-    NextAction.EXPORT_AGAIN: "e",
-    NextAction.RECORD_AFTER_FILE: "F8",
-    NextAction.RECORDED: "",
+_NEXT_KEYS: Final[Mapping[ModeloFormNextAction, str]] = {
+    ModeloFormNextAction.APPLY: "R",
+    ModeloFormNextAction.FILL: "n",
+    ModeloFormNextAction.CONFIRM: "n",
+    ModeloFormNextAction.RESOLVE: "i",
+    ModeloFormNextAction.CALCULATE: "F8",
+    ModeloFormNextAction.RECALCULATE: "c",
+    ModeloFormNextAction.VERIFY: "F8",
+    ModeloFormNextAction.EXPORT: "e",
+    ModeloFormNextAction.EXPORT_AGAIN: "e",
+    ModeloFormNextAction.RECORD_AFTER_FILE: "F8",
+    ModeloFormNextAction.RECORDED: "",
 }
-_FINDINGS_KEY: Final[str] = _NEXT_KEYS[NextAction.RESOLVE]
+_FINDINGS_KEY: Final[str] = _NEXT_KEYS[ModeloFormNextAction.RESOLVE]
 """The key the next-action line names when the findings list leads to what is left, whichever step it is."""
 _CHECKED_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = {
     VerificationCompletenessStatus.COMPLETE: "tui.modelo.workbench.operation.checked.complete",

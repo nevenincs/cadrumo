@@ -52,16 +52,20 @@ from typing import Final
 from rich.cells import cell_len
 from textual.content import Content
 
-from .....application.modelo.calculation_notes import CHECK_REFUSED_REASONS
 from .....application.modelo.work_form_models import ModeloWorkForm
+from .....application.modelo.work_form_next_step import (
+    ModeloFormNextAction,
+    awaiting_the_check,
+    blocking_count,
+    form_next_step,
+    to_do_counts,
+)
 from .....application.modelo.work_form_wording import date_text, day_text
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
 from ...components.cell_text import ellipsize
-from .header import blocking_count, confirm_count, missing_findings
 from .issue_scale import blocks_marked
-from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, DONE_MARK, HERE_MARK, WorkbenchMark
 
 
@@ -83,25 +87,6 @@ class StepStatus(StrEnum):
     PENDING = "pending"
 
 
-class NextAction(StrEnum):
-    """The one action the next-action line offers."""
-
-    APPLY = "apply"
-    FILL = "fill"
-    CONFIRM = "confirm"
-    CALCULATE = "calculate"
-    RECALCULATE = "recalculate"
-    RESOLVE = "resolve"
-    VERIFY = "verify"
-    EXPORT = "export"
-    EXPORT_AGAIN = "export_again"
-    RECORD_AFTER_FILE = "record_after_file"
-    RECORDED = "recorded"
-
-
-_UNRESOLVED_VERDICTS: Final[frozenset[VerificationCompletenessStatus]] = frozenset(
-    {VerificationCompletenessStatus.INCOMPLETE, VerificationCompletenessStatus.BLOCKED}
-)
 _STEP_SEPARATOR: Final[str] = " ── "
 _STATUS_MARKS: Final[dict[StepStatus, WorkbenchMark | None]] = {
     StepStatus.DONE: DONE_MARK,
@@ -113,7 +98,9 @@ _STATUS_MARKS: Final[dict[StepStatus, WorkbenchMark | None]] = {
 }
 _PENDING_STYLE: Final[str] = "dim"
 _NEXT_LINE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.next_line"
-_DATED_ACTIONS: Final[frozenset[NextAction]] = frozenset({NextAction.EXPORT_AGAIN, NextAction.RECORD_AFTER_FILE})
+_DATED_ACTIONS: Final[frozenset[ModeloFormNextAction]] = frozenset(
+    {ModeloFormNextAction.EXPORT_AGAIN, ModeloFormNextAction.RECORD_AFTER_FILE}
+)
 """Next actions that name the day the latest file was created."""
 
 
@@ -136,7 +123,7 @@ class WorkbenchProgress:
     """
 
     steps: tuple[StepState, ...]
-    next_action: NextAction
+    next_action: ModeloFormNextAction
     count: int
     recorded_at: datetime | None = None
     assumed: int = 0
@@ -172,42 +159,30 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
     those values, the findings list leads to them (``findings_lead``).
     """
     counts = to_do_counts(form)
-    to_fill = counts.needs_input
-    unboxed = missing_findings(form)
     assumed = counts.default_to_confirm
     blocked = counts.blocked
     blocking = blocking_count(form)
-    awaiting = _awaiting_the_check(form)
     clean = staged == 0
     done = {
-        WorkbenchStep.FILL: clean and _filling_is_done(filed, verified, to_fill, assumed),
+        WorkbenchStep.FILL: clean and _filling_is_done(filed, verified, counts.needs_input, assumed),
         WorkbenchStep.CALCULATE: clean and _calculation_is_done(form, filed),
         WorkbenchStep.REVIEW: clean and _review_is_done(filed, verified, blocked, blocking),
         WorkbenchStep.FILE: clean and filed,
     }
-    steps = _step_states(done, blocked=blocked, blocking=blocking, awaiting=awaiting, form=form)
-    action, count, findings_lead = _next(
-        form,
-        staged=staged,
-        to_fill=to_fill,
-        unboxed=unboxed,
-        assumed=assumed,
-        blocked=blocked,
-        blocking=blocking,
-        awaiting=awaiting,
-        verified=verified,
-        filed=filed,
-    )
-    recorded_at = form.filing.recorded_at if action is NextAction.RECORDED and form.filing is not None else None
+    steps = _step_states(done, blocked=blocked, blocking=blocking, awaiting=awaiting_the_check(form), form=form)
+    step = form_next_step(form, verified=verified, filed=filed)
+    if staged:
+        # Changes held here come before anything the form offers.
+        step = step.model_copy(update={"action": ModeloFormNextAction.APPLY, "count": staged, "findings_lead": False})
     return WorkbenchProgress(
         steps=steps,
-        next_action=action,
-        count=count,
-        recorded_at=recorded_at,
+        next_action=step.action,
+        count=step.count,
+        recorded_at=step.recorded_at if step.action is ModeloFormNextAction.RECORDED else None,
         assumed=0 if filed else assumed,
         blocking=0 if filed else blocking,
-        file_created_at=None if form.last_export is None else form.last_export.exported_at,
-        findings_lead=findings_lead,
+        file_created_at=step.file_created_at,
+        findings_lead=step.findings_lead,
     )
 
 
@@ -247,129 +222,6 @@ def _step_states(
     return tuple(steps)
 
 
-def _next(
-    form: ModeloWorkForm,
-    *,
-    staged: int,
-    to_fill: int,
-    unboxed: int,
-    assumed: int,
-    blocked: int,
-    blocking: int,
-    awaiting: int,
-    verified: bool,
-    filed: bool,
-) -> tuple[NextAction, int, bool]:
-    early = _next_before_review(
-        form,
-        staged=staged,
-        to_fill=to_fill,
-        unboxed=unboxed,
-        assumed=assumed,
-        verified=verified,
-        filed=filed,
-    )
-    if early is not None:
-        return early
-    return _next_after_review(
-        form,
-        unboxed=unboxed,
-        to_fill=to_fill,
-        blocked=blocked,
-        blocking=blocking,
-        awaiting=awaiting,
-        verified=verified,
-    )
-
-
-def _next_before_review(
-    form: ModeloWorkForm,
-    *,
-    staged: int,
-    to_fill: int,
-    unboxed: int,
-    assumed: int,
-    verified: bool,
-    filed: bool,
-) -> tuple[NextAction, int, bool] | None:
-    if staged:
-        return NextAction.APPLY, staged, False
-    if filed:
-        return NextAction.RECORDED, 0, False
-    if form.calculation_revision_id is not None and form.calculation_out_of_date:
-        return NextAction.RECALCULATE, 0, False
-    if to_fill and not verified:
-        return NextAction.FILL, to_fill + unboxed, False
-    if assumed:
-        # The count is the header's: the assumed boxes, the only values a filer confirms.
-        return NextAction.CONFIRM, confirm_count(form), False
-    return None
-
-
-def _next_after_review(
-    form: ModeloWorkForm,
-    *,
-    unboxed: int,
-    to_fill: int,
-    blocked: int,
-    blocking: int,
-    awaiting: int,
-    verified: bool,
-) -> tuple[NextAction, int, bool]:
-    file_action = _ready_file_action(form, verified=verified, blocking=blocking)
-    if file_action is not None:
-        return file_action
-    if form.calculation_revision_id is None:
-        return NextAction.CALCULATE, 0, False
-    if _check_is_next(awaiting, blocking, blocked):
-        # Only the check can say whether what blocks stands, and it also judges
-        # whether the values still missing are ones the declaration needs.
-        return NextAction.VERIFY, 0, False
-    if _only_unboxed_values_remain(form, unboxed=unboxed, blocked=blocked, blocking=blocking):
-        # Only values are missing, so the step is filling them in, counted as the
-        # header's missing chip counts them; findings name them, so they lead there.
-        return NextAction.FILL, to_fill + unboxed, True
-    if _filing_still_needs_resolution(form, blocked=blocked, blocking=blocking, unboxed=unboxed):
-        # The header's chips count what blocks filing and the missing values
-        # only a finding names; boxes the check marked stand in only when no
-        # finding is left to count.
-        return NextAction.RESOLVE, (blocking + unboxed) or blocked, False
-    return NextAction.VERIFY, 0, False
-
-
-def _ready_file_action(form: ModeloWorkForm, *, verified: bool, blocking: int) -> tuple[NextAction, int, bool] | None:
-    if not verified or blocking:
-        return None
-    export = form.last_export
-    if export is None:
-        return NextAction.EXPORT, 0, False
-    action = NextAction.RECORD_AFTER_FILE if export.current else NextAction.EXPORT_AGAIN
-    return action, 0, False
-
-
-def _check_is_next(awaiting: int, blocking: int, blocked: int) -> bool:
-    return bool(awaiting and awaiting == blocking and not blocked)
-
-
-def _only_unboxed_values_remain(form: ModeloWorkForm, *, unboxed: int, blocked: int, blocking: int) -> bool:
-    return bool(unboxed and not (blocked or blocking or form.verification is VerificationCompletenessStatus.BLOCKED))
-
-
-def _filing_still_needs_resolution(form: ModeloWorkForm, *, blocked: int, blocking: int, unboxed: int) -> bool:
-    return bool(blocked or blocking or unboxed or form.verification in _UNRESOLVED_VERDICTS)
-
-
-def _awaiting_the_check(form: ModeloWorkForm) -> int:
-    """How many of what blocks filing are calculation notes only the check can decide, the calculation unchecked.
-
-    Once the current calculation is checked the form leaves these notes out
-    and the check's own finding of the same cause stands in their place.
-    """
-    if form.verification is not None:
-        return 0
-    return sum(1 for note in form.blocking_calculation_notes if note.reason in CHECK_REFUSED_REASONS)
-
-
 def _step_name(step: WorkbenchStep) -> str:
     return tr(f"tui.modelo.workbench.step.{step.value}")
 
@@ -398,7 +250,7 @@ def stepper_marks(progress: WorkbenchProgress) -> tuple[WorkbenchMark, ...]:
 def next_action_text(progress: WorkbenchProgress, language: OutputLanguage) -> str:
     """Render the next action in the filer's language, without its key."""
     action = progress.next_action
-    if action is NextAction.RECORDED:
+    if action is ModeloFormNextAction.RECORDED:
         if progress.recorded_at is None:
             return f"{DONE_MARK.glyph} {_step_name(WorkbenchStep.FILE)}"
         return tr("tui.modelo.workbench.next.recorded", date=date_text(progress.recorded_at.date(), language))
@@ -423,7 +275,6 @@ def fit_next_line(action: str, key: str, width: int) -> str:
 
 
 __all__ = [
-    "NextAction",
     "StepState",
     "StepStatus",
     "WorkbenchProgress",

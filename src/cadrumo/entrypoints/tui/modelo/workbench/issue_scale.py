@@ -20,13 +20,14 @@ from .....application.modelo.work_form_models import (
     address_key,
     section_fields,
 )
+from .....application.modelo.work_form_next_step import applicable_fields
 from .....core.i18n.render import tr
 from .....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
 )
 from .casilla_list_models import AddressKey
-from .navigator import applicable_fields, presented_form
+from .navigator import presented_form
 from .page_items import workbench_pages
 from .sources import OpenSourceSurface
 from .vocabulary import (

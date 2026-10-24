@@ -32,6 +32,7 @@ from .edit_models import ModeloEditAdmissionResultV1
 from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1
 from .m303_exonerado_390_applicability_attestation import modelo_390_question_asked
 from .verification_report_facts import granting_verification_report
+from .work_form_next_step import ModeloFormNextStep, form_next_step, registry_grade_refusal
 from .work_form_service import ModeloWorkFormLoadV1, load_modelo_work_form, modelo_form_snapshot
 
 if TYPE_CHECKING:
@@ -94,6 +95,14 @@ class ModeloWorkbenchFormReadV1:
     registry_revision_id: str
     #: The governed Spanish tax-identifier format the frontend parses NIF entries against.
     tax_id_format: SpanishTaxIdFormat
+
+    @property
+    def next_step(self) -> ModeloFormNextStep | None:
+        """The one action the form offers next; ``None`` when the registry rules cannot calculate it at all."""
+        if registry_grade_refusal(self.admission):
+            return None
+        load = self.load
+        return form_next_step(load.form, verified=load.verified, filed=load.filed)
 
 
 def _work_unit(work_unit_id: str, *, bucket_id: str, ports: ModeloWorkbenchReadPorts) -> WorkUnit:

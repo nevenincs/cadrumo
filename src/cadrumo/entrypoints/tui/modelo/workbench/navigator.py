@@ -40,7 +40,6 @@ from .....application.modelo.work_form_models import (
     ModeloFormAttention,
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
-    ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
@@ -183,50 +182,6 @@ def presented_form(form: ModeloWorkForm, *, recorded: bool = False) -> ModeloWor
         update["working_figures"] = tuple(_settled(field) for field in form.working_figures)
         update["unplaced"] = tuple(item.model_copy(update={"field": _settled(item.field)}) for item in form.unplaced)
     return form.model_copy(update=update)
-
-
-def inapplicable_pages(form: ModeloWorkForm) -> frozenset[str]:
-    """The official pages the read model states do not apply to this filing, by id."""
-    return frozenset(page.id for page in form.pages if page.applies is False)
-
-
-def applicable_fields(form: ModeloWorkForm) -> tuple[ModeloFormField, ...]:
-    """Every field the filer may be asked about: all but those on pages the read model states do not apply.
-
-    It is the population :func:`to_do_counts` counts over, so a list of what
-    is missing or assumed names exactly the boxes the header counts.
-    """
-    set_aside = inapplicable_pages(form)
-    kept = [
-        field
-        for page in form.pages
-        if page.id not in set_aside
-        for section in page.sections
-        for field in section_fields(section)
-    ]
-    kept.extend(form.working_figures)
-    kept.extend(item.field for item in form.unplaced)
-    return tuple(kept)
-
-
-def to_do_counts(form: ModeloWorkForm) -> ModeloFormCounts:
-    """The form's counts without what the pages that do not apply hold as missing or assumed.
-
-    Those pages ask nothing of the filer, so their boxes are never to do; every
-    other count, blockers included, stays as the read model states it.
-    """
-    set_aside = [page.counts for page in form.pages if page.applies is False]
-    if not set_aside:
-        return form.counts
-    counts = form.counts
-    return counts.model_copy(
-        update={
-            "needs_input": max(counts.needs_input - sum(item.needs_input for item in set_aside), 0),
-            "default_to_confirm": max(
-                counts.default_to_confirm - sum(item.default_to_confirm for item in set_aside), 0
-            ),
-        }
-    )
 
 
 def checked_boxes(form: ModeloWorkForm) -> dict[str, int]:
@@ -573,11 +528,9 @@ def breadcrumb(
 __all__ = [
     "NavigatorRow",
     "NavigatorState",
-    "applicable_fields",
     "breadcrumb",
     "checked_boxes",
     "heading_groups",
-    "inapplicable_pages",
     "looks_like_identifier",
     "navigator_rows",
     "page_counts",
@@ -586,5 +539,4 @@ __all__ = [
     "readable_text",
     "section_of",
     "section_title",
-    "to_do_counts",
 ]

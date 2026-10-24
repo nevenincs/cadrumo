@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:6b0c05faeb4f932be4bf1426d0de311792f7f6f6660d9b43228694f7ad783ce7'
+body_hash: 'sha256:058775a24c7ba17a1fa7f163a97f72a6669efb6482b61cda30cc6d0ccd2a7ca7'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -39,7 +39,7 @@ Move every classification and wording decision the prototype had to make into th
 - [x] `P01.S02` - Add confirmable, edit address and held-zero to each form field and its public mirror, with tests over the builder forms for 111, 130, 303, 347 and 390; `src/cadrumo/application/modelo/workbench_projection.py`.
 - [x] `P01.S03` - Move origin wording selection (origin by source family, named earlier filing, no earlier filing, AEAT import date, held zero) into an application wording module and switch the TUI to it; `src/cadrumo/application/modelo/work_form_wording.py`.
 - [x] `P01.S04` - Carry per-field display text from the value presentation (ratio units, masked IBAN, booleans, dates) for the requested language; `src/cadrumo/application/modelo/value_presentation.py`.
-- [ ] `P01.S05` - Add a form-level next action on the export, filing and calculation-note gates, halting only on a registry-grade admission refusal, with a state table and a gate-agreement test; `src/cadrumo/application/modelo/work_form.py`.
+- [x] `P01.S05` - Add a form-level next action on the export, filing and calculation-note gates, halting only on a registry-grade admission refusal, with a state table and a gate-agreement test; `src/cadrumo/application/modelo/work_form_next_step.py`.
 - [ ] `P01.S06` - Move period words and modelo titles into the application wording module and use them in the form and list projections; `src/cadrumo/application/modelo/work_form_wording.py`.
 - [ ] `P01.S07` - Add a public declarations list row and register the read modelo.declarations.list, carrying state, group, next step, editability and the AEAT axes, with an exact-profile access test; `src/cadrumo/application/modelo/declarations_list.py`.
 - [ ] `P01.S08` - Move the sources grouping (family, state, boxes fed, owning surface) from the TUI into an application read; `src/cadrumo/application/modelo/source_policy.py`.

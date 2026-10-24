@@ -28,19 +28,15 @@ import pytest
 from ....core.casilla_id import validated_casilla_id
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation
-from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.ledger_iva_bindings import LedgerIvaProvider
-from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_form_layouts import FormCellKind
 from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.legal_inventory import legal_reference_ids
-from ....domain.filing.schema import ModeloValueKind
 from ....domain.modelos.calculation_revision import CalculationRevisionState
-from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -55,7 +51,6 @@ from ...calculations.cross_period_models import (
 )
 from ..required_inputs import filer_required_casilla_ids
 from ..verification_cross_period import cross_period_clean_state_findings
-from ..work_form import build_modelo_work_form
 from ..work_form_models import (
     FINDING_KIND_ACTION_LOCALE_KEYS,
     FINDING_MESSAGE_ACTION_LOCALE_KEYS,
@@ -73,76 +68,14 @@ from ..work_form_models import (
     finding_action_locale_key,
     section_fields,
 )
-from ..work_form_service import modelo_form_snapshot
 from ..work_form_wording import field_value_text, origin_explanation, origin_words
-from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
+from ..work_review import build_modelo_work_review_casillas
+from .work_form_fixture import built_form, form_casilla, form_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ACTION = "application.modelo.work_form.finding_action."
 _LEGAL_REF = "rd-439-2007:art-110"
-
-
-def _snapshot(operation: PinnedAuthorityOperation, modelo: str, year: int, code: str) -> RegistrySnapshot:
-    period = Period.from_year_and_code(year, code)
-    revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
-    return modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
-
-
-def _form(
-    operation: PinnedAuthorityOperation,
-    modelo: str,
-    year: int,
-    code: str,
-    *,
-    held: dict[str, Decimal] | None = None,
-    entered: frozenset[str] | None = None,
-    lifecycle: CalculationRevisionState | None = None,
-    findings: tuple[ModeloVerificationFinding, ...] = (),
-    language: OutputLanguage = OutputLanguage.EN,
-) -> ModeloWorkForm:
-    """Build a form whose ``held`` boxes carry the calculation's values; ``entered`` ``None`` is an unknown record."""
-    snapshot = _snapshot(operation, modelo, year, code)
-    values = held or {}
-    rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
-    review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000455",
-        modelo=modelo,
-        filing_year=year,
-        period=Period.from_year_and_code(year, code),
-        registry_revision_id=snapshot.revision.id,
-        work_unit_id="e" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=lifecycle,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=tuple(
-            row.model_copy(update={"value": values[str(row.casilla_id)], "realised_kind": ModeloValueKind.LITERAL})
-            if str(row.casilla_id) in values
-            else row
-            for row in rows
-        ),
-        findings=findings,
-        blockers=(),
-    )
-    return build_modelo_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=operation.form_layout(modelo, snapshot.revision.id),
-        revision=None,
-        permitted_surface=None,
-        entered_casilla_ids=None if entered is None else frozenset(validated_casilla_id(item) for item in entered),
-        overridden_binding_ids=None if entered is None else frozenset(),
-        language=language,
-    )
-
-
-def _casilla(form: ModeloWorkForm, casilla_id: str) -> ModeloFormField:
-    return next(
-        field
-        for field in form.fields()
-        if isinstance(field.address, ModeloFormCasillaAddressV1) and str(field.address.casilla_id) == casilla_id
-    )
 
 
 def _casilla_ids(fields: tuple[ModeloFormField, ...] | list[ModeloFormField]) -> set[str]:
@@ -151,7 +84,7 @@ def _casilla_ids(fields: tuple[ModeloFormField, ...] | list[ModeloFormField]) ->
 
 def _optional_money_box(operation: PinnedAuthorityOperation) -> str:
     """A Modelo 210 amount the filer types and verification does not require, beside the gross income it does."""
-    revision = _snapshot(operation, "210", 2025, "0A").revision
+    revision = form_snapshot(operation, "210", 2025, "0A").revision
     required = {str(item) for item in filer_required_casilla_ids(revision)}
     assert "rendimientos_integros" in required
     return next(
@@ -174,25 +107,27 @@ def test_a_held_value_is_assumed_only_where_it_could_under_declare(operation: Pi
     """
     optional = _optional_money_box(operation)
 
-    empty = _form(operation, "210", 2025, "0A")
-    zeros = _form(operation, "210", 2025, "0A", held={"rendimientos_integros": Decimal("0"), optional: Decimal("0")})
-    amounts = _form(
+    empty = built_form(operation, "210", 2025, "0A")
+    zeros = built_form(
+        operation, "210", 2025, "0A", held={"rendimientos_integros": Decimal("0"), optional: Decimal("0")}
+    )
+    amounts = built_form(
         operation, "210", 2025, "0A", held={"rendimientos_integros": Decimal("1200.00"), optional: Decimal("35.00")}
     )
 
-    assert _casilla(empty, "rendimientos_integros").origin is ModeloFormOrigin.NEEDS_INPUT
-    assert _casilla(zeros, "rendimientos_integros").origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
-    assert _casilla(amounts, "rendimientos_integros").origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
-    assert _casilla(empty, optional).origin is ModeloFormOrigin.OPTIONAL_EMPTY
-    assert _casilla(zeros, optional).origin is ModeloFormOrigin.OPTIONAL_EMPTY
-    assert _casilla(amounts, optional).origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+    assert form_casilla(empty, "rendimientos_integros").origin is ModeloFormOrigin.NEEDS_INPUT
+    assert form_casilla(zeros, "rendimientos_integros").origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+    assert form_casilla(amounts, "rendimientos_integros").origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+    assert form_casilla(empty, optional).origin is ModeloFormOrigin.OPTIONAL_EMPTY
+    assert form_casilla(zeros, optional).origin is ModeloFormOrigin.OPTIONAL_EMPTY
+    assert form_casilla(amounts, optional).origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
 
     # Every held value nobody entered stays unattributed, assumed or not; a box
     # that holds nothing is not.
-    assert not _casilla(empty, optional).unattributed
-    assert _casilla(zeros, optional).unattributed
-    assert _casilla(zeros, "rendimientos_integros").unattributed
-    assert _casilla(amounts, optional).unattributed
+    assert not form_casilla(empty, optional).unattributed
+    assert form_casilla(zeros, optional).unattributed
+    assert form_casilla(zeros, "rendimientos_integros").unattributed
+    assert form_casilla(amounts, optional).unattributed
 
     # The counts follow the origins.
     assert zeros.counts.default_to_confirm == 1
@@ -200,7 +135,7 @@ def test_a_held_value_is_assumed_only_where_it_could_under_declare(operation: Pi
 
 
 def test_a_value_the_filer_entered_is_never_assumed_whatever_it_holds(operation: PinnedAuthorityOperation) -> None:
-    form = _form(
+    form = built_form(
         operation,
         "210",
         2025,
@@ -209,7 +144,7 @@ def test_a_value_the_filer_entered_is_never_assumed_whatever_it_holds(operation:
         entered=frozenset({"rendimientos_integros"}),
     )
 
-    field = _casilla(form, "rendimientos_integros")
+    field = form_casilla(form, "rendimientos_integros")
     assert field.origin is ModeloFormOrigin.ENTERED
     assert not field.unattributed
 
@@ -225,7 +160,7 @@ def test_modelo_100_calculated_elsewhere_asks_only_for_the_income_it_holds(
     any box verification requires, and nothing else, while every held box stays
     unattributed.
     """
-    snapshot = _snapshot(operation, "100", 2025, "0A")
+    snapshot = form_snapshot(operation, "100", 2025, "0A")
     rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
     typed = {
         str(row.casilla_id) for row in rows if row.declared_input_kind is InputKind.MANUAL and not row.absent_by_design
@@ -233,7 +168,7 @@ def test_modelo_100_calculated_elsewhere_asks_only_for_the_income_it_holds(
     held = {casilla_id: Decimal("0") for casilla_id in typed} | {"0003": Decimal("24000")}
     required = {str(item) for item in filer_required_casilla_ids(snapshot.revision)}
 
-    form = _form(operation, "100", 2025, "0A", held=held, entered=None)
+    form = built_form(operation, "100", 2025, "0A", held=held, entered=None)
 
     assumed = [field for field in form.fields() if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM]
     unattributed = [field for field in form.fields() if field.unattributed]
@@ -251,12 +186,12 @@ def test_modelo_100_calculated_elsewhere_asks_only_for_the_income_it_holds(
 def test_a_declaration_recorded_as_filed_counts_nothing_to_do(operation: PinnedAuthorityOperation) -> None:
     """A draft with a missing required box and an assumed amount counts both; the same declaration filed counts none."""
     held = {_optional_money_box(operation): Decimal("35.00")}
-    draft = _form(operation, "210", 2025, "0A", held=held)
-    filed = _form(operation, "210", 2025, "0A", held=held, lifecycle=CalculationRevisionState.PRESENTADO)
+    draft = built_form(operation, "210", 2025, "0A", held=held)
+    filed = built_form(operation, "210", 2025, "0A", held=held, lifecycle=CalculationRevisionState.PRESENTADO)
 
     assert draft.counts.needs_input > 0
     assert draft.counts.default_to_confirm > 0
-    assert _casilla(filed, "rendimientos_integros").origin is ModeloFormOrigin.NEEDS_INPUT
+    assert form_casilla(filed, "rendimientos_integros").origin is ModeloFormOrigin.NEEDS_INPUT
     for counts in (
         filed.counts,
         *(page.counts for page in filed.pages),
@@ -298,7 +233,7 @@ def _page_fields(form: ModeloWorkForm) -> Iterator[tuple[ModeloFormField, bool]]
 
 def test_every_box_stands_where_its_origin_and_page_put_it(operation: PinnedAuthorityOperation) -> None:
     """A draft Modelo 210 with a required box empty and an optional amount nobody entered."""
-    form = _form(operation, "210", 2025, "0A", held={_optional_money_box(operation): Decimal("35.00")})
+    form = built_form(operation, "210", 2025, "0A", held={_optional_money_box(operation): Decimal("35.00")})
 
     standings = [(field.standing, _expected_standing(field, applies=applies)) for field, applies in _page_fields(form)]
     assert standings
@@ -314,7 +249,7 @@ def test_a_page_that_does_not_apply_asks_for_no_value(operation: PinnedAuthority
     The same typed box, holding an amount nobody entered, is assumed in both
     quarters; it asks the filer only where its page applies.
     """
-    annual = next(page for page in _form(operation, "303", 2026, "4T").pages if page.id == "dp30304")
+    annual = next(page for page in built_form(operation, "303", 2026, "4T").pages if page.id == "dp30304")
     page_box = next(
         str(field.address.casilla_id)
         for section in annual.sections
@@ -324,17 +259,17 @@ def test_a_page_that_does_not_apply_asks_for_no_value(operation: PinnedAuthority
         and field.data_type == "money"
     )
     held = {page_box: Decimal("125.00")}
-    first = _form(operation, "303", 2026, "1T", held=held)
-    fourth = _form(operation, "303", 2026, "4T", held=held)
+    first = built_form(operation, "303", 2026, "1T", held=held)
+    fourth = built_form(operation, "303", 2026, "4T", held=held)
 
     assert next(page for page in first.pages if page.id == "dp30304").applies is False
     assert next(page for page in fourth.pages if page.id == "dp30304").applies is True
-    assert _casilla(first, page_box).origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
-    assert _casilla(fourth, page_box).origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
-    assert _casilla(first, page_box).standing is ModeloFormStanding.DONE
-    assert _casilla(fourth, page_box).standing is ModeloFormStanding.NEEDS_YOU
-    assert not field_needs_filer(_casilla(first, page_box), applies=False)
-    assert field_needs_filer(_casilla(fourth, page_box))
+    assert form_casilla(first, page_box).origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+    assert form_casilla(fourth, page_box).origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+    assert form_casilla(first, page_box).standing is ModeloFormStanding.DONE
+    assert form_casilla(fourth, page_box).standing is ModeloFormStanding.NEEDS_YOU
+    assert not field_needs_filer(form_casilla(first, page_box), applies=False)
+    assert field_needs_filer(form_casilla(fourth, page_box))
 
 
 def test_a_box_the_design_fixes_stands_done_and_is_never_confirmed(operation: PinnedAuthorityOperation) -> None:
@@ -344,8 +279,8 @@ def test_a_box_the_design_fixes_stands_done_and_is_never_confirmed(operation: Pi
     recorded as having entered: as typed boxes they would be assumed and ask
     the filer, so this proves the printed rate replaces that reading.
     """
-    rates = _rate_cells(_form(operation, "303", 2026, "1T"))
-    form = _form(operation, "303", 2026, "1T", held=dict.fromkeys(rates, Decimal("21.00")))
+    rates = _rate_cells(built_form(operation, "303", 2026, "1T"))
+    form = built_form(operation, "303", 2026, "1T", held=dict.fromkeys(rates, Decimal("21.00")))
     fixed = [
         cell.field
         for page in form.pages
@@ -363,7 +298,7 @@ def test_a_box_the_design_fixes_stands_done_and_is_never_confirmed(operation: Pi
 
 def test_on_a_declaration_recorded_as_filed_every_box_is_done(operation: PinnedAuthorityOperation) -> None:
     held = {_optional_money_box(operation): Decimal("35.00")}
-    filed = _form(operation, "210", 2025, "0A", held=held, lifecycle=CalculationRevisionState.PRESENTADO)
+    filed = built_form(operation, "210", 2025, "0A", held=held, lifecycle=CalculationRevisionState.PRESENTADO)
 
     assert {field.standing for field, _ in _page_fields(filed)} == {ModeloFormStanding.DONE}
 
@@ -383,33 +318,33 @@ def test_every_box_carries_its_origin_and_editability_in_the_forms_language(
 ) -> None:
     """A draft Modelo 210: the required box that is empty, and an optional box left at zero."""
     optional = _optional_money_box(operation)
-    form = _form(operation, "210", 2025, "0A", held={optional: Decimal("0")}, language=language)
+    form = built_form(operation, "210", 2025, "0A", held={optional: Decimal("0")}, language=language)
 
     assert all(field.origin_words and field.editability_words for field in form.fields())
-    assert _casilla(form, "rendimientos_integros").origin_words == _catalogue(
+    assert form_casilla(form, "rendimientos_integros").origin_words == _catalogue(
         "tui.modelo.workbench.origin.needs_input", language
     )
-    assert _casilla(form, optional).origin_words == _catalogue(
+    assert form_casilla(form, optional).origin_words == _catalogue(
         "tui.modelo.workbench.origin_held_zero.optional_empty", language
     )
-    assert _casilla(form, optional).editability_words == _catalogue(
-        f"tui.modelo.workbench.editability.{_casilla(form, optional).editability.value}", language
+    assert form_casilla(form, optional).editability_words == _catalogue(
+        f"tui.modelo.workbench.editability.{form_casilla(form, optional).editability.value}", language
     )
 
 
 def test_on_a_declaration_recorded_as_filed_an_empty_box_says_what_it_holds(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    filed = _form(operation, "210", 2025, "0A", lifecycle=CalculationRevisionState.PRESENTADO)
+    filed = built_form(operation, "210", 2025, "0A", lifecycle=CalculationRevisionState.PRESENTADO)
 
-    assert _casilla(filed, "rendimientos_integros").origin_words == _catalogue(
+    assert form_casilla(filed, "rendimientos_integros").origin_words == _catalogue(
         "tui.modelo.workbench.origin_filed.needs_input", OutputLanguage.EN
     )
 
 
 def test_the_carried_words_are_the_ones_the_rule_gives_for_the_box(operation: PinnedAuthorityOperation) -> None:
     """Every frontend shows the carried words; the rule a terminal applies live gives the same ones."""
-    form = _form(operation, "130", 2026, "1T", held={"05": Decimal("0")})
+    form = built_form(operation, "130", 2026, "1T", held={"05": Decimal("0")})
     for field in form.fields():
         assert field.origin_words == origin_words(field, recorded=False, language=OutputLanguage.EN)
         assert field.origin_explanation == origin_explanation(field, OutputLanguage.EN)
@@ -427,7 +362,7 @@ def test_every_box_carries_the_figure_it_shows_in_the_forms_language(
 ) -> None:
     """A Modelo 210 amount held, an optional box left at zero, and the required box still empty."""
     optional = _optional_money_box(operation)
-    form = _form(
+    form = built_form(
         operation,
         "210",
         2025,
@@ -436,24 +371,28 @@ def test_every_box_carries_the_figure_it_shows_in_the_forms_language(
         language=language,
     )
 
-    assert _casilla(form, "rendimientos_integros").value_text == amount
+    assert form_casilla(form, "rendimientos_integros").value_text == amount
     # A held zero is a figure, never shown as missing.
-    assert _casilla(form, optional).value_text == zero
-    assert _casilla(_form(operation, "210", 2025, "0A", language=language), "rendimientos_integros").value_text is None
+    assert form_casilla(form, optional).value_text == zero
+    assert (
+        form_casilla(built_form(operation, "210", 2025, "0A", language=language), "rendimientos_integros").value_text
+        is None
+    )
 
 
 def test_a_printed_rate_shows_as_the_form_prints_it_and_a_waiting_box_shows_no_figure(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = _form(operation, "303", 2026, "1T")
+    form = built_form(operation, "303", 2026, "1T")
     printed = [cell.field for cell in _rate_cells(form).values() if cell.field is not None and cell.field.printed_rate]
     assert printed
     for field in printed:
         assert field.value_text is not None
         assert field.value_text.endswith("%")
     # A box whose calculation waits or failed shows no figure, whatever it still holds.
-    held = _casilla(
-        _form(operation, "210", 2025, "0A", held={"rendimientos_integros": Decimal("1234.56")}), "rendimientos_integros"
+    held = form_casilla(
+        built_form(operation, "210", 2025, "0A", held={"rendimientos_integros": Decimal("1234.56")}),
+        "rendimientos_integros",
     )
     assert field_value_text(held, OutputLanguage.EN) is not None
     for origin in (ModeloFormOrigin.NOT_CALCULATED_YET, ModeloFormOrigin.CALCULATION_FAILED):
@@ -515,7 +454,7 @@ def test_each_finding_says_how_loud_it_is_and_what_to_do(operation: PinnedAuthor
         legal_refs=(_LEGAL_REF,),
     )
 
-    form = _form(operation, "130", 2026, "1T", findings=(suppressed, output, deductible, unmapped))
+    form = built_form(operation, "130", 2026, "1T", findings=(suppressed, output, deductible, unmapped))
     issues = {issue.finding.message_locale_key: issue for issue in form.issues}
 
     assert suppressed.message_locale_key == "application.modelo.findings.cross_period_operator_declared_suppression"
@@ -589,10 +528,10 @@ def test_a_303_rate_box_prints_the_one_rate_its_base_binding_declares(operation:
     two transitional rates and row [150]-[151] has no binding, so none of their
     rate boxes claims one.
     """
-    snapshot = _snapshot(operation, "303", 2026, "1T")
+    snapshot = form_snapshot(operation, "303", 2026, "1T")
     bindings = {str(item.id): item for item in snapshot.revision.bindings}
     casillas = {str(item.id): item for item in snapshot.revision.casillas}
-    cells = _rate_cells(_form(operation, "303", 2026, "1T"))
+    cells = _rate_cells(built_form(operation, "303", 2026, "1T"))
 
     field = cells["166"].field
     assert field is not None
@@ -635,7 +574,7 @@ def test_a_grounded_rate_agrees_with_the_rate_the_official_design_prints(operati
     rate-specific ledger binding that fills the ledger's base each formula adds;
     the filer's autoconsumo base, which no binding fills, declares none.
     """
-    snapshot = _snapshot(operation, "303", 2026, "1T")
+    snapshot = form_snapshot(operation, "303", 2026, "1T")
     bindings = {str(item.id): item for item in snapshot.revision.bindings}
     casillas = {str(item.id): item for item in snapshot.revision.casillas}
     formulas = {str(item.id): item for item in snapshot.revision.formulas}
@@ -662,7 +601,7 @@ def test_a_grounded_rate_agrees_with_the_rate_the_official_design_prints(operati
         return rates
 
     compared: set[str] = set()
-    for cells in _grid_rows(_form(operation, "303", 2026, "1T")):
+    for cells in _grid_rows(built_form(operation, "303", 2026, "1T")):
         base = cells[0].field
         for cell in cells:
             if cell.kind is not FormCellKind.DESIGN_CONSTANT or cell.field is None or cell.literal is None:
@@ -682,7 +621,7 @@ def test_a_grounded_rate_agrees_with_the_rate_the_official_design_prints(operati
 
 
 def test_no_field_but_a_rate_box_carries_a_rate(operation: PinnedAuthorityOperation) -> None:
-    form = _form(operation, "303", 2026, "1T")
+    form = built_form(operation, "303", 2026, "1T")
 
     carrying = [
         field

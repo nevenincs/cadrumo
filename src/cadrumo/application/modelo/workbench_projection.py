@@ -69,6 +69,7 @@ from .work_form_models import (
     ModeloFormStanding,
     ModeloFormText,
 )
+from .work_form_next_step import ModeloFormNextStep
 from .work_form_service import ModeloWorkFormLoadV1
 from .work_review import ModeloWorkProgress
 from .workbench_read import ModeloWorkbenchFormReadV1
@@ -388,6 +389,8 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
     form: PublicModeloWorkFormLoadV1
     admitted_baseline: ModeloEditApplyBaselineV1 | None
     admission_refusal: ModeloEditRefusedV1 | None
+    #: The one action the form offers next, ``None`` when the registry rules for the revision cannot calculate it.
+    next_step: ModeloFormNextStep | None
     calculation_revision_id: str | None
     verification_report_id: str | None
     asks_m303_evidence: bool
@@ -486,6 +489,7 @@ def project_modelo_workbench_form(
             else None
         ),
         admission_refusal=admission if isinstance(admission, ModeloEditRefusedV1) else None,
+        next_step=read.next_step,
         calculation_revision_id=read.calculation_revision_id,
         verification_report_id=read.verification_report_id,
         asks_m303_evidence=read.asks_m303_evidence,
@@ -493,7 +497,8 @@ def project_modelo_workbench_form(
         registry_revision_id=read.registry_revision_id,
         tax_id_format=_project_tax_id_format(read.tax_id_format),
     )
-    if _restore(projection) != read:
+    restored = _restore(projection)
+    if restored != read or restored.next_step != projection.next_step:
         raise ValueError("workbench form public projection changed canonical meaning")
     return projection
 

@@ -511,6 +511,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         ModeloFormOrigin,
         ModeloFormTextDisclosure,
     )
+    from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction
     from cadrumo.application.modelo.work_form_wording import (
         NOT_WRITABLE_REASONS,
         PERIOD_WORD_NAMES,
@@ -519,7 +520,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.entrypoints.tui.modelo.workbench.editor import EDITOR_HINT_KINDS
     from cadrumo.entrypoints.tui.modelo.workbench.factory import WORDED_FINDING_CODES
     from cadrumo.entrypoints.tui.modelo.workbench.page_items import WorkbenchFilter
-    from cadrumo.entrypoints.tui.modelo.workbench.progress import NextAction, WorkbenchStep
+    from cadrumo.entrypoints.tui.modelo.workbench.progress import WorkbenchStep
     from cadrumo.entrypoints.tui.modelo.workbench.result import ResultGroup
     from cadrumo.entrypoints.tui.modelo.workbench.review import REVIEW_EFFECTS
     from cadrumo.entrypoints.tui.modelo.workbench.session import StageRefusal
@@ -543,7 +544,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         ),
         ("filter", _enum_values(WorkbenchFilter)),
         ("step", _enum_values(WorkbenchStep)),
-        ("next", _enum_values(NextAction)),
+        ("next", _enum_values(ModeloFormNextAction)),
         ("stage_refused", _enum_values(StageRefusal)),
         ("editor.placeholder", EDITOR_HINT_KINDS),
         ("editor.format", EDITOR_HINT_KINDS),

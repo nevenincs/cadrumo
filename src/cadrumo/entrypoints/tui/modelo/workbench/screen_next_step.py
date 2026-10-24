@@ -7,6 +7,7 @@ from functools import partial
 from typing import TYPE_CHECKING
 
 from .....application.modelo.work_form_models import ModeloFormField, ModeloWorkForm, address_key
+from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
 from .....core.i18n.render import tr
 from ...components.dialogs import ConfirmScreen
@@ -15,7 +16,7 @@ from .editor import open_area_target
 from .issue_scale import CalculateAgain, ConfirmAssumedValues, IssueLevel, IssueLine, IssuesChoice
 from .issues import WorkbenchIssuesScreen
 from .ports import ModeloWorkbenchActionsV1, WorkbenchApplyPrerequisite
-from .progress import NextAction, WorkbenchProgress, workbench_progress
+from .progress import WorkbenchProgress, workbench_progress
 from .review import recalculation_risk_text
 from .screen_constants import (
     _DIALOG_FRAME,
@@ -48,30 +49,31 @@ class WorkbenchNextStepMixin:
         self: ModeloWorkbenchScreen, load: ModeloWorkFormLoadV1, progress: WorkbenchProgress
     ) -> bool:
         action = progress.next_action
-        if action is NextAction.RECORDED:
+        if action is ModeloFormNextAction.RECORDED:
             self._edit_unavailable()
-        elif action is NextAction.APPLY:
+        elif action is ModeloFormNextAction.APPLY:
             self.action_review()
-        elif action is NextAction.CONFIRM:
+        elif action is ModeloFormNextAction.CONFIRM:
             self._confirm_next()
         elif progress.findings_lead or (
-            action is NextAction.RESOLVE and (load.form.verification is not None or load.form.calculation_notes)
+            action is ModeloFormNextAction.RESOLVE
+            and (load.form.verification is not None or load.form.calculation_notes)
         ):
             self.action_issues()
-        elif action in {NextAction.FILL, NextAction.RESOLVE}:
+        elif action in {ModeloFormNextAction.FILL, ModeloFormNextAction.RESOLVE}:
             self._advance_attention(1)
         else:
             return False
         return True
 
     def _run_operation_next_step(
-        self: ModeloWorkbenchScreen, action: NextAction, actions: ModeloWorkbenchActionsV1
+        self: ModeloWorkbenchScreen, action: ModeloFormNextAction, actions: ModeloWorkbenchActionsV1
     ) -> None:
-        if action in {NextAction.CALCULATE, NextAction.RECALCULATE}:
+        if action in {ModeloFormNextAction.CALCULATE, ModeloFormNextAction.RECALCULATE}:
             self._calculate(actions)
-        elif action is NextAction.VERIFY:
+        elif action is ModeloFormNextAction.VERIFY:
             self._run_operation(actions.verify)
-        elif action in {NextAction.EXPORT, NextAction.EXPORT_AGAIN}:
+        elif action in {ModeloFormNextAction.EXPORT, ModeloFormNextAction.EXPORT_AGAIN}:
             if not self._file_out_of_date():
                 self.action_export()
         else:
@@ -248,6 +250,10 @@ class WorkbenchNextStepMixin:
         )
         if self._active_apply_prerequisite() is not None:
             return replace(
-                progress, next_action=NextAction.RESOLVE, count=1, blocking=progress.blocking + 1, findings_lead=True
+                progress,
+                next_action=ModeloFormNextAction.RESOLVE,
+                count=1,
+                blocking=progress.blocking + 1,
+                findings_lead=True,
             )
         return progress

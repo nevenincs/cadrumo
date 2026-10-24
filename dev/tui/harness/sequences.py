@@ -40,6 +40,7 @@ from textual.widgets import Button, DataTable, Input
 from textual.worker import WorkerCancelled
 
 from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, ModeloWorkForm, confirmable
+from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import load_settings
 from cadrumo.core.config_support import TuiAppearance
@@ -58,7 +59,7 @@ from cadrumo.entrypoints.tui.modelo.workbench.casilla_list import CasillaList
 from cadrumo.entrypoints.tui.modelo.workbench.casilla_list_models import CasillaListEntry
 from cadrumo.entrypoints.tui.modelo.workbench.editor import CasillaEditorPanel, CasillaEditorScreen
 from cadrumo.entrypoints.tui.modelo.workbench.issues import WorkbenchIssuesScreen
-from cadrumo.entrypoints.tui.modelo.workbench.progress import NextAction, workbench_progress
+from cadrumo.entrypoints.tui.modelo.workbench.progress import workbench_progress
 from cadrumo.entrypoints.tui.modelo.workbench.review import EditReviewScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.modelo.workbench.search import WorkbenchSearchPanel
@@ -106,7 +107,7 @@ def _require_no_confirmable_value(form: ModeloWorkForm, scenario: SequenceScenar
     steps = {
         workbench_progress(form, staged=0, verified=verified, filed=False).next_action for verified in (False, True)
     }
-    if steps != {NextAction.CONFIRM}:
+    if steps != {ModeloFormNextAction.CONFIRM}:
         raise PageUnavailableError(
             f"{scenario.sequence_id}: F8 would {', '.join(sorted(step.value for step in steps))}, not confirm"
         )

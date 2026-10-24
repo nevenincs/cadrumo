@@ -50,6 +50,7 @@ from .....application.modelo.work_form_models import (
     address_key,
     section_fields,
 )
+from .....application.modelo.work_form_next_step import inapplicable_pages
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
@@ -70,11 +71,7 @@ from .editor import (
     CasillaEditorPanel,
 )
 from .legend import first_open_text, mark_for_glyph
-from .navigator import (
-    NavigatorState,
-    inapplicable_pages,
-    presented_form,
-)
+from .navigator import NavigatorState, presented_form
 from .page_items import (
     WorkbenchFilter,
     WorkbenchPage,

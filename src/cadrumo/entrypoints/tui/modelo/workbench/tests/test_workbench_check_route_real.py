@@ -30,6 +30,7 @@ from ......adapters.persistence.profile.tests.operator_scope_fakes import (
 from ......application.calculations.m111_no_retenciones import M111_NO_RETENCIONES_PROFILE_PATH
 from ......application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ......application.modelo.work_form_models import ModeloFormAttention, ModeloWorkForm
+from ......application.modelo.work_form_next_step import ModeloFormNextAction
 from ......application.modelo.work_form_service import ModeloWorkFormLoadV1
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -46,7 +47,7 @@ from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import application_workbench
 from ....tests.settling import settle_until
 from ..factory import InstalledModeloWorkbench
-from ..progress import NextAction, WorkbenchProgress, next_action_text, workbench_progress
+from ..progress import WorkbenchProgress, next_action_text, workbench_progress
 from ..screen import ModeloWorkbenchScreen
 from .workbench_fixture import FakeActions
 
@@ -127,7 +128,9 @@ def test_an_attested_empty_detail_sends_the_filer_to_the_check_and_then_no_longe
 
     assert _REASON in {note.reason for note in before.form.blocking_calculation_notes}
     assert before.form.verification is None
-    assert progress_before.next_action is NextAction.VERIFY, "only the check can say whether the empty detail stands"
+    assert progress_before.next_action is ModeloFormNextAction.VERIFY, (
+        "only the check can say whether the empty detail stands"
+    )
     assert next_line == "Check the declaration"
     assert progress_before.filing_withheld, "filing stays withheld until the check has spoken"
     assert actions.requested == ["verify"], "F8 runs the check"
@@ -139,7 +142,7 @@ def test_an_attested_empty_detail_sends_the_filer_to_the_check_and_then_no_longe
     assert len(attested) == 1, "the check's acceptance of the attestation is shown in the note's place"
     assert attested[0].attention is not ModeloFormAttention.BLOCKS
     assert _blocking_on_the_cause(after.form) == []
-    assert progress_after.next_action is not NextAction.VERIFY
+    assert progress_after.next_action is not ModeloFormNextAction.VERIFY
 
 
 def test_an_unattested_empty_detail_stays_blocked_by_the_checks_own_finding(tmp_path: Path) -> None:
@@ -150,10 +153,10 @@ def test_an_unattested_empty_detail_stays_blocked_by_the_checks_own_finding(tmp_
         after = installed.load(OutputLanguage.EN)
         progress_after = _progress(after)
 
-    assert progress_before.next_action is NextAction.VERIFY
+    assert progress_before.next_action is ModeloFormNextAction.VERIFY
     assert progress_before.filing_withheld
     assert not report.granted_verificado_completo
     assert _REASON not in {note.reason for note in after.form.calculation_notes}
     assert _blocking_on_the_cause(after.form) == [_UNPROVEN], "the check refused, and its finding is what blocks"
-    assert progress_after.next_action is NextAction.RESOLVE
+    assert progress_after.next_action is ModeloFormNextAction.RESOLVE
     assert progress_after.filing_withheld

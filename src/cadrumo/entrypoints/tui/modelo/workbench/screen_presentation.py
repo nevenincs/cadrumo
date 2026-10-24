@@ -13,6 +13,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormResultDirection,
     ModeloWorkForm,
 )
+from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....core.i18n.render import tr
 from .casilla_list import CasillaList
 from .casilla_list_models import CasillaListEntry, CasillaListNote
@@ -31,7 +32,7 @@ from .header import (
 )
 from .navigator import NavigatorRow, breadcrumb, checked_boxes, navigator_rows, section_of
 from .page_items import WorkbenchFilter, page_items, page_of
-from .progress import NextAction, fit_next_line, next_action_text, stepper_marks, stepper_text
+from .progress import fit_next_line, next_action_text, stepper_marks, stepper_text
 from .screen_constants import (
     _CRUMB_SEPARATOR,
     _DEADLINE_TONE_CLASSES,
@@ -154,8 +155,8 @@ class WorkbenchPresentationMixin:
         self.set_class(cell_len(line) > width - cell_len(stepper.plain) - _NEXT_GAP, "-next-below")
         next_widget = self.query_one("#wb-next", Static)
         next_widget.update(line)
-        next_widget.set_class(progress.next_action is NextAction.CONFIRM, "-confirm")
-        next_widget.set_class(progress.next_action is NextAction.RESOLVE, "-resolve")
+        next_widget.set_class(progress.next_action is ModeloFormNextAction.CONFIRM, "-confirm")
+        next_widget.set_class(progress.next_action is ModeloFormNextAction.RESOLVE, "-resolve")
         # The footer keeps the key the line now names.
         self._describe_keys()
 

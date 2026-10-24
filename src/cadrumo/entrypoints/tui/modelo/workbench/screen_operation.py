@@ -15,6 +15,7 @@ from .....application.modelo.operation_definitions import (
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
 from .....application.modelo.work_form_models import ModeloWorkForm
+from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_work_form_changes
 from .....application.modelo.work_form_wording import day_text
 from .....core.errors.error_codes import resolve_error_message
@@ -31,7 +32,6 @@ from .casilla_list_models import AddressKey
 from .export import WorkbenchExportScreen
 from .header import result_view
 from .ports import ModeloWorkbenchActionsV1, WorkbenchExportRequest
-from .progress import NextAction
 from .result import WorkbenchResultScreen, result_lines
 from .screen_constants import (
     _BLOCKED_LOCALE_KEY,
@@ -83,7 +83,7 @@ class WorkbenchOperationMixin:
             return True
         if self._session.dirty:
             action = tr("tui.modelo.workbench.next.apply", count=len(self._session.changes))
-            self._notice(f"{action} [{_NEXT_KEYS[NextAction.APPLY]}]")
+            self._notice(f"{action} [{_NEXT_KEYS[ModeloFormNextAction.APPLY]}]")
             return True
         progress = self._progress(load)
         if not progress.filing_withheld:

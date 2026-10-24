@@ -47,11 +47,16 @@ from textual.content import Content
 from .....application.modelo.value_presentation import format_casilla_value
 from .....application.modelo.work_form_models import (
     ModeloFormAttention,
-    ModeloFormCasillaAddressV1,
     ModeloFormField,
     ModeloFormOrigin,
     ModeloFormResultDirection,
     ModeloWorkForm,
+)
+from .....application.modelo.work_form_next_step import (
+    blocking_count,
+    confirm_count,
+    missing_count,
+    result_fields,
 )
 from .....application.modelo.work_form_wording import date_text, day_text, period_words
 from .....core.external_constants import OutputLanguage
@@ -59,9 +64,7 @@ from .....core.i18n.render import tr
 from ...components.cell_text import ellipsize
 from .casilla_list_models import CasillaListEntry
 from .casilla_list_values import value_text
-from .issue_projection import issue_lines
-from .issue_scale import IssueLevel, levels_marked
-from .navigator import to_do_counts
+from .issue_scale import levels_marked
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, MISSING_MARK, STALE_MARK, WorkbenchMark
 from .wording import modelo_number, modelo_title
 
@@ -289,18 +292,6 @@ def deadline_help(form: ModeloWorkForm, language: OutputLanguage, *, recorded: b
     )
 
 
-def _result_fields(form: ModeloWorkForm) -> dict[str, ModeloFormField]:
-    wanted = {str(casilla_id) for casilla_id in form.result_addresses}
-    if form.result is not None:
-        wanted.add(str(form.result.casilla_id))
-    fields: dict[str, ModeloFormField] = {}
-    for field in form.fields():
-        address = field.address
-        if isinstance(address, ModeloFormCasillaAddressV1) and str(address.casilla_id) in wanted:
-            fields.setdefault(str(address.casilla_id), field)
-    return fields
-
-
 def _money(value: Decimal, language: OutputLanguage) -> str:
     """A settlement amount, as money whatever type its box declares: a result is always an amount to pay or get."""
     return format_casilla_value(value, data_type=_MONEY, language=language)
@@ -408,7 +399,7 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, 
 
 
 def _selected_result(form: ModeloWorkForm) -> _SelectedResult | None:
-    fields = _result_fields(form)
+    fields = result_fields(form)
     result = form.result
     if result is not None:
         settling = str(result.casilla_id)
@@ -474,68 +465,6 @@ def _field_amount(field: ModeloFormField | None) -> Decimal | None:
     if field is None or isinstance(field.value, bool) or not isinstance(field.value, Decimal | int):
         return None
     return Decimal(field.value)
-
-
-def is_result_field(form: ModeloWorkForm, field: ModeloFormField) -> bool:
-    """Whether ``field`` is one of the boxes that state the declaration's result."""
-    address = field.address
-    if not isinstance(address, ModeloFormCasillaAddressV1):
-        return False
-    settling = form.result.casilla_id if form.result is not None else None
-    return address.casilla_id == settling or address.casilla_id in form.result_addresses
-
-
-def blocking_count(form: ModeloWorkForm) -> int:
-    """How many things block filing: the check's blocking findings, the calculation's blocking notes, and failed boxes.
-
-    A result box the calculation could not produce counts once, when neither a
-    finding nor a note already names it. The header's chip, the next-action
-    line and the gate on the file and the recording all count with this, so
-    the number beside "resolve what blocks filing" is the number the chip shows.
-    """
-    blocking = [issue for issue in form.issues if issue.attention is ModeloFormAttention.BLOCKS]
-    notes = form.blocking_calculation_notes
-    named = {issue.box for issue in blocking if issue.box is not None} | {
-        note.box for note in notes if note.box is not None
-    }
-    failed = _unreported_failed_result_count(form, named)
-    return len(blocking) + len(notes) + failed
-
-
-def _unreported_failed_result_count(form: ModeloWorkForm, named: set[str]) -> int:
-    return sum(
-        1
-        for field in _result_fields(form).values()
-        if field.origin is ModeloFormOrigin.CALCULATION_FAILED
-        and field.box not in named
-        and is_result_field(form, field)
-    )
-
-
-def confirm_count(form: ModeloWorkForm) -> int:
-    """How many values wait for the filer to confirm: the assumed values on pages that apply.
-
-    Only an assumed box can be confirmed, so nothing else is counted: the
-    next-action line offers confirming exactly what this counts.
-    """
-    return to_do_counts(form).default_to_confirm
-
-
-def missing_findings(form: ModeloWorkForm) -> int:
-    """How many missing values only a finding or a calculation note names, such as a record's value.
-
-    The findings list already leaves out a finding whose box the missing
-    boxes count, and lists the calculation's notes beside the findings.
-    """
-    return sum(1 for line in issue_lines(form) if line.level is IssueLevel.MISSING)
-
-
-def missing_count(form: ModeloWorkForm) -> int:
-    """How many values the declaration still needs: boxes on pages that apply, and findings no such box answers.
-
-    The header's chip and the next-action line both count with this.
-    """
-    return to_do_counts(form).needs_input + missing_findings(form)
 
 
 def attention_chips(form: ModeloWorkForm, *, recorded: bool) -> tuple[AttentionChip, ...]:
@@ -700,17 +629,12 @@ __all__ = [
     "ResultView",
     "StatusLine",
     "attention_chips",
-    "blocking_count",
-    "confirm_count",
     "deadline_help",
     "deadline_view",
     "file_view",
     "fit_identity",
     "fit_result_line",
     "identity_text",
-    "is_result_field",
-    "missing_count",
-    "missing_findings",
     "result_view",
     "status_line",
 ]

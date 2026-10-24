@@ -31,6 +31,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormOrigin,
     ModeloWorkForm,
 )
+from ......application.modelo.work_form_next_step import ModeloFormNextAction, blocking_count
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
@@ -40,11 +41,11 @@ from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NA
 from ....tests.settling import settle
 from ..bulk_confirm import BulkConfirmScreen, TickBox
 from ..export import WorkbenchExportScreen
-from ..header import attention_chips, blocking_count
+from ..header import attention_chips
 from ..issue_projection import issue_lines
 from ..issue_scale import IssueLevel
 from ..issues import WorkbenchIssuesScreen
-from ..progress import NextAction, next_action_text, workbench_progress
+from ..progress import next_action_text, workbench_progress
 from ..review import EditReviewScreen, ReviewNote
 from ..screen import ModeloWorkbenchScreen
 from ..vocabulary import BLOCKS_MARK, CHECK_MARK
@@ -155,10 +156,10 @@ def test_recording_comes_after_the_file_and_is_withheld_as_the_file_is() -> None
     blocking = workbench_progress(_with_current_file(_cause("one-blocking")), staged=0, verified=True, filed=False)
     filed = workbench_progress(_cause("one-blocking"), staged=0, verified=True, filed=True)
 
-    assert file_first.next_action is NextAction.EXPORT and not file_first.filing_withheld
-    assert record_next.next_action is NextAction.RECORD_AFTER_FILE and not record_next.filing_withheld
-    assert assumed.filing_withheld and assumed.assumed == 1 and assumed.next_action is NextAction.CONFIRM
-    assert blocking.filing_withheld and blocking.blocking == 1 and blocking.next_action is NextAction.RESOLVE
+    assert file_first.next_action is ModeloFormNextAction.EXPORT and not file_first.filing_withheld
+    assert record_next.next_action is ModeloFormNextAction.RECORD_AFTER_FILE and not record_next.filing_withheld
+    assert assumed.filing_withheld and assumed.assumed == 1 and assumed.next_action is ModeloFormNextAction.CONFIRM
+    assert blocking.filing_withheld and blocking.blocking == 1 and blocking.next_action is ModeloFormNextAction.RESOLVE
     assert not filed.filing_withheld
 
 
@@ -175,7 +176,7 @@ def test_resolving_counts_what_blocks_filing_as_the_header_chip_does() -> None:
         line = next_action_text(progress, OutputLanguage.EN)
 
     assert len(form.issues) == 3
-    assert progress.next_action is NextAction.RESOLVE
+    assert progress.next_action is ModeloFormNextAction.RESOLVE
     assert progress.count == chips["blocks"] == blocking_count(form) == 1
     assert line == "Resolve what blocks filing (to do: 1)"
 
@@ -297,7 +298,7 @@ def test_a_value_the_calculation_inferred_is_worth_checking_and_never_promised_a
 
     assert note.attention is ModeloFormAttention.CHECK
     assert "confirm" not in chips
-    assert progress.next_action is NextAction.EXPORT
+    assert progress.next_action is ModeloFormNextAction.EXPORT
     assert [line.level for line in lines if line.from_calculation] == [IssueLevel.CHECK]
     assert blocking_count(form) == 0
 
@@ -310,4 +311,4 @@ def test_an_assumed_box_is_still_counted_to_confirm_and_offered_next() -> None:
     progress = workbench_progress(form, staged=0, verified=True, filed=False)
 
     assert chips["confirm"] == 1
-    assert progress.next_action is NextAction.CONFIRM and progress.count == 1
+    assert progress.next_action is ModeloFormNextAction.CONFIRM and progress.count == 1

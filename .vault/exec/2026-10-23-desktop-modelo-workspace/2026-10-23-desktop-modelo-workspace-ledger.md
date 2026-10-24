@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:2c99ba5c811ef34e4c643ff16ce0fb2524170a6f09bf64d5a82eb8d0d21f6d86'
+body_hash: 'sha256:326c9d45a46e18559174867b65fd85ae621b75b77814e0e660cdbb24f694d47f'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -128,8 +128,40 @@ related:
 - `S04` `verify:` `dev.quality.types --count` -> `pass`
 - `S04` `verify:` `lint-imports` -> `pass`
 - `S04` `verify:` `operation_contract_manifest.generate --check` -> `pass`
+- `S05` `A` `src/cadrumo/application/modelo/work_form_next_step.py`
+- `S05` `A` `src/cadrumo/application/modelo/tests/test_work_form_next_step.py`
+- `S05` `A` `src/cadrumo/application/modelo/tests/work_form_fixture.py`
+- `S05` `M` `dev/locales/fstring_registry.py`
+- `S05` `M` `dev/tui/harness/sequences.py`
+- `S05` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S05` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S05` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/navigator.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_constants.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_help_content.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_next_step.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_operation.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_presentation.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_applicability.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_apply_prerequisite.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_check_route_real.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_filing_gates.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_formula_values_real.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_missing_count.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_progress.py`
+- `S05` `verify:` `pytest TUI modelo workbench suite, application next-step/filer-attention/field-rules, workbench operations and form loading (779)` -> `pass`
+- `S05` `verify:` `dev.quality.types --count` -> `pass`
+- `S05` `verify:` `lint-imports` -> `pass`
+- `S05` `verify:` `operation_contract_manifest.generate` -> `pass`
 
 ## Notes
 
 - `S02` Fixes an S01 defect: a design-constant cell kept the standing of its pre-copy origin; field copies that change state now go through `revised_field`
 - `S03` Also moved period and date wording from the TUI (needed by origin words); the frontend-neutral key namespace remains P02
+- `S05` Scope corrected from `work_form.py` to the new defining module `work_form_next_step.py;` TUI counters and ladder moved there with every consumer repointed

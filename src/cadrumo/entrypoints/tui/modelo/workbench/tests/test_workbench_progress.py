@@ -24,6 +24,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormIssue,
     ModeloWorkForm,
 )
+from ......application.modelo.work_form_next_step import ModeloFormNextAction, missing_count
 from ......application.modelo.work_form_wording import day_text
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -36,10 +37,9 @@ from ......domain.modelos.verification_report import (
 )
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
-from ..header import attention_chips, missing_count
+from ..header import attention_chips
 from ..issues import WorkbenchIssuesScreen
 from ..progress import (
-    NextAction,
     StepStatus,
     WorkbenchProgress,
     WorkbenchStep,
@@ -73,7 +73,7 @@ def test_a_filed_declaration_is_done_whatever_its_form_still_marks_and_says_when
         line = next_action_text(progress, OutputLanguage.EN)
 
     assert set(_statuses(progress).values()) == {StepStatus.DONE}
-    assert progress.next_action is NextAction.RECORDED
+    assert progress.next_action is ModeloFormNextAction.RECORDED
     assert line == "Recorded as filed on 15/04/2026"
 
 
@@ -98,9 +98,9 @@ def test_a_verified_declaration_offers_the_file_first_and_recording_after_one_at
     assert statuses[WorkbenchStep.FILL] is StepStatus.DONE
     assert statuses[WorkbenchStep.REVIEW] is StepStatus.DONE
     assert statuses[WorkbenchStep.FILE] is StepStatus.CURRENT
-    assert progress.next_action is NextAction.EXPORT
+    assert progress.next_action is ModeloFormNextAction.EXPORT
     assert line == "Create the file to file with AEAT"
-    assert exported.next_action is NextAction.RECORD_AFTER_FILE
+    assert exported.next_action is ModeloFormNextAction.RECORD_AFTER_FILE
     assert record == expected_record
     assert day in record
 
@@ -112,7 +112,7 @@ def test_an_assumed_value_keeps_filling_in_open_and_withholds_recording() -> Non
     verified = workbench_progress(form, staged=0, verified=True, filed=False)
 
     for progress in (unverified, verified):
-        assert progress.next_action is NextAction.CONFIRM
+        assert progress.next_action is ModeloFormNextAction.CONFIRM
         assert progress.count == 3
         assert _statuses(progress)[WorkbenchStep.FILL] is StepStatus.CURRENT
         assert _statuses(progress)[WorkbenchStep.FILE] is not StepStatus.DONE
@@ -123,7 +123,7 @@ def test_without_assumed_values_filling_in_is_done_and_the_declaration_is_checke
     progress = workbench_progress(_assumed(synthetic_form(needs_input=False), 0), staged=0, verified=False, filed=False)
 
     assert _statuses(progress)[WorkbenchStep.FILL] is StepStatus.DONE
-    assert progress.next_action is NextAction.VERIFY
+    assert progress.next_action is ModeloFormNextAction.VERIFY
 
 
 def test_a_done_step_shows_as_done_even_after_the_current_one() -> None:
@@ -134,13 +134,13 @@ def test_a_done_step_shows_as_done_even_after_the_current_one() -> None:
     statuses = _statuses(progress)
     assert statuses[WorkbenchStep.FILL] is StepStatus.CURRENT
     assert statuses[WorkbenchStep.CALCULATE] is StepStatus.DONE
-    assert progress.next_action is NextAction.FILL
+    assert progress.next_action is ModeloFormNextAction.FILL
 
 
 def test_staged_changes_come_first_and_undo_every_step_they_touch() -> None:
     progress = workbench_progress(synthetic_form(needs_input=False), staged=2, verified=True, filed=True)
 
-    assert progress.next_action is NextAction.APPLY
+    assert progress.next_action is ModeloFormNextAction.APPLY
     assert progress.count == 2
     assert StepStatus.DONE not in _statuses(progress).values()
 
@@ -171,7 +171,7 @@ def test_a_note_only_the_check_decides_sends_the_unchecked_declaration_to_the_ch
     with override_settings(cadrumo_output_language="en"):
         line = next_action_text(progress, OutputLanguage.EN)
 
-    assert progress.next_action is NextAction.VERIFY
+    assert progress.next_action is ModeloFormNextAction.VERIFY
     assert line == "Check the declaration"
     assert progress.filing_withheld, "it still withholds filing until the check has spoken"
     assert _statuses(progress)[WorkbenchStep.REVIEW] is StepStatus.CURRENT
@@ -183,9 +183,9 @@ def test_a_note_the_check_does_not_decide_still_sends_the_filer_to_resolve_it() 
         synthetic_form(calculated=True, needs_input=False), "withholding_detail_absent", "unrouted_observation"
     )
 
-    assert workbench_progress(alone, staged=0, verified=False, filed=False).next_action is NextAction.RESOLVE
+    assert workbench_progress(alone, staged=0, verified=False, filed=False).next_action is ModeloFormNextAction.RESOLVE
     mixed = workbench_progress(beside, staged=0, verified=False, filed=False)
-    assert mixed.next_action is NextAction.RESOLVE
+    assert mixed.next_action is ModeloFormNextAction.RESOLVE
     assert mixed.count == 2, "the count is the chip's: everything that blocks filing"
     assert _statuses(mixed)[WorkbenchStep.REVIEW] is StepStatus.BLOCKED
 
@@ -195,7 +195,9 @@ def test_once_checked_a_note_the_check_decides_no_longer_sends_the_filer_back_to
         update={"verification": VerificationCompletenessStatus.BLOCKED}
     )
 
-    assert workbench_progress(checked, staged=0, verified=False, filed=False).next_action is NextAction.RESOLVE
+    assert (
+        workbench_progress(checked, staged=0, verified=False, filed=False).next_action is ModeloFormNextAction.RESOLVE
+    )
 
 
 def _missing_only_a_finding_names(form: ModeloWorkForm) -> ModeloWorkForm:
@@ -225,7 +227,7 @@ def test_when_only_values_are_missing_the_next_step_is_filling_them_in_as_the_he
         chips = {chip.level.value: chip.count for chip in attention_chips(form, recorded=False)}
 
     assert chips == {"missing": 1}
-    assert progress.next_action is NextAction.FILL
+    assert progress.next_action is ModeloFormNextAction.FILL
     assert progress.count == missing_count(form) == 1
     assert progress.findings_lead, "a value only a finding names is reached from the findings list"
     assert line == "Complete the marked boxes (to do: 1)"
@@ -241,7 +243,7 @@ def test_a_blocker_beside_the_missing_value_still_sends_the_filer_to_resolve_it(
 
     progress = workbench_progress(blocked, staged=0, verified=False, filed=False)
 
-    assert progress.next_action is NextAction.RESOLVE
+    assert progress.next_action is ModeloFormNextAction.RESOLVE
     assert not progress.findings_lead
 
 

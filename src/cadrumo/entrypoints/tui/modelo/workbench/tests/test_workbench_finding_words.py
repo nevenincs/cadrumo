@@ -42,6 +42,7 @@ from ......application.modelo.work_form_models import (
     ModeloWorkForm,
     address_key,
 )
+from ......application.modelo.work_form_next_step import missing_count
 from ......application.modelo.work_form_service import modelo_form_snapshot
 from ......application.modelo.work_review import (
     ModeloWorkProgress,
@@ -64,7 +65,6 @@ from ....components.host import ScreenHostApp
 from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ....tests.settling import settle
 from ..casilla_list_models import CasillaListHeading
-from ..header import missing_count
 from ..issue_projection import issue_lines
 from ..issue_scale import IssueLevel, IssueLine
 from ..issues import WorkbenchIssuesScreen

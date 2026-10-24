@@ -14,6 +14,7 @@ import pytest
 from rich.text import Text
 from textual.widgets import OptionList, Static
 
+from ......application.modelo.work_form_next_step import ModeloFormNextAction, inapplicable_pages
 from ......core.config import override_settings
 from ......core.i18n.render import tr
 from ......core.period import Period
@@ -21,9 +22,9 @@ from ....components.host import ScreenHostApp
 from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..header import ChipLevel, attention_chips
-from ..navigator import NavigatorState, checked_boxes, inapplicable_pages, navigator_rows, presented_form
+from ..navigator import NavigatorState, checked_boxes, navigator_rows, presented_form
 from ..page_items import workbench_pages
-from ..progress import NextAction, workbench_progress
+from ..progress import workbench_progress
 from ..screen import ModeloWorkbenchScreen
 from ..wording import does_not_apply_text
 from .sectioned_form import LAST_QUARTER_PAGE, sectioned_form
@@ -87,9 +88,9 @@ def test_what_a_page_that_does_not_apply_holds_is_never_to_do_in_the_header_or_t
     undecided_progress = workbench_progress(undecided, staged=0, verified=False, filed=False)
 
     assert chips == {ChipLevel.CONFIRM: 4}
-    assert (progress.next_action, progress.count) == (NextAction.CONFIRM, 4)
+    assert (progress.next_action, progress.count) == (ModeloFormNextAction.CONFIRM, 4)
     assert undecided_chips == {ChipLevel.MISSING: 1, ChipLevel.CONFIRM: 5}
-    assert (undecided_progress.next_action, undecided_progress.count) == (NextAction.FILL, 1)
+    assert (undecided_progress.next_action, undecided_progress.count) == (ModeloFormNextAction.FILL, 1)
 
 
 def test_a_heading_the_layout_prints_twice_is_listed_once_with_both_parts_counted() -> None:
