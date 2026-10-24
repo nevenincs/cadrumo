@@ -33,7 +33,7 @@ from ......core.hashing import sha256_hex
 from ......domain.transactions.enums import TransactionDirection
 from ......tests.inventory import FIXTURES_DIR
 from ......tests.pdf_fixtures import multi_page_text_pdf_bytes
-from ..base import InvalidFinancialSourceError, ParsedLedgerRow
+from ..base import ParsedLedgerRow
 from ..detection import detect_provider
 from ..pdf_statement import PdfStatementProvider
 from .statement_reader_support import LinePatternStatementReader, invented_movement
@@ -119,17 +119,17 @@ def test_balances_totals_and_invented_movements_are_dropped_and_reported() -> No
     assert not any("100.00" in warning for warning in validation.warnings), "a warning must not quote values"
 
 
-def test_a_direction_contradicting_the_printed_sign_drops_every_movement() -> None:
-    """A reader that misreads every sign imports nothing, and the statement is refused."""
+def test_a_direction_disagreeing_with_the_printed_sign_is_reported_and_ignored() -> None:
+    """A reader that misreads every sign does not change one printed sign, and says so."""
     provider = _provider(_reader(reverse_directions=True))
-    source = _FIXTURES / _STATEMENTS[0][0]
+    fixture, expected = _STATEMENTS[0]
 
-    validation = provider.validate_source(source)
+    validation = provider.validate_source(_FIXTURES / fixture)
+    rows = list(provider.ingest(_FIXTURES / fixture))
 
-    assert not validation.is_valid
-    assert any("contradicts the printed sign" in warning for warning in validation.warnings)
-    with pytest.raises(InvalidFinancialSourceError, match="cannot be imported"):
-        list(provider.ingest(source))
+    assert validation.is_valid, validation.warnings
+    assert _observed(rows) == _expected(expected)
+    assert sum("disagrees with the printed sign" in warning for warning in validation.warnings) == len(rows)
 
 
 def test_a_sign_the_reader_left_out_is_read_off_the_printed_line() -> None:
@@ -137,10 +137,8 @@ def test_a_sign_the_reader_left_out_is_read_off_the_printed_line() -> None:
     provider = _provider(_reader(drop_signs=True, reverse_directions=True))
     fixture, expected = _STATEMENTS[2]
 
-    validation = provider.validate_source(_FIXTURES / fixture)
+    rows = list(provider.ingest(_FIXTURES / fixture))
 
-    assert not validation.is_valid, "a reversed reader direction must still contradict the printed sign"
-    rows = list(_provider(_reader(drop_signs=True)).ingest(_FIXTURES / fixture))
     assert _observed(rows) == _expected(expected)
     assert {row.raw.raw_fields["direction_source"] for row in rows} == {"printed_sign"}
 
@@ -253,7 +251,8 @@ def test_rows_carry_neutral_provenance_and_the_printed_forms() -> None:
     first = rows[0].raw
     assert first.provenance.provider_name == "PDF provider"
     assert first.provider_transaction_id.startswith("pdf-provider-")
-    assert first.raw_fields["amount_printed"] == "+8,55EUR"
+    assert first.raw_fields["amount_printed"] == "+8,55"
+    assert first.currency == "EUR"
     assert first.raw_fields["booked_date_printed"] == "01.01.2025"
     assert first.raw_fields["read_by"] == reader.decided_by
     assert first.raw_fields["transcribed_by"] == "pdfplumber"

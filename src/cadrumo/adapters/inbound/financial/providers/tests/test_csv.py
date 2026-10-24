@@ -75,6 +75,24 @@ def test_the_decimal_separator_is_read_from_the_file_itself(
     assert [str(row.raw.amount) for row in parsed] == expected
 
 
+def test_catalan_statement_headers_are_part_of_the_vocabulary(tmp_path: Path) -> None:
+    """A Catalan export reads without a model: its headers are ordinary statement terms."""
+    source = tmp_path / "extracte.csv"
+    source.write_text(
+        "Data operació;Descripció;Import;Saldo\n02/03/2026;Rebut aigua;-23,10;976,90\n"
+        "15/03/2026;Transferència rebuda;400,00;1.376,90\n",
+        encoding="utf-8",
+    )
+
+    parsed = list(CsvProvider().ingest(source))
+
+    assert [(row.raw.booked_date.isoformat(), str(row.raw.amount)) for row in parsed] == [
+        ("2026-03-02", "23.10"),
+        ("2026-03-15", "400.00"),
+    ]
+    assert [row.raw.description for row in parsed] == ["Rebut aigua", "Transferència rebuda"]
+
+
 def test_month_first_dates_are_read_month_first(tmp_path: Path) -> None:
     """A date whose second group exceeds 12 reads every date of the file month-first."""
     source = tmp_path / "statement.csv"

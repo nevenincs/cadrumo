@@ -216,8 +216,8 @@ def test_a_typographic_minus_is_a_printed_sign() -> None:
 
     grounded = ground_statement((page,), default_currency="EUR")
 
-    assert grounded.movements == ()
-    assert any("contradicts the printed sign" in warning for warning in grounded.warnings)
+    assert [m.signed_amount for m in grounded.movements] == [Decimal("-9.99")]
+    assert any("disagrees with the printed sign" in warning for warning in grounded.warnings)
 
 
 def test_a_year_less_date_is_dropped_rather_than_completed() -> None:
@@ -228,3 +228,99 @@ def test_a_year_less_date_is_dropped_rather_than_completed() -> None:
 
     assert grounded.movements == ()
     assert any("not a complete date" in warning for warning in grounded.warnings)
+
+
+def test_a_reformatted_amount_is_matched_by_its_digits_and_parsed_as_printed() -> None:
+    """A reader that dropped a thousands separator still anchors to the amount the line prints."""
+    page = _page(
+        "Max Mustermann 19.06.2024 +5.000,00EUR\nFee 20.06.2024 -2,50EUR",
+        _movement("19.06.2024", "+5000,00EUR", direction=ProposedDirection.IN),
+        _movement("20.06.2024", "-2,50EUR", direction=ProposedDirection.OUT),
+    )
+
+    grounded = ground_statement((page,), default_currency="EUR")
+
+    assert [m.signed_amount for m in grounded.movements] == [Decimal("5000.00"), Decimal("-2.50")]
+    assert grounded.movements[0].printed["amount_printed"] == "+5.000,00"
+
+
+def _paid_out_paid_in_page(*movements: ProposedStatementMovement) -> StatementPageText:
+    return _page(
+        "Date Description Paid out Paid in Balance\n"
+        "01/03/2026 Balance brought forward 3,400.00\n"
+        "02/03/2026 Rent 1,200.00 2,200.00\n"
+        "04/03/2026 Invoice 2,450.00 4,650.00\n"
+        "16/03/2026 Card payment 6.40 4,643.60\n"
+        "31/03/2026 Balance carried forward 4,643.60",
+        *movements,
+        opening="4,643.60",
+        closing="4,643.60",
+    )
+
+
+def test_running_balances_decide_unsigned_debit_and_credit_columns() -> None:
+    """Separate paid-out and paid-in columns print no sign; the balances prove each direction.
+
+    The reader here misreads every direction and both balances, as the local
+    model was measured doing, and lists the brought- and carried-forward lines
+    as movements. None of it reaches the result.
+    """
+    out = ProposedDirection.OUT
+    page = _paid_out_paid_in_page(
+        _movement("01/03/2026", "3,400.00", description="Balance brought forward", direction=out),
+        _movement("02/03/2026", "1,200.00", description="Rent", direction=out, balance="4,643.60"),
+        _movement("04/03/2026", "2,450.00", description="Invoice", direction=out, balance="4,643.60"),
+        _movement("16/03/2026", "6.40", description="Card payment", direction=out, balance="4,643.60"),
+        _movement("31/03/2026", "4,643.60", description="Balance carried forward", direction=out),
+    )
+
+    grounded = ground_statement((page,), default_currency="GBP")
+
+    assert [m.signed_amount for m in grounded.movements] == [
+        Decimal("-1200.00"),
+        Decimal("2450.00"),
+        Decimal("-6.40"),
+    ]
+    assert {m.direction_source for m in grounded.movements} == {"running_balance"}
+    assert grounded.reconciliation is ReconciliationOutcome.RECONCILED
+    assert sum("prints a balance, not a movement" in warning for warning in grounded.warnings) == 2
+
+
+def test_an_unsigned_amount_no_balance_proves_takes_the_reader_direction() -> None:
+    """Without a running balance the reader's direction applies, and is recorded as such."""
+    page = _page(
+        "05/03/2026 Supplier invoice 40,00\n06/03/2026 Customer payment 15,00",
+        _movement("05/03/2026", "40,00", direction=ProposedDirection.OUT),
+        _movement("06/03/2026", "15,00", direction=ProposedDirection.IN),
+    )
+
+    grounded = ground_statement((page,), default_currency="EUR")
+
+    assert [m.signed_amount for m in grounded.movements] == [Decimal("-40.00"), Decimal("15.00")]
+    assert {m.direction_source for m in grounded.movements} == {"reader"}
+
+
+def test_a_month_name_date_is_read() -> None:
+    """``03 Mar 2026`` is a complete date in any of the supported languages."""
+    page = _page(
+        "03 Mar 2026 Coffee Roasters -12.50 GBP\n14 de marzo de 2026 Reembolso +30.00 GBP",
+        _movement("03 Mar 2026", "-12.50"),
+        _movement("14 de marzo de 2026", "+30.00"),
+    )
+
+    grounded = ground_statement((page,), default_currency="EUR")
+
+    assert [m.booked_date for m in grounded.movements] == [date(2026, 3, 3), date(2026, 3, 14)]
+    assert {m.currency for m in grounded.movements} == {"GBP"}
+
+
+def test_a_code_elsewhere_on_the_line_is_not_the_amount_currency() -> None:
+    """A ``BIC`` label on the line names no currency for the movement's amount."""
+    page = _page(
+        "Transfer 01/02/2026 BIC ABCDESMM -20,00",
+        _movement("01/02/2026", "-20,00"),
+    )
+
+    grounded = ground_statement((page,), default_currency="EUR")
+
+    assert grounded.movements[0].currency == "EUR"

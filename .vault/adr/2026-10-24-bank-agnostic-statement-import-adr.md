@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:94e82abe1dee6f261d0bf9df3f3b0c818351d1b331c2dd53ab02fdbdbf8bc620'
+body_hash: 'sha256:5e148161a980a439409db6ef63e8de9f9bc57af47aa62d5a54d48d4a4425326a'
 related:
   - "[[2026-10-24-bank-agnostic-statement-import-reference]]"
   - "[[2026-08-07-unstructured-document-ingestion-adr]]"
@@ -42,11 +42,11 @@ Bank-statement import was pegged to named banks. The only PDF reader accepted Ge
 
 ### D1 - One bank-agnostic PDF statement provider
 
-`PdfStatementProvider` replaces the N26 reader. Each page is transcribed from its text layer, or by the on-host vision model when it has none, and the local text model proposes the page's movements as printed strings. The operator token becomes `pdf`; `pdf-n26` is retired with no alias. Detection offers the provider for PDF content after every exact fixed-layout provider.
+`PdfStatementProvider` replaces the N26 reader. Each page is transcribed from its text layer, or by the on-host vision model when it has none, and the local text model proposes the page's movements as printed strings. A scanned page the vision model returns empty is read again, up to three attempts, and the model client never caches a blank completion, so one failed read is not replayed. The operator token becomes `pdf`; `pdf-n26` is retired with no alias. Detection offers the provider for PDF content after every exact fixed-layout provider.
 
 ### D2 - Deterministic anchoring decides what is a movement
 
-A proposal survives only when its printed booked date and printed amount appear together on one line of the page, and each line backs at most one movement. A printed sign decides direction; the model's direction applies only to an unsigned amount, and a contradiction drops the row. Dates and amounts are parsed by the shared provider parsers under a statement-wide day-order and decimal-separator inference; an amount whose separator stays ambiguous is dropped. A description or counterparty carrying words the page does not print is replaced by the anchored line's own text or dropped. Every dropped proposal is reported.
+A proposal survives only when its printed booked date and an amount the line prints appear together on one line of the page, and each line backs at most one movement. The amount is matched to the line by its digits, so a proposal that reformatted it still anchors, and the line's printed form is what gets parsed. A printed sign decides direction, and a model direction disagreeing with it is reported and ignored. For an amount printed without a sign, as in separate debit and credit columns, the running balances printed on the lines decide: the balance before plus or minus the amount must give the line's balance. Only when no balance proves it does the model's direction apply. A dated line that prints only a balance among lines that print running balances is a balance line, kept as the opening or closing balance rather than as a movement. Dates and amounts are parsed by the shared provider parsers under a statement-wide day-order and decimal-separator inference, month-name dates included in Spanish, Catalan, English and German; an amount whose separator stays ambiguous is dropped. A description or counterparty carrying words the page does not print is replaced by the anchored line's own text or dropped. Every dropped proposal is reported.
 
 ### D3 - Printed balances must reconcile
 
@@ -54,7 +54,7 @@ Where the page prints an opening and closing balance, or running balances on mov
 
 ### D4 - One bank-neutral tabular vocabulary, conventions inferred per file
 
-The CSV and spreadsheet readers share one header vocabulary of ordinary Spanish, English and German statement column names, most specific alias first; no bank-named layout remains, and the former bank exports are test data. Each file's date order and decimal separator are inferred from its own printed values by the same shared helpers the PDF grounding uses: dates printed in both orders refuse the file, and an amount whose separator stays ambiguous is refused rather than guessed. An export whose headers fall outside the vocabulary goes to the column-role mapping lane. Warnings name the format, and synthetic transaction ids carry the provider's name.
+The CSV and spreadsheet readers share one header vocabulary of ordinary Spanish, Catalan, English and German statement column names, most specific alias first; no bank-named layout remains, and the former bank exports are test data. Each file's date order and decimal separator are inferred from its own printed values by the same shared helpers the PDF grounding uses: dates printed in both orders refuse the file, and an amount whose separator stays ambiguous is refused rather than guessed. An export whose headers fall outside the vocabulary goes to the column-role mapping lane. Warnings name the format, and synthetic transaction ids carry the provider's name.
 
 ### D5 - The tabular mapping lane accepts the statement roles
 
@@ -70,5 +70,6 @@ Anchoring every value to a printed line and reconciling printed balances is the 
 - Statements whose dates print without a year, or whose movements wrap date and amount onto different lines, are refused row by row until a later decision widens anchoring.
 - Synthetic transaction ids for CSV and spreadsheet rows without an id column change prefix for new imports.
 - A CSV or spreadsheet whose header names fall outside the vocabulary needs the `llm` extra for the mapping lane.
+- The on-host 2B vision model was measured on 2026-10-24 ignoring the reasoning switch and intermittently spending its whole output budget without returning text. Retries reduce this but do not remove it; a scanned page still unread refuses the statement rather than importing it short.
 - The desktop frontend type union must follow the token change.
 - Approval basis: the operator's instructions of 2026-10-24 in the tui session, which directed this change, its AI-backed approach, and the removal of every bank-named CSV layout.

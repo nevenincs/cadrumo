@@ -34,6 +34,7 @@ from collections.abc import Mapping
 from pydantic import TypeAdapter, ValidationError
 
 from ....application.ledger.document_transcription import DocumentTranscription
+from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ....application.ledger.statement_reading import (
     ProposedDirection,
     ProposedStatementMovement,
@@ -71,6 +72,13 @@ _MAX_REPLY_TOKENS = 4096
 
 #: Copying printed values has one right answer; sampling variety buys nothing.
 _READING_TEMPERATURE = 0.0
+
+#: Reads of one scanned page before it is declared untranscribable. The local
+#: vision model was measured intermittently spending its whole output budget on
+#: hidden reasoning and returning no text for a page it transcribes fully on the
+#: next attempt. Whatever a retry returns is still anchored and reconciled by the
+#: statement provider, so a retry cannot let an unprinted value through.
+_VISION_ATTEMPTS = 3
 
 #: A decoded JSON object, validated to string keys so every lookup is typed.
 _JSON_OBJECT: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
@@ -210,6 +218,24 @@ def parse_statement_page_response(text: str) -> ProposedStatementPage:
     )
 
 
+def _transcribe_with_retries(
+    transcriber: LocalVisionDocumentTranscriber,
+    image: MultimodalImageInput,
+    source_content_sha256: str,
+) -> DocumentTranscription | None:
+    """Transcribe one page image, retrying a read that came back empty.
+
+    Returns ``None`` when every attempt came back empty, so the provider
+    refuses the statement as incomplete rather than reading it short.
+    """
+    for _ in range(_VISION_ATTEMPTS):
+        try:
+            return transcriber.transcribe(evidence_images=(image,), source_content_sha256=source_content_sha256)
+        except PurchaseInvoiceEvidenceInputError:
+            continue
+    return None
+
+
 class LocalStatementReader:
     """Read statement pages with the on-host text model and, for scans, the vision model.
 
@@ -290,10 +316,9 @@ class LocalStatementReader:
             if not 1 <= page_number <= len(renders):
                 continue
             image = MultimodalImageInput.from_base64(renders[page_number - 1], ImageMediaType.PNG)
-            transcriptions[page_number] = transcriber.transcribe(
-                evidence_images=(image,),
-                source_content_sha256=source_content_sha256,
-            )
+            transcription = _transcribe_with_retries(transcriber, image, source_content_sha256)
+            if transcription is not None:
+                transcriptions[page_number] = transcription
         return transcriptions
 
     def _vision(self) -> LocalVisionDocumentTranscriber:

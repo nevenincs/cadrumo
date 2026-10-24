@@ -158,13 +158,18 @@ class _ScriptedRuntime(SilentLoopbackHandler):
 
     text_replies: ClassVar[Queue[str]]
     transcription: ClassVar[str] = ""
+    empty_transcriptions: ClassVar[int] = 0
     requests: ClassVar[Queue[dict[str, object]]]
 
     @override
     def do_POST(self) -> None:
         body = dict(read_json_body(self))
         self.requests.put(body)
-        content = self.transcription if _carries_images(body) else self.text_replies.get_nowait()
+        if _carries_images(body):
+            content = "" if _ScriptedRuntime.empty_transcriptions > 0 else self.transcription
+            _ScriptedRuntime.empty_transcriptions = max(0, _ScriptedRuntime.empty_transcriptions - 1)
+        else:
+            content = self.text_replies.get_nowait()
         write_json_response(self, ollama_chat_reply(content, model=str(body.get("model"))), status=HTTPStatus.OK)
 
 
@@ -174,6 +179,7 @@ def runtime(secure_object_test_profile: TestRuntimeProfile) -> Iterator[tuple[st
     _ = secure_object_test_profile
     requests: Queue[dict[str, object]] = Queue()
     _ScriptedRuntime.requests = requests
+    _ScriptedRuntime.empty_transcriptions = 0
     _ScriptedRuntime.text_replies = Queue()
     for reply in _PAGE_REPLIES:
         _ScriptedRuntime.text_replies.put(reply)
@@ -247,3 +253,25 @@ def test_a_scanned_page_is_transcribed_on_host_then_read(
     ]
     sent = [requests.get_nowait() for _ in range(requests.qsize())]
     assert sum(_carries_images(body) for body in sent) == 1
+
+
+def test_a_scanned_page_read_back_empty_is_read_again(
+    runtime: tuple[str, Queue[dict[str, object]]],
+    tmp_path: Path,
+) -> None:
+    """A vision read that spent its budget and returned no text is retried, not taken as a blank page."""
+    chat_url, requests = runtime
+    source = tmp_path / "scan.pdf"
+    source.write_bytes(multi_page_text_pdf_bytes(("Account statement March 2026",), ()))
+    _ScriptedRuntime.transcription = "Coffee shop 05.03.2026 -4,50 EUR"
+    _ScriptedRuntime.empty_transcriptions = 1
+    _ScriptedRuntime.text_replies = Queue()
+    _ScriptedRuntime.text_replies.put(_reply())
+    _ScriptedRuntime.text_replies.put(_reply(_movement("05.03.2026", "-4,50 EUR", "Coffee shop", "out")))
+
+    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+        rows = list(PdfStatementProvider(reader_factory=_reader).ingest(source))
+
+    assert [(row.raw.booked_date.isoformat(), row.raw.amount) for row in rows] == [("2026-03-05", Decimal("4.50"))]
+    sent = [requests.get_nowait() for _ in range(requests.qsize())]
+    assert sum(_carries_images(body) for body in sent) == 2

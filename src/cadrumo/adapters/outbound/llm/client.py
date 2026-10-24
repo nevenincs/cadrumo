@@ -547,7 +547,13 @@ class LLMClient:
             created_at=now(),
             request_id=request_id,
         )
-        self.cache.write(request, response)
+        # A blank completion is a failed read, not an answer: a local reasoning
+        # model can spend its whole output budget on hidden reasoning and return
+        # no text for a request it answers fully on the next attempt. Caching it
+        # would replay the failure for every later request about the same
+        # document, so only a completion that carries text is cached.
+        if response.text.strip():
+            self.cache.write(request, response)
         self.usage_recorder.record(self.usage_recorder.build_record(response, self.prompt_id, self.caller))
         _LOGGER.info(
             "llm request completed provider=%s model=%s input_tokens=%d output_tokens=%d",

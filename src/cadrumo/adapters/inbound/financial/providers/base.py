@@ -56,6 +56,7 @@ from typing import ClassVar, Final, Literal
 
 from pydantic import BaseModel
 
+from .....application.ledger.invoice_label_vocabulary import MONTHS
 from .....core.config import load_settings
 from .....core.decimal.coercion import coerce_decimal
 from .....core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, european_thousands_reading_is_ambiguous
@@ -441,6 +442,25 @@ def _expected_date_format_hint(*, day_first: bool) -> str:
     return "YYYY-MM-DD, MM/DD/YYYY, or DD/MM/YYYY"
 
 
+#: A day, a month name and a four-digit year: ``03 Mar 2026``, ``3-mar-2026``,
+#: ``14. März 2026``, ``14 de marzo de 2026``.
+_TEXT_MONTH_DATE_RE = re.compile(r"^(\d{1,2})\.?[\s./-]+(?:de\s+|d'\s*)?([^\W\d_]+)\.?[\s./-]+(?:de\s+)?(\d{4})$")
+
+
+def _text_month_date(raw: str) -> date | None:
+    """Read a date printed with its month as a name, or ``None`` when it is not one."""
+    match = _TEXT_MONTH_DATE_RE.match(raw.strip())
+    if match is None:
+        return None
+    month = MONTHS.get(fold_diacritics(match.group(2)).casefold())
+    if month is None:
+        return None
+    try:
+        return date(int(match.group(3)), month, int(match.group(1)))
+    except ValueError:
+        return None
+
+
 def parse_date_value(value: object, *, day_first: bool = True, label: str = "date") -> date:
     """Parse a bank-statement date or date-time into a ``date``."""
     if isinstance(value, datetime):
@@ -450,6 +470,9 @@ def parse_date_value(value: object, *, day_first: bool = True, label: str = "dat
     original_raw = archive_cell_text(value)
     if not original_raw:
         raise FinancialValidationError("missing date value")
+    named_month = _text_month_date(original_raw)
+    if named_month is not None:
+        return named_month
     raw = original_raw.replace(".", "/")
     if raw.isdigit() and len(raw) >= 8:
         try:

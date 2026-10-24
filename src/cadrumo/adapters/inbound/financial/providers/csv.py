@@ -4,8 +4,8 @@ Provides :class:`CsvProvider`, an implementation of
 :class:`~adapters.inbound.financial.providers.base.FinancialProvider`
 that ingests bank CSV exports whose header row names its columns in the
 statement vocabulary of :data:`STATEMENT_COLUMNS`: booking and value dates,
-amount, currency, description, counterparty and reference, in Spanish, English
-and German. No bank is named and no bank's layout is assumed; each file's date
+amount, currency, description, counterparty and reference, in Spanish,
+Catalan, English and German. No bank is named and no bank's layout is assumed; each file's date
 order and decimal separator are inferred from its own printed values. An
 export whose headers fall outside the vocabulary is left to the column-role
 mapping lane, which reads any layout.
@@ -98,21 +98,29 @@ STATEMENT_COLUMNS = CsvColumnMap(
         "fecha operación",
         "fecha operacion",
         "fecha movimiento",
+        "data operació",
+        "data operacio",
+        "data moviment",
         "fecha",
+        "data",
         "completed date",
         "booking date",
         "transaction date",
         "date",
         "datum",
     ),
-    value_date=("fecha valor", "value date", "started date", "valuta", "wertstellung"),
-    amount=("importe", "importe euros", "amount (eur)", "betrag (eur)", "amount", "betrag"),
+    value_date=("fecha valor", "data valor", "value date", "started date", "valuta", "wertstellung"),
+    amount=("importe", "importe euros", "import", "amount (eur)", "betrag (eur)", "amount", "betrag"),
     currency=("moneda", "divisa", "currency", "wahrung", "waehrung"),
     description=(
         "concepto",
+        "concepte",
         "descripción",
         "descripcion",
+        "descripció",
+        "descripcio",
         "movimiento",
+        "moviment",
         "description",
         "payment reference",
         "verwendungszweck",
@@ -121,7 +129,9 @@ STATEMENT_COLUMNS = CsvColumnMap(
     ),
     counterparty=(
         "beneficiario",
+        "beneficiari",
         "ordenante",
+        "ordenant",
         "contraparte",
         "contrapartida",
         "payee",
@@ -132,6 +142,7 @@ STATEMENT_COLUMNS = CsvColumnMap(
     ),
     external_id=(
         "referencia",
+        "referència",
         "referencia operación",
         "referencia operacion",
         "id operación",
@@ -146,7 +157,7 @@ STATEMENT_COLUMNS = CsvColumnMap(
 """The statement header vocabulary, most specific alias first within each column.
 
 Bank-neutral by construction: every alias is an ordinary statement column name
-in Spanish, English or German, never one bank's private label. Within a column
+in Spanish, Catalan, English or German, never one bank's private label. Within a column
 the order decides which header wins when a file prints several, so a booking
 date outranks a plain date and a completion date outranks a start date.
 """
