@@ -396,6 +396,7 @@ export function InvoiceSection({
         <Combobox
           label={t("desktop.ledger.inspector.invoice.pick")}
           value={null}
+          className="w-dialog-md"
           options={options}
           emptyLabel={t("desktop.ledger.inspector.no_match")}
           footer={

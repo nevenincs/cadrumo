@@ -4,6 +4,8 @@ import {
   inconsistencies,
   linkPicker,
   linkAction,
+  movementPicker,
+  PICK_WINDOW_DAYS,
   reconcile,
   settlement,
   tiedInvoices,
@@ -282,5 +284,62 @@ test("a one-sided link is repaired by a link only where both sides end up citing
     { kind: "link" },
     { kind: "none", why: "invoice_missing" },
     { kind: "none", why: "not_loaded" },
+  ]);
+});
+
+test("an invoice no movement settles is offered the open movements near its day, those that settle first, then the nearest amount", () => {
+  const ticket = invoice("T-1", { issued_at: "2026-10-15", total: "58.39" });
+  const day = (offset: number) =>
+    `2026-10-${String(15 + offset).padStart(2, "0")}`;
+  const near = movement("near", {
+    amount: "58.40",
+    direction: "OUTGOING",
+    date: day(2),
+  });
+  const exact = movement("exact", {
+    amount: "58.39",
+    direction: "OUTGOING",
+    date: day(PICK_WINDOW_DAYS),
+  });
+  const far = movement("far", {
+    amount: "12.00",
+    direction: "OUTGOING",
+    date: day(1),
+  });
+  const late = movement("late", {
+    amount: "58.39",
+    direction: "OUTGOING",
+    date: day(PICK_WINDOW_DAYS + 1),
+  });
+  const income = movement("income", {
+    amount: "58.39",
+    direction: "INCOMING",
+    date: day(0),
+  });
+  const linked = movement("linked", {
+    amount: "58.39",
+    direction: "OUTGOING",
+    date: day(0),
+    invoice_id: "other",
+  });
+  const staged = movement("staged", {
+    amount: "58.39",
+    direction: "OUTGOING",
+    date: day(0),
+  });
+  const offered = movementPicker(
+    ticket,
+    [far, near, exact, late, income, linked, staged],
+    [linkAction("staged", hexId("inv-other"))],
+  );
+  expect(
+    offered.map((option) => [
+      option.row.transaction.transaction_id,
+      option.settles,
+    ]),
+  ).toEqual([
+    ["exact", true],
+    ["near", true],
+    ["far", false],
   ]);
 });

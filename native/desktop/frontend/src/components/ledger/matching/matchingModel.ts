@@ -388,6 +388,68 @@ export function linkPicker(
   };
 }
 
+/** How far from an invoice's issue day the movement picker looks. */
+export const PICK_WINDOW_DAYS = 10;
+
+/** One movement the picker offers an invoice. */
+export type MovementOption = {
+  row: LedgerRow;
+  /** The movement settles the invoice by flow, currency and amount. */
+  settles: boolean;
+};
+/** The movements an invoice no movement settles may be linked to by hand:
+ * the open movements of its flow and currency paid within
+ * `PICK_WINDOW_DAYS` of its issue day, those that settle its amount first,
+ * then by how near their amount is, then by how near their day. A movement
+ * a link already takes, or a staged one, is not offered. */
+export function movementPicker(
+  invoice: CatalogueInvoice,
+  rows: readonly LedgerRow[],
+  actions: readonly StagedAction[] = [],
+): MovementOption[] {
+  const staged = stagedLinks(actions);
+  const owed = settlement(invoice);
+  const due = owed === null ? null : units(owed);
+  const distance = (row: LedgerRow) => {
+    const paid = units(row.transaction.amount);
+    if (paid === null || due === null) return null;
+    return paid > due ? paid - due : due - paid;
+  };
+  return rows
+    .filter(
+      (row) =>
+        linkable(row) &&
+        row.transaction.invoice_id === null &&
+        !staged.rows.has(row.transaction.transaction_id) &&
+        row.transaction.direction === flowOf(invoice) &&
+        row.transaction.currency === invoice.currency &&
+        Math.abs(daysBetween(invoice.issued_at, row.transaction.date)) <=
+          PICK_WINDOW_DAYS,
+    )
+    .map((row) => ({ row, settles: settles(row, invoice) }))
+    .sort((left, right) => {
+      if (left.settles !== right.settles) return left.settles ? -1 : 1;
+      const near = (option: MovementOption) => distance(option.row);
+      const a = near(left);
+      const b = near(right);
+      if (a !== b) {
+        if (a === null) return 1;
+        if (b === null) return -1;
+        return a < b ? -1 : 1;
+      }
+      return (
+        Math.abs(daysBetween(invoice.issued_at, left.row.transaction.date)) -
+          Math.abs(
+            daysBetween(invoice.issued_at, right.row.transaction.date),
+          ) ||
+        (left.row.transaction.transaction_id <
+        right.row.transaction.transaction_id
+          ? -1
+          : 1)
+      );
+    });
+}
+
 // ---- Links the two catalogues disagree about ---------------------------------
 
 /** One one-sided link, and the repair the page can stage for it. */

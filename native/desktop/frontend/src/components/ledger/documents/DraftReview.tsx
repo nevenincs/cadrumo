@@ -8,6 +8,7 @@ import {
 } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
 import {
@@ -51,7 +52,13 @@ import { figureText, kindChoice, problemText } from "../invoices/invoiceWords";
 import { write } from "../invoices/invoiceWrites";
 import { failureCode } from "../ledgerWords";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
-import { reconcile, stageLink, stagedLinks } from "../matching/matchingModel";
+import {
+  movementPicker,
+  PICK_WINDOW_DAYS,
+  reconcile,
+  stageLink,
+  stagedLinks,
+} from "../matching/matchingModel";
 import { invoiceLine } from "../matching/matchingWords";
 import { dayText } from "../transfer/transferWords";
 import {
@@ -734,6 +741,12 @@ export function DraftReview({
         ? (reconcile(rows, [invoice], actions).list[0] ?? null)
         : null;
     const linkStaged = staged.invoices.get(invoice.invoice_id);
+    // With no movement that settles it, the movements near its day are
+    // offered instead, those that settle its amount first.
+    const nearby =
+      rows && !offer && invoice.linked_transaction_ids.length === 0
+        ? movementPicker(invoice, rows, actions)
+        : null;
     return columns(
       "",
       <div
@@ -773,6 +786,45 @@ export function DraftReview({
             className="ledger-draft-link-staged"
           >
             {t("desktop.ledger.matching.staged_toast")}
+          </Alert>
+        ) : nearby ? (
+          <Alert icon={<Icon name="link" />} className="ledger-draft-no-match">
+            <AlertTitle>{t("desktop.ledger.documents.no_movement")}</AlertTitle>
+            <AlertDescription className="grid gap-2">
+              <span>{t("desktop.ledger.inspector.invoice.permanent")}</span>
+              <Combobox
+                label={t("desktop.ledger.documents.find_movement")}
+                value={null}
+                className="w-dialog-md"
+                options={nearby.map((option): ComboboxOption => ({
+                  value: option.row.transaction.transaction_id,
+                  label: `${option.row.transaction.description} · ${dayText(
+                    locale,
+                    option.row.transaction.date,
+                  )} · ${figureText(locale, option.row.transaction.amount)}`,
+                  group: option.settles
+                    ? t("desktop.ledger.inspector.invoice.group_settles")
+                    : t("desktop.ledger.documents.group_near", {
+                        days: PICK_WINDOW_DAYS,
+                      }),
+                }))}
+                emptyLabel={t("desktop.ledger.inspector.no_match")}
+                onCommit={(chosen) => {
+                  onStage(stageLink(chosen, invoice.invoice_id));
+                  say(t("desktop.ledger.matching.staged_toast"));
+                  onLinkStaged();
+                }}
+              >
+                <Button
+                  size="xs"
+                  variant="outline"
+                  className="ledger-draft-find-movement w-fit"
+                >
+                  {t("desktop.ledger.documents.find_movement")}
+                  <Icon name="chevronDown" size="xs" />
+                </Button>
+              </Combobox>
+            </AlertDescription>
           </Alert>
         ) : (
           offer && (

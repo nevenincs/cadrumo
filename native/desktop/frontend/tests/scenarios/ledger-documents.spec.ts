@@ -715,3 +715,42 @@ test("the ticket stays on screen beside the question it is needed for, and after
   await expect(list).toHaveAttribute("data-open", "true");
   expect((await list.boundingBox())!.width).toBeGreaterThan(rail.width * 3);
 });
+
+test("a confirmed ticket no movement settles offers the movements near its day, and stages a permanent link", async ({
+  page: target,
+}) => {
+  await openDocuments(target);
+  await choose(target, PLENOIL);
+  await kind(target, "received");
+  await draft(target).locator(".ledger-draft-country").fill("ES");
+  const findings = draft(target).locator(".ledger-finding");
+  await findings
+    .nth(0)
+    .getByRole("radio", {
+      name: label("desktop.ledger.documents.action.choose_candidate"),
+    })
+    .click();
+  await findings
+    .nth(0)
+    .getByRole("radio", { name: /B87000001/ })
+    .check();
+  await findings
+    .nth(1)
+    .getByLabel(label("desktop.ledger.documents.why_right"))
+    .fill("Rounding");
+  await draft(target).locator(".ledger-draft-confirm").click();
+  const done = section(target).locator(".ledger-draft-confirmed");
+  await expect(done).toBeVisible();
+  const none = done.locator(".ledger-draft-no-match");
+  await expect(none).toContainText(
+    label("desktop.ledger.documents.no_movement"),
+  );
+  await none.locator(".ledger-draft-find-movement").click();
+  const list = target.locator("[data-slot=combobox]");
+  await expect(list).toBeVisible();
+  const options = list.getByRole("option");
+  await expect(options).not.toHaveCount(0);
+  await options.first().click();
+  await expect(done.locator(".ledger-draft-link-staged")).toBeVisible();
+  await expect(target.locator(".ledger-tray")).toBeVisible();
+});
