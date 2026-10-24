@@ -41,14 +41,24 @@ export function Panel({
   children,
   tone,
   className,
+  open,
+  onOpen,
 }: {
   title: string;
   actions?: ReactNode;
   children: ReactNode;
   tone?: "danger";
   className?: string;
+  /** Given, the title opens and closes the panel's content. */
+  open?: boolean;
+  onOpen?: (open: boolean) => void;
 }) {
   const heading = useId();
+  const content = useId();
+  const folds = open !== undefined && onOpen !== undefined;
+  const mark = tone === "danger" && (
+    <Icon name="alert" size="sm" className="text-destructive" />
+  );
   return (
     <section
       aria-labelledby={heading}
@@ -60,15 +70,36 @@ export function Panel({
     >
       <div className="flex flex-wrap items-center gap-2">
         <h3 id={heading} className="flex items-center gap-1.5 font-medium">
-          {tone === "danger" && (
-            <Icon name="alert" size="sm" className="text-destructive" />
+          {folds ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="-mx-2 font-medium"
+              aria-expanded={open}
+              aria-controls={content}
+              onClick={() => onOpen(!open)}
+            >
+              {mark}
+              {title}
+              <Icon name={open ? "chevronUp" : "chevronDown"} size="sm" />
+            </Button>
+          ) : (
+            <>
+              {mark}
+              {title}
+            </>
           )}
-          {title}
         </h3>
         <span className="flex-1" />
         {actions}
       </div>
-      {children}
+      {folds ? (
+        <div id={content} hidden={!open} className="flex flex-col gap-3">
+          {children}
+        </div>
+      ) : (
+        children
+      )}
     </section>
   );
 }

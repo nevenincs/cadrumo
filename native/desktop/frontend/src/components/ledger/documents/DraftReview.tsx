@@ -16,6 +16,11 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type {
   CatalogueInvoice,
   ConfirmationBlocker,
@@ -83,6 +88,10 @@ function shownValue(locale: string, field: ReadingField, value: string | null) {
   return value;
 }
 
+/**
+ * Where a value came from, as a glyph: its words are the tooltip and what a
+ * screen reader hears, so the column stays one glyph wide.
+ */
 function Provenance({
   t,
   draft,
@@ -94,28 +103,55 @@ function Provenance({
   field: ReadingField;
   edited: boolean;
 }) {
-  if (edited)
-    return (
-      <span className="ledger-provenance text-sm">
-        {t("desktop.ledger.documents.entered_by_you")}
-      </span>
-    );
-  const found = provenanceOf(draft, field);
-  if (!found)
-    return (
-      <span className="ledger-provenance text-sm text-muted-foreground">
-        {readValue(draft, field) === null
-          ? t("desktop.ledger.documents.not_read")
-          : t("desktop.ledger.documents.no_provenance")}
-      </span>
-    );
+  const found = edited ? null : provenanceOf(draft, field);
+  const [glyph, words] = edited
+    ? [
+        <Icon key="edited" name="edit" size="xs" />,
+        t("desktop.ledger.documents.entered_by_you"),
+      ]
+    : found
+      ? [
+          doubtful(found) ? (
+            <Icon key="doubt" name="alert" size="xs" className="text-warning" />
+          ) : (
+            <Icon
+              key="read"
+              name="tick"
+              size="xs"
+              className="text-muted-foreground"
+            />
+          ),
+          provenanceText(t, found),
+        ]
+      : readValue(draft, field) === null
+        ? [
+            <Icon
+              key="unread"
+              name="pending"
+              size="xs"
+              className="text-muted-foreground"
+            />,
+            t("desktop.ledger.documents.not_read"),
+          ]
+        : [
+            <Icon
+              key="unknown"
+              name="info"
+              size="xs"
+              className="text-muted-foreground"
+            />,
+            t("desktop.ledger.documents.no_provenance"),
+          ];
   return (
-    <span className="ledger-provenance inline-flex items-center gap-1 text-sm">
-      {doubtful(found) && (
-        <Icon name="alert" size="xs" className="shrink-0 text-warning" />
-      )}
-      {provenanceText(t, found)}
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="ledger-provenance inline-flex size-icon-sm items-center justify-center text-sm text-muted-foreground">
+          {glyph}
+          <span className="sr-only">{words}</span>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{words}</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -606,12 +642,21 @@ export function DraftReview({
           <h3 className="text-md font-semibold [overflow-wrap:anywhere]">
             {fileName}
           </h3>
-          <span className="text-sm text-muted-foreground">
-            {t("desktop.ledger.documents.read_by", {
-              extractor: view.extractor,
-              date: dayText(locale, view.drafted_at.slice(0, 10)),
-            })}
-          </span>
+          {/* The extractor is an identifier, not words: it is named only on
+              hover, beside the day it read the file. */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="justify-self-start text-sm text-muted-foreground">
+                {dayText(locale, view.drafted_at.slice(0, 10))}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              {t("desktop.ledger.documents.read_by", {
+                extractor: view.extractor,
+                date: dayText(locale, view.drafted_at.slice(0, 10)),
+              })}
+            </TooltipContent>
+          </Tooltip>
         </div>
         <Button
           size="sm"
@@ -693,8 +738,8 @@ export function DraftReview({
           <thead className="sr-only">
             <tr>
               <th scope="col">{t("desktop.ledger.documents.column.field")}</th>
-              <th scope="col">{t("desktop.ledger.documents.column.value")}</th>
               <th scope="col">{t("desktop.ledger.documents.column.source")}</th>
+              <th scope="col">{t("desktop.ledger.documents.column.value")}</th>
             </tr>
           </thead>
           <tbody>
@@ -709,16 +754,16 @@ export function DraftReview({
                     >
                       {fieldLabel(t, row.field)}
                     </th>
-                    <td className="py-1 pr-2 tabular-nums">
-                      {shownValue(locale, row.field, value) ?? "—"}
-                    </td>
-                    <td className="py-1">
+                    <td className="w-6 py-1 pr-2 text-center">
                       <Provenance
                         t={t}
                         draft={draft}
                         field={row.field}
                         edited={false}
                       />
+                    </td>
+                    <td className="py-1 pr-2 tabular-nums">
+                      {shownValue(locale, row.field, value) ?? "—"}
                     </td>
                   </tr>
                 );
@@ -734,6 +779,14 @@ export function DraftReview({
                   >
                     {fieldLabel(t, row.field)}
                   </th>
+                  <td className="w-6 py-1 pr-2 text-center">
+                    <Provenance
+                      t={t}
+                      draft={draft}
+                      field={facts.readField}
+                      edited={facts.edited}
+                    />
+                  </td>
                   <td className="py-1 pr-2">
                     <Input
                       controlSize="sm"
@@ -754,14 +807,6 @@ export function DraftReview({
                         {problemText(t, { kind: "grammar", refusal: refused })}
                       </FieldError>
                     )}
-                  </td>
-                  <td className="py-1">
-                    <Provenance
-                      t={t}
-                      draft={draft}
-                      field={facts.readField}
-                      edited={facts.edited}
-                    />
                   </td>
                 </tr>
               );

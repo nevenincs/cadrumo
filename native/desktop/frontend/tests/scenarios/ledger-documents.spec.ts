@@ -391,5 +391,13 @@ for (const scheme of ["light", "dark"] as const)
     await tab(target, "review").click();
     await choose(target, DOMESTIKA);
     await draft(target).locator(".ledger-draft-off-host").click();
-    expect(await audit(target, target.locator(".ledger-off-host"))).toEqual([]);
+    // A dialog fading in has text of partial contrast: audit it once drawn.
+    const dialog = target.locator(".ledger-off-host");
+    await expect(dialog).toBeVisible();
+    await dialog.evaluate((element) =>
+      Promise.all(
+        element.getAnimations({ subtree: true }).map((a) => a.finished),
+      ),
+    );
+    expect(await audit(target, dialog)).toEqual([]);
   });

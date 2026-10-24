@@ -87,6 +87,8 @@ export function HealthSection({
   const [rebuilt, setRebuilt] =
     useState<LedgerParticipationRebuildResult | null>(null);
   const [reason, setReason] = useState("");
+  // Resetting is rare and cannot be taken back: it stays folded until asked.
+  const [resetOpen, setResetOpen] = useState(false);
   const [dryRun, setDryRun] = useState<{
     reason: string;
     call: SetupCall<LedgerResetResult>;
@@ -392,6 +394,8 @@ export function HealthSection({
         title={t("desktop.ledger.health.reset")}
         tone="danger"
         className="ledger-health-reset"
+        open={resetOpen}
+        onOpen={setResetOpen}
       >
         <p className="text-sm">{t("desktop.ledger.health.reset_what")}</p>
         <TextField

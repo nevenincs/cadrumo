@@ -488,6 +488,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
       actions={
         <Button
           size="xs"
+          variant="outline"
           className="ledger-account-add"
           onClick={() => open({ kind: "add" })}
         >

@@ -414,6 +414,12 @@ test("a reset is previewed first and blocked by sealed declarations", async ({
   await openLedger(target);
   await openSetup(target, "health");
   const zone = target.locator(".ledger-health-reset");
+  const opener = button(zone, "desktop.ledger.health.reset");
+  // Folded until asked: nothing of the reset is in the tab order.
+  await expect(opener).toHaveAttribute("aria-expanded", "false");
+  await expect(field(zone, "desktop.ledger.health.reset_reason")).toBeHidden();
+  await opener.click();
+  await expect(opener).toHaveAttribute("aria-expanded", "true");
   const dryRun = button(zone, "desktop.ledger.health.dry_run");
   await expect(dryRun).toHaveAttribute("aria-disabled", "true");
   await field(zone, "desktop.ledger.health.reset_reason").fill(
