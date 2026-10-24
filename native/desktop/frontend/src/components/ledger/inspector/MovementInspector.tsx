@@ -109,6 +109,7 @@ export function MovementInspector({
   onStage,
   classify,
   issues,
+  checked,
   duplicate = false,
   accounts,
   focus,
@@ -132,6 +133,9 @@ export function MovementInspector({
   onStage: (event: StageEvent) => void;
   classify: ClassifySelection | null;
   issues: readonly string[];
+  /** Whether readiness has been measured: until it has, a reviewed
+   * movement is not measured, never done. */
+  checked: boolean;
   /** An import flagged it as a likely duplicate of a stored movement. */
   duplicate?: boolean;
   accounts: readonly OwnAccountChoice[] | null;
@@ -271,7 +275,8 @@ export function MovementInspector({
   };
 
   // ---- The header ------------------------------------------------------------
-  const word = statusWord(row.review_status, issues.length);
+  const issueCount = checked ? issues.length : null;
+  const word = statusWord(row.review_status, issueCount);
   const staged = Object.keys(changes ?? {}).length + actions.length;
   const lifecycleItems = (
     ["archive", "stash", "restore", "exclude"] as const
@@ -405,7 +410,9 @@ export function MovementInspector({
             <span className="text-muted-foreground">{tx.currency}</span>
           </span>
           <span>{directionLabel(t, tx.direction)}</span>
-          <Badge variant="neutral">{statusLabel(t, word, issues.length)}</Badge>
+          <Badge variant="neutral" data-status={word}>
+            {statusLabel(t, word, issueCount)}
+          </Badge>
           {duplicate && (
             <Badge variant="neutral" className="ledger-duplicate-badge">
               <Icon name="copy" size="xs" className="text-warning" />

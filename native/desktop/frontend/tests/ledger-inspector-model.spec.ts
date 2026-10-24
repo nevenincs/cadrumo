@@ -10,6 +10,7 @@ import {
   fittingEntries,
   lifecycleTakes,
   needsShare,
+  noneClassified,
   quarterMove,
   selectionCounts,
   setForAll,
@@ -75,6 +76,46 @@ test("counts are by classification and by status, most first", () => {
     ["pending", 2],
     ["needs_fixing", 1],
   ]);
+});
+
+test("while readiness is not measured, a reviewed movement counts as not measured, never done", () => {
+  const rows = [
+    movement(hexId("a")),
+    movement(hexId("b"), { business_classification: "BUSINESS" }),
+    movement(hexId("c"), { business_classification: "PERSONAL" }),
+  ];
+  expect(selectionCounts(rows, null).statuses).toEqual([
+    ["unmeasured", 2],
+    ["pending", 1],
+  ]);
+  // Measured with nothing found, the same movements are done.
+  expect(selectionCounts(rows, new Map()).statuses).toEqual([
+    ["done", 2],
+    ["pending", 1],
+  ]);
+});
+
+test("the selection's tax fields wait for a classification, stored or staged", () => {
+  const rows = [movement(hexId("a")), movement(hexId("b"))];
+  expect(noneClassified(rows, EMPTY_CONTENT)).toBe(true);
+  const staged: StagedContent = {
+    ...EMPTY_CONTENT,
+    rows: {
+      [hexId("a")]: {
+        business_classification: { kind: "set", value: "BUSINESS" },
+      },
+    },
+  };
+  expect(noneClassified(rows, staged)).toBe(false);
+  // A classification staged to be cleared leaves the movement undecided.
+  const stored = [movement(hexId("c"), { business_classification: "MIXED" })];
+  expect(noneClassified(stored, EMPTY_CONTENT)).toBe(false);
+  expect(
+    noneClassified(stored, {
+      ...EMPTY_CONTENT,
+      rows: { [hexId("c")]: { business_classification: { kind: "clear" } } },
+    }),
+  ).toBe(true);
 });
 
 test("set for all skips what cannot take it, and counts hidden movements apart", () => {
@@ -385,6 +426,7 @@ test("the inspector hears of a section only when what it shows changed", () => {
   const base = {
     visible: new Set(["a", "b"]),
     partial: false,
+    checked: true,
     issues: new Map([["a", ["missing_category"]]]),
     accounts: null,
     duplicates: new Set(["a"]),
@@ -414,4 +456,7 @@ test("the inspector hears of a section only when what it shows changed", () => {
     }),
   ).toBe(false);
   expect(sameInspectorContext(base, { ...base, partial: true })).toBe(false);
+  // Readiness measured or not is news: the inspector draws "done" only once
+  // it is.
+  expect(sameInspectorContext(base, { ...base, checked: false })).toBe(false);
 });

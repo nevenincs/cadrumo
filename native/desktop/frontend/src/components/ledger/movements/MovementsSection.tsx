@@ -1189,6 +1189,7 @@ export function MovementsSection({
     () => ({
       visible: visibleSet,
       partial,
+      checked: sets.checked,
       issues: sets.issues,
       accounts,
       duplicates,
@@ -1469,6 +1470,17 @@ export function MovementsSection({
       {membership.kind === "failed" && (
         <Alert tone="warning" role="alert" icon={<Icon name="alert" />}>
           {t("desktop.ledger.filters.failed")}
+        </Alert>
+      )}
+      {flagged.kind === "failed" && (
+        // Unread is not "none": without this the marks would just vanish.
+        <Alert
+          tone="warning"
+          role="alert"
+          icon={<Icon name="alert" />}
+          className="ledger-duplicates-failed"
+        >
+          {t("desktop.ledger.duplicate.failed")}
         </Alert>
       )}
       <RowRevealNotice

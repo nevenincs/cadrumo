@@ -11,6 +11,9 @@ export type SectionInspectorContext = {
   visible: ReadonlySet<string>;
   /** The window is read in part, so "every movement" is the loaded ones. */
   partial: boolean;
+  /** Whether readiness has been measured. While it has not, `issues` is
+   * empty and no movement may be drawn as having none. */
+  checked: boolean;
   /** By movement, what the last check found other than a missing
    * classification. */
   issues: ReadonlyMap<string, readonly string[]>;
@@ -34,7 +37,11 @@ export function sameInspectorContext(
   left: SectionInspectorContext,
   right: SectionInspectorContext,
 ): boolean {
-  if (left.partial !== right.partial || left.accounts !== right.accounts)
+  if (
+    left.partial !== right.partial ||
+    left.checked !== right.checked ||
+    left.accounts !== right.accounts
+  )
     return false;
   if (!sameSet(left.visible, right.visible)) return false;
   if (!sameSet(left.duplicates, right.duplicates)) return false;

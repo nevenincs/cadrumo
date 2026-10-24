@@ -727,6 +727,40 @@ test("the selection's totals are per currency and direction, and shared values s
   );
 });
 
+test("while readiness is not measured, neither inspector draws a reviewed movement as done", async ({
+  page: target,
+}) => {
+  await open(target);
+  // The page's first readiness check fails, so nothing is measured.
+  await target.evaluate(() =>
+    window.__scenarioLedger!.nextReads("ledger.preflight", 1),
+  );
+  await target.locator("[data-rail=ledger]").click();
+  await expect(dataRows(target).first()).toBeVisible();
+  const reviewed = rowOf(target, "SUPERMERCADO HOJA");
+  await expect(
+    cellOf(reviewed, "status").locator("[data-status]"),
+  ).toHaveAttribute("data-status", "unmeasured");
+  await inspect(target, "SUPERMERCADO HOJA");
+  const head = panel(target).locator(".ledger-inspector-head");
+  await expect(head.locator("[data-status]")).toHaveAttribute(
+    "data-status",
+    "unmeasured",
+  );
+  await expect(head.locator("[data-status]")).toHaveText(
+    label("desktop.ledger.readiness.not_measured"),
+  );
+  await cellOf(rowOf(target, "FIBRA HOGAR"), "status").click({
+    modifiers: ["Control"],
+  });
+  const statuses = panel(target).locator(
+    ".ledger-selection-statuses li[data-status]",
+  );
+  await expect(statuses).toHaveCount(1);
+  await expect(statuses.first()).toHaveAttribute("data-status", "unmeasured");
+  await expect(statuses.first()).toHaveText(/2/);
+});
+
 test("the inspector is resized by its separator within its limits", async ({
   page: target,
 }) => {

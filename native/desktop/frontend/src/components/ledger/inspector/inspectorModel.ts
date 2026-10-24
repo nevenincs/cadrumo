@@ -97,10 +97,11 @@ export function commonValue(
 }
 
 /** How many of the movements hold each classification and each status,
- * most first. */
+ * most first. `issues` is null while readiness is not measured, so a
+ * reviewed movement counts as not measured rather than done. */
 export function selectionCounts(
   rows: readonly LedgerRow[],
-  issues: ReadonlyMap<string, readonly string[]>,
+  issues: ReadonlyMap<string, readonly string[]> | null,
 ): {
   classifications: [string, number][];
   statuses: [StatusWord, number][];
@@ -115,7 +116,7 @@ export function selectionCounts(
     );
     const word = statusWord(
       row.review_status,
-      issues.get(t.transaction_id)?.length ?? 0,
+      issues === null ? null : (issues.get(t.transaction_id)?.length ?? 0),
     );
     statuses.set(word, (statuses.get(word) ?? 0) + 1);
   }
@@ -125,6 +126,28 @@ export function selectionCounts(
     classifications: order(classifications),
     statuses: order(statuses),
   };
+}
+
+/** The classifications a person decides; the rest are counted by status. */
+export const DECIDED_CLASSIFICATIONS: ReadonlySet<string> = new Set([
+  "BUSINESS",
+  "PERSONAL",
+  "MIXED",
+]);
+
+/** Whether none of the movements is, or is staged to be, classified: the
+ * tax fields take nothing until one is. */
+export function noneClassified(
+  rows: readonly LedgerRow[],
+  content: StagedContent,
+): boolean {
+  return rows.every((row) => {
+    const classification = effectiveFacts(
+      row,
+      content.rows[row.transaction.transaction_id],
+    ).business_classification;
+    return !classification || !DECIDED_CLASSIFICATIONS.has(classification);
+  });
 }
 
 /** The fields the selection inspector sets on every selected movement. */

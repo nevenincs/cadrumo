@@ -43,10 +43,12 @@ import { MOVEMENT_TSV_COLUMNS, movementsTsv } from "../transfer/tsv";
 import type { ActionRequest } from "./ActionDialog";
 import type { SectionInspectorContext } from "./inspectorContext";
 import {
+  DECIDED_CLASSIFICATIONS,
   LIFECYCLE_KINDS,
   commonValue,
   completeCohort,
   needsShare,
+  noneClassified,
   selectionCounts,
   setForAll,
   suggestionWrites,
@@ -68,8 +70,6 @@ const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
   personal: "PERSONAL",
   mixed: "MIXED",
 };
-/** The classifications a person decides; the rest are counted by status. */
-const DECIDED = new Set(["BUSINESS", "PERSONAL", "MIXED"]);
 /** The fields whose shared value the selection shows, and how each is
  * read. The classification is counted above them instead. */
 const COMMON_FIELDS: readonly (readonly [
@@ -167,13 +167,15 @@ export function SelectionInspector({
   ).length;
   const shown = selected.length - hidden;
   const blocked = shown === 0;
-  const counts = selectionCounts(selected, context?.issues ?? new Map());
-  // While none of them is classified, the tax fields take nothing yet.
-  const undecided = selected.every(
-    (row) => !DECIDED.has(row.transaction.business_classification),
+  const counts = selectionCounts(
+    selected,
+    context?.checked ? context.issues : null,
   );
-  const sums = currencySums(selected);
   const content = stage.content;
+  // While none of them is classified, or staged to be, the tax fields take
+  // nothing yet.
+  const undecided = noneClassified(selected, content);
+  const sums = currencySums(selected);
   const [share, setShare] = useState("");
   const [group, setGroup] = useState("");
   const [notes, setNotes] = useState("");
@@ -475,7 +477,9 @@ export function SelectionInspector({
               );
             })}
             {counts.classifications
-              .filter(([classification]) => DECIDED.has(classification))
+              .filter(([classification]) =>
+                DECIDED_CLASSIFICATIONS.has(classification),
+              )
               .map(([classification, count]) => (
                 <li key={classification}>
                   {classificationLabel(t, classification)}{" "}
