@@ -33,18 +33,22 @@ from ....application.operations.frontend_projection import OperationPublicProjec
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ..operations.controller_port import OperationControllerPort
 
-__all__ = ["RuntimeSetupDoor", "SetupDoorPort"]
+__all__ = ["RuntimeSetupDoor", "SetupDoorPort", "SetupStatusReaderPort"]
 
 _QUICK_DEADLINE_S: Final = 60.0
 _FULL_DEADLINE_S: Final = 900.0
 
 
-class SetupDoorPort(Protocol):
-    """What the setup screen asks of the runtime."""
+class SetupStatusReaderPort(Protocol):
+    """The setup status read alone: what a surface reads before it offers an item's setup."""
 
     async def read_status(self, mode: DependencyCheckMode) -> DependencyStatusResultV1:
         """Read every setup item's row in ``mode``."""
         ...
+
+
+class SetupDoorPort(SetupStatusReaderPort, Protocol):
+    """What the setup screen asks of the runtime."""
 
     async def verify(self, item_ids: tuple[str, ...] | None) -> DependencyStatusResultV1:
         """Fully check the named items, every item when ``None``."""

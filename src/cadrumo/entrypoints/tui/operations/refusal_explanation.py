@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from ....application.dependency_registry import dependency_item_declarations
 from ....application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
 from ....application.operator_surface.action_targets import resolve_recorded_precondition_action
 from ....core.errors.error_codes import declared_error_codes_by_qualname, resolve_error_message
 from ....core.errors.hierarchy import RecordedRegisteredError
 from ....core.i18n.render import tr
+from ..setup.offer import setup_item_for_action
 
 
 def public_refusal_explanation(code: str | None) -> str | None:
@@ -70,15 +70,7 @@ def recorded_setup_item(detail: OperationErrorDetailV1 | None) -> str | None:
     verdict = None if detail is None else detail.precondition_verdict()
     if verdict is None or verdict.action is None:
         return None
-    action_id = verdict.action.action_id
-    return next(
-        (
-            declaration.item_id
-            for declaration in dependency_item_declarations()
-            if declaration.recovery_action_id == action_id
-        ),
-        None,
-    )
+    return setup_item_for_action(verdict.action.action_id)
 
 
 __all__ = [

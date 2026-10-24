@@ -38,7 +38,7 @@ import sys
 from collections.abc import Callable, Mapping, Sequence
 from contextvars import ContextVar
 from dataclasses import dataclass
-from typing import Final, Never, Protocol, TypeGuard, cast
+from typing import TYPE_CHECKING, Final, Never, Protocol, TypeGuard, cast
 
 import click
 import typer
@@ -64,7 +64,10 @@ from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.redaction.rules import redact_for_cli_output
 from ...core.terminal_encoding import encode_terminal_field, encode_terminal_text
 from ...domain.user_profile.errors import StoredProfileDriftError
-from ._component_setup_rendering import component_setup_line
+from ._component_setup_rendering import component_setup_lines, setup_status_source
+
+if TYPE_CHECKING:
+    from ...application.dependency_contracts import DependencyStatusRow
 
 _log = logging.getLogger(__name__)
 
@@ -266,17 +269,19 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     def _wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
         token = _ACTIVE_COMMAND_ID.set(_resolve_active_command_id(*args, *kwargs.values()))
         try:
-            return callback(*args, **kwargs)
-        except Exception as error:
-            # Typer/Click control flow (Exit, Abort, BadParameter) propagates
-            # untouched so the framework can render it; the under-test override
-            # re-raises the original so tests can assert on the typed exception.
-            # Everything else routes through the ordered specificity dispatch.
-            if _is_click_control_flow(error):
-                raise
-            if _BOUNDARY_SUSPENDED.get():
-                raise
-            emit_error_and_exit(_project_boundary_error(error, callback))
+            with setup_status_source(_invocation_setup_rows(*args, *kwargs.values())):
+                try:
+                    return callback(*args, **kwargs)
+                except Exception as error:
+                    # Typer/Click control flow (Exit, Abort, BadParameter) propagates
+                    # untouched so the framework can render it; the under-test override
+                    # re-raises the original so tests can assert on the typed exception.
+                    # Everything else routes through the ordered specificity dispatch.
+                    if _is_click_control_flow(error):
+                        raise
+                    if _BOUNDARY_SUSPENDED.get():
+                        raise
+                    emit_error_and_exit(_project_boundary_error(error, callback))
         finally:
             _ACTIVE_COMMAND_ID.reset(token)
 
@@ -482,13 +487,14 @@ def _render_precondition_action_text(
     evidence and binding provenance cannot be flattened into ambiguous prose.
 
     A refusal for a component that is not set up is the exception: the person
-    reads the error's sentence and the exact setup command the action resolved
-    to, never condition identifiers or evidence. JSON still carries the DTO.
+    reads the error's sentence and then what the item's current row allows,
+    the exact setup command the action resolved to or the row's own sentence,
+    never condition identifiers or evidence. JSON still carries the DTO.
     """
     lines = [text.rstrip("\n")]
-    setup_line = component_setup_line(action)
-    if setup_line is not None:
-        lines.append(f"  {setup_line}")
+    setup_lines = component_setup_lines(action)
+    if setup_lines is not None:
+        lines.extend(f"  {line}" for line in setup_lines)
         return "\n".join(lines) + "\n"
     if command is not None:
         lines.append(f"  command: {command}")
@@ -603,6 +609,33 @@ def _active_command_identifier() -> str | None:
     an argv parse failure raised before any command callback runs.
     """
     return _ACTIVE_COMMAND_ID.get()
+
+
+def _invocation_setup_rows(*values: object) -> Callable[[], tuple[DependencyStatusRow, ...]]:
+    """Return the quick setup status read of the executing command's profile connection.
+
+    A component setup line is printed only from the item's current row, so the
+    read binds the callback's injected Context, found as
+    :func:`_resolve_active_command_id` finds it. Nothing is read until a line
+    needs a row; a command without a Context or a profile connection reads none.
+    """
+    context = next(
+        (
+            value
+            for value in values
+            if isinstance(getattr(value, "command_path", None), str) and isinstance(getattr(value, "meta", None), dict)
+        ),
+        None,
+    )
+
+    def read() -> tuple[DependencyStatusRow, ...]:
+        if not isinstance(context, typer.Context):
+            raise LookupError("no command context to read the setup status through")
+        from .config.provision_cli import read_quick_setup_rows
+
+        return read_quick_setup_rows(context)
+
+    return read
 
 
 def _resolve_active_command_id(*values: object) -> str | None:

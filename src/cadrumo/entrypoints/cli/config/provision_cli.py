@@ -161,6 +161,7 @@ __all__ = [
     "provision_start",
     "provision_status",
     "provision_verify",
+    "read_quick_setup_rows",
     "recovery_command",
     "setup_review_handler",
     "verify_item_ids",
@@ -279,6 +280,15 @@ def _status(ctx: typer.Context, request: DependencyStatusRequest | DependencyVer
     )
     _require_settled(completed)
     return completed.projection
+
+
+def read_quick_setup_rows(ctx: typer.Context) -> tuple[DependencyStatusRow, ...]:
+    """Read every setup item's row from the quick status, on this invocation's profile connection.
+
+    Raises:
+        RefusalError: This invocation holds no profile connection.
+    """
+    return _status(ctx, DependencyStatusRequest(mode=DependencyCheckMode.QUICK)).rows
 
 
 def provision_status(ctx: typer.Context) -> None:

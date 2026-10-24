@@ -54,6 +54,7 @@ __all__ = [
     "dependency_action_key",
     "dependency_copy_details",
     "dependency_failure_key",
+    "dependency_held_sentence",
     "dependency_name_key",
     "dependency_note_key",
     "dependency_part_name",
@@ -146,6 +147,18 @@ def dependency_row_wording(
         note=None if row.note is None else tr(dependency_note_key(row.note), locale=locale),
         action=None if row.recovery is None else tr(dependency_action_key(row.recovery), locale=locale),
     )
+
+
+def dependency_held_sentence(
+    row: DependencyStatusRow, declaration: DependencyItemDeclaration, *, locale: str | None = None
+) -> str:
+    """Say what holds an item a surface cannot offer to set up: its name, then its row's own sentence.
+
+    A surface shows this where a refusal names the item's setup but the row's
+    button cannot set it up now, so the person reads why instead of an offer.
+    """
+    wording = dependency_row_wording(row, declaration, locale=locale)
+    return f"{wording.name}: {wording.sentence}"
 
 
 _PROGRAM_PART: Final = "program"

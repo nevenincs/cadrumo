@@ -26,6 +26,7 @@ from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ....application.dependency_contracts import (
+    DEPENDENCY_SETUP_RECOVERIES,
     DependencyCheckMode,
     DependencyItemDeclaration,
     DependencyRecoveryAction,
@@ -52,16 +53,6 @@ __all__ = ["SetupScreen", "setup_review_text"]
 
 _MIB: Final = 1024**2
 _GIB: Final = 1024**3
-
-#: The recovery buttons that run the setup operation for their row's item.
-_SETS_UP: Final = frozenset(
-    {
-        DependencyRecoveryAction.SET_UP,
-        DependencyRecoveryAction.UPDATE,
-        DependencyRecoveryAction.TRY_AGAIN,
-        DependencyRecoveryAction.RESUME,
-    }
-)
 
 
 def _declaration(item_id: str) -> DependencyItemDeclaration:
@@ -263,7 +254,7 @@ class SetupScreen(AccountChromeScreen):
             return
         if row.recovery is DependencyRecoveryAction.CHECK_AGAIN:
             self._read(DependencyCheckMode.FULL, (item_id,))
-        elif row.recovery in _SETS_UP:
+        elif row.recovery in DEPENDENCY_SETUP_RECOVERIES:
             self.start_setup((item_id,))
 
     def start_setup(self, item_ids: tuple[str, ...] | None) -> None:

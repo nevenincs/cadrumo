@@ -47,6 +47,7 @@ __all__ = [
     "DEPENDENCY_PLAN_CONTRACT_VERSION",
     "DEPENDENCY_PROGRESS_UNIT_CODE",
     "DEPENDENCY_QUICK_CHECK_BUDGET_S",
+    "DEPENDENCY_SETUP_RECOVERIES",
     "DEPENDENCY_SPACE_HEADROOM_BYTES",
     "DependencyActivity",
     "DependencyBlockedReason",
@@ -201,6 +202,21 @@ class DependencyRecoveryAction(StrEnum):
     TRY_AGAIN = "try_again"
     RESUME = "resume"
     CHECK_AGAIN = "check_again"
+
+
+DEPENDENCY_SETUP_RECOVERIES: Final = frozenset(
+    {
+        DependencyRecoveryAction.SET_UP,
+        DependencyRecoveryAction.UPDATE,
+        DependencyRecoveryAction.TRY_AGAIN,
+        DependencyRecoveryAction.RESUME,
+    }
+)
+"""The recovery buttons that run the setup operation for their row's item.
+
+A surface offers an item's setup only while its row's button is one of these;
+any other row, a blocked one included, says its sentence and offers no setup.
+"""
 
 
 class DependencyCheckMode(StrEnum):

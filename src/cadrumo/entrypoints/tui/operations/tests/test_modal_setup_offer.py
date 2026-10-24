@@ -1,12 +1,17 @@
-"""A refusal that needs a setup item keeps the operation modal open on one offer: set up that item.
+"""A refusal that needs a setup item keeps the operation modal open on that item's current row.
 
 The recorded details come from the real producers: the browser launch guard
 over an empty browser cache, and the local reader probe over an inventory
 without the role's model, each projected by the operation error detail
-builder. The modal runs under Textual's pilot with a scripted controller that
-serves one refused terminal observation and that detail. One host records the
-navigation request the offer posts; the real TUI root admits it and opens the
-setup page on that item's row.
+builder. The item's row comes from the real row derivation: absent, so its
+action sets it up, or blocked as not in this build, as every item reads while
+this build sets nothing up. The modal runs under Textual's pilot with a
+scripted controller that serves one refused terminal observation and that
+detail. An offerable row gets the setup offer; a blocked row shows its own
+sentence and offers nothing; a host that reads no setup status closes the
+modal at once. One host records the navigation request the offer posts; the
+real TUI root reads the row through its setup door, admits the request and
+opens the setup page on that item's row.
 """
 
 from __future__ import annotations
@@ -22,7 +27,13 @@ from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
 from .....adapters.outbound.aeat.browser.session import require_browser_ready
-from .....application.dependency_contracts import DependencyCheckMode, DependencyProbeOutcome, DependencyProbeReading
+from .....application.dependency_contracts import (
+    DependencyBlockedReason,
+    DependencyCheckMode,
+    DependencyProbeOutcome,
+    DependencyProbeReading,
+    DependencyStatusRow,
+)
 from .....application.dependency_registry import (
     dependency_item_declarations,
     derive_dependency_row,
@@ -211,12 +222,37 @@ class _RefusedController:
         raise AssertionError("a settled operation is not detached")
 
 
-class _Host(App[None]):
-    """Opens one modal, keeps its outcome, and records every setup navigation request it receives."""
+def _row(item_id: str, reading: DependencyProbeOutcome) -> DependencyStatusRow:
+    """The item's quick-status row, derived by the real registry from one probe reading."""
+    declaration = next(declaration for declaration in dependency_item_declarations() if declaration.item_id == item_id)
+    blocked = DependencyBlockedReason.NOT_IN_THIS_BUILD if reading is DependencyProbeOutcome.BLOCKED else None
+    return derive_dependency_row(
+        declaration,
+        DependencyProbeReading(
+            item_id=item_id, mode=DependencyCheckMode.QUICK, outcome=reading, blocked_reason=blocked
+        ),
+    )
 
-    def __init__(self, controller: _RefusedController) -> None:
+
+def _absent(item_id: str) -> DependencyStatusRow:
+    return _row(item_id, DependencyProbeOutcome.ABSENT)
+
+
+def _not_in_this_build(item_id: str) -> DependencyStatusRow:
+    return _row(item_id, DependencyProbeOutcome.BLOCKED)
+
+
+class _Host(App[None]):
+    """Opens one modal, keeps its outcome, and records every setup navigation request it receives.
+
+    It reads each item's row from ``rows``, as the TUI root reads the quick setup status.
+    """
+
+    def __init__(self, controller: _RefusedController, rows: tuple[DependencyStatusRow, ...] = ()) -> None:
         super().__init__()
         self.controller = controller
+        self.rows = rows
+        self.row_reads: list[str] = []
         self.modal = OperationModal(controller)
         self.outcome: object = None
         self.closed = False
@@ -231,6 +267,27 @@ class _Host(App[None]):
 
     def on_setup_item_requested(self, message: SetupItemRequested) -> None:
         self.requested.append(message.item_id)
+
+    async def read_setup_row(self, item_id: str) -> DependencyStatusRow | None:
+        self.row_reads.append(item_id)
+        return next((row for row in self.rows if row.item_id == item_id), None)
+
+
+class _HostWithoutSetupStatus(App[None]):
+    """Opens one modal in a session that reads no setup status, and records its outcome."""
+
+    def __init__(self, controller: _RefusedController) -> None:
+        super().__init__()
+        self.modal = OperationModal(controller)
+        self.outcome: object = None
+        self.closed = False
+
+    def _dismissed(self, outcome: object) -> None:
+        self.outcome = outcome
+        self.closed = True
+
+    def on_mount(self) -> None:
+        self.push_screen(self.modal, self._dismissed)
 
 
 def _controller(detail: OperationErrorDetailV1 | None) -> _RefusedController:
@@ -252,7 +309,7 @@ def test_a_refusal_names_the_setup_item_its_recorded_verdict_asks_for(tmp_path: 
 @pytest.mark.asyncio
 async def test_a_missing_browser_refusal_offers_its_setup_and_asks_the_root_to_open_it(tmp_path: Path) -> None:
     detail = _browser_detail(tmp_path)
-    host = _Host(_controller(detail))
+    host = _Host(_controller(detail), rows=(_absent("browser"), _absent("local_ai")))
     with override_settings(cadrumo_output_language="en"):
         async with host.run_test(size=_SIZE) as pilot:
             await settle_until(pilot, lambda: _offer(host).display, "the setup offer to be shown")
@@ -268,6 +325,7 @@ async def test_a_missing_browser_refusal_offers_its_setup_and_asks_the_root_to_o
             await settle_until(pilot, lambda: host.closed and bool(host.requested), "the offer to be taken")
 
     assert host.requested == ["browser"]
+    assert host.row_reads == ["browser"]
     assert isinstance(host.outcome, OperationModalSettledOutcomeV1)
     assert host.outcome.view_model.projection == host.controller.observation.projection
     assert host.outcome.error_explanation == explanation
@@ -275,7 +333,7 @@ async def test_a_missing_browser_refusal_offers_its_setup_and_asks_the_root_to_o
 
 @pytest.mark.asyncio
 async def test_closing_a_local_ai_offer_returns_the_settled_outcome_without_navigating() -> None:
-    host = _Host(_controller(_reader_detail()))
+    host = _Host(_controller(_reader_detail()), rows=(_absent("local_ai"),))
     with override_settings(cadrumo_output_language="en"):
         async with host.run_test(size=_SIZE) as pilot:
             await settle_until(pilot, lambda: _offer(host).display, "the setup offer to be shown")
@@ -291,13 +349,48 @@ async def test_closing_a_local_ai_offer_returns_the_settled_outcome_without_navi
 @pytest.mark.asyncio
 @pytest.mark.parametrize("detail", [_hardware_detail(), None], ids=["no-recovery verdict", "no detail"])
 async def test_a_refusal_setup_cannot_fix_closes_the_modal_at_once(detail: OperationErrorDetailV1 | None) -> None:
-    host = _Host(_controller(detail))
+    host = _Host(_controller(detail), rows=(_absent("local_ai"),))
     async with host.run_test(size=_SIZE) as pilot:
         await settle_until(pilot, lambda: host.closed, "the modal to close on settlement")
 
     assert host.requested == []
+    assert host.row_reads == []
     assert isinstance(host.outcome, OperationModalSettledOutcomeV1)
     assert host.outcome.error_explanation == operation_error_explanation(detail)
+
+
+@pytest.mark.asyncio
+async def test_a_blocked_item_shows_its_own_sentence_and_offers_no_setup() -> None:
+    """While this build sets nothing up, the local AI reads blocked: its sentence stands in for the offer."""
+    detail = _reader_detail()
+    host = _Host(_controller(detail), rows=(_not_in_this_build("local_ai"),))
+    with override_settings(cadrumo_output_language="en"):
+        async with host.run_test(size=_SIZE) as pilot:
+            reason = host.modal.query_one("#operation-modal-setup", Static)
+            await settle_until(pilot, lambda: bool(str(reason.render())), "the item's sentence to be shown")
+
+            assert not host.closed
+            assert not _offer(host).display
+            assert str(reason.render()).splitlines()[-1] == "Local AI: This version of Cadrumo does not include this."
+            assert host.focused is host.modal.query_one("#btn-operation-close", Button)
+            explanation = operation_error_explanation(detail)
+
+            await pilot.press("escape")
+            await settle_until(pilot, lambda: host.closed, "the modal to close")
+
+    assert host.requested == []
+    assert host.row_reads == ["local_ai"]
+    assert isinstance(host.outcome, OperationModalSettledOutcomeV1)
+    assert host.outcome.error_explanation == explanation
+
+
+@pytest.mark.asyncio
+async def test_a_session_that_reads_no_setup_status_closes_the_modal_at_once() -> None:
+    host = _HostWithoutSetupStatus(_controller(_reader_detail()))
+    async with host.run_test(size=_SIZE) as pilot:
+        await settle_until(pilot, lambda: host.closed, "the modal to close on settlement")
+
+    assert isinstance(host.outcome, OperationModalSettledOutcomeV1)
 
 
 class _SetupDoor:
@@ -359,6 +452,7 @@ async def test_the_root_opens_the_setup_page_on_the_item_the_refusal_needs() -> 
     app = CadrumoTuiApp(
         destination_catalogue=_root_catalogue(door, contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        setup_status=door,
     )
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=_SIZE) as pilot:
@@ -387,4 +481,5 @@ async def test_the_root_opens_the_setup_page_on_the_item_the_refusal_needs() -> 
             assert table.ordered_rows[table.cursor_row].key.value == "local_ai"
             assert screen.focused is table
             assert len(app.screen_stack) == 2
-            assert door.calls == [("status", DependencyCheckMode.QUICK)]
+            # The offer read the item's row first; the setup page then read every row.
+            assert door.calls == [("status", DependencyCheckMode.QUICK), ("status", DependencyCheckMode.QUICK)]

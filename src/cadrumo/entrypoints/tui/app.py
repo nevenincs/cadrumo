@@ -23,10 +23,14 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Static
 
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
+from ...application.dependency_contracts import DependencyCheckMode, DependencyStatusRow
 from ...application.overview.home import HomeSessionPosture
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.i18n.render import tr
 from ...core.logging import get_logger
 from ...core.startup_phase_log import log_startup_phase
@@ -72,6 +76,7 @@ from .navigation import (
 from .operations.palette import WorkbenchOperationProviderV1
 from .presentation import PagePresentationRequested, presentation_target
 from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, WorkbenchSearchProviderV1
+from .setup.door import SetupStatusReaderPort
 from .setup.focus import SetupItemRequested, setup_item_target
 
 if TYPE_CHECKING:
@@ -146,6 +151,8 @@ class RootBindingV1:
     initial_destination: TuiNavigationTargetV1 | None = None
     initial_account_session: HomeAccountSession | None = None
     note_activity: Callable[[], Awaitable[None]] | None = None
+    setup_status: SetupStatusReaderPort | None = None
+    """The quick setup status a surface reads before it offers an item's setup."""
 
 
 type RootLoaderV1 = Callable[[], RootBindingV1]
@@ -202,6 +209,7 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         read_account_session: AccountSessionReaderV1 | None = None,
         note_activity: Callable[[], Awaitable[None]] | None = None,
         load_root: RootLoaderV1 | None = None,
+        setup_status: SetupStatusReaderPort | None = None,
     ) -> None:
         """Bind the shell to caller-owned doors.
 
@@ -258,6 +266,7 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         """Whether this session has already opened the setup walk once."""
         self._initial_destination: TuiNavigationTargetV1 | None = None
         self._read_account_session = read_account_session
+        self._setup_status = setup_status
         self._note_activity = note_activity
         self._last_activity_sent: float | None = None
         self._activity_pending = False
@@ -363,6 +372,7 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         self._account_factories = binding.account_factories
         self._read_account_session = binding.read_account_session
         self._note_activity = binding.note_activity
+        self._setup_status = binding.setup_status
         self._initial_destination = binding.initial_destination
         self._account_session = binding.initial_account_session
         self._workbench_search_refusal_code = (
@@ -461,6 +471,21 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
             return
         self.query_one("#root-navigation-refusal", Static).update("")
         self.navigate_to(presentation_target(message.view))
+
+    async def read_setup_row(self, item_id: str) -> DependencyStatusRow | None:
+        """Read ``item_id``'s current row from the quick setup status, the setup page's own read.
+
+        ``None`` when this session reads no setup status, the read is refused,
+        or the status has no row for the item: a surface then offers nothing.
+        """
+        door = self._setup_status
+        if door is None:
+            return None
+        try:
+            status = await door.read_status(DependencyCheckMode.QUICK)
+        except (FrontendRefusedError, RefusalError, CadrumoError):
+            return None
+        return next((row for row in status.rows if row.item_id == item_id), None)
 
     def on_setup_item_requested(self, message: SetupItemRequested) -> None:
         """Open the setup page on the item a refused operation needs, as any other navigation.
