@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:270faf332ef6505b1c89c77d58b39ebf4284e2718dc75fc71a1dbed88eb406c8'
+body_hash: 'sha256:d8ea1b3f9f99bfbf6652f20a90b742bbf6dd6371a8d313b19a5aa1be5f20c1ea'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -276,6 +276,36 @@ related:
 - `S34` `verify:` `pytest issue lines and header` -> `pass`
 - `S34` `verify:` `pytest TUI issue suites` -> `pass`
 - `S34` `by:` `opus-p01-lane-2`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/admitted.rs`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/files.rs`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.json`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.py`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/scripted.rs`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/settle.rs`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S15` `M` `native/desktop/src-tauri/src/app.rs`
+- `S15` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S15` `M` `native/desktop/CMakeLists.txt`
+- `S15` `verify:` `desktop-host-unit-test` -> `pass`
+- `S15` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S15` `verify:` `relay_contracts.py --check` -> `pass`
+- `S15` `by:` `opus-host-lane`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/admitted.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/files.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.json`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.py`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/scripted.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/settle.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S16` `M` `native/desktop/src-tauri/src/app.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S16` `M` `native/desktop/CMakeLists.txt`
+- `S16` `verify:` `desktop-host-unit-test` -> `pass`
+- `S16` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S16` `verify:` `relay_contracts.py --check` -> `pass`
+- `S16` `by:` `opus-host-lane`
 
 ## Notes
 
