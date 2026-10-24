@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:03950a5c9dcd226d2eee0aaf0c94c6c78a1c26d5896cb7809d782dec786b23b1'
+body_hash: 'sha256:449bdafa7ee0eb69e49cc78fb2d8af88dddc7db5f411fadd6174194f8a4fa9fe'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-18-dependency-provisioning-unified-setup-adr]]"
@@ -91,3 +91,14 @@ Components need no profile authority, so the profile runtime's operation journal
 - The local AI program archive is large (CUDA libraries on Windows and Linux). The plan size and free-space rule decide what the person approves.
 - Upgrading Playwright or Ollama needs new pins, as the browser does today.
 - Reconsider if Ollama stops publishing standalone archives, if Playwright's layout or marker contract changes beyond what pins can track, or if setup ever needs profile authority.
+
+### Amendment 2026-10-24: the runtime manager hosts the local AI server
+
+Basis: taken 2026-10-24 by the principal on the recommended option while the owner was away, within the owner's approval of the Rust provisioning work ("all approved, implemnet"); the owner may reverse it. The alternatives put to the owner were starting the server on first use through a native request to the manager, and running it only while the desktop window is open, which breaks CLI, TUI and MCP parity.
+
+Constraint 7 says the engine starts and stops the server as its own child, but no Step named the long-lived process that hosts the engine for CLI, TUI and MCP use, and the withdrawal forbids Python and the runtime from starting the program. This amendment settles it:
+
+- The runtime manager, the long-lived per-user Rust supervisor, hosts the engine's local AI server. It starts the server whenever the local AI program is installed and verified, restarts it after a crash under its supervision policy, and stops it on exit, at session end, and before the engine replaces or removes the program. The server process is contained by the manager so nothing outlives it.
+- The server listens on one fixed Cadrumo loopback address, declared once in the canonical environment definition (`native/application-environment.toml`) and never the upstream default port, so it cannot collide with a system Ollama. The engine records the address in the local AI component record; Python consumers read that record and only connect. The default of `cadrumo_llm_ollama_chat_url` derives from the same declaration.
+- The desktop host's in-process engine does not run a second server; it observes the manager's. Where no manager runs (a development checkout), the local AI reads `program_not_running` and consumers refuse with the local AI setup verdict.
+- A system-installed Ollama is still detected and reported, never started, stopped or modified.

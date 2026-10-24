@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-21'
+modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:6e8a1fff37d925d629ebaf506d9af7560a4a3421010fdf6e3d54f761ecfdc578'
+body_hash: 'sha256:bb24b821fa5ff323913e57af834e2cade06715d81894480d112984b7db58ad7f'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -348,3 +348,9 @@ Accepted 2026-10-08 under the user's advance authorization to fix defects and co
 ## 2026-10-17 amendment: the manager is a role of the one Cadrumo binary
 
 Accepted 2026-10-17 under `2026-10-17-single-binary-process-tree-adr`, which the operator approved. The manager is no longer a separate `cadrumo-manager` image: it runs as the `cadrumo` binary in its manager role, and the runtime it supervises runs as the same binary in its runtime role. Wherever this record identifies the manager or runtime by image (startup items, quiescence, termination targeting, adoption and diagnostics), identification is by the digest-verified image plus the role argument and exact invocation. Supervision, the session lock, IPC endpoints, login startup, logs and the cutover protocol are unchanged. The machine lifecycle broker service is the same binary in its broker role, so an installed runtime runs in a Cadrumo tree of broker, manager and runtime. The runtime host is only ever started by a manager role or by the supervision core embedded in a running desktop; it never runs outside a Cadrumo tree.
+
+## 2026-10-24 amendment: the manager supervises the local AI server
+
+Basis: taken 2026-10-24 by the principal on the recommended option while the owner was away, within the owner's approval of the Rust provisioning work ("all approved, implemnet"); the owner may reverse it. The alternatives put to the owner were starting the server on first use through a native request to the manager, and running it only while the desktop window is open, which breaks CLI, TUI and MCP parity.
+
+Under `2026-10-24-rust-component-provisioning-adr` (amendment of the same date), the manager also supervises the local AI server that the Rust component engine installs: it starts it while the local AI is set up, restarts it after a crash, stops it on exit, at session end and before the engine replaces or removes the program, and contains it so nothing outlives the manager. The server binds one fixed Cadrumo loopback address from the canonical environment definition. The manager still holds no profile or credential authority; the local AI server is installation-wide, public software outside custody.
