@@ -35,6 +35,7 @@ from .work_form_models import (
     ModeloFormResult,
     ModeloFormSection,
     ModeloWorkForm,
+    revised_field,
 )
 from .work_form_notes import project_calculation_notes, project_verification_issues
 from .work_form_result import settlement_result
@@ -108,8 +109,10 @@ def build_inspection_only_form(
     """
     fields = sorted(
         (
-            project_casilla_field(casilla_id, context, None).model_copy(
-                update={"editability": ModeloFormEditability.INFORMATIONAL, "not_writable_reason": None}
+            revised_field(
+                project_casilla_field(casilla_id, context, None),
+                editability=ModeloFormEditability.INFORMATIONAL,
+                not_writable_reason=None,
             )
             for casilla_id in context.rows
         ),

@@ -51,6 +51,7 @@ from ...application.modelo.operation_definitions import (
 from ...application.modelo.source_policy import SourceFamily
 from ...application.modelo.work_form import build_modelo_work_form
 from ...application.modelo.work_form_models import (
+    ModeloFormBindingAddressV1,
     ModeloFormEditability,
     ModeloFormEditClosure,
     ModeloFormField,
@@ -252,6 +253,25 @@ def test_a_typed_value_reads_as_entered_and_survives_a_recalculation(tmp_path: P
     assert recalculated.form.calculation_revision_id is not None
     assert not edited.verified
     assert not edited.filed
+
+
+def test_each_box_says_where_its_edit_is_submitted(tmp_path: Path) -> None:
+    """Box 05 carries the instalments of earlier declarations; replacing it is an override of that binding.
+
+    Box 06 is a value the filer types, edited at the box itself. Neither holds an
+    assumed value, so neither is confirmable, and the form's envelope carries all three.
+    """
+    with seeded_operator_work(tmp_path) as work:
+        fresh = _load(work, work.admit())
+
+    carried = _field(fresh.form, "05")
+    typed = _field(fresh.form, "06")
+    assert carried.editability is ModeloFormEditability.OVERRIDABLE_SOURCE
+    assert carried.edit_address == ModeloFormBindingAddressV1(binding_id=carried.bindings[0].binding_id)
+    assert typed.editability is ModeloFormEditability.EDITABLE_VALUE
+    assert typed.edit_address == typed.address
+    assert not carried.confirmable
+    assert not typed.confirmable
 
 
 def test_an_admission_for_another_declaration_offers_nothing(tmp_path: Path) -> None:

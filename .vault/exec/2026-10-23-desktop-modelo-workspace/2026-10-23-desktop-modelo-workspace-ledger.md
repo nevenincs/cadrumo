@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:923530f35103264c153966fd5137eb45d225b31a2637e9bdcfc5cd94ca4b894b'
+body_hash: 'sha256:4753ba756c1e39cc54ce610eed4b41cce7b3bc052217937199b3dece03c38479'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -56,3 +56,20 @@ related:
 - `S01` `verify:` `mutation: page correction disabled fails test_a_page_that_does_not_apply_asks_for_no_value` -> `pass`
 - `S01` `verify:` `ruff check+format, lint-imports (30 kept), dev.quality.types (0)` -> `pass`
 - `S01` `verify:` `operation contract manifest regenerated; only modelo.work.form result schema changed` -> `pass`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_layout.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_inspection.py`
+- `S02` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S02` `A` `src/cadrumo/application/modelo/tests/test_work_form_field_rules.py`
+- `S02` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/test_modelo_work_form_loading.py`
+- `S02` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S02` `verify:` `pytest -n0 field_rules, filer_attention, work_form, work_form_grids, every_revision, contract_manifest (84)` -> `pass`
+- `S02` `verify:` `pytest -n0 work_form_loading, workbench_operations (14)` -> `pass`
+- `S02` `verify:` `pytest -n0 TUI review_effect, confirmation, scoped_confirm, bulk_confirm_real, confirm_real (35)` -> `pass`
+- `S02` `verify:` `mutation: design-constant standing correction removed fails its regression test` -> `pass`
+- `S02` `verify:` `ruff, format, lint-imports (30 kept), dev.quality.types (0), contract manifest check` -> `pass`
+
+## Notes
+
+- `S02` Fixes an S01 defect: a design-constant cell kept the standing of its pre-copy origin; field copies that change state now go through `revised_field`

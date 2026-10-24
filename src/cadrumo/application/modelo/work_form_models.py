@@ -356,6 +356,49 @@ class ModeloFormPrintedRate(_FormModel):
         return self.ratio * 100
 
 
+_OVERRIDE_EDITABILITIES = frozenset({ModeloFormEditability.OVERRIDABLE_SOURCE, ModeloFormEditability.EDITABLE_OVERRIDE})
+_CONFIRMING_EDITABILITIES = frozenset({ModeloFormEditability.EDITABLE_VALUE, ModeloFormEditability.EDITABLE_OVERRIDE})
+
+
+def _edit_address_of(
+    address: ModeloFormAddressV1,
+    editability: ModeloFormEditability,
+    bindings: tuple[ModeloFormBinding, ...] | list[ModeloFormBinding],
+) -> ModeloFormAddressV1:
+    if isinstance(address, ModeloFormCasillaAddressV1) and editability in _OVERRIDE_EDITABILITIES and bindings:
+        return ModeloFormBindingAddressV1(binding_id=bindings[0].binding_id)
+    return address
+
+
+def _typed_by_the_filer_of(bindings: tuple[ModeloFormBinding, ...] | list[ModeloFormBinding]) -> bool:
+    return all(binding.policy.override_policy is SourceOverridePolicy.ENTER for binding in bindings)
+
+
+def _confirmable_of(data: dict[str, Any]) -> bool:
+    address = data["address"]
+    editability = data["editability"]
+    bindings = data.get("bindings", ())
+    return (
+        data["origin"] is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+        and data["value"] is not None
+        and _typed_by_the_filer_of(bindings)
+        and editability in _CONFIRMING_EDITABILITIES
+        and _edit_address_of(address, editability, bindings) == address
+    )
+
+
+def _holds_zero(value: ModeloFormScalar) -> bool:
+    return isinstance(value, Decimal | int) and not isinstance(value, bool) and value == 0
+
+
+def _default_edit_address(data: dict[str, Any]) -> ModeloFormAddressV1:
+    return _edit_address_of(data["address"], data["editability"], data.get("bindings", ()))
+
+
+def _default_held_zero(data: dict[str, Any]) -> bool:
+    return _holds_zero(data.get("value"))
+
+
 class ModeloFormField(_FormModel):
     """One box or binding input, classified for an editor."""
 
@@ -394,6 +437,13 @@ class ModeloFormField(_FormModel):
     #: Where the box stands for the filer, on the declaration and page it is shown on; derived from
     #: its own origin and blockers when the builder has no declaration or page to say otherwise.
     standing: ModeloFormStanding = Field(default_factory=_default_standing)
+    #: The address a change to the box is submitted to: the binding that feeds it when the filer
+    #: replaces a source's value, otherwise the box itself.
+    edit_address: ModeloFormAddressV1 = Field(default_factory=_default_edit_address)
+    #: Whether the box holds an assumed value the filer can confirm here as their own.
+    confirmable: bool = Field(default_factory=_confirmable_of)
+    #: Whether the box holds an amount of exactly zero: a figure the form holds, never the same as nothing.
+    held_zero: bool = Field(default_factory=_default_held_zero)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -401,6 +451,33 @@ class ModeloFormField(_FormModel):
         if (self.editability is ModeloFormEditability.NOT_WRITABLE) != (self.not_writable_reason is not None):
             raise ValueError("a not-writable reason belongs to, and only to, a not-writable field")
         return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _derived_from_the_field_itself(self) -> ModeloFormField:
+        if self.edit_address != _edit_address_of(self.address, self.editability, self.bindings):
+            raise ValueError("a field's edit address is the one its own address, editability and bindings give")
+        if self.confirmable is not _confirmable_of(dict(self)):
+            raise ValueError("a field is confirmable exactly when its own state makes it so")
+        if self.held_zero is not _holds_zero(self.value):
+            raise ValueError("a field holds zero exactly when its value is an amount of zero")
+        return self
+
+
+_SELF_DERIVED: Final[frozenset[str]] = frozenset({"edit_address", "confirmable", "held_zero"})
+
+
+def revised_field(field: ModeloFormField, **update: Any) -> ModeloFormField:
+    """A copy of ``field`` with ``update`` applied and every value it derives from itself derived again.
+
+    A plain model copy skips validation, so a copy that changes a value, an
+    origin or an editability would keep derivations that no longer hold. The
+    standing is kept unless ``update`` gives one, because it also depends on
+    the declaration and page the builder knows.
+    """
+    data = {name: getattr(field, name) for name in type(field).model_fields if name not in _SELF_DERIVED}
+    data.update(update)
+    return type(field).model_validate(data)
 
 
 def field_needs_filer(field: ModeloFormField, *, recorded: bool = False, applies: bool = True) -> bool:
@@ -410,9 +487,6 @@ def field_needs_filer(field: ModeloFormField, *, recorded: bool = False, applies
     )
 
 
-_OVERRIDE_EDITABILITIES = frozenset({ModeloFormEditability.OVERRIDABLE_SOURCE, ModeloFormEditability.EDITABLE_OVERRIDE})
-
-
 def edit_address(field: ModeloFormField) -> ModeloFormAddressV1:
     """Return the address a change to ``field`` is submitted to.
 
@@ -420,16 +494,7 @@ def edit_address(field: ModeloFormField) -> ModeloFormAddressV1:
     value of the binding that feeds it, so an override is addressed to that
     binding; every other field is edited at its own address.
     """
-    if (
-        isinstance(field.address, ModeloFormCasillaAddressV1)
-        and field.editability in _OVERRIDE_EDITABILITIES
-        and field.bindings
-    ):
-        return ModeloFormBindingAddressV1(binding_id=field.bindings[0].binding_id)
-    return field.address
-
-
-_CONFIRMING_EDITABILITIES = frozenset({ModeloFormEditability.EDITABLE_VALUE, ModeloFormEditability.EDITABLE_OVERRIDE})
+    return _edit_address_of(field.address, field.editability, field.bindings)
 
 
 def typed_by_the_filer(field: ModeloFormField) -> bool:
@@ -439,7 +504,7 @@ def typed_by_the_filer(field: ModeloFormField) -> bool:
     filer's entry. A box any other source fills is not: keeping a value over
     it replaces the source.
     """
-    return all(binding.policy.override_policy is SourceOverridePolicy.ENTER for binding in field.bindings)
+    return _typed_by_the_filer_of(field.bindings)
 
 
 def confirmable(field: ModeloFormField) -> bool:
@@ -449,13 +514,7 @@ def confirmable(field: ModeloFormField) -> bool:
     filer types into, and the box must take a typed value here: a box whose
     kind of value cannot be entered here yet cannot be confirmed either.
     """
-    return (
-        field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
-        and field.value is not None
-        and typed_by_the_filer(field)
-        and field.editability in _CONFIRMING_EDITABILITIES
-        and edit_address(field) == field.address
-    )
+    return _confirmable_of(dict(field))
 
 
 class ModeloFormCounts(_FormModel):
@@ -1141,6 +1200,7 @@ __all__ = [
     "field_standing",
     "finding_action_locale_key",
     "finding_attention",
+    "revised_field",
     "section_fields",
     "typed_by_the_filer",
 ]

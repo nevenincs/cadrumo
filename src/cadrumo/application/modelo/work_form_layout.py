@@ -50,6 +50,8 @@ from .work_form_models import (
     ModeloFormStanding,
     ModeloFormText,
     ModeloFormTextDisclosure,
+    field_standing,
+    revised_field,
     section_fields,
 )
 from .work_form_rates import (
@@ -109,15 +111,15 @@ class LayoutWalker:
             design_constant,
             literal_decimals if literal_decimals is not None else self.context.export_decimals(casilla_id),
         )
-        return field.model_copy(
-            update={
-                "editability": ModeloFormEditability.DESIGN_CONSTANT,
-                "not_writable_reason": None,
-                "origin": ModeloFormOrigin.INFORMATIONAL,
-                "unattributed": False,
-                "value": fixed,
-                "source": FIXED_BY_THE_FORM,
-            }
+        return revised_field(
+            field,
+            editability=ModeloFormEditability.DESIGN_CONSTANT,
+            not_writable_reason=None,
+            origin=ModeloFormOrigin.INFORMATIONAL,
+            unattributed=False,
+            value=fixed,
+            source=FIXED_BY_THE_FORM,
+            standing=field_standing(ModeloFormOrigin.INFORMATIONAL),
         )
 
     def page(self, page: FormPageDefinition) -> ModeloFormPage:

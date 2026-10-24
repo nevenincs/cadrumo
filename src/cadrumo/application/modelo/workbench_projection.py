@@ -156,6 +156,9 @@ class PublicModeloFormField(BaseModel):
     legal_refs: tuple[str, ...]
     also_appears_on: tuple[str, ...]
     standing: ModeloFormStanding
+    edit_address: ModeloFormAddressV1
+    confirmable: bool
+    held_zero: bool
 
 
 class PublicModeloFormFieldBlock(BaseModel):

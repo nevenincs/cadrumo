@@ -335,6 +335,30 @@ def test_a_page_that_does_not_apply_asks_for_no_value(operation: PinnedAuthority
     assert field_needs_filer(_casilla(fourth, page_box))
 
 
+def test_a_box_the_design_fixes_stands_done_and_is_never_confirmed(operation: PinnedAuthorityOperation) -> None:
+    """Modelo 303's printed rates are design constants: nothing is asked of them and nothing can be confirmed.
+
+    The rate boxes hold the figures a calculation gives them, which nobody is
+    recorded as having entered: as typed boxes they would be assumed and ask
+    the filer, so this proves the printed rate replaces that reading.
+    """
+    rates = _rate_cells(_form(operation, "303", 2026, "1T"))
+    form = _form(operation, "303", 2026, "1T", held=dict.fromkeys(rates, Decimal("21.00")))
+    fixed = [
+        cell.field
+        for page in form.pages
+        for section in page.sections
+        for block in section.blocks
+        if isinstance(block, ModeloFormGridBlock)
+        for row in block.rows
+        for cell in row.cells
+        if cell.kind is FormCellKind.DESIGN_CONSTANT and cell.field is not None
+    ]
+    assert fixed
+    assert {field.standing for field in fixed} == {ModeloFormStanding.DONE}
+    assert not any(field.confirmable for field in fixed)
+
+
 def test_on_a_declaration_recorded_as_filed_every_box_is_done(operation: PinnedAuthorityOperation) -> None:
     held = {_optional_money_box(operation): Decimal("35.00")}
     filed = _form(operation, "210", 2025, "0A", held=held, lifecycle=CalculationRevisionState.PRESENTADO)
