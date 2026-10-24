@@ -21,6 +21,7 @@ import type { LedgerRuleRow } from "../../../shell/ledgerSetup";
 import type { StageEvent } from "../../../shell/ledgerStage";
 import { SPENDING_CATEGORY_FAMILIES } from "../../../shell/ledgerVocabulary";
 import { useStrings } from "../../../shell/strings";
+import { useWritePause, WriteHold } from "../WritePause";
 import {
   categoryLabel,
   classificationLabel,
@@ -168,7 +169,9 @@ export function RuleDialog({
       classification !== target.rule.classification ||
       (category || null) !== target.rule.category_id);
   const takesCategory = classification === "BUSINESS";
+  const { hold, held } = useWritePause();
   const ready =
+    held === null &&
     rules !== null &&
     pattern !== "" &&
     !patternBroken &&
@@ -192,6 +195,14 @@ export function RuleDialog({
     );
     setSaving(false);
     setSaved(call);
+    // Not seen to settle: every write waits for the page's re-read, and
+    // this form never sends the same rule again on its own.
+    if (call.kind === "unknown" || call.kind === "saved_unread")
+      hold({
+        what: t("desktop.ledger.rules.title"),
+        outcome: call.kind,
+        onSettled: () => setSaved(null),
+      });
     if (
       call.kind !== "done" ||
       call.result.outcome !== "added" ||
@@ -365,15 +376,17 @@ export function RuleDialog({
           <Button variant="ghost" onClick={onClose}>
             {t("desktop.ledger.form.cancel")}
           </Button>
-          <Button
-            aria-disabled={!ready || undefined}
-            onClick={() => void save()}
-            className="ledger-rule-save"
-          >
-            {saving
-              ? t("desktop.ledger.form.saving")
-              : t("desktop.ledger.rules.save")}
-          </Button>
+          <WriteHold>
+            <Button
+              aria-disabled={!ready || undefined}
+              onClick={() => void save()}
+              className="ledger-rule-save"
+            >
+              {saving
+                ? t("desktop.ledger.form.saving")
+                : t("desktop.ledger.rules.save")}
+            </Button>
+          </WriteHold>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import type { LedgerCounterpartyResult } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
+import { WriteHold } from "../WritePause";
 import { stampText } from "../movements/movementWords";
 import {
   CallLine,
@@ -44,7 +45,7 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
   const [state, setState] = useState("");
   const [note, setNote] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
-  const write = useSetupWrite();
+  const write = useSetupWrite(t("desktop.ledger.counterparty.title"));
 
   const view = async (id = taxId) => {
     setViewed(
@@ -205,14 +206,16 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
             />
           </FormGrid>
           <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              className="ledger-counterparty-confirm"
-              aria-disabled={!canConfirm || write.busy || undefined}
-              onClick={() => canConfirm && !write.busy && void confirm()}
-            >
-              {t("desktop.ledger.counterparty.confirm")}
-            </Button>
+            <WriteHold>
+              <Button
+                size="sm"
+                className="ledger-counterparty-confirm"
+                aria-disabled={!canConfirm || write.busy || undefined}
+                onClick={() => canConfirm && !write.busy && void confirm()}
+              >
+                {t("desktop.ledger.counterparty.confirm")}
+              </Button>
+            </WriteHold>
             {result.facts && (
               <Button
                 size="sm"
@@ -235,14 +238,16 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
                 >
                   {t("desktop.ledger.form.cancel")}
                 </Button>
-                <Button
-                  size="xs"
-                  variant="destructive"
-                  className="ledger-counterparty-withdraw"
-                  onClick={() => void withdraw()}
-                >
-                  {t("desktop.ledger.counterparty.withdraw_confirm")}
-                </Button>
+                <WriteHold>
+                  <Button
+                    size="xs"
+                    variant="destructive"
+                    className="ledger-counterparty-withdraw"
+                    onClick={() => void withdraw()}
+                  >
+                    {t("desktop.ledger.counterparty.withdraw_confirm")}
+                  </Button>
+                </WriteHold>
               </span>
             </Alert>
           )}

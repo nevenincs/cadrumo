@@ -28,6 +28,8 @@ export function callText<R>(
 ): string | null {
   if (!call || call.kind === "done") return null;
   if (call.kind === "unknown") return t("desktop.ledger.form.unknown");
+  if (call.kind === "saved_unread")
+    return t("desktop.ledger.apply.outcome.saved_unread");
   if (call.kind === "refused")
     return (
       refusal?.(call.reason) ??

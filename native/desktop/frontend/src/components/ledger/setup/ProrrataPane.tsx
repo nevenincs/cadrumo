@@ -8,6 +8,7 @@ import type {
   ProrrataMutationResult,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
+import { WriteHold } from "../WritePause";
 import { amountText } from "../movements/movementWords";
 import { PeriodSelector } from "../PeriodSelector";
 import {
@@ -69,7 +70,7 @@ export function ProrrataPane({
     {},
     "prorrata",
   );
-  const write = useSetupWrite();
+  const write = useSetupWrite(t("desktop.ledger.prorrata.title"));
   const [action, setAction] = useState<Action | null>(null);
   const [percentage, setPercentage] = useState("");
   const [provenance, setProvenance] = useState("");
@@ -494,16 +495,18 @@ export function ProrrataPane({
             >
               {t("desktop.ledger.form.cancel")}
             </Button>
-            <Button
-              type="submit"
-              size="sm"
-              className="ledger-prorrata-submit"
-              aria-disabled={!ready || write.busy || undefined}
-            >
-              {write.busy
-                ? t("desktop.ledger.form.saving")
-                : t(`desktop.ledger.prorrata.action.${action}`)}
-            </Button>
+            <WriteHold>
+              <Button
+                type="submit"
+                size="sm"
+                className="ledger-prorrata-submit"
+                aria-disabled={!ready || write.busy || undefined}
+              >
+                {write.busy
+                  ? t("desktop.ledger.form.saving")
+                  : t(`desktop.ledger.prorrata.action.${action}`)}
+              </Button>
+            </WriteHold>
           </div>
         </form>
       )}

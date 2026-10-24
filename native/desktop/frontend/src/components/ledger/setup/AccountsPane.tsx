@@ -18,6 +18,7 @@ import type {
   OwnAccountRole,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
+import { useWritePause, WriteHold } from "../WritePause";
 import { dateText } from "../movements/movementWords";
 import {
   CallLine,
@@ -107,7 +108,8 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
     { action: "list" },
     "accounts",
   );
-  const write = useSetupWrite();
+  const write = useSetupWrite(t("desktop.ledger.accounts.title"));
+  const { held } = useWritePause();
   const [form, setForm] = useState<Form | null>(null);
   const [label, setLabel] = useState("");
   const [holding, setHolding] = useState("");
@@ -349,15 +351,17 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
                 className="flex items-center gap-1"
               >
                 {designationText(found)}
-                <IconButton
-                  size="sm"
-                  label={t("desktop.ledger.accounts.undesignate", {
-                    designation: designationText(found),
-                  })}
-                  onClick={() => !write.busy && void undesignate(found)}
-                >
-                  <Icon name="close" />
-                </IconButton>
+                <WriteHold>
+                  <IconButton
+                    size="sm"
+                    label={t("desktop.ledger.accounts.undesignate", {
+                      designation: designationText(found),
+                    })}
+                    onClick={() => !write.busy && void undesignate(found)}
+                  >
+                    <Icon name="close" />
+                  </IconButton>
+                </WriteHold>
               </li>
             ))}
           </ul>
@@ -403,6 +407,8 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="ledger-account-remove"
+              disabled={held !== null}
+              title={held ?? undefined}
               onSelect={() => void remove(account)}
             >
               <Icon name="trash" />
@@ -640,24 +646,26 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
             >
               {t("desktop.ledger.form.cancel")}
             </Button>
-            <Button
-              type="submit"
-              size="sm"
-              className="ledger-account-submit"
-              aria-disabled={
-                write.busy ||
-                (form.kind === "add" && !addReady) ||
-                (form.kind === "update" && !updateReady(form.account)) ||
-                (form.kind === "close" && closing.kind !== "value") ||
-                (form.kind === "designate" &&
-                  (!role || (modelo !== "" && !MODELO.test(modelo)))) ||
-                undefined
-              }
-            >
-              {write.busy
-                ? t("desktop.ledger.form.saving")
-                : t(`desktop.ledger.accounts.submit.${form.kind}`)}
-            </Button>
+            <WriteHold>
+              <Button
+                type="submit"
+                size="sm"
+                className="ledger-account-submit"
+                aria-disabled={
+                  write.busy ||
+                  (form.kind === "add" && !addReady) ||
+                  (form.kind === "update" && !updateReady(form.account)) ||
+                  (form.kind === "close" && closing.kind !== "value") ||
+                  (form.kind === "designate" &&
+                    (!role || (modelo !== "" && !MODELO.test(modelo)))) ||
+                  undefined
+                }
+              >
+                {write.busy
+                  ? t("desktop.ledger.form.saving")
+                  : t(`desktop.ledger.accounts.submit.${form.kind}`)}
+              </Button>
+            </WriteHold>
           </div>
         </form>
       )}

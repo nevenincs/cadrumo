@@ -25,6 +25,7 @@ import type {
   InventoryValuationResult,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
+import { WriteHold } from "../WritePause";
 import { amountText, dateText } from "../movements/movementWords";
 import { PeriodSelector } from "../PeriodSelector";
 import {
@@ -156,7 +157,7 @@ export function InventoryPane({
     {},
     "inventory",
   );
-  const write = useSetupWrite();
+  const write = useSetupWrite(t("desktop.ledger.inventory.title"));
   const [task, setTask] = useState<Task | null>(null);
   const [chosen, setChosen] = useState("");
   const [actividad, setActividad] = useState("");
@@ -585,16 +586,18 @@ export function InventoryPane({
             >
               {t("desktop.ledger.form.cancel")}
             </Button>
-            <Button
-              type="submit"
-              size="sm"
-              className="ledger-inventory-submit"
-              aria-disabled={!ready || write.busy || undefined}
-            >
-              {write.busy
-                ? t("desktop.ledger.form.saving")
-                : t(`desktop.ledger.inventory.task.${task}`)}
-            </Button>
+            <WriteHold>
+              <Button
+                type="submit"
+                size="sm"
+                className="ledger-inventory-submit"
+                aria-disabled={!ready || write.busy || undefined}
+              >
+                {write.busy
+                  ? t("desktop.ledger.form.saving")
+                  : t(`desktop.ledger.inventory.task.${task}`)}
+              </Button>
+            </WriteHold>
           </div>
         </form>
       )}

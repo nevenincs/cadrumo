@@ -14,6 +14,7 @@ import type {
   LedgerRatiosValidateResult,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
+import { WriteHold } from "../WritePause";
 import { categoryLabel, percentText } from "../movements/movementWords";
 import { PeriodSelector } from "../PeriodSelector";
 import {
@@ -59,7 +60,7 @@ export function RatiosPane({
     { year },
     `y${year}`,
   );
-  const write = useSetupWrite();
+  const write = useSetupWrite(t("desktop.ledger.ratios.title"));
   const [editing, setEditing] = useState<Record<string, string>>({});
   const [refused, setRefused] = useState<Record<string, string>>({});
   const [validation, setValidation] =
@@ -192,14 +193,16 @@ export function RatiosPane({
         if (row.category in editing)
           return (
             <span className="flex justify-end gap-1">
-              <Button
-                size="xs"
-                className="ledger-ratio-save"
-                aria-disabled={write.busy || undefined}
-                onClick={() => !write.busy && void save(row.category)}
-              >
-                {t("desktop.ledger.form.save")}
-              </Button>
+              <WriteHold>
+                <Button
+                  size="xs"
+                  className="ledger-ratio-save"
+                  aria-disabled={write.busy || undefined}
+                  onClick={() => !write.busy && void save(row.category)}
+                >
+                  {t("desktop.ledger.form.save")}
+                </Button>
+              </WriteHold>
             </span>
           );
         const set = overrides.get(row.category);
@@ -233,16 +236,18 @@ export function RatiosPane({
             {set && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    className="ledger-ratio-unset"
-                    aria-disabled={write.busy || undefined}
-                    onClick={() => !write.busy && void unset(row.category)}
-                  >
-                    {t("desktop.ledger.ratios.unset")}
-                    <span className="sr-only"> {name}</span>
-                  </Button>
+                  <WriteHold>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      className="ledger-ratio-unset"
+                      aria-disabled={write.busy || undefined}
+                      onClick={() => !write.busy && void unset(row.category)}
+                    >
+                      {t("desktop.ledger.ratios.unset")}
+                      <span className="sr-only"> {name}</span>
+                    </Button>
+                  </WriteHold>
                 </TooltipTrigger>
                 <TooltipContent>
                   {t("desktop.ledger.ratios.unset_named", { category: name })}

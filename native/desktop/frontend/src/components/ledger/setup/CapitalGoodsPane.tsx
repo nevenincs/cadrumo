@@ -11,6 +11,7 @@ import type {
   CapitalGoodDeclareResult,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
+import { WriteHold } from "../WritePause";
 import { amountText } from "../movements/movementWords";
 import {
   CallLine,
@@ -45,7 +46,7 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
     {},
     "capital",
   );
-  const write = useSetupWrite();
+  const write = useSetupWrite(t("desktop.ledger.capital.title"));
   const [open, setOpen] = useState(false);
   const [identifier, setIdentifier] = useState("");
   const [description, setDescription] = useState("");
@@ -305,16 +306,18 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
             >
               {t("desktop.ledger.form.cancel")}
             </Button>
-            <Button
-              type="submit"
-              size="sm"
-              className="ledger-capital-submit"
-              aria-disabled={!ready || write.busy || undefined}
-            >
-              {write.busy
-                ? t("desktop.ledger.form.saving")
-                : t("desktop.ledger.capital.declare")}
-            </Button>
+            <WriteHold>
+              <Button
+                type="submit"
+                size="sm"
+                className="ledger-capital-submit"
+                aria-disabled={!ready || write.busy || undefined}
+              >
+                {write.busy
+                  ? t("desktop.ledger.form.saving")
+                  : t("desktop.ledger.capital.declare")}
+              </Button>
+            </WriteHold>
           </div>
         </form>
       )}

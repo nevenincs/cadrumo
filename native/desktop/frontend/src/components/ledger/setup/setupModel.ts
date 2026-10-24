@@ -34,6 +34,8 @@ export type SetupCall<Result> =
   | { kind: "refused"; reason: string | null; detail: JsonObject | null }
   /** A write sent and not seen to settle: it may have been saved. */
   | { kind: "unknown" }
+  /** A write that saved, whose answer was not read. */
+  | { kind: "saved_unread" }
   | { kind: "failed"; code: LedgerFailureCode; reason: string | null };
 
 /** What a settled outcome means for a call that `writes` or only reads. A
@@ -60,6 +62,7 @@ export function callOutcome<Result>(
 export function callFailure<Result>(error: unknown): SetupCall<Result> {
   const failure = ledgerFailure(error);
   if (failure.code === "unknown") return { kind: "unknown" };
+  if (failure.code === "saved_unread") return { kind: "saved_unread" };
   return {
     kind: "failed",
     code: failure.code,

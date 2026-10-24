@@ -27,6 +27,7 @@ import type {
   LedgerResult,
 } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
+import { useWritePause } from "../WritePause";
 import { setupCall, type SetupCall } from "./setupModel";
 import { callText } from "./setupWords";
 
@@ -233,7 +234,8 @@ export function SetupTable<Row>({
 }
 
 /** How a call ended where it did not succeed: a refusal or a failure in
- * a line, an unknown write with the read that settles it. */
+ * a line, an unknown write, or a saved one whose answer was not read, with
+ * the page's re-read that settles it. */
 export function CallLine<R>({
   call,
   refusal,
@@ -244,21 +246,35 @@ export function CallLine<R>({
   onReread?: () => void;
 }) {
   const t = useStrings();
+  const pause = useWritePause();
   const said = callText(t, call, refusal);
   if (said === null) return null;
+  const undetermined =
+    call?.kind === "unknown" || call?.kind === "saved_unread";
+  // While the page holds this write, its re-read is the page's.
+  const reread =
+    undetermined && pause.writes.length > 0 ? pause.reread : onReread;
   return (
     <Alert
-      tone={call?.kind === "unknown" ? "warning" : "danger"}
+      tone={undetermined ? "warning" : "danger"}
       role="alert"
-      icon={<Icon name={call?.kind === "unknown" ? "unknown" : "refused"} />}
+      icon={<Icon name={undetermined ? "unknown" : "refused"} />}
       className="setup-call-line"
     >
       <span>
         {said}
-        {call?.kind === "unknown" && onReread && (
+        {undetermined && reread && (
           <>
             {" "}
-            <Button variant="link" size="xs" onClick={onReread}>
+            <Button
+              variant="link"
+              size="xs"
+              className="setup-call-reread"
+              aria-disabled={pause.rereading || undefined}
+              onClick={() => {
+                if (!pause.rereading) reread();
+              }}
+            >
               {t("desktop.ledger.form.reread")}
             </Button>
           </>
@@ -415,6 +431,8 @@ export function useSetupRead<D extends LedgerDefinitionId>(
 } {
   const [read, setRead] = useState<SetupCall<LedgerResult<D>> | null>(null);
   const [round, setRound] = useState(0);
+  // The page's re-read after a write it could not settle reads this again.
+  const { round: reread } = useWritePause();
   const latest = useRef(payload);
   latest.current = payload;
   useEffect(() => {
@@ -428,13 +446,17 @@ export function useSetupRead<D extends LedgerDefinitionId>(
     return () => {
       active = false;
     };
-  }, [port, reader, definition, key, round]);
+  }, [port, reader, definition, key, round, reread]);
   const reload = useCallback(() => setRound((value) => value + 1), []);
   return { read, reload };
 }
 
-/** A write in flight and how the last one ended, for one form. */
-export function useSetupWrite() {
+/** A write in flight and how the last one ended, for one form. A write
+ * whose outcome was not seen, or whose answer was not read, holds every
+ * write on the page under `what` until the page's re-read settles it; the
+ * form's line about it goes once that read has run. */
+export function useSetupWrite(what: string) {
+  const { hold } = useWritePause();
   const [busy, setBusy] = useState(false);
   const [last, setLast] = useState<SetupCall<unknown> | null>(null);
   const run = useCallback(
@@ -444,12 +466,14 @@ export function useSetupWrite() {
       try {
         const done = await write();
         setLast(done);
+        if (done.kind === "unknown" || done.kind === "saved_unread")
+          hold({ what, outcome: done.kind, onSettled: () => setLast(null) });
         return done;
       } finally {
         setBusy(false);
       }
     },
-    [],
+    [hold, what],
   );
   return { busy, last, run, clear: () => setLast(null) };
 }

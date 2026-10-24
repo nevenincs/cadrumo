@@ -17,6 +17,7 @@ import type {
   LedgerResetResult,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
+import { WriteHold } from "../WritePause";
 import { periodText } from "../ledgerWords";
 import {
   amountText,
@@ -83,7 +84,7 @@ export function HealthSection({
   const [preflighting, setPreflighting] = useState(false);
   const [check, setCheck] = useState<SetupCall<LedgerCheckResult> | null>(null);
   const [checking, setChecking] = useState(false);
-  const rebuild = useSetupWrite();
+  const rebuild = useSetupWrite(t("desktop.ledger.health.links"));
   const [rebuilt, setRebuilt] =
     useState<LedgerParticipationRebuildResult | null>(null);
   const [reason, setReason] = useState("");
@@ -93,7 +94,7 @@ export function HealthSection({
     reason: string;
     call: SetupCall<LedgerResetResult>;
   } | null>(null);
-  const resetting = useSetupWrite();
+  const resetting = useSetupWrite(t("desktop.ledger.section.health"));
 
   const runPreflight = async () => {
     if (!period) return;
@@ -362,17 +363,19 @@ export function HealthSection({
         <Panel
           title={t("desktop.ledger.health.links")}
           actions={
-            <Button
-              size="xs"
-              variant="outline"
-              className="ledger-health-rebuild"
-              aria-disabled={rebuild.busy || undefined}
-              onClick={() => !rebuild.busy && void runRebuild()}
-            >
-              {rebuild.busy
-                ? t("desktop.ledger.form.saving")
-                : t("desktop.ledger.health.rebuild")}
-            </Button>
+            <WriteHold>
+              <Button
+                size="xs"
+                variant="outline"
+                className="ledger-health-rebuild"
+                aria-disabled={rebuild.busy || undefined}
+                onClick={() => !rebuild.busy && void runRebuild()}
+              >
+                {rebuild.busy
+                  ? t("desktop.ledger.form.saving")
+                  : t("desktop.ledger.health.rebuild")}
+              </Button>
+            </WriteHold>
           }
         >
           <p className="text-sm text-muted-foreground">
@@ -460,19 +463,21 @@ export function HealthSection({
               })}
             </span>
             <span>
-              <Button
-                size="sm"
-                variant="destructive"
-                className="ledger-health-reset-confirm"
-                aria-disabled={!dryRunCurrent || resetting.busy || undefined}
-                onClick={() =>
-                  dryRunCurrent && !resetting.busy && void runReset()
-                }
-              >
-                {t("desktop.ledger.health.reset_confirm", {
-                  movements: report.removed_transaction_ids.length,
-                })}
-              </Button>
+              <WriteHold>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="ledger-health-reset-confirm"
+                  aria-disabled={!dryRunCurrent || resetting.busy || undefined}
+                  onClick={() =>
+                    dryRunCurrent && !resetting.busy && void runReset()
+                  }
+                >
+                  {t("desktop.ledger.health.reset_confirm", {
+                    movements: report.removed_transaction_ids.length,
+                  })}
+                </Button>
+              </WriteHold>
             </span>
           </Alert>
         )}

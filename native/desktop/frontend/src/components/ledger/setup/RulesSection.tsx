@@ -10,6 +10,7 @@ import type {
   LedgerRuleRow,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
+import { WriteHold } from "../WritePause";
 import {
   categoryLabel,
   classificationLabel,
@@ -103,7 +104,7 @@ function RulesPane({
     () => (read?.kind === "done" ? ruleOrder(read.result.rules) : null),
     [read],
   );
-  const moving = useSetupWrite();
+  const moving = useSetupWrite(t("desktop.ledger.rules.title"));
   const [reaffirm, setReaffirm] = useState(false);
   const [preview, setPreview] =
     useState<SetupCall<LedgerRuleApplyResult> | null>(null);
@@ -219,29 +220,33 @@ function RulesPane({
         const name = ruleMatchText(t, rule.description_pattern);
         return (
           <span className="flex justify-end gap-0.5">
-            <IconButton
-              size="sm"
-              label={t("desktop.ledger.rules.move_up", { rule: name })}
-              aria-disabled={at === 0 || moving.busy || undefined}
-              onClick={() => at > 0 && !moving.busy && void move(at, at - 1)}
-            >
-              <Icon name="chevronUp" />
-            </IconButton>
-            <IconButton
-              size="sm"
-              label={t("desktop.ledger.rules.move_down", { rule: name })}
-              aria-disabled={
-                at === (rules?.length ?? 0) - 1 || moving.busy || undefined
-              }
-              onClick={() =>
-                rules &&
-                at < rules.length - 1 &&
-                !moving.busy &&
-                void move(at, at + 1)
-              }
-            >
-              <Icon name="chevronDown" />
-            </IconButton>
+            <WriteHold>
+              <IconButton
+                size="sm"
+                label={t("desktop.ledger.rules.move_up", { rule: name })}
+                aria-disabled={at === 0 || moving.busy || undefined}
+                onClick={() => at > 0 && !moving.busy && void move(at, at - 1)}
+              >
+                <Icon name="chevronUp" />
+              </IconButton>
+            </WriteHold>
+            <WriteHold>
+              <IconButton
+                size="sm"
+                label={t("desktop.ledger.rules.move_down", { rule: name })}
+                aria-disabled={
+                  at === (rules?.length ?? 0) - 1 || moving.busy || undefined
+                }
+                onClick={() =>
+                  rules &&
+                  at < rules.length - 1 &&
+                  !moving.busy &&
+                  void move(at, at + 1)
+                }
+              >
+                <Icon name="chevronDown" />
+              </IconButton>
+            </WriteHold>
             <IconButton
               size="sm"
               label={t("desktop.ledger.rules.edit", { rule: name })}

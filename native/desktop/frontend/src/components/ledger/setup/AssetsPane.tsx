@@ -18,6 +18,7 @@ import type {
   ActivityAssetRevision,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
+import { WriteHold } from "../WritePause";
 import { amountText, dateText } from "../movements/movementWords";
 import { JsonDocumentField } from "./InventoryPane";
 import {
@@ -53,7 +54,7 @@ const pretty = (value: JsonObject) => JSON.stringify(value, null, 2);
  */
 export function AssetsPane({ port, locale }: SetupProps) {
   const t = useStrings();
-  const write = useSetupWrite();
+  const write = useSetupWrite(t("desktop.ledger.assets.title"));
   const [assetId, setAssetId] = useState("");
   const [inspected, setInspected] =
     useState<SetupCall<ActivityAssetInspectResult> | null>(null);
@@ -354,16 +355,18 @@ export function AssetsPane({ port, locale }: SetupProps) {
             >
               {t("desktop.ledger.form.cancel")}
             </Button>
-            <Button
-              type="submit"
-              size="sm"
-              className="ledger-assets-submit"
-              aria-disabled={!ready || write.busy || undefined}
-            >
-              {write.busy
-                ? t("desktop.ledger.form.saving")
-                : t(`desktop.ledger.assets.submit.${task}`)}
-            </Button>
+            <WriteHold when={task === "create" || task === "correct"}>
+              <Button
+                type="submit"
+                size="sm"
+                className="ledger-assets-submit"
+                aria-disabled={!ready || write.busy || undefined}
+              >
+                {write.busy
+                  ? t("desktop.ledger.form.saving")
+                  : t(`desktop.ledger.assets.submit.${task}`)}
+              </Button>
+            </WriteHold>
           </div>
         </form>
       )}
@@ -391,16 +394,18 @@ export function AssetsPane({ port, locale }: SetupProps) {
               maxLength={256}
               className="w-72"
             />
-            <Button
-              size="sm"
-              className="ledger-assets-claim"
-              aria-disabled={
-                !creatingOperation.trim() || write.busy || undefined
-              }
-              onClick={() => void claim()}
-            >
-              {t("desktop.ledger.assets.claim")}
-            </Button>
+            <WriteHold>
+              <Button
+                size="sm"
+                className="ledger-assets-claim"
+                aria-disabled={
+                  !creatingOperation.trim() || write.busy || undefined
+                }
+                onClick={() => void claim()}
+              >
+                {t("desktop.ledger.assets.claim")}
+              </Button>
+            </WriteHold>
           </div>
         </div>
       )}
