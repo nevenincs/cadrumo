@@ -97,6 +97,24 @@ async function openReview(target: Page) {
   );
 }
 
+/** The result's title: its worst outcome and how many it holds. */
+const headline = (target: Page) =>
+  review(target).locator(".ledger-apply-headline");
+const titled = (kind: string, count: number) =>
+  `${label(`desktop.ledger.apply.tally.${kind}`)} · ${count}`;
+
+/** The grid's active cell holds the focus. */
+async function focusOnGrid(target: Page) {
+  await expect
+    .poll(() =>
+      target.evaluate(
+        () =>
+          document.activeElement?.closest(".ledger-page [role=grid]") !== null,
+      ),
+    )
+    .toBe(true);
+}
+
 async function save(target: Page) {
   await review(target).locator(".ledger-apply-save").click();
   await expect(review(target).locator(".ledger-apply-done")).toBeVisible({
@@ -168,8 +186,11 @@ test("the amount editor refuses what could be read two ways, echoing it, and sav
   await openReview(target);
   await save(target);
   // The product's single update refuses any but the shortest spelling.
-  await expect(review(target).locator("[data-outcome=applied]")).toHaveCount(1);
+  // Everything saved: the result says so once and lists nothing.
+  await expect(headline(target)).toHaveText(titled("applied", 1));
+  await expect(review(target).locator("[data-outcome]")).toHaveCount(0);
   await review(target).locator(".ledger-apply-done").click();
+  await focusOnGrid(target);
   await expect(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION")).toHaveCount(1);
   await expect(
     cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "amount"),
@@ -368,10 +389,7 @@ test("a paste of several rows is previewed, blanks change nothing, and an open q
   const preview = target.locator(".ledger-paste");
   await expect(preview).toBeVisible();
   await expect(preview).toContainText(
-    label("desktop.ledger.paste.description", {
-      rows: 4,
-      columns: label("desktop.ledger.column.counterparty"),
-    }),
+    label("desktop.ledger.paste.description", { rows: 4 }),
   );
   await expect(preview).toContainText(label("desktop.ledger.paste.blanks"));
   // Nothing is staged until Paste.
@@ -392,6 +410,43 @@ test("a paste of several rows is previewed, blanks change nothing, and an open q
     label("desktop.ledger.paste.refused_unclosed_quote"),
   );
   expect(await trayCount(target)).toBe(3);
+});
+
+test("a paste that changes nothing names its column and first refusal, and offers only Cancel", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await find(target, "farmacia nube");
+  const rows = dataRows(target);
+  await cellOf(rows.first(), "amount").click();
+  await paste(target, "Proyecto A\nProyecto B\nProyecto C");
+  const preview = target.locator(".ledger-paste");
+  await expect(preview.getByRole("heading")).toHaveText(
+    label("desktop.ledger.paste.title_into", {
+      columns: label("desktop.ledger.column.amount"),
+    }),
+  );
+  await expect(preview.locator(".ledger-paste-refusal")).toContainText(
+    `${label("desktop.ledger.column.amount")}: `,
+  );
+  await expect(preview.locator(".ledger-paste-refusal")).toContainText(
+    "Proyecto A",
+  );
+  await expect(preview.locator(".ledger-paste-apply")).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+  await expect(
+    preview.locator("[data-slot=dialog-footer]").getByRole("button", {
+      name: label("desktop.ledger.paste.cancel"),
+      exact: true,
+    }),
+  ).toBeFocused();
+  await target.keyboard.press("Escape");
+  await expect(preview).toHaveCount(0);
+  // Closing hands the focus back to the cell the paste went to.
+  await expect(cellOf(rows.first(), "amount")).toBeFocused();
+  await expect(tray(target)).toHaveCount(0);
 });
 
 test("fill down copies the top value, undo and redo step through it, and revert takes one cell back", async ({
@@ -573,6 +628,8 @@ test("an unknown write pauses every later write until a re-read says whether it 
   await ledgerControls.nextWrites(target, ["unknown"]);
   await save(target);
   await expect(review(target).locator("[data-outcome=unknown]")).toHaveCount(1);
+  // Titled by the worst outcome, never as nothing saved.
+  await expect(headline(target)).toHaveText(titled("unknown", 1));
   // The write after it was not sent.
   await expect(review(target).locator("[data-outcome=not_sent]")).toHaveCount(
     1,
@@ -592,6 +649,79 @@ test("an unknown write pauses every later write until a re-read says whether it 
     cellOf(rowOf(target, "PAPELERIA TRAZO"), "counterparty"),
   ).toHaveText("Trazo Papelería SL");
   expect(await trayCount(target)).toBe(1);
+});
+
+test("a write the read after it shows saved leaves the stage, and the re-read says it was saved", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await typeInto(
+    target,
+    cellOf(rowOf(target, "PAPELERIA TRAZO"), "counterparty"),
+    "Trazo Papelería SL",
+  );
+  await typeInto(
+    target,
+    cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "group_label"),
+    "Software",
+  );
+  await openReview(target);
+  await ledgerControls.nextWrites(target, ["unknown"]);
+  await save(target);
+  await review(target).locator(".ledger-apply-done").click();
+  await focusOnGrid(target);
+  // The scenario landed the write: no staged value stands equal to the
+  // stored one, while writes stay paused until the person re-reads.
+  const counterparty = cellOf(rowOf(target, "PAPELERIA TRAZO"), "counterparty");
+  await expect(counterparty).toHaveText("Trazo Papelería SL");
+  await expect(counterparty.locator("[data-staged]")).toHaveCount(0);
+  expect(await trayCount(target)).toBe(1);
+  const paused = page(target).locator(".ledger-paused");
+  await expect(paused).toContainText(label("desktop.ledger.paused.title"));
+  await paused.locator(".ledger-paused-reread").click();
+  await expect(page(target).locator(".ledger-findings")).toContainText(
+    label("desktop.ledger.paused.found_saved", {
+      movement: "PAPELERIA TRAZO",
+    }),
+  );
+  // The note stays until it is dismissed.
+  await expect(page(target).locator(".ledger-paused [role=alert]")).toHaveCount(
+    0,
+  );
+  expect(await trayCount(target)).toBe(1);
+});
+
+test("the review leads with its summary and folds the list of movements", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await typeInto(
+    target,
+    cellOf(rowOf(target, "PAPELERIA TRAZO"), "counterparty"),
+    "Trazo SL",
+  );
+  await typeInto(
+    target,
+    cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "counterparty"),
+    "SoftNube Ltd",
+  );
+  await openReview(target);
+  const list = review(target).locator(".ledger-review-rows");
+  await expect(list.locator(".ledger-review-rows-toggle")).toHaveText(
+    `${label("desktop.ledger.apply.summary_movements")} · 2`,
+  );
+  await expect(list.locator("[data-entry]")).toHaveCount(0);
+  // A summary row's "Show rows" opens the list on its movements.
+  await review(target)
+    .locator(".ledger-summary")
+    .getByRole("button", { name: label("desktop.ledger.apply.show_rows") })
+    .first()
+    .click();
+  await expect(list.locator("[data-entry]")).toHaveCount(1);
+  // A minute or less of single saves says no time.
+  await expect(review(target).locator(".ledger-review-summary")).toHaveText(
+    label("desktop.ledger.apply.one_by_one_quick", { count: 2 }),
+  );
 });
 
 test("a part refused whole saves nothing of it and keeps it staged", async ({
@@ -614,7 +744,22 @@ test("a part refused whole saves nothing of it and keeps it staged", async ({
   await expect(
     review(target).locator("[data-part=part][data-outcome=refused]"),
   ).toContainText(label("desktop.ledger.apply.part_refused"));
-  await expect(review(target).locator("[data-outcome=applied]")).toHaveCount(1);
+  await expect(headline(target)).toHaveText(titled("refused", 1));
+  // Only what did not save is listed; the saved one is counted.
+  await expect(review(target).locator("[data-outcome=applied]")).toHaveCount(0);
+  await expect(review(target).locator("[data-tally=applied]")).toContainText(
+    "1",
+  );
+  // The code is under Technical details only, and a re-read is offered.
+  await expect(review(target).locator(".ledger-outcomes")).not.toContainText(
+    "precondition_failed",
+  );
+  await expect(review(target).locator(".ledger-technical")).toContainText(
+    "precondition_failed",
+  );
+  await expect(
+    review(target).locator(".ledger-apply-refused-reread"),
+  ).toBeVisible();
   await review(target).locator(".ledger-apply-done").click();
   // Undo steps back through what did not save; the saved edit stays saved.
   expect(await trayCount(target)).toBe(1);
@@ -663,7 +808,7 @@ test("a movement changed elsewhere asks only where both changed the same field",
   await go.click();
   // Taking theirs dropped the staged change.
   await expect(review(target).locator(".ledger-review-summary")).toContainText(
-    label("desktop.ledger.apply.one_by_one", { count: 1, minutes: 1 }),
+    label("desktop.ledger.apply.one_by_one_quick", { count: 1 }),
   );
   await save(target);
   await review(target).locator(".ledger-apply-done").click();

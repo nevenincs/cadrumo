@@ -136,11 +136,27 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
+/**
+ * The dialog's actions. `sticky` keeps them in view at the foot of a
+ * dialog whose content scrolls inside it, over an edge the content passes
+ * under; a dialog that fits shows them as it would without.
+ */
+function DialogFooter({
+  className,
+  sticky = false,
+  ...props
+}: React.ComponentProps<"div"> & { sticky?: boolean }) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn("flex flex-wrap items-center justify-end gap-2", className)}
+      data-sticky={sticky || undefined}
+      className={cn(
+        "flex flex-wrap items-center justify-end gap-2",
+        // The surface's own padding is taken back so the bar meets its edges.
+        sticky &&
+          "sticky bottom-0 -mx-5 -mb-5 rounded-b-xl border-t border-border bg-card px-5 pt-3 pb-5",
+        className,
+      )}
       {...props}
     />
   );

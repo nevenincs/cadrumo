@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,7 +23,10 @@ import type {
   OutputLanguage,
 } from "../../../shell/ledger";
 import type { StepOutcome, StepReport } from "../../../shell/ledgerApply";
-import { classifyCells } from "../../../shell/ledgerCommands";
+import {
+  classifyCells,
+  takesExpenseCategory,
+} from "../../../shell/ledgerCommands";
 import { parsePercent } from "../../../shell/ledgerGrammar";
 import {
   planApply,
@@ -33,6 +36,7 @@ import {
 } from "../../../shell/ledgerPlan";
 import {
   actionRows,
+  effectiveFacts,
   storedFieldValue,
   type DraftField,
   type StageEvent,
@@ -69,6 +73,16 @@ type Apply = ReturnType<typeof useLedgerApply>;
 
 const minutesOf = (seconds: number) => Math.max(1, Math.round(seconds / 60));
 
+/** The outcomes worst first: the result is titled by the first it holds. */
+const WORST: readonly StepOutcome["kind"][] = [
+  "unknown",
+  "saved_unread",
+  "refused",
+  "not_sent",
+];
+/** Outcomes that saved: the result lists only the rest. */
+const SAVED = new Set<StepOutcome["kind"]>(["applied", "settled"]);
+
 /** A movement as the review names it. */
 function titleOf(
   t: Translate,
@@ -95,10 +109,12 @@ function planLine(t: Translate, plan: LedgerPlan, held: number): string {
       ? t("desktop.ledger.apply.together", { count: summary.together })
       : "",
     single
-      ? t("desktop.ledger.apply.one_by_one", {
-          count: single,
-          minutes: minutesOf(summary.seconds),
-        })
+      ? summary.seconds > 60
+        ? t("desktop.ledger.apply.one_by_one", {
+            count: single,
+            minutes: minutesOf(summary.seconds),
+          })
+        : t("desktop.ledger.apply.one_by_one_quick", { count: single })
       : "",
     summary.newMovements
       ? t("desktop.ledger.apply.new", { count: summary.newMovements })
@@ -220,6 +236,26 @@ function RuleApplies({
       ))}
     </section>
   );
+}
+
+/** The staged movements that would end Business or Mixed with a spending
+ * category on pure income, which no expense reads: the product's own
+ * missing-category rule, from the other side. */
+function incomeWithCategory(
+  content: StagedContent,
+  rows: ReadonlyMap<string, LedgerRow>,
+): string[] {
+  return Object.entries(content.rows).flatMap(([id, changes]) => {
+    const row = rows.get(id);
+    if (!row) return [];
+    const after = effectiveFacts(row, changes);
+    const classified =
+      after.business_classification === "BUSINESS" ||
+      after.business_classification === "MIXED";
+    return classified && after.category_id && !takesExpenseCategory(row)
+      ? [id]
+      : [];
+  });
 }
 
 // ---- Needs you first -------------------------------------------------------
@@ -936,11 +972,16 @@ function MovementList({
   only,
   onOnly,
   onDrop,
+  open,
+  onOpen,
 }: {
   entries: Entry[];
   only: string[] | null;
   onOnly: (ids: string[] | null) => void;
   onDrop: (entry: Entry) => void;
+  /** The list is folded behind its count until opened. */
+  open: boolean;
+  onOpen: (open: boolean) => void;
 }) {
   const t = useStrings();
   const [filter, setFilter] = useState("");
@@ -956,71 +997,83 @@ function MovementList({
       ),
   );
   return (
-    <section className="ledger-review-rows grid gap-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <Input
-          controlSize="sm"
-          className="w-field"
-          type="search"
-          aria-label={t("desktop.ledger.apply.filter")}
-          placeholder={t("desktop.ledger.apply.filter")}
-          value={filter}
-          onChange={(event) => setFilter(event.target.value)}
-        />
-        <span className="text-sm text-muted-foreground">
-          {t("desktop.ledger.apply.shown", {
-            shown: shown.length,
-            total: entries.length,
-          })}
-        </span>
-        {only !== null && (
-          <Button variant="link" size="xs" onClick={() => onOnly(null)}>
-            {t("desktop.ledger.apply.show_all")}
-          </Button>
-        )}
-      </div>
-      <WindowedList
-        label={t("desktop.ledger.apply.rows")}
-        className="max-h-72 rounded-md border border-border"
-        items={shown}
-        keyOf={(entry) => entry.key}
-        render={(entry) => (
-          <div
-            data-entry={entry.key}
-            className="flex h-14 items-center gap-2 border-b border-border px-3"
-          >
-            {entry.blocked ? (
-              <Icon name="alert" size="xs" className="shrink-0 text-warning" />
-            ) : entry.draft ? (
-              <Icon name="plus" size="xs" className="shrink-0" />
-            ) : (
-              <Icon
-                name="edit"
-                size="xs"
-                className="shrink-0 text-muted-foreground"
-              />
-            )}
-            <span className="grid min-w-0 flex-1">
-              <span className="truncate font-medium">{entry.title}</span>
-              <span className="truncate text-sm text-muted-foreground">
-                {entry.lines.join(" · ")}
-              </span>
-            </span>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              className="ledger-review-drop"
-              aria-label={t("desktop.ledger.apply.drop", {
-                movement: entry.title,
+    <details
+      className="ledger-review-rows grid gap-2"
+      open={open}
+      onToggle={(event) => onOpen(event.currentTarget.open)}
+    >
+      <summary className="ledger-review-rows-toggle flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground">
+        {`${t("desktop.ledger.apply.summary_movements")} · ${entries.length}`}
+        <Icon name={open ? "chevronDown" : "forward"} size="xs" />
+      </summary>
+      {open && (
+        <div className="mt-2 grid gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              controlSize="sm"
+              className="w-field"
+              type="search"
+              aria-label={t("desktop.ledger.apply.filter")}
+              placeholder={t("desktop.ledger.apply.filter")}
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            />
+            <span className="text-sm text-muted-foreground">
+              {t("desktop.ledger.apply.shown", {
+                shown: shown.length,
+                total: entries.length,
               })}
-              onClick={() => onDrop(entry)}
-            >
-              <Icon name="close" size="xs" />
-            </Button>
+            </span>
+            {only !== null && (
+              <Button variant="link" size="xs" onClick={() => onOnly(null)}>
+                {t("desktop.ledger.apply.show_all")}
+              </Button>
+            )}
           </div>
-        )}
-      />
-    </section>
+          <WindowedList
+            label={t("desktop.ledger.apply.rows")}
+            className="max-h-72 rounded-md border border-border"
+            items={shown}
+            keyOf={(entry) => entry.key}
+            render={(entry) => (
+              <div
+                data-entry={entry.key}
+                className="flex h-14 items-center gap-2 border-b border-border px-3"
+              >
+                {entry.blocked ? (
+                  <Icon
+                    name="alert"
+                    size="xs"
+                    className="shrink-0 text-warning"
+                  />
+                ) : (
+                  entry.draft && (
+                    <Icon name="plus" size="xs" className="shrink-0" />
+                  )
+                )}
+                <span className="grid min-w-0 flex-1">
+                  <span className="truncate font-medium">{entry.title}</span>
+                  <span className="truncate text-sm text-muted-foreground">
+                    {entry.lines.join(" · ")}
+                  </span>
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  className="ledger-review-drop"
+                  aria-label={t("desktop.ledger.apply.drop", {
+                    movement: entry.title,
+                  })}
+                  onClick={() => onDrop(entry)}
+                >
+                  <Icon name="close" size="xs" />
+                </Button>
+              </div>
+            )}
+          />
+        </div>
+      )}
+    </details>
   );
 }
 
@@ -1035,6 +1088,14 @@ const OUTCOME_ICONS: Record<StepOutcome["kind"], IconName> = {
   saved_unread: "unknown",
   not_sent: "pause",
 };
+
+/** The colour of an outcome's glyph. */
+function outcomeTone(kind: StepOutcome["kind"]): string | undefined {
+  if (kind === "refused") return "text-destructive";
+  if (kind === "unknown" || kind === "saved_unread") return "text-warning";
+  if (kind === "applied" || kind === "settled") return "text-success";
+  return undefined;
+}
 
 function stepTitle(
   t: Translate,
@@ -1072,6 +1133,21 @@ function stepTitle(
   }
 }
 
+/** Why a change was refused, in words; its code is under Technical
+ * details. */
+function refusalWords(
+  t: Translate,
+  outcome: Extract<StepOutcome, { kind: "refused" }>,
+): string {
+  if (outcome.reason === "precondition_failed")
+    return t("desktop.ledger.apply.refusal.changed_elsewhere");
+  return outcome.messages[0] ?? t("desktop.ledger.apply.refusal.other");
+}
+
+/** A refusal that a read of the ledger and a new review can resolve. */
+const changedElsewhere = (outcome: StepOutcome) =>
+  outcome.kind === "refused" && outcome.reason === "precondition_failed";
+
 function outcomeText(
   t: Translate,
   locale: string,
@@ -1099,7 +1175,7 @@ function outcomeText(
         : t("desktop.ledger.apply.outcome.settled");
     case "refused":
       return t("desktop.ledger.apply.outcome.refused", {
-        reason: outcome.messages[0] ?? outcome.reason ?? "",
+        reason: refusalWords(t, outcome),
       });
     case "unknown":
       return t("desktop.ledger.apply.outcome.unknown");
@@ -1110,20 +1186,24 @@ function outcomeText(
   }
 }
 
-function Outcomes({
-  reports,
-  rows,
-  fresh,
-  content,
-  locale,
-}: {
-  reports: readonly StepReport[];
-  rows: ReadonlyMap<string, LedgerRow>;
-  fresh: ReadonlyMap<string, LedgerRow> | null;
-  content: StagedContent;
-  locale: string;
-}) {
-  const t = useStrings();
+type OutcomeItem = {
+  key: string;
+  title: string;
+  outcome: StepOutcome;
+  note: string;
+  head?: string;
+};
+
+/** Every step's outcome, a bulk part's row by row unless the part ended
+ * whole. */
+function outcomeItems(
+  t: Translate,
+  locale: string,
+  reports: readonly StepReport[],
+  rows: ReadonlyMap<string, LedgerRow>,
+  fresh: ReadonlyMap<string, LedgerRow> | null,
+  content: StagedContent,
+): OutcomeItem[] {
   const storedOf = (
     id: string,
     fields: StageField[],
@@ -1133,13 +1213,7 @@ function Outcomes({
     if (!row || !field) return null;
     return { field, value: storedFieldValue(row, field) ?? null };
   };
-  const items: {
-    key: string;
-    title: string;
-    outcome: StepOutcome;
-    note: string;
-    head?: string;
-  }[] = [];
+  const items: OutcomeItem[] = [];
   for (const report of reports) {
     const step = report.step;
     if (step.kind === "bulk") {
@@ -1191,6 +1265,12 @@ function Outcomes({
       ),
     });
   }
+  return items;
+}
+
+function Outcomes({ items }: { items: readonly OutcomeItem[] }) {
+  const t = useStrings();
+  if (!items.length) return null;
   return (
     <WindowedList
       label={t("desktop.ledger.apply.outcomes")}
@@ -1206,16 +1286,7 @@ function Outcomes({
           <Icon
             name={OUTCOME_ICONS[item.outcome.kind]}
             size="xs"
-            className={cn(
-              "shrink-0",
-              item.outcome.kind === "refused" && "text-destructive",
-              (item.outcome.kind === "unknown" ||
-                item.outcome.kind === "saved_unread") &&
-                "text-warning",
-              (item.outcome.kind === "applied" ||
-                item.outcome.kind === "settled") &&
-                "text-success",
-            )}
+            className={cn("shrink-0", outcomeTone(item.outcome.kind))}
           />
           <span className="grid min-w-0 flex-1">
             <span className="truncate">{item.title}</span>
@@ -1247,6 +1318,7 @@ export function ReviewDialog({
   onStage,
   onShowRows,
   onGoToDraft,
+  onCloseAutoFocus,
 }: {
   apply: Apply;
   content: StagedContent;
@@ -1255,6 +1327,8 @@ export function ReviewDialog({
   onStage: (event: StageEvent) => void;
   onShowRows: (ids: string[]) => void;
   onGoToDraft: (key: string) => void;
+  /** Where the focus goes once the review has gone. */
+  onCloseAutoFocus?: (event: Event) => void;
 }) {
   const t = useStrings();
   const pause = useWritePause();
@@ -1266,6 +1340,7 @@ export function ReviewDialog({
   }, [state.phase]);
   const [ticks, setTicks] = useState<LinkTicks>({});
   const [only, setOnly] = useState<string[] | null>(null);
+  const [listOpen, setListOpen] = useState<boolean | null>(null);
   const [looked, setLooked] = useState(false);
   const [choices, setChoices] = useState<Record<string, "mine" | "theirs">>({});
   const rows =
@@ -1291,7 +1366,9 @@ export function ReviewDialog({
     if (!busy) apply.close();
   };
 
-  let title = t("desktop.ledger.apply.title", { count: tally.units });
+  let title: ReactNode = t("desktop.ledger.apply.title", {
+    count: tally.units,
+  });
   let description: ReactNode = null;
   let body: ReactNode = null;
   let footer: ReactNode = null;
@@ -1401,8 +1478,32 @@ export function ReviewDialog({
     const groups = changeGroups(content, rows);
     const entries = entriesOf(t, locale, content, plan, rows);
     description = planLine(t, plan, held);
+    const onIncome = incomeWithCategory(content, rows);
     body = (
       <div className="grid gap-5">
+        {onIncome.length > 0 && (
+          <ul className="ledger-review-mismatches flex flex-wrap items-center gap-1.5">
+            <li data-mismatch="income_category">
+              <Badge variant="warning">
+                {t("desktop.ledger.apply.mismatch.income_category", {
+                  count: onIncome.length,
+                })}
+              </Badge>
+            </li>
+            <li>
+              <Button
+                variant="link"
+                size="xs"
+                onClick={() => {
+                  setOnly(onIncome);
+                  setListOpen(true);
+                }}
+              >
+                {t("desktop.ledger.apply.show_rows")}
+              </Button>
+            </li>
+          </ul>
+        )}
         <NeedsYouFirst
           plan={plan}
           content={content}
@@ -1472,7 +1573,10 @@ export function ReviewDialog({
                       <Button
                         variant="link"
                         size="xs"
-                        onClick={() => setOnly(group.ids)}
+                        onClick={() => {
+                          setOnly(group.ids);
+                          setListOpen(true);
+                        }}
                       >
                         {t("desktop.ledger.apply.show_rows")}
                       </Button>
@@ -1495,6 +1599,9 @@ export function ReviewDialog({
           entries={entries}
           only={only}
           onOnly={setOnly}
+          // With no summary by kind the list is the summary: it starts open.
+          open={listOpen ?? groups.length === 0}
+          onOpen={setListOpen}
           onDrop={(entry) =>
             onStage(
               entry.draft
@@ -1570,41 +1677,65 @@ export function ReviewDialog({
           })}
         </p>
         <Outcomes
-          reports={state.reports}
-          rows={state.rows}
-          fresh={null}
-          content={content}
-          locale={locale}
+          items={outcomeItems(
+            t,
+            locale,
+            state.reports,
+            state.rows,
+            null,
+            content,
+          )}
         />
       </div>
     );
   } else if (state.phase === "done") {
     const counts = outcomeTally(state.report.steps);
     const saved = (counts.applied ?? 0) + (counts.settled ?? 0);
-    title =
-      saved === 0
-        ? t("desktop.ledger.apply.done_nothing")
-        : counts.refused || counts.unknown || counts.not_sent
-          ? t("desktop.ledger.apply.done_partly")
-          : t("desktop.ledger.apply.done");
-    description = t("desktop.ledger.apply.done_description");
+    // Titled by its worst outcome; "Saved" only where every part settled.
+    const worst = WORST.find((kind) => (counts[kind] ?? 0) > 0) ?? null;
+    const headline: StepOutcome["kind"] =
+      worst ?? (saved > 0 ? "applied" : "unchanged");
+    title = (
+      <span className="ledger-apply-headline flex items-center gap-2">
+        <Icon
+          name={OUTCOME_ICONS[headline]}
+          className={outcomeTone(headline)}
+        />
+        {`${t(`desktop.ledger.apply.tally.${headline}`)} · ${
+          worst ? counts[worst]! : saved || (counts.unchanged ?? 0)
+        }`}
+      </span>
+    );
+    const items = outcomeItems(
+      t,
+      locale,
+      state.report.steps,
+      state.rows,
+      state.fresh,
+      content,
+    );
+    const unsaved = items.filter((item) => !SAVED.has(item.outcome.kind));
+    const refusals = items.filter((item) => item.outcome.kind === "refused");
+    const kinds = Object.keys(counts).length;
     body = (
       <div className="grid gap-3">
-        <ul className="ledger-outcome-tally flex flex-wrap gap-x-4 gap-y-1 text-sm">
-          {(Object.entries(counts) as [StepOutcome["kind"], number][]).map(
-            ([kind, count]) => (
-              <li
-                key={kind}
-                data-tally={kind}
-                className="flex items-center gap-1.5"
-              >
-                <Icon name={OUTCOME_ICONS[kind]} size="xs" />
-                {t(`desktop.ledger.apply.tally.${kind}`)}
-                <span className="font-semibold tabular-nums">{count}</span>
-              </li>
-            ),
-          )}
-        </ul>
+        {kinds > 1 && (
+          <ul className="ledger-outcome-tally flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {(Object.entries(counts) as [StepOutcome["kind"], number][]).map(
+              ([kind, count]) => (
+                <li
+                  key={kind}
+                  data-tally={kind}
+                  className="flex items-center gap-1.5"
+                >
+                  <Icon name={OUTCOME_ICONS[kind]} size="xs" />
+                  {t(`desktop.ledger.apply.tally.${kind}`)}
+                  <span className="font-semibold tabular-nums">{count}</span>
+                </li>
+              ),
+            )}
+          </ul>
+        )}
         {state.report.paused && (
           <Alert
             tone="warning"
@@ -1612,22 +1743,31 @@ export function ReviewDialog({
             icon={<Icon name="unknown" />}
             className="ledger-apply-unknown"
           >
-            {state.report.steps.some(
-              (step) => step.outcome.kind === "unknown",
-            ) ? (
-              <>
-                <AlertTitle>
-                  {t("desktop.ledger.apply.unknown_title")}
-                </AlertTitle>
-                <AlertDescription>
-                  {t("desktop.ledger.apply.unknown_note")}
-                </AlertDescription>
-              </>
-            ) : (
-              <AlertTitle>
-                {t("desktop.ledger.apply.outcome.saved_unread")}
-              </AlertTitle>
-            )}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="min-w-0 flex-1">
+                {t(
+                  state.report.steps.some(
+                    (step) => step.outcome.kind === "unknown",
+                  )
+                    ? "desktop.ledger.apply.unknown_note"
+                    : "desktop.ledger.apply.outcome.saved_unread",
+                )}
+              </span>
+              {apply.paused && (
+                <Button
+                  size="xs"
+                  variant="outline"
+                  className="ledger-apply-reread shrink-0"
+                  onClick={() => {
+                    if (!pause.rereading) pause.reread();
+                  }}
+                  aria-disabled={pause.rereading || undefined}
+                >
+                  <Icon name="sync" />
+                  {t("desktop.ledger.paused.reread")}
+                </Button>
+              )}
+            </div>
           </Alert>
         )}
         {state.report.stopped && (
@@ -1635,35 +1775,40 @@ export function ReviewDialog({
             <AlertTitle>{t("desktop.ledger.apply.stopped")}</AlertTitle>
           </Alert>
         )}
-        <Outcomes
-          reports={state.report.steps}
-          rows={state.rows}
-          fresh={state.fresh}
-          content={content}
-          locale={locale}
-        />
+        <Outcomes items={unsaved} />
+        {refusals.length > 0 && (
+          <details className="ledger-technical text-sm">
+            <summary className="cursor-pointer text-muted-foreground">
+              {t("desktop.ledger.apply.technical")}
+            </summary>
+            <ul className="mt-2 grid gap-1 font-mono text-xs">
+              {refusals.map((item) => (
+                <li key={item.key}>
+                  {`${item.title} · ${
+                    item.outcome.kind === "refused"
+                      ? (item.outcome.reason ?? "refused")
+                      : ""
+                  }`}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </div>
     );
     footer = (
       <>
-        <span className="me-auto text-sm text-muted-foreground">
-          {apply.paused
-            ? t("desktop.ledger.apply.paused_footer")
-            : t("desktop.ledger.apply.checked_again")}
-        </span>
-        {apply.paused && (
-          <Button
-            variant="outline"
-            className="ledger-apply-reread"
-            onClick={() => {
-              if (!pause.rereading) pause.reread();
-            }}
-            aria-disabled={pause.rereading || undefined}
-          >
-            <Icon name="sync" />
-            {t("desktop.ledger.paused.reread")}
-          </Button>
-        )}
+        {!apply.paused &&
+          unsaved.some((item) => changedElsewhere(item.outcome)) && (
+            <Button
+              variant="outline"
+              className="ledger-apply-refused-reread"
+              onClick={() => void apply.open()}
+            >
+              <Icon name="sync" />
+              {t("desktop.ledger.paused.reread")}
+            </Button>
+          )}
         <Button className="ledger-apply-done" onClick={close}>
           {t("desktop.ledger.apply.close")}
         </Button>
@@ -1687,7 +1832,9 @@ export function ReviewDialog({
         onPointerDownOutside={(event) => {
           if (busy) event.preventDefault();
         }}
+        onCloseAutoFocus={onCloseAutoFocus}
         aria-busy={busy || undefined}
+        {...(description ? {} : { "aria-describedby": undefined })}
       >
         <DialogHeader>
           <DialogTitle ref={heading} tabIndex={-1}>
@@ -1700,7 +1847,7 @@ export function ReviewDialog({
           )}
         </DialogHeader>
         {body}
-        {footer && <DialogFooter>{footer}</DialogFooter>}
+        {footer && <DialogFooter sticky>{footer}</DialogFooter>}
       </DialogContent>
     </Dialog>
   );

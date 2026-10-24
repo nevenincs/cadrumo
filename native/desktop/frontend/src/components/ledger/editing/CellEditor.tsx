@@ -1,4 +1,5 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import type { EditorContext } from "@/components/ui/data-grid";
@@ -188,6 +189,27 @@ export function TypedEditor({
         <Icon name="alert" size="xs" className="mt-0.5 text-destructive" />
       )}
       {message}
+      {/* The refusal names the form it would take: one press uses it,
+          nothing is guessed silently. */}
+      {error?.suggestion && (
+        <Button
+          type="button"
+          variant="outline"
+          size="xs"
+          className="ledger-cell-suggestion shrink-0"
+          onPointerDown={(event) => event.preventDefault()}
+          onClick={() => {
+            const parsed = parseCell(kind, field, error.suggestion!, labels);
+            if (parsed.kind !== "value") return;
+            done.current = true;
+            context.commit({ kind: "value", value: parsed.value }, "enter");
+          }}
+        >
+          {t("desktop.ledger.edit.refusal.use", {
+            suggestion: error.suggestion,
+          })}
+        </Button>
+      )}
     </p>
   ) : null;
   return (

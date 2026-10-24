@@ -16,7 +16,7 @@ import {
   type MouseEvent,
   type ReactElement,
 } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import {
@@ -173,57 +173,65 @@ export function usePagePause({
   };
 }
 
-/** The page's banner: what waits and the re-read that settles it, then
- * what the re-read found. */
+/** The page's banner, in the Alert pattern with its one action at its end:
+ * what waits and the re-read that settles it, then what the re-read found
+ * until it is dismissed. */
 export function PausedBanner({ pause }: { pause: WritePause }) {
   const t = useStrings();
   if (pause.writes.length === 0 && !pause.findings) return null;
   const unknown = pause.writes.some((write) => write.outcome === "unknown");
   const names = [...new Set(pause.writes.map((write) => write.what))];
+  // The banner names the first; the rest are counted.
+  const named = names.length > 1 ? [names[0]!, `+${names.length - 1}`] : names;
   return (
     <div className="ledger-paused px-3 pt-3">
       {pause.writes.length > 0 ? (
-        <Alert
-          tone="warning"
-          role="alert"
-          icon={<Icon name="unknown" />}
-          className="flex flex-wrap items-center gap-2"
-        >
-          <AlertDescription className="flex-1">
-            {[
-              t(
-                unknown
-                  ? "desktop.ledger.paused.title"
-                  : "desktop.ledger.paused.saved_unread",
-              ),
-              ...names,
-            ].join(" · ")}
-          </AlertDescription>
-          <Button
-            size="sm"
-            className="ledger-paused-reread"
-            aria-disabled={pause.rereading || undefined}
-            onClick={() => {
-              if (!pause.rereading) pause.reread();
-            }}
-          >
-            <Icon name="sync" />
-            {t("desktop.ledger.paused.reread")}
-          </Button>
+        <Alert tone="warning" role="alert" icon={<Icon name="unknown" />}>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="min-w-0 flex-1" title={names.join(" · ")}>
+              {[
+                t(
+                  unknown
+                    ? "desktop.ledger.paused.title"
+                    : "desktop.ledger.paused.saved_unread",
+                ),
+                ...named,
+              ].join(" · ")}
+            </span>
+            <Button
+              size="xs"
+              variant="outline"
+              className="ledger-paused-reread shrink-0"
+              aria-disabled={pause.rereading || undefined}
+              onClick={() => {
+                if (!pause.rereading) pause.reread();
+              }}
+            >
+              <Icon name="sync" />
+              {t("desktop.ledger.paused.reread")}
+            </Button>
+          </div>
         </Alert>
       ) : (
         <Alert
           tone="neutral"
           role="status"
           icon={<Icon name="info" />}
-          className="ledger-findings flex flex-wrap items-center gap-2"
+          className="ledger-findings"
         >
-          <AlertDescription className="flex-1">
-            {(pause.findings ?? []).join(" · ")}
-          </AlertDescription>
-          <Button variant="ghost" size="sm" onClick={pause.dismissFindings}>
-            {t("desktop.ledger.paused.dismiss")}
-          </Button>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="min-w-0 flex-1">
+              {(pause.findings ?? []).join(" · ")}
+            </span>
+            <Button
+              variant="ghost"
+              size="xs"
+              className="shrink-0"
+              onClick={pause.dismissFindings}
+            >
+              {t("desktop.ledger.paused.dismiss")}
+            </Button>
+          </div>
         </Alert>
       )}
     </div>

@@ -49,6 +49,7 @@ export function useLedgerEditing({
   locale,
   pause,
   sealedOf,
+  returnFocus,
 }: {
   port: LedgerPort;
   period: LedgerPeriod | null;
@@ -67,6 +68,9 @@ export function useLedgerEditing({
   pause: WritePause;
   /** Which of `ids` a finalized declaration cites, read where not known. */
   sealedOf: (ids: readonly string[]) => Promise<ReadonlySet<string>>;
+  /** Puts the focus back on the grid's active cell: false where the page
+   * draws no grid. */
+  returnFocus?: () => boolean;
 }) {
   const content = stage.content;
   const tally = useMemo(() => stageTally(content), [content]);
@@ -133,10 +137,28 @@ export function useLedgerEditing({
     locale,
   });
 
+  // The review mounts only while open, so it has no trigger to hand the
+  // focus back to: it goes to the grid's active cell, or else to what had
+  // it when the review opened.
+  const reviewOpener = useRef<HTMLElement | null>(null);
   const openReview = useCallback(() => {
     if (apply.paused || tally.units === 0) return;
+    reviewOpener.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     void apply.open();
   }, [apply, tally.units]);
+  const returnReviewFocus = (event: Event) => {
+    event.preventDefault();
+    const opener = reviewOpener.current;
+    reviewOpener.current = null;
+    // What the review led to, such as showing rows, keeps the focus.
+    const active = document.activeElement;
+    if (active !== null && active !== document.body) return;
+    if (returnFocus?.()) return;
+    if (opener?.isConnected) opener.focus();
+  };
 
   const addDraft = useCallback(() => {
     const draft = newDraft();
@@ -195,6 +217,7 @@ export function useLedgerEditing({
             apply.close();
             onGoToDraft(key);
           }}
+          onCloseAutoFocus={returnReviewFocus}
         />
       )}
       {leaving && (

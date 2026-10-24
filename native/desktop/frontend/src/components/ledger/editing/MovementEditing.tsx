@@ -764,6 +764,13 @@ export function useMovementEditing(input: MovementEditingInput) {
     grid.current?.focusCell(focusDraft, "date");
   }, [focusDraft, drafts, drawnRows, grid, onDraftFocused]);
 
+  // The grid opened these dialogs: closing one hands the focus back to its
+  // active cell.
+  const backToGrid = (event: Event) => {
+    event.preventDefault();
+    const at = grid.current?.activeCell();
+    if (at?.key) grid.current?.focusCell(at.key, at.column);
+  };
   const dialogs = (
     <>
       {paste && (
@@ -774,6 +781,7 @@ export function useMovementEditing(input: MovementEditingInput) {
           )}
           singleWrites={paste.singleWrites}
           onCancel={() => setPaste(null)}
+          onCloseAutoFocus={backToGrid}
           onPaste={() => {
             const plan = paste.plan;
             setPaste(null);
@@ -786,6 +794,7 @@ export function useMovementEditing(input: MovementEditingInput) {
           singleWrites={cost.singleWrites}
           seconds={cost.seconds}
           onCancel={() => setCost(null)}
+          onCloseAutoFocus={backToGrid}
           onStage={() => {
             const found = cost;
             setCost(null);

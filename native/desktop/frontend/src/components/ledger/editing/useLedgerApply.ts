@@ -304,19 +304,32 @@ export function useLedgerApply({
   /** Reads the ledger after an unknown outcome and says, movement by
    * movement, whether the write saved. What saved leaves the stage; the
    * rest stays staged. Null while the ledger could not be read. */
+  /** Drops from the stage what `step` was found to have saved on `id`:
+   * staged again, it would be a change to the value already stored. */
+  const dropSaved = useCallback(
+    (step: PlanStep, id: string) => {
+      for (const field of stepFields(step).get(id) ?? [])
+        dispatch({ type: "revert_cell", id, field });
+      if (step.kind === "action" || step.kind === "answer")
+        dispatch({ type: "drop_action", id: step.action.id });
+    },
+    [dispatch],
+  );
+
   const settle = useCallback(
-    async (step: PlanStep, staged: StagedContent): Promise<string[] | null> => {
+    async (
+      step: PlanStep,
+      staged: StagedContent,
+      seen: ReadonlySet<string>,
+    ): Promise<string[] | null> => {
       const answer = await readStaged(port, period, staged, read());
       if (answer.kind === "failed") return null;
       const found = resolveUnknown(step, staged, answer.rows);
-      const saved = stepFields(step);
-      for (const [id, resolution] of found) {
-        if (resolution !== "saved") continue;
-        for (const field of saved.get(id) ?? [])
-          dispatch({ type: "revert_cell", id, field });
-        if (step.kind === "action" || step.kind === "answer")
-          dispatch({ type: "drop_action", id: step.action.id });
-      }
+      // What the read after the apply saw saved was saved, whatever changed
+      // it since.
+      for (const id of seen) found.set(id, "saved");
+      for (const [id, resolution] of found)
+        if (resolution === "saved") dropSaved(step, id);
       rebase(answer.rows);
       // A rules apply is keyed by its action, which is worded.
       const nameOf = (id: string) => {
@@ -331,7 +344,7 @@ export function useLedgerApply({
         }),
       );
     },
-    [port, period, read, dispatch, rebase, t, locale],
+    [port, period, read, dropSaved, rebase, t, locale],
   );
 
   const apply = useCallback(
@@ -356,6 +369,7 @@ export function useLedgerApply({
           step.outcome.kind === "unknown" ||
           step.outcome.kind === "saved_unread",
       );
+      const seen = new Set<string>();
       if (report.paused && unobserved) {
         const step = unobserved.step;
         pause.hold({
@@ -364,13 +378,26 @@ export function useLedgerApply({
             unobserved.outcome.kind === "saved_unread"
               ? "saved_unread"
               : "unknown",
-          settle: () => settle(step, staged),
+          settle: () => settle(step, staged, seen),
         });
       }
       // What was unchanged is shown as stored, read again.
       const after = await readWindow(port, period);
       const fresh = after.kind === "read" ? rowsById(after.rows) : null;
       if (fresh) await readMissing(port, report.reread, fresh, rows);
+      // A held write this read already shows saved leaves the stage now, so
+      // no staged value stands equal to the stored one. Writes stay paused
+      // until the person's re-read, which reports it as saved.
+      if (report.paused && unobserved && fresh)
+        for (const [id, resolution] of resolveUnknown(
+          unobserved.step,
+          staged,
+          fresh,
+        ))
+          if (resolution === "saved") {
+            seen.add(id);
+            dropSaved(unobserved.step, id);
+          }
       setState({
         phase: "done",
         plan,
@@ -381,7 +408,18 @@ export function useLedgerApply({
       });
       afterApply(report, fresh ?? rows);
     },
-    [state, paused, port, period, dispatch, afterApply, pause, t, settle],
+    [
+      state,
+      paused,
+      port,
+      period,
+      dispatch,
+      afterApply,
+      pause,
+      t,
+      settle,
+      dropSaved,
+    ],
   );
 
   return {
