@@ -11,7 +11,10 @@ import type { SetupRow } from "../../ipc/contract";
 import { useStrings } from "../../shell/strings";
 
 /** What a feature that could not run needs: the item by name, its state said
- * once by the host's sentence, and the way into setting it up. */
+ * once by the host's sentence, and the row's own action when it has one. A
+ * row with none, such as one this build or this computer cannot set up, says
+ * its sentence and offers only to close: no button leads to a setup that
+ * would refuse. */
 export function SetupPrompt({
   row,
   takeFocus = true,
@@ -40,12 +43,20 @@ export function SetupPrompt({
             <DialogDescription>{row.sentence}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={onClose}>
-              {t("desktop.setup.not_now")}
-            </Button>
-            <Button size="sm" onClick={() => onSetUp(row)}>
-              {row.action_label ?? t("desktop.setup.open")}
-            </Button>
+            {row.recovery === null ? (
+              <Button size="sm" onClick={onClose}>
+                {t("desktop.setup.close")}
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" onClick={onClose}>
+                  {t("desktop.setup.not_now")}
+                </Button>
+                <Button size="sm" onClick={() => onSetUp(row)}>
+                  {row.action_label ?? t("desktop.setup.open")}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       )}

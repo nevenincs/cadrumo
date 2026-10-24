@@ -150,6 +150,32 @@ test("where setup cannot change what is missing, nothing is offered", async ({
   await expect(section(target).locator(".setup-offer")).toHaveCount(0);
 });
 
+test("a scan refused for a local AI this computer cannot set up says why and offers no setup", async ({
+  page: target,
+}) => {
+  // The refusal still names the local AI's setup, but its row is blocked:
+  // the prompt says the row's own sentence and offers only to close.
+  await openDocuments(target, "hardware");
+  await choose(target, PLENOIL);
+  await draft(target)
+    .getByRole("button", { name: label("desktop.ledger.documents.read_again") })
+    .click();
+  const shown = prompt(target);
+  await expect(shown).toBeVisible();
+  await expect(shown).toContainText(
+    "This computer does not have enough memory for this.",
+  );
+  await expect(shown.getByRole("button")).toHaveText([
+    label("desktop.setup.close"),
+  ]);
+  await shown
+    .getByRole("button", { name: label("desktop.setup.close"), exact: true })
+    .click();
+  await expect(shown).toBeHidden();
+  // Beside the refusal, nothing offers the setup either.
+  await expect(draft(target).locator(".setup-offer")).toHaveCount(0);
+});
+
 test("a reader held back by memory offers no setup, though the local AI is not set up", async ({
   page: target,
 }) => {

@@ -571,7 +571,7 @@ test("Copy details puts the report on the clipboard", async ({
   ).toBeVisible();
 });
 
-test("asking for an item this computer cannot set up says why once and leads to setup", async ({
+test("asking for an item this computer cannot set up says why once and offers only to close", async ({
   page: target,
 }) => {
   await open(target, "hardware");
@@ -586,8 +586,12 @@ test("asking for an item this computer cannot set up says why once and leads to 
   await expect(prompt).toContainText(sentence);
   expect((await prompt.innerText()).split(sentence).length - 1).toBe(1);
   await noInternalWords(target);
+  // Setup cannot change this row, so no button leads into it.
+  await expect(prompt.getByRole("button")).toHaveText([
+    label("desktop.setup.close"),
+  ]);
   await prompt
-    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .getByRole("button", { name: label("desktop.setup.close"), exact: true })
     .click();
   await expect(prompt).toBeHidden();
 });
