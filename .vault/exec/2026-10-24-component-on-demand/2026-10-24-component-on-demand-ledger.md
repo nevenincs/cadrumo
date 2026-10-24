@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:b199bf83b109e8e5b8bfda300d909ed2270c0eef379c71d12b31ee6d7b07aaf4'
+body_hash: 'sha256:b36a09be9b9c6989ac4bb455c99fb2e22e6965f463d1a124c22598dab1b3b83d'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -291,6 +291,58 @@ related:
 - `S06` `M` `src/cadrumo/locales/es/cli.yml`
 - `S06` `M` `src/cadrumo/locales/hu/cli.yml`
 - `S06` `verify:` `CLI batch suites (10, 8)` -> `pass`
+- `S03` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S03` `M` `src/cadrumo/application/ledger/import_operation.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/ledger_import_commands.py`
+- `S03` `A` `src/cadrumo/entrypoints/tests/test_ledger_import_reader_refusal_settlement.py`
+- `S03` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S03` `M` `src/cadrumo/locales/ca/common.yml`
+- `S03` `M` `src/cadrumo/locales/en/cli.yml`
+- `S03` `M` `src/cadrumo/locales/en/common.yml`
+- `S03` `M` `src/cadrumo/locales/es/cli.yml`
+- `S03` `M` `src/cadrumo/locales/es/common.yml`
+- `S03` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S03` `M` `src/cadrumo/locales/hu/common.yml`
+- `S03` `M` `src/cadrumo/locales/ca/common.yml`
+- `S03` `M` `src/cadrumo/locales/en/common.yml`
+- `S03` `M` `src/cadrumo/locales/es/common.yml`
+- `S03` `M` `src/cadrumo/locales/hu/common.yml`
+- `S03` `M` `src/cadrumo/entrypoints/cli/ledger_import_commands.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/test_ledger_import_reader_refusal_settlement.py`
+- `S03` `verify:` `import reader refusal settlement through the real supervisor, CSV and PDF lanes, with CLI rendering (3; 2 fail without the fix)` -> `pass`
+- `S13` `M` `src/cadrumo/application/ledger/import_operation.py`
+- `S13` `verify:` `PDF statement lane settlement (part of the S03 correction tests)` -> `pass`
+- `S10` `M` `src/cadrumo/application/invoices/catalogue_intake_operation.py`
+- `S10` `A` `src/cadrumo/entrypoints/tests/test_invoice_import_reader_refusal_settlement.py`
+- `S10` `verify:` `invoice import refusal settlement (1; fails without the fix), covering suites (323)` -> `pass`
+- `S02` `A` `src/cadrumo/application/ledger/tests/test_vision_reader_failure_attribution.py`
+- `S02` `M` `src/cadrumo/application/ledger/confirmation_gate.py`
+- `S02` `M` `src/cadrumo/application/ledger/invoice_evidence_confirm_operation.py`
+- `S02` `A` `src/cadrumo/application/ledger/tests/test_confirmation_blocked_published_detail.py`
+- `S02` `M` `src/cadrumo/core/errors/error_codes.py`
+- `S02` `M` `src/cadrumo/core/errors/hierarchy.py`
+- `S02` `A` `src/cadrumo/entrypoints/tests/test_evidence_confirm_reader_refusal_settlement.py`
+- `S02` `verify:` `vision reader failure attribution (3), confirm published detail and reader refusal settlement (4), covering suites (851)` -> `pass`
+- `S09` `A` `src/cadrumo/entrypoints/tests/dependency_operation_gating_support.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_dependency_consumer_gating.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_dependency_consumer_gating.py`
+- `S09` `M` `docs/reference/environment-overrides.md`
+- `S09` `M` `env/.env.example`
+- `S09` `M` `src/cadrumo/adapters/outbound/llm/supply_nature_proposal.py`
+- `S09` `A` `src/cadrumo/adapters/outbound/llm/tests/test_supply_nature_model_resolution.py`
+- `S09` `M` `src/cadrumo/application/local_reader.py`
+- `S09` `M` `src/cadrumo/application/provisioning_runtime.py`
+- `S09` `M` `src/cadrumo/application/tests/test_provisioning_hardware_contention.py`
+- `S09` `A` `src/cadrumo/application/tests/test_supply_nature_model_setting.py`
+- `S09` `M` `src/cadrumo/core/config_runtime_fields.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_dependency_consumer_gating.py`
+- `S09` `verify:` `consumer gating gate with operation rows (36), twice under -n 6` -> `pass`
+- `S04` `M` `src/cadrumo/application/provisioning_browser.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_component_setup_refusal_text.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/aeat/browser/errors.py`
+- `S04` `M` `src/cadrumo/core/errors/registry/_adapters_part1.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/test_dependency_consumer_gating.py`
+- `S04` `verify:` `browser refusal and setup refusal text suites (87, 186; 2 live-only AEAT tests need CADRUMO_LIVE_TESTS_ENABLED)` -> `pass`
 
 ## Notes
 
@@ -309,3 +361,9 @@ related:
 - `S07` review corrections batch-pause-not-routed, setup-offered-when-blocked and tui-label-fallback-no-action: setup is offered only when the item's quick-status row can act; a blocked row shows its own sentence
 - `S08` review corrections batch-pause-not-routed and setup-offered-when-blocked, plus the `reader_unavailable` import refusal; the blocked-row prompt shows only Close
 - `S06` review correction batch-cli-raw-facts: batch-pause text prints the local AI sentence and the row-gated setup line, JSON unchanged
+- `S03` review correction import-reader-refusal-swallowed: file refusals carry reason `reader_unavailable` and the verdict; 5114c62fb5 alone leaves common.yml unparseable, cf3a33b412 repairs it
+- `S13` review correction import-reader-refusal-swallowed also covers the PDF statement refusal S13 added
+- `S10` review correction invoice-import-detail-unpublished
+- `S02` review corrections off-host-read-misattributed and confirm-detail-unpublished: blocker explanations stay in process
+- `S09` review correction gate-stops-at-consumer and the supply-nature row flake: operation drives through the real supervisor, a declared operation set with coverage checks, and an operator supply-nature model setting the gate pins
+- `S04` review corrections verdict-paths-published and browser-code-key-mismatch: `REFUSED_BROWSER_NOT_USABLE`
