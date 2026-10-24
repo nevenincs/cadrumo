@@ -157,7 +157,9 @@ function Combobox({
           className="min-h-0"
           onKeyDownCapture={(event) => {
             const how = commitKeyOf(event);
-            if (how === "enter") pressed.current = "enter";
+            // Only the press that chooses an option names how it was chosen:
+            // an Enter on an empty list is forgotten at the next key.
+            pressed.current = how === "enter" ? "enter" : null;
             if (how !== "tab" && how !== "shift-tab") return;
             event.preventDefault();
             event.stopPropagation();
@@ -200,6 +202,9 @@ function Combobox({
                     value={option.value}
                     keywords={[option.label, option.note ?? ""]}
                     disabled={option.disabled}
+                    onPointerDown={() => {
+                      pressed.current = null;
+                    }}
                     onSelect={(chosen) => {
                       const via = pressed.current ?? "pointer";
                       pressed.current = null;

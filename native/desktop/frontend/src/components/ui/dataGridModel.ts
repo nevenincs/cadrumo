@@ -251,6 +251,25 @@ export function selectAll(order: readonly string[]): Set<string> {
   return new Set(order);
 }
 
+/**
+ * The header checkbox's choice. Alone it makes the rows in view the whole
+ * selection, or clears it when they all are; with `add` it puts the rows in
+ * view into the selection, or takes them out, and keeps the rest.
+ */
+export function headerSelection(
+  order: readonly string[],
+  selected: ReadonlySet<string>,
+  add: boolean,
+): Set<string> {
+  const every = selectionExtent(order, selected) === "all";
+  if (!add) return every ? new Set() : selectAll(order);
+  const next = new Set(selected);
+  for (const key of order)
+    if (every) next.delete(key);
+    else next.add(key);
+  return next;
+}
+
 /** Whether none, some or every row of `order` is selected. */
 export function selectionExtent(
   order: readonly string[],
@@ -360,6 +379,7 @@ export type KeyPress = {
   shiftKey: boolean;
   altKey: boolean;
   isComposing?: boolean;
+  getModifierState?: (key: "AltGraph") => boolean;
 };
 
 const platform =
@@ -382,7 +402,10 @@ export type Modifiers = {
  * primary modifier is Command on Apple systems and Control elsewhere, and
  * the other one of the pair must be up.
  */
-export function exactly(press: KeyPress, wanted: Modifiers = {}): boolean {
+export function exactly(
+  press: Pick<KeyPress, "ctrlKey" | "metaKey" | "shiftKey" | "altKey">,
+  wanted: Modifiers = {},
+): boolean {
   const primary = APPLE ? press.metaKey : press.ctrlKey;
   const other = APPLE ? press.ctrlKey : press.metaKey;
   return (
@@ -393,54 +416,28 @@ export function exactly(press: KeyPress, wanted: Modifiers = {}): boolean {
   );
 }
 
-// The chords the shell owns, by physical key: the grid never takes them,
-// even where it has a use for the same letter.
-const SHELL_PRIMARY = new Set(["KeyK", "KeyP", "Comma"]);
-const SHELL_PRIMARY_SHIFT = new Set([
-  "KeyA",
-  "KeyT",
-  "KeyH",
-  "KeyM",
-  "KeyL",
-  "KeyD",
-  "KeyK",
-  "Digit1",
-  "Digit2",
-  "Digit3",
-]);
-
-/** Whether a press is a chord the shell owns. */
-export function isShellChord(press: KeyPress): boolean {
-  if (press.code === "F6" && !press.ctrlKey && !press.metaKey && !press.altKey)
-    return true;
-  if (
-    press.code === "Backquote" &&
-    press.ctrlKey &&
-    !press.metaKey &&
-    !press.shiftKey &&
-    !press.altKey
-  )
-    return true;
-  if (exactly(press, { primary: true }) && SHELL_PRIMARY.has(press.code))
-    return true;
-  return (
-    exactly(press, { primary: true, shift: true }) &&
-    SHELL_PRIMARY_SHIFT.has(press.code)
-  );
+/** The character a key gives unshifted on a US layout, for a letter or digit. */
+function ownCharacter(code: string): string | null {
+  const letter = /^Key([A-Z])$/.exec(code);
+  if (letter) return letter[1]!.toLowerCase();
+  const digit = /^Digit([0-9])$/.exec(code);
+  return digit ? digit[1]! : null;
 }
 
 /**
  * Whether a press types a character, which opens a cell's editor seeded
  * with it. Space is left out: it toggles the row's selection. A character
- * typed with AltGr arrives with Control and Alt both down on Windows.
+ * typed with AltGr arrives with Control and Alt both down on Windows; a
+ * Ctrl+Alt press that gives the key's own letter is a chord, not text.
  */
 export function isPrintable(press: KeyPress): boolean {
   if (press.isComposing || press.key.length !== 1 || press.key === " ")
     return false;
   if (press.metaKey) return false;
-  if (press.ctrlKey || press.altKey)
-    return !APPLE && press.ctrlKey && press.altKey;
-  return true;
+  if (!press.ctrlKey && !press.altKey) return true;
+  if (APPLE || !press.ctrlKey || !press.altKey) return false;
+  if (press.getModifierState?.("AltGraph")) return true;
+  return press.key.toLowerCase() !== ownCharacter(press.code);
 }
 
 /** How a value left its editor: by Enter, by Tab one way or the other, or

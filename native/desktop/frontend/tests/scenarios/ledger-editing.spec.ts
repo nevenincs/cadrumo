@@ -720,13 +720,21 @@ test("the tray counts movements, new movements and actions on every section", as
   expect(await trayCount(target)).toBe(2);
 });
 
-test("a cell editor never takes a shell chord", async ({ page: target }) => {
+test("neither the grid nor a cell editor takes a shell chord", async ({
+  page: target,
+}) => {
   await openLedger(target);
+  const palette = target.locator(".palette");
+  await cellOf(rowOf(target, "PAPELERIA TRAZO"), "counterparty").click();
+  await target.keyboard.press("Control+KeyK");
+  await expect(palette).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(palette).toBeHidden();
   await cellOf(rowOf(target, "PAPELERIA TRAZO"), "counterparty").click();
   await target.keyboard.press("Enter");
   await expect(editor(target)).toBeVisible();
   await target.keyboard.press("Control+KeyK");
-  await expect(target.locator(".palette")).toBeVisible();
+  await expect(palette).toBeVisible();
 });
 
 async function audit(target: Page) {

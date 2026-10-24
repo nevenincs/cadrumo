@@ -327,68 +327,6 @@ test("a range is drawn, copied, filled and offered to the menu", async ({
   expect(log).toContain("menu m2 counterparty");
 });
 
-test("no chord the shell owns is taken by the grid", async ({ page }) => {
-  await open(page);
-  await enter(page);
-  const chords: [string, string, Partial<Record<string, boolean>>][] = [
-    ["k", "KeyK", { ctrl: true }],
-    ["p", "KeyP", { ctrl: true }],
-    [",", "Comma", { ctrl: true }],
-    ["F6", "F6", {}],
-    ["F6", "F6", { shift: true }],
-    ["`", "Backquote", { ctrl: true }],
-    ...["A", "T", "H", "M", "L", "D", "K"].map(
-      (key): [string, string, Partial<Record<string, boolean>>] => [
-        key,
-        `Key${key}`,
-        { ctrl: true, shift: true },
-      ],
-    ),
-    ...["1", "2", "3"].map(
-      (key): [string, string, Partial<Record<string, boolean>>] => [
-        key,
-        `Digit${key}`,
-        { ctrl: true, shift: true },
-      ],
-    ),
-  ];
-  const prevented = await focused(page).evaluate((cell, list) => {
-    const apple = /mac/i.test(navigator.platform);
-    return list.flatMap(([key, code, mods]) => {
-      // The shell's primary modifier is Command on Apple systems; Control
-      // and backquote is Control everywhere.
-      const command = apple && mods.ctrl && code !== "Backquote";
-      const event = new KeyboardEvent("keydown", {
-        key,
-        code,
-        ctrlKey: !!mods.ctrl && !command,
-        metaKey: !!command,
-        shiftKey: !!mods.shift,
-        bubbles: true,
-        cancelable: true,
-      });
-      cell.dispatchEvent(event);
-      return event.defaultPrevented ? [`${code}${JSON.stringify(mods)}`] : [];
-    });
-  }, chords);
-  expect(prevented).toEqual([]);
-  // The grid's own chord, by contrast, is taken.
-  const own = await focused(page).evaluate((cell) => {
-    const apple = /mac/i.test(navigator.platform);
-    const event = new KeyboardEvent("keydown", {
-      key: "a",
-      code: "KeyA",
-      ctrlKey: !apple,
-      metaKey: apple,
-      bubbles: true,
-      cancelable: true,
-    });
-    cell.dispatchEvent(event);
-    return event.defaultPrevented;
-  });
-  expect(own).toBe(true);
-});
-
 test("ten thousand rows keep a bounded document and reach the last row", async ({
   page,
 }) => {

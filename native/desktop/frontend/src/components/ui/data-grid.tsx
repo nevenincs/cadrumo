@@ -16,9 +16,9 @@ import {
   dropColumn,
   edgeRow,
   exactly,
+  headerSelection,
   inBox,
   isPrintable,
-  isShellChord,
   lengthPx,
   MIN_COLUMN_REM,
   nextRow,
@@ -216,7 +216,8 @@ const DRAG_SLOP_REM = 0.25;
 const GridSelectionContext = React.createContext<{
   isSelected: (key: string) => boolean;
   toggle: (key: string, range: boolean) => void;
-  toggleAll: () => void;
+  /** The visible rows become the selection, or with `add` join it. */
+  toggleAll: (add: boolean) => void;
   extent: "none" | "some" | "all";
 } | null>(null);
 
@@ -366,6 +367,10 @@ function DataGrid<R>({
   const dataKeys = React.useMemo(
     () => rows.flatMap((row) => (row.kind === "data" ? [row.key] : [])),
     [rows],
+  );
+  const dataOrdinal = React.useMemo(
+    () => new Map(dataKeys.map((key, at) => [key, at])),
+    [dataKeys],
   );
   const editable = ordered.some((column) => column.editor);
 
@@ -638,7 +643,12 @@ function DataGrid<R>({
     const at = index.get(cell.key);
     const row = at === undefined ? undefined : rows[at];
     if (at === undefined || !row) return text;
-    const parts = [positionLabel(at + 1, rows.length)];
+    // The position counts movements, not the section rows between them.
+    const ordinal = row.kind === "data" ? dataOrdinal.get(row.key) : undefined;
+    const parts =
+      ordinal === undefined
+        ? []
+        : [positionLabel(ordinal + 1, dataKeys.length)];
     const column = ordered.find((entry) => entry.id === cell.column);
     if (row.kind === "data" && column) parts.push(columnLabel(column));
     if (text) parts.push(text);
@@ -719,11 +729,9 @@ function DataGrid<R>({
                 onSelectionChange(toggleKey(selection, key), "toggle");
               }
             },
-            toggleAll: () =>
+            toggleAll: (add: boolean) =>
               onSelectionChange?.(
-                selectionExtent(dataKeys, selection) === "all"
-                  ? new Set()
-                  : selectAll(dataKeys),
+                headerSelection(dataKeys, selection, add),
                 "all",
               ),
             extent: selectionExtent(dataKeys, selection),
@@ -1064,7 +1072,6 @@ function DataGrid<R>({
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (editing || event.defaultPrevented || event.nativeEvent.isComposing)
       return;
-    if (isShellChord(event)) return;
     const target = event.target as HTMLElement;
     // A field inside a cell keeps its own keys.
     if (target.closest("input, textarea, select, [contenteditable=true]"))
@@ -1814,6 +1821,8 @@ function DataGridRowCheckbox({
 function DataGridSelectAll({ label }: { label: string }) {
   const grid = React.useContext(GridSelectionContext);
   const box = React.useRef<HTMLInputElement>(null);
+  // The change event carries no modifiers; the click before it does.
+  const adding = React.useRef(false);
   React.useEffect(() => {
     if (box.current) box.current.indeterminate = grid?.extent === "some";
   }, [grid?.extent]);
@@ -1824,8 +1833,14 @@ function DataGridSelectAll({ label }: { label: string }) {
       tabIndex={-1}
       aria-label={label}
       checked={grid.extent === "all"}
-      onClick={(event) => event.stopPropagation()}
-      onChange={() => grid.toggleAll()}
+      onClick={(event) => {
+        event.stopPropagation();
+        adding.current = exactly(event, { primary: true });
+      }}
+      onChange={() => {
+        grid.toggleAll(adding.current);
+        adding.current = false;
+      }}
     />
   );
 }

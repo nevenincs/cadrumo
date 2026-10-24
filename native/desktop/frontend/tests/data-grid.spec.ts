@@ -8,9 +8,9 @@ import {
   dropColumn,
   edgeRow,
   exactly,
+  headerSelection,
   inBox,
   isPrintable,
-  isShellChord,
   lengthPx,
   nextRow,
   prefixSums,
@@ -186,6 +186,26 @@ test("row selection: one alone, one toggled, a span from the anchor, or all", ()
   expect([...selectAll(order)]).toEqual(order);
 });
 
+test("the header box replaces the selection with the rows in view, or adds them to it", () => {
+  const view = ["a", "b"];
+  const sorted = (set: Set<string>) => [...set].sort();
+  // Alone: the rows in view become the selection, hidden ones are dropped.
+  expect(sorted(headerSelection(view, new Set(["hidden"]), false))).toEqual([
+    "a",
+    "b",
+  ]);
+  expect(sorted(headerSelection(view, new Set(["a", "b"]), false))).toEqual([]);
+  // With the modifier: the rows in view join the selection, or leave it.
+  expect(sorted(headerSelection(view, new Set(["hidden"]), true))).toEqual([
+    "a",
+    "b",
+    "hidden",
+  ]);
+  expect(
+    sorted(headerSelection(view, new Set(["a", "b", "hidden"]), true)),
+  ).toEqual(["hidden"]);
+});
+
 test("the selection's extent is none, some or all of the rows in view", () => {
   const order = ["a", "b"];
   expect(selectionExtent(order, new Set())).toBe("none");
@@ -236,36 +256,6 @@ test("columns move one place at a time, or to a drop target, within their group"
   expect(dropColumn(columns, "a", "a")).toBeNull();
 });
 
-test("every chord the shell owns is recognised, and the grid's own are not", () => {
-  const shell = [
-    press("k", "KeyK", primary),
-    press("p", "KeyP", primary),
-    press(",", "Comma", primary),
-    press("F6", "F6"),
-    press("F6", "F6", { shiftKey: true }),
-    press("`", "Backquote", { ctrlKey: true }),
-    ...["KeyA", "KeyT", "KeyH", "KeyM", "KeyL", "KeyD", "KeyK"].map((code) =>
-      press(code.slice(3), code, { ...primary, shiftKey: true }),
-    ),
-    ...["Digit1", "Digit2", "Digit3"].map((code) =>
-      press(code.slice(5), code, { ...primary, shiftKey: true }),
-    ),
-  ];
-  for (const chord of shell)
-    expect(isShellChord(chord), JSON.stringify(chord)).toBe(true);
-  const grid = [
-    press("a", "KeyA", primary),
-    press("d", "KeyD", primary),
-    press("c", "KeyC", primary),
-    press("Home", "Home", { ...primary, shiftKey: true }),
-    press("ArrowLeft", "ArrowLeft", { altKey: true }),
-    press("k", "KeyK"),
-    press("k", "KeyK", { ...primary, altKey: true }),
-  ];
-  for (const chord of grid)
-    expect(isShellChord(chord), JSON.stringify(chord)).toBe(false);
-});
-
 test("modifiers match exactly, so a chord with Shift is not the chord without it", () => {
   expect(exactly(press("a", "KeyA", primary), { primary: true })).toBe(true);
   expect(
@@ -291,8 +281,20 @@ test("a typed character opens an editor; Space and chords do not", () => {
   expect(isPrintable(press("a", "KeyA", primary))).toBe(false);
   expect(isPrintable(press("a", "KeyA", { isComposing: true }))).toBe(false);
   // AltGr arrives as Control and Alt together, except on Apple systems.
+  const altGr = { ctrlKey: true, altKey: true };
+  expect(isPrintable(press("@", "Digit2", altGr))).toBe(!APPLE);
+  expect(isPrintable(press("ł", "KeyL", altGr))).toBe(!APPLE);
+  // Control and Alt giving the key's own letter is a chord, such as Revert
+  // cell, unless AltGr itself is held.
+  expect(isPrintable(press("z", "KeyZ", altGr))).toBe(false);
+  expect(isPrintable(press("2", "Digit2", altGr))).toBe(false);
   expect(
-    isPrintable(press("@", "Digit2", { ctrlKey: true, altKey: true })),
+    isPrintable(
+      press("q", "KeyQ", {
+        ...altGr,
+        getModifierState: (key) => key === "AltGraph",
+      }),
+    ),
   ).toBe(!APPLE);
 });
 
