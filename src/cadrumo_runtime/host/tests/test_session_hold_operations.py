@@ -90,6 +90,7 @@ from cadrumo_client.contracts.failure_categories import DependencyFailureCategor
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,
+    OperationFinancialInput,
     OperationManage,
     OperationManaged,
     OperationObserve,
@@ -102,6 +103,7 @@ from cadrumo_client.contracts.operation_access import (
     OperationSubmitted,
 )
 from cadrumo_client.contracts.operation_ids import DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID
+from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_runtime.host.session_hold_operations import (
@@ -280,6 +282,9 @@ class _Runtime:
     def __init__(self) -> None:
         self.operations: dict[str, _Operation] = {}
         self.submitted: list[OperationSubmit] = []
+        self.financial: list[OperationFinancialInput] = []
+        #: The definitions whose contract takes a transient financial operand; the runtime refuses every other one.
+        self.financial_definitions: set[str] = set()
         self.managed: list[object] = []
         self.busy_holder: str | None = None
         self.stale_cancellation = False
@@ -292,6 +297,14 @@ class _Runtime:
                 raise FrontendRefusedError(AccessDenialCode.SUBJECT_BUSY.value, holder_operation_id=self.busy_holder)
             self.submitted.append(request)
             operation = _Operation(f"{len(self.submitted):064x}", request.definition_id, request.subject_ref)
+            self.operations[operation.operation_id] = operation
+            receipt = OperationSubmissionReceiptV1(operation_id=operation.operation_id, secret_requirement=None)
+            return OperationSubmitted(request_id=rid, runtime_boot_id=_BOOT, connection_id=_CONNECTION, receipt=receipt)
+        if isinstance(request, OperationFinancialInput):
+            if request.definition_id not in self.financial_definitions:
+                raise FrontendRefusedError(AccessDenialCode.OPERATION_DENIED.value)
+            self.financial.append(request)
+            operation = _Operation(f"f{len(self.financial):063x}", request.definition_id, request.subject_ref)
             self.operations[operation.operation_id] = operation
             receipt = OperationSubmissionReceiptV1(operation_id=operation.operation_id, secret_requirement=None)
             return OperationSubmitted(request_id=rid, runtime_boot_id=_BOOT, connection_id=_CONNECTION, receipt=receipt)
@@ -461,6 +474,58 @@ def test_a_submitted_operation_is_relayed_unchanged_and_watched_until_it_settles
     read = relay.handle("operation_result", {"operation_id": operation_id})
     assert read["definition_id"] == DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID
     assert cast(dict[str, object], read["document"])["projection"] == result.model_dump(mode="json")
+
+
+def _financial(definition_id: str, body: object) -> dict[str, object]:
+    return {"definition_id": definition_id, "subject_ref": DEPENDENCIES_OPERATION_SUBJECT, "input": body}
+
+
+def test_financial_input_travels_once_as_the_runtimes_financial_input_and_the_relay_lets_go_of_it() -> None:
+    runtime = _Runtime()
+    runtime.financial_definitions.add(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID)
+    relay = _relay(runtime)
+    request = _financial(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"input_version": 2, "amount": "1.234,56"})
+
+    reply = relay.handle("operation_financial_submit", request)
+
+    assert reply["kind"] == "operation_submitted"
+    (sent,) = runtime.financial
+    assert (sent.definition_id, sent.subject_ref) == (
+        DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID,
+        DEPENDENCIES_OPERATION_SUBJECT,
+    )
+    assert sent.payload_json == '{"input_version":2,"amount":"1.234,56"}'
+    # Never as an ordinary submission, and the bridge's own copy is gone once it is handed over.
+    assert runtime.submitted == []
+    assert "input" not in request
+    assert relay.watching()
+
+
+def test_financial_input_for_a_definition_that_takes_none_is_refused_closed_and_starts_nothing() -> None:
+    runtime = _Runtime()
+    relay = _relay(runtime)
+
+    with pytest.raises(RelayRefusedError) as refused:
+        relay.handle("operation_financial_submit", _financial(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"a": 1}))
+
+    assert refused.value.code == AccessDenialCode.OPERATION_DENIED.value
+    assert (runtime.financial, runtime.operations) == ([], {})
+    assert not relay.watching()
+
+
+def test_financial_input_that_is_not_an_object_or_too_large_never_reaches_the_runtime() -> None:
+    runtime = _Runtime()
+    runtime.financial_definitions.add(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID)
+    relay = _relay(runtime)
+
+    with pytest.raises(TypeError):
+        relay.handle("operation_financial_submit", _financial(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, []))
+    with pytest.raises(ValueError, match="too large"):
+        relay.handle(
+            "operation_financial_submit",
+            _financial(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"text": "x" * SUBMISSION_PAYLOAD_MAX_BYTES}),
+        )
+    assert runtime.financial == []
 
 
 def test_a_busy_subject_names_the_operation_that_holds_it() -> None:

@@ -9,6 +9,12 @@ digest of exactly what it showed, an answer bound to that digest, and a
 cancellation at the observed revision. Every document passes unchanged, so the
 product that registered the operation owns its meaning and its words.
 
+An operation whose contract takes its amounts as a transient financial
+operand is submitted with ``operation_financial_submit``: the parent's input
+object travels once, as the runtime's financial input, and the relay keeps no
+reference to it afterwards. The runtime refuses it for any definition whose
+contract declares no such operand, so the hold still names no definition.
+
 A refusal is a closed reply that keeps the hold holding. The runtime's
 ``operation_changed`` cue is forwarded only while an operation this session
 relayed is unsettled. A sign-in to a provider is one more registered
@@ -19,7 +25,7 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from datetime import UTC, datetime
 from typing import Final, Literal
 from uuid import UUID, uuid4
@@ -57,6 +63,7 @@ from cadrumo_client.contracts.deadline_budget import (
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,
+    OperationFinancialInput,
     OperationManage,
     OperationManaged,
     OperationObserve,
@@ -65,13 +72,16 @@ from cadrumo_client.contracts.operation_access import (
     OperationReply,
     OperationRequest,
     OperationReview,
+    OperationSubmitted,
 )
+from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.operation_settlement import PinnedConnection, submit_operation
 
 RELAY_ACTION_KEYS: Final[Mapping[str, frozenset[str]]] = {
     "operation_submit": frozenset({"definition_id", "subject_ref", "payload"}),
+    "operation_financial_submit": frozenset({"definition_id", "subject_ref", "input"}),
     "operation_observe": frozenset({"operation_id", "after_cursor"}),
     "operation_result": frozenset({"operation_id"}),
     "operation_review": frozenset({"operation_id"}),
@@ -135,6 +145,8 @@ class OperationRelay:
         try:
             if action == "operation_submit":
                 return self._submit(request, deadline=deadline)
+            if action == "operation_financial_submit":
+                return self._submit_financial(request, deadline=deadline)
             operation_id = _text(request["operation_id"])
             if action == "operation_observe":
                 observation = self._observe(operation_id, _count(request["after_cursor"]), deadline=deadline)
@@ -200,7 +212,40 @@ class OperationRelay:
             payload_json=payload_json,
             deadline=deadline,
         )
-        operation_id = submitted.receipt.operation_id
+        return self._start(pinned, submitted.receipt.operation_id, deadline=deadline)
+
+    def _submit_financial(self, request: Mapping[str, object], *, deadline: float) -> dict[str, object]:
+        """Hand the parent's input to the runtime once, as financial input, and let go of it."""
+        body = request["input"]
+        if isinstance(request, MutableMapping):
+            # The bridge's own copy of the input is dropped before anything else can read it.
+            request.pop("input", None)
+        if not isinstance(body, dict):
+            raise TypeError("expected an input object")
+        input_json = json.dumps(body, ensure_ascii=False, separators=(",", ":"))
+        body = None
+        try:
+            if len(input_json) > SUBMISSION_PAYLOAD_MAX_BYTES:
+                raise ValueError("input too large")
+            pinned = PinnedConnection.of(self._client)
+            submitted = self._exchange(
+                OperationFinancialInput(
+                    request_id=uuid4(),
+                    profile_id=pinned.profile_id,
+                    session_id=pinned.session_id,
+                    definition_id=_text(request["definition_id"]),
+                    subject_ref=_text(request["subject_ref"]),
+                    payload_json=input_json,
+                ),
+                deadline=deadline,
+            )
+        finally:
+            input_json = ""
+        if not isinstance(submitted, OperationSubmitted):
+            raise RelayRefusedError("unavailable")
+        return self._start(pinned, submitted.receipt.operation_id, deadline=deadline)
+
+    def _start(self, pinned: PinnedConnection, operation_id: str, *, deadline: float) -> dict[str, object]:
         started = self._exchange(
             OperationControl(
                 action="operation_start",

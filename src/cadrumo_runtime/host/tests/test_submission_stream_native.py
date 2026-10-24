@@ -565,13 +565,15 @@ def test_native_financial_input_its_readers_refuse_is_answered_with_their_reason
     try:
         session_id = _admit(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
 
-        def submit(subject_ref: str, payload_json: str) -> OperationSubmitted | AccessRefusal:
+        def submit(
+            subject_ref: str, payload_json: str, definition_id: str = "modelo.edit.preflight"
+        ) -> OperationSubmitted | AccessRefusal:
             reply = client.operation(
                 OperationFinancialInput(
                     request_id=uuid4(),
                     profile_id=runtime.profile_id,
                     session_id=session_id,
-                    definition_id="modelo.edit.preflight",
+                    definition_id=definition_id,
                     subject_ref=subject_ref,
                     payload_json=payload_json,
                 ),
@@ -583,6 +585,8 @@ def test_native_financial_input_its_readers_refuse_is_answered_with_their_reason
         by_the_model = submit(runtime.work_unit.work_unit_id, json.dumps(unread))
         # The operand is whole, and its baseline belongs to another work unit than the one addressed.
         by_a_registered_error = submit("f" * 64, encoded.model_dump_json())
+        # A definition whose contract takes no financial operand is refused whatever the input.
+        no_operand = submit(runtime.work_unit.work_unit_id, encoded.model_dump_json(), "modelo.work.form")
         accepted = submit(runtime.work_unit.work_unit_id, encoded.model_dump_json())
     finally:
         client.close()
@@ -601,4 +605,6 @@ def test_native_financial_input_its_readers_refuse_is_answered_with_their_reason
     assert by_a_registered_error.request_faults == (
         RequestFault(location=(), type=printed.code, message=printed.message),
     )
+    assert isinstance(no_operand, AccessRefusal), no_operand
+    assert no_operand.code is AccessDenialCode.OPERATION_DENIED
     assert isinstance(accepted, OperationSubmitted), accepted

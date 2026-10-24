@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:507050f654823ed7d3975d36ee998a5ec2862a0a3bf76956098a0885152c4016'
+body_hash: 'sha256:4de0e21a63e155d1f5dbf5a38ed696515d48054ebbcd4f72701dbbdbd7011f56'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -227,6 +227,11 @@ related:
 - `S10` `verify:` `pytest application edit tests (154), TUI editing (161), edit conformance (4), workbench operations incl. typed preflight and apply refusal, native submission stream (3), operation contract manifest tests (136)` -> `pass`
 - `S10` `verify:` `basedpyright edit modules` -> `pass`
 - `S10` `verify:` `operation_contract_manifest.generate` -> `pass`
+- `S13` `M` `src/cadrumo_runtime/host/session_hold_operations.py`
+- `S13` `M` `src/cadrumo_runtime/host/tests/test_session_hold_operations.py`
+- `S13` `M` `src/cadrumo_runtime/host/tests/test_submission_stream_native.py`
+- `S13` `verify:` `pytest held relay, bridge and product-neutral gate (27), native submission stream incl. no-operand refusal (3)` -> `pass`
+- `S13` `verify:` `ty session_hold_operations` -> `pass`
 
 ## Notes
 
@@ -238,3 +243,4 @@ related:
 - `S08` Scope corrected from `source_policy.py` to the new defining module `work_form_source_groups.py.` Type gate clean for these files; remaining findings are in another session's statement-reading files
 - `S09` Citation text already reached the card's legal basis; this step proves it and adds the off-form figures. lint-imports shows one broken contract from another session's `cadrumo/tests/statement_reader_fixtures.py,` not from this step
 - `S10` The native disconnect/session-lock test failed once under concurrent load and passed on rerun with all three native tests; lint-imports' one broken contract is another session's `cadrumo/tests/statement_reader_fixtures.py`
+- `S13` The relay names no definition: it forwards `operation_financial_submit` as the runtime's financial input and the runtime refuses any definition whose contract takes no financial operand, so the product-neutral bridge gate still holds. Python strings cannot be zeroed; the relay drops its references to the input after transfer

@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:869f753f6ea5d65a6212a9d0395167790221a036099004ab7f017d4391132ecf'
+body_hash: 'sha256:29bc4d3e6bd1868b59fd07f86b6f62623c0ce51643cb57149254e4a9553b3e8f'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -57,7 +57,7 @@ Give the Modelo and declarations wording a neutral home in the canonical locale 
 
 Implement the boundary recorded in the decision: the held relay's financial-operand action, bounded large replies, and the host's closed Modelo family.
 
-- [ ] `P03.S13` - Add the held relay's financial-operand submit for modelo.edit.preflight and modelo.edit.apply, wiping the body and refusing any other definition, with custody and journal tests; `src/cadrumo_runtime/host/session_hold_operations.py`.
+- [x] `P03.S13` - Add the held relay's financial-operand submit for modelo.edit.preflight and modelo.edit.apply, wiping the body and refusing any other definition, with custody and journal tests; `src/cadrumo_runtime/host/session_hold_operations.py`.
 - [ ] `P03.S14` - Carry relay replies larger than one line in bounded parts the host reassembles, with a 390-sized and a synthetic oversize test; `native/desktop/src-tauri/src/agent/person.rs`.
 - [ ] `P03.S15` - Add the host's typed reads for the declarations list, a form and a box's help card after the calendar view's pattern; `native/desktop/src-tauri/src/shell/modelo/`.
 - [ ] `P03.S16` - Add the host's closed modelo family on the shared settle loop in shell/relay.rs (submit and settle, review by digest, cancel), save and file tokens, and the raw financial-operand body, within the relay's request-size limits, with the closed list checked against the contract manifest; `native/desktop/src-tauri/src/shell/modelo/`.
