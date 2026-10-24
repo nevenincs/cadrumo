@@ -188,8 +188,6 @@ export function tauriHost(): Host {
           );
         };
       },
-    },
-    presentation: {
       async guardClose(asked) {
         const requests = new Channel<null>();
         requests.onmessage = () => asked();
@@ -203,6 +201,8 @@ export function tauriHost(): Host {
           );
         };
       },
+    },
+    presentation: {
       present: (profileId, destination) =>
         call("desktop_present_destination", { profileId, destination }),
     },
