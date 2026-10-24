@@ -19,9 +19,12 @@
 //! library check, and it writes no `.links` entry, because it removes superseded builds
 //! itself rather than leaving that to the vendor installer's collection.
 //!
-//! [`BrowserLayout::settle`] runs only after the new builds verified: it writes the item's
-//! receipt, which says where the builds are and which driver they belong to, and then
-//! removes the builds of the same families they supersede.
+//! The quick check reads the markers, the executables and their bytes against the
+//! receipt. The full check also hashes every recorded file and launches the headless
+//! build once (`launch`), comparing the version it reports with the driver's. Only a
+//! passing full check mints the proof [`BrowserLayout::settle`] needs: settling writes
+//! the item's receipt, which says where the builds are and which driver they belong to,
+//! and then removes the builds of the same families they supersede.
 
 use super::{
     activity::ItemWriter,
@@ -32,7 +35,7 @@ use super::{
         Receipt, ReceiptFile, ReceiptLocation, ReceiptReading, ReceiptStore, build_manifest,
         check_manifest,
     },
-    state::SetupStep,
+    state::{BlockedReason, CheckMode, Observation, Reading, SetupStep},
     transfer::{Pinned, Transfer, TransferEvent, file_failure},
 };
 use crate::{
@@ -44,11 +47,16 @@ use crate::{
 use serde::Deserialize;
 use std::{
     collections::{BTreeMap, BTreeSet},
+    ffi::OsString,
     fs::{self, File},
     io::{Read, Write},
     path::{Path, PathBuf},
-    time::SystemTime,
+    time::{Duration, SystemTime},
 };
+
+mod launch;
+
+pub use launch::LaunchFailure;
 
 /// The file the driver reads as "this build is completely installed".
 pub const COMPLETION_MARKER: &str = "INSTALLATION_COMPLETE";
@@ -527,9 +535,119 @@ impl BrowserLayout {
         Ok(())
     }
 
+    /// The quick check: no network and no launch. Every build must be installed as the
+    /// driver reads it, and each executable must hold the bytes this layout's receipt
+    /// recorded. Installed builds that no receipt describes read absent: setup then
+    /// verifies and records them without downloading anything.
+    pub fn quick_check(&self, reading: &ReceiptReading) -> Reading {
+        self.local_reading(CheckMode::Quick, reading)
+    }
+
+    /// What the files say, hashing the executables in a quick check and every recorded
+    /// file in a full one.
+    fn local_reading(&self, mode: CheckMode, reading: &ReceiptReading) -> Reading {
+        let observation = if !self.incomplete().is_empty() {
+            if self.pinned {
+                Observation::Absent
+            } else {
+                Observation::Blocked(BlockedReason::NotInThisBuild)
+            }
+        } else if matches!(reading, ReceiptReading::Unreadable) {
+            Observation::Unreadable
+        } else if let Some(receipt) = self.receipt(reading) {
+            let executables: Vec<RelativePath> = self
+                .builds
+                .iter()
+                .map(|build| build.executable.clone())
+                .collect();
+            let only = (mode == CheckMode::Quick).then_some(executables.as_slice());
+            if check_manifest(&self.root, receipt, only).intact() {
+                Observation::Present { note: None }
+            } else {
+                Observation::Failed(FailureCategory::DamagedDownload)
+            }
+        } else {
+            Observation::Absent
+        };
+        Reading {
+            mode,
+            observation,
+            version: Some(self.version.clone()),
+        }
+    }
+
+    /// The full check: every recorded file against the receipt, then one headless launch
+    /// of the headless build, whose reported version must be the one the driver names.
+    /// Installed builds without a readable receipt of this layout are launched too, and a
+    /// passing launch is what lets setup record them. Only a passing full check mints the
+    /// proof [`Self::settle`] needs.
+    pub fn full_check(
+        &self,
+        reading: &ReceiptReading,
+        context: &LaunchContext<'_>,
+        cancellation: &Cancellation,
+    ) -> FullCheck {
+        let local = self.local_reading(CheckMode::Full, reading);
+        let launchable = match local.observation {
+            Observation::Present { .. } => true,
+            Observation::Absent | Observation::Unreadable => self.incomplete().is_empty(),
+            _ => false,
+        };
+        let failed = |category, local: &Reading| Reading {
+            observation: Observation::Failed(category),
+            ..local.clone()
+        };
+        if !launchable {
+            return FullCheck::of(local);
+        }
+        let headless = self
+            .builds
+            .iter()
+            .find(|build| build.family_name == Family::HeadlessShell.manifest_name());
+        let (Ok(verified), Some(headless)) = (self.verify_installation(), headless) else {
+            return FullCheck::of(failed(FailureCategory::DamagedDownload, &local));
+        };
+        let executable = headless.executable.under(&self.root);
+        let program = launch::Program {
+            executable: &executable,
+            leading: &context.leading,
+            environment: context.environment,
+        };
+        let budget = context
+            .budget
+            .min(ItemId::Browser.declaration().full_check_budget);
+        match launch::browser_version(&program, context.scratch, budget, cancellation) {
+            Ok(version) => {
+                let matches = self
+                    .headless_version
+                    .as_deref()
+                    .is_none_or(|expected| expected == version);
+                FullCheck {
+                    reading: if matches {
+                        Reading {
+                            observation: Observation::Present { note: None },
+                            ..local
+                        }
+                    } else {
+                        failed(FailureCategory::DamagedDownload, &local)
+                    },
+                    verified: matches.then_some(verified),
+                    launched_version: Some(version),
+                    launch_failure: None,
+                }
+            }
+            Err(failure) => FullCheck {
+                reading: failed(failure.category(), &local),
+                verified: None,
+                launched_version: None,
+                launch_failure: Some(failure),
+            },
+        }
+    }
+
     /// Confirms every build is installed as the driver reads it and its executable runs as
-    /// a program, before anything is recorded or removed.
-    pub fn verify_installation(&self) -> Result<Verified, Error> {
+    /// a program. Only the full check, which also launches the browser, hands the proof on.
+    fn verify_installation(&self) -> Result<Verified, Error> {
         for build in &self.builds {
             if !self.complete(build) {
                 return Err(Error::Integrity("browser build incomplete".into()));
@@ -626,6 +744,67 @@ impl BrowserLayout {
 /// Proof that the layout's builds verified; only a check mints it, and settling needs it.
 #[derive(Debug)]
 pub struct Verified(());
+
+/// Bound for the full check's one launch, inside the item's full-check budget.
+pub const LAUNCH_BUDGET: Duration = Duration::from_secs(45);
+
+/// What the full check's launch runs with besides the executable.
+pub struct LaunchContext<'a> {
+    /// The complete environment the browser runs with; nothing else is inherited.
+    pub environment: &'a BTreeMap<OsString, OsString>,
+    /// The owner's temporary folder; the launch's throwaway profile is made and removed
+    /// inside it.
+    pub scratch: &'a Path,
+    pub budget: Duration,
+    /// Arguments before the browser switches; only a test's stand-in browser takes any.
+    leading: Vec<OsString>,
+}
+
+impl<'a> LaunchContext<'a> {
+    pub fn new(environment: &'a BTreeMap<OsString, OsString>, scratch: &'a Path) -> Self {
+        Self {
+            environment,
+            scratch,
+            budget: LAUNCH_BUDGET,
+            leading: Vec::new(),
+        }
+    }
+}
+
+/// A full check's reading, the proof settling needs when it passed, and the launch's
+/// locale-neutral facts.
+#[derive(Debug)]
+pub struct FullCheck {
+    pub reading: Reading,
+    pub verified: Option<Verified>,
+    pub launched_version: Option<String>,
+    pub launch_failure: Option<LaunchFailure>,
+}
+
+impl FullCheck {
+    fn of(reading: Reading) -> Self {
+        Self {
+            reading,
+            verified: None,
+            launched_version: None,
+            launch_failure: None,
+        }
+    }
+}
+
+impl LaunchFailure {
+    /// The closed category a failed launch reports.
+    pub fn category(self) -> FailureCategory {
+        match self {
+            Self::Unrunnable => FailureCategory::DamagedDownload,
+            Self::NotPermitted => FailureCategory::NoPermission,
+            Self::Cancelled => FailureCategory::Cancelled,
+            Self::Exited | Self::TimedOut | Self::NoVersion | Self::ProfileUnavailable => {
+                FailureCategory::Unexpected
+            }
+        }
+    }
+}
 
 /// What an install did.
 #[derive(Debug, Default, Eq, PartialEq)]
@@ -1353,6 +1532,188 @@ pub(crate) mod tests {
         assert!(
             moved.receipt(&reading).is_none(),
             "a receipt for another root describes other builds"
+        );
+    }
+
+    fn quick(fixture: &Fixture) -> Observation {
+        fixture
+            .layout
+            .quick_check(&fixture.receipts.read(ItemId::Browser))
+            .observation
+    }
+
+    #[test]
+    fn the_quick_check_reads_markers_executables_and_their_recorded_bytes() {
+        let fixture = fixture();
+        let root = fixture.root().to_path_buf();
+        assert_eq!(quick(&fixture), Observation::Absent);
+        let unpinned = BrowserLayout::new(
+            root.clone(),
+            &driver_package(&fixture.directory.path().join("driver")),
+            None,
+            platform(),
+        )
+        .unwrap();
+        assert_eq!(
+            unpinned.quick_check(&ReceiptReading::Absent).observation,
+            Observation::Blocked(BlockedReason::NotInThisBuild),
+            "a build this copy cannot install is not offered"
+        );
+        fixture.install(&Mutex::new(Vec::new())).unwrap();
+        assert_eq!(
+            quick(&fixture),
+            Observation::Absent,
+            "installed builds no receipt describes are recorded by setup, not believed"
+        );
+        fixture.settle();
+        let reading = fixture
+            .layout
+            .quick_check(&fixture.receipts.read(ItemId::Browser));
+        assert_eq!(reading.observation, Observation::Present { note: None });
+        assert_eq!(reading.mode, CheckMode::Quick);
+        assert_eq!(reading.version.as_deref(), Some(BROWSER_VERSION));
+
+        // A changed data file is the full check's to find, and it does not launch over it.
+        let chromium = fixture.layout.builds()[0].clone();
+        let recorded = fixture.receipts.read(ItemId::Browser);
+        let ReceiptReading::Present(receipt) = &recorded else {
+            panic!("a receipt");
+        };
+        let resource = receipt
+            .files
+            .iter()
+            .find(|file| {
+                file.path.as_str().starts_with(&chromium.directory_name)
+                    && file.path != chromium.executable
+                    && !file.path.as_str().ends_with(COMPLETION_MARKER)
+            })
+            .unwrap()
+            .path
+            .clone();
+        fs::write(resource.under(&root), b"changed").unwrap();
+        assert_eq!(quick(&fixture), Observation::Present { note: None });
+        let environment = BTreeMap::new();
+        let scratch = fixture.directory.path().join("tmp");
+        let full = fixture.layout.full_check(
+            &recorded,
+            &LaunchContext::new(&environment, &scratch),
+            &Cancellation::default(),
+        );
+        assert_eq!(
+            full.reading.observation,
+            Observation::Failed(FailureCategory::DamagedDownload)
+        );
+        assert!(full.verified.is_none() && full.launched_version.is_none());
+
+        fs::write(chromium.executable.under(&root), b"changed").unwrap();
+        assert_eq!(
+            quick(&fixture),
+            Observation::Failed(FailureCategory::DamagedDownload)
+        );
+        fs::write(
+            fixture
+                .directory
+                .path()
+                .join("components/receipts/browser.json"),
+            b"{",
+        )
+        .unwrap();
+        assert_eq!(quick(&fixture), Observation::Unreadable);
+        fs::remove_file(root.join(&chromium.directory_name).join(COMPLETION_MARKER)).unwrap();
+        assert_eq!(quick(&fixture), Observation::Absent);
+    }
+
+    /// A context whose launch runs this test binary as a stand-in browser.
+    fn stand_in<'a>(
+        environment: &'a BTreeMap<OsString, OsString>,
+        scratch: &'a Path,
+    ) -> LaunchContext<'a> {
+        let mut context = LaunchContext::new(environment, scratch);
+        context.leading = launch::tests::fake_leading();
+        context
+    }
+
+    #[test]
+    fn a_full_check_launches_the_headless_build_and_only_a_passing_launch_is_recorded() {
+        let fixture = fixture();
+        let root = fixture.root().to_path_buf();
+        fixture.install(&Mutex::new(Vec::new())).unwrap();
+        let headless = fixture
+            .layout
+            .builds()
+            .iter()
+            .find(|build| build.name() == "chromium-headless-shell")
+            .unwrap()
+            .clone();
+        fs::copy(
+            std::env::current_exe().unwrap(),
+            headless.executable.under(&root),
+        )
+        .unwrap();
+        let scratch = fixture.directory.path().join("tmp");
+        let cancellation = Cancellation::default();
+
+        let reporting_other = launch::tests::fake_environment("version=155.0.0.1");
+        let other = fixture.layout.full_check(
+            &ReceiptReading::Absent,
+            &stand_in(&reporting_other, &scratch),
+            &cancellation,
+        );
+        assert_eq!(
+            other.reading.observation,
+            Observation::Failed(FailureCategory::DamagedDownload)
+        );
+        assert_eq!(other.launched_version.as_deref(), Some("155.0.0.1"));
+        assert!(other.verified.is_none());
+
+        let ending = launch::tests::fake_environment("silent");
+        let ended = fixture.layout.full_check(
+            &ReceiptReading::Absent,
+            &stand_in(&ending, &scratch),
+            &cancellation,
+        );
+        assert_eq!(
+            ended.reading.observation,
+            Observation::Failed(FailureCategory::Unexpected)
+        );
+        assert_eq!(ended.launch_failure, Some(LaunchFailure::Exited));
+        assert!(ended.verified.is_none());
+
+        let working = launch::tests::fake_environment(&format!("version={BROWSER_VERSION}"));
+        let passed = fixture.layout.full_check(
+            &ReceiptReading::Absent,
+            &stand_in(&working, &scratch),
+            &cancellation,
+        );
+        assert_eq!(
+            passed.reading.observation,
+            Observation::Present { note: None }
+        );
+        assert_eq!(passed.reading.mode, CheckMode::Full);
+        assert_eq!(passed.launched_version.as_deref(), Some(BROWSER_VERSION));
+        fixture
+            .layout
+            .settle(
+                passed.verified.expect("a passing launch can be recorded"),
+                &fixture.receipts,
+                vec![HostName::new(HOST).unwrap()],
+                UNIX_EPOCH + Duration::from_secs(1_792_846_800),
+            )
+            .unwrap();
+        assert_eq!(quick(&fixture), Observation::Present { note: None });
+        let again = fixture.layout.full_check(
+            &fixture.receipts.read(ItemId::Browser),
+            &stand_in(&working, &scratch),
+            &cancellation,
+        );
+        assert_eq!(
+            again.reading.observation,
+            Observation::Present { note: None }
+        );
+        assert_eq!(
+            fs::read_dir(&scratch).unwrap().count(),
+            0,
+            "every throwaway profile is removed"
         );
     }
 

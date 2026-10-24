@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:281927f9dde19b03e5ffda119747921271feee98daea6014c8ad0e6ae6339239'
+body_hash: 'sha256:027d8a764f3cb229a808c658004d9222bb48b62b5f026af905aee1293dc73940'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -237,6 +237,23 @@ related:
 - `S08` `verify:` `rustfmt --edition 2024 --check through stdin on the touched files` -> `pass`
 - `S08` `verify:` `WSL Linux: cargo clippy --locked --lib --tests -D warnings and cargo test --lib local_ai, component, proxy (31)` -> `pass`
 - `S08` `by:` `implementation-engineer-high`
+- `S06` `A` `src/cadrumo/core/component_records.py`
+- `S06` `A` `src/cadrumo/core/tests/test_component_records.py`
+- `S06` `A` `src/cadrumo/core/tests/_component_records/browser.json`
+- `S06` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S06` `M` `dev/quality/metadata/import_load_targets.json`
+- `S06` `M` `native/application/src/provisioning/browser.rs`
+- `S06` `A` `native/application/src/provisioning/browser/launch.rs`
+- `S06` `verify:` `pytest src/cadrumo/core/tests/test_component_records.py (9)` -> `pass`
+- `S06` `verify:` `ruff check, ruff format --check, ty check on component_records.py and its test` -> `pass`
+- `S06` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S06` `verify:` `pytest dev/quality/tests/test_import_load_worker.py (7)` -> `pass`
+- `S06` `verify:` `cargo test --offline --no-fail-fast on an export of HEAD 8d10ad2e6f plus this Step (lib 143, application 25, installation 22; package_inspection linked_root_and_deep_root_ancestor_are_refused pre-existing non-ASCII junction failure)` -> `pass`
+- `S06` `verify:` `cargo test --lib --features platform provisioning::browser (16)` -> `pass`
+- `S06` `verify:` `cargo clippy --all-targets -- -D warnings` -> `pass`
+- `S06` `verify:` `cargo clippy --all-targets --features platform -- -D warnings` -> `pass`
+- `S06` `verify:` `rustfmt --edition 2024 through stdin on browser.rs and browser/launch.rs` -> `pass`
+- `S06` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -261,3 +278,4 @@ related:
 - `S07` S07 the Linux and macOS archives carry 28, 17 and 10 symbolic links for versioned libraries; extraction creates no link: each link that resolves inside the archive to a regular file is placed as a hard link of that file, and any other link is refused
 - `S07` S07 the server inherits the engine's containment: a crash ends it only where the owner hosts the engine in a kill-on-close job (the crate forbids unsafe and has no job API); an orderly stop unloads models, then ends the server
 - `S08` S08 total memory comes from /proc/meminfo on Linux, sysctl hw.memsize on macOS and a PowerShell CIM query on Windows (0.44 s measured here), NVIDIA VRAM from nvidia-smi; each is a separate bounded program with no console window, since the crate forbids unsafe; macOS code paths are compiled only on a macOS host
+- `S06` S06 open: the Python launch guard re-point `(provisioning_browser.py` `probe_playwright_browser,` session.py) is held back. Records live under each storage root (components/receipts, fixed), while the test bootstrap shares one relocated browser cache across private storage roots; with the guard reading records, 25 real-browser tests that build their own storage roots refuse (auth real lifecycle, clave movil recovery, authenticator real boundary, representation alert race, justificante capture authenticity). The guard patch and its test updates are kept outside the tree pending the decision
