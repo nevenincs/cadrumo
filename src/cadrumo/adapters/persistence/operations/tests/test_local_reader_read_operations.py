@@ -73,15 +73,15 @@ def test_status_publishes_the_host_every_role_and_the_recorded_fitness_without_p
     assert text.model == TEXT_MODEL
     assert text.installed is True and text.resident is True
     assert text.fitness is RoleFitnessState.NOT_VERIFIED, "no verdict is recorded, which is not unfitness"
-    assert text.fit_for_role is None and text.ready is False
-    assert text.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_VERIFIED
+    assert text.fit_for_role is None and text.ready is True, "fitness is admission: no verdict admits"
+    assert text.failed_condition_id is None
     vision = rows[ModelRole.VISION_TRANSCRIPTION]
     assert vision.model == VISION_MODEL
     assert vision.installed is False and vision.ready is False
     assert vision.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED
     assert status.extraction_ready is False
     assert status.document_readiness is direct.document_readiness
-    assert status.text_layer_model_fill_available is False
+    assert status.text_layer_model_fill_available is True
     assert [(row.role, row.model, row.installed, row.resident, row.fitness, row.ready) for row in status.roles] == [
         (row.role, row.model, row.installed, row.resident, row.fitness, row.ready) for row in direct.roles
     ]

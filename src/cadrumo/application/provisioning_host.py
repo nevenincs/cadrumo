@@ -3,8 +3,11 @@
 The model-level verbs in :mod:`.provisioning_runtime` assume a runtime is
 already listening. This module owns the step before that, per platform:
 
-* **Detect.** Locate the runtime executable on ``PATH`` and in each platform's
-  standard install location, and ask the configured endpoint whether it answers.
+* **Detect.** Locate the local AI from the native engine's component record --
+  the program it installed and the fixed address the runtime manager's server
+  answers on -- and ask that address whether it answers. An operator's own
+  endpoint is asked as configured, with the runtime looked for on ``PATH`` and
+  in each platform's standard install location.
 * **Start.** Spawn ``<runtime> serve`` detached when the endpoint is local, the
   executable is present and nothing answers yet. Starting an already running
   runtime is a successful no-op, so the verb is idempotent.
@@ -32,6 +35,7 @@ from urllib.parse import quote, urlsplit, urlunsplit
 import httpx
 from pydantic import Field, model_validator
 
+from ..core.component_records import component_records_root, locate_local_ai, uses_managed_local_ai
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.loopback_endpoint import endpoint_host_is_loopback
@@ -218,19 +222,32 @@ def probe_runtime_host(
     platform: RuntimeHostPlatform | None = None,
     which: ExecutableLookup = shutil.which,
 ) -> RuntimeHostStatus:
-    """Detect the runtime installation and whether its endpoint answers. Never raises."""
+    """Detect the runtime installation and whether its endpoint answers. Never raises.
+
+    The local AI the runtime manager runs is located from its component record
+    alone, and only its recorded address is asked; without a record that
+    locates it, nothing is asked. An operator's own endpoint is asked as
+    configured.
+    """
     resolved = settings if settings is not None else load_settings()
     host_platform = platform if platform is not None else current_runtime_platform()
     endpoint = resolved.cadrumo_llm_ollama_chat_url
+    if uses_managed_local_ai(resolved):
+        located = locate_local_ai(records_root=component_records_root(resolved))
+        executable_located = located.located
+        endpoint = located.chat_url if located.located and located.chat_url is not None else endpoint
+        aimed = resolved.model_copy(update={"cadrumo_llm_ollama_chat_url": endpoint})
+        version = read_runtime_version(aimed) if executable_located else None
+    else:
+        executable_located = locate_runtime_executable(platform=host_platform, which=which) is not None
+        version = read_runtime_version(resolved)
     local = endpoint_host_is_loopback(endpoint)
-    executable = locate_runtime_executable(platform=host_platform, which=which)
-    version = read_runtime_version(resolved)
     installer = available_runtime_installer(platform=host_platform, which=which)
     facts: dict[str, ProvisioningFactValue] = {
         "platform": host_platform.value,
         "runtime_url": endpoint,
         "endpoint_local": local,
-        "executable_located": executable is not None,
+        "executable_located": executable_located,
         "runtime_reachable": version is not None,
         "installer": installer.value,
     }
@@ -238,7 +255,7 @@ def probe_runtime_host(
     if version is None:
         condition = (
             ProvisioningPreconditionCondition.RUNTIME_INSTALLED
-            if local and executable is None
+            if local and not executable_located
             else ProvisioningPreconditionCondition.RUNTIME_REACHABLE
         )
         verdict = provisioning_no_recovery_verdict(condition, facts=facts)
@@ -246,7 +263,7 @@ def probe_runtime_host(
         platform=host_platform,
         endpoint_url=endpoint,
         endpoint_local=local,
-        executable_located=executable is not None,
+        executable_located=executable_located,
         reachable=version is not None,
         version=version,
         installer=installer,

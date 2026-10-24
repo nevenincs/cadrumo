@@ -73,7 +73,7 @@ def _rows() -> dict[str, ReaderRoleProjectionV1]:
     return {row.role: row for row in projection.roles}
 
 
-def test_a_missing_model_offers_the_local_ai_setup_and_an_unverified_one_offers_none() -> None:
+def test_a_missing_model_offers_the_local_ai_setup_and_an_unverified_one_is_admitted() -> None:
     with _runtime_holding(_TEXT):
         rows = _rows()
 
@@ -84,8 +84,9 @@ def test_a_missing_model_offers_the_local_ai_setup_and_an_unverified_one_offers_
     text = rows[ModelRole.TEXT_EXTRACTION.value]
     assert text.installed is True
     assert text.fitness is RoleFitnessState.NOT_VERIFIED
-    assert text.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_VERIFIED.value
-    assert text.recovery_action_id is None, "a fitness verdict is not repaired by setting the local AI up"
+    assert text.ready is True, "fitness is the consumer's admission: no verdict is no refusal"
+    assert text.failed_condition_id is None
+    assert text.recovery_action_id is None
 
 
 def test_an_unanswering_runtime_offers_the_local_ai_setup_on_every_role() -> None:

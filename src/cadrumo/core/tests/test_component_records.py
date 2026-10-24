@@ -1,9 +1,11 @@
 """The component records the native engine writes, read and located the way Python consumers use them.
 
-``_component_records/browser.json`` is the record the engine writes for a
-browser install, produced and checked by the engine's own test, with the storage
-root left as a placeholder. Reading it here proves the two languages agree on
-the record's shape and on where the browser and its record live.
+``_component_records/browser.json`` and ``_component_records/local_ai.json`` are
+the records the engine writes for a browser and a local AI install, produced and
+checked by the engine's own tests, with the storage root left as a placeholder.
+Reading them here proves the two languages agree on each record's shape, on
+where the component and its record live and, for the local AI, on the fixed
+address its server answers on.
 """
 
 from __future__ import annotations
@@ -19,10 +21,14 @@ from ..component_records import (
     ComponentLocateOutcome,
     ComponentRecordState,
     component_records_root,
+    local_ai_chat_url,
     locate_component,
+    locate_local_ai,
     read_component_record,
+    uses_managed_local_ai,
 )
 from ..config import Settings
+from ..config_runtime_fields import LOCAL_AI_CHAT_URL, LOCAL_AI_SERVER_ADDRESS
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_location
 
@@ -152,3 +158,66 @@ def test_a_damaged_or_foreign_record_reads_unreadable_rather_than_absent(tmp_pat
 
     assert read_component_record(item, records_root=records_root).state is ComponentRecordState.UNREADABLE
     assert locate_component(item, records_root=records_root).outcome is ComponentLocateOutcome.RECORD_UNREADABLE
+
+
+_LOCAL_AI_FIXTURE = Path(__file__).parent / "_component_records" / "local_ai.json"
+
+
+def _local_ai_record(storage_root: Path, *, address: str | None = None) -> Path:
+    """Write the engine's local AI record, and the program and models folder it names."""
+    text = _LOCAL_AI_FIXTURE.read_text(encoding="utf-8").replace(_PLACEHOLDER, storage_root.as_posix())
+    record: Any = json.loads(text)
+    if address is not None:
+        record["location"]["facts"]["address"] = address
+    records_root = component_records_root(Settings(cadrumo_local_storage_root=storage_root))
+    records_root.mkdir(parents=True, exist_ok=True)
+    (records_root / "local_ai.json").write_text(json.dumps(record), encoding="utf-8")
+    folder = Path(record["location"]["root"])
+    program = folder / record["location"]["paths"]["program"]
+    program.parent.mkdir(parents=True, exist_ok=True)
+    program.write_bytes(b"local AI program")
+    (folder / record["location"]["paths"]["models"]).mkdir(parents=True, exist_ok=True)
+    return records_root
+
+
+def test_the_local_ai_record_locates_the_program_the_models_and_the_servers_fixed_address(tmp_path: Path) -> None:
+    records_root = _local_ai_record(tmp_path)
+
+    located = locate_local_ai(records_root=records_root)
+    assert located.located
+    assert located.address == LOCAL_AI_SERVER_ADDRESS, "the engine records the declared fixed address"
+    assert located.chat_url == LOCAL_AI_CHAT_URL
+    assert located.models == tmp_path / "models" / "ollama"
+    assert located.program is not None and located.program.is_file()
+    assert located.component.version == "0.40.10"
+
+
+@pytest.mark.parametrize("address", ["192.0.2.1:23743", "localhost:23743", "127.0.0.1", "127.0.0.1:0", "[::1]:23743"])
+def test_a_local_ai_record_naming_no_loopback_address_does_not_locate(tmp_path: Path, address: str) -> None:
+    located = locate_local_ai(records_root=_local_ai_record(tmp_path, address=address))
+    assert not located.located
+    assert located.address is None
+    assert located.component.outcome is ComponentLocateOutcome.OTHER_IDENTITY
+
+
+def test_without_a_record_or_its_program_the_local_ai_does_not_locate(tmp_path: Path) -> None:
+    records_root = component_records_root(Settings(cadrumo_local_storage_root=tmp_path))
+    assert locate_local_ai(records_root=records_root).component.outcome is ComponentLocateOutcome.NO_RECORD
+    _local_ai_record(tmp_path)
+    program = locate_local_ai(records_root=records_root).program
+    assert program is not None
+    program.unlink()
+    gone = locate_local_ai(records_root=records_root)
+    assert not gone.located
+    assert gone.component.outcome is ComponentLocateOutcome.PATH_MISSING
+
+
+def test_the_readers_send_to_the_recorded_address_unless_the_operator_named_an_endpoint(tmp_path: Path) -> None:
+    managed = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_llm_ollama_chat_url=LOCAL_AI_CHAT_URL)
+    assert uses_managed_local_ai(managed)
+    assert local_ai_chat_url(managed) == LOCAL_AI_CHAT_URL, "without a record nothing Cadrumo runs answers there"
+    _local_ai_record(tmp_path, address="127.0.0.1:24001")
+    assert local_ai_chat_url(managed) == "http://127.0.0.1:24001/api/chat"
+    own = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_llm_ollama_chat_url="http://10.0.0.2:11434/api/chat")
+    assert not uses_managed_local_ai(own)
+    assert local_ai_chat_url(own) == "http://10.0.0.2:11434/api/chat"

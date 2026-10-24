@@ -18,13 +18,15 @@ from .model_catalogue import ModelRole, default_model_runtime_id
 #: environment declaration states the same address for the native side; a package-side
 #: test keeps the two equal.
 LOCAL_AI_SERVER_ADDRESS: Final = "127.0.0.1:23743"
+#: The chat endpoint of that server, the readers' default.
+LOCAL_AI_CHAT_URL: Final = f"http://{LOCAL_AI_SERVER_ADDRESS}/api/chat"
 
 
 class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
     """LLM provider endpoints and runtime tuning fields layered on top of timeouts."""
 
     cadrumo_llm_ollama_chat_url: str = Field(
-        default=f"http://{LOCAL_AI_SERVER_ADDRESS}/api/chat",
+        default=LOCAL_AI_CHAT_URL,
         description=(
             "Local Ollama /api/chat endpoint; defaults to the server the runtime manager runs, "
             "override for non-localhost Ollama deployments"

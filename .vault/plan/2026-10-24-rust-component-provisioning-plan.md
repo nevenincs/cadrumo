@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:ac1ca59ccb316485d1dc66875a9f1b577a5dc7ca4c43556fe0e0aaa0fedc0ab0'
+body_hash: 'sha256:f3f29489a3a00f7564d3631f608975174d09ea683c4d3012946ca1a6f670c4db'
 ---
 
 # `rust-component-provisioning` plan
@@ -62,7 +62,7 @@ The engine installs a pinned portable Ollama, runs it as its own child, pulls an
 
 - [x] `P03.S07` - Install the pinned portable Ollama archive into components/ollama/<version>, start and stop it as the engine's child with the existing models root and home, and detect but never modify a system install; `native/application/src/provisioning/local_ai/program.rs, native/application/Cargo.toml (archive crates through cargo-deny), native/deny.toml and tests`.
 - [x] `P03.S08` - Pull each role's model through the started server with byte progress, compare its manifest digest with the pin for stale, run the one-token generation check, and decide the hardware floor from memory and NVIDIA VRAM; `native/application/src/provisioning/local_ai/models.rs, native/application/src/provisioning/local_ai/hardware.rs and tests against a local fake pull server`.
-- [ ] `P03.S09` - Make the Python readers locate the program, the server's fixed address and the models from the Rust component record, refuse with the local AI setup verdict when no manager runs the server, and move role fitness to consumer admission outside component state; `src/cadrumo/application/local_reader.py, src/cadrumo/application/provisioning_host.py (locate only), src/cadrumo/application/provisioning_fitness.py, src/cadrumo/adapters/outbound/llm/providers/local.py and tests`.
+- [x] `P03.S09` - Make the Python readers locate the program, the server's fixed address and the models from the Rust component record, refuse with the local AI setup verdict when no manager runs the server, and move role fitness to consumer admission outside component state; `src/cadrumo/application/local_reader.py, src/cadrumo/application/provisioning_host.py (locate only), src/cadrumo/application/provisioning_fitness.py, src/cadrumo/adapters/outbound/llm/providers/local.py and tests`.
 
 ### Phase `P04` - Role and surfaces
 

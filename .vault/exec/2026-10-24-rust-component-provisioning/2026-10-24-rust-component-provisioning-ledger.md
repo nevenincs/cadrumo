@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:388628c5cdb169131e8787082f1600356cc92c2c0d25ef806b40bf7e73b04f23'
+body_hash: 'sha256:dd3c6e1e87ff57541ae676ae6a197b37d9f538c3dcb72a17bd1d937a1b4120a3'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -281,6 +281,23 @@ related:
 - `S17` `verify:` `pytest test_native_local_ai_address, test_native_storage_environment_contract, test_application_environment, generator boundary and conformance, test_env_reference, loopback endpoint, consumer gating, provisioning fitness (pre-existing linux-x86-64 contract digest failure only)` -> `pass`
 - `S17` `verify:` `ruff check, ruff format --check, ty check on the touched Python` -> `pass`
 - `S17` `by:` `implementation-engineer-high`
+- `S09` `M` `src/cadrumo/core/component_records.py`
+- `S09` `M` `src/cadrumo/core/config_runtime_fields.py`
+- `S09` `M` `src/cadrumo/application/local_reader.py`
+- `S09` `M` `src/cadrumo/application/provisioning_host.py`
+- `S09` `M` `src/cadrumo/application/provisioning_fitness.py`
+- `S09` `M` `src/cadrumo/adapters/outbound/llm/client.py`
+- `S09` `M` `src/cadrumo/core/tests/test_component_records.py`
+- `S09` `M` `src/cadrumo/application/tests/test_local_reader.py`
+- `S09` `M` `src/cadrumo/application/tests/test_provisioning_fitness.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_read_operations.py`
+- `S09` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_reader_readiness_recovery.py`
+- `S09` `verify:` `pytest component records, local reader, provisioning fitness, local reader read operations, reader readiness recovery, consumer gating, quick check bound, local reader setup items (151)` -> `pass`
+- `S09` `verify:` `pytest every test naming the readers, host probe, component records, LLMClient or the chat URL, -n 6 (959 passed; 4 failed: 2 updated to admission semantics and then passed, label-reading notice passes alone, test_cloud_transport_fully_deleted fails on LocalStatementReader from cd95fbe115 outside this Step)` -> `pass`
+- `S09` `verify:` `ruff check, ruff format --check, ty check on the touched Python` -> `pass`
+- `S09` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S09` `verify:` `just check-operation-contract-manifest (drift is ledger.evidence.page, modelo.edit.renew and modelo.work.form from uncommitted work outside this Step; no local reader or dependency operation changed)` -> `fail`
+- `S09` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -311,3 +328,6 @@ related:
 - `S17` S17 coordination: two kernel-released locks under components/activity; the supervisor holds `local_ai.server.lock` for a server's life and finds `local_ai.program.lock` held as an engine's change request, stops and yields; the engine waits on the server lock in a kernel wait bounded at 60 s, then replaces or removes; the manager looks at a 1 s pace on its own thread
 - `S17` S17 the engine no longer starts a server: the full check observes the manager's server, and Program::start (fixed address, lease, containment hook) is the supervisor's alone; containment is a kill-on-close job per server on Windows, none yet on POSIX
 - `S17` S17 env/.env (gitignored developer file) still overrides the chat URL to 11434; left untouched
+- `S09` S09 review finding hardware-refusal-unreachable (2026-10-24-component-on-demand-audit): the probe now judges a role the hardware or catalogue cannot serve first, for every role including vision transcription and text extraction, with a no-action verdict, then the local AI record and reachability, then the installed model
+- `S09` S09 fitness is consumer admission: a verdict recorded against the current weights that found the text model unfit or too slow refuses with no action; a model with no verdict is admitted, since the withdrawn Python verify is the only writer of a verdict; `local_reader_setup_items` keeps its own fitness use until P05.S14 deletes it
+- `S09` S09 the record is consulted only while the chat URL is the managed default; an operator-configured endpoint is used as written; providers/local.py needed no change because the client resolves the URL before the consent gate and the adapter posts only to what it is given

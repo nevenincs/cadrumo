@@ -1,11 +1,14 @@
 """Durable record of each local reader model's fitness for its role.
 
-A fitness probe costs a model load plus a full answer budget, so a status
-surface must not run one on every refresh. The verdict is recorded here by the
-verify action and read back by status. It is keyed by endpoint, model and the
-runtime's content digest: a verdict describes exact weights, so a pull that
-replaces them or a removal drops the record rather than letting it describe
-different bytes.
+A fitness probe costs a model load plus a full answer budget, so neither a
+status surface nor a consumer may run one on every refresh. The verdict is
+recorded here by the verify action and read back at a consumer's admission and
+by status; it is never part of the local AI component's state, which the
+native engine decides. It is keyed by endpoint, model and the runtime's content
+digest: the endpoint of the server the runtime manager runs is its one fixed
+address, so a verdict survives the server's restarts, while a verdict describes
+exact weights, so a pull that replaces them or a removal drops the record
+rather than letting it describe different bytes.
 
 The record is operational state about a public model, never taxpayer data, and
 lives in one fixed file under the storage root.

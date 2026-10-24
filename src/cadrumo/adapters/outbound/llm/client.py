@@ -32,6 +32,7 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from ....application.operations.model_runs import ModelRunPort, current_model_run_port
+from ....core.component_records import local_ai_chat_url
 from ....core.config import Settings, load_settings
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
@@ -464,7 +465,7 @@ class LLMClient:
         # Resolved once, here, and handed to both the gate and the adapter: the
         # URL the gate judges on-host is then the only URL the request can be
         # posted to.
-        local_chat_url = load_settings().cadrumo_llm_ollama_chat_url if provider is LLMProvider.LOCAL else None
+        local_chat_url = local_ai_chat_url(load_settings()) if provider is LLMProvider.LOCAL else None
         self._require_evidence_consent(provider, model, request, local_chat_url=local_chat_url)
         request_id = self._request_id(request)
         cached = self.cache.read(request, provider, model)

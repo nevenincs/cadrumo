@@ -38,6 +38,7 @@ from ..local_reader import (
     LocalReaderStatus,
     RoleFitnessOutcome,
     RoleFitnessState,
+    probe_local_reader,
     read_local_reader_status,
     role_model_targets,
     verify_role_target,
@@ -258,18 +259,17 @@ def test_an_unreadable_record_reads_as_nothing_recorded_and_verify_replaces_it(t
 # ---------------------------------------------------------------------------
 
 
-def test_status_without_a_recorded_verdict_is_not_verified_rather_than_unfit(tmp_path: Path) -> None:
+def test_status_without_a_recorded_verdict_is_not_verified_and_admitted(tmp_path: Path) -> None:
+    """Fitness is the consumer's admission: only a verdict against the weights closes the role."""
     with _runtime(tmp_path):
         status, row = _text_row()
 
     assert row.fitness is RoleFitnessState.NOT_VERIFIED
     assert row.fit_for_role is None, "no verdict is not evidence of unfitness"
     assert row.installed is True
-    assert row.ready is False
-    assert row.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_VERIFIED
-    assert status.extraction_ready is False
-    assert status.document_readiness is LocalReaderDocumentReadiness.TEXT_LAYER_ONLY
-    assert status.text_layer_model_fill_available is False
+    assert row.ready is True
+    assert row.failed_condition_id is None
+    assert status.text_layer_model_fill_available is True
 
 
 @pytest.mark.parametrize(
@@ -302,6 +302,33 @@ def test_status_reports_a_recorded_refusal_under_its_own_condition_without_probi
     assert row.ready is False
     assert row.failed_condition_id == condition
     assert status.extraction_ready is False
+
+
+@pytest.mark.parametrize(
+    ("verdict", "condition"),
+    [
+        (RoleFitnessVerdict.UNFIT, ProvisioningPreconditionCondition.ROLE_MODEL_FIT_FOR_ROLE),
+        (RoleFitnessVerdict.TIMED_OUT, ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_WITHIN_TIMEOUT),
+    ],
+)
+def test_a_recorded_refusal_closes_the_consumers_admission_and_offers_nothing(
+    tmp_path: Path,
+    verdict: RoleFitnessVerdict,
+    condition: ProvisioningPreconditionCondition,
+) -> None:
+    with _runtime(tmp_path):
+        before = probe_local_reader(ModelRole.TEXT_EXTRACTION)
+        _verify_text(_Probe(verdict))
+        after = probe_local_reader(ModelRole.TEXT_EXTRACTION)
+        vision = probe_local_reader(ModelRole.VISION_TRANSCRIPTION)
+
+    assert before.available is True, "no verdict admits the consumer"
+    assert after.available is False
+    assert after.facts["fitness"] == verdict.value
+    assert after.precondition_verdict is not None
+    assert after.precondition_verdict.failed_condition_id == condition
+    assert after.precondition_verdict.action is None
+    assert vision.available is True, "only the probed text role is admitted on its fitness"
 
 
 def test_a_verified_fit_model_is_extraction_ready_from_the_record_alone(tmp_path: Path) -> None:
@@ -371,6 +398,7 @@ def test_a_requested_probe_with_no_answer_is_not_verified(tmp_path: Path) -> Non
 
     assert row.fitness is RoleFitnessState.NOT_VERIFIED
     assert row.fit_for_role is None
+    assert row.ready is False, "a check asked for now that got no answer closes the role"
     assert row.failed_condition_id == ProvisioningPreconditionCondition.MODEL_READY
 
 

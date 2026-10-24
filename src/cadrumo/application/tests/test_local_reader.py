@@ -6,6 +6,7 @@ The runtime is a real loopback endpoint speaking the ``/api/version``,
 
 from __future__ import annotations
 
+import json
 from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
@@ -14,7 +15,10 @@ from typing import ClassVar, override
 
 import pytest
 
-from ...core.config import Settings, override_settings
+from ...core.component_records import component_records_root, local_ai_chat_url
+from ...core.config import Settings, load_settings, override_settings
+from ...core.config_runtime_fields import LOCAL_AI_CHAT_URL
+from ...core.hardware import AcceleratorKind
 from ...core.model_catalogue import ModelRole, default_model_runtime_id
 from ...tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
 from ..local_reader import (
@@ -26,6 +30,12 @@ from ..local_reader import (
     read_local_reader_status,
     role_model_targets,
     verify_role_target,
+)
+from ..provisioning import (
+    AcceleratorReading,
+    HardwareProfile,
+    SystemMemoryReading,
+    probe_hardware_profile,
 )
 from ..provisioning_contracts import (
     LOCAL_AI_PROVISION_ACTION_ID,
@@ -193,7 +203,7 @@ def test_status_of_an_unreachable_runtime_reports_unknowns_not_absences() -> Non
     assert all(row.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE for row in status.roles)
 
 
-def test_installed_reader_models_are_not_extraction_ready_until_the_text_model_is_verified() -> None:
+def test_installed_reader_models_are_extraction_ready_with_the_text_model_not_yet_verified() -> None:
     with _runtime(installed=[_TEXT]):
         partial = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False)
     with _runtime(installed=[_TEXT, _VISION], residents=[_TEXT]):
@@ -205,9 +215,10 @@ def test_installed_reader_models_are_not_extraction_ready_until_the_text_model_i
     assert partial_rows[ModelRole.VISION_TRANSCRIPTION].failed_condition_id == (
         ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED
     )
-    assert unverified.extraction_ready is False
+    assert unverified.extraction_ready is True, "no fitness verdict is not a refusal"
     rows = {row.role: row for row in unverified.roles}
     assert rows[ModelRole.TEXT_EXTRACTION].fitness is RoleFitnessState.NOT_VERIFIED
+    assert rows[ModelRole.TEXT_EXTRACTION].ready is True
     assert rows[ModelRole.TEXT_EXTRACTION].resident is True
     assert rows[ModelRole.VISION_TRANSCRIPTION].ready is True
     assert rows[ModelRole.VISION_TRANSCRIPTION].fitness is None, "only the text role is probed"
@@ -280,3 +291,93 @@ def test_verify_passes_a_fit_model_and_skips_the_probe_for_unprobed_roles() -> N
 
     assert outcome.ready is True
     assert probe.calls == []
+
+
+# ---------------------------------------------------------------------------
+# the order of the probe's judgement, and the local AI located from its record
+# ---------------------------------------------------------------------------
+
+_LOCAL_AI_RECORD = Path(__file__).parents[2] / "core" / "tests" / "_component_records" / "local_ai.json"
+_GIB = 1024**3
+
+
+def _below_every_floor() -> HardwareProfile:
+    """A computer measured with no accelerator and too little free memory for any catalogued model."""
+    return probe_hardware_profile(
+        memory=SystemMemoryReading(total_bytes=2 * _GIB, free_bytes=_GIB // 4),
+        accelerator=AcceleratorReading(kind=AcceleratorKind.NONE),
+    )
+
+
+@pytest.mark.parametrize("role", list(ModelRole))
+def test_a_role_below_this_computers_floor_offers_nothing_even_with_no_runtime(role: ModelRole) -> None:
+    """Setup cannot change the hardware, so the floor decides before reachability, for every role."""
+    with override_settings(
+        cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT,
+        cadrumo_llm_ollama_vision_model=_VISION,
+        cadrumo_llm_ollama_text_model=_TEXT,
+        cadrumo_llm_ollama_mapping_model=_MAPPING,
+    ):
+        status = probe_local_reader(role, hardware=_below_every_floor())
+    assert status.available is False
+    assert status.facts["role"] == role.value
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE
+    assert status.precondition_verdict.action is None
+    assert status.facts["selection_condition"] == ProvisioningPreconditionCondition.SELECTED_MODEL_FITS
+
+
+def _install_local_ai(storage_root: Path, address: str) -> None:
+    """Write the engine's local AI record, at ``address``, and the program and models it names."""
+    record = json.loads(_LOCAL_AI_RECORD.read_text(encoding="utf-8").replace("<storage-root>", storage_root.as_posix()))
+    record["location"]["facts"]["address"] = address
+    records_root = component_records_root(load_settings())
+    records_root.mkdir(parents=True, exist_ok=True)
+    (records_root / "local_ai.json").write_text(json.dumps(record), encoding="utf-8")
+    location = record["location"]
+    folder = Path(location["root"])
+    program = folder / location["paths"]["program"]
+    program.parent.mkdir(parents=True, exist_ok=True)
+    program.write_bytes(b"local AI program")
+    (folder / location["paths"]["models"]).mkdir(parents=True, exist_ok=True)
+
+
+def test_the_managed_local_ai_without_a_record_refuses_with_its_setup(tmp_path: Path) -> None:
+    with override_settings(cadrumo_llm_ollama_chat_url=LOCAL_AI_CHAT_URL, cadrumo_llm_ollama_text_model=_TEXT):
+        status = probe_local_reader(ModelRole.TEXT_EXTRACTION)
+        host = read_local_reader_status(roles=(ModelRole.TEXT_EXTRACTION,), assess_load=False).host
+    assert status.available is False
+    assert status.facts["local_ai_located"] is False
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALLED
+    assert status.precondition_verdict.action is not None
+    assert status.precondition_verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert host.executable_located is False and host.reachable is False
+    assert not (tmp_path / "components" / "receipts").exists(), "reading writes nothing"
+
+
+def test_a_located_local_ai_whose_server_no_manager_runs_refuses_with_its_setup(tmp_path: Path) -> None:
+    _, port = _CLOSED_ENDPOINT.removeprefix("http://").split("/")[0].split(":")
+    with override_settings(cadrumo_llm_ollama_chat_url=LOCAL_AI_CHAT_URL, cadrumo_llm_ollama_text_model=_TEXT):
+        _install_local_ai(tmp_path, f"127.0.0.1:{port}")
+        status = probe_local_reader(ModelRole.TEXT_EXTRACTION)
+    assert status.available is False
+    assert status.facts["runtime_url"] == _CLOSED_ENDPOINT
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE
+    assert status.precondition_verdict.action is not None
+    assert status.precondition_verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+
+
+def test_the_readers_ask_the_server_at_the_address_the_record_names(tmp_path: Path) -> None:
+    with _runtime(installed=[_TEXT]) as chat_url:
+        address = chat_url.removeprefix("http://").removesuffix("/api/chat")
+        with override_settings(cadrumo_llm_ollama_chat_url=LOCAL_AI_CHAT_URL):
+            _install_local_ai(tmp_path, address)
+            status = probe_local_reader(ModelRole.TEXT_EXTRACTION)
+            reader = read_local_reader_status(roles=(ModelRole.TEXT_EXTRACTION,), assess_load=False)
+            sent_to = local_ai_chat_url(load_settings())
+    assert status.available is True
+    assert sent_to == chat_url
+    assert reader.host.endpoint_url == chat_url
+    assert reader.host.executable_located is True and reader.host.reachable is True
