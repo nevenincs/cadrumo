@@ -557,6 +557,146 @@ try {
     };
     await context.close();
   }
+
+  // The Ledger page over a period of five thousand movements: how long the
+  // period takes to be read in pages and drawn, a scroll through it, every
+  // shown movement selected, and a sort of the whole window.
+  {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+    });
+    const page = await context.newPage();
+    const client = await context.newCDPSession(page);
+    await client.send("Performance.enable");
+    await page.addInitScript(() =>
+      localStorage.setItem(
+        "cadrumo-shell-layout",
+        JSON.stringify({ layout: { page: "ledger" } }),
+      ),
+    );
+    await page.goto(
+      `${origin}/scenarios.html?scenario=ledger&bar=off&latency=0&ledger=large`,
+    );
+    const trigger = page.locator(".ledger-period");
+    await trigger.waitFor();
+    const grid = page.locator(".ledger-movements [role=grid]");
+    const head = page.locator(".pane-docs .pane-head");
+    // The large period is the fixture's last quarter, wherever today is.
+    for (let guard = 0; guard < 400; guard++) {
+      const shown = (await trigger.textContent()) ?? "";
+      const [year, code] = shown.split(" · ");
+      if (year === "2026" && code === "4T") break;
+      const later =
+        Number(year) > 2026 || (Number(year) === 2026 && code > "4T");
+      await head
+        .locator(".ledger-period")
+        .locator("xpath=..")
+        .getByRole("button")
+        .nth(later ? 0 : 2)
+        .click();
+    }
+    await grid.waitFor();
+    const read = [];
+    for (let run = 0; run < RUNS; run++) {
+      // Timed in the page, from asking for the period again to the frame
+      // that draws it whole.
+      read.push(
+        await page.evaluate(
+          () =>
+            new Promise((done) => {
+              const status = () =>
+                document.querySelector(".ledger-movements .ledger-count")
+                  ?.textContent ?? "";
+              const before = status();
+              const buttons = document
+                .querySelector(".pane-docs .pane-head .ledger-period")
+                .parentElement.querySelectorAll("button");
+              buttons[0].click();
+              // Once the quarter before is drawn, the large one is asked
+              // for again and timed until it is drawn whole.
+              const back = () => {
+                const now = status();
+                if (now === "" || now === before)
+                  return requestAnimationFrame(back);
+                const started = performance.now();
+                buttons[2].click();
+                const whole = () =>
+                  status() === before
+                    ? requestAnimationFrame(() =>
+                        done(performance.now() - started),
+                      )
+                    : requestAnimationFrame(whole);
+                requestAnimationFrame(whole);
+              };
+              requestAnimationFrame(back);
+            }),
+        ),
+      );
+    }
+    const rows = Number(await grid.getAttribute("aria-rowcount")) - 1;
+    if (rows < 5000)
+      throw new Error(`The large period read ${rows} movements, not 5000.`);
+    const scroll = await frames(page, () =>
+      page.evaluate(
+        () =>
+          new Promise((done) => {
+            const box = document.querySelector(".ledger-movements [role=grid]");
+            const started = performance.now();
+            const step = (now) => {
+              box.scrollTop += box.clientHeight;
+              if (now - started < 2000) requestAnimationFrame(step);
+              else done();
+            };
+            requestAnimationFrame(step);
+          }),
+      ),
+    );
+    await grid.locator("[data-kind=data] [role=gridcell]").first().click();
+    const select = await page.evaluate(
+      () =>
+        new Promise((done) => {
+          const cell = document.activeElement;
+          const started = performance.now();
+          cell.dispatchEvent(
+            new KeyboardEvent("keydown", {
+              key: "a",
+              code: "KeyA",
+              ctrlKey: true,
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+          requestAnimationFrame(() => done(performance.now() - started));
+        }),
+    );
+    const sort = await page.evaluate(
+      () =>
+        new Promise((done) => {
+          const header = [
+            ...document.querySelectorAll(
+              ".ledger-movements [role=columnheader]",
+            ),
+          ].find((cell) => cell.getAttribute("aria-sort") === "none");
+          const started = performance.now();
+          header.click();
+          requestAnimationFrame(() => done(performance.now() - started));
+        }),
+    );
+    report.ledger = {
+      movements: rows,
+      drawnRows: await grid.locator("[data-kind=data]").count(),
+      readMs: { median: round(median(read)), worst: round(Math.max(...read)) },
+      scrollFrameMs: {
+        median: round(median(scroll)),
+        p95: round(percentile(scroll, 0.95)),
+        worst: round(Math.max(...scroll)),
+      },
+      selectAllMs: round(select),
+      sortMs: round(sort),
+      ...(await metrics(client)),
+    };
+    await context.close();
+  }
 } finally {
   await browser.close();
   server.close();
@@ -617,6 +757,16 @@ const BUDGETS = [
     report.signIn.churn.listenersGrown,
     300,
   ],
+  [
+    "ledger period of 5,000 read and drawn, median ms",
+    report.ledger.readMs.median,
+    3000,
+  ],
+  ["ledger scroll frame, p95 ms", report.ledger.scrollFrameMs.p95, 34],
+  ["ledger select every shown movement ms", report.ledger.selectAllMs, 150],
+  ["ledger sort of 5,000 ms", report.ledger.sortMs, 300],
+  ["ledger rows in the document", report.ledger.drawnRows, 80],
+  ["heap with 5,000 movements MB", report.ledger.heapMB, 64],
 ];
 report.budgets = BUDGETS.map(([name, value, most]) => ({
   name,

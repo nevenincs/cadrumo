@@ -8,6 +8,7 @@ import type {
   LedgerTransaction,
   PublicDecimal,
 } from "../../shell/ledger";
+import { exampleInvoices } from "./ledgerInvoices";
 
 /** The profile the fixture ledger belongs to: the profile fixture's own. */
 export const LEDGER_FIXTURE_PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -424,16 +425,16 @@ function receivedInvoice(
         quantity: { decimal: "1" },
         unit_price: decimal(baseCents),
         subtotal: decimal(baseCents),
-        iva_rate: "0.21",
+        iva_rate: "RATE_21",
         iva_amount: decimal(ivaCents),
         spending_category_id: "arrendamiento_local",
         oss_rate_kind: null,
       },
     ],
-    invoice_class: "ordinaria",
+    invoice_class: "ORDINARIA",
     series: null,
     operation_date: issued,
-    operation_date_role: null,
+    operation_date_role: "OPERATION_PERFORMED",
     iva_category: "domestic_general",
     rectifies_invoice_number: null,
     fx_rate: null,
@@ -640,16 +641,16 @@ export function fixtureLedger(): FixtureLedger {
             quantity: { decimal: "1" },
             unit_price: decimal(baseCents),
             subtotal: decimal(baseCents),
-            iva_rate: "0.21",
+            iva_rate: "RATE_21",
             iva_amount: decimal(ivaCents),
             spending_category_id: null,
             oss_rate_kind: null,
           },
         ],
-        invoice_class: "ordinaria",
+        invoice_class: "ORDINARIA",
         series: "2026",
         operation_date: issued,
-        operation_date_role: null,
+        operation_date_role: "OPERATION_PERFORMED",
         iva_category: "domestic_general",
         rectifies_invoice_number: null,
         fx_rate: null,
@@ -796,6 +797,33 @@ export function fixtureLedger(): FixtureLedger {
     if (rejected) rejected.llm_rejected = true;
   }
 
+  // Something for readiness to find in the open quarters: business
+  // expenses whose category was never chosen, and foreign income whose
+  // exchange rate was not found, so its euro value is not known.
+  const open = movements.filter(
+    (movement) =>
+      movement.transaction.date >= "2026-07-01" &&
+      movement.transaction.lifecycle_state === "ACTIVE",
+  );
+  open
+    .filter(
+      (movement) =>
+        movement.transaction.business_classification === "BUSINESS" &&
+        movement.transaction.direction === "OUTGOING" &&
+        movement.transaction.category_id !== null,
+    )
+    .filter((_, at) => at % 5 === 2)
+    .forEach((movement) => {
+      movement.transaction.category_id = null;
+    });
+  const foreign = open.filter(
+    (movement) => movement.transaction.currency !== "EUR",
+  );
+  for (const movement of foreign.slice(-1)) {
+    movement.transaction.value_in_eur = null;
+    movement.transaction.fx_rate = null;
+  }
+
   // A few movements from earlier years, so that moving between years, and
   // the years that hold movements, have something to find. Added after the
   // year's rows so none of those changes. Before the accounts were opened a
@@ -818,7 +846,7 @@ export function fixtureLedger(): FixtureLedger {
 
   return {
     movements,
-    invoices,
+    invoices: [...invoices, ...exampleInvoices(hex64)],
     evidence,
     rules: [
       {
@@ -882,4 +910,50 @@ export function fixtureLedger(): FixtureLedger {
 
 export function emptyLedger(): FixtureLedger {
   return { movements: [], invoices: [], evidence: [], rules: [], accounts: [] };
+}
+
+/** How many movements the large ledger adds to October 2026. */
+export const LARGE_LEDGER_EXTRA = 5_000;
+
+/** The fixture ledger with thousands more movements in October 2026, the
+ * size a busy period reaches, for measuring the grid. Each is a copy of an
+ * October movement with its own id, day and amount. */
+export function largeLedger(): FixtureLedger {
+  const ledger = fixtureLedger();
+  const october = ledger.movements.filter((movement) =>
+    movement.transaction.date.startsWith("2026-10-"),
+  );
+  for (let at = 0; at < LARGE_LEDGER_EXTRA; at += 1) {
+    const source = october[at % october.length]!;
+    const date = day(10, 1 + (at % 23));
+    const amount = money(500 + ((at * 7919) % 250_000));
+    const description = `${source.transaction.description} ${String(at).padStart(4, "0")}`;
+    ledger.movements.push({
+      ...source,
+      transaction: {
+        ...source.transaction,
+        transaction_id: movementId({
+          date,
+          amount,
+          description,
+          own_account_id: source.own_account_id,
+          salt: `large-${at}`,
+        }),
+        date,
+        booked_date: date,
+        value_date: date,
+        amount,
+        description,
+        taxable_base: null,
+        iva_amount: null,
+      },
+      sealed: false,
+    });
+  }
+  ledger.movements.sort(
+    (a, b) =>
+      a.transaction.date.localeCompare(b.transaction.date) ||
+      a.transaction.transaction_id.localeCompare(b.transaction.transaction_id),
+  );
+  return ledger;
 }

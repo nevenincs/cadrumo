@@ -809,11 +809,162 @@ desktop:
       go_to_period: Ir a un periodo…
       import: Importar
       section: 'Libro: {section}'
+    category:
+      amortizacion_vivienda_afecto: Amortización de la vivienda afecta
+      arrendamiento_local: Alquiler del local
+      arrendamiento_vivienda_afecto: Alquiler de la vivienda afecta
+      asesoria_contable: Honorarios de asesoría contable
+      asesoria_fiscal: Honorarios de asesoría fiscal
+      asesoria_juridica: Honorarios de asesoría jurídica
+      comunidad_vivienda_afecto: Gastos de comunidad de la vivienda afecta
+      cuotas_autonomos_ss: Cuotas de autónomos a la Seguridad Social (RETA)
+      cuotas_colegiales: Cuotas colegiales
+      formacion_profesional: Formación profesional
+      gastos_bancarios: Gastos bancarios
+      gastos_financieros: Gastos financieros
+      hardware_amortizable: Hardware amortizable
+      ibi_local_afecto: IBI del local afecto
+      ibi_vivienda_afecto: IBI de la vivienda afecta
+      manutencion_dietas_extranjero: Manutención en el extranjero
+      manutencion_dietas_nacional: Manutención en España
+      material_oficina: Material de oficina
+      mobiliario_amortizable: Mobiliario amortizable
+      mutualidad_alternativa: Mutualidad alternativa
+      publicidad_marketing: Publicidad y marketing
+      reparaciones_conservacion: Reparaciones y conservación
+      seguros_responsabilidad_civil: Seguro de responsabilidad civil profesional
+      seguros_salud_autonomo: Seguro de salud del autónomo
+      software_suscripcion: Suscripción de software
+      subcontratacion: Subcontratación
+      suministros_cliente_directos: Suministros directos del cliente
+      suministros_home_office_agua: Agua del despacho en casa
+      suministros_home_office_gas: Gas del despacho en casa
+      suministros_home_office_internet: Internet del despacho en casa
+      suministros_home_office_luz: Electricidad del despacho en casa
+      suministros_local_afecto: Suministros del local afecto
+      telefonia_fija: Telefonía fija
+      telefonia_movil: Telefonía móvil
+      tributos_fiscalmente_deducibles: Tributos deducibles
+      vehiculo_combustible: Combustible del vehículo
+      vehiculo_mantenimiento: Mantenimiento del vehículo
+      vehiculo_parking: Aparcamiento del vehículo
+      vehiculo_peaje: Peajes del vehículo
+      vehiculo_seguro: Seguro del vehículo
+      viajes_alojamiento: Alojamiento en viajes
+      viajes_transporte: Transporte en viajes
+    category_family:
+      direct_costs: Costes directos
+      financial: Financieros
+      home_office_ownership: Vivienda afecta
+      home_office_suministros: Suministros del despacho en casa
+      insurance: Seguros
+      meals: Manutención
+      office: Oficina y equipos
+      premises: Local de negocio
+      professional_services: Servicios profesionales
+      social_security: Seguridad social y cuotas
+      taxes: Tributos
+      telecoms: Telecomunicaciones
+      travel: Viajes
+      vehicle: Vehículo
+    classification:
+      business: Empresarial
+      failed_validation: Validación fallida
+      mixed: Mixto
+      mixed_share: Mixto {share}
+      not_yet_processed: Por clasificar
+      personal: Personal
+      processed_unclassified: Sin clasificar
+      reviewed_excluded: Excluido
+      skipped_by_rule: Omitido por una regla
+    classified_by:
+      auto: Todavía no
+      derived: Calculado
+      manual: Tú
+      model: Modelo, aprobado por ti
+      rule: Regla
+    classify:
+      as_business: Clasifica como empresarial
+      as_mixed: Clasifica como mixto
+      as_personal: Clasifica como personal
+      cancel: Cancelar
+      category: Categoría
+      category_needs_classification: Clasifícalos antes como empresariales o mixtos
+      choose_category: Elige una categoría
+      inactive_only: Solo cambian los movimientos activos
+      no_category_match: Ninguna categoría coincide
+      not_saved: Preparado, sin guardar
+      nothing: Selecciona movimientos primero
+      partial: solo las filas cargadas
+      search_category: Busca en las categorías
+      share: Parte empresarial
+      share_hint: 'Porcentaje de uso empresarial: 50 para el 50 %.'
+      share_refused: '«{raw}» no es una parte: escribe un porcentaje, como 50 para
+        el 50 %.'
+      skipped: '{count} se quedan como están'
+      stage: Prepara para {count}
+      staged: '{classification} · {count} movimientos preparados'
+      staged_category: '{category} · {count} movimientos preparados'
+      staged_detail: '{classification} · {detail} · {count} movimientos preparados'
+      title_business: Empresarial · {count} movimientos
+      title_category: Categoría · {count} movimientos
+      title_mixed: Mixto · {count} movimientos
+      transfers_only: Los traspasos solo pueden ser personales o quedar sin clasificar
     close: Cerrar el libro
+    column:
+      amount: Importe
+      category: Categoría
+      classification: Clasificación
+      classified_by: Clasificado por
+      counterparty: Contraparte
+      date: Fecha
+      description: Descripción
+      direction: Sentido
+      documents: Documentos
+      eur: Valor en EUR
+      group_label: Grupo
+      invoice: Factura
+      irpf_category: Categoría de IRPF
+      iva_amount: Cuota de IVA
+      iva_category: Categoría de IVA
+      iva_rate: Tipo de IVA
+      lifecycle: Situación
+      modified: Modificado
+      notes: Notas
+      select: Selección
+      status: Estado
+      taxable_base: Base imponible
+    columns:
+      list: Columnas mostradas
+      move_down: Baja {column}
+      move_up: Sube {column}
+      preset:
+        custom: personalizadas
+        everything: Todo
+        irpf: IRPF
+        iva: IVA
+        review: Revisión
+      presets: Predefinidas
+      reset: Restablece las columnas
+      title: Columnas
     count:
       to_classify: '{count} por clasificar'
+    density:
+      comfortable: Filas holgadas
+    describe:
+      missing: 'falta: {reason}'
+      readiness: 'Preparación: {reasons}'
+    direction:
+      incoming: Entrada
+      internal_transfer: Traspaso
+      outgoing: Salida
+    documents:
+      count: '{count} documentos'
     empty: No hay movimientos en {period}
     empty_all: Aún no hay movimientos
+    empty_filtered: Ningún movimiento coincide
+    empty_filtered_detail: La búsqueda o los filtros ocultan {count} movimientos de
+      {period}.
     export:
       cancel: Cancelar
       change_file: Cambiar…
@@ -888,6 +1039,66 @@ desktop:
         revisa el archivo antes de exportar otra vez.'
       without_staged: Exportar sin ellos
     failed: No se ha podido leer el libro.
+    filters:
+      account: Cuenta
+      active: '{count} activos'
+      any: Cualquiera
+      classification: Clasificación
+      clear_all: Quita todos los filtros
+      direction: Sentido
+      failed: No se ha podido aplicar el filtro.
+      foreign: Solo moneda extranjera
+      foreign_chip: Moneda extranjera
+      group: Etiqueta de grupo
+      hide_rejected: Oculta los movimientos cuya sugerencia del modelo rechazaste
+      hide_rejected_chip: Sin rechazados
+      import_chip: De la importación
+      import_issue: Nota de importación
+      in_force: Filtros aplicados
+      lifecycle: Situación
+      no_group: Sin etiqueta de grupo
+      reading: Leyendo el filtro…
+      reason: Motivo de preparación
+      remove: 'Quita el filtro: {filter}'
+      reset: Restablecer
+      status: Estado
+      title: Filtros
+      to_match: Movimientos empresariales sin factura vinculada
+      to_match_chip: Por conciliar
+    grid: Movimientos, {period}
+    group:
+      business: Empresarial…
+      by: Agrupar por
+      category: Categoría
+      category_family: Familia de categoría
+      classification: Clasificación
+      collapse_all: Pliega todos los grupos
+      count: '{count} movimientos'
+      counterparty: Contraparte
+      description: Descripción, sin referencias
+      direction: Sentido
+      empty:
+        category: Sin categoría
+        category_family: Sin categoría
+        classification: Sin valor
+        counterparty: Sin contraparte
+        description: Sin descripción
+        direction: Sin valor
+        group_label: Sin etiqueta de grupo
+        iva_category: Sin categoría de IVA
+        month: Sin valor
+        status: Sin valor
+      expand_all: Despliega todos los grupos
+      group_label: Etiqueta de grupo
+      iva_category: Categoría de IVA
+      mixed: Mixto…
+      month: Mes
+      none: Sin agrupar
+      personal: Personal
+      select: Selecciona {count}
+      status: Estado
+      title: Agrupar
+      waits: necesita leerlo todo
     import:
       accepts:
         bank: CSV, XLSX, XLS, OFX, QFX o PDF · hasta 128 archivos · no se leen las
@@ -1048,10 +1259,59 @@ desktop:
       unmapped: 'Columnas no usadas: {columns}'
       verify: Comprobar huecos y filas repetidas
       what: Qué importar
+    import_issue:
+      duplicate: Posible duplicado
+      gap: Hueco en el extracto
+      original_file: Archivo original
+      parser: Leído con un aviso
+    invoice:
+      linked: Vinculada
+    irpf_category:
+      actividad_economica: Actividad económica
+      arrendamiento_local: Arrendamiento de local
+      arrendamiento_vivienda_afecto: Arrendamiento de vivienda afecta
+      trabajo: Trabajo
+    issue:
+      next: Siguiente problema de preparación
+      none: No hay problemas de preparación en esta vista
+      previous: Problema de preparación anterior
+    iva_category:
+      domestic_exempt: Exenta
+      domestic_general: Tipo general
+      domestic_not_subject: No sujeta
+      domestic_reduced: Tipo reducido
+      domestic_reverse_charge: Inversión del sujeto pasivo
+      domestic_super_reduced: Tipo superreducido
+      domestic_zero: Tipo cero
+      erroneous_invoice: Factura errónea
+      export_assimilated_zero_rated: Asimilada a la exportación
+      export_third_country_zero_rated: Exportación
+      import_third_country: Importación
+      intra_community_acquisition_reverse_charge: Adquisición intracomunitaria
+      intra_community_service_acquisition_reverse_charge: Adquisición intracomunitaria
+        de servicios
+      intra_community_service_supply: Prestación intracomunitaria de servicios
+      intra_community_supply: Entrega intracomunitaria
+      intra_community_triangulation: Operación triangular
+      operacion_no_sujeta: Operación no sujeta
+      reagp_compensation: Compensación REAGP
+      recargo_equivalencia: Recargo de equivalencia
+      regimen_simplificado: Régimen simplificado
+      unknown: Desconocida
+    lifecycle:
+      active: Activo
+      archived: Archivado
+      split: Dividido
+      stashed: Apartado
     loaded_of: '{loaded} de {total} cargados'
     loading: Leyendo el libro…
     maximize: Maximizar el libro
+    menu: Acciones del movimiento
+    missing: Falta
     movements_count: 'Movimientos: {count}'
+    no_rate: Sin tipo de cambio
+    no_rate_detail: 'No hay tipo de cambio para esta fecha: el valor en EUR no se
+      conoce y no es cero.'
     period:
       all: Todos los periodos
       choose: Elige un periodo
@@ -1065,18 +1325,84 @@ desktop:
       year_next: Año siguiente
       year_previous: Año anterior
       years_with_movements: Años con movimientos
+    position: Fila {row} de {count}
     readiness:
       checking: Comprobando…
       failed: No se ha podido comprobar la preparación
+      fewer: Menos
+      loaded_only: solo las filas cargadas
+      more: +{count}
+      more_name: '{count} motivos más'
       no_rate: '{count} sin tipo de cambio a euros'
       not_checked: Aún sin comprobar
       not_measured: Preparación sin medir
       not_ready: No listo para calcular · {count} por corregir
       out_of_date: Sin comprobar desde {count} cambios guardados
       ready: Listo para calcular · comprobado a las {time}
+      reason_name: '{reason}: {count}. Muéstralos y cómo corregirlos'
+      reasons: Motivos de preparación
+      staged: '{count} preparados'
       title: Preparación
+      unsaved: '{count} cambios sin guardar no incluidos'
+    readiness_filter:
+      issues: Por corregir
+      no_rate: Sin tipo de cambio
+      to_classify: Por clasificar
     reading: Leyendo {loaded} de {total}
+    reason:
+      anomaly_non_declarable_iva_category: Categoría IVA
+      anomaly_non_declarable_recargo_equivalencia: Recargo
+      censo_ratio_mismatch: Ratio censo
+      domestic_identification_on_intra_community_transaction: NIF español
+      eu_member_state_on_export_transaction: Estado exportación
+      inadmissible_deduction_classification: Deducción
+      missing_business_classification: Clasificación
+      missing_category: Categoría
+      missing_counterparty_establishment_on_export: Establecimiento
+      missing_counterparty_identification_state: Estado IVA
+      missing_eur_tax_substrate: Cifras EUR
+      missing_home_office_afectacion: Afectación
+      missing_iva_amount: Cuota IVA
+      missing_iva_rate: Tipo IVA
+      missing_proportionality_reference: Ratio de uso
+      missing_taxable_base: Base
+      unsupported_currency: Tipo EUR
+      unsupported_period: Periodo
+    reason_detail:
+      anomaly_non_declarable_iva_category: Categoría de IVA no declarable
+      anomaly_non_declarable_recargo_equivalencia: Recargo de equivalencia no declarable
+      censo_ratio_mismatch: La ratio no coincide con el censo
+      domestic_identification_on_intra_community_transaction: NIF español en una operación
+        intracomunitaria
+      eu_member_state_on_export_transaction: Estado miembro de la UE en una exportación
+      inadmissible_deduction_classification: Clasificación no admitida para deducir
+      missing_business_classification: Falta la clasificación
+      missing_category: Falta la categoría
+      missing_counterparty_establishment_on_export: Falta el establecimiento de la
+        contraparte en una exportación
+      missing_counterparty_identification_state: Falta la identificación a efectos
+        de IVA de la contraparte
+      missing_eur_tax_substrate: Faltan las cifras en euros
+      missing_home_office_afectacion: Falta la afectación de la vivienda
+      missing_iva_amount: Falta la cuota de IVA
+      missing_iva_rate: Falta el tipo de IVA
+      missing_proportionality_reference: Mixto sin ratio de uso
+      missing_taxable_base: Falta la base imponible
+      unsupported_currency: Moneda no admitida
+      unsupported_period: Periodo no admitido
     retry: Reintentar
+    review:
+      excluded: Excluido
+      pending: Por clasificar
+      reviewed: Revisado
+      skipped: Omitido por una regla
+    search:
+      elsewhere: '{count} más en otros periodos'
+      label: Buscar movimientos
+      load_all: Carga los {total}
+      loaded: '{found} encontrados en los {loaded} cargados'
+      placeholder: Buscar
+      show: Ver
     section:
       documents: Documentos
       health: Estado
@@ -1085,11 +1411,79 @@ desktop:
       registers: Registros
       rules: Reglas
     sections: Secciones del libro
+    select:
+      row: Selecciona {description}
+      shown: Selecciona los movimientos mostrados · Ctrl+clic los añade
+    selected: '{count} seleccionados'
+    selection:
+      all_shown: Los {count} mostrados están seleccionados.
+      hidden: '{hidden} de {selected} seleccionados están ocultos'
+      keep_visible: Deja solo los visibles
+      select_all: Selecciona los {count} de {period}
+      show: Muéstralos
     setup: Ajustes
     setup_current: 'Ajustes: {section}'
+    shown_of: '{shown} de {total} movimientos'
     signed_out: Inicia sesión para ver tu libro.
+    sort:
+      asc: Ascendente
+      by: Ordenar por
+      current: '{key}, {direction}'
+      desc: Descendente
+      key:
+        amount: Importe
+        category: Categoría
+        classification: Clasificación
+        classified_at: Fecha de clasificación
+        classified_by: Clasificado por
+        counterparty: Contraparte
+        created_at: Fecha de alta
+        date: Fecha
+        description: Descripción
+        direction: Sentido
+        documents: Documentos
+        eur: Valor en EUR
+        group_label: Etiqueta de grupo
+        invoice: Factura
+        irpf_category: Categoría de IRPF
+        iva_amount: Cuota de IVA
+        iva_category: Categoría de IVA
+        iva_rate: Tipo de IVA
+        lifecycle: Situación
+        modified: Modificado
+        notes: Notas
+        select: Selección
+        status: Estado
+        taxable_base: Base imponible
+        value_date: Fecha valor
+      title: Ordenar
+      waits: necesita leerlo todo
+    status:
+      done: Hecho
+      excluded: Excluido
+      needs_fixing: Por corregir
+      needs_fixing_count: Por corregir · {count}
+      pending: Por clasificar
+      skipped: Omitido por una regla
+    sum:
+      in: Entradas {amount}
+      out: Salidas {amount}
+      transfer: Traspasos {amount}
     title: Libro
+    toolbar: Vista de movimientos
     unavailable: Aún no disponible
+    view:
+      all: Todos
+      business_expenses: Gastos empresariales
+      custom: Vista personalizada
+      foreign: Moneda extranjera
+      named: 'Vista: {view}'
+      title: Vistas guardadas
+      to_classify: Por clasificar
+      to_fix: Por corregir
+      to_match: Por conciliar
+    window:
+      partial: Los grupos y los totales esperan a que se lea todo.
   logs:
     all_loggers: Todos los registradores
     all_origins: Todos los orígenes

@@ -14,6 +14,8 @@ import {
   type LedgerPort,
   type LedgerPreflightResult,
   type LedgerRow,
+  type LedgerSortField,
+  type LedgerSortOrder,
   type LedgerStatusResult,
 } from "./ledger";
 import {
@@ -22,6 +24,8 @@ import {
   samePeriod,
   type LedgerPeriod,
 } from "./ledgerGrammar";
+
+const NO_SCOPE: LedgerWindowScope = {};
 
 /** Rows per `ledger.list` call: a page stays well inside one relay reply. */
 export const LEDGER_PAGE_SIZE = 250;
@@ -53,11 +57,47 @@ export type LedgerReadFailure =
 /** The rows of a window read whole, kept on screen while it is read again. */
 export type HeldWindow = { rows: LedgerRow[]; total: number };
 
+/** What a window reads beside its period: further filter clauses, and the
+ * server's order and group partition where the page cannot sort or group
+ * the rows itself, as when "All periods" is read only in part. */
+export type LedgerWindowScope = {
+  filters?: readonly string[];
+  sort_by?: LedgerSortField;
+  sort_order?: LedgerSortOrder;
+  by_group?: boolean;
+  exclude_llm_rejected?: boolean;
+};
+
+/** A scope as one comparable text: two scopes that read the same rows in
+ * the same order are equal. `scopeOfKey` reads it back. */
+export function scopeKey(scope: LedgerWindowScope): string {
+  return JSON.stringify([
+    [...(scope.filters ?? [])].sort(),
+    scope.sort_by ?? "date",
+    scope.sort_order ?? "asc",
+    scope.by_group === true,
+    scope.exclude_llm_rejected === true,
+  ]);
+}
+export function scopeOfKey(key: string): LedgerWindowScope {
+  const [filters, sortBy, sortOrder, byGroup, excludeRejected] = JSON.parse(
+    key,
+  ) as [string[], LedgerSortField, LedgerSortOrder, boolean, boolean];
+  return {
+    ...(filters.length ? { filters } : {}),
+    sort_by: sortBy,
+    sort_order: sortOrder,
+    ...(byGroup ? { by_group: true } : {}),
+    ...(excludeRejected ? { exclude_llm_rejected: true } : {}),
+  };
+}
+
 export type LedgerWindow = {
   /** Which read this is; an answer to an older one is dropped. */
   generation: number;
   /** The period read, or null for every period. */
   period: LedgerPeriod | null;
+  scope: LedgerWindowScope;
   phase: "reading" | "ready" | "failed";
   /** The rows read so far, in the read's order. */
   rows: LedgerRow[];
@@ -78,6 +118,7 @@ export type LedgerWindowEvent =
       generation: number;
       period: LedgerPeriod | null;
       wanted?: number;
+      scope?: LedgerWindowScope;
       /** Keep the window read whole on screen while it is read again. */
       hold?: boolean;
     }
@@ -97,10 +138,12 @@ export function openWindow(
   generation: number,
   period: LedgerPeriod | null,
   wanted?: number,
+  scope: LedgerWindowScope = {},
 ): LedgerWindow {
   return {
     generation,
     period,
+    scope,
     phase: "reading",
     rows: [],
     total: null,
@@ -134,8 +177,16 @@ export function reduceWindow(
   event: LedgerWindowEvent,
 ): LedgerWindow {
   if (event.type === "open") {
-    const next = openWindow(event.generation, event.period, event.wanted);
-    return event.hold !== false && samePeriod(current.period, event.period)
+    const next = openWindow(
+      event.generation,
+      event.period,
+      event.wanted,
+      event.scope,
+    );
+    // Rows read under another scope are other rows: none is held for them.
+    return event.hold !== false &&
+      samePeriod(current.period, event.period) &&
+      scopeKey(current.scope) === scopeKey(next.scope)
       ? { ...next, held: heldOf(current) }
       : next;
   }
@@ -180,7 +231,8 @@ export function reduceWindow(
 }
 
 /** The next page a reading window asks for, or null when it asks for
- * none. The order is the product's date order, ties by id, so pages join. */
+ * none. The order is the product's date order unless the scope names
+ * another, ties by id, so pages join. */
 export function nextPageRequest(
   current: LedgerWindow,
 ): LedgerListRequest | null {
@@ -190,10 +242,16 @@ export function nextPageRequest(
       ? current.wanted
       : Math.min(current.total, current.wanted) - current.rows.length;
   if (remaining <= 0) return null;
+  const scope = current.scope;
   return {
-    filters: current.period ? periodFilters(current.period) : [],
-    sort_by: "date",
-    sort_order: "asc",
+    filters: [
+      ...(current.period ? periodFilters(current.period) : []),
+      ...(scope.filters ?? []),
+    ],
+    sort_by: scope.sort_by ?? "date",
+    sort_order: scope.sort_order ?? "asc",
+    ...(scope.by_group ? { by_group: true } : {}),
+    ...(scope.exclude_llm_rejected ? { exclude_llm_rejected: true } : {}),
     offset: current.rows.length,
     limit: Math.min(LEDGER_PAGE_SIZE, remaining),
   };
@@ -284,11 +342,12 @@ export async function readWindow(
   port: LedgerPort,
   period: LedgerPeriod | null,
   wanted = Infinity,
+  scope: LedgerWindowScope = {},
 ): Promise<
   | { kind: "read"; rows: LedgerRow[]; total: number }
   | { kind: "failed"; failure: LedgerReadFailure }
 > {
-  let state = openWindow(1, period, wanted);
+  let state = openWindow(1, period, wanted, scope);
   for (
     let request = nextPageRequest(state);
     request;
@@ -312,13 +371,15 @@ export async function readWindow(
  * The period window of one profile, read when the page is shown and again
  * on `reread`. `reader` names whose ledger it is and is null while the
  * account withholds it: what was read is dropped whenever it changes, and
- * nothing of one profile is held on screen under another.
+ * nothing of one profile is held on screen under another. A changed
+ * `scope` reads the window again.
  */
 export function useLedgerWindow(
   port: LedgerPort | undefined,
   reader: string | null,
   period: LedgerPeriod | null,
   shown: boolean,
+  scope: LedgerWindowScope = NO_SCOPE,
 ) {
   const generation = useRef(0);
   const lastReader = useRef(reader);
@@ -328,6 +389,7 @@ export function useLedgerWindow(
   );
   const year = period?.year ?? null;
   const code = period?.code ?? null;
+  const scoped = scopeKey(scope);
 
   const open = useCallback(
     (hold: boolean) => {
@@ -336,10 +398,11 @@ export function useLedgerWindow(
         type: "open",
         generation: generation.current,
         period: year === null || code === null ? null : { year, code },
+        scope: scopeOfKey(scoped),
         hold,
       });
     },
-    [year, code],
+    [year, code, scoped],
   );
   const reread = useCallback(() => open(true), [open]);
 

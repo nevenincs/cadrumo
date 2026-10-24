@@ -790,11 +790,160 @@ desktop:
       go_to_period: Ugrás időszakra…
       import: Importálás
       section: 'Napló: {section}'
+    category:
+      amortizacion_vivienda_afecto: Üzleti célra használt lakás amortizációja
+      arrendamiento_local: Üzlethelyiség bérleti díja
+      arrendamiento_vivienda_afecto: Üzleti célra használt lakás bérleti díja
+      asesoria_contable: Könyvelési díj
+      asesoria_fiscal: Adótanácsadási díj
+      asesoria_juridica: Jogi tanácsadási díj
+      comunidad_vivienda_afecto: Üzleti célra használt lakás közös költsége
+      cuotas_autonomos_ss: Önálló vállalkozói társadalombiztosítási járulék (RETA)
+      cuotas_colegiales: Szakmai kamarai tagdíjak
+      formacion_profesional: Szakmai továbbképzés
+      gastos_bancarios: Banki költségek
+      gastos_financieros: Pénzügyi költségek
+      hardware_amortizable: Amortizálható informatikai eszközök
+      ibi_local_afecto: Üzlethelyiség ingatlanadója (IBI)
+      ibi_vivienda_afecto: Üzleti célra használt lakás ingatlanadója (IBI)
+      manutencion_dietas_extranjero: Étkezés külföldön
+      manutencion_dietas_nacional: Étkezés belföldön
+      material_oficina: Irodaszerek
+      mobiliario_amortizable: Amortizálható bútorzat
+      mutualidad_alternativa: Alternatív kölcsönös biztosítói járulék
+      publicidad_marketing: Reklám és marketing
+      reparaciones_conservacion: Javítás és karbantartás
+      seguros_responsabilidad_civil: Szakmai felelősségbiztosítás
+      seguros_salud_autonomo: Önálló vállalkozó egészségbiztosítása
+      software_suscripcion: Szoftver-előfizetések
+      subcontratacion: Alvállalkozás
+      suministros_cliente_directos: Az ügyfélnek közvetlenül továbbszámlázott ellátások
+      suministros_home_office_agua: Otthoni iroda vízdíja
+      suministros_home_office_gas: Otthoni iroda gázköltsége
+      suministros_home_office_internet: Otthoni iroda internetköltsége
+      suministros_home_office_luz: Otthoni iroda villamosenergia-költsége
+      suministros_local_afecto: Üzleti helyiség közüzemi költségei
+      telefonia_fija: Vezetékes telefon
+      telefonia_movil: Mobiltelefon
+      tributos_fiscalmente_deducibles: Levonható adók
+      vehiculo_combustible: Üzemanyag
+      vehiculo_mantenimiento: Járműkarbantartás
+      vehiculo_parking: Parkolás
+      vehiculo_peaje: Autópályadíj
+      vehiculo_seguro: Járműbiztosítás
+      viajes_alojamiento: Utazási szállás
+      viajes_transporte: Utazási közlekedés
+    category_family:
+      direct_costs: Közvetlen költségek
+      financial: Pénzügyi
+      home_office_ownership: Üzleti célra használt lakás
+      home_office_suministros: Otthoni iroda rezsije
+      insurance: Biztosítások
+      meals: Étkezés
+      office: Iroda és eszközök
+      premises: Üzlethelyiség
+      professional_services: Szakmai szolgáltatások
+      social_security: Társadalombiztosítás és díjak
+      taxes: Adók
+      telecoms: Távközlés
+      travel: Utazás
+      vehicle: Jármű
+    classification:
+      business: Üzleti
+      failed_validation: Sikertelen ellenőrzés
+      mixed: Vegyes
+      mixed_share: Vegyes {share}
+      not_yet_processed: Besorolandó
+      personal: Magán
+      processed_unclassified: Besorolatlan
+      reviewed_excluded: Kizárva
+      skipped_by_rule: Szabály kihagyta
+    classified_by:
+      auto: Még nem
+      derived: Levezetve
+      manual: Te
+      model: Modell, általad jóváhagyva
+      rule: Szabály
+    classify:
+      as_business: Besorolás üzletiként
+      as_mixed: Besorolás vegyesként
+      as_personal: Besorolás magánként
+      cancel: Mégse
+      category: Kategória
+      category_needs_classification: Előbb sorold be őket üzletiként vagy vegyesként
+      choose_category: Válassz kategóriát
+      inactive_only: Csak az aktív tételek módosíthatók
+      no_category_match: Nincs egyező kategória
+      not_saved: Előkészítve, nincs mentve
+      nothing: Előbb jelölj ki tételeket
+      partial: csak a betöltött sorok
+      search_category: Keress a kategóriák között
+      share: Üzleti rész
+      share_hint: 'Üzleti használat százaléka: 50 az 50%-hoz.'
+      share_refused: '„{raw}” nem arány: írj százalékot, például 50-et az 50%-hoz.'
+      skipped: '{count} változatlan marad'
+      stage: 'Előkészítés: {count}'
+      staged: '{classification} · {count} tétel előkészítve'
+      staged_category: '{category} · {count} tétel előkészítve'
+      staged_detail: '{classification} · {detail} · {count} tétel előkészítve'
+      title_business: Üzleti · {count} tétel
+      title_category: Kategória · {count} tétel
+      title_mixed: Vegyes · {count} tétel
+      transfers_only: Az átvezetés csak magán lehet vagy besorolatlan
     close: Napló bezárása
+    column:
+      amount: Összeg
+      category: Kategória
+      classification: Besorolás
+      classified_by: Besorolta
+      counterparty: Partner
+      date: Dátum
+      description: Leírás
+      direction: Irány
+      documents: Dokumentumok
+      eur: EUR-érték
+      group_label: Csoport
+      invoice: Számla
+      irpf_category: IRPF-kategória
+      iva_amount: IVA összege
+      iva_category: IVA-kategória
+      iva_rate: IVA-kulcs
+      lifecycle: Állapot
+      modified: Módosítva
+      notes: Megjegyzések
+      select: Kijelölés
+      status: Státusz
+      taxable_base: Adóalap
+    columns:
+      list: Megjelenített oszlopok
+      move_down: '{column} lejjebb'
+      move_up: '{column} feljebb'
+      preset:
+        custom: egyéni
+        everything: Minden
+        irpf: IRPF
+        iva: IVA
+        review: Áttekintés
+      presets: Előbeállítások
+      reset: Oszlopok visszaállítása
+      title: Oszlopok
     count:
       to_classify: '{count} besorolandó'
+    density:
+      comfortable: Tágas sorok
+    describe:
+      missing: 'hiányzik: {reason}'
+      readiness: 'Készültség: {reasons}'
+    direction:
+      incoming: Bejövő
+      internal_transfer: Átvezetés
+      outgoing: Kimenő
+    documents:
+      count: '{count} dokumentum'
     empty: 'Nincs tétel ebben az időszakban: {period}'
     empty_all: Még nincs tétel
+    empty_filtered: Nincs egyező tétel
+    empty_filtered_detail: 'A keresés vagy a szűrők {count} tételt rejtenek el: {period}.'
     export:
       cancel: Mégse
       change_file: Módosítás…
@@ -868,6 +1017,66 @@ desktop:
         a fájlt, mielőtt ismét exportálsz.'
       without_staged: Exportálás nélkülük
     failed: A naplót nem sikerült beolvasni.
+    filters:
+      account: Bankszámla
+      active: '{count} aktív'
+      any: Bármelyik
+      classification: Besorolás
+      clear_all: Minden szűrő törlése
+      direction: Irány
+      failed: A szűrőt nem sikerült alkalmazni.
+      foreign: Csak devizás
+      foreign_chip: Deviza
+      group: Csoportcímke
+      hide_rejected: Rejtsd el a tételeket, amelyek modelljavaslatát elutasítottad
+      hide_rejected_chip: Elutasítottak nélkül
+      import_chip: Az importból
+      import_issue: Importálási megjegyzés
+      in_force: Érvényes szűrők
+      lifecycle: Állapot
+      no_group: Csoportcímke nélkül
+      reading: A szűrő beolvasása…
+      reason: Készültségi ok
+      remove: 'Szűrő eltávolítása: {filter}'
+      reset: Alaphelyzet
+      status: Státusz
+      title: Szűrők
+      to_match: Üzleti tételek kapcsolt számla nélkül
+      to_match_chip: Párosítandó
+    grid: Tételek, {period}
+    group:
+      business: Üzleti…
+      by: Csoportosítás szerint
+      category: Kategória
+      category_family: Kategóriacsalád
+      classification: Besorolás
+      collapse_all: Minden csoport összecsukása
+      count: '{count} tétel'
+      counterparty: Partner
+      description: Leírás hivatkozások nélkül
+      direction: Irány
+      empty:
+        category: Kategória nélkül
+        category_family: Kategória nélkül
+        classification: Nincs megadva
+        counterparty: Partner nélkül
+        description: Leírás nélkül
+        direction: Nincs megadva
+        group_label: Csoportcímke nélkül
+        iva_category: IVA-kategória nélkül
+        month: Nincs megadva
+        status: Nincs megadva
+      expand_all: Minden csoport kinyitása
+      group_label: Csoportcímke
+      iva_category: IVA-kategória
+      mixed: Vegyes…
+      month: Hónap
+      none: Nincs csoportosítás
+      personal: Magán
+      select: '{count} kijelölése'
+      status: Státusz
+      title: Csoportosítás
+      waits: teljes beolvasás kell
     import:
       accepts:
         bank: CSV, XLSX, XLS, OFX, QFX vagy PDF · legfeljebb 128 fájl · a mappán belüli
@@ -1028,10 +1237,59 @@ desktop:
       unmapped: 'Nem használt oszlopok: {columns}'
       verify: Hézagok és ismétlődő sorok ellenőrzése
       what: Mit importálsz
+    import_issue:
+      duplicate: Lehetséges ismétlődés
+      gap: Hézag a kivonatban
+      original_file: Eredeti fájl
+      parser: Figyelmeztetéssel beolvasva
+    invoice:
+      linked: Összekapcsolva
+    irpf_category:
+      actividad_economica: Gazdasági tevékenység
+      arrendamiento_local: Üzlethelyiség bérlete
+      arrendamiento_vivienda_afecto: Üzleti célú lakás bérlete
+      trabajo: Munkaviszony
+    issue:
+      next: Következő készültségi hiba
+      none: Ebben a nézetben nincs készültségi hiba
+      previous: Előző készültségi hiba
+    iva_category:
+      domestic_exempt: Adómentes
+      domestic_general: Általános kulcs
+      domestic_not_subject: Nem adóköteles
+      domestic_reduced: Kedvezményes kulcs
+      domestic_reverse_charge: Belföldi fordított adózás
+      domestic_super_reduced: Szuperkedvezményes kulcs
+      domestic_zero: Nulla kulcs
+      erroneous_invoice: Hibás számla
+      export_assimilated_zero_rated: Exporttal egyenértékű
+      export_third_country_zero_rated: Export
+      import_third_country: Import
+      intra_community_acquisition_reverse_charge: Közösségen belüli beszerzés
+      intra_community_service_acquisition_reverse_charge: Közösségen belüli szolgáltatás
+        igénybevétele
+      intra_community_service_supply: Közösségen belüli szolgáltatásnyújtás
+      intra_community_supply: Közösségen belüli értékesítés
+      intra_community_triangulation: Háromszögügylet
+      operacion_no_sujeta: Nem adóköteles ügylet
+      reagp_compensation: REAGP-kompenzáció
+      recargo_equivalencia: Recargo de equivalencia
+      regimen_simplificado: Régimen simplificado
+      unknown: Ismeretlen
+    lifecycle:
+      active: Aktív
+      archived: Archivált
+      split: Felosztva
+      stashed: Félretéve
     loaded_of: '{loaded} / {total} betöltve'
     loading: A napló beolvasása…
     maximize: Napló teljes méretben
+    menu: Tételműveletek
+    missing: Hiányzik
     movements_count: 'Tételek: {count}'
+    no_rate: Nincs árfolyam
+    no_rate_detail: 'Erre a napra nincs árfolyam: az EUR-érték nem ismert, és nem
+      nulla.'
     period:
       all: Minden időszak
       choose: Válassz időszakot
@@ -1045,18 +1303,83 @@ desktop:
       year_next: Következő év
       year_previous: Előző év
       years_with_movements: Évek tételekkel
+    position: '{row}. sor / {count}'
     readiness:
       checking: Ellenőrzés…
       failed: A készültséget nem sikerült ellenőrizni
+      fewer: Kevesebb
+      loaded_only: csak a betöltött sorok
+      more: +{count}
+      more_name: Még {count} ok
       no_rate: '{count} euróárfolyam nélkül'
       not_checked: Még nincs ellenőrizve
       not_measured: A készültség nincs felmérve
       not_ready: Nem kész a számításra · {count} javítandó
       out_of_date: '{count} mentett változás óta nincs ellenőrizve'
       ready: 'Számításra kész · ellenőrizve: {time}'
+      reason_name: '{reason}: {count}. Mutasd őket és a javításuk módját'
+      reasons: Készültségi okok
+      staged: '{count} előkészítve'
       title: Készültség
+      unsaved: '{count} mentetlen változás nincs benne'
+    readiness_filter:
+      issues: Javítandó
+      no_rate: Nincs árfolyam
+      to_classify: Besorolandó
     reading: 'Beolvasás: {loaded} / {total}'
+    reason:
+      anomaly_non_declarable_iva_category: IVA-kategória
+      anomaly_non_declarable_recargo_equivalencia: Recargo
+      censo_ratio_mismatch: Cenzusarány
+      domestic_identification_on_intra_community_transaction: Spanyol adószám
+      eu_member_state_on_export_transaction: Exportállam
+      inadmissible_deduction_classification: Levonás
+      missing_business_classification: Besorolás
+      missing_category: Kategória
+      missing_counterparty_establishment_on_export: Telephely
+      missing_counterparty_identification_state: IVA-azonosítás
+      missing_eur_tax_substrate: EUR-adatok
+      missing_home_office_afectacion: Afectación
+      missing_iva_amount: IVA összeg
+      missing_iva_rate: IVA-kulcs
+      missing_proportionality_reference: Használati arány
+      missing_taxable_base: Adóalap
+      unsupported_currency: EUR-árfolyam
+      unsupported_period: Időszak
+    reason_detail:
+      anomaly_non_declarable_iva_category: Nem bevallható IVA-kategória
+      anomaly_non_declarable_recargo_equivalencia: Nem bevallható recargo de equivalencia
+      censo_ratio_mismatch: Az arány eltér a cenzustól
+      domestic_identification_on_intra_community_transaction: Spanyol adószám Közösségen
+        belüli ügyleten
+      eu_member_state_on_export_transaction: EU-tagállam exportügyleten
+      inadmissible_deduction_classification: A besorolás nem levonható
+      missing_business_classification: Hiányzik a besorolás
+      missing_category: Hiányzik a kategória
+      missing_counterparty_establishment_on_export: Hiányzik a partner telephelye
+        exportügyleten
+      missing_counterparty_identification_state: Hiányzik a partner IVA-azonosítása
+      missing_eur_tax_substrate: Hiányoznak az euróadatok
+      missing_home_office_afectacion: Hiányzik az otthoni iroda afectación értéke
+      missing_iva_amount: Hiányzik az IVA összege
+      missing_iva_rate: Hiányzik az IVA-kulcs
+      missing_proportionality_reference: Vegyes, használati arány nélkül
+      missing_taxable_base: Hiányzik az adóalap
+      unsupported_currency: A pénznem nem támogatott
+      unsupported_period: Az időszak nem támogatott
     retry: Újra
+    review:
+      excluded: Kizárva
+      pending: Besorolandó
+      reviewed: Átnézve
+      skipped: Szabály kihagyta
+    search:
+      elsewhere: Még {count} más időszakokban
+      label: Tételek keresése
+      load_all: Mind a {total} betöltése
+      loaded: '{found} találat a {loaded} betöltöttből'
+      placeholder: Keresés
+      show: Mutasd
     section:
       documents: Dokumentumok
       health: Állapot
@@ -1065,11 +1388,79 @@ desktop:
       registers: Nyilvántartások
       rules: Szabályok
     sections: A napló részei
+    select:
+      row: 'Jelöld ki: {description}'
+      shown: Jelöld ki a látható tételeket · Ctrl+kattintás hozzáadja őket
+    selected: '{count} kijelölve'
+    selection:
+      all_shown: Mind a {count} látható ki van jelölve.
+      hidden: '{selected} kijelöltből {hidden} rejtett'
+      keep_visible: Csak a láthatók maradjanak
+      select_all: 'Mind a {count} kijelölése: {period}'
+      show: Mutasd őket
     setup: Beállítás
     setup_current: 'Beállítás: {section}'
+    shown_of: '{shown} / {total} tétel'
     signed_out: Jelentkezz be a naplód megtekintéséhez.
+    sort:
+      asc: Növekvő
+      by: Rendezés szerint
+      current: '{key}, {direction}'
+      desc: Csökkenő
+      key:
+        amount: Összeg
+        category: Kategória
+        classification: Besorolás
+        classified_at: Besorolás dátuma
+        classified_by: Besorolta
+        counterparty: Partner
+        created_at: Felvétel dátuma
+        date: Dátum
+        description: Leírás
+        direction: Irány
+        documents: Dokumentumok
+        eur: EUR-érték
+        group_label: Csoportcímke
+        invoice: Számla
+        irpf_category: IRPF-kategória
+        iva_amount: IVA összege
+        iva_category: IVA-kategória
+        iva_rate: IVA-kulcs
+        lifecycle: Állapot
+        modified: Módosítva
+        notes: Megjegyzések
+        select: Kijelölés
+        status: Státusz
+        taxable_base: Adóalap
+        value_date: Értéknap
+      title: Rendezés
+      waits: teljes beolvasás kell
+    status:
+      done: Kész
+      excluded: Kizárva
+      needs_fixing: Javítandó
+      needs_fixing_count: Javítandó · {count}
+      pending: Besorolandó
+      skipped: Szabály kihagyta
+    sum:
+      in: Bejövő {amount}
+      out: Kimenő {amount}
+      transfer: Átvezetés {amount}
     title: Napló
+    toolbar: Tételnézet
     unavailable: Még nem érhető el
+    view:
+      all: Összes
+      business_expenses: Üzleti kiadások
+      custom: Egyéni nézet
+      foreign: Deviza
+      named: 'Nézet: {view}'
+      title: Mentett nézetek
+      to_classify: Besorolandó
+      to_fix: Javítandó
+      to_match: Párosítandó
+    window:
+      partial: A csoportosítás és az összegek a teljes beolvasásra várnak.
   logs:
     all_loggers: Minden naplózó
     all_origins: Minden forrás

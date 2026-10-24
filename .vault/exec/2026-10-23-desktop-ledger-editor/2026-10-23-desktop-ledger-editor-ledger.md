@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:b284fe8bb8b5222c8ccdc31006594e2afb9d554cf55e8c7c08520ba836c2b406'
+body_hash: 'sha256:d7cf4eaa6c628d502300d2b24834f9ff6ba40ef6c331c000025fd1ceef50ec39'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -185,6 +185,40 @@ related:
 - `S11` `verify:` `playwright scenarios ledger-transfer (8), ledger-shell, accessibility` -> `pass`
 - `S11` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (19 of 20; the drift test fails only on another Step's undeclared keys)` -> `pass`
 - `S11` `by:` `implementation-engineer-high`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/ClassifyDialog.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/ColumnChooser.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/MovementCells.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/MovementsGrid.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/MovementsToolbar.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/ReadinessStrip.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/movementWords.ts`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/movementsModel.ts`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/useMovementsView.ts`
+- `S08` `A` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S08` `A` `native/desktop/frontend/src/shell/ledgerVocabulary.ts`
+- `S08` `A` `native/desktop/frontend/src/shell/ledgerMovementReads.ts`
+- `S08` `A` `native/desktop/frontend/tests/ledger-movements.spec.ts`
+- `S08` `A` `native/desktop/frontend/tests/scenarios/ledger-movements.spec.ts`
+- `S08` `M` `native/desktop/frontend/src/shell/ledgerWindow.ts`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S08` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S08` `M` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S08` `M` `native/desktop/frontend/tests/scenarios/accessibility.spec.ts`
+- `S08` `M` `native/desktop/frontend/scripts/benchmark.mjs`
+- `S08` `M` `native/desktop/frontend/README.md`
+- `S08` `M` `dev/locales/desktop_chrome.py`
+- `S08` `M` `src/cadrumo/locales/en/common.yml`
+- `S08` `M` `src/cadrumo/locales/es/common.yml`
+- `S08` `M` `src/cadrumo/locales/ca/common.yml`
+- `S08` `M` `src/cadrumo/locales/hu/common.yml`
+- `S08` `verify:` `npm run check (tsc, eslint with design-system rules, eslint rule tests, prettier)` -> `pass`
+- `S08` `verify:` `playwright pure specs ledger-movements/window/stage/plan/grammar/apply (62)` -> `pass`
+- `S08` `verify:` `playwright scenarios ledger-movements (12), ledger-shell (10), accessibility incl. 6 new Ledger surfaces, keyboard` -> `pass`
+- `S08` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (20)` -> `pass`
+- `S08` `verify:` `ledger benchmark section on the scenario build: 5,040 movements read 255-328 ms, scroll frame p95 33.4 ms, select-all 1-5 ms, sort 24-29 ms, 39 rows drawn` -> `pass`
+- `S08` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -194,3 +228,7 @@ related:
 - `S11` Likely duplicates are compared in the result step, after import: the dry-run projection names neither the incoming row's fields nor the existing movement.
 - `S11` The invoice-book preview shows file name and size only; the host offers no digest before apply, so the digest is shown from the result.
 - `S11` Export receives staged=0 from the page until staged editing lands; the warning is verified through the primitives harness.
+- `S08` S08 The full benchmark.mjs stops before the ledger section: its start-up step waits for terminals that the current scenario build never reports (not from this Step); the ledger section was measured on its own against the same build.
+- `S08` S08 Under four Playwright workers on the loaded host, three tests timed out (an accessibility calendar surface, keyboard F6, the column chooser test); each passed when rerun with one worker.
+- `S08` S08 The list projection carries no own account id, import batch or import note: the account, import and import-note filters are product list reads whose ids the grid keeps, and the grid has no Account column.
+- `S08` S08 Staging is held in the page (reduceStage) and the classify command stages through it; the unsaved marker, tray and review land with S09.

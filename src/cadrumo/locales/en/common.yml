@@ -774,11 +774,161 @@ desktop:
       go_to_period: Go to period…
       import: Import
       section: 'Ledger: {section}'
+    category:
+      amortizacion_vivienda_afecto: Depreciation of home used for business
+      arrendamiento_local: Business premises rent
+      arrendamiento_vivienda_afecto: Rent of home used for business
+      asesoria_contable: Accounting fees
+      asesoria_fiscal: Tax advisory fees
+      asesoria_juridica: Legal advisory fees
+      comunidad_vivienda_afecto: Community fees on home used for business
+      cuotas_autonomos_ss: Self-employed social security contributions (RETA)
+      cuotas_colegiales: Professional association fees
+      formacion_profesional: Professional training
+      gastos_bancarios: Bank charges
+      gastos_financieros: Financial expenses
+      hardware_amortizable: Depreciable computer hardware
+      ibi_local_afecto: Property tax (IBI) on business premises
+      ibi_vivienda_afecto: Property tax (IBI) on home used for business
+      manutencion_dietas_extranjero: Meals abroad
+      manutencion_dietas_nacional: Meals in Spain
+      material_oficina: Office supplies
+      mobiliario_amortizable: Depreciable furniture
+      mutualidad_alternativa: Alternative mutual-insurance contribution
+      publicidad_marketing: Advertising and marketing
+      reparaciones_conservacion: Repairs and maintenance
+      seguros_responsabilidad_civil: Professional liability insurance
+      seguros_salud_autonomo: Self-employed health insurance
+      software_suscripcion: Software subscriptions
+      subcontratacion: Subcontracting
+      suministros_cliente_directos: Supplies billed directly to the client
+      suministros_home_office_agua: Home-office water
+      suministros_home_office_gas: Home-office gas
+      suministros_home_office_internet: Home-office internet
+      suministros_home_office_luz: Home-office electricity
+      suministros_local_afecto: Utilities for business premises
+      telefonia_fija: Landline phone
+      telefonia_movil: Mobile phone
+      tributos_fiscalmente_deducibles: Deductible taxes
+      vehiculo_combustible: Vehicle fuel
+      vehiculo_mantenimiento: Vehicle maintenance
+      vehiculo_parking: Parking
+      vehiculo_peaje: Tolls
+      vehiculo_seguro: Vehicle insurance
+      viajes_alojamiento: Travel accommodation
+      viajes_transporte: Travel transport
+    category_family:
+      direct_costs: Direct costs
+      financial: Financial
+      home_office_ownership: Home used for business
+      home_office_suministros: Home-office utilities
+      insurance: Insurance
+      meals: Meals
+      office: Office and equipment
+      premises: Business premises
+      professional_services: Professional services
+      social_security: Social security and fees
+      taxes: Taxes
+      telecoms: Telecoms
+      travel: Travel
+      vehicle: Vehicle
+    classification:
+      business: Business
+      failed_validation: Failed validation
+      mixed: Mixed
+      mixed_share: Mixed {share}
+      not_yet_processed: To classify
+      personal: Personal
+      processed_unclassified: Unclassified
+      reviewed_excluded: Excluded
+      skipped_by_rule: Skipped by rule
+    classified_by:
+      auto: Not yet
+      derived: Worked out
+      manual: You
+      model: Model, approved by you
+      rule: Rule
+    classify:
+      as_business: Classify as Business
+      as_mixed: Classify as Mixed
+      as_personal: Classify as Personal
+      cancel: Cancel
+      category: Category
+      category_needs_classification: Classify them as Business or Mixed first
+      choose_category: Choose a category
+      inactive_only: Only active movements change
+      no_category_match: No category matches
+      not_saved: Staged, not saved
+      nothing: Select movements first
+      partial: loaded rows only
+      search_category: Search the categories
+      share: Business share
+      share_hint: 'Percent of business use: 50 for 50%.'
+      share_refused: '“{raw}” is not a share: write a percentage, such as 50 for 50%.'
+      skipped: '{count} left as they are'
+      stage: Stage for {count}
+      staged: '{classification} · {count} movements staged'
+      staged_category: '{category} · {count} movements staged'
+      staged_detail: '{classification} · {detail} · {count} movements staged'
+      title_business: Business · {count} movements
+      title_category: Category · {count} movements
+      title_mixed: Mixed · {count} movements
+      transfers_only: Transfers are Personal or unclassified only
     close: Close the ledger
+    column:
+      amount: Amount
+      category: Category
+      classification: Classification
+      classified_by: Classified by
+      counterparty: Counterparty
+      date: Date
+      description: Description
+      direction: Direction
+      documents: Documents
+      eur: EUR value
+      group_label: Group
+      invoice: Invoice
+      irpf_category: IRPF category
+      iva_amount: IVA
+      iva_category: IVA category
+      iva_rate: IVA rate
+      lifecycle: State
+      modified: Modified
+      notes: Notes
+      select: Selection
+      status: Status
+      taxable_base: Taxable base
+    columns:
+      list: Columns shown
+      move_down: Move {column} down
+      move_up: Move {column} up
+      preset:
+        custom: custom
+        everything: Everything
+        irpf: IRPF
+        iva: IVA
+        review: Review
+      presets: Presets
+      reset: Reset columns
+      title: Columns
     count:
       to_classify: '{count} to classify'
+    density:
+      comfortable: Comfortable rows
+    describe:
+      missing: 'missing: {reason}'
+      readiness: 'Readiness: {reasons}'
+    direction:
+      incoming: In
+      internal_transfer: Transfer
+      outgoing: Out
+    documents:
+      count: '{count} documents'
     empty: No movements in {period}
     empty_all: No movements yet
+    empty_filtered: No movements match
+    empty_filtered_detail: '{count} movements in {period} are hidden by the search
+      or filters.'
     export:
       cancel: Cancel
       change_file: Change…
@@ -852,6 +1002,66 @@ desktop:
         the file before exporting once more.'
       without_staged: Export without them
     failed: Couldn't read the ledger.
+    filters:
+      account: Account
+      active: '{count} active'
+      any: Any
+      classification: Classification
+      clear_all: Clear all filters
+      direction: Direction
+      failed: Couldn't apply the filter.
+      foreign: Foreign currency only
+      foreign_chip: Foreign currency
+      group: Group label
+      hide_rejected: Hide movements whose model suggestion you rejected
+      hide_rejected_chip: No rejected
+      import_chip: From the import
+      import_issue: Import note
+      in_force: Filters in force
+      lifecycle: State
+      no_group: No group label
+      reading: Reading the filter…
+      reason: Readiness reason
+      remove: 'Remove filter: {filter}'
+      reset: Reset
+      status: Status
+      title: Filters
+      to_match: Business movements with no invoice linked
+      to_match_chip: To match
+    grid: Movements, {period}
+    group:
+      business: Business…
+      by: Group by
+      category: Category
+      category_family: Category family
+      classification: Classification
+      collapse_all: Collapse all groups
+      count: '{count} movements'
+      counterparty: Counterparty
+      description: Description, without references
+      direction: Direction
+      empty:
+        category: No category
+        category_family: No category
+        classification: Not set
+        counterparty: No counterparty
+        description: No description
+        direction: Not set
+        group_label: No group label
+        iva_category: No IVA category
+        month: Not set
+        status: Not set
+      expand_all: Expand all groups
+      group_label: Group label
+      iva_category: IVA category
+      mixed: Mixed…
+      month: Month
+      none: No grouping
+      personal: Personal
+      select: Select {count}
+      status: Status
+      title: Group
+      waits: needs the whole window
     import:
       accepts:
         bank: CSV, XLSX, XLS, OFX, QFX or PDF · up to 128 files · folders inside a
@@ -1011,10 +1221,59 @@ desktop:
       unmapped: 'Columns not used: {columns}'
       verify: Check for gaps and repeated rows
       what: What to import
+    import_issue:
+      duplicate: Possible duplicate
+      gap: Gap in the statement
+      original_file: Original file
+      parser: Read with a warning
+    invoice:
+      linked: Linked
+    irpf_category:
+      actividad_economica: Economic activity
+      arrendamiento_local: Rent of business premises
+      arrendamiento_vivienda_afecto: Rent of home used for business
+      trabajo: Employment
+    issue:
+      next: Next readiness issue
+      none: No readiness issues in this view
+      previous: Previous readiness issue
+    iva_category:
+      domestic_exempt: Exempt
+      domestic_general: General rate
+      domestic_not_subject: Not subject
+      domestic_reduced: Reduced rate
+      domestic_reverse_charge: Reverse charge in Spain
+      domestic_super_reduced: Super-reduced rate
+      domestic_zero: Zero rate
+      erroneous_invoice: Erroneous invoice
+      export_assimilated_zero_rated: Treated as an export
+      export_third_country_zero_rated: Export
+      import_third_country: Import
+      intra_community_acquisition_reverse_charge: Intra-community acquisition
+      intra_community_service_acquisition_reverse_charge: Intra-community service
+        received
+      intra_community_service_supply: Intra-community service supplied
+      intra_community_supply: Intra-community supply
+      intra_community_triangulation: Triangular operation
+      operacion_no_sujeta: Operation not subject
+      reagp_compensation: REAGP compensation
+      recargo_equivalencia: Recargo de equivalencia
+      regimen_simplificado: Régimen simplificado
+      unknown: Unknown
+    lifecycle:
+      active: Active
+      archived: Archived
+      split: Split
+      stashed: Set aside
     loaded_of: '{loaded} of {total} loaded'
     loading: Reading the ledger…
     maximize: Maximize the ledger
+    menu: Movement actions
+    missing: Missing
     movements_count: 'Movements: {count}'
+    no_rate: No rate
+    no_rate_detail: 'No exchange rate for this date: the EUR value is not known, and
+      it is not zero.'
     period:
       all: All periods
       choose: Choose a period
@@ -1028,18 +1287,84 @@ desktop:
       year_next: Next year
       year_previous: Previous year
       years_with_movements: Years with movements
+    position: Row {row} of {count}
     readiness:
       checking: Checking…
       failed: Couldn't check readiness
+      fewer: Fewer
+      loaded_only: loaded rows only
+      more: +{count}
+      more_name: '{count} more reasons'
       no_rate: '{count} without an EUR rate'
       not_checked: Not checked yet
       not_measured: Readiness not measured
       not_ready: Not ready for calculation · {count} to fix
       out_of_date: Not checked since {count} saved changes
       ready: Ready for calculation · checked {time}
+      reason_name: '{reason}: {count}. Show them and how to fix them'
+      reasons: Readiness reasons
+      staged: '{count} staged'
       title: Readiness
+      unsaved: '{count} unsaved changes not included'
+    readiness_filter:
+      issues: To fix
+      no_rate: No rate
+      to_classify: To classify
     reading: Reading {loaded} of {total}
+    reason:
+      anomaly_non_declarable_iva_category: IVA category
+      anomaly_non_declarable_recargo_equivalencia: Recargo
+      censo_ratio_mismatch: Censo ratio
+      domestic_identification_on_intra_community_transaction: Spanish id
+      eu_member_state_on_export_transaction: Export state
+      inadmissible_deduction_classification: Deduction
+      missing_business_classification: Classification
+      missing_category: Category
+      missing_counterparty_establishment_on_export: Establishment
+      missing_counterparty_identification_state: VAT state
+      missing_eur_tax_substrate: EUR figures
+      missing_home_office_afectacion: Afectación
+      missing_iva_amount: IVA amount
+      missing_iva_rate: IVA rate
+      missing_proportionality_reference: Usage ratio
+      missing_taxable_base: Base
+      unsupported_currency: EUR rate
+      unsupported_period: Period
+    reason_detail:
+      anomaly_non_declarable_iva_category: IVA category not declarable
+      anomaly_non_declarable_recargo_equivalencia: Recargo de equivalencia not declarable
+      censo_ratio_mismatch: Ratio differs from the censo
+      domestic_identification_on_intra_community_transaction: Spanish tax id on an
+        intra-community operation
+      eu_member_state_on_export_transaction: EU member state on an export
+      inadmissible_deduction_classification: Classification not admitted for deduction
+      missing_business_classification: Classification missing
+      missing_category: Category missing
+      missing_counterparty_establishment_on_export: Counterparty's establishment missing
+        on an export
+      missing_counterparty_identification_state: Counterparty's VAT identification
+        not stated
+      missing_eur_tax_substrate: Euro figures missing
+      missing_home_office_afectacion: Home-office afectación missing
+      missing_iva_amount: IVA amount missing
+      missing_iva_rate: IVA rate missing
+      missing_proportionality_reference: Mixed without a usage ratio
+      missing_taxable_base: Taxable base missing
+      unsupported_currency: Currency not supported
+      unsupported_period: Period not supported
     retry: Retry
+    review:
+      excluded: Excluded
+      pending: To classify
+      reviewed: Reviewed
+      skipped: Skipped by rule
+    search:
+      elsewhere: '{count} more in other periods'
+      label: Search movements
+      load_all: Load all {total}
+      loaded: '{found} found in the {loaded} loaded'
+      placeholder: Search
+      show: Show
     section:
       documents: Documents
       health: Health
@@ -1048,11 +1373,79 @@ desktop:
       registers: Registers
       rules: Rules
     sections: Ledger sections
+    select:
+      row: Select {description}
+      shown: Select the shown movements · Ctrl-click adds them
+    selected: '{count} selected'
+    selection:
+      all_shown: All {count} shown are selected.
+      hidden: '{hidden} of {selected} selected are hidden'
+      keep_visible: Keep only visible
+      select_all: Select all {count} in {period}
+      show: Show them
     setup: Setup
     setup_current: 'Setup: {section}'
+    shown_of: '{shown} of {total} movements'
     signed_out: Sign in to see your ledger.
+    sort:
+      asc: Ascending
+      by: Sort by
+      current: '{key}, {direction}'
+      desc: Descending
+      key:
+        amount: Amount
+        category: Category
+        classification: Classification
+        classified_at: Date classified
+        classified_by: Classified by
+        counterparty: Counterparty
+        created_at: Date added
+        date: Date
+        description: Description
+        direction: Direction
+        documents: Documents
+        eur: EUR value
+        group_label: Group label
+        invoice: Invoice
+        irpf_category: IRPF category
+        iva_amount: IVA
+        iva_category: IVA category
+        iva_rate: IVA rate
+        lifecycle: State
+        modified: Modified
+        notes: Notes
+        select: Selection
+        status: Status
+        taxable_base: Taxable base
+        value_date: Value date
+      title: Sort
+      waits: needs the whole window
+    status:
+      done: Done
+      excluded: Excluded
+      needs_fixing: Needs fixing
+      needs_fixing_count: Needs fixing · {count}
+      pending: To classify
+      skipped: Skipped by rule
+    sum:
+      in: In {amount}
+      out: Out {amount}
+      transfer: Transfers {amount}
     title: Ledger
+    toolbar: Movements view
     unavailable: Not available yet
+    view:
+      all: All
+      business_expenses: Business expenses
+      custom: Custom view
+      foreign: Foreign currency
+      named: 'View: {view}'
+      title: Saved views
+      to_classify: To classify
+      to_fix: To fix
+      to_match: To match
+    window:
+      partial: Grouping and totals wait for the whole window.
   logs:
     all_loggers: All loggers
     all_origins: All origins

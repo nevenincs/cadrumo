@@ -123,16 +123,16 @@ Select one in the control or in the address:
 /scenarios.html?scenario=throttled&lang=es
 ```
 
-| Parameter  | Values                                               | Meaning                                                                                                                                                                              |
-| ---------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `scenario` | a name from the table                                | The scenario to start in                                                                                                                                                             |
-| `lang`     | `en`, `es`, `ca`, `hu`                               | The output language the host reports                                                                                                                                                 |
-| `latency`  | milliseconds                                         | The fixed delay before a sign-in or sign-out answer, 600 by default                                                                                                                  |
-| `bar`      | `off`                                                | Hide the scenario control, for a clean screenshot                                                                                                                                    |
-| `records`  | a count                                              | Fill the log with that many generated records, up to its ring size                                                                                                                   |
-| `feed`     | milliseconds                                         | Keep the log growing: twenty more records at that interval                                                                                                                           |
-| `calendar` | `behind`, `ahead`, `straddling`, `busy`              | Another shape of the fixture calendar: all of it behind its day, all ahead, that day inside a month, or the turn of a year with nine windows open at once (evaluated on 2027-01-12)  |
-| `ledger`   | `empty`, `refused`, `unknown`, `unavailable`, `slow` | How the made-up ledger answers: nothing recorded, every write refused, every write landing with an outcome that is not observed, nothing readable, or every answer four seconds late |
+| Parameter  | Values                                                        | Meaning                                                                                                                                                                                                                            |
+| ---------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scenario` | a name from the table                                         | The scenario to start in                                                                                                                                                                                                           |
+| `lang`     | `en`, `es`, `ca`, `hu`                                        | The output language the host reports                                                                                                                                                                                               |
+| `latency`  | milliseconds                                                  | The fixed delay before a sign-in or sign-out answer, 600 by default                                                                                                                                                                |
+| `bar`      | `off`                                                         | Hide the scenario control, for a clean screenshot                                                                                                                                                                                  |
+| `records`  | a count                                                       | Fill the log with that many generated records, up to its ring size                                                                                                                                                                 |
+| `feed`     | milliseconds                                                  | Keep the log growing: twenty more records at that interval                                                                                                                                                                         |
+| `calendar` | `behind`, `ahead`, `straddling`, `busy`                       | Another shape of the fixture calendar: all of it behind its day, all ahead, that day inside a month, or the turn of a year with nine windows open at once (evaluated on 2027-01-12)                                                |
+| `ledger`   | `empty`, `refused`, `unknown`, `unavailable`, `slow`, `large` | How the made-up ledger answers: nothing recorded, every write refused, every write landing with an outcome that is not observed, nothing readable, every answer four seconds late, or five thousand more movements in October 2026 |
 
 The terminals show deterministic fixture sessions in the real xterm view: type
 `exit` in the console or `exit()` in the Python tab, or press `q` in the TUI, to
@@ -482,9 +482,36 @@ Registers and Health under Setup), its period and its actions.
 - **Only presentation is kept**: the section, columns, density, grouping,
   saved view and inspector, in the layout store. The period, every value
   and anything staged stay in the page's memory and go with the profile.
-- **No chord** is the page's: the shell's are spoken for, and the
-  documentation's Alt+Left and Alt+Right are not taken while it is shown.
-  The page's actions are in the palette.
+- **No shell chord** is the page's, and the documentation's Alt+Left and
+  Alt+Right are not taken while it is shown. No bare letter is a shortcut:
+  in the movements grid a typed character is typing. The page's actions
+  are in the palette.
+
+The Movements section, in `src/components/ledger/movements/`, draws the
+stored movements of the period on `DataGrid`; nothing staged changes what a
+cell, a count or a sum shows.
+
+- **The readiness strip** counts, as a glyph and a number, the movements
+  readiness found something on, those to classify and those with no euro
+  rate, each hidden at zero; with nothing left it is one tick, and a hollow
+  mark while nothing current was checked. Each pill, and each reason chip
+  ("Category 5"), filters the grid to exactly the movements it counts,
+  replaces the selection with the first of them, and leads to its column.
+- **The toolbar** has the search (every word on its own, months by name,
+  figures written with a dot or a comma, and a count of what other periods
+  hold), the filters with their chips, the saved views, grouping (with
+  each group's count and sums per currency and direction, and its quick
+  actions), sorting, the column chooser with its presets, and density.
+- **A period is refined here**; "All periods" is read in part, so only the
+  product's own sort axes and its group-label partition are offered there,
+  and the toolbar says how much of it is loaded. The account, import and
+  import-note filters are the product's own: the grid keeps the movements
+  their list reads return.
+- **Classifying** goes through one command, `classifySelection` in
+  `src/shell/ledgerCommands.ts`: Alt+B, Alt+P and Alt+M, the palette, the
+  group headers and the inspector all reach it. Business asks for a
+  category and Mixed for a share; a selection with hidden movements is
+  refused until the person shows them or keeps only the visible ones.
 
 ### Keyboard
 
@@ -503,6 +530,8 @@ Every pointer path has a keyboard path through the same action.
 | Alt+Home, Alt+Left, Alt+Right         | Documentation home, back and forward                                   |
 | Ctrl+=, Ctrl+-, Ctrl+0                | Documentation zoom                                                     |
 | Ctrl+Shift+C, Ctrl+Shift+V            | Copy and paste in a terminal                                           |
+| Alt+B, Alt+P, Alt+M                   | Ledger movements: classify the selection as Business, Personal, Mixed  |
+| F8, Shift+F8                          | Ledger movements: the next or previous readiness issue                 |
 
 On macOS the primary modifier is Command. The rail and the tab row are one tab
 stop each, moved through with the arrow keys. A splitter takes the arrow keys,
@@ -551,7 +580,10 @@ fixture with nine windows open at once: how long it takes to be drawn, forty
 rounds of its faces, a month drawn whole and a choice, and a drag of the
 split out to where both faces fit and back; and forty rounds of the sign-in
 dialog, put aside and opened again, turned into the form that creates a
-profile and back, with another profile chosen. It writes `test-results/benchmark/benchmark.json`
+profile and back, with another profile chosen; and the Ledger page over a
+period of five thousand movements: how long the period takes to be read in
+pages and drawn, a scroll through it, every shown movement selected and a
+sort of the whole window. It writes `test-results/benchmark/benchmark.json`
 in the build directory. Each number has a loose budget in the script, and
 `--check` fails the run when one is exceeded. The numbers describe the machine
 they were taken on: compare runs, not hosts.
@@ -588,7 +620,12 @@ and in the calendar `.calendar-page`, `.calendar-head`,
 `.calendar-today` and `.calendar-distance`, and on the Ledger page
 `.ledger-page`, `[data-rail=ledger]`, `.ledger-period`, `.ledger-readiness`
 with `[data-readiness]`, `.ledger-movements`, `.ledger-empty`,
-`.ledger-failed` and `.ledger-loading`.
+`.ledger-failed` and `.ledger-loading`, and in its Movements section
+`.ledger-grid`, `.ledger-count`, `.ledger-toolbar`, `.ledger-search`,
+`.ledger-views`, `.ledger-filters`, `.ledger-columns`, `.ledger-chips`,
+`.ledger-reasons` with `[data-reason]`, `.ledger-group-actions`,
+`.ledger-hidden-selection`, `.ledger-elsewhere`, `.ledger-classify` and
+`.ledger-toast`.
 
 ## What only the desktop window can show
 

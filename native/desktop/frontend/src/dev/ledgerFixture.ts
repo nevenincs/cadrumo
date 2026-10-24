@@ -40,6 +40,7 @@ import {
   emptyLedger,
   fixtureLedger,
   hex64,
+  largeLedger,
   money,
   movementId,
   type FixtureAccount,
@@ -55,6 +56,7 @@ export const LEDGER_SHAPES = [
   "unknown",
   "unavailable",
   "slow",
+  "large",
 ] as const;
 export type LedgerShape = (typeof LEDGER_SHAPES)[number];
 
@@ -531,7 +533,12 @@ function issues(ledger: FixtureLedger, period: JsonValue | undefined) {
 
 export function ledgerFixture(options: Options): LedgerPort {
   const { say, signedIn, shape } = options;
-  const ledger = shape === "empty" ? emptyLedger() : fixtureLedger();
+  const ledger =
+    shape === "empty"
+      ? emptyLedger()
+      : shape === "large"
+        ? largeLedger()
+        : fixtureLedger();
   let clock = 0;
   const now = () => {
     clock += 1;

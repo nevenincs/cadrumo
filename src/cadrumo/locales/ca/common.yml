@@ -802,11 +802,161 @@ desktop:
       go_to_period: Ves a un període…
       import: Importa
       section: 'Llibre: {section}'
+    category:
+      amortizacion_vivienda_afecto: Amortització de l'habitatge afecte a l'activitat
+      arrendamiento_local: Lloguer del local de negoci
+      arrendamiento_vivienda_afecto: Lloguer de l'habitatge afecte a l'activitat
+      asesoria_contable: Honoraris d'assessoria comptable
+      asesoria_fiscal: Honoraris d'assessoria fiscal
+      asesoria_juridica: Honoraris d'assessoria jurídica
+      comunidad_vivienda_afecto: Despeses de comunitat de l'habitatge afecte a l'activitat
+      cuotas_autonomos_ss: Quotes d'autònoms a la Seguretat Social (RETA)
+      cuotas_colegiales: Quotes de col·legi professional
+      formacion_profesional: Formació professional
+      gastos_bancarios: Despeses bancàries
+      gastos_financieros: Despeses financeres
+      hardware_amortizable: Maquinari informàtic amortitzable
+      ibi_local_afecto: IBI del local de negoci
+      ibi_vivienda_afecto: IBI de l'habitatge afecte a l'activitat
+      manutencion_dietas_extranjero: Manutenció a l'estranger
+      manutencion_dietas_nacional: Manutenció a Espanya
+      material_oficina: Material d'oficina
+      mobiliario_amortizable: Mobiliari amortitzable
+      mutualidad_alternativa: Aportació a mutualitat alternativa
+      publicidad_marketing: Publicitat i màrqueting
+      reparaciones_conservacion: Reparacions i conservació
+      seguros_responsabilidad_civil: Assegurança de responsabilitat civil professional
+      seguros_salud_autonomo: Assegurança de salut de l'autònom
+      software_suscripcion: Subscripcions de programari
+      subcontratacion: Subcontractació
+      suministros_cliente_directos: Subministraments facturats directament al client
+      suministros_home_office_agua: Aigua de l'habitatge-oficina
+      suministros_home_office_gas: Gas de l'habitatge-oficina
+      suministros_home_office_internet: Internet de l'habitatge-oficina
+      suministros_home_office_luz: Electricitat de l'habitatge-oficina
+      suministros_local_afecto: Subministraments del local afecte
+      telefonia_fija: Telefonia fixa
+      telefonia_movil: Telefonia mòbil
+      tributos_fiscalmente_deducibles: Tributs deduïbles
+      vehiculo_combustible: Combustible del vehicle
+      vehiculo_mantenimiento: Manteniment del vehicle
+      vehiculo_parking: Aparcament
+      vehiculo_peaje: Peatges
+      vehiculo_seguro: Assegurança del vehicle
+      viajes_alojamiento: Allotjament de viatge
+      viajes_transporte: Transport de viatge
+    category_family:
+      direct_costs: Costos directes
+      financial: Financers
+      home_office_ownership: Habitatge afecte
+      home_office_suministros: Subministraments de l'habitatge-oficina
+      insurance: Assegurances
+      meals: Manutenció
+      office: Oficina i equips
+      premises: Local de negoci
+      professional_services: Serveis professionals
+      social_security: Seguretat social i quotes
+      taxes: Tributs
+      telecoms: Telecomunicacions
+      travel: Viatges
+      vehicle: Vehicle
+    classification:
+      business: Empresarial
+      failed_validation: Validació fallida
+      mixed: Mixt
+      mixed_share: Mixt {share}
+      not_yet_processed: Per classificar
+      personal: Personal
+      processed_unclassified: Sense classificar
+      reviewed_excluded: Exclòs
+      skipped_by_rule: Omès per una regla
+    classified_by:
+      auto: Encara no
+      derived: Calculat
+      manual: Tu
+      model: Model, aprovat per tu
+      rule: Regla
+    classify:
+      as_business: Classifica com a empresarial
+      as_mixed: Classifica com a mixt
+      as_personal: Classifica com a personal
+      cancel: Cancel·la
+      category: Categoria
+      category_needs_classification: Classifica'ls abans com a empresarials o mixtos
+      choose_category: Tria una categoria
+      inactive_only: Només canvien els moviments actius
+      no_category_match: Cap categoria coincideix
+      not_saved: Preparat, sense desar
+      nothing: Selecciona moviments primer
+      partial: només les files carregades
+      search_category: Cerca a les categories
+      share: Part empresarial
+      share_hint: 'Percentatge d''ús empresarial: 50 per al 50 %.'
+      share_refused: '«{raw}» no és una part: escriu un percentatge, com 50 per al
+        50 %.'
+      skipped: '{count} es queden com estan'
+      stage: Prepara per a {count}
+      staged: '{classification} · {count} moviments preparats'
+      staged_category: '{category} · {count} moviments preparats'
+      staged_detail: '{classification} · {detail} · {count} moviments preparats'
+      title_business: Empresarial · {count} moviments
+      title_category: Categoria · {count} moviments
+      title_mixed: Mixt · {count} moviments
+      transfers_only: Els traspassos només poden ser personals o quedar sense classificar
     close: Tanca el llibre
+    column:
+      amount: Import
+      category: Categoria
+      classification: Classificació
+      classified_by: Classificat per
+      counterparty: Contrapart
+      date: Data
+      description: Descripció
+      direction: Sentit
+      documents: Documents
+      eur: Valor en EUR
+      group_label: Grup
+      invoice: Factura
+      irpf_category: Categoria d'IRPF
+      iva_amount: Quota d'IVA
+      iva_category: Categoria d'IVA
+      iva_rate: Tipus d'IVA
+      lifecycle: Situació
+      modified: Modificat
+      notes: Notes
+      select: Selecció
+      status: Estat
+      taxable_base: Base imposable
+    columns:
+      list: Columnes mostrades
+      move_down: Baixa {column}
+      move_up: Puja {column}
+      preset:
+        custom: personalitzades
+        everything: Tot
+        irpf: IRPF
+        iva: IVA
+        review: Revisió
+      presets: Predefinides
+      reset: Restableix les columnes
+      title: Columnes
     count:
       to_classify: '{count} per classificar'
+    density:
+      comfortable: Files àmplies
+    describe:
+      missing: 'falta: {reason}'
+      readiness: 'Preparació: {reasons}'
+    direction:
+      incoming: Entrada
+      internal_transfer: Traspàs
+      outgoing: Sortida
+    documents:
+      count: '{count} documents'
     empty: No hi ha moviments a {period}
     empty_all: Encara no hi ha moviments
+    empty_filtered: Cap moviment coincideix
+    empty_filtered_detail: La cerca o els filtres amaguen {count} moviments de {period}.
     export:
       cancel: Cancel·la
       change_file: Canvia…
@@ -880,6 +1030,66 @@ desktop:
         revisa el fitxer abans d''exportar un altre cop.'
       without_staged: Exporta sense ells
     failed: No s'ha pogut llegir el llibre.
+    filters:
+      account: Compte
+      active: '{count} actius'
+      any: Qualsevol
+      classification: Classificació
+      clear_all: Treu tots els filtres
+      direction: Sentit
+      failed: No s'ha pogut aplicar el filtre.
+      foreign: Només moneda estrangera
+      foreign_chip: Moneda estrangera
+      group: Etiqueta de grup
+      hide_rejected: Amaga els moviments amb un suggeriment del model que vas rebutjar
+      hide_rejected_chip: Sense rebutjats
+      import_chip: De la importació
+      import_issue: Nota d'importació
+      in_force: Filtres aplicats
+      lifecycle: Situació
+      no_group: Sense etiqueta de grup
+      reading: S'està llegint el filtre…
+      reason: Motiu de preparació
+      remove: 'Treu el filtre: {filter}'
+      reset: Restableix
+      status: Estat
+      title: Filtres
+      to_match: Moviments empresarials sense factura vinculada
+      to_match_chip: Per conciliar
+    grid: Moviments, {period}
+    group:
+      business: Empresarial…
+      by: Agrupa per
+      category: Categoria
+      category_family: Família de categoria
+      classification: Classificació
+      collapse_all: Plega tots els grups
+      count: '{count} moviments'
+      counterparty: Contrapart
+      description: Descripció, sense referències
+      direction: Sentit
+      empty:
+        category: Sense categoria
+        category_family: Sense categoria
+        classification: Sense valor
+        counterparty: Sense contrapart
+        description: Sense descripció
+        direction: Sense valor
+        group_label: Sense etiqueta de grup
+        iva_category: Sense categoria d'IVA
+        month: Sense valor
+        status: Sense valor
+      expand_all: Desplega tots els grups
+      group_label: Etiqueta de grup
+      iva_category: Categoria d'IVA
+      mixed: Mixt…
+      month: Mes
+      none: Sense agrupar
+      personal: Personal
+      select: Selecciona {count}
+      status: Estat
+      title: Agrupa
+      waits: cal llegir-ho tot
     import:
       accepts:
         bank: CSV, XLSX, XLS, OFX, QFX o PDF · fins a 128 fitxers · no es llegeixen
@@ -1040,10 +1250,59 @@ desktop:
       unmapped: 'Columnes no utilitzades: {columns}'
       verify: Comprova buits i files repetides
       what: Què importar
+    import_issue:
+      duplicate: Possible duplicat
+      gap: Buit a l'extracte
+      original_file: Fitxer original
+      parser: Llegit amb un avís
+    invoice:
+      linked: Vinculada
+    irpf_category:
+      actividad_economica: Activitat econòmica
+      arrendamiento_local: Arrendament de local
+      arrendamiento_vivienda_afecto: Arrendament d'habitatge afecte
+      trabajo: Treball
+    issue:
+      next: Següent problema de preparació
+      none: No hi ha problemes de preparació en aquesta vista
+      previous: Problema de preparació anterior
+    iva_category:
+      domestic_exempt: Exempta
+      domestic_general: Tipus general
+      domestic_not_subject: No subjecta
+      domestic_reduced: Tipus reduït
+      domestic_reverse_charge: Inversió del subjecte passiu
+      domestic_super_reduced: Tipus superreduït
+      domestic_zero: Tipus zero
+      erroneous_invoice: Factura errònia
+      export_assimilated_zero_rated: Assimilada a l'exportació
+      export_third_country_zero_rated: Exportació
+      import_third_country: Importació
+      intra_community_acquisition_reverse_charge: Adquisició intracomunitària
+      intra_community_service_acquisition_reverse_charge: Adquisició intracomunitària
+        de serveis
+      intra_community_service_supply: Prestació intracomunitària de serveis
+      intra_community_supply: Lliurament intracomunitari
+      intra_community_triangulation: Operació triangular
+      operacion_no_sujeta: Operació no subjecta
+      reagp_compensation: Compensació REAGP
+      recargo_equivalencia: Recàrrec d'equivalència
+      regimen_simplificado: Règim simplificat
+      unknown: Desconeguda
+    lifecycle:
+      active: Actiu
+      archived: Arxivat
+      split: Dividit
+      stashed: Apartat
     loaded_of: '{loaded} de {total} carregats'
     loading: S'està llegint el llibre…
     maximize: Maximitza el llibre
+    menu: Accions del moviment
+    missing: Falta
     movements_count: 'Moviments: {count}'
+    no_rate: Sense tipus de canvi
+    no_rate_detail: 'No hi ha tipus de canvi per a aquesta data: el valor en EUR no
+      es coneix i no és zero.'
     period:
       all: Tots els períodes
       choose: Tria un període
@@ -1057,18 +1316,84 @@ desktop:
       year_next: Any següent
       year_previous: Any anterior
       years_with_movements: Anys amb moviments
+    position: Fila {row} de {count}
     readiness:
       checking: S'està comprovant…
       failed: No s'ha pogut comprovar la preparació
+      fewer: Menys
+      loaded_only: només les files carregades
+      more: +{count}
+      more_name: '{count} motius més'
       no_rate: '{count} sense tipus de canvi a euros'
       not_checked: Encara sense comprovar
       not_measured: Preparació sense mesurar
       not_ready: No llest per calcular · {count} per corregir
       out_of_date: Sense comprovar des de {count} canvis desats
       ready: Llest per calcular · comprovat a les {time}
+      reason_name: '{reason}: {count}. Mostra''ls i com corregir-los'
+      reasons: Motius de preparació
+      staged: '{count} preparats'
       title: Preparació
+      unsaved: '{count} canvis sense desar no inclosos'
+    readiness_filter:
+      issues: Per corregir
+      no_rate: Sense tipus de canvi
+      to_classify: Per classificar
     reading: S'estan llegint {loaded} de {total}
+    reason:
+      anomaly_non_declarable_iva_category: Categoria IVA
+      anomaly_non_declarable_recargo_equivalencia: Recàrrec
+      censo_ratio_mismatch: Ràtio cens
+      domestic_identification_on_intra_community_transaction: NIF espanyol
+      eu_member_state_on_export_transaction: Estat exportació
+      inadmissible_deduction_classification: Deducció
+      missing_business_classification: Classificació
+      missing_category: Categoria
+      missing_counterparty_establishment_on_export: Establiment
+      missing_counterparty_identification_state: Estat IVA
+      missing_eur_tax_substrate: Xifres EUR
+      missing_home_office_afectacion: Afectació
+      missing_iva_amount: Quota IVA
+      missing_iva_rate: Tipus IVA
+      missing_proportionality_reference: Ràtio d'ús
+      missing_taxable_base: Base
+      unsupported_currency: Tipus EUR
+      unsupported_period: Període
+    reason_detail:
+      anomaly_non_declarable_iva_category: Categoria d'IVA no declarable
+      anomaly_non_declarable_recargo_equivalencia: Recàrrec d'equivalència no declarable
+      censo_ratio_mismatch: La ràtio no coincideix amb el cens
+      domestic_identification_on_intra_community_transaction: NIF espanyol en una
+        operació intracomunitària
+      eu_member_state_on_export_transaction: Estat membre de la UE en una exportació
+      inadmissible_deduction_classification: Classificació no admesa per deduir
+      missing_business_classification: Falta la classificació
+      missing_category: Falta la categoria
+      missing_counterparty_establishment_on_export: Falta l'establiment de la contrapart
+        en una exportació
+      missing_counterparty_identification_state: Falta la identificació a efectes
+        d'IVA de la contrapart
+      missing_eur_tax_substrate: Falten les xifres en euros
+      missing_home_office_afectacion: Falta l'afectació de l'habitatge
+      missing_iva_amount: Falta la quota d'IVA
+      missing_iva_rate: Falta el tipus d'IVA
+      missing_proportionality_reference: Mixt sense ràtio d'ús
+      missing_taxable_base: Falta la base imposable
+      unsupported_currency: Moneda no admesa
+      unsupported_period: Període no admès
     retry: Torna-ho a provar
+    review:
+      excluded: Exclòs
+      pending: Per classificar
+      reviewed: Revisat
+      skipped: Omès per una regla
+    search:
+      elsewhere: '{count} més en altres períodes'
+      label: Cerca moviments
+      load_all: Carrega'ls tots ({total})
+      loaded: '{found} trobats als {loaded} carregats'
+      placeholder: Cerca
+      show: Mostra
     section:
       documents: Documents
       health: Estat
@@ -1077,11 +1402,79 @@ desktop:
       registers: Registres
       rules: Regles
     sections: Seccions del llibre
+    select:
+      row: Selecciona {description}
+      shown: Selecciona els moviments mostrats · Ctrl+clic els afegeix
+    selected: '{count} seleccionats'
+    selection:
+      all_shown: Els {count} mostrats estan seleccionats.
+      hidden: '{hidden} de {selected} seleccionats estan amagats'
+      keep_visible: Deixa només els visibles
+      select_all: Selecciona els {count} de {period}
+      show: Mostra'ls
     setup: Configuració
     setup_current: 'Configuració: {section}'
+    shown_of: '{shown} de {total} moviments'
     signed_out: Inicia la sessió per veure el teu llibre.
+    sort:
+      asc: Ascendent
+      by: Ordena per
+      current: '{key}, {direction}'
+      desc: Descendent
+      key:
+        amount: Import
+        category: Categoria
+        classification: Classificació
+        classified_at: Data de classificació
+        classified_by: Classificat per
+        counterparty: Contrapart
+        created_at: Data d'alta
+        date: Data
+        description: Descripció
+        direction: Sentit
+        documents: Documents
+        eur: Valor en EUR
+        group_label: Etiqueta de grup
+        invoice: Factura
+        irpf_category: Categoria d'IRPF
+        iva_amount: Quota d'IVA
+        iva_category: Categoria d'IVA
+        iva_rate: Tipus d'IVA
+        lifecycle: Situació
+        modified: Modificat
+        notes: Notes
+        select: Selecció
+        status: Estat
+        taxable_base: Base imposable
+        value_date: Data valor
+      title: Ordena
+      waits: cal llegir-ho tot
+    status:
+      done: Fet
+      excluded: Exclòs
+      needs_fixing: Per corregir
+      needs_fixing_count: Per corregir · {count}
+      pending: Per classificar
+      skipped: Omès per una regla
+    sum:
+      in: Entrades {amount}
+      out: Sortides {amount}
+      transfer: Traspassos {amount}
     title: Llibre
+    toolbar: Vista de moviments
     unavailable: Encara no disponible
+    view:
+      all: Tots
+      business_expenses: Despeses empresarials
+      custom: Vista personalitzada
+      foreign: Moneda estrangera
+      named: 'Vista: {view}'
+      title: Vistes desades
+      to_classify: Per classificar
+      to_fix: Per corregir
+      to_match: Per conciliar
+    window:
+      partial: Els grups i els totals esperen que es llegeixi tot.
   logs:
     all_loggers: Tots els registradors
     all_origins: Tots els orígens

@@ -1,21 +1,17 @@
 import {
+  useCallback,
   useEffect,
   useId,
   useMemo,
+  useReducer,
   useRef,
   useState,
   type ReactNode,
   type RefObject,
 } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon, type IconName } from "@/components/ui/icon";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import type { PaneControl } from "../PaneHeader";
 import type { Action } from "../../shell/actions";
 import {
@@ -35,15 +31,13 @@ import {
 } from "../../shell/ledgerImports";
 import { useLedgerReadiness } from "../../shell/ledgerReadiness";
 import {
-  readinessSnapshot,
   shownRows,
   useLedgerWindow,
   windowProgress,
-  windowTruncation,
-  type Readiness,
 } from "../../shell/ledgerWindow";
 import { useLedgerYears } from "../../shell/ledgerYears";
-import { useStrings, type Translate } from "../../shell/strings";
+import { EMPTY_STAGE, reduceStage } from "../../shell/ledgerStage";
+import { useStrings } from "../../shell/strings";
 import { localDay } from "../../shared/dates";
 import {
   HeldButton,
@@ -59,132 +53,24 @@ import {
   sectionName,
   sectionTabId,
 } from "./ledgerWords";
+import { MovementsSection } from "./movements/MovementsSection";
+import {
+  useMovementsView,
+  windowScope,
+  type MovementsMemory,
+} from "./movements/useMovementsView";
 import { PeriodSelector } from "./PeriodSelector";
 import { ExportDialog } from "./transfer/ExportDialog";
 import { ImportDialog } from "./transfer/ImportDialog";
 import { dayText } from "./transfer/transferWords";
 
 /** What the page keeps of itself while it is put away, for one profile:
- * the period it showed. Held in memory only. */
-export type LedgerMemory = { period?: LedgerPeriod | null };
-
-type Pill = {
-  key: string;
-  variant: "success" | "warning" | "neutral";
-  icon: IconName;
-  count?: number;
-  label: string;
+ * the period it showed and how its movements were looked at. Held in memory
+ * only. */
+export type LedgerMemory = {
+  period?: LedgerPeriod | null;
+  movements?: MovementsMemory;
 };
-
-/** The readiness as it stood when it was checked: a glyph and a count for
- * each thing it counts, hidden at zero, with the sentence in its tooltip and
- * its name. One tick when nothing is left; a hollow mark while nothing
- * current has been checked. */
-function readinessPills(
-  t: Translate,
-  locale: string,
-  readiness: Readiness,
-): Pill[] {
-  const snapshot = readinessSnapshot(readiness);
-  const unknown = (label: string): Pill[] => [
-    { key: "unknown", variant: "neutral", icon: "unknown", label },
-  ];
-  if (!snapshot)
-    return unknown(
-      t(
-        readiness.kind === "checking"
-          ? "desktop.ledger.readiness.checking"
-          : readiness.kind === "failed"
-            ? "desktop.ledger.readiness.failed"
-            : "desktop.ledger.readiness.not_checked",
-      ),
-    );
-  // Staged changes leave the stored data as it was checked; saved ones do
-  // not.
-  if (snapshot.savedSince > 0)
-    return unknown(
-      t("desktop.ledger.readiness.out_of_date", {
-        count: snapshot.savedSince,
-      }),
-    );
-  const { status, preflight } = snapshot;
-  const ready = preflight ? preflight.ready : status.ready;
-  if (ready === null)
-    return unknown(t("desktop.ledger.readiness.not_measured"));
-  const issues = preflight ? preflight.issues : status.readiness_issues;
-  // What is still to classify has a pill of its own.
-  const fix = new Set(
-    issues
-      .filter((issue) => issue.reason !== "missing_business_classification")
-      .map((issue) => issue.transaction_id),
-  ).size;
-  const toClassify = status.pending_review_count;
-  const noRate = status.unconverted_currency_count;
-  const pills: Pill[] = [];
-  if (fix > 0 || (ready === false && toClassify === 0 && noRate === 0))
-    pills.push({
-      key: "issues",
-      variant: "warning",
-      icon: "alert",
-      ...(fix > 0 ? { count: fix } : {}),
-      label: t("desktop.ledger.readiness.not_ready", { count: fix }),
-    });
-  if (toClassify > 0)
-    pills.push({
-      key: "to_classify",
-      variant: "neutral",
-      icon: "pending",
-      count: toClassify,
-      label: t("desktop.ledger.count.to_classify", { count: toClassify }),
-    });
-  if (noRate > 0)
-    pills.push({
-      key: "no_rate",
-      variant: "neutral",
-      icon: "noRate",
-      count: noRate,
-      label: t("desktop.ledger.readiness.no_rate", { count: noRate }),
-    });
-  if (pills.length === 0)
-    pills.push({
-      key: "ready",
-      variant: "success",
-      icon: "check",
-      label: t("desktop.ledger.readiness.ready", {
-        time: new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(
-          new Date(snapshot.checkedAt),
-        ),
-      }),
-    });
-  return pills;
-}
-
-function ReadinessPills({ pills }: { pills: Pill[] }) {
-  const t = useStrings();
-  return (
-    <ul
-      aria-label={t("desktop.ledger.readiness.title")}
-      className="ledger-readiness flex flex-wrap items-center gap-1.5"
-    >
-      {pills.map((pill) => (
-        <li key={pill.key} data-readiness={pill.key}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant={pill.variant} className="tabular-nums">
-                <Icon name={pill.icon} size="xs" />
-                {pill.count !== undefined && (
-                  <span aria-hidden="true">{pill.count}</span>
-                )}
-                <span className="sr-only">{pill.label}</span>
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>{pill.label}</TooltipContent>
-          </Tooltip>
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 /**
  * The Ledger page: a period's movements, invoices and documents, and the
@@ -250,12 +136,26 @@ export function LedgerPage({
   const periodShown =
     section === "movements" || section === "invoices" || section === "health";
   const movementsShown = shown && readable && section === "movements";
-  const { window: periodWindow, reread } = useLedgerWindow(
+  const movements = useMovementsView(memory, view, onViewChange);
+  const {
+    window: periodWindow,
+    reread,
+    readAll,
+  } = useLedgerWindow(
     port,
     reader,
     period,
     movementsShown,
+    windowScope(period === null, movements),
   );
+  // What is staged lives here, with the page, so it stays while a section
+  // is put away and goes with the profile.
+  const [stage, dispatchStage] = useReducer(reduceStage, EMPTY_STAGE);
+  // What the movements section offers the palette.
+  const movementActions = useRef<(() => Action[]) | null>(null);
+  const registerMovements = useCallback((actions: (() => Action[]) | null) => {
+    movementActions.current = actions;
+  }, []);
   const readiness = useLedgerReadiness(
     port,
     reader,
@@ -288,14 +188,17 @@ export function LedgerPage({
     : unavailable();
   const addAction = unavailable();
 
-  const snapshot = readinessSnapshot(readiness);
+  const shownWindow = periodWindow ? shownRows(periodWindow) : null;
+  const toClassify = shownWindow
+    ? shownWindow.rows.filter((row) => row.review_status === "pending").length
+    : 0;
   const counts: Partial<Record<LedgerSection, SectionCount>> =
-    snapshot && snapshot.status.pending_review_count > 0
+    toClassify > 0
       ? {
           movements: {
-            count: snapshot.status.pending_review_count,
+            count: toClassify,
             label: t("desktop.ledger.count.to_classify", {
-              count: snapshot.status.pending_review_count,
+              count: toClassify,
             }),
           },
         }
@@ -385,6 +288,9 @@ export function LedgerPage({
                 { enabled: () => value !== section },
               ),
             ),
+            ...(section === "movements"
+              ? (movementActions.current?.() ?? [])
+              : []),
           ]
         : [];
   });
@@ -471,23 +377,11 @@ export function LedgerPage({
           </div>
         </EmptyState>
       );
-    else {
-      const truncated = windowTruncation(periodWindow);
+    else
       body = (
-        <div className="ledger-movements grid content-start gap-3 p-3">
-          <ReadinessPills pills={readinessPills(t, locale, readiness)} />
-          <p className="text-sm text-muted-foreground">
-            {truncated
-              ? t("desktop.ledger.loaded_of", {
-                  loaded: numbers.format(truncated.loaded),
-                  total: numbers.format(truncated.total),
-                })
-              : t("desktop.ledger.movements_count", {
-                  count: numbers.format(rows.total),
-                })}
-          </p>
+        <>
           {shownImport && (
-            <p className="ledger-shown-import flex flex-wrap items-center gap-2 text-sm">
+            <p className="ledger-shown-import flex flex-wrap items-center gap-2 px-3 pt-3 text-sm">
               {t("desktop.ledger.import.shown", {
                 from: dayText(locale, shownImport.span.from),
                 to: dayText(locale, shownImport.span.to),
@@ -501,14 +395,26 @@ export function LedgerPage({
               </Button>
             </p>
           )}
-          {periodWindow.phase === "reading" && (
-            <p role="status" className="text-xs text-muted-foreground">
-              {reading}
-            </p>
-          )}
-        </div>
+          <MovementsSection
+            port={port}
+            reader={reader}
+            period={period}
+            periodWindow={periodWindow}
+            readAll={readAll}
+            readiness={readiness}
+            movements={movements}
+            stage={stage}
+            onStage={dispatchStage}
+            view={view}
+            onViewChange={onViewChange}
+            locale={locale}
+            onPeriod={setPeriod}
+            register={registerMovements}
+            shownImport={shownImport}
+            onImportCleared={() => setShownImport(null)}
+          />
+        </>
       );
-    }
   }
 
   return (

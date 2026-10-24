@@ -516,6 +516,40 @@ const SURFACES: {
       }
     },
   })),
+  ...(["filters", "columns", "classify"] as const).map((open) => ({
+    name: `the Ledger movements grouped by counterparty, with ${open === "classify" ? "the classify dialog" : `the ${open}`} open`,
+    scenario: "ledger",
+    reach: async (target: Page) => {
+      await target.locator("[data-rail=ledger]").click();
+      const movements = target.locator(".ledger-movements");
+      await expect(movements.getByRole("grid")).toBeVisible();
+      await movements.locator(".ledger-views").click();
+      await target
+        .getByRole("menuitemradio", {
+          name: label("desktop.ledger.view.to_classify"),
+        })
+        .click();
+      await target.keyboard.press("Escape");
+      await expect(movements.locator("[data-kind=section]")).not.toHaveCount(0);
+      if (open === "classify") {
+        await movements
+          .locator(".ledger-group-actions")
+          .first()
+          .getByRole("button", { name: label("desktop.ledger.group.business") })
+          .click();
+        await expect(target.locator(".ledger-classify")).toBeVisible();
+        return;
+      }
+      await movements
+        .getByRole("button", {
+          name: new RegExp(
+            `^${label(open === "filters" ? "desktop.ledger.filters.title" : "desktop.ledger.columns.title")}`,
+          ),
+        })
+        .click();
+      await expect(target.locator(`.ledger-${open}`)).toBeVisible();
+    },
+  })),
 ];
 
 for (const scheme of ["light", "dark"] as const)
