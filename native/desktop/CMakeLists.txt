@@ -138,7 +138,9 @@ file(GLOB_RECURSE desktop_chrome_inputs CONFIGURE_DEPENDS
 list(FILTER desktop_chrome_inputs EXCLUDE REGEX "/dev/locales/tests/")
 list(APPEND desktop_chrome_inputs "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/i18n/render.py"
   "${CADRUMO_SOURCE_ROOT}/dev/_paths.py" "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
-  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py")
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"
+  # The shell source names the keys; generation refuses one it would not carry.
+  "${CMAKE_CURRENT_SOURCE_DIR}/frontend/src")
 set(desktop_palette_inputs "${CADRUMO_SOURCE_ROOT}/docs/conf.py" "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-docs.css"
   "${CADRUMO_SOURCE_ROOT}/dev/docs/desktop_palette.py" "${CADRUMO_SOURCE_ROOT}/dev/_paths.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
@@ -162,6 +164,7 @@ set(desktop_icons_module dev.packaging.native.provider_icon_assets)
 set(desktop_chrome_description "chrome strings from the locale catalogues")
 set(desktop_palette_description "palette from the documentation theme")
 set(desktop_icons_description "pinned provider marks from the admitted agent wheel")
+set(desktop_chrome_arguments --shell-source "${CMAKE_CURRENT_SOURCE_DIR}/frontend/src")
 set(desktop_icons_arguments --build "${PROJECT_BINARY_DIR}")
 set(desktop_icons_dependencies agent_project)
 foreach(generator IN ITEMS chrome palette icons)

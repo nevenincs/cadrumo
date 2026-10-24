@@ -58,18 +58,14 @@ export function originWords(f: FormField, locale: string) {
   )
     word =
       filings.length === 1 && family === "earlier_filings"
-        ? w(
-            `workspace.modelo.origin_source.${f.origin}.named_filing`,
-            locale,
-            {
-              modelo: filings[0]!.modelo,
-              period: periodWords(
-                filings[0]!.period.code,
-                filings[0]!.period.filing_year,
-                locale,
-              ),
-            },
-          )
+        ? w(`workspace.modelo.origin_source.${f.origin}.named_filing`, locale, {
+            modelo: filings[0]!.modelo,
+            period: periodWords(
+              filings[0]!.period.code,
+              filings[0]!.period.filing_year,
+              locale,
+            ),
+          })
         : w(`workspace.modelo.origin_source.${f.origin}.${family}`, locale);
   if (
     f.origin === "imported" &&
@@ -84,10 +80,7 @@ export function originWords(f: FormField, locale: string) {
     word = w("workspace.modelo.origin_held_zero.optional_empty", locale);
   return {
     word,
-    sentence: w(
-      `workspace.modelo.legend.meaning.origin.${f.origin}`,
-      locale,
-    ),
+    sentence: w(`workspace.modelo.legend.meaning.origin.${f.origin}`, locale),
     ...look,
   };
 }
@@ -105,12 +98,25 @@ export const FAMILY_ICON: Record<SourceFamily, IconName> = {
 export const familyWords = (family: SourceFamily, locale: string) =>
   w(`workspace.modelo.origin_source.imported.${family}`, locale);
 
-export const SURFACE_WORD: Record<string, string> = {
-  ledger: "Open your records",
-  withholding: "Open withholdings",
-  profile: "Open your profile",
-  declarations: "Open that declaration",
-};
+const SURFACES: ReadonlySet<string> = new Set([
+  "ledger",
+  "withholding",
+  "profile",
+  "declarations",
+]);
+
+/** The words that take the filer to the surface keeping a value, or
+ * undefined when the surface is not one the workspace can open. */
+export const surfaceWord = (surface: string, locale: string) =>
+  SURFACES.has(surface)
+    ? w(`workspace.modelo.surface.open.${surface}`, locale)
+    : undefined;
+
+/** The same, ending in where the value is corrected. */
+export const surfaceCorrection = (surface: string, locale: string) =>
+  SURFACES.has(surface)
+    ? w(`workspace.modelo.surface.correct.${surface}`, locale)
+    : undefined;
 
 const EDITABLE: ReadonlySet<Editability> = new Set([
   "editable_value",
@@ -123,10 +129,7 @@ const EDITABLE: ReadonlySet<Editability> = new Set([
 export function editing(field: FormField, locale: string) {
   const editable = EDITABLE.has(field.editability);
   const why = field.not_writable_reason
-    ? w(
-        `workspace.modelo.not_writable.${field.not_writable_reason}`,
-        locale,
-      )
+    ? w(`workspace.modelo.not_writable.${field.not_writable_reason}`, locale)
     : w(`workspace.modelo.editability.${field.editability}`, locale);
   return { editable, why };
 }
@@ -149,7 +152,10 @@ export const resultWords = (direction: ResultDirection, locale: string) =>
       "workspace.modelo.header.result.to_carry_forward",
       locale,
     ),
-    to_deduct_later: "To deduct in later periods",
+    to_deduct_later: w(
+      "workspace.modelo.header.result.to_deduct_later",
+      locale,
+    ),
     negative: w("workspace.modelo.header.result.negative", locale),
     nil: w("workspace.modelo.header.result.zero", locale),
     unknown: w("workspace.modelo.header.result.unknown", locale),
@@ -162,8 +168,7 @@ export function periodWords(
   locale: string,
 ): string {
   const q = /^([1-4])T$/.exec(code);
-  if (q)
-    return w(`workspace.modelo.period.quarter_${q[1]}`, locale, { year });
+  if (q) return w(`workspace.modelo.period.quarter_${q[1]}`, locale, { year });
   if (/^(0[1-9]|1[0-2])$/.test(code))
     return w(`workspace.modelo.period.month_${code}`, locale, { year });
   if (code === "0A")
@@ -248,25 +253,47 @@ export function timeWords(iso: string, locale: string): string {
 export function dueWords(
   daysLeft: number | null,
   daysOverdue: number | null,
+  locale: string,
 ): { text: string; tone: Tone } {
   if (daysOverdue !== null && daysOverdue > 0)
-    return { text: `${daysOverdue} days late`, tone: "danger" };
+    return {
+      text: w("workspace.declarations.due.days_late", locale, {
+        days: daysOverdue,
+      }),
+      tone: "danger",
+    };
   if (daysLeft === null) return { text: "", tone: "quiet" };
-  if (daysLeft === 0) return { text: "Due today", tone: "danger" };
+  if (daysLeft === 0)
+    return {
+      text: w("workspace.declarations.calendar.legal.due_today", locale),
+      tone: "danger",
+    };
   if (daysLeft <= 7)
     return {
-      text: `Due in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`,
+      text: w("workspace.declarations.due.days_left", locale, {
+        days: daysLeft,
+      }),
       tone: "attention",
     };
-  return { text: `Due in ${daysLeft} days`, tone: "source" };
+  return {
+    text: w("workspace.declarations.due.days_left", locale, {
+      days: daysLeft,
+    }),
+    tone: "source",
+  };
 }
 
 /** What a deadline's holiday check covered, when it did not cover all. */
-export const COVERAGE_WORDS: Record<string, string> = {
-  national_only: "Regional holidays not checked",
-  calendar_unavailable: "Holidays not checked",
-  territory_unverified: "Regional holidays not confirmed",
-};
+const COVERAGE_KINDS: ReadonlySet<string> = new Set([
+  "national_only",
+  "calendar_unavailable",
+  "territory_unverified",
+]);
+
+export const coverageWords = (coverage: string, locale: string) =>
+  COVERAGE_KINDS.has(coverage)
+    ? w(`workspace.declarations.holiday_coverage.${coverage}`, locale)
+    : undefined;
 
 const LAW_KINDS: Record<string, string> = {
   ley: "Ley",

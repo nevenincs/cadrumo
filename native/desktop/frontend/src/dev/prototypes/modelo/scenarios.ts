@@ -1,65 +1,52 @@
-import type { FormIssue } from "./types";
+import checked130En from "@/dev/fixtures/modelo/modelo-130-1T-checked-en.json";
+import checked130Es from "@/dev/fixtures/modelo/modelo-130-1T-checked-es.json";
+import type { Attention, FormIssue } from "./types";
 
 // What the read models report after steps a fresh synthetic profile never
-// reaches. Findings are in the form's own wire shape, with the catalogue keys
-// and facts the verification really emits; the AEAT side comes from the
+// reaches. Findings carry the words of a real checked envelope's issue lines;
+// the AEAT side comes from the
 // calendar read, never from the form; history and sources are scenario data
 // in the shape their reads will take.
 
-export const ISSUES_130: FormIssue[] = [
-  {
-    finding: {
-      kind: "missing_required_casilla",
-      severity: "blocking",
-      casilla_id: "18",
-      message_locale_key:
-        "application.modelo.findings.missing_required_casilla",
-      message_facts: { casilla_id: "18" },
-      legal_refs: ["orden-eha-672-2007:art-1"],
-    },
-    box: "18",
-    attention: "missing",
-    action_locale_key:
-      "application.modelo.work_form.finding_action.enter_box_value",
+type IssueLine = {
+  level: Attention;
+  box: string | null;
+  message: string;
+  action: string;
+  technical: string;
+};
+
+const CHECKED_130_LINES: Record<string, IssueLine[]> = {
+  en: checked130En.issue_lines as IssueLine[],
+  es: checked130Es.issue_lines as IssueLine[],
+};
+
+const SEVERITY: Record<Attention, string> = {
+  blocks: "blocking",
+  missing: "blocking",
+  confirm: "advisory",
+  check: "advisory",
+  info: "info",
+};
+
+/** The checked 130's issue lines as the read model words them in English and
+ * Spanish; a language the envelope was not read in shows the English. */
+export const ISSUES_130: FormIssue[] = CHECKED_130_LINES.en!.map((line, i) => ({
+  finding: {
+    kind: /: (\w+)/.exec(line.technical)?.[1] ?? "advisory",
+    severity: SEVERITY[line.level],
+    casilla_id: line.box,
+    legal_refs: [],
   },
-  {
-    finding: {
-      kind: "advisory",
-      severity: "advisory",
-      casilla_id: "05",
-      message_locale_key:
-        "application.modelo.findings.cross_period_zero_value_previous_filing",
-      message_facts: {
-        source_modelo: "130",
-        source_filing_year: 2026,
-        source_period: "2T",
-        target_modelo: "130",
-        target_filing_year: 2026,
-        target_period: "3T",
-      },
-      legal_refs: ["rd-439-2007:art-110"],
-    },
-    box: "05",
-    attention: "check",
-    action_locale_key:
-      "application.modelo.work_form.finding_action.compare_figures",
-  },
-  {
-    finding: {
-      kind: "advisory",
-      severity: "info",
-      casilla_id: null,
-      message_locale_key:
-        "application.modelo.findings.registry_advisory_predicate_fired",
-      message_facts: {},
-      legal_refs: ["ley-35-2006:art-99"],
-    },
-    box: null,
-    attention: "info",
-    action_locale_key:
-      "application.modelo.work_form.finding_action.compare_figures",
-  },
-];
+  box: line.box,
+  attention: line.level,
+  words: Object.fromEntries(
+    ["en", "es", "ca", "hu"].map((locale) => {
+      const said = (CHECKED_130_LINES[locale] ?? CHECKED_130_LINES.en!)[i]!;
+      return [locale, { message: said.message, action: said.action }];
+    }),
+  ),
+}));
 
 /** What has been seen of the AEAT for this declaration: the calendar read's
  * submission axis, separate from anything recorded here. */

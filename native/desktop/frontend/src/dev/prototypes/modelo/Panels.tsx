@@ -20,7 +20,6 @@ import {
 } from "./scenarios";
 import type { Attention, FormIssue, ModeloForm } from "./types";
 import {
-  periodWords,
   FAMILY_ICON,
   familyWords,
   money,
@@ -43,26 +42,15 @@ function Heading({ title, lead }: { title: string; lead?: ReactNode }) {
   );
 }
 
-const LEVELS: { level: Attention; word: string; tone: Tone }[] = [
-  { level: "blocks", word: "Must be fixed before filing", tone: "danger" },
-  { level: "missing", word: "Missing", tone: "danger" },
-  { level: "confirm", word: "To confirm", tone: "attention" },
-  { level: "check", word: "Worth checking", tone: "source" },
-  { level: "info", word: "For your information", tone: "quiet" },
+const LEVELS: { level: Attention; tone: Tone }[] = [
+  { level: "blocks", tone: "danger" },
+  { level: "missing", tone: "danger" },
+  { level: "confirm", tone: "attention" },
+  { level: "check", tone: "source" },
+  { level: "info", tone: "quiet" },
 ];
 
 /** Finding facts as a reader says them: a period code in words. */
-function factWords(
-  facts: Record<string, string | number>,
-  locale: string,
-): Record<string, string | number> {
-  const out: Record<string, string | number> = { ...facts };
-  for (const [key, value] of Object.entries(facts))
-    if (key.endsWith("period") && typeof value === "string")
-      out[key] = periodWords(value, 0, locale).replace(/\s*0$/, "");
-  return out;
-}
-
 export const stoppingIssues = (issues: FormIssue[]) =>
   issues.filter((i) => ["blocks", "missing", "confirm"].includes(i.attention));
 
@@ -92,7 +80,8 @@ export function CheckView({
           {w("workspace.modelo.operation.checked.complete", locale)}
         </Alert>
       )}
-      {LEVELS.map(({ level, word, tone }) => {
+      {LEVELS.map(({ level, tone }) => {
+        const word = w(`workspace.modelo.level.${level}`, locale);
         const found = form.issues.filter((i) => i.attention === level);
         if (!found.length) return null;
         return (
@@ -110,14 +99,10 @@ export function CheckView({
                   <>
                     <span className="flex flex-col gap-1">
                       <span className="text-base text-foreground">
-                        {w(
-                          issue.finding.message_locale_key,
-                          locale,
-                          factWords(issue.finding.message_facts, locale),
-                        )}
+                        {(issue.words[locale] ?? issue.words.en)?.message}
                       </span>
                       <span className="text-sm text-muted-foreground">
-                        {w(issue.action_locale_key, locale)}
+                        {(issue.words[locale] ?? issue.words.en)?.action}
                       </span>
                     </span>
                     {issue.box && (
@@ -208,44 +193,53 @@ export function FilingView({
   const result = form.result;
   const stages: Stage[] = [
     {
-      word: "Calculated",
-      when: form.calculation_revision_id ? "Done" : "Not yet",
+      word: w("workspace.modelo.origin.calculated", locale),
+      when: form.calculation_revision_id
+        ? w("workspace.modelo.legend.name.done", locale)
+        : w("workspace.modelo.filing.not_yet", locale),
       detail:
         result?.value && result.direction !== "unknown"
-          ? `${money(result.value, locale)} · ${result.direction === "to_pay" ? "to pay" : "result"}`
-          : "Cadrumo's calculation; the AEAT has not seen it",
+          ? `${money(result.value, locale)} · ${w(
+              result.direction === "to_pay"
+                ? "workspace.modelo.header.result.to_pay"
+                : "workspace.modelo.header.result.unknown",
+              locale,
+            )}`
+          : w("workspace.modelo.header.own_calculation", locale),
       state: form.calculation_revision_id ? "done" : "open",
     },
     {
-      word: "File exported",
-      when: file ? timeWords(file.exported_at, locale) : "Not yet",
+      word: w("workspace.modelo.filing.file_exported", locale),
+      when: file
+        ? timeWords(file.exported_at, locale)
+        : w("workspace.modelo.filing.not_yet", locale),
       detail: file
         ? file.current
-          ? "Made from the current calculation"
-          : "Made from an earlier calculation: do not upload it"
-        : "Made on this computer only",
+          ? w("workspace.modelo.filing.file_current", locale)
+          : w("workspace.modelo.filing.file_earlier", locale)
+        : w("workspace.modelo.filing.file_local", locale),
       state: file ? (file.current ? "done" : "stale") : "open",
     },
     {
-      word: "Recorded as filed",
+      word: w("workspace.declarations.list.group.recorded", locale),
       when: recorded?.recorded_at
         ? timeWords(recorded.recorded_at, locale)
-        : "Not yet",
+        : w("workspace.modelo.filing.not_yet", locale),
       detail: recorded
-        ? "Recorded here; nothing was sent from Cadrumo"
-        : "After you have filed at the AEAT",
+        ? w("workspace.modelo.filing.recorded_here", locale)
+        : w("workspace.modelo.filing.after_filing", locale),
       state: recorded ? "done" : "open",
     },
     {
-      word: "At the AEAT",
+      word: w("workspace.modelo.filing.at_aeat", locale),
       when: aeat?.on
         ? timeWords(aeat.on, locale)
         : recorded
-          ? "Not confirmed yet"
+          ? w("workspace.modelo.filing.not_confirmed_yet", locale)
           : "—",
       detail: aeat
         ? aeatWords(aeat.state, locale)
-        : "Add the AEAT receipt to confirm",
+        : w("workspace.modelo.filing.add_receipt_to_confirm", locale),
       state: aeat?.state === "justificante_verified" ? "done" : "open",
     },
   ];
@@ -253,8 +247,8 @@ export function FilingView({
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <Heading
-        title="Export and record"
-        lead="Cadrumo makes the file; you upload it yourself at the AEAT's electronic office. Nothing is sent from here."
+        title={w("workspace.modelo.filing.title", locale)}
+        lead={w("workspace.modelo.filing.lead", locale)}
       />
       <ol className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border @3xl:grid-cols-4">
         {stages.map((s) => (
@@ -282,11 +276,12 @@ export function FilingView({
           />
           <div className="flex flex-1 flex-col gap-1">
             <h3 className="text-md font-medium">
-              The file to upload at the AEAT
+              {w("workspace.modelo.filing.file_title", locale)}
             </h3>
             <p className="text-base text-muted-foreground">
-              In the official format for modelo {form.modelo}. It is not proof
-              of filing; the AEAT's receipt is.
+              {w("workspace.modelo.filing.file_format", locale, {
+                modelo: form.modelo,
+              })}
             </p>
           </div>
         </div>
@@ -299,7 +294,7 @@ export function FilingView({
               className="justify-self-start"
               onClick={onCheck}
             >
-              Open Check
+              {w("workspace.modelo.filing.open_check", locale)}
             </Button>
           </Alert>
         )}
@@ -315,10 +310,10 @@ export function FilingView({
             <>
               <Button variant="ghost" size="sm">
                 <Icon name="folder" size="xs" />
-                Show the filed file
+                {w("workspace.modelo.filing.show_filed_file", locale)}
               </Button>
               <span className="text-sm text-muted-foreground">
-                Exporting again makes a new file; only do it for a correction.
+                {w("workspace.modelo.filing.export_again_warning", locale)}
               </span>
             </>
           ) : (
@@ -328,18 +323,20 @@ export function FilingView({
                 variant={file?.current ? "secondary" : "primary"}
               >
                 <Icon name="download" size="xs" />
-                {file ? "Export again" : "Export file…"}
+                {file
+                  ? w("workspace.modelo.filing.export_again", locale)
+                  : w("workspace.modelo.filing.export_file", locale)}
               </Button>
               {file?.current && (
                 <Button variant="ghost">
                   <Icon name="folder" size="xs" />
-                  Show in folder
+                  {w("workspace.modelo.filing.show_in_folder", locale)}
                 </Button>
               )}
             </>
           )}
           <Button variant="link" className="ml-auto">
-            How to upload it
+            {w("workspace.modelo.filing.how_to_upload", locale)}
             <Icon name="forward" size="xs" />
           </Button>
         </div>
@@ -353,17 +350,18 @@ export function FilingView({
             className="mt-0.5 text-muted-foreground"
           />
           <div className="flex flex-1 flex-col gap-1">
-            <h3 className="text-md font-medium">After you have filed</h3>
+            <h3 className="text-md font-medium">
+              {w("workspace.modelo.filing.after_filed_title", locale)}
+            </h3>
             <p className="text-base text-muted-foreground">
-              Record here that you filed it, so your calendar and later
-              declarations know. Then add the AEAT's receipt to confirm it.
+              {w("workspace.modelo.filing.record_lead", locale)}
             </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {!recorded && (
             <Button variant="secondary" disabled={!canRecord}>
-              Record as filed…
+              {w("workspace.modelo.filing.record_as_filed", locale)}
             </Button>
           )}
           <Button
@@ -371,23 +369,23 @@ export function FilingView({
             disabled={!recorded || aeat?.state === "justificante_verified"}
           >
             <Icon name="paste" size="xs" />
-            Add the AEAT receipt (PDF)…
+            {w("workspace.modelo.filing.add_receipt_pdf", locale)}
           </Button>
           <span className="text-sm text-muted-foreground">
             {!recorded
               ? canRecord
-                ? "Also if you filed some other way."
-                : "Check the declaration first."
+                ? w("workspace.modelo.filing.also_other_way", locale)
+                : w("workspace.modelo.filing.check_first", locale)
               : aeat?.state === "justificante_verified"
-                ? "The receipt matches this declaration."
-                : "Not confirmed by a receipt yet."}
+                ? w("workspace.modelo.filing.receipt_matches", locale)
+                : w("workspace.modelo.filing.receipt_missing", locale)}
           </span>
         </div>
       </section>
 
       <section className="flex flex-col gap-2">
         <h3 className="text-sm font-medium text-muted-foreground">
-          Other copies
+          {w("workspace.modelo.filing.other_copies", locale)}
         </h3>
         <ul className="grid grid-cols-1 gap-3 @3xl:grid-cols-2">
           {ARTEFACTS.map((a) => (
@@ -440,7 +438,7 @@ export function SourcesView({
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <Heading
         title={w("workspace.modelo.sources.title", locale)}
-        lead="Boxes are filled from these when you calculate. Correct a value where it is kept, then calculate again."
+        lead={w("workspace.modelo.sources.lead", locale)}
       />
       {groups.map((g) => (
         <section
@@ -489,7 +487,13 @@ export function SourcesView({
                       key={b}
                       type="button"
                       onClick={() => onGo(b)}
-                      aria-label={`Go to box ${b}`}
+                      aria-label={w(
+                        "workspace.modelo.sources.go_to_box",
+                        locale,
+                        {
+                          box: b,
+                        },
+                      )}
                     >
                       <BoxNumber box={b} size="sm" />
                     </button>
@@ -538,8 +542,8 @@ export function HistoryView({
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <Heading
-        title="History"
-        lead="What happened to this declaration, newest first. Kept on this computer."
+        title={w("workspace.modelo.history.title", locale)}
+        lead={w("workspace.modelo.history.lead", locale)}
       />
       <ol className="flex flex-col">
         {aeat?.on && (
@@ -550,7 +554,7 @@ export function HistoryView({
             <span className="flex flex-col">
               <span className="text-base">{aeatWords(aeat.state, locale)}</span>
               <span className="text-sm text-muted-foreground">
-                Read from the AEAT
+                {w("workspace.modelo.history.read_from_aeat", locale)}
               </span>
             </span>
             <span className="text-sm text-faint tabular-nums">
@@ -569,7 +573,7 @@ export function HistoryView({
             <span className="flex flex-col">
               <span className="text-base">
                 {e.kind === "changed"
-                  ? "Changes applied"
+                  ? w("workspace.modelo.history.changes_applied", locale)
                   : w(`workspace.declarations.lifecycle.${e.kind}`, locale)}
               </span>
               <span className="text-sm text-muted-foreground">
@@ -587,36 +591,34 @@ export function HistoryView({
       <div className="flex gap-2 border-t border-border pt-4">
         <Button variant="ghost" size="sm">
           <Icon name="edit" size="xs" />
-          Rename
+          {w("workspace.modelo.history.rename", locale)}
         </Button>
         {!form.edit_closure && (
           <Button variant="ghost" size="sm" className="text-destructive">
             <Icon name="trash" size="xs" />
-            Discard this declaration
+            {w("workspace.modelo.history.discard", locale)}
           </Button>
         )}
       </div>
       <Dialog open={correcting} onOpenChange={onCorrect}>
-        <DialogContent closeLabel="Close">
+        <DialogContent closeLabel={w("workspace.modelo.key.close", locale)}>
           <DialogHeader>
-            <DialogTitle>Prepare a correction</DialogTitle>
+            <DialogTitle>
+              {w("workspace.modelo.correction.title", locale)}
+            </DialogTitle>
             <DialogDescription>
-              A filed declaration is never changed in place. Cadrumo prepares a
-              correction from it; you change what was wrong, then export its
-              file and file it at the AEAT like any other.
+              {w("workspace.modelo.correction.lead", locale)}
             </DialogDescription>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Whether it is filed as a supplementary return or a rectification
-            depends on the modelo and on which way the amount moves. Cadrumo
-            works it out and tells you before you export.
+            {w("workspace.modelo.correction.kind", locale)}
           </p>
           <DialogFooter>
             <Button variant="ghost" onClick={() => onCorrect(false)}>
-              Cancel
+              {w("workspace.modelo.editor.cancel", locale)}
             </Button>
             <Button onClick={() => onCorrect(false)}>
-              Prepare the correction
+              {w("workspace.modelo.correction.confirm", locale)}
             </Button>
           </DialogFooter>
         </DialogContent>

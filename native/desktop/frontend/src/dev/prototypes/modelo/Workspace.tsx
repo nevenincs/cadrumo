@@ -53,7 +53,7 @@ import {
 import type { FormEnvelope, FormField, Intent, ModeloForm } from "./types";
 import {
   confirmable,
-  COVERAGE_WORDS,
+  coverageWords,
   dateWords,
   dueWords,
   money,
@@ -105,9 +105,6 @@ export const rulesIncomplete = (e: FormEnvelope) =>
   e.admission_refusal?.refusal.code === "admission_denied" &&
   e.admission_refusal.refusal.facts.includes("registry_authority_grade");
 
-/** A catalogue next step as a button label: its count is on the badges. */
-const label = (text: string) => text.replace(/\s*\([^)]*\)\s*$/, "");
-
 /** The one next step, read from the form, its refusal and the AEAT side in
  * one order, so the header, the views and the list never disagree. Export
  * and recording follow the application's own gates: a complete check and no
@@ -120,8 +117,8 @@ function nextStep(
   locale: string,
 ): Next | null {
   const f = e.form.form;
-  const next = (key: string, values: Record<string, string | number> = {}) =>
-    label(w(`workspace.modelo.next.${key}`, locale, values));
+  const next = (key: string) =>
+    w(`workspace.modelo.next_button.${key}`, locale);
   if (f.edit_closure)
     return aeat?.state === "justificante_verified"
       ? {
@@ -132,7 +129,7 @@ function nextStep(
               : "",
           })} · ${w("workspace.declarations.calendar.aeat.justificante_verified", locale)}`,
         }
-      : { kind: "act", word: "Add the AEAT receipt", view: "file" };
+      : { kind: "act", word: next("add_receipt"), view: "file" };
   if (rulesIncomplete(e))
     return {
       kind: "status",
@@ -151,7 +148,7 @@ function nextStep(
   if (todo.failed.length)
     return {
       kind: "act",
-      word: "See what is missing",
+      word: next("see_missing"),
       view: "form",
       jump: "failed",
     };
@@ -166,9 +163,9 @@ function nextStep(
   if (!f.last_export)
     return { kind: "act", word: next("export"), view: "file" };
   if (!f.last_export.current)
-    return { kind: "act", word: "Create the file again", view: "file" };
+    return { kind: "act", word: next("export_again"), view: "file" };
   if (!f.filing)
-    return { kind: "act", word: "Record the filing", view: "file" };
+    return { kind: "act", word: next("record_after_file"), view: "file" };
   return null;
 }
 
@@ -187,7 +184,7 @@ function ResultLine({
   if (!r)
     return (
       <span className="text-sm text-muted-foreground">
-        This form has no result box
+        {w("workspace.modelo.header.result.no_result_box", locale)}
       </span>
     );
   if (!form.calculation_revision_id)
@@ -215,9 +212,9 @@ function ResultLine({
       <span className="text-sm text-muted-foreground">
         {resultWords(r.direction, locale)}
         {staged
-          ? " · out of date until applied"
+          ? ` · ${w("workspace.modelo.header.result.out_of_date_until_applied", locale)}`
           : provisional
-            ? " · provisional"
+            ? ` · ${w("workspace.modelo.header.result.provisional", locale)}`
             : ""}
       </span>
     </span>
@@ -228,17 +225,20 @@ function AboutForm({ form, locale }: { form: ModeloForm; locale: string }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <IconButton label="About this form" size="xs">
+        <IconButton label={w("workspace.modelo.about.title", locale)} size="xs">
           <Icon name="info" />
         </IconButton>
       </PopoverTrigger>
       <PopoverContent className="flex w-80 flex-col gap-2 text-sm">
-        <p className="font-medium">About this form</p>
+        <p className="font-medium">
+          {w("workspace.modelo.about.title", locale)}
+        </p>
         <p className="text-muted-foreground">
-          The boxes follow the official design of modelo {form.modelo} for this
-          period.
+          {w("workspace.modelo.about.official", locale, {
+            modelo: form.modelo,
+          })}
           {form.layout_provenance === "generated" &&
-            " Their grouping was produced from that design and has not yet been checked against the printed form; each value is kept by its box number."}
+            ` ${w("workspace.modelo.about.generated", locale)}`}
         </p>
         {!form.filing && (
           <p className="text-muted-foreground">
@@ -250,11 +250,14 @@ function AboutForm({ form, locale }: { form: ModeloForm; locale: string }) {
   );
 }
 
-function Keys() {
+function Keys({ locale }: { locale: string }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <IconButton label="Keys" size="sm">
+        <IconButton
+          label={w("workspace.modelo.legend.group.keys", locale)}
+          size="sm"
+        >
           <Icon name="keyboard" />
         </IconButton>
       </PopoverTrigger>
@@ -265,19 +268,19 @@ function Keys() {
         <span>
           <Kbd>↑</Kbd> <Kbd>↓</Kbd>
         </span>
-        <span>Move between boxes</span>
+        <span>{w("desktop.modelo.keys.move", locale)}</span>
         <span>
           <Kbd>Enter</Kbd>
         </span>
-        <span>Change the chosen box; Enter again keeps it and moves on</span>
+        <span>{w("desktop.modelo.keys.change", locale)}</span>
         <span>
           <Kbd>Esc</Kbd>
         </span>
-        <span>Leave a box unchanged</span>
+        <span>{w("desktop.modelo.keys.leave", locale)}</span>
         <span>
           <Kbd>N</Kbd>
         </span>
-        <span>Next box that needs you (while the form has focus)</span>
+        <span>{w("desktop.modelo.keys.next_attention", locale)}</span>
       </PopoverContent>
     </Popover>
   );
@@ -301,7 +304,7 @@ function TodoRail({
     return (
       <p className="flex gap-2 p-4 text-sm text-muted-foreground">
         <Icon name="lock" size="xs" className="mt-0.5" />
-        Nothing can be changed here at the moment.
+        {w("workspace.modelo.editability.no_admission", locale)}
       </p>
     );
   const item = (f: FormField) => (
@@ -333,7 +336,7 @@ function TodoRail({
     return (
       <p className="flex gap-2 p-4 text-sm text-muted-foreground">
         <Icon name="check" size="xs" className="mt-0.5 text-success" />
-        Nothing needs you on this form.
+        {w("workspace.modelo.todo.none", locale)}
       </p>
     );
   return (
@@ -357,11 +360,12 @@ function TodoRail({
             <Icon name="alert" size="xs" className="mt-0.5 text-destructive" />
             <span className="flex flex-col">
               <span className="text-sm">
-                {todo.failed.length} boxes could not be worked out
+                {w("workspace.modelo.todo.failed", locale, {
+                  count: todo.failed.length,
+                })}
               </span>
               <span className="text-xs text-muted-foreground">
-                They wait on something the calculation lacked. Choose one to see
-                what.
+                {w("workspace.modelo.todo.failed_lead", locale)}
               </span>
             </span>
             <Icon
@@ -379,14 +383,19 @@ function TodoRail({
 
 function Outline({
   form,
+  locale,
   onGo,
 }: {
   form: ModeloForm;
+  locale: string;
   onGo: (id: string) => void;
 }) {
   const leaf = (t: string) => t.split(" · ").pop() ?? t;
   return (
-    <nav aria-label="Form outline" className="flex flex-col gap-4 p-3">
+    <nav
+      aria-label={w("desktop.modelo.outline.label", locale)}
+      className="flex flex-col gap-4 p-3"
+    >
       {form.pages.map((page) => (
         <div key={page.id} className="flex flex-col gap-0.5">
           <span className="px-2 pb-1 text-xs font-medium text-faint uppercase">
@@ -460,7 +469,10 @@ function ReviewDialog({
   ).length;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-palette" closeLabel="Close">
+      <DialogContent
+        className="w-palette"
+        closeLabel={w("workspace.modelo.key.close", locale)}
+      >
         <DialogHeader>
           <DialogTitle>
             {w("workspace.modelo.review.title", locale, {
@@ -520,7 +532,7 @@ function ReviewDialog({
         )}
         <DialogFooter>
           <span className="mr-auto text-sm text-muted-foreground">
-            Kept on this computer only.
+            {w("workspace.modelo.filing.kept_locally", locale)}
           </span>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {w("workspace.modelo.review.back", locale)}
@@ -690,7 +702,7 @@ export function ModeloWorkspace({
     if (f) pick(f);
   };
   const due = form.deadline
-    ? dueWords(form.deadline.days_remaining, form.deadline.days_overdue)
+    ? dueWords(form.deadline.days_remaining, form.deadline.days_overdue, locale)
     : null;
   const showNext =
     next && !(next.kind === "act" && next.view === view && view !== "form");
@@ -748,7 +760,7 @@ export function ModeloWorkspace({
             className="self-start text-sm text-muted-foreground"
           >
             <Icon name="back" size="xs" />
-            Declarations
+            {w("workspace.declarations.destination.overview", locale)}
           </Button>
           <div className="flex items-center gap-3">
             <span className="flex h-8 min-w-12 items-center justify-center rounded-md border border-border-strong px-1.5 font-mono text-md font-semibold">
@@ -765,16 +777,18 @@ export function ModeloWorkspace({
           {form.deadline && (
             <span className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
               <Icon name="calendar" size="xs" />
-              Due {dateWords(form.deadline.closes_on, locale)}
+              {w("workspace.declarations.due.on", locale, {
+                date: dateWords(form.deadline.closes_on, locale),
+              })}
               {due?.text && !form.edit_closure && (
                 <span className={cn("font-medium", TONE_TEXT[due.tone])}>
                   · {due.text}
                 </span>
               )}
-              {COVERAGE_WORDS[form.deadline.holiday_coverage] &&
+              {coverageWords(form.deadline.holiday_coverage, locale) &&
                 !form.edit_closure && (
                   <span className="text-faint">
-                    · {COVERAGE_WORDS[form.deadline.holiday_coverage]}
+                    · {coverageWords(form.deadline.holiday_coverage, locale)}
                   </span>
                 )}
             </span>
@@ -805,15 +819,15 @@ export function ModeloWorkspace({
         onValueChange={(v) => setView(v as View)}
         className="flex-none border-b border-border px-4"
       >
-        <TabsList aria-label="Declaration views">
+        <TabsList aria-label={w("desktop.modelo.views.label", locale)}>
           <TabsTrigger value="form">
-            Form{" "}
+            {w("desktop.modelo.view.form", locale)}{" "}
             {formBadge > 0 && !locked && (
               <Badge variant="warning">{formBadge}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="check">
-            Check
+            {w("workspace.modelo.step.review", locale)}
             {form.verification &&
               (stop ? (
                 <Badge variant="neutral">{stop}</Badge>
@@ -822,13 +836,17 @@ export function ModeloWorkspace({
               ))}
           </TabsTrigger>
           <TabsTrigger value="file">
-            Export and record{" "}
+            {w("workspace.modelo.filing.title", locale)}{" "}
             {form.filing && (
               <Icon name="check" size="xs" className="text-success" />
             )}
           </TabsTrigger>
-          <TabsTrigger value="sources">Sources</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="sources">
+            {w("workspace.modelo.key.sources", locale)}
+          </TabsTrigger>
+          <TabsTrigger value="history">
+            {w("workspace.modelo.history.title", locale)}
+          </TabsTrigger>
         </TabsList>
       </Tabs>
       {locked && (
@@ -837,7 +855,12 @@ export function ModeloWorkspace({
           <span>
             {form.edit_closure
               ? w("workspace.modelo.filed.read_only", locale)
-              : `${w("workspace.modelo.editability.no_admission", locale)} ${envelope.admission_refusal?.refusal.reconsideration_condition ? "It will open once Cadrumo's rules for this modelo are complete." : ""}`}
+              : w(
+                  envelope.admission_refusal?.refusal.reconsideration_condition
+                    ? "workspace.modelo.editor.rules_incomplete"
+                    : "workspace.modelo.editability.no_admission",
+                  locale,
+                )}
           </span>
           {form.edit_closure && (
             <Button
@@ -849,7 +872,7 @@ export function ModeloWorkspace({
                 setCorrecting(true);
               }}
             >
-              Prepare a correction
+              {w("workspace.modelo.correction.title", locale)}
             </Button>
           )}
         </div>
@@ -865,9 +888,13 @@ export function ModeloWorkspace({
               onValueChange={(v) => setRail(v as "todo" | "outline")}
               className="flex-none px-2"
             >
-              <TabsList aria-label="Beside the form">
-                <TabsTrigger value="todo">To do</TabsTrigger>
-                <TabsTrigger value="outline">Outline</TabsTrigger>
+              <TabsList aria-label={w("desktop.modelo.side.label", locale)}>
+                <TabsTrigger value="todo">
+                  {w("workspace.modelo.todo.title", locale)}
+                </TabsTrigger>
+                <TabsTrigger value="outline">
+                  {w("desktop.modelo.side.outline", locale)}
+                </TabsTrigger>
               </TabsList>
             </Tabs>
             <div className="min-h-0 flex-1 overflow-y-auto border-t border-border">
@@ -880,7 +907,7 @@ export function ModeloWorkspace({
                   onPick={pick}
                 />
               ) : (
-                <Outline form={form} onGo={go} />
+                <Outline form={form} locale={locale} onGo={go} />
               )}
             </div>
           </aside>
@@ -894,11 +921,11 @@ export function ModeloWorkspace({
                 />
                 <Input
                   controlSize="sm"
-                  placeholder="Find a box by number or words"
+                  placeholder={w("workspace.modelo.search.placeholder", locale)}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="pl-7"
-                  aria-label="Find a box"
+                  aria-label={w("desktop.modelo.search.label", locale)}
                 />
               </div>
               <Button
@@ -907,12 +934,17 @@ export function ModeloWorkspace({
                 aria-pressed={filter === "mine"}
                 onClick={() => setFilter(filter === "mine" ? "all" : "mine")}
               >
-                Only my entries
+                {w("workspace.modelo.filter.only_mine", locale)}
               </Button>
               <span className="ml-auto" />
-              {!locked && <Keys />}
+              {!locked && <Keys locale={locale} />}
               <IconButton
-                label={details ? "Hide details" : "Show details"}
+                label={w(
+                  details
+                    ? "desktop.modelo.details.hide"
+                    : "desktop.modelo.details.show",
+                  locale,
+                )}
                 size="sm"
                 aria-pressed={details}
                 onClick={() => setDetails(!details)}
@@ -929,7 +961,7 @@ export function ModeloWorkspace({
             )}
             <div
               role="grid"
-              aria-label="Form"
+              aria-label={w("desktop.modelo.view.form", locale)}
               tabIndex={selected ? -1 : 0}
               onFocus={(e) => {
                 if (e.target === e.currentTarget && !selected && visible[0])
@@ -945,11 +977,9 @@ export function ModeloWorkspace({
                       key={page.id}
                       className="rounded-lg border border-dashed border-border p-4 text-base text-muted-foreground"
                     >
-                      {page.heading.text}:{" "}
-                      {w(
-                        "workspace.modelo.applicability.period",
-                        locale,
-                      ).toLowerCase()}
+                      {w("workspace.modelo.page.does_not_apply", locale, {
+                        page: page.heading.text,
+                      })}
                     </p>
                   ) : (
                     <div key={page.id} className="flex flex-col gap-6">
@@ -960,7 +990,11 @@ export function ModeloWorkspace({
                           </h2>
                           {page.applies === null && (
                             <span className="text-sm text-faint">
-                              · only if it applies to you
+                              ·{" "}
+                              {w(
+                                "workspace.modelo.page.only_if_it_applies",
+                                locale,
+                              )}
                             </span>
                           )}
                         </div>
@@ -976,7 +1010,7 @@ export function ModeloWorkspace({
                     section={{
                       id: "unplaced",
                       heading: {
-                        text: "Boxes not yet placed on this form",
+                        text: w("workspace.modelo.page.unplaced", locale),
                         disclosure: "localized",
                       },
                       official_heading: null,
@@ -997,7 +1031,10 @@ export function ModeloWorkspace({
                       section={{
                         id: "working-figures",
                         heading: {
-                          text: "Calculation details, not printed on the form",
+                          text: w(
+                            "workspace.modelo.page.calculation_details",
+                            locale,
+                          ),
                           disclosure: "localized",
                         },
                         official_heading: null,
@@ -1031,7 +1068,7 @@ export function ModeloWorkspace({
                     {w("workspace.modelo.review.discard", locale)}
                   </Button>
                   <Button onClick={() => setReviewing(true)}>
-                    Review and apply
+                    {w("workspace.modelo.next_button.apply", locale)}
                   </Button>
                 </div>
               </div>

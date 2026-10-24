@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/segmented-control";
 import { FIXTURE_TODAY, modeloTitle, type ListRow } from "./fixtures";
 import {
-  COVERAGE_WORDS,
+  coverageWords,
   dateWords,
   dueWords,
   money,
@@ -75,7 +75,9 @@ function status(
     case "blocked":
       return {
         word,
-        next: w("workspace.declarations.list.next.fix", locale, { count: blocking }),
+        next: w("workspace.declarations.list.next.fix", locale, {
+          count: blocking,
+        }),
         tone: "danger",
         icon: "alert",
       };
@@ -160,14 +162,16 @@ function aeatWords(row: ListRow, locale: string): string | null {
     `workspace.declarations.calendar.aeat.${cal.aeat_submission_state}`,
     locale,
   );
-  return cal.evidence_conflicted ? `${word} · evidence disagrees` : word;
+  return cal.evidence_conflicted
+    ? `${word} · ${w("workspace.declarations.calendar.evidence.disagrees", locale)}`
+    : word;
 }
 
 function Row({ row, locale }: { row: ListRow; locale: string }) {
   const st = status(row, locale);
   const cal = row.calendar;
   const due = cal
-    ? dueWords(daysLeft(cal.adjusted_closes_on), cal.days_overdue)
+    ? dueWords(daysLeft(cal.adjusted_closes_on), cal.days_overdue, locale)
     : null;
   const result = row.declaration?.summary?.result;
   const recorded = row.group === "recorded";
@@ -298,17 +302,19 @@ export function DeclarationsHub({
     <div className="@container flex h-full min-h-0 flex-col bg-background">
       <header className="flex flex-wrap items-end gap-4 px-8 pt-6 pb-4">
         <div className="flex flex-col gap-1">
-          <h1 className="font-serif text-lg">Declarations</h1>
+          <h1 className="font-serif text-lg">
+            {w("workspace.declarations.destination.overview", locale)}
+          </h1>
           <p className="text-base text-muted-foreground">
-            Prepare each modelo, export the file you upload at the AEAT, and
-            record that you filed it.
+            {w("workspace.declarations.hub.lead", locale)}
             {rows.some(
-              (r) => r.calendar && COVERAGE_WORDS[r.calendar.holiday_coverage],
+              (r) =>
+                r.calendar &&
+                coverageWords(r.calendar.holiday_coverage, locale),
             ) && (
               <span className="text-faint">
                 {" "}
-                Deadlines count national holidays; regional ones are not
-                checked.
+                {w("workspace.declarations.hub.holidays_national_only", locale)}
               </span>
             )}
           </p>
@@ -321,45 +327,55 @@ export function DeclarationsHub({
               className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-faint"
             />
             <Input
-              placeholder="Find a modelo"
+              placeholder={w(
+                "workspace.declarations.list.search.modelo",
+                locale,
+              )}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-7"
-              aria-label="Find a declaration"
+              aria-label={w("desktop.declarations.search.label", locale)}
             />
           </div>
           <Button onClick={() => setNewOpen(true)}>
             <Icon name="plus" size="xs" />
-            New declaration
+            {w("workspace.declarations.list.key.new", locale)}
           </Button>
         </div>
       </header>
       <div className="flex items-center gap-3 border-b border-border px-8 pb-3">
         <SegmentedControl
-          aria-label="Show"
+          aria-label={w("desktop.declarations.show.label", locale)}
           value={view}
           onValueChange={(v) => setView(v as View)}
         >
           <SegmentedControlItem value="todo" className="flex-none">
-            To do <span className="ml-1 text-faint tabular-nums">{todo}</span>
+            {w("workspace.declarations.list.filter.todo", locale)}{" "}
+            <span className="ml-1 text-faint tabular-nums">{todo}</span>
           </SegmentedControlItem>
           <SegmentedControlItem value="recorded" className="flex-none">
-            Recorded
+            {w("workspace.declarations.list.filter.recorded", locale)}
           </SegmentedControlItem>
           <SegmentedControlItem value="all" className="flex-none">
-            All
+            {w("workspace.declarations.list.filter.all", locale)}
           </SegmentedControlItem>
         </SegmentedControl>
         <label className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
-          Sort by
+          {w("workspace.declarations.list.sort.by", locale)}
           <NativeSelect
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
             className="w-36"
           >
-            <option value="deadline">Work order</option>
-            <option value="modelo">Modelo</option>
-            <option value="amount">Amount</option>
+            <option value="deadline">
+              {w("workspace.declarations.list.sort.work_order", locale)}
+            </option>
+            <option value="modelo">
+              {w("workspace.declarations.list.sort.modelo", locale)}
+            </option>
+            <option value="amount">
+              {w("workspace.declarations.list.sort.amount", locale)}
+            </option>
           </NativeSelect>
         </label>
       </div>
@@ -367,8 +383,8 @@ export function DeclarationsHub({
         {shown.length === 0 ? (
           <p className="p-8 text-center text-base text-muted-foreground">
             {query
-              ? `No declaration matches “${query}”.`
-              : "Nothing to do. Every declaration is recorded."}
+              ? w("workspace.declarations.list.no_match", locale, { query })
+              : w("workspace.declarations.list.all_recorded", locale)}
           </p>
         ) : sort === "deadline" ? (
           GROUPS.map((g) => {
@@ -465,7 +481,13 @@ export function NewDeclarationDialog({
         <span className="min-w-0 flex-1 truncate text-base">
           {modeloTitle(m, locale)}
         </span>
-        {open_(m) > 0 && <Badge>{open_(m)} open</Badge>}
+        {open_(m) > 0 && (
+          <Badge>
+            {w("workspace.declarations.list.new.open_count", locale, {
+              count: open_(m),
+            })}
+          </Badge>
+        )}
         <Icon name="forward" size="xs" className="text-faint" />
       </button>
     </li>
@@ -483,32 +505,44 @@ export function NewDeclarationDialog({
   const chosen = existing(modelo ?? "", annual ? "0A" : period);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-palette" placement="top" closeLabel="Close">
+      <DialogContent
+        className="w-palette"
+        placement="top"
+        closeLabel={w("workspace.modelo.key.close", locale)}
+      >
         {modelo === null ? (
           <>
             <DialogHeader>
-              <DialogTitle>New declaration</DialogTitle>
+              <DialogTitle>
+                {w("workspace.declarations.list.key.new", locale)}
+              </DialogTitle>
               <DialogDescription>
-                Which modelo do you want to prepare?
+                {w("workspace.declarations.list.new.which_modelo", locale)}
               </DialogDescription>
             </DialogHeader>
             <Input
               autoFocus
-              placeholder="Number or name, for example 303 or VAT"
+              placeholder={w(
+                "workspace.declarations.list.new.search_placeholder",
+                locale,
+              )}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              aria-label="Find a modelo"
+              aria-label={w(
+                "workspace.declarations.list.search.modelo",
+                locale,
+              )}
             />
             <div className="flex flex-col gap-3">
               <div>
                 <h3 className="px-3 pb-1 text-sm font-medium text-muted-foreground">
-                  Expected for you
+                  {w("workspace.declarations.list.new.expected", locale)}
                 </h3>
                 <ul>{filter(EXPECTED).map(tile)}</ul>
               </div>
               <div>
                 <h3 className="px-3 pb-1 text-sm font-medium text-muted-foreground">
-                  Other modelos
+                  {w("workspace.declarations.list.new.other", locale)}
                 </h3>
                 <ul>{filter(OTHERS).map(tile)}</ul>
               </div>
@@ -523,17 +557,26 @@ export function NewDeclarationDialog({
                 className="self-start text-sm text-muted-foreground"
                 onClick={() => setModelo(null)}
               >
-                <Icon name="back" size="xs" /> Another modelo
+                <Icon name="back" size="xs" />{" "}
+                {w("workspace.declarations.list.new.another", locale)}
               </Button>
               <DialogTitle>
-                Modelo {modelo} · {modeloTitle(modelo, locale)}
+                {w("workspace.modelo.modelo_title", locale, {
+                  modelo,
+                  title: modeloTitle(modelo, locale),
+                })}
               </DialogTitle>
               <DialogDescription>
-                Which {annual ? "year" : "period"} is it for?
+                {w(
+                  annual
+                    ? "workspace.declarations.list.new.which_year"
+                    : "workspace.declarations.list.new.which_period",
+                  locale,
+                )}
               </DialogDescription>
             </DialogHeader>
             <SegmentedControl
-              aria-label="Year"
+              aria-label={w("workspace.declarations.list.new.year", locale)}
               value={String(year)}
               onValueChange={(v) => setYear(Number(v))}
               className="self-start"
@@ -550,7 +593,10 @@ export function NewDeclarationDialog({
             </SegmentedControl>
             <div
               role="radiogroup"
-              aria-label="Period"
+              aria-label={w(
+                "workspace.declarations.list.column.period",
+                locale,
+              )}
               className={cn(
                 "grid gap-2",
                 annual ? "grid-cols-1" : "grid-cols-2",
@@ -572,14 +618,25 @@ export function NewDeclarationDialog({
                       {periodWords(p.code, year, locale)}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      Due {dateWords(p.closes, locale)}
+                      {w("workspace.declarations.due.on", locale, {
+                        date: dateWords(p.closes, locale),
+                      })}
                     </span>
                     <span className="text-xs text-faint">
                       {there
                         ? there.group === "recorded"
-                          ? "Recorded as filed"
-                          : "Already started"
-                        : "Not started"}
+                          ? w(
+                              "workspace.declarations.list.group.recorded",
+                              locale,
+                            )
+                          : w(
+                              "workspace.declarations.list.new.already_started",
+                              locale,
+                            )
+                        : w(
+                            "workspace.declarations.list.state.not_started",
+                            locale,
+                          )}
                     </span>
                   </button>
                 );
@@ -587,9 +644,16 @@ export function NewDeclarationDialog({
             </div>
             <DialogFooter>
               <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                Cancel
+                {w("workspace.modelo.editor.cancel", locale)}
               </Button>
-              <Button>{chosen ? "Open it" : "Create declaration"}</Button>
+              <Button>
+                {chosen
+                  ? w("workspace.declarations.list.new.open_it", locale)
+                  : w(
+                      "workspace.declarations.list.new.create_declaration",
+                      locale,
+                    )}
+              </Button>
             </DialogFooter>
           </>
         )}

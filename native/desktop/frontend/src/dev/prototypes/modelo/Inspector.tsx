@@ -12,7 +12,7 @@ import {
   FAMILY_ICON,
   familyWords,
   originWords,
-  SURFACE_WORD,
+  surfaceWord,
   TONE_TEXT,
 } from "./vocabulary";
 import { w } from "./words";
@@ -31,18 +31,23 @@ function Part({ title, children }: { title: string; children: ReactNode }) {
 }
 
 /** With nothing chosen: where the declaration stands, by the form's counts. */
-function Summary({ form }: { form: ModeloForm }) {
+function Summary({ form, locale }: { form: ModeloForm; locale: string }) {
   const c = form.counts;
   const lines: [string, number][] = [
-    ["Brought in from your data", c.imported],
-    ["Worked out from other boxes", c.calculated],
-    ["Entered by you", c.entered + c.overridden],
-    ["Need you", c.needs_input + c.default_to_confirm],
-    ["Could not be worked out", c.blocked],
+    [w("workspace.modelo.summary.imported", locale), c.imported],
+    [w("workspace.modelo.summary.calculated", locale), c.calculated],
+    [w("workspace.modelo.summary.entered", locale), c.entered + c.overridden],
+    [
+      w("workspace.modelo.summary.needs_you", locale),
+      c.needs_input + c.default_to_confirm,
+    ],
+    [w("workspace.modelo.summary.blocked", locale), c.blocked],
   ];
   return (
     <div className="flex flex-col gap-4 p-5">
-      <h3 className="font-serif text-md">This declaration</h3>
+      <h3 className="font-serif text-md">
+        {w("workspace.modelo.summary.title", locale)}
+      </h3>
       {form.calculation_revision_id ? (
         <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1.5 text-base">
           {lines.map(([word, n]) => (
@@ -54,11 +59,11 @@ function Summary({ form }: { form: ModeloForm }) {
         </dl>
       ) : (
         <p className="text-base text-muted-foreground">
-          Not calculated yet: the boxes fill in when it is.
+          {w("workspace.modelo.summary.not_calculated", locale)}
         </p>
       )}
       <p className="text-sm text-muted-foreground">
-        Choose a box to see where its value comes from and what it means.
+        {w("workspace.modelo.details.choose_box", locale)}
       </p>
     </div>
   );
@@ -85,7 +90,7 @@ export function Inspector({
   operand: (casillaId: string) => FormField | null;
   onClose?: () => void;
 }) {
-  if (!field) return <Summary form={form} />;
+  if (!field) return <Summary form={form} locale={locale} />;
   const o = originWords(field, locale);
   const { editable, why } = editing(field, locale);
   const failed = field.origin === "calculation_failed" && !staged;
@@ -102,7 +107,7 @@ export function Inspector({
           <BoxNumber box={field.box} />
           {onClose && (
             <IconButton
-              label="Close details"
+              label={w("desktop.modelo.details.close", locale)}
               size="xs"
               className="ml-auto @6xl:hidden"
               onClick={onClose}
@@ -158,7 +163,7 @@ export function Inspector({
             {staged && (
               <Button size="sm" variant="ghost" onClick={onRevert}>
                 <Icon name="reset" size="xs" />
-                Undo
+                {w("workspace.modelo.details.undo", locale)}
               </Button>
             )}
             {field.origin === "overrides_source" && !staged && (
@@ -172,7 +177,7 @@ export function Inspector({
       </div>
 
       {field.formula_operands.length > 0 && (
-        <Part title="Worked out from">
+        <Part title={w("workspace.modelo.details.worked_out_from", locale)}>
           <ul className="flex flex-col">
             {field.formula_operands.map((id) => {
               const source = operand(id);
@@ -200,8 +205,10 @@ export function Inspector({
               <li className="flex items-center gap-2 px-1.5 py-1 text-sm text-muted-foreground">
                 <Icon name="info" size="xs" />
                 {missing.length === 1
-                  ? "It also uses a figure kept outside this form."
-                  : `It also uses ${missing.length} figures kept outside this form.`}
+                  ? w("workspace.modelo.details.uses_outside_one", locale)
+                  : w("workspace.modelo.details.uses_outside_many", locale, {
+                      count: missing.length,
+                    })}
               </li>
             )}
           </ul>
@@ -209,7 +216,7 @@ export function Inspector({
       )}
 
       {family && field.formula_operands.length === 0 && (
-        <Part title="Where it comes from">
+        <Part title={w("workspace.modelo.editor.block.where_from", locale)}>
           <span className="flex items-center gap-2 text-base">
             <Icon
               name={FAMILY_ICON[family]}
@@ -225,16 +232,16 @@ export function Inspector({
               )}
             </span>
           )}
-          {surface && SURFACE_WORD[surface] && (
+          {surface && surfaceWord(surface, locale) && (
             <Button size="sm" variant="link" className="self-start">
-              {SURFACE_WORD[surface]}
+              {surfaceWord(surface, locale)}
               <Icon name="forward" size="xs" />
             </Button>
           )}
         </Part>
       )}
 
-      <Part title="What it means">
+      <Part title={w("workspace.modelo.details.what_it_means", locale)}>
         {field.help ? (
           <p className="text-base leading-relaxed">{field.help}</p>
         ) : (
@@ -245,7 +252,7 @@ export function Inspector({
       </Part>
 
       {field.legal_refs.length > 0 && (
-        <Part title="Legal basis">
+        <Part title={w("workspace.modelo.details.legal_basis", locale)}>
           <ul className="flex flex-col gap-0.5">
             {field.legal_refs.map((ref) => (
               <li key={ref}>

@@ -177,18 +177,20 @@ export type ResultDirection =
 
 export type Attention = "blocks" | "missing" | "confirm" | "check" | "info";
 
+/** One issue line in a reader's language, as the read model words it. */
+export type IssueWords = { message: string; action: string };
+
 export type FormIssue = {
   finding: {
     kind: string;
     severity: string;
     casilla_id: string | null;
-    message_locale_key: string;
-    message_facts: Record<string, string | number>;
     legal_refs: string[];
   };
   box: string | null;
   attention: Attention;
-  action_locale_key: string;
+  /** The issue line's words by language. */
+  words: Record<string, IssueWords>;
 };
 
 export type HolidayCoverage =

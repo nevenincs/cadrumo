@@ -36,7 +36,7 @@ import {
   money,
   originWords,
   periodWords,
-  SURFACE_WORD,
+  surfaceCorrection,
   TONE_TEXT,
 } from "./vocabulary";
 import { w } from "./words";
@@ -227,7 +227,7 @@ function OriginMark({
         {staged.intent.kind === "restore_source_value" ||
         staged.intent.kind === "remove_override"
           ? w("workspace.modelo.staged.restore", locale)
-          : "Changed, not applied"}
+          : w("workspace.modelo.attention.staged", locale)}
       </span>
     );
   const o = originWords(field, locale);
@@ -250,10 +250,12 @@ function OriginMark({
 function ValueEditor({
   field,
   initial,
+  locale,
   onDone,
 }: {
   field: FormField;
   initial: string;
+  locale: string;
   onDone: (text: string | null, advance: boolean) => void;
 }) {
   const [text, setText] = useState(initial);
@@ -281,7 +283,9 @@ function ValueEditor({
       onBlur={() => onDone(text, false)}
       inputMode={numeric ? "decimal" : "text"}
       className={cn("w-40", numeric && "text-right tabular-nums")}
-      aria-label={`Box ${field.box ?? ""}: new value`}
+      aria-label={w("workspace.modelo.editor.new_value_for_box", locale, {
+        box: field.box ?? "",
+      })}
     />
   );
 }
@@ -316,16 +320,13 @@ function ReplaceSource({
           · {o.word}
         </p>
         <p className="text-sm text-muted-foreground">
-          {w(
-            "workspace.modelo.legend.meaning.origin.overrides_source",
-            locale,
-          )}
+          {w("workspace.modelo.legend.meaning.origin.overrides_source", locale)}
         </p>
         <div className="flex flex-col gap-2">
-          {surface && SURFACE_WORD[surface] && (
+          {surface && surfaceCorrection(surface, locale) && (
             <Button variant="primary" size="sm" className="justify-start">
               <Icon name="forward" size="xs" />
-              {SURFACE_WORD[surface]} and correct it there
+              {surfaceCorrection(surface, locale)}
             </Button>
           )}
           <Button
@@ -336,7 +337,7 @@ function ReplaceSource({
             autoFocus={!surface}
           >
             <Icon name="swap" size="xs" />
-            Replace it in this declaration only
+            {w("workspace.modelo.editor.replace_here", locale)}
           </Button>
         </div>
       </PopoverContent>
@@ -384,6 +385,7 @@ function ValueCell({
             ? stagedWords(field, staged.intent, locale)
             : heldValue(field, locale)
         }
+        locale={locale}
         onDone={(text, advance) => {
           setEditing(false);
           setReplacing(false);
@@ -485,10 +487,7 @@ export function FieldRow({
         {field.label.disclosure !== "localized" && locale !== "es" && (
           <span className="ml-1.5 text-xs text-faint">
             (
-            {w(
-              `workspace.modelo.disclosure.${field.label.disclosure}`,
-              locale,
-            )}
+            {w(`workspace.modelo.disclosure.${field.label.disclosure}`, locale)}
             )
           </span>
         )}
@@ -523,7 +522,7 @@ export function FieldRow({
             }}
           >
             <Icon name="tick" size="xs" />
-            Confirm
+            {w("workspace.modelo.editor.confirm", locale)}
           </Button>
         )}
       </span>
@@ -565,7 +564,9 @@ function GridValue({
     <td
       className={cn("p-1 align-middle", selected && "bg-selected")}
       onClick={onSelect}
-      aria-label={`Box ${f.box}`}
+      aria-label={w("workspace.modelo.section.box", p.locale, {
+        box: f.box ?? "",
+      })}
     >
       <div className="flex items-center justify-end gap-2">
         <BoxNumber box={f.box} size="sm" />
@@ -689,7 +690,7 @@ function Block({ block, ...p }: BlockProps & { block: FormBlock }) {
       return (
         <div className="flex flex-col gap-0.5 rounded-lg border border-dashed border-border p-1">
           <span className="px-2 pt-1 text-sm text-muted-foreground">
-            Figures the calculation asks for that have no box of their own
+            {w("workspace.modelo.page.working_figures", p.locale)}
           </span>
           {block.fields
             .filter((f) => matches(f, p.filter, p.query))
@@ -810,7 +811,7 @@ function ContextSummary({
             {calm(c.label.text)}
           </dt>
           <dd className={text(c) ? "text-foreground" : "text-faint"}>
-            {text(c) ?? "Not known yet"}
+            {text(c) ?? w("workspace.modelo.value.not_known_yet", locale)}
           </dd>
         </div>
       ))}

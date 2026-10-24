@@ -9,7 +9,6 @@ the four canonical catalogues. Each test below fails when one of them drifts.
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -27,7 +26,11 @@ from ..desktop_chrome import (
     DESKTOP_LOCALES,
     desktop_chrome_strings,
     main,
+    refuse_unbuilt_shell_keys,
     render_desktop_chrome,
+    shell_drift,
+    shell_key_references,
+    shell_named_keys,
 )
 from ..errors import LocaleError
 from ..manager import LocaleManager
@@ -36,48 +39,11 @@ from ..service_catalogues import SERVICE_FAMILIES, SERVICE_KEYS
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FRONTEND_SOURCE = REPO_ROOT / "native" / "desktop" / "frontend" / "src"
-# A whole key in quotes, or the fixed head of a template literal up to `${`.
-_LITERAL_KEY = re.compile(r"""["'`]((?:desktop|auth\.sync\.requirement)\.[A-Za-z0-9_.]+)["'`]""")
-_TEMPLATE_HEAD = re.compile(r"`(desktop\.[A-Za-z0-9_.]*)\$\{")
 
 
-def _frontend_references(source: Path) -> tuple[set[str], set[str]]:
-    """Return the literal keys and template prefixes the shell source names."""
-    literals: set[str] = set()
-    templates: set[str] = set()
-    sources = [
-        path
-        for pattern in ("*.ts", "*.tsx")
-        for path in source.rglob(pattern)
-        if "generated" not in path.relative_to(source).parts
-    ]
-    assert sources, f"no shell source under {source}, so nothing was checked"
-    for path in sources:
-        text = path.read_text(encoding="utf-8")
-        literals.update(_LITERAL_KEY.findall(text))
-        templates.update(_TEMPLATE_HEAD.findall(text))
-    return literals, templates
-
-
-def _expand(literals: set[str], templates: set[str], families: Mapping[str, tuple[str, ...]]) -> set[str]:
-    """Return every key named, expanding the templates that have a declared family."""
-    return literals | {f"{prefix}{member}" for prefix in templates & set(families) for member in families[prefix]}
-
-
-def _used_keys(source: Path, families: Mapping[str, tuple[str, ...]]) -> set[str]:
+def _used_keys(source: Path, families: Mapping[str, tuple[str, ...]]) -> frozenset[str]:
     """Return every key the shell source names."""
-    return _expand(*_frontend_references(source), families)
-
-
-def _drift(source: Path, keys: frozenset[str], families: Mapping[str, tuple[str, ...]]) -> dict[str, list[str]]:
-    """Compare what the shell source names with a key declaration."""
-    literals, templates = _frontend_references(source)
-    used = _expand(literals, templates, families)
-    return {
-        "undeclared_templates": sorted(templates - set(families)),
-        "undeclared": sorted(used - keys),
-        "unused": sorted(keys - used),
-    }
+    return shell_named_keys(*shell_key_references(source), families)
 
 
 def _catalogues(root: Path, values: dict[str, dict[str, str]]) -> Path:
@@ -236,12 +202,12 @@ def test_the_drift_check_sees_templates_undeclared_and_stale_keys(tmp_path: Path
     )
     keys = frozenset({"desktop.rail.search", "desktop.kind_a", "desktop.stale"})
 
-    assert _drift(source, keys, {}) == {
+    assert shell_drift(source, keys, {}) == {
         "undeclared_templates": ["desktop.kind_"],
         "undeclared": ["desktop.rail.extra"],
         "unused": ["desktop.kind_a", "desktop.stale"],
     }
-    assert _drift(source, keys, {"desktop.kind_": ("a", "b")}) == {
+    assert shell_drift(source, keys, {"desktop.kind_": ("a", "b")}) == {
         "undeclared_templates": [],
         "undeclared": ["desktop.kind_b", "desktop.rail.extra"],
         "unused": ["desktop.stale"],
@@ -321,3 +287,39 @@ def test_the_locale_key_scan_reads_the_declaration(tmp_path: Path) -> None:
     service_keys = {key for key in DESKTOP_CHROME_KEYS if key.startswith(service_prefixes) or key in SERVICE_KEYS}
     assert keys >= DESKTOP_CHROME_KEYS - service_keys
     assert keys.isdisjoint(service_keys)
+
+
+def _planted_shell(root: Path, text: str) -> Path:
+    source = root / "src"
+    source.mkdir()
+    (source / "Workspace.tsx").write_text(text, encoding="utf-8")
+    return source
+
+
+def test_generation_refuses_a_key_the_shell_names_but_does_not_carry(tmp_path: Path) -> None:
+    source = _planted_shell(
+        tmp_path,
+        "w('workspace.modelo.filing.title'); w('workspace.example.absent'); w(`workspace.example.kind_${kind}`);\n",
+    )
+
+    with pytest.raises(LocaleError, match=r"workspace\.example\.absent") as refusal:
+        refuse_unbuilt_shell_keys(source)
+    assert "workspace.example.kind_" in str(refusal.value)
+    assert "workspace.modelo.filing.title" not in str(refusal.value)
+
+
+def test_generation_admits_a_shell_that_names_only_declared_keys(tmp_path: Path) -> None:
+    source = _planted_shell(tmp_path, "w('workspace.modelo.filing.title'); w(`workspace.modelo.origin.${origin}`);\n")
+
+    refuse_unbuilt_shell_keys(source)
+
+
+def test_the_build_entry_point_stops_on_an_uncarried_shell_key(tmp_path: Path) -> None:
+    source = _planted_shell(tmp_path, "t('desktop.example.absent');\n")
+    output = tmp_path / "out" / "chrome-strings.json"
+
+    with pytest.raises(SystemExit) as stopped:
+        main(["--output", str(output), "--shell-source", str(source)])
+
+    assert stopped.value.code == 1
+    assert not output.exists()

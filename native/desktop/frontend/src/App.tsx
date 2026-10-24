@@ -66,6 +66,9 @@ import { AboutDialog } from "./components/AboutDialog";
 import { UserProfilePage } from "./components/profile/UserProfilePage";
 import { LedgerPage, type LedgerMemory } from "./components/ledger/LedgerPage";
 import type { LeaveGuard } from "./components/ledger/editing/LedgerEditing";
+import { DeclarationsPane } from "./components/modelo/declarations/DeclarationsPane";
+import type { DeclarationsMemory } from "./components/modelo/declarations/DeclarationsPage";
+import type { OutputLanguage } from "./shell/modeloContract";
 import { AccountMenu } from "./components/AccountMenu";
 import { ManageProfiles } from "./components/account/ManageProfiles";
 import { Titlebar } from "./components/Titlebar";
@@ -236,8 +239,9 @@ export function App({ host }: { host: Host }) {
   // What the first pane shows: the documentation, or a view of the profile
   // where the host offers one. The documentation stays loaded underneath.
   const page = layout.page;
-  // The Ledger page asks before what it has staged is dropped: by another
-  // page, a sign-out, a profile switch or the window's close.
+  // The Ledger page and a declaration's workspace ask before what they have
+  // staged is dropped: by another page, a sign-out, a profile switch or the
+  // window's close. Only one of them is shown at a time.
   const ledgerGuard = useRef<LeaveGuard | null>(null);
   const guardLeave = useCallback((guard: LeaveGuard | null) => {
     ledgerGuard.current = guard;
@@ -274,7 +278,9 @@ export function App({ host }: { host: Host }) {
   const setPage = useCallback(
     (page: Layout["page"]) => {
       const go = () => setLayout((current) => ({ ...current, page }));
-      if (shownPage.current === "ledger" && page !== "ledger") guarded(go);
+      const staging =
+        shownPage.current === "ledger" || shownPage.current === "declarations";
+      if (staging && page !== shownPage.current) guarded(go);
       else go();
     },
     [guarded],
@@ -284,6 +290,10 @@ export function App({ host }: { host: Host }) {
   const ledgerPage = useRef<HTMLElement>(null);
   // The ledger was asked for: it takes focus once it is laid out.
   const wantsLedger = useRef(false);
+  const declarationsPage = useRef<HTMLElement>(null);
+  // The declarations, or one declaration, were asked for: the page takes
+  // focus once it is laid out.
+  const wantsDeclarations = useRef(false);
   // The agent column was asked for: it takes focus once it is laid out.
   const wantsAgent = useRef(false);
   const agentColumn = useRef<HTMLElement>(null);
@@ -454,16 +464,20 @@ export function App({ host }: { host: Host }) {
   const profileOn = host.userProfile !== undefined && page === "profile";
   const calendarOn = views !== undefined && page === "calendar";
   const ledgerOn = host.ledger !== undefined && page === "ledger";
+  const declarationsOn = host.modelo !== undefined && page === "declarations";
   const firstPaneShown =
     (layout.docsShown ||
       calendarOn ||
       profileOn ||
       ledgerOn ||
+      declarationsOn ||
       maximized === "docs") &&
     unhidden("docs");
-  const docsVisible = firstPaneShown && !calendarOn && !profileOn && !ledgerOn;
+  const docsVisible =
+    firstPaneShown && !calendarOn && !profileOn && !ledgerOn && !declarationsOn;
   const calendarVisible = calendarOn && firstPaneShown;
   const ledgerVisible = ledgerOn && firstPaneShown;
+  const declarationsVisible = declarationsOn && firstPaneShown;
   const tuiVisible =
     (layout.tuiShown || maximized === "tui") && unhidden("tui");
   const panelVisible = layout.panelOpen && unhidden("panel");
@@ -506,6 +520,20 @@ export function App({ host }: { host: Host }) {
   }));
   if (ledgerKept.reader !== reader)
     setLedgerKept({ reader, memory: { current: {} } });
+  // The declaration open in the workspace, and what the list keeps of
+  // itself meanwhile, for one profile and one sign-in, in memory only; no
+  // declaration shows the list.
+  const [openDeclaration, setOpenDeclaration] = useState(() => ({
+    reader,
+    workUnitId: null as string | null,
+    memory: { current: {} as DeclarationsMemory },
+  }));
+  if (openDeclaration.reader !== reader)
+    setOpenDeclaration({ reader, workUnitId: null, memory: { current: {} } });
+  const openWorkUnit = (workUnitId: string | null) => {
+    wantsDeclarations.current = true;
+    setOpenDeclaration((held) => ({ ...held, workUnitId }));
+  };
   const calendar = useFilingCalendar(
     views,
     reader,
@@ -546,6 +574,12 @@ export function App({ host }: { host: Host }) {
       ledgerPage.current?.focus();
     }
   }, [ledgerVisible]);
+  useEffect(() => {
+    if (declarationsVisible && wantsDeclarations.current) {
+      wantsDeclarations.current = false;
+      declarationsPage.current?.focus();
+    }
+  }, [declarationsVisible, openDeclaration]);
   const askSignIn = useCallback(() => {
     const element = document.activeElement;
     signInOpener.current = {
@@ -1014,7 +1048,8 @@ export function App({ host }: { host: Host }) {
         !layout.docsShown &&
         !calendarOn &&
         !profileOn &&
-        !ledgerOn
+        !ledgerOn &&
+        !declarationsOn
       )
         patch({ docsShown: true });
       if (area === "panel" && !layout.panelOpen) patch({ panelOpen: true });
@@ -1031,6 +1066,7 @@ export function App({ host }: { host: Host }) {
       calendarOn,
       profileOn,
       ledgerOn,
+      declarationsOn,
       patch,
       focusView,
     ],
@@ -1106,12 +1142,14 @@ export function App({ host }: { host: Host }) {
         firstPaneShown &&
           (profilePage.current !== null ||
             ledgerPage.current !== null ||
+            declarationsPage.current !== null ||
             calendarPage.current !== null ||
             !!docs.current),
         () =>
           (
             profilePage.current ??
             ledgerPage.current ??
+            declarationsPage.current ??
             calendarPage.current ??
             docs.current
           )?.focus(),
@@ -1259,7 +1297,8 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "back",
         chords: [{ alt: true, code: "ArrowLeft", key: "←", scope: "docs" }],
-        enabled: () => !calendarOn && !profileOn && !ledgerOn,
+        enabled: () =>
+          !calendarOn && !profileOn && !ledgerOn && !declarationsOn,
         run: () => docs.current?.back(),
       },
       {
@@ -1268,7 +1307,8 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "forward",
         chords: [{ alt: true, code: "ArrowRight", key: "→", scope: "docs" }],
-        enabled: () => !calendarOn && !profileOn && !ledgerOn,
+        enabled: () =>
+          !calendarOn && !profileOn && !ledgerOn && !declarationsOn,
         run: () => docs.current?.forward(),
       },
       {
@@ -1277,7 +1317,8 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "zoomIn",
         chords: [{ mod: true, code: "Equal", key: "=", scope: "docs" }],
-        enabled: () => !calendarOn && !profileOn && !ledgerOn,
+        enabled: () =>
+          !calendarOn && !profileOn && !ledgerOn && !declarationsOn,
         run: () =>
           patch({
             zoom: Math.min(2, Math.round((layout.zoom + 0.1) * 10) / 10),
@@ -1289,7 +1330,8 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "zoomOut",
         chords: [{ mod: true, code: "Minus", key: "-", scope: "docs" }],
-        enabled: () => !calendarOn && !profileOn && !ledgerOn,
+        enabled: () =>
+          !calendarOn && !profileOn && !ledgerOn && !declarationsOn,
         run: () =>
           patch({
             zoom: Math.max(0.5, Math.round((layout.zoom - 0.1) * 10) / 10),
@@ -1301,7 +1343,8 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "reset",
         chords: [{ mod: true, code: "Digit0", key: "0", scope: "docs" }],
-        enabled: () => !calendarOn && !profileOn && !ledgerOn,
+        enabled: () =>
+          !calendarOn && !profileOn && !ledgerOn && !declarationsOn,
         run: () => patch({ zoom: 1 }),
       },
       {
@@ -1668,6 +1711,34 @@ export function App({ host }: { host: Host }) {
         },
       },
       {
+        id: "view.declarations",
+        label: t("workspace.declarations.destination.overview"),
+        group: "views",
+        icon: "page",
+        keywords: "modelo declaration return filing declaraciones modelos",
+        // No chord: the shell's own are spoken for, and the page's grid
+        // keeps the plain and Alt keys.
+        enabled: () => host.modelo !== undefined,
+        run: () => {
+          if (declarationsVisible) {
+            setPage("docs");
+            return;
+          }
+          wantsDeclarations.current = true;
+          setMaximized((area) => (area === "docs" ? area : null));
+          setPage("declarations");
+        },
+        choose: () => {
+          if (declarationsVisible) {
+            declarationsPage.current?.focus();
+            return;
+          }
+          wantsDeclarations.current = true;
+          setMaximized((area) => (area === "docs" ? area : null));
+          setPage("declarations");
+        },
+      },
+      {
         id: "view.messages",
         label: t("desktop.rail.messages"),
         group: "views",
@@ -1839,8 +1910,10 @@ export function App({ host }: { host: Host }) {
       calendarOn,
       profileOn,
       ledgerOn,
+      declarationsOn,
       calendarVisible,
       ledgerVisible,
+      declarationsVisible,
       askSignIn,
       askNewProfile,
       canCreateProfile,
@@ -2224,12 +2297,14 @@ export function App({ host }: { host: Host }) {
       firstPaneShown &&
       (profilePage.current ??
         ledgerPage.current ??
+        declarationsPage.current ??
         calendarPage.current ??
         docs.current)
     )
       (
         profilePage.current ??
         ledgerPage.current ??
+        declarationsPage.current ??
         calendarPage.current ??
         docs.current
       )?.focus();
@@ -2399,6 +2474,17 @@ export function App({ host }: { host: Host }) {
           } satisfies RailItem,
         ]
       : []),
+    ...(host.modelo
+      ? [
+          {
+            id: "declarations",
+            icon: "page",
+            label: t("workspace.declarations.destination.overview"),
+            pressed: declarationsVisible,
+            onClick: () => runAction("view.declarations"),
+          } satisfies RailItem,
+        ]
+      : []),
     // Shortcuts, between the window's own toggles and the bottom panel's:
     // the profile's views where the host offers them, then the ways out of
     // the window.
@@ -2541,7 +2627,59 @@ export function App({ host }: { host: Host }) {
   };
   const docsPane = (
     <div className={cn(pane, "pane-docs")}>
-      {ledgerOn && host.ledger ? (
+      {declarationsOn && host.modelo ? (
+        <DeclarationsPane
+          port={host.modelo}
+          reader={reader}
+          workUnitId={openDeclaration.workUnitId}
+          onOpen={openWorkUnit}
+          onBack={() => guarded(() => openWorkUnit(null))}
+          onOpenSurface={(surface) => {
+            if (surface === "declarations") guarded(() => openWorkUnit(null));
+            else if (surface === "ledger") runAction("view.ledger");
+            else if (surface === "profile") setPage("profile");
+          }}
+          // Only an area this window has a page for is linked.
+          canOpenSurface={(surface) =>
+            surface === "declarations" ||
+            (surface === "ledger" && host.ledger !== undefined) ||
+            (surface === "profile" && host.userProfile !== undefined)
+          }
+          openLink={openLink}
+          guardLeave={guardLeave}
+          memory={openDeclaration.memory}
+          withheld={
+            <SignedOut
+              account={account}
+              lead={t("desktop.declarations.signed_out")}
+              quiet
+              onSignIn={askSignIn}
+            />
+          }
+          // The desktop's locales are the read models' output languages.
+          language={locale as OutputLanguage}
+          locale={locale}
+          shown={firstPaneShown}
+          page={declarationsPage}
+          pane={{
+            title: t("workspace.declarations.destination.overview"),
+            onToggleMaximize: () => toggleMaximize("docs"),
+            controls: [
+              maximizeControl("docs", "desktop.declarations.maximize"),
+              ...splitControls.map((control) => ({
+                ...control,
+                yields: true,
+              })),
+              {
+                id: "close",
+                icon: "close",
+                label: t("desktop.declarations.close"),
+                run: closePage,
+              },
+            ],
+          }}
+        />
+      ) : ledgerOn && host.ledger ? (
         <LedgerPage
           key={reader ?? ""}
           port={host.ledger}
@@ -2680,7 +2818,11 @@ export function App({ host }: { host: Host }) {
       )}
       {/* Put aside, not unloaded: the page it was on is there on return. */}
       <div
-        className={calendarOn || profileOn || ledgerOn ? "hidden" : "contents"}
+        className={
+          calendarOn || profileOn || ledgerOn || declarationsOn
+            ? "hidden"
+            : "contents"
+        }
       >
         {environment.state === "ready" &&
         environment.value.docs.state === "bundled" &&
