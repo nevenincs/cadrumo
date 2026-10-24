@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { fixtureLedger } from "../../src/dev/fixtures/ledger";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 
@@ -340,10 +341,13 @@ test("signed out, the page is withheld and says how to sign in", async ({
   await expect(page(target).locator(".ledger-readiness")).toHaveCount(0);
 });
 
-test("reading a period keeps no taxpayer value in the window's storage", async ({
+test("no taxpayer value reaches storage or the log, and sign-out drops the page's data", async ({
   page: target,
 }) => {
-  await openLedger(target);
+  const logged: string[] = [];
+  target.on("console", (message) => logged.push(message.text()));
+  target.on("pageerror", (error) => logged.push(error.message));
+  await openLedger(target, "&ledger=documents");
   await choosePeriod(target, 2026, "1T");
   const movements = page(target).locator(".ledger-movements");
   await expect(movements).toBeVisible();
@@ -352,15 +356,23 @@ test("reading a period keeps no taxpayer value in the window's storage", async (
       ".ledger-readiness [data-readiness]:not([data-readiness=unknown])",
     ),
   ).toBeVisible();
-  const stored = await target.evaluate(() => {
-    const all: string[] = [];
-    for (const store of [localStorage, sessionStorage])
-      for (let at = 0; at < store.length; at += 1) {
-        const key = store.key(at) ?? "";
-        all.push(key, store.getItem(key) ?? "");
-      }
-    return all.join("\n");
-  });
+  const stored = () =>
+    target.evaluate(() => {
+      const all: string[] = [];
+      for (const store of [localStorage, sessionStorage])
+        for (let at = 0; at < store.length; at += 1) {
+          const key = store.key(at) ?? "";
+          all.push(key, store.getItem(key) ?? "");
+        }
+      return all.join(" | ");
+    });
+  const calls = () =>
+    target.evaluate(
+      () =>
+        (window as unknown as { __scenarioHostCalls?: string[] })
+          .__scenarioHostCalls ?? [],
+    );
+  const original = await stored();
   for (const value of [
     "Talleres Ondara",
     "HOJA VERDE",
@@ -369,7 +381,7 @@ test("reading a period keeps no taxpayer value in the window's storage", async (
     "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
     "2026-0",
   ])
-    expect(stored).not.toContain(value);
+    expect(original).not.toContain(value);
   const layout = JSON.parse(
     (await target.evaluate(() =>
       localStorage.getItem("cadrumo-shell-layout"),
@@ -387,6 +399,91 @@ test("reading a period keeps no taxpayer value in the window's storage", async (
     "section",
   ]);
   expect(JSON.stringify(layout)).not.toContain("1T");
+
+  // Every part of the work: a cell edited, the inspector, a document's draft
+  // and the import dialog.
+  await choosePeriod(target, 2026, "4T");
+  const grid = page(target).getByRole("grid");
+  const first = grid.locator("[data-kind=data]").first();
+  await first.locator("[data-column=counterparty]").click();
+  await target.keyboard.press("Enter");
+  const editor = target.locator(".ledger-cell-editor");
+  await expect(editor).toBeVisible();
+  const typed = "Testigo Privado Zeta SL";
+  await editor.fill(typed);
+  await target.keyboard.press("Enter");
+  await first.locator("[data-column=status]").click();
+  await target.keyboard.press("Alt+KeyI");
+  await expect(target.locator("aside.ledger-panel")).toBeVisible();
+  await tab(target, "documents").click();
+  // The first reading is open already; the draft shows its values.
+  await expect(page(target).locator(".ledger-draft")).toBeVisible();
+  await tab(target, "movements").click();
+  await head(target)
+    .getByRole("button", {
+      name: label("desktop.ledger.action.import"),
+      exact: true,
+    })
+    .click();
+  const dialog = target.getByRole("dialog", {
+    name: label("desktop.ledger.import.title"),
+  });
+  await expect(dialog).toBeVisible();
+
+  // The values to look for come from the ledger the scenario made, never from
+  // a list kept here: descriptions, counterparties, amounts and the accounts'
+  // numbers.
+  const made = fixtureLedger();
+  const values = new Set<string>([typed]);
+  for (const { transaction } of made.movements) {
+    for (const text of [transaction.description, transaction.counterparty])
+      if (text && text.length >= 6) values.add(text);
+    if (transaction.amount.length >= 6) values.add(transaction.amount);
+  }
+  for (const account of made.accounts) values.add(account.masked_iban);
+  for (const evidence of made.evidence)
+    for (const text of [evidence.supplier, evidence.invoice_number])
+      if (text && text.length >= 6) values.add(text);
+  expect(values.size).toBeGreaterThan(100);
+  const kept = await stored();
+  const stream = [...logged, ...(await calls())].join(" | ");
+  const leaks = [...values].filter(
+    (value) => kept.includes(value) || stream.includes(value),
+  );
+  expect(leaks).toEqual([]);
+  // The log stream names definitions; it did carry the work.
+  expect(await calls()).toContain("ledger ledger.list");
+
+  // Signing out withholds the page and drops what it held; signing in reads
+  // the ledger again.
+  await target.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  const before = (await calls()).filter(
+    (call) => call === "ledger ledger.list",
+  ).length;
+  await target
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
+  await target
+    .locator(".account-menu")
+    .getByRole("menuitem", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
+    .click();
+  // The staged edit asks first; discarding it lets the sign-out through.
+  await target.locator(".ledger-leave .ledger-leave-discard").click();
+  await expect(page(target)).toContainText(label("desktop.ledger.signed_out"));
+  await expect(page(target).getByRole("grid")).toHaveCount(0);
+  const text = (await target.locator("body").innerText()) ?? "";
+  expect(text).not.toContain(typed);
+  expect(
+    [...values].filter((value) => value.length >= 12 && text.includes(value)),
+  ).toEqual([]);
+  expect(await stored()).not.toContain(typed);
+  expect(
+    (await calls()).filter((call) => call === "ledger ledger.list").length,
+  ).toBe(before);
 });
 
 test("the page offers its actions to the palette and leaves the grid its keys", async ({
