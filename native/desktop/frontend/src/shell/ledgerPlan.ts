@@ -385,20 +385,28 @@ export function splitBulk(
 ): { parts: BulkRow[][]; tooLarge: BulkRow[] } {
   const parts: BulkRow[][] = [];
   const tooLarge: BulkRow[] = [];
-  let part: BulkRow[] = [];
-  const fits = (candidate: BulkRow[]) =>
-    payloadSize(bulkRequest(candidate, outputLanguage)) <= limit;
-  for (const row of rows) {
-    if (fits([...part, row])) {
-      part.push(row);
+  const fits = (from: number, to: number) =>
+    payloadSize(bulkRequest(rows.slice(from, to), outputLanguage)) <= limit;
+  // A part only grows by adding rows, so the longest run that fits is found
+  // by halving rather than by measuring every prefix.
+  let start = 0;
+  while (start < rows.length) {
+    if (!fits(start, start + 1)) {
+      tooLarge.push(...rows.slice(start, start + 1));
+      start += 1;
       continue;
     }
-    if (part.length) parts.push(part);
-    part = [];
-    if (fits([row])) part.push(row);
-    else tooLarge.push(row);
+    let fitting = start + 1;
+    let over = rows.length + 1;
+    if (fits(start, rows.length)) fitting = rows.length;
+    while (over - fitting > 1 && fitting < rows.length) {
+      const middle = Math.floor((fitting + over) / 2);
+      if (fits(start, middle)) fitting = middle;
+      else over = middle;
+    }
+    parts.push(rows.slice(start, fitting));
+    start = fitting;
   }
-  if (part.length) parts.push(part);
   return { parts, tooLarge };
 }
 
