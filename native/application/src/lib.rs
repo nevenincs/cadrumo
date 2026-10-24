@@ -25,6 +25,7 @@
 //! declarations remain with their existing owners and are inputs to this library.
 
 pub mod binary;
+mod canonical_json;
 pub mod capability;
 pub mod child;
 pub mod component;

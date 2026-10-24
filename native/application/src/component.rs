@@ -115,7 +115,7 @@ struct ActivePointer {
     version: RelativePath,
 }
 
-struct WriterLock(File);
+pub(crate) struct WriterLock(pub(crate) File);
 
 impl Drop for WriterLock {
     fn drop(&mut self) {

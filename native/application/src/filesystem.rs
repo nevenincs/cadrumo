@@ -126,6 +126,30 @@ pub(crate) fn write_json<T: serde::Serialize>(path: &Path, value: &T) -> Result<
     Ok(())
 }
 
+/// Replaces `path` with `value` atomically: a crash leaves the old document or the new
+/// one, never a mixture. The parent folder must exist and belong to the caller.
+pub(crate) fn replace_json<T: serde::Serialize>(path: &Path, value: &T) -> Result<(), Error> {
+    static WRITES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| Error::Invalid("atomic write needs a file name".into()))?;
+    let sequence = WRITES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let pending = path.with_file_name(format!(".{name}.{}.{sequence}.tmp", std::process::id()));
+    refuse_links(path)?;
+    refuse_links(&pending)?;
+    let written = write_json(&pending, value).and_then(|()| Ok(fs::rename(&pending, path)?));
+    if written.is_err() {
+        let _ = fs::remove_file(&pending);
+    }
+    written?;
+    #[cfg(unix)]
+    if let Some(parent) = path.parent() {
+        File::open(parent)?.sync_all()?;
+    }
+    Ok(())
+}
+
 pub(crate) fn archive_permissions(path: &Path, mode: Option<u32>) -> Result<(), Error> {
     #[cfg(unix)]
     {

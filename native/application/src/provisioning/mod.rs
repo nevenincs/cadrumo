@@ -8,13 +8,23 @@
 //! archive with the hop, retry and resume rules; `network` is the preflight that classifies
 //! whether an item's hosts can be reached. `failure` holds the closed failure
 //! categories every outcome is reported in.
+//!
+//! `items` declares the two setup items and their locations, `state` derives each item's
+//! state from what a check observed, `plan` builds the approved plan and its digest with
+//! the free-space rule, `activity` keeps the per-item writer lock and the crash-surviving
+//! activity record, and `receipts` keeps the evidence of what was installed.
 
+pub mod activity;
 pub mod connection;
 pub mod failure;
 pub(crate) mod http;
+pub mod items;
 pub mod network;
 pub mod pins;
+pub mod plan;
 pub mod proxy;
+pub mod receipts;
+pub mod state;
 pub mod transfer;
 pub mod url;
 
