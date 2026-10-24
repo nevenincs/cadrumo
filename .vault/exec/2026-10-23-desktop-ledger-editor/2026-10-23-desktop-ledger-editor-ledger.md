@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d01a46e099da4400e7a06ab983a43e4052b93250e400bc154a3de28e66dd5e8'
+body_hash: 'sha256:7138d809a7c68754b58c67e166e12f9ac9801e1ea469bb73f639e779b84b0109'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -578,6 +578,98 @@ related:
 - `S08` `A` `native/desktop/frontend/tests/combobox-ranking.spec.ts`
 - `S08` `verify:` `playwright data-grid, ledger-movements, ledger-inspector, ledger-invoices, ledger-benchmark` -> `pass`
 - `S15` `verify:` `desktop chrome drift check` -> `pass`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/inspectorModel.ts`
+- `S10` `verify:` `npx playwright test tests/ledger-inspector-model.spec.ts tests/scenarios/ledger-inspector.spec.ts` -> `pass`
+- `S08` `verify:` `npx playwright test tests/scenarios/ledger-movements.spec.ts -g duplicate` -> `pass`
+- `S08` `verify:` `npx playwright test tests/ledger-movements.spec.ts tests/scenarios/ledger-movements.spec.ts -g compact|widens|duplicate` -> `pass`
+- `S08` `M` `native/desktop/frontend/src/components/ui/dataGridModel.ts`
+- `S08` `M` `native/desktop/frontend/tests/data-grid.spec.ts`
+- `S08` `verify:` `npx playwright test tests/data-grid.spec.ts tests/scenarios/data-grid.spec.ts` -> `pass`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/RightPanel.tsx`
+- `S10` `verify:` `npx playwright test tests/scenarios/ledger-inspector.spec.ts -g 1280` -> `pass`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/ledger-movements.spec.ts`
+- `S07` `verify:` `npx playwright test tests/scenarios/ledger-movements.spec.ts -g header` -> `pass`
+- `S07` `by:` `implementation-engineer-high`
+- `S19` `A` `src/cadrumo/application/ledger/evidence_page_contracts.py`
+- `S19` `A` `src/cadrumo/application/ledger/evidence_page_errors.py`
+- `S19` `A` `src/cadrumo/application/ledger/evidence_page_operation.py`
+- `S19` `A` `src/cadrumo/adapters/inbound/pdf/page_image.py`
+- `S19` `A` `src/cadrumo/adapters/inbound/pdf/tests/test_page_image.py`
+- `S19` `A` `src/cadrumo/entrypoints/evidence_page_operation_composition.py`
+- `S19` `A` `src/cadrumo/entrypoints/cli/operation_ledger_evidence_page.py`
+- `S19` `A` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_page_command.py`
+- `S19` `A` `src/cadrumo/entrypoints/tests/test_ledger_evidence_page_settlement.py`
+- `S19` `A` `src/cadrumo/entrypoints/tests/conformance_ledger_evidence_page_support.py`
+- `S19` `M` `src/cadrumo/core/errors/registry/_application_part3a2.py`
+- `S19` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S19` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/ledger_evidence_commands.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/_app_ledger_evidence_command_specs.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/ledger_business_payloads.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/conformance_families.py`
+- `S19` `M` `stubs/pypdfium2/__init__.pyi`
+- `S19` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S19` `A` `native/desktop/frontend/src/components/ledger/documents/DocumentViewer.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S19` `M` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S19` `A` `native/desktop/frontend/src/dev/fixtures/documentPage.ts`
+- `S19` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S19` `M` `native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`
+- `S19` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S19` `M` `native/desktop/src-tauri/src/shell/ledger/relay_contracts.json`
+- `S19` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S19` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S19` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/inbound/pdf/tests/test_page_image.py` -> `pass`
+- `S19` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tests/test_ledger_evidence_page_settlement.py` -> `pass`
+- `S19` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k ledger.evidence.page` -> `pass`
+- `S19` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_page_command.py` -> `pass`
+- `S19` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S19` `verify:` `uv run --no-sync python native/desktop/src-tauri/src/shell/ledger/relay_contracts.py --check` -> `pass`
+- `S19` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S19` `verify:` `ruff check + ruff format --check + ty + basedpyright + pyrefly on S19 files` -> `pass`
+- `S19` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
+- `S19` `verify:` `npx tsc --noEmit -p . (S19 files)` -> `pass`
+- `S19` `verify:` `npx playwright test tests/scenarios/ledger-documents.spec.ts` -> `pass`
+- `S19` `verify:` `uv run --no-sync pytest dev/operation_contract_manifest/tests` -> `fail`
+- `S19` `by:` `implementation-engineer`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/useSealedMovements.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/transfer/importModel.ts`
+- `S09` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S09` `verify:` `npx eslint (touched files)` -> `pass`
+- `S09` `verify:` `playwright ledger-plan.spec.ts scenarios/ledger-pause.spec.ts` -> `pass`
+- `S09` `by:` `vaultspec-high-executor`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/setup/useConfiguredRatios.ts`
+- `S08` `M` `native/desktop/frontend/tests/ledger-plan.spec.ts`
+- `S08` `M` `native/desktop/frontend/tests/ledger-fixture-host.spec.ts`
+- `S08` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S08` `verify:` `playwright ledger-plan.spec.ts ledger-fixture-host.spec.ts` -> `pass`
+- `S08` `by:` `vaultspec-high-executor`
+- `S14` `M` `native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`
+- `S14` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S14` `verify:` `playwright scenarios/ledger-pause.spec.ts scenarios/ledger-setup.spec.ts` -> `pass`
+- `S14` `by:` `vaultspec-high-executor`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/inspectorWords.ts`
+- `S10` `verify:` `npx playwright test (10 ledger and grid specs incl. ledger-benchmark)` -> `pass`
+- `S08` `verify:` `npx playwright test tests/scenarios/ledger-movements.spec.ts` -> `pass`
+- `S08` `by:` `implementation-engineer-high`
+- `S07` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/documentLanding.ts`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx`
+- `S13` `verify:` `npx tsc --noEmit -p . (documents files)` -> `pass`
+- `S13` `verify:` `npx eslint src/components/ledger/documents/` -> `pass`
+- `S13` `verify:` `npx prettier --check src/components/ledger/documents/` -> `pass`
+- `S13` `verify:` `npx playwright test tests/scenarios/ledger-documents.spec.ts tests/scenarios/ledger-pause.spec.ts` -> `pass`
+- `S13` `by:` `implementation-engineer`
+- `S19` `M` `pyproject.toml`
+- `S19` `M` `dev/locales/desktop_chrome.py`
+- `S19` `M` `src/cadrumo/locales/en/common.yml`
+- `S19` `M` `src/cadrumo/locales/en/cli.yml`
+- `S19` `M` `src/cadrumo/locales/en/errors.yml`
+- `S19` `verify:` `dev/packaging/tests/test_inference_imports_are_declared.py` -> `pass`
 
 ## Notes
 
@@ -624,3 +716,5 @@ related:
 - `S08` ledger-benchmark filter step measured 541-861 ms against its 500 ms budget while a concurrent Release build loaded the machine; the committed grid text without the click fix also measured 599 once, so no lane B cause is established
 - `S08` d7311a0669: one shared grid tooltip; filter after select-all of 5000 rows `~750` ms to `~440` ms; a8e5d5320b combobox ranking; 24016487a6 pinned Description
 - `S15` 67afa01221 adds and rewords 110 keys plural-free; 703653a275 and 8d10ad2e6f retire 18
+- `S19` `dev/operation_contract_manifest/tests/test_command_operation_join.py` fails on errors.py/main.py findings and config profile dependencies.status rows from another session's commit ca8b1943ac; the derived row for app ledger evidence page matches the recorded table.
+- `S19` 4fd1d57cdb strings (92b51eefeb restored strings it dropped); 3d46e89c4a drops the stale deptry Pillow suppression; deptry itself crashes in importlib metadata on HEAD as well; generated CLI docs are gitignored build outputs

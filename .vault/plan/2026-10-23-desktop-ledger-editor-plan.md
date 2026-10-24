@@ -19,7 +19,7 @@ related:
   - '[[2026-10-09-desktop-titlebar-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:122419843a7d2235baf797b5a1c9f6187943c4042518a764c48c441dc60b9804'
+body_hash: 'sha256:4b34ce7f2a3464d59c8959689dff56eb164775b50e98b80b530a7e8f13133204'
 ---
 
 # `desktop-ledger-editor` plan
@@ -61,7 +61,7 @@ Build the Ledger page and its sections from the reviewed prototype, at parity wi
 - [x] `P03.S12` - Add the Invoices section with catalogue grid and invoice editor; `native/desktop/frontend/src/components/ledger/`.
 - [x] `P03.S13` - Add the Documents and Matching sections; `native/desktop/frontend/src/components/ledger/`.
 - [x] `P03.S14` - Add the Rules, Registers and Health sections; `native/desktop/frontend/src/components/ledger/`.
-- [ ] `P03.S19` - Add the document page read and its viewer: a registered read that renders one page of a stored evidence or attachment as an image, its CLI command, the host's admitted id, and the Documents panel viewer; `src/cadrumo/application/ledger/, native/desktop/src-tauri/src/shell/ledger/, native/desktop/frontend/src/components/ledger/documents/`.
+- [x] `P03.S19` - Add the document page read and its viewer: a registered read that renders one page of a stored evidence or attachment as an image, its CLI command, the host's admitted id, and the Documents panel viewer; `src/cadrumo/application/ledger/, native/desktop/src-tauri/src/shell/ledger/, native/desktop/frontend/src/components/ledger/documents/`.
 
 ### Phase `P04` - Strings, accessibility and verification
 
