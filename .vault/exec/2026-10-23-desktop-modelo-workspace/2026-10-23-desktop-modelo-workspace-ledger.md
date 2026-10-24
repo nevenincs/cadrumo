@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:67507d33436bed36a841d6dff0e0b21bb15c62fc593b91345e046157e7ccb500'
+body_hash: 'sha256:b6857560a83397ab4eb087af31a611da8ddba90f6502db034b34ba232444880e'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -737,6 +737,34 @@ related:
 - `S45` `verify:` `playwright modelo-port.spec` -> `pass`
 - `S45` `verify:` `tsc --noEmit` -> `pass`
 - `S45` `by:` `opus-port-lane`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/form/session.ts`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/form/ValueCell.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/dialogs/ReviewDialog.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/CorrectionDialog.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/CheckView.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/Workspace.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/details/TodoRail.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/declarations/NewDeclarationDialog.tsx`
+- `S46` `M` `dev/locales/desktop_chrome.py`
+- `S46` `M` `src/cadrumo/locales/en/common.yml`
+- `S46` `verify:` `tsc --noEmit` -> `pass`
+- `S46` `verify:` `eslint and prettier` -> `pass`
+- `S46` `verify:` `playwright modelo workspace and declarations scenarios` -> `pass`
+- `S46` `by:` `opus-p04-lane-b`
+- `S47` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S47` `M` `native/desktop/frontend/scripts/modelo-fixtures.mjs`
+- `S47` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S47` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S47` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S47` `M` `native/desktop/frontend/tests/modelo-port.spec.ts`
+- `S47` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S47` `verify:` `playwright port, form, run, modelo, declarations and workspace specs` -> `pass`
+- `S47` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
+- `S47` `verify:` `tsc --noEmit` -> `pass`
+- `S47` `by:` `opus-p05-lane`
 
 ## Notes
 
@@ -783,3 +811,5 @@ related:
 - `S13` committed in 788d9231f0, reviewed by CADRUMO-RUST-NATIVE and CADRUMO-UX-LEDGER; desktop-host-unit-test and clippy blocked by other sessions' uncommitted shell/setup and Cargo.lock work, last direct run 541 passed with the lane's one failure fixed
 - `S16` committed in 788d9231f0, reviewed by CADRUMO-RUST-NATIVE and CADRUMO-UX-LEDGER; desktop-host-unit-test and clippy blocked by other sessions' uncommitted shell/setup and Cargo.lock work, last direct run 541 passed with the lane's one failure fixed
 - `S45` committed in 5da639c4ba against HEAD 788d9231f0
+- `S46` committed in ddecebc18e with S47; my `saved_unread` key and chrome declarations were wiped once by another writer and re-applied before commit
+- `S47` committed in ddecebc18e; no history envelope is written because a reduced receipt path fails the history model's validator; hu 347 navigation failure seen by lane B not reproduced in 27 runs

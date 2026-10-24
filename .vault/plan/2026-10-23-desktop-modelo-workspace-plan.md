@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:e38cd5d4ab920e2e8ff4f1d58186b7f241dbc03096eb64f2d7cb66263f9a986b'
+body_hash: 'sha256:2bc4ff7f66395eee56509b2f806d0ad7ddc277076eef4665bc2599455d27cbb6'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -87,23 +87,23 @@ Promote the round-3 prototype into product components on the application's field
 - [x] `P04.S18` - Add the declarations page with the new-declaration dialog to the shell (page, action, rail item), on the shared data grid; `native/desktop/frontend/src/components/modelo/DeclarationsPage.tsx`.
 - [x] `P04.S19` - Add the workspace shell: header with result and the read model's next action, view tabs with state marks, recorded and refused banners; `native/desktop/frontend/src/components/modelo/Workspace.tsx`.
 - [x] `P04.S20` - Render the form from the read model: sections, rows, official grids, repeated records, context facts, binding inputs, unplaced boxes and working figures, one page at a time with section windowing; `native/desktop/frontend/src/components/modelo/form/`.
-- [ ] `P04.S21` - Edit boxes in place with the replace-a-source prompt, stage contract intents by edit address, and follow the keyboard model shared with the data grid; `native/desktop/frontend/src/components/modelo/form/ValueCell.tsx`.
-- [ ] `P04.S22` - Review and apply through preflight, apply and renew, keeping edits and re-reviewing on a stale baseline and showing an unknown outcome as unknown; `native/desktop/frontend/src/components/modelo/ReviewDialog.tsx`.
+- [x] `P04.S21` - Edit boxes in place with the replace-a-source prompt, stage contract intents by edit address, and follow the keyboard model shared with the data grid; `native/desktop/frontend/src/components/modelo/form/ValueCell.tsx`.
+- [x] `P04.S22` - Review and apply through preflight, apply and renew, keeping edits and re-reviewing on a stale baseline and showing an unknown outcome as unknown; `native/desktop/frontend/src/components/modelo/ReviewDialog.tsx`.
 - [x] `P04.S23` - Add the details panel on the help card, docked at narrow widths, and the To do rail; `native/desktop/frontend/src/components/modelo/Details.tsx`.
 - [x] `P04.S24` - Add the Check view on the form's findings in catalogue wording; `native/desktop/frontend/src/components/modelo/CheckView.tsx`.
 - [x] `P04.S25` - Add the Export and record view: the AEAT file through a save token, recording the filing, adding the receipt, and the other copies; `native/desktop/frontend/src/components/modelo/FilingView.tsx`.
 - [x] `P04.S26` - Add the Sources view and the History view with correction, rename and discard; `native/desktop/frontend/src/components/modelo/`.
 - [x] `P04.S41` - Render the read-only view of a return the AEAT holds from the declarations list, from the same read the TUI's external filing details use, and keep the list's view, sort and search while a declaration is open; `native/desktop/frontend/src/components/modelo/declarations/`.
-- [ ] `P04.S46` - Render the new admission, typing, renewal and availability fields, show every correction and creation outcome in catalogue words, and type the presentation tables against the generated enums; `native/desktop/frontend/src/components/modelo/`.
+- [x] `P04.S46` - Render the new admission, typing, renewal and availability fields, show every correction and creation outcome in catalogue words, and type the presentation tables against the generated enums; `native/desktop/frontend/src/components/modelo/`.
 
 ### Phase `P05` - Proof
 
 Prove the workspace in the browser and the packaged window over real envelopes, and review it against this plan and its decisions.
 
-- [ ] `P05.S27` - Add Playwright scenarios over regenerated envelopes: refused 390, held-zero and filled 130, check findings, stale export, recorded with and without receipt, hub AEAT-only and maybe rows, all four languages, missing-key and raw-identifier gates, axe; `native/desktop/frontend/tests/modelo.spec.ts`.
+- [x] `P05.S27` - Add Playwright scenarios over regenerated envelopes: refused 390, held-zero and filled 130, check findings, stale export, recorded with and without receipt, hub AEAT-only and maybe rows, all four languages, missing-key and raw-identifier gates, axe; `native/desktop/frontend/tests/modelo.spec.ts`.
 - [ ] `P05.S28` - Check in the packaged window that no declaration data reaches storage, logs or diagnostics and that sign-out discards it; `native/desktop/tests/`.
 - [ ] `P05.S29` - Review the integrated work against this plan, the decision and the frozen prototype, and record findings in the feature audit; `.vault/audit/`.
-- [ ] `P05.S47` - Add scenario answers from real envelopes for apply, renewal, export, recording, receipt and correction, and specs proving staged edits survive a renewal, an unknown apply holds until a re-read and a recorded filing differs from a verified receipt; `native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
+- [x] `P05.S47` - Add scenario answers from real envelopes for apply, renewal, export, recording, receipt and correction, and specs proving staged edits survive a renewal, an unknown apply holds until a re-read and a recorded filing differs from a verified receipt; `native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 
 ## Parallelization
 
