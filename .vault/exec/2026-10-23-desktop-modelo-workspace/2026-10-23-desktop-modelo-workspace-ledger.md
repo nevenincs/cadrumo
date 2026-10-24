@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:73537dfed56fa5c1233efa33de37ea362a62eed4fb3e8f66f0a90d0f7acbe6da'
+body_hash: 'sha256:4afc5d5c524b824109424573516042d93e1a832420e220679406ed23c95e7f5c'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -645,6 +645,20 @@ related:
 - `S42` `verify:` `operation_contract_manifest --check` -> `pass`
 - `S42` `verify:` `pytest application, profile persistence and TUI suites` -> `pass`
 - `S42` `by:` `opus-p01-lane-2`
+- `S27` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S27` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S27` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S27` `M` `native/desktop/frontend/src/components/modelo/declarations/AeatFilingDialog.tsx`
+- `S27` `M` `native/desktop/frontend/src/components/modelo/workspace/CheckView.tsx`
+- `S27` `A` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S27` `M` `native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts`
+- `S27` `M` `native/desktop/frontend/tests/scenarios/accessibility.spec.ts`
+- `S27` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S27` `verify:` `playwright modelo port, form, run and scenario specs` -> `pass`
+- `S27` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
+- `S27` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S27` `verify:` `tsc --noEmit` -> `pass`
+- `S27` `by:` `opus-p05-lane`
 
 ## Notes
 
@@ -685,3 +699,4 @@ related:
 - `S40` committed in 46f9e9219b with the `aeat_filing` row field for P04.S41
 - `S41` the row field half of S41, committed in 46f9e9219b; the AEAT reference stays out of the public row by its owner's custody decision, a known gap against the TUI's technical toggle
 - `S42` also carries the issue-line where fix that removes the box from place words
+- `S27` committed in 35fff18be9; no modelo yields a missing-value finding through the real executors, so missing values are proven by the drawn dash

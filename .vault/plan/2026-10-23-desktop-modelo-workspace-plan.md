@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:0ab4b666dc36d0ac5e2690bdf45ec90d411ee0aa0aeea0441751b6526275c1e6'
+body_hash: 'sha256:de8f0449316a592b7b91ad6b8865a9cb2974698cf839e49a45e769c4eca33dbf'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -90,13 +90,13 @@ Promote the round-3 prototype into product components on the application's field
 - [x] `P04.S24` - Add the Check view on the form's findings in catalogue wording; `native/desktop/frontend/src/components/modelo/CheckView.tsx`.
 - [x] `P04.S25` - Add the Export and record view: the AEAT file through a save token, recording the filing, adding the receipt, and the other copies; `native/desktop/frontend/src/components/modelo/FilingView.tsx`.
 - [x] `P04.S26` - Add the Sources view and the History view with correction, rename and discard; `native/desktop/frontend/src/components/modelo/`.
-- [ ] `P04.S41` - Render the read-only view of a return the AEAT holds from the declarations list, from the same read the TUI's external filing details use, and keep the list's view, sort and search while a declaration is open; `native/desktop/frontend/src/components/modelo/declarations/`.
+- [x] `P04.S41` - Render the read-only view of a return the AEAT holds from the declarations list, from the same read the TUI's external filing details use, and keep the list's view, sort and search while a declaration is open; `native/desktop/frontend/src/components/modelo/declarations/`.
 
 ### Phase `P05` - Proof
 
 Prove the workspace in the browser and the packaged window over real envelopes, and review it against this plan and its decisions.
 
-- [ ] `P05.S27` - Add Playwright scenarios over regenerated envelopes: refused 390, held-zero and filled 130, check findings, stale export, recorded with and without receipt, hub AEAT-only and maybe rows, all four languages, missing-key and raw-identifier gates, axe; `native/desktop/frontend/tests/modelo.spec.ts`.
+- [x] `P05.S27` - Add Playwright scenarios over regenerated envelopes: refused 390, held-zero and filled 130, check findings, stale export, recorded with and without receipt, hub AEAT-only and maybe rows, all four languages, missing-key and raw-identifier gates, axe; `native/desktop/frontend/tests/modelo.spec.ts`.
 - [ ] `P05.S28` - Check in the packaged window that no declaration data reaches storage, logs or diagnostics and that sign-out discards it; `native/desktop/tests/`.
 - [ ] `P05.S29` - Review the integrated work against this plan, the decision and the frozen prototype, and record findings in the feature audit; `.vault/audit/`.
 
