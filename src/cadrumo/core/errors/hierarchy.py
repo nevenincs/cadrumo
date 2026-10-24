@@ -152,6 +152,10 @@ class CadrumoError(Exception):
 
     __bare_base_rationale__: ClassVar[str] = "central root of the registry-bound exception hierarchy"
 
+    #: Context keys the in-process envelope shows but a record kept for another
+    #: process never carries, because their values can repeat document content.
+    process_local_context_keys: ClassVar[frozenset[str]] = frozenset[str]()
+
     code = _DeclaredErrorCode()
 
     def __init_subclass__(cls, **kwargs: object) -> None:

@@ -254,6 +254,11 @@ def build_ledger_evidence_confirm_definition(
         executor_type=LedgerEvidenceConfirmExecutor,
         build=lambda: LedgerEvidenceConfirmExecutor(ports_factory),
         capabilities=invoice_evidence_operation_capabilities(mutates=True),
+        # Confirming reads the document again, so a reader refusal's verdict
+        # names the local AI setup; a frontend in another process learns it
+        # only from the recorded detail. A blocked confirm records its
+        # blockers by id and reason, never their document-quoting explanation.
+        public_error_detail=True,
     )
 
 

@@ -40,7 +40,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Self
+from typing import ClassVar, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -111,7 +111,15 @@ drives deductibility --- so it blocks and the name does not.
 
 
 class ConfirmationBlockedError(LedgerPreconditionErrorMixin, CadrumoError):
-    """Raised when a confirm is attempted with an unresolved blocking finding."""
+    """Raised when a confirm is attempted with an unresolved blocking finding.
+
+    Each blocker's explanation names the figures or readings involved, so it
+    can repeat what the document prints: it stays in this process, and the
+    detail recorded for other processes names each blocker by its id and
+    reason only.
+    """
+
+    process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"unresolved_blockers"})
 
 
 class ConfirmationBlocker(BaseModel):
@@ -366,6 +374,7 @@ def _require_all_confirmation_blockers_resolved(
             translated_message="errors.refused.refused_ledger_confirmation_blocked",
             context={
                 "unresolved_blocker_ids": ",".join(blocker.blocker_id for blocker in unresolved),
+                "unresolved_blocker_reasons": ",".join(blocker.reason.value for blocker in unresolved),
                 "unresolved_blockers": named,
             },
             precondition_verdict=ledger_no_recovery_verdict(

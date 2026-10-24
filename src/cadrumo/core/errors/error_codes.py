@@ -357,9 +357,14 @@ def public_error_context(error: BaseException) -> dict[str, str] | None:
     The same merge of ``context`` and public attributes, and the same
     redaction, as :func:`build_error_envelope`, so a process that records the
     context for another process to render discloses nothing the envelope would
-    not have disclosed itself.
+    not have disclosed itself. Keys the error's class declares process-local
+    are left out as well: the envelope may show them, the record never does.
     """
-    return scrub_error_context(_merge_error_context(error, None))
+    merged = _merge_error_context(error, None)
+    local = getattr(type(error), "process_local_context_keys", frozenset())
+    if merged is not None and local:
+        merged = {key: value for key, value in merged.items() if key not in local} or None
+    return scrub_error_context(merged)
 
 
 def build_error_envelope(
