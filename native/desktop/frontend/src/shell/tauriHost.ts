@@ -190,6 +190,19 @@ export function tauriHost(): Host {
       },
     },
     presentation: {
+      async guardClose(asked) {
+        const requests = new Channel<null>();
+        requests.onmessage = () => asked();
+        const subscription = await call("shell_close_guard_subscribe", {
+          requests,
+        });
+        return () => {
+          requests.onmessage = () => undefined;
+          void call("shell_close_guard_unsubscribe", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
       present: (profileId, destination) =>
         call("desktop_present_destination", { profileId, destination }),
     },

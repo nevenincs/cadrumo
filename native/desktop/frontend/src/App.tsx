@@ -242,9 +242,33 @@ export function App({ host }: { host: Host }) {
   const guardLeave = useCallback((guard: LeaveGuard | null) => {
     ledgerGuard.current = guard;
   }, []);
-  const guarded = useCallback((proceed: () => void) => {
-    if (!ledgerGuard.current?.(proceed)) proceed();
+  const guarded = useCallback((proceed: () => void, stay?: () => void) => {
+    if (!ledgerGuard.current?.(proceed, stay)) proceed();
   }, []);
+  // A close the system raised (the window's own close, Alt+F4) asks the
+  // page through the host, which holds the window until the page answers.
+  useEffect(() => {
+    const windowPort = host.window;
+    if (!windowPort?.guardClose) return;
+    let release: (() => void) | null = null;
+    let current = true;
+    void windowPort
+      .guardClose(() =>
+        guarded(
+          () => void windowPort.action("close_now"),
+          () => void windowPort.action("keep_open"),
+        ),
+      )
+      .then((stop) => {
+        if (current) release = stop;
+        else stop();
+      })
+      .catch(() => undefined);
+    return () => {
+      current = false;
+      release?.();
+    };
+  }, [host, guarded]);
   const shownPage = useRef(page);
   shownPage.current = page;
   const setPage = useCallback(

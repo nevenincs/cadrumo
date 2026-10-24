@@ -119,6 +119,9 @@ export interface Host {
   readonly window?: {
     action(action: WindowAction): Promise<void>;
     observe(listener: (state: WindowPresentation) => void): Promise<() => void>;
+    /** Asks the page before a close the system raised; the page answers
+     * with "close_now" or "keep_open". */
+    guardClose?(asked: () => void): Promise<() => void>;
   };
   /** False when no desktop host exists (browser preview). */
   readonly available: boolean;

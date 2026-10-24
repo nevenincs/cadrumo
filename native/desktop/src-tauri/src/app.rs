@@ -227,6 +227,12 @@ pub fn run(
             };
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 state
+                // The page asks before staged work is dropped; it answers by
+                // closing or keeping the window open.
+                if shell::window_controls::close_held(window) {
+                    api.prevent_close();
+                    return;
+                }
                     .launch
                     .diagnostics
                     .host_event(EventKind::WindowCloseRequested, HostStage::Shutdown);

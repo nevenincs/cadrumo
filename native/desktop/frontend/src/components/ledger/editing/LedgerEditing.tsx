@@ -27,8 +27,8 @@ import { ReviewDialog } from "./ReviewDialog";
 import { useLedgerApply } from "./useLedgerApply";
 
 /** Asks before staged work is dropped: true when it asked, and runs
- * `proceed` once the person chose to leave. */
-export type LeaveGuard = (proceed: () => void) => boolean;
+ * `proceed` once the person chose to leave, or `stay` once they did not. */
+export type LeaveGuard = (proceed: () => void, stay?: () => void) => boolean;
 
 /**
  * The page's staged work as one whole: the stage store's events, with the
@@ -136,17 +136,20 @@ export function useLedgerEditing({
   }, [dispatch]);
 
   // ---- Leaving -------------------------------------------------------------
-  const [leaving, setLeaving] = useState<(() => void) | null>(null);
+  const [leaving, setLeaving] = useState<{
+    proceed: () => void;
+    stay?: () => void;
+  } | null>(null);
   const staged = tally.units > 0;
   const guard = useRef<LeaveGuard>(() => false);
-  guard.current = (proceed) => {
+  guard.current = (proceed, stay) => {
     if (!staged) return false;
-    setLeaving(() => proceed);
+    setLeaving({ proceed, stay });
     return true;
   };
   useEffect(() => {
     if (!guardLeave) return;
-    guardLeave((proceed) => guard.current(proceed));
+    guardLeave((proceed, stay) => guard.current(proceed, stay));
     return () => guardLeave(null);
   }, [guardLeave]);
   // A browser asks on its own before a page with staged work unloads.
@@ -242,15 +245,19 @@ export function useLedgerEditing({
       {leaving && (
         <LeaveDialog
           units={tally.units}
-          onCancel={() => setLeaving(null)}
+          onCancel={() => {
+            setLeaving(null);
+            leaving.stay?.();
+          }}
           onDiscard={() => {
-            const proceed = leaving;
+            const { proceed } = leaving;
             setLeaving(null);
             dispatch({ type: "discard" });
             proceed();
           }}
           onReview={() => {
             setLeaving(null);
+            leaving.stay?.();
             openReview();
           }}
         />

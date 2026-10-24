@@ -187,6 +187,7 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             app.manage(channel::Deliveries::default());
             app.manage(window_controls::Controls::default());
             Ok(())
+            app.manage(window_controls::CloseGuard::default());
         })
         .on_window_ready(move |window| {
             window_states.attach(&window);

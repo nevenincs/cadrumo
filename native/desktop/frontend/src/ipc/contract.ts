@@ -1358,6 +1358,15 @@ export interface HostCommands {
    * model for every role of the local AI. A setup already running is joined.
    * `resume` is the person's Resume click after an interruption: when the
    * new plan is exactly the one approved before, it is approved again
+  /** A close the system raised asks the page first, while it listens. */
+  shell_close_guard_subscribe: {
+    args: Authorized<{ requests: Channel<null> }>;
+    result: number;
+  };
+  shell_close_guard_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
    * without a second review; any other plan awaits an answer as usual. */
   desktop_setup_start: {
     args: Authorized<{
@@ -1655,7 +1664,14 @@ export interface HostCommands {
 /** Native presentation only; no profile or runtime authority. */
 export type WindowPresentation = { maximized: boolean; fullscreen: boolean };
 export type WindowAction =
-  "minimize" | "toggle_maximize" | "close" | "drag" | "focus";
+  | "minimize"
+  | "toggle_maximize"
+  | "close"
+  | "drag"
+  | "focus"
+  /** The page's answers to a close it was asked about. */
+  | "close_now"
+  | "keep_open";
 
 /** A page of the TUI a link may open, in the runtime's closed vocabulary. */
 export type PresentationDestination =

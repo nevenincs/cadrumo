@@ -122,7 +122,9 @@ export function Titlebar({
           aria-label={t("desktop.titlebar.close")}
           title={t("desktop.titlebar.close")}
           onClick={() =>
-            guardClose ? guardClose(() => run("close")) : run("close")
+            // Once the page has asked, the close goes through without the
+            // host asking the page a second time.
+            guardClose ? guardClose(() => run("close_now")) : run("close")
           }
         >
           <Icon name="close" size="xs" />
