@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:14f5c543e2b247cab9367068db5129c2122b08f316b59c2771693d9b7beb132c'
+body_hash: 'sha256:6a03d0fe8c9c4cb57970a3ae0ec032cf51640907bc605f70ad280ad28e797cf9'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---
@@ -93,9 +93,43 @@ related:
 - `S07` `verify:` `lint-imports --config .importlinter --no-cache (1 broken: cadrumo.tests to application.local_reader, pre-existing uncommitted edit)` -> `fail`
 - `S07` `verify:` `pytest presentation contract, client events, runtime routing and session hold tests (53 passed)` -> `pass`
 - `S07` `verify:` `ruff check, ruff format --check and ty on the follow-up files` -> `pass`
+- `S09` `A` `dev/packaging/native/desktop_navigation.py`
+- `S09` `A` `dev/packaging/native/tests/test_desktop_navigation.py`
+- `S09` `A` `dev/locales/tests/test_desktop_navigation_labels.py`
+- `S09` `M` `dev/locales/desktop_chrome.py`
+- `S09` `M` `dev/locales/tests/test_desktop_chrome.py`
+- `S09` `M` `native/desktop/CMakeLists.txt`
+- `S09` `M` `native/desktop/scripts/tauri.mjs`
+- `S09` `M` `native/desktop/src-tauri/build.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/presentation.rs`
+- `S09` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S09` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S09` `M` `native/desktop/frontend/scripts/dev.mjs`
+- `S09` `M` `native/desktop/frontend/vite.config.ts`
+- `S09` `M` `native/desktop/frontend/src/content.d.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/navigation/register.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/navigation/projection.ts`
+- `S09` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S09` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S09` `M` `native/desktop/frontend/src/App.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/agent/cadrumoLink.ts`
+- `S09` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/agent-page-links.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/user-profile.spec.ts`
+- `S09` `M` `src/cadrumo/locales/en/common.yml`
+- `S09` `M` `src/cadrumo/locales/es/common.yml`
+- `S09` `M` `src/cadrumo/locales/ca/common.yml`
+- `S09` `M` `src/cadrumo/locales/hu/common.yml`
+- `S09` `verify:` `pytest dev/packaging/native/tests/test_desktop_navigation.py` -> `pass`
+- `S09` `verify:` `pytest dev/locales/tests/test_desktop_navigation_labels.py` -> `pass`
+- `S09` `verify:` `cmake --target desktop-host-unit-test` -> `pass`
+- `S09` `verify:` `tsc --noEmit on S09 index export` -> `pass`
 
 ## Notes
 
 - `S06` dev/locales/tests: 4 failures in `test_desktop_chrome,` `test_dict_constant_naming_convention,` `test_modelo_schema_runtime_localization` and `test_audit` product identity; none names a navigation key; they sit in files other sessions are editing. Locale spelling flags ca Instal·lació and es/ca Python shell for navigation labels exactly as for the existing tui.destination.installation and desktop.rail.python cells.
 - `S07` The 9 broader failures are outside S07: `desktop_chrome` and dict-naming and catalogue-identity locale gates over other sessions' edits, and runtime TUI automation-inventory and restored-login settle timeouts; locale key `tui.ledger.entries.selection_absent` landed inside another session's commit 44d85df020
 - `S07` Follow-up 7ba285bd05 closes a wire gap the desktop lane found: PresentationDelivered and the session hold's `destination_presented` line now echo the request's params, and the client refuses a reply whose params differ
+- `S09` commits e7301548b6 and 70ae70915f; the first was written from an index read before five other commits and dropped their files, the second restores them; the host requires the runtime delivery to echo params, added by the Python lane in 7ba285bd05
