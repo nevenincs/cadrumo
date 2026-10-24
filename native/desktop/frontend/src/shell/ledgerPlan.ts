@@ -131,6 +131,28 @@ export function routeChange(
   return { refused: "cannot_clear" };
 }
 
+/** The values a classification write clears by itself, by the
+ * classification it sets: anything but Mixed drops the business share and
+ * usage ratio, and anything but Business or Mixed the business figures as
+ * well. A staged clear of one of them travels with that write. */
+function clearedBy(classification: string): ReadonlySet<StageField> {
+  const cleared = new Set<StageField>();
+  if (classification !== "MIXED") {
+    cleared.add("business_pct");
+    cleared.add("usage_ratio_id");
+  }
+  if (classification !== "BUSINESS" && classification !== "MIXED")
+    for (const field of [
+      "category_id",
+      "taxable_base",
+      "iva_rate",
+      "iva_amount",
+      "irpf_category",
+    ] as const)
+      cleared.add(field);
+  return cleared;
+}
+
 const TAX_FIELDS: readonly StageField[] = [
   "business_pct",
   "category_id",
@@ -186,6 +208,9 @@ export type PlanBlocker =
   | { kind: "action_and_edits"; action: string }
   | { kind: "exclude_and_classification"; action: string }
   | { kind: "suggestion_and_edits"; action: string }
+  /** A staged rules apply names the movement a model approval answers for:
+   * either would change what the other expects to find. */
+  | { kind: "suggestion_and_rules"; action: string; rules: string[] }
   /** A Mixed approval names no business share: it is never saved so. */
   | { kind: "suggestion_needs_share"; action: string }
   | { kind: "actions_conflict"; actions: string[] }
@@ -519,17 +544,21 @@ function actionStep(action: StagedAction): PlanStep | null {
   }
 }
 
-/** Whether a staged rule apply meets a staged classification on a movement
- * its dry run named: the rules and the person would both decide it, so it
- * is held back until one of them is dropped. */
+/** Whether a staged rule apply meets a staged classification or a staged
+ * model approval on a movement its dry run named: the rules and the person
+ * would both decide it, so it is held back until one of them is dropped. */
 export function ruleApplyClashes(
   action: Extract<StagedAction, { kind: "rule_apply" }>,
   content: StagedContent,
 ): boolean {
-  return action.transactionIds.some((id) =>
-    Object.keys(content.rows[id] ?? {}).some((field) =>
-      CLASSIFICATION_FIELDS.has(field as StageField),
-    ),
+  return action.transactionIds.some(
+    (id) =>
+      Object.keys(content.rows[id] ?? {}).some((field) =>
+        CLASSIFICATION_FIELDS.has(field as StageField),
+      ) ||
+      content.actions.some(
+        (other) => other.kind === "suggestion" && other.transactionId === id,
+      ),
   );
 }
 
@@ -562,7 +591,22 @@ function checkRow(
   const edits = fields.length > 0 || m210 !== undefined;
   const cannotClear: PlanField[] = [];
   const needsClass: PlanField[] = [];
+  // The classification's own write clears what it drops; a staged clear of
+  // that goes with it and is no write of its own.
+  const chosen = changes.business_classification;
+  const carrier =
+    chosen?.kind === "set"
+      ? routeChange("business_classification", chosen, classified)
+      : null;
+  const carried =
+    chosen?.kind === "set" && carrier && "route" in carrier
+      ? { route: carrier.route, fields: clearedBy(chosen.value) }
+      : null;
   for (const field of fields) {
+    if (carried?.fields.has(field) && changes[field]!.kind === "clear") {
+      entry.routes[field] = carried.route;
+      continue;
+    }
     const decision = routeChange(field, changes[field]!, classified);
     if ("route" in decision) entry.routes[field] = decision.route;
     else if (decision.refused === "cannot_clear") cannotClear.push(field);
@@ -658,14 +702,23 @@ function checkRow(
     (fields.some((field) => CLASSIFICATION_FIELDS.has(field)) || m210)
   )
     entry.blockers.push({ kind: "action_and_edits", action: derivation.id });
+  // A model approval commits against the movement exactly as it was when
+  // the model was asked, so nothing else may change it first.
   const suggestion = suggestions[0];
-  if (
-    suggestion &&
-    (fields.some((field) => CLASSIFICATION_FIELDS.has(field)) || m210)
-  )
+  if (suggestion && edits)
     entry.blockers.push({
       kind: "suggestion_and_edits",
       action: suggestion.id,
+    });
+  const rules = content.actions.filter(
+    (action) =>
+      action.kind === "rule_apply" && action.transactionIds.includes(id),
+  );
+  if (suggestion && rules.length)
+    entry.blockers.push({
+      kind: "suggestion_and_rules",
+      action: suggestion.id,
+      rules: rules.map((action) => action.id),
     });
   for (const found of suggestions) {
     if (found.kind !== "suggestion" || found.decision !== "apply") continue;

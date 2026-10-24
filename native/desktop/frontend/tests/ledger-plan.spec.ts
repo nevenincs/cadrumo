@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { LEDGER_PAYLOAD_LIMIT, type LedgerRow } from "../src/shell/ledger";
+import { classifyCells } from "../src/shell/ledgerCommands";
 import {
   bulkCsv,
   payloadSize,
@@ -13,7 +14,9 @@ import {
 } from "../src/shell/ledgerPlan";
 import {
   EMPTY_CONTENT,
+  EMPTY_STAGE,
   newDraft,
+  reduceStage,
   type Draft,
   type StageField,
   type StagedAction,
@@ -425,6 +428,161 @@ test("a model suggestion is not combined with the person's own edits or a second
     { kind: "actions_conflict", actions: ["arch", "s2"] },
   ]);
   expect(plan.steps).toEqual([]);
+});
+
+test("a model approval waits while the same movement has its own edits, and the edits are not sent first", () => {
+  const A = hexId("a");
+  const approval: StagedAction = {
+    id: "s1",
+    kind: "suggestion",
+    transactionId: A,
+    operationId: "op-s1",
+    reviewDigest: "digest-s1",
+    decision: "apply",
+    reason: "",
+  };
+  // Its commit expects the movement exactly as the model saw it: a notes
+  // edit saved in the bulk, or a description that gives it a new id, would
+  // make it refuse.
+  for (const edit of [
+    { notes: set("Revisado") },
+    { description: set("OTRA DESCRIPCION") },
+    { counterparty: clear },
+  ]) {
+    const plan = planApply(
+      staged({ [A]: edit }, [approval]),
+      contextOf(business(A, { counterparty: "ACME" })),
+    );
+    expect(plan.entries[0]!.blockers).toEqual([
+      { kind: "suggestion_and_edits", action: "s1" },
+    ]);
+    expect(plan.steps).toEqual([]);
+    expect(plan.held).toEqual({ rows: [A], drafts: [], actions: ["s1"] });
+  }
+  // Alone, it is answered.
+  const alone = planApply(staged({}, [approval]), contextOf(business(A)));
+  expect(stepKinds(alone)).toEqual(["answer"]);
+});
+
+test("a model approval and a rules apply that names its movement hold each other", () => {
+  const A = hexId("a");
+  const B = hexId("b");
+  const approval: StagedAction = {
+    id: "s1",
+    kind: "suggestion",
+    transactionId: A,
+    operationId: "op-s1",
+    reviewDigest: "digest-s1",
+    decision: "apply",
+    reason: "",
+  };
+  const rules = (id: string, ids: string[]): StagedAction => ({
+    id,
+    kind: "rule_apply",
+    reaffirm: false,
+    transactionIds: ids,
+  });
+  const plan = planApply(
+    staged({}, [rules("r1", [B, A]), approval]),
+    contextOf(business(A), business(B)),
+  );
+  expect(
+    plan.entries.find((entry) => entry.transactionId === A)!.blockers,
+  ).toEqual([{ kind: "suggestion_and_rules", action: "s1", rules: ["r1"] }]);
+  // Neither runs: the rules could change the movement before the answer,
+  // and the answer could change it under the rules.
+  expect(plan.steps).toEqual([]);
+  expect(plan.held.actions.sort()).toEqual(["r1", "s1"]);
+  // Rules that do not name it leave the approval alone.
+  const apart = planApply(
+    staged({}, [rules("r2", [B]), approval]),
+    contextOf(business(A), business(B)),
+  );
+  expect(stepKinds(apart)).toEqual(["action:rule_apply", "answer"]);
+  expect(apart.held.actions).toEqual([]);
+});
+
+test("reclassifying Mixed movements saves them together: the classification clears the share itself", () => {
+  const ids = Array.from({ length: 120 }, (_, at) => hexId(`mx${at}`));
+  const rows = contextOf(...ids.map(mixed));
+  for (const [kind, category] of [
+    ["business", "material_oficina"],
+    ["personal", undefined],
+  ] as const) {
+    const outcome = classifyCells({ kind, ids, category }, rows.rows);
+    expect(outcome.kind).toBe("staged");
+    if (outcome.kind !== "staged") return;
+    // The share's clear is staged, so the grid shows no share on the row.
+    expect(
+      outcome.event.cells.filter((cell) => cell.field === "business_pct"),
+    ).toHaveLength(120);
+    const content = reduceStage(EMPTY_STAGE, outcome.event).content;
+    const plan = planApply(content, rows);
+    expect(stepKinds(plan)).toEqual(["bulk"]);
+    expect(plan.summary).toMatchObject({
+      together: 120,
+      parts: 1,
+      singleClassifications: 0,
+      oneAtATime: 0,
+      held: 0,
+    });
+    const bulk = plan.steps[0] as Extract<PlanStep, { kind: "bulk" }>;
+    // The row carries the clear as one of the fields it saves, with no
+    // cell of its own: a blank cell would mean unchanged.
+    expect(bulk.rows[0]!.fields).toContain("business_pct");
+    expect(bulk.request.csv_text.split("\n")[0]).toBe(
+      kind === "business"
+        ? "transaction_id,classification,category_id"
+        : "transaction_id,classification",
+    );
+  }
+  // A share cleared on a movement that stays Mixed still needs its own
+  // write, and is held for the share Mixed needs.
+  const M = hexId("m");
+  const kept = planApply(
+    staged({ [M]: { business_pct: clear } }),
+    contextOf(mixed(M)),
+  );
+  expect(blockersOf(kept, M)).toEqual(["mixed_needs_share"]);
+});
+
+test("the classification write also carries the clears of what it drops on a Personal movement", () => {
+  const A = hexId("a");
+  const plan = planApply(
+    staged({
+      [A]: {
+        business_classification: set("PERSONAL"),
+        category_id: clear,
+        usage_ratio_id: clear,
+        iva_category: clear,
+      },
+    }),
+    contextOf(business(A, { usage_ratio_id: "ratio-1", iva_category: "x" })),
+  );
+  // The IVA category is not dropped by the classification: it goes alone.
+  expect(stepKinds(plan)).toEqual(["bulk", "classify"]);
+  expect(plan.entries[0]!.routes).toEqual({
+    business_classification: "bulk",
+    category_id: "bulk",
+    usage_ratio_id: "bulk",
+    iva_category: "classify",
+  });
+});
+
+test("bulk requests carry the window's language for their row refusals", () => {
+  const A = hexId("a");
+  const content = staged({ [A]: { notes: set("Revisado") } });
+  const worded = planApply(content, {
+    ...contextOf(business(A)),
+    outputLanguage: "hu",
+  });
+  const bulk = worded.steps[0] as Extract<PlanStep, { kind: "bulk" }>;
+  expect(bulk.request.output_language).toBe("hu");
+  const plain = planApply(content, contextOf(business(A)));
+  expect(
+    "output_language" in
+      (plain.steps[0] as Extract<PlanStep, { kind: "bulk" }>).request,
+  ).toBe(false);
 });
 
 test("new movements need their five facts and keep their key", () => {
