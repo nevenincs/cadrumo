@@ -11,6 +11,7 @@ from .....core.classification.policies import SensitivityClass
 from .....core.hashing import sha256_hex
 from .....core.tax_domain import TaxDomain
 from ....modelos.perceptor_clave_scope import PERCEPTOR_CLAVE_SCOPE_FACT_ID
+from ....renta.retenciones_routing_integrity import M130_RETENCIONES_ROUTING_FACT_ID
 from ..facts.schema import GovernedFact, GovernedFactCatalogue
 from ..runtime_catalogues import (
     ApoderamientoScopeRecord,
@@ -102,7 +103,7 @@ def _snapshot_checked_facts(restated_on: date | None) -> tuple[GovernedFact, ...
     """
     return (
         _snapshot_checked_fact(
-            "m130-retenciones-output-routing",
+            M130_RETENCIONES_ROUTING_FACT_ID,
             (("modelo", "130"), ("binding_id", "fixture-retenciones"), ("output_casilla", "01")),
             restated_on=restated_on,
         ),

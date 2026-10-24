@@ -14,6 +14,7 @@ at the domain boundary.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Final
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.time.clock import today_madrid
@@ -22,6 +23,8 @@ from ..calculations.registry.governed_fact_scope import GovernedFactSource, requ
 from ..calculations.registry.ids import BindingId
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.validate_cross_domain_snapshot import register_cross_domain_snapshot_check
+
+M130_RETENCIONES_ROUTING_FACT_ID: Final = "m130-retenciones-output-routing"
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,7 +45,7 @@ def _registry_m130_retenciones_route(
     selected_authority = require_governed_fact_authority(authority, subject="Renta route")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
-            fact_id="m130-retenciones-output-routing",
+            fact_id=M130_RETENCIONES_ROUTING_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=today_madrid(),
         ),
@@ -106,4 +109,9 @@ def check_m130_retenciones_output_casilla(
 register_cross_domain_snapshot_check(check_m130_retenciones_output_casilla)
 
 
-__all__ = ["M130RetencionesRoute", "check_m130_retenciones_output_casilla", "resolve_m130_retenciones_route"]
+__all__ = [
+    "M130_RETENCIONES_ROUTING_FACT_ID",
+    "M130RetencionesRoute",
+    "check_m130_retenciones_output_casilla",
+    "resolve_m130_retenciones_route",
+]
