@@ -188,7 +188,28 @@ export function LedgerPage({
   // The invoice being added or corrected; it goes with the profile.
   const [invoiceEditor, setInvoiceEditor] = useState<EditorTarget | null>(null);
   useEffect(() => setInvoiceEditor(null), [reader]);
-  const [transfer, setTransfer] = useState<"import" | "export" | null>(null);
+  const [transfer, setTransferNow] = useState<"import" | "export" | null>(null);
+  // The dialogs mount only while open, so they have no trigger to hand the
+  // focus back to: the page keeps what had it when one opened.
+  const transferOpener = useRef<HTMLElement | null>(null);
+  const setTransfer = (next: "import" | "export" | null) => {
+    if (next !== null && transfer === null)
+      transferOpener.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+    setTransferNow(next);
+  };
+  // Back to the opener, unless what the dialog led to took the focus.
+  const returnTransferFocus = (event: Event) => {
+    event.preventDefault();
+    const active = document.activeElement;
+    if (active !== null && active !== document.body) return;
+    const opener = transferOpener.current;
+    transferOpener.current = null;
+    if (opener?.isConnected) opener.focus();
+    else page.current?.focus();
+  };
 
   // The panel beside the grid: the To match queue or the inspector. Alt+I
   // is handled here, once: it opens the inspector and focuses its index,
@@ -796,6 +817,7 @@ export function LedgerPage({
             setSection("movements");
           }}
           onShowDocuments={() => setSection("documents")}
+          onCloseAutoFocus={returnTransferFocus}
         />
       )}
       {readable && transfer === "export" && (
@@ -813,6 +835,7 @@ export function LedgerPage({
           onReviewStaged={editing.openReview}
           copy={copy}
           onClose={() => setTransfer(null)}
+          onCloseAutoFocus={returnTransferFocus}
         />
       )}
     </>

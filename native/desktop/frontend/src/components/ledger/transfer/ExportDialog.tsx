@@ -76,6 +76,7 @@ export function ExportDialog({
   selection,
   copy,
   onClose,
+  onCloseAutoFocus,
 }: {
   port: LedgerPort;
   locale: string;
@@ -93,6 +94,8 @@ export function ExportDialog({
   selection?: readonly LedgerRow[];
   copy(text: string): Promise<void>;
   onClose(): void;
+  /** Where the focus goes once the dialog has gone. */
+  onCloseAutoFocus?: (event: Event) => void;
 }) {
   const t = useStrings();
   const ids = useId();
@@ -280,6 +283,7 @@ export function ExportDialog({
           event.preventDefault();
           heading.current?.focus();
         }}
+        onCloseAutoFocus={onCloseAutoFocus}
       >
         <DialogHeader>
           <DialogTitle>{t("desktop.ledger.export.title")}</DialogTitle>

@@ -308,6 +308,7 @@ export function ImportDialog({
   onWritten,
   onShowImported,
   onShowDocuments,
+  onCloseAutoFocus,
 }: {
   port: LedgerPort;
   locale: string;
@@ -320,6 +321,8 @@ export function ImportDialog({
   onWritten(): void;
   onShowImported: ShowImportBatch;
   onShowDocuments(): void;
+  /** Where the focus goes once the dialog has gone. */
+  onCloseAutoFocus?: (event: Event) => void;
 }) {
   const t = useStrings();
   const numbers = useMemo(() => new Intl.NumberFormat(locale), [locale]);
@@ -809,6 +812,7 @@ export function ImportDialog({
           event.preventDefault();
           heading.current?.focus();
         }}
+        onCloseAutoFocus={onCloseAutoFocus}
       >
         <DialogHeader>
           <DialogTitle>{t("desktop.ledger.import.title")}</DialogTitle>
