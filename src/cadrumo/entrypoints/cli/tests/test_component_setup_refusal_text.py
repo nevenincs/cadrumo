@@ -168,7 +168,9 @@ def test_json_keeps_the_typed_browser_action_and_prints_no_command_line(tmp_path
     assert "To fix it" not in result.stderr
     action = json.loads(result.stderr)["error"]["action"]
     assert action["failed_condition_id"] == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
-    assert action["evidence"][0]["values"]["browser_cache_root"] == str(tmp_path / "empty-browsers")
+    assert action["evidence"][0]["values"]["chromium_installed"] is False
+    published = [str(value) for value in action["evidence"][0]["values"].values()]
+    assert not [value for value in published if str(tmp_path) in value], "the refusal published the browsers folder"
     assert action["action"] == {
         "action_id": "operator.provision.browser",
         "target_command_key": "config.provision.browser",

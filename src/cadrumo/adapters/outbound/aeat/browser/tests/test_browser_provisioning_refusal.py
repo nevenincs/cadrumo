@@ -81,7 +81,9 @@ def _assert_names_the_browser_setup(error: BrowserError, browsers_root: Path) ->
     verdict = error.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
-    assert verdict.evidence[0].values["browser_cache_root"] == str(browsers_root)
+    # The verdict is published with every refusal, so it names the missing builds, never the folder.
+    assert verdict.evidence[0].values["missing_builds"]
+    assert not [value for value in verdict.evidence[0].values.values() if str(browsers_root) in str(value)]
     assert verdict.action is not None
     assert verdict.action.action_id == BROWSER_PROVISION_ACTION_ID
     assert lookup_action(verdict.action.action_id).target_command_key == "config.provision.browser"

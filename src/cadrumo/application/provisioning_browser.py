@@ -293,11 +293,12 @@ def probe_playwright_browser(
     manifest (Playwright absent or its layout unrecognised) is refused without a
     recovery action, because installing a browser cannot repair it.
     """
+    # No fact names the browsers folder: the verdict is published with every
+    # refusal, and a path outside the storage root is never published.
     root = playwright_browsers_root(cache_root, settings=settings)
     builds = required_browser_builds(manifest_path)
     if builds is None:
         facts: dict[str, ProvisioningFactValue] = {
-            "browser_cache_root": str(root),
             "browser_manifest_readable": False,
             "chromium_installed": False,
         }
@@ -312,7 +313,6 @@ def probe_playwright_browser(
         )
     missing = [build.directory_name for build in builds if not _build_installed(root, build)]
     facts = {
-        "browser_cache_root": str(root),
         "required_builds": ",".join(build.directory_name for build in builds),
         "chromium_installed": not missing,
     }
