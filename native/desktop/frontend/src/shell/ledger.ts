@@ -1032,6 +1032,278 @@ export type LedgerLlmSuggestion = {
   };
 };
 
+/** A declaration revision a movement took part in, as the participation
+ * index keeps it. */
+export type LedgerParticipation = {
+  calculation_revision_id: string;
+  work_unit_id: string;
+  modelo: string;
+  filing_year: number;
+  period: PublicPeriod;
+  revision_state: string;
+  filing_record_id: string | null;
+  justificante_reference: string | null;
+};
+/** One movement's lineage, where it came from and which finalized
+ * declarations cite it. A current or a superseded id may be named. */
+export type LedgerTrackRequest = { transaction_prefix: string };
+export type LedgerTrackResult = {
+  profile_id: string;
+  transaction_prefix: string;
+  transaction: LedgerTransaction;
+  tracking: {
+    transaction_id: string;
+    created_event_id: string | null;
+    evidence_provenance: {
+      evidence_id: string;
+      evidence_kind: string;
+      actor: string;
+      source_command: string;
+      linked_at: string;
+      bucket_event_id: string | null;
+    }[];
+    edit_lineage: {
+      previous_transaction_id: string;
+      actor: string;
+      source_command: string;
+      edited_at: string;
+      bucket_event_id: string | null;
+    }[];
+    lifecycle_state: string;
+    lifecycle_lineage: {
+      previous_state: string;
+      state: string;
+      actor: string;
+      source_command: string;
+      changed_at: string;
+      reason: string;
+      bucket_event_id: string | null;
+    }[];
+  };
+  /** Set for an imported movement, null for one added by hand. */
+  imported_provenance: {
+    provider_name: string;
+    source_filename: string;
+    source_row_index: number;
+    ingested_at: string;
+    import_fingerprint: string | null;
+  } | null;
+  /** Null where the participation index was never built. */
+  participated_in: LedgerParticipation[] | null;
+};
+
+/** One movement's event chain, with its split siblings' where asked. */
+export type LedgerHistoryRequest = {
+  transaction_prefix: string;
+  include_split_siblings?: boolean;
+};
+export type LedgerHistoryEventDetails = Partial<
+  Record<
+    | "source_command"
+    | "mutation_kind"
+    | "direction"
+    | "amount"
+    | "currency"
+    | "business_pct"
+    | "usage_ratio_id"
+    | "prorrata_reference"
+    | "previous_transaction_id"
+    | "transaction_id"
+    | "classification"
+    | "category_id"
+    | "category"
+    | "iva_category"
+    | "classified_by"
+    | "provider"
+    | "provenance"
+    | "confidence"
+    | "suggestion_kind"
+    | "operator_reason"
+    | "reason"
+    | "lifecycle_state"
+    | "previous_lifecycle_state"
+    | "invoice_id"
+    | "linked"
+    | "media_kind"
+    | "source_sha256"
+    | "purchase_invoice_evidence_count"
+    | "attachment_count"
+    | "cascade_count"
+    | "import_batch_id"
+    | "provider_name"
+    | "source_format"
+    | "source_row_index"
+    | "imported_count"
+    | "skipped_count"
+    | "split_group_id"
+    | "parent_transaction_id"
+    | "merged_transaction_id"
+    | "child_count"
+    | "export_format"
+    | "include_inactive"
+    | "row_count"
+    | "byte_size"
+    | "sha256"
+    | "transaction_ids_sha256"
+    | "first_transaction_id"
+    | "last_transaction_id",
+    string | null
+  >
+>;
+export type LedgerHistoryTypedResult = {
+  profile_id: string;
+  transaction_prefix: string;
+  include_split_siblings: boolean;
+  transaction_id: string;
+  /** The movement, its earlier ids and, where asked, its split siblings. */
+  object_ids: string[];
+  events: {
+    event_id: string;
+    event_type: string;
+    occurred_at: string;
+    actor: string;
+    object_type: string;
+    object_id: string;
+    details: LedgerHistoryEventDetails;
+    model_reason_withheld: boolean;
+    output_path_withheld: boolean;
+    undeclared_detail_count: number;
+  }[];
+  event_count: number;
+};
+
+/** A finalized or draft declaration revision a removal or a lifecycle
+ * change meets. */
+export type LedgerRevisionReference = {
+  work_unit_id: string;
+  calculation_revision_id: string;
+  revision_state: string | null;
+  modelo: string;
+  filing_year: number;
+  period: string;
+};
+/** Removes a movement; `dry_run` reports what it would take with it and
+ * what stops it, and changes nothing. */
+export type LedgerRemoveRequest = {
+  transaction_id: string;
+  reason?: string;
+  dry_run?: boolean;
+  actor?: string | null;
+};
+export type LedgerRemoveResult = {
+  profile_id: string;
+  report: {
+    bucket_id: string;
+    transaction_id: string;
+    removed: boolean;
+    dry_run: boolean;
+    actor: string;
+    reason: string;
+    cascaded_purchase_invoice_evidence_ids: string[];
+    cascaded_attachment_ids: string[];
+    /** Finalized declarations that stop the removal. */
+    blocking_modelo_references: LedgerRevisionReference[];
+    /** Draft revisions the removal makes stale. */
+    stale_draft_revision_references: LedgerRevisionReference[];
+    bucket_event_ids: string[];
+  };
+};
+
+/** Archive, set aside, restore or exclude one movement. */
+export type LedgerLifecycleRequest = {
+  transaction_id: string;
+  reason?: string;
+  actor?: string | null;
+};
+export type LedgerLifecycleResult = {
+  outcome: "updated" | "validation_error";
+  profile_id: string;
+  operation_id:
+    "ledger.archive" | "ledger.stash" | "ledger.restore" | "ledger.exclude";
+  result: {
+    profile_id: string;
+    transaction: LedgerTransaction;
+    review_status: LedgerReviewStatus;
+    bucket_event_ids: string[];
+  } | null;
+  validation: {
+    messages: string[];
+    blocking_reference: LedgerRevisionReference | null;
+  } | null;
+};
+
+/** Splits an active movement into two or more parts whose amounts add up
+ * to its own, exactly. */
+export type LedgerSplitRequest = {
+  transaction_id: string;
+  children: { amount: string; description: string }[];
+  reason?: string;
+  actor?: string | null;
+};
+export type LedgerSplitResult = {
+  profile_id: string;
+  parent_transaction_id: string;
+  split_group_id: string;
+  /** In the order the parts were sent. */
+  child_transaction_ids: string[];
+  bucket_event_id: string;
+  parent_business_classification: string;
+  child_business_classification: string;
+  remerged_by: string[];
+};
+/** Merges every part of one split back into its parent. */
+export type LedgerMergeRequest = {
+  child_ids: string[];
+  reason?: string;
+  actor?: string | null;
+};
+export type LedgerMergeResult = {
+  profile_id: string;
+  split_group_id: string;
+  parent_transaction_id: string;
+  merged_transaction_id: string;
+  source_child_ids: string[];
+  bucket_event_id: string;
+};
+
+/** Works out and saves base, rate and IVA from the registry's rate for an
+ * IVA category the person chose; a category with no single rate is
+ * answered as not derivable and writes nothing. */
+export type LedgerIvaDeriveRequest = {
+  transaction_id: string;
+  iva_category: string;
+  actor?: string | null;
+};
+export type LedgerIvaDeriveResult = {
+  profile_id: string;
+  outcome: "derived" | "validation_error";
+  transaction_id: string;
+  iva_category: string;
+  derivable: boolean;
+  iva_rate: string | null;
+  taxable_base: string | null;
+  iva_amount: string | null;
+  note: string;
+  classification: LedgerClassifyResult | null;
+  validation_messages: string[];
+};
+/** Sets a movement's business share, as a fraction, with what it is
+ * allocated by. */
+export type LedgerAllocateRequest = {
+  transaction_id: string;
+  business_pct: string;
+  category_id?: string | null;
+  usage_ratio_id?: string | null;
+  prorrata_reference?: string | null;
+  actor?: string | null;
+};
+export type LedgerAllocateResult = {
+  profile_id: string;
+  transaction: LedgerTransaction;
+  review_status: LedgerReviewStatus;
+  bucket_event_ids: string[];
+};
+
 // ---- Documents: evidence, reviewable drafts, consent and readers ---------
 
 export type EvidenceMediaKind = "pdf" | "image";
@@ -1574,6 +1846,18 @@ export interface LedgerRequests {
   "ledger.attach": LedgerAttachRequest;
   "ledger.detach": LedgerDetachRequest;
   "ledger.check": LedgerCheckRequest;
+  "ledger.split.review": LedgerLlmReviewRequest;
+  "ledger.track": LedgerTrackRequest;
+  "ledger.history.typed": LedgerHistoryRequest;
+  "ledger.remove": LedgerRemoveRequest;
+  "ledger.archive": LedgerLifecycleRequest;
+  "ledger.stash": LedgerLifecycleRequest;
+  "ledger.restore": LedgerLifecycleRequest;
+  "ledger.exclude": LedgerLifecycleRequest;
+  "ledger.split.manual": LedgerSplitRequest;
+  "ledger.merge": LedgerMergeRequest;
+  "ledger.classify.iva-derive": LedgerIvaDeriveRequest;
+  "ledger.allocate": LedgerAllocateRequest;
   "ledger.rule.list": Record<string, never>;
   "ledger.rule.add": LedgerRuleAddRequest;
   "ledger.rule.apply": LedgerRuleApplyRequest;
@@ -1644,6 +1928,17 @@ export interface LedgerResults {
   "ledger.attach": LedgerAttachResult;
   "ledger.detach": LedgerAttachResult;
   "ledger.check": LedgerCheckResult;
+  "ledger.track": LedgerTrackResult;
+  "ledger.history.typed": LedgerHistoryTypedResult;
+  "ledger.remove": LedgerRemoveResult;
+  "ledger.archive": LedgerLifecycleResult;
+  "ledger.stash": LedgerLifecycleResult;
+  "ledger.restore": LedgerLifecycleResult;
+  "ledger.exclude": LedgerLifecycleResult;
+  "ledger.split.manual": LedgerSplitResult;
+  "ledger.merge": LedgerMergeResult;
+  "ledger.classify.iva-derive": LedgerIvaDeriveResult;
+  "ledger.allocate": LedgerAllocateResult;
   "ledger.rule.list": LedgerRuleListResult;
   "ledger.rule.add": LedgerRuleAddResult;
   "ledger.rule.apply": LedgerRuleApplyResult;

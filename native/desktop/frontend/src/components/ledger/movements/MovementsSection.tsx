@@ -25,7 +25,12 @@ import {
   classifyCells,
   type ClassifyBlock,
   type ClassifyKind,
+  type ClassifyScope,
 } from "../../../shell/ledgerCommands";
+import {
+  sameInspectorContext,
+  type SectionInspectorContext,
+} from "../inspector/inspectorContext";
 import { parsePercent, type LedgerPeriod } from "../../../shell/ledgerGrammar";
 import {
   useLedgerMembership,
@@ -302,6 +307,7 @@ export function MovementsSection({
   locale,
   onPeriod,
   onOpenInspector,
+  onInspector,
   register,
   shownImport,
   onImportCleared,
@@ -324,6 +330,8 @@ export function MovementsSection({
   /** Opens the movement inspector on one of its sections, where the page
    * has one. */
   onOpenInspector?: (section: "classify") => void;
+  /** Hands the inspector what the section draws and its commands. */
+  onInspector?: (context: SectionInspectorContext | null) => void;
   /** Hands the page's palette what the section offers. */
   register: (actions: (() => Action[]) | null) => void;
   /** An import's movements, which the grid shows when asked. */
@@ -664,8 +672,8 @@ export function MovementsSection({
 
   // ---- Commands --------------------------------------------------------------
   const [asking, setAsking] = useState<Asking | null>(null);
-  const classifyTarget = (scope?: { ids: readonly string[] }) =>
-    scope
+  const classifyTarget = (scope?: ClassifyScope) =>
+    scope?.ids
       ? { ids: scope.ids, hidden: 0, partial }
       : { ids: [...selected], hidden: hiddenSelected.length, partial };
 
@@ -709,10 +717,7 @@ export function MovementsSection({
   }
 
   /** The page's one classify command: every control calls it. */
-  function classifySelection(
-    kind: ClassifyKind,
-    scope?: { ids: readonly string[] },
-  ) {
+  function classifySelection(kind: ClassifyKind, scope?: ClassifyScope) {
     const availability = classifyAvailability(
       kind,
       classifyTarget(scope),
@@ -720,6 +725,21 @@ export function MovementsSection({
     );
     if (availability.kind === "blocked") {
       setToast(blockText(t, availability.block));
+      return;
+    }
+    // What the control already asked for is not asked again.
+    const given =
+      kind === "business" ? scope?.answer?.category : scope?.answer?.share;
+    if (kind !== "personal" && given) {
+      const error = stageClassified(kind, availability.ids, scope!.answer!);
+      if (error)
+        setAsking({
+          kind,
+          ids: availability.ids,
+          skipped: availability.skipped,
+          partial: availability.partial,
+          error,
+        });
       return;
     }
     if (kind === "personal") {
@@ -902,6 +922,50 @@ export function MovementsSection({
     register(() => latest.current());
     return () => register(null);
   }, [register]);
+
+  // ---- The inspector beside the grid ------------------------------------------
+  const inspectorCommands = useRef({
+    classify: classifySelection,
+    focusActive: () => undefined as void,
+    showHidden: () => undefined as void,
+  });
+  useEffect(() => {
+    inspectorCommands.current = {
+      classify: classifySelection,
+      focusActive: () => {
+        const active = grid.current?.activeCell();
+        const key = active?.key ?? [...selected][0] ?? visible[0];
+        if (key) grid.current?.focusCell(key, active?.column);
+      },
+      showHidden: () => {
+        setFilters(NO_FILTERS);
+        setSearch("");
+        setCollapsed(new Set());
+      },
+    };
+  });
+  const inspectorContext = useMemo<SectionInspectorContext>(
+    () => ({
+      visible: visibleSet,
+      partial,
+      issues: sets.issues,
+      accounts,
+      classify: (kind, scope) =>
+        inspectorCommands.current.classify(kind, scope),
+      focusActive: () => inspectorCommands.current.focusActive(),
+      showHidden: () => inspectorCommands.current.showHidden(),
+    }),
+    [visibleSet, partial, sets, accounts],
+  );
+  // The page hears of a change only: the section draws often.
+  const sentContext = useRef<SectionInspectorContext | null>(null);
+  useEffect(() => {
+    const last = sentContext.current;
+    if (last && sameInspectorContext(last, inspectorContext)) return;
+    sentContext.current = inspectorContext;
+    onInspector?.(inspectorContext);
+  }, [onInspector, inspectorContext]);
+  useEffect(() => () => onInspector?.(null), [onInspector]);
 
   // ---- Menus -----------------------------------------------------------------
   const [menu, setMenu] = useState<{

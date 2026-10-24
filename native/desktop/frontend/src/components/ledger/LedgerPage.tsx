@@ -6,6 +6,7 @@ import {
   useReducer,
   useRef,
   useState,
+  type KeyboardEvent,
   type ReactNode,
   type RefObject,
 } from "react";
@@ -74,6 +75,13 @@ import { RuleDialog, type RuleDialogTarget } from "./setup/RuleDialog";
 import { RulesSection } from "./setup/RulesSection";
 import type { SetupProps } from "./setup/setupProps";
 import { NO_FILTERS, TO_CLASSIFY_REASON } from "./movements/movementsModel";
+import { exactly } from "@/components/ui/dataGridModel";
+import type { SectionInspectorContext } from "./inspector/inspectorContext";
+import type { InspectorSection } from "./inspector/inspectorModel";
+import { LedgerInspector } from "./inspector/LedgerInspector";
+import type { InspectorFocus } from "./inspector/MovementInspector";
+import type { RightPanelMode } from "./inspector/RightPanel";
+import { MatchQueue } from "./matching/MatchQueue";
 
 /** What the page keeps of itself while it is put away, for one profile:
  * the period it showed and how its movements were looked at. Held in memory
@@ -181,6 +189,63 @@ export function LedgerPage({
   const [invoiceEditor, setInvoiceEditor] = useState<EditorTarget | null>(null);
   useEffect(() => setInvoiceEditor(null), [reader]);
   const [transfer, setTransfer] = useState<"import" | "export" | null>(null);
+
+  // The panel beside the grid: the To match queue or the inspector. Alt+I
+  // is handled here, once: it opens the inspector and focuses its index,
+  // moves focus to the index from the grid, or closes it from inside and
+  // hands focus back to the active cell.
+  const [inspectorContext, setInspectorContext] =
+    useState<SectionInspectorContext | null>(null);
+  const [inspectorFocus, setInspectorFocus] = useState<InspectorFocus>({
+    section: null,
+    index: false,
+    tick: 0,
+  });
+  const [panelMode, setPanelMode] = useState<RightPanelMode>(
+    view.savedView === "to_match" ? "match" : "movement",
+  );
+  // Choosing the To match view opens the panel on its queue, its side
+  // list; leaving the view leaves the panel as it is.
+  const panelView = useRef(view.savedView);
+  useEffect(() => {
+    if (panelView.current === view.savedView) return;
+    panelView.current = view.savedView;
+    if (view.savedView !== "to_match") return;
+    setPanelMode("match");
+    onViewChange((current) => ({ ...current, inspectorOpen: true }));
+  }, [view.savedView, onViewChange]);
+  const inspectorPanel = useRef<HTMLElement | null>(null);
+  const setInspectorOpen = (inspectorOpen: boolean) =>
+    onViewChange((current) => ({ ...current, inspectorOpen }));
+  const openInspector = (section: InspectorSection | null, index = false) => {
+    setPanelMode("movement");
+    setInspectorOpen(true);
+    setInspectorFocus((held) => ({ section, index, tick: held.tick + 1 }));
+  };
+  const closeInspector = () => {
+    setInspectorOpen(false);
+    inspectorContext?.focusActive();
+  };
+  const onInspectorKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (
+      event.code !== "KeyI" ||
+      !exactly(event, { alt: true }) ||
+      event.nativeEvent.isComposing
+    )
+      return;
+    event.preventDefault();
+    if (!view.inspectorOpen) openInspector(null, true);
+    else if (inspectorPanel.current?.contains(document.activeElement))
+      closeInspector();
+    else {
+      setPanelMode("movement");
+      setInspectorFocus((held) => ({
+        section: null,
+        index: true,
+        tick: held.tick + 1,
+      }));
+    }
+  };
   // What an import brought in, as the person asked to see it.
   const [shownImport, setShownImport] = useState<ImportedBatches | null>(null);
   const { years, refresh: refreshYears } = useLedgerYears(
@@ -564,12 +629,25 @@ export function LedgerPage({
             locale={locale}
             onPeriod={setPeriod}
             register={registerMovements}
+            onOpenInspector={(at) => openInspector(at)}
+            onInspector={setInspectorContext}
             shownImport={shownImport}
             onImportCleared={() => setShownImport(null)}
           />
         </>
       );
   }
+
+  // The panel stands beside the movements only while the grid is drawn.
+  const drawnRows = periodWindow ? shownRows(periodWindow) : null;
+  const inspectorShown =
+    view.inspectorOpen &&
+    readable &&
+    section === "movements" &&
+    periodWindow !== null &&
+    !(periodWindow.phase === "failed" && periodWindow.failure) &&
+    drawnRows !== null &&
+    !(drawnRows.total === 0 && stage.content.drafts.length === 0);
 
   return (
     <>
@@ -628,7 +706,61 @@ export function LedgerPage({
           className="flex min-h-0 flex-1 flex-col"
         >
           {readable && editing.banner}
-          {body}
+          <div className="flex min-h-0 flex-1" onKeyDown={onInspectorKey}>
+            {/* The grid scrolls within what the panel leaves it; resizing
+                the panel keeps it its own width. */}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">{body}</div>
+            {inspectorShown && periodWindow && (
+              <LedgerInspector
+                port={port}
+                reader={reader}
+                rows={shownRows(periodWindow)?.rows ?? []}
+                generation={periodWindow.generation}
+                stage={stage}
+                onStage={editing.onStage}
+                selection={movements.selection}
+                onSelection={movements.setSelection}
+                context={inspectorContext}
+                mode={panelMode}
+                onMode={setPanelMode}
+                matchPanel={
+                  <MatchQueue
+                    port={port}
+                    reader={reader}
+                    shown={panelMode === "match"}
+                    rows={shownRows(periodWindow)?.rows ?? null}
+                    generation={
+                      periodWindow.phase === "ready"
+                        ? periodWindow.generation
+                        : null
+                    }
+                    stage={stage}
+                    onStage={editing.onStage}
+                    onChoose={(id) => {
+                      movements.setSelection(new Set([id]));
+                      openInspector("invoice");
+                    }}
+                    locale={locale}
+                  />
+                }
+                width={view.inspectorWidth}
+                onWidth={(inspectorWidth) =>
+                  onViewChange((current) => ({ ...current, inspectorWidth }))
+                }
+                focus={inspectorFocus}
+                locale={locale}
+                panelRef={inspectorPanel}
+                onClose={closeInspector}
+                onOpenInvoice={(invoiceId) => {
+                  setSection("invoices");
+                  setInvoiceEditor({ kind: "open", invoiceId });
+                }}
+                onExport={() => setTransfer("export")}
+                onMakeRule={openRuleFromSelection}
+                copy={copy}
+              />
+            )}
+          </div>
         </div>
       </section>
       {readable && editing.dock}

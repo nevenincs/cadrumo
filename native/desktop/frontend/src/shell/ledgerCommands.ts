@@ -194,8 +194,15 @@ export function classifyCells(
  */
 export type ClassifySelection = (
   kind: ClassifyKind,
-  scope?: { ids: readonly string[] },
+  scope?: ClassifyScope,
 ) => void;
+/** What a classify command acts on, where not the selection, and what the
+ * control already asked for: a field beside the control that holds the
+ * category or the share is not asked for again. */
+export type ClassifyScope = {
+  ids?: readonly string[];
+  answer?: { category?: string; share?: string };
+};
 
 /** The classifications a category belongs to: a category says what a
  * business expense is, so it is set only where the movement is Business or

@@ -87,6 +87,9 @@
   --spacing-dialog-xl: 60rem;
   /* A sheet that slides in from the side. */
   --spacing-sheet: 44rem;
+  /* The panel beside the ledger's grid, and the least it is dragged to. */
+  --spacing-inspector: 20rem;
+  --spacing-inspector-min: 17.5rem;
 
   /* ── The height of a row in a data grid: the density of a toolbar
      control when compact, of a tab row when comfortable, so rows grow with

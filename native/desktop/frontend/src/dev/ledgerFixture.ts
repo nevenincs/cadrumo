@@ -56,6 +56,11 @@ import {
   invoiceOperations,
 } from "./ledgerInvoiceFixture";
 import {
+  MovementActionInvalid,
+  MovementActionStopped,
+  movementActionOperations,
+} from "./ledgerMovementActionFixture";
+import {
   SetupRequestInvalid,
   SetupStopped,
   setupOperations,
@@ -217,6 +222,11 @@ const CLASSIFICATIONS = [
   "SKIPPED_BY_RULE",
   "FAILED_VALIDATION",
   "REVIEWED_EXCLUDED",
+];
+/** The definitions that pause on a model's review. */
+const REVIEWED: readonly string[] = [
+  "ledger.classify.review",
+  "ledger.split.review",
 ];
 const BULK_COLUMNS = [
   "transaction_id",
@@ -577,6 +587,7 @@ export function ledgerFixture(options: Options): LedgerPort {
   let operations = 0;
   const outcomes = new Map<string, LedgerOutcome>();
   type Pending = {
+    definition: LedgerDefinitionId;
     request: JsonObject;
     transaction: string;
     version: number;
@@ -1625,9 +1636,7 @@ export function ledgerFixture(options: Options): LedgerPort {
         action,
         own_account_id: null,
         accounts: accounts as unknown as JsonValue,
-        designations: [
-          ...setupWork.designations(),
-        ],
+        designations: [...setupWork.designations()],
         changed: false,
       };
     if (action === "show") {
@@ -1652,6 +1661,12 @@ export function ledgerFixture(options: Options): LedgerPort {
     events,
     hex64,
   });
+  const movementWork = movementActionOperations(ledger, {
+    profileId: LEDGER_FIXTURE_PROFILE_ID,
+    now,
+    events,
+    hex64,
+  });
   const invoiceWork = invoiceOperations(ledger, {
     profileId: LEDGER_FIXTURE_PROFILE_ID,
     events,
@@ -1671,6 +1686,7 @@ export function ledgerFixture(options: Options): LedgerPort {
   > = {
     ...invoiceWork.reads,
     ...evidenceWork.reads,
+    ...movementWork.reads,
     ...setupWork.reads,
     "ledger.list": (request) => list(ledger, request),
     "ledger.view": (request) => {
@@ -1717,12 +1733,26 @@ export function ledgerFixture(options: Options): LedgerPort {
     "ledger.evidence.batch": addDocuments,
     ...invoiceWork.writes,
     ...evidenceWork.writes,
+    ...movementWork.writes,
     ...setupWork.writes,
+    "ledger.remove": movementWork.remove,
   };
 
   function suggestion(pending: Pending, operation: string) {
     const movement = transactionOf(pending.transaction);
-    const proposed = pending.version % 2 === 0 ? "BUSINESS" : "MIXED";
+    const t = movement?.transaction;
+    const mode = text(pending.request.mode) ?? "classification";
+    // A household supply is proposed as Mixed, with the share the person
+    // asked with or none; anything else as an office expense.
+    const mixed =
+      t !== undefined &&
+      (t.business_classification === "MIXED" ||
+        /FIBRA|LUZ|ELECTRICA/.test(t.description));
+    const share = text(pending.request.business_pct);
+    const gross = t ? cents(t.amount) : 0;
+    const base = Math.round(gross / 1.21);
+    const saturated = mode === "saturated";
+    const halves = [Math.floor(gross / 2), gross - Math.floor(gross / 2)];
     return {
       projection_version: 1,
       profile_id: LEDGER_FIXTURE_PROFILE_ID,
@@ -1730,26 +1760,48 @@ export function ledgerFixture(options: Options): LedgerPort {
         `proposal:${operation}:${pending.version}`,
       ),
       suggestion: {
-        kind: "classification",
+        kind:
+          mode === "split" || mode === "auto_split"
+            ? "split"
+            : saturated
+              ? "saturated"
+              : "classification",
         transaction_id: pending.transaction,
-        provenance: "local-model",
+        provenance: "llm:local-medium",
         reason:
-          "The counterparty and the description match an office supplier.",
-        evidence_id: movement?.transaction.purchase_invoice_evidence_id ?? null,
-        classification: proposed,
-        category: "material_oficina",
-        confidence: "0.82",
-        multiple_components: false,
-        business_pct: proposed === "MIXED" ? "0.50" : null,
+          pending.version === 0
+            ? "The counterparty and the description match an office supplier."
+            : "Read again: the description matches an office supplier.",
+        evidence_id: t?.purchase_invoice_evidence_id ?? null,
+        classification: mixed ? "MIXED" : "BUSINESS",
+        category: mixed ? (t?.category_id ?? null) : "material_oficina",
+        confidence: pending.version === 0 ? "0.82" : "0.79",
+        multiple_components: mode === "split" || mode === "auto_split",
+        business_pct: mixed ? share : null,
         iva_category: "domestic_general",
-        iva_rate: "0.21",
-        taxable_base: null,
-        iva_amount: null,
-        rate_derivable: false,
-        derivation_note: "",
+        iva_rate: saturated ? "0.21" : null,
+        taxable_base: saturated ? money(base) : null,
+        iva_amount: saturated ? money(gross - base) : null,
+        rate_derivable: saturated,
+        derivation_note: saturated ? "Registry rate for domestic_general." : "",
         evidence_advisory: "",
-        parent_amount: null,
-        children: [],
+        parent_amount: mode === "split" && t ? t.amount : null,
+        children:
+          mode === "split" && t
+            ? halves.map((part, at) => ({
+                proportion: "0.5",
+                amount: money(part),
+                description: `${t.description} · ${at + 1}`,
+                category: "material_oficina",
+                iva_category: "domestic_general",
+                iva_rate: null,
+                taxable_base: null,
+                iva_amount: null,
+                rate_derivable: false,
+                derivation_note: "",
+                evidence_citation: "",
+              }))
+            : [],
       },
     };
   }
@@ -1759,7 +1811,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     (definition in writes &&
       request.dry_run !== true &&
       !(definition === "ledger.counterparty" && request.action === "view")) ||
-    definition === "ledger.classify.review" ||
+    REVIEWED.includes(definition) ||
     (definition === "ledger.own_account" &&
       request.action !== "list" &&
       request.action !== "show");
@@ -1792,9 +1844,10 @@ export function ledgerFixture(options: Options): LedgerPort {
       return reject("refused", { reason: "operation_unavailable" });
     const operation = nextOperation();
     try {
-      if (definition === "ledger.classify.review") {
+      if (REVIEWED.includes(definition)) {
         const movement = resolve(ledger, request.transaction_id);
         reviews.set(operation, {
+          definition: definition as LedgerDefinitionId,
           request,
           transaction: movement.transaction.transaction_id,
           version: 0,
@@ -1834,6 +1887,11 @@ export function ledgerFixture(options: Options): LedgerPort {
         return reject("unknown", { operation_id: operation });
       return settle(operation, result);
     } catch (error) {
+      if (
+        error instanceof InvoiceRequestInvalid ||
+        error instanceof MovementActionInvalid
+      )
+        return invalid();
       if (error instanceof SetupRequestInvalid) return invalid();
       if (error instanceof SetupStopped) {
         const refused: LedgerOutcome = {
@@ -1846,7 +1904,17 @@ export function ledgerFixture(options: Options): LedgerPort {
         outcomes.set(operation, refused);
         return refused;
       }
-      if (error instanceof InvoiceRequestInvalid) return invalid();
+      if (error instanceof MovementActionStopped) {
+        const refused: LedgerOutcome = {
+          kind: "refused",
+          operation_id: operation,
+          revision: 3,
+          reason: error.reason,
+          detail: null,
+        };
+        outcomes.set(operation, refused);
+        return refused;
+      }
       if (error instanceof InvoiceUnsettled)
         return reject("unknown", { operation_id: operation });
       if (error instanceof InvoiceStopped) {
@@ -1913,25 +1981,75 @@ export function ledgerFixture(options: Options): LedgerPort {
         return reject("review_changed", { reason: "review_changed" });
       if (shape === "refused")
         return reject("refused", { reason: "operation_unavailable" });
-      reviews.delete(operation);
       const movement = transactionOf(pending.transaction);
       const proposal = suggestion(pending, operation).suggestion;
-      if (decision === "apply" && movement && !movement.sealed)
-        classifyRow(
-          movement,
-          {
-            classification: proposal.classification,
-            category_id: proposal.category,
-            business_pct: proposal.business_pct,
-          },
-          "llm",
-        );
+      const refuse = (reason: string): LedgerOutcome => {
+        reviews.delete(operation);
+        const refused: LedgerOutcome = {
+          kind: "refused",
+          operation_id: operation,
+          revision: 3,
+          reason,
+          detail: null,
+        };
+        outcomes.set(operation, refused);
+        return refused;
+      };
+      // An explicit rejection cannot apply; a Mixed proposal applies only
+      // with a share.
+      if (
+        decision === "apply" &&
+        (pending.request.origin === "classify_llm_reject" ||
+          (proposal.classification === "MIXED" &&
+            proposal.business_pct === null))
+      )
+        return refuse("ERROR_TRANSACTION_VALIDATION");
+      if (
+        movement &&
+        (movement.sealed || movement.transaction.lifecycle_state !== "ACTIVE")
+      )
+        return refuse("ERROR_TRANSACTION_VALIDATION");
+      reviews.delete(operation);
+      if (decision === "apply" && movement) {
+        if (proposal.kind === "split")
+          movementWork.writes["ledger.split.manual"]!({
+            transaction_id: pending.transaction,
+            children: proposal.children.map((child) => ({
+              amount: child.amount,
+              description: child.description,
+            })),
+          });
+        else
+          classifyRow(
+            movement,
+            {
+              classification: proposal.classification,
+              category_id: proposal.category,
+              business_pct: proposal.business_pct,
+              iva_category: proposal.iva_category,
+              ...(proposal.rate_derivable
+                ? {
+                    iva_rate: proposal.iva_rate,
+                    taxable_base: proposal.taxable_base,
+                    iva_amount: proposal.iva_amount,
+                  }
+                : {}),
+            },
+            "llm:local-medium",
+          );
+      }
+      if (decision === "reject" && movement) movement.llm_rejected = true;
+      movementWork.noteReview(
+        pending.transaction,
+        decision,
+        text(pending.request.reason) ?? "",
+      );
       if (shape === "unknown")
         return reject("unknown", { operation_id: operation });
       return settle(operation, {
         identity: {
           operation_id: operation,
-          definition_id: "ledger.classify.review",
+          definition_id: pending.definition,
           subject_ref: `profile:${LEDGER_FIXTURE_PROFILE_ID}`,
         },
         request: { ...pending.request, profile_id: LEDGER_FIXTURE_PROFILE_ID },
@@ -1943,7 +2061,7 @@ export function ledgerFixture(options: Options): LedgerPort {
           outcome: decision === "apply" ? "classified" : "rejected",
           transaction_id: pending.transaction,
           provenance: proposal.provenance,
-          operator_reason: "",
+          operator_reason: text(pending.request.reason) ?? "",
         },
       });
     },
