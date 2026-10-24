@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { fixtureLedger } from "../src/dev/fixtures/ledger";
-import { LEDGER_PAYLOAD_LIMIT } from "../src/shell/ledger";
+import {
+  RELAY_PAYLOAD_LIMIT,
+  RELAY_REQUEST_LIMIT,
+} from "../src/shell/relayBounds";
 
 // The scenario ledger holds to the host's bounds and to its handling of a
 // write whose settlement was not seen. The scenario ledger needs a window; a
@@ -16,19 +19,23 @@ const { ledgerFixture, replyTooLarge, tooLarge } =
 
 const ARCHIVE = "ledger.archive";
 
-test("a payload is refused over the host's characters, and a request line over its bytes", () => {
+test("a payload is refused over the host's bytes, not its characters", () => {
   const request = (reason: string) => ({ transaction_id: "x", reason });
   const empty = JSON.stringify(request("")).length;
-  // Exactly the payload limit passes; one character more does not.
+  // Exactly the payload limit passes; one byte more does not.
   expect(
-    tooLarge(ARCHIVE, request("a".repeat(LEDGER_PAYLOAD_LIMIT - empty))),
+    tooLarge(ARCHIVE, request("a".repeat(RELAY_PAYLOAD_LIMIT - empty))),
   ).toBe(false);
   expect(
-    tooLarge(ARCHIVE, request("a".repeat(LEDGER_PAYLOAD_LIMIT - empty + 1))),
+    tooLarge(ARCHIVE, request("a".repeat(RELAY_PAYLOAD_LIMIT - empty + 1))),
   ).toBe(true);
-  // Few characters, but three bytes each: the line is over its bytes.
-  expect(tooLarge(ARCHIVE, request("\u20ac".repeat(4_000)))).toBe(false);
-  expect(tooLarge(ARCHIVE, request("\u20ac".repeat(6_000)))).toBe(true);
+  // Characters of three bytes: a third of the bound in characters fits,
+  // and one more character is over its bytes.
+  const euros = Math.floor((RELAY_PAYLOAD_LIMIT - empty) / 3);
+  expect(tooLarge(ARCHIVE, request("\u20ac".repeat(euros)))).toBe(false);
+  expect(tooLarge(ARCHIVE, request("\u20ac".repeat(euros + 1)))).toBe(true);
+  // The relay's whole request has room for the frame around a full payload.
+  expect(RELAY_REQUEST_LIMIT).toBeGreaterThan(RELAY_PAYLOAD_LIMIT);
 });
 
 test("a reply is lost over sixteen mebibytes of bytes, not of characters", () => {

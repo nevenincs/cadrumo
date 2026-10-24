@@ -8,7 +8,6 @@
 
 import {
   LEDGER_BULK_CLASSIFY_COLUMNS,
-  LEDGER_PAYLOAD_LIMIT,
   LEDGER_UPDATE_FIELDS,
   type JsonObject,
   type LedgerAddRequest,
@@ -21,6 +20,7 @@ import {
   type LedgerUpdateRequest,
   type OutputLanguage,
 } from "./ledger";
+import { RELAY_PAYLOAD_LIMIT } from "./relayBounds";
 import {
   canonicalDecimal,
   periodOf,
@@ -380,7 +380,7 @@ export function bulkRequest(
  * row that does not fit even alone is returned apart. */
 export function splitBulk(
   rows: readonly BulkRow[],
-  limit = LEDGER_PAYLOAD_LIMIT,
+  limit = RELAY_PAYLOAD_LIMIT,
   outputLanguage?: OutputLanguage,
 ): { parts: BulkRow[][]; tooLarge: BulkRow[] } {
   const parts: BulkRow[][] = [];
@@ -952,7 +952,7 @@ export function planApply(
   content: StagedContent,
   context: PlanContext,
 ): LedgerPlan {
-  const limit = context.payloadLimit ?? LEDGER_PAYLOAD_LIMIT;
+  const limit = context.payloadLimit ?? RELAY_PAYLOAD_LIMIT;
   const actionsByRow = new Map<string, StagedAction[]>();
   for (const action of content.actions)
     for (const id of actionRows(action))

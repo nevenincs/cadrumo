@@ -9,7 +9,6 @@
 // test evidence only. Its call lines name a definition, never a value.
 
 import {
-  LEDGER_PAYLOAD_LIMIT,
   LEDGER_UPDATE_FIELDS,
   isLedgerDefinition,
   type CatalogueInvoice,
@@ -34,6 +33,7 @@ import {
   type LedgerUpdateField,
   type PublicPeriod,
 } from "../shell/ledger";
+import { RELAY_PAYLOAD_LIMIT, RELAY_REQUEST_LIMIT } from "../shell/relayBounds";
 import {
   LEDGER_FIXTURE_PROFILE_ID,
   LEDGER_FIXTURE_TODAY,
@@ -68,9 +68,6 @@ import {
   setupOperations,
 } from "./ledgerSetupFixture";
 
-/** The longest request line, in bytes, the relay takes: the host refuses a
- * longer one before it is written. */
-const REQUEST_LINE_LIMIT = 16_383;
 /** The longest reply, in bytes of compact JSON, the host takes from the
  * relay; one longer is lost. */
 const REPLY_LIMIT = 16 * 1024 * 1024;
@@ -84,16 +81,17 @@ const REQUEST_ID_ROOM = 14 + 36 + 1 + 1;
 const encoder = new TextEncoder();
 
 /** Whether the host refuses the request before sending it: the payload's
- * characters of compact JSON, or the request line's bytes. */
+ * bytes of compact JSON, or the whole request's. */
 export function tooLarge(definition: string, request: JsonObject): boolean {
-  if (JSON.stringify(request).length > LEDGER_PAYLOAD_LIMIT) return true;
+  if (encoder.encode(JSON.stringify(request)).length > RELAY_PAYLOAD_LIMIT)
+    return true;
   const line = JSON.stringify({
     action: LINE_FRAME.action,
     definition_id: definition,
     subject_ref: LINE_FRAME.subject_ref,
     payload: request,
   });
-  return encoder.encode(line).length + REQUEST_ID_ROOM > REQUEST_LINE_LIMIT;
+  return encoder.encode(line).length + REQUEST_ID_ROOM > RELAY_REQUEST_LIMIT;
 }
 
 /** Whether a reply is over the host's bound. */

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { LEDGER_PAYLOAD_LIMIT, type LedgerRow } from "../src/shell/ledger";
+import type { LedgerRow } from "../src/shell/ledger";
+import { RELAY_PAYLOAD_LIMIT } from "../src/shell/relayBounds";
 import { classifyCells, ratioCoverage } from "../src/shell/ledgerCommands";
 import {
   bulkCsv,
@@ -773,13 +774,25 @@ test("the bulk is cut into parts that each fit the host's bound, in order", () =
       ]),
     ),
   );
-  const plan = planApply(content, contextOf(...ids.map((id) => business(id))));
-  const parts = plan.steps.filter(
-    (step): step is Extract<PlanStep, { kind: "bulk" }> => step.kind === "bulk",
+  const rows = contextOf(...ids.map((id) => business(id)));
+  const bulkOf = (plan: LedgerPlan) =>
+    plan.steps.filter(
+      (step): step is Extract<PlanStep, { kind: "bulk" }> =>
+        step.kind === "bulk",
+    );
+  // At the relay's own bound the whole bulk is one request.
+  const whole = bulkOf(planApply(content, rows));
+  expect(whole).toHaveLength(1);
+  expect(payloadSize(whole[0]!.request)).toBeLessThanOrEqual(
+    RELAY_PAYLOAD_LIMIT,
   );
+  // At a bound a fraction of it, the parts each fit, in order.
+  const limit = 8 * 1024;
+  const plan = planApply(content, { ...rows, payloadLimit: limit });
+  const parts = bulkOf(plan);
   expect(parts.length).toBeGreaterThan(1);
   for (const part of parts) {
-    expect(payloadSize(part.request)).toBeLessThanOrEqual(LEDGER_PAYLOAD_LIMIT);
+    expect(payloadSize(part.request)).toBeLessThanOrEqual(limit);
     expect(part.parts).toBe(parts.length);
   }
   // Each part is as full as the bound allows: one more row would not fit.
@@ -787,7 +800,7 @@ test("the bulk is cut into parts that each fit the host's bound, in order", () =
   const next = parts[1]!.rows[0]!;
   expect(
     payloadSize({ csv_text: bulkCsv([...first.rows, next]) }),
-  ).toBeGreaterThan(LEDGER_PAYLOAD_LIMIT);
+  ).toBeGreaterThan(limit);
   expect(
     parts.flatMap((part) => part.rows.map((row) => row.transactionId)),
   ).toEqual(ids);
@@ -813,11 +826,13 @@ test("the bound counts bytes, and a row too large to send alone is held", () => 
   ]);
   expect(split.tooLarge.map((r) => r.transactionId)).toEqual(["b"]);
 
+  // Quotes are doubled in the CSV and escaped again in its JSON: 4,000 of
+  // them are over 16,000 bytes.
   const A = hexId("a");
-  const plan = planApply(
-    staged({ [A]: { notes: set('"'.repeat(4_000)) } }),
-    contextOf(business(A)),
-  );
+  const plan = planApply(staged({ [A]: { notes: set('"'.repeat(4_000)) } }), {
+    ...contextOf(business(A)),
+    payloadLimit: 16_000,
+  });
   expect(blockersOf(plan, A)).toEqual(["too_large"]);
   expect(plan.steps).toEqual([]);
 });

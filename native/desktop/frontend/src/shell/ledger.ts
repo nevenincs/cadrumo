@@ -159,11 +159,6 @@ export function isLedgerDefinition(id: string): id is LedgerDefinitionId {
   return (LEDGER_DEFINITIONS as readonly string[]).includes(id);
 }
 
-/** The longest payload, in characters of compact JSON, the host sends on.
- * The host refuses a longer one with `too_large` before anything is sent; the
- * page splits a batch into several requests and shows them as one apply. */
-export const LEDGER_PAYLOAD_LIMIT = 12_032;
-
 export type JsonValue =
   string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 export type JsonObject = { [key: string]: JsonValue };
