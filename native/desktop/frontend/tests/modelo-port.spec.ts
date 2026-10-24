@@ -227,7 +227,20 @@ test("a preflight answers the application's reading and zeroes the body", async 
     submission: {
       baseline: form.admitted_baseline!,
       mutation_family: "calculate",
-      lexemes: [],
+      // The entries the envelope's producer typed: a figure, and words over
+      // a box that takes none.
+      lexemes: [
+        {
+          address: { kind: "scalar", casilla_id: "06" },
+          entry_locale: "es",
+          lexeme: "1.234,56",
+        },
+        {
+          address: { kind: "scalar", casilla_id: "01" },
+          entry_locale: "es",
+          lexeme: "doce",
+        },
+      ],
     },
   } as unknown as ModeloEditOperatorInputV2;
   const body = modeloEditBody(input);

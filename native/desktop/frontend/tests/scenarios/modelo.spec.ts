@@ -562,3 +562,411 @@ test("the gate sees a raw key, an identifier and an enum token", async ({
   ])
     expect(found.some((entry) => entry.startsWith(`${kind}:`))).toBe(true);
 });
+
+// -- writes ------------------------------------------------------------------
+// Each write answers what the application answered for it (envelopes under
+// src/dev/fixtures/modelo/ read through the registered operations); a write
+// whose settlement was not seen, or that was refused before it ran, is the
+// host's own answer.
+
+/** The scenario host's call lines that are `line`, or `line` and what it
+ * names after it, such as a file's kind. */
+const calls = async (target: Page, line: string) =>
+  (await target.evaluate(() => window.__scenarioHostCalls ?? [])).filter(
+    (call) => call === line || call.startsWith(`${line} `),
+  );
+
+/** Types `text` over a box, as the filer does, and waits until it is staged. */
+async function stage(target: Page, box: string, text: string) {
+  await boxRow(target, box)
+    .getByRole("gridcell")
+    .nth(2)
+    .getByRole("button")
+    .click();
+  const entry = target.getByRole("textbox", {
+    name: label("workspace.modelo.editor.new_value_for_box", { box }),
+  });
+  await entry.fill(text);
+  await entry.press("Enter");
+  await expect(boxRow(target, box)).toContainText(
+    label("workspace.modelo.attention.staged"),
+  );
+}
+
+/** Opens the review of what is staged, and waits until the check answers. */
+async function review(target: Page, count = 1) {
+  await target
+    .getByRole("button", { name: label("workspace.modelo.next_button.apply") })
+    .first()
+    .click();
+  await expect(
+    target.getByRole("dialog", {
+      name: label("workspace.modelo.review.title", { count }),
+    }),
+  ).toBeVisible();
+  // Its title counts what is staged, which an apply clears.
+  const dialog = target.getByRole("dialog");
+  await expect(
+    dialog.getByText(label("workspace.modelo.review.checking")),
+  ).toHaveCount(0);
+  return dialog;
+}
+
+const applyButton = (dialog: Locator) =>
+  dialog.getByRole("button", { name: label("workspace.modelo.review.apply") });
+
+/** The value the producer's edits stage on box 06, as the filer types it. */
+const TYPED_06 = "1.234,56";
+
+test("an applied edit settles, clears what was staged and shows what was stored", async ({
+  page: target,
+}) => {
+  const after = fields(form("130-1T-applied").form.form.pages).find(
+    (field) => field.box === "06",
+  );
+  if (!after?.value_text) throw new Error("the applied 130 holds no box 06");
+  await openDeclaration(target, "130", { shape: "edit" });
+  await stage(target, "06", TYPED_06);
+  const dialog = await review(target);
+  await applyButton(dialog).click();
+  await expect(
+    dialog.getByText(label("workspace.modelo.operation.done")),
+  ).toBeVisible();
+  await dialog
+    .getByRole("button", { name: label("workspace.modelo.key.close") })
+    .last()
+    .click();
+  await expect(boxRow(target, "06")).toContainText(after.value_text);
+  await expect(boxRow(target, "06")).not.toContainText(
+    label("workspace.modelo.attention.staged"),
+  );
+  expect(await calls(target, "modelo edit modelo.edit.apply")).toHaveLength(1);
+});
+
+test("staged edits survive a renewal of a baseline that went stale", async ({
+  page: target,
+}) => {
+  const stale = envelope<{
+    outcome: { outcome: string; refusal?: { kind: string } };
+  }>("preflight-130-stale");
+  expect(stale.outcome.refusal?.kind).toBe("stale_edit_baseline");
+  await openDeclaration(target, "130", { shape: "renewal" });
+  await stage(target, "06", TYPED_06);
+  const dialog = await review(target);
+  // The check answered stale, the baseline was renewed, the declaration read
+  // again and the edits checked again: nothing staged was lost.
+  expect(await calls(target, "modelo submit modelo.edit.renew")).toHaveLength(
+    1,
+  );
+  await expect(dialog.getByRole("listitem")).toHaveCount(1);
+  await expect(dialog.getByRole("listitem")).toContainText("06");
+  await expect(applyButton(dialog)).toBeVisible();
+  await dialog
+    .getByRole("button", { name: label("workspace.modelo.review.back") })
+    .click();
+  await expect(boxRow(target, "06")).toContainText(
+    label("workspace.modelo.attention.staged"),
+  );
+});
+
+test("an apply whose settlement was not seen holds every write until the declaration is read again", async ({
+  page: target,
+}) => {
+  const unknown = (where: Locator | Page) =>
+    where.getByRole("alert").filter({
+      hasText: label("workspace.modelo.review.unknown"),
+    });
+  await openDeclaration(target, "130", { shape: "unknown" });
+  await stage(target, "06", TYPED_06);
+  const dialog = await review(target);
+  await applyButton(dialog).click();
+  await expect(unknown(dialog)).toBeVisible();
+  await expect(applyButton(dialog)).toBeDisabled();
+  // Closing and reviewing again sends nothing: it may have committed.
+  await dialog
+    .getByRole("button", { name: label("workspace.modelo.key.close") })
+    .last()
+    .click();
+  await review(target);
+  await expect(unknown(target)).toBeVisible();
+  expect(await calls(target, "modelo edit modelo.edit.apply")).toHaveLength(1);
+  const preflights = (await calls(target, "modelo edit modelo.edit.preflight"))
+    .length;
+  // Reading the declaration again releases the hold, and the edits are
+  // checked again before anything more is applied.
+  await target
+    .getByRole("button", { name: label("workspace.modelo.read_again") })
+    .click();
+  await expect(unknown(target)).toHaveCount(0);
+  await expect
+    .poll(
+      async () =>
+        (await calls(target, "modelo edit modelo.edit.preflight")).length,
+    )
+    .toBeGreaterThan(preflights);
+  expect(await calls(target, "modelo edit modelo.edit.apply")).toHaveLength(1);
+});
+
+test("a refused apply names the earlier filing it waits on", async ({
+  page: target,
+}) => {
+  const held = envelope<{
+    prerequisite: { casilla_id: string; words: string | null } | null;
+  }>("apply-prerequisite-130").prerequisite;
+  if (!held?.words) throw new Error("the refused apply holds no prerequisite");
+  await openDeclaration(target, "130", { shape: "prerequisite" });
+  await stage(target, "06", TYPED_06);
+  const dialog = await review(target);
+  await applyButton(dialog).click();
+  await expect(
+    dialog.getByText(label("workspace.modelo.operation.not_done")),
+  ).toBeVisible();
+  for (const line of held.words.split("\n"))
+    await expect(dialog).toContainText(line);
+  await expect(
+    dialog.getByRole("button", {
+      name: label("workspace.modelo.apply_prerequisite.action"),
+    }),
+  ).toBeVisible();
+  // Nothing was applied: the edit stays staged.
+  await dialog
+    .getByRole("button", { name: label("workspace.modelo.review.back") })
+    .click();
+  await expect(boxRow(target, "06")).toContainText(
+    label("workspace.modelo.attention.staged"),
+  );
+});
+
+/** Opens the Export and record view of the 130 in `shape`. */
+async function filing(target: Page, shape: string) {
+  await openDeclaration(target, "130", { shape });
+  await tab(target, "workspace.modelo.filing.title").click();
+}
+
+test("an export writes the file the filer saved, through its save token", async ({
+  page: target,
+}) => {
+  await filing(target, "exported");
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.export_again"),
+    })
+    .click();
+  await expect(
+    target.getByText(
+      label("workspace.modelo.filing.saved", {
+        name: "modelo-130-2026-1T.boe",
+      }),
+    ),
+  ).toBeVisible();
+  // The file was named in the save dialog and sent as its token; the file
+  // the export wrote is shown in its folder.
+  expect(await calls(target, "modelo saveFile")).toHaveLength(1);
+  expect(await calls(target, "modelo submit modelo.export")).toHaveLength(1);
+  await expect(
+    target.getByText(label("workspace.modelo.filing.completeness_unverified")),
+  ).toHaveCount(0);
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.show_in_folder"),
+    })
+    .click();
+  expect(await calls(target, "modelo revealFile")).toHaveLength(1);
+});
+
+test("an export that cannot vouch for its completeness says so", async ({
+  page: target,
+}) => {
+  expect(
+    envelope<{ completeness: string }>("export-165-unverified").completeness,
+  ).toBe("unverified");
+  await filing(target, "export-unverified");
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.export_again"),
+    })
+    .click();
+  await expect(
+    target.getByText(label("workspace.modelo.filing.completeness_unverified")),
+  ).toBeVisible();
+});
+
+test("an export whose settlement was not seen is unknown and holds", async ({
+  page: target,
+}) => {
+  await filing(target, "export-unknown");
+  const exportAgain = target.getByRole("button", {
+    name: label("workspace.modelo.filing.export_again"),
+  });
+  await exportAgain.click();
+  await expect(
+    target.getByText(label("workspace.modelo.outcome.unknown")).first(),
+  ).toBeVisible();
+  await expect(exportAgain).toBeDisabled();
+  expect(await calls(target, "modelo submit modelo.export")).toHaveLength(1);
+});
+
+test("recording the filing keeps it local, and a verified receipt is another state", async ({
+  page: target,
+}) => {
+  const recorded = form("130-1T-filed").receipt;
+  const verified = form("130-1T-receipt").receipt;
+  if (!recorded || recorded.verified || !verified?.verified)
+    throw new Error("the recorded and the verified 130 do not differ");
+  await filing(target, "exported");
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.record_as_filed"),
+    })
+    .click();
+  await target
+    .getByRole("dialog")
+    .getByRole("button", {
+      name: label("application.modelo.lifecycle.file_confirm_accept"),
+    })
+    .click();
+  await expect(
+    target.getByText(label("workspace.modelo.filing.recorded_here")).first(),
+  ).toBeVisible();
+  expect(await calls(target, "modelo submit modelo.work.file")).toHaveLength(1);
+  // Recorded here, its receipt not verified: the AEAT's side is still open.
+  await expect(target.getByText(recorded.words).first()).toBeVisible();
+  await expect(
+    target.getByText(label("workspace.modelo.filing.not_confirmed_yet")),
+  ).toBeVisible();
+  await expect(target.getByText(verified.words)).toHaveCount(0);
+});
+
+test("a receipt imported against the filing says whether it matches", async ({
+  page: target,
+}) => {
+  const imported = envelope<{ verdict: string; narrative: string }>(
+    "reconcile-130",
+  );
+  await filing(target, "filed");
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.add_receipt_pdf"),
+    })
+    .click();
+  await expect(
+    target.getByText(
+      label(
+        imported.verdict === "matches"
+          ? "workspace.modelo.filing.receipt_matches"
+          : "workspace.modelo.filing.receipt_differs",
+      ),
+    ),
+  ).toBeVisible();
+  await expect(target.getByText(imported.narrative)).toBeVisible();
+  expect(await calls(target, "modelo pickFile evidence")).toHaveLength(1);
+});
+
+/** Opens the correction of the receipt-confirmed 130 in `shape` and sends
+ * one corrected figure, with the reason. */
+async function correct(target: Page, shape: string, figure: string) {
+  const context = envelope<{
+    correction: {
+      reason_prompt: string;
+      rows: { casilla_id: string; box: string | null; label: string }[];
+    };
+  }>("amendment-context-130").correction;
+  await openDeclaration(target, "130", { shape });
+  await target
+    .getByRole("button", { name: label("workspace.modelo.correction.title") })
+    .first()
+    .click();
+  const dialog = target.getByRole("dialog", {
+    name: label("workspace.modelo.correction.title"),
+  });
+  await dialog
+    .getByRole("textbox", { name: context.reason_prompt })
+    .fill("A deductible expense was left out.");
+  const row = context.rows.find((entry) => entry.casilla_id === "06")!;
+  await dialog
+    .getByRole("textbox", {
+      name: label("workspace.modelo.editor.new_value_for_box", {
+        box: row.box ?? row.label,
+      }),
+    })
+    .fill(figure);
+  await dialog
+    .getByRole("button", { name: label("workspace.modelo.correction.confirm") })
+    .click();
+  return dialog;
+}
+
+test("a correction that settles closes and the declaration is read again", async ({
+  page: target,
+}) => {
+  const dialog = await correct(target, "receipt", "150");
+  await expect(dialog).toBeHidden();
+  expect(await calls(target, "modelo submit modelo.work.amend")).toHaveLength(
+    1,
+  );
+});
+
+test("a corrected figure the application cannot read is said beside it, and nothing is sent", async ({
+  page: target,
+}) => {
+  const read = envelope<{ parsed: { refusal_words: string | null }[] }>(
+    "preflight-130-correction-refused",
+  ).parsed[0];
+  if (!read?.refusal_words)
+    throw new Error("the unreadable entry has no words");
+  const dialog = await correct(target, "receipt", "doce");
+  await expect(dialog).toContainText(read.refusal_words);
+  expect(await calls(target, "modelo submit modelo.work.amend")).toHaveLength(
+    0,
+  );
+});
+
+test("a refused correction says so and keeps the dialog", async ({
+  page: target,
+}) => {
+  const dialog = await correct(target, "correction-refused", "150");
+  await expect(dialog).toBeVisible();
+  // The catalogue sentence names the code the host refused it with.
+  await expect(dialog).toContainText(
+    label("workspace.modelo.outcome.refused", { code: "operation_denied" }),
+  );
+});
+
+test("a correction whose settlement was not seen is unknown and sends nothing more", async ({
+  page: target,
+}) => {
+  const dialog = await correct(target, "correction-unknown", "150");
+  await expect(dialog).toContainText(label("workspace.modelo.outcome.unknown"));
+  await expect(
+    dialog.getByRole("button", {
+      name: label("workspace.modelo.correction.confirm"),
+    }),
+  ).toBeDisabled();
+  expect(await calls(target, "modelo submit modelo.work.amend")).toHaveLength(
+    1,
+  );
+});
+
+test("the real Modelo 303 takes a typed value and checks it as staged", async ({
+  page: target,
+}) => {
+  const typed = envelope<{
+    parsed: { value_text: string | null }[];
+  }>("preflight-303").parsed[0];
+  if (!typed?.value_text) throw new Error("the 303 entry read no value");
+  await openDeclaration(target, "303");
+  // The form draws its sections as they scroll in: find the box by number.
+  await target
+    .getByRole("searchbox", { name: label("desktop.modelo.search.label") })
+    .fill("42");
+  // The application read the entry as a figure; the box says it as typed.
+  await stage(target, "42", "1.234,56");
+  await expect(boxRow(target, "42")).toContainText("1.234,56");
+  const dialog = await review(target);
+  await expect(dialog.getByRole("listitem")).toContainText("42");
+  await expect(applyButton(dialog)).toBeVisible();
+  // Each body the window sent was within the host's bound and answered.
+  await expect(
+    dialog.getByText(label("workspace.modelo.review.check_failed")),
+  ).toHaveCount(0);
+});

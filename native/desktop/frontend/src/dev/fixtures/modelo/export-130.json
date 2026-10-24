@@ -1,0 +1,263 @@
+{
+  "result_version": 3,
+  "calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
+  "artefact": "fichero_boe",
+  "export_format": "fichero-boe",
+  "output_path": "modelo-130.txt",
+  "byte_size": 946,
+  "file_sha256": "3d8bfdd902bf67f4d98277f90b0f035c0ccadf4405a9b5a062b6d0aff8808d31",
+  "software_identity_grade": "development_mock",
+  "evidence_status": "local_export_not_official_aeat_filing_evidence",
+  "completeness": "not_flagged",
+  "fichero_boe": {
+    "calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
+    "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+    "bucket_id": "13000000-0000-4000-8000-000000000730",
+    "modelo": "130",
+    "filing_year": 2026,
+    "period": { "filing_year": 2026, "code": "1T" },
+    "output_path": "modelo-130.txt",
+    "byte_size": 946,
+    "file_sha256": "3d8bfdd902bf67f4d98277f90b0f035c0ccadf4405a9b5a062b6d0aff8808d31",
+    "format": "fichero-boe",
+    "exported_at": "2026-10-24T18:35:46.309756Z",
+    "actor": "operator:desktop-modelo",
+    "bucket_event_id": "f81234e1764025712f3af328d8e231eca39f06ec6478b1ba7395fe5735ed7fcf",
+    "resolved_result_disposition": "I",
+    "payment_election": "ingreso",
+    "refund_election": null,
+    "prior_domiciliation_election": {
+      "election": "keep",
+      "baseline_filing_record_id": null,
+      "baseline_evidence_reference_id": null,
+      "baseline_result_disposition": null,
+      "baseline_source_header_locator": null
+    },
+    "selected_account": null,
+    "casilla_provenance": [
+      {
+        "casilla_id": "01",
+        "formula_id": null,
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95",
+          "ley-35-2006:art-27",
+          "ley-35-2006:art-28"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "02",
+        "formula_id": null,
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95",
+          "ley-35-2006:art-28",
+          "ley-35-2006:art-30"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "03",
+        "formula_id": "modelo-130-rendimiento-neto",
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95",
+          "ley-35-2006:art-28",
+          "ley-35-2006:art-30"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "04",
+        "formula_id": "modelo-130-pago-fraccionado-directa",
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "05",
+        "formula_id": null,
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "06",
+        "formula_id": null,
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "07",
+        "formula_id": "modelo-130-resultado-apartado-i",
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "08",
+        "formula_id": null,
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "09",
+        "formula_id": "modelo-130-pago-fraccionado-agrario",
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "10",
+        "formula_id": null,
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "11",
+        "formula_id": "modelo-130-resultado-apartado-ii",
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "12",
+        "formula_id": "modelo-130-suma-parciales",
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "13",
+        "formula_id": "modelo-130-minoracion-rendimientos-netos",
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "14",
+        "formula_id": "modelo-130-neto-tras-minoracion",
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "15",
+        "formula_id": "modelo-130-resultados-negativos-anteriores-cap",
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "16",
+        "formula_id": null,
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "17",
+        "formula_id": "modelo-130-diferencia",
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "18",
+        "formula_id": null,
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      },
+      {
+        "casilla_id": "19",
+        "formula_id": "modelo-130-resultado-final",
+        "legal_refs": [
+          "rd-439-2007:art-110",
+          "orden-eha-672-2007:art-1",
+          "ley-35-2006:art-99",
+          "rd-439-2007:art-95"
+        ],
+        "source_refs": ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+      }
+    ],
+    "iva_wallet_decision_provenance": null,
+    "local_evidence_status": "local_export_not_official_aeat_filing_evidence",
+    "official_evidence_message": "Local export wrote an AEAT-compatible fichero-BOE file only; it is not official AEAT filing evidence. Official evidence comes from AEAT after filing: justificante, consulta de declaraciones presentadas, or CSV cotejo.",
+    "domiciliation_cutoff_unverified": false,
+    "completeness_unverified": false,
+    "software_identity_grade": "development_mock"
+  },
+  "calculation_report": null,
+  "handoff_required": true
+}

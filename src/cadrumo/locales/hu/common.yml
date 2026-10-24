@@ -2218,6 +2218,8 @@ desktop:
         ask_how: Mit kérdezzen a modell
         ask_with_share: Kérdezés ezzel az aránnyal
         asking: A modell válaszára vár
+        busy: Ennek a tételnek egy korábbi ellenőrzése még nyitva van. Próbáld újra
+          egy kicsit később, vagy válaszolj rá ott, ahol kérték.
         confidence: '{value} biztos'
         continue_reject: Kérdezés ezzel az indoklással
         derived: a Cadrumo számolta ki
@@ -7469,6 +7471,8 @@ workspace:
         open_it: Megnyitás
         other: Egyéb modelók
         refused: A Cadrumo nem hozta létre a bevallást.
+        saved_unread: A bevallás elkészült, de a válaszát nem sikerült beolvasni.
+          A lista újra beolvasásra kerül; onnan nyisd meg.
         search_placeholder: Szám vagy név, például 303 vagy IVA
         show_all: Minden nyomtatvány, nem csak a rád vonatkozók
         start_confirm: 'Elkezdi a(z) {modelo} bevallást erre az időszakra: {period}?'

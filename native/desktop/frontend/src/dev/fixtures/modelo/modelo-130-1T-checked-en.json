@@ -1646,8 +1646,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "65fcd0a87ef67022d4a5a88782b1b227a8cae0bf51dac039a51a33436e5762de",
-    "calculation_head_digest": "c443bf3d9f2431659eee000a3184363f3780c6e7608f783015770efd1458d9a1",
+    "work_unit_record_digest": "06ffe4adfd0e2009f9a04ff95d04139bf191e18c483a1520d1151502a3c818e1",
+    "calculation_head_digest": "c8142df03d6337aa718903f5690e48bac83d779b6d72cf64b4bc4b4da80fe407",
     "current_calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1951,9 +1951,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T18:03:09.904132Z",
-    "expires_at": "2026-10-24T18:08:09.904132Z",
-    "baseline_id": "1c8998832eb259a8feded9d23c942d0607fa43de1a7ce59a6745d7c6352bb0d6"
+    "issued_at": "2026-10-24T18:34:22.141967Z",
+    "expires_at": "2026-10-24T18:39:22.141967Z",
+    "baseline_id": "7694352be807806c94cfcd72de4479bb1678dc861569abbb560736eb09065f72"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,

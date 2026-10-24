@@ -252,16 +252,21 @@ export function ReviewDialog({
   const edits = [...session.staged.values()].sort(
     (a, b) => Number(replacing(b)) - Number(replacing(a)),
   );
-  // A box the declaration shows differently from when it was staged changed
-  // under the edit; the filer looks at it again before applying.
+  // What a renewal did to the staged edits is the application's report: a
+  // box that changed under its edit is looked at again before applying, and
+  // one that no longer takes it was dropped.
+  const rebase = phase.kind === "checked" ? phase.rebase : [];
+  const moved = new Set(
+    rebase
+      .filter((entry) => entry.outcome === "changed")
+      .map((entry) => addressKey(entry.address)),
+  );
   const changed = new Set(
     edits
-      .filter((edit) => {
-        const now = session.fieldAt(edit.field.address);
-        return now !== null && now.value_text !== edit.field.value_text;
-      })
+      .filter((edit) => moved.has(addressKey(edit.field.address)))
       .map((edit) => edit.key),
   );
+  const dropped = rebase.filter((entry) => entry.outcome === "dropped").length;
   const displacing = edits.filter(replacing).length;
   const findings = phase.kind === "checked" ? phase.findings : [];
   const blocked = findings.some((finding) => finding.blocking);
@@ -319,9 +324,17 @@ export function ReviewDialog({
             {t("workspace.modelo.review.displacing", { count: displacing })}
           </Alert>
         )}
-        {changed.size > 0 && (
+        {(changed.size > 0 || dropped > 0) && (
           <Alert tone="warning" icon={<Icon name="alert" />}>
-            {t("workspace.modelo.review.rebased", { count: changed.size })}
+            {[
+              t("workspace.modelo.rebase.moved"),
+              changed.size > 0 &&
+                t("workspace.modelo.rebase.changed", { count: changed.size }),
+              dropped > 0 &&
+                t("workspace.modelo.rebase.dropped", { count: dropped }),
+            ]
+              .filter(Boolean)
+              .join(" ")}
           </Alert>
         )}
         {entriesUnknown && (

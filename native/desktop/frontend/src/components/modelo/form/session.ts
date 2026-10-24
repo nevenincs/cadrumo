@@ -210,18 +210,12 @@ export function placedFields(form: PublicModeloWorkForm): PlacedField[] {
 }
 
 /** Whether a box can be typed into here: the form admits edits and the
- * application says its value may be changed. */
+ * application says the box takes a typed value. */
 export function editableHere(
   envelope: ModeloWorkbenchFormProjectionV1,
   field: PublicModeloFormField,
 ): boolean {
-  return (
-    editsAdmitted(envelope) &&
-    field.origin !== "not_applicable" &&
-    (field.editability === "editable_value" ||
-      field.editability === "editable_override" ||
-      field.editability === "overridable_source")
-  );
+  return editsAdmitted(envelope) && field.takes_typed_value;
 }
 
 /** Whether the declaration takes edits at all. */
@@ -354,7 +348,7 @@ export function useFormSession({
           unstage(key);
           return { kind: "staged" } as const;
         }
-        if (held || !field.filers_own) return { kind: "unchanged" } as const;
+        if (held || !field.clearable) return { kind: "unchanged" } as const;
         stage(field, clearIntent(field));
         return { kind: "staged" } as const;
       }
@@ -379,6 +373,15 @@ export function useFormSession({
         if (!entry)
           return { kind: "failed", code: "unknown", words: null } as const;
         if (entry.refusal) return { kind: "refused", entry } as const;
+        // Typing the filer's own value again changes nothing; an assumed value
+        // typed unchanged is staged, as keeping it is how it is confirmed.
+        if (
+          field.own_value !== null &&
+          entry.comparable_value === field.own_value
+        ) {
+          if (held) unstage(key);
+          return { kind: "unchanged" } as const;
+        }
         stage(
           field,
           valueIntent(field, entry.value),

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import type {
-  ModeloFormAttention,
   ModeloFormIssueLine,
   ModeloFormVerdict,
 } from "../../../shell/modeloContract";
@@ -12,15 +11,6 @@ import { useStrings } from "../../../shell/strings";
 import type { OpenableSurface } from "../details/Details";
 import { BoxNumber } from "../form/BoxNumber";
 import { ATTENTION_ICON, ATTENTION_TONE } from "./Marks";
-
-/** The order the scale reads in, most urgent first. */
-const LEVELS: ModeloFormAttention[] = [
-  "blocks",
-  "missing",
-  "confirm",
-  "check",
-  "info",
-];
 
 export function Heading({ title, lead }: { title: string; lead?: ReactNode }) {
   return (
@@ -139,6 +129,9 @@ export function CheckView({
   onRecalculate: (() => void) | null;
 }) {
   const t = useStrings();
+  // The read model lists the lines most urgent first; the sections follow
+  // that order.
+  const levels = [...new Set(lines.map((line) => line.level))];
   const words =
     stagedCount > 0 && verdict.unapplied_words
       ? verdict.unapplied_words
@@ -153,9 +146,8 @@ export function CheckView({
       ) : (
         <p className="-mt-4 text-base text-muted-foreground">{words}</p>
       )}
-      {LEVELS.map((level) => {
+      {levels.map((level) => {
         const found = lines.filter((line) => line.level === level);
-        if (!found.length) return null;
         const word = t(`workspace.modelo.level.${level}`);
         return (
           <section

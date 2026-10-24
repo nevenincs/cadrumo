@@ -2239,6 +2239,8 @@ desktop:
         ask_how: Preguntar al modelo por
         ask_with_share: Preguntar con esta parte
         asking: Preguntando al modelo
+        busy: Una revisión anterior de este movimiento sigue abierta. Vuelve a intentarlo
+          en un momento o respóndela donde se pidió.
         confidence: '{value} de confianza'
         continue_reject: Preguntar con este motivo
         derived: calculado por Cadrumo
@@ -7520,6 +7522,8 @@ workspace:
         open_it: Abrirla
         other: Otros modelos
         refused: Cadrumo no ha creado la declaración.
+        saved_unread: La declaración se ha creado, pero no se ha podido leer su respuesta.
+          La lista se vuelve a leer; ábrela desde allí.
         search_placeholder: Número o nombre, por ejemplo 303 o IVA
         show_all: Mostrar todos los modelos, no solo los tuyos
         start_confirm: ¿Empezar el {modelo} de {period}?

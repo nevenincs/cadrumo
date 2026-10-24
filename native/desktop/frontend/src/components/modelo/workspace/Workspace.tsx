@@ -297,11 +297,10 @@ export function ModeloWorkspace({
     </>
   ) : envelope.admission_refusal ? (
     <span>
-      {t(
-        next === null
-          ? "workspace.modelo.editor.rules_incomplete"
-          : "workspace.modelo.editability.no_admission",
-      )}
+      {envelope.rules_incomplete
+        ? t("workspace.modelo.editor.rules_incomplete")
+        : (envelope.admission_refusal_words ??
+          t("workspace.modelo.editability.no_admission"))}
     </span>
   ) : null;
 

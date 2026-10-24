@@ -1,0 +1,24 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+  "outcome": {
+    "outcome": "evaluated",
+    "baseline_id": "bf5d30225aa3e4d7686d49c1d804bcee2fd98c5e3fa3a1e9ccf75b0bb20c87c9",
+    "findings": []
+  },
+  "parsed": [
+    {
+      "address": { "kind": "correction", "casilla_id": "06" },
+      "value": "150.00",
+      "normalisations": [],
+      "refusal": null,
+      "value_text": "150.00 €",
+      "refusal_words": null,
+      "comparable_value": "150"
+    }
+  ],
+  "findings": [],
+  "operator_entries_unknown": false,
+  "refusal_words": null
+}

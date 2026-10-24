@@ -1,0 +1,22 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+  "outcome": {
+    "outcome": "evaluated",
+    "baseline_id": "f6ab2c16b13f3555d6fa4ce42690aa4fd03d71b2a095def2bc1a7945acdc90ef",
+    "findings": [
+      {
+        "code": "overrides_source_value",
+        "severity": "warning",
+        "address": { "kind": "scalar", "casilla_id": "06" },
+        "message_arguments": [],
+        "evidence": []
+      }
+    ]
+  },
+  "parsed": [],
+  "findings": [],
+  "operator_entries_unknown": false,
+  "refusal_words": null
+}

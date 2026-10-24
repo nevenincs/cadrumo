@@ -1,0 +1,11 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "ac7df7f74e158b75091f4829039ea76d8faa798a4cd13bcd4753c20f20c32a63",
+  "prerequisite": {
+    "casilla_id": "05",
+    "calculation_revision_id": null,
+    "source_boxes": ["07", "16"],
+    "words": "For this recalculation, the value from an earlier filing is unavailable.\nModelo 130 · 1st quarter 2026, Modelo 130 · 2nd quarter 2026\nEarlier source boxes: [07], [16]"
+  }
+}

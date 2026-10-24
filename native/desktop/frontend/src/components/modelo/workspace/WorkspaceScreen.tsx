@@ -236,7 +236,11 @@ function Ready({
   const correct = async (
     answer: CorrectionAnswer,
   ): Promise<CorrectionResult> => {
-    if (!baseline || !correction) return { kind: "failed" };
+    // An earlier write's outcome was not seen: nothing is sent until the
+    // declaration is read again.
+    if (held) return { kind: "unknown" };
+    if (!baseline || !correction)
+      return { kind: "not_sent", code: "not_admitted" };
     let parsed;
     try {
       const outcome = await port.edit(
@@ -255,14 +259,16 @@ function Ready({
           },
         }),
       );
-      if (
-        outcome.kind !== "settled" ||
-        outcome.result.outcome.outcome === "refused"
-      )
-        return { kind: "failed" };
-      parsed = outcome.result.parsed;
-    } catch {
-      return { kind: "failed" };
+      if (outcome.kind !== "settled")
+        return { kind: "not_sent", code: outcome.kind };
+      const read = outcome.result;
+      if (read.outcome.outcome === "refused")
+        return read.refusal_words
+          ? { kind: "said", words: read.refusal_words }
+          : { kind: "refused", code: read.outcome.refusal.kind };
+      parsed = read.parsed;
+    } catch (error) {
+      return { kind: "not_sent", code: ledgerFailure(error).code };
     }
     const refused: Record<string, string> = {};
     const overrides: { casilla_id: string; value: string }[] = [];
@@ -278,7 +284,7 @@ function Ready({
         });
     }
     if (Object.keys(refused).length)
-      return { kind: "refused", entries: refused };
+      return { kind: "entries", entries: refused };
     const outcome = await run(() =>
       port.submit(
         "modelo.work.amend",
@@ -295,7 +301,19 @@ function Ready({
         workUnit,
       ),
     );
-    return outcome?.kind === "settled" ? { kind: "done" } : { kind: "failed" };
+    if (outcome === null) return { kind: "unknown" };
+    switch (outcome.kind) {
+      // Committed: the declaration is read again, read answer or not.
+      case "settled":
+      case "saved_unread":
+        return { kind: "done" };
+      case "refused":
+        return { kind: "refused", code: outcome.reason ?? "refused" };
+      case "not_sent":
+        return { kind: "not_sent", code: outcome.code };
+      case "unknown":
+        return { kind: "unknown" };
+    }
   };
 
   const calculate = () =>

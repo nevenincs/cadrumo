@@ -59,13 +59,10 @@ function TodoList({
     return (
       <p className="flex gap-2 p-4 text-sm text-muted-foreground">
         <Icon name="lock" size="xs" className="mt-0.5" />
-        {/* The read model names no next step when the registry rules cannot
-            calculate the declaration at all; the header's banner says the same. */}
-        {t(
-          envelope.admission_refusal && envelope.next_step === null
-            ? "workspace.modelo.editor.rules_incomplete"
-            : "workspace.modelo.editability.no_admission",
-        )}
+        {envelope.rules_incomplete
+          ? t("workspace.modelo.editor.rules_incomplete")
+          : (envelope.admission_refusal_words ??
+            t("workspace.modelo.editability.no_admission"))}
       </p>
     );
   const todo = todoOf(envelope.form.form, session);

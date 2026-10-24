@@ -2198,6 +2198,8 @@ desktop:
         ask_how: Ask the model for
         ask_with_share: Ask with this share
         asking: Asking the model
+        busy: An earlier review of this movement is still open. Try again in a moment,
+          or answer it where it was asked.
         confidence: '{value} confident'
         continue_reject: Ask with this reason
         derived: worked out by Cadrumo
@@ -7371,6 +7373,8 @@ workspace:
         open_it: Open it
         other: Other modelos
         refused: Cadrumo did not create the declaration.
+        saved_unread: The declaration was created, but its answer was not read. The
+          list is read again; open it from there.
         search_placeholder: Number or name, for example 303 or IVA
         show_all: Show all modelos, not only yours
         start_confirm: Start {modelo} for {period}?

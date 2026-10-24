@@ -9,6 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Alert } from "@/components/ui/alert";
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import {
   SegmentedControl,
@@ -33,12 +35,19 @@ export type CorrectionAnswer = {
   entries: { row: ModeloAmendmentCorrectionRowV1; lexeme: string }[];
 };
 
-/** What sending a correction came to: done, the application's words for
- * each entry it could not read (by casilla), or nothing it could finish. */
+/** What sending a correction came to. `done` committed it, whether or not
+ * its answer was read; `entries` names, by casilla, each figure the
+ * application could not read; `said` carries the application's own words for
+ * a refusal; `refused` settled without changing anything; `not_sent` never
+ * reached the runtime; `unknown` may have committed and is never sent again
+ * until the declaration is read again. */
 export type CorrectionResult =
   | { kind: "done" }
-  | { kind: "refused"; entries: Record<string, string> }
-  | { kind: "failed" };
+  | { kind: "entries"; entries: Record<string, string> }
+  | { kind: "said"; words: string }
+  | { kind: "refused"; code: string }
+  | { kind: "not_sent"; code: string }
+  | { kind: "unknown" };
 
 /** One labelled control. */
 export function Labelled({
@@ -85,6 +94,7 @@ export function CorrectionDialog({
   const [values, setValues] = useState<Record<string, string>>({});
   const [refusals, setRefusals] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [outcome, setOutcome] = useState<CorrectionResult | null>(null);
   const ids = useId();
   const chosen = kind ?? context?.kinds[0]?.kind ?? null;
   const help = context?.kinds.find((option) => option.kind === chosen)?.help;
@@ -115,8 +125,23 @@ export function CorrectionDialog({
     });
     setBusy(false);
     if (result.kind === "done") onOpenChange(false);
-    else if (result.kind === "refused") setRefusals(result.entries);
+    else if (result.kind === "entries") setRefusals(result.entries);
+    setOutcome(result);
   };
+  // An outcome nobody saw may have committed: the dialog sends nothing more.
+  const held = outcome?.kind === "unknown";
+  const said =
+    outcome === null
+      ? null
+      : outcome.kind === "said"
+        ? outcome.words
+        : outcome.kind === "refused"
+          ? t("workspace.modelo.outcome.refused", { code: outcome.code })
+          : outcome.kind === "not_sent"
+            ? t("workspace.modelo.outcome.failed", { code: outcome.code })
+            : outcome.kind === "unknown"
+              ? t("workspace.modelo.outcome.unknown")
+              : null;
   const type = (casillaId: string, text: string) => {
     setValues((held) => ({ ...held, [casillaId]: text }));
     setRefusals((held) => {
@@ -243,11 +268,20 @@ export function CorrectionDialog({
             </div>
           </div>
         )}
+        {said && (
+          <Alert
+            tone={held ? "danger" : "warning"}
+            role="alert"
+            icon={<Icon name={held ? "unknown" : "alert"} />}
+          >
+            {said}
+          </Alert>
+        )}
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {t("workspace.modelo.editor.cancel")}
           </Button>
-          <Button disabled={!ready || busy} onClick={submit}>
+          <Button disabled={!ready || busy || held} onClick={submit}>
             {t("workspace.modelo.correction.confirm")}
           </Button>
         </DialogFooter>

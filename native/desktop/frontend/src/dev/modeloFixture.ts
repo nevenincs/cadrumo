@@ -44,7 +44,17 @@ import { hex64 } from "./fixtures/ledger";
  * Modelo 130 is read after its check, after it was recorded as filed
  * locally, after its AEAT receipt was verified, or after the declaration
  * changed once its file for the AEAT was made. `incomplete` lists the
- * declarations of a profile nothing was ever read from the AEAT for. */
+ * declarations of a profile nothing was ever read from the AEAT for.
+ *
+ * The write shapes answer that Modelo 130's writes as the application
+ * answered them: `edit` applies a typed value, `renewal` first finds the
+ * edit baseline stale and renews it, and `prerequisite` reads a third
+ * quarter whose apply is refused on an earlier filing it waits on;
+ * `exported` is the checked declaration with its file made, which exports
+ * and records, `export-unverified` exports a file whose design carries no
+ * completeness manifest, and `export-unknown` loses the export's settlement;
+ * the `receipt` declaration is corrected, and `correction-refused` and
+ * `correction-unknown` refuse the correction or lose its settlement. */
 export const MODELO_SHAPES = [
   "fixture",
   "checked",
@@ -52,6 +62,14 @@ export const MODELO_SHAPES = [
   "receipt",
   "stale",
   "incomplete",
+  "edit",
+  "renewal",
+  "prerequisite",
+  "exported",
+  "export-unverified",
+  "export-unknown",
+  "correction-refused",
+  "correction-unknown",
   "refused",
   "unknown",
   "unavailable",
@@ -180,23 +198,57 @@ export function modeloFixture(options: Options): ModeloPort {
     return reject("unavailable");
   };
 
-  const state =
-    shape === "checked" ||
-    shape === "filed" ||
-    shape === "receipt" ||
-    shape === "stale"
-      ? shape
-      : null;
+  // What the scenario's writes did, as far as they settled.
+  let applied = false;
+  let recorded = false;
+  let renewed: string | null = null;
+  /** The envelope the first quarter's Modelo 130 is read from, by shape and
+   * by what was written. */
+  const laterState = (): string => {
+    switch (shape) {
+      case "checked":
+      case "filed":
+      case "stale":
+      case "receipt":
+        return `130-1T-${shape}`;
+      case "correction-refused":
+      case "correction-unknown":
+        return "130-1T-receipt";
+      case "exported":
+      case "export-unverified":
+      case "export-unknown":
+        return recorded ? "130-1T-filed" : "130-1T-exported";
+      case "edit":
+      case "renewal":
+        return applied ? "130-1T-applied" : LATER_STATES;
+      case "prerequisite":
+        return "130-3T-prerequisite";
+      default:
+        return LATER_STATES;
+    }
+  };
   const readForm = async (workUnitId: string, language: OutputLanguage) => {
     const name = await formName(workUnitId);
-    const later = state && name === LATER_STATES ? `-${state}` : "";
+    const read = name === LATER_STATES ? laterState() : name;
     const form =
-      name &&
+      read &&
       (await envelope<ModeloWorkbenchFormProjectionV1>(
-        `modelo-${name}${later}-${language}`,
+        `modelo-${read}-${language}`,
       ));
     return form || reject("refused", { reason: "profile_mismatch" });
   };
+  /** The envelope `name` of a write the scenario answers, or unserved. */
+  const written = async (name: string): Promise<unknown> =>
+    (await envelope<unknown>(name)) ?? unserved();
+  /** A file the host issued for `picked` (a pick) or not (a save). */
+  const issued = (token: unknown, picked: boolean) => {
+    const file = files.get(token as FileToken);
+    if (!file || file.picked !== picked) reject("invalid");
+  };
+  const receiptShape =
+    shape === "receipt" ||
+    shape === "correction-refused" ||
+    shape === "correction-unknown";
   const readHelp = async (
     workUnitId: string,
     casillaId: string,
@@ -262,8 +314,44 @@ export function modeloFixture(options: Options): ModeloPort {
               (await envelope<ModeloEditRenewalProjectionV1>(
                 `renew-${name.split("-")[0]}`,
               ));
-            return renewal || unserved();
+            if (!renewal) return unserved();
+            renewed = renewal.renewed_baseline?.baseline_id ?? null;
+            return renewal;
           }
+          case "modelo.edit.apply_prerequisite":
+            return shape === "prerequisite"
+              ? written("apply-prerequisite-130")
+              : unserved();
+          case "modelo.export": {
+            issued(request.output_path, false);
+            if (shape === "export-unknown")
+              reject("unknown", { operation_id: nextOperation() });
+            if (shape === "export-unverified")
+              return written("export-165-unverified");
+            return shape === "exported" ? written("export-130") : unserved();
+          }
+          case "modelo.work.file": {
+            if (shape !== "exported") return unserved();
+            const filed = await written("file-130");
+            recorded = true;
+            return filed;
+          }
+          case "modelo.reconcile.import":
+            issued(request.source_path, true);
+            return shape === "filed" ? written("reconcile-130") : unserved();
+          case "modelo.work.metadata":
+            return receiptShape ? written("metadata-130-receipt") : unserved();
+          case "modelo.work.amendment_context":
+            return receiptShape ? written("amendment-context-130") : unserved();
+          case "modelo.work.amend":
+            if (shape === "correction-unknown")
+              reject("unknown", { operation_id: nextOperation() });
+            if (shape === "correction-refused")
+              reject("refused", {
+                operation_id: nextOperation(),
+                reason: "operation_denied",
+              });
+            return shape === "receipt" ? written("amend-130") : unserved();
           default:
             return unserved();
         }
@@ -283,20 +371,45 @@ export function modeloFixture(options: Options): ModeloPort {
         } catch {
           return reject("invalid");
         }
-        const workUnitId = input.submission?.baseline?.work_unit_id;
+        // The answers are named by the modelo the baseline was admitted for:
+        // the later states were read in profiles of their own.
+        const submission = input.submission;
+        const modelo = submission?.baseline?.modelo;
+        if (!modelo) return unserved();
         if (definition === "modelo.edit.preflight") {
-          const name = workUnitId ? await formName(workUnitId) : null;
+          // Which of the application's answers fits what was sent: a
+          // correction's figures, entries as typed, or the staged edits,
+          // which the `renewal` shape first finds on a stale baseline.
+          const entries = submission.lexemes ?? [];
+          const correction = entries.find(
+            (entry) => entry.address.kind === "correction",
+          );
+          const stale =
+            shape === "renewal" && renewed !== submission.baseline.baseline_id;
+          const read = correction
+            ? /^[-+\d.,\s]+$/.test(correction.lexeme)
+              ? `preflight-${modelo}-correction`
+              : `preflight-${modelo}-correction-refused`
+            : entries.length > 0
+              ? `preflight-${modelo}`
+              : stale
+                ? `preflight-${modelo}-stale`
+                : `preflight-${modelo}-review`;
           const preflight =
-            name &&
-            (await envelope<ModeloEditPreflightProjectionV1>(
-              `preflight-${name.split("-")[0]}`,
-            ));
+            await envelope<ModeloEditPreflightProjectionV1>(read);
           if (preflight)
             return settle(preflight) as LedgerOutcome<
               ModeloResult<typeof definition>
             >;
+          return unserved();
         }
-        return unserved();
+        if (shape === "prerequisite")
+          reject("refused", { operation_id: nextOperation() });
+        if (shape !== "edit" && shape !== "renewal") return unserved();
+        const result = await envelope<unknown>(`apply-${modelo}`);
+        if (!result) return unserved();
+        applied = true;
+        return settle(result) as LedgerOutcome<ModeloResult<typeof definition>>;
       } finally {
         body.fill(0);
       }

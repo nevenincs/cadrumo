@@ -33,7 +33,8 @@ const repository = resolve(frontend, "../../..");
 const contract = resolve(frontend, "src/shell/modeloContract.ts");
 const fixtures = resolve(frontend, "src/dev/fixtures/modelo");
 const producer = resolve(frontend, "scripts/modelo_fixtures.py");
-const ENVELOPE = /^(modelo|help|declarations|preflight|renew)-.*\.json$/;
+// Every envelope the producer wrote into its own scratch directory.
+const ENVELOPE = /^[A-Za-z0-9-]+\.json$/;
 
 const environment = { ...process.env };
 const authority = resolve(repository, ".authority");

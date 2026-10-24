@@ -41,7 +41,9 @@ type Attempt =
   | { kind: "failed"; code: string }
   /** The write may have happened: nothing is sent again until the list is
    * read again. */
-  | { kind: "unknown" };
+  | { kind: "unknown" }
+  /** The declaration was created; only its answer was not read. */
+  | { kind: "saved_unread" };
 
 const at = (target: Target, period: PublicPeriod | null) =>
   period !== null &&
@@ -177,6 +179,9 @@ function Chooser({
       if (failure.code === "unknown") {
         onWritten();
         setAttempt({ kind: "unknown" });
+      } else if (failure.code === "saved_unread") {
+        onWritten();
+        setAttempt({ kind: "saved_unread" });
       } else
         // A refusal settled without writing; any other failure never sent.
         setAttempt({
@@ -219,7 +224,7 @@ function Chooser({
   };
 
   const busy = attempt.kind === "creating";
-  const held = attempt.kind === "unknown";
+  const held = attempt.kind === "unknown" || attempt.kind === "saved_unread";
 
   return (
     <DialogContent
@@ -388,6 +393,10 @@ function Chooser({
                   : "workspace.declarations.list.new.failed",
               )}{" "}
               <code className="font-mono text-xs">{attempt.code}</code>
+            </Alert>
+          ) : attempt.kind === "saved_unread" ? (
+            <Alert tone="success" role="status" icon={<Icon name="check" />}>
+              {t("workspace.declarations.list.new.saved_unread")}
             </Alert>
           ) : attempt.kind === "unknown" ? (
             <Alert tone="warning" role="alert" icon={<Icon name="unknown" />}>

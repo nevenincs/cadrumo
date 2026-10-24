@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import type {
+  ModeloEditWritableScalarSurfaceEntryV1,
   PublicModeloFormField,
   SourceSurface,
 } from "../../../shell/modeloContract";
@@ -37,22 +38,50 @@ import { stagedText } from "./stagedWords";
  * when one did. */
 export type EditRequest = { seed?: string };
 
-const PLACEHOLDER_TYPES = new Set([
-  "boolean",
-  "date",
-  "decimal",
-  "integer",
-  "money",
-  "ratio",
-  "text",
-  "year",
-]);
-const NUMERIC_TYPES = new Set(["money", "integer", "decimal", "ratio"]);
+/** A casilla's data type, as the registry declares it. */
+type CasillaDataType = ModeloEditWritableScalarSurfaceEntryV1["data_type"];
+/** The kinds of entry the editor's placeholder names. */
+type EntryKind =
+  | "boolean"
+  | "date"
+  | "decimal"
+  | "integer"
+  | "money"
+  | "ratio"
+  | "text"
+  | "year";
+
+/** How each data type is typed: the placeholder it shows and whether it
+ * reads as a figure. Keyed by the generated type, so a type the registry
+ * gains does not compile until it is placed here. */
+const TYPING: Record<CasillaDataType, { entry: EntryKind; figure: boolean }> = {
+  decimal: { entry: "decimal", figure: true },
+  money: { entry: "money", figure: true },
+  integer: { entry: "integer", figure: true },
+  ratio: { entry: "ratio", figure: true },
+  year: { entry: "year", figure: false },
+  boolean: { entry: "boolean", figure: false },
+  date: { entry: "date", figure: false },
+  text: { entry: "text", figure: false },
+  nif: { entry: "text", figure: false },
+  period_code: { entry: "text", figure: false },
+  country_code: { entry: "text", figure: false },
+  iban: { entry: "text", figure: false },
+  name: { entry: "text", figure: false },
+  nif_iva: { entry: "text", figure: false },
+  ccaa_code: { entry: "text", figure: false },
+  province_code: { entry: "text", figure: false },
+  postal_code: { entry: "text", figure: false },
+  municipality_code: { entry: "text", figure: false },
+  bic: { entry: "text", figure: false },
+};
+const typing = (field: PublicModeloFormField) =>
+  Object.hasOwn(TYPING, field.data_type)
+    ? TYPING[field.data_type as CasillaDataType]
+    : TYPING.text;
 
 const placeholder = (t: Translate, field: PublicModeloFormField) =>
-  t(
-    `workspace.modelo.editor.placeholder.${PLACEHOLDER_TYPES.has(field.data_type) ? field.data_type : "text"}`,
-  );
+  t(`workspace.modelo.editor.placeholder.${typing(field).entry}`);
 
 /** The surfaces a value fed by a source can be corrected at. */
 const CORRECTABLE: ReadonlySet<SourceSurface> = new Set([
@@ -153,7 +182,7 @@ function Editor({
           readOnly={pending}
           value={text}
           placeholder={placeholder(t, field)}
-          inputMode={NUMERIC_TYPES.has(field.data_type) ? "decimal" : "text"}
+          inputMode={typing(field).figure ? "decimal" : "text"}
           onChange={(event) => {
             setText(event.target.value);
             setMessage(null);
@@ -175,7 +204,7 @@ function Editor({
           className={cn(
             inputVariants({ controlSize: "sm" }),
             "w-40",
-            NUMERIC_TYPES.has(field.data_type) && "text-right tabular-nums",
+            typing(field).figure && "text-right tabular-nums",
             message && "border-destructive",
           )}
         />

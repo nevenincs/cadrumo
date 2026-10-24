@@ -29,6 +29,7 @@ import type {
   ExportLayoutFormat,
   ModeloExportArtefact,
   ModeloExportRequest,
+  ModeloFormArtefactOption,
   ModeloFormElection,
   ModeloWorkbenchFormProjectionV1,
   OutputLanguage,
@@ -92,7 +93,7 @@ const FILING_FORMAT: Record<ExportLayoutFormat, ModeloSaveFormat> = {
 /** The request field each election the export asks is sent in. */
 const ELECTION_FIELD: Record<
   ModeloFormElection,
-  "refund_election" | "payment_election" | "prior_domiciliation_election"
+  Extract<keyof ModeloExportRequest, `${ModeloFormElection}_election`>
 > = {
   refund: "refund_election",
   payment: "payment_election",
@@ -181,15 +182,18 @@ export function FilingView({
   const receipt = envelope.receipt;
   const verifiedReceipt = receipt?.verified === true;
   const pending = session.stagedCount > 0;
-  const filingOffered =
-    offer?.artefacts.some((option) => option.artefact === "fichero_boe") ===
-      true && offer.file_format !== null;
+  // Which artefacts are offered and whether each, and recording, can be
+  // done now is the read model's, from the same gates the operations apply.
+  const filing =
+    offer?.file_format !== null
+      ? (offer?.artefacts.find((option) => option.artefact === "fichero_boe") ??
+        null)
+      : null;
   const copies = (offer?.artefacts ?? []).filter(
     (
       option,
-    ): option is {
+    ): option is ModeloFormArtefactOption & {
       artefact: Exclude<ModeloExportArtefact, "fichero_boe">;
-      words: string;
     } => option.artefact !== "fichero_boe",
   );
   // The elections the filing file is exported with, as the filer answers
@@ -425,14 +429,9 @@ export function FilingView({
   );
 
   const fileStale = file !== null && !file.current;
-  const mayExport =
-    filingOffered && calculation !== null && hold === null && !recorded;
-  const mayRecord =
-    !recorded &&
-    calculation !== null &&
-    envelope.verification_report_id !== null &&
-    hold === null &&
-    !fileStale;
+  const mayExport = filing?.availability.available === true;
+  const recordAvailability = offer?.record ?? null;
+  const mayRecord = recordAvailability?.available === true;
   const notYet = t("workspace.modelo.filing.not_yet");
   const stages: Stage[] = [
     {
@@ -608,6 +607,11 @@ export function FilingView({
             </Button>
           )}
           {reveal("export")}
+          {!recorded && !hold && !mayExport && filing?.availability.words && (
+            <span className="text-sm text-muted-foreground">
+              {filing.availability.words}
+            </span>
+          )}
           <Button
             variant="link"
             className="ml-auto"
@@ -653,7 +657,8 @@ export function FilingView({
             {!recorded
               ? mayRecord
                 ? t("workspace.modelo.filing.also_other_way")
-                : t("workspace.modelo.filing.check_first")
+                : (recordAvailability?.words ??
+                  t("workspace.modelo.filing.check_first"))
               : (receipt?.words ??
                 t("workspace.modelo.filing.receipt_missing"))}
           </span>
@@ -674,12 +679,16 @@ export function FilingView({
               artefact: "package" as const,
               words: t("workspace.modelo.filing.copy.package.title"),
             },
-          ].map(({ artefact: copy, words }) => {
-            // A report and a package explain a checked calculation; the
-            // workbook shows any calculation.
-            const ready =
-              calculation !== null &&
-              (copy === "calculation_review_xlsx" || verified);
+          ].map((option) => {
+            const { artefact: copy, words } = option;
+            // A copy is offered as the read model says; the review package,
+            // which the export offer does not list, needs a checked
+            // calculation, as its operation does.
+            const availability =
+              "availability" in option ? option.availability : null;
+            const ready = availability
+              ? availability.available
+              : calculation !== null && verified;
             return (
               <li
                 key={copy}
@@ -695,6 +704,9 @@ export function FilingView({
                 <p className="text-sm text-muted-foreground">
                   {t(`workspace.modelo.filing.copy.${copy}.detail`)}
                 </p>
+                {availability?.words && (
+                  <p className="text-xs text-faint">{availability.words}</p>
+                )}
                 <div className="mt-auto flex items-center gap-2 pt-1">
                   <Button
                     size="sm"
