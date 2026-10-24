@@ -9,7 +9,7 @@ from typing import Final
 from rich.text import Text
 
 from ....application.modelo.declarations_calendar import DeclarationsCalendarSource
-from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow
+from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow, is_unlinked_local_draft
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ..components.cell_text import wrap_words
@@ -17,7 +17,7 @@ from ..components.widgets import ContentDataTable
 from .controller import (
     DeclarationsWorkspaceController,
 )
-from .row_words import is_unlinked_local_draft, row_lines
+from .row_words import row_lines
 
 DECLARATION_GROUP_LOCALE_KEYS: Final[Mapping[DeclarationListGroup, str]] = MappingProxyType(
     {

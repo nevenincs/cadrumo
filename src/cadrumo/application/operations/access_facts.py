@@ -105,6 +105,7 @@ _LOCAL_READS: Final = (
     "modelo.bindings.list",
     "modelo.bindings.resolve",
     "modelo.bindings.resolve.typed",
+    "modelo.declarations.list",
     "modelo.filing_record.list",
     "modelo.filing_record.view",
     "modelo.history",

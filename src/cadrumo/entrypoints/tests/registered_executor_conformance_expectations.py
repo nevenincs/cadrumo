@@ -507,6 +507,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "modelo.work.list", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("modelo.work.list",)
         ),
         RegisteredExecutorConformanceCase(
+            "modelo.declarations.list",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("modelo.declarations.list",),
+        ),
+        RegisteredExecutorConformanceCase(
             "modelo.work.history",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,

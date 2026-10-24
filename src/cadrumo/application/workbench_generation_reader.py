@@ -69,6 +69,7 @@ from .ledger.workspace import (
     LedgerWorkspaceProjectionV1,
 )
 from .modelo.declaration_summary import declaration_summary
+from .modelo.declarations_list import DeclarationListInputs
 from .modelo.declarations_portfolio import project_declarations_portfolio
 from .modelo.declarations_workspace_contracts import (
     DeclarationResultCasillaReaderV1,
@@ -301,7 +302,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
     filing_repository: ModeloRecordCatalogueRepositoryProtocol
     clock: Callable[[], UtcInstant]
-    account_session_reader: Callable[[], HomeAccountSession]
+    account_session_reader: Callable[[], HomeAccountSession] | None = None
+    """The live account session Home shows; a declarations-list read is composed without one."""
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None
@@ -340,7 +342,10 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
 
     def read_workbench_generation_inputs(self) -> WorkbenchGenerationInputsV1:
         """Capture secure local facts once and build installed projections."""
-        self.account_session_reader()
+        account_session_reader = self.account_session_reader
+        if account_session_reader is None:
+            raise InternalInvariantError("a workbench generation needs the live account session")
+        account_session_reader()
         observed_at = self.clock()
         as_of = observed_at.astimezone(ZoneInfo("Europe/Madrid")).date()
         record = self.profile_repository.load(self.profile_id)
@@ -396,7 +401,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             census_observation=census_observation,
             filed_evidence=aeat_projection,
         )
-        account_session = self.account_session_reader()
+        account_session = account_session_reader()
         if not self._capture_is_unchanged(
             record=record,
             work_units_revision=work_units_revision,
@@ -422,6 +427,63 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             work_units=work_units,
             verification=verification,
         )
+
+    def read_declaration_list_inputs(self) -> DeclarationListInputs:
+        """Capture only what the declarations list joins: the local declarations and the legal calendar.
+
+        It reads the same repositories, through the same projections, as a
+        generation does, and is checked unchanged across the capture the same
+        way, without the account session only Home needs.
+        """
+        observed_at = self.clock()
+        as_of = observed_at.astimezone(ZoneInfo("Europe/Madrid")).date()
+        record = self.profile_repository.load(self.profile_id)
+        work_units, work_units_revision = self.work_unit_repository.load_revisioned()
+        revisions, calculations_revision = self.calculation_repository.load_revisioned(operation=self.operation)
+        filings, filings_revision = self.filing_repository.load_revisioned()
+        verification = self._load_verification_reports()
+        bucket_events = None if self.bucket_event_repository is None else self.bucket_event_repository.load()
+        declarations = self._read_declarations_projection(
+            work_units=work_units,
+            revisions=revisions,
+            verification=verification,
+            filings=filings,
+            bucket_events=bucket_events,
+            observed_at=observed_at,
+        )
+        raw_values = record_to_path_values(record)
+        ledger_revision = self._ledger_revision()
+        ledger_sources = self._load_ledger_sources()
+        aeat_evidence, aeat_projection = self._read_calendar_aeat_evidence(raw_values)
+        calendar_inputs = self._read_calendar_inputs(
+            record=record,
+            raw_values=raw_values,
+            aeat_evidence=aeat_evidence,
+            aeat_projection=aeat_projection,
+            as_of=as_of,
+            work_units=work_units,
+            filings=filings,
+            observed_at=observed_at,
+            operation=self.operation,
+            work_units_revision=work_units_revision,
+            filings_revision=filings_revision,
+            ledger_revision=ledger_revision,
+            ledger_sources=ledger_sources,
+        )
+        if not self._capture_is_unchanged(
+            record=record,
+            work_units_revision=work_units_revision,
+            calculations_revision=calculations_revision,
+            filings_revision=filings_revision,
+            ledger_revision=ledger_revision,
+            ledger_sources=ledger_sources,
+            verification=verification,
+            bucket_events=bucket_events,
+            custody_count=self._load_custody_count(),
+            census_observation=None if self.census_observation_reader is None else self.census_observation_reader(),
+        ):
+            raise InternalInvariantError("secure declarations list changed during capture")
+        return DeclarationListInputs(workspace=declarations, calendar=calendar_inputs.declarations_calendar)
 
     def _read_declarations_projection(
         self,

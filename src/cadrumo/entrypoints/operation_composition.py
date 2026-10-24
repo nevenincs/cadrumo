@@ -1746,6 +1746,20 @@ def _modelo_reconciliation_list_operation(inputs: OperationCompositionInputs) ->
     return _built((definition,), (build_modelo_reconciliation_list_registration(definition),))
 
 
+def _modelo_declarations_list_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    from ..application.modelo.declarations_list_operation import (
+        build_modelo_declarations_list_definition,
+        build_modelo_declarations_list_registration,
+    )
+    from .workbench_generation_composition import compose_secure_declaration_list_reader
+
+    del inputs
+    definition = build_modelo_declarations_list_definition(
+        lambda profile_id, operation: compose_secure_declaration_list_reader(profile_id=profile_id, operation=operation)
+    )
+    return _built((definition,), (build_modelo_declarations_list_registration(definition),))
+
+
 def _modelo_work_inventory_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     from ..application.modelo.work_inventory_operation import (
         build_modelo_work_list_definition,
@@ -2848,6 +2862,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.modelo.amendment_context_operation": _modelo_amendment_context_operation,
     "application.modelo.audit_operation": _modelo_audit_operation,
     "application.modelo.calculation_report_verification_operation": _modelo_calculation_report_verification_operation,
+    "application.modelo.declarations_list_operation": _modelo_declarations_list_operation,
     "application.modelo.dependency_operation": _modelo_dependency_operation,
     "application.modelo.filing_record_import_operation": _modelo_filing_record_import_operation,
     "application.modelo.filing_record_list_operation": _modelo_filing_record_list_operation,

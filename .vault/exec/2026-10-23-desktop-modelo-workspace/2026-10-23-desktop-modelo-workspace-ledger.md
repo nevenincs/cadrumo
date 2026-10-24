@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:c91dc1d2ff72da3fc7155a68b7f6a48cdbc7e05eb5412ccc1f7c7583ff8572b2'
+body_hash: 'sha256:e811dbcee7912a594c5456ecac5456f24aea182b14e72dfb36239e45c69059f6'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -175,6 +175,24 @@ related:
 - `S06` `verify:` `dev.quality.types --count` -> `pass`
 - `S06` `verify:` `lint-imports` -> `pass`
 - `S06` `verify:` `operation_contract_manifest.generate` -> `pass`
+- `S07` `A` `src/cadrumo/application/modelo/declarations_list_operation.py`
+- `S07` `A` `src/cadrumo/application/modelo/tests/test_declarations_list_operation.py`
+- `S07` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S07` `M` `src/cadrumo/application/modelo/tests/test_declarations_list.py`
+- `S07` `M` `src/cadrumo/application/workbench_generation_reader.py`
+- `S07` `M` `src/cadrumo/entrypoints/workbench_generation_composition.py`
+- `S07` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S07` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/registered_executor_conformance_expectations.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/registered_executor_payload_support.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/declarations/row_words.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/declarations/portfolio_rendering.py`
+- `S07` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S07` `verify:` `pytest declarations list and list operation, TUI declarations (189), registered executor conformance case and completeness, access facts, MCP surfaces, operation contract manifest tests (136), no-AEAT-write gate` -> `pass`
+- `S07` `verify:` `dev.quality.types --count` -> `pass`
+- `S07` `verify:` `lint-imports` -> `pass`
+- `S07` `verify:` `operation_contract_manifest.generate --check` -> `pass`
 
 ## Notes
 
@@ -182,3 +200,4 @@ related:
 - `S03` Also moved period and date wording from the TUI (needed by origin words); the frontend-neutral key namespace remains P02
 - `S05` Scope corrected from `work_form.py` to the new defining module `work_form_next_step.py;` TUI counters and ladder moved there with every consumer repointed
 - `S06` Period words already moved in S03; this step moved modelo titles and put title, number and period words on the form. The list projection that uses them is S07
+- `S07` The list read captures through the generation's own door with a list-only method, so the runtime gains no special case; row words and steps moved from the TUI `row_words`

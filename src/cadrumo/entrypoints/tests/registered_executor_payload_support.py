@@ -629,6 +629,10 @@ def _payload(
             modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
             subject_ref = profile_operation_subject(str(profile_id))
             values = {"profile_id": profile_id, "include_discarded": False}
+        case "modelo.declarations.list":
+            modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {"profile_id": profile_id, "output_language": OutputLanguage.ES}
         case "modelo.work.history":
             unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
             subject_ref = unit.work_unit_id

@@ -14,6 +14,7 @@ from ..application.workbench_generation_contracts import WorkbenchGenerationV1
 from ..application.workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
 
 if TYPE_CHECKING:
+    from ..application.modelo.declarations_list import DeclarationListInputs
     from ..application.modelo.workspace_models import (
         ModeloWorkspaceProjectionV1,
         ModeloWorkspaceRefusedResultV1,
@@ -42,6 +43,44 @@ def compose_secure_workbench_generation_provider(
     session check precedes each capture and the repository composition it
     performs; neither this builder nor its readers select an active profile.
     """
+    account_session_reader()
+    read_door = _secure_read_door(
+        profile_id=profile_id,
+        operation=operation,
+        operation_contracts=operation_contracts,
+        account_session_reader=account_session_reader,
+    )
+
+    def capture() -> WorkbenchGenerationV1:
+        # Ledger ports capture current evidence; keep them per generation.
+        account_session_reader()
+        return InstalledWorkbenchGenerationProviderV1(read_door())()
+
+    return capture
+
+
+def compose_secure_declaration_list_reader(
+    *, profile_id: str, operation: PinnedAuthorityOperation
+) -> Callable[[], DeclarationListInputs]:
+    """Bind one explicit profile and pinned authority to the read door's declarations-list capture.
+
+    The list reads the same repositories through the same door as a generation,
+    without the account session only Home shows.
+    """
+    read_door = _secure_read_door(
+        profile_id=profile_id, operation=operation, operation_contracts=None, account_session_reader=None
+    )
+    return lambda: read_door().read_declaration_list_inputs()
+
+
+def _secure_read_door(
+    *,
+    profile_id: str,
+    operation: PinnedAuthorityOperation,
+    operation_contracts: OperationPublicContractSetV1 | None,
+    account_session_reader: Callable[[], HomeAccountSession] | None,
+) -> Callable[[], SecureProfileWorkbenchGenerationReadDoorV1]:
+    """Compose the read door over one profile's secure repositories, afresh for each capture."""
     from ..adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationRecordRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -52,7 +91,6 @@ def compose_secure_workbench_generation_provider(
     from .censal_readback_composition import read_stored_censal_observation
     from .ledger_action_composition import compose_ledger_action_ports
 
-    account_session_reader()
     calendar_aeat_reader = compose_calendar_aeat_reader(operation)
     objects = secure_object_repository_for_bucket(profile_id)
     calculation_binding = bind_calculation_revision_persistence_from_profile(
@@ -89,12 +127,7 @@ def compose_secure_workbench_generation_provider(
             calendar_aeat_reader=calendar_aeat_reader,
         )
 
-    def capture() -> WorkbenchGenerationV1:
-        # Ledger ports capture current evidence; keep them per generation.
-        account_session_reader()
-        return InstalledWorkbenchGenerationProviderV1(read_door())()
-
-    return capture
+    return read_door
 
 
 def _notification_custody_reader(profile_id: str) -> Callable[[], int]:

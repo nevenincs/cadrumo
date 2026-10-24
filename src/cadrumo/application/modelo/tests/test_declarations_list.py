@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
+from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
@@ -26,7 +27,12 @@ from ..declarations_calendar import (
     DeclarationsCalendarSource,
     DeclarationsCalendarSourceStateV1,
 )
-from ..declarations_list import DeclarationListGroup, declaration_list_rows
+from ..declarations_list import (
+    DeclarationListGroup,
+    DeclarationListNextStep,
+    declaration_list_rows,
+    worded_declaration_list,
+)
 from ..declarations_workspace_contracts import (
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceDeclarationRefV1,
@@ -235,3 +241,52 @@ def test_undetermined_and_window_missing_modelos_remain_visible_as_advice() -> N
     assert {row.modelo for row in rows} == {"100", "349"}
     assert all(row.group is DeclarationListGroup.MAYBE and row.period is None for row in rows)
     assert {row.advice for row in rows} == {item.reason for item in advice}
+
+
+def test_each_row_names_its_step_and_keeps_the_aeats_facts_beside_its_own() -> None:
+    blocked = _local(DeclarationSummaryState.BLOCKED).model_copy(
+        update={"summary": DeclarationSummary(state=DeclarationSummaryState.BLOCKED, blocking_count=2)}
+    )
+    checked = _local(DeclarationSummaryState.CHECKED, work="b" * 64).model_copy(
+        update={"period": Period.from_year_and_code(2025, "2T")}
+    )
+    later = _entry(external=False, period=Period.from_year_and_code(2025, "3T"), close=date(2025, 10, 20))
+    filed_elsewhere = _entry(external=True, period=Period.from_year_and_code(2025, "4T"), close=date(2026, 1, 30))
+
+    rows = {
+        row.key: row
+        for row in worded_declaration_list(
+            _workspace(blocked, checked), _calendar(later, filed_elsewhere), OutputLanguage.EN
+        )
+    }
+
+    fix = rows["a" * 64]
+    assert (fix.next_step, fix.blocking_count, fix.opens_local_work) == (DeclarationListNextStep.FIX, 2, False)
+    assert fix.work_unit_id == "a" * 64
+    assert fix.state_words.startswith("▲ ")
+    ready = rows["b" * 64]
+    assert (ready.next_step, ready.opens_local_work, ready.group) == (
+        DeclarationListNextStep.CREATE_FILE,
+        True,
+        DeclarationListGroup.READY,
+    )
+    due = next(row for row in rows.values() if row.key.startswith("due:"))
+    assert (due.next_step, due.opens_local_work, due.work_unit_id) == (DeclarationListNextStep.START, False, None)
+    assert due.deadline == date(2025, 10, 20)
+    unlinked = next(row for row in rows.values() if row.key.startswith("aeat:"))
+    # A return the AEAT holds with no local work shows the AEAT's date, never a deadline or a local result.
+    assert (unlinked.deadline, unlinked.result_words, unlinked.next_step) == (None, None, None)
+    assert unlinked.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+    assert unlinked.aeat_submitted_at == datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
+    assert all(row.modelo_title.startswith("Modelo 303") for row in rows.values())
+
+
+def test_rows_are_said_in_the_language_asked_for() -> None:
+    workspace = _workspace(_local(DeclarationSummaryState.DRAFT))
+    english, spanish = (
+        worded_declaration_list(workspace, None, language)[0] for language in (OutputLanguage.EN, OutputLanguage.ES)
+    )
+
+    assert (english.period_words, spanish.period_words) == ("1st quarter 2025", "1.er trimestre 2025")
+    assert english.state_words != spanish.state_words
+    assert english.next_step is spanish.next_step is DeclarationListNextStep.CONTINUE
