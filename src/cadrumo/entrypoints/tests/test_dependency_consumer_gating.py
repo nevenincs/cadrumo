@@ -24,6 +24,21 @@ Local AI rows:
   ``operator.provision.local_ai`` and whose ``role`` fact is the driven role,
   and the runtime must have received no request.
 
+Local AI operation rows:
+
+- Coverage. Each consumer row names the registered operations whose
+  composition reaches its site, or is listed in ``_UNWRAPPED_CONSUMERS`` with
+  the reason none does. Every named operation must be registered and have a
+  row in ``_OPERATION_ROWS``, and every row must be named by a consumer.
+- Behaviour. Each operation row settles its operation through the production
+  registry and the real supervisor, journal and encrypted operand store, in an
+  enrolled profile, against the same empty runtime. What a client in another
+  process reads of it, the recorded error detail of a stopped operation or the
+  public result of a successful one, must carry the consumer's verdict naming
+  ``operator.provision.local_ai`` for the driven role, with no request sent.
+  An operation that swallows the refusal into its result, or stops without
+  publishing its detail, fails here.
+
 Browser rows:
 
 - Launch. Every production function that constructs a ``BrowserSession`` or
@@ -55,6 +70,15 @@ Where it stops:
 - A browser resource that reaches an operation only inside a composed port,
   rather than as an argument of its definition builder, is outside the
   operations row.
+- Which registered operation reaches a local AI consumer is declared on the
+  consumer row, not discovered: a new operation composed over an existing
+  consumer passes until someone names it there. Each operation is settled
+  through one lane per row, against an absent model only; a runtime that does
+  not answer, or a refusal raised only on another lane, is covered by the
+  consumer rows and the operations' own settlement tests.
+- Browser operations are held to their preflight here, not to what they
+  publish: that a live capture or sign-in refusal publishes its verdict is
+  covered by those operations' own settlement tests.
 
 Each structural row and each assertion helper is run once more against an
 isolated fixture that carries the defect it exists to catch.
@@ -71,7 +95,7 @@ import traceback
 from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from http import HTTPStatus
 from io import BytesIO
@@ -83,6 +107,7 @@ from uuid import UUID, uuid4
 import httpx
 import pytest
 from PIL import Image
+from pydantic import BaseModel
 
 from ...adapters.outbound.aeat.browser.errors import (
     BrowserNotReadyError,
@@ -98,15 +123,30 @@ from ...adapters.outbound.aeat.browser.factory import (
 from ...adapters.outbound.aeat.browser.profile import Profile
 from ...adapters.outbound.aeat.browser.session import BrowserSession
 from ...adapters.outbound.llm.evidence_draft_text import default_extraction_authority_values
+from ...adapters.outbound.llm.statement_reading import LocalStatementReader
 from ...adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposal
+from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
+from ...adapters.persistence.operations.tests.supervisor_test_support import _repositories
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.ledger.column_roles import ColumnRoleReaderUnavailable, column_role_mapping_resolver
 from ...application.ledger.document_transcription import DocumentTranscription
 from ...application.ledger.evidence_textlayer import text_layer_transcriber_identity
+from ...application.ledger.import_ports import LedgerImportReaderUnavailableError
 from ...application.ledger.invoice_draft_extraction_ports import InvoiceDraftReaderUnavailableError, VisionImage
 from ...application.ledger.llm_classification_ports import EvidenceImage
+from ...application.ledger.read_access import resolve_ledger_read_access
 from ...application.ledger.statement_reading import statement_reader_factory
 from ...application.local_reader import probe_local_reader
+from ...application.operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ...application.operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
+from ...application.operations.contract_manifest import OperationContractManifestV1
+from ...application.operations.models import CredentialFreeOperationRequest, OperationRequest
+from ...application.operations.operation_definition import build_single_phase_definition
+from ...application.operations.owner import OperationExecutorContext
+from ...application.operations.projection_services import OperationResultProjectionService
+from ...application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
+from ...application.operations.subject_reference import OperationSubjectReferenceV1
+from ...application.operations.supervisor import OperationSupervisor
 from ...application.operator_actions.models import PreconditionVerdict
 from ...application.provisioning_browser import BROWSER_PROVISION_ACTION_ID
 from ...application.provisioning_contracts import (
@@ -118,9 +158,11 @@ from ...core.config import Settings, load_settings, override_settings
 from ...core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...core.image_media_type import ImageMediaType
 from ...core.model_catalogue import ModelRole, candidates_for_role, default_model_runtime_id
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.tabular import normalize_tabular_bytes
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.llm import PromptSpec
@@ -132,6 +174,22 @@ from ..adapter_composition import build_ledger_evidence_ports, profile_adapter_c
 from ..invoice_intake_operation_composition import build_invoice_intake_ports
 from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 from ..ledger_llm_composition import compose_ledger_llm
+from .dependency_operation_gating_support import (
+    OperationSettler,
+    SettledOperation,
+    operation_runtime,
+    published_verdicts,
+    read_published,
+    runtime_holding_nothing,
+    settle_classify_review,
+    settle_evidence_batch,
+    settle_evidence_confirm,
+    settle_evidence_extract,
+    settle_invoice_import,
+    settle_ledger_import,
+    settle_ledger_import_pdf,
+    settle_split_review,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -761,10 +819,16 @@ type _Driver = Callable[[_Runtime], object]
 
 @dataclass(frozen=True)
 class _LocalAiConsumer:
-    """One consumer site: the dispatch units it names, and one driver per role it reads with."""
+    """One consumer site: the dispatch units it names, one driver per role it reads with, and its operations.
+
+    ``operations`` names every registered operation whose composition reaches
+    the site; each must have an operation row. A site no operation reaches
+    names none and has an entry in ``_UNWRAPPED_CONSUMERS`` saying why.
+    """
 
     units: frozenset[str]
     drivers: Mapping[ModelRole, _Driver]
+    operations: frozenset[str] = frozenset()
 
 
 _LLM = "cadrumo.adapters.outbound.llm"
@@ -782,6 +846,7 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
             ModelRole.TEXT_EXTRACTION: _drive_ledger_text_classifier,
             ModelRole.VISION_TRANSCRIPTION: _drive_ledger_vision_classifier,
         },
+        operations=frozenset({"ledger.classify.review", "ledger.split.review"}),
     ),
     "cadrumo.entrypoints.ledger_evidence_extraction_composition._invoice_read_text": _LocalAiConsumer(
         units=frozenset(
@@ -791,6 +856,7 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
             }
         ),
         drivers={ModelRole.TEXT_EXTRACTION: _drive_evidence_text_read},
+        operations=frozenset({"ledger.evidence.extract", "ledger.evidence.confirm", "ledger.evidence.batch"}),
     ),
     "cadrumo.entrypoints.ledger_evidence_extraction_composition._invoice_transcribe_vision": _LocalAiConsumer(
         units=frozenset(
@@ -800,6 +866,7 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
             }
         ),
         drivers={ModelRole.VISION_TRANSCRIPTION: _drive_evidence_vision_read},
+        operations=frozenset({"ledger.evidence.extract", "ledger.evidence.confirm", "ledger.evidence.batch"}),
     ),
     "cadrumo.entrypoints.ledger_evidence_extraction_composition._invoice_propose_supply_nature": _LocalAiConsumer(
         units=frozenset({f"{_LLM}.supply_nature_proposal.SupplyNatureProposer"}),
@@ -808,18 +875,30 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
     "cadrumo.entrypoints.adapter_composition._resolve_column_roles": _LocalAiConsumer(
         units=frozenset({f"{_LLM}.column_role_mapping.resolve_column_roles"}),
         drivers={ModelRole.COLUMN_ROLE_MAPPING: _drive_ledger_import_column_roles},
+        operations=frozenset({"ledger.import"}),
     ),
     "cadrumo.entrypoints.invoice_intake_operation_composition.build_invoice_intake_ports": _LocalAiConsumer(
         units=frozenset({f"{_LLM}.column_role_mapping.resolve_header_roles"}),
         drivers={ModelRole.COLUMN_ROLE_MAPPING: _drive_invoice_book_column_roles},
+        operations=frozenset({"ledger.invoice.import"}),
     ),
     "cadrumo.entrypoints.adapter_composition._statement_reader": _LocalAiConsumer(
         units=frozenset({f"{_LLM}.statement_reading.LocalStatementReader"}),
         drivers={ModelRole.TEXT_EXTRACTION: _drive_statement_text_read},
+        operations=frozenset({"ledger.import"}),
     ),
     f"{_LLM}.statement_reading.LocalStatementReader": _LocalAiConsumer(
         units=frozenset({f"{_LLM}.evidence_draft_vision.LocalVisionDocumentTranscriber"}),
         drivers={ModelRole.VISION_TRANSCRIPTION: _drive_statement_scanned_page},
+        operations=frozenset({"ledger.import"}),
+    ),
+}
+
+#: Consumer sites no registered operation reaches, and why.
+_UNWRAPPED_CONSUMERS: Mapping[str, str] = {
+    "cadrumo.entrypoints.ledger_evidence_extraction_composition._invoice_propose_supply_nature": (
+        "advisory and asked for only on request, which no registered extraction makes; a missing reader "
+        "leaves the person asked as before rather than refusing"
     ),
 }
 
@@ -857,6 +936,74 @@ def _role_problems(
             missing = unit_roles.get(unit, frozenset()) - consumer.drivers.keys()
             problems += [f"{site} reaches {unit}, which reads with {role.value}, undriven" for role in missing]
     return problems
+
+
+# -- Operation rows ----------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class _OperationDrive:
+    """One way to settle a registered operation with its consumer's model missing, and the role it reads with."""
+
+    role: ModelRole
+    settle: OperationSettler
+
+
+#: Every registered operation a consumer row names, with one drive per reading lane it is settled through.
+_OPERATION_ROWS: Mapping[str, tuple[_OperationDrive, ...]] = {
+    "ledger.import": (
+        _OperationDrive(ModelRole.COLUMN_ROLE_MAPPING, settle_ledger_import),
+        _OperationDrive(ModelRole.TEXT_EXTRACTION, settle_ledger_import_pdf),
+    ),
+    "ledger.invoice.import": (_OperationDrive(ModelRole.COLUMN_ROLE_MAPPING, settle_invoice_import),),
+    "ledger.evidence.extract": (_OperationDrive(ModelRole.VISION_TRANSCRIPTION, settle_evidence_extract),),
+    "ledger.evidence.confirm": (_OperationDrive(ModelRole.VISION_TRANSCRIPTION, settle_evidence_confirm),),
+    "ledger.evidence.batch": (_OperationDrive(ModelRole.TEXT_EXTRACTION, settle_evidence_batch),),
+    "ledger.classify.review": (_OperationDrive(ModelRole.TEXT_EXTRACTION, settle_classify_review),),
+    "ledger.split.review": (_OperationDrive(ModelRole.VISION_TRANSCRIPTION, settle_split_review),),
+}
+
+_SHIPPED_MANIFEST = _PACKAGE_ROOT / "_data" / "operations" / "contract_manifest.json"
+
+
+def _registered_definition_ids() -> frozenset[str]:
+    """Return the definitions the shipped manifest records; its own check holds it equal to the live registry."""
+    manifest = OperationContractManifestV1.model_validate_json(_SHIPPED_MANIFEST.read_text(encoding="utf-8"))
+    return frozenset(manifest.entries)
+
+
+def _operation_coverage_problems(
+    consumers: Mapping[str, _LocalAiConsumer],
+    unwrapped: Mapping[str, str],
+    rows: Mapping[str, object],
+    registered: frozenset[str],
+) -> list[str]:
+    """Return every named operation without a row or registration, every stale row, and every silent site."""
+    named = {operation for consumer in consumers.values() for operation in consumer.operations}
+    problems = [f"{operation} wraps a consumer and has no operation row" for operation in sorted(named - rows.keys())]
+    problems += [f"{operation} has a row but no consumer row names it" for operation in sorted(rows.keys() - named)]
+    problems += [f"{operation} is named but not a registered operation" for operation in sorted(named - registered)]
+    for site, consumer in sorted(consumers.items()):
+        if not consumer.operations and site not in unwrapped:
+            problems.append(f"{site} names no operation and no reason that none reaches it")
+        if consumer.operations and site in unwrapped:
+            problems.append(f"{site} names operations and is also listed as unwrapped")
+    problems += [
+        f"{site} is listed as unwrapped but has no consumer row" for site in sorted(unwrapped.keys() - consumers.keys())
+    ]
+    return problems
+
+
+def _operation_problems(settled: SettledOperation, posts: Sequence[str], role: ModelRole) -> list[str]:
+    """Return why a settled operation does not let another process route its person to the local AI setup."""
+    what = f"{settled.definition_id} settled {settled.condition.value}"
+    if settled.published is None:
+        return [f"{what} with no detail or result a client in another process can read"]
+    verdicts = published_verdicts(settled.published)
+    if not verdicts:
+        return [f"{what} and its published {type(settled.published).__name__} carries no verdict"]
+    attempts = [_local_ai_gating_problems(verdict, posts, role) for verdict in verdicts]
+    return [] if any(not attempt for attempt in attempts) else [f"{what}: {problem}" for problem in attempts[0]]
 
 
 # -- Browser drivers ---------------------------------------------------------------
@@ -976,6 +1123,34 @@ def test_a_local_ai_consumer_refuses_with_its_setup_before_any_request(
         outcome = _outcome(lambda: driver(runtime))
         problems = _local_ai_gating_problems(outcome, runtime.posts, role)
 
+    assert not problems, "\n".join(problems)
+
+
+def test_every_operation_that_wraps_a_consumer_has_an_operation_row() -> None:
+    problems = _operation_coverage_problems(
+        _LOCAL_AI_CONSUMERS, _UNWRAPPED_CONSUMERS, _OPERATION_ROWS, _registered_definition_ids()
+    )
+
+    assert not problems, "\n".join(problems)
+
+
+_OPERATION_DRIVES = [
+    pytest.param(definition_id, drive, id=f"{definition_id}-{drive.role.value}")
+    for definition_id, drives in _OPERATION_ROWS.items()
+    for drive in drives
+]
+
+
+@pytest.mark.parametrize(("definition_id", "drive"), _OPERATION_DRIVES)
+def test_an_operation_that_wraps_a_consumer_settles_with_its_setup_verdict_readable(
+    tmp_path: Path, operation: PinnedAuthorityOperation, definition_id: str, drive: _OperationDrive
+) -> None:
+    del operation
+    with operation_runtime(tmp_path) as runtime:
+        settled = drive.settle(runtime)
+        problems = _operation_problems(settled, runtime.posts, drive.role)
+
+    assert settled.definition_id == definition_id
     assert not problems, "\n".join(problems)
 
 
@@ -1275,3 +1450,165 @@ def test_a_browser_consumer_that_does_not_refuse_or_names_no_action_is_reported(
     ]
     assert _browser_refusal_problems(_outcome(names_no_action)) == ["the refusal names no setup action"]
     assert real == [], "the real readiness check's refusal is what a gated consumer raises"
+
+
+def test_an_operation_without_a_row_a_stale_row_and_a_silent_site_are_reported() -> None:
+    unit = frozenset({f"{_LLM}.fixture.Reader"})
+    consumers = {
+        "cadrumo.fixture.wrapped": _LocalAiConsumer(
+            units=unit, drivers={}, operations=frozenset({"fixture.read", "fixture.unregistered"})
+        ),
+        "cadrumo.fixture.silent": _LocalAiConsumer(units=unit, drivers={}),
+        "cadrumo.fixture.contradictory": _LocalAiConsumer(
+            units=unit, drivers={}, operations=frozenset({"fixture.read"})
+        ),
+    }
+    unwrapped = {"cadrumo.fixture.contradictory": "fixture", "cadrumo.fixture.gone": "fixture"}
+    rows = {"fixture.read": (), "fixture.stale": ()}
+
+    problems = _operation_coverage_problems(consumers, unwrapped, rows, frozenset({"fixture.read", "fixture.stale"}))
+
+    assert problems == [
+        "fixture.unregistered wraps a consumer and has no operation row",
+        "fixture.stale has a row but no consumer row names it",
+        "fixture.unregistered is named but not a registered operation",
+        "cadrumo.fixture.contradictory names operations and is also listed as unwrapped",
+        "cadrumo.fixture.silent names no operation and no reason that none reaches it",
+        "cadrumo.fixture.gone is listed as unwrapped but has no consumer row",
+    ]
+
+
+class _FixtureReadRequest(CredentialFreeOperationRequest):
+    """A fixture operation's request: only the profile it reads for."""
+
+    profile_id: UUID
+
+
+class _FixtureReadResult(BaseModel):
+    """A fixture operation's result: whether the page was read."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    read: bool
+
+
+def _read_one_statement_page() -> None:
+    """Ask the real statement reader for one page; with no model it refuses with the setup verdict."""
+    LocalStatementReader().propose_page(_transcription("05.03.2026 Cafeteria -4,50 EUR"))
+
+
+class _FixtureReadExecutor:
+    """Read one page through a gated consumer, swallowing its refusal into the result or letting it stop the run."""
+
+    def __init__(self, *, swallow: bool) -> None:
+        self._swallow = swallow
+
+    async def execute(self, request: OperationRequest[_FixtureReadRequest], context: OperationExecutorContext) -> str:
+        await context.events.phase(request.definition_id)
+        try:
+            await asyncio.to_thread(_read_one_statement_page)
+        except LedgerImportReaderUnavailableError:
+            if not self._swallow:
+                await context.events.effect(OperationEffect.NONE)
+                raise
+            read = False
+        else:
+            read = True
+        reference = await context.operands.put(_FixtureReadResult(read=read), written_at=datetime.now(UTC))
+        await context.events.effect(OperationEffect.NONE)
+        return reference
+
+
+def _fixture_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+) -> ResolvedOperationAccess:
+    assert isinstance(request.payload, _FixtureReadRequest)
+    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+
+
+def _settle_fixture_read(tmp_path: Path, *, swallow: bool, publish: bool) -> tuple[SettledOperation, list[str]]:
+    """Settle the fixture operation through the real supervisor and read it back as another process does."""
+    definition_id = "ledger.fixture-read"
+    definition = build_single_phase_definition(
+        definition_id=definition_id,
+        request_type=_FixtureReadRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
+        result_type=_FixtureReadResult,
+        executor_type=_FixtureReadExecutor,
+        build=lambda: _FixtureReadExecutor(swallow=swallow),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
+        public_error_detail=publish,
+    )
+    registration = OperationPublicDefinitionRegistrationV1.compose_request_result(
+        definition=definition, public_result_type=_FixtureReadResult, access_resolver=_fixture_access
+    )
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+    posts: list[str] = []
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_BUCKET_ID) as profile,
+        runtime_holding_nothing(posts),
+        bundled_indexed_authority().operation() as operation,
+    ):
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        supervisor = OperationSupervisor(
+            authority_operation=operation,
+            registry=registry,
+            journal=journal,
+            event_stream=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            lease_token_factory=lambda: "2" * 64,
+            clock=lambda: datetime.now(UTC),
+            lease_duration=timedelta(minutes=5),
+            execution_timeout=timedelta(minutes=2),
+            cleanup_timeout=timedelta(minutes=1),
+            response_token_factory=lambda: "3" * 64,
+        )
+        service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
+
+        async def settle() -> SettledOperation:
+            operation_id = await supervisor.submit(
+                OperationRequest[BaseModel](
+                    definition_id=definition_id,
+                    subject_ref=profile_operation_subject(_BUCKET_ID),
+                    payload=_FixtureReadRequest(profile_id=UUID(_BUCKET_ID)),
+                ),
+                operation_id="4" * 64,
+            )
+            terminal = await run_to_settlement(supervisor, operation_id)
+            receipt = terminal.terminal_receipt
+            assert receipt is not None
+            return await read_published(
+                service.resolve,
+                registry,
+                definition_id=definition_id,
+                operation_id=operation_id,
+                condition=receipt.condition,
+                revision=terminal.revision,
+                result_type=_FixtureReadResult,
+            )
+
+        settled = asyncio.run(settle())
+    return settled, posts
+
+
+def test_an_operation_that_swallows_or_withholds_a_consumer_refusal_is_reported(tmp_path: Path) -> None:
+    swallowed, swallowed_posts = _settle_fixture_read(tmp_path / "swallowed", swallow=True, publish=True)
+    withheld, withheld_posts = _settle_fixture_read(tmp_path / "withheld", swallow=False, publish=False)
+    published, published_posts = _settle_fixture_read(tmp_path / "published", swallow=False, publish=True)
+
+    assert _operation_problems(swallowed, swallowed_posts, ModelRole.TEXT_EXTRACTION) == [
+        "ledger.fixture-read settled succeeded and its published _FixtureReadResult carries no verdict"
+    ]
+    assert _operation_problems(withheld, withheld_posts, ModelRole.TEXT_EXTRACTION) == [
+        "ledger.fixture-read settled refused with no detail or result a client in another process can read"
+    ]
+    assert _operation_problems(published, published_posts, ModelRole.TEXT_EXTRACTION) == [], (
+        "an operation that lets the real consumer's refusal stop it, and publishes it, is what a gated row settles as"
+    )
+    assert _operation_problems(published, published_posts, ModelRole.VISION_TRANSCRIPTION) == [
+        "ledger.fixture-read settled refused: verdict speaks for role ['text_extraction'], not vision_transcription"
+    ]
