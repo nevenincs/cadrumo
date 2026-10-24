@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:d8192cb00a329449a5b83554cf4fec07989ceccaa946b433106eb7d751d9b3bc'
+body_hash: 'sha256:bbff8a83cdbdf6e47fc1450e20db73d7eac4314de148247a42eceb03a1ccc582'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -43,7 +43,7 @@ Move every classification and wording decision the prototype had to make into th
 - [x] `P01.S06` - Move period words and modelo titles into the application wording module and use them in the form and list projections; `src/cadrumo/application/modelo/work_form_wording.py`.
 - [x] `P01.S07` - Add a public declarations list row and register the read modelo.declarations.list, carrying state, group, next step, editability and the AEAT axes, with an exact-profile access test; `src/cadrumo/application/modelo/declarations_list.py`.
 - [x] `P01.S08` - Move the sources grouping (family, state, boxes fed, owning surface) from the TUI into an application read; `src/cadrumo/application/modelo/work_form_source_groups.py`.
-- [ ] `P01.S09` - Name the figures outside the form a failed box waits on, with their owning surface, in the casilla help card, and carry citation text for legal references; `src/cadrumo/application/modelo/casilla_help.py`.
+- [x] `P01.S09` - Name the figures outside the form a failed box waits on, with their owning surface, in the casilla help card, and carry citation text for legal references; `src/cadrumo/application/modelo/casilla_help.py`.
 - [ ] `P01.S10` - Accept raw typed text in edit preflight and return the parsed value, its normalisations and parse refusals per address; `src/cadrumo/application/modelo/edit_operator_input.py`.
 
 ### Phase `P02` - One shared Modelo wording for every frontend

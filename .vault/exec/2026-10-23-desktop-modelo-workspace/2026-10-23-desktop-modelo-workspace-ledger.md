@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:fc814c98efe52309e4da21a512d78adf16e410d80b249cf9272634feb7c76568'
+body_hash: 'sha256:3e01dd7c90f8c884445607b4ca60227112de8b07f1bb376471ecf0f15dbd916b'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -207,6 +207,12 @@ related:
 - `S08` `verify:` `pytest source groups, TUI sources and real sources, check route, progress, responsive surfaces, form tests, workbench operations and loading (166)` -> `pass`
 - `S08` `verify:` `lint-imports` -> `pass`
 - `S08` `verify:` `operation_contract_manifest.generate` -> `pass`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_casilla_help_outside_figures.py`
+- `S09` `M` `src/cadrumo/application/modelo/casilla_help.py`
+- `S09` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S09` `verify:` `pytest casilla help, formula values, outside figures, workbench operations (39), TUI help, footer, freshness, affects text, installed factory (67)` -> `pass`
+- `S09` `verify:` `basedpyright casilla_help` -> `pass`
+- `S09` `verify:` `operation_contract_manifest.generate` -> `pass`
 
 ## Notes
 
@@ -216,3 +222,4 @@ related:
 - `S06` Period words already moved in S03; this step moved modelo titles and put title, number and period words on the form. The list projection that uses them is S07
 - `S07` The list read captures through the generation's own door with a list-only method, so the runtime gains no special case; row words and steps moved from the TUI `row_words`
 - `S08` Scope corrected from `source_policy.py` to the new defining module `work_form_source_groups.py.` Type gate clean for these files; remaining findings are in another session's statement-reading files
+- `S09` Citation text already reached the card's legal basis; this step proves it and adds the off-form figures. lint-imports shows one broken contract from another session's `cadrumo/tests/statement_reader_fixtures.py,` not from this step

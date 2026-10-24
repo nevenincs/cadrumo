@@ -16,7 +16,10 @@ written at runtime:
 * where a bound value comes from, and which boxes use this one;
 * how a change to the box travels to the declaration's result: the fewest
   formulas from it to the result box, the other printed boxes it also
-  reaches, or that no formula chain reaches the result at all.
+  reaches, or that no formula chain reaches the result at all;
+* the figures its formula reads that the form does not print, each named,
+  with the area that owns it, so a box that could not be worked out says what
+  it waits on outside the form.
 
 The explanation a person wrote for the casilla is the form's own ``help``; this
 card adds what the registry can say mechanically, so a box with no written help
@@ -32,7 +35,7 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import date
 from typing import Final
 
@@ -46,7 +49,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
+from ...domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_references import LegalReference
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from .casilla_help_formula import (
@@ -57,7 +60,14 @@ from .casilla_help_formula import (
 )
 from .casilla_help_reach import ModeloHelpReachV1, build_casilla_help_reach
 from .printed_boxes import snapshot_printed_boxes
-from .source_policy import source_policy
+from .source_policy import SourceSurface, source_policy
+from .work_form_localization import localized_text, unnamed_casilla_label
+from .workspace import formula_expression_operand_references
+from .workspace_models import (
+    ModeloWorkspaceFormulaBindingOperandReferenceV1,
+    ModeloWorkspaceFormulaCasillaOperandReferenceV1,
+    ModeloWorkspaceFormulaDateBindingOperandReferenceV1,
+)
 
 _HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "constraint.at_least": "application.modelo.help.constraint.at_least",
@@ -119,6 +129,23 @@ class ModeloHelpCitationV1(BaseModel):
     permalink: str
 
 
+class ModeloHelpOutsideFigureV1(BaseModel):
+    """A figure the box's formula reads that the form does not print, and the product area that owns it.
+
+    Exactly one of ``casilla_id`` and ``binding_id`` names the figure: a
+    working figure the application computes, or a source the formula reads
+    directly. ``surface`` is :attr:`~.source_policy.SourceSurface.NONE` when
+    no area owns it, such as a figure calculated from other boxes.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    label: str
+    surface: SourceSurface
+    casilla_id: CasillaId | None = None
+    binding_id: str | None = None
+
+
 class ModeloCasillaHelpCardV1(BaseModel):
     """Everything the registry can say mechanically about one casilla.
 
@@ -137,6 +164,7 @@ class ModeloCasillaHelpCardV1(BaseModel):
     feeds: tuple[str, ...]
     reach: ModeloHelpReachV1 | None = None
     is_result: bool = False
+    outside_figures: tuple[ModeloHelpOutsideFigureV1, ...] = ()
 
 
 class CasillaHelpCatalogueError(InternalInvariantError):
@@ -198,6 +226,52 @@ def _legal_basis(casilla: CasillaDefinition, operation: PinnedAuthorityOperation
         ModeloHelpCitationV1(text=legal_citation_text(reference), permalink=reference.permalink)
         for reference in (operation.legal_reference(ref_id) for ref_id in casilla.legal_refs)
     )
+
+
+def _outside_figures(
+    casilla: CasillaDefinition,
+    *,
+    formulas: Mapping[str, FormulaDefinition],
+    casillas: Mapping[str, CasillaDefinition],
+    bindings: Mapping[str, BindingDefinition],
+    is_printed: Callable[[str], bool],
+    binding_name: Callable[[BindingId], str],
+    language: OutputLanguage,
+) -> tuple[ModeloHelpOutsideFigureV1, ...]:
+    """The figures the box's formula reads that the form does not print, each once, in formula order."""
+    formula = None if casilla.formula is None else formulas.get(casilla.formula)
+    if formula is None:
+        return ()
+    figures: dict[str, ModeloHelpOutsideFigureV1] = {}
+    for reference in formula_expression_operand_references(formula.id, formula.expression):
+        if isinstance(reference, ModeloWorkspaceFormulaCasillaOperandReferenceV1):
+            operand = casillas.get(reference.casilla_id)
+            if operand is None or is_printed(operand.id):
+                continue
+            bound = bindings.get(operand.binding) if operand.binding is not None else None
+            label = localized_text(operand.localization_keys, language) or unnamed_casilla_label(language)
+            figures.setdefault(
+                f"casilla:{operand.id}",
+                ModeloHelpOutsideFigureV1(
+                    label=label.text,
+                    surface=SourceSurface.NONE if bound is None else source_policy(bound.source).surface,
+                    casilla_id=operand.id,
+                ),
+            )
+        elif isinstance(
+            reference,
+            ModeloWorkspaceFormulaBindingOperandReferenceV1 | ModeloWorkspaceFormulaDateBindingOperandReferenceV1,
+        ):
+            binding = bindings.get(reference.binding_id)
+            figures.setdefault(
+                f"binding:{reference.binding_id}",
+                ModeloHelpOutsideFigureV1(
+                    label=binding_name(reference.binding_id),
+                    surface=SourceSurface.NONE if binding is None else source_policy(binding.source).surface,
+                    binding_id=str(reference.binding_id),
+                ),
+            )
+    return tuple(figures.values())
 
 
 def _origin_sentences(
@@ -277,6 +351,15 @@ def build_casilla_help_card(
     feeds, is_result, reach = build_casilla_help_reach(
         casilla, snapshot=snapshot, casillas=casillas, boxes=boxes, box_text=box_text
     )
+    outside = _outside_figures(
+        casilla,
+        formulas=formulas,
+        casillas=casillas,
+        bindings=bindings,
+        is_printed=lambda key: boxes.number(key) is not None,
+        binding_name=binding_name,
+        language=language,
+    )
     return ModeloCasillaHelpCardV1(
         casilla_id=casilla.id,
         formula=formula_card,
@@ -287,6 +370,7 @@ def build_casilla_help_card(
         feeds=feeds,
         reach=reach,
         is_result=is_result,
+        outside_figures=outside,
     )
 
 
@@ -294,6 +378,7 @@ __all__ = [
     "CasillaHelpCatalogueError",
     "ModeloCasillaHelpCardV1",
     "ModeloHelpCitationV1",
+    "ModeloHelpOutsideFigureV1",
     "build_casilla_help_card",
     "legal_citation_text",
 ]
