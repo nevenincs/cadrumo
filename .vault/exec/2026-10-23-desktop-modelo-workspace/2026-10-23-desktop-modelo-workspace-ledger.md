@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:65b906b25c88ce3fd3ce70500d30bb56b21975e09c9481cb56c5be7a57d8d71a'
+body_hash: 'sha256:40e4d418a297b19e24f6f98ee96517d8adca6c5693dfba2cf6abce11997dd08f'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -859,6 +859,22 @@ related:
 - `S56` `verify:` `playwright full modelo suite` -> `pass`
 - `S56` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
 - `S56` `by:` `opus-p05-lane`
+- `S57` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S57` `M` `native/desktop/frontend/src/components/modelo/dialogs/ReviewDialog.tsx`
+- `S57` `M` `native/desktop/frontend/src/components/modelo/form/session.ts`
+- `S57` `M` `native/desktop/frontend/tests/modelo-form-model.spec.ts`
+- `S57` `M` `dev/locales/desktop_chrome.py`
+- `S57` `verify:` `tsc --noEmit` -> `pass`
+- `S57` `verify:` `playwright modelo-form-model` -> `pass`
+- `S57` `by:` `opus-p04-lane-b`
+- `S58` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S58` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S58` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S58` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S58` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S58` `verify:` `playwright full modelo suite` -> `pass`
+- `S58` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
+- `S58` `by:` `opus-p05-lane`
 
 ## Notes
 
@@ -916,3 +932,5 @@ related:
 - `S54` committed in 790d21f36f; a Hungarian failure traced to a fixture rewritten by a concurrent regeneration, not to the window
 - `S55` committed in 4c1b5c81da with S56
 - `S56` committed in 4c1b5c81da; write specs run in English only, every edit envelope being read on the English form's baseline
+- `S57` committed in e4db8638d4 with S58; scenario specs proven by the proof lane's full run
+- `S58` committed in e4db8638d4
