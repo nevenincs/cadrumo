@@ -9,6 +9,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 
 from ...contracts.contracts import RefusalError
 from ...contracts.navigation import ViewLink
+from ...contracts.presentation import PresentationDelivered, PresentationRequest
 from ...contracts.session_events import PresentationRequested
 from ..framing import VerifiedConnection
 from ..frontend_client import FrontendClient
@@ -56,3 +57,45 @@ def test_presentation_reaches_only_the_current_session_and_refuses_a_foreign_pro
     client._session_retired(event)
     assert seen == [_SELECTED]
     assert retired == []
+
+
+class _PresentingConnection:
+    """A verified connection whose runtime answers a view request, echoing the parameters it was given or others."""
+
+    def __init__(self, echoed: dict[str, str] | None) -> None:
+        self.echoed = echoed
+
+    def present(self, request: PresentationRequest, *, deadline: float) -> PresentationDelivered:
+        return PresentationDelivered(
+            request_id=request.request_id,
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            destination=request.destination,
+            params=request.params if self.echoed is None else self.echoed,
+            delivered=1,
+        )
+
+
+@pytest.mark.parametrize("params", [{}, {"select": _TRANSACTION}])
+def test_a_delivered_view_echoes_exactly_the_parameters_asked_for(params: dict[str, str]) -> None:
+    client = FrontendClient(
+        cast(VerifiedConnection, _PresentingConnection(None)),
+        profile_id=uuid4(),
+        frontend=OperationFrontendProjection.DESKTOP,
+    )
+    client._session_id = uuid4()
+
+    delivered = client.present_destination("ledger", params)
+    assert (delivered.destination, delivered.params) == ("ledger", params)
+
+
+def test_a_reply_echoing_other_parameters_is_refused() -> None:
+    client = FrontendClient(
+        cast(VerifiedConnection, _PresentingConnection({})),
+        profile_id=uuid4(),
+        frontend=OperationFrontendProjection.DESKTOP,
+    )
+    client._session_id = uuid4()
+
+    with pytest.raises(RefusalError):
+        client.present_destination("ledger", {"select": _TRANSACTION})

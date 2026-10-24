@@ -154,8 +154,9 @@ def test_the_page_reaches_only_the_same_persons_signed_in_page_surfaces_on_that_
     delivered = _ask(profiles, desktop, "profile/aeat-access")
 
     assert isinstance(delivered, PresentationDelivered)
-    assert (delivered.destination, delivered.delivered, delivered.connection_id) == (
+    assert (delivered.destination, delivered.params, delivered.delivered, delivered.connection_id) == (
         "profile/aeat-access",
+        {},
         1,
         desktop.connection_id,
     )
@@ -248,7 +249,7 @@ def test_a_selected_record_is_relayed_with_the_view(tmp_path: Path) -> None:
     delivered = _ask(profiles, desktop, "ledger", {"select": _TRANSACTION})
 
     assert isinstance(delivered, PresentationDelivered)
-    assert delivered.delivered == 1
+    assert (delivered.destination, delivered.params, delivered.delivered) == ("ledger", {"select": _TRANSACTION}, 1)
     events = [event for event in profiles.take_events(tui) if isinstance(event, PresentationRequested)]
     assert [(event.destination, event.params) for event in events] == [("ledger", {"select": _TRANSACTION})]
 
