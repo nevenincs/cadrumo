@@ -65,6 +65,7 @@ if TYPE_CHECKING:
     from ...user_profile.schema import ProfileSchemaDefinition
     from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
     from .facts.schema import GovernedFact
+    from .governed_fact_scope import GovernedFactSource
     from .ids import RevisionId
     from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
     from .schema_deadlines import DeadlineWindowDefinition
@@ -72,8 +73,9 @@ if TYPE_CHECKING:
     from .schema_form_layouts import FormLayoutDefinition
     from .schema_references import LegalReference, SourceReference
     from .snapshot_globals import SnapshotGlobalCatalogues, SupportedFilingYearsCatalogue
+    from .snapshot_proof import SnapshotCrossCheckProof, SnapshotProofContract
     from .static_inspection import RegistryRevisionInspection
-    from .temporal import ModeloRevisionDirectory
+    from .temporal import ModeloRevisionDirectory, RevisionSelectionMetadata
 
 _LOGGER = get_logger(__name__)
 
@@ -749,6 +751,78 @@ class PinnedAuthorityOperation:
             raise RegistryValidationError("registry snapshot projection resolved to an unexpected type")
         return value
 
+    def build_unretained_snapshot(
+        self,
+        modelo_id: str | Modelo,
+        /,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+        revision_id: RevisionId | None = None,
+        grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+        governed_facts: GovernedFactSource | None = None,
+    ) -> RegistrySnapshot:
+        """Build one validated snapshot exactly as :meth:`snapshot` does, without sharing it.
+
+        This is the same build behind a :meth:`snapshot` cache miss, proof use
+        included, but the result is not retained in the reader's accounted
+        cache. A caller visiting many coordinates once, such as the publication
+        sweep over every declared selector, would otherwise fill the component
+        budget with snapshots nobody asks for again and evict the components
+        that later requests need. The components the build loads are cached as
+        usual.
+
+        ``governed_facts`` replaces this operation as the validation's
+        governed-fact scope; it must resolve facts of this same generation. A
+        publication sweep passes a recorder that delegates to this operation.
+        """
+        return self._build_snapshot(
+            Modelo(modelo_id).value,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+            grade=grade,
+            governed_facts=governed_facts,
+        )
+
+    def snapshot_proof_contract(self) -> SnapshotProofContract | None:
+        """Return the snapshot proof contract this generation records, or ``None`` without proofs."""
+        reader = self._reader
+        return reader.snapshot_proof_contract() if isinstance(reader, SQLiteAuthorityReader) else None
+
+    def _usable_snapshot_proof(
+        self,
+        selected: RevisionSelectionMetadata,
+        normalized: str,
+        *,
+        filing_year: int,
+        period: str,
+        grade: RegistryAuthorityGrade,
+    ) -> SnapshotCrossCheckProof | None:
+        """Return publication's proof for this request when every trust condition holds.
+
+        The admitted physical digest already covers the proof rows. The proof
+        additionally needs this process to run the validator that proved it,
+        today's Madrid date inside the window its wall-clock fact lookups hold
+        for, and a recorded cell whose revision is the one just selected.
+        """
+        from .snapshot_proof import runtime_validator_matches, snapshot_proof_key
+
+        reader = self._reader
+        if not isinstance(reader, SQLiteAuthorityReader):
+            return None
+        contract = reader.snapshot_proof_contract()
+        if contract is None or not contract.admits_date(today_madrid()) or not runtime_validator_matches(contract):
+            return None
+        proof = reader.snapshot_proof(
+            snapshot_proof_key(selected, modelo_id=normalized, filing_year=filing_year, period=period, grade=grade)
+        )
+        if proof is None or proof.revision_id != selected.id:
+            return None
+        return proof
+
     def _build_snapshot(
         self,
         normalized: str,
@@ -758,6 +832,7 @@ class PinnedAuthorityOperation:
         on: date | None,
         revision_id: RevisionId | None,
         grade: RegistryAuthorityGrade,
+        governed_facts: GovernedFactSource | None = None,
     ) -> RegistrySnapshot:
         from .governed_fact_scope import validating_governed_facts
         from .schema import RegistryCatalogues
@@ -783,7 +858,12 @@ class PinnedAuthorityOperation:
             supplementary_ordenes=globals_value.supplementary_ordenes,
             supported_filing_years=directory.supported_filing_years,
         )
-        with validating_governed_facts(self):
+        proof = (
+            self._usable_snapshot_proof(selected, normalized, filing_year=filing_year, period=period, grade=grade)
+            if on is None and revision_id is None
+            else None
+        )
+        with validating_governed_facts(self if governed_facts is None else governed_facts):
             return build_validated_snapshot(
                 modelo,
                 catalogues,
@@ -793,6 +873,7 @@ class PinnedAuthorityOperation:
                 revision_id=revision_id,
                 grade=grade,
                 revision_directory=directory,
+                proof=proof,
             )
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:

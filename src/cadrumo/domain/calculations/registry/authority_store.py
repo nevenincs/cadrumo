@@ -8,6 +8,7 @@ import sqlite3
 from collections.abc import Callable, Generator, Hashable
 from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from queue import LifoQueue
 from secrets import token_hex
@@ -30,8 +31,18 @@ from .authority_cache import (
     AuthorityCacheStats,
     RetainedAuthorityValue,
 )
+from .snapshot_proof import (
+    SNAPSHOT_PROOF_TABLES,
+    SnapshotCrossCheckProof,
+    SnapshotProofContract,
+    SnapshotProofKey,
+    ValidatorSource,
+)
 
-AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v4"
+AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v5"
+#: The preceding format: identical components, no snapshot proof tables.
+_PROOFLESS_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v4"
+_ADMITTED_DATABASE_FORMATS: Final = frozenset({_PROOFLESS_DATABASE_FORMAT, AUTHORITY_DATABASE_FORMAT})
 AUTHORITY_DESCRIPTOR_FORMAT: Final = "cadrumo-authority-descriptor-v1"
 #: The one file in an authority directory that selects its current database.
 AUTHORITY_DESCRIPTOR_FILENAME: Final = "authority.current.json"
@@ -261,6 +272,8 @@ class SQLiteAuthorityReader:
         self._active_leases = 0
         self._closed = False
         self._component_queries: tuple[AuthorityComponentQuery, ...] | None = None
+        self._has_proof_tables = False
+        self._proof_contract: tuple[SnapshotProofContract | None] | None = None
         for _ in range(max_connections):
             connection = self._open_connection()
             self._all_connections.append(connection)
@@ -343,6 +356,67 @@ class SQLiteAuthorityReader:
         with self._state_lock:
             self._component_queries = queries
         return queries
+
+    def snapshot_proof_contract(self) -> SnapshotProofContract | None:
+        """Return the validator and date window this database's snapshot proofs hold under.
+
+        ``None`` means the database carries no proofs: it is the preceding
+        format, or a newer database whose proof tables are still empty while
+        publication sweeps it. The contract is read once per admitted
+        database; identity is still verified on every call.
+        """
+        self._verify_database_identity()
+        with self._state_lock:
+            if self._proof_contract is not None:
+                return self._proof_contract[0]
+        contract = self._read_proof_contract() if self._has_proof_tables else None
+        with self._state_lock:
+            self._proof_contract = (contract,)
+        return contract
+
+    def snapshot_proof(self, key: SnapshotProofKey) -> SnapshotCrossCheckProof | None:
+        """Return publication's proof for exactly ``key``, or ``None`` when the cell was not proven."""
+        if self.snapshot_proof_contract() is None:
+            return None
+        with self._checkout() as connection:
+            row = connection.execute(
+                "SELECT revision_id FROM snapshot_proofs "
+                "WHERE modelo_id = ? AND filing_year = ? AND period = ? AND grade = ?",
+                (key.modelo_id, key.filing_year, key.period, key.grade.value),
+            ).fetchone()
+        self._verify_database_identity()
+        if row is None:
+            return None
+        revision_id = row[0]
+        if not isinstance(revision_id, str) or not revision_id:
+            raise AuthorityStoreCorruptionError("authority snapshot proof names no revision")
+        return SnapshotCrossCheckProof(key, revision_id)
+
+    def _read_proof_contract(self) -> SnapshotProofContract | None:
+        with self._checkout() as connection:
+            row = connection.execute(
+                "SELECT validator_digest, window_from, window_to FROM snapshot_proof_contract WHERE singleton = 1"
+            ).fetchone()
+            source_rows = connection.execute(
+                "SELECT module, sha256 FROM snapshot_proof_validator_sources ORDER BY module"
+            ).fetchall()
+        self._verify_database_identity()
+        if row is None:
+            return None
+        digest, window_from, window_to = row
+        if not isinstance(digest, str) or _SHA256_HEX.fullmatch(digest) is None:
+            raise AuthorityStoreCorruptionError("authority snapshot proof contract has an invalid validator digest")
+        sources: list[ValidatorSource] = []
+        for module, sha256 in source_rows:
+            if not isinstance(module, str) or not isinstance(sha256, str) or _SHA256_HEX.fullmatch(sha256) is None:
+                raise AuthorityStoreCorruptionError("authority snapshot proof validator source is malformed")
+            sources.append(ValidatorSource(module, sha256))
+        return SnapshotProofContract(
+            validator_sources=tuple(sources),
+            validator_digest=digest,
+            window_from=_proof_window_bound(window_from),
+            window_to=_proof_window_bound(window_to),
+        )
 
     @property
     def active_leases(self) -> int:
@@ -431,17 +505,26 @@ class SQLiteAuthorityReader:
         exactly those published bytes, so repeating the scans here would only
         re-prove what the digest guarantees. An older format is refused rather
         than read under a layout it does not have.
+
+        The preceding format differs only by lacking the snapshot proof
+        tables, so it is admitted as a database without proofs. The current
+        format must carry all three proof tables; proof rows without a
+        contract would be proofs nothing vouches for, so they are refused.
         """
         with self._checkout() as connection:
             format_row = connection.execute("SELECT format FROM authority_manifest WHERE singleton = 1").fetchone()
-            if format_row is None or format_row[0] != AUTHORITY_DATABASE_FORMAT:
+            if format_row is None or format_row[0] not in _ADMITTED_DATABASE_FORMATS:
                 raise AuthorityStoreFormatError(
-                    f"authority database format {format_row[0] if format_row else None!r} is not "
-                    f"{AUTHORITY_DATABASE_FORMAT!r}; republish the authority",
+                    f"authority database format {format_row[0] if format_row else None!r} is not one of "
+                    f"{sorted(_ADMITTED_DATABASE_FORMATS)!r}; republish the authority",
                 )
             row = connection.execute("SELECT logical_generation FROM authority_manifest WHERE singleton = 1").fetchone()
+            has_proof_tables = format_row[0] == AUTHORITY_DATABASE_FORMAT
+            if has_proof_tables:
+                _require_proof_tables(connection)
         if row is None or row[0] != self._descriptor.logical_generation:
             raise AuthorityStoreCorruptionError("authority database manifest disagrees with its descriptor")
+        self._has_proof_tables = has_proof_tables
 
     def _read_database_identity(self) -> _DatabaseIdentity:
         """Prove the published database's whole digest, once per file object rather than once per process.
@@ -534,3 +617,32 @@ class SQLiteAuthorityReader:
     def _require_open(self) -> None:
         if self._closed:
             raise AuthorityStoreError("authority reader is closed")
+
+
+def _require_proof_tables(connection: sqlite3.Connection) -> None:
+    present = {name for (name,) in connection.execute("SELECT name FROM sqlite_schema WHERE type = 'table'").fetchall()}
+    missing = [table for table in SNAPSHOT_PROOF_TABLES if table not in present]
+    if missing:
+        raise AuthorityStoreCorruptionError(f"authority database lacks its snapshot proof tables {missing!r}")
+    (has_contract,) = connection.execute("SELECT EXISTS (SELECT 1 FROM snapshot_proof_contract)").fetchone()
+    if has_contract:
+        return
+    (has_rows,) = connection.execute(
+        "SELECT EXISTS (SELECT 1 FROM snapshot_proofs) OR EXISTS (SELECT 1 FROM snapshot_proof_validator_sources)"
+    ).fetchone()
+    if has_rows:
+        raise AuthorityStoreCorruptionError("authority database records snapshot proofs without a proof contract")
+
+
+def _proof_window_bound(value: object) -> date | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise AuthorityStoreCorruptionError("authority snapshot proof window bound is not ISO date text")
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError as exc:
+        raise AuthorityStoreCorruptionError("authority snapshot proof window bound is not an ISO date") from exc
+    if parsed.isoformat() != value:
+        raise AuthorityStoreCorruptionError("authority snapshot proof window bound is not canonical ISO date text")
+    return parsed

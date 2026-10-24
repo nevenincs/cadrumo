@@ -11,11 +11,14 @@ Core types:
 from __future__ import annotations
 
 import importlib
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass
 from datetime import date
+from enum import Enum, auto
 from typing import Protocol
 
 from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .casilla_structural_succession import CasillaStructuralSuccession, endpoint_source_context_failures
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
@@ -30,6 +33,7 @@ from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, Regist
 from .schema_base import DateAxis, filing_period_from_scope
 from .schema_references import LegalReference, SourceReference, governed_period_span
 from .schema_surfaces import CasillaContinuidadEvolutionDefinition, CasillaDefinition
+from .snapshot_proof import SnapshotCrossCheckProof, snapshot_proof_key
 from .temporal import (
     ModeloRevisionDirectory,
     RevisionSelectionMetadata,
@@ -242,6 +246,132 @@ def _require_snapshot_filing_review_tier(
         )
 
 
+class _SnapshotCheckStage(Enum):
+    """The point of snapshot assembly at which a cross-check runs, in assembly order."""
+
+    REQUEST = auto()
+    SELECTED = auto()
+    MATERIALIZED = auto()
+    REFERENCED = auto()
+    ASSEMBLED = auto()
+
+
+@dataclass(slots=True)
+class _SnapshotCheckContext:
+    """The request and the assembly state the cross-checks read, filled in as assembly proceeds."""
+
+    modelo: ModeloDefinition
+    catalogues: RegistryCatalogues
+    filing_year: int
+    on: date | None
+    grade: RegistryAuthorityGrade
+    revision_directory: ModeloRevisionDirectory | None
+    revision: ModeloRevision | None = None
+    legal_ids: set[str] | None = None
+    snapshot: RegistrySnapshot | None = None
+
+    def selected_revision(self) -> ModeloRevision:
+        if self.revision is None:
+            raise InternalInvariantError("snapshot cross-check ran before revision selection")
+        return self.revision
+
+    def referenced_legal_ids(self) -> set[str]:
+        if self.legal_ids is None:
+            raise InternalInvariantError("snapshot cross-check ran before the reference closure was collected")
+        return self.legal_ids
+
+    def assembled_snapshot(self) -> RegistrySnapshot:
+        if self.snapshot is None:
+            raise InternalInvariantError("snapshot cross-check ran before the snapshot was assembled")
+        return self.snapshot
+
+
+@dataclass(frozen=True, slots=True)
+class _SnapshotCrossCheck:
+    """One cross-check of snapshot assembly and the stage it runs at."""
+
+    stage: _SnapshotCheckStage
+    run: Callable[[_SnapshotCheckContext], None]
+
+
+def _install_cross_domain_checks_step(_context: _SnapshotCheckContext) -> None:
+    _install_cross_domain_snapshot_checks()
+
+
+def _authority_selection_step(context: _SnapshotCheckContext) -> None:
+    _validate_snapshot_authority_selection(
+        context.modelo, context.selected_revision(), context.catalogues, grade=context.grade
+    )
+
+
+def _export_record_families_step(context: _SnapshotCheckContext) -> None:
+    validate_materialized_export_record_families(context.selected_revision())
+
+
+def _filing_capability_step(context: _SnapshotCheckContext) -> None:
+    _require_filing_snapshot_capability(context.modelo, context.selected_revision(), context.grade)
+
+
+def _filing_review_tier_step(context: _SnapshotCheckContext) -> None:
+    _require_snapshot_filing_review_tier(
+        context.modelo,
+        context.selected_revision(),
+        context.catalogues,
+        context.referenced_legal_ids(),
+        grade=context.grade,
+        on=context.on,
+        filing_year=context.filing_year,
+    )
+
+
+def _legal_windows_step(context: _SnapshotCheckContext) -> None:
+    check_revision_scoped_legal_windows(context.modelo, context.selected_revision(), context.catalogues)
+
+
+def _source_windows_step(context: _SnapshotCheckContext) -> None:
+    check_revision_scoped_source_windows(
+        context.modelo,
+        context.selected_revision(),
+        context.catalogues,
+        context.revision_directory
+        or ModeloRevisionDirectory.from_modelo(context.modelo, support=context.catalogues.supported_filing_years),
+    )
+
+
+def _id_references_step(context: _SnapshotCheckContext) -> None:
+    check_all_id_references(context.assembled_snapshot())
+
+
+# Every check snapshot assembly runs, in the order it runs them. A publication
+# proof replaces exactly this registry and nothing else: data steps (selection,
+# temporal resolution, period normalisation, export-layout derivation, the
+# reference closure and the snapshot model's own validators) are not here and
+# always run. A check added to assembly belongs here, so the set a proof skips
+# can never drift from the set a proof was made by.
+_SNAPSHOT_CROSS_CHECKS: tuple[_SnapshotCrossCheck, ...] = (
+    _SnapshotCrossCheck(_SnapshotCheckStage.REQUEST, _install_cross_domain_checks_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.SELECTED, _authority_selection_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.MATERIALIZED, _export_record_families_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.MATERIALIZED, _filing_capability_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.REFERENCED, _filing_review_tier_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.REFERENCED, _legal_windows_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.REFERENCED, _source_windows_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.ASSEMBLED, _id_references_step),
+)
+
+
+def _run_snapshot_cross_checks(
+    stage: _SnapshotCheckStage,
+    context: _SnapshotCheckContext,
+    proof: SnapshotCrossCheckProof | None,
+) -> None:
+    if proof is not None:
+        return
+    for check in _SNAPSHOT_CROSS_CHECKS:
+        if check.stage is stage:
+            check.run(context)
+
+
 def build_validated_snapshot(
     modelo: ModeloDefinition,
     catalogues: RegistryCatalogues,
@@ -252,6 +382,7 @@ def build_validated_snapshot(
     revision_id: RevisionId | None = None,
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
     revision_directory: ModeloRevisionDirectory | None = None,
+    proof: SnapshotCrossCheckProof | None = None,
 ) -> RegistrySnapshot:
     """Return a selected snapshot after the caller has validated ``modelo``.
 
@@ -266,10 +397,28 @@ def build_validated_snapshot(
     caller asking when a modelo is due is not making a filing assertion, and
     forcing it to would make a scheduling question unanswerable rather than safe.
 
+    ``proof`` is publication's record that this exact request already passed
+    every cross-check of this function under the same validator. It replaces
+    the cross-check registry and nothing else: selection, temporal resolution,
+    period normalisation, export-layout derivation, catalogue slicing and the
+    snapshot model's own validators still run. A proof is refused unless the
+    request names neither ``on`` nor ``revision_id`` and the proof's key and
+    revision equal this request's canonical key and selected revision.
+
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
     """
-    _install_cross_domain_snapshot_checks()
+    if proof is not None and (on is not None or revision_id is not None):
+        raise InternalInvariantError("a snapshot proof covers only requests without on or revision_id")
+    context = _SnapshotCheckContext(
+        modelo=modelo,
+        catalogues=catalogues,
+        filing_year=filing_year,
+        on=on,
+        grade=grade,
+        revision_directory=revision_directory,
+    )
+    _run_snapshot_cross_checks(_SnapshotCheckStage.REQUEST, context, proof)
     revision = select_revision(
         modelo,
         filing_year=filing_year,
@@ -284,11 +433,10 @@ def build_validated_snapshot(
         period=period,
         support=catalogues.supported_filing_years,
     )
-    endpoint_directory = revision_directory or ModeloRevisionDirectory.from_modelo(
-        modelo,
-        support=catalogues.supported_filing_years,
-    )
-    _validate_snapshot_authority_selection(modelo, revision, catalogues, grade=grade)
+    if proof is not None:
+        _require_matching_proof(proof, modelo, revision, filing_year=filing_year, period=period, grade=grade)
+    context.revision = revision
+    _run_snapshot_cross_checks(_SnapshotCheckStage.SELECTED, context, proof)
     # select_revision matches period selectors case-insensitively but returns
     # the caller's token verbatim. Storing that raw token made the snapshot
     # disagree with itself -- filing_period normalises through Period while
@@ -301,20 +449,11 @@ def build_validated_snapshot(
     # rather than collapsing it to the symbolic EVENT-N selector.
     period = registry_period_for_request(revision.period_selector.declared_periods, period) or period
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
-    validate_materialized_export_record_families(revision)
-    _require_filing_snapshot_capability(modelo, revision, grade)
+    context.revision = revision
+    _run_snapshot_cross_checks(_SnapshotCheckStage.MATERIALIZED, context, proof)
     legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
-    _require_snapshot_filing_review_tier(
-        modelo,
-        revision,
-        catalogues,
-        legal_ids,
-        grade=grade,
-        on=on,
-        filing_year=filing_year,
-    )
-    check_revision_scoped_legal_windows(modelo, revision, catalogues)
-    check_revision_scoped_source_windows(modelo, revision, catalogues, endpoint_directory)
+    context.legal_ids = legal_ids
+    _run_snapshot_cross_checks(_SnapshotCheckStage.REFERENCED, context, proof)
     snapshot = RegistrySnapshot(
         modelo=modelo,
         revision=revision,
@@ -338,8 +477,26 @@ def build_validated_snapshot(
         convenio=catalogues.convenio,
         supplementary_ordenes=catalogues.supplementary_ordenes,
     )
-    check_all_id_references(snapshot)
+    context.snapshot = snapshot
+    _run_snapshot_cross_checks(_SnapshotCheckStage.ASSEMBLED, context, proof)
     return snapshot
+
+
+def _require_matching_proof(
+    proof: SnapshotCrossCheckProof,
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    period: str,
+    grade: RegistryAuthorityGrade,
+) -> None:
+    expected = snapshot_proof_key(revision, modelo_id=modelo.id, filing_year=filing_year, period=period, grade=grade)
+    if proof.key != expected or proof.revision_id != revision.id:
+        raise InternalInvariantError(
+            f"snapshot proof for {proof.key!r} revision {proof.revision_id!r} does not cover request "
+            f"{expected!r} selecting revision {revision.id!r}",
+        )
 
 
 def _check_snapshot_authority_grade(
