@@ -11,7 +11,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:590946e865db796d399f10537894668839fe07326fda036312f16fbaa974ce33'
+body_hash: 'sha256:8aaafad433f70802beae63dd1e95d27216927096765252269addc4779ecfb816'
 ---
 
 # `rust-component-provisioning` plan
@@ -53,7 +53,8 @@ The Rust engine gains declarative pins, a proxy-aware pinned transfer with retry
 The engine installs pinned Chromium archives straight into the bundled driver's layout and checks them with its own headless launch; Python only locates the result.
 
 - [x] `P02.S05` - Install each pending pinned Chromium archive into the build directory browsers.json names, write the driver's completion marker set read from its registry code, and remove superseded builds after the new one verifies; `native/application/src/provisioning/browser.rs and tests against a recorded archive`.
-- [ ] `P02.S06` - Add the browser quick and full checks (marker, executable digest against the receipt, headless launch and version against the pins) and make the Python launch guard read the Rust component record instead of probing; `native/application/src/provisioning/browser.rs, src/cadrumo/application/provisioning_browser.py (locate only), src/cadrumo/adapters/outbound/aeat/browser/session.py and tests`.
+- [ ] `P02.S06` - Add the browser quick and full checks (marker, executable digest against the receipt, headless launch and version against the pins), the engine's location record, and the item-generic Python reader of component records; `native/application/src/provisioning/browser.rs, browser/launch.rs, receipts.rs, src/cadrumo/core/component_records.py and tests`.
+- [ ] `P02.S18` - Share one bounded extractor between the component store and the browser, and admit only relative symbolic links that resolve inside the build folder, created after the regular files and verified afterwards, so platform archives that carry them install; `native/application/src/component.rs, native/application/src/provisioning/browser.rs and tests`.
 
 ### Phase `P03` - Local AI
 
@@ -72,6 +73,7 @@ The single binary gains the components role; the desktop calls the engine in pro
 - [ ] `P04.S12` - Add a Python client that starts the components role and decodes its protocol, and make config provision, config check and the health report thin clients of it with words from the canonical catalogues; `src/cadrumo/adapters/outbound/components/, src/cadrumo/entrypoints/cli/config/provision_cli.py, src/cadrumo/entrypoints/cli/config/check_cli.py, src/cadrumo/application/preflight.py, src/cadrumo/application/diagnostics.py, src/cadrumo/entrypoints/cli/command_operation_table.py and tests`.
 - [ ] `P04.S13` - Make the TUI setup screen and the MCP service clients of the same role, with MCP approval bound to the plan digest and progress relayed as notifications; `src/cadrumo/entrypoints/tui/setup/, src/cadrumo_mcp/ and tests`.
 - [ ] `P04.S17` - Have the runtime manager supervise the engine's local AI server on one fixed Cadrumo loopback address declared in the canonical environment definition: start it while the local AI is set up, restart it after a crash, stop it on exit, at session end and before the engine replaces or removes the program, contain it, and record the address in the local AI component record; `native/manager/src/supervision/, native/application/src/provisioning/local_ai/, native/application-environment.toml, src/cadrumo/core/config_runtime_fields.py (default derived from the declaration) and tests`.
+- [ ] `P04.S19` - Let the components role adopt browser builds already installed without downloading, then point the Python launch guard at the Rust component record, with test support writing the engine's fixture record into each test storage root; `native/application/src/provisioning/browser.rs, src/cadrumo/application/provisioning_browser.py (locate only), src/cadrumo/adapters/outbound/aeat/browser/session.py, the real-browser test support and conftest, and tests`.
 
 ### Phase `P05` - Removal and gates
 
