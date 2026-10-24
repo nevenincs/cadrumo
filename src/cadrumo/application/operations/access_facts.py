@@ -57,6 +57,7 @@ _LOCAL_READS: Final = (
     "ledger.evidence.attachment_view",
     "ledger.evidence.consent.list",
     "ledger.evidence.list",
+    "ledger.evidence.page",
     "ledger.evidence.query",
     "ledger.evidence.review.list",
     "ledger.evidence.review.summary",

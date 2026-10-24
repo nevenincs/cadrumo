@@ -102,6 +102,7 @@ _PROFILE_CONNECTION_KEYS = frozenset(
         "app_ledger_evidence_attachment_queue",
         "app_ledger_evidence_attachment_view",
         "app_ledger_evidence_consent_list",
+        "app_ledger_evidence_page",
         "app_ledger_evidence_review_list",
         "app_ledger_evidence_review_view",
         "app_ledger_attach",

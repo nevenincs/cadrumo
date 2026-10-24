@@ -2519,6 +2519,18 @@ def _ledger_evidence_add_operation(inputs: OperationCompositionInputs) -> Operat
     return _built((definition,), (build_ledger_evidence_add_registration(definition),))
 
 
+def _ledger_evidence_page_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    from ..application.ledger.evidence_page_operation import (
+        build_ledger_evidence_page_definition,
+        build_ledger_evidence_page_registration,
+    )
+    from .evidence_page_operation_composition import build_ledger_evidence_page_operation_ports
+
+    del inputs
+    definition = build_ledger_evidence_page_definition(build_ledger_evidence_page_operation_ports())
+    return _built((definition,), (build_ledger_evidence_page_registration(definition),))
+
+
 def _ledger_evidence_read_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     from ..application.ledger.evidence_read_operation import (
         build_ledger_evidence_list_definition,
@@ -2816,6 +2828,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.ledger.evidence_followup_registration": _ledger_evidence_followup_registration,
     "application.ledger.evidence_ingestion_operation": _ledger_evidence_ingestion_operation,
     "application.ledger.evidence_mutation_operation": _ledger_evidence_mutation_operation,
+    "application.ledger.evidence_page_operation": _ledger_evidence_page_operation,
     "application.ledger.evidence_read_operation": _ledger_evidence_read_operation,
     "application.ledger.export_operation": _ledger_export_operation,
     "application.ledger.history_operation": _ledger_history_operation,

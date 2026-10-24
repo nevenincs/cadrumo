@@ -21,6 +21,7 @@ from ...adapters.outbound.llm.consent import (
     classify_off_host_evidence_read,
 )
 from ...application.ledger.evidence import PurchaseInvoiceEvidencePatch
+from ...application.ledger.evidence_page_contracts import EVIDENCE_PAGE_DEFAULT_WIDTH
 from ...application.ledger.invoice_draft_payloads import EvidenceExtractResult
 from ...application.ledger.invoice_draft_records import FieldProvenance, LabelReadingFallback
 from ...application.ledger.invoice_evidence_confirm_operation import (
@@ -42,6 +43,7 @@ from ...application.ledger.invoice_evidence_operation_dtos import (
 )
 from ...application.operations.public_scalar import PublicDecimal
 from ...core.aggregation import IntracomOperationType
+from ...core.atomic_write import atomic_write_bytes
 from ...core.config_support import LLMProvider
 from ...core.confirmation_gate import ConfirmationBlockReason
 from ...core.i18n.render import tr
@@ -56,6 +58,7 @@ from .common import active_bucket_id_or_refuse, bad, emit_envelope
 from .ledger_business_payloads import (
     EvidenceAddResult,
     EvidenceConfirmResult,
+    EvidencePageResult,
     EvidenceRemoveResult,
     EvidenceUpdateResult,
 )
@@ -66,6 +69,7 @@ from .operation_ledger_evidence_followup import (
     run_ledger_evidence_attachment_view,
 )
 from .operation_ledger_evidence_mutation import run_ledger_evidence_remove, run_ledger_evidence_update
+from .operation_ledger_evidence_page import run_ledger_evidence_page
 from .operation_ledger_evidence_read import run_ledger_evidence_list, run_ledger_evidence_view
 from .operation_ledger_invoice_evidence import (
     submit_invoice_evidence_confirm,
@@ -108,6 +112,59 @@ def attachment_view(ctx: typer.Context, attachment_id: str) -> None:
         command="ledger.evidence.attachment_view",
         result=result,
         lines=[f"bucket_id\t{result.bucket_id}", *_attachment_review_lines(payload)],
+    )
+
+
+def evidence_page(
+    ctx: typer.Context,
+    output: Path,
+    evidence_id: str | None = None,
+    attachment_id: str | None = None,
+    page: int = 1,
+    max_width: int = EVIDENCE_PAGE_DEFAULT_WIDTH,
+) -> None:
+    """Draw one page of a stored document and write it to ``output`` as a PNG."""
+    _require_exact_evidence_reference(evidence_id, attachment_id)
+    read = run_ledger_evidence_page(
+        ctx, evidence_id=evidence_id, attachment_id=attachment_id, page=page, max_width=max_width
+    )
+    target = output.expanduser()
+    try:
+        atomic_write_bytes(target, read.png)
+    except OSError:
+        raise bad(tr("cli.app.ledger.evidence.page_output_failed", path=str(output))) from None
+    projection = read.projection
+    result = EvidencePageResult(
+        bucket_id=str(projection.profile_id),
+        evidence_id=projection.evidence_id,
+        attachment_id=projection.attachment_id,
+        media_type=projection.media_type.value,
+        page=projection.page,
+        page_count=projection.page_count,
+        width=projection.width,
+        height=projection.height,
+        source_sha256=projection.source_sha256,
+        file_name=projection.file_name,
+        output_path=str(target),
+        bytes_written=len(read.png),
+    )
+    emit_envelope(
+        ctx,
+        command="ledger.evidence.page",
+        result=result,
+        lines=[
+            f"evidence_id	{result.evidence_id or '-'}",
+            f"attachment_id	{result.attachment_id}",
+            f"file_name	{result.file_name or '-'}",
+            f"media_type	{result.media_type}",
+            f"page	{result.page}",
+            f"page_count	{result.page_count}",
+            f"width	{result.width}",
+            f"height	{result.height}",
+            f"source_sha256	{result.source_sha256}",
+            f"output_path	{result.output_path}",
+            f"bytes_written	{result.bytes_written}",
+        ],
     )
 
 
@@ -825,6 +882,7 @@ __all__ = [
     "evidence_confirm",
     "evidence_extract",
     "evidence_list",
+    "evidence_page",
     "evidence_remove",
     "evidence_update",
     "evidence_view",

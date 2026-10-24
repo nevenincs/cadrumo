@@ -18,6 +18,66 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger.evidence_page_errors.LedgerEvidencePageNotFoundError",
+        ErrorCode(
+            code="REFUSED_LEDGER_EVIDENCE_PAGE_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_evidence_page_not_found",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.evidence_page_errors.LedgerEvidencePageDigestMismatchError",
+        ErrorCode(
+            code="REFUSED_LEDGER_EVIDENCE_PAGE_DIGEST_MISMATCH",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_evidence_page_digest_mismatch",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.evidence_page_errors.LedgerEvidencePageUnsupportedMediaError",
+        ErrorCode(
+            code="REFUSED_LEDGER_EVIDENCE_PAGE_UNSUPPORTED_MEDIA",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_evidence_page_unsupported_media",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.evidence_page_errors.LedgerEvidencePageTooLargeError",
+        ErrorCode(
+            code="REFUSED_LEDGER_EVIDENCE_PAGE_TOO_LARGE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_evidence_page_too_large",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.evidence_page_errors.LedgerEvidencePageOutOfRangeError",
+        ErrorCode(
+            code="REFUSED_LEDGER_EVIDENCE_PAGE_OUT_OF_RANGE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_evidence_page_out_of_range",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.evidence_page_errors.LedgerEvidencePageUnreadableError",
+        ErrorCode(
+            code="REFUSED_LEDGER_EVIDENCE_PAGE_UNREADABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_evidence_page_unreadable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.ledger.ledger_add_command.SourceJurisdictionRequiredError",
         ErrorCode(
             code="REFUSED_LEDGER_SOURCE_JURISDICTION_REQUIRED",

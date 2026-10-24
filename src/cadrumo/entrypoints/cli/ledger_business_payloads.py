@@ -320,6 +320,23 @@ class AttachmentReviewViewResult(AttachmentReviewPayload):
     bucket_id: BucketId
 
 
+class EvidencePageResult(OutputSchema):
+    """One page of a stored document, drawn and written to the PNG file the operator named."""
+
+    bucket_id: BucketId
+    evidence_id: str | None = None
+    attachment_id: Hex64Str
+    media_type: str
+    page: int
+    page_count: int
+    width: int
+    height: int
+    source_sha256: Hex64Str
+    file_name: str | None = None
+    output_path: str
+    bytes_written: NonNegativeInt
+
+
 class ConsentedDispatchPayload(OutputSchema):
     """One recorded off-host dispatch on the consent surface."""
 
