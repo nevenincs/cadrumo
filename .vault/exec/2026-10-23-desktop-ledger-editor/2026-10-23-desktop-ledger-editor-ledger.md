@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:1489fc6d6652f10cfa61b8a8c5ef99feaba634de5603fab2218857ce86d315ad'
+body_hash: 'sha256:37ecf4c88d26233058eab3c3c9b763265a50ef1ee97be5c2d80caaf2cec09818'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -433,6 +433,24 @@ related:
 - `S15` `M` `src/cadrumo/locales/ca/common.yml`
 - `S15` `M` `src/cadrumo/locales/hu/common.yml`
 - `S15` `verify:` `dev/locales/tests/test_desktop_chrome.py` -> `fail`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/movementsModel.ts`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/MovementCells.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsGrid.tsx`
+- `S08` `verify:` `playwright ledger-movements, ledger-matching, ledger-inspector, ledger-editing` -> `pass`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S13` `M` `native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`
+- `S13` `verify:` `playwright ledger-documents` -> `pass`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/SetupParts.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/HealthSection.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/AccountsPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/InventoryPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S14` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S14` `verify:` `playwright ledger-setup` -> `pass`
+- `S12` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`
+- `S12` `verify:` `playwright ledger-invoices` -> `pass`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S11` `verify:` `playwright ledger-transfer` -> `pass`
 
 ## Notes
 
@@ -462,3 +480,8 @@ related:
 - `S01` 81e11327f6 derives the payload bound from the native relay; the native wipe landed in a61193c467; all four P01 highs and the relay-bound-pin medium are resolved
 - `S10` `test_desktop_chrome:` the one failure is `test_the_shell_source_names_exactly_the_declared_keys,` whose drift is only S13's undeclared `desktop.ledger.documents.*` keys and the unused `desktop.ledger.matching.open_named;` every `desktop.ledger.inspector.*` key is declared and generated.
 - `S15` 797c4ab08a; no desktop.ledger key drifts, every ledger key is authored in four catalogues, no hard-coded ledger text; the one failing test flags only CADRUMO-UX-MODELO's uncommitted declarations, modelo and workspace keys
+- `S08` 1e55936f02 adds M6's Match column after Amount; failures seen under shared-server contention passed when re-run serially
+- `S13` cd708fab1b: provenance as a glyph, extractor id in tooltip; off-host dialog audited after its fade-in (the audit failed at HEAD before)
+- `S14` cd708fab1b folds the reset; 797c4ab08a reads a closing authority or purchase cost from a file (TUI parity)
+- `S12` e451d06c49 pins the total to the end edge
+- `S11` e451d06c49 drops the repeated What to import label
