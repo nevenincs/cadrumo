@@ -9,7 +9,7 @@ related:
   - '[[2026-10-24-rust-component-provisioning-reference]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:288b6de335ff84ead1b715ae2a1fb060bfad4c4b12bc276f75afb574038368c1'
+body_hash: 'sha256:34fad19044033451282dc30e7420a302e5cc22afffac232f3fe84d22ef1e65ad'
 ---
 
 # `component-on-demand` plan
@@ -43,6 +43,7 @@ The work is independent of the proposed `2026-10-24-rust-component-provisioning-
 - [x] `S10` - Carry the column reader refusal through invoice bulk intake instead of turning every error into a silent decline, and make the reader probe check the model the mapper actually sends; `src/cadrumo/entrypoints/invoice_intake_operation_composition.py, src/cadrumo/adapters/outbound/llm/column_role_mapping.py, src/cadrumo/application/local_reader.py and tests`.
 - [x] `S11` - Keep the reader verdict on the outer evidence extraction refusal so it routes to setup, and carry the local AI recovery action on the reader readiness projections; `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py, src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py, src/cadrumo/_data/operations/contract_manifest.json and tests`.
 - [ ] `S12` - Repair the label-reading notice tests the reader pre-check broke, publish the error detail of the ledger classification and evidence ingestion operations so their reader verdicts reach every surface, and make the desktop Readers tab read each role's recovery action; `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_label_reading_notice.py and its loopback runtime, the ledger classification and evidence ingestion operation definitions, native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx and shell/ledger.ts, and tests`.
+- [ ] `S13` - Check the local AI before the statement reader dispatches a text or scanned page, refusing with the setup verdict instead of a transport error, and keep the supply-nature verdict through the extraction composition instead of discarding it; `src/cadrumo/adapters/outbound/llm/statement_reading.py, src/cadrumo/adapters/inbound/financial/providers/pdf_statement.py, the supply-nature step of src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py, and tests`.
 
 ## Parallelization
 
