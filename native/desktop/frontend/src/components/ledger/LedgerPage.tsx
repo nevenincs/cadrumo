@@ -204,7 +204,7 @@ export function LedgerPage({
   const registerMovements = useCallback((actions: (() => Action[]) | null) => {
     movementActions.current = actions;
   }, []);
-  const readiness = useLedgerReadiness(
+  const { readiness, recheck: recheckReadiness } = useLedgerReadiness(
     port,
     reader,
     period,
@@ -402,9 +402,16 @@ export function LedgerPage({
     : unavailable();
 
   const shownWindow = periodWindow ? shownRows(periodWindow) : null;
-  const toClassify = shownWindow
-    ? shownWindow.rows.filter((row) => row.review_status === "pending").length
-    : 0;
+  // The tab counts what the period's own check counts, never the rows the
+  // page holds, which may be another period's while another section shows.
+  const pageSets = useMemo(
+    () => readinessSets(shownWindow?.rows ?? [], readinessSnapshot(readiness)),
+    [shownWindow, readiness],
+  );
+  const toClassify =
+    readiness.kind !== "failed" && pageSets.counts
+      ? pageSets.counts.toClassify
+      : 0;
   const counts: Partial<Record<LedgerSection, SectionCount>> =
     toClassify > 0
       ? {
@@ -562,14 +569,6 @@ export function LedgerPage({
       <HealthSection
         {...setupProps}
         readiness={readiness}
-        partial={
-          periodWindow
-            ? (() => {
-                const held = shownRows(periodWindow);
-                return held ? held.rows.length < held.total : true;
-              })()
-            : true
-        }
         onShowReadiness={(filter) => {
           movements.setFilters({ ...NO_FILTERS, readiness: filter });
           setSection("movements");
@@ -702,6 +701,7 @@ export function LedgerPage({
             periodWindow={periodWindow}
             readAll={readAll}
             readiness={readiness}
+            onCheckReadiness={recheckReadiness}
             movements={movements}
             stage={stage}
             onStage={editing.onStage}
@@ -816,12 +816,13 @@ export function LedgerPage({
     transfer === "export" && shownWindow ? (
       <ReadinessStrip
         readiness={readiness}
-        sets={readinessSets(shownWindow.rows, readinessSnapshot(readiness))}
+        sets={pageSets}
         filters={movements.filters}
         locale={locale}
         unsaved={editing.tally.units}
         stagedClassify={0}
-        partial={shownWindow.rows.length < shownWindow.total}
+        periodName={shownPeriod}
+        onCheck={recheckReadiness}
         onPill={(filter) => {
           if (!filter) return;
           movements.setFilters({ ...NO_FILTERS, readiness: filter });

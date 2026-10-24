@@ -623,7 +623,7 @@ function issues(ledger: FixtureLedger, period: JsonValue | undefined) {
       if (t.currency !== "EUR" && !t.value_in_eur)
         found.push({
           transaction_id: id,
-          reason: "missing_eur_tax_substrate",
+          reason: "unsupported_currency",
           detail: "No euro value.",
         });
     }
@@ -1264,9 +1264,18 @@ export function ledgerFixture(options: Options): LedgerPort {
             0,
           ),
       );
-    const found = issues(ledger, period);
+    // Every period's status runs no preflight, as the product's does: it
+    // lists no issues and leaves readiness unmeasured.
+    const found = period === null ? [] : issues(ledger, period);
+    // The product counts movements over the whole ledger, whatever period
+    // is asked for, and its review states over the active ones; only the
+    // money totals and the foreign count read the period.
+    const all = ledger.movements;
+    const inState = (state: string) =>
+      all.filter((movement) => movement.transaction.lifecycle_state === state);
+    const active = inState("ACTIVE");
     const by = (state: LedgerReviewStatus) =>
-      rows.filter(
+      active.filter(
         (movement) =>
           reviewStatus(movement.transaction.business_classification) === state,
       ).length;
@@ -1278,13 +1287,11 @@ export function ledgerFixture(options: Options): LedgerPort {
       business_income_total: income,
       business_expense_total: expense,
       business_net_total: money(cents(income) - cents(expense)),
-      total_count: rows.length,
-      active_count: rows.filter(
-        (movement) => movement.transaction.lifecycle_state === "ACTIVE",
-      ).length,
-      archived_count: 0,
-      stashed_count: 0,
-      split_count: 0,
+      total_count: all.length,
+      active_count: active.length,
+      archived_count: inState("ARCHIVED").length,
+      stashed_count: inState("STASHED").length,
+      split_count: inState("SPLIT").length,
       pending_review_count: by("pending"),
       reviewed_count: by("reviewed"),
       skipped_count: by("skipped"),
@@ -1292,10 +1299,14 @@ export function ledgerFixture(options: Options): LedgerPort {
       readiness_issue_count: found.length,
       unconverted_currency_count: rows.filter(
         (movement) =>
+          movement.transaction.lifecycle_state === "ACTIVE" &&
+          ["BUSINESS", "MIXED"].includes(
+            movement.transaction.business_classification,
+          ) &&
           movement.transaction.currency !== "EUR" &&
           !movement.transaction.value_in_eur,
       ).length,
-      ready: rows.length === 0 ? null : found.length === 0,
+      ready: rows.length === 0 || period === null ? null : found.length === 0,
       readiness_issues: found.map((issue) => ({
         ...issue,
         transaction_present: true,

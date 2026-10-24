@@ -394,6 +394,7 @@ export function MovementsSection({
   periodWindow,
   readAll,
   readiness,
+  onCheckReadiness,
   movements,
   stage,
   onStage,
@@ -417,6 +418,8 @@ export function MovementsSection({
   periodWindow: LedgerWindow;
   readAll: () => void;
   readiness: Readiness;
+  /** Runs the period's readiness check again. */
+  onCheckReadiness?: () => void;
   movements: MovementsView;
   stage: StageState;
   onStage: (event: StageEvent) => void;
@@ -1452,7 +1455,7 @@ export function MovementsSection({
         locale={locale}
         unsaved={unsaved}
         stagedClassify={stagedClassify}
-        partial={partial}
+        onCheck={onCheckReadiness}
         onPill={onPill}
         onReason={onReason}
         duplicates={duplicates.size}

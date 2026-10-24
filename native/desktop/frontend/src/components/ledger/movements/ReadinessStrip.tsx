@@ -24,9 +24,13 @@ type Pill = {
   icon: IconName;
   tone: "warning" | "success" | "neutral";
   count?: number;
+  /** The count is a least one: the check listed only some. */
+  atLeast?: boolean;
   label: string;
   /** What pressing it filters to; a pill without one only says. */
   filter?: ReadinessFilter;
+  /** Pressing it checks again. */
+  check?: boolean;
   /** The share of what it counts that a staged change classifies. */
   staged?: number;
 };
@@ -39,65 +43,92 @@ function pillsOf(
   locale: string,
   readiness: Readiness,
   sets: ReadinessSets,
-  notes: { unsaved: number; stagedClassify: number; partial: boolean },
+  notes: {
+    unsaved: number;
+    stagedClassify: number;
+    periodName: string | null;
+    canCheck: boolean;
+  },
 ): Pill[] {
   const unsaved =
     notes.unsaved > 0
       ? t("desktop.ledger.readiness.unsaved", { count: notes.unsaved })
       : "";
-  const partial = notes.partial
-    ? t("desktop.ledger.readiness.loaded_only")
-    : "";
   const pills: Pill[] = [];
   const snapshot = readinessSnapshot(readiness);
-  const unknown = (label: string) =>
-    pills.push({ key: "unknown", icon: "unknown", tone: "neutral", label });
-  let ready: boolean | null = null;
-  if (!snapshot)
+  const unknown = (label: string, check = false) =>
+    pills.push({
+      key: "unknown",
+      icon: "unknown",
+      tone: "neutral",
+      label,
+      ...(check && notes.canCheck ? { check: true } : {}),
+    });
+  // A check that failed, or none yet, says only that: what an earlier
+  // check found is no count of the stored rows now.
+  if (readiness.kind === "failed") {
+    unknown(t("desktop.ledger.readiness.failed"), true);
+    return pills;
+  }
+  if (!snapshot) {
     unknown(
-      t(
-        readiness.kind === "checking"
-          ? "desktop.ledger.readiness.checking"
-          : readiness.kind === "failed"
-            ? "desktop.ledger.readiness.failed"
-            : "desktop.ledger.readiness.not_checked",
-      ),
+      readiness.kind === "checking"
+        ? t("desktop.ledger.readiness.checking")
+        : notes.periodName !== null
+          ? t("desktop.ledger.readiness.not_checked_period", {
+              period: notes.periodName,
+            })
+          : t("desktop.ledger.readiness.not_checked"),
+      readiness.kind !== "checking",
     );
+    return pills;
+  }
   // Staged changes leave the stored data as it was checked; saved ones do
   // not.
-  else if (snapshot.savedSince > 0)
+  if (snapshot.savedSince > 0) {
     unknown(
       t("desktop.ledger.readiness.out_of_date", {
         count: snapshot.savedSince,
       }),
+      true,
     );
-  else {
-    ready = snapshot.preflight
-      ? snapshot.preflight.ready
-      : snapshot.status.ready;
-    if (ready === null) unknown(t("desktop.ledger.readiness.not_measured"));
+    return pills;
   }
-  const checked =
-    snapshot !== null && snapshot.savedSince === 0 && ready !== null;
-  const fix = sets.fix.size;
-  // Not ready with nothing this strip counts is still said, without a count.
-  if (
-    checked &&
-    (fix > 0 ||
-      (ready === false && sets.toClassify.size === 0 && sets.noRate.size === 0))
+  const counts = sets.counts;
+  if (!counts) return pills;
+  const ready = snapshot.preflight
+    ? snapshot.preflight.ready
+    : snapshot.status.ready;
+  if (ready === null) unknown(t("desktop.ledger.readiness.not_measured"));
+  const fix = counts.fix;
+  if (ready !== null && fix > 0)
+    pills.push({
+      key: "issues",
+      icon: "alert",
+      tone: "warning",
+      count: fix,
+      ...(counts.fixAtLeast ? { atLeast: true } : {}),
+      filter: "issues",
+      label: said(
+        t("desktop.ledger.readiness.not_ready", { count: fix }),
+        counts.fixAtLeast ? t("desktop.ledger.readiness.listed_only") : "",
+        unsaved,
+      ),
+    });
+  // Not ready with nothing on any movement is the period's own reason:
+  // said without a count.
+  else if (
+    ready === false &&
+    counts.toClassify === 0 &&
+    counts.noRate === 0
   )
     pills.push({
       key: "issues",
       icon: "alert",
       tone: "warning",
-      ...(fix > 0 ? { count: fix, filter: "issues" as const } : {}),
-      label: said(
-        t("desktop.ledger.readiness.not_ready", { count: fix }),
-        unsaved,
-        partial,
-      ),
+      label: said(t("desktop.ledger.readiness.not_ready_period"), unsaved),
     });
-  const toClassify = sets.toClassify.size;
+  const toClassify = counts.toClassify;
   if (toClassify > 0)
     pills.push({
       key: "to_classify",
@@ -114,10 +145,9 @@ function pillsOf(
             })
           : "",
         unsaved,
-        partial,
       ),
     });
-  const noRate = sets.noRate.size;
+  const noRate = counts.noRate;
   if (noRate > 0)
     pills.push({
       key: "no_rate",
@@ -125,12 +155,9 @@ function pillsOf(
       tone: "neutral",
       count: noRate,
       filter: "no_rate",
-      label: said(
-        t("desktop.ledger.readiness.no_rate", { count: noRate }),
-        partial,
-      ),
+      label: t("desktop.ledger.readiness.no_rate", { count: noRate }),
     });
-  if (checked && ready && pills.length === 0 && snapshot)
+  if (ready === true && pills.length === 0)
     pills.push({
       key: "ready",
       icon: "check",
@@ -158,7 +185,8 @@ export function ReadinessStrip({
   locale,
   unsaved,
   stagedClassify,
-  partial,
+  periodName = null,
+  onCheck,
   onPill,
   onReason,
   duplicates = 0,
@@ -174,9 +202,14 @@ export function ReadinessStrip({
   unsaved: number;
   /** Movements to classify whose staged change classifies them. */
   stagedClassify: number;
-  partial: boolean;
-  onPill: (filter: ReadinessFilter | null) => void;
-  onReason: (reason: string | null) => void;
+  /** The period the strip is titled with, named while it is not checked. */
+  periodName?: string | null;
+  /** Checks again; the muted pill offers it where the check is not
+   * current. */
+  onCheck?: () => void;
+  /** What a pill or chip filters to; without it they only say. */
+  onPill?: (filter: ReadinessFilter | null) => void;
+  onReason?: (reason: string | null) => void;
   /** Movements an import flagged as likely duplicates, which a chip
    * shows. */
   duplicates?: number;
@@ -188,10 +221,14 @@ export function ReadinessStrip({
   const pills = pillsOf(t, locale, readiness, sets, {
     unsaved,
     stagedClassify,
-    partial,
+    periodName,
+    canCheck: onCheck !== undefined,
   });
   const snapshot = readinessSnapshot(readiness);
-  const current = snapshot !== null && snapshot.savedSince === 0;
+  const current =
+    readiness.kind !== "failed" &&
+    snapshot !== null &&
+    snapshot.savedSince === 0;
   const reasons = current ? sets.reasons : [];
   const shown = more ? reasons : reasons.slice(0, REASONS_SHOWN);
   return (
@@ -216,7 +253,9 @@ export function ReadinessStrip({
             <>
               {icon}
               {pill.count !== undefined && (
-                <span aria-hidden="true">{pill.count}</span>
+                <span aria-hidden="true">
+                  {pill.atLeast ? `≥ ${pill.count}` : pill.count}
+                </span>
               )}
               <span className="sr-only">{pill.label}</span>
               {pill.staged !== undefined && pill.staged > 0 && (
@@ -228,7 +267,7 @@ export function ReadinessStrip({
               )}
             </>
           );
-          const filter = pill.filter;
+          const filter = onPill ? pill.filter : undefined;
           return (
             <li key={pill.key} data-readiness={pill.key}>
               <Tooltip>
@@ -240,15 +279,26 @@ export function ReadinessStrip({
                       className="relative overflow-hidden tabular-nums"
                       aria-pressed={filters.readiness === filter}
                       onClick={() =>
-                        onPill(filters.readiness === filter ? null : filter)
+                        onPill?.(filters.readiness === filter ? null : filter)
                       }
                     >
                       {body}
                     </Button>
+                  ) : pill.check && onCheck ? (
+                    <Button
+                      variant="pill"
+                      size="xs"
+                      className="ledger-readiness-check"
+                      onClick={onCheck}
+                    >
+                      {body}
+                    </Button>
                   ) : (
+                    // The size of a counted pill, so a pill without a count
+                    // reads as the same control.
                     <Badge
                       variant={pill.tone}
-                      className="tabular-nums"
+                      className="h-control-xs min-w-control-xs px-2 text-sm tabular-nums"
                       tabIndex={0}
                     >
                       {body}
@@ -288,7 +338,7 @@ export function ReadinessStrip({
           </TooltipContent>
         </Tooltip>
       )}
-      {reasons.length > 0 && (
+      {reasons.length > 0 && onReason && (
         <ul
           aria-label={t("desktop.ledger.readiness.reasons")}
           className="ledger-reasons flex flex-wrap items-center gap-1.5"
@@ -301,18 +351,18 @@ export function ReadinessStrip({
                     variant="pill"
                     size="xs"
                     aria-pressed={filters.reason === reason}
+                    // Named by what it shows, so the name holds the visible
+                    // label; the sentence and what pressing does describe it.
+                    aria-description={said(
+                      reasonDetail(t, reason),
+                      t("desktop.ledger.readiness.reason_action"),
+                    )}
                     onClick={() =>
                       onReason(filters.reason === reason ? null : reason)
                     }
                   >
                     {reasonShort(t, reason)}
                     <span className="tabular-nums">{ids.size}</span>
-                    <span className="sr-only">
-                      {t("desktop.ledger.readiness.reason_name", {
-                        reason: reasonDetail(t, reason),
-                        count: ids.size,
-                      })}
-                    </span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>

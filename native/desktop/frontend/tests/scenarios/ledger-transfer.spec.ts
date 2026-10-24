@@ -540,3 +540,28 @@ for (const scheme of ["light", "dark"] as const)
     ).click();
     expect(await audit(target)).toEqual([]);
   });
+
+test("Export for another period checks that period and says it with the same strip", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await button(head(target), "desktop.ledger.action.export").click();
+  const dialog = exportDialog(target);
+  await expect(dialog.locator(".ledger-export-readiness")).toBeVisible();
+  await dialog
+    .getByRole("group", { name: label("desktop.ledger.export.period") })
+    .getByRole("button", {
+      name: label("desktop.ledger.period.previous"),
+      exact: true,
+    })
+    .click();
+  const strip = dialog.locator(".ledger-export-readiness .ledger-readiness");
+  await expect(strip.locator("[data-readiness]")).not.toHaveCount(0);
+  await expect(strip.locator("[data-readiness=unknown]")).toHaveCount(0);
+  // The pills count that period; they only say, since the grid shows the
+  // page's period.
+  await expect(strip.getByRole("button")).toHaveCount(0);
+  await expect(dialog).not.toContainText(
+    label("desktop.ledger.readiness.not_ready_period"),
+  );
+});

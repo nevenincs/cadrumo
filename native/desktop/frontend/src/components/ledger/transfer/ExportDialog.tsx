@@ -38,8 +38,17 @@ import {
   publicPeriod,
   type LedgerPeriod,
 } from "../../../shell/ledgerGrammar";
-import { readAnswer } from "../../../shell/ledgerWindow";
+import {
+  checkReadiness,
+  readAnswer,
+  readinessSnapshot,
+  readWindow,
+  type Readiness,
+} from "../../../shell/ledgerWindow";
 import { useStrings } from "../../../shell/strings";
+import { periodText } from "../ledgerWords";
+import { NO_FILTERS, readinessSets } from "../movements/movementsModel";
+import { ReadinessStrip } from "../movements/ReadinessStrip";
 import { PeriodSelector } from "../PeriodSelector";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
@@ -59,10 +68,40 @@ const samePeriod = (left: LedgerPeriod | null, right: LedgerPeriod | null) =>
     left.year === right.year &&
     left.code === right.code);
 
+/** The movements an export takes, by lifecycle state. */
+type Counts = {
+  total: number;
+  active: number;
+  archived: number;
+  stashed: number;
+  split: number;
+};
 type Status =
   | { kind: "reading" }
-  | { kind: "read"; status: LedgerStatusResult }
+  | { kind: "read"; counts: Counts }
   | { kind: "failed" };
+
+/** The status read's counts span the whole ledger: they are the counts of
+ * "All periods", and of no single period. */
+const ledgerCounts = (status: LedgerStatusResult): Counts => ({
+  total: status.total_count,
+  active: status.active_count,
+  archived: status.archived_count,
+  stashed: status.stashed_count,
+  split: status.split_count,
+});
+/** A period's counts, from its own movements. */
+function periodCounts(rows: readonly LedgerRow[]): Counts {
+  const of = (state: string) =>
+    rows.filter((row) => row.transaction.lifecycle_state === state).length;
+  return {
+    total: rows.length,
+    active: of("ACTIVE"),
+    archived: of("ARCHIVED"),
+    stashed: of("STASHED"),
+    split: of("SPLIT"),
+  };
+}
 type Sent =
   | { kind: "idle" }
   | { kind: "sending" }
@@ -166,22 +205,74 @@ export function ExportDialog({
   useEffect(() => {
     let active = true;
     setStatus({ kind: "reading" });
-    void port
-      .submit("ledger.status", { period: period ? publicPeriod(period) : null })
-      .then((outcome) => {
+    const counted: Promise<Counts | null> =
+      period === null
+        ? port
+            .submit("ledger.status", { period: null })
+            .then((outcome) => {
+              const read = readAnswer(outcome);
+              return read.kind === "answer" ? ledgerCounts(read.result) : null;
+            })
+        : readWindow(port, period).then((read) =>
+            read.kind === "read" ? periodCounts(read.rows) : null,
+          );
+    void counted
+      .then((counts) => {
         if (!active) return;
-        const read = readAnswer(outcome);
-        setStatus(
-          read.kind === "answer"
-            ? { kind: "read", status: read.result }
-            : { kind: "failed" },
-        );
+        setStatus(counts ? { kind: "read", counts } : { kind: "failed" });
       })
       .catch(() => active && setStatus({ kind: "failed" }));
     return () => {
       active = false;
     };
   }, [port, period]);
+
+  // Another period than the page's is checked here, and said with the same
+  // strip; its pills only say, since the grid shows the page's period.
+  const otherPeriod = !samePeriod(period, pagePeriod);
+  const [own, setOwn] = useState<{
+    period: LedgerPeriod | null;
+    readiness: Readiness;
+  } | null>(null);
+  const [checkAgain, setCheckAgain] = useState(0);
+  useEffect(() => {
+    if (!otherPeriod) return;
+    let active = true;
+    setOwn((current) => ({
+      period,
+      readiness: {
+        kind: "checking",
+        held:
+          current && samePeriod(current.period, period)
+            ? readinessSnapshot(current.readiness)
+            : null,
+      },
+    }));
+    void checkReadiness(port, period, Date.now).then((answer) => {
+      if (!active) return;
+      setOwn({
+        period,
+        readiness:
+          answer.kind === "checked"
+            ? answer
+            : { kind: "failed", failure: answer.failure, held: null },
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [port, period, otherPeriod, checkAgain]);
+  const ownReadiness = useMemo<Readiness>(
+    () =>
+      own && samePeriod(own.period, period)
+        ? own.readiness
+        : { kind: "not_checked" },
+    [own, period],
+  );
+  const ownSets = useMemo(
+    () => readinessSets([], readinessSnapshot(ownReadiness)),
+    [ownReadiness],
+  );
 
   const choose = async () => {
     setChoosing(true);
@@ -294,13 +385,9 @@ export function ExportDialog({
     }
   };
 
-  const read = status.kind === "read" ? status.status : null;
-  const exported = read
-    ? inactive
-      ? read.total_count
-      : read.active_count
-    : null;
-  const leftOut = read && !inactive ? read.total_count - read.active_count : 0;
+  const read = status.kind === "read" ? status.counts : null;
+  const exported = read ? (inactive ? read.total : read.active) : null;
+  const leftOut = read && !inactive ? read.total - read.active : 0;
   const blockedByStaged = staged > 0 && !without;
   const done = sent.kind === "done";
   // The result is a step of its own: focus moves to its heading.
@@ -429,27 +516,29 @@ export function ExportDialog({
                 leftOut > 0 &&
                 read &&
                 t("desktop.ledger.export.left_out", {
-                  archived: count(read.archived_count),
-                  aside: count(read.stashed_count),
-                  split: count(read.split_count),
+                  archived: count(read.archived),
+                  aside: count(read.stashed),
+                  split: count(read.split),
                 })
               )}
             </p>
-            {readiness && samePeriod(period, pagePeriod) ? (
-              <div className="ledger-export-readiness">{readiness}</div>
-            ) : (
-              read?.ready === false && (
-                <Alert tone="warning" icon={<Icon name="alert" />}>
-                  <AlertTitle>
-                    {t("desktop.ledger.export.not_ready")}
-                  </AlertTitle>
-                  <AlertDescription>
-                    {t("desktop.ledger.export.not_ready_note", {
-                      count: read.readiness_issue_count,
-                    })}
-                  </AlertDescription>
-                </Alert>
+            {!otherPeriod ? (
+              readiness && (
+                <div className="ledger-export-readiness">{readiness}</div>
               )
+            ) : (
+              <div className="ledger-export-readiness">
+                <ReadinessStrip
+                  readiness={ownReadiness}
+                  sets={ownSets}
+                  filters={NO_FILTERS}
+                  locale={locale}
+                  unsaved={staged}
+                  stagedClassify={0}
+                  periodName={periodText(t, locale, period)}
+                  onCheck={() => setCheckAgain((count) => count + 1)}
+                />
+              </div>
             )}
             {staged > 0 && without && (
               <Alert

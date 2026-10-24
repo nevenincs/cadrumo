@@ -518,7 +518,12 @@ test("Health's status says each count beside its label and names what the states
 }) => {
   await openLedger(target);
   await openSetup(target, "health");
-  const status = target.locator(".ledger-health-status");
+  // The review states are counted over the whole ledger, apart from what
+  // is read for the period.
+  await expect(target.locator(".ledger-health-status")).not.toContainText(
+    label("desktop.ledger.health.count.pending"),
+  );
+  const status = target.locator(".ledger-health-ledger");
   await expect(status).toBeVisible();
   const value = async (name: string) =>
     Number(
@@ -599,3 +604,37 @@ for (const scheme of ["light", "dark"] as const)
     await expect(target.locator(".ledger-health-status")).toBeVisible();
     expect(await audit(target)).toEqual([]);
   });
+
+test("Health for another period counts only that period's own check, and says so until it is checked", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const movements = head(target).getByRole("tab", {
+    name: new RegExp(`^${label("desktop.ledger.section.movements")}`),
+  });
+  await expect(movements.locator("[data-slot=badge]")).toHaveCount(1);
+  await openSetup(target, "health");
+  const health = target.locator(".ledger-setup-health");
+  await head(target)
+    .getByRole("group", { name: label("desktop.ledger.period.label") })
+    .getByRole("button", {
+      name: label("desktop.ledger.period.previous"),
+      exact: true,
+    })
+    .click();
+  const strip = health.locator(".ledger-readiness");
+  // Nothing of the page's earlier period is counted: only the muted pill,
+  // and no count on the Movements tab.
+  await expect(strip.locator("[data-readiness]")).toHaveCount(1);
+  await expect(strip.locator("[data-readiness=unknown]")).toHaveCount(1);
+  await expect(health.locator(".ledger-reasons")).toHaveCount(0);
+  await expect(movements.locator("[data-slot=badge]")).toHaveCount(0);
+  await health.locator(".ledger-health-preflight").click();
+  await expect(strip.locator("[data-readiness=unknown]")).toHaveCount(0);
+  const onHealth = await stripOf(health);
+  // The Movements strip of the same period counts the same.
+  await movements.click();
+  const own = page(target).locator(".ledger-movements");
+  await expect(own.locator("[data-readiness=unknown]")).toHaveCount(0);
+  await expect.poll(() => stripOf(own)).toEqual(onHealth);
+});

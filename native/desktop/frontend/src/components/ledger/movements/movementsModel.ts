@@ -274,6 +274,9 @@ export function moveColumn(
 /** The reason a movement still needs a classification, which has its own
  * pill rather than a chip. */
 export const TO_CLASSIFY_REASON = "missing_business_classification";
+/** The reason a period's check gives a foreign movement without an EUR
+ * value. */
+export const NO_RATE_REASON = "unsupported_currency";
 
 /** The column a reason marks and the preset that shows it. */
 export const REASON_FIX: Record<
@@ -346,9 +349,24 @@ export function stagedClassifyCount(
 export const lacksRate = (row: LedgerRow) =>
   row.transaction.currency !== "EUR" && row.transaction.value_in_eur === null;
 
-/** The sets the readiness strip counts, each over the rows of the window,
- * so that what a pill or chip filters is exactly what it counts. The
- * issues are as the last check found them; the rest is the stored rows. */
+/** What the readiness strip counts, as the last check found the period:
+ * never the part of it the window holds, so a filter, a sort or a window
+ * read in part changes none of it. */
+export type ReadinessCounts = {
+  /** Movements the check lists with something to fix. */
+  fix: number;
+  /** The check listed only some of its issues: `fix` is a least count. */
+  fixAtLeast: boolean;
+  /** Movements still to classify: the period's, as its check lists them,
+   * or the whole ledger's, as the status read counts them. */
+  toClassify: number;
+  /** Foreign movements without an EUR rate that a calculation reads. */
+  noRate: number;
+};
+
+/** What the readiness strip counts and filters. The counts are the
+ * check's own; the sets select the window's rows a pill or chip filters
+ * the grid to. */
 export type ReadinessSets = {
   /** A check has answered for this window. */
   checked: boolean;
@@ -358,23 +376,34 @@ export type ReadinessSets = {
   fix: Set<string>;
   toClassify: Set<string>;
   noRate: Set<string>;
-  /** By reason, most movements first. */
+  /** By reason, most movements first, over every movement the check
+   * lists. */
   reasons: { reason: string; ids: Set<string> }[];
+  /** Null until a check answers. */
+  counts: ReadinessCounts | null;
 };
 
 export function readinessSets(
   rows: readonly LedgerRow[],
   snapshot: ReadinessSnapshot | null,
 ): ReadinessSets {
-  const present = new Set(rows.map((row) => row.transaction.transaction_id));
   const issues = new Map<string, string[]>();
   const byReason = new Map<string, Set<string>>();
+  const preflight = snapshot?.preflight ?? null;
   const found = snapshot
-    ? (snapshot.preflight?.issues ?? snapshot.status.readiness_issues)
+    ? (preflight?.issues ?? snapshot.status.readiness_issues)
     : [];
+  // A period's check lists the movements to classify and those without a
+  // rate; without one, the rows the window holds say which they are.
+  const listedToClassify = new Set<string>();
+  const listedNoRate = new Set<string>();
   for (const issue of found) {
-    if (issue.reason === TO_CLASSIFY_REASON) continue;
-    if (!present.has(issue.transaction_id)) continue;
+    if (issue.reason === NO_RATE_REASON)
+      listedNoRate.add(issue.transaction_id);
+    if (issue.reason === TO_CLASSIFY_REASON) {
+      listedToClassify.add(issue.transaction_id);
+      continue;
+    }
     const reasons = issues.get(issue.transaction_id) ?? [];
     if (!reasons.includes(issue.reason)) reasons.push(issue.reason);
     issues.set(issue.transaction_id, reasons);
@@ -382,13 +411,14 @@ export function readinessSets(
     ids.add(issue.transaction_id);
     byReason.set(issue.reason, ids);
   }
-  const toClassify = new Set<string>();
-  const noRate = new Set<string>();
-  for (const row of rows) {
-    const id = row.transaction.transaction_id;
-    if (row.review_status === "pending") toClassify.add(id);
-    if (lacksRate(row)) noRate.add(id);
-  }
+  const toClassify = preflight ? listedToClassify : new Set<string>();
+  const noRate = preflight ? listedNoRate : new Set<string>();
+  if (!preflight)
+    for (const row of rows) {
+      const id = row.transaction.transaction_id;
+      if (row.review_status === "pending") toClassify.add(id);
+      if (lacksRate(row)) noRate.add(id);
+    }
   return {
     checked: snapshot !== null,
     issues,
@@ -400,6 +430,23 @@ export function readinessSets(
       .sort(
         (a, b) => b.ids.size - a.ids.size || a.reason.localeCompare(b.reason),
       ),
+    counts: snapshot
+      ? {
+          fix: issues.size,
+          // The status read lists its issues up to a bound; the preflight
+          // lists all of a period's.
+          fixAtLeast:
+            snapshot.preflight === null &&
+            snapshot.status.readiness_issues.length <
+              snapshot.status.readiness_issue_count,
+          toClassify: preflight
+            ? listedToClassify.size
+            : snapshot.status.pending_review_count,
+          noRate: preflight
+            ? listedNoRate.size
+            : snapshot.status.unconverted_currency_count,
+        }
+      : null,
   };
 }
 

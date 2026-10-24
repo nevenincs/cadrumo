@@ -23,7 +23,11 @@ import {
   type SortLabels,
 } from "../src/components/ledger/movements/movementsModel";
 import { statusWord } from "../src/components/ledger/movements/movementWords";
-import type { LedgerRow, LedgerStatusResult } from "../src/shell/ledger";
+import type {
+  LedgerPreflightReason,
+  LedgerRow,
+  LedgerStatusResult,
+} from "../src/shell/ledger";
 import {
   categoryCells,
   categorySplit,
@@ -79,12 +83,28 @@ const status = (
   })),
   stale_filings: [],
 });
+/** A period's check: the preflight lists its issues. */
 const snapshotOf = (
-  issues: { transaction_id: string; reason: string }[],
+  issues: { transaction_id: string; reason: LedgerPreflightReason }[],
 ): ReadinessSnapshot => ({
   period: { year: 2026, code: "4T" },
   checkedAt: 0,
   status: status(issues),
+  preflight: {
+    profile_id: "p",
+    period: { filing_year: 2026, code: "4T" },
+    bucket_id: "p",
+    checked_transaction_count: 0,
+    issues: issues.map((issue) => ({ ...issue, detail: "" })),
+    ready: issues.length === 0,
+  },
+  savedSince: 0,
+});
+/** Every period's status: no preflight, and no issues listed. */
+const allPeriods = (): ReadinessSnapshot => ({
+  period: null,
+  checkedAt: 0,
+  status: { ...status([]), ready: null },
   preflight: null,
   savedSince: 0,
 });
@@ -124,46 +144,80 @@ const rows: LedgerRow[] = [
 ];
 const byId = new Map(rows.map((row) => [row.transaction.transaction_id, row]));
 
-test("each readiness set filters exactly the movements it counts", () => {
+test("the readiness counts are the check's own, and each set filters the loaded movements it names", () => {
+  const Z = hexId("z");
   const sets = readinessSets(
     rows,
     snapshotOf([
       { transaction_id: A, reason: "missing_business_classification" },
       { transaction_id: B, reason: "missing_category" },
       { transaction_id: B, reason: "missing_iva_rate" },
-      { transaction_id: C, reason: "missing_eur_tax_substrate" },
-      // A movement outside the window is neither counted nor shown.
-      { transaction_id: hexId("z"), reason: "missing_category" },
+      { transaction_id: C, reason: "unsupported_currency" },
+      // A movement the window does not hold is counted, not shown.
+      { transaction_id: Z, reason: "missing_category" },
     ]),
   );
-  expect([...sets.fix].sort()).toEqual([B, C].sort());
+  expect(sets.counts).toEqual({
+    fix: 3,
+    fixAtLeast: false,
+    toClassify: 1,
+    noRate: 1,
+  });
+  expect([...sets.fix].sort()).toEqual([B, C, Z].sort());
   expect([...sets.toClassify]).toEqual([A]);
   expect([...sets.noRate]).toEqual([C]);
   expect(sets.reasons.map((entry) => [entry.reason, entry.ids.size])).toEqual([
-    ["missing_category", 1],
-    ["missing_eur_tax_substrate", 1],
+    ["missing_category", 2],
     ["missing_iva_rate", 1],
+    ["unsupported_currency", 1],
   ]);
-  for (const [filter, counted] of [
-    ["issues", sets.fix],
-    ["to_classify", sets.toClassify],
-    ["no_rate", sets.noRate],
+  for (const [filter, loaded] of [
+    ["issues", [B, C]],
+    ["to_classify", [A]],
+    ["no_rate", [C]],
   ] as const) {
     const kept = rows.filter((row) =>
       keepsRow(row, { ...NO_FILTERS, readiness: filter }, sets, null),
     );
     expect(kept.map((row) => row.transaction.transaction_id).sort()).toEqual(
-      [...counted].sort(),
+      [...loaded].sort(),
     );
   }
-  for (const { reason, ids } of sets.reasons) {
-    const kept = rows.filter((row) =>
-      keepsRow(row, { ...NO_FILTERS, reason }, sets, null),
-    );
-    expect(kept.length).toBe(ids.size);
-  }
-  // Unchecked, nothing is said to need fixing.
+  // The window's rows change none of the counts: fewer rows, the same check.
+  expect(readinessSets(rows.slice(0, 1), snapshotOf([])).counts?.fix).toBe(0);
+  expect(
+    readinessSets(
+      [],
+      snapshotOf([{ transaction_id: B, reason: "missing_category" }]),
+    ).counts,
+  ).toEqual({ fix: 1, fixAtLeast: false, toClassify: 0, noRate: 0 });
+  // Unchecked, nothing is counted.
+  expect(readinessSets(rows, null).counts).toBeNull();
   expect(readinessSets(rows, null).fix.size).toBe(0);
+});
+
+test("every period's strip counts what the status read counts over the whole ledger", () => {
+  const sets = readinessSets(rows, allPeriods());
+  expect(sets.counts).toEqual({
+    fix: 0,
+    fixAtLeast: false,
+    toClassify: 999,
+    noRate: 999,
+  });
+  // The filters still select the loaded rows.
+  expect([...sets.toClassify]).toEqual([A]);
+  // A status that lists fewer issues than it counts gives a least count.
+  const cut: ReadinessSnapshot = {
+    ...allPeriods(),
+    status: {
+      ...status([{ transaction_id: B, reason: "missing_category" }]),
+      readiness_issue_count: 5,
+    },
+  };
+  expect(readinessSets(rows, cut).counts).toMatchObject({
+    fix: 1,
+    fixAtLeast: true,
+  });
 });
 
 test("the product's own filters become one list read each", () => {

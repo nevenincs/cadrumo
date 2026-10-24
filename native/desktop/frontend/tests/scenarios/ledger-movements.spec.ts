@@ -1028,3 +1028,44 @@ test("five thousand movements of one period are read, drawn and scrolled", async
   await expect(dataRows(target).first()).toBeVisible();
   expect(await dataRows(target).count()).toBeLessThan(80);
 });
+
+/** What the readiness strip shows, pill by pill, with each name. */
+const stripNow = (target: Page) =>
+  page(target)
+    .locator(".ledger-readiness [data-readiness]")
+    .evaluateAll((items) =>
+      items.map(
+        (item) =>
+          `${item.getAttribute("data-readiness")}:${item.textContent ?? ""}`,
+      ),
+    );
+
+test("a filter on the grid never changes what the readiness strip counts", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  for (const period of ["4T", "all"]) {
+    if (period === "all") {
+      await head(target).locator(".ledger-period").click();
+      await target.locator(".ledger-period-all").click();
+    } else await choosePeriod(target, 2026, period);
+    const strip = page(target).locator(".ledger-readiness");
+    await expect(strip.locator("[data-readiness]")).not.toHaveCount(0);
+    await expect(
+      strip.locator("[data-readiness=unknown]", {
+        hasText: label("desktop.ledger.readiness.checking"),
+      }),
+    ).toHaveCount(0);
+    const before = await stripNow(target);
+    const chip = page(target).locator(".ledger-duplicates");
+    if ((await chip.count()) === 0) continue;
+    await chip.click();
+    await expect(chip).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(() => stripNow(target)).toEqual(before);
+    // Never a pill that says nothing is to fix while it counts nothing.
+    expect(before.join(" ")).not.toContain(
+      label("desktop.ledger.readiness.not_ready", { count: 0 }),
+    );
+    await chip.click();
+  }
+});

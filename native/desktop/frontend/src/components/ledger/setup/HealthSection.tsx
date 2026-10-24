@@ -80,7 +80,6 @@ export function HealthSection({
   stage,
   period,
   readiness,
-  partial,
   onShowReason,
   onShowReadiness,
   onShowInvoices,
@@ -88,9 +87,6 @@ export function HealthSection({
 }: SetupProps & {
   /** The page's readiness, as its strip shows it. */
   readiness?: Readiness;
-  /** Whether the page holds only some of the period's movements; unknown
-   * is taken as some. */
-  partial?: boolean;
   /** Opens Movements on the movements a readiness reason names. */
   onShowReason(reason: string): void;
   /** Opens Movements on the movements a readiness pill counts. */
@@ -232,12 +228,96 @@ export function HealthSection({
             <Reading label={t("desktop.ledger.form.reading")} />
           ) : !read ? (
             <CallLine call={status.read} />
-          ) : read.total_count === 0 ? (
+          ) : (
+            <dl
+              className={`ledger-health-status text-sm ${COUNTS}`}
+              data-scope="period"
+            >
+              <dt>{t("desktop.ledger.health.income")}</dt>
+              <dd className="text-right tabular-nums">
+                {amountText(locale, read.business_income_total)}
+              </dd>
+              <dt>{t("desktop.ledger.health.expense")}</dt>
+              <dd className="text-right tabular-nums">
+                {amountText(locale, read.business_expense_total)}
+              </dd>
+              <dt>{t("desktop.ledger.health.net")}</dt>
+              <dd className="text-right font-medium tabular-nums">
+                {amountText(locale, read.business_net_total)}
+              </dd>
+              <dt>{t("desktop.ledger.health.unconverted")}</dt>
+              <dd className="text-right tabular-nums">
+                {count(read.unconverted_currency_count)}
+              </dd>
+            </dl>
+          )}
+        </Panel>
+        <Panel
+          title={t("desktop.ledger.health.missing", { period: shown })}
+          actions={
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  className="ledger-health-preflight"
+                  aria-disabled={checkingNow || undefined}
+                  onClick={() => !checkingNow && void runReadiness()}
+                >
+                  <Icon name="sync" />
+                  {snapshot
+                    ? t("desktop.ledger.health.check_again")
+                    : t("desktop.ledger.health.check")}
+                </Button>
+              </TooltipTrigger>
+              {snapshot && (
+                <TooltipContent className="ledger-health-checked-at">
+                  {t("desktop.ledger.health.checked_at", {
+                    time: new Intl.DateTimeFormat(locale, {
+                      timeStyle: "short",
+                    }).format(new Date(snapshot.checkedAt)),
+                  })}
+                </TooltipContent>
+              )}
+            </Tooltip>
+          }
+        >
+          <ReadinessStrip
+            readiness={shownReadiness}
+            sets={sets}
+            filters={NO_FILTERS}
+            locale={locale}
+            unsaved={stageTally(stage).units}
+            stagedClassify={stagedClassifyCount(sets.toClassify, stage)}
+            periodName={shown}
+            onCheck={() => !checkingNow && void runReadiness()}
+            onPill={(filter) => {
+              if (filter === null) return;
+              if (onShowReadiness) onShowReadiness(filter);
+              else if (filter === "to_classify")
+                onShowReason(TO_CLASSIFY_REASON);
+            }}
+            onReason={(reason) => {
+              if (reason !== null) onShowReason(reason);
+            }}
+          />
+        </Panel>
+      </div>
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+        <Panel title={t("desktop.ledger.health.whole_counts")}>
+          {/* The status read counts these over the whole ledger, whatever
+            period it is asked for. */}
+          {status.read === null ? (
+            <Reading label={t("desktop.ledger.form.reading")} />
+          ) : !read ? null : read.total_count === 0 ? (
             <p className="text-sm text-muted-foreground">
-              {t("desktop.ledger.health.no_movements", { period: shown })}
+              {t("desktop.ledger.empty_all")}
             </p>
           ) : (
-            <div className="ledger-health-status flex flex-wrap items-start gap-x-10 gap-y-3 text-sm">
+            <div
+              className="ledger-health-ledger flex flex-wrap items-start gap-x-10 gap-y-3 text-sm"
+              data-scope="ledger"
+            >
               <dl className={COUNTS}>
                 {(
                   [
@@ -282,125 +362,58 @@ export function HealthSection({
                   )}
                 </dl>
               </div>
-              <dl className={COUNTS}>
-                <dt>{t("desktop.ledger.health.income")}</dt>
-                <dd className="text-right tabular-nums">
-                  {amountText(locale, read.business_income_total)}
-                </dd>
-                <dt>{t("desktop.ledger.health.expense")}</dt>
-                <dd className="text-right tabular-nums">
-                  {amountText(locale, read.business_expense_total)}
-                </dd>
-                <dt>{t("desktop.ledger.health.net")}</dt>
-                <dd className="text-right font-medium tabular-nums">
-                  {amountText(locale, read.business_net_total)}
-                </dd>
-                <dt>{t("desktop.ledger.health.unconverted")}</dt>
-                <dd className="text-right tabular-nums">
-                  {count(read.unconverted_currency_count)}
-                </dd>
-              </dl>
             </div>
           )}
         </Panel>
         <Panel
-          title={t("desktop.ledger.health.missing", { period: shown })}
+          title={t("desktop.ledger.health.whole")}
           actions={
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  className="ledger-health-preflight"
-                  aria-disabled={checkingNow || undefined}
-                  onClick={() => !checkingNow && void runReadiness()}
-                >
-                  <Icon name="sync" />
-                  {snapshot
-                    ? t("desktop.ledger.health.check_again")
-                    : t("desktop.ledger.health.check")}
-                </Button>
-              </TooltipTrigger>
-              {snapshot && (
-                <TooltipContent className="ledger-health-checked-at">
-                  {t("desktop.ledger.health.checked_at", {
-                    time: new Intl.DateTimeFormat(locale, {
-                      timeStyle: "short",
-                    }).format(new Date(snapshot.checkedAt)),
-                  })}
-                </TooltipContent>
-              )}
-            </Tooltip>
+            <Button
+              size="xs"
+              variant="outline"
+              className="ledger-health-check"
+              aria-disabled={checking || undefined}
+              onClick={() => !checking && void runCheck()}
+            >
+              {t("desktop.ledger.health.run_check")}
+            </Button>
           }
         >
-          <ReadinessStrip
-            readiness={shownReadiness}
-            sets={sets}
-            filters={NO_FILTERS}
-            locale={locale}
-            unsaved={stageTally(stage).units}
-            stagedClassify={stagedClassifyCount(sets.toClassify, stage)}
-            partial={partial ?? true}
-            onPill={(filter) => {
-              if (filter === null) return;
-              if (onShowReadiness) onShowReadiness(filter);
-              else if (filter === "to_classify")
-                onShowReason(TO_CLASSIFY_REASON);
-            }}
-            onReason={(reason) => {
-              if (reason !== null) onShowReason(reason);
-            }}
-          />
+          {checking ? (
+            <Reading label={t("desktop.ledger.form.reading")} />
+          ) : whole ? (
+            <ul className="ledger-health-whole flex flex-col text-sm">
+              {byReason(whole.issues).map(([found, n]) => (
+                <li
+                  key={found}
+                  className="flex gap-2 border-t border-border py-1 first:border-t-0"
+                >
+                  <span className="flex-1">{reasonShort(t, found)}</span>
+                  <span className="tabular-nums">{count(n)}</span>
+                </li>
+              ))}
+              <li className="flex items-center gap-2 border-t border-border py-1 first:border-t-0">
+                <span className="flex-1">
+                  {t("desktop.ledger.health.one_sided")}
+                </span>
+                <span className="tabular-nums">
+                  {count(whole.link_inconsistencies.length)}
+                </span>
+                {whole.link_inconsistencies.length > 0 && (
+                  <Button size="xs" variant="ghost" onClick={onShowInvoices}>
+                    {t("desktop.ledger.section.invoices")}
+                  </Button>
+                )}
+              </li>
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {t("desktop.ledger.health.not_run")}
+            </p>
+          )}
+          <CallLine call={check} />
         </Panel>
       </div>
-      <Panel
-        title={t("desktop.ledger.health.whole")}
-        actions={
-          <Button
-            size="xs"
-            variant="outline"
-            className="ledger-health-check"
-            aria-disabled={checking || undefined}
-            onClick={() => !checking && void runCheck()}
-          >
-            {t("desktop.ledger.health.run_check")}
-          </Button>
-        }
-      >
-        {checking ? (
-          <Reading label={t("desktop.ledger.form.reading")} />
-        ) : whole ? (
-          <ul className="ledger-health-whole flex flex-col text-sm">
-            {byReason(whole.issues).map(([found, n]) => (
-              <li
-                key={found}
-                className="flex gap-2 border-t border-border py-1 first:border-t-0"
-              >
-                <span className="flex-1">{reasonShort(t, found)}</span>
-                <span className="tabular-nums">{count(n)}</span>
-              </li>
-            ))}
-            <li className="flex items-center gap-2 border-t border-border py-1 first:border-t-0">
-              <span className="flex-1">
-                {t("desktop.ledger.health.one_sided")}
-              </span>
-              <span className="tabular-nums">
-                {count(whole.link_inconsistencies.length)}
-              </span>
-              {whole.link_inconsistencies.length > 0 && (
-                <Button size="xs" variant="ghost" onClick={onShowInvoices}>
-                  {t("desktop.ledger.section.invoices")}
-                </Button>
-              )}
-            </li>
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {t("desktop.ledger.health.not_run")}
-          </p>
-        )}
-        <CallLine call={check} />
-      </Panel>
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
         <Panel title={t("desktop.ledger.health.stale")}>
           {!read ? null : read.stale_filings.length === 0 ? (
