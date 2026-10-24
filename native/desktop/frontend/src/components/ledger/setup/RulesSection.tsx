@@ -363,12 +363,6 @@ function RulesPane({
                   count: matched.length,
                 })}
               </span>
-              <span className="text-sm text-muted-foreground tabular-nums">
-                {t("desktop.ledger.rules.dry_run_counts", {
-                  skipped: preview.result.skipped_already_classified ?? 0,
-                  none: preview.result.no_match ?? 0,
-                })}
-              </span>
               <span className="flex-1" />
               <Button
                 size="xs"

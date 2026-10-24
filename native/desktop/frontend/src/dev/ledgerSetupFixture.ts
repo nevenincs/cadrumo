@@ -321,9 +321,16 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       validation_code: null,
       validation_messages: [],
     };
+    // A dry run counts only what it would match: the product sends none of
+    // the live counts with it.
     if (request.dry_run === true)
       return {
         ...base,
+        rules_evaluated: null,
+        transactions_scanned: null,
+        matched: null,
+        skipped_already_classified: null,
+        no_match: null,
         outcome: "dry_run",
         dry_run: true,
         count: plan.matched.length,
