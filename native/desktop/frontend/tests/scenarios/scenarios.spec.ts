@@ -2154,6 +2154,7 @@ test("the rail keeps its order: search, window toggles, shortcuts, panel toggle"
       "desktop.rail.tui",
       "desktop.rail.docs",
       "desktop.profile.title",
+      "desktop.ledger.title",
       "desktop.calendar.title",
       "desktop.rail.messages",
       "desktop.rail.aeat",

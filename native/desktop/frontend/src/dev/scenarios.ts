@@ -1019,7 +1019,7 @@ export const SCENARIOS: readonly Scenario[] = [
     id: "ledger",
     title: "Ledger",
     summary:
-      "Signed in with a made-up 2026 ledger of a design studio: about 350 movements, 60 invoices, receipts, rules and two accounts. The first quarter is sealed by a filed Modelo 303. Add ?ledger=empty, refused, unknown, unavailable or slow for its other answers.",
+      "Signed in with a made-up 2026 ledger of a design studio: about 350 movements, 60 invoices, receipts, rules and two accounts, and a few movements in earlier years. The first quarter of 2026 is sealed by a filed Modelo 303. Add ?ledger=empty, refused, unknown, unavailable or slow for its other answers.",
     signIn: {
       status: { ...signedOut, state: "present" },
       submit: { kind: "accept" },

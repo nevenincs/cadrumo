@@ -64,6 +64,7 @@ import { accountLabel } from "./components/accountWords";
 import { SignedOut, SignInDialog } from "./components/SignIn";
 import { AboutDialog } from "./components/AboutDialog";
 import { UserProfilePage } from "./components/profile/UserProfilePage";
+import { LedgerPage, type LedgerMemory } from "./components/ledger/LedgerPage";
 import { AccountMenu } from "./components/AccountMenu";
 import { ManageProfiles } from "./components/account/ManageProfiles";
 import { Titlebar } from "./components/Titlebar";
@@ -99,6 +100,7 @@ import {
   loadState,
   saveState,
   type Layout,
+  type LedgerView,
   type Maximized,
   type PanelTab,
   type Prefs,
@@ -238,6 +240,9 @@ export function App({ host }: { host: Host }) {
   }, []);
   const calendarPage = useRef<HTMLElement>(null);
   const profilePage = useRef<HTMLElement>(null);
+  const ledgerPage = useRef<HTMLElement>(null);
+  // The ledger was asked for: it takes focus once it is laid out.
+  const wantsLedger = useRef(false);
   // The agent column was asked for: it takes focus once it is laid out.
   const wantsAgent = useRef(false);
   const agentColumn = useRef<HTMLElement>(null);
@@ -403,11 +408,17 @@ export function App({ host }: { host: Host }) {
   const unhidden = (area: Area) => maximized === null || maximized === area;
   const profileOn = host.userProfile !== undefined && page === "profile";
   const calendarOn = views !== undefined && page === "calendar";
+  const ledgerOn = host.ledger !== undefined && page === "ledger";
   const firstPaneShown =
-    (layout.docsShown || calendarOn || profileOn || maximized === "docs") &&
+    (layout.docsShown ||
+      calendarOn ||
+      profileOn ||
+      ledgerOn ||
+      maximized === "docs") &&
     unhidden("docs");
-  const docsVisible = firstPaneShown && !calendarOn && !profileOn;
+  const docsVisible = firstPaneShown && !calendarOn && !profileOn && !ledgerOn;
   const calendarVisible = calendarOn && firstPaneShown;
+  const ledgerVisible = ledgerOn && firstPaneShown;
   const tuiVisible =
     (layout.tuiShown || maximized === "tui") && unhidden("tui");
   const panelVisible = layout.panelOpen && unhidden("panel");
@@ -442,6 +453,14 @@ export function App({ host }: { host: Host }) {
   if (calendarKept.reader !== reader)
     setCalendarKept({ reader, memory: { current: {} } });
   const calendarMemory = calendarKept.memory;
+  // The ledger's period, kept while its page is away, for one profile and
+  // one sign-in, in memory only.
+  const [ledgerKept, setLedgerKept] = useState(() => ({
+    reader,
+    memory: { current: {} as LedgerMemory },
+  }));
+  if (ledgerKept.reader !== reader)
+    setLedgerKept({ reader, memory: { current: {} } });
   const calendar = useFilingCalendar(
     views,
     reader,
@@ -476,6 +495,12 @@ export function App({ host }: { host: Host }) {
       )?.focus();
     calendarWas.current = calendarVisible;
   }, [calendarVisible, firstPaneShown]);
+  useEffect(() => {
+    if (ledgerVisible && wantsLedger.current) {
+      wantsLedger.current = false;
+      ledgerPage.current?.focus();
+    }
+  }, [ledgerVisible]);
   const askSignIn = useCallback(() => {
     const element = document.activeElement;
     signInOpener.current = {
@@ -939,7 +964,13 @@ export function App({ host }: { host: Host }) {
       }
       if (area === "agent" && !layout.agentShown) patch({ agentShown: true });
       if (area === "tui" && !layout.tuiShown) patch({ tuiShown: true });
-      if (area === "docs" && !layout.docsShown && !calendarOn && !profileOn)
+      if (
+        area === "docs" &&
+        !layout.docsShown &&
+        !calendarOn &&
+        !profileOn &&
+        !ledgerOn
+      )
         patch({ docsShown: true });
       if (area === "panel" && !layout.panelOpen) patch({ panelOpen: true });
       setMaximized(area);
@@ -954,6 +985,7 @@ export function App({ host }: { host: Host }) {
       layout.panelOpen,
       calendarOn,
       profileOn,
+      ledgerOn,
       patch,
       focusView,
     ],
@@ -1028,11 +1060,13 @@ export function App({ host }: { host: Host }) {
         "docs",
         firstPaneShown &&
           (profilePage.current !== null ||
+            ledgerPage.current !== null ||
             calendarPage.current !== null ||
             !!docs.current),
         () =>
           (
             profilePage.current ??
+            ledgerPage.current ??
             calendarPage.current ??
             docs.current
           )?.focus(),
@@ -1180,7 +1214,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "back",
         chords: [{ alt: true, code: "ArrowLeft", key: "←", scope: "docs" }],
-        enabled: () => !calendarOn && !profileOn,
+        enabled: () => !calendarOn && !profileOn && !ledgerOn,
         run: () => docs.current?.back(),
       },
       {
@@ -1189,7 +1223,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "forward",
         chords: [{ alt: true, code: "ArrowRight", key: "→", scope: "docs" }],
-        enabled: () => !calendarOn && !profileOn,
+        enabled: () => !calendarOn && !profileOn && !ledgerOn,
         run: () => docs.current?.forward(),
       },
       {
@@ -1198,7 +1232,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "zoomIn",
         chords: [{ mod: true, code: "Equal", key: "=", scope: "docs" }],
-        enabled: () => !calendarOn && !profileOn,
+        enabled: () => !calendarOn && !profileOn && !ledgerOn,
         run: () =>
           patch({
             zoom: Math.min(2, Math.round((layout.zoom + 0.1) * 10) / 10),
@@ -1210,7 +1244,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "zoomOut",
         chords: [{ mod: true, code: "Minus", key: "-", scope: "docs" }],
-        enabled: () => !calendarOn && !profileOn,
+        enabled: () => !calendarOn && !profileOn && !ledgerOn,
         run: () =>
           patch({
             zoom: Math.max(0.5, Math.round((layout.zoom - 0.1) * 10) / 10),
@@ -1222,7 +1256,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "reset",
         chords: [{ mod: true, code: "Digit0", key: "0", scope: "docs" }],
-        enabled: () => !calendarOn && !profileOn,
+        enabled: () => !calendarOn && !profileOn && !ledgerOn,
         run: () => patch({ zoom: 1 }),
       },
       {
@@ -1561,6 +1595,34 @@ export function App({ host }: { host: Host }) {
         },
       },
       {
+        id: "view.ledger",
+        label: t("desktop.ledger.title"),
+        group: "views",
+        icon: "ledger",
+        keywords: "movements transactions invoices bank movimientos facturas",
+        // No chord: the shell's own are spoken for, and the page's grid
+        // keeps the plain and Alt keys.
+        enabled: () => host.ledger !== undefined,
+        run: () => {
+          if (ledgerVisible) {
+            setPage("docs");
+            return;
+          }
+          wantsLedger.current = true;
+          setMaximized((area) => (area === "docs" ? area : null));
+          setPage("ledger");
+        },
+        choose: () => {
+          if (ledgerVisible) {
+            ledgerPage.current?.focus();
+            return;
+          }
+          wantsLedger.current = true;
+          setMaximized((area) => (area === "docs" ? area : null));
+          setPage("ledger");
+        },
+      },
+      {
         id: "view.messages",
         label: t("desktop.rail.messages"),
         group: "views",
@@ -1731,7 +1793,9 @@ export function App({ host }: { host: Host }) {
       showTui,
       calendarOn,
       profileOn,
+      ledgerOn,
       calendarVisible,
+      ledgerVisible,
       askSignIn,
       askNewProfile,
       canCreateProfile,
@@ -1784,6 +1848,14 @@ export function App({ host }: { host: Host }) {
       setLayout((current) => ({
         ...current,
         profileView: update(current.profileView),
+      })),
+    [setLayout],
+  );
+  const changeLedgerView = useCallback(
+    (update: (current: LedgerView) => LedgerView) =>
+      setLayout((current) => ({
+        ...current,
+        ledgerView: update(current.ledgerView),
       })),
     [setLayout],
   );
@@ -2105,9 +2177,17 @@ export function App({ host }: { host: Host }) {
     if (tuiVisible && tuiFocusable) focusView("tui");
     else if (
       firstPaneShown &&
-      (profilePage.current ?? calendarPage.current ?? docs.current)
+      (profilePage.current ??
+        ledgerPage.current ??
+        calendarPage.current ??
+        docs.current)
     )
-      (profilePage.current ?? calendarPage.current ?? docs.current)?.focus();
+      (
+        profilePage.current ??
+        ledgerPage.current ??
+        calendarPage.current ??
+        docs.current
+      )?.focus();
     else if (agentVisible) agentBody.current?.focus();
     else focusRail();
   }, [
@@ -2263,6 +2343,17 @@ export function App({ host }: { host: Host }) {
           } satisfies RailItem,
         ]
       : []),
+    ...(host.ledger
+      ? [
+          {
+            id: "ledger",
+            icon: "ledger",
+            label: t("desktop.ledger.title"),
+            pressed: ledgerVisible,
+            onClick: () => runAction("view.ledger"),
+          } satisfies RailItem,
+        ]
+      : []),
     // Shortcuts, between the window's own toggles and the bottom panel's:
     // the profile's views where the host offers them, then the ways out of
     // the window.
@@ -2397,54 +2488,97 @@ export function App({ host }: { host: Host }) {
   );
 
   const pane = "pane flex min-h-0 min-w-0 flex-1 flex-col bg-background";
+  // A page of the first pane is put away by its own close, back to the
+  // documentation where that is shown.
+  const closePage = () => {
+    setPage("docs");
+    setMaximized(null);
+  };
   const docsPane = (
     <div className={cn(pane, "pane-docs")}>
-      <PaneHeader
-        title={t(
-          profileOn
-            ? "desktop.profile.title"
-            : calendarOn
-              ? "desktop.calendar.title"
-              : "desktop.pane.docs",
-        )}
-        onToggleMaximize={() => toggleMaximize("docs")}
-        controls={[
-          maximizeControl(
-            "docs",
-            profileOn
-              ? "desktop.profile.maximize"
-              : calendarOn
-                ? "desktop.calendar.maximize"
-                : "desktop.pane.maximize_docs",
-          ),
-          // The split's controls are on the TUI's header too: narrow, this
-          // header gives them up before it cuts its title.
-          ...splitControls.map((control) => ({ ...control, yields: true })),
-          // Every column is put away by its own close. The calendar's puts
-          // the calendar away, back to the documentation where that is shown.
-          calendarOn || profileOn
-            ? {
+      {ledgerOn && host.ledger ? (
+        <LedgerPage
+          key={reader ?? ""}
+          port={host.ledger}
+          reader={reader}
+          withheld={
+            <SignedOut
+              account={account}
+              lead={t("desktop.ledger.signed_out")}
+              quiet
+              onSignIn={askSignIn}
+            />
+          }
+          locale={locale}
+          shown={firstPaneShown}
+          page={ledgerPage}
+          view={layout.ledgerView}
+          onViewChange={changeLedgerView}
+          memory={ledgerKept.memory}
+          contribute={contribute}
+          pane={{
+            title: t("desktop.ledger.title"),
+            onToggleMaximize: () => toggleMaximize("docs"),
+            controls: [
+              maximizeControl("docs", "desktop.ledger.maximize"),
+              ...splitControls.map((control) => ({
+                ...control,
+                yields: true,
+              })),
+              {
                 id: "close",
                 icon: "close",
-                label: t(
-                  profileOn
-                    ? "desktop.profile.close"
-                    : "desktop.calendar.close",
-                ),
-                run: () => {
-                  setPage("docs");
-                  setMaximized(null);
-                },
-              }
-            : {
-                id: "close",
-                icon: "close",
-                label: t("desktop.docs.hide"),
-                shortcut: primaryChord(byId("docs.toggle")),
-                run: () => closeColumn("docs"),
+                label: t("desktop.ledger.close"),
+                run: closePage,
               },
-        ]}
-      />
+            ],
+          }}
+        />
+      ) : (
+        <PaneHeader
+          title={t(
+            profileOn
+              ? "desktop.profile.title"
+              : calendarOn
+                ? "desktop.calendar.title"
+                : "desktop.pane.docs",
+          )}
+          onToggleMaximize={() => toggleMaximize("docs")}
+          controls={[
+            maximizeControl(
+              "docs",
+              profileOn
+                ? "desktop.profile.maximize"
+                : calendarOn
+                  ? "desktop.calendar.maximize"
+                  : "desktop.pane.maximize_docs",
+            ),
+            // The split's controls are on the TUI's header too: narrow, this
+            // header gives them up before it cuts its title.
+            ...splitControls.map((control) => ({ ...control, yields: true })),
+            // Every column is put away by its own close. The calendar's puts
+            // the calendar away, back to the documentation where that is shown.
+            calendarOn || profileOn
+              ? {
+                  id: "close",
+                  icon: "close",
+                  label: t(
+                    profileOn
+                      ? "desktop.profile.close"
+                      : "desktop.calendar.close",
+                  ),
+                  run: closePage,
+                }
+              : {
+                  id: "close",
+                  icon: "close",
+                  label: t("desktop.docs.hide"),
+                  shortcut: primaryChord(byId("docs.toggle")),
+                  run: () => closeColumn("docs"),
+                },
+          ]}
+        />
+      )}
       {profileOn &&
         (reader !== null ? (
           <UserProfilePage
@@ -2498,7 +2632,9 @@ export function App({ host }: { host: Host }) {
         />
       )}
       {/* Put aside, not unloaded: the page it was on is there on return. */}
-      <div className={calendarOn || profileOn ? "hidden" : "contents"}>
+      <div
+        className={calendarOn || profileOn || ledgerOn ? "hidden" : "contents"}
+      >
         {environment.state === "ready" &&
         environment.value.docs.state === "bundled" &&
         docsEntry ? (
@@ -3013,6 +3149,7 @@ export function App({ host }: { host: Host }) {
                     logLevel: current.logLevel,
                     calendarView: current.calendarView,
                     profileView: current.profileView,
+                    ledgerView: current.ledgerView,
                   }));
                   setMaximized(null);
                   say(t("desktop.settings.layout_reset"));

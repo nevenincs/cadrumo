@@ -782,6 +782,62 @@ desktop:
   host:
     failed: Ezt a részt nem sikerült betölteni.
     unavailable: Ehhez a részhez az asztali alkalmazás kell.
+  ledger:
+    action:
+      add: Hozzáadás
+      add_movement: Tétel hozzáadása
+      export: Exportálás
+      go_to_period: Ugrás időszakra…
+      import: Importálás
+      section: 'Napló: {section}'
+    close: Napló bezárása
+    count:
+      to_classify: '{count} besorolandó'
+    empty: 'Nincs tétel ebben az időszakban: {period}'
+    empty_all: Még nincs tétel
+    failed: A naplót nem sikerült beolvasni.
+    loaded_of: '{loaded} / {total} betöltve'
+    loading: A napló beolvasása…
+    maximize: Napló teljes méretben
+    movements_count: 'Tételek: {count}'
+    period:
+      all: Minden időszak
+      choose: Válassz időszakot
+      choose_year: Válassz évet
+      label: Időszak
+      named: '{label}: {period}'
+      next: Következő időszak
+      of_year: '{year} időszakai'
+      previous: Előző időszak
+      year: Év
+      year_next: Következő év
+      year_previous: Előző év
+      years_with_movements: Évek tételekkel
+    readiness:
+      checking: Ellenőrzés…
+      failed: A készültséget nem sikerült ellenőrizni
+      no_rate: '{count} euróárfolyam nélkül'
+      not_checked: Még nincs ellenőrizve
+      not_measured: A készültség nincs felmérve
+      not_ready: Nem kész a számításra · {count} javítandó
+      out_of_date: '{count} mentett változás óta nincs ellenőrizve'
+      ready: 'Számításra kész · ellenőrizve: {time}'
+      title: Készültség
+    reading: 'Beolvasás: {loaded} / {total}'
+    retry: Újra
+    section:
+      documents: Dokumentumok
+      health: Állapot
+      invoices: Számlák
+      movements: Tételek
+      registers: Nyilvántartások
+      rules: Szabályok
+    sections: A napló részei
+    setup: Beállítás
+    setup_current: 'Beállítás: {section}'
+    signed_out: Jelentkezz be a naplód megtekintéséhez.
+    title: Napló
+    unavailable: Még nem érhető el
   logs:
     all_loggers: Minden naplózó
     all_origins: Minden forrás

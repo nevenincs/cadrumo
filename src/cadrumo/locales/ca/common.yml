@@ -794,6 +794,62 @@ desktop:
   host:
     failed: Aquesta part no s'ha pogut carregar.
     unavailable: Aquesta part necessita l'aplicació d'escriptori.
+  ledger:
+    action:
+      add: Afegeix
+      add_movement: Afegeix un moviment
+      export: Exporta
+      go_to_period: Ves a un període…
+      import: Importa
+      section: 'Llibre: {section}'
+    close: Tanca el llibre
+    count:
+      to_classify: '{count} per classificar'
+    empty: No hi ha moviments a {period}
+    empty_all: Encara no hi ha moviments
+    failed: No s'ha pogut llegir el llibre.
+    loaded_of: '{loaded} de {total} carregats'
+    loading: S'està llegint el llibre…
+    maximize: Maximitza el llibre
+    movements_count: 'Moviments: {count}'
+    period:
+      all: Tots els períodes
+      choose: Tria un període
+      choose_year: Tria un any
+      label: Període
+      named: '{label}: {period}'
+      next: Període següent
+      of_year: Períodes de {year}
+      previous: Període anterior
+      year: Any
+      year_next: Any següent
+      year_previous: Any anterior
+      years_with_movements: Anys amb moviments
+    readiness:
+      checking: S'està comprovant…
+      failed: No s'ha pogut comprovar la preparació
+      no_rate: '{count} sense tipus de canvi a euros'
+      not_checked: Encara sense comprovar
+      not_measured: Preparació sense mesurar
+      not_ready: No llest per calcular · {count} per corregir
+      out_of_date: Sense comprovar des de {count} canvis desats
+      ready: Llest per calcular · comprovat a les {time}
+      title: Preparació
+    reading: S'estan llegint {loaded} de {total}
+    retry: Torna-ho a provar
+    section:
+      documents: Documents
+      health: Estat
+      invoices: Factures
+      movements: Moviments
+      registers: Registres
+      rules: Regles
+    sections: Seccions del llibre
+    setup: Configuració
+    setup_current: 'Configuració: {section}'
+    signed_out: Inicia la sessió per veure el teu llibre.
+    title: Llibre
+    unavailable: Encara no disponible
   logs:
     all_loggers: Tots els registradors
     all_origins: Tots els orígens

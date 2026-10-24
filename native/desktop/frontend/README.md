@@ -103,7 +103,7 @@ A scenario is a named, deterministic host behaviour, declared as data in
 | `session-failure`     | Sessions that start, print a line, then fail and exit                    |
 | `tui-unavailable`     | Signed out, with sessions that cannot start: the TUI is not a way on     |
 | `views-refused`       | Signed in, with every profile view refused: not an empty calendar        |
-| `ledger`              | Signed in with a made-up 2026 ledger; its first quarter is sealed        |
+| `ledger`              | Signed in with a 2026 ledger and earlier years; 2026 1T is sealed        |
 | `no-views`            | Signed in on a host with no profile views                                |
 
 Every scenario but `no-views` offers the profile views (the filing calendar
@@ -464,6 +464,28 @@ A new view takes its type and method in `src/shell/views.ts`, a fixture and
 an answer in the scenario host, a hook in `src/shell/` that owns when it is
 read and dropped, and then its surface.
 
+### The Ledger page
+
+The rail's Ledger button, or its palette entry, shows the profile's ledger
+in the first pane, where the host offers the ledger port. The pane's header
+holds the page's sections (Movements, Invoices, Documents, and Rules,
+Registers and Health under Setup), its period and its actions.
+
+- **The period** is one dropdown with the previous and next period beside
+  it. Inside, the year moves by its own buttons, with no bound inside the
+  period grammar. Each year that has movements, read from the ledger, is a
+  button that moves the dropdown to that year. `PeriodSelector` also has a
+  year-only mode.
+- **A period is read whole** before anything is drawn from it. Reading, a
+  failed read (with its code, and a Retry the page never runs by itself),
+  an empty period and a withheld page are each said as such.
+- **Only presentation is kept**: the section, columns, density, grouping,
+  saved view and inspector, in the layout store. The period, every value
+  and anything staged stay in the page's memory and go with the profile.
+- **No chord** is the page's: the shell's are spoken for, and the
+  documentation's Alt+Left and Alt+Right are not taken while it is shown.
+  The page's actions are in the palette.
+
 ### Keyboard
 
 Every pointer path has a keyboard path through the same action.
@@ -563,7 +585,10 @@ and in the calendar `.calendar-page`, `.calendar-head`,
 `.calendar-grid-today`, `.calendar-event` with `data-event`,
 `.calendar-more`, `.calendar-whole`,
 `.calendar-list`, `.calendar-aside`, `.calendar-observed`,
-`.calendar-today` and `.calendar-distance`.
+`.calendar-today` and `.calendar-distance`, and on the Ledger page
+`.ledger-page`, `[data-rail=ledger]`, `.ledger-period`, `.ledger-readiness`
+with `[data-readiness]`, `.ledger-movements`, `.ledger-empty`,
+`.ledger-failed` and `.ledger-loading`.
 
 ## What only the desktop window can show
 

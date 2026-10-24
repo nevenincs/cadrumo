@@ -42,13 +42,47 @@ const legacyShow = (filter: unknown): ProfileView["show"] =>
     ? LEGACY_FILTER[filter as keyof typeof LEGACY_FILTER]
     : "all";
 
+/** The Ledger page's sections: three tabs, and three under its setup menu. */
+export const LEDGER_SECTIONS = [
+  "movements",
+  "invoices",
+  "documents",
+  "rules",
+  "registers",
+  "health",
+] as const;
+export type LedgerSection = (typeof LEDGER_SECTIONS)[number];
+
+/** How the Ledger page is laid out. Presentation only: names of columns,
+ * groupings and views the page defines, and sizes. Never a period, a value,
+ * a search or anything staged. */
+export type LedgerView = {
+  section: LedgerSection;
+  /** The movements grid's columns, by the ids the page gives them. */
+  columns: {
+    hidden: string[];
+    order: string[];
+    /** Widths in CSS pixels, by column id. */
+    widths: Record<string, number>;
+  };
+  density: "compact" | "comfortable";
+  /** The grouping key the page offers, or null for none. */
+  groupBy: string | null;
+  /** The saved view chosen, by the page's id for it. */
+  savedView: string | null;
+  inspectorOpen: boolean;
+  /** The inspector's width in CSS pixels; null keeps the token's. */
+  inspectorWidth: number | null;
+};
+
 export type Layout = {
-  page: "docs" | "calendar" | "profile";
+  page: "docs" | "calendar" | "profile" | "ledger";
   maximized: Maximized;
   /** Null follows the host default until the person chooses a level. */
   logLevel: number | null;
   calendarView: "months" | "list";
   profileView: ProfileView;
+  ledgerView: LedgerView;
   /** The agent column, always beside the rail. */
   agentShown: boolean;
   /** The agent column's share of the window width. */
@@ -82,6 +116,15 @@ export const DEFAULT_LAYOUT: Layout = {
     group: "section",
     sort: "form",
     collapsed: [],
+  },
+  ledgerView: {
+    section: "movements",
+    columns: { hidden: [], order: [], widths: {} },
+    density: "compact",
+    groupBy: null,
+    savedView: null,
+    inspectorOpen: false,
+    inspectorWidth: null,
   },
   agentShown: true,
   agentRatio: 0.24,
@@ -128,6 +171,55 @@ function identifiers(value: unknown, fallback: string[]): string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string")
     ? [...new Set(value)]
     : fallback;
+}
+
+// The shape of a name the Ledger page gives a column, grouping or view. Any
+// other stored text is dropped: what is kept here is never free text.
+const VIEW_ID = /^[a-z][a-z0-9_.:-]{0,63}$/;
+const VIEW_IDS_MAX = 64;
+const viewId = (value: unknown): string | null =>
+  typeof value === "string" && VIEW_ID.test(value) ? value : null;
+const viewIds = (value: unknown): string[] =>
+  Array.isArray(value) && value.length <= VIEW_IDS_MAX
+    ? [...new Set(value.map(viewId).filter((id) => id !== null))]
+    : [];
+const width = (value: unknown): number | null =>
+  typeof value === "number" &&
+  Number.isFinite(value) &&
+  value >= 16 &&
+  value <= 4096
+    ? Math.round(value)
+    : null;
+
+function ledgerViewOf(value: unknown): LedgerView {
+  const stored = object(value);
+  const columns = object(stored.columns);
+  const widths: Record<string, number> = {};
+  for (const [id, size] of Object.entries(object(columns.widths)).slice(
+    0,
+    VIEW_IDS_MAX,
+  )) {
+    const kept = width(size);
+    if (viewId(id) !== null && kept !== null) widths[id] = kept;
+  }
+  return {
+    section: pick(stored.section, LEDGER_SECTIONS, "movements"),
+    columns: {
+      hidden: viewIds(columns.hidden),
+      order: viewIds(columns.order),
+      widths,
+    },
+    density: pick(
+      stored.density,
+      ["compact", "comfortable"] as const,
+      "compact",
+    ),
+    groupBy: viewId(stored.groupBy),
+    savedView: viewId(stored.savedView),
+    inspectorOpen:
+      typeof stored.inspectorOpen === "boolean" ? stored.inspectorOpen : false,
+    inspectorWidth: width(stored.inspectorWidth),
+  };
 }
 
 // Every stored field is validated: browser storage is a convenience that may
@@ -192,7 +284,7 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
     layout: {
       page: pick(
         l.page,
-        ["docs", "calendar", "profile"] as const,
+        ["docs", "calendar", "profile", "ledger"] as const,
         l.page === undefined &&
           (typeof l.tuiShown === "boolean" || typeof l.docsShown === "boolean")
           ? "docs"
@@ -223,6 +315,7 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
         sort: pick(profile.sort, ["form", "missing", "alpha"] as const, "form"),
         collapsed: identifiers(profile.collapsed, []),
       },
+      ledgerView: ledgerViewOf(l.ledgerView),
       agentShown:
         typeof l.agentShown === "boolean"
           ? l.agentShown

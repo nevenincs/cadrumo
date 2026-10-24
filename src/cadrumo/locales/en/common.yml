@@ -766,6 +766,62 @@ desktop:
   host:
     failed: This part couldn't load.
     unavailable: This part needs the desktop application.
+  ledger:
+    action:
+      add: Add
+      add_movement: Add movement
+      export: Export
+      go_to_period: Go to period…
+      import: Import
+      section: 'Ledger: {section}'
+    close: Close the ledger
+    count:
+      to_classify: '{count} to classify'
+    empty: No movements in {period}
+    empty_all: No movements yet
+    failed: Couldn't read the ledger.
+    loaded_of: '{loaded} of {total} loaded'
+    loading: Reading the ledger…
+    maximize: Maximize the ledger
+    movements_count: 'Movements: {count}'
+    period:
+      all: All periods
+      choose: Choose a period
+      choose_year: Choose a year
+      label: Period
+      named: '{label}: {period}'
+      next: Next period
+      of_year: Periods of {year}
+      previous: Previous period
+      year: Year
+      year_next: Next year
+      year_previous: Previous year
+      years_with_movements: Years with movements
+    readiness:
+      checking: Checking…
+      failed: Couldn't check readiness
+      no_rate: '{count} without an EUR rate'
+      not_checked: Not checked yet
+      not_measured: Readiness not measured
+      not_ready: Not ready for calculation · {count} to fix
+      out_of_date: Not checked since {count} saved changes
+      ready: Ready for calculation · checked {time}
+      title: Readiness
+    reading: Reading {loaded} of {total}
+    retry: Retry
+    section:
+      documents: Documents
+      health: Health
+      invoices: Invoices
+      movements: Movements
+      registers: Registers
+      rules: Rules
+    sections: Ledger sections
+    setup: Setup
+    setup_current: 'Setup: {section}'
+    signed_out: Sign in to see your ledger.
+    title: Ledger
+    unavailable: Not available yet
   logs:
     all_loggers: All loggers
     all_origins: All origins

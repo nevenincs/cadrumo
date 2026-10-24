@@ -801,6 +801,62 @@ desktop:
   host:
     failed: Esta parte no se ha podido cargar.
     unavailable: Esta parte necesita la aplicación de escritorio.
+  ledger:
+    action:
+      add: Añadir
+      add_movement: Añadir movimiento
+      export: Exportar
+      go_to_period: Ir a un periodo…
+      import: Importar
+      section: 'Libro: {section}'
+    close: Cerrar el libro
+    count:
+      to_classify: '{count} por clasificar'
+    empty: No hay movimientos en {period}
+    empty_all: Aún no hay movimientos
+    failed: No se ha podido leer el libro.
+    loaded_of: '{loaded} de {total} cargados'
+    loading: Leyendo el libro…
+    maximize: Maximizar el libro
+    movements_count: 'Movimientos: {count}'
+    period:
+      all: Todos los periodos
+      choose: Elige un periodo
+      choose_year: Elige un año
+      label: Periodo
+      named: '{label}: {period}'
+      next: Periodo siguiente
+      of_year: Periodos de {year}
+      previous: Periodo anterior
+      year: Año
+      year_next: Año siguiente
+      year_previous: Año anterior
+      years_with_movements: Años con movimientos
+    readiness:
+      checking: Comprobando…
+      failed: No se ha podido comprobar la preparación
+      no_rate: '{count} sin tipo de cambio a euros'
+      not_checked: Aún sin comprobar
+      not_measured: Preparación sin medir
+      not_ready: No listo para calcular · {count} por corregir
+      out_of_date: Sin comprobar desde {count} cambios guardados
+      ready: Listo para calcular · comprobado a las {time}
+      title: Preparación
+    reading: Leyendo {loaded} de {total}
+    retry: Reintentar
+    section:
+      documents: Documentos
+      health: Estado
+      invoices: Facturas
+      movements: Movimientos
+      registers: Registros
+      rules: Reglas
+    sections: Secciones del libro
+    setup: Ajustes
+    setup_current: 'Ajustes: {section}'
+    signed_out: Inicia sesión para ver tu libro.
+    title: Libro
+    unavailable: Aún no disponible
   logs:
     all_loggers: Todos los registradores
     all_origins: Todos los orígenes

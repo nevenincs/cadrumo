@@ -8,7 +8,7 @@ related:
   - '[[2026-10-23-desktop-ledger-editor-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:8172e93a1c0e76563a6ff15466509025487e530d1eaccdc05ffeeeb1ddb4cddd'
+body_hash: 'sha256:6c9399bc2a9eb196f9c74a6d9476253b609a14175c36eaf267d05818c3071052'
 ---
 
 # `desktop-ledger-editor` plan
@@ -42,7 +42,7 @@ Add a virtualised, keyboard-first data grid primitive to the design system that 
 Build the Ledger page and its sections from the reviewed prototype, at parity with the CLI and TUI ledger.
 
 - [x] `P03.S18` - Add the ledger page models: paged period window, canonical input grammar, staged changes with undo, operation routing with conflict checks, and the apply runner, with pure tests; `native/desktop/frontend/src/shell/`.
-- [ ] `P03.S07` - Add the Ledger page to the shell: layout page, rail item, actions, palette contribution, first-pane wiring and states; `native/desktop/frontend/src/App.tsx`.
+- [x] `P03.S07` - Add the Ledger page to the shell: layout page, rail item, actions, palette contribution, first-pane wiring and states; `native/desktop/frontend/src/App.tsx`.
 - [ ] `P03.S08` - Build the Movements grid with readiness strip, toolbar, filters, sort, grouping, columns and saved views; `native/desktop/frontend/src/components/ledger/`.
 - [ ] `P03.S09` - Add staged editing: cell editors, paste and fill, undo and redo, changes tray, review and apply with per-row outcomes; `native/desktop/frontend/src/components/ledger/`.
 - [ ] `P03.S10` - Add the movement inspector for one row and for a selection, with classification, documents, invoice link, history, declarations and actions; `native/desktop/frontend/src/components/ledger/`.

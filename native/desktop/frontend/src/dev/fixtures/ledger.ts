@@ -796,6 +796,26 @@ export function fixtureLedger(): FixtureLedger {
     if (rejected) rejected.llm_rejected = true;
   }
 
+  // A few movements from earlier years, so that moving between years, and
+  // the years that hold movements, have something to find. Added after the
+  // year's rows so none of those changes. Before the accounts were opened a
+  // movement is bound to none.
+  for (const [date, kind, amountCents] of [
+    ["2003-05-14", PERSONAL[0]!, 2310],
+    ["2011-11-02", PERSONAL[1]!, 1475],
+    ["2019-06-21", OCCASIONAL[1]!, 3630],
+    ["2024-03-08", OCCASIONAL[1]!, 1815],
+    ["2024-12-19", PERSONAL[0]!, 6240],
+    ["2025-09-30", OCCASIONAL[0]!, 5600],
+  ] as const) {
+    push(kind, date, amountCents);
+    const earlier = movements.at(-1)!;
+    const year = date.slice(0, 4);
+    earlier.sealed = false;
+    earlier.import_batch_id = `import-${year}-${date.slice(5, 7)}`;
+    if (year < "2012") earlier.own_account_id = null;
+  }
+
   return {
     movements,
     invoices,

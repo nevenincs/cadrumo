@@ -492,6 +492,30 @@ const SURFACES: {
       await expect(target.locator("#profile-password")).toBeFocused();
     },
   },
+  ...[false, true].map((choosing) => ({
+    name: choosing
+      ? "the Ledger page's period dropdown"
+      : "the Ledger page with a period read",
+    scenario: "ledger",
+    reach: async (target: Page) => {
+      await target.locator("[data-rail=ledger]").click();
+      await expect(
+        target.locator(".ledger-page .ledger-readiness [data-readiness]"),
+      ).not.toHaveCount(0);
+      if (choosing) {
+        await target.locator(".ledger-period").click();
+        await expect(
+          target
+            .getByRole("dialog", {
+              name: label("desktop.ledger.period.choose"),
+            })
+            .getByRole("group", {
+              name: label("desktop.ledger.period.years_with_movements"),
+            }),
+        ).toBeVisible();
+      }
+    },
+  })),
 ];
 
 for (const scheme of ["light", "dark"] as const)

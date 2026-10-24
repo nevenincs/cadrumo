@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:1f7a56457f94ba142956a3a29a5c181754c142772adde2a125f45103993dbd05'
+body_hash: 'sha256:7b90de4dc946e200370d3f150410c6431103e98ce8331425fa9b9754d8ce7829'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -128,8 +128,37 @@ related:
 - `S18` `verify:` `uv run --no-sync python scratchpad/ledgertest/gen/check.py payloads.json (planner bulk CSV, single classify, update and add payloads through the product request parsers)` -> `pass`
 - `S18` `verify:` `mutation check of bulk-never-clears, stale-drop, unknown-pauses and mixed-share-in-bulk, each restored byte-for-byte` -> `pass`
 - `S18` `by:` `implementation-engineer-high`
+- `S07` `A` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S07` `A` `native/desktop/frontend/src/components/ledger/LedgerHeader.tsx`
+- `S07` `A` `native/desktop/frontend/src/components/ledger/PeriodSelector.tsx`
+- `S07` `A` `native/desktop/frontend/src/components/ledger/ledgerWords.ts`
+- `S07` `A` `native/desktop/frontend/src/shell/ledgerYears.ts`
+- `S07` `A` `native/desktop/frontend/src/shell/ledgerReadiness.ts`
+- `S07` `A` `native/desktop/frontend/tests/scenarios/ledger-shell.spec.ts`
+- `S07` `M` `native/desktop/frontend/src/App.tsx`
+- `S07` `M` `native/desktop/frontend/src/shell/layout.ts`
+- `S07` `M` `native/desktop/frontend/src/components/PaneHeader.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S07` `M` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S07` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/accessibility.spec.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S07` `M` `native/desktop/frontend/README.md`
+- `S07` `M` `dev/locales/desktop_chrome.py`
+- `S07` `M` `src/cadrumo/locales/en/common.yml`
+- `S07` `M` `src/cadrumo/locales/es/common.yml`
+- `S07` `M` `src/cadrumo/locales/ca/common.yml`
+- `S07` `M` `src/cadrumo/locales/hu/common.yml`
+- `S07` `verify:` `npx tsc --noEmit` -> `pass`
+- `S07` `verify:` `npx eslint .` -> `pass`
+- `S07` `verify:` `npx prettier --check <touched files>` -> `pass`
+- `S07` `verify:` `playwright scenarios ledger-shell accessibility keyboard (107)` -> `pass`
+- `S07` `verify:` `playwright scenarios scenarios.spec view-preferences columns touch panel (174)` -> `pass`
+- `S07` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `pass`
+- `S07` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S04` Playwright scenario suite not run here: it starts the fixed-port development and preview servers; the Ledger page's scenario tests belong to P04.S16.
 - `S01` Follow-up correction: results reach the window with file names, not paths (ADR amendment 2026-10-24)
+- `S07` Pre-existing, not from this Step: a 'Maximum update depth exceeded' console error in scenarios.spec 'a reader far from the end is never given the whole log to draw', reproduced with the committed App.tsx; dev/locales test failures on provenance.source and TUI registries come from concurrent Modelo work.

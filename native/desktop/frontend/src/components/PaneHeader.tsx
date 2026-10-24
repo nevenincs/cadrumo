@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
@@ -41,18 +42,23 @@ export function SessionDot({ phase }: { phase: SessionPhase }) {
 
 /**
  * The slim header of a workspace area: its title, a session's state where it
- * has one, and its controls. Double-clicking the bar toggles maximize.
+ * has one, what the page it heads puts beside its title, and its controls.
+ * Double-clicking the bar, not a control in it, toggles maximize.
  */
 export function PaneHeader({
   title,
   status,
   controls,
   onToggleMaximize,
+  children,
 }: {
   title: string;
   status?: { phase: SessionPhase; note?: string };
   controls: PaneControl[];
   onToggleMaximize: () => void;
+  /** The page's own controls, between the title and the pane's. They take
+   * the room between and give it up before the title is cut. */
+  children?: ReactNode;
 }) {
   return (
     <PaneHeaderFrame className="pane-head" onToggleMaximize={onToggleMaximize}>
@@ -74,7 +80,7 @@ export function PaneHeader({
           {status.note}
         </span>
       )}
-      <span className="flex-1" />
+      {children ?? <span className="flex-1" />}
       {controls.map((control) => (
         <IconButton
           key={control.id}
