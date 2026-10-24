@@ -17,6 +17,7 @@ import type {
   PresentationOutcome,
   SignInSignal,
   SignInStatus,
+  WindowAction,
 } from "../ipc/contract";
 import { censoFixture } from "./censoFixture";
 import { ledgerFixture, type LedgerShape } from "./ledgerFixture";
@@ -111,6 +112,9 @@ export type ScenarioHostOptions = {
   ledger?: LedgerShape | null;
   /** How the made-up declarations answer. */
   modelo?: ModeloShape | null;
+  /** Offer a made-up window port whose close is guarded as the native
+   * host guards it, so a close the system raised can be played. */
+  window?: boolean;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
 };
@@ -143,7 +147,76 @@ declare global {
     __scenarioAgentPublishStatus?: (status?: AgentServiceStatus) => void;
     /** The next password change is answered as unconfirmed. */
     __scenarioPassword?: { uncertain(): void; changes(): number };
+    /** The made-up window port, where the scenario offers one. */
+    __scenarioWindow?: ScenarioWindowControls;
   }
+}
+
+/** Plays the system's close on the made-up window and reads its answers. */
+export type ScenarioWindowControls = {
+  /** A close the system raised, as the window's own close or Alt+F4. */
+  systemClose(): void;
+  /** Every action the page sent, in order. */
+  actions(): WindowAction[];
+  /** Whether the window has closed. */
+  closed(): boolean;
+};
+
+// One made-up window per page, whichever host instance answers: a scenario
+// may build its host more than once.
+let windowPage: (() => void) | null = null;
+let windowAsked = false;
+let windowReleasing = false;
+let windowClosed = false;
+const windowActions: WindowAction[] = [];
+
+/** A close of the made-up window, held as the native host holds it. */
+function closeWindow() {
+  if (windowClosed) return;
+  if (windowReleasing || windowAsked || windowPage === null) {
+    windowClosed = true;
+    return;
+  }
+  windowAsked = true;
+  windowPage();
+}
+
+/**
+ * A window port that holds a close the system raised as the native host
+ * does: while the page listens the first close asks it, a second close
+ * while it has not answered closes, `close_now` closes without asking
+ * again and `keep_open` lets the next close ask again. Nothing closes:
+ * `closed` only says the native window would have.
+ */
+function windowFixture(): NonNullable<Host["window"]> {
+  window.__scenarioWindow = {
+    systemClose: closeWindow,
+    actions: () => [...windowActions],
+    closed: () => windowClosed,
+  };
+  return {
+    action(action) {
+      windowActions.push(action);
+      // `close` raises the same close the system does.
+      if (action === "close") closeWindow();
+      else if (action === "close_now") {
+        windowReleasing = true;
+        windowClosed = true;
+      } else if (action === "keep_open") windowAsked = false;
+      return Promise.resolve();
+    },
+    observe(listener) {
+      listener({ maximized: false, fullscreen: false });
+      return Promise.resolve(() => undefined);
+    },
+    guardClose(asking) {
+      const listener = () => asking();
+      windowPage = listener;
+      return Promise.resolve(() => {
+        if (windowPage === listener) windowPage = null;
+      });
+    },
+  };
 }
 
 const wait = (ms: number) =>
@@ -545,6 +618,7 @@ export function scenarioHost(
       },
     },
     available: true,
+    ...(options.window ? { window: windowFixture() } : {}),
     ...(scenario.views === "none"
       ? {}
       : {

@@ -121,6 +121,9 @@ export function useNavigator(window: NavigatorWindow) {
   const [prompt, setPrompt] = useState<NavigatorPrompt | null>(null);
   // One navigation waits for an answer at a time.
   const pending = useRef(false);
+  // A close the window has not answered: the one being asked about, or one
+  // that came while another question waited. The next close closes.
+  const closing = useRef<{ readonly stay?: () => void } | null>(null);
   // A commit after each applied navigation, so a wish whose element is
   // already mounted is flushed even when the layout did not change.
   const [, setApplied] = useState(0);
@@ -150,11 +153,25 @@ export function useNavigator(window: NavigatorWindow) {
   }, [runtime]);
 
   /** Weighs a navigation against the guards and lets it through, refuses
-   * it with a toast, or asks once. `stay` runs whenever it does not go. */
+   * it with a toast, or asks once. `stay` runs whenever it does not go; for
+   * a close that came over another question, once that question is
+   * answered. */
   const guard = useCallback(
     (leaving: Leaving, proceed: () => void, stay?: () => void) => {
       const { say, t } = host.current;
       if (pending.current) {
+        if (leaving.kind === "close") {
+          // A close is never refused. Over a question it is left
+          // unanswered, so the host closes on the next one; a next close
+          // raised in the page closes here.
+          if (closing.current) {
+            proceed();
+            return;
+          }
+          closing.current = { stay };
+          say(t("desktop.navigation.pending"));
+          return;
+        }
         say(t("desktop.navigation.pending"));
         stay?.();
         return;
@@ -176,10 +193,16 @@ export function useNavigator(window: NavigatorWindow) {
         return;
       }
       pending.current = true;
+      if (leaving.kind === "close") closing.current = {};
       const settle = (then?: () => void) => {
         pending.current = false;
+        const owed = closing.current;
+        closing.current = null;
         setPrompt(null);
         then?.();
+        // A close left unanswered over another question: the window
+        // stayed, so the host asks again on the next close.
+        if (leaving.kind !== "close") owed?.stay?.();
       };
       if (decision.kind === "ask_busy_close") {
         setPrompt({

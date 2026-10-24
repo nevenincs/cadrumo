@@ -208,6 +208,15 @@ test("guards weigh only what a navigation takes down, and a dialog anywhere", ()
   // A dialog anywhere stands every navigation down, a pane's included.
   expect(weigh(leaveLedger)).toBe("refuse:modal");
   expect(weigh(showPane)).toBe("refuse:modal");
+  // The close is never held by a dialog: it closes, or asks about the work
+  // it would drop.
+  expect(weigh({ kind: "close" })).toBe("proceed");
+  expect(weigh({ kind: "sign_out" })).toBe("refuse:modal");
+  ledger = "dirty";
+  expect(weigh({ kind: "close" })).toBe("ask_dirty");
+  ledger = "busy";
+  expect(weigh({ kind: "close" })).toBe("ask_busy_close");
+  ledger = "clean";
   release();
   expect(weigh(showPane)).toBe("proceed");
 });

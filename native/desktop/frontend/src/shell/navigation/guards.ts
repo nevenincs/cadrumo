@@ -12,7 +12,8 @@ export type GuardState =
   | "dirty"
   /** An effect in flight whose outcome the owner must show: refuse. */
   | "busy"
-  /** An open dialog or credential form: stand down and keep it. */
+  /** An open dialog or credential form: stand down and keep it. The
+   * window's close is not held by one. */
   | "modal";
 
 export type Guard = {
@@ -88,15 +89,17 @@ export class GuardRegister {
   }
 }
 
-/** The navigator's answer to one assessment. A modal owner always stands
- * the navigation down. Work in flight refuses it without override, except
- * the window's close, which asks, because a second close still closes. */
+/** The navigator's answer to one assessment. The window's close is never
+ * refused, because a second close still closes: a dialog does not hold it,
+ * and work in flight is asked about. Any other navigation is stood down by
+ * a modal owner and refused, without override, by work in flight. */
 export function decide(leaving: Leaving, assessed: Assessment): Decision {
-  if (assessed.modal.length > 0) return { kind: "refuse", reason: "modal" };
-  if (assessed.busy.length > 0)
-    return leaving.kind === "close"
-      ? { kind: "ask_busy_close" }
-      : { kind: "refuse", reason: "busy" };
+  if (leaving.kind === "close") {
+    if (assessed.busy.length > 0) return { kind: "ask_busy_close" };
+  } else {
+    if (assessed.modal.length > 0) return { kind: "refuse", reason: "modal" };
+    if (assessed.busy.length > 0) return { kind: "refuse", reason: "busy" };
+  }
   if (assessed.dirty.length > 0)
     return { kind: "ask_dirty", owners: assessed.dirty };
   return { kind: "proceed" };

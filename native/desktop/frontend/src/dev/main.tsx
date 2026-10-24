@@ -95,6 +95,8 @@ function readParams() {
     ledger: LEDGER_SHAPES.find((shape) => shape === params.get("ledger")),
     // How the made-up declarations answer.
     modelo: MODELO_SHAPES.find((shape) => shape === params.get("modelo")),
+    // A made-up window port, for how the page answers a close.
+    window: params.get("window") === "port",
   };
 }
 
@@ -151,6 +153,7 @@ function Scenarios() {
       setup: initial.setup,
       ledger: initial.ledger,
       modelo: initial.modelo,
+      window: initial.window,
       language: run.language,
       latencyMs: initial.latencyMs,
       onCall: (call) => {
