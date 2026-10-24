@@ -11,7 +11,9 @@
 //! end ready leaves `<item>.failure.json` with its category instead.
 //!
 //! A status read takes the lock shared for an instant to learn whether a writer holds
-//! it; a writer starting in that instant is refused as busy rather than queued.
+//! it, and reads the record only after: a record read while the shared lock is held was
+//! left by a writer that is gone, because no writer can begin or finish meanwhile. A
+//! writer starting in that instant is refused as busy rather than queued.
 
 use super::{
     failure::FailureCategory,
@@ -58,6 +60,32 @@ impl ActivityStore {
         self.root.join(format!("{item}.{kind}"))
     }
 
+    /// The item's lock file when it exists; a status read never creates one.
+    fn existing_lock_file(&self, item: ItemId) -> Result<Option<File>, Error> {
+        filesystem::refuse_links(&self.root)?;
+        let path = self.path(item, "lock");
+        filesystem::refuse_links(&path)?;
+        match File::options().read(true).write(true).open(path) {
+            Ok(file) => Ok(Some(file)),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+            Err(error) => Err(error.into()),
+        }
+    }
+
+    /// The item's activity record: `None` when there is none, `Some(None)` when one is
+    /// there but cannot be read as this item's.
+    fn record(&self, item: ItemId) -> Result<Option<Option<ActivityRecord>>, Error> {
+        match filesystem::bounded_bytes(&self.path(item, "activity.json"), RECORD_BYTES_LIMIT) {
+            Ok(bytes) => Ok(Some(
+                serde_json::from_slice::<ActivityRecord>(&bytes)
+                    .ok()
+                    .filter(|record| record.schema == 1 && record.item == item),
+            )),
+            Err(Error::Io(error)) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+            Err(error) => Err(error),
+        }
+    }
+
     fn lock_file(&self, item: ItemId) -> Result<File, Error> {
         filesystem::refuse_links(&self.root)?;
         fs::create_dir_all(&self.root)?;
@@ -88,34 +116,40 @@ impl ActivityStore {
         Ok(writer)
     }
 
-    /// What a setup is doing to the item right now, judged by its record and its lock.
+    /// What a setup is doing to the item right now, judged by its lock and then its record.
     pub fn activity(&self, item: ItemId) -> Result<Activity, Error> {
-        let record = match filesystem::bounded_bytes(
-            &self.path(item, "activity.json"),
-            RECORD_BYTES_LIMIT,
-        ) {
-            Ok(bytes) => serde_json::from_slice::<ActivityRecord>(&bytes)
-                .ok()
-                .filter(|record| record.schema == 1 && record.item == item),
-            Err(Error::Io(error)) if error.kind() == std::io::ErrorKind::NotFound => {
-                return Ok(Activity::Idle);
-            }
-            Err(error) => return Err(error),
+        self.observe(item, &mut || {})
+    }
+
+    /// [`Self::activity`], running `between` after the lock is judged and before the record
+    /// is read, which is where a writer may finish concurrently.
+    fn observe(&self, item: ItemId, between: &mut dyn FnMut()) -> Result<Activity, Error> {
+        let lock = match self.existing_lock_file(item)? {
+            Some(lock) => lock,
+            // No writer has begun here unless one is beginning now, and its record says so.
+            None if self.record(item)?.is_none() => return Ok(Activity::Idle),
+            None => self.lock_file(item)?,
         };
-        let lock = self.lock_file(item)?;
-        let held = match lock.try_lock_shared() {
+        match lock.try_lock_shared() {
             Ok(()) => {
+                between();
+                let record = self.record(item);
                 lock.unlock()?;
-                false
+                Ok(match record? {
+                    Some(_) => Activity::Interrupted,
+                    None => Activity::Idle,
+                })
             }
-            Err(fs::TryLockError::WouldBlock) => true,
-            Err(fs::TryLockError::Error(error)) => return Err(Error::Io(error)),
-        };
-        Ok(match (held, record) {
-            (true, Some(record)) => Activity::Running(record.step),
-            (true, None) => Activity::Running(SetupStep::Plan),
-            (false, _) => Activity::Interrupted,
-        })
+            Err(fs::TryLockError::WouldBlock) => {
+                between();
+                Ok(Activity::Running(
+                    self.record(item)?
+                        .flatten()
+                        .map_or(SetupStep::Plan, |record| record.step),
+                ))
+            }
+            Err(fs::TryLockError::Error(error)) => Err(Error::Io(error)),
+        }
     }
 
     /// The category the item's last finished setup recorded when it did not end ready.
@@ -238,6 +272,40 @@ mod tests {
             None,
             "a ready setup clears the failure"
         );
+    }
+
+    #[test]
+    fn a_writer_finishing_during_a_status_read_never_reads_as_interrupted() {
+        let (_directory, store) = store();
+        let mut writer = Some(store.begin(ItemId::Browser, SetupStep::Verify).unwrap());
+        let read = store
+            .observe(ItemId::Browser, &mut || {
+                writer.take().unwrap().finished().unwrap();
+            })
+            .unwrap();
+        assert!(writer.is_none());
+        assert_ne!(read, Activity::Interrupted);
+        assert_eq!(store.activity(ItemId::Browser).unwrap(), Activity::Idle);
+
+        let mut writer = Some(store.begin(ItemId::LocalAi, SetupStep::Download).unwrap());
+        let read = store
+            .observe(ItemId::LocalAi, &mut || {
+                writer
+                    .take()
+                    .unwrap()
+                    .failed(FailureCategory::Offline)
+                    .unwrap();
+            })
+            .unwrap();
+        assert_ne!(read, Activity::Interrupted);
+        assert_eq!(store.activity(ItemId::LocalAi).unwrap(), Activity::Idle);
+    }
+
+    #[test]
+    fn a_status_read_on_a_clean_root_creates_nothing() {
+        let (directory, store) = store();
+        assert_eq!(store.activity(ItemId::Browser).unwrap(), Activity::Idle);
+        assert!(!directory.path().join("activity").exists());
     }
 
     #[test]

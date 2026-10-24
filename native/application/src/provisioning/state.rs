@@ -1,11 +1,15 @@
 //! Derived item states: never stored, always computed from what a check observed, any
 //! setup running now, and how the last setup of the item ended.
 //!
-//! A running setup wins, then a check that could not read gives `unknown`, then the
-//! observation. A recorded failure, an interrupted download among them, shows only while
-//! the check still finds the item absent: once the item is observed, the observation
-//! decides. A receipt is evidence a check compares against, never an observation, so no
-//! receipt can make an item ready.
+//! A running setup wins, then a check that could not read gives `unknown`. A computer
+//! below the model floor or a build without the item decides next, because Resume could
+//! not change it. An item observed present is ready: a setup cut off during its cleanup
+//! left it usable. Otherwise an interrupted setup reads `failed interrupted` with Resume,
+//! whatever else the check observed, so the person resumes the plan they approved instead
+//! of being offered a different act. Then the observation decides, and a failure the last
+//! finished setup recorded shows only while the item is still absent. A receipt is
+//! evidence a check compares against, never an observation, so no receipt can make an
+//! item ready.
 
 use super::{
     failure::FailureCategory,
@@ -289,15 +293,18 @@ pub fn derive_row(
     activity: Activity,
     last_failure: Option<FailureCategory>,
 ) -> StatusRow {
-    let last_failure = match activity {
-        Activity::Interrupted => Some(FailureCategory::Interrupted),
-        _ => last_failure,
-    };
     let state = match (activity, reading.observation) {
         (Activity::Running(SetupStep::Verify), _) => ItemState::Verifying,
         (Activity::Running(_), _) => ItemState::Provisioning,
         (_, Observation::Unreadable) => ItemState::Unknown,
+        (
+            _,
+            Observation::Blocked(
+                reason @ (BlockedReason::Hardware | BlockedReason::NotInThisBuild),
+            ),
+        ) => ItemState::Blocked(reason),
         (_, Observation::Present { .. }) => ItemState::Ready,
+        (Activity::Interrupted, _) => ItemState::Failed(FailureCategory::Interrupted),
         (_, Observation::Differs { stale, .. }) => ItemState::Stale(stale),
         (_, Observation::Failed(category)) => ItemState::Failed(category),
         (_, Observation::Blocked(reason)) => ItemState::Blocked(reason),
@@ -345,24 +352,15 @@ pub fn setup_complete(rows: &[StatusRow]) -> bool {
     rows.iter().all(|row| row.state.usable())
 }
 
-/// The items a setup with no explicit request covers, in setup order: every item that is
-/// not ready, not already running, and not held back by this computer or this build.
+/// The items a setup with no explicit request covers, in setup order: every item whose
+/// row offers the person an action. That leaves out an item that is ready or already
+/// running, and one held back by this computer or this build, blocked or failed.
 pub fn items_to_set_up(rows: &[StatusRow]) -> Vec<ItemId> {
     ItemId::ALL
         .into_iter()
         .filter(|item| {
-            rows.iter().any(|row| {
-                row.item == *item
-                    && !matches!(
-                        row.state,
-                        ItemState::Ready
-                            | ItemState::Provisioning
-                            | ItemState::Verifying
-                            | ItemState::Blocked(
-                                BlockedReason::Hardware | BlockedReason::NotInThisBuild
-                            )
-                    )
-            })
+            rows.iter()
+                .any(|row| row.item == *item && recovery_for(row.state).is_some())
         })
         .collect()
 }
@@ -419,12 +417,60 @@ mod tests {
         assert_eq!(
             row(present, Activity::Interrupted, None).state,
             ItemState::Ready,
-            "once the item is observed, the observation decides"
+            "a setup cut off during its cleanup left the item usable"
         );
     }
 
     #[test]
-    fn a_recorded_failure_or_an_interruption_shows_only_while_the_item_is_absent() {
+    fn an_interruption_offers_resume_whatever_else_the_check_observed() {
+        let differs = Observation::Differs {
+            stale: StaleReason::DifferentModelVersion,
+            note: Some(Note::DownloadedNotLoaded),
+        };
+        for observation in [
+            Observation::Absent,
+            differs,
+            Observation::Failed(FailureCategory::HostUnreachable),
+            Observation::Failed(FailureCategory::DamagedDownload),
+            Observation::Blocked(BlockedReason::Offline),
+            Observation::Blocked(BlockedReason::NeedsPerson),
+        ] {
+            let interrupted = row(
+                observation,
+                Activity::Interrupted,
+                Some(FailureCategory::DiskFull),
+            );
+            assert_eq!(
+                (interrupted.state, interrupted.recovery, interrupted.note),
+                (
+                    ItemState::Failed(FailureCategory::Interrupted),
+                    Some(RecoveryAction::Resume),
+                    None
+                ),
+                "{observation:?}"
+            );
+        }
+        for reason in [BlockedReason::Hardware, BlockedReason::NotInThisBuild] {
+            let held = row(Observation::Blocked(reason), Activity::Interrupted, None);
+            assert_eq!(
+                (held.state, held.recovery),
+                (ItemState::Blocked(reason), None),
+                "{reason:?}: Resume could not change it"
+            );
+        }
+        assert_eq!(
+            row(Observation::Unreadable, Activity::Interrupted, None).state,
+            ItemState::Unknown
+        );
+        assert_eq!(
+            row(differs, Activity::Idle, Some(FailureCategory::DiskFull)).state,
+            ItemState::Stale(StaleReason::DifferentModelVersion),
+            "a recorded failure shows only while the item is absent"
+        );
+    }
+
+    #[test]
+    fn a_recorded_failure_or_an_interruption_reads_failed_with_its_button() {
         let interrupted = row(
             Observation::Absent,
             Activity::Interrupted,
@@ -664,7 +710,7 @@ mod tests {
     }
 
     #[test]
-    fn setup_covers_what_is_not_ready_running_or_held_back_by_the_computer_or_build() {
+    fn setup_covers_every_item_whose_row_offers_an_action() {
         let rows = |browser: Observation, local: Observation| {
             vec![
                 derive_row(&BROWSER, &reading(browser), Activity::Idle, None),
@@ -682,6 +728,16 @@ mod tests {
             Observation::Blocked(BlockedReason::Hardware),
         );
         assert!(items_to_set_up(&held).is_empty());
+        let failed_without_a_button = rows(
+            Observation::Failed(FailureCategory::NotInThisBuild),
+            Observation::Failed(FailureCategory::NotEnoughMemory),
+        );
+        assert!(
+            failed_without_a_button
+                .iter()
+                .all(|row| row.recovery.is_none())
+        );
+        assert!(items_to_set_up(&failed_without_a_button).is_empty());
         let done = rows(
             Observation::Present { note: None },
             Observation::Differs {

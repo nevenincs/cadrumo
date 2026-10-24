@@ -39,7 +39,8 @@ pub struct Receipt {
     pub version: Option<String>,
     /// Every installed file, once each, in path order.
     pub files: Vec<ReceiptFile>,
-    /// When the item last verified, as UTC `YYYY-MM-DDTHH:MM:SSZ`.
+    /// When the item last verified, as UTC `YYYY-MM-DDTHH:MM:SSZ`. A receipt read with
+    /// fractional seconds, as the earlier setup wrote them, holds them truncated.
     pub verified_at: String,
     pub hosts: Vec<HostName>,
 }
@@ -75,7 +76,7 @@ impl Receipt {
                 .version
                 .as_ref()
                 .is_some_and(|v| v.is_empty() || v.len() > 128)
-            || !timestamp(&self.verified_at)
+            || canonical_timestamp(&self.verified_at).as_deref() != Some(&self.verified_at)
         {
             return Err(Error::Invalid("receipt shape".into()));
         }
@@ -122,11 +123,17 @@ impl ReceiptStore {
             }
             Err(_) => return ReceiptReading::Unreadable,
         };
-        match serde_json::from_slice::<Receipt>(&bytes) {
-            Ok(receipt) if receipt.item_id == item && receipt.validate().is_ok() => {
-                ReceiptReading::Present(receipt)
-            }
-            _ => ReceiptReading::Unreadable,
+        let Ok(mut receipt) = serde_json::from_slice::<Receipt>(&bytes) else {
+            return ReceiptReading::Unreadable;
+        };
+        let Some(verified_at) = canonical_timestamp(&receipt.verified_at) else {
+            return ReceiptReading::Unreadable;
+        };
+        receipt.verified_at = verified_at;
+        if receipt.item_id == item && receipt.validate().is_ok() {
+            ReceiptReading::Present(receipt)
+        } else {
+            ReceiptReading::Unreadable
         }
     }
 
@@ -285,18 +292,27 @@ pub fn utc_timestamp(time: SystemTime) -> String {
     )
 }
 
-fn timestamp(value: &str) -> bool {
+/// The canonical `YYYY-MM-DDTHH:MM:SSZ` form of an RFC 3339 UTC timestamp with optional
+/// fractional seconds (one to nine digits), or `None` for any other text.
+fn canonical_timestamp(value: &str) -> Option<String> {
     let bytes = value.as_bytes();
-    bytes.len() == 20
-        && bytes[4] == b'-'
-        && bytes[7] == b'-'
-        && bytes[10] == b'T'
-        && bytes[13] == b':'
-        && bytes[16] == b':'
-        && bytes[19] == b'Z'
+    let seconds = bytes.get(..19)?;
+    let shaped = seconds[4] == b'-'
+        && seconds[7] == b'-'
+        && seconds[10] == b'T'
+        && seconds[13] == b':'
+        && seconds[16] == b':'
         && [0..4, 5..7, 8..10, 11..13, 14..16, 17..19]
             .into_iter()
-            .all(|range| bytes[range].iter().all(u8::is_ascii_digit))
+            .all(|range| seconds[range].iter().all(u8::is_ascii_digit));
+    let fraction = match &bytes[19..] {
+        [b'Z'] => true,
+        [b'.', digits @ .., b'Z'] => {
+            (1..=9).contains(&digits.len()) && digits.iter().all(u8::is_ascii_digit)
+        }
+        _ => false,
+    };
+    (shaped && fraction).then(|| format!("{}Z", &value[..19]))
 }
 
 #[cfg(test)]
@@ -426,8 +442,72 @@ mod tests {
         ] {
             let spelled = utc_timestamp(UNIX_EPOCH + Duration::from_secs(seconds));
             assert_eq!(spelled, expected);
-            assert!(timestamp(&spelled));
+            assert_eq!(canonical_timestamp(&spelled).as_deref(), Some(expected));
         }
-        assert!(!timestamp("2026-10-24 13:00:00Z"));
+        for (value, canonical) in [
+            ("2026-10-18T13:00:00.123456Z", Some("2026-10-18T13:00:00Z")),
+            ("2026-10-18T13:00:00.1Z", Some("2026-10-18T13:00:00Z")),
+            (
+                "2026-10-18T13:00:00.123456789Z",
+                Some("2026-10-18T13:00:00Z"),
+            ),
+            ("2026-10-18T13:00:00.1234567890Z", None),
+            ("2026-10-18T13:00:00.Z", None),
+            ("2026-10-18T13:00:00.12a4Z", None),
+            ("2026-10-18T13:00:00+00:00", None),
+            ("2026-10-18T13:00:00", None),
+            ("2026-10-24 13:00:00Z", None),
+            ("", None),
+        ] {
+            assert_eq!(canonical_timestamp(value).as_deref(), canonical, "{value}");
+        }
+    }
+
+    /// Written by the earlier Python setup's own receipt model and serialiser for a
+    /// browser verified at 13:00:00.123456 UTC.
+    const PYTHON_RECEIPT: &str = r#"{"files":[{"path":"chrome-win/chrome.exe","sha256":"b0335dc5c19f374fb20d56c5e3764727a1dc64df38c0a2f4239d35a6ef4a3e82","size_bytes":10}],"hosts":["cdn.playwright.dev"],"item_id":"browser","receipt_version":1,"verified_at":"2026-10-18T13:00:00.123456Z","version":"1194"}"#;
+
+    #[test]
+    fn a_receipt_the_earlier_setup_wrote_reads_and_is_rewritten_canonically() {
+        let directory = tempfile::tempdir().unwrap();
+        let receipts = directory.path().join("receipts");
+        fs::create_dir_all(&receipts).unwrap();
+        fs::write(receipts.join("browser.json"), PYTHON_RECEIPT).unwrap();
+        let store = ReceiptStore::new(receipts.clone()).unwrap();
+        let ReceiptReading::Present(read) = store.read(ItemId::Browser) else {
+            panic!("a Python-written receipt must read present");
+        };
+        assert_eq!(read.verified_at, "2026-10-18T13:00:00Z");
+        assert_eq!(read.version.as_deref(), Some("1194"));
+        assert_eq!(read.files[0].sha256, Sha256Digest::of(b"tool bytes"));
+        store.write(&read).unwrap();
+        let rewritten = fs::read_to_string(receipts.join("browser.json")).unwrap();
+        assert!(rewritten.contains("\"verified_at\":\"2026-10-18T13:00:00Z\""));
+        assert_eq!(store.read(ItemId::Browser), ReceiptReading::Present(read));
+
+        let install_root = directory.path().join("install");
+        fs::create_dir_all(install_root.join("chrome-win")).unwrap();
+        fs::write(install_root.join("chrome-win/chrome.exe"), b"tool bytes").unwrap();
+        assert_eq!(
+            observe_install(&store.read(ItemId::Browser), &install_root, None),
+            Observation::Present { note: None },
+            "its files decide, not its age"
+        );
+
+        let mut odd = read_value(PYTHON_RECEIPT);
+        odd["verified_at"] = "2026-10-18T13:00:00+01:00".into();
+        fs::write(receipts.join("browser.json"), odd.to_string()).unwrap();
+        assert_eq!(store.read(ItemId::Browser), ReceiptReading::Unreadable);
+        let mut invalid = read_value(PYTHON_RECEIPT);
+        invalid["verified_at"] = "2026-10-18T13:00:00.123456Z".into();
+        let invalid: Receipt = serde_json::from_value(invalid).unwrap();
+        assert!(
+            store.write(&invalid).is_err(),
+            "a receipt is only ever written in the canonical form"
+        );
+    }
+
+    fn read_value(text: &str) -> serde_json::Value {
+        serde_json::from_str(text).unwrap()
     }
 }

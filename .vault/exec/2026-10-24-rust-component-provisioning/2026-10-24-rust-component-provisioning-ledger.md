@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:4eddbe4a24ac948d7ec85d8eb139e53d9789226ee9c60782c22f1f1f02d95eae'
+body_hash: 'sha256:631c42ad651b225a1484354e1e76d2919748f613518784a8477e255b525e4e3e'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -162,6 +162,14 @@ related:
 - `S02` `verify:` `cargo clippy --all-targets --features platform -- -D warnings` -> `pass`
 - `S02` `verify:` `rustfmt --edition 2024 --check src/provisioning/*.rs` -> `pass`
 - `S02` `by:` `implementation-engineer-high`
+- `S04` `M` `native/application/src/provisioning/activity.rs`
+- `S04` `M` `native/application/src/provisioning/state.rs`
+- `S04` `M` `native/application/src/provisioning/receipts.rs`
+- `S04` `verify:` `cargo test --no-fail-fast (lib 104 passed; package_inspection linked_root_and_deep_root_ancestor_are_refused pre-existing non-ASCII junction failure)` -> `pass`
+- `S04` `verify:` `cargo clippy --all-targets -- -D warnings` -> `pass`
+- `S04` `verify:` `cargo clippy --all-targets --features platform -- -D warnings` -> `pass`
+- `S04` `verify:` `rustfmt --edition 2024 --check src/provisioning/*.rs` -> `pass`
+- `S04` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -178,3 +186,4 @@ related:
 - `S16` Owner ruling 2026-10-24: Python must not provision; the Python path is withdrawn now, ahead of its P05.S14 deletion. Setup is unavailable on every surface until the components role lands; status still names what is missing. The local AI quick check takes about 1.1 s warm and 2.2 s cold with or without withdrawal, near its 2 s bound (pre-existing).
 - `S16` review correction withdrawn-full-check-relabelled: a registry without full checks answers a full request with its quick check and labels the rows quick; review correction runtime-owner-start-residual: the runtime admits no operation's request to start the local model program
 - `S02` review correction: transfer-source-fallback, retry-first-wait, http-unbounded-loops
+- `S04` review correction: activity-finish-race, interrupted-hidden-by-observation, receipt-timestamp-interop, setup-selection-vs-button; a `not_in_this_build` block also outranks an interruption beside the hardware block, because Resume cannot change either
