@@ -217,6 +217,34 @@ def _callee_name(callee: ast.expr) -> str | None:
     return None
 
 
+CANONICAL_TRANSLATORS: frozenset[str] = frozenset({"tr", "t", "lookup_translation"})
+"""The translators themselves, reached by bare name or through a module or object attribute."""
+
+METHOD_WRAPPER_MARK = "."
+"""Prefix of a translator wrapper defined as a method in a translator-name set, so only an attribute call reaches it."""
+
+
+def method_wrapper_name(name: str) -> str:
+    """How a translator set records a wrapper defined in a class body."""
+    return f"{METHOD_WRAPPER_MARK}{name}"
+
+
+def _is_translator_call(callee: ast.expr, tr_names: frozenset[str]) -> bool:
+    """Return whether ``callee`` names a translator in ``tr_names``.
+
+    A wrapper defined as a plain function is called by its bare name, so only
+    a bare-name call reaches it: ``schema.field("provenance.source")`` is a
+    different function from a ``def field(key)`` wrapper elsewhere and its
+    argument is no key. A method wrapper is recorded with
+    :data:`METHOD_WRAPPER_MARK` and reached only through an attribute call.
+    """
+    if isinstance(callee, ast.Name):
+        return callee.id in tr_names
+    if isinstance(callee, ast.Attribute):
+        return callee.attr in CANONICAL_TRANSLATORS or method_wrapper_name(callee.attr) in tr_names
+    return False
+
+
 def _dotted_literal_value(node: ast.expr | None) -> str | None:
     """Return the dotted-literal key string ``node`` carries, else ``None``.
 

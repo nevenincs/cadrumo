@@ -10,6 +10,7 @@ from ._ast_key_syntax import (
     _collect_dotted_literals,
     _dotted_literal_value,
     _is_dynamic_translation_prefix,
+    _is_translator_call,
     _unwrapped_key_literal,
     _walk_nodes,
 )
@@ -70,7 +71,9 @@ def _call_site_key_argument_exprs(node: ast.Call, tr_names: frozenset[str]) -> l
     name = _callee_name(node.func)
     exprs: list[ast.expr] = []
     if name is not None:
-        is_first_arg_sink = name in tr_names or name == "failed" or name.endswith(("Error", "Exception"))
+        is_first_arg_sink = (
+            _is_translator_call(node.func, tr_names) or name == "failed" or name.endswith(("Error", "Exception"))
+        )
         if is_first_arg_sink and node.args:
             exprs.append(node.args[0])
         elif name == "build_entry":
@@ -115,7 +118,7 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str], tr_names: frozen
     _collect_wrapped_key_arguments(node, findings)
     if name in _COMMAND_SPEC_KEY_FACTORIES:
         _collect_command_spec_positional_keys(node, findings)
-    if name in tr_names:
+    if _is_translator_call(node.func, tr_names):
         _add_first_dotted_arg(node, findings)
         return
     if name == "build_entry":

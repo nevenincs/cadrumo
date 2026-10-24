@@ -7,7 +7,13 @@ from pathlib import Path
 
 from ._ast_key_calls import _call_site_key_argument_exprs, _collect_conditional_dotted_literal, _translation_call_names
 from ._ast_key_policy import _TRANSLATION_KEY_KWARGS
-from ._ast_key_syntax import _collect_dotted_literals, _walk_nodes
+from ._ast_key_syntax import (
+    CANONICAL_TRANSLATORS,
+    _collect_dotted_literals,
+    _is_translator_call,
+    _walk_nodes,
+    method_wrapper_name,
+)
 
 
 def _translation_wrapper_names(modules: list[tuple[Path, ast.Module]]) -> frozenset[str]:
@@ -30,6 +36,13 @@ def _translation_wrapper_names(modules: list[tuple[Path, ast.Module]]) -> frozen
     """
     definitions: list[tuple[str, str, ast.AST]] = []
     for _path, tree in modules:
+        methods = {
+            id(member)
+            for owner in _walk_nodes(tree)
+            if isinstance(owner, ast.ClassDef)
+            for member in owner.body
+            if isinstance(member, ast.FunctionDef | ast.AsyncFunctionDef)
+        }
         for node in _walk_nodes(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue
@@ -37,15 +50,16 @@ def _translation_wrapper_names(modules: list[tuple[Path, ast.Module]]) -> frozen
             if parameters and parameters[0].arg in {"self", "cls"}:
                 parameters = parameters[1:]
             if parameters:
-                definitions.append((node.name, parameters[0].arg, node))
+                name = method_wrapper_name(node.name) if id(node) in methods else node.name
+                definitions.append((name, parameters[0].arg, node))
 
-    known = {"tr", "t", "lookup_translation"}
+    known = set(CANONICAL_TRANSLATORS)
     while True:
         discovered = set()
         for name, first, node in definitions:
             discover_translator_wrapper(name, first, node, known, discovered)
         if not discovered:
-            return frozenset[str](known - {"tr", "t", "lookup_translation"})
+            return frozenset[str](known - CANONICAL_TRANSLATORS)
         known |= discovered
 
 
@@ -220,9 +234,12 @@ def discover_translator_wrapper(name: str, first: str, node: ast.AST, known: set
     for inner in ast.walk(node):
         if not isinstance(inner, ast.Call) or not inner.args:
             continue
-        callee = getattr(inner.func, "id", getattr(inner.func, "attr", None))
         argument = inner.args[0]
-        if callee in known and isinstance(argument, ast.Name) and argument.id == first:
+        if (
+            _is_translator_call(inner.func, frozenset(known))
+            and isinstance(argument, ast.Name)
+            and argument.id == first
+        ):
             discovered.add(name)
             break
 
