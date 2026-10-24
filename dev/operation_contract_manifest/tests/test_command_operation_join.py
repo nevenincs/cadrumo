@@ -216,10 +216,19 @@ def test_every_submission_is_constructed_where_the_reading_looks() -> None:
         ),
         pytest.param(
             ("app", "ledger", "classify"),
-            {"ledger.classify.single", "ledger.classify.bulk", "ledger.classify.review", "ledger.classify.iva-derive"},
+            # A review first resolves the operator's handle through the ledger view.
+            {
+                "ledger.classify.single",
+                "ledger.classify.bulk",
+                "ledger.classify.review",
+                "ledger.classify.iva-derive",
+                "ledger.view",
+            },
             id="four-modes",
         ),
-        pytest.param(("app", "ledger", "split"), {"ledger.split.manual", "ledger.split.review"}, id="two-modes"),
+        pytest.param(
+            ("app", "ledger", "split"), {"ledger.split.manual", "ledger.split.review", "ledger.view"}, id="two-modes"
+        ),
         pytest.param(("config", "profile", "edit"), {"user-profile.patch", "user-profile.view"}, id="profile-client"),
         pytest.param(("app", "overview", "calendar"), {"overview.calendar"}, id="named-selection"),
         pytest.param(("app", "quickfile"), {"modelo.quickfile"}, id="group-callback"),

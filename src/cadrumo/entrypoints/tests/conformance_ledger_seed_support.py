@@ -29,7 +29,7 @@ from ...application.ledger.evidence_ingestion_contracts import (
 from ...application.ledger.export_operation import LedgerExportProjection, LedgerExportRequest
 from ...application.ledger.link_operation import LedgerLinkOperationResult, LedgerLinkRequest
 from ...application.ledger.llm_diagnostics_operation import LedgerLlmDiagnosticsProjection, LedgerLlmDiagnosticsRequest
-from ...application.ledger.llm_review_contracts import LedgerLlmReviewRequest
+from ...application.ledger.llm_review_contracts import LedgerLlmReviewRequest, ledger_llm_review_subject
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.ledger.models import ManualLedgerTransactionCommand
 from ...application.ledger.operator_iva_contracts import LedgerOperatorIvaRequest, LedgerOperatorIvaResult
@@ -235,7 +235,12 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
                 assert Decimal(rows[0]["amount"]) == Decimal("121.00")
                 assert transactions.load() == before
 
-        return ConformancePreparation(profile_operation_subject(profile), request, verify=verify)
+        subject = (
+            ledger_llm_review_subject(request)
+            if isinstance(request, LedgerLlmReviewRequest)
+            else profile_operation_subject(profile)
+        )
+        return ConformancePreparation(subject, request, verify=verify)
     if definition_id == "ledger.evidence.batch":
         name = "facturae_32_series_and_parties_invoice.xml"
         corpus = Path(__file__).parents[2] / "application" / "ledger" / "tests" / "_evidence_corpus" / name

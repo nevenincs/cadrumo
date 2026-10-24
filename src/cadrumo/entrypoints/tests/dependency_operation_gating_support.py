@@ -373,7 +373,7 @@ def settle_classify_review(runtime: OperationRuntime) -> SettledOperation:
         LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
         LedgerLlmReviewRequest(
             profile_id=runtime.profile_id,
-            transaction_id=transaction_id[:12],
+            transaction_id=transaction_id,
             mode="classification",
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
         ),
@@ -397,7 +397,7 @@ def settle_split_review(runtime: OperationRuntime) -> SettledOperation:
         LEDGER_SPLIT_REVIEW_DEFINITION_ID,
         LedgerLlmReviewRequest(
             profile_id=runtime.profile_id,
-            transaction_id=transaction_id[:12],
+            transaction_id=transaction_id,
             mode="split",
             origin=LlmReviewInvocationOrigin.SPLIT_LLM,
             read_evidence=True,

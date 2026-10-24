@@ -564,6 +564,7 @@ def _ledger_split_llm(
     from cadrumo_client.contracts.contracts import RefusalCode
 
     from ...application.operations.schema_identity import OperationSchemaIdentityV1
+    from .operation_ledger_view import resolve_ledger_transaction_id
 
     _validate_split_llm_options(
         child_amount=child_amount,
@@ -575,7 +576,7 @@ def _ledger_split_llm(
     client = bound_profile_client(ctx)
     request = LedgerLlmReviewRequest(
         profile_id=client.profile_id,
-        transaction_id=transaction_id,
+        transaction_id=resolve_ledger_transaction_id(client, transaction_id),
         mode="split",
         origin=LlmReviewInvocationOrigin.SPLIT_LLM,
         preview=not apply,

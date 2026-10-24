@@ -195,7 +195,7 @@ def _settle_and_read_detail(
         async def settle() -> tuple[OperationTerminalCondition, str | None, OperationErrorDetailV1]:
             review = LedgerLlmReviewRequest(
                 profile_id=_PROFILE,
-                transaction_id=row.transaction_id[:12],
+                transaction_id=row.transaction_id,
                 mode="classification",
                 origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
             )

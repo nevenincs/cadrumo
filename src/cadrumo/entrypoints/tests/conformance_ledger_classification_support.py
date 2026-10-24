@@ -128,7 +128,7 @@ def _prepare_classify_review(context: ConformanceFamilyContext) -> ConformancePr
     # operator response before reaching a result.
     request = LedgerLlmReviewRequest(
         profile_id=context.profile_id,
-        transaction_id=transaction_id[:12],
+        transaction_id=transaction_id,
         mode="classification",
         origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
         preview=True,
@@ -174,7 +174,7 @@ def _prepare_split_review(context: ConformanceFamilyContext) -> ConformancePrepa
         subject_ref=profile_operation_subject(str(context.profile_id)),
         request=LedgerLlmReviewRequest(
             profile_id=context.profile_id,
-            transaction_id=transaction_id[:12],
+            transaction_id=transaction_id,
             mode="split",
             origin=LlmReviewInvocationOrigin.SPLIT_LLM,
             read_evidence=True,

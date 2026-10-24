@@ -45,6 +45,7 @@ from ._decimal_parsing import parse_optional_fraction
 from ._ledger_support import ledger_validation_bad
 from .common import bad, emit_envelope
 from .operation_ledger_classify import run_ledger_operator_iva
+from .operation_ledger_view import resolve_ledger_transaction_id
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -76,6 +77,9 @@ def _run_review(
 ) -> LedgerLlmReviewProjection | LedgerLlmOperationResult:
     """Use the canonical reviewed-operation driver and correlate the settled proposal."""
     client = bound_profile_client(ctx)
+    # A review holds the movement it names: the operator's handle is resolved
+    # to its canonical id first, so every ask about one movement conflicts.
+    transaction_id = resolve_ledger_transaction_id(client, transaction_id)
     percentage = parse_optional_fraction(business_pct, label="business-pct") if apply else None
     try:
         request = LedgerLlmReviewRequest(

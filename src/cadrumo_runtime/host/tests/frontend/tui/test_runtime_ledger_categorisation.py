@@ -753,7 +753,7 @@ def test_the_composer_builds_every_tool_on_one_pinned_session(monkeypatch: pytes
 def _review_request(*, split: bool = False, profile_id: UUID = _PROFILE_ID) -> LedgerLlmReviewRequest:
     return LedgerLlmReviewRequest(
         profile_id=profile_id,
-        transaction_id=_TX[:12],
+        transaction_id=_TX,
         mode="split" if split else "classification",
         origin=LlmReviewInvocationOrigin.SPLIT_LLM if split else LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
     )
@@ -842,7 +842,7 @@ def test_the_review_door_starts_the_exact_review_and_refuses_another_definition(
     assert log.started == [_OPERATION_ID]
     assert submitted["definition_id"] == LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
     assert submitted["payload"] == _review_request()
-    assert submitted["subject_ref"] == _TX[:12], "a classification review holds only its movement"
+    assert submitted["subject_ref"] == _TX, "a classification review holds only its movement"
     assert submitted["expected_session_id"] == _SESSION_ID
 
     with pytest.raises(RefusalError):

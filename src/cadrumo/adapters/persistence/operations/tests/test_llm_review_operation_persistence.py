@@ -8,6 +8,7 @@ they do not establish native login, credential custody, or model availability.
 from __future__ import annotations
 
 import asyncio
+import json
 import sys
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
@@ -19,6 +20,7 @@ from typing import Literal, NoReturn, override
 from uuid import UUID
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.adapters.outbound.llm.tests.subprocess_classifier_support import SubprocessLLMClassifier
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
@@ -46,6 +48,13 @@ from cadrumo.application.ledger.llm_review_operation import (
 from cadrumo.application.ledger.llm_review_results import LedgerLlmOperationResult
 from cadrumo.application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from cadrumo.application.ledger.models import ManualLedgerTransactionPatch
+from cadrumo.application.ledger.view_operation import (
+    LEDGER_VIEW_OPERATION_DEFINITION_ID,
+    LedgerViewProjection,
+    LedgerViewRequest,
+    build_ledger_view_definition,
+    build_ledger_view_registration,
+)
 from cadrumo.application.operations.composition import (
     OperationComposedServices,
     OperationSubmission,
@@ -76,16 +85,19 @@ from cadrumo.application.operations.owner import OperationExecutorContext, Opera
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot, serialize_operation_operand
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.config import load_settings
+from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
+    profile_operation_subject,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
+from cadrumo.domain.transactions.errors import TransactionIdPrefixError
 from cadrumo.domain.transactions.llm import PromptSpec
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -202,7 +214,7 @@ class _Case:
     def request(self, movement: Transaction | None = None) -> OperationRequest[LedgerLlmReviewRequest]:
         payload = LedgerLlmReviewRequest(
             profile_id=UUID(_PROFILE),
-            transaction_id=(movement or self.baseline).transaction_id[:12],
+            transaction_id=(movement or self.baseline).transaction_id,
             mode="classification",
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
         )
@@ -271,13 +283,17 @@ def _case(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Gene
                     )
                 }
             )
+            view = build_ledger_view_definition(lambda *, bucket_id, operation: ports.ledger)
             yield _Case(
                 root=tmp_path / "operations",
                 database=profile.paths.database_file,
                 objects=profile.repository,
                 registry=OperationRegistry(
-                    definitions=(definition,),
-                    public_registrations=(build_ledger_llm_review_registration(definition),),
+                    definitions=(definition, view),
+                    public_registrations=(
+                        build_ledger_llm_review_registration(definition),
+                        build_ledger_view_registration(view),
+                    ),
                 ),
                 ports=ports,
                 baseline=baseline,
@@ -506,8 +522,8 @@ def test_reviews_of_different_movements_wait_together_and_one_movement_holds_one
             try:
                 _, first = await _publish(case, services)
                 _, second = await _publish(case, services, case.other)
-                assert first.identity.subject_ref == case.baseline.transaction_id[:12]
-                assert second.identity.subject_ref == case.other.transaction_id[:12]
+                assert first.identity.subject_ref == case.baseline.transaction_id
+                assert second.identity.subject_ref == case.other.transaction_id
                 with pytest.raises(OperationSubjectBusyError):
                     await services.submission.submit(case.request(), actor_ref="operator:reviewer")
                 supervisor = services.submission.supervisor
@@ -615,3 +631,108 @@ def test_a_cancel_that_reaches_an_answered_review_before_its_write_stops_it_with
                 await services.shutdown()
 
         asyncio.run(run())
+
+
+async def _view(case: _Case, services: OperationComposedServices, handle: str) -> OperationPersistedSnapshot:
+    """Resolve an operator's handle the way the command line does: through the profile's ledger view."""
+    submission = await services.submission.submit(
+        OperationRequest(
+            definition_id=LEDGER_VIEW_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(_PROFILE),
+            payload=LedgerViewRequest(profile_id=UUID(_PROFILE), transaction_prefix=handle),
+        ),
+        actor_ref="operator:reviewer",
+    )
+    return await run_to_settlement(services.submission.supervisor, submission.receipt.operation_id)
+
+
+def test_a_review_asked_by_a_handle_and_one_asked_by_the_full_id_hold_one_movement(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    with _case(tmp_path, authority_operation) as case:
+        services = case.services()
+
+        async def run() -> None:
+            try:
+                viewed = await _view(case, services, case.baseline.transaction_id[:8])
+                assert viewed.terminal_condition is OperationTerminalCondition.SUCCEEDED
+                contract = case.registry.lookup_public_contract(LEDGER_VIEW_OPERATION_DEFINITION_ID)
+                assert contract.result_schema is not None
+                resolved = await services.result.resolve(
+                    OperationResultProjectionRequestV1(
+                        operation_id=viewed.identity.operation_id,
+                        terminal_revision=viewed.revision,
+                        definition_contract_digest=contract.definition_contract_digest,
+                        result_schema=contract.result_schema,
+                    ),
+                    LedgerViewProjection,
+                )
+                assert isinstance(resolved, OperationResultProjectionSuccessV1)
+                canonical = resolved.projection.transaction.transaction_id
+                assert canonical == case.baseline.transaction_id
+                _, waiting = await _publish(case, services, case.baseline)
+                assert waiting.identity.subject_ref == canonical
+                with pytest.raises(OperationSubjectBusyError):
+                    await services.submission.submit(case.request(), actor_ref="operator:reviewer")
+            finally:
+                await services.shutdown()
+
+        asyncio.run(run())
+
+
+def test_a_handle_that_names_more_than_one_movement_is_refused_by_the_ledger_view(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    with _case(tmp_path, authority_operation) as case:
+        repository = case.ports.ledger.transaction_repository
+        movements = dict(repository.load().transactions)
+        row = 3
+        # Among seventeen ids two share a first hex digit.
+        while len({transaction_id[0] for transaction_id in movements}) == len(movements):
+            added = _movement(f"encrypted-extra-row-{row}", f"{row}.00", row=row)
+            movements[added.transaction_id] = added
+            row += 1
+        repository.save(TransactionCatalogue.from_transactions(tuple(movements.values())))
+        firsts = [transaction_id[0] for transaction_id in movements]
+        shared = next(first for first in firsts if firsts.count(first) > 1)
+        services = case.services()
+
+        async def run() -> None:
+            try:
+                refused = await _view(case, services, shared)
+                receipt = refused.terminal_receipt
+                assert receipt is not None and receipt.effect is OperationEffect.NONE
+                assert refused.terminal_condition is OperationTerminalCondition.REFUSED
+                assert receipt.refusal_ref == get_registered_error_code(TransactionIdPrefixError).code
+            finally:
+                await services.shutdown()
+
+        asyncio.run(run())
+
+
+@pytest.mark.parametrize(
+    "spelling",
+    [
+        pytest.param(lambda full: full[:12], id="short-handle"),
+        pytest.param(lambda full: full.upper(), id="uppercase"),
+        pytest.param(lambda full: full + "0", id="too-long"),
+    ],
+)
+def test_the_registered_review_request_refuses_a_movement_not_named_by_its_canonical_id(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation, spelling: Callable[[str], str]
+) -> None:
+    with _case(tmp_path, authority_operation) as case:
+        full = case.baseline.transaction_id
+        document = {
+            "profile_id": _PROFILE,
+            "transaction_id": full,
+            "mode": "classification",
+            "origin": "classify_llm_apply",
+        }
+        decoded = case.registry.decode_request_payload(LEDGER_CLASSIFY_REVIEW_DEFINITION_ID, json.dumps(document))
+        assert isinstance(decoded, LedgerLlmReviewRequest) and decoded.transaction_id == full
+        with pytest.raises(ValidationError):
+            case.registry.decode_request_payload(
+                LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
+                json.dumps({**document, "transaction_id": spelling(full)}),
+            )

@@ -10,13 +10,13 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.identity.digest import ContentDigest
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.interactions import OperationResponseIntentValue
 from ..operations.models import OperationIdentity
 from ..operations.subject_reference import OperationSubjectReferenceV1, expected_operation_subject
 from .actions_common import display_decimal
-from .id_resolution import normalise_transaction_id_prefix
 from .llm_classification_ports import (
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,
@@ -44,7 +44,10 @@ class LedgerLlmReviewRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    transaction_id: Annotated[str, Field(min_length=1, max_length=96)]
+    # The movement's canonical id: a review holds the movement it names, so a
+    # short handle would let two asks about one movement run side by side.
+    # Frontends resolve an operator's handle before they submit.
+    transaction_id: TransactionId
     mode: Literal["classification", "saturated", "auto_split", "split"]
     origin: LlmReviewInvocationOrigin
     business_pct: LedgerLlmDecimalText | None = None
@@ -53,11 +56,6 @@ class LedgerLlmReviewRequest(BaseModel):
     vision_model: LedgerLlmShortText | None = None
     reason: LedgerLlmLongText = ""
     preview: bool = False
-
-    @field_validator("transaction_id")
-    @classmethod
-    def _canonical_transaction_prefix(cls, value: str) -> str:
-        return normalise_transaction_id_prefix(value)
 
     @field_validator("business_pct")
     @classmethod
