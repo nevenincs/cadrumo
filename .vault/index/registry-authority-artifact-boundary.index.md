@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-10'
-modified: '2026-10-03'
+modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:8b7c069ad1257b202b0a05057ed22cb1d675e3742e55125d3bfa055ec5d20b8e'
+body_hash: 'sha256:16277d0e98c80165b75828bb0036cf4c52ea41b412a101eb49d8c9e2974153a4'
 related:
   - '[[2026-09-10-registry-authority-artifact-boundary-adr]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-artifact-contract-audit]]'
@@ -51,6 +51,8 @@ related:
   - '[[2026-09-15-registry-authority-artifact-boundary-lane3-integration-review-audit]]'
   - '[[2026-09-15-registry-authority-artifact-boundary-migration-r02-runtime-adoption-closure-audit]]'
   - '[[2026-09-19-registry-authority-artifact-boundary-fresh-worktree-bootstrap-audit]]'
+  - '[[2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr]]'
+  - '[[2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-reference]]'
 ---
 
 # `registry-authority-artifact-boundary` feature index
@@ -63,6 +65,7 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 
 - `2026-09-10-registry-authority-artifact-boundary-adr` - `registry-authority-artifact-boundary` adr: immutable runtime publication | (**status:** `superseded`)
 - `2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr` - `registry-authority-artifact-boundary` adr: indexed authority and complete source enrollment | (**status:** `accepted`)
+- `2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-adr` - `registry-authority-artifact-boundary` adr: `snapshot cross-checks proven at publication` | (**status:** `proposed`)
 
 ### audit
 
@@ -107,6 +110,7 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 - `2026-09-14-registry-authority-artifact-boundary-indexed-storage-source-enrollment-reference` - Authority source enrollment and runtime access map
 - `2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference` - `registry-authority-artifact-boundary` reference: `Post-delta authority backend architecture review`
 - `2026-09-14-registry-authority-artifact-boundary-remediation-result-reference` - Authority backend implementation and performance review
+- `2026-10-24-registry-authority-artifact-boundary-snapshot-publication-proof-reference` - `registry-authority-artifact-boundary` reference: `snapshot cross-check placement and publication proof surface`
 
 ### research
 
