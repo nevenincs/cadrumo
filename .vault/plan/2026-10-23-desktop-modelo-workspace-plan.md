@@ -12,7 +12,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:de8f0449316a592b7b91ad6b8865a9cb2974698cf839e49a45e769c4eca33dbf'
+body_hash: 'sha256:60fad0c86e6e49473384ceaac68d10b012b91fb75816e0a0c1b0ac1a43a548d6'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -52,13 +52,14 @@ Move every classification and wording decision the prototype had to make into th
 - [x] `P01.S32` - Fold the retained apply prerequisite and the AEAT receipt step into the form's next step; `src/cadrumo/application/modelo/work_form_next_step.py`.
 - [x] `P01.S33` - Close the review's lower findings: the TUI reads the stored standing, page applicability words are projected, a design-constant figure shows, the typed-entry apply refusal has its own code, the filed wording keys on the recorded closure, and the gate-agreement test drives the real gates; `src/cadrumo/application/modelo/work_form_models.py`.
 - [x] `P01.S34` - Move the TUI's issue lines into the application and project them on the form read model in the form's language, with the verdict line, and switch the TUI to them; `src/cadrumo/application/modelo/work_form_issue_lines.py`.
-- [x] `P01.S35` - Add a worded history read for one declaration in the modelo family, newest first, with a closed kind per event, and switch the TUI history to it; `src/cadrumo/application/modelo/work_history_read.py`.
+- [x] `P01.S35` - Add a worded history read for one declaration in the modelo family, newest first, with a closed kind per event, read by the CLI history and the shared event table; the TUI has no per-declaration history view; `src/cadrumo/application/modelo/work_history_read.py`.
 - [x] `P01.S36` - Add envelopes for a verified Modelo 130 with blocking and incomplete findings and one recorded as filed, read through the real producer; `native/desktop/frontend/scripts/modelo_fixtures.py`.
 - [x] `P01.S37` - Word the typed entry's read-back value and parse refusal in the entry's language, the edit preflight's findings and edit refusals, each repeating-record cell's and context field's value text, and state each box's restore offer and confirm value on the form read model; `src/cadrumo/application/modelo/work_form_wording.py`.
 - [x] `P01.S38` - Project a worded amendment context for a recorded declaration, with the filed record, the permitted kinds and motives in words and each box's filed value text and edit hints, and parse the corrected values typed by the filer through the canonical typed-entry path, matching the CLI amend wizard; `src/cadrumo/application/modelo/work_amend_contracts.py`.
 - [x] `P01.S39` - Project what typing a value over each box does in words, the export offer with its artefacts, elections and their words, the revision's file format, and the recorded filing's receipt state on the form read model, and switch the TUI to them; `src/cadrumo/application/modelo/work_form_export_offer.py`.
 - [x] `P01.S40` - Derive the form's export hold and next step from the filing gate's own predicate so no frontend offers a file the gate refuses, test gate agreement over every note kind and working figure, and remove the unused field_needs_filer route; `src/cadrumo/application/modelo/work_form_next_step.py`.
 - [x] `P01.S42` - Read each declaration list row at the authority grade its revision declares, as the form does, so an applicability-graded revision shows its real state rather than unreadable; `src/cadrumo/application/modelo/declaration_summary.py`.
+- [ ] `P01.S44` - Project the edit admission refusal's words and whether a box takes a typed value on the form read model, report per staged address what a renewal dropped or changed, and give the export offer per-artefact and record availability from the gate predicates, switching the TUI to each; `src/cadrumo/application/modelo/workbench_projection.py`.
 
 ### Phase `P02` - One shared Modelo wording for every frontend
 
@@ -71,11 +72,13 @@ Give the Modelo and declarations wording a neutral home in the canonical locale 
 
 Implement the boundary recorded in the decision: the held relay's financial-operand action, bounded large replies, and the host's closed Modelo family.
 
-- [x] `P03.S13` - Add the held relay's financial-operand submit for modelo.edit.preflight and modelo.edit.apply, wiping the body and refusing any other definition, with custody and journal tests; `src/cadrumo_runtime/host/session_hold_operations.py`.
-- [x] `P03.S14` - Carry relay replies larger than one line in bounded parts the host reassembles, with a 390-sized and a synthetic oversize test; `native/desktop/src-tauri/src/agent/person.rs`.
+- [ ] `P03.S13` - Add the held relay's financial-operand submit for modelo.edit.preflight and modelo.edit.apply, wiping the body and refusing any other definition, with custody and journal tests; `src/cadrumo_runtime/host/session_hold_operations.py`.
+- [x] `P03.S14` - Carry relay replies larger than one line by the relay's assembled-document size rather than bounded parts; closed by 931da66b20, which made a separate part protocol unnecessary; `native/desktop/src-tauri/src/agent/person.rs`.
 - [x] `P03.S15` - Add the host's typed reads for the declarations list, a form and a box's help card after the calendar view's pattern; `native/desktop/src-tauri/src/shell/modelo/`.
-- [x] `P03.S16` - Add the host's closed modelo family on the shared settle loop in shell/relay.rs (submit and settle, review by digest, cancel), save and file tokens, and the raw financial-operand body, within the relay's request-size limits, with the closed list checked against the contract manifest; `native/desktop/src-tauri/src/shell/modelo/`.
+- [ ] `P03.S16` - Add the host's closed modelo family on the shared settle loop in shell/relay.rs (submit and settle, review by digest, cancel), save and file tokens, and the raw financial-operand body, within the relay's request-size limits, with the closed list checked against the contract manifest; `native/desktop/src-tauri/src/shell/modelo/`.
 - [x] `P03.S17` - Add the modelo port to the frontend host, its contract types and scenario answers from envelopes regenerated by a development script; `native/desktop/frontend/src/shell/host.ts`.
+- [ ] `P03.S43` - Bound the financial-operand submit and the edit renewal by the relay's assembled-document size in the bridge and the relay, carry numbers and the raw body through the wipe, and prove preflight, renewal and apply on the real Modelo 303 and 390 baselines; `native/desktop/src-tauri/src/agent/person.rs`.
+- [ ] `P03.S45` - Generate the stored-subject definitions and the edit body limit from the contract and host facts instead of restating them; `native/desktop/frontend/scripts/modelo_fixtures.py`.
 
 ### Phase `P04` - The workspace, built from the frozen prototype
 
@@ -84,21 +87,23 @@ Promote the round-3 prototype into product components on the application's field
 - [x] `P04.S18` - Add the declarations page with the new-declaration dialog to the shell (page, action, rail item), on the shared data grid; `native/desktop/frontend/src/components/modelo/DeclarationsPage.tsx`.
 - [x] `P04.S19` - Add the workspace shell: header with result and the read model's next action, view tabs with state marks, recorded and refused banners; `native/desktop/frontend/src/components/modelo/Workspace.tsx`.
 - [x] `P04.S20` - Render the form from the read model: sections, rows, official grids, repeated records, context facts, binding inputs, unplaced boxes and working figures, one page at a time with section windowing; `native/desktop/frontend/src/components/modelo/form/`.
-- [x] `P04.S21` - Edit boxes in place with the replace-a-source prompt, stage contract intents by edit address, and follow the keyboard model shared with the data grid; `native/desktop/frontend/src/components/modelo/form/ValueCell.tsx`.
-- [x] `P04.S22` - Review and apply through preflight, apply and renew, keeping edits and re-reviewing on a stale baseline and showing an unknown outcome as unknown; `native/desktop/frontend/src/components/modelo/ReviewDialog.tsx`.
+- [ ] `P04.S21` - Edit boxes in place with the replace-a-source prompt, stage contract intents by edit address, and follow the keyboard model shared with the data grid; `native/desktop/frontend/src/components/modelo/form/ValueCell.tsx`.
+- [ ] `P04.S22` - Review and apply through preflight, apply and renew, keeping edits and re-reviewing on a stale baseline and showing an unknown outcome as unknown; `native/desktop/frontend/src/components/modelo/ReviewDialog.tsx`.
 - [x] `P04.S23` - Add the details panel on the help card, docked at narrow widths, and the To do rail; `native/desktop/frontend/src/components/modelo/Details.tsx`.
 - [x] `P04.S24` - Add the Check view on the form's findings in catalogue wording; `native/desktop/frontend/src/components/modelo/CheckView.tsx`.
 - [x] `P04.S25` - Add the Export and record view: the AEAT file through a save token, recording the filing, adding the receipt, and the other copies; `native/desktop/frontend/src/components/modelo/FilingView.tsx`.
 - [x] `P04.S26` - Add the Sources view and the History view with correction, rename and discard; `native/desktop/frontend/src/components/modelo/`.
 - [x] `P04.S41` - Render the read-only view of a return the AEAT holds from the declarations list, from the same read the TUI's external filing details use, and keep the list's view, sort and search while a declaration is open; `native/desktop/frontend/src/components/modelo/declarations/`.
+- [ ] `P04.S46` - Render the new admission, typing, renewal and availability fields, show every correction and creation outcome in catalogue words, and type the presentation tables against the generated enums; `native/desktop/frontend/src/components/modelo/`.
 
 ### Phase `P05` - Proof
 
 Prove the workspace in the browser and the packaged window over real envelopes, and review it against this plan and its decisions.
 
-- [x] `P05.S27` - Add Playwright scenarios over regenerated envelopes: refused 390, held-zero and filled 130, check findings, stale export, recorded with and without receipt, hub AEAT-only and maybe rows, all four languages, missing-key and raw-identifier gates, axe; `native/desktop/frontend/tests/modelo.spec.ts`.
+- [ ] `P05.S27` - Add Playwright scenarios over regenerated envelopes: refused 390, held-zero and filled 130, check findings, stale export, recorded with and without receipt, hub AEAT-only and maybe rows, all four languages, missing-key and raw-identifier gates, axe; `native/desktop/frontend/tests/modelo.spec.ts`.
 - [ ] `P05.S28` - Check in the packaged window that no declaration data reaches storage, logs or diagnostics and that sign-out discards it; `native/desktop/tests/`.
 - [ ] `P05.S29` - Review the integrated work against this plan, the decision and the frozen prototype, and record findings in the feature audit; `.vault/audit/`.
+- [ ] `P05.S47` - Add scenario answers from real envelopes for apply, renewal, export, recording, receipt and correction, and specs proving staged edits survive a renewal, an unknown apply holds until a re-read and a recorded filing differs from a verified receipt; `native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 
 ## Parallelization
 

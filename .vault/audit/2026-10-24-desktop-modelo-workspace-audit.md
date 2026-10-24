@@ -76,6 +76,46 @@ The TUI's external filing details show `aeat_reference_id` behind a technical to
 ### list-reads-filing-grade | medium | the declarations list reads an applicability-graded revision as unreadable
 `declaration_summary` (`src/cadrumo/application/modelo/declaration_summary.py:84`) and the result-box reader (`src/cadrumo/entrypoints/workbench_generation_composition.py:162`) snapshot at the default FILING grade, so the 2026 Modelo 390 revision, which declares applicability grade, reads as "Could not be read" in the list while its form opens. Plan step P01.S42 routes both through `modelo_form_snapshot`, which reads the law-selected revision at its declared grade.
 
+The plan-close review (P05.S29, 2026-10-24, independent opus lane, feature commits `1671c8dd7d` to `118aa04a65`) failed with the findings below.
+
+### edit-request-bound | critical | Modelo 303 cannot be edited from the desktop, and 347 only just fits one entry
+Every preflight and apply carries the whole admitted baseline in the financial-operand body, and the host refuses a body over `REQUEST_LIMIT` = 16,383 bytes (`native/desktop/src-tauri/src/agent/person.rs:20`, `native/desktop/src-tauri/src/shell/modelo/mod.rs:310`). On the real-producer envelopes the admitted baseline alone is 58,049 bytes for 303 (its `permitted_surface` 55,771), 15,936 for 347 and 7,564 for 130; renewal sends the baseline as a plain payload capped near `MAX_PAYLOAD_TEXT` = 12,288 (`native/application/src/person_operations.rs:48`). The TUI and CLI edit these modelos, so parity breaks. P03.S14 was closed on the reply bound only. Decided in the ADR's 2026-10-24 amendment: requests take the assembled-document bound. Reopens P03.S13, P03.S16, P04.S21 and P04.S22.
+
+### mutation-paths-untested | high | No test exercises edit apply, stale renewal, export, recording, receipt or correction
+The scenario host answers only the reads, renewal and one preflight; apply, export, file, reconcile and amend are unserved (`native/desktop/frontend/src/dev/modeloFixture.ts:255`), and no spec drives the review, filing or correction views. Reopens P05.S27.
+
+### correction-outcomes | medium | The correction dialog folds committed, unknown, held and refused outcomes into one silent failure
+`native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx:236` returns failed for anything but settled, including a committed-but-unread amendment, and `CorrectionDialog.tsx:107` shows nothing, inviting a second amendment.
+
+### stale-rebase-divergence | medium | After a renewal the desktop re-checks staged edits by its own rule
+The TUI's rebase drops changes whose box no longer accepts them and compares value and origin (`src/cadrumo/entrypoints/tui/modelo/workbench/session.py:218`); the desktop keeps every edit and compares the value text only (`dialogs/ReviewDialog.tsx:257`).
+
+### admission-refusal-words | medium | The desktop drops the edit refusal's own words and infers rules incomplete from an empty next step
+The TUI shows the admission refusal's words (`src/cadrumo/entrypoints/tui/modelo/workbench/factory.py:186`); the form projection carries none, and the window picks a key by whether a next step exists (`workspace/Workspace.tsx:298`, `details/TodoRail.tsx:64`).
+
+### client-editability-set | medium | Whether a box takes typing is a hand copy of the application's set
+`form/session.ts:214` restates `TYPED_EDITABILITIES` (`src/cadrumo/application/modelo/work_form_typing_effect.py:32`) with an extra rule, and stages an unchanged value the TUI drops.
+
+### export-record-availability | medium | Which artefacts and whether recording is offered are decided separately in each frontend
+`dialogs/FilingView.tsx:428` and the TUI's `screen_operation.py:69` hold their own rules and disagree under a verify hold; the server gates still refuse, so nothing unsafe is written.
+
+### stored-subject-list | medium | The stored-subject definitions and the edit body limit are hand copies of host facts
+`native/desktop/frontend/src/shell/modelo.ts:55` and `:73` restate the host's subject table and request limit.
+
+### wipe-coverage | low | The wipe leaves numbers and the framework's raw body untouched
+`person::wipe` zeroes strings only (`native/desktop/src-tauri/src/agent/person.rs:62`), and the raw invoke body is not copied into a zeroising buffer.
+
+### create-saved-unread | low | A committed-but-unread creation shows as failed and does not re-read the list
+`declarations/NewDeclarationDialog.tsx:175`.
+
+### hand-written-presentation-lists | low | Several presentation tables restate closed sets
+`form/ValueCell.tsx:40`, `workspace/CheckView.tsx:17`, `dialogs/FilingView.tsx:87`.
+
+### record-drift | low | The decision and plan text no longer match what was built
+The reply-parts constraint (now amended), P03.S14's note, and P01.S35's claim that the TUI history switched; only the CLI and the shared event table use the worded history.
+
+Verified sound by the plan-close review: the closed admitted list pinned to the manifest, exact-profile filling and subject binding, files as session tokens, unknown versus refused on every mutation path with no resend, no logging or web storage in the Modelo host and components, typed entries only through the edit port with the buffer zeroed, list, header, next step, issue lines, sources, AEAT notes and receipt from shared producers, theme-only styling, missing drawn as a dash, and the prototype's interaction design unchanged.
+
 Verified sound: the next-step ladder and missing-value count are identical to the removed TUI code; origin, editability and source wording are faithful moves; no TUI module re-exports a moved name; the public round trip covers the new fields; the list read is exact-profile with whole-profile consent and no commit action; neither relay names a definition, the runtime refuses definitions without a financial operand, and both relays drop or overwrite the input after sending; every moved catalogue key exists in all four languages. Not verified by the reviewer: the full TUI and Rust suites (relying on the ledger's results), the full type and Ruff gates, the S02 mutation claim, and a live end-to-end financial submit through the Rust relay to a worker.
 
 ## Recommendations
