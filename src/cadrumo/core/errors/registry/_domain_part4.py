@@ -77,4 +77,14 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.domain.calculations.registry.snapshot_proof.SnapshotProofPublicationError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_SNAPSHOT_PROOF_PUBLICATION",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
