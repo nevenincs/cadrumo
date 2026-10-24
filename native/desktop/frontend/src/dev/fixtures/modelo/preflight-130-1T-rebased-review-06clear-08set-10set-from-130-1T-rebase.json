@@ -4,16 +4,8 @@
   "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
   "outcome": {
     "outcome": "evaluated",
-    "baseline_id": "09621f656d5a7c4a117b7eedeab6599f4d70ea11ff035815f3b4ee7d4c9560d8",
-    "findings": [
-      {
-        "code": "overrides_source_value",
-        "severity": "warning",
-        "address": { "kind": "scalar", "casilla_id": "06" },
-        "message_arguments": [],
-        "evidence": []
-      }
-    ]
+    "baseline_id": "7da2e6c2078d0986de4786139497ff2f1588095ee8206a78e8df74058507e5a5",
+    "findings": []
   },
   "parsed": [],
   "findings": [],
@@ -22,6 +14,16 @@
   "rebase": [
     {
       "address": { "kind": "scalar", "casilla_id": "06" },
+      "kind": "clear",
+      "outcome": "dropped"
+    },
+    {
+      "address": { "kind": "scalar", "casilla_id": "08" },
+      "kind": "set",
+      "outcome": "changed"
+    },
+    {
+      "address": { "kind": "scalar", "casilla_id": "10" },
       "kind": "set",
       "outcome": "kept"
     }

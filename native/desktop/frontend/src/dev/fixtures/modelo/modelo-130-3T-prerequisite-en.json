@@ -1939,9 +1939,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T22:42:07.575521Z",
-    "expires_at": "2026-10-24T22:47:07.575521Z",
-    "baseline_id": "5ea89239a93e5aba55498c50c60a2b99fe6d48dc359df31275c06e2ca4c50fc2"
+    "issued_at": "2026-10-24T23:21:29.741114Z",
+    "expires_at": "2026-10-24T23:26:29.741114Z",
+    "baseline_id": "9706810e2555abe2d6892e7d2ee4e4777abc6ac0210675318dbd498c3018bd6a"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,

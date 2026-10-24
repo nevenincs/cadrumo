@@ -1591,7 +1591,7 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-10-24T22:42:52.001020Z",
+        "exported_at": "2026-10-24T23:22:59.414128Z",
         "calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
         "current": false
       },
@@ -1644,8 +1644,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "df2bf94c7ae1e3f6b5ad16132e96d4c9757dc92d533d7b917b491fb0292ff50a",
-    "calculation_head_digest": "300369085bfa82015f961d11d2a04bd3a918fb836a986959d5f1413f3cabdb54",
+    "work_unit_record_digest": "cffc543b7a6876a7c8df57774b471552fd7e45d49a56b3e7ba116aeb6efa35b0",
+    "calculation_head_digest": "ce3d4e6a27383f660783598407cd48fe3fe3593f2d1ad34934678d5ee807aaa1",
     "current_calculation_revision_id": "f750b77d07a9d8ece9ecf2939bdede9bc70b159d7ff18c7ee1477c27e9c389fe",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1949,9 +1949,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T22:43:02.055090Z",
-    "expires_at": "2026-10-24T22:48:02.055090Z",
-    "baseline_id": "baf5e52e6d596ca3858fd762a9b7d55efe66d410b0a72ed2e2a600f5e1a08972"
+    "issued_at": "2026-10-24T23:23:21.456270Z",
+    "expires_at": "2026-10-24T23:28:21.456270Z",
+    "baseline_id": "5ec2dd21e02c7f0d84bfa07f12f3363e8d420a646feff0c201f4905880f0d393"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1961,7 +1961,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-10-24T22:42:52.001020Z",
+    "file_created_at": "2026-10-24T23:22:59.414128Z",
     "receipt_to_add": false
   },
   "header": {
@@ -1987,7 +1987,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-10-24T22:42:52.001020Z",
+      "exported_at": "2026-10-24T23:22:59.414128Z",
       "created_on": "25/10/2026",
       "current": false,
       "words": "El fichero del 25/10/2026 está desactualizado. Vuelve a generarlo."

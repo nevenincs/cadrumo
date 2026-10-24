@@ -12,6 +12,7 @@ import {
   fieldKey,
   placedFields,
   noteMoved,
+  rebasedEdits,
   rebasedOf,
   restaged,
   restoreIntent,
@@ -281,4 +282,48 @@ test("the notice counts each box a report moved once, until acknowledged", () =>
     changed: 0,
     dropped: 2,
   });
+});
+
+test("what a report moved is kept by the box's own address, which a restage never changes", () => {
+  const own = box(m130, "08");
+  const edit = staged(own, valueIntent(own, "250"));
+  const sent = editAddress(own);
+  if (sent.kind !== "scalar" && sent.kind !== "binding")
+    throw new Error("box 08 has no held edit address");
+  // On the read the report applies to, the box is edited at a binding.
+  const now = {
+    ...own,
+    takes_typed_value: true,
+    edit_address: { kind: "binding" as const, binding_id: "synthetic.08" },
+  };
+  const placed = placedFields(m130.form.form).map((p) =>
+    p.field.box === "08" ? { ...p, field: now } : p,
+  );
+  const first = rebasedEdits(
+    new Map([[edit.key, edit]]),
+    [{ address: sent, kind: "set", outcome: "changed" }],
+    placed,
+  );
+  const [restagedEdit] = [...first.next.values()];
+  expect(restagedEdit?.address).toEqual({
+    kind: "binding",
+    binding_id: "synthetic.08",
+  });
+  expect(first.found).toEqual([[fieldKey(own), "changed"]]);
+  // A second report names the edit at its new address; the box is the same.
+  const second = rebasedEdits(
+    first.next,
+    [
+      {
+        address: { kind: "binding", binding_id: "synthetic.08" },
+        kind: "set",
+        outcome: "changed",
+      },
+    ],
+    placed,
+  );
+  expect(second.found).toEqual([[fieldKey(own), "changed"]]);
+  expect(
+    rebasedOf(noteMoved(noteMoved(new Map(), first.found), second.found)),
+  ).toEqual({ changed: 1, dropped: 0 });
 });

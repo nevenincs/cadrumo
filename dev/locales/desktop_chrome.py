@@ -379,6 +379,7 @@ _WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "workspace.modelo.rebase.changed",
         "workspace.modelo.rebase.dropped",
         "workspace.modelo.rebase.moved",
+        "workspace.modelo.rebase.still_moving",
         "workspace.modelo.repeating",
         "workspace.modelo.review.acknowledge",
         "workspace.modelo.review.and_more",

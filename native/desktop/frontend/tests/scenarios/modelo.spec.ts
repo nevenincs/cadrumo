@@ -655,12 +655,28 @@ test("staged edits survive a renewal of a baseline that went stale", async ({
   const dialog = await review(target);
   // The check answered stale, the baseline was renewed, the declaration read
   // again and the edits checked again: nothing staged was lost.
+  const sequence = (
+    await target.evaluate(() => window.__scenarioHostCalls ?? [])
+  ).filter(
+    (call) =>
+      call === "modelo edit modelo.edit.preflight" ||
+      call === "modelo submit modelo.edit.renew" ||
+      call.startsWith("modelo form "),
+  );
+  const renewed = sequence.indexOf("modelo submit modelo.edit.renew");
+  expect(sequence.slice(renewed - 1, renewed + 3)).toEqual([
+    "modelo edit modelo.edit.preflight",
+    "modelo submit modelo.edit.renew",
+    "modelo form en",
+    "modelo edit modelo.edit.preflight",
+  ]);
   expect(await calls(target, "modelo submit modelo.edit.renew")).toHaveLength(
     1,
   );
   await expect(dialog.getByRole("listitem")).toHaveCount(1);
   await expect(dialog.getByRole("listitem")).toContainText("06");
-  await expect(applyButton(dialog)).toBeVisible();
+  // The check on the renewed baseline was evaluated: the edit may be applied.
+  await expect(applyButton(dialog)).toBeEnabled();
   await dialog
     .getByRole("button", { name: label("workspace.modelo.review.back") })
     .click();
@@ -983,7 +999,7 @@ type RebaseEntry = {
  * on the box printed `box`, as the application judged it. */
 function rebaseOf(box: string): RebaseEntry["outcome"] {
   const entry = envelope<{ rebase: RebaseEntry[] }>(
-    "preflight-130-1T-rebased-review-06clear-08set-10set",
+    "preflight-130-1T-rebased-review-06clear-08set-10set-from-130-1T-rebase",
   ).rebase.find((item) => item.address.casilla_id === box);
   if (!entry) throw new Error(`the review says nothing of box ${box}`);
   return entry.outcome;
@@ -1150,4 +1166,61 @@ test("a stale check whose renewal is refused reads the declaration again once, a
     })
     .check();
   await expect(applyButton(dialog)).toBeEnabled();
+});
+
+test("a declaration still changing after it was read again stops after that one read and says so", async ({
+  page: target,
+}) => {
+  // The real sequence: stale on the read the edits were staged on, its
+  // renewal refused, and stale again on the declaration read again, since
+  // it moved once more.
+  for (const name of [
+    "preflight-130-1T-rebase-stale",
+    "preflight-130-1T-moving-stale",
+  ]) {
+    const stale = envelope<{
+      outcome: { refusal?: { kind: string } };
+      rebase: RebaseEntry[];
+    }>(name);
+    expect(stale.outcome.refusal?.kind).toBe("stale_edit_baseline");
+    expect(stale.rebase).toEqual([]);
+  }
+  await openDeclaration(target, "130", { shape: "moving" });
+  await boxRow(target, "06").getByRole("gridcell").nth(1).click();
+  await target.keyboard.press("Delete");
+  await stage(target, "08", "250");
+  await stage(target, "10", "75");
+  await target
+    .getByRole("button", { name: label("workspace.modelo.next_button.apply") })
+    .first()
+    .click();
+  const dialog = target.getByRole("dialog");
+  await expect(dialog).toContainText(
+    label("workspace.modelo.rebase.still_moving"),
+  );
+  // One renewal and one read of the declaration, and nothing after them.
+  const sequence = (
+    await target.evaluate(() => window.__scenarioHostCalls ?? [])
+  ).filter(
+    (call) =>
+      call === "modelo edit modelo.edit.preflight" ||
+      call === "modelo submit modelo.edit.renew" ||
+      call.startsWith("modelo form "),
+  );
+  const renewed = sequence.indexOf("modelo submit modelo.edit.renew");
+  expect(sequence.slice(renewed + 1)).toEqual([
+    "modelo form en",
+    "modelo edit modelo.edit.preflight",
+  ]);
+  expect(await calls(target, "modelo submit modelo.edit.renew")).toHaveLength(
+    1,
+  );
+  await expect(applyButton(dialog)).toHaveCount(0);
+  // The edits are still the filer's: nothing was applied or let go.
+  await dialog
+    .getByRole("button", { name: label("workspace.modelo.review.back") })
+    .click();
+  await expect(boxRow(target, "08")).toContainText(
+    label("workspace.modelo.attention.staged"),
+  );
 });

@@ -35,6 +35,9 @@ export type ReviewPhase =
     }
   /** The application refused the edits as they stand, and why. */
   | { kind: "refused"; words: string | null }
+  /** The declaration moved again after it was read again: nothing more is
+   * renewed or read until the filer asks to check again. */
+  | { kind: "still_moving" }
   /** The check did not answer; nothing was changed. */
   | { kind: "check_failed"; code: LedgerFailureCode | "refused" }
   | { kind: "applying" }
@@ -64,7 +67,7 @@ async function preflight(
   session: FormSession,
   baseline: ModeloEditApplyBaselineV1,
   language: OutputLanguage,
-  renewedBefore: boolean,
+  movedBefore: boolean,
   renew: (baseline: ModeloEditApplyBaselineV1) => Renewal,
 ): Promise<Checked> {
   try {
@@ -89,11 +92,14 @@ async function preflight(
         },
         report: read.rebase,
       };
-    if (answer.refusal.kind !== "stale_edit_baseline" || renewedBefore)
+    if (answer.refusal.kind !== "stale_edit_baseline")
       return {
         phase: { kind: "refused", words: read.refusal_words },
         report: null,
       };
+    // Stale again on the baseline a renewal or a re-read left: the
+    // declaration keeps moving, so this check stops, as the TUI's does.
+    if (movedBefore) return { phase: { kind: "still_moving" }, report: null };
   } catch (error) {
     return {
       phase: { kind: "check_failed", code: ledgerFailure(error).code },
@@ -167,6 +173,9 @@ export function useEditReview({
   // The renewal under way, which every check that finds the baseline stale
   // meanwhile waits on instead of starting another.
   const renewing = useRef<Renewal | null>(null);
+  // Whether the baseline was renewed or read again since the filer last
+  // asked to check: a check stale again then stops instead of renewing.
+  const moved = useRef(false);
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -195,10 +204,11 @@ export function useEditReview({
       session,
       baseline,
       language,
-      renewed !== null && baseline === renewed,
+      moved.current,
       (stale) => {
         const held = renewing.current;
         if (held) return held;
+        moved.current = true;
         const running = renewal(port, stale, language, setRenewed, onReread);
         renewing.current = running;
         void running.finally(() => {
@@ -208,12 +218,15 @@ export function useEditReview({
       },
     );
     if (!alive.current || ticket !== checks.current) return;
+    // A check that evaluated the edits ends the moving: a later stale
+    // baseline may be renewed again.
+    if (answer.phase.kind === "checked") moved.current = false;
     // The report is of the read this check was made on, which is the read
     // the form holds while this check is the latest.
     if (answer.report?.some((entry) => entry.outcome !== "kept"))
       session.rebase(answer.report);
     setPhase(answer.phase);
-  }, [baseline, port, session, language, renewed, onReread]);
+  }, [baseline, port, session, language, onReread]);
 
   // Each opening checks the edits as they now stand; a re-read after an
   // unknown apply releases the hold.
@@ -328,7 +341,11 @@ export function useEditReview({
       ? ({ kind: "unknown", operationId: held.operationId } as const)
       : phase,
     apply,
-    recheck: () => void check(),
+    recheck: () => {
+      // The filer asks again: one more renewal is allowed.
+      moved.current = false;
+      void check();
+    },
     prerequisite:
       standing && prerequisite && heldField
         ? { field: heldField, words: prerequisite.held.words }

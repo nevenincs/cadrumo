@@ -10,7 +10,7 @@
     "filing_year": 2026,
     "period": { "filing_year": 2026, "code": "1T" },
     "member_nif": null,
-    "filed_at": "2026-10-24T22:42:27.113404Z",
+    "filed_at": "2026-10-24T23:22:09.541679Z",
     "filed_by": "operator:desktop-modelo",
     "notes": null,
     "origin": "local",
@@ -46,7 +46,7 @@
     "revision_id": "2019-y-siguientes",
     "name": "130-2026-1T",
     "created_at": "2026-04-02T09:00:00Z",
-    "updated_at": "2026-10-24T22:42:27.113404Z",
+    "updated_at": "2026-10-24T23:22:09.541679Z",
     "state": "borrador",
     "discarded_at": null,
     "discarded_by": null,
@@ -613,11 +613,11 @@
       { "key": "05", "value": "0" },
       { "key": "06", "value": "0" }
     ],
-    "created_at": "2026-10-24T22:42:24.687346Z",
-    "updated_at": "2026-10-24T22:42:27.113404Z",
-    "verified_at": "2026-10-24T22:42:26.497902Z",
+    "created_at": "2026-10-24T23:22:04.719224Z",
+    "updated_at": "2026-10-24T23:22:09.541679Z",
+    "verified_at": "2026-10-24T23:22:08.298113Z",
     "verified_by": "operator:desktop-modelo",
-    "filed_at": "2026-10-24T22:42:27.113404Z",
+    "filed_at": "2026-10-24T23:22:09.541679Z",
     "filed_by": "operator:desktop-modelo",
     "superseded_at": null
   },
@@ -1039,7 +1039,7 @@
       "period_words": "1st quarter 2026",
       "declaration_kind": "original",
       "declaration_kind_words": "Original",
-      "filed_at": "2026-10-24T22:42:27.113404Z",
+      "filed_at": "2026-10-24T23:22:09.541679Z",
       "filed_on": "25/10/2026"
     },
     "kinds": [

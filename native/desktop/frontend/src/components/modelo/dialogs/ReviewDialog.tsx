@@ -177,6 +177,12 @@ function PhaseNotice({
           {t("workspace.modelo.operation.not_done")}
         </Alert>
       );
+    case "still_moving":
+      return (
+        <Alert tone="warning" icon={<Icon name="alert" />}>
+          {t("workspace.modelo.rebase.still_moving")}
+        </Alert>
+      );
     case "unknown":
       return (
         <Alert tone="warning" icon={<Icon name="unknown" />} role="alert">
@@ -448,7 +454,9 @@ export function ReviewDialog({
               >
                 {t("workspace.modelo.review.discard")}
               </Button>
-              {phase.kind === "check_failed" || phase.kind === "not_applied" ? (
+              {phase.kind === "check_failed" ||
+              phase.kind === "not_applied" ||
+              phase.kind === "still_moving" ? (
                 <Button onClick={recheck}>
                   {t("workspace.modelo.review.check_again")}
                 </Button>

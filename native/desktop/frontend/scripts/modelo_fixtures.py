@@ -99,6 +99,8 @@ REBASE_TYPED: tuple[tuple[str, str], ...] = (("08", "250"), ("10", "75"))
 #: How the declaration moves under them: box 06's typed value is taken back and a figure typed into box 08.
 REBASE_RESTORED: tuple[str, ...] = ("06",)
 REBASE_MOVE: tuple[tuple[str, str], ...] = (("08", "500"),)
+#: How it moves once more, after the window read it again.
+REBASE_MOVE_AGAIN: tuple[tuple[str, str], ...] = (("16", "40"),)
 #: What the filer types into the first-quarter 130, as typed, and an entry over a box that takes none.
 TYPED_130: tuple[tuple[str, str], ...] = (("06", "1.234,56"),)
 UNWRITABLE_130: tuple[str, str] = ("01", "doce")
@@ -1052,9 +1054,9 @@ def _write_check(
 ) -> BaseModel:
     """Check the changes staged on ``staged_on`` on the baseline of ``form``, holding them as they were staged.
 
-    A review is written once per set of held changes, named by them, so the
-    window's answer is the one the application gave for exactly the changes
-    it holds.
+    A review is written once per set of held changes, named by them and by
+    the form they were staged on, so the window's answer is the one the
+    application gave for exactly the changes it holds, as it holds them.
     """
     from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
 
@@ -1062,7 +1064,7 @@ def _write_check(
         _form_baseline(directory, form), intents=intents, held=_held(directory, staged_on, staged)
     )
     checked = _expect_model(_edit(work, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, document))
-    held = "".join(f"-{box}{kind}" for box, kind in sorted(staged)) if name == "review" else ""
+    held = "".join(f"-{box}{kind}" for box, kind in sorted(staged)) + f"-from-{staged_on}" if name == "review" else ""
     _write(directory, f"preflight-{form}-{name}{held}.json", checked)
     return checked
 
@@ -1114,19 +1116,20 @@ def _write_main_edits(directory: Path, first: Any) -> None:
     _write_renewal(directory, first, form)
 
 
-def _write_renewal_flow(directory: Path, work: Any) -> None:
+def _write_renewal_flow(directory: Path, work: Any, started: datetime) -> None:
     """A first-quarter 130 whose form was read half an hour ago, reviewed now, renewed and read again.
 
     What was typed then was read while the form's baseline was current; the
     review now finds it stale, the renewal re-admits it with nothing but its
     lifetime changed, and the form read again admits a fresh baseline, on
     which the review is checked. The profile's whole timeline runs on a
-    frozen clock, half an hour and then twenty minutes ago, as a replay does.
+    frozen clock before ``started``, as a replay does: it was seeded and
+    calculated forty minutes before, the form read half an hour before, and
+    the review twenty minutes before.
     """
-    from cadrumo.core.time.clock import frozen_clock, now
+    from cadrumo.core.time.clock import frozen_clock
 
     read, renewed = "130-1T-expiring", "130-1T-renewed"
-    started = now()
     with frozen_clock(started - timedelta(minutes=30)):
         _write_form(directory, work, f"modelo-{read}")
         _write_entries(directory, work, read, TYPED_130)
@@ -1241,6 +1244,21 @@ def _write_rebase(directory: Path, work: Any) -> None:
     # then checks them as it holds them now.
     still = tuple(change for change in REBASE_STAGED if change[1] != "clear")
     _write_check(directory, work, moved, staged_on=moved, staged=still, intents=REBASE_TYPED)
+    # Still changing: read again after the refused renewal, the declaration moves once more before the check.
+    moving = "130-1T-moving"
+    _write_form(directory, work, f"modelo-{moving}")
+    _expect_model(
+        _edit(
+            work,
+            MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+            _edit_document(_admitted(work), intents=REBASE_MOVE_AGAIN),
+        )
+    )
+    _stale_refusal(
+        _write_check(
+            directory, work, moving, staged_on=staged_on, staged=REBASE_STAGED, intents=REBASE_TYPED, name="stale"
+        )
+    )
 
 
 def _expect_model(answer: Any) -> BaseModel:
@@ -1460,6 +1478,7 @@ def _form_fields(envelope: Mapping[str, Any]) -> list[dict[str, Any]]:
 def write_envelopes(directory: Path) -> None:
     """Read every envelope the scenario host answers through the application's read path."""
     from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
+    from cadrumo.core.time.clock import frozen_clock, now
     from cadrumo.domain.user_profile.values import UserProfileFact
 
     directory.mkdir(parents=True, exist_ok=True)
@@ -1496,9 +1515,14 @@ def write_envelopes(directory: Path) -> None:
         unit = _write_filing_reads(directory, filed, "130-receipt")
         _write_correction(directory, filed, unit.current_filing_record_id)
     # Its own profile, on a frozen timeline: a review half an hour after the form was read, and its renewal.
-    with tempfile.TemporaryDirectory() as tmp, _seeded(Path(tmp), facts=income) as renewing:
+    started = now()
+    with (
+        tempfile.TemporaryDirectory() as tmp,
+        frozen_clock(started - timedelta(minutes=40)),
+        _seeded(Path(tmp), facts=income) as renewing,
+    ):
         renewing.recalculate()
-        _write_renewal_flow(directory, renewing)
+        _write_renewal_flow(directory, renewing, started)
     # Its own profile: the file for the AEAT is written, then the declaration changes and is checked again.
     with tempfile.TemporaryDirectory() as tmp, _seeded(Path(tmp), facts=facts) as stale:
         _seed_income(stale)

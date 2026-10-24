@@ -95,8 +95,8 @@ export type StagedEdit = {
  * acknowledges it. */
 export type Rebased = { changed: number; dropped: number };
 
-/** What reports moved or dropped, by the edit address of each box, until
- * the filer acknowledges it. */
+/** What reports moved or dropped, by the address of each box (its own,
+ * which a restage never changes), until the filer acknowledges it. */
 export type Moved = ReadonlyMap<string, "changed" | "dropped">;
 
 /** `moved` with what one report did added: a box counts once, and a box
@@ -318,6 +318,48 @@ export function restaged(
   return restoreIntent(field);
 }
 
+/** The staged edits as a preflight's `report` leaves them on the boxes
+ * `placed` as they now stand: each kept or changed edit staged again on its
+ * box, the others dropped; and what the report moved or dropped, by the
+ * box's own address. */
+export function rebasedEdits(
+  staged: ReadonlyMap<string, StagedEdit>,
+  report: ModeloFormRebaseEntryV1[],
+  placed: readonly PlacedField[],
+): {
+  next: Map<string, StagedEdit>;
+  found: [string, "changed" | "dropped"][];
+} {
+  const outcomes = new Map(
+    report.map((entry) => [heldKey(entry.address), entry.outcome]),
+  );
+  const now = new Map(placed.map((p) => [p.key, p.field]));
+  const next = new Map<string, StagedEdit>();
+  const found: [string, "changed" | "dropped"][] = [];
+  for (const edit of staged.values()) {
+    const change = held(edit);
+    const outcome = (change && outcomes.get(heldKey(change.address))) ?? "kept";
+    const where = addressKey(edit.field.address);
+    const field = now.get(where);
+    const intent = field && outcome !== "dropped" && restaged(edit, field);
+    if (!field || !intent) {
+      found.push([where, "dropped"]);
+      continue;
+    }
+    if (outcome === "changed") found.push([where, "changed"]);
+    const key = editKey(field);
+    next.set(key, {
+      ...edit,
+      key,
+      address: editAddress(field),
+      field,
+      intent,
+      beforeChanged: outcome === "changed" || edit.beforeChanged,
+    });
+  }
+  return { next, found };
+}
+
 /** Whether a box can be typed into here: the form admits edits and the
  * application says the box takes a typed value. */
 export function editableHere(
@@ -473,36 +515,8 @@ export function useFormSession({
   );
   useEffect(() => {
     if (!pendingRebase) return;
-    const outcomes = new Map(
-      pendingRebase.map((entry) => [heldKey(entry.address), entry.outcome]),
-    );
     setPendingRebase(null);
-    const now = new Map<string, PublicModeloFormField>(
-      placed.map((p) => [p.key, p.field]),
-    );
-    const next = new Map<string, StagedEdit>();
-    const found: [string, "changed" | "dropped"][] = [];
-    for (const edit of staged.values()) {
-      const change = held(edit);
-      const where = change ? heldKey(change.address) : edit.key;
-      const outcome = outcomes.get(where) ?? "kept";
-      const field = now.get(addressKey(edit.field.address));
-      const intent = field && outcome !== "dropped" && restaged(edit, field);
-      if (!field || !intent) {
-        found.push([where, "dropped"]);
-        continue;
-      }
-      if (outcome === "changed") found.push([where, "changed"]);
-      const key = editKey(field);
-      next.set(key, {
-        ...edit,
-        key,
-        address: editAddress(field),
-        field,
-        intent,
-        beforeChanged: outcome === "changed" || edit.beforeChanged,
-      });
-    }
+    const { next, found } = rebasedEdits(staged, pendingRebase, placed);
     setStaged(next);
     // What a report moved or dropped is said until the filer acknowledges
     // it: a later check is told only the changes still held, so it adds what

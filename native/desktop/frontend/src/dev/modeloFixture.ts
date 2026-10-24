@@ -35,6 +35,7 @@ import {
   type ModeloEditPreflightProjectionV1,
   type ModeloEditRenewalProjectionV1,
   type ModeloWorkbenchFormProjectionV1,
+  type PublicModeloFormField,
   type OutputLanguage,
 } from "../shell/modeloContract";
 import { hex64 } from "./fixtures/ledger";
@@ -56,7 +57,9 @@ import { hex64 } from "./fixtures/ledger";
  * completeness manifest, and `export-unknown` loses the export's settlement;
  * `rebase` stages on a read the declaration then moves under, so its check
  * is stale, renewing its baseline is refused, and the check on the form
- * read again reports each staged change kept, changed or dropped;
+ * read again reports each staged change kept, changed or dropped, and
+ * `moving` moves it once more after that read, so the check on it is stale
+ * again;
  * the `receipt` declaration is corrected, and `correction-refused` and
  * `correction-unknown` refuse the correction or lose its settlement. */
 export const MODELO_SHAPES = [
@@ -75,6 +78,7 @@ export const MODELO_SHAPES = [
   "correction-refused",
   "correction-unknown",
   "rebase",
+  "moving",
   "refused",
   "unknown",
   "unavailable",
@@ -84,6 +88,17 @@ export type ModeloShape = (typeof MODELO_SHAPES)[number];
 
 /** The declaration whose later states the `checked` and `filed` shapes read. */
 const LATER_STATES = "130-1T";
+
+/** Every box a form's pages hold. */
+function fields(node: unknown): PublicModeloFormField[] {
+  if (Array.isArray(node)) return node.flatMap(fields);
+  if (!node || typeof node !== "object") return [];
+  const own =
+    "held_zero" in node && "edit_address" in node
+      ? [node as PublicModeloFormField]
+      : [];
+  return [...own, ...Object.values(node).flatMap(fields)];
+}
 
 /** Delay added to every answer of the `slow` shape. */
 const SLOW_MS = 4000;
@@ -233,6 +248,8 @@ export function modeloFixture(options: Options): ModeloPort {
         return renewed ? "130-1T-renewed" : "130-1T-expiring";
       case "rebase":
         return renewed ? "130-1T-rebased" : "130-1T-rebase";
+      case "moving":
+        return renewed ? "130-1T-moving" : "130-1T-rebase";
       case "prerequisite":
         return "130-3T-prerequisite";
       default:
@@ -431,17 +448,53 @@ export function modeloFixture(options: Options): ModeloPort {
                   .join("-")}`
               : catalogue[`preflight-${form}-stale`]
                 ? `preflight-${form}-stale`
-                : // A review was read once per set of held changes.
-                  `preflight-${form}-review${(submission.held ?? [])
-                    .map(
-                      (change) =>
-                        `-${"casilla_id" in change.address ? change.address.casilla_id : change.address.binding_id}${change.kind}`,
-                    )
-                    .sort()
-                    .join("")}`;
+                : // A review was read once per set of held changes, named
+                  // by them and by the form they were staged on.
+                  Object.keys(catalogue).find((name) =>
+                    name.startsWith(
+                      `preflight-${form}-review${(submission.held ?? [])
+                        .map(
+                          (change) =>
+                            `-${"casilla_id" in change.address ? change.address.casilla_id : change.address.binding_id}${change.kind}`,
+                        )
+                        .sort()
+                        .join("")}-from-`,
+                    ),
+                  );
           const preflight =
-            await envelope<ModeloEditPreflightProjectionV1>(read);
+            read && (await envelope<ModeloEditPreflightProjectionV1>(read));
           if (!preflight) return unserved();
+          // Each held change carries its box's state as the form it was
+          // staged on showed it, which is what the application judged.
+          const stagedOn = read.split("-from-")[1];
+          if (stagedOn) {
+            const states = new Map(
+              fields(
+                (
+                  await envelope<ModeloWorkbenchFormProjectionV1>(
+                    `modelo-${stagedOn}-en`,
+                  )
+                )?.form.form.pages,
+              ).map((field) => [
+                JSON.stringify(field.edit_address),
+                field.state_digest,
+              ]),
+            );
+            for (const change of submission.held ?? [])
+              if (
+                states.get(
+                  JSON.stringify(
+                    "casilla_id" in change.address
+                      ? {
+                          kind: "casilla",
+                          casilla_id: change.address.casilla_id,
+                        }
+                      : change.address,
+                  ),
+                ) !== change.held_state
+              )
+                reject("invalid");
+          }
           // Read for exactly this baseline and, where it reports on them,
           // exactly the changes this window holds.
           const outcome = preflight.outcome;

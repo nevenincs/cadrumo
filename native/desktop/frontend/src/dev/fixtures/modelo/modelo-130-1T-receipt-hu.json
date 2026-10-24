@@ -1574,7 +1574,7 @@
         "days_overdue": 188
       },
       "aeat_data": null,
-      "filing": { "recorded_at": "2026-10-24T22:42:27.113404Z" },
+      "filing": { "recorded_at": "2026-10-24T23:22:09.541679Z" },
       "last_export": null,
       "edit_closure": "recorded_as_filed",
       "modelo_title": "Modelo 130 · IRPF részletfizetés, közvetlen megállapítás",
@@ -1625,8 +1625,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "edcac44e32134e7ad1b1eac449cb6d96093033ca124c71152e0390cada7783cf",
-    "calculation_head_digest": "7d3043299d9c01201fd1d3d389771f603b2d91bb4f2448d90b4e4adcb84fd1cb",
+    "work_unit_record_digest": "7ffd109248231c07da84f1e5f79701c46017559898605ead0c637bc691a12223",
+    "calculation_head_digest": "56d3a9fc5a8b6ac1fe787994abd094ab3fac10283e6e4952dc015ad28bbdefe2",
     "current_calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1930,9 +1930,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T22:42:38.846023Z",
-    "expires_at": "2026-10-24T22:47:38.846023Z",
-    "baseline_id": "cbdc07640df30680c2943ece5ce1d7d4d88f97c7faba87c614c5a2f7aaf19799"
+    "issued_at": "2026-10-24T23:22:31.901949Z",
+    "expires_at": "2026-10-24T23:27:31.901949Z",
+    "baseline_id": "e9bed0b83628c46c1ad65c5773a6da662e9c7225e2426c3f75393f0cd40c7cc5"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1941,7 +1941,7 @@
     "action": "recorded",
     "count": 0,
     "findings_lead": false,
-    "recorded_at": "2026-10-24T22:42:27.113404Z",
+    "recorded_at": "2026-10-24T23:22:09.541679Z",
     "file_created_at": null,
     "receipt_to_add": false
   },
@@ -2048,7 +2048,7 @@
     "file_format_words": "AEAT-fájl a rögzített szélességű BOE-formátumban"
   },
   "receipt": {
-    "recorded_at": "2026-10-24T22:42:27.113404Z",
+    "recorded_at": "2026-10-24T23:22:09.541679Z",
     "verified": true,
     "verified_at": "2026-04-21T09:30:00Z",
     "words": "Az AEAT igazolása ellenőrizve: 2026. 04. 21.."

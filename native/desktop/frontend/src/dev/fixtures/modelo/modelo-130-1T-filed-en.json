@@ -1571,7 +1571,7 @@
         "days_overdue": 188
       },
       "aeat_data": null,
-      "filing": { "recorded_at": "2026-10-24T22:42:27.113404Z" },
+      "filing": { "recorded_at": "2026-10-24T23:22:09.541679Z" },
       "last_export": null,
       "edit_closure": "recorded_as_filed",
       "modelo_title": "Modelo 130 · IRPF instalment payment, direct assessment",
@@ -1622,8 +1622,8 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "edcac44e32134e7ad1b1eac449cb6d96093033ca124c71152e0390cada7783cf",
-    "calculation_head_digest": "7d3043299d9c01201fd1d3d389771f603b2d91bb4f2448d90b4e4adcb84fd1cb",
+    "work_unit_record_digest": "7ffd109248231c07da84f1e5f79701c46017559898605ead0c637bc691a12223",
+    "calculation_head_digest": "56d3a9fc5a8b6ac1fe787994abd094ab3fac10283e6e4952dc015ad28bbdefe2",
     "current_calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
@@ -1927,9 +1927,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T22:42:30.125265Z",
-    "expires_at": "2026-10-24T22:47:30.125265Z",
-    "baseline_id": "ef16004a3ab5886c83295053b6d832cd7abeedaf077fa8d71d06e608ad6acf1d"
+    "issued_at": "2026-10-24T23:22:15.772692Z",
+    "expires_at": "2026-10-24T23:27:15.772692Z",
+    "baseline_id": "359f52db80aaf0b112aa3d1259344ef9f6ad00befe620f446affea74ca145e61"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1938,7 +1938,7 @@
     "action": "recorded",
     "count": 0,
     "findings_lead": false,
-    "recorded_at": "2026-10-24T22:42:27.113404Z",
+    "recorded_at": "2026-10-24T23:22:09.541679Z",
     "file_created_at": null,
     "receipt_to_add": true
   },
@@ -2045,7 +2045,7 @@
     "file_format_words": "AEAT file in the fixed-width BOE design"
   },
   "receipt": {
-    "recorded_at": "2026-10-24T22:42:27.113404Z",
+    "recorded_at": "2026-10-24T23:22:09.541679Z",
     "verified": false,
     "verified_at": null,
     "words": "No AEAT receipt has been verified for this filing yet."
