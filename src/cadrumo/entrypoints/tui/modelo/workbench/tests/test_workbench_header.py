@@ -20,7 +20,13 @@ import pytest
 from rich.cells import cell_len
 from textual.widgets import Static
 
-from ......application.modelo.work_form_models import ModeloFormOrigin, ModeloFormResultDirection, ModeloWorkForm
+from ......application.modelo.work_form_header import ModeloFormDeadlineTone
+from ......application.modelo.work_form_models import (
+    ModeloFormAttention,
+    ModeloFormOrigin,
+    ModeloFormResultDirection,
+    ModeloWorkForm,
+)
 from ......application.modelo.work_form_wording import modelo_number, period_words
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -29,8 +35,6 @@ from ......core.result_disposition import ResultDisposition
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
 from ..header import (
-    ChipLevel,
-    DeadlineTone,
     attention_chips,
     deadline_help,
     deadline_view,
@@ -145,7 +149,7 @@ def test_without_a_figure_the_result_says_so_and_a_failure_blocks() -> None:
 
     assert not_calculated == "Result: not calculated yet [c]"
     assert failed == "Result: could not be calculated [i]"
-    assert next(chip.level for chip in attention_chips(failed_form, recorded=False)) is ChipLevel.BLOCKS
+    assert next(chip.level for chip in attention_chips(failed_form, recorded=False)) is ModeloFormAttention.BLOCKS
 
 
 def test_an_informative_declaration_states_no_result() -> None:
@@ -167,15 +171,15 @@ def test_staged_changes_mark_the_result_out_of_date_until_recorded() -> None:
 @pytest.mark.parametrize(
     ("days", "text", "tone"),
     [
-        (21, "Deadline 29/04/2026 · days left: 21", DeadlineTone.NORMAL),
-        (7, "Deadline 15/04/2026 · days left: 7", DeadlineTone.SOON),
-        (4, "Deadline 12/04/2026 · days left: 4", DeadlineTone.SOON),
-        (3, "Deadline 11/04/2026 · days left: 3", DeadlineTone.URGENT),
-        (1, "Deadline 09/04/2026 · days left: 1", DeadlineTone.URGENT),
-        (0, "Deadline today, 08/04/2026", DeadlineTone.URGENT),
+        (21, "Deadline 29/04/2026 · days left: 21", ModeloFormDeadlineTone.NORMAL),
+        (7, "Deadline 15/04/2026 · days left: 7", ModeloFormDeadlineTone.SOON),
+        (4, "Deadline 12/04/2026 · days left: 4", ModeloFormDeadlineTone.SOON),
+        (3, "Deadline 11/04/2026 · days left: 3", ModeloFormDeadlineTone.URGENT),
+        (1, "Deadline 09/04/2026 · days left: 1", ModeloFormDeadlineTone.URGENT),
+        (0, "Deadline today, 08/04/2026", ModeloFormDeadlineTone.URGENT),
     ],
 )
-def test_the_deadline_reads_in_days_and_grows_urgent(days: int, text: str, tone: DeadlineTone) -> None:
+def test_the_deadline_reads_in_days_and_grows_urgent(days: int, text: str, tone: ModeloFormDeadlineTone) -> None:
     with override_settings(cadrumo_output_language="en"):
         view = deadline_view(with_deadline(synthetic_form(), days_left=days), _EN, recorded=False)
 
@@ -194,8 +198,8 @@ def test_a_passed_a_missing_a_moved_and_a_recorded_deadline() -> None:
         recorded = deadline_view(with_deadline(form, days_left=10), _EN, recorded=True)
 
     assert passed is not None and passed.text == "Deadline passed on 05/04/2026: filing now is late"
-    assert passed.tone is DeadlineTone.URGENT
-    assert missing is not None and missing.tone is DeadlineTone.MUTED
+    assert passed.tone is ModeloFormDeadlineTone.URGENT
+    assert missing is not None and missing.tone is ModeloFormDeadlineTone.MUTED
     assert missing.text == "No deadline on record for this period"
     assert moved == "The usual deadline is 16/04/2026. It moves to 18/04/2026 because of a weekend or holiday."
     assert unmoved is None
@@ -235,7 +239,7 @@ def test_a_narrow_line_keeps_the_result_and_what_blocks_taking_a_second_line_bef
     assert wide.result.endswith("[19]") and len(wide.chips) == len(chips)
     assert narrow.stacked, "what blocks and what is missing do not fit beside the result, so they take a line"
     assert cell_len(narrow.result) <= 76 and narrow_marks <= 76
-    assert [chip.level for chip in narrow.chips][:2] == [ChipLevel.BLOCKS, ChipLevel.MISSING]
+    assert [chip.level for chip in narrow.chips][:2] == [ModeloFormAttention.BLOCKS, ModeloFormAttention.MISSING]
     assert tightest.stacked and cell_len(tightest.result) <= 10 and tightest.chips == ()
     assert whole == wide_text
 
@@ -444,5 +448,5 @@ def test_a_loss_carried_forward_keeps_its_words_whole_dropping_the_box_first(
         widest = cell_len(line.marks_text() if line.stacked else line.text())
 
     assert line.result in (view.text, view.short_text), "the words that say the loss carries forward are never cut"
-    assert ChipLevel.BLOCKS in [chip.level for chip in line.chips]
+    assert ModeloFormAttention.BLOCKS in [chip.level for chip in line.chips]
     assert cell_len(line.result) <= width and widest <= width

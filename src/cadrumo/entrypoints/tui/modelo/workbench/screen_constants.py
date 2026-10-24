@@ -11,10 +11,10 @@ from .....application.modelo.operation_definitions import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
+from .....application.modelo.work_form_header import ModeloFormDeadlineTone
 from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
 from ...components.theme import CADRUMO_CSS_TOKENS
-from .header import DeadlineTone
 from .page_items import WorkbenchFilter
 
 _NARROW: Final[int] = 110
@@ -100,11 +100,11 @@ _CHECKED_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = {
     VerificationCompletenessStatus.INCOMPLETE: "workspace.modelo.operation.checked.incomplete",
     VerificationCompletenessStatus.BLOCKED: "workspace.modelo.operation.checked.blocked",
 }
-_DEADLINE_TONE_CLASSES: Final[Mapping[DeadlineTone, str]] = {
-    DeadlineTone.NORMAL: "-normal",
-    DeadlineTone.SOON: "-soon",
-    DeadlineTone.URGENT: "-urgent",
-    DeadlineTone.MUTED: "-muted",
+_DEADLINE_TONE_CLASSES: Final[Mapping[ModeloFormDeadlineTone, str]] = {
+    ModeloFormDeadlineTone.NORMAL: "-normal",
+    ModeloFormDeadlineTone.SOON: "-soon",
+    ModeloFormDeadlineTone.URGENT: "-urgent",
+    ModeloFormDeadlineTone.MUTED: "-muted",
 }
 _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "left_square_bracket": "workspace.modelo.key.previous_page",
@@ -137,10 +137,6 @@ _EMPTY_NEXT_LOCALE_KEY: Final[str] = "workspace.modelo.filter.empty_next"
 _CRUMB_SEPARATOR: Final[str] = " · "
 _FILE_OUT_OF_DATE_LOCALE_KEY: Final[str] = "workspace.modelo.record.refused_file_out_of_date"
 """Why recording the filing is refused while the latest file was made from an earlier calculation."""
-_WITHHELD_LOCALE_KEY: Final[str] = "workspace.modelo.export.confirm_first"
-"""Why neither the file for the AEAT nor recording the filing is offered while an assumed value remains."""
-_BLOCKED_LOCALE_KEY: Final[str] = "workspace.modelo.export.resolve_first"
-"""Why neither is offered while something blocks filing."""
 _LEGEND_KEYS: Final[frozenset[str]] = frozenset({"escape"})
 _SCROLL_LOCALE_KEY: Final[str] = "workspace.modelo.key.scroll"
 """The only keys the footer shows while the symbols panel is open."""

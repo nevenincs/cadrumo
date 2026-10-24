@@ -15,6 +15,7 @@ from textual.app import App, ComposeResult
 
 from ......application.modelo.work_form_models import (
     ORIGIN_STANDINGS,
+    ModeloFormAttention,
     ModeloFormBlocker,
     ModeloFormCounts,
     ModeloFormField,
@@ -40,7 +41,7 @@ from ....components.theme import install_cadrumo_themes
 from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry, CasillaListHeading, CasillaListItem
-from ..header import ChipLevel, attention_chips
+from ..header import attention_chips
 from ..navigator import NavigatorState, navigator_rows
 from ..page_items import (
     WorkbenchPage,
@@ -291,4 +292,4 @@ async def test_the_navigator_the_list_a_grid_row_n_and_the_header_class_every_or
         assert ("to do: 1" in heading.text) is needs_you, heading.text
     # The page reads as not done, and the header counts exactly what the list and the navigator call missing and assumed.
     assert DONE_MARK.glyph not in navigator[0].prompt.plain
-    assert chips == {ChipLevel.MISSING: 1, ChipLevel.CONFIRM: 1}
+    assert chips == {ModeloFormAttention.MISSING: 1, ModeloFormAttention.CONFIRM: 1}

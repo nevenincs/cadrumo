@@ -9,20 +9,12 @@ changes wait to be applied or after the filer's records changed under the
 calculation, and one chip per attention level that has anything in it. The
 third, the stepper and the next action, is :mod:`.progress`'s.
 
-Everything shown is what the read model states. The direction comes from the
-settlement box's declared disposition, never from the sign; when nothing
-declares it the amount keeps its sign under the plain word "Result" and the
-help says why. Money is formatted by the same function as the rows, the
-magnitude where a word carries the direction: a negative instalment result
-the filer deducts in later quarters says so with its amount, and a negative
-result nothing carries says it settles nothing. A declaration recorded as filed
-shows its result undimmed, no deadline and no attention chips: nothing is left
-to do on it here.
-
-What blocks filing and what is missing are each counted once, by
-:func:`blocking_count` and :func:`missing_count`, so the chips and the
-next-action line never disagree, and every blocker mark is drawn in the
-theme's error colour, as the rows draw it.
+Everything shown is what the read model states, through
+:mod:`~cadrumo.application.modelo.work_form_header`: the counts, the result and
+its words, the deadline and how urgently it reads, and the latest file are
+decided there once, for every frontend. This module adds only what a terminal
+owns: the marks, the keys that act, the out-of-date mark of changes held here
+unapplied, and fitting it all to the screen's width.
 
 The header never drops the result to fit, and never runs past the screen's
 edge. A narrow terminal loses the modelo's name before the deadline, and the
@@ -36,107 +28,54 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from decimal import Decimal
-from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
 from rich.cells import cell_len
 from textual.content import Content
 
-from .....application.modelo.value_presentation import format_casilla_value
-from .....application.modelo.work_form_models import (
-    ModeloFormAttention,
-    ModeloFormField,
-    ModeloFormOrigin,
-    ModeloFormResultDirection,
-    ModeloWorkForm,
+from .....application.modelo.work_form_header import (
+    ModeloFormAttentionCount,
+    ModeloFormDeadlineTone,
+    ModeloFormResultState,
+    ModeloFormResultView,
+    attention_counts,
 )
-from .....application.modelo.work_form_next_step import (
-    blocking_count,
-    confirm_count,
-    missing_count,
-    result_fields,
-)
-from .....application.modelo.work_form_wording import date_text, day_text, modelo_number, modelo_title, period_words
+from .....application.modelo.work_form_header import deadline_view as form_deadline_view
+from .....application.modelo.work_form_header import file_view as form_file_view
+from .....application.modelo.work_form_header import result_view as form_result_view
+from .....application.modelo.work_form_models import ModeloFormAttention, ModeloWorkForm
+from .....application.modelo.work_form_wording import modelo_number, modelo_title, period_words
 from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import tr
+from .....core.i18n.render import output_language, tr
 from ...components.cell_text import ellipsize
-from .casilla_list_models import CasillaListEntry
-from .casilla_list_values import value_text
 from .issue_scale import levels_marked
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, MISSING_MARK, STALE_MARK, WorkbenchMark
 
-_MONEY: Final[str] = "money"
 _PART_GAP: Final[str] = "   "
-_WORD_GAP: Final[str] = "  "
 _IDENTITY_SEPARATOR: Final[str] = " · "
-_AMBER_DAYS: Final[int] = 7
-_RED_DAYS: Final[int] = 3
 _CALCULATE_KEY: Final[str] = "c"
 _ISSUES_KEY: Final[str] = "i"
 _REVIEW_KEY: Final[str] = "R"
-
-_DIRECTION_LOCALE_KEYS: Final[Mapping[ModeloFormResultDirection, str]] = MappingProxyType(
-    {
-        ModeloFormResultDirection.TO_PAY: "workspace.modelo.header.result.to_pay",
-        ModeloFormResultDirection.TO_REFUND: "workspace.modelo.header.result.to_refund",
-        ModeloFormResultDirection.TO_CARRY_FORWARD: "workspace.modelo.header.result.to_carry_forward",
-        ModeloFormResultDirection.TO_DEDUCT_LATER: "workspace.modelo.header.result.negative_carried",
-        ModeloFormResultDirection.NEGATIVE: "workspace.modelo.header.result.negative",
-        ModeloFormResultDirection.NIL: "workspace.modelo.header.result.zero",
-        ModeloFormResultDirection.UNKNOWN: "workspace.modelo.header.result.unknown",
-    }
-)
-"""The words for each direction the read model states; total over the directions."""
-
-_CHOICE_PENDING_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.choice_pending"
-_CHOICE_PENDING_SHORT_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.choice_pending_short"
-_NOT_CALCULATED_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.not_calculated"
-_FAILED_LOCALE_KEY: Final[str] = "workspace.modelo.header.result.failed"
-_STALE_LOCALE_KEY: Final[str] = "workspace.modelo.header.stale.changes"
-_RECALCULATE_LOCALE_KEY: Final[str] = "workspace.modelo.header.stale.recalculate"
-_FILE_CREATED_LOCALE_KEY: Final[str] = "workspace.modelo.header.file_created"
-_FILE_OUT_OF_DATE_LOCALE_KEY: Final[str] = "workspace.modelo.header.file_out_of_date"
 _EXPORT_KEY: Final[str] = "e"
+_RESULT_KEYS: Final[Mapping[ModeloFormResultState, str]] = MappingProxyType(
+    {ModeloFormResultState.NOT_CALCULATED: _CALCULATE_KEY, ModeloFormResultState.FAILED: _ISSUES_KEY}
+)
+"""The key a result with no figure names: calculating it, or opening the issues that say why it failed."""
+_STALE_LOCALE_KEY: Final[str] = "workspace.modelo.header.stale.changes"
 
-
-class ChipLevel(StrEnum):
-    """The attention levels the header counts, most urgent first."""
-
-    BLOCKS = "blocks"
-    MISSING = "missing"
-    CONFIRM = "confirm"
-    CHECK = "check"
-
-
-_CHIP_MARKS: Final[Mapping[ChipLevel, WorkbenchMark]] = MappingProxyType(
+_CHIP_MARKS: Final[Mapping[ModeloFormAttention, WorkbenchMark]] = MappingProxyType(
     {
-        ChipLevel.BLOCKS: BLOCKS_MARK,
-        ChipLevel.MISSING: MISSING_MARK,
-        ChipLevel.CONFIRM: CONFIRM_MARK,
-        ChipLevel.CHECK: CHECK_MARK,
+        ModeloFormAttention.BLOCKS: BLOCKS_MARK,
+        ModeloFormAttention.MISSING: MISSING_MARK,
+        ModeloFormAttention.CONFIRM: CONFIRM_MARK,
+        ModeloFormAttention.CHECK: CHECK_MARK,
     }
 )
-_URGENT_CHIPS: Final[frozenset[ChipLevel]] = frozenset({ChipLevel.BLOCKS, ChipLevel.MISSING})
+_URGENT_CHIPS: Final[frozenset[ModeloFormAttention]] = frozenset(
+    {ModeloFormAttention.BLOCKS, ModeloFormAttention.MISSING}
+)
 """Chips the result line never drops to keep itself on one line: it takes a second line first."""
-_CHIP_LOCALE_KEYS: Final[Mapping[ChipLevel, str]] = MappingProxyType(
-    {
-        ChipLevel.BLOCKS: "workspace.modelo.header.chip.blocks",
-        ChipLevel.MISSING: "workspace.modelo.header.chip.missing",
-        ChipLevel.CONFIRM: "workspace.modelo.header.chip.confirm",
-        ChipLevel.CHECK: "workspace.modelo.header.chip.check",
-    }
-)
-
-
-class DeadlineTone(StrEnum):
-    """How urgently the deadline reads; colour only reinforces the words."""
-
-    NORMAL = "normal"
-    SOON = "soon"
-    URGENT = "urgent"
-    MUTED = "muted"
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,7 +83,7 @@ class DeadlineView:
     """The deadline's words and how urgently they read."""
 
     text: str
-    tone: DeadlineTone
+    tone: ModeloFormDeadlineTone
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,25 +112,6 @@ class ResultView:
 
 
 @dataclass(frozen=True, slots=True)
-class _ResultPresentation:
-    text: str
-    short_text: str
-    settled: tuple[str, str] | None = None
-    brief_text: str | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class _SelectedResult:
-    settling: str
-    fields: Mapping[str, ModeloFormField]
-    field: ModeloFormField | None
-    box: str | None
-    value: Decimal | None
-    direction: ModeloFormResultDirection
-    election_may_change: bool
-
-
-@dataclass(frozen=True, slots=True)
 class FileView:
     """The latest file for the AEAT in words, and whether it no longer matches the declaration."""
 
@@ -200,27 +120,31 @@ class FileView:
 
 
 def file_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool) -> FileView | None:
-    """Say when the latest file for the AEAT was created, or that it is out of date; ``None`` when there is none.
-
-    A file made from an earlier calculation reads as out of date, with the key
-    that creates it again. Nothing is said once the declaration is recorded as
-    filed.
-    """
-    export = form.last_export
-    if export is None or recorded:
+    """Say the read model's latest file for the AEAT; one that is out of date names the key that creates it again."""
+    view = form_file_view(form, language, recorded=recorded)
+    if view is None:
         return None
-    day = day_text(export.exported_at, language)
-    if export.current:
-        return FileView(tr(_FILE_CREATED_LOCALE_KEY, date=day), out_of_date=False)
-    return FileView(tr(_FILE_OUT_OF_DATE_LOCALE_KEY, date=day, key=_EXPORT_KEY), out_of_date=True)
+    if view.words is not None:
+        return FileView(view.words, out_of_date=False)
+    text = tr(str(view.locale_key), date=view.created_on, key=_EXPORT_KEY, locale=language.value)
+    return FileView(text, out_of_date=True)
 
 
 @dataclass(frozen=True, slots=True)
 class AttentionChip:
-    """One attention level with something in it, as the header counts it."""
+    """One attention level with something in it, as the read model counts it."""
 
-    level: ChipLevel
-    count: int
+    tally: ModeloFormAttentionCount
+
+    @property
+    def level(self) -> ModeloFormAttention:
+        """The level counted."""
+        return self.tally.level
+
+    @property
+    def count(self) -> int:
+        """How many things the level holds."""
+        return self.tally.count
 
     @property
     def mark(self) -> WorkbenchMark:
@@ -230,7 +154,7 @@ class AttentionChip:
     @property
     def text(self) -> str:
         """The chip as the header shows it: the glyph, then its count in words."""
-        return f"{self.mark.glyph} {tr(_CHIP_LOCALE_KEYS[self.level], count=self.count)}"
+        return f"{self.mark.glyph} {self.tally.words}"
 
     @property
     def content(self) -> Content:
@@ -248,238 +172,67 @@ def identity_text(form: ModeloWorkForm, language: OutputLanguage, *, short: bool
 def deadline_view(
     form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool, width: int | None = None
 ) -> DeadlineView | None:
-    """Say when the filing window closes, or ``None`` once the declaration is recorded as filed.
-
-    The date is the effective one, after any weekend or holiday shift; the days
-    are the read model's own count, so the header and the calendar agree.
-    """
-    if recorded:
+    """Say the read model's deadline, in fewer words where it would not fit beside the declaration's number."""
+    view = form_deadline_view(form, language, recorded=recorded)
+    if view is None:
         return None
-    deadline = form.deadline
-    if deadline is None:
-        text = tr("workspace.modelo.header.no_deadline")
-        if (
-            width is not None
-            and cell_len(identity_text(form, language, short=True)) + cell_len(text) + len(_PART_GAP) > width
-        ):
-            text = tr("workspace.modelo.header.no_deadline_short")
-        return DeadlineView(text, DeadlineTone.MUTED)
-    closes = date_text(deadline.closes_on, language)
-    if deadline.days_overdue is not None:
-        return DeadlineView(tr("workspace.modelo.header.deadline_passed", date=closes), DeadlineTone.URGENT)
-    days = deadline.days_remaining or 0
-    if days == 0:
-        return DeadlineView(tr("workspace.modelo.header.deadline_today", date=closes), DeadlineTone.URGENT)
-    if days <= _RED_DAYS:
-        tone = DeadlineTone.URGENT
-    elif days <= _AMBER_DAYS:
-        tone = DeadlineTone.SOON
-    else:
-        tone = DeadlineTone.NORMAL
-    return DeadlineView(tr("workspace.modelo.header.deadline", date=closes, days=days), tone)
+    text = view.text
+    if (
+        width is not None
+        and cell_len(identity_text(form, language, short=True)) + cell_len(text) + len(_PART_GAP) > width
+    ):
+        text = view.short_text
+    return DeadlineView(text, view.tone)
 
 
 def deadline_help(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool) -> str | None:
     """Explain a deadline a weekend or holiday moved, naming the usual date; ``None`` otherwise."""
-    deadline = form.deadline
-    if recorded or deadline is None or deadline.closes_on == deadline.nominal_closes_on:
-        return None
-    return tr(
-        "workspace.modelo.header.deadline_shifted_help",
-        nominal=date_text(deadline.nominal_closes_on, language),
-        date=date_text(deadline.closes_on, language),
-    )
+    view = form_deadline_view(form, language, recorded=recorded)
+    return None if view is None else view.help
 
 
-def _money(value: Decimal, language: OutputLanguage) -> str:
-    """A settlement amount, as money whatever type its box declares: a result is always an amount to pay or get."""
-    return format_casilla_value(value, data_type=_MONEY, language=language)
-
-
-def _boxed(parts: list[str], box: str | None) -> tuple[str, str]:
-    short = _WORD_GAP.join(parts)
-    return (f"{short}{_WORD_GAP}[{box}]" if (box is not None and box) else short), short
-
-
-def _other_boxes_help(
-    form: ModeloWorkForm, settling: str, fields: Mapping[str, ModeloFormField], language: OutputLanguage
-) -> str | None:
-    others = [
-        fields[str(casilla_id)]
-        for casilla_id in form.result_addresses
-        if str(casilla_id) != settling and str(casilla_id) in fields
-    ]
-    if not others:
-        return None
-    named = ", ".join(
-        f"[{field.box}] {value_text(CasillaListEntry(field), language)}"
-        if (field.box is not None and field.box)
-        else field.label.text
-        for field in others
-    )
-    return tr("workspace.modelo.header.result.other_boxes", boxes=named)
-
-
-def _result_stale_notice(form: ModeloWorkForm, *, staged: int, recorded: bool) -> str | None:
+def _result_stale_notice(view: ModeloFormResultView, *, staged: int, recorded: bool) -> str | None:
     if staged and not recorded:
         return f"{STALE_MARK.glyph} {tr(_STALE_LOCALE_KEY, count=staged, key=_REVIEW_KEY)}"
-    if form.calculation_out_of_date and not recorded:
-        return f"{STALE_MARK.glyph} {tr(_RECALCULATE_LOCALE_KEY, key=_CALCULATE_KEY)}"
+    if view.out_of_date_locale_key is not None:
+        return f"{STALE_MARK.glyph} {tr(view.out_of_date_locale_key, key=_CALCULATE_KEY)}"
     return None
-
-
-def _choice_result_presentation(
-    value: Decimal,
-    box: str | None,
-    language: OutputLanguage,
-    help_lines: list[str],
-) -> _ResultPresentation:
-    settled = (tr(_CHOICE_PENDING_LOCALE_KEY), _money(abs(value), language))
-    full, short = _boxed(list(settled), box)
-    help_lines.append(settled[0])
-    brief = _WORD_GAP.join((tr(_CHOICE_PENDING_SHORT_LOCALE_KEY), settled[1]))
-    return _ResultPresentation(full, short, settled, brief)
-
-
-def _directional_result_presentation(
-    direction: ModeloFormResultDirection,
-    value: Decimal,
-    box: str | None,
-    language: OutputLanguage,
-    help_lines: list[str],
-) -> _ResultPresentation:
-    if direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
-        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction], amount=_money(abs(value), language))], box)
-        if box is not None and box:
-            help_lines.append(tr("workspace.modelo.header.result.sign_help", box=box, value=_money(value, language)))
-        return _ResultPresentation(full, short)
-    if direction is ModeloFormResultDirection.NEGATIVE:
-        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction])], box)
-        return _ResultPresentation(full, short)
-    if direction is ModeloFormResultDirection.UNKNOWN:
-        settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(value, language))
-        full, short = _boxed(list(settled), box)
-        help_lines.append(tr("workspace.modelo.header.result.direction_unknown_help"))
-        return _ResultPresentation(full, short, settled)
-    if direction is ModeloFormResultDirection.NIL:
-        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction])], box)
-        return _ResultPresentation(full, short)
-    settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(abs(value), language))
-    full, short = _boxed(list(settled), box)
-    return _ResultPresentation(full, short, settled)
 
 
 def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, recorded: bool) -> ResultView | None:
-    """The result as the header states it, or ``None`` when the form names no result box at all.
+    """The read model's result, marked out of date while ``staged`` changes wait; ``None`` with no result box.
 
-    Without a declared settlement box the first result box in form order
-    stands, under the plain word "Result".
+    Changes held here unapplied are known only to this frontend, so their mark
+    is added here. A result with no figure is said with the key that
+    calculates it, or that opens the issues saying why it could not be.
     """
-    selected = _selected_result(form)
-    if selected is None:
+    view = form_result_view(form, language, recorded=recorded)
+    if view is None:
         return None
-    stale = _result_stale_notice(form, staged=staged, recorded=recorded)
-    unavailable = _unavailable_result_view(form, selected, stale=stale)
-    if unavailable is not None:
-        return unavailable
-    help_lines = [tr("workspace.modelo.header.own_calculation")]
-    presentation = _selected_result_presentation(form, selected, language, help_lines)
+    stale = _result_stale_notice(view, staged=staged, recorded=recorded)
+    if view.locale_key is not None:
+        text = tr(view.locale_key, key=_RESULT_KEYS[view.state], locale=language.value)
+        failed = view.state is ModeloFormResultState.FAILED
+        return ResultView(text=text, short_text=text, stale=stale, failed=failed, help=view.help)
+    if view.text is None or view.short_text is None:
+        raise ValueError("a result with a figure is said in words")
     return ResultView(
-        text=presentation.text,
-        short_text=presentation.short_text,
+        text=view.text,
+        short_text=view.short_text,
         stale=stale,
         failed=False,
-        help=tuple(help_lines),
-        settled=presentation.settled,
-        brief_text=presentation.brief_text,
+        help=view.help,
+        settled=None if view.words is None or view.amount_text is None else (view.words, view.amount_text),
+        brief_text=view.brief_text,
     )
 
 
-def _selected_result(form: ModeloWorkForm) -> _SelectedResult | None:
-    fields = result_fields(form)
-    result = form.result
-    if result is not None:
-        settling = str(result.casilla_id)
-    elif form.result_addresses:
-        settling = str(form.result_addresses[0])
-    else:
-        return None
-    field = fields.get(settling)
-    return _SelectedResult(
-        settling=settling,
-        fields=fields,
-        field=field,
-        box=(result.box if result is not None else None) or (field.box if field is not None else None),
-        value=result.value if result is not None else _field_amount(field),
-        direction=result.direction if result is not None else ModeloFormResultDirection.UNKNOWN,
-        election_may_change=result is not None and result.election_may_change,
-    )
-
-
-def _unavailable_result_view(
-    form: ModeloWorkForm, selected: _SelectedResult, *, stale: str | None
-) -> ResultView | None:
-    origin = selected.field.origin if selected.field is not None else None
-    if origin is ModeloFormOrigin.CALCULATION_FAILED:
-        text = tr(_FAILED_LOCALE_KEY, key=_ISSUES_KEY)
-        help_lines = (tr("workspace.modelo.header.own_calculation"),)
-        return ResultView(text=text, short_text=text, stale=stale, failed=True, help=help_lines)
-    if form.calculation_revision_id is None or origin is ModeloFormOrigin.NOT_CALCULATED_YET or selected.value is None:
-        text = tr(_NOT_CALCULATED_LOCALE_KEY, key=_CALCULATE_KEY)
-        return ResultView(text=text, short_text=text, stale=stale, failed=False, help=())
-    return None
-
-
-def _selected_result_presentation(
-    form: ModeloWorkForm,
-    selected: _SelectedResult,
-    language: OutputLanguage,
-    help_lines: list[str],
-) -> _ResultPresentation:
-    value = selected.value
-    if value is None:
-        raise ValueError("an available result must have a value")
-    if selected.election_may_change:
-        presentation = _choice_result_presentation(value, selected.box, language, help_lines)
-    else:
-        presentation = _directional_result_presentation(selected.direction, value, selected.box, language, help_lines)
-    if (
-        value < 0
-        and presentation.settled is not None
-        and selected.direction is not ModeloFormResultDirection.UNKNOWN
-        and (selected.box is not None and selected.box)
-    ):
-        help_lines.append(
-            tr("workspace.modelo.header.result.sign_help", box=selected.box, value=_money(value, language))
-        )
-    other = _other_boxes_help(form, selected.settling, selected.fields, language)
-    if other is not None:
-        help_lines.append(other)
-    return presentation
-
-
-def _field_amount(field: ModeloFormField | None) -> Decimal | None:
-    if field is None or isinstance(field.value, bool) or not isinstance(field.value, Decimal | int):
-        return None
-    return Decimal(field.value)
-
-
-def attention_chips(form: ModeloWorkForm, *, recorded: bool) -> tuple[AttentionChip, ...]:
-    """One chip per attention level with anything in it, counted from the form; none once recorded.
-
-    What blocks is counted by :func:`blocking_count`. What is missing or
-    assumed on a page that does not apply this period is not counted: nothing
-    there is asked of the filer.
-    """
-    if recorded:
-        return ()
-    counts = {
-        ChipLevel.BLOCKS: blocking_count(form),
-        ChipLevel.MISSING: missing_count(form),
-        ChipLevel.CONFIRM: confirm_count(form),
-        ChipLevel.CHECK: sum(1 for issue in form.issues if issue.attention is ModeloFormAttention.CHECK),
-    }
-    return tuple(AttentionChip(level, count) for level, count in counts.items() if count)
+def attention_chips(
+    form: ModeloWorkForm, *, recorded: bool, language: OutputLanguage | None = None
+) -> tuple[AttentionChip, ...]:
+    """One chip per level the read model counts anything in, most urgent first; none once recorded."""
+    spoken = language if language is not None else OutputLanguage(output_language())
+    return tuple(AttentionChip(count) for count in attention_counts(form, spoken, recorded=recorded))
 
 
 @dataclass(frozen=True, slots=True)
@@ -610,7 +363,7 @@ class StatusLine:
 def status_line(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, recorded: bool) -> StatusLine | None:
     """The header's result line for a dialog to repeat, or ``None`` when it would say nothing."""
     view = result_view(form, language, staged=staged, recorded=recorded)
-    chips = attention_chips(form, recorded=recorded)
+    chips = attention_chips(form, recorded=recorded, language=language)
     file = file_view(form, language, recorded=recorded)
     line = StatusLine(view, chips, None if file is None else file.text)
     return line if line.text() else None
@@ -618,8 +371,6 @@ def status_line(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, 
 
 __all__ = [
     "AttentionChip",
-    "ChipLevel",
-    "DeadlineTone",
     "DeadlineView",
     "FileView",
     "ResultLine",

@@ -52,7 +52,7 @@ from ......domain.modelos.verification_report import (
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
 from ..casilla_list import CasillaList
-from ..header import ChipLevel, attention_chips, status_line
+from ..header import attention_chips, status_line
 from ..issue_projection import issue_lines
 from ..issue_scale import (
     ASSUMED_BOXES_BEFORE_SECTIONS,
@@ -511,7 +511,7 @@ def _recounted(form: ModeloWorkForm) -> ModeloWorkForm:
     return recounted.model_copy(update={"counts": counted(recounted.fields(), form.counts)})
 
 
-def _chips(form: ModeloWorkForm) -> dict[ChipLevel, int]:
+def _chips(form: ModeloWorkForm) -> dict[ModeloFormAttention, int]:
     return {chip.level: chip.count for chip in attention_chips(form, recorded=False)}
 
 
@@ -540,7 +540,7 @@ async def test_the_missing_boxes_the_header_counts_are_listed_at_their_own_level
 
     assert missing is not None
     assert missing.boxes == ("06",)
-    assert chips == {ChipLevel.MISSING: 1}
+    assert chips == {ModeloFormAttention.MISSING: 1}
     assert title == "Issues to look at   ! 1"
     assert "! Needs your input (1)" in listed
     assert "[06]" in listed
@@ -570,7 +570,7 @@ def test_boxes_on_a_page_that_does_not_apply_are_neither_listed_nor_counted() ->
 
     # The instrument sees both boxes while their page applies, so their absence below is the page's doing.
     assert applying == {IssueLevel.MISSING: ("06",), IssueLevel.CONFIRM: ("19",)}
-    assert chips_applying == {ChipLevel.MISSING: 1, ChipLevel.CONFIRM: 1}
+    assert chips_applying == {ModeloFormAttention.MISSING: 1, ModeloFormAttention.CONFIRM: 1}
     assert not_applying == ()
     assert chips_not_applying == {}
 

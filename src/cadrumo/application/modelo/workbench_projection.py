@@ -47,6 +47,7 @@ from .calculation_report import CalculationReportRowRole
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import ModeloEditAdmittedV1, ModeloEditRefusedV1
 from .source_policy import SourceFamily
+from .work_form_header import ModeloFormHeader
 from .work_form_models import (
     ModeloFormAddressV1,
     ModeloFormAeatData,
@@ -396,6 +397,8 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
     admission_refusal: ModeloEditRefusedV1 | None
     #: The one action the form offers next, ``None`` when the registry rules for the revision cannot calculate it.
     next_step: ModeloFormNextStep | None
+    #: What the header states: the attention counts, the result, the deadline, the latest file and any hold.
+    header: ModeloFormHeader
     calculation_revision_id: str | None
     verification_report_id: str | None
     asks_m303_evidence: bool
@@ -495,6 +498,7 @@ def project_modelo_workbench_form(
         ),
         admission_refusal=admission if isinstance(admission, ModeloEditRefusedV1) else None,
         next_step=read.next_step,
+        header=read.header,
         calculation_revision_id=read.calculation_revision_id,
         verification_report_id=read.verification_report_id,
         asks_m303_evidence=read.asks_m303_evidence,
@@ -503,7 +507,7 @@ def project_modelo_workbench_form(
         tax_id_format=_project_tax_id_format(read.tax_id_format),
     )
     restored = _restore(projection)
-    if restored != read or restored.next_step != projection.next_step:
+    if restored != read or restored.next_step != projection.next_step or restored.header != projection.header:
         raise ValueError("workbench form public projection changed canonical meaning")
     return projection
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from ......application.modelo.work_form import build_modelo_work_form
-from ......application.modelo.work_form_models import ModeloWorkForm
+from ......application.modelo.work_form_models import ModeloFormAttention, ModeloWorkForm
 from ......application.modelo.work_form_next_step import (
     ModeloFormNextAction,
     blocking_count,
@@ -37,7 +37,7 @@ from ......domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ..header import ChipLevel, attention_chips
+from ..header import attention_chips
 from ..issue_projection import issue_lines
 from ..issue_scale import IssueLevel
 from ..progress import workbench_progress
@@ -104,8 +104,8 @@ def test_missing_record_values_count_in_the_missing_chip_and_on_the_next_line(
 
     assert len(form.issues) == len(_RECORD_VALUES)
     assert blocking_count(form) == 0
-    assert ChipLevel.BLOCKS not in chips
-    assert chips[ChipLevel.MISSING] == missing == to_do_counts(form).needs_input + len(_RECORD_VALUES)
+    assert ModeloFormAttention.BLOCKS not in chips
+    assert chips[ModeloFormAttention.MISSING] == missing == to_do_counts(form).needs_input + len(_RECORD_VALUES)
     assert progress.next_action in {ModeloFormNextAction.FILL, ModeloFormNextAction.RESOLVE}
     assert progress.count == missing
 

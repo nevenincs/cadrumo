@@ -14,6 +14,7 @@ from .....application.modelo.operation_definitions import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
+from .....application.modelo.work_form_header import ModeloFormExportHoldReason, export_hold
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_work_form_changes
@@ -34,13 +35,11 @@ from .header import result_view
 from .ports import ModeloWorkbenchActionsV1, WorkbenchExportRequest
 from .result import WorkbenchResultScreen, result_lines
 from .screen_constants import (
-    _BLOCKED_LOCALE_KEY,
     _CHECKED_LOCALE_KEYS,
     _FILE_OUT_OF_DATE_LOCALE_KEY,
     _NEXT_KEYS,
     _SELF_REPORTING_OPERATIONS,
     _VALUE_CHANGING_OPERATIONS,
-    _WITHHELD_LOCALE_KEY,
 )
 
 if TYPE_CHECKING:
@@ -85,16 +84,14 @@ class WorkbenchOperationMixin:
             action = tr("workspace.modelo.next.apply", count=len(self._session.changes))
             self._notice(f"{action} [{_NEXT_KEYS[ModeloFormNextAction.APPLY]}]")
             return True
-        progress = self._progress(load)
-        if not progress.filing_withheld:
+        hold = export_hold(load.form, verified=load.verified, recorded=self.recorded)
+        if hold is None or hold.reason is ModeloFormExportHoldReason.VERIFY:
             return False
-        if progress.blocking:
+        if hold.reason is ModeloFormExportHoldReason.BLOCKS:
             self.action_issues()
-            self._notice(tr(_BLOCKED_LOCALE_KEY, count=progress.blocking))
-            return True
-        if self._may_confirm():
+        elif self._may_confirm():
             self._confirm_next()
-        self._notice(tr(_WITHHELD_LOCALE_KEY, count=progress.assumed))
+        self._notice(tr(hold.locale_key, count=hold.count))
         return True
 
     def action_export(self: ModeloWorkbenchScreen) -> None:
