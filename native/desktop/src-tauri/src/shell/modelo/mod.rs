@@ -803,26 +803,9 @@ async fn modelo_files_save<R: tauri::Runtime>(
 async fn modelo_files_reveal(host: State<'_, Arc<ModeloHost>>, token: String) -> Result<()> {
     let identity = host.identity().await?;
     let path = host.files.saved(&identity, &token)?;
-    super::blocking(move || Ok(reveal(&path)))
+    super::blocking(move || Ok(super::external::reveal(&path)))
         .await?
         .map_err(|_| failure("unavailable"))
-}
-#[cfg(windows)]
-fn reveal(path: &Path) -> std::io::Result<()> {
-    use std::os::windows::process::CommandExt;
-    // Explorer reads its own command line: the path is quoted after the
-    // switch, never as one argument with it. It can answer a failing status
-    // even when it showed the file, so only a failure to start it counts.
-    std::process::Command::new("explorer.exe")
-        .raw_arg(format!("/select,\"{}\"", path.display()))
-        .spawn()
-        .map(drop)
-}
-/// No portable call selects a file, so the folder holding it is opened.
-#[cfg(not(windows))]
-fn reveal(path: &Path) -> std::io::Result<()> {
-    let folder = path.parent().ok_or(std::io::ErrorKind::NotFound)?;
-    opener::open(folder).map_err(std::io::Error::other)
 }
 /// Forgets tokens the page no longer shows.
 #[tauri::command]

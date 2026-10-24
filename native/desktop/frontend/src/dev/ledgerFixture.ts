@@ -2364,6 +2364,13 @@ export function ledgerFixture(options: Options): LedgerPort {
         ? take([name], "export")
         : { files: [], refused: 1 };
     },
+    async revealFile(token) {
+      say("ledger revealFile");
+      await answer();
+      const file = files.get(token);
+      if (!file) return reject("file_unavailable");
+      if (file.purpose !== "export") return reject("invalid");
+    },
     async forgetFiles(tokens) {
       say("ledger forgetFiles");
       tokens.forEach((token) => files.delete(token));

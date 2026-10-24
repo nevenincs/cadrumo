@@ -2066,6 +2066,10 @@ export type LedgerPort = {
     filterLabel: string,
     suggestedName?: string,
   ): Promise<FilePicks>;
+  /** Shows an exported file selected in the system file manager, by the
+   * save token it was exported to; refused `file_unavailable` until the
+   * file is there, and `invalid` for a token picked to be read. */
+  revealFile(token: FileToken): Promise<void>;
   /** Forgets tokens the page no longer shows. */
   forgetFiles(tokens: FileToken[]): Promise<void>;
   /** Calls `listener` as files of `purpose` are dragged over and dropped on

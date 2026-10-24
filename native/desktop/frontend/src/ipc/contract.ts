@@ -1206,6 +1206,12 @@ export interface HostCommands {
     }>;
     result: import("../shell/ledger").FilePicks;
   };
+  /** Shows an exported file in the system file manager; the path never
+   * reaches the window. */
+  ledger_files_reveal: {
+    args: Authorized<{ token: import("../shell/ledger").FileToken }>;
+    result: null;
+  };
   ledger_files_forget: {
     args: Authorized<{ tokens: import("../shell/ledger").FileToken[] }>;
     result: null;

@@ -133,6 +133,7 @@ export function fakePort(answer: (call: Call, at: number) => FakeAnswer): {
     cancel: unused,
     pickFiles: unused,
     saveFile: unused,
+    revealFile: unused,
     forgetFiles: unused,
     observeDrops: unused,
     changeOwnAccount: unused,

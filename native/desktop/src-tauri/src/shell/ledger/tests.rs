@@ -179,6 +179,30 @@ fn file_tokens_become_paths_only_where_the_definition_reads_a_file() {
 }
 
 #[test]
+fn an_export_is_shown_in_the_file_manager_only_once_written_and_only_by_its_save_token() {
+    let root = scratch("reveal");
+    let files = Files::default();
+    let session = json!({"session_id":"one"});
+    let target = root.join("ledger-2026-4T.csv");
+    let saved = serde_json::to_value(files.issue_save(&session, "csv", target.clone()).unwrap())
+        .unwrap()["files"][0]["token"]
+        .clone();
+    let saved = saved.as_str().unwrap();
+    // Not written yet: there is nothing to show.
+    assert_eq!(files.saved(&session, saved).unwrap_err().code, "file_unavailable");
+    std::fs::write(&target, b"x").unwrap();
+    assert_eq!(files.saved(&session, saved).unwrap(), target);
+    // A file picked to be read is never shown through this door.
+    let picked = token(&files, &session, Purpose::BankStatements, root.join("statement.csv"));
+    assert_eq!(files.saved(&session, picked.as_str().unwrap()).unwrap_err().code, "invalid");
+    // Nor is a save token from another session, or one never issued.
+    let other = json!({"session_id":"two"});
+    assert_eq!(files.saved(&other, saved).unwrap_err().code, "file_unavailable");
+    assert_eq!(files.saved(&session, "not-a-token").unwrap_err().code, "invalid");
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
 fn an_export_goes_only_where_the_person_saved_its_format() {
     let files = Files::default();
     let session = json!({"session_id":"one"});

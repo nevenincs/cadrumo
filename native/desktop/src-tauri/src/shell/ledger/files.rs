@@ -211,6 +211,17 @@ impl Files {
         Ok(entry.path.clone())
     }
 
+    /// The file an export's save token names, once the host has written it:
+    /// for this session only, never a file the person picked to read, and
+    /// only while it is still there.
+    pub(super) fn saved(&self, identity: &Value, token: &str) -> Result<PathBuf> {
+        let path = self.path(identity, token, Purpose::Export, true)?;
+        if !path.is_file() {
+            return Err(Failure::new("file_unavailable"));
+        }
+        Ok(path)
+    }
+
     pub(super) fn forget(&self, tokens: &[String]) {
         lock(&self.0).retain(|entry| !tokens.contains(&entry.token));
     }

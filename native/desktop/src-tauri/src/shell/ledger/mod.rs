@@ -592,6 +592,17 @@ async fn ledger_files_save<R: tauri::Runtime>(
         None => Ok(Picks::none(0)),
     }
 }
+/// Shows an exported file selected in the system file manager, so the person
+/// can check a file whose export outcome is unknown. The window names it by
+/// its save token; the path never reaches it.
+#[tauri::command]
+async fn ledger_files_reveal(host: State<'_, Arc<LedgerHost>>, token: String) -> Result<()> {
+    let identity = host.identity().await?;
+    let path = host.files.saved(&identity, &token)?;
+    super::blocking(move || Ok(super::external::reveal(&path)))
+        .await?
+        .map_err(|_| failure("unavailable"))
+}
 /// Forgets tokens the page no longer shows.
 #[tauri::command]
 fn ledger_files_forget(host: State<'_, Arc<LedgerHost>>, tokens: Vec<String>) {
@@ -666,6 +677,7 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         ledger_cancel,
         ledger_files_pick,
         ledger_files_save,
+        ledger_files_reveal,
         ledger_files_forget,
         ledger_drop_observe,
         ledger_drop_unobserve,

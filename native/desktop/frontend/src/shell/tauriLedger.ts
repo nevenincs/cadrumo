@@ -41,6 +41,8 @@ export function tauriLedger(
         filterLabel,
         suggestedName: suggestedName ?? null,
       }),
+    revealFile: (token) =>
+      call("ledger_files_reveal", { token }).then(() => undefined),
     forgetFiles: (tokens) =>
       call("ledger_files_forget", { tokens }).then(() => undefined),
     async observeDrops(purpose, listener) {
