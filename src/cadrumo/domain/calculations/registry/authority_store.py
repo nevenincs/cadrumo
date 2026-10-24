@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
-from collections.abc import Generator
+from collections.abc import Callable, Generator, Hashable
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -266,7 +266,7 @@ class SQLiteAuthorityReader:
             self._all_connections.append(connection)
             self._connections.put(connection)
         self._admit_database()
-        self._cache: AccountedAuthorityCache[tuple[AuthorityGenerationPin, AuthorityComponentQuery], object] = (
+        self._cache: AccountedAuthorityCache[tuple[AuthorityGenerationPin, Hashable], object] = (
             AccountedAuthorityCache()
         )
 
@@ -302,6 +302,25 @@ class SQLiteAuthorityReader:
             (pin, query),
             lambda: self._load_uncached(query, pin=pin),
         )
+
+    def retain_projection(
+        self,
+        key: Hashable,
+        *,
+        pin: AuthorityGenerationPin,
+        build: Callable[[], object],
+    ) -> object:
+        """Share one immutable projection of this generation's components within the component budget.
+
+        ``key`` must name every input the projection depends on besides the
+        generation. The projection holds the components it was built from, so
+        it is retained under their accounting rather than beside it: a
+        component it keeps alive stays charged after its own entry is evicted,
+        and evicting the projection releases only what no other entry holds.
+        Like a component, a hit is served under the pin the lease verified.
+        """
+        self._require_pin(pin)
+        return self._cache.get_or_compose((pin, key), build)
 
     def stats(self) -> AuthorityCacheStats:
         """Return retained component accounting, excluding connections and leases."""
@@ -377,7 +396,9 @@ class SQLiteAuthorityReader:
         decoded = decode_authority_component(query, payload, dependencies=dependencies)
         # Publication measured the decoded graph once; re-walking millions of
         # members on every load would repeat that work for every operation.
-        return RetainedAuthorityValue(decoded, int(retained_weight))
+        # The weight is a shared token so a projection holding this component
+        # is charged for it once, together with the component's own entry.
+        return RetainedAuthorityValue(decoded, 0, (((pin, query), int(retained_weight)),))
 
     def _open_connection(self) -> sqlite3.Connection:
         uri = self._database_path.resolve().as_uri() + "?mode=ro"

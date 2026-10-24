@@ -548,6 +548,19 @@ def _deadline_window_qualifier_sort_key(window: DeadlineWindowDefinition) -> tup
     return resultado, tipo_renta
 
 
+@dataclass(frozen=True, slots=True)
+class _SnapshotProjectionKey:
+    """Every input a pinned snapshot depends on besides its generation."""
+
+    modelo_id: str
+    filing_year: int
+    period: str
+    on: date | None
+    revision_id: RevisionId | None
+    grade: RegistryAuthorityGrade
+    validated_on: date
+
+
 @dataclass(frozen=True, slots=True, weakref_slot=True)
 class PinnedAuthorityOperation:
     """Typed component access confined to one leased authority generation."""
@@ -701,12 +714,56 @@ class PinnedAuthorityOperation:
         revision_id: RevisionId | None = None,
         grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
     ) -> RegistrySnapshot:
-        """Build one validated snapshot from same-generation point components."""
+        """Return one validated snapshot built from same-generation point components.
+
+        A snapshot is validated against this operation's governed facts, some
+        resolved at today's Madrid date, so it is shared under the generation,
+        the full request coordinate and that date. Sharing needs the reader's
+        accounted cache; any other reader builds afresh on every call.
+        """
+        from .schema import RegistrySnapshot
+
+        normalized = Modelo(modelo_id).value
+        reader = self._reader
+        if not isinstance(reader, SQLiteAuthorityReader):
+            return self._build_snapshot(
+                normalized, filing_year=filing_year, period=period, on=on, revision_id=revision_id, grade=grade
+            )
+        key = _SnapshotProjectionKey(
+            modelo_id=normalized,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+            grade=grade,
+            validated_on=today_madrid(),
+        )
+        value = reader.retain_projection(
+            key,
+            pin=self.generation,
+            build=lambda: self._build_snapshot(
+                normalized, filing_year=filing_year, period=period, on=on, revision_id=revision_id, grade=grade
+            ),
+        )
+        if not isinstance(value, RegistrySnapshot):
+            raise RegistryValidationError("registry snapshot projection resolved to an unexpected type")
+        return value
+
+    def _build_snapshot(
+        self,
+        normalized: str,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None,
+        revision_id: RevisionId | None,
+        grade: RegistryAuthorityGrade,
+    ) -> RegistrySnapshot:
+        from .governed_fact_scope import validating_governed_facts
         from .schema import RegistryCatalogues
         from .snapshot import build_validated_snapshot, collect_snapshot_ref_ids
         from .temporal import select_revision_metadata
 
-        normalized = Modelo(modelo_id).value
         directory = self.modelo_directory(normalized)
         selected = select_revision_metadata(
             directory,
@@ -726,16 +783,17 @@ class PinnedAuthorityOperation:
             supplementary_ordenes=globals_value.supplementary_ordenes,
             supported_filing_years=directory.supported_filing_years,
         )
-        return build_validated_snapshot(
-            modelo,
-            catalogues,
-            filing_year=filing_year,
-            period=period,
-            on=on,
-            revision_id=revision_id,
-            grade=grade,
-            revision_directory=directory,
-        )
+        with validating_governed_facts(self):
+            return build_validated_snapshot(
+                modelo,
+                catalogues,
+                filing_year=filing_year,
+                period=period,
+                on=on,
+                revision_id=revision_id,
+                grade=grade,
+                revision_directory=directory,
+            )
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
         """Resolve one fact once per query without revalidating its static component."""

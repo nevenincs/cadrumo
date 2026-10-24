@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Callable, Hashable
+from collections.abc import Callable, Hashable, Iterable
 from concurrent.futures import Future
 from dataclasses import dataclass, fields, is_dataclass
 from sys import getsizeof
@@ -40,13 +40,23 @@ def _member_names(item_type: type, item: object) -> tuple[str, ...] | None:
     return None
 
 
-def retained_object_size(value: object) -> int:
-    """Estimate a decoded immutable graph without following types or callables.
+def _retained_members(item: object) -> tuple[object, ...]:
+    """Return the members a retained-size walk follows from ``item``."""
+    item_type = type(item)
+    if item_type in _SCALAR_LEAF_TYPES or isinstance(item, type):
+        return ()
+    if is_object_mapping(item):
+        return (*item.keys(), *item.values())
+    if is_object_collection(item):
+        return tuple(item)
+    names = _member_names(item_type, item)
+    if names is None:
+        return ()
+    return tuple(getattr(item, name) for name in names)
 
-    Every reachable object is counted once by identity; the walk is iterative
-    because a large revision component reaches millions of members.
-    """
-    seen: set[int] = set()
+
+def _retained_size_excluding(value: object, excluded: set[int]) -> int:
+    seen = set(excluded)
     total = 0
     stack: list[object] = [value]
     while stack:
@@ -69,6 +79,41 @@ def retained_object_size(value: object) -> int:
             if names is not None:
                 stack.extend(getattr(item, name) for name in names)
     return total
+
+
+def retained_object_size(value: object) -> int:
+    """Estimate a decoded immutable graph without following types or callables.
+
+    Every reachable object is counted once by identity; the walk is iterative
+    because a large revision component reaches millions of members.
+    """
+    return _retained_size_excluding(value, set())
+
+
+_SHARED_MEMBER_DEPTH = 2
+
+
+def composed_object_size(value: object, shared: Iterable[object]) -> int:
+    """Estimate what ``value`` retains beyond the already-charged values it shares.
+
+    A composed projection reuses its components' members, usually through a
+    shallow copy, so the walk stops at each shared value and at its members two
+    levels down instead of proving exclusion across millions of shared members.
+    Anything it reaches below that depth is counted again, which can only
+    overstate the projection's own weight.
+    """
+    excluded: set[int] = set()
+    frontier = list(shared)
+    for _ in range(_SHARED_MEMBER_DEPTH + 1):
+        following: list[object] = []
+        for item in frontier:
+            identity = id(item)
+            if identity in excluded:
+                continue
+            excluded.add(identity)
+            following.extend(member for member in _retained_members(item) if type(member) not in _SCALAR_LEAF_TYPES)
+        frontier = following
+    return _retained_size_excluding(value, excluded)
 
 
 class AuthorityCacheCycleError(CadrumoError):
@@ -102,6 +147,14 @@ class AuthorityCacheStats:
     in_flight: int
 
 
+class _LoadingState[K: Hashable, V](local):
+    """The loads in progress on one thread and the compositions collecting their parts."""
+
+    def __init__(self) -> None:
+        self.keys: tuple[K, ...] = ()
+        self.compositions: dict[K, dict[int, RetainedAuthorityValue[V]]] = {}
+
+
 class AccountedAuthorityCache[K: Hashable, V]:
     """Coalesce loads and retain successful immutable values within one LRU budget."""
 
@@ -118,7 +171,7 @@ class AccountedAuthorityCache[K: Hashable, V]:
         self._owners: dict[K, int] = {}
         self._waiting_for: dict[int, K] = {}
         self._lock = RLock()
-        self._loading = local()
+        self._loading = _LoadingState[K, V]()
 
     def get_or_load(
         self,
@@ -126,14 +179,56 @@ class AccountedAuthorityCache[K: Hashable, V]:
         loader: Callable[[], RetainedAuthorityValue[V]],
     ) -> V:
         """Return a retained value or share exactly one concurrent load for ``key``."""
-        stack = getattr(self._loading, "keys", ())
+        stack = self._loading.keys
+        retained = self._get_or_load_retained(key, loader, stack)
+        if stack:
+            parts = self._loading.compositions.get(stack[-1])
+            if parts is not None:
+                parts[id(retained)] = retained
+        return retained.value
+
+    def get_or_compose(self, key: K, build: Callable[[], V]) -> V:
+        """Retain a value composed from values ``build`` obtains directly from this cache.
+
+        The composed entry holds every shared token of those parts, so a part it
+        keeps alive stays charged after the part's own entry is evicted, and a
+        part retained by both entries is charged once. A part's exclusive weight
+        cannot be shared and is charged to the composition again; the
+        composition's own members are estimated by :func:`composed_object_size`.
+        Values the parts load for themselves are their own concern, as they are
+        for any component.
+        """
+
+        def compose() -> RetainedAuthorityValue[V]:
+            compositions = self._loading.compositions
+            parts: dict[int, RetainedAuthorityValue[V]] = {}
+            compositions[key] = parts
+            try:
+                value = build()
+            finally:
+                del compositions[key]
+            shared: dict[Hashable, int] = {}
+            exclusive = composed_object_size(value, (part.value for part in parts.values()))
+            for part in parts.values():
+                exclusive += part.exclusive_weight
+                shared.update(part.shared_weights)
+            return RetainedAuthorityValue(value, exclusive, tuple(shared.items()))
+
+        return self.get_or_load(key, compose)
+
+    def _get_or_load_retained(
+        self,
+        key: K,
+        loader: Callable[[], RetainedAuthorityValue[V]],
+        stack: tuple[K, ...],
+    ) -> RetainedAuthorityValue[V]:
         if key in stack:
             raise AuthorityCacheCycleError(f"recursive authority component load for {key!r}")
         with self._lock:
             retained = self._values.get(key)
             if retained is not None:
                 self._values.move_to_end(key)
-                return retained.value
+                return retained
             future = self._in_flight.get(key)
             owner = future is None
             if future is None:
@@ -146,7 +241,7 @@ class AccountedAuthorityCache[K: Hashable, V]:
                 self._refuse_wait_cycle(waiter, key)
                 self._waiting_for[waiter] = key
             try:
-                return future.result().value
+                return future.result()
             finally:
                 with self._lock:
                     self._waiting_for.pop(waiter, None)
@@ -158,7 +253,7 @@ class AccountedAuthorityCache[K: Hashable, V]:
                     self._admit(key, loaded)
                     self._evict_to_budget()
                 future.set_result(loaded)
-            return loaded.value
+            return loaded
         except BaseException as exc:
             future.set_exception(exc)
             # The owner observes the original exception directly. Mark the Future's
