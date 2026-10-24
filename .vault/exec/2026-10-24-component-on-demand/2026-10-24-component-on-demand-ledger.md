@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:3cf4569881ce85a727dfe64eb44cd4a7fee0c7bec5c1d311c6e59e5674e09d78'
+body_hash: 'sha256:8a3f9edd9e9482f1acb2f4709d6ba986e986f5d28e2d3092c2b9b4971defbbaf'
 related:
   - "[[2026-10-24-component-on-demand-plan]]"
 ---
@@ -120,6 +120,31 @@ related:
 - `S07` `M` `src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py`
 - `S07` `verify:` `tui operations, setup, app and navigation unit pytest (81)` -> `pass`
 - `S07` `verify:` `ruff, ty, lint-imports` -> `pass`
+- `S08` `M` `native/desktop/frontend/src/App.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/setup/SetupOffer.stories.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/setup/SetupOffer.tsx`
+- `S08` `M` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S08` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S08` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S08` `A` `native/desktop/frontend/src/shell/provisioningRecovery.ts`
+- `S08` `A` `native/desktop/frontend/tests/provisioning-recovery.spec.ts`
+- `S08` `A` `native/desktop/frontend/tests/scenarios/ledger-provisioning.spec.ts`
+- `S08` `verify:` `npm run check (tsc, eslint, prettier)` -> `pass`
+- `S08` `verify:` `provisioning-recovery unit spec (4), ledger-provisioning scenarios (5), setup/ledger-documents/ledger-matching specs (43)` -> `pass`
+- `S08` `verify:` `full npm run test: 1142 passed, 22 failed from other in-flight work (rail Declarations item, panel log badge, TUI cover, window close)` -> `fail`
+- `S10` `M` `src/cadrumo/adapters/outbound/llm/column_role_mapping.py`
+- `S10` `M` `src/cadrumo/adapters/outbound/llm/tests/test_role_reader_unavailable_is_reported.py`
+- `S10` `M` `src/cadrumo/application/invoices/_bulk_import_columns.py`
+- `S10` `M` `src/cadrumo/application/invoices/bulk_import.py`
+- `S10` `M` `src/cadrumo/application/invoices/catalogue_intake_operation_ports.py`
+- `S10` `M` `src/cadrumo/application/invoices/tests/test_catalogue_intake_operation.py`
+- `S10` `M` `src/cadrumo/application/local_reader.py`
+- `S10` `M` `src/cadrumo/entrypoints/invoice_intake_operation_composition.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/test_invoice_intake_operation_composition.py`
+- `S10` `verify:` `focused unit and integration pytest over 26 files (1308)` -> `pass`
+- `S10` `verify:` `ruff, ty, lint-imports, check-operation-contract-manifest` -> `pass`
 
 ## Notes
 
@@ -128,3 +153,5 @@ related:
 - `S02` Pre-checks sit in the reader wiring (entrypoints) so injected test readers stay unaffected; the label fallback stays a success and now carries `recovery_action_id;` batch ingest unchanged
 - `S06` Helper lives in the new `_component_setup_rendering.py` because `_action_rendering.py` is gated to its one serializer; browser refusal context lines (failure mode) still print until S05
 - `S07` Offer lives in the operation modal and app root (outside the row) because the modal closes on settlement; label composes the existing set-up key with the item name; integration failures seen were in the production registry build from other uncommitted work
+- `S08` Readers projections carry no recovery action id, so the Readers tab offers setup when the local AI row is set-up-able; Modelo and Censo ports carry no verdict and are not routed
+- `S10` Mapping model resolves through `select_role_model` for both probe and dispatch; `map_column_roles` removed for `resolve_header_roles;` text and vision readers still send their raw settings (out of scope)

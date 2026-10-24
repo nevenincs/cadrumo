@@ -9,7 +9,7 @@ related:
   - '[[2026-10-24-rust-component-provisioning-reference]]'
 modified: '2026-10-24'
 body_schema: body-v2
-body_hash: 'sha256:a811a93d210c73386d4ffa21ac67e1cf3499b7e097861179fe44d395ac12e805'
+body_hash: 'sha256:3e275de52cd0d6c25b3cce8babf486ed989271b157535e6f530b4aee5e262a65'
 ---
 
 # `component-on-demand` plan
@@ -38,9 +38,10 @@ The work is independent of the proposed `2026-10-24-rust-component-provisioning-
 - [ ] `S05` - Word the browser and reader refusals and the label-fallback notice with the component's name and its setup action in four languages, and register a REFUSED error code with a message key for a missing browser so a no-effect browser refusal settles REFUSED; `src/cadrumo/core/errors/error_codes.py and its catalogue, the provisioning and ledger subtrees of src/cadrumo/locales/*/ through the dev.locales workflow, src/cadrumo/application/dependency_wording.py, src/cadrumo/adapters/outbound/aeat/browser/session.py (code only) and tests`.
 - [x] `S06` - Render a provisioning verdict on the CLI as the sentence plus the exact setup command instead of raw precondition action lines; `src/cadrumo/entrypoints/cli/config/status_rendering.py, the shared CLI refusal renderer and tests`.
 - [x] `S07` - Route a provisioning verdict from the TUI operation modal to the Setup screen on that item; `src/cadrumo/entrypoints/tui/operations/run_result.py, src/cadrumo/entrypoints/tui/operations/refusal_explanation.py, src/cadrumo/entrypoints/tui/setup/ and tests`.
-- [ ] `S08` - Route every desktop refusal whose verdict names operator.provision to the setup prompt on that item, and give the Readers tab a set-up action; `native/desktop/frontend/src/shell/ledger.ts, native/desktop/frontend/src/App.tsx, native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx, native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx, scenarios and stories`.
+- [x] `S08` - Route every desktop refusal whose verdict names operator.provision to the setup prompt on that item, and give the Readers tab a set-up action; `native/desktop/frontend/src/shell/ledger.ts, native/desktop/frontend/src/App.tsx, native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx, native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx, scenarios and stories`.
 - [ ] `S09` - Add the consumer gating gate: every browser and model-role consumer declares its item and refuses with operator.provision.<item> before any effect; `src/cadrumo/application/tests/test_dependency_consumer_gating.py`.
-- [ ] `S10` - Carry the column reader refusal through invoice bulk intake instead of turning every error into a silent decline, and make the reader probe check the model the mapper actually sends; `src/cadrumo/entrypoints/invoice_intake_operation_composition.py, src/cadrumo/adapters/outbound/llm/column_role_mapping.py, src/cadrumo/application/local_reader.py and tests`.
+- [x] `S10` - Carry the column reader refusal through invoice bulk intake instead of turning every error into a silent decline, and make the reader probe check the model the mapper actually sends; `src/cadrumo/entrypoints/invoice_intake_operation_composition.py, src/cadrumo/adapters/outbound/llm/column_role_mapping.py, src/cadrumo/application/local_reader.py and tests`.
+- [ ] `S11` - Keep the reader verdict on the outer evidence extraction refusal so it routes to setup, and carry the local AI recovery action on the reader readiness projections; `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py, src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py, src/cadrumo/_data/operations/contract_manifest.json and tests`.
 
 ## Parallelization
 
