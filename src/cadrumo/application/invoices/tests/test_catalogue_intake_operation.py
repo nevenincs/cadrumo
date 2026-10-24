@@ -17,20 +17,27 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....core.config import override_settings
 from ....core.hashing import sha256_hex
+from ....core.model_catalogue import ModelRole
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.buckets.event import BucketEvent
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.schema import InvoiceKind
+from ...ledger.column_roles import ColumnRoleReaderUnavailable
+from ...ledger.import_ports import LedgerImportReaderUnavailableError
+from ...local_reader import probe_local_reader
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...operations.error_detail import build_operation_error_detail
 from ...operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
 from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_intake_contracts as intake_contracts
@@ -486,6 +493,78 @@ def test_source_substitution_refuses_before_mapping_provider_or_write(
     with pytest.raises(InvoiceValidationError):
         asyncio.run(InvoiceIntakeExecutor(factory).execute(request, context))
     assert events.effects[-1] is OperationEffect.NONE and operands.value is None
+
+
+def _unreadable_book_import(tmp_path: Path) -> OperationRequest[BaseModel]:
+    path = tmp_path / "libro.csv"
+    path.write_bytes(b"fecha_expedicion;nif_destinatario;base_imponible\n2026-05-01;A58818501;100,00\n")
+    return _wire(
+        intake_contracts.InvoiceImportRequest(
+            profile_id=_PROFILE, kind=InvoiceKind.RECEIVED, source_path=str(path), country="ES"
+        ),
+        intake_contracts.INVOICE_IMPORT_OPERATION_DEFINITION_ID,
+    )
+
+
+def _mapper_factory(
+    outcome: ColumnRoleReaderUnavailable | None,
+) -> Callable[..., InvoiceIntakePorts]:
+    def factory(
+        *,
+        profile_id: UUID,
+        operation: PinnedAuthorityOperation,
+        commit: InvoiceIntakeCommit,
+        admit_provider: InvoiceIntakeProviderAdmission,
+    ) -> InvoiceIntakePorts:
+        def unavailable(*_args: object):
+            pytest.fail("a book that was never read reached an outbound or storage capability")
+
+        return InvoiceIntakePorts(profile_id, operation, unavailable, lambda _headers: outcome, lambda: ())
+
+    return factory
+
+
+def test_a_book_whose_column_reader_is_unavailable_refuses_with_the_reader_verdict(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The verdict the reader probe returned reaches the operation error detail, and nothing was written."""
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
+        status = probe_local_reader(ModelRole.COLUMN_ROLE_MAPPING)
+    assert status.precondition_verdict is not None
+    request = _unreadable_book_import(tmp_path)
+    context, events, operands, _fence = _context(request, authority_operation)
+    factory = _mapper_factory(ColumnRoleReaderUnavailable(precondition_verdict=status.precondition_verdict))
+
+    with pytest.raises(LedgerImportReaderUnavailableError) as raised:
+        asyncio.run(InvoiceIntakeExecutor(factory).execute(request, context))
+
+    assert events.effects[-1] is OperationEffect.NONE and operands.value is None
+    assert raised.value.terminal_precondition_verdict == status.precondition_verdict
+    detail = build_operation_error_detail(raised.value)
+    assert detail is not None
+    assert detail.error_code == "REFUSED_LEDGER_IMPORT_READER"
+    projected = detail.precondition_verdict()
+    assert projected is not None and projected.action is not None
+    assert projected.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+
+
+def test_a_book_the_mapper_declined_still_refuses_for_its_missing_columns(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Control: a mapper that answered and established nothing names no component."""
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    request = _unreadable_book_import(tmp_path)
+    context, events, operands, _fence = _context(request, authority_operation)
+
+    with pytest.raises(InvoiceValidationError) as raised:
+        asyncio.run(InvoiceIntakeExecutor(_mapper_factory(None)).execute(request, context))
+
+    assert not isinstance(raised.value, LedgerImportReaderUnavailableError)
+    assert events.effects[-1] is OperationEffect.NONE and operands.value is None
+    detail = build_operation_error_detail(raised.value)
+    assert detail is not None
+    assert detail.precondition_verdict() is None
 
 
 @pytest.mark.parametrize("conflict", [True, False], ids=["atomic-cas-refusal", "uncertain-dispatch"])

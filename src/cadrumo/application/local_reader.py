@@ -2,9 +2,9 @@
 
 Invoice extraction reads a text-layer document with the TEXT_EXTRACTION model
 and a scanned one with the VISION_TRANSCRIPTION model; column mapping and the
-supply-nature proposal use their own roles. Each role reads the model its
-setting names, so provisioning, status and the reader itself must resolve the
-same identifier -- :func:`configured_role_model` is that single resolution.
+supply-nature proposal use their own roles. Each reader loads one model for
+its role, so provisioning, status and the reader itself must resolve the same
+identifier -- :func:`configured_role_model` is that single resolution.
 
 Starting, installing and pulling live in :mod:`.provisioning_host` and
 :mod:`.provisioning_runtime`; this module turns their measurements into the
@@ -285,21 +285,30 @@ def local_reader_service(role: ModelRole) -> str:
     return f"local-reader:{role.value}"
 
 
+def _role_setting(role: ModelRole, settings: Settings) -> str | None:
+    """Return the model setting an operator can set for ``role``, or ``None`` when it has none."""
+    if role is ModelRole.VISION_TRANSCRIPTION:
+        return settings.cadrumo_llm_ollama_vision_model
+    if role is ModelRole.TEXT_EXTRACTION:
+        return settings.cadrumo_llm_ollama_text_model
+    if role is ModelRole.COLUMN_ROLE_MAPPING:
+        return settings.cadrumo_llm_ollama_mapping_model
+    return None
+
+
 def configured_role_model(role: ModelRole, settings: Settings | None = None) -> str | None:
     """Return the runtime model id the on-host reader for ``role`` actually loads.
 
-    The three document and table roles read their own settings; the
-    supply-nature proposer resolves through catalogue selection, so it returns
-    whatever that selection names, or ``None`` when nothing is selectable.
+    The two document readers load their settings as written. The column mapper
+    and the supply-nature proposer resolve through :func:`select_role_model`,
+    so this returns whatever that selection names -- the operator's setting
+    when it differs from the shipped default, otherwise the catalogue's pick
+    for this machine -- or ``None`` when nothing is selectable.
     """
     resolved = settings if settings is not None else load_settings()
-    if role is ModelRole.VISION_TRANSCRIPTION:
-        return resolved.cadrumo_llm_ollama_vision_model
-    if role is ModelRole.TEXT_EXTRACTION:
-        return resolved.cadrumo_llm_ollama_text_model
-    if role is ModelRole.COLUMN_ROLE_MAPPING:
-        return resolved.cadrumo_llm_ollama_mapping_model
-    return select_model_for_role(role, settings=resolved).runtime_id
+    if role in EXTRACTION_READER_ROLES:
+        return _role_setting(role, resolved)
+    return select_role_model(role, resolved).runtime_id
 
 
 class RoleModelTarget(BaseModel):
@@ -340,9 +349,9 @@ def select_role_model(role: ModelRole, settings: Settings, *, explicit: str | No
     honoured with its advisories. ``explicit`` outranks both.
     """
     configured = explicit
-    if configured is None and role is not ModelRole.SUPPLY_NATURE_PROPOSAL:
-        setting = configured_role_model(role, settings)
-        configured = setting if setting != default_model_runtime_id(role) else None
+    if configured is None:
+        setting = _role_setting(role, settings)
+        configured = setting if setting is not None and setting != default_model_runtime_id(role) else None
     return select_model_for_role(role, settings=settings, override=configured)
 
 
@@ -426,6 +435,7 @@ def probe_local_reader(
     settings: Settings | None = None,
     *,
     installed: tuple[InstalledModel, ...] | None = None,
+    model: str | None = None,
 ) -> DependencyStatus:
     """Report whether the on-host reader for ``role`` can run right now.
 
@@ -441,13 +451,17 @@ def probe_local_reader(
         role: The reader role a document needs.
         settings: Settings carrying the endpoint and role models.
         installed: An inventory already read; read from the runtime when omitted.
+        model: The role model a reader already resolved and will send; resolved
+            through :func:`configured_role_model` when omitted. A reader that
+            passes the id it sends cannot be checked against another model.
 
     Returns:
         A :class:`DependencyStatus` on the ``local-reader:<role>`` row. Never raises.
     """
     resolved = settings if settings is not None else load_settings()
     service = local_reader_service(role)
-    model = configured_role_model(role, resolved)
+    if model is None:
+        model = configured_role_model(role, resolved)
     inventory = installed if installed is not None else read_installed_models(resolved)
     if inventory is None:
         facts: dict[str, ProvisioningFactValue] = {

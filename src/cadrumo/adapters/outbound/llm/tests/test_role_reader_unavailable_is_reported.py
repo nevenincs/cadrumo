@@ -24,6 +24,7 @@ from typing import override
 import pytest
 
 from .....application.ledger.column_roles import ColumnRoleReaderUnavailable
+from .....application.local_reader import role_model_targets
 from .....application.provisioning import select_model_for_role
 from .....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
 from .....core.config import Settings, override_settings
@@ -102,10 +103,10 @@ def _role_model(role: ModelRole) -> str:
     return model
 
 
-def _settings(tmp_path: Path, endpoint: str) -> Settings:
+def _settings(tmp_path: Path, endpoint: str, *, mapping_model: str | None = None) -> Settings:
     return EnvFileFreeSettings(
         cadrumo_llm_ollama_chat_url=endpoint,
-        cadrumo_llm_ollama_mapping_model=_role_model(ModelRole.COLUMN_ROLE_MAPPING),
+        cadrumo_llm_ollama_mapping_model=mapping_model or _role_model(ModelRole.COLUMN_ROLE_MAPPING),
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -113,14 +114,15 @@ def _settings(tmp_path: Path, endpoint: str) -> Settings:
 
 
 @contextmanager
-def _mapper(tmp_path: Path, endpoint: str) -> Generator[SemanticColumnRoleMapper]:
+def _mapper(tmp_path: Path, endpoint: str, *, mapping_model: str | None = None) -> Generator[SemanticColumnRoleMapper]:
     """A mapper on the production client, admitted under a measured reading for its model.
 
     The local transport reads its chat URL from the process-wide settings, so
-    the endpoint is overridden there as well as injected.
+    the endpoint is overridden there as well as injected. ``mapping_model`` is
+    an operator-set mapping model; the role's selection otherwise.
     """
-    settings = _settings(tmp_path, endpoint)
-    model = _role_model(ModelRole.COLUMN_ROLE_MAPPING)
+    settings = _settings(tmp_path, endpoint, mapping_model=mapping_model)
+    model = mapping_model or _role_model(ModelRole.COLUMN_ROLE_MAPPING)
     client = LLMClient(
         settings=settings,
         hardware_profile=admitting_hardware_profile(model, settings=settings),
@@ -218,6 +220,54 @@ def test_a_role_this_computer_cannot_serve_is_reported_without_a_setup_action() 
     verdict = outcome.precondition_verdict
     assert verdict.failed_condition_id == ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE.value
     assert verdict.action is None
+
+
+#: A catalogued mapping candidate other than the role's selection, set by an operator.
+_OPERATOR_MAPPING_MODEL = "qwen2.5:3b"
+
+
+def _sent_model(request: object) -> object:
+    assert isinstance(request, dict)
+    return request.get("model")
+
+
+def test_an_operator_set_mapping_model_is_the_model_sent_and_checked(tmp_path: Path) -> None:
+    """The mapper sends the model setup provisions and the probe checks, not the role's default."""
+    assert _role_model(ModelRole.COLUMN_ROLE_MAPPING) != _OPERATOR_MAPPING_MODEL
+    reply = _mapping_reply([(0, FieldRole.BOOKED_DATE), (1, FieldRole.NOTES), (2, FieldRole.MOVEMENT_AMOUNT)])
+    state = _RuntimeState(tags=[[_OPERATOR_MAPPING_MODEL]], chat_reply=reply)
+    with (
+        _runtime(state) as endpoint,
+        _mapper(tmp_path, endpoint, mapping_model=_OPERATOR_MAPPING_MODEL) as mapper,
+    ):
+        outcome = resolve_column_roles(_table(), mapper=mapper)
+        (target,) = role_model_targets(
+            (ModelRole.COLUMN_ROLE_MAPPING,), _settings(tmp_path, endpoint, mapping_model=_OPERATOR_MAPPING_MODEL)
+        )
+
+    assert isinstance(outcome, ColumnRoleProposal)
+    assert [_sent_model(request) for request in state.chat_requests] == [_OPERATOR_MAPPING_MODEL]
+    assert target.model == _OPERATOR_MAPPING_MODEL
+
+
+def test_the_probe_checks_the_mapping_model_the_mapper_would_send(tmp_path: Path) -> None:
+    """A runtime holding only the role's default does not satisfy an operator-set mapping model."""
+    state = _RuntimeState(
+        tags=[[_role_model(ModelRole.COLUMN_ROLE_MAPPING)]],
+        chat_reply=_mapping_reply([(0, FieldRole.BOOKED_DATE)]),
+    )
+    with (
+        _runtime(state) as endpoint,
+        _mapper(tmp_path, endpoint, mapping_model=_OPERATOR_MAPPING_MODEL) as mapper,
+    ):
+        outcome = resolve_column_roles(_table(), mapper=mapper)
+
+    _assert_setup_offered(outcome, ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED)
+    assert isinstance(outcome, ColumnRoleReaderUnavailable)
+    assert [evidence.values.get("model") for evidence in outcome.precondition_verdict.evidence] == [
+        _OPERATOR_MAPPING_MODEL
+    ]
+    assert state.chat_requests == [], "a reader known to be missing must not be asked"
 
 
 # -- Supply-nature proposal ------------------------------------------------------

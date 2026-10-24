@@ -61,6 +61,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.raw_transaction import RawProvenance, SourceFormat
+from ..ledger.import_ports import LedgerImportReaderUnavailableError
 from ._bulk_import_columns import (
     BulkImportColumnResolution,
     ColumnRoleMapper,
@@ -472,6 +473,11 @@ def _parse_bulk_invoice_row(
     )
 
 
+#: Why a book refused when its column-naming model could not be asked. It names
+#: the missing reader, not the file, because the file was never read.
+_READER_UNAVAILABLE_REASON = "the local AI that reads this book's column names is not ready, so the file was not read"
+
+
 def _assert_required_fields_present(resolution: BulkImportColumnResolution) -> None:
     """Refuse a file that cannot supply a required field under any column.
 
@@ -480,10 +486,27 @@ def _assert_required_fields_present(resolution: BulkImportColumnResolution) -> N
     still imports, but a book carrying no taxable base at all has no row to
     create. The refusal names the fields, and lists what the file did carry, so
     the operator can see whether a column was simply not recognised.
+
+    A book whose own column names only the mapping lane could read, and whose
+    mapping model could not be asked, was never read. It refuses with the
+    reader's verdict, which names the local AI setup when setup can supply the
+    model, rather than claiming the book lacks the columns.
+
+    Raises:
+        LedgerImportReaderUnavailableError: The mapping lane was needed and
+            its reader could not be asked.
+        InvoiceValidationError: No column supplies a required field.
     """
     missing = BULK_INVOICE_IMPORT_REQUIRED_COLUMNS - resolution.fields_present
     if not missing:
         return
+    verdict = resolution.reader_unavailable_verdict
+    if verdict is not None:
+        raise LedgerImportReaderUnavailableError(
+            translated_message="errors.transaction.ledger_import_failed",
+            context={"reason": _READER_UNAVAILABLE_REASON},
+            precondition_verdict=verdict,
+        )
     raise InvoiceValidationError(
         "bulk invoice import file supplies no column for required field(s): " + ", ".join(sorted(missing)),
         translated_message="application.invoices.bulk_import.errors.missing_columns",
@@ -784,6 +807,8 @@ def read_bulk_invoice_import_source(
     Raises:
         InvoiceValidationError: The extension is unsupported, the file cannot be
             read, or no column supplies a required field.
+        LedgerImportReaderUnavailableError: Only the mapping lane could read
+            the book's columns, and its model could not be asked.
     """
     suffix = path.suffix.lower()
     if suffix not in BULK_INVOICE_IMPORT_EXTENSIONS:

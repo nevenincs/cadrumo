@@ -510,11 +510,13 @@ class SemanticColumnRoleMapper:
 
     **The model comes from the role, never from a general default.** A mapping
     call selects among a handful of short strings. So the model is resolved
-    through :func:`~application.provisioning.select_model_for_role` against
-    :attr:`~core.model_catalogue.ModelRole.COLUMN_ROLE_MAPPING`, which names the WEAKEST catalogued
+    through :func:`~application.local_reader.select_role_model` against
+    :attr:`~core.model_catalogue.ModelRole.COLUMN_ROLE_MAPPING`: the mapping
+    setting when an operator changed it, otherwise the WEAKEST catalogued
     candidate clearing the capability, licence and headroom bars on this
     machine. Re-pointing that role in the catalogue re-points this lane with no
-    edit here.
+    edit here. Setup provisions and the reader probe checks the same
+    resolution, so the model this mapper sends is the one they speak for.
 
     A role-resolved or pinned model is an on-host runtime id, so it runs on the
     LOCAL provider. The only way off-host is naming AGENT, which asks the agent
@@ -584,9 +586,9 @@ class SemanticColumnRoleMapper:
                 inference, where it reaches the operator as a timeout instead
                 of as a refusal carrying its own remediation.
         """
-        from ....application.provisioning import select_model_for_role
+        from ....application.local_reader import select_role_model
 
-        selection = select_model_for_role(ModelRole.COLUMN_ROLE_MAPPING, settings=settings)
+        selection = select_role_model(ModelRole.COLUMN_ROLE_MAPPING, settings)
         if not selection.selected or selection.runtime_id is None:
             raise LLMConfigError(
                 context=selection.facts,
@@ -597,11 +599,13 @@ class SemanticColumnRoleMapper:
     def reader_refusal(self) -> PreconditionVerdict | None:
         """Return why the on-host model this mapper loads cannot answer now, or ``None``.
 
-        Asked of the runtime itself through the reader probe, so a runtime that
-        does not answer and a role model that is not installed each come back
-        as the probe's verdict naming the local AI setup. ``None`` when the
-        reader can run, and whenever the probe cannot speak for this mapper: an
-        off-host transport, or a model the caller pinned rather than the role's.
+        Asked of the runtime itself through the reader probe, about the exact
+        model this mapper sends, so a runtime that does not answer and a role
+        model that is not installed each come back as the probe's verdict
+        naming the local AI setup. ``None`` when the reader can run, and
+        whenever the probe cannot speak for this mapper: an off-host transport,
+        or a model the caller pinned rather than the role's, which setup would
+        not install.
 
         Deferred import for the same reason as :meth:`_role_model`.
         """
@@ -609,7 +613,7 @@ class SemanticColumnRoleMapper:
             return None
         from ....application.local_reader import probe_local_reader
 
-        status = probe_local_reader(ModelRole.COLUMN_ROLE_MAPPING, self._settings)
+        status = probe_local_reader(ModelRole.COLUMN_ROLE_MAPPING, self._settings, model=self._model)
         return None if status.available else status.precondition_verdict
 
     @property
@@ -672,27 +676,6 @@ class SemanticColumnRoleMapper:
         )
 
 
-def map_column_roles(
-    headers: Sequence[str],
-    *,
-    model: str | None = None,
-    provider: LLMProvider | None = None,
-    settings: Settings | None = None,
-) -> ColumnRoleProposal:
-    """Convenience wrapper: build a :class:`SemanticColumnRoleMapper` and map once.
-
-    Args:
-        headers: The header cells, in column order.
-        model: Optional runtime id, honoured over the role resolution.
-        provider: Optional provider override.
-        settings: Optional resolved settings override.
-
-    Returns:
-        The positional mapping plus every column that was not established.
-    """
-    return SemanticColumnRoleMapper(model=model, provider=provider, settings=settings).map(headers)
-
-
 def _carried_verdict(error: BaseException) -> PreconditionVerdict | None:
     """Return the typed verdict a reader refusal carries, such as missing load headroom."""
     verdict = getattr(error, "terminal_precondition_verdict", None)
@@ -708,8 +691,25 @@ def resolve_column_roles(
 
     The concrete mapper stays owned by this outbound adapter.  Composition
     roots bind this function to the application port, while inbound financial
-    providers consume only the inward contract.  Missing optional capability
-    remains a typed refusal.
+    providers consume only the inward contract.  The outcomes are those of
+    :func:`resolve_header_roles` over the table's headers.
+
+    Args:
+        table: The normalized table whose headers are mapped.
+        mapper: The mapper to ask; built against the current settings when
+            omitted.
+    """
+    return resolve_header_roles(table.headers, mapper=mapper)
+
+
+def resolve_header_roles(
+    headers: Sequence[str],
+    *,
+    mapper: SemanticColumnRoleMapper | None = None,
+) -> ColumnRoleProposal | ColumnRoleReaderUnavailable | None:
+    """Resolve one header row, reporting a reader that could not be asked.
+
+    Missing optional capability remains a typed refusal.
 
     A reader that could not be asked is reported, not declined: the role's
     runtime and model are checked before the call and again after a failed
@@ -718,10 +718,10 @@ def resolve_column_roles(
     carrying the verdict, which names the local AI setup when setup can
     supply what is missing. A catalogue that names no model this computer can
     run is reported the same way, with its no-action verdict. Only a model
-    that answered and established nothing declines the table with ``None``.
+    that answered and established nothing declines the headers with ``None``.
 
     Args:
-        table: The normalized table whose headers are mapped.
+        headers: The header cells, in column order.
         mapper: The mapper to ask; built against the current settings when
             omitted.
     """
@@ -742,7 +742,7 @@ def resolve_column_roles(
     if refusal is not None:
         return ColumnRoleReaderUnavailable(precondition_verdict=refusal)
     try:
-        proposal = resolved.map(table.headers)
+        proposal = resolved.map(headers)
     except MissingOptionalExtraError:
         raise
     except LLMValidationError:

@@ -32,6 +32,8 @@ from pydantic import BaseModel, NonNegativeInt
 
 from ...core.field_role import FieldRole
 from ...core.models import STRICT_FROZEN_CONFIG
+from ..ledger.column_roles import ColumnRoleReaderUnavailable
+from ..operator_actions.models import PreconditionVerdict
 
 __all__ = [
     "BULK_IMPORT_FIELD_BY_ROLE",
@@ -62,8 +64,12 @@ BULK_IMPORT_FIELD_BY_ROLE: dict[FieldRole, str] = {
     FieldRole.NOTES: "notes",
 }
 
-ColumnRoleMapper = Callable[[Sequence[str]], Sequence[FieldRole] | None]
-"""Establishes one role per column for a header row, or ``None`` when it cannot."""
+ColumnRoleMapper = Callable[[Sequence[str]], Sequence[FieldRole] | ColumnRoleReaderUnavailable | None]
+"""Establishes one role per column for a header row, or says why it could not.
+
+:class:`~application.ledger.column_roles.ColumnRoleReaderUnavailable` means the
+model that names columns was never asked; ``None`` means it established nothing.
+"""
 
 
 class ResolvedColumn(BaseModel):
@@ -95,12 +101,16 @@ class BulkImportColumnResolution(BaseModel):
         columns: Every source column, in order.
         consulted_mapping_lane: Whether the semantic lane was called. ``False``
             means every column matched a canonical name outright.
+        reader_unavailable_verdict: Why the model that names columns could not
+            be asked, when the lane was needed and its reader was unavailable.
+            Nothing beyond the exact matches was then read.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     columns: tuple[ResolvedColumn, ...]
     consulted_mapping_lane: bool = False
+    reader_unavailable_verdict: PreconditionVerdict | None = None
 
     @property
     def field_by_index(self) -> dict[int, str]:
@@ -150,14 +160,20 @@ def _apply_semantic_column_mapping(
     *,
     mapper: ColumnRoleMapper | None,
     required_fields: frozenset[str],
-) -> bool:
-    """Fill unresolved columns from one mapping-lane verdict without displacing exact fields."""
+) -> bool | ColumnRoleReaderUnavailable:
+    """Fill unresolved columns from one mapping-lane verdict without displacing exact fields.
+
+    Returns whether the lane's roles were applied, or the lane's report that
+    its reader could not be asked.
+    """
     claimed_fields = {field for field in exact_fields if field is not None}
     if mapper is None or _mapping_lane_not_needed(mapper, required_fields, claimed_fields):
         return False
     proposed_roles = mapper(list(headers))
     if proposed_roles is None:
         return False
+    if isinstance(proposed_roles, ColumnRoleReaderUnavailable):
+        return proposed_roles
     for index, role in enumerate(proposed_roles):
         _apply_proposed_role(index, role, headers, exact_fields, roles, claimed_fields)
     return True
@@ -214,7 +230,8 @@ def resolve_bulk_import_columns(
 
     Returns:
         The per-column resolution, with everything unresolved reported rather
-        than refused.
+        than refused, and the reader's verdict when the lane was needed and
+        could not be asked.
     """
     exact: list[str | None] = [_canonical_field(header) for header in headers]
     roles = [_role_for_exact_field(field) for field in exact]
@@ -225,11 +242,13 @@ def resolve_bulk_import_columns(
         mapper=mapper,
         required_fields=required_fields,
     )
+    unavailable = consulted if isinstance(consulted, ColumnRoleReaderUnavailable) else None
 
     return BulkImportColumnResolution(
         columns=tuple(
             ResolvedColumn(column_index=index, header=header, field=exact[index], role=roles[index])
             for index, header in enumerate(headers)
         ),
-        consulted_mapping_lane=consulted,
+        consulted_mapping_lane=consulted is True,
+        reader_unavailable_verdict=None if unavailable is None else unavailable.precondition_verdict,
     )
