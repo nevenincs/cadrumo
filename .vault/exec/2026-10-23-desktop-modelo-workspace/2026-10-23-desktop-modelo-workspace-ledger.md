@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:16c726e2e00e4cc028c631ab533c481484aa08b4575f8b2fc15f8ac29444d776'
+body_hash: 'sha256:6012e174b60b3296cce2e76f716d9b9641171a39ab68faa36b309e267d70e14f'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -682,6 +682,50 @@ related:
 - `S44` `verify:` `pytest application modelo suites` -> `pass`
 - `S44` `verify:` `pytest full TUI modelo tree` -> `pass`
 - `S44` `by:` `opus-p01-lanes-1-and-2`
+- `S43` `M` `native/application/src/person_operations.rs`
+- `S43` `M` `native/application/src/runtime_client.rs`
+- `S43` `A` `native/application/tests/data/modelo-303-admitted-baseline.json`
+- `S43` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S43` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/modelo/admitted.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S43` `M` `native/desktop/scripts/backend-snapshot.mjs`
+- `S43` `verify:` `native_client_live against a real runtime` -> `pass`
+- `S43` `verify:` `application.rust ctest` -> `pass`
+- `S43` `verify:` `relay_contracts.py --check` -> `pass`
+- `S43` `verify:` `backend-snapshot node tests` -> `pass`
+- `S43` `by:` `opus-host-lane`
+- `S13` `M` `native/application/src/runtime_client.rs`
+- `S13` `A` `native/application/tests/data/modelo-303-admitted-baseline.json`
+- `S13` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/modelo/admitted.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S13` `M` `native/desktop/scripts/backend-snapshot.mjs`
+- `S13` `verify:` `native_client_live against a real runtime` -> `pass`
+- `S13` `verify:` `application.rust ctest` -> `pass`
+- `S13` `verify:` `relay_contracts.py --check` -> `pass`
+- `S13` `verify:` `backend-snapshot node tests` -> `pass`
+- `S13` `by:` `opus-host-lane`
+- `S16` `M` `native/application/src/person_operations.rs`
+- `S16` `M` `native/application/src/runtime_client.rs`
+- `S16` `A` `native/application/tests/data/modelo-303-admitted-baseline.json`
+- `S16` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S16` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S16` `M` `native/desktop/scripts/backend-snapshot.mjs`
+- `S16` `verify:` `native_client_live against a real runtime` -> `pass`
+- `S16` `verify:` `application.rust ctest` -> `pass`
+- `S16` `verify:` `relay_contracts.py --check` -> `pass`
+- `S16` `verify:` `backend-snapshot node tests` -> `pass`
 
 ## Notes
 
@@ -724,3 +768,6 @@ related:
 - `S42` also carries the issue-line where fix that removes the box from place words
 - `S27` committed in 35fff18be9; no modelo yields a missing-value finding through the real executors, so missing values are proven by the drawn dash
 - `S44` committed in f5a6e55f11; items a and d by lane 1, b and c by lane 2
+- `S43` committed in 788d9231f0, reviewed by CADRUMO-RUST-NATIVE and CADRUMO-UX-LEDGER; desktop-host-unit-test and clippy blocked by other sessions' uncommitted shell/setup and Cargo.lock work, last direct run 541 passed with the lane's one failure fixed
+- `S13` committed in 788d9231f0, reviewed by CADRUMO-RUST-NATIVE and CADRUMO-UX-LEDGER; desktop-host-unit-test and clippy blocked by other sessions' uncommitted shell/setup and Cargo.lock work, last direct run 541 passed with the lane's one failure fixed
+- `S16` committed in 788d9231f0, reviewed by CADRUMO-RUST-NATIVE and CADRUMO-UX-LEDGER; desktop-host-unit-test and clippy blocked by other sessions' uncommitted shell/setup and Cargo.lock work, last direct run 541 passed with the lane's one failure fixed
