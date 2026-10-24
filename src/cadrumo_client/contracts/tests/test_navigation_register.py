@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import lookup_translation
+from cadrumo.core.toml import parse_toml
 
+from .. import navigation
 from ..navigation import (
     NavigationRegister,
     NavigationRegisterError,
@@ -211,7 +215,83 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
         "ledger/movements": {"select": "transaction"},
         "ledger/invoices": {"select": "invoice"},
     }
-    assert register.retired == ()
+
+
+_SHIPPED_VIEWS = Path(__file__).with_name("navigation_shipped_views.json")
+
+
+def _shipped_ids() -> tuple[str, ...]:
+    """Every view id ever shipped, read from the append-only baseline beside this module."""
+    shipped = json.loads(_SHIPPED_VIEWS.read_text(encoding="utf-8"))["shipped"]
+    assert isinstance(shipped, list)
+    return tuple(str(item) for item in shipped)
+
+
+def _lifecycle_breaches(register: NavigationRegister, shipped: tuple[str, ...]) -> list[str]:
+    """Return every way ``register`` breaks the shipped baseline; empty when it keeps it.
+
+    A shipped id stays answerable for good: either an element declares it or
+    ``retired`` lists it. So deleting an element without retiring it, or
+    dropping an id from ``retired``, breaks the baseline. A declared or
+    retired id the baseline lacks means the baseline was not grown with it.
+    """
+    declared = {element.id for element in register.elements}
+    retired = set(register.retired)
+    breaches = [
+        f"shipped id {item!r} is neither declared nor retired" for item in shipped if item not in declared | retired
+    ]
+    breaches.extend(
+        f"id {item!r} is missing from the shipped baseline" for item in sorted((declared | retired) - set(shipped))
+    )
+    return breaches
+
+
+def _shipped_register_data() -> dict[str, Any]:
+    source = Path(navigation.__file__).with_name("navigation.toml").read_text(encoding="utf-8")
+    return dict(parse_toml(source))
+
+
+def test_the_shipped_baseline_lists_each_id_once() -> None:
+    shipped = _shipped_ids()
+    assert shipped
+    assert len(set(shipped)) == len(shipped)
+
+
+def test_every_id_ever_shipped_is_declared_or_retired() -> None:
+    assert _lifecycle_breaches(load_navigation_register(), _shipped_ids()) == []
+
+
+def test_an_element_deleted_without_retiring_its_id_breaks_the_baseline() -> None:
+    data = _shipped_register_data()
+    data["element"] = [element for element in data["element"] if element["id"] != "panel/logs"]
+    register = NavigationRegister.model_validate(data)
+    assert _lifecycle_breaches(register, _shipped_ids()) == ["shipped id 'panel/logs' is neither declared nor retired"]
+
+    data["retired"] = ["panel/logs"]
+    assert _lifecycle_breaches(NavigationRegister.model_validate(data), _shipped_ids()) == []
+
+
+def test_an_id_taken_out_of_retired_breaks_the_baseline() -> None:
+    data = _shipped_register_data()
+    shipped = (*_shipped_ids(), "statements")
+    data["retired"] = ["statements"]
+    assert _lifecycle_breaches(NavigationRegister.model_validate(data), shipped) == []
+
+    data["retired"] = []
+    assert _lifecycle_breaches(NavigationRegister.model_validate(data), shipped) == [
+        "shipped id 'statements' is neither declared nor retired"
+    ]
+
+
+def test_an_element_added_without_growing_the_baseline_breaks_it() -> None:
+    data = _shipped_register_data()
+    data["element"] = [
+        *data["element"],
+        {"id": "notes", "label": "nav.notes.label", "keywords": "w", "surfaces": ["gui"]},
+    ]
+    assert _lifecycle_breaches(NavigationRegister.model_validate(data), _shipped_ids()) == [
+        "id 'notes' is missing from the shipped baseline"
+    ]
 
 
 def test_the_shipped_value_kinds_are_content_derived_sha256_ids() -> None:

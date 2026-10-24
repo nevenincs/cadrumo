@@ -1,0 +1,30 @@
+{
+  "description": "Every navigation register view id ever shipped, in the order it first shipped. Append only: an id stays here after its element is retired.",
+  "shipped": [
+    "home",
+    "ledger",
+    "ledger/movements",
+    "ledger/invoices",
+    "ledger/documents",
+    "ledger/rules",
+    "ledger/registers",
+    "ledger/health",
+    "withholding",
+    "declarations",
+    "aeat-sync",
+    "operations",
+    "installation",
+    "setup",
+    "reference",
+    "profile",
+    "profile/aeat-access",
+    "calendar",
+    "docs",
+    "agent",
+    "terminal",
+    "panel",
+    "panel/console",
+    "panel/python",
+    "panel/logs"
+  ]
+}
