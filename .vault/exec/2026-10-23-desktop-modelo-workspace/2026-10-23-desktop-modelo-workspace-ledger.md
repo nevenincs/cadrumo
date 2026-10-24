@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:d8ea1b3f9f99bfbf6652f20a90b742bbf6dd6371a8d313b19a5aa1be5f20c1ea'
+body_hash: 'sha256:40b4a8194739937bfe4a8d3fda0a90d415afbb5cf5aafb958aa0444ddf48501a'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -306,6 +306,13 @@ related:
 - `S16` `verify:` `desktop-host-unit-clippy` -> `pass`
 - `S16` `verify:` `relay_contracts.py --check` -> `pass`
 - `S16` `by:` `opus-host-lane`
+- `S11` `M` `dev/locales/_ast_key_syntax.py`
+- `S11` `M` `dev/locales/_ast_key_wrappers.py`
+- `S11` `M` `dev/locales/_ast_key_calls.py`
+- `S11` `A` `dev/locales/tests/test_translator_wrapper_call_scope.py`
+- `S11` `verify:` `ruff check and format` -> `pass`
+- `S11` `verify:` `pytest translator wrapper scope and dynamic prefix registry` -> `pass`
+- `S11` `by:` `opus-wording-lane`
 
 ## Notes
 
