@@ -785,7 +785,7 @@ class FrontendClient(ProfileViewFrontend):
             ),
             PresentationDelivered,
         )
-        if reply.destination != destination:
+        if reply.destination != destination or reply.params != dict(params or {}):
             raise RefusalError(RefusalCode.INVALID_FRAME)
         return reply
 

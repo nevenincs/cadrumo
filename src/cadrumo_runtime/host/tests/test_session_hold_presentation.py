@@ -42,7 +42,7 @@ class FakeClient:
         if refusals:
             raise FrontendRefusedError(refusals.pop(0))
         print(f"presented {destination} {sorted((params or {}).items())}", file=sys.stderr)
-        return SimpleNamespace(destination=destination, delivered=1)
+        return SimpleNamespace(destination=destination, params=dict(params or {}), delivered=1)
 
     def subscribe_session_retirement(self, callback):
         pass
@@ -136,6 +136,7 @@ async def test_a_presented_page_reports_how_many_tuis_were_asked(tmp_path: Path)
         "runtime_boot_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
         "connection_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
         "destination": "profile/aeat-access",
+        "params": {},
         "delivered": 1,
     }
     assert replies[1]["kind"] == "session_closed"
@@ -184,6 +185,7 @@ async def test_a_selected_record_is_passed_with_its_view(tmp_path: Path) -> None
     assert exit_code == 0, replies
     assert replies[0]["kind"] == "destination_presented"
     assert replies[0]["destination"] == "ledger"
+    assert replies[0]["params"] == {"select": _TRANSACTION}
     assert f"presented ledger [('select', '{_TRANSACTION}')]" in stderr
 
 

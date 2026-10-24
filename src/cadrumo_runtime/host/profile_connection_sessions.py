@@ -423,6 +423,7 @@ class ProfileConnectionSessionMixin:
             runtime_boot_id=self.boot,
             connection_id=context.connection_id,
             destination=request.destination,
+            params=request.params,
             delivered=len(recipients),
         )
 

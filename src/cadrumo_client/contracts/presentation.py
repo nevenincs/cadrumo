@@ -61,4 +61,6 @@ class PresentationDelivered(BaseModel):
     runtime_boot_id: UUID
     connection_id: UUID
     destination: str
+    params: dict[str, str] = Field(default_factory=dict)
+    """The request's parameters, echoed so the asker can check which request was delivered."""
     delivered: Annotated[int, Field(ge=0)]
