@@ -90,20 +90,26 @@ function LinkButton({
   onLink(pair: MatchPair): void;
   size?: "xs" | "sm";
 }) {
+  const described = useId();
   return (
-    <Button
-      size={size}
-      variant="outline"
-      className="ledger-match-link"
-      aria-label={t("desktop.ledger.matching.link_named", {
-        number: seriesAndNumber(pair.invoice),
-        description: pair.row.transaction.description,
-      })}
-      onClick={() => onLink(pair)}
-    >
-      <Icon name="lock" size="xs" />
-      {t("desktop.ledger.matching.link")}
-    </Button>
+    <>
+      <Button
+        size={size}
+        variant="outline"
+        className="ledger-match-link"
+        aria-describedby={described}
+        onClick={() => onLink(pair)}
+      >
+        <Icon name="lock" size="xs" />
+        {t("desktop.ledger.matching.link")}
+      </Button>
+      <span id={described} className="sr-only">
+        {t("desktop.ledger.matching.link_named", {
+          number: seriesAndNumber(pair.invoice),
+          description: pair.row.transaction.description,
+        })}
+      </span>
+    </>
   );
 }
 
@@ -144,11 +150,6 @@ function MatchItem({
         type="button"
         className="ledger-match-pick grid w-full cursor-pointer gap-1 rounded-md text-left hover-wash focus-visible:outline-offset-2"
         onClick={() => onChoose(id)}
-        aria-label={t("desktop.ledger.matching.open_named", {
-          description: row.transaction.description,
-          amount: movementAmount(locale, row),
-          number: seriesAndNumber(suggestion.invoice),
-        })}
       >
         <span className="flex min-w-0 items-baseline gap-2">
           <span className="min-w-0 flex-1 truncate font-medium">
