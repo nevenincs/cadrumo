@@ -9,6 +9,7 @@ related:
   - '[[2026-10-18-dependency-provisioning-unified-setup-adr]]'
   - '[[2026-10-13-canonical-environment-application-internals-adr]]'
   - '[[2026-10-17-single-binary-process-tree-adr]]'
+  - '[[2026-10-04-runtime-manager-architecture-adr]]'
 modified: '2026-10-25'
 body_schema: body-v2
 body_hash: 'sha256:ac6df5027998ae36320ce156b5425d1de77a6c1f9b047472379eb2a52b70fb1f'
