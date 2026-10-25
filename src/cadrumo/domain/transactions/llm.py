@@ -59,7 +59,6 @@ from ..categories.spending_category_catalogue import spending_category_tokens
 from ..iva.schema import IvaCategory
 from .enums import BusinessClassification
 from .errors import LLMClassifierError, TransactionValidationError
-from .model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier
 from .models import Transaction
 
 if TYPE_CHECKING:
@@ -969,15 +968,12 @@ def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMS
 
 
 __all__ = [
-    "MINIMUM_CLASSIFICATION_TIER",
     "CategoryChoice",
     "ClassificationChoice",
     "IvaCategoryChoice",
     "LLMClassificationResponse",
     "LLMClassifier",
     "LLMClassifierError",
-    "ModelProfile",
-    "ModelTier",
     "PromptSpec",
     "default_classification_choices",
     "default_iva_category_choices",

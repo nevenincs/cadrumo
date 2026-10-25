@@ -2496,7 +2496,6 @@
         "cadrumo.domain.transactions.lineage_models",
         "cadrumo.domain.transactions.llm",
         "cadrumo.domain.transactions.m210_income_classification",
-        "cadrumo.domain.transactions.model_tier",
         "cadrumo.domain.transactions.model_validation",
         "cadrumo.domain.transactions.models",
         "cadrumo.domain.transactions.own_accounts",
