@@ -10,6 +10,8 @@ import pytest
 from cadrumo.core.errors.hierarchy import CoreValidationError
 
 from ..catalog import (
+    BackgroundInput,
+    BackgroundOption,
     ProviderAuthKind,
     ProviderConsumer,
     ProviderTransport,
@@ -21,8 +23,55 @@ from ..catalog import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _document(*lanes: dict[str, Any], schema_version: int = 4) -> str:
+def _document(*lanes: dict[str, Any], schema_version: int = 5) -> str:
     return json.dumps({"schema_version": schema_version, "providers": list(lanes), "icon_attribution": {}})
+
+
+_HOSTED_BACKGROUND: dict[str, Any] = {"runnable": True, "inputs": ["text", "image", "pdf"], "options": []}
+_DIGEST = "sha256:" + "a" * 64
+
+
+def _model(model_id: str, **overrides: Any) -> dict[str, Any]:
+    """Return one declared model with every field the agent prints and no stated fact."""
+    model: dict[str, Any] = {
+        "id": model_id,
+        "display_name": model_id,
+        "effort": {"reasoning": "toggle", "control": "none", "levels": [], "default": None},
+        "vision": None,
+        "size_bytes": None,
+        "context_length": None,
+        "licence": None,
+    }
+    model.update(overrides)
+    return model
+
+
+def _local_model(model_id: str, *, vision: bool, **overrides: Any) -> dict[str, Any]:
+    """Return one declared model with every fact stated, as the agent prints a local model."""
+    stated: dict[str, Any] = {
+        "vision": vision,
+        "size_bytes": 1_889_519_687,
+        "context_length": 262_144,
+        "licence": {"spdx": "Apache-2.0", "name": "Synthetic licence", "digest": _DIGEST},
+    }
+    stated.update(overrides)
+    return _model(model_id, **stated)
+
+
+def _with_licence(licence: dict[str, Any]) -> str:
+    return _document(_keyless_lane(models=[_local_model("synthetic-reader:1", vision=False, licence=licence)]))
+
+
+def _with_model(**overrides: Any) -> str:
+    return _document(_keyless_lane(models=[{**_local_model("synthetic-reader:1", vision=False), **overrides}]))
+
+
+def _with_background(lane: dict[str, Any], background: dict[str, Any]) -> str:
+    return _document({**lane, "background": background})
+
+
+def _without(lane: dict[str, Any], field: str) -> dict[str, Any]:
+    return {key: value for key, value in lane.items() if key != field}
 
 
 def _key_lane(**overrides: Any) -> dict[str, Any]:
@@ -37,6 +86,8 @@ def _key_lane(**overrides: Any) -> dict[str, Any]:
         "agent_credential_id": "example",
         "reads_off_host": True,
         "cli_programs": [],
+        "recommended": {},
+        "background": _HOSTED_BACKGROUND,
     }
     lane.update(overrides)
     return lane
@@ -54,6 +105,8 @@ def _cli_lane(**overrides: Any) -> dict[str, Any]:
         "agent_credential_id": None,
         "reads_off_host": True,
         "cli_programs": ["example"],
+        "recommended": {},
+        "background": _HOSTED_BACKGROUND,
     }
     lane.update(overrides)
     return lane
@@ -71,7 +124,16 @@ def _keyless_lane(**overrides: Any) -> dict[str, Any]:
         "agent_credential_id": None,
         "reads_off_host": False,
         "cli_programs": [],
-        "models": [{"id": "synthetic-reader:1"}, {"id": "synthetic-viewer:1"}],
+        "models": [
+            _local_model("synthetic-reader:1", vision=False),
+            _local_model("synthetic-viewer:1", vision=True),
+        ],
+        "recommended": {"text": "synthetic-reader:1"},
+        "background": {
+            "runnable": True,
+            "inputs": ["text", "image"],
+            "options": ["temperature", "context_tokens", "response_schema"],
+        },
     }
     lane.update(overrides)
     return lane
@@ -112,17 +174,17 @@ def test_a_valid_document_parses_into_typed_lanes() -> None:
     assert api.consumers == (ProviderConsumer.ASSISTANT,)
 
 
-def test_version_four_retains_presentation_metadata_without_affecting_authentication() -> None:
+def test_version_five_retains_presentation_metadata_without_affecting_authentication() -> None:
     icon = {"key": "example", "variants": [{"variant": "mono", "media_type": "image/svg+xml", "sha256": "a" * 64}]}
     effort = {"reasoning": "supported", "control": "levels", "levels": ["low", "high"], "default": "low"}
-    document = json.loads(_document(_cli_lane(icon=icon, models=[{"id": "sample", "effort": effort}])))
+    document = json.loads(_document(_cli_lane(icon=icon, models=[_model("sample", effort=effort)])))
     document["icon_attribution"] = {"title": "Synthetic artwork", "licence": "MIT"}
 
     catalog = parse_provider_catalog(json.dumps(document))
 
     assert catalog.providers[0].description == "Synthetic CLI provider"
     assert catalog.providers[0].icon == icon
-    assert catalog.providers[0].models[0]["effort"] == effort
+    assert catalog.providers[0].models[0].effort == effort
     assert catalog.icon_attribution == document["icon_attribution"]
     assert catalog.providers[0].agent_credential_id is None
     assert catalog.providers[0].auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY
@@ -141,6 +203,67 @@ def test_a_keyless_lane_parses_with_its_loopback_url_and_on_host_flag() -> None:
     assert keyless.recommended == {"vision": "synthetic-viewer:1"}
     assert catalog.providers[0].reads_off_host is True
     assert catalog.providers[0].recommended == {}
+
+
+def test_a_lane_shaped_as_the_agents_local_lane_parses_every_typed_model_fact() -> None:
+    """The lane mirrors the agent's printed local lane field for field, with invented model ids and facts."""
+    lane = _keyless_lane(
+        description="Open models run on this computer by a local server.",
+        default_base_url="http://127.0.0.1:11434",
+        icon=None,
+        platform={"docs_url": None, "models_url": None, "status": {"kind": "none", "page_url": None, "api_url": None}},
+        default_model="synthetic-reader:1",
+        models=[
+            _local_model("synthetic-viewer:1", vision=True),
+            _local_model("synthetic-reader:1", vision=False),
+            _model("synthetic-unstated:1"),
+        ],
+        recommended={"vision": "synthetic-viewer:1", "text": "synthetic-reader:1"},
+        unread=[],
+    )
+
+    keyless = parse_provider_catalog(_document(lane)).entry("local_api")
+
+    assert keyless is not None
+    viewer = keyless.model("synthetic-viewer:1")
+    assert viewer is not None and viewer.licence is not None
+    assert (viewer.vision, viewer.size_bytes, viewer.context_length) == (True, 1_889_519_687, 262_144)
+    assert (viewer.licence.spdx, viewer.licence.name, viewer.licence.digest) == (
+        "Apache-2.0",
+        "Synthetic licence",
+        _DIGEST,
+    )
+    reader = keyless.model("synthetic-reader:1")
+    assert reader is not None and reader.vision is False
+    unstated = keyless.model("synthetic-unstated:1")
+    assert unstated is not None
+    assert (unstated.vision, unstated.size_bytes, unstated.context_length, unstated.licence) == (None, None, None, None)
+    assert keyless.model("synthetic-absent:1") is None
+    assert keyless.background.runnable is True
+    assert keyless.background.inputs == (BackgroundInput.TEXT, BackgroundInput.IMAGE)
+    assert keyless.background.options == (
+        BackgroundOption.TEMPERATURE,
+        BackgroundOption.CONTEXT_TOKENS,
+        BackgroundOption.RESPONSE_SCHEMA,
+    )
+
+
+def test_a_lane_that_runs_no_background_request_parses_with_no_input() -> None:
+    catalog = parse_provider_catalog(_with_background(_cli_lane(), {"runnable": False, "inputs": [], "options": []}))
+
+    background = catalog.providers[0].background
+    assert (background.runnable, background.inputs, background.options) == (False, (), ())
+
+
+def test_a_licence_without_an_spdx_identifier_parses() -> None:
+    licence = {"spdx": None, "name": "Synthetic community licence", "digest": _DIGEST}
+
+    keyless = parse_provider_catalog(_with_licence(licence)).entry("local_api")
+
+    assert keyless is not None
+    reader = keyless.model("synthetic-reader:1")
+    assert reader is not None and reader.licence is not None
+    assert (reader.licence.spdx, reader.licence.name) == (None, "Synthetic community licence")
 
 
 def test_the_keyless_kind_takes_no_credential_no_sign_in_and_no_url_override() -> None:
@@ -227,7 +350,8 @@ def test_acceptable_base_url_passes() -> None:
 @pytest.mark.parametrize(
     "document",
     [
-        pytest.param(_document(_key_lane(), schema_version=5), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=6), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=4), id="retired-schema-version-four"),
         pytest.param(_document(_key_lane(), schema_version=3), id="retired-schema-version-three"),
         pytest.param(
             _document({key: value for key, value in _key_lane().items() if key != "reads_off_host"}),
@@ -261,6 +385,92 @@ def test_acceptable_base_url_passes() -> None:
         pytest.param(_document(_keyless_lane(recommended={"vision": "not-listed:1"})), id="recommended-not-listed"),
         pytest.param(_document(_keyless_lane(recommended={"": "synthetic-reader:1"})), id="recommended-empty-key"),
         pytest.param(_document(_keyless_lane(recommended={"vision": 1})), id="recommended-not-a-string"),
+        pytest.param(
+            _document(_key_lane(recommended={"text": "synthetic-reader:1"})), id="recommended-on-modelless-lane"
+        ),
+        pytest.param(_document(_without(_keyless_lane(), "recommended")), id="missing-recommended"),
+        pytest.param(_document(_without(_key_lane(), "background")), id="missing-background"),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": True, "inputs": ["text", "audio"], "options": []}),
+            id="unknown-input-kind",
+        ),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": True, "inputs": ["text", "text"], "options": []}),
+            id="duplicate-input",
+        ),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": True, "inputs": ["image", "text"], "options": []}),
+            id="inputs-out-of-order",
+        ),
+        pytest.param(
+            _with_background(
+                _key_lane(), {"runnable": True, "inputs": ["text"], "options": ["temperature", "temperature"]}
+            ),
+            id="duplicate-option",
+        ),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": True, "inputs": ["text"], "options": ["seed"]}),
+            id="unknown-option",
+        ),
+        pytest.param(
+            _with_background(
+                _key_lane(), {"runnable": True, "inputs": ["text"], "options": ["response_schema", "temperature"]}
+            ),
+            id="options-out-of-order",
+        ),
+        pytest.param(
+            _with_background(_cli_lane(), {"runnable": False, "inputs": ["text"], "options": []}),
+            id="unrunnable-lane-with-input",
+        ),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": "yes", "inputs": [], "options": []}),
+            id="runnable-not-a-bool",
+        ),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": True, "inputs": ["text"], "options": [], "extra": 1}),
+            id="background-unknown-field",
+        ),
+        pytest.param(_with_model(size_bytes=0), id="size-zero"),
+        pytest.param(_with_model(size_bytes=-1), id="size-negative"),
+        pytest.param(_with_model(size_bytes="1"), id="size-not-an-integer"),
+        pytest.param(_with_model(size_bytes=1.5), id="size-fractional"),
+        pytest.param(_with_model(context_length=0), id="context-length-zero"),
+        pytest.param(_with_model(vision="yes"), id="vision-not-a-bool"),
+        pytest.param(_with_model(installed=True), id="model-unknown-field"),
+        pytest.param(
+            _document(_keyless_lane(models=[_without(_local_model("synthetic-reader:1", vision=False), "licence")])),
+            id="model-missing-licence",
+        ),
+        pytest.param(
+            _document(_keyless_lane(models=[_without(_local_model("synthetic-reader:1", vision=False), "vision")])),
+            id="model-missing-vision",
+        ),
+        pytest.param(
+            _document(_keyless_lane(models=[_model("synthetic-reader:1"), _model("synthetic-reader:1")])),
+            id="duplicate-model",
+        ),
+        pytest.param(
+            _with_licence({"spdx": "MIT", "name": "Synthetic", "digest": "sha256:" + "A" * 64}),
+            id="licence-digest-uppercase",
+        ),
+        pytest.param(
+            _with_licence({"spdx": "MIT", "name": "Synthetic", "digest": "md5:" + "a" * 32}),
+            id="licence-digest-wrong-algorithm",
+        ),
+        pytest.param(
+            _with_licence({"spdx": "MIT", "name": "Synthetic", "digest": "sha256:" + "a" * 63}),
+            id="licence-digest-short",
+        ),
+        pytest.param(
+            _with_licence({"spdx": "MIT", "name": "Synthetic", "digest": "sha256:" + "g" * 64}),
+            id="licence-digest-not-hex",
+        ),
+        pytest.param(_with_licence({"spdx": "MIT", "name": "", "digest": _DIGEST}), id="licence-name-empty"),
+        pytest.param(_with_licence({"spdx": "MIT", "name": "Synthetic"}), id="licence-missing-digest"),
+        pytest.param(
+            _with_licence({"spdx": "MIT", "name": "Synthetic", "digest": _DIGEST, "url": "x"}),
+            id="licence-unknown-field",
+        ),
         pytest.param(_document(_key_lane(), schema_version=2), id="retired-schema-version"),
         pytest.param(_document(_key_lane(), schema_version=0), id="schema-version-zero"),
         pytest.param(_document(), id="no-lanes"),

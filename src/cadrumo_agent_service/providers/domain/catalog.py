@@ -3,8 +3,9 @@
 Each entry is one lane the agent can run: one way into a provider identity,
 over its API or through its CLI. Cadrumo keeps no list of providers or lanes.
 Which exist, how each authenticates, its default gateway URL, whether it sends
-material off this computer and the id the agent keys its credential by are the
-agent's own declarations, parsed here from
+material off this computer, the id the agent keys its credential by, the models
+it declares with their stated facts, its recommended models and what a
+background run on it takes are the agent's own declarations, parsed here from
 the document the agent serves at run time. Every Cadrumo name for a lane is
 constructed from the ids the agent reports.
 """
@@ -13,10 +14,11 @@ from __future__ import annotations
 
 import re
 from enum import StrEnum
+from itertools import pairwise
 from typing import Annotated, Final, Literal, Self
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationError, model_validator
+from pydantic import BaseModel, Field, JsonValue, PositiveInt, StringConstraints, ValidationError, model_validator
 
 from cadrumo.core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -28,6 +30,7 @@ _LOOPBACK_HOSTS: Final[frozenset[str]] = frozenset({"127.0.0.1", "localhost", ":
 _MAX_PORT: Final[int] = 65535
 RECOMMENDED_KEY_MAX_LENGTH: Final[int] = 64
 RECOMMENDED_VALUE_MAX_LENGTH: Final[int] = 256
+MODEL_ID_MAX_LENGTH: Final[int] = 256
 
 _PROVIDER_ID_PATTERN: Final[str] = r"^[a-z][a-z0-9_]{0,39}$"
 _PROVIDER_ID: Final[re.Pattern[str]] = re.compile(_PROVIDER_ID_PATTERN)
@@ -37,6 +40,9 @@ ProviderId = Annotated[str, StringConstraints(pattern=_PROVIDER_ID_PATTERN)]
 
 CliProgram = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_-]{0,63}$")]
 """The executable name a cli lane runs."""
+
+LicenceDigest = Annotated[str, StringConstraints(pattern=r"^sha256:[0-9a-f]{64}$")]
+"""The digest of a licence text the agent ships: ``sha256:`` and 64 lowercase hex digits."""
 
 
 class ProviderAuthKind(StrEnum):
@@ -146,6 +152,84 @@ def validate_loopback_http_base_url(value: str) -> str:
     return value
 
 
+class ModelLicence(BaseModel):
+    """The licence the agent states for one model, shown to the person and never judged by Cadrumo."""
+
+    model_config = _STRICT_FROZEN
+
+    spdx: str | None = Field(min_length=1, max_length=128)
+    """The SPDX identifier, when the licence has one."""
+    name: str = Field(min_length=1, max_length=256)
+    digest: LicenceDigest
+    """The digest of the licence text the agent serves for this model."""
+
+
+class ProviderCatalogModel(BaseModel):
+    """One model a lane declares, with the facts the agent states for it.
+
+    A fact the agent does not state is ``None``; nothing is inferred in its place.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    id: str = Field(min_length=1, max_length=MODEL_ID_MAX_LENGTH)
+    """The model value a run names on its lane."""
+    display_name: str = Field(min_length=1)
+    effort: dict[str, JsonValue]
+    """The agent's effort control for the model, carried as declared."""
+    vision: bool | None
+    """Whether the model reads images; ``None`` when the agent does not state it."""
+    size_bytes: PositiveInt | None
+    """The model's download size in bytes, when the agent states it."""
+    context_length: PositiveInt | None
+    """The model's context window in tokens, when the agent states it."""
+    licence: ModelLicence | None
+
+
+class BackgroundInput(StrEnum):
+    """An input family a background run on a lane may carry, in the agent's declared order."""
+
+    TEXT = "text"
+    IMAGE = "image"
+    PDF = "pdf"
+
+
+class BackgroundOption(StrEnum):
+    """A run option a background request on a lane may set, in the agent's declared order."""
+
+    TEMPERATURE = "temperature"
+    CONTEXT_TOKENS = "context_tokens"
+    RESPONSE_SCHEMA = "response_schema"
+
+
+class LaneBackground(BaseModel):
+    """What a background run on one lane takes, as the agent declares it."""
+
+    model_config = _STRICT_FROZEN
+
+    runnable: bool
+    """Whether the lane runs background requests at all."""
+    inputs: tuple[BackgroundInput, ...]
+    options: tuple[BackgroundOption, ...]
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _declaration_is_coherent(self) -> Self:
+        if not _in_declared_order(self.inputs, tuple(BackgroundInput)):
+            raise ValueError("background inputs are unique and in declared order")
+        if not _in_declared_order(self.options, tuple(BackgroundOption)):
+            raise ValueError("background options are unique and in declared order")
+        if not self.runnable and self.inputs:
+            raise ValueError("a lane that runs no background request takes no input")
+        return self
+
+
+def _in_declared_order[T](values: tuple[T, ...], vocabulary: tuple[T, ...]) -> bool:
+    """Return whether ``values`` is a repetition-free subsequence of ``vocabulary``."""
+    positions = [vocabulary.index(value) for value in values]
+    return all(earlier < later for earlier, later in pairwise(positions))
+
+
 class ProviderCatalogEntry(BaseModel):
     """One lane the agent reports and a profile can manage a credential for."""
 
@@ -170,13 +254,15 @@ class ProviderCatalogEntry(BaseModel):
     icon: dict[str, JsonValue] | None = None
     platform: dict[str, JsonValue] = Field(default_factory=dict)
     default_model: str | None = None
-    models: tuple[dict[str, JsonValue], ...] = ()
+    models: tuple[ProviderCatalogModel, ...] = ()
     unread: tuple[dict[str, JsonValue], ...] = ()
     recommended: dict[
         Annotated[str, StringConstraints(min_length=1, max_length=RECOMMENDED_KEY_MAX_LENGTH)],
         Annotated[str, StringConstraints(min_length=1, max_length=RECOMMENDED_VALUE_MAX_LENGTH)],
-    ] = Field(default_factory=dict)
+    ]
     """The agent's recommended model id per capability; empty when it states none, never applied by Cadrumo."""
+    background: LaneBackground
+    """What a background run on this lane takes."""
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -195,10 +281,16 @@ class ProviderCatalogEntry(BaseModel):
             validate_loopback_http_base_url(self.default_base_url)
         elif self.default_base_url is not None:
             validate_https_base_url(self.default_base_url)
-        model_ids = {identifier for model in self.models if isinstance(identifier := model.get("id"), str)}
-        if self.models and not set(self.recommended.values()) <= model_ids:
+        model_ids = [model.id for model in self.models]
+        if len(model_ids) != len(set(model_ids)):
+            raise ValueError("a lane's model ids must be unique")
+        if not set(self.recommended.values()) <= set(model_ids):
             raise ValueError("a recommended entry names one of its lane's models")
         return self
+
+    def model(self, model_id: str) -> ProviderCatalogModel | None:
+        """Return the model this lane declares under ``model_id``, or ``None`` when it declares none."""
+        return next((model for model in self.models if model.id == model_id), None)
 
     @property
     def consumers(self) -> tuple[ProviderConsumer, ...]:
@@ -215,7 +307,7 @@ class ProviderCatalog(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    schema_version: Literal[4]
+    schema_version: Literal[5]
     providers: tuple[ProviderCatalogEntry, ...] = Field(min_length=1, max_length=MAX_CATALOG_LANES)
     icon_attribution: dict[str, JsonValue]
 
@@ -274,12 +366,19 @@ def parse_provider_catalog(text: str) -> ProviderCatalog:
 __all__ = [
     "BASE_URL_MAX_LENGTH",
     "MAX_CATALOG_LANES",
+    "MODEL_ID_MAX_LENGTH",
     "RECOMMENDED_KEY_MAX_LENGTH",
     "RECOMMENDED_VALUE_MAX_LENGTH",
+    "BackgroundInput",
+    "BackgroundOption",
     "CliProgram",
+    "LaneBackground",
+    "LicenceDigest",
+    "ModelLicence",
     "ProviderAuthKind",
     "ProviderCatalog",
     "ProviderCatalogEntry",
+    "ProviderCatalogModel",
     "ProviderConsumer",
     "ProviderId",
     "ProviderTransport",

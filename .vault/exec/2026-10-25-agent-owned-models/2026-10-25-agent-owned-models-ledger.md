@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:a5d4f00375c73ca6e28dc4cb6119e6353ad3abdc2e9be1fd6594aaa4599aa3fb'
+body_hash: 'sha256:770d8458e63185e6251bd9a01fd6a736c6397d0c683f5f32cdadbb2e6ab3dd2b'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -225,6 +225,19 @@ related:
 - `S11` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
 - `S11` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
 - `S11` `by:` `implementation-engineer-high`
+- `S08` `M` `src/cadrumo_agent_service/providers/domain/catalog.py`
+- `S08` `M` `src/cadrumo_agent_service/providers/domain/tests/test_catalog.py`
+- `S08` `M` `src/cadrumo_agent_service/providers/application/tests/synthetic_catalog.py`
+- `S08` `M` `src/cadrumo_agent_service/adapters/agent_provider_catalog.py`
+- `S08` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_provider_catalog.py`
+- `S08` `A` `src/cadrumo_agent_service/adapters/tests/test_agent_provider_catalog_declared.py`
+- `S08` `verify:` `pytest src/cadrumo_agent_service src/cadrumo_client src/cadrumo/adapters/outbound/llm -q` -> `pass`
+- `S08` `verify:` `pytest -m integration -n 0 gateway, lifecycle answers and declared catalogue tests against cadrumo-agent 821f4ff` -> `pass`
+- `S08` `verify:` `python -m dev.quality.types` -> `pass`
+- `S08` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S08` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
+- `S08` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
+- `S08` `by:` `implementation-engineer-high`
 
 ## Notes
 

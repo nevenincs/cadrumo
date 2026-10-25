@@ -41,6 +41,9 @@ def _lane(
     default_base_url: str | None = None,
     cli_programs: tuple[str, ...] = (),
     reads_off_host: bool = True,
+    models: tuple[dict[str, Any], ...] = (),
+    recommended: dict[str, str] | None = None,
+    background: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "id": f"{provider}_{transport}",
@@ -53,11 +56,33 @@ def _lane(
         "agent_credential_id": credential_id,
         "reads_off_host": reads_off_host,
         "cli_programs": list(cli_programs),
+        "models": list(models),
+        "recommended": {} if recommended is None else recommended,
+        "background": _HOSTED_BACKGROUND if background is None else background,
+    }
+
+
+_HOSTED_BACKGROUND: Final = {"runnable": True, "inputs": ["text", "image", "pdf"], "options": []}
+"""What a hosted lane's background run takes: every input family and no run option."""
+KEYLESS_TEXT_MODEL: Final = "synthetic-text:1"
+KEYLESS_VISION_MODEL: Final = "synthetic-vision:1"
+
+
+def synthetic_model(model_id: str, *, vision: bool | None) -> dict[str, Any]:
+    """Return one declared model shaped as the agent prints a local model, with invented facts."""
+    return {
+        "id": model_id,
+        "display_name": model_id,
+        "effort": {"reasoning": "toggle", "control": "none", "levels": [], "default": None},
+        "vision": vision,
+        "size_bytes": 1_000_000,
+        "context_length": 4096,
+        "licence": {"spdx": "MIT", "name": "Synthetic licence", "digest": "sha256:" + "0" * 64},
     }
 
 
 def synthetic_document() -> str:
-    """Return the schema-version-4 document the synthetic agent serves."""
+    """Return the schema-version-5 document the synthetic agent serves."""
     lanes = [
         _lane("bare", "cli", "api_key_with_base_url", credential_id="bare", cli_programs=("example",)),
         _lane(
@@ -84,11 +109,21 @@ def synthetic_document() -> str:
             credential_id=None,
             default_base_url=KEYLESS_DEFAULT_URL,
             reads_off_host=False,
+            models=(
+                synthetic_model(KEYLESS_TEXT_MODEL, vision=False),
+                synthetic_model(KEYLESS_VISION_MODEL, vision=True),
+            ),
+            recommended={"text": KEYLESS_TEXT_MODEL, "vision": KEYLESS_VISION_MODEL},
+            background={
+                "runnable": True,
+                "inputs": ["text", "image"],
+                "options": ["temperature", "context_tokens", "response_schema"],
+            },
         ),
         _lane("other", "api", "api_key", credential_id="other"),
         _lane("third", "cli", "api_key", credential_id="third", cli_programs=("third",)),
     ]
-    return json.dumps({"schema_version": 4, "providers": lanes, "icon_attribution": {}})
+    return json.dumps({"schema_version": 5, "providers": lanes, "icon_attribution": {}})
 
 
 def synthetic_catalog() -> ProviderCatalog:
