@@ -34,11 +34,16 @@ DEPENDENCY_INPUTS = {
     # disabled: gtk-sys 0.18/v3_24 stays inside GTK 3.24; no portal backend is
     # enabled. All 13 locked native sys-crates retain their versions, checksums
     # and dependency edges. Direct sha2 was already enabled by the application.
+    # The application crate's provisioning dependencies (rustls with ring, webpki-roots,
+    # flate2 with zlib-rs, ruzstd, tar, toml, zeroize, sha2 0.11) are pure Rust or
+    # statically linked: the Linux-target graph gains no sys-crate, and the platform crate
+    # reaches only libc there. The locked GTK/WebKit sys-crates and rfd's GTK3-only backend
+    # are unchanged (rfd 0.16.1; no ashpd).
     # This is source/feature evidence, not new artifact or minimum-host proof.
-    "native/desktop/src-tauri/Cargo.lock": "93da058f516427967517548bb5723702561dc179cab69bc7e1783ef452bfa25e",
-    "native/desktop/src-tauri/Cargo.toml": "14897d45bfc2491a33ab784a68c3ec2d943c50ef2e14c83d3d9245c1d8b100cb",
-    "native/application/Cargo.toml": "2e2f7aa92cad3b936326559ab24da93fba049d0dffda75abc5f7025b410eecf0",
-    "native/platform/Cargo.toml": "34225e76a1da73fbb4dcf6654896d5ae85beebf12200cb5b72d0eea5ffa9675d",
+    "native/desktop/src-tauri/Cargo.lock": "242ee51e510b32d9f872d405561b09530658fa7bfb89c063a3f61069fd6d836c",
+    "native/desktop/src-tauri/Cargo.toml": "be225b1da025a41482cddf26b757c13ecc418dec51f4997ff91b846db0d224a8",
+    "native/application/Cargo.toml": "8433af116b0af1aa424f88018ccbfbb3aa94409f222e8342082dfda7a71e4165",
+    "native/platform/Cargo.toml": "45e633cefce86ce0a233670b94839e23bca14aba65b8d1c3b870718f50d01c37",
 }
 
 
