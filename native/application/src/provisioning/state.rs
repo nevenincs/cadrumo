@@ -305,7 +305,13 @@ pub fn derive_row(
         ) => ItemState::Blocked(reason),
         (_, Observation::Present { .. }) => ItemState::Ready,
         (Activity::Interrupted, _) => ItemState::Failed(FailureCategory::Interrupted),
-        (_, Observation::Differs { stale, .. }) => ItemState::Stale(stale),
+        // A setup that failed outranks what the item differs by: the Update a stale row
+        // offers would run the very transfer that failed, so the row keeps the failure
+        // and its Try again until a setup ends another way.
+        (_, Observation::Differs { stale, .. }) => match last_failure {
+            Some(category) => ItemState::Failed(category),
+            None => ItemState::Stale(stale),
+        },
         (_, Observation::Failed(category)) => ItemState::Failed(category),
         (_, Observation::Blocked(reason)) => ItemState::Blocked(reason),
         (_, Observation::Absent) => match last_failure {
@@ -462,10 +468,19 @@ mod tests {
             row(Observation::Unreadable, Activity::Interrupted, None).state,
             ItemState::Unknown
         );
+        let after_failure = row(differs, Activity::Idle, Some(FailureCategory::DiskFull));
         assert_eq!(
-            row(differs, Activity::Idle, Some(FailureCategory::DiskFull)).state,
+            (after_failure.state, after_failure.recovery),
+            (
+                ItemState::Failed(FailureCategory::DiskFull),
+                Some(RecoveryAction::TryAgain)
+            ),
+            "the failure the last setup recorded outranks what the item differs by"
+        );
+        assert_eq!(
+            row(differs, Activity::Idle, None).state,
             ItemState::Stale(StaleReason::DifferentModelVersion),
-            "a recorded failure shows only while the item is absent"
+            "with no recorded failure the difference is what the row reads"
         );
     }
 

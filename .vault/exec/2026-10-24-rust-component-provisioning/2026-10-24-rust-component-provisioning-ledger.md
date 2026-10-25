@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc3070ae43ae93ec6e9c46c6b3745879e606218693b0db5abd4d19d89453a19c'
+body_hash: 'sha256:ce182291b0865d22e169f77b624b791fa07d396634b9a8515d7d35672fe15020'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -892,6 +892,8 @@ related:
 - `S17` `verify:` `cargo test --offline --lib supervision:: on native/manager` -> `pass`
 - `S17` `verify:` `cargo clippy --offline --all-targets -- -D warnings on both crates` -> `pass`
 - `S17` `by:` `implementation-engineer`
+- `S08` `M` `native/application/src/provisioning/state.rs`
+- `S08` `verify:` `cargo test --offline --lib provisioning:: on native/application (132 passed)` -> `pass`
 
 ## Notes
 
