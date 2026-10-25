@@ -3399,14 +3399,14 @@ cli:
       empty_directory: 'No s''han trobat fitxers d''extracte importables al directori:
         {path}'
       file_help: Ruta a l'arxiu de l'extracte bancari o directori
-      file_refused: 'Extracte rebutjat i omès: {file}. La resta de la carpeta s''ha
-        importat.'
-      file_refused_account_mismatch: 'Extracte rebutjat i omès: {file} indica un compte
-        propi diferent del que has triat.'
       file_reader_not_ready: 'Extracte no llegit: {file} el llegeix la IA local, que
         no està a punt.'
       file_reader_unavailable: 'Extracte no llegit: la IA local no pot llegir {file}
         en aquest ordinador.'
+      file_refused: 'Extracte rebutjat i omès: {file}. La resta de la carpeta s''ha
+        importat.'
+      file_refused_account_mismatch: 'Extracte rebutjat i omès: {file} indica un compte
+        propi diferent del que has triat.'
       help: Importar extractes bancaris o altres fitxers comptables als teus registres
       likely_duplicates: '{count} fila(es) importada(es) coincideixen en data i import
         amb un altre moviment ja present als teus registres o anterior en aquest fitxer,

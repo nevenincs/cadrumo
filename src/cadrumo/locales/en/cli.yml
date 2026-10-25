@@ -3165,14 +3165,14 @@ cli:
         of what a real import would add and skip.'
       empty_directory: 'No importable statement files found in directory: {path}'
       file_help: Path to the bank statement file or directory
-      file_refused: 'Statement refused and skipped: {file}. The rest of the folder
-        was imported.'
-      file_refused_account_mismatch: 'Statement refused and skipped: {file} names
-        a different own account than the one you chose.'
       file_reader_not_ready: 'Statement not read: {file} is read by the local AI,
         which is not ready.'
       file_reader_unavailable: 'Statement not read: the local AI cannot read {file}
         on this computer.'
+      file_refused: 'Statement refused and skipped: {file}. The rest of the folder
+        was imported.'
+      file_refused_account_mismatch: 'Statement refused and skipped: {file} names
+        a different own account than the one you chose.'
       help: Import bank statements or bookkeeping files into your records
       likely_duplicates: '{count} imported row(s) share a date and amount with another
         transaction already in your records or earlier in this file, so they may be

@@ -3418,14 +3418,14 @@ cli:
       empty_directory: 'No se encontraron ficheros de extracto importables en el directorio:
         {path}'
       file_help: Ruta al archivo del extracto bancario o directorio
-      file_refused: 'Extracto rechazado y omitido: {file}. El resto de la carpeta
-        se ha importado.'
-      file_refused_account_mismatch: 'Extracto rechazado y omitido: {file} indica
-        una cuenta propia distinta de la que elegiste.'
       file_reader_not_ready: 'Extracto no leído: {file} lo lee la IA local, que no
         está lista.'
       file_reader_unavailable: 'Extracto no leído: la IA local no puede leer {file}
         en este ordenador.'
+      file_refused: 'Extracto rechazado y omitido: {file}. El resto de la carpeta
+        se ha importado.'
+      file_refused_account_mismatch: 'Extracto rechazado y omitido: {file} indica
+        una cuenta propia distinta de la que elegiste.'
       help: Importar extractos bancarios u otros ficheros contables a tus registros
       likely_duplicates: '{count} fila(s) importada(s) coinciden en fecha e importe
         con otro movimiento ya presente en tus registros o anterior en este fichero,

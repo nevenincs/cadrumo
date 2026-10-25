@@ -185,7 +185,9 @@ def test_every_declared_key_is_authored_in_all_four_canonical_catalogues(tmp_pat
 
 
 def test_the_shell_source_names_exactly_the_declared_keys() -> None:
-    drift = _drift(_FRONTEND_SOURCE, DESKTOP_CHROME_KEYS - DESKTOP_CHROME_AWAITING_CONSUMER, DESKTOP_CHROME_FAMILIES)
+    drift = shell_drift(
+        _FRONTEND_SOURCE, DESKTOP_CHROME_KEYS - DESKTOP_CHROME_AWAITING_CONSUMER, DESKTOP_CHROME_FAMILIES
+    )
 
     assert drift == {"undeclared_templates": [], "undeclared": [], "unused": []}, (
         "the shell source and the desktop chrome declaration disagree: a template needs a declared family, "

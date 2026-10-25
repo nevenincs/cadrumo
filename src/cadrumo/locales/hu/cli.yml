@@ -3365,14 +3365,14 @@ cli:
         mi történne valódi importálásnál.'
       empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
       file_help: A bankikivonati fájl vagy könyvtár elérési útja.
-      file_refused: 'Elutasított és kihagyott kivonat: {file}. A mappa többi része
-        importálva lett.'
-      file_refused_account_mismatch: 'Elutasított és kihagyott kivonat: a(z) {file}
-        más saját számlát nevez meg, mint amelyet választottál.'
       file_reader_not_ready: 'A kivonat nem lett beolvasva: a(z) {file} fájlt a helyi
         MI olvassa, amely nem áll készen.'
       file_reader_unavailable: 'A kivonat nem lett beolvasva: a helyi MI ezen a számítógépen
         nem tudja beolvasni a(z) {file} fájlt.'
+      file_refused: 'Elutasított és kihagyott kivonat: {file}. A mappa többi része
+        importálva lett.'
+      file_refused_account_mismatch: 'Elutasított és kihagyott kivonat: a(z) {file}
+        más saját számlát nevez meg, mint amelyet választottál.'
       help: Bankszámlakivonatok vagy könyvelési fájlok importálása a nyilvántartásba.
       likely_duplicates: '{count} importált sor dátuma és összege megegyezik egy,
         a nyilvántartásban már szereplő vagy ebben a fájlban korábbi tranzakcióéval,
