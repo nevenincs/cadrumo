@@ -72,8 +72,6 @@ struct ChildConfig {
     free_bytes: Option<u64>,
     /// Measure this computer as the production role does, instead of a roomy fixture.
     measure_hardware: bool,
-    /// The local models selected for the engine, as role, name and size.
-    local_models: Vec<(String, String, u64)>,
     arguments: Vec<String>,
 }
 
@@ -112,13 +110,6 @@ fn child_engine(config: &ChildConfig) -> Result<Engine, Error> {
         policy: RetryPolicy::default(),
     })?;
     engine.browser_leading = fake_leading();
-    engine.select_local_models(LocalModels::new(
-        config
-            .local_models
-            .iter()
-            .map(|(role, name, size)| SelectedModel::new(role, name, *size))
-            .collect::<Result<_, _>>()?,
-    )?);
     Ok(engine)
 }
 
@@ -159,7 +150,8 @@ struct World {
     server: TlsServer,
     ollama: Option<FakeOllama>,
     driver: bool,
-    /// The local models the person selected, as role, name and size.
+    /// The local models the person selected, as role, name and size; every command but
+    /// `cancel` names them on its command line, as a client does.
     local_models: Vec<(String, String, u64)>,
     spawned: AtomicUsize,
 }
@@ -374,6 +366,17 @@ impl World {
     }
 
     fn config(&self, arguments: &[&str]) -> ChildConfig {
+        let mut arguments: Vec<String> = arguments.iter().map(|word| (*word).to_owned()).collect();
+        if arguments.first().is_some_and(|name| name != "cancel") {
+            for (role, name, size) in &self.local_models {
+                arguments.extend([
+                    "--model".into(),
+                    role.clone(),
+                    name.clone(),
+                    size.to_string(),
+                ]);
+            }
+        }
         ChildConfig {
             root: self.root(),
             pins: self.directory.path().join("pins"),
@@ -386,8 +389,7 @@ impl World {
                 .map_or_else(|| "127.0.0.1:23743".parse().unwrap(), FakeOllama::address),
             free_bytes: Some(1024 * GIB),
             measure_hardware: false,
-            local_models: self.local_models.clone(),
-            arguments: arguments.iter().map(|word| (*word).to_owned()).collect(),
+            arguments,
         }
     }
 
@@ -1341,6 +1343,33 @@ fn a_command_line_the_protocol_does_not_have_is_refused_without_an_engine() {
         &["remove"],
         &["cancel", "--item", "browser"],
         &["verify", "--full"],
+        &["plan", "--model", "text_extraction", "", "5"],
+        &["plan", "--model", "text_extraction", TEXT, "0"],
+        &["plan", "--model", "text_extraction", TEXT, "-5"],
+        &["plan", "--model", "text_extraction", TEXT, "+5"],
+        &["plan", "--model", "text_extraction", TEXT, "5.0"],
+        &[
+            "plan",
+            "--model",
+            "text_extraction",
+            TEXT,
+            "99999999999999999999",
+        ],
+        &["plan", "--model", "text_extraction", TEXT],
+        &["plan", "--model", "Text Extraction", TEXT, "5"],
+        &["plan", "--model", "text_extraction", "../escape:test", "5"],
+        &[
+            "plan",
+            "--model",
+            "text_extraction",
+            TEXT,
+            "5",
+            "--model",
+            "text_extraction",
+            VISION,
+            "5",
+        ],
+        &["cancel", "--model", "text_extraction", TEXT, "5"],
     ] {
         let arguments: Vec<OsString> = arguments.iter().map(OsString::from).collect();
         let output = Output::default();
@@ -1354,8 +1383,9 @@ fn a_command_line_the_protocol_does_not_have_is_refused_without_an_engine() {
         assert_eq!(written.iter().filter(|byte| **byte == b'\n').count(), 1);
     }
     let digest = Sha256Digest::of(b"plan");
+    let command = |arguments: &[&str]| CommandLine::parse(arguments).map(|request| request.command);
     assert_eq!(
-        Command::parse(&[
+        command(&[
             "setup",
             "--item",
             "local_ai",
@@ -1372,18 +1402,97 @@ fn a_command_line_the_protocol_does_not_have_is_refused_without_an_engine() {
         }))
     );
     assert_eq!(
-        Command::parse(&["status", "--full"]),
+        command(&["status", "--full"]),
         Some(Command::Status {
             mode: CheckMode::Full,
             items: ItemId::ALL.to_vec(),
         })
     );
     assert_eq!(
-        Command::parse(&["remove", "--item", "browser"]),
+        command(&["remove", "--item", "browser"]),
         Some(Command::Remove {
             items: vec![ItemId::Browser]
         })
     );
+    assert_eq!(
+        CommandLine::parse(&["status"]).unwrap().local_models,
+        LocalModels::default(),
+        "no selection names no model"
+    );
+    assert_eq!(
+        CommandLine::parse(&[
+            "setup",
+            "--model",
+            "vision_transcription",
+            VISION,
+            "7",
+            "--item",
+            "local_ai",
+            "--model",
+            "text_extraction",
+            TEXT,
+            "5",
+        ])
+        .unwrap(),
+        CommandLine {
+            command: Command::Setup(SetupRequest {
+                items: Some(vec![ItemId::LocalAi]),
+                approved: None,
+            }),
+            local_models: LocalModels::new(vec![
+                SelectedModel::new("text_extraction", TEXT, 5).unwrap(),
+                SelectedModel::new("vision_transcription", VISION, 7).unwrap(),
+            ])
+            .unwrap(),
+        }
+    );
+}
+
+/// The plan's digest for the selection `models`, as the role reports it.
+fn plan_digest(world: &World, models: &[(&str, &str, u64)]) -> String {
+    let mut arguments = vec!["plan".to_owned(), "--item".into(), "local_ai".into()];
+    for (role, name, size) in models {
+        arguments.extend([
+            "--model".into(),
+            (*role).to_owned(),
+            (*name).to_owned(),
+            size.to_string(),
+        ]);
+    }
+    let config = ChildConfig {
+        arguments,
+        ..world.config(&["plan"])
+    };
+    let planned = world.start_with(&config).finish();
+    assert_eq!(planned.result["outcome"], "ok", "{}", planned.result);
+    planned.result["plan_digest"].as_str().unwrap().to_owned()
+}
+
+#[test]
+fn the_plan_digest_binds_every_selected_role_name_and_size() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::local_ai(&text, &vision);
+    let selection = [
+        ("text_extraction", TEXT, 5),
+        ("vision_transcription", VISION, 7),
+    ];
+    let digest = plan_digest(&world, &selection);
+    assert_eq!(
+        plan_digest(&world, &[selection[1], selection[0]]),
+        digest,
+        "the order the client names them in is not part of the plan"
+    );
+    for changed in [
+        [("text_extraction", "synthetic-text:other", 5), selection[1]],
+        [("text_extraction", TEXT, 6), selection[1]],
+        [("column_role_mapping", TEXT, 5), selection[1]],
+    ] {
+        assert_ne!(plan_digest(&world, &changed), digest, "{changed:?}");
+    }
+    assert_ne!(plan_digest(&world, &selection[..1]), digest);
+    let program_only = plan_digest(&world, &[]);
+    assert_ne!(program_only, digest, "no selection plans the program alone");
 }
 
 #[test]

@@ -1,14 +1,16 @@
 //! The setup plan a person approves before any byte moves, and the digest the approval
 //! binds.
 //!
-//! A plan lists, per item, how much it downloads, from which hosts, to where, and the
-//! licence notices that come with it. The local AI's entry is made of ordered parts, the
-//! program and then each role's model, and is exactly their sum; roles that share one
-//! model count its download once. Each model part names its licence, by identifier and
-//! display name, so a notice can be worded from the plan alone. The digest covers the
-//! contract version and every entry in order, spelled as the product's canonical JSON, so
-//! a changed size, host, destination, version, licence or item set needs a new approval
-//! while a re-measured free space does not.
+//! A plan lists, per item, how much it downloads, from which hosts and to where. The local
+//! AI's entry is made of ordered parts, the program and then one per role the person
+//! selected a local model for, and is exactly their sum; roles that share one model count
+//! its download once. A model part is the selection triple itself: its id is the role,
+//! its target version the model's name and its size the size the selected catalogue
+//! entry states. The engine words no licence: the person saw the catalogue entry's
+//! licence when they selected the model. The digest covers the contract version and
+//! every entry in order, spelled as the product's canonical JSON, so a changed role,
+//! model name, size, host, destination, version or item set needs a new approval while a
+//! re-measured free space does not.
 
 use super::items::{Destination, ItemId};
 use crate::{
@@ -47,8 +49,8 @@ pub enum Advisory {
     OverrideNotInCatalogue,
 }
 
-/// The licence a planned model comes under, as the pins state it: locale-neutral facts a
-/// surface words its notice from.
+/// The licence a planned part comes under: locale-neutral facts a surface words its notice
+/// from. The engine states none for a model, whose licence the catalogue shows.
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct PartLicence {
     /// The SPDX identifier, or the `LicenseRef-` identifier of an unlisted licence.
@@ -57,9 +59,8 @@ pub struct PartLicence {
     pub name: String,
 }
 
-/// One piece of an item's plan: the local AI program, or the model one role reads with.
-/// `download_bytes` is `None` when the source does not say in advance, and `licence` is
-/// `None` for anything but a model.
+/// One piece of an item's plan: the local AI program, or the model the person selected for
+/// one role. `download_bytes` is `None` when the source does not say in advance.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PlanPart {
     pub part_id: String,
@@ -331,15 +332,13 @@ mod tests {
             installs_outside_program: false,
             target_version: version.map(str::to_owned),
             advisories,
-            licence: Some(PartLicence {
-                spdx_id: "Apache-2.0".into(),
-                name: "Apache License 2.0".into(),
-            }),
+            licence: None,
         }
     }
 
-    const TEXT: &str =
-        "qwen3:1.7b@8f68893c685c3ddff2aa3fffce2aa60a30bb2da65ca488b61fff134a4d1730e7";
+    /// Obviously synthetic names: the engine knows no model, so its tests name none.
+    const TEXT: &str = "synthetic-text:test";
+    const VISION: &str = "synthetic-vision:test";
 
     fn sample() -> SetupPlan {
         let browser = PlanEntry::whole(
@@ -364,15 +363,15 @@ mod tests {
             ItemId::LocalAi,
             vec![
                 program,
+                model("column_role_mapping", Some(5_000), Some(TEXT), Vec::new()),
+                model("supply_nature_proposal", None, None, Vec::new()),
+                model("text_extraction", Some(5_000), Some(TEXT), Vec::new()),
                 model(
                     "vision_transcription",
-                    Some(1_889_519_687),
-                    Some("qwen3-vl:2b@0635d9d857d497aeadba3d7d27485746c50554446f9f6ec01ef39788221adbe8"),
-                    vec![Advisory::LicenceUnverified],
+                    Some(7_000),
+                    Some(VISION),
+                    Vec::new(),
                 ),
-                model("text_extraction", Some(1_359_293_444), Some(TEXT), Vec::new()),
-                model("column_role_mapping", Some(1_359_293_444), Some(TEXT), Vec::new()),
-                model("supply_nature_proposal", None, None, Vec::new()),
             ],
             Destination::OllamaModels,
         )
@@ -387,10 +386,10 @@ mod tests {
         // product's Python canonical JSON (`content_hash_hex`), not by this crate.
         assert_eq!(
             plan.digest().as_str(),
-            "df1b8e83f91043fa9cda0b79ccba1ce340951139939674203b964efe1884a824"
+            "c11dfaa19cdbcce048e6f3cbead662d059e9edba83460dd7ce6b9d0844875c12"
         );
-        assert_eq!(plan.entries[1].download_bytes, Some(4_835_042_544));
-        assert_eq!(plan.space.required_bytes, 7_266_346_760);
+        assert_eq!(plan.entries[1].download_bytes, Some(1_586_241_413));
+        assert_eq!(plan.space.required_bytes, 3_367_785_403);
         assert!(plan.has_unknown_size());
         assert!(!plan.space.sufficient());
     }
@@ -408,15 +407,16 @@ mod tests {
         let mut rehosted = plan.clone();
         rehosted.entries[0].source_hosts = hosts(&["storage.googleapis.com"]);
         assert_ne!(rehosted.digest(), plan.digest());
-        let mut retargeted = plan.clone();
-        retargeted.entries[1].parts[2].target_version = Some("qwen3:1.7b@other".into());
-        assert_ne!(retargeted.digest(), plan.digest());
-        let mut relicensed = plan.clone();
-        relicensed.entries[1].parts[1].licence = Some(PartLicence {
-            spdx_id: "Apache-2.0".into(),
-            name: "Apache Licence, Version 2.0".into(),
-        });
-        assert_ne!(relicensed.digest(), plan.digest());
+        // Each part of a selection triple: the model's name, its size and its role.
+        let mut renamed = plan.clone();
+        renamed.entries[1].parts[3].target_version = Some("synthetic-text:other".into());
+        assert_ne!(renamed.digest(), plan.digest());
+        let mut model_resized = plan.clone();
+        model_resized.entries[1].parts[4].download_bytes = Some(7_001);
+        assert_ne!(model_resized.digest(), plan.digest());
+        let mut reassigned = plan.clone();
+        reassigned.entries[1].parts[3].part_id = "statement_reading".into();
+        assert_ne!(reassigned.digest(), plan.digest());
         let browser_only = SetupPlan::new(vec![plan.entries[0].clone()], None).unwrap();
         assert_ne!(browser_only.digest(), plan.digest());
         assert!(
@@ -472,8 +472,7 @@ mod tests {
             )
             .is_err()
         );
-        let mut unnamed = model("a", None, None, vec![Advisory::LicenceCommercialUseBarred]);
-        unnamed.licence = None;
+        let unnamed = model("a", None, None, vec![Advisory::LicenceCommercialUseBarred]);
         assert!(
             PlanEntry::of_parts(ItemId::LocalAi, vec![unnamed], Destination::OllamaModels).is_err()
         );

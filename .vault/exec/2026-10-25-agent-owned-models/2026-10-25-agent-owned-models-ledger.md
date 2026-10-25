@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:0d7ee4cbd3fd1fe772940f74bba3d6edea141d79f9f2ba998e5ba26ebb21f16a'
+body_hash: 'sha256:fdc6a1c8107f113847558c4a3f5e8833115355bade9d3cce0b952feace1295ad'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -169,6 +169,16 @@ related:
 - `S08` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs_gateway.py`
 - `S08` `verify:` `pytest src/cadrumo_agent_service src/cadrumo/adapters/outbound/llm src/cadrumo_client` -> `pass`
 - `S08` `verify:` `pytest -m integration test_agent_background_runs_gateway.py vs cadrumo-agent c60a65c` -> `pass`
+- `S20` `M` `native/application/src/provisioning/protocol.rs`
+- `S20` `M` `native/application/src/provisioning/protocol/tests.rs`
+- `S20` `M` `native/application/src/provisioning/plan.rs`
+- `S20` `M` `native/application/src/provisioning/role_host.rs`
+- `S20` `verify:` `cargo test --locked --manifest-path native/application/Cargo.toml --lib provisioning:: -- --test-threads=2` -> `pass`
+- `S20` `verify:` `cargo test --locked --manifest-path native/application/Cargo.toml --features test-support --test provisioning_faults -- --test-threads=2` -> `pass`
+- `S20` `verify:` `cargo clippy --locked --all-targets --manifest-path native/application/Cargo.toml --all-features -- -D warnings` -> `pass`
+- `S20` `verify:` `cargo fmt --check --manifest-path native/application/Cargo.toml` -> `pass`
+- `S20` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/components/tests src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py src/cadrumo/entrypoints/cli/config/tests/test_check_setup_rows.py dev/runtime_lifecycle/tests/test_components_surface_conformance.py` -> `pass`
+- `S20` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -182,3 +192,4 @@ related:
 - `S09` cargo test on native/desktop/src-tauri not run: the launch-guard build script needs the CMake-generated contract.json; rustfmt --check on wire.rs passes. Keyless rendering in ProviderSettings.tsx has no UI test.
 - `S19` The engine keeps the PartLicence type, the licence plan field (now always null), the LicenceCommercialUseBarred advisory and the DifferentModelVersion stale reason because native/desktop/src-tauri still maps them; P04.S22 removes the desktop consumers. The staged `local_ai_models.toml` stays for Python until P03.S16; the engine no longer reads it. The manager test edit was checked with rustfmt only: the manager crate needs CMake build inputs.
 - `S08` run options and c60a65c refusals consumed; per-model typed fields wait for cadrumo-agent S04, Step stays open
+- `S20` The selection arrives as --model `<role>` `<name>` `<size_bytes>` on every command but cancel. `PLAN_CONTRACT_VERSION` stays 2: the plan fields are unchanged, and a model part now carries the bare name as `target_version` and a null licence. The Python client (protocol.py `_a_model_names_its_licence)` refuses a model part without a licence, so it must change in P04.S22 before it passes --model. The real-role Python cases need a built image and were not run.

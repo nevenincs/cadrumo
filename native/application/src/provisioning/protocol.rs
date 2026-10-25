@@ -12,6 +12,15 @@
 //! | `cancel` |                                           | stops setups in other processes    |
 //! | `remove` | `--item <id>`... (at least one)           | removes the items                  |
 //!
+//! Every command but `cancel` also takes `--model <role> <name> <size_bytes>`, once per
+//! local role the person selected a model for: the role, the model's name as its registry
+//! spells it, and its download size in bytes as the selected catalogue entry states it.
+//! These are the local models the command plans, pulls, checks and removes, and a plan
+//! names each one, so its digest binds every role, name and size it pulls. Without any
+//! the local AI is its program alone: the engine chooses no model itself. An empty name,
+//! a size that is not a positive whole number, or a role named twice is refused as an
+//! invalid request.
+//!
 //! Output lines carry a `type`: `started` first, then any `phase`, `progress`, `notice`
 //! and `review` events, and one `result` last. Every value is a closed code or a
 //! locale-neutral fact (item ids, step and category codes, byte counts, versions,
@@ -38,6 +47,7 @@
 use super::{
     engine::{Answer, Engine, Event, Report, SetupRequest},
     items::ItemId,
+    local_ai::models::{LocalModels, SelectedModel},
     plan::SetupPlan,
     state::{self, CheckMode},
 };
@@ -78,16 +88,35 @@ impl Command {
             Self::Remove { .. } => "remove",
         }
     }
+}
 
-    /// The command `arguments`, after the role's own, name; `None` for anything else.
+/// One command line of the role: its command and the local models the person selected.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CommandLine {
+    pub command: Command,
+    pub local_models: LocalModels,
+}
+
+impl CommandLine {
+    /// The command line `arguments`, after the role's own, name; `None` for anything else.
     pub fn parse<T: AsRef<OsStr>>(arguments: &[T]) -> Option<Self> {
         let mut words = arguments.iter().map(|argument| argument.as_ref().to_str());
         let name = words.next()??;
         let mut items = Vec::new();
         let mut full = false;
         let mut approve = None;
+        let mut models = Vec::new();
         while let Some(word) = words.next() {
             match word? {
+                "--model" if name != "cancel" => {
+                    let role = words.next()??;
+                    let model = words.next()??;
+                    let size = words.next()??;
+                    if !size.bytes().all(|c| c.is_ascii_digit()) {
+                        return None;
+                    }
+                    models.push(SelectedModel::new(role, model, size.parse().ok()?).ok()?);
+                }
                 "--item" => {
                     let item = ItemId::parse(words.next()??)?;
                     if !items.contains(&item) {
@@ -103,8 +132,8 @@ impl Command {
         }
         items.sort();
         let some = |items: Vec<ItemId>| (!items.is_empty()).then_some(items);
-        Some(match name {
-            "status" => Self::Status {
+        let command = match name {
+            "status" => Command::Status {
                 mode: if full {
                     CheckMode::Full
                 } else {
@@ -112,15 +141,19 @@ impl Command {
                 },
                 items: some(items).unwrap_or_else(|| ItemId::ALL.to_vec()),
             },
-            "plan" => Self::Plan { items: some(items) },
-            "setup" => Self::Setup(SetupRequest {
+            "plan" => Command::Plan { items: some(items) },
+            "setup" => Command::Setup(SetupRequest {
                 items: some(items),
                 approved: approve,
             }),
-            "verify" => Self::Verify { items },
-            "cancel" if items.is_empty() => Self::Cancel,
-            "remove" if !items.is_empty() => Self::Remove { items },
+            "verify" => Command::Verify { items },
+            "cancel" if items.is_empty() => Command::Cancel,
+            "remove" if !items.is_empty() => Command::Remove { items },
             _ => return None,
+        };
+        Some(Self {
+            command,
+            local_models: LocalModels::new(models).ok()?,
         })
     }
 }
@@ -304,7 +337,11 @@ pub fn serve(
         output: Arc::new(Mutex::new(output)),
         cancellation: cancellation.clone(),
     };
-    let Some(command) = Command::parse(arguments) else {
+    let Some(CommandLine {
+        command,
+        local_models,
+    }) = CommandLine::parse(arguments)
+    else {
         lines.send(&json!({
             "type": "result",
             "command": null,
@@ -342,6 +379,7 @@ pub fn serve(
             return 1;
         }
     };
+    engine.select_local_models(local_models);
     let mut events = |event| lines.send(&event_value(event));
     let report = match &command {
         Command::Status { mode, items } => engine.status(*mode, items, &mut events, &cancellation),
