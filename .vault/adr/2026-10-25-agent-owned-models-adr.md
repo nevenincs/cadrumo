@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:cb6ccb06c559a12e995d2e6fce4962d7825b43e4c3e2d79fa5ca2b1f135225d8'
+body_hash: 'sha256:2cdfc4bb3f88ee2ced7deb4e19bf38957d6e0f654d4dace36f19277c24c963ad'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -158,3 +158,11 @@ Basis: the owner's first-hand ruling in conversation on 2026-10-25, "Choice can 
 - **States.** Absent means no role is selected. A record that does not decrypt or validate is unreadable, never absent, and only a guarded reset removes it.
 - **No migration.** The reserved provider-settings key that held the selections on 2026-10-25 never shipped. It is dropped without a migration.
 - **Implementation outline.** "The agent service stores one selection per role per profile, beside the provider records" reads as: in a capability of its own, separate from the provider records.
+
+## Amendment 2026-10-25, selectable models
+
+Basis: the owner's first-hand ruling in conversation on 2026-10-25, "both", answering whether a role may name a model only the running agent's live catalogue lists.
+
+- **Constraint 6 (per-role selection), which catalogue.** "The person picks a lane and a model for each role from the catalogue." reads as: "A selection is checked against the lane's entries in cadrumo-agent's declared catalogue and, while the agent is running, also its live served catalogue, which adds the models installed on a local server. Without a running agent only declared entries are selectable. A selection the current entries do not list is refused as not in the catalogue, never as a permanent ban."
+- **Vision role.** A live-only entry whose vision field is unknown is not vision-capable, so the vision role refuses it.
+- **Facts.** A lookup carries the facts of the entry the selection was checked against, from the live catalogue when the agent is running and otherwise the declared one. Absent facts stay null; Cadrumo supplies none.
