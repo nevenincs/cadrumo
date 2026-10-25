@@ -140,6 +140,22 @@ async function renewal(
     : { kind: "check_failed", code: "unavailable" };
 }
 
+/** Whether a check that found `stale` stale may renew it: only the latest
+ * check, on the baseline the review now holds; an overtaken check leaves the
+ * renewal to the check that overtook it. */
+export function mayRenew(check: {
+  ticket: number;
+  latest: number;
+  stale: ModeloEditApplyBaselineV1;
+  current: ModeloEditApplyBaselineV1 | null;
+}): boolean {
+  return (
+    check.ticket === check.latest &&
+    check.current !== null &&
+    check.stale.baseline_id === check.current.baseline_id
+  );
+}
+
 export function useEditReview({
   open,
   envelope,
@@ -208,6 +224,15 @@ export function useEditReview({
       (stale) => {
         const held = renewing.current;
         if (held) return held;
+        if (
+          !mayRenew({
+            ticket,
+            latest: checks.current,
+            stale,
+            current: current.current,
+          })
+        )
+          return Promise.resolve(null);
         moved.current = true;
         const running = renewal(port, stale, language, setRenewed, onReread);
         renewing.current = running;
@@ -227,6 +252,20 @@ export function useEditReview({
       session.rebase(answer.report);
     setPhase(answer.phase);
   }, [baseline, port, session, language, onReread]);
+
+  // The baseline the review holds now, for a check that was overtaken.
+  const current = useRef(baseline);
+  useEffect(() => {
+    current.current = baseline;
+  });
+  // Each opening starts as the TUI's review does: one renewal and re-read
+  // are allowed again. Only the opening edge clears it, never a new
+  // baseline.
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (open && !wasOpen.current) moved.current = false;
+    wasOpen.current = open;
+  }, [open]);
 
   // Each opening checks the edits as they now stand; a re-read after an
   // unknown apply releases the hold.

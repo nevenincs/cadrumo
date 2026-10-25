@@ -99,8 +99,9 @@ REBASE_TYPED: tuple[tuple[str, str], ...] = (("08", "250"), ("10", "75"))
 #: How the declaration moves under them: box 06's typed value is taken back and a figure typed into box 08.
 REBASE_RESTORED: tuple[str, ...] = ("06",)
 REBASE_MOVE: tuple[tuple[str, str], ...] = (("08", "500"),)
-#: How it moves once more, after the window read it again.
+#: How it moves once more, after the window read it again, and again after the next read.
 REBASE_MOVE_AGAIN: tuple[tuple[str, str], ...] = (("16", "40"),)
+REBASE_MOVE_ONCE_MORE: tuple[tuple[str, str], ...] = (("18", "30"),)
 #: What the filer types into the first-quarter 130, as typed, and an entry over a box that takes none.
 TYPED_130: tuple[tuple[str, str], ...] = (("06", "1.234,56"),)
 UNWRITABLE_130: tuple[str, str] = ("01", "doce")
@@ -1244,21 +1245,28 @@ def _write_rebase(directory: Path, work: Any) -> None:
     # then checks them as it holds them now.
     still = tuple(change for change in REBASE_STAGED if change[1] != "clear")
     _write_check(directory, work, moved, staged_on=moved, staged=still, intents=REBASE_TYPED)
-    # Still changing: read again after the refused renewal, the declaration moves once more before the check.
-    moving = "130-1T-moving"
-    _write_form(directory, work, f"modelo-{moving}")
-    _expect_model(
-        _edit(
-            work,
-            MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
-            _edit_document(_admitted(work), intents=REBASE_MOVE_AGAIN),
+    # Still changing: each time the window reads it again after a refused renewal, it moves once more before
+    # the check. Asked to check again, the window renews and reads once more, and finds it moved again.
+    previous = staged_on
+    for read, move in (("130-1T-moving", REBASE_MOVE_AGAIN), ("130-1T-moving-again", REBASE_MOVE_ONCE_MORE)):
+        if previous != staged_on:
+            renewal = _write_renewal(directory, work, previous)
+            if getattr(renewal, "renewed_baseline", None) is not None:
+                raise SystemExit(f"renewing {previous} after the declaration moved was not refused")
+        _write_form(directory, work, f"modelo-{read}")
+        _expect_model(
+            _edit(
+                work,
+                MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+                _edit_document(_admitted(work), intents=move),
+            )
         )
-    )
-    _stale_refusal(
-        _write_check(
-            directory, work, moving, staged_on=staged_on, staged=REBASE_STAGED, intents=REBASE_TYPED, name="stale"
+        _stale_refusal(
+            _write_check(
+                directory, work, read, staged_on=staged_on, staged=REBASE_STAGED, intents=REBASE_TYPED, name="stale"
+            )
         )
-    )
+        previous = read
 
 
 def _expect_model(answer: Any) -> BaseModel:

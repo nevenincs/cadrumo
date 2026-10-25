@@ -1224,3 +1224,104 @@ test("a declaration still changing after it was read again stops after that one 
     label("workspace.modelo.attention.staged"),
   );
 });
+
+/** Stages the rebase changes in the `moving` shape and reviews them until
+ * the window says the declaration is still changing. */
+async function stillMoving(target: Page) {
+  await openDeclaration(target, "130", { shape: "moving" });
+  await boxRow(target, "06").getByRole("gridcell").nth(1).click();
+  await target.keyboard.press("Delete");
+  await stage(target, "08", "250");
+  await stage(target, "10", "75");
+  await target
+    .getByRole("button", { name: label("workspace.modelo.next_button.apply") })
+    .first()
+    .click();
+  const dialog = target.getByRole("dialog");
+  await expect(dialog).toContainText(
+    label("workspace.modelo.rebase.still_moving"),
+  );
+  return dialog;
+}
+
+/** The host calls of a review's recovery: checks, renewals and reads. */
+const recovery = async (target: Page) =>
+  (await target.evaluate(() => window.__scenarioHostCalls ?? [])).filter(
+    (call) =>
+      call === "modelo edit modelo.edit.preflight" ||
+      call === "modelo submit modelo.edit.renew" ||
+      call.startsWith("modelo form "),
+  );
+
+/** What a review asked of the host after its last renewal. */
+async function afterLastRenewal(target: Page) {
+  const sequence = await recovery(target);
+  return sequence.slice(
+    sequence.lastIndexOf("modelo submit modelo.edit.renew") + 1,
+  );
+}
+
+test("checking again after the declaration is still changing renews and reads once more, then stops", async ({
+  page: target,
+}) => {
+  // Each renewal is refused, and each read finds the declaration moved again.
+  for (const name of ["renew-130-1T-rebase", "renew-130-1T-moving"])
+    expect(
+      envelope<{ renewed_baseline: unknown }>(name).renewed_baseline,
+    ).toBeNull();
+  const dialog = await stillMoving(target);
+  expect(await calls(target, "modelo submit modelo.edit.renew")).toHaveLength(
+    1,
+  );
+  await dialog
+    .getByRole("button", { name: label("workspace.modelo.review.check_again") })
+    .click();
+  await expect(dialog).toContainText(
+    label("workspace.modelo.rebase.still_moving"),
+  );
+  await expect
+    .poll(
+      async () =>
+        (await calls(target, "modelo submit modelo.edit.renew")).length,
+    )
+    .toBe(2);
+  // One more renewal, one more read, the check on it, and nothing after.
+  await expect
+    .poll(() => afterLastRenewal(target))
+    .toEqual(["modelo form en", "modelo edit modelo.edit.preflight"]);
+  await expect(applyButton(dialog)).toHaveCount(0);
+});
+
+test("reopening the review after the declaration is still changing reads it again once", async ({
+  page: target,
+}) => {
+  const dialog = await stillMoving(target);
+  await dialog
+    .getByRole("button", { name: label("workspace.modelo.review.back") })
+    .click();
+  await expect(dialog).toBeHidden();
+  await target
+    .getByRole("button", { name: label("workspace.modelo.next_button.apply") })
+    .first()
+    .click();
+  const again = target.getByRole("dialog");
+  await expect(again).toContainText(
+    label("workspace.modelo.rebase.still_moving"),
+  );
+  await expect
+    .poll(
+      async () =>
+        (await calls(target, "modelo submit modelo.edit.renew")).length,
+    )
+    .toBe(2);
+  await expect
+    .poll(() => afterLastRenewal(target))
+    .toEqual(["modelo form en", "modelo edit modelo.edit.preflight"]);
+  // The edits are still staged throughout.
+  await again
+    .getByRole("button", { name: label("workspace.modelo.review.back") })
+    .click();
+  await expect(boxRow(target, "08")).toContainText(
+    label("workspace.modelo.attention.staged"),
+  );
+});

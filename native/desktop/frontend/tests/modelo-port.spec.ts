@@ -363,3 +363,59 @@ test("only a saved file is shown in the file manager", async () => {
   await port.forgetFiles([saved.token]);
   expect(await failure(port.revealFile(saved.token))).toBe("file_unavailable");
 });
+
+test("a check is answered only for the held changes as the window staged them", async () => {
+  const { port } = scenario();
+  const form = await formOf("130");
+  const box = (function find(node: unknown): { state_digest: string } | null {
+    if (Array.isArray(node)) {
+      for (const item of node) {
+        const found = find(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    if (!node || typeof node !== "object") return null;
+    if ("held_zero" in node && (node as { box?: string }).box === "06")
+      return node as unknown as { state_digest: string };
+    return find(Object.values(node));
+  })(form.form.form.pages);
+  if (!box) throw new Error("the 130 shows no box 06");
+  const baseline = form.admitted_baseline!;
+  const check = (heldState: string) =>
+    port
+      .edit(
+        "modelo.edit.preflight",
+        modeloEditBody({
+          input_version: 2,
+          output_language: "en",
+          submission: {
+            baseline,
+            mutation_family: baseline.mutation_family,
+            scalar_intents: [
+              {
+                address: { kind: "scalar", casilla_id: "06" },
+                kind: "set_typed_value",
+                value: "1234.56",
+              },
+            ],
+            binding_intents: [],
+            held: [
+              {
+                address: { kind: "scalar", casilla_id: "06" },
+                kind: "set",
+                held_state: heldState,
+              },
+            ],
+          },
+        } as unknown as ModeloEditOperatorInputV2),
+      )
+      .then(
+        (outcome) => outcome.kind,
+        (error: unknown) => ledgerFailure(error).code,
+      );
+  // As the form showed the box when it was staged: the application's answer.
+  expect(await check(box.state_digest)).toBe("settled");
+  // A state no form the window read showed for the box: refused.
+  expect(await check("0".repeat(64))).toBe("invalid");
+});

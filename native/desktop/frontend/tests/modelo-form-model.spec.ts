@@ -21,6 +21,7 @@ import {
   WORKING_FIGURES_PAGE,
   type StagedEdit,
 } from "../src/components/modelo/form/session";
+import { mayRenew } from "../src/components/modelo/dialogs/useEditReview";
 import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
@@ -326,4 +327,23 @@ test("what a report moved is kept by the box's own address, which a restage neve
   expect(
     rebasedOf(noteMoved(noteMoved(new Map(), first.found), second.found)),
   ).toEqual({ changed: 1, dropped: 0 });
+});
+
+test("only the latest check, on the baseline held now, may renew it", () => {
+  const held = m130.admitted_baseline!;
+  const other = { ...held, baseline_id: `${held.baseline_id}-other` };
+  expect(mayRenew({ ticket: 3, latest: 3, stale: held, current: held })).toBe(
+    true,
+  );
+  // A check overtaken by a later one leaves the renewal to it.
+  expect(mayRenew({ ticket: 2, latest: 3, stale: held, current: held })).toBe(
+    false,
+  );
+  // A check made on a baseline the review no longer holds renews nothing.
+  expect(mayRenew({ ticket: 3, latest: 3, stale: held, current: other })).toBe(
+    false,
+  );
+  expect(mayRenew({ ticket: 3, latest: 3, stale: held, current: null })).toBe(
+    false,
+  );
 });
