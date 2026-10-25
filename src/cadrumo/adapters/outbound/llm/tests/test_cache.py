@@ -20,10 +20,10 @@ from pathlib import Path
 import pytest
 
 from .....core.config import override_settings
-from .....core.config_support import LLMProvider
+from .....core.config_support import LLMProvider, RetiredLLMProvider
 from .....core.directory_scan import scan_directory
 from ....persistence.llm.cache import LLMCache
-from ..models import LLMRequest, LLMResponse
+from ..models import LLMRequest, LLMResponse, RecordedLLMProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -90,13 +90,13 @@ def test_cache_key_distinguishes_multimodal_evidence(tmp_path: Path) -> None:
     sha_b = "b" * 64
     prompt = "Read the attached invoice and report the total."
 
-    text_only = cache.build_key(LLMRequest(prompt=prompt), LLMProvider.LOCAL, "gpt-oss")
+    text_only = cache.build_key(LLMRequest(prompt=prompt), LLMProvider.AGENT, "gpt-oss")
     with_a = cache.build_key(
         LLMRequest(
             prompt=prompt,
             images=(MultimodalImageInput(content_sha256=sha_a, base64_data="QQ==", media_type=ImageMediaType.PNG),),
         ),
-        LLMProvider.LOCAL,
+        LLMProvider.AGENT,
         "gpt-oss",
     )
     with_b = cache.build_key(
@@ -104,7 +104,7 @@ def test_cache_key_distinguishes_multimodal_evidence(tmp_path: Path) -> None:
             prompt=prompt,
             images=(MultimodalImageInput(content_sha256=sha_b, base64_data="Qg==", media_type=ImageMediaType.PNG),),
         ),
-        LLMProvider.LOCAL,
+        LLMProvider.AGENT,
         "gpt-oss",
     )
     with_a_other_bytes = cache.build_key(
@@ -114,7 +114,7 @@ def test_cache_key_distinguishes_multimodal_evidence(tmp_path: Path) -> None:
                 MultimodalImageInput(content_sha256=sha_a, base64_data="ZGlmZmVyZW50", media_type=ImageMediaType.PNG),
             ),
         ),
-        LLMProvider.LOCAL,
+        LLMProvider.AGENT,
         "gpt-oss",
     )
 
@@ -209,10 +209,11 @@ def test_cache_reads_and_writes_reject_unsafe_model_identifiers(tmp_path: Path) 
 
 
 @pytest.mark.parametrize(
-    ("provider", "model"), [(LLMProvider.AGENT, "anthropic/claude-3-7-sonnet"), (LLMProvider.LOCAL, "qwen2.5vl:3b")]
+    ("provider", "model"),
+    [(LLMProvider.AGENT, "example/api/example-model-1"), (RetiredLLMProvider.LOCAL, "synthetic-reader:3b")],
 )
 def test_cache_preserves_namespaced_and_tagged_model_identity(
-    tmp_path: Path, provider: LLMProvider, model: str
+    tmp_path: Path, provider: RecordedLLMProvider, model: str
 ) -> None:
     cache = LLMCache(root_dir=tmp_path)
     request = LLMRequest(prompt="Hello", temperature=0.0, language="es")

@@ -31,17 +31,15 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from ....application.operations.model_runs import ModelRunPort, current_model_run_port
-from ....core.component_records import local_ai_chat_url
-from ....core.config import Settings, load_settings
+from ....core.config import Settings
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.hashing import content_hash_hex
 from ....core.logging import get_logger
-from ....core.loopback_endpoint import endpoint_host_is_loopback
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.time.clock import now
-from .consent import agent_consent_binding, provider_reads_off_host
+from .consent import agent_consent_binding
 from .errors import (
     LLMBusyError,
     LLMCacheError,
@@ -72,15 +70,12 @@ if TYPE_CHECKING:
 from ....core.config_support import LLMProvider
 from ....core.model_catalogue import ModelRole
 from .models import LLMRequest, LLMResponse, PromptRegistry
-from .pricing import estimate_cost_usd
 from .providers.agent import AgentAdapter, lane_model_label, model_run_refusal_error
 from .providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest
-from .providers.local import LocalAdapter
 
 _LOGGER = get_logger(__name__)
 
 _EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY = "llm.evidence.consent.dispatch_refused"
-_EVIDENCE_LOCAL_READER_REFUSAL_LOCALE_KEY = "llm.evidence.consent.local_reader_not_loopback"
 
 
 def _elapsed_ms(monotonic_start: float) -> int:
@@ -454,24 +449,10 @@ class LLMClient:
         Raises:
             Exception: Re-raised after logging when the LLM provider adapter fails.
         """
-        provider = request.provider_override or self._default_provider()
-        agent = await self._agent_dispatch(request) if provider is LLMProvider.AGENT else None
-        model = (
-            lane_model_label(agent.lane)
-            if agent is not None
-            else request.model_override or self._default_model(provider)
-        )
-        # Resolved once, here, and handed to both the gate and the adapter: the
-        # URL the gate judges on-host is then the only URL the request can be
-        # posted to.
-        local_chat_url = local_ai_chat_url(load_settings()) if provider is LLMProvider.LOCAL else None
-        self._require_evidence_consent(
-            provider,
-            model,
-            request,
-            lane=None if agent is None else agent.lane,
-            local_chat_url=local_chat_url,
-        )
+        provider = LLMProvider.AGENT
+        agent = await self._agent_dispatch(request)
+        model = lane_model_label(agent.lane)
+        self._require_evidence_consent(provider, model, request, lane=agent.lane)
         request_id = self._request_id(request)
         cached = self.cache.read(request, provider, model)
         if cached is not None:
@@ -479,7 +460,7 @@ class LLMClient:
             self.usage_recorder.record(self.usage_recorder.build_record(response, self.prompt_id, self.caller))
             return response
 
-        adapter = self._build_adapter(provider, agent=agent, request=request, local_chat_url=local_chat_url)
+        adapter = self._build_adapter(agent=agent, request=request)
         provider_request = ProviderRequest(
             request_id=request_id,
             model=model,
@@ -499,7 +480,7 @@ class LLMClient:
         run_started_at = now()
         run_clock_start = time.monotonic()
         try:
-            with self._on_host_admission(provider):
+            with self._on_host_admission(agent.lane):
                 # Inside the slot and outside the retry loop, both load-bearing.
                 # Inside, because a headroom reading taken before the slot is
                 # held can be invalidated by another request loading a model
@@ -507,7 +488,7 @@ class LLMClient:
                 # refusal that the retry loop could see would be re-sent on a
                 # schedule, turning one refusal into several while the memory it
                 # waits for is still held.
-                self._require_load_headroom(provider, provider_request.model)
+                self._require_load_headroom(agent.lane)
                 completion = await self._complete_with_retries(adapter, provider_request)
         except Exception as exc:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise here
             # WARNING, not ERROR: the caller owns this failure and renders it as
@@ -543,12 +524,10 @@ class LLMClient:
             model=completion.model,
             input_tokens=completion.input_tokens,
             output_tokens=completion.output_tokens,
-            cost_estimate_usd=estimate_cost_usd(
-                provider=provider,
-                model=completion.model,
-                input_tokens=completion.input_tokens,
-                output_tokens=completion.output_tokens,
-            ),
+            # Unpriced, never free: the selected lane bills at rates Cadrumo
+            # does not see, and a caller budgeting from zero would read the
+            # call as costless.
+            cost_estimate_usd=None,
             cache_hit=False,
             created_at=now(),
             request_id=request_id,
@@ -570,7 +549,7 @@ class LLMClient:
         )
         return response
 
-    def _require_load_headroom(self, provider: LLMProvider, model: str) -> None:
+    def _require_load_headroom(self, lane: ModelRunLane) -> None:
         """Refuse an on-host dispatch this machine has no measured room for.
 
         **A wiring job, not a second detector.** The verdict comes from
@@ -588,32 +567,33 @@ class LLMClient:
         imported by application code, so an eager binding would risk closing
         that loop at import time.
 
-        **Assessed only where the catalogue makes a claim.** An uncatalogued
-        model has no declared requirement, and inventing one would be worse than
-        not checking: a requirement read as zero flows into the authority as the
-        amount the model needs, and the check then reports the load ADMITTED on
-        evidence nobody has. That is the reasoning
-        :attr:`~application.provisioning.ModelSelection.assessable_load` records
-        for every other caller, followed here rather than re-decided.
+        **The requirement is the lane's catalogue size.** Only a lane whose
+        catalogue entry says it stays on this computer loads weights here, and
+        the size its entry states is the amount the load needs. An entry that
+        states no size, or ``0``, makes no claim, and inventing one would be
+        worse than not checking: a requirement read as zero flows into the
+        authority as the amount the model needs, and the check then reports the
+        load ADMITTED on evidence nobody has. Such a load skips this check and
+        still holds its inference slot.
 
         Args:
-            provider: The resolved provider this dispatch would run at.
-            model: The resolved model whose load is being judged.
+            lane: The lane the agent service resolved for this dispatch.
 
         Raises:
             LLMContentionError: When the measured verdict is not admitted,
                 carrying the authority's typed precondition verdict, model, and
                 causes.
         """
-        if provider_reads_off_host(provider):
+        if lane.reads_off_host:
+            return
+        requirement_bytes = lane.size_bytes
+        if requirement_bytes is None or requirement_bytes == 0:
+            # No model id: the line says only that the check did not run.
+            _LOGGER.debug("on-host load headroom not assessed: the lane's catalogue entry states no size")
             return
         from ....application.provisioning_runtime import assess_model_load_contention
-        from ....core.model_catalogue import model_candidate
 
-        candidate = model_candidate(model)
-        requirement_bytes = None if candidate is None else candidate.memory_requirement_bytes
-        if requirement_bytes is None:
-            return
+        model = lane.model
         snapshot = assess_model_load_contention(
             model,
             requirement_bytes,
@@ -720,16 +700,15 @@ class LLMClient:
                 attempt += 1
 
     @contextmanager
-    def _on_host_admission(self, provider: LLMProvider) -> Generator[None]:
+    def _on_host_admission(self, lane: ModelRunLane) -> Generator[None]:
         """Hold one on-host inference slot for the duration of a dispatch.
 
         Applied at the client's single dispatch point, like every other boundary
-        on this path, and scoped to on-host providers through
-        :func:`~llm.consent.provider_reads_off_host` rather than a
-        hand-kept list of local transports -- so a provider added later is
-        off-host by construction, and correctly unbounded here, because an
-        off-host dispatch occupies none of this machine's device memory. The
-        resource this bound protects is local, so the bound is local too.
+        on this path, and scoped by the resolved lane's typed
+        ``reads_off_host`` flag rather than by a provider, transport or model
+        name. A lane that reads off the host is unbounded here, because its
+        dispatch occupies none of this machine's device memory. The resource
+        this bound protects is local, so the bound is local too.
 
         Wrapped around the adapter call ONLY, not around the whole method: a
         cache hit runs no inference and returns before this point, and holding a
@@ -737,7 +716,7 @@ class LLMClient:
         never touches the device.
 
         Args:
-            provider: The resolved provider this dispatch runs at.
+            lane: The lane the agent service resolved for this dispatch.
 
         Yields:
             Nothing; the slot is held for the body and released on any exit.
@@ -745,9 +724,10 @@ class LLMClient:
         Raises:
             LLMBusyError: When every on-host slot is already occupied.
         """
-        if provider_reads_off_host(provider):
+        if lane.reads_off_host:
             yield
             return
+        provider = LLMProvider.AGENT
         arena = _on_host_inference_arena(self.settings)
         if not arena.try_acquire():
             raise LLMBusyError(
@@ -777,8 +757,7 @@ class LLMClient:
         model: str,
         request: LLMRequest,
         *,
-        lane: ModelRunLane | None,
-        local_chat_url: str | None,
+        lane: ModelRunLane,
     ) -> None:
         """Refuse an off-host dispatch of taxpayer evidence without consent.
 
@@ -787,11 +766,8 @@ class LLMClient:
         The confidentiality boundary, enforced at the client's single dispatch
         point for the reason the image boundary is: which requests may leave the
         host is a property of the DISPATCH, never of each caller remembering to
-        pin a provider. A caller may still pin
-        :attr:`~llm.LLMProvider.LOCAL` as documentation, but
-        no pin is load-bearing -- ``extract_invoice_fields_from_text`` is
-        exported with none, and a reader constructed with a cloud provider
-        reaches the same line as every other request.
+        pin a provider: ``extract_invoice_fields_from_text`` is exported with
+        none, and every reader reaches the same line as every other request.
 
         **Ordered before the cache read and before adapter construction, both
         deliberately.** Before the cache read, so priming an entry under consent
@@ -822,14 +798,6 @@ class LLMClient:
         err on: the response is still cloud-derived, so a withdrawal must list
         it as a re-derivation candidate.
 
-        **The local provider is on-host only at a loopback endpoint.** The
-        provider enum says which transport runs, not where its endpoint is, and
-        the Ollama endpoint may be configured to another machine. An
-        evidence-derived request at a non-loopback local endpoint is refused
-        outright rather than routed through the token: the consent surfaces
-        refuse to name the local provider for an off-host read, and a ledger
-        entry recording ``local`` would not say where the document went.
-
         **An agent dispatch is off-host exactly when its lane says so.** The
         resolved lane's typed ``reads_off_host`` flag decides, never the
         provider, transport or model name. A lane that stays on this computer
@@ -842,25 +810,15 @@ class LLMClient:
             model: The resolved model this request would dispatch at, recorded
                 in the ledger entry.
             request: The request, carrying its evidence marker and any token.
-            lane: The lane an agent dispatch was resolved to; ``None`` for any
-                other provider.
-            local_chat_url: The endpoint a local dispatch will be posted to,
-                the same value handed to the adapter; ``None`` for any other
-                provider.
+            lane: The lane the agent service resolved for the request's role.
 
         Raises:
             LLMConsentError: When an evidence-derived request would be
                 dispatched off-host without a valid per-invocation consent
-                token, in a gestor deployment at all, at a local endpoint that
-                is not loopback, or when the consent ledger cannot record the
-                permitted dispatch.
+                token, in a gestor deployment at all, or when the consent
+                ledger cannot record the permitted dispatch.
         """
-        if not request.evidence_derived:
-            return
-        reads_off_host = provider_reads_off_host(provider) if lane is None else lane.reads_off_host
-        if not reads_off_host:
-            if lane is None:
-                self._require_loopback_local_reader(provider, local_chat_url)
+        if not request.evidence_derived or not lane.reads_off_host:
             return
         token = request.consent_token
         if self.settings.cadrumo_evidence_gestor_mode or token is None:
@@ -886,30 +844,6 @@ class LLMClient:
             provider=provider.value,
             model=model,
             surface=token.surface,
-        )
-
-    @staticmethod
-    def _require_loopback_local_reader(provider: LLMProvider, chat_url: str | None) -> None:
-        """Refuse an evidence read at a local endpoint that is not this machine's loopback.
-
-        A missing endpoint is refused too: an on-host claim nobody can check is
-        not one this gate accepts. The URL itself stays out of the refusal,
-        because a configured endpoint may carry credentials in its user part.
-
-        Raises:
-            LLMConsentError: When ``chat_url`` is absent or not loopback.
-        """
-        if chat_url is not None and endpoint_host_is_loopback(chat_url):
-            return
-        facts = {"provider": provider.value, "local_reader_loopback": False}
-        raise LLMConsentError(
-            translated_message=_EVIDENCE_LOCAL_READER_REFUSAL_LOCALE_KEY,
-            context=facts,
-            precondition_verdict=llm_no_recovery_verdict(
-                LLMPreconditionCondition.EVIDENCE_LOCAL_READER_LOOPBACK,
-                facts=facts,
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-            ),
         )
 
     @staticmethod
@@ -950,10 +884,8 @@ class LLMClient:
         boundary refuses rather than degrades.
 
         Enforced here, at the client's single dispatch point, rather than inside
-        each adapter: the same reasoning
-        :func:`~llm.providers.base.post_provider_request` records for the
-        transport boundary -- a property of the dispatch, never of each
-        adapter's memory to catch.
+        each adapter: a property of the dispatch, never of each adapter's
+        memory to catch.
 
         Args:
             adapter: The resolved provider adapter about to run the request.
@@ -1019,17 +951,6 @@ class LLMClient:
         except LLMCacheError:
             _LOGGER.debug("llm run-record write failed; continuing without it", exc_info=True)
 
-    @staticmethod
-    def _default_provider() -> LLMProvider:
-        """A request that names no provider runs on this machine; leaving it is always stated."""
-        return LLMProvider.LOCAL
-
-    def _default_model(self, provider: LLMProvider) -> str:
-        if provider is LLMProvider.LOCAL:
-            return self.settings.cadrumo_llm_ollama_text_model
-        msg = "an agent dispatch takes its model from the lane the service resolves"
-        raise InternalInvariantError(msg)
-
     async def _agent_dispatch(self, request: LLMRequest) -> _AgentDispatch:
         """Resolve the lane the agent service would use, before consent or cache are consulted.
 
@@ -1062,23 +983,8 @@ class LLMClient:
             raise model_run_refusal_error(ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED), role=role)
         return _AgentDispatch(port=port, role=role, lane=lane)
 
-    def _build_adapter(
-        self,
-        provider: LLMProvider,
-        *,
-        agent: _AgentDispatch | None = None,
-        request: LLMRequest | None = None,
-        local_chat_url: str | None = None,
-    ) -> ProviderAdapter:
+    def _build_adapter(self, *, agent: _AgentDispatch, request: LLMRequest) -> ProviderAdapter:
         timeout_s = self.settings.cadrumo_llm_default_timeout_s
-        if provider is LLMProvider.LOCAL:
-            if local_chat_url is None:
-                msg = "a local adapter is built only from the endpoint the dispatch gate judged"
-                raise InternalInvariantError(msg)
-            return LocalAdapter(timeout_s=timeout_s, chat_url=local_chat_url)
-        if agent is None or request is None:
-            msg = "an agent adapter is built only from a resolved lane"
-            raise InternalInvariantError(msg)
         consent = agent_consent_binding(agent.lane, request.consent_token if request.evidence_derived else None)
         return AgentAdapter(
             port=agent.port,

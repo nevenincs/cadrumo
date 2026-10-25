@@ -24,12 +24,12 @@ def build_local_reader_report_request() -> OperationRequest[LocalReaderReportReq
     )
 
 
-def build_local_reader_status_request(*, probe: bool) -> OperationRequest[LocalReaderStatusRequest]:
-    """Build the request that reads the machine's reader status, probing fitness when asked."""
+def build_local_reader_status_request() -> OperationRequest[LocalReaderStatusRequest]:
+    """Build the request that reads the machine's reader status."""
     return OperationRequest(
         definition_id=LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
         subject_ref=LOCAL_READER_OPERATION_SUBJECT,
-        payload=LocalReaderStatusRequest(probe=probe),
+        payload=LocalReaderStatusRequest(),
     )
 
 

@@ -2,8 +2,7 @@
 
 Every run goes through the real registry, supervisor, journal and encrypted
 operand store. The model runtime is a real loopback endpoint speaking the
-Ollama wire shapes; only the text fitness probe is an injected port, as
-production composition injects it.
+Ollama wire shapes.
 """
 
 from __future__ import annotations
@@ -42,7 +41,6 @@ from .local_reader_operation_support import (
     TEXT_MODEL,
     VISION_MODEL,
     LoopbackModelRuntime,
-    ProvisioningPorts,
     SupervisedRun,
     loopback_model_runtime,
     provisioning_registry,
@@ -59,15 +57,14 @@ def _target_models() -> set[str]:
 
 
 def _run(
-    tmp_path: Path, ports: ProvisioningPorts, request: OperationRequest[LocalReaderProvisionRequest]
+    tmp_path: Path, request: OperationRequest[LocalReaderProvisionRequest]
 ) -> SupervisedRun[LocalReaderProvisionPublicResultV3]:
-    return run_supervised(tmp_path, ports, request, LocalReaderProvisionPublicResultV3)
+    return run_supervised(tmp_path, request, LocalReaderProvisionPublicResultV3)
 
 
 def test_load_brings_a_pulled_model_into_memory_and_reports_it_resident(tmp_path: Path) -> None:
-    ports = ProvisioningPorts()
     with loopback_model_runtime(installed={TEXT_MODEL}, residents=set()):
-        run = _run(tmp_path, ports, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION))
+        run = _run(tmp_path, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION))
 
     assert run.result.action is LocalReaderProvisionAction.LOAD
     assert run.result.succeeded is True
@@ -82,9 +79,8 @@ def test_load_brings_a_pulled_model_into_memory_and_reports_it_resident(tmp_path
 
 
 def test_loading_a_resident_model_sends_nothing(tmp_path: Path) -> None:
-    ports = ProvisioningPorts()
     with loopback_model_runtime(installed={TEXT_MODEL}, residents={TEXT_MODEL}):
-        run = _run(tmp_path, ports, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION))
+        run = _run(tmp_path, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION))
 
     (item,) = run.result.models
     assert item.succeeded is True
@@ -94,9 +90,8 @@ def test_loading_a_resident_model_sends_nothing(tmp_path: Path) -> None:
 
 
 def test_load_refuses_a_model_that_was_never_pulled_instead_of_fetching_it(tmp_path: Path) -> None:
-    ports = ProvisioningPorts()
     with loopback_model_runtime(installed=set(), residents=set()):
-        run = _run(tmp_path, ports, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION))
+        run = _run(tmp_path, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION))
 
     (item,) = run.result.models
     assert run.result.succeeded is False
@@ -110,11 +105,10 @@ def test_load_refuses_a_model_that_was_never_pulled_instead_of_fetching_it(tmp_p
 
 
 def test_a_load_the_host_cannot_admit_sends_nothing_and_carries_its_measured_verdict(tmp_path: Path) -> None:
-    ports = ProvisioningPorts()
     with loopback_model_runtime(
         installed={TEXT_MODEL}, residents=set(), required_headroom_bytes=_BEYOND_ANY_HOST_BYTES
     ):
-        run = _run(tmp_path, ports, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION, TEXT_MODEL))
+        run = _run(tmp_path, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION, TEXT_MODEL))
         loads = [body for path, body in LoopbackModelRuntime.requests if path == "/api/generate"]
 
     (item,) = run.result.models
@@ -132,10 +126,9 @@ def test_a_load_the_host_cannot_admit_sends_nothing_and_carries_its_measured_ver
     assert run.effect is OperationEffect.NONE
 
 
-def test_verify_of_a_named_model_checks_that_model_and_probes_the_text_role(tmp_path: Path) -> None:
-    ports = ProvisioningPorts()
+def test_verify_of_a_named_model_checks_that_model_for_the_text_role(tmp_path: Path) -> None:
     with loopback_model_runtime(installed={VISION_MODEL}, residents={VISION_MODEL}):
-        run = _run(tmp_path, ports, build_local_reader_verify_request(ModelRole.TEXT_EXTRACTION, VISION_MODEL))
+        run = _run(tmp_path, build_local_reader_verify_request(ModelRole.TEXT_EXTRACTION, VISION_MODEL))
         generated = [body for path, body in LoopbackModelRuntime.requests if path == "/api/generate"]
 
     assert run.result.action is LocalReaderProvisionAction.VERIFY
@@ -144,20 +137,17 @@ def test_verify_of_a_named_model_checks_that_model_and_probes_the_text_role(tmp_
     assert item.roles == (ModelRole.TEXT_EXTRACTION,)
     assert item.succeeded is True and item.resident is True and item.answered is True
     assert [body["model"] for body in generated] == [VISION_MODEL]
-    assert ports.probed == [VISION_MODEL], "the text role's fitness is part of its readiness"
     assert run.effect is OperationEffect.NONE
 
 
 def test_verify_of_an_absent_model_names_the_missing_pull_and_loads_nothing(tmp_path: Path) -> None:
-    ports = ProvisioningPorts()
     with loopback_model_runtime(installed=set(), residents=set()):
-        run = _run(tmp_path, ports, build_local_reader_verify_request(ModelRole.TEXT_EXTRACTION))
+        run = _run(tmp_path, build_local_reader_verify_request(ModelRole.TEXT_EXTRACTION))
 
     (item,) = run.result.models
     assert run.result.succeeded is False
     assert item.failed_condition_id == ProvisioningPreconditionCondition.MODEL_INSTALLED
     assert LoopbackModelRuntime.requests == []
-    assert ports.probed == []
 
 
 def test_a_licence_advisory_is_written_in_the_language_the_request_names(tmp_path: Path) -> None:
@@ -169,7 +159,6 @@ def test_a_licence_advisory_is_written_in_the_language_the_request_names(tmp_pat
         with loopback_model_runtime(installed=set(), residents=set()), override_settings(cadrumo_output_language="es"):
             run = _run(
                 tmp_path / language.value,
-                ProvisioningPorts(),
                 build_local_reader_verify_request(
                     ModelRole.VISION_TRANSCRIPTION, restricted.runtime_id, output_language=language
                 ),
@@ -213,7 +202,7 @@ def test_every_model_action_accepts_a_named_model(action: LocalReaderProvisionAc
 
 
 def test_the_published_schemas_are_immutable_versioned_and_register() -> None:
-    registry = provisioning_registry(ProvisioningPorts())
+    registry = provisioning_registry()
     contract = registry.lookup_public_contract(LOCAL_READER_OPERATION_DEFINITION_ID)
 
     assert contract.request_schema.schema_version == LOCAL_READER_REQUEST_SCHEMA_VERSION == 3
@@ -240,10 +229,9 @@ def test_the_direct_call_and_the_supervised_operation_settle_identically(tmp_pat
     request = build_local_reader_load_request(ModelRole.TEXT_EXTRACTION)
     models = {TEXT_MODEL} if installed else set()
     with loopback_model_runtime(installed=models, residents=set()):
-        supervised = _run(tmp_path, ProvisioningPorts(), request)
-    ports = ProvisioningPorts()
+        supervised = _run(tmp_path, request)
     with loopback_model_runtime(installed=models, residents=set()):
-        direct = asyncio.run(provision_local_reader(request.payload, text_probe=ports.probe))
+        direct = asyncio.run(provision_local_reader(request.payload))
 
     assert _essence(direct) == _essence(supervised.result)
     assert direct.succeeded is installed
@@ -252,9 +240,8 @@ def test_the_direct_call_and_the_supervised_operation_settle_identically(tmp_pat
 def test_a_resident_model_of_another_size_does_not_count_as_loaded(tmp_path: Path) -> None:
     family_sibling = TEXT_MODEL.split(":", 1)[0] + ":8b"
     assert family_sibling != TEXT_MODEL
-    ports = ProvisioningPorts()
     with loopback_model_runtime(installed={TEXT_MODEL, family_sibling}, residents={family_sibling}):
-        run = _run(tmp_path, ports, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION))
+        run = _run(tmp_path, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION))
         residents = set(LoopbackModelRuntime.residents)
 
     (item,) = run.result.models
@@ -265,9 +252,8 @@ def test_a_resident_model_of_another_size_does_not_count_as_loaded(tmp_path: Pat
 
 def test_load_refuses_when_only_another_size_is_pulled(tmp_path: Path) -> None:
     family_sibling = TEXT_MODEL.split(":", 1)[0] + ":8b"
-    ports = ProvisioningPorts()
     with loopback_model_runtime(installed={family_sibling}, residents=set()):
-        run = _run(tmp_path, ports, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION))
+        run = _run(tmp_path, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION))
         loads = [body for path, body in LoopbackModelRuntime.requests if path == "/api/generate"]
 
     (item,) = run.result.models
@@ -277,9 +263,8 @@ def test_load_refuses_when_only_another_size_is_pulled(tmp_path: Path) -> None:
 
 
 def test_an_untagged_model_name_means_latest(tmp_path: Path) -> None:
-    ports = ProvisioningPorts()
     with loopback_model_runtime(installed={"qwen3:latest"}, residents={"qwen3:latest"}):
-        run = _run(tmp_path, ports, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION, "qwen3"))
+        run = _run(tmp_path, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION, "qwen3"))
 
     (item,) = run.result.models
     assert item.succeeded is True

@@ -1,16 +1,14 @@
 """Compose the operations that load, measure and report on what the machine holds for local reading.
 
 The three operations share one subject, the local AI the native component
-engine installed and the runtime manager runs, and the same outbound adapter:
-the text reader's fitness probe. Nothing composed here starts, installs or
-removes a program or a model.
+engine installed and the runtime manager runs. Nothing composed here starts,
+installs or removes a program or a model.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
 from ..application.local_reader_operation import (
     build_local_reader_operation_definition,
     build_local_reader_operation_registration,
@@ -38,9 +36,9 @@ class LocalReaderOperations:
 
 
 def build_local_reader_operations() -> LocalReaderOperations:
-    """Bind the outbound adapters to the three ``local-reader`` operations."""
-    provision = build_local_reader_operation_definition(text_probe=probe_text_extraction_fitness)
-    status = build_local_reader_status_definition(text_probe=probe_text_extraction_fitness)
+    """Build the three ``local-reader`` operations."""
+    provision = build_local_reader_operation_definition()
+    status = build_local_reader_status_definition()
     report = build_local_reader_report_definition()
     return LocalReaderOperations(
         definitions=(provision, status, report),

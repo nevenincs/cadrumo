@@ -5,7 +5,7 @@ loopback runtime that speaks the ``/api/version``, ``/api/tags`` and
 ``/api/ps`` wire shapes, or against a real closed port, and is then projected
 by the readiness operation's own projection. A row offers setup only when the
 probe's verdict names it: a missing model or an unanswering runtime does, and a
-role this computer cannot run or a fitness verdict does not.
+role this computer cannot run does not.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import pytest
 from ....core.config import override_settings
 from ....core.model_catalogue import ModelRole, default_model_runtime_id
 from ....tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
-from ...local_reader import RoleFitnessState, probe_local_reader, read_local_reader_status
+from ...local_reader import probe_local_reader, read_local_reader_status
 from ...provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
 from ..invoice_evidence_readiness_operation import LedgerEvidenceReaderReadinessProjection, ReaderRoleProjectionV1
 
@@ -73,7 +73,7 @@ def _rows() -> dict[str, ReaderRoleProjectionV1]:
     return {row.role: row for row in projection.roles}
 
 
-def test_a_missing_model_offers_the_local_ai_setup_and_an_unverified_one_is_admitted() -> None:
+def test_a_missing_model_offers_the_local_ai_setup_and_an_installed_one_is_ready() -> None:
     with _runtime_holding(_TEXT):
         rows = _rows()
 
@@ -83,8 +83,7 @@ def test_a_missing_model_offers_the_local_ai_setup_and_an_unverified_one_is_admi
     assert vision.recovery_action_id == LOCAL_AI_PROVISION_ACTION_ID
     text = rows[ModelRole.TEXT_EXTRACTION.value]
     assert text.installed is True
-    assert text.fitness is RoleFitnessState.NOT_VERIFIED
-    assert text.ready is True, "fitness is the consumer's admission: no verdict is no refusal"
+    assert text.ready is True
     assert text.failed_condition_id is None
     assert text.recovery_action_id is None
 

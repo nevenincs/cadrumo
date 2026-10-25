@@ -8,24 +8,25 @@ for one proves nothing about the other.
 The verdict is not computed here and is not computed in the client: it comes
 from the single contention authority the doctor surface, the provision verbs and
 the batch lane already consult. What these cases prove is the WIRING -- that the
-dispatch asks, that it obeys the answer, that it asks while holding its slot,
-and that a refusal is never re-sent by the retry policy.
+dispatch asks with the size the lane's catalogue entry states, that it obeys the
+answer, that it asks while holding its slot, and that a refusal is never re-sent
+by the retry policy.
 
 Measurements are injected rather than verdicts. A test that supplied the answer
 would exercise none of the comparison, the safety margin or the fail-closed arm,
-and would pass against a client that never consulted the authority at all.
+and would pass against a client that never consulted the authority at all. The
+agent service behind the model-run port is a recording stand-in, so "nothing
+was run" is an observation of the service rather than an inference.
 """
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
-from contextlib import contextmanager
-from http import HTTPStatus
 from pathlib import Path
-from typing import override
 
 import pytest
+
+from cadrumo_client.contracts.model_runs import ModelRunBody, ModelRunLane
 
 from .....application.provisioning import HardwareProfile, probe_hardware_profile
 from .....application.provisioning_runtime import (
@@ -34,52 +35,30 @@ from .....application.provisioning_runtime import (
     assess_model_load_contention,
     read_runtime_residents,
 )
-from .....core.config import override_settings
-from .....core.config_support import LLMProvider
 from .....core.hardware import ContentionCause
-from .....core.model_catalogue import model_candidate
+from .....core.model_catalogue import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from .....tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_records import LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
-from ..client import LLMClient, LLMRetryPolicy, transport_retry_permitted
+from ..client import LLMClient, LLMRetryPolicy, _on_host_inference_arena, transport_retry_permitted
 from ..errors import LLMContentionError
 from ..models import LLMRequest
 from ._arena_fixtures import _fresh_arena
 from .load_headroom_support import measured_hardware_profile
+from .model_run_support import DEFAULT_LANE, ON_HOST_LANE, serving_agent
 
 __all__ = ["_fresh_arena"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-# A catalogued local model, so the catalogue makes a claim about what it needs.
-# The check is deliberately silent about a model it has no requirement for, so a
-# case using an uncatalogued id would pass without the check ever running.
-_CATALOGUED_MODEL = "qwen3:1.7b"
-
 _GIB = 1024**3
 
+# A synthetic catalogue size: the figure the lane's entry states for its model.
+_SIZE_BYTES = 2 * _GIB
 
-def test_the_model_under_test_still_declares_a_memory_requirement() -> None:
-    """Anchor the fixture: a catalogue rename would make every case below vacuous.
-
-    The check returns early for a model the catalogue makes no claim about, so
-    if this id stopped resolving, every refusal case would pass by never running
-    the check at all -- green, and measuring nothing.
-    """
-    candidate = model_candidate(_CATALOGUED_MODEL)
-
-    assert candidate is not None, (
-        f"{_CATALOGUED_MODEL} left the catalogue; the cases below no longer exercise the check"
-    )
-    assert candidate.memory_requirement_bytes is not None
+_SIZED_LANE = ON_HOST_LANE.model_copy(update={"size_bytes": _SIZE_BYTES})
+"""An on-host lane whose catalogue entry states the model's size."""
 
 
 def _causes(refusal: LLMContentionError) -> tuple[str, ...]:
@@ -94,14 +73,6 @@ def _causes(refusal: LLMContentionError) -> tuple[str, ...]:
     return tuple(typed_causes)
 
 
-def _declared_requirement_bytes() -> int:
-    """Return the catalogue's memory requirement for the model under test."""
-    candidate = model_candidate(_CATALOGUED_MODEL)
-    assert candidate is not None
-    assert candidate.memory_requirement_bytes is not None
-    return candidate.memory_requirement_bytes
-
-
 def _profile(*, free_vram_bytes: int | None, free_ram_bytes: int) -> HardwareProfile:
     """Build a measured hardware reading with the given free figures."""
     return measured_hardware_profile(
@@ -112,24 +83,9 @@ def _profile(*, free_vram_bytes: int | None, free_ram_bytes: int) -> HardwarePro
     )
 
 
-@contextmanager
-def _serve_ollama() -> Generator[tuple[str, list[str]]]:
-    """Serve a loopback runtime that answers, recording what reached it."""
-    arrivals: list[str] = []
-
-    class _Endpoint(SilentLoopbackHandler):
-        @override
-        def do_POST(self) -> None:
-            read_json_body(self)
-            arrivals.append(self.path)
-            write_json_response(
-                self,
-                ollama_chat_reply(" local completion ", model=_CATALOGUED_MODEL),
-                status=HTTPStatus.OK,
-            )
-
-    with serving_loopback(_Endpoint, path="/api/chat") as endpoint:
-        yield endpoint, arrivals
+_STARVED = _profile(free_vram_bytes=256 * 1024**2, free_ram_bytes=48 * _GIB)
+_QUIESCED = _profile(free_vram_bytes=7 * _GIB, free_ram_bytes=48 * _GIB)
+_UNMEASURABLE = _profile(free_vram_bytes=None, free_ram_bytes=48 * _GIB)
 
 
 def _client(
@@ -141,7 +97,6 @@ def _client(
     retry_policy: LLMRetryPolicy | None = None,
 ) -> LLMClient:
     settings = EnvFileFreeSettings(
-        cadrumo_llm_ollama_text_model=_CATALOGUED_MODEL,
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -158,19 +113,18 @@ def _client(
     )
 
 
-def test_a_measured_shortfall_refuses_before_the_runtime_is_touched(tmp_path: Path) -> None:
-    """The load does not fit: refused at the dispatch point, nothing sent."""
-    starved = _profile(free_vram_bytes=256 * 1024**2, free_ram_bytes=48 * _GIB)
-    with _serve_ollama() as (endpoint, arrivals):
-        with (
-            override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-            pytest.raises(LLMContentionError) as refusal,
-        ):
-            asyncio.run(_client(tmp_path, profile=starved, residents=()).complete(LLMRequest(prompt="hello")))
+def _request() -> LLMRequest:
+    return LLMRequest(prompt="hello", model_role=ModelRole.TEXT_EXTRACTION)
 
-        # Admission control, not a post-hoc failure: refusing after the runtime
-        # began loading would have already spent the memory being protected.
-        assert arrivals == []
+
+def test_a_measured_shortfall_refuses_before_the_run_is_sent(tmp_path: Path) -> None:
+    """The load does not fit: refused at the dispatch point, nothing run."""
+    with serving_agent(lane=_SIZED_LANE) as service, pytest.raises(LLMContentionError) as refusal:
+        asyncio.run(_client(tmp_path, profile=_STARVED, residents=()).complete(_request()))
+
+    # Admission control, not a post-hoc failure: refusing after the runtime
+    # began loading would have already spent the memory being protected.
+    assert service.runs == []
 
     # A measured shortfall with a readable, empty resident set is attributed
     # OUTSIDE this runtime -- there is nothing of ours to unload -- and that is
@@ -183,19 +137,15 @@ def test_a_measured_shortfall_refuses_before_the_runtime_is_touched(tmp_path: Pa
 def test_a_post_quiesce_reading_admits_the_same_request(tmp_path: Path) -> None:
     """The positive control, and the case that separates the two refusal arms.
 
-    Same client, same model, same server -- only the measurement differs. Without
-    it, a refusal is indistinguishable from a dispatch that could not have
-    succeeded anyway, and on this machine that ambiguity is real rather than
-    theoretical: free VRAM sits below the operator threshold and the runtime is
-    usually down, so BOTH the shortfall arm and the fail-closed arm hold at once
-    and a live refusal proves neither.
+    Same client, same lane, same service -- only the measurement differs.
+    Without it, a refusal is indistinguishable from a dispatch that could not
+    have succeeded anyway.
     """
-    quiesced = _profile(free_vram_bytes=7 * _GIB, free_ram_bytes=48 * _GIB)
-    with _serve_ollama() as (endpoint, arrivals), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        response = asyncio.run(_client(tmp_path, profile=quiesced, residents=()).complete(LLMRequest(prompt="hello")))
+    with serving_agent(lane=_SIZED_LANE, replies=("agent completion",)) as service:
+        response = asyncio.run(_client(tmp_path, profile=_QUIESCED, residents=()).complete(_request()))
 
-    assert response.text == "local completion"
-    assert arrivals == ["/api/chat"]
+    assert response.text == "agent completion"
+    assert len(service.runs) == 1
 
 
 def test_an_unmeasurable_headroom_fails_closed(tmp_path: Path) -> None:
@@ -203,24 +153,17 @@ def test_an_unmeasurable_headroom_fails_closed(tmp_path: Path) -> None:
 
     The accelerator is present but its free figure could not be read, while
     system memory is abundant. Abundant RAM is not the arena the weights load
-    into, so the refusal must stand: this is the exact state that destroys
-    running work on a machine whose device memory nobody could measure.
+    into, so the refusal must stand.
 
     Distinguished by cause rather than by the refusal alone. A gate asserting
     only that something was refused would pass here for the shortfall reason and
     on a starved box for this one, and would never notice if the fail-closed arm
     were removed entirely.
     """
-    unmeasurable = _profile(free_vram_bytes=None, free_ram_bytes=48 * _GIB)
-    with _serve_ollama() as (endpoint, arrivals):
-        with (
-            override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-            pytest.raises(LLMContentionError) as refusal,
-        ):
-            asyncio.run(_client(tmp_path, profile=unmeasurable, residents=()).complete(LLMRequest(prompt="hello")))
+    with serving_agent(lane=_SIZED_LANE) as service, pytest.raises(LLMContentionError) as refusal:
+        asyncio.run(_client(tmp_path, profile=_UNMEASURABLE, residents=()).complete(_request()))
 
-        assert arrivals == []
-
+    assert service.runs == []
     causes = _causes(refusal.value)
     assert ContentionCause.UNREADABLE.value in causes
     assert ContentionCause.PEER_PROCESS.value not in causes, (
@@ -231,40 +174,24 @@ def test_an_unmeasurable_headroom_fails_closed(tmp_path: Path) -> None:
 def test_an_unreadable_resident_set_cannot_admit_a_measured_shortfall(tmp_path: Path) -> None:
     """A shortfall the runtime cannot explain is still a shortfall.
 
-    The second fail-closed arm, and the one easier to get wrong: when free
-    memory IS measurable and short, an unreadable resident set removes only the
-    ATTRIBUTION, never the shortfall. Admitting here because the cause could not
-    be determined would be the fail-open inversion of the whole check.
+    When free memory IS measurable and short, an unreadable resident set removes
+    only the ATTRIBUTION, never the shortfall. Admitting here because the cause
+    could not be determined would be the fail-open inversion of the whole check.
     """
-    starved = _profile(free_vram_bytes=256 * 1024**2, free_ram_bytes=48 * _GIB)
-    with _serve_ollama() as (endpoint, arrivals):
-        with (
-            override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-            pytest.raises(LLMContentionError) as refusal,
-        ):
-            asyncio.run(
-                _client(tmp_path, profile=starved, residents=None, residents_measured=False).complete(
-                    LLMRequest(prompt="hello")
-                )
-            )
+    with serving_agent(lane=_SIZED_LANE) as service, pytest.raises(LLMContentionError) as refusal:
+        asyncio.run(_client(tmp_path, profile=_STARVED, residents=None, residents_measured=False).complete(_request()))
 
-        assert arrivals == []
-
+    assert service.runs == []
     assert ContentionCause.UNREADABLE.value in _causes(refusal.value)
 
 
 def test_an_unmeasurable_headroom_and_a_measured_shortfall_are_not_the_same_refusal(tmp_path: Path) -> None:
     """The discrimination stated directly, since the two arms share an exception type."""
-    starved = _profile(free_vram_bytes=256 * 1024**2, free_ram_bytes=48 * _GIB)
-    unmeasurable = _profile(free_vram_bytes=None, free_ram_bytes=48 * _GIB)
-
-    with _serve_ollama() as (endpoint, _arrivals), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
+    with serving_agent(lane=_SIZED_LANE):
         with pytest.raises(LLMContentionError) as shortfall:
-            asyncio.run(_client(tmp_path / "a", profile=starved, residents=()).complete(LLMRequest(prompt="hello")))
+            asyncio.run(_client(tmp_path / "a", profile=_STARVED, residents=()).complete(_request()))
         with pytest.raises(LLMContentionError) as unreadable:
-            asyncio.run(
-                _client(tmp_path / "b", profile=unmeasurable, residents=()).complete(LLMRequest(prompt="hello"))
-            )
+            asyncio.run(_client(tmp_path / "b", profile=_UNMEASURABLE, residents=()).complete(_request()))
 
     shortfall_verdict = shortfall.value.terminal_precondition_verdict
     unreadable_verdict = unreadable.value.terminal_precondition_verdict
@@ -272,7 +199,6 @@ def test_an_unmeasurable_headroom_and_a_measured_shortfall_are_not_the_same_refu
     assert unreadable_verdict is not None
     assert shortfall_verdict.failed_condition_id == "provisioning.load_capacity.available"
     assert unreadable_verdict.failed_condition_id == "provisioning.load_headroom.measurable"
-    assert shortfall_verdict.failed_condition_id != unreadable_verdict.failed_condition_id
 
 
 def test_a_contention_refusal_is_sent_once_and_never_retried(tmp_path: Path) -> None:
@@ -281,84 +207,96 @@ def test_a_contention_refusal_is_sent_once_and_never_retried(tmp_path: Path) -> 
     Headroom does not return on a timer, so a refusal inside the retry loop
     would become several refusals while the memory is still held. Proven two
     ways because they can fail independently: the taxonomy must declare it
-    non-retryable, AND the check must sit outside the loop, so a retryable
-    declaration alone could not re-send it and neither could a generous policy.
+    non-retryable, AND the check must sit outside the loop.
     """
     assert transport_retry_permitted(LLMContentionError("no headroom")) is False
 
-    starved = _profile(free_vram_bytes=256 * 1024**2, free_ram_bytes=48 * _GIB)
     generous = LLMRetryPolicy(max_attempts=5, initial_backoff_s=0.01, max_backoff_s=0.02, budget_s=5.0)
-    with _serve_ollama() as (endpoint, arrivals):
-        with (
-            override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-            pytest.raises(LLMContentionError),
-        ):
-            asyncio.run(
-                _client(tmp_path, profile=starved, residents=(), retry_policy=generous).complete(
-                    LLMRequest(prompt="hello")
-                )
-            )
+    with serving_agent(lane=_SIZED_LANE) as service, pytest.raises(LLMContentionError):
+        asyncio.run(_client(tmp_path, profile=_STARVED, residents=(), retry_policy=generous).complete(_request()))
 
-        assert arrivals == []
+    assert service.lookups == [ModelRole.TEXT_EXTRACTION]
+    assert service.runs == []
 
 
-def test_the_refusal_names_the_authority_s_own_causes(tmp_path: Path) -> None:
-    """The error carries the authority's typed verdict, model, and causes."""
-    resident = RuntimeResident(name=_CATALOGUED_MODEL, size_bytes=2 * _GIB, size_vram_bytes=2 * _GIB)
-    starved = _profile(free_vram_bytes=256 * 1024**2, free_ram_bytes=48 * _GIB)
+def test_the_refusal_names_the_authority_s_own_causes_and_the_catalogue_size(tmp_path: Path) -> None:
+    """The error carries the authority's verdict for the lane's model at its catalogue size."""
+    resident = RuntimeResident(name=_SIZED_LANE.model, size_bytes=_GIB, size_vram_bytes=_GIB)
     snapshot = assess_model_load_contention(
-        _CATALOGUED_MODEL,
-        _declared_requirement_bytes(),
-        profile=starved,
+        _SIZED_LANE.model,
+        _SIZE_BYTES,
+        profile=_STARVED,
         residents=(resident,),
     )
 
-    with (
-        _serve_ollama() as (endpoint, _arrivals),
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-        pytest.raises(LLMContentionError) as refusal,
-    ):
-        asyncio.run(_client(tmp_path, profile=starved, residents=(resident,)).complete(LLMRequest(prompt="hello")))
+    with serving_agent(lane=_SIZED_LANE), pytest.raises(LLMContentionError) as refusal:
+        asyncio.run(_client(tmp_path, profile=_STARVED, residents=(resident,)).complete(_request()))
 
     assert snapshot.admitted is False
     assert snapshot.precondition_verdict is not None
     assert refusal.value.terminal_precondition_verdict == snapshot.precondition_verdict
     assert snapshot.causes, "the authority refused without naming a cause, so there is nothing to carry"
     assert refusal.value.context == {
-        "model": _CATALOGUED_MODEL,
+        "model": _SIZED_LANE.model,
         "contention_causes": tuple(cause.value for cause in snapshot.causes),
     }
 
 
-def test_an_off_host_dispatch_is_not_headroom_checked(tmp_path: Path) -> None:
+def test_an_off_host_lane_is_not_headroom_checked(tmp_path: Path) -> None:
     """A hosted model's weights never touch this machine's memory.
 
-    Asserted through the client's own guard rather than by dispatching at a
-    vendor: the point is that the check does not run, and a real cloud call is
-    what this repository must never make in a test.
+    Asserted through the client's own guard on the same stated size, so the
+    lane's ``reads_off_host`` flag is the only difference between the refusal
+    and the silence.
     """
     starved = _profile(free_vram_bytes=0, free_ram_bytes=0)
     client = _client(tmp_path, profile=starved, residents=())
+    off_host = DEFAULT_LANE.model_copy(update={"size_bytes": _SIZE_BYTES})
 
-    # Would refuse on-host with these readings; must be silent off-host.
     with pytest.raises(LLMContentionError):
-        client._require_load_headroom(LLMProvider.LOCAL, _CATALOGUED_MODEL)
-    client._require_load_headroom(LLMProvider.AGENT, _CATALOGUED_MODEL)
+        client._require_load_headroom(_SIZED_LANE)
+    client._require_load_headroom(off_host)
 
 
-def test_an_uncatalogued_model_is_not_assessed(tmp_path: Path) -> None:
-    """The catalogue's claim is the requirement, and there is none for an unknown id.
+@pytest.mark.parametrize("size_bytes", [None, 0])
+def test_an_unknown_size_skips_the_memory_check_and_still_takes_the_slot(
+    tmp_path: Path, size_bytes: int | None
+) -> None:
+    """The catalogue's size is the requirement, and an entry that states none makes no claim.
 
-    Deliberate and worth stating plainly: this is the one direction the check
-    does not cover. Inventing a requirement is worse than not checking, because
-    an unknown requirement read as zero flows into the authority as the amount
-    the model needs and returns ADMITTED on evidence nobody has.
+    Inventing a requirement is worse than not checking, because an unknown
+    requirement read as zero flows into the authority as the amount the model
+    needs and returns ADMITTED on evidence nobody has. The memory check is
+    skipped; the occupancy bound is not, because the load still happens here.
     """
+    unknown = ON_HOST_LANE.model_copy(update={"size_bytes": size_bytes})
     starved = _profile(free_vram_bytes=0, free_ram_bytes=0)
     client = _client(tmp_path, profile=starved, residents=())
+    held_during_run: list[int] = []
 
-    assert model_candidate("an-operator-chosen-model") is None
-    client._require_load_headroom(LLMProvider.LOCAL, "an-operator-chosen-model")
+    def answer(body: ModelRunBody) -> str:
+        del body
+        held_during_run.append(_on_host_inference_arena(client.settings).held)
+        return "agent completion"
+
+    with serving_agent(lane=unknown, answer=answer) as service:
+        response = asyncio.run(client.complete(_request()))
+
+    assert response.text == "agent completion"
+    assert len(service.runs) == 1
+    assert held_during_run == [1], "an on-host run of unknown size must still hold an inference slot"
+
+
+def _assert_agrees(client: LLMClient, lane: ModelRunLane, expected: ContentionSnapshot) -> None:
+    with serving_agent(lane=lane, replies=("agent completion",)) as service:
+        if expected.admitted:
+            response = asyncio.run(client.complete(_request()))
+            assert response.text == "agent completion"
+            assert len(service.runs) == 1
+        else:
+            with pytest.raises(LLMContentionError):
+                asyncio.run(client.complete(_request()))
+            assert service.runs == []
 
 
 def test_the_dispatch_agrees_with_the_live_authority_on_this_machine(tmp_path: Path) -> None:
@@ -369,35 +307,17 @@ def test_the_dispatch_agrees_with_the_live_authority_on_this_machine(tmp_path: P
     reaches no external service.
 
     Written as agreement with the authority rather than as a hardcoded verdict
-    because the verdict is a property of the box. A case asserting "refuses"
-    would pass here and fail on a machine with headroom, and a case asserting
-    "admits" would do the reverse -- neither would be testing the wiring, which
-    is the only thing this layer owns.
+    because the verdict is a property of the box.
     """
     profile = probe_hardware_profile()
     residents = read_runtime_residents()
-    requirement = _declared_requirement_bytes()
     expected = assess_model_load_contention(
-        _CATALOGUED_MODEL,
-        requirement,
+        _SIZED_LANE.model,
+        _SIZE_BYTES,
         profile=profile,
         residents=residents,
         residents_measured=residents is not None,
     )
-    assert isinstance(expected, ContentionSnapshot)
+    client = _client(tmp_path, profile=profile, residents=residents, residents_measured=residents is not None)
 
-    with _serve_ollama() as (endpoint, arrivals), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        client = _client(
-            tmp_path,
-            profile=profile,
-            residents=residents,
-            residents_measured=residents is not None,
-        )
-        if expected.admitted:
-            response = asyncio.run(client.complete(LLMRequest(prompt="hello")))
-            assert response.text == "local completion"
-            assert arrivals == ["/api/chat"]
-        else:
-            with pytest.raises(LLMContentionError):
-                asyncio.run(client.complete(LLMRequest(prompt="hello")))
-            assert arrivals == []
+    _assert_agrees(client, _SIZED_LANE, expected)

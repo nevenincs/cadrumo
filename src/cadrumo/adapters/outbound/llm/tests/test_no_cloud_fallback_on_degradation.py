@@ -1,4 +1,4 @@
-"""A local outage must never become an off-host read.
+"""An on-host lane's failure must never become an off-host read.
 
 This is a confidentiality boundary, not a reliability one. Every other
 degradation in this product may be answered by trying something else; this one
@@ -6,25 +6,24 @@ may not, because the something else removes a taxpayer's document from the
 machine. An automatic fallback would do it at exactly the moment nobody is
 watching -- a failure -- and without anyone choosing it.
 
-The behavioural cases run a real local outage with the off-host route fully
-available (an agent service bound for the operation, recording every run) and
-assert on what the OFF-HOST route received, which is zero. Asserting on
-the raised exception alone would not distinguish "no fallback exists" from "a
-fallback exists and happened to fail too".
+The behavioural cases run a failing on-host lane behind a recording agent
+service and assert on what the service received: the one refused run and
+nothing after it. Asserting on the raised exception alone would not distinguish
+"no fallback exists" from "a fallback exists and happened to fail too".
 """
 
 from __future__ import annotations
 
 import ast
 import asyncio
-import socket
 from collections.abc import Generator
-from contextlib import closing, contextmanager
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 
-from .....core.config import override_settings
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+
 from .....core.config_support import LLMProvider
 from .....core.directory_scan import scan_directory
 from .....core.errors.error_codes import build_error_envelope
@@ -38,7 +37,7 @@ from ..consent import EvidenceConsentToken
 from ..errors import LLMConsentError, LLMError
 from ..models import LLMRequest
 from ._arena_fixtures import _fresh_arena
-from .model_run_support import RecordingModelRuns, serving_agent
+from .model_run_support import ON_HOST_LANE, RecordingModelRuns, serving_agent
 
 __all__ = ["_fresh_arena"]
 
@@ -49,36 +48,26 @@ _NO_RETRY = LLMRetryPolicy(max_attempts=1)
 
 @contextmanager
 def _cloud_recorder() -> Generator[RecordingModelRuns]:
-    """Stand in for the agent service, recording every run that reaches it.
+    """Stand in for the agent service on a lane that reads off-host, recording every run.
 
-    The question is whether a request reached the off-host route, and only the
-    route can answer it. The stand-in answers a real dispatch with a completion,
-    so a request that legitimately reaches it COMPLETES; every case asserting it
-    stayed empty would otherwise be satisfied by a route nothing could reach.
+    The stand-in answers a permitted dispatch with a completion, so a request
+    that legitimately reaches it COMPLETES; every case asserting it stayed
+    empty would otherwise be satisfied by a route nothing could reach.
     """
     with serving_agent(replies=("cloud completion",)) as service:
         yield service
 
 
-def _dead_local_endpoint() -> str:
-    """Return a loopback URL with nothing listening -- a genuine local outage.
-
-    The port is bound and released so it is known to be free, which makes the
-    connection refusal deterministic rather than a hope that a random port is
-    unused.
-    """
-    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as probe:
-        probe.bind(("127.0.0.1", 0))
-        port = probe.getsockname()[1]
-    return f"http://127.0.0.1:{port}/api/chat"
+@contextmanager
+def _failing_on_host_lane(code: ModelRunRefusalCode) -> Generator[RecordingModelRuns]:
+    """Stand in for the agent service on a lane that stays on this computer and refuses its run."""
+    with serving_agent(lane=ON_HOST_LANE, run_refusal=code) as service:
+        yield service
 
 
 def _client(tmp_path: Path, *, cloud_upload_permitted: bool = False) -> LLMClient:
     settings = EnvFileFreeSettings(
         cadrumo_evidence_cloud_upload_permitted=cloud_upload_permitted,
-        # The off-host route is fully usable: a service is bound and answers.
-        # If a fallback existed, nothing here would stop it.
-        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -92,21 +81,22 @@ def _client(tmp_path: Path, *, cloud_upload_permitted: bool = False) -> LLMClien
     )
 
 
-def test_a_local_outage_does_not_reach_the_cloud(tmp_path: Path) -> None:
-    """The front door: the configured local provider is down and the cloud is ready."""
-    with _cloud_recorder() as service:
-        with (
-            override_settings(
-                cadrumo_llm_ollama_chat_url=_dead_local_endpoint(),
-            ),
-            pytest.raises(LLMError),
-        ):
-            asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="read this")))
-
-        assert service.runs == []
+def _request(**fields: object) -> LLMRequest:
+    base: dict[str, object] = {"prompt": "read this", "model_role": ModelRole.TEXT_EXTRACTION}
+    return LLMRequest.model_validate(base | fields)
 
 
-def test_an_unmarked_request_does_not_reach_the_cloud_either(tmp_path: Path) -> None:
+@pytest.mark.parametrize("code", [ModelRunRefusalCode.LANE_UNAVAILABLE, ModelRunRefusalCode.RUN_FAILED])
+def test_a_failing_on_host_lane_is_not_tried_again_elsewhere(tmp_path: Path, code: ModelRunRefusalCode) -> None:
+    """The front door: the selected on-host lane fails, and nothing else is asked."""
+    with _failing_on_host_lane(code) as service, pytest.raises(LLMError):
+        asyncio.run(_client(tmp_path).complete(_request(evidence_derived=True)))
+
+    assert service.lookups == [ModelRole.TEXT_EXTRACTION]
+    assert len(service.runs) == 1
+
+
+def test_an_unmarked_request_is_not_tried_again_elsewhere_either(tmp_path: Path) -> None:
     """The reach-around that matters most: a request the consent gate never sees.
 
     The consent gate only inspects a request MARKED as evidence-derived, so an
@@ -115,91 +105,60 @@ def test_an_unmarked_request_does_not_reach_the_cloud_either(tmp_path: Path) -> 
     only would leave the unwatched half untested -- and the unwatched half is
     where a silent fallback would actually live.
     """
-    with _cloud_recorder() as service:
-        request = LLMRequest(prompt="a routine unmarked prompt", evidence_derived=False)
-        with (
-            override_settings(
-                cadrumo_llm_ollama_chat_url=_dead_local_endpoint(),
-            ),
-            pytest.raises(LLMError),
-        ):
-            asyncio.run(_client(tmp_path).complete(request))
+    with _failing_on_host_lane(ModelRunRefusalCode.RUN_FAILED) as service, pytest.raises(LLMError):
+        asyncio.run(_client(tmp_path).complete(_request(evidence_derived=False)))
 
-        assert service.runs == []
+    assert service.lookups == [ModelRole.TEXT_EXTRACTION]
+    assert len(service.runs) == 1
 
 
-def test_a_permitted_request_pinned_at_the_cloud_does_reach_the_recorder(tmp_path: Path) -> None:
+def test_a_permitted_request_on_an_off_host_lane_does_reach_the_recorder(tmp_path: Path) -> None:
     """The recorder's own control: it CAN record, so an empty one is a fact about the client.
 
-    Every other case here asserts the recorder stayed empty, and an empty
-    recorder is exactly what a recorder nothing could reach also produces -- a
-    drifted settings key, a changed endpoint path, a client that never wired the
-    URL. Each of those would satisfy all three refusal cases identically while
-    proving nothing about fallback.
+    The refusal case below asserts the recorder stayed empty, and an empty
+    recorder is exactly what a recorder nothing could reach also produces.
+    Asserting zero arrivals cannot distinguish "nothing was sent" from "nothing
+    could have been recorded" without this case.
 
-    This is the same argument the file already makes one level up: asserting on
-    the exception alone cannot distinguish "no fallback exists" from "a fallback
-    exists and also failed". Asserting zero arrivals cannot distinguish "nothing
-    was sent" from "nothing could have been recorded".
-
-    Consented and deliberately pinned, so the request carries everything the
-    off-host route admits: the service refuses any run on an off-host lane that
-    carries no consent for it. Nothing about this makes a fallback reachable:
-    the request NAMES its provider, which is the operator choosing, not a
-    degradation choosing for them.
+    Consented, so the request carries everything the off-host lane admits: the
+    service refuses any run on an off-host lane that carries no consent for it.
     """
     with _cloud_recorder() as service:
-        request = LLMRequest(
+        request = _request(
             prompt="a routine consented prompt",
             evidence_derived=True,
             consent_token=EvidenceConsentToken(
                 surface="runtime:ledger.evidence.extract", evidence_content_address="d" * 64
             ),
             provider_override=LLMProvider.AGENT,
-            model_role=ModelRole.TEXT_EXTRACTION,
         )
-        with override_settings(cadrumo_llm_ollama_chat_url=_dead_local_endpoint()):
-            response = asyncio.run(_client(tmp_path, cloud_upload_permitted=True).complete(request))
+        response = asyncio.run(_client(tmp_path, cloud_upload_permitted=True).complete(request))
 
         assert len(service.runs) == 1
 
     assert response.text == "cloud completion"
 
 
-def test_an_evidence_request_pinned_at_the_cloud_is_refused_before_dispatch(tmp_path: Path) -> None:
+def test_an_evidence_request_on_an_off_host_lane_is_refused_before_dispatch(tmp_path: Path) -> None:
     """The consent gate refuses an evidence read off-host, and refuses it EARLY.
 
     Asserted at the recorder rather than only on the exception type, because
     "refused before dispatch" and "dispatched, then refused" are different
     facts and only one of them keeps the document on this host. The case above
-    is what makes this empty recorder meaningful: the same endpoint, reached by
-    a permitted request, does record.
+    is what makes this empty recorder meaningful: the same lane, reached by a
+    permitted request, does record.
     """
     with _cloud_recorder() as service:
-        request = LLMRequest(
-            prompt="read this invoice",
-            evidence_derived=True,
-            provider_override=LLMProvider.AGENT,
-            model_role=ModelRole.TEXT_EXTRACTION,
-        )
-        with (
-            override_settings(
-                cadrumo_llm_ollama_chat_url=_dead_local_endpoint(),
-            ),
-            pytest.raises(LLMConsentError),
-        ):
-            asyncio.run(_client(tmp_path).complete(request))
+        with pytest.raises(LLMConsentError):
+            asyncio.run(_client(tmp_path).complete(_request(prompt="read this invoice", evidence_derived=True)))
 
         assert service.runs == []
 
 
-def test_a_local_degradation_has_no_invented_action(tmp_path: Path) -> None:
-    """A transport failure remains a transport fact until an application boundary classifies it."""
-    with (
-        override_settings(cadrumo_llm_ollama_chat_url=_dead_local_endpoint()),
-        pytest.raises(LLMError) as raised,
-    ):
-        asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="read this")))
+def test_an_on_host_degradation_has_no_invented_action(tmp_path: Path) -> None:
+    """A failed run remains a provider fact until an application boundary classifies it."""
+    with _failing_on_host_lane(ModelRunRefusalCode.RUN_FAILED), pytest.raises(LLMError) as raised:
+        asyncio.run(_client(tmp_path).complete(_request()))
 
     assert build_error_envelope(raised.value).action is None
 
@@ -210,7 +169,7 @@ def _llm_package_modules() -> list[Path]:
     return sorted(path for path in scan_directory(root, pattern="*.py", recursive=True) if "tests" not in path.parts)
 
 
-_ADAPTER_CONSTRUCTORS = frozenset({"_build_adapter", "AgentAdapter", "LocalAdapter"})
+_ADAPTER_CONSTRUCTORS = frozenset({"_build_adapter", "AgentAdapter"})
 
 
 def _called_names(node: ast.AST) -> set[str]:
@@ -266,7 +225,7 @@ _FALLBACK_SPECIMEN = '''
 
 def read(request):
     try:
-        return local_adapter.complete(request)
+        return first_adapter.complete(request)
     except LLMProviderError:
         adapter = AgentAdapter(port=port, role=role, lane=lane, consent=None, deadline_seconds=30, expects_json=False)
         return adapter.complete(request.model_copy(update={"provider_override": "AGENT"}))
@@ -308,7 +267,7 @@ def test_no_failure_handler_in_the_package_builds_another_provider() -> None:
     offenders = _handlers_building_adapters(_llm_package_modules())
 
     assert not offenders, (
-        "a failure handler builds a provider adapter, which is how a local outage becomes a "
+        "a failure handler builds a provider adapter, which is how an on-host failure becomes a "
         "cloud dispatch nobody chose:\n" + "\n".join(offenders)
     )
 

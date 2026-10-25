@@ -43,7 +43,6 @@ from ..consent import (
     EvidenceConsentToken,
     cloud_evidence_read_permitted,
     mint_evidence_consent_token,
-    provider_reads_off_host,
 )
 from ..errors import LLMConsentError
 from ..evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
@@ -278,17 +277,6 @@ def test_the_public_corpus_escape_reaches_the_provider_through_the_reader(
 
     ((header, _),) = service.runs
     assert header.consent is None
-
-
-def test_a_local_evidence_read_needs_no_consent() -> None:
-    """POSITIVE CONTROL: on-host reading is unchanged and unceremonious.
-
-    The whole justification for a narrow gate is that the on-host route stays
-    free; a gate that also taxed local reads would push operators toward
-    disabling it.
-    """
-    assert provider_reads_off_host(LLMProvider.LOCAL) is False
-    assert all(provider_reads_off_host(member) for member in LLMProvider if member is not LLMProvider.LOCAL)
 
 
 # ── The minting side ─────────────────────────────────────────────────────────

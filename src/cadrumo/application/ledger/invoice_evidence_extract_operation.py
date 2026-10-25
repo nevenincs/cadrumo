@@ -76,7 +76,7 @@ class LedgerEvidenceExtractRequest(BaseModel):
         if self.off_host_provider is None:
             if self.acknowledge_off_host:
                 raise ValueError("off-host acknowledgement requires an off-host provider")
-        elif self.off_host_provider is LLMProvider.LOCAL or not self.acknowledge_off_host or self.evidence_id is None:
+        elif not self.acknowledge_off_host or self.evidence_id is None:
             raise ValueError("off-host reading requires a stored evidence record and per-invocation acknowledgement")
         return self
 

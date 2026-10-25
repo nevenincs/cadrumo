@@ -4049,10 +4049,6 @@ llm:
       dispatch_refused: 'Refused: this request reads a taxpayer document and would
         send it to the off-host provider %{provider} without a per-invocation consent
         acknowledgement.'
-      local_reader_not_loopback: 'Refused: this request reads a taxpayer document,
-        and the local reader''s endpoint is not this machine''s loopback address.
-        Reading it there would send the document off this machine, so point the local
-        reader at a loopback address to read taxpayer evidence.'
       mint_refused: 'Refused: off-host reading of taxpayer evidence is not permitted
         for this invocation.'
 navigation:

@@ -21,7 +21,6 @@ from ..component_records import (
     ComponentLocateOutcome,
     ComponentRecordState,
     component_records_root,
-    local_ai_chat_url,
     locate_component,
     locate_local_ai,
     read_component_record,
@@ -230,12 +229,12 @@ def test_without_a_record_or_its_program_the_local_ai_does_not_locate(tmp_path: 
     assert gone.component.outcome is ComponentLocateOutcome.PATH_MISSING
 
 
-def test_the_readers_send_to_the_recorded_address_unless_the_operator_named_an_endpoint(tmp_path: Path) -> None:
+def test_the_readers_use_the_recorded_address_unless_the_operator_named_an_endpoint(tmp_path: Path) -> None:
     managed = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_llm_ollama_chat_url=LOCAL_AI_CHAT_URL)
+    records_root = component_records_root(managed)
     assert uses_managed_local_ai(managed)
-    assert local_ai_chat_url(managed) == LOCAL_AI_CHAT_URL, "without a record nothing Cadrumo runs answers there"
+    assert locate_local_ai(records_root=records_root).chat_url is None, "without a record no server is located"
     _local_ai_record(tmp_path, address="127.0.0.1:24001")
-    assert local_ai_chat_url(managed) == "http://127.0.0.1:24001/api/chat"
+    assert locate_local_ai(records_root=records_root).chat_url == "http://127.0.0.1:24001/api/chat"
     own = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_llm_ollama_chat_url="http://10.0.0.2:11434/api/chat")
     assert not uses_managed_local_ai(own)
-    assert local_ai_chat_url(own) == "http://10.0.0.2:11434/api/chat"

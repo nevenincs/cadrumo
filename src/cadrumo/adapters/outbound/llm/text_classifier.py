@@ -37,10 +37,10 @@ from .client import LLMClient
 from .consent import EvidenceConsentToken
 from .models import LLMRequest
 
-__all__ = ["LocalTextLLMClassifier"]
+__all__ = ["TextLLMClassifier"]
 
 
-class LocalTextLLMClassifier:
+class TextLLMClassifier:
     """Classify or split a transaction from extracted evidence text through the agent.
 
     Args:

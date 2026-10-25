@@ -2,8 +2,7 @@
 
 Every run goes through the real registry, supervisor, journal and encrypted
 operand store. The model runtime is a real loopback endpoint speaking the
-Ollama wire shapes; only the text fitness probe is an injected port, as
-production composition injects it.
+Ollama wire shapes.
 """
 
 from __future__ import annotations
@@ -20,7 +19,6 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from .....application.local_reader import RoleFitnessOutcome
 from .....application.local_reader_operation import (
     build_local_reader_operation_definition,
     build_local_reader_operation_registration,
@@ -43,7 +41,7 @@ from .....application.operations.frontend_requests import (
 from .....application.operations.models import OperationRequest
 from .....application.operations.registry import OperationRegistry
 from .....application.operations.tests.authority_test_support import unread_authority_operation
-from .....core.config import Settings, override_settings
+from .....core.config import override_settings
 from .....core.model_catalogue import ModelRole, default_model_runtime_id
 from .....core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
 from .....tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
@@ -57,7 +55,6 @@ __all__ = [
     "TEXT_MODEL",
     "VISION_MODEL",
     "LoopbackModelRuntime",
-    "ProvisioningPorts",
     "SupervisedRun",
     "loopback_model_runtime",
     "provisioning_registry",
@@ -165,32 +162,10 @@ def loopback_model_runtime(
         yield chat_url
 
 
-class ProvisioningPorts:
-    """The injected fitness port, recording every call."""
-
-    def __init__(self) -> None:
-        """Start with nothing probed."""
-        self.probed: list[str] = []
-
-    def probe(self, model: str, settings: Settings) -> RoleFitnessOutcome:
-        """Record a fitness probe and report the model fit."""
-        del settings
-        self.probed.append(model)
-        return RoleFitnessOutcome(
-            role=ModelRole.TEXT_EXTRACTION,
-            model=model,
-            fit=True,
-            answer_parseable=True,
-            grounded=True,
-            answer_budget_tokens=1024,
-            elapsed_ms=1,
-        )
-
-
-def provisioning_registry(ports: ProvisioningPorts) -> OperationRegistry:
-    """Register the three local-reader operations over ``ports``."""
-    provision = build_local_reader_operation_definition(text_probe=ports.probe)
-    status = build_local_reader_status_definition(text_probe=ports.probe)
+def provisioning_registry() -> OperationRegistry:
+    """Register the three local-reader operations."""
+    provision = build_local_reader_operation_definition()
+    status = build_local_reader_status_definition()
     report = build_local_reader_report_definition()
     return OperationRegistry(
         definitions=(provision, report, status),
@@ -233,12 +208,11 @@ class SupervisedRun[ResultT: BaseModel]:
 
 def run_supervised[RequestT: BaseModel, ResultT: BaseModel](
     tmp_path: Path,
-    ports: ProvisioningPorts,
     request: OperationRequest[RequestT],
     result_type: type[ResultT],
 ) -> SupervisedRun[ResultT]:
-    """Settle ``request`` over the recording ``ports`` and resolve its public result as a frontend would."""
-    return run_supervised_in(tmp_path, provisioning_registry(ports), request, result_type)
+    """Settle ``request`` and resolve its public result as a frontend would."""
+    return run_supervised_in(tmp_path, provisioning_registry(), request, result_type)
 
 
 def run_supervised_in[RequestT: BaseModel, ResultT: BaseModel](

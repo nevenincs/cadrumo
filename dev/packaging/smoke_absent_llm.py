@@ -108,8 +108,8 @@ _INFERENCE_SURFACES: Final[tuple[tuple[str, str, str], ...]] = (
     ),
     (
         "cadrumo.adapters.outbound.llm.text_classifier",
-        "LocalTextLLMClassifier",
-        "LocalTextLLMClassifier(spec=None)",
+        "TextLLMClassifier",
+        "TextLLMClassifier(spec=None)",
     ),
     # The reader constructors. Each is
     # public at its own module and carries the guard itself, so the derivation
@@ -138,6 +138,13 @@ _INFERENCE_SURFACES: Final[tuple[tuple[str, str, str], ...]] = (
         "cadrumo.adapters.outbound.llm.supply_nature_proposal",
         "SupplyNatureProposer",
         "SupplyNatureProposer()",
+    ),
+    # The statement reader guards before it resolves settings or builds its
+    # client, so a bare construction reaches the cut.
+    (
+        "cadrumo.adapters.outbound.llm.statement_reading",
+        "StatementReader",
+        "StatementReader()",
     ),
 )
 

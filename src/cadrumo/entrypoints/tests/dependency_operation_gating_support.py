@@ -40,7 +40,7 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from ...adapters.outbound.llm.column_role_mapping import resolve_column_roles
-from ...adapters.outbound.llm.statement_reading import LocalStatementReader
+from ...adapters.outbound.llm.statement_reading import StatementReader
 from ...adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, RecordingModelRuns, serving_agent
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...application.invoices.catalogue_intake_contracts import (
@@ -297,7 +297,7 @@ def operation_runtime(
         )
         with (
             bind_column_role_mapping_resolver(resolve_column_roles),
-            bind_statement_reader_factory(LocalStatementReader),
+            bind_statement_reader_factory(StatementReader),
             conformance.conformance_operation_runtime(
                 tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
             ) as (driver, registry, profile_id),

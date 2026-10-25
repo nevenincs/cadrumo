@@ -223,9 +223,6 @@ cli:
           del document, que un identificador d''adjunt no aporta.'
         extract_off_host_provider_help: Envia aquest document a un model allotjat
           en lloc de llegir-lo en aquest equip.
-        extract_off_host_provider_is_local: --off-host-provider local és el valor
-          per defecte i no envia res fora de l'equip. Omet l'opció o indica un proveïdor
-          allotjat.
         extract_off_host_unclassified: 'Es rebutja aquesta lectura fora de l''equip:
           el control de consentiment ha retornat {outcome}, per al qual aquesta ordre
           no té text. Una resposta no reconeguda es tracta com un rebuig perquè les

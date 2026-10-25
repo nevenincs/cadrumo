@@ -353,12 +353,12 @@ def _agent_supply_nature_proposer_transport() -> str:
 
 
 def _agent_text_classifier_transport() -> str:
-    from cadrumo.adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
+    from cadrumo.adapters.outbound.llm.text_classifier import TextLLMClassifier
     from cadrumo.domain.transactions.llm import prompt_spec_with_every_spending_category
 
     with bundled_indexed_authority().operation() as operation:
         spec = prompt_spec_with_every_spending_category(year=2025, operation=operation)
-        return _transport_of(LocalTextLLMClassifier(spec=spec).decided_by)
+        return _transport_of(TextLLMClassifier(spec=spec).decided_by)
 
 
 def _agent_text_extractor_transport() -> str:
@@ -400,15 +400,15 @@ def _agent_vision_transcriber_transport() -> str:
 
 
 def _agent_statement_reader_transport() -> str:
-    from cadrumo.adapters.outbound.llm.statement_reading import LocalStatementReader
+    from cadrumo.adapters.outbound.llm.statement_reading import StatementReader
 
-    return _transport_of(LocalStatementReader().decided_by)
+    return _transport_of(StatementReader().decided_by)
 
 
 _READERS_THROUGH_THE_AGENT: dict[str, Callable[[], str]] = {
-    "LocalTextLLMClassifier": _agent_text_classifier_transport,
+    "TextLLMClassifier": _agent_text_classifier_transport,
     "TextInvoiceFieldExtractor": _agent_text_extractor_transport,
-    "LocalStatementReader": _agent_statement_reader_transport,
+    "StatementReader": _agent_statement_reader_transport,
     "VisionLLMClassifier": _agent_vision_classifier_transport,
     "VisionDocumentTranscriber": _agent_vision_transcriber_transport,
     "SemanticColumnRoleMapper": _agent_column_role_mapper_transport,
@@ -436,17 +436,17 @@ def test_a_reader_through_the_agent_never_stamps_the_on_host_transport() -> None
     from cadrumo.adapters.outbound.llm.column_role_mapping import SemanticColumnRoleMapper
     from cadrumo.adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
     from cadrumo.adapters.outbound.llm.evidence_draft_vision import VisionDocumentTranscriber
-    from cadrumo.adapters.outbound.llm.statement_reading import LocalStatementReader
+    from cadrumo.adapters.outbound.llm.statement_reading import StatementReader
     from cadrumo.adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
-    from cadrumo.adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
+    from cadrumo.adapters.outbound.llm.text_classifier import TextLLMClassifier
     from cadrumo.adapters.outbound.llm.vision_classifier import VisionLLMClassifier
     from cadrumo.core.config_support import LLMProvider
     from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 
     classes = {
-        "LocalTextLLMClassifier": LocalTextLLMClassifier,
+        "TextLLMClassifier": TextLLMClassifier,
         "TextInvoiceFieldExtractor": TextInvoiceFieldExtractor,
-        "LocalStatementReader": LocalStatementReader,
+        "StatementReader": StatementReader,
         "VisionLLMClassifier": VisionLLMClassifier,
         "VisionDocumentTranscriber": VisionDocumentTranscriber,
         "SemanticColumnRoleMapper": SemanticColumnRoleMapper,

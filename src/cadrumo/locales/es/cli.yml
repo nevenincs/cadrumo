@@ -226,9 +226,6 @@ cli:
           del documento, que un identificador de adjunto no aporta.'
         extract_off_host_provider_help: Envía este documento a un modelo alojado en
           lugar de leerlo en este equipo.
-        extract_off_host_provider_is_local: --off-host-provider local es el valor
-          por defecto y no envía nada fuera del equipo. Omite la opción o indica un
-          proveedor alojado.
         extract_off_host_unclassified: 'Se rechaza esta lectura fuera del equipo:
           el control de consentimiento devolvió {outcome}, para lo que este comando
           no tiene texto. Una respuesta no reconocida se trata como rechazo para que

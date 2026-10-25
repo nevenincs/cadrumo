@@ -67,7 +67,7 @@ from .response_json import first_json_object
 
 __all__ = [
     "STATEMENT_READING_PROMPT_ID",
-    "LocalStatementReader",
+    "StatementReader",
     "build_statement_page_prompt",
     "parse_statement_page_response",
 ]
@@ -259,7 +259,7 @@ def _transcribe_with_retries(
     return None
 
 
-class LocalStatementReader:
+class StatementReader:
     """Read statement pages through the agent's text extraction role and, for scans, its vision role.
 
     Args:

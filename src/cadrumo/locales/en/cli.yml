@@ -208,8 +208,6 @@ cli:
           id does not carry.'
         extract_off_host_provider_help: Send this document to a hosted model instead
           of reading it on-host.
-        extract_off_host_provider_is_local: --off-host-provider local is the default
-          and reads nothing off-host. Omit the flag, or name a hosted provider.
         extract_off_host_unclassified: 'Refusing this off-host read: the consent gate
           returned {outcome}, which this command has no wording for. An unrecognised
           answer is treated as a refusal so evidence cannot leave this host on a decision

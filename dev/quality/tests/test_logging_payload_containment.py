@@ -119,8 +119,8 @@ def test_third_party_warnings_still_reach_the_log_file(log_file: Path) -> None:
 
 
 def test_first_party_image_payload_is_redacted_but_the_record_survives(log_file: Path) -> None:
-    """The local on-host route: our own module logs a request carrying images."""
-    logging.getLogger("cadrumo.adapters.outbound.llm.providers.local").debug(
+    """The on-host route: our own module logs a request carrying images."""
+    logging.getLogger("cadrumo.adapters.outbound.llm.providers.agent").debug(
         "ollama vision request %s",
         {"model": "probe-vision", "images": [_JPEG_PAYLOAD]},
     )

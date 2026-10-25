@@ -14,7 +14,7 @@ from ..adapters.outbound.llm.errors import LLMCacheError, LLMConfigError, LLMPro
 from ..adapters.outbound.llm.models import MultimodalImageInput
 from ..adapters.outbound.llm.pdf_rasterisation import rasterise_pdf_pages_to_base64_png
 from ..adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
-from ..adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
+from ..adapters.outbound.llm.text_classifier import TextLLMClassifier
 from ..adapters.outbound.llm.vision_classifier import VisionLLMClassifier
 from ..adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -135,7 +135,7 @@ class VisionReader:
 class TextReader:
     """Adapt the local text reader to the application classifier protocol."""
 
-    def __init__(self, reader: LocalTextLLMClassifier) -> None:
+    def __init__(self, reader: TextLLMClassifier) -> None:
         self._reader = reader
 
     @property
@@ -238,7 +238,7 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
         return result
 
     def make_text_classifier(spec: PromptSpec, /) -> LLMClassifier:
-        return TextReader(LocalTextLLMClassifier(spec=spec, settings=settings))
+        return TextReader(TextLLMClassifier(spec=spec, settings=settings))
 
     ports = LLMClassificationPorts(
         resolve_evidence_input=resolve_evidence_input,

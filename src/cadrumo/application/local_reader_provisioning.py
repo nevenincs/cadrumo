@@ -13,7 +13,7 @@ from ..core.config import override_settings
 from ..core.model_catalogue import ModelRole
 from ..core.operations import OperationEffect
 from ..core.time.clock import now
-from .local_reader import RoleModelTarget, TextExtractionFitnessProbe, role_model_targets, verify_role_target
+from .local_reader import RoleModelTarget, role_model_targets, verify_role_target
 from .local_reader_contracts import (
     LOCAL_READER_EXECUTE_PHASE,
     LOCAL_READER_OPERATION_SUBJECT,
@@ -65,10 +65,7 @@ def local_reader_provision_effect(outcome: LocalReaderProvisionOutcome) -> Opera
 
 
 class _LocalReaderProvisioner:
-    """Every local-reader action, over the injected fitness port."""
-
-    def __init__(self, *, text_probe: TextExtractionFitnessProbe) -> None:
-        self._text_probe = text_probe
+    """Every local-reader action."""
 
     async def run(self, payload: LocalReaderProvisionRequest) -> LocalReaderProvisionOutcome:
         match payload.action:
@@ -110,7 +107,7 @@ class _LocalReaderProvisioner:
             if target.model is None:
                 items.append(_refused_target(target))
                 continue
-            ready = await asyncio.to_thread(verify_role_target, target, text_probe=self._text_probe)
+            ready = await asyncio.to_thread(verify_role_target, target)
             items.append(
                 LocalReaderModelOutcome(
                     model=ready.model,
@@ -127,18 +124,14 @@ class _LocalReaderProvisioner:
         return items
 
 
-async def provision_local_reader(
-    payload: LocalReaderProvisionRequest,
-    *,
-    text_probe: TextExtractionFitnessProbe,
-) -> LocalReaderProvisionOutcome:
+async def provision_local_reader(payload: LocalReaderProvisionRequest) -> LocalReaderProvisionOutcome:
     """Run one local-reader action and return its settled outcome.
 
     The single implementation of load and verify, which the supervised
     operation wraps. Never raises for a refusal: every refusal is a typed
     verdict on the outcome.
     """
-    provisioner = _LocalReaderProvisioner(text_probe=text_probe)
+    provisioner = _LocalReaderProvisioner()
     language = payload.output_language
     # A licence advisory is prose, written where the model is selected; the
     # frontend that asked must read it in its own language, not this host's.
@@ -151,10 +144,6 @@ async def provision_local_reader(
 class LocalReaderProvisionExecutor:
     """Supervise :func:`provision_local_reader` and persist its outcome."""
 
-    def __init__(self, *, text_probe: TextExtractionFitnessProbe) -> None:
-        """Bind the injected text-reader fitness probe."""
-        self._text_probe = text_probe
-
     async def execute(
         self,
         request: OperationRequest[LocalReaderProvisionRequest],
@@ -166,7 +155,7 @@ class LocalReaderProvisionExecutor:
         await context.events.phase(_PREFLIGHT)
         await context.events.phase(_EXECUTE)
         await context.events.effect(OperationEffect.UNKNOWN)
-        outcome = await provision_local_reader(request.payload, text_probe=self._text_probe)
+        outcome = await provision_local_reader(request.payload)
         await context.events.effect(local_reader_provision_effect(outcome))
         await context.events.phase(_SETTLEMENT)
         return await context.operands.put(outcome, written_at=now())

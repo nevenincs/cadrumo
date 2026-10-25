@@ -4123,10 +4123,6 @@ llm:
       dispatch_refused: 'Rechazado: esta solicitud lee un documento del contribuyente
         y lo enviaría al proveedor externo %{provider} sin una autorización de consentimiento
         para esta invocación.'
-      local_reader_not_loopback: 'Rechazado: esta solicitud lee un documento del contribuyente
-        y el punto de conexión del lector local no es la dirección de loopback de
-        este equipo. Leerlo allí enviaría el documento fuera de este equipo; configura
-        el lector local con una dirección de loopback para leer documentos del contribuyente.'
       mint_refused: 'Rechazado: la lectura externa de documentos del contribuyente
         no está permitida para esta invocación.'
 navigation:

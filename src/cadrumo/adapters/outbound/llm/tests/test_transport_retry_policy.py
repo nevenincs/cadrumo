@@ -1,11 +1,11 @@
 """The transport retry policy: transient only, bounded, and taxonomy-scoped.
 
-Every dispatch case here runs against a real loopback HTTP server scripted to
-exhibit one genuine failure shape -- a 5xx, a 4xx, a 2xx whose body does not
-match the provider schema, a connection dropped mid-request -- and counts what
-actually arrived at the server. Nothing is patched and no transport is
-simulated, because the question this policy gets wrong in production is
-precisely "did it send that again", which only the receiving end can answer.
+The retry loop decides from the typed failure an adapter raises and nothing
+else, so its cases drive the client's own loop with an adapter that plays one
+failure shape per attempt -- a transient transport failure, a provider refusal,
+a rate limit carrying a server delay -- and count the attempts that were sent.
+The question this policy gets wrong in production is precisely "did it send
+that again", and the attempts the adapter received answer it.
 
 The scoping cases matter more than the retrying ones. Re-sending a transient
 failure costs a wait; re-sending a refusal re-attempts something the system
@@ -15,28 +15,13 @@ already decided not to do.
 from __future__ import annotations
 
 import asyncio
-import json
-import threading
-from collections.abc import Generator, Mapping
-from contextlib import contextmanager
-from dataclasses import dataclass, field
-from http import HTTPStatus
 from pathlib import Path
-from typing import override
 
 import pytest
 
-from .....core.config import override_settings
 from .....core.config_support import LLMProvider
 from .....core.model_catalogue import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from .....tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_raw_response,
-)
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_records import LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
@@ -53,79 +38,21 @@ from ..errors import (
     LLMValidationError,
 )
 from ..models import LLMRequest
+from ..providers.base import ProviderCompletion
 from ._arena_fixtures import _fresh_arena
 from .model_run_support import serving_agent
+from .scripted_adapter_support import COMPLETION_TEXT, ScriptedAdapter, provider_request
 
 __all__ = ["_fresh_arena"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
-_OK_BODY: Mapping[str, object] = ollama_chat_reply(" local completion ")
-
 # Short enough to keep the suite quick, long enough that a wait is observable.
 _FAST_POLICY = LLMRetryPolicy(max_attempts=3, initial_backoff_s=0.02, max_backoff_s=0.1, budget_s=5.0)
 
 
-@dataclass
-class _Script:
-    """What the loopback runtime does, response by response.
-
-    Attributes:
-        responses: One ``(status, body)`` per arrival; the last entry repeats
-            once the script is exhausted, so a "always fails" case needs one row.
-        drop_connection: Arrival indices (0-based) where the server accepts the
-            request and then closes without answering -- a real
-            ``httpx.RemoteProtocolError``, which is what a runtime dying
-            mid-load looks like from here.
-        retry_after: Optional ``Retry-After`` header value sent with a 429.
-        bodies: Every request body the server received, in arrival order.
-    """
-
-    responses: list[tuple[HTTPStatus, object]]
-    drop_connection: frozenset[int] = frozenset()
-    retry_after: str | None = None
-    bodies: list[dict[str, object]] = field(default_factory=list)
-
-    @property
-    def arrivals(self) -> int:
-        """Return how many requests actually reached the server."""
-        return len(self.bodies)
-
-
-@contextmanager
-def _serve_scripted(script: _Script) -> Generator[str]:
-    """Serve ``/api/chat`` on loopback following ``script``."""
-    lock = threading.Lock()
-
-    class _Endpoint(SilentLoopbackHandler):
-        @override
-        def do_POST(self) -> None:
-            body = read_json_body(self)
-            with lock:
-                index = len(script.bodies)
-                script.bodies.append(dict(body))
-            if index in script.drop_connection:
-                self.close_connection = True
-                return
-            status, payload = script.responses[min(index, len(script.responses) - 1)]
-            # The schema-violating case sends a body that is NOT valid JSON, so
-            # it goes out verbatim rather than through the serialising writer.
-            encoded = payload.encode("utf-8") if isinstance(payload, str) else json.dumps(payload).encode("utf-8")
-            retry_after = script.retry_after if status is HTTPStatus.TOO_MANY_REQUESTS else None
-            write_raw_response(
-                self,
-                encoded,
-                status=status,
-                extra_headers={"retry-after": retry_after} if retry_after is not None else None,
-            )
-
-    with serving_loopback(_Endpoint, path="/api/chat") as endpoint:
-        yield endpoint
-
-
 def _client(tmp_path: Path, *, policy: LLMRetryPolicy | None = None) -> LLMClient:
     settings = EnvFileFreeSettings(
-        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -139,83 +66,47 @@ def _client(tmp_path: Path, *, policy: LLMRetryPolicy | None = None) -> LLMClien
     )
 
 
-def test_a_transient_server_error_is_retried_until_it_succeeds(tmp_path: Path) -> None:
-    """Two 5xx answers then a good one: the caller sees the completion, the server sees three arrivals."""
-    script = _Script(
-        responses=[
-            (HTTPStatus.SERVICE_UNAVAILABLE, {"error": "loading"}),
-            (HTTPStatus.BAD_GATEWAY, {"error": "loading"}),
-            (HTTPStatus.OK, _OK_BODY),
-        ],
-    )
-    with _serve_scripted(script) as endpoint, override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        response = asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="hello")))
+def _dispatch(client: LLMClient, adapter: ScriptedAdapter) -> ProviderCompletion:
+    return asyncio.run(client._complete_with_retries(adapter, provider_request()))
 
-    assert response.text == "local completion"
-    assert script.arrivals == 3
+
+def _transient() -> LLMTransientTransportError:
+    return LLMTransientTransportError(context={"http_status": 503})
+
+
+def test_a_transient_failure_is_retried_until_it_succeeds(tmp_path: Path) -> None:
+    """Two transient failures then a good answer: the caller sees the completion, three attempts were sent."""
+    adapter = ScriptedAdapter([_transient(), _transient(), None])
+
+    completion = _dispatch(_client(tmp_path), adapter)
+
+    assert completion.text == COMPLETION_TEXT
+    assert len(adapter.attempts) == 3
     # Every attempt asked the identical question. An attempt that altered the
     # request would be a different question, and its success would say nothing
     # about whether the first one would have worked.
-    assert script.bodies[0] == script.bodies[1] == script.bodies[2]
+    assert adapter.attempts[0] == adapter.attempts[1] == adapter.attempts[2]
 
 
-def test_a_dropped_connection_is_retried(tmp_path: Path) -> None:
-    """A runtime that accepts and dies mid-request is the transient case the design names."""
-    script = _Script(responses=[(HTTPStatus.OK, _OK_BODY)], drop_connection=frozenset({0, 1}))
-    with _serve_scripted(script) as endpoint, override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        response = asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="hello")))
+def test_a_provider_refusal_is_never_retried(tmp_path: Path) -> None:
+    """A provider refusal is deterministic: the identical request fails identically forever."""
+    adapter = ScriptedAdapter([LLMProviderError(context={"http_status": 400})])
 
-    assert response.text == "local completion"
-    assert script.arrivals == 3
-
-
-def test_a_client_error_is_never_retried(tmp_path: Path) -> None:
-    """A 4xx is deterministic: the identical request fails identically forever."""
-    script = _Script(responses=[(HTTPStatus.BAD_REQUEST, {"error": "bad model"})])
-    with (
-        _serve_scripted(script) as endpoint,
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-        pytest.raises(LLMProviderError) as raised,
-    ):
-        asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="hello")))
+    with pytest.raises(LLMProviderError) as raised:
+        _dispatch(_client(tmp_path), adapter)
 
     assert not isinstance(raised.value, LLMTransientTransportError)
-    assert script.arrivals == 1
+    assert len(adapter.attempts) == 1
 
 
-def test_a_schema_refusal_is_never_retried(tmp_path: Path) -> None:
-    """A 2xx whose body does not match the provider schema is a semantic failure.
+def test_a_permanently_failing_transport_stops_at_the_attempt_bound(tmp_path: Path) -> None:
+    """The budget is bounded: a transport that is simply down does not retry forever."""
+    adapter = ScriptedAdapter([_transient()])
 
-    Retrying it would launder a wrong answer into a retry statistic, and the
-    server would return the same wrong shape every time.
-    """
-    script = _Script(responses=[(HTTPStatus.OK, {"model": "gpt-oss", "unexpected": True})])
-    with (
-        _serve_scripted(script) as endpoint,
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-        pytest.raises(LLMProviderError) as raised,
-    ):
-        asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="hello")))
+    with pytest.raises(LLMTransientTransportError):
+        _dispatch(_client(tmp_path), adapter)
 
-    assert raised.value.context == {
-        "provider_name": LLMProvider.LOCAL.value,
-        "provider_response_error_type": "ValidationError",
-        "provider_response_valid": False,
-    }
-    assert script.arrivals == 1
-
-
-def test_a_permanently_failing_runtime_stops_at_the_attempt_bound(tmp_path: Path) -> None:
-    """The budget is bounded: a runtime that is simply down does not retry forever."""
-    script = _Script(responses=[(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "down"})])
-    with (
-        _serve_scripted(script) as endpoint,
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-        pytest.raises(LLMTransientTransportError),
-    ):
-        asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="hello")))
-
-    assert script.arrivals == _FAST_POLICY.max_attempts
+    assert len(adapter.attempts) == _FAST_POLICY.max_attempts
 
 
 def test_the_wall_clock_budget_cuts_the_schedule_short(tmp_path: Path) -> None:
@@ -226,72 +117,55 @@ def test_the_wall_clock_budget_cuts_the_schedule_short(tmp_path: Path) -> None:
     operator's patience, so the wall clock has to bound it independently.
     """
     starved = LLMRetryPolicy(max_attempts=5, initial_backoff_s=2.0, max_backoff_s=2.0, budget_s=0.1)
-    script = _Script(responses=[(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "down"})])
-    with (
-        _serve_scripted(script) as endpoint,
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-        pytest.raises(LLMTransientTransportError),
-    ):
-        asyncio.run(_client(tmp_path, policy=starved).complete(LLMRequest(prompt="hello")))
+    adapter = ScriptedAdapter([_transient()])
 
-    assert script.arrivals == 1
+    with pytest.raises(LLMTransientTransportError):
+        _dispatch(_client(tmp_path, policy=starved), adapter)
+
+    assert len(adapter.attempts) == 1
 
 
 def test_a_rate_limit_is_retried_and_honours_the_server_delay(tmp_path: Path) -> None:
-    """A 429 carrying Retry-After is retried, and the server's delay is not shortened."""
-    script = _Script(
-        responses=[(HTTPStatus.TOO_MANY_REQUESTS, {"error": "slow down"}), (HTTPStatus.OK, _OK_BODY)],
-        retry_after="0.05",
-    )
-    with _serve_scripted(script) as endpoint, override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        response = asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="hello")))
+    """A rate limit carrying a server delay is retried once the delay has passed."""
+    adapter = ScriptedAdapter([LLMRateLimitError(retry_after_seconds=0.05), None])
 
-    assert response.text == "local completion"
-    assert script.arrivals == 2
+    completion = _dispatch(_client(tmp_path), adapter)
+
+    assert completion.text == COMPLETION_TEXT
+    assert len(adapter.attempts) == 2
 
 
 def test_a_retry_disabled_policy_sends_exactly_once(tmp_path: Path) -> None:
     """The positive control on the retry cases above: one attempt is a real configuration.
 
-    Without it, "the server saw three arrivals" is consistent with a loop that
+    Without it, "three attempts were sent" is consistent with a loop that
     cannot be turned off, and the transient cases would prove only that the
     dispatch runs at all.
     """
-    script = _Script(responses=[(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "down"})])
-    once = LLMRetryPolicy(max_attempts=1)
-    with (
-        _serve_scripted(script) as endpoint,
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-        pytest.raises(LLMTransientTransportError),
-    ):
-        asyncio.run(_client(tmp_path, policy=once).complete(LLMRequest(prompt="hello")))
+    adapter = ScriptedAdapter([_transient()])
 
-    assert script.arrivals == 1
+    with pytest.raises(LLMTransientTransportError):
+        _dispatch(_client(tmp_path, policy=LLMRetryPolicy(max_attempts=1)), adapter)
+
+    assert len(adapter.attempts) == 1
 
 
-def test_a_consent_refusal_never_reaches_the_transport_at_all(tmp_path: Path) -> None:
+def test_a_consent_refusal_never_reaches_the_service_at_all(tmp_path: Path) -> None:
     """An off-host evidence read without consent is refused before any dispatch.
 
-    Asserted at the server, not at the exception: the property that matters is
+    Asserted at the service, not at the exception: the property that matters is
     that nothing was SENT, and an exception type alone cannot distinguish
     "refused before dispatch" from "dispatched, then refused".
     """
-    script = _Script(responses=[(HTTPStatus.OK, _OK_BODY)])
     request = LLMRequest(
         prompt="read this invoice",
         evidence_derived=True,
         provider_override=LLMProvider.AGENT,
         model_role=ModelRole.TEXT_EXTRACTION,
     )
-    with (
-        serving_agent() as service,
-        _serve_scripted(script) as endpoint,
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-        pytest.raises(LLMConsentError),
-    ):
+    with serving_agent() as service, pytest.raises(LLMConsentError):
         asyncio.run(_client(tmp_path).complete(request))
 
-    assert script.arrivals == 0
     assert service.runs == []
 
 

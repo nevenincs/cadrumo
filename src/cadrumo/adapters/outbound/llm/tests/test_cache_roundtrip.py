@@ -111,14 +111,14 @@ def test_llm_cache_keeps_tagged_and_underscore_models_in_distinct_encrypted_entr
     cache = LLMCache(root_dir=tmp_path / "llm-cache")
     tagged = _populated_response(
         _CREATED_AT,
-        provider=LLMProvider.LOCAL,
+        provider=LLMProvider.AGENT,
         model="qwen:3b",
         text="TAGGED-MODEL-RESPONSE",
         request_id="b" * 64,
     )
     underscored = _populated_response(
         _CREATED_AT,
-        provider=LLMProvider.LOCAL,
+        provider=LLMProvider.AGENT,
         model="qwen_3b",
         text="UNDERSCORE-MODEL-RESPONSE",
         request_id="c" * 64,
@@ -127,8 +127,8 @@ def test_llm_cache_keeps_tagged_and_underscore_models_in_distinct_encrypted_entr
     cache.write(request, tagged)
     cache.write(request, underscored)
 
-    tagged_loaded = cache.read(request, LLMProvider.LOCAL, tagged.model)
-    underscored_loaded = cache.read(request, LLMProvider.LOCAL, underscored.model)
+    tagged_loaded = cache.read(request, LLMProvider.AGENT, tagged.model)
+    underscored_loaded = cache.read(request, LLMProvider.AGENT, underscored.model)
 
     assert tagged_loaded is not None
     assert tagged_loaded.model == "qwen:3b"

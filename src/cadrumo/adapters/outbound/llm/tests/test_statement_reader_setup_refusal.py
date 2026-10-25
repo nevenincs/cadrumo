@@ -37,7 +37,7 @@ from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..preconditions import LLMPreconditionCondition
-from ..statement_reading import STATEMENT_READING_PROMPT_ID, LocalStatementReader
+from ..statement_reading import STATEMENT_READING_PROMPT_ID, StatementReader
 from .model_run_support import DEFAULT_LANE, RecordingModelRuns, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -54,7 +54,7 @@ def _pdf_provider(tmp_path: Path) -> Generator[PdfStatementProvider]:
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
     )
 
-    def factory() -> LocalStatementReader:
+    def factory() -> StatementReader:
         client = LLMClient(
             settings=settings,
             caller="cadrumo.adapters.outbound.llm.statement_reading",
@@ -62,7 +62,7 @@ def _pdf_provider(tmp_path: Path) -> Generator[PdfStatementProvider]:
             cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
             usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
         )
-        return LocalStatementReader(settings=settings, client=client)
+        return StatementReader(settings=settings, client=client)
 
     with bind_statement_reader_factory(factory):
         yield PdfStatementProvider()

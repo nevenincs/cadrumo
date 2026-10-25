@@ -1422,8 +1422,6 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
           resident: true,
           load_admitted: true,
           contention_causes: [],
-          fitness: "fit",
-          fit_for_role: true,
           ready: true,
           failed_condition_id: null,
         },
@@ -1434,8 +1432,6 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
           resident: false,
           load_admitted: false,
           contention_causes: ["memory_headroom"],
-          fitness: "not_verified",
-          fit_for_role: null,
           ready: false,
           failed_condition_id: "inference.load_headroom",
           // Memory headroom is not something setup supplies.
@@ -1458,8 +1454,6 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       resident: null,
       load_admitted: null,
       contention_causes: [],
-      fitness: null,
-      fit_for_role: null,
       ready: false,
       failed_condition_id: RUNTIME_REACHABLE,
       // The probe names the local AI setup for a runtime that does not answer.

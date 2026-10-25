@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
-from ...adapters.outbound.llm.models import UsageRecord
+from ...adapters.outbound.llm.models import RecordedLLMProvider, UsageRecord
 from ...adapters.persistence.llm.usage import UsageRecorder
 from ...application.ledger.actions_manual import attach_manual_transaction_evidence
 from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
@@ -29,7 +29,7 @@ from ...application.ledger.operator_iva_contracts import (
     LedgerOperatorIvaResult,
 )
 from ...application.operations.public_scalar import PublicDecimal
-from ...core.config_support import LLMProvider
+from ...core.config_support import LLMProvider, RetiredLLMProvider
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
@@ -193,7 +193,7 @@ def _usage_record(
     request_id: str,
     created: datetime,
     *,
-    provider: LLMProvider,
+    provider: RecordedLLMProvider,
     input_tokens: int,
     output_tokens: int,
     cost: Decimal | None,
@@ -254,7 +254,8 @@ def _seed_diagnostics_usage() -> None:
         _usage_record(
             "local-unpriced",
             datetime(2026, 4, 6, 9, 0, tzinfo=UTC),
-            provider=LLMProvider.LOCAL,
+            # A record written before every call went through the agent.
+            provider=RetiredLLMProvider.LOCAL,
             input_tokens=300,
             output_tokens=50,
             cost=None,

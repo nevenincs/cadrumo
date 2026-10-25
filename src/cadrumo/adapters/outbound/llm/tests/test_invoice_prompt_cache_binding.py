@@ -80,12 +80,12 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
 
         annual_key = cache.build_key(
             LLMRequest(prompt=annual.text),
-            LLMProvider.LOCAL,
+            LLMProvider.AGENT,
             "vision-model",
         )
         q4_key = cache.build_key(
             LLMRequest(prompt=q4.text),
-            LLMProvider.LOCAL,
+            LLMProvider.AGENT,
             "vision-model",
         )
 
@@ -96,8 +96,8 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
         cache = LLMCache()
         text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
 
-        first = cache.build_key(LLMRequest(prompt=text), LLMProvider.LOCAL, "vision-model")
-        second = cache.build_key(LLMRequest(prompt=text), LLMProvider.LOCAL, "vision-model")
+        first = cache.build_key(LLMRequest(prompt=text), LLMProvider.AGENT, "vision-model")
+        second = cache.build_key(LLMRequest(prompt=text), LLMProvider.AGENT, "vision-model")
 
         assert first == second
 
@@ -114,10 +114,10 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
         enumerated = ", ".join(format(pct.normalize(), "f") for pct in compiled.iva_rate_pcts)
         assert enumerated in compiled.text
 
-        baseline = cache.build_key(LLMRequest(prompt=compiled.text), LLMProvider.LOCAL, "m")
+        baseline = cache.build_key(LLMRequest(prompt=compiled.text), LLMProvider.AGENT, "m")
         restated = cache.build_key(
             LLMRequest(prompt=compiled.text.replace(enumerated, f"{enumerated}, 19", 1)),
-            LLMProvider.LOCAL,
+            LLMProvider.AGENT,
             "m",
         )
 

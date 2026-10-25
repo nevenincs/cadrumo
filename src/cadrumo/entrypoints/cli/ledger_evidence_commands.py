@@ -304,7 +304,6 @@ _OFF_HOST_REFUSAL_LOCALE_KEYS: dict[OffHostEvidenceReadOutcome, str] = {
     OffHostEvidenceReadOutcome.ACKNOWLEDGEMENT_WITHOUT_PROVIDER: (
         "cli.app.ledger.evidence.extract_acknowledge_without_provider"
     ),
-    OffHostEvidenceReadOutcome.PROVIDER_READS_ON_HOST: ("cli.app.ledger.evidence.extract_off_host_provider_is_local"),
     OffHostEvidenceReadOutcome.PROVIDER_WITHOUT_ACKNOWLEDGEMENT: (
         "cli.app.ledger.evidence.extract_provider_without_acknowledge"
     ),
@@ -324,9 +323,8 @@ def _validate_extract_consent_options(
     worker owns profile eligibility, content binding and token minting.
 
     Raises:
-        typer.BadParameter: When the flags are supplied incompletely, when the
-            provider names the on-host default, or when an off-host read has no
-            persisted evidence reference to bind to.
+        typer.BadParameter: When the flags are supplied incompletely, or when
+            an off-host read has no persisted evidence reference to bind to.
     """
     outcome = classify_off_host_evidence_read(provider=off_host_provider, acknowledged=acknowledged)
     if outcome is OffHostEvidenceReadOutcome.ON_HOST_DEFAULT:

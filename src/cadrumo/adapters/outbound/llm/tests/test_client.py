@@ -1,45 +1,38 @@
-"""Behaviour tests for the public LLM client through the local provider.
+"""Behaviour tests for the public LLM client: cache, usage and run records.
 
-The completion cases cross the production :class:`LLMClient`,
-:class:`LocalAdapter`, and HTTP transport against an Ollama-shaped loopback
-service. This keeps the provider boundary real while remaining fully on-host.
+The completion cases cross the production :class:`LLMClient` and the real
+agent adapter. The agent service behind the model-run port is a recording
+stand-in, so what reached the service is observed rather than assumed; the
+service side has its own tests.
 """
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
-from contextlib import contextmanager
-from http import HTTPStatus
 from pathlib import Path
-from queue import Queue
-from typing import override
 
 import pytest
 
-from .....core.config import override_settings
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+
 from .....core.config_support import LLMProvider
+from .....core.model_catalogue import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from .....tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_records import LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
-from ..errors import LLMProviderError, LLMRateLimitError
+from ..errors import LLMProviderError
 from ..models import LLMRequest
+from .model_run_support import ON_HOST_LANE, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_LANE_MODEL = f"{ON_HOST_LANE.provider_id}/{ON_HOST_LANE.transport}/{ON_HOST_LANE.model}"
 
 
 def _settings(tmp_path: Path) -> EnvFileFreeSettings:
     return EnvFileFreeSettings(
-        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "probe-cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -56,108 +49,73 @@ def _client(tmp_path: Path, *, run_recorder: LLMRunRecorder | None = None) -> LL
     )
 
 
-@contextmanager
-def _serve_ollama(status: HTTPStatus = HTTPStatus.OK) -> Generator[tuple[str, Queue[dict[str, object]]]]:
-    events: Queue[dict[str, object]] = Queue()
-
-    class _OllamaEndpoint(SilentLoopbackHandler):
-        @override
-        def do_POST(self) -> None:
-            events.put({"path": self.path, "body": read_json_body(self)})
-            payload = ollama_chat_reply(" local completion ") if status is HTTPStatus.OK else {"error": status.phrase}
-            write_json_response(
-                self,
-                payload,
-                status=status,
-                extra_headers={"retry-after": "0.01"} if status is HTTPStatus.TOO_MANY_REQUESTS else None,
-            )
-
-    with serving_loopback(_OllamaEndpoint, path="/api/chat") as endpoint:
-        yield endpoint, events
+def _request() -> LLMRequest:
+    return LLMRequest(prompt="hello", model_role=ModelRole.TEXT_EXTRACTION)
 
 
 def test_client_uses_cache_before_calling_provider(tmp_path: Path) -> None:
-    """A repeated request should hit the cache instead of re-calling Ollama."""
-    with _serve_ollama() as (endpoint, events), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
+    """A repeated request should hit the cache instead of running the model again."""
+    with serving_agent(lane=ON_HOST_LANE, replies=("agent completion",)) as service:
         client = _client(tmp_path)
-        request = LLMRequest(prompt="hello")
-        first = asyncio.run(client.complete(request))
-        second = asyncio.run(client.complete(request))
+        first = asyncio.run(client.complete(_request()))
+        second = asyncio.run(client.complete(_request()))
 
-    assert first.text == "local completion"
+    assert first.text == "agent completion"
     assert first.cache_hit is False
     assert second.cache_hit is True
-    assert events.qsize() == 1
+    assert len(service.runs) == 1
 
 
 def test_client_surfaces_provider_error(tmp_path: Path) -> None:
-    """Provider failures should surface as LLM provider errors."""
+    """A failed run surfaces as an LLM provider error naming the agent route."""
     with (
-        _serve_ollama(HTTPStatus.SERVICE_UNAVAILABLE) as (endpoint, _events),
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
+        serving_agent(lane=ON_HOST_LANE, run_refusal=ModelRunRefusalCode.RUN_FAILED),
         pytest.raises(LLMProviderError) as raised,
     ):
-        asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="hello")))
-    assert raised.value.context == {
-        "http_status": HTTPStatus.SERVICE_UNAVAILABLE,
-        "model": "gpt-oss",
-        "provider_name": LLMProvider.LOCAL.value,
-    }
+        asyncio.run(_client(tmp_path).complete(_request()))
 
-
-def test_client_surfaces_rate_limit_error(tmp_path: Path) -> None:
-    """Rate-limit failures should surface as the dedicated rate-limit error."""
-    with (
-        _serve_ollama(HTTPStatus.TOO_MANY_REQUESTS) as (endpoint, _events),
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-        pytest.raises(LLMRateLimitError) as exc_info,
-    ):
-        asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="hello")))
-
-    assert exc_info.value.retry_after_seconds == pytest.approx(0.01)
+    assert raised.value.context is not None
+    assert raised.value.context["provider"] == LLMProvider.AGENT.value
+    assert raised.value.context["model_run_refusal"] == ModelRunRefusalCode.RUN_FAILED.value
 
 
 def test_client_records_run_record_on_success(tmp_path: Path) -> None:
-    """A successful provider call records one succeeded run-timing record."""
+    """A successful run records one succeeded run-timing record."""
     run_recorder = LLMRunRecorder(root_dir=tmp_path / "run-record")
-    with _serve_ollama() as (endpoint, _events), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        asyncio.run(_client(tmp_path, run_recorder=run_recorder).complete(LLMRequest(prompt="hello")))
+    with serving_agent(lane=ON_HOST_LANE, replies=("agent completion",)):
+        asyncio.run(_client(tmp_path, run_recorder=run_recorder).complete(_request()))
 
     records = run_recorder.load_records()
     assert len(records) == 1
     record = records[0]
     assert record.succeeded is True
     assert record.error_kind == ""
-    assert record.provider == "LOCAL"
-    assert record.model == "gpt-oss"
+    assert record.provider == LLMProvider.AGENT.value
+    assert record.model == _LANE_MODEL
     assert record.duration_ms >= 0
 
 
 def test_client_cache_hit_does_not_record_a_second_run(tmp_path: Path) -> None:
-    """A cache hit must not append a second provider run-timing record."""
+    """A cache hit must not append a second run-timing record."""
     run_recorder = LLMRunRecorder(root_dir=tmp_path / "run-record")
-    with _serve_ollama() as (endpoint, _events), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
+    with serving_agent(lane=ON_HOST_LANE, replies=("agent completion",)):
         client = _client(tmp_path, run_recorder=run_recorder)
-        request = LLMRequest(prompt="hello")
-        asyncio.run(client.complete(request))
-        asyncio.run(client.complete(request))
+        asyncio.run(client.complete(_request()))
+        asyncio.run(client.complete(_request()))
 
     assert len(run_recorder.load_records()) == 1
 
 
 def test_client_records_run_record_on_provider_failure(tmp_path: Path) -> None:
-    """A provider failure records one failed run naming the error kind."""
+    """A failed run records one failed run naming the error kind."""
     run_recorder = LLMRunRecorder(root_dir=tmp_path / "run-record")
     with (
-        _serve_ollama(HTTPStatus.SERVICE_UNAVAILABLE) as (endpoint, _events),
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
+        serving_agent(lane=ON_HOST_LANE, run_refusal=ModelRunRefusalCode.RUN_FAILED),
         pytest.raises(LLMProviderError),
     ):
-        asyncio.run(_client(tmp_path, run_recorder=run_recorder).complete(LLMRequest(prompt="hello")))
+        asyncio.run(_client(tmp_path, run_recorder=run_recorder).complete(_request()))
 
     records = run_recorder.load_records()
     assert len(records) == 1
     assert records[0].succeeded is False
-    # A 5xx is the transient half of the provider boundary, so the recorded kind
-    # names the class the retry policy actually classified on.
-    assert records[0].error_kind == "LLMTransientTransportError"
+    assert records[0].error_kind == "LLMProviderError"

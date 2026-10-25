@@ -63,10 +63,11 @@ _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
     ("extract_invoice_fields_from_text", "extract_invoice_fields_from_text(_TRANSCRIPTION, operation=_OPERATION)"),
     ("VisionDocumentTranscriber", "VisionDocumentTranscriber()"),
     ("TextInvoiceFieldExtractor", "TextInvoiceFieldExtractor(operation=_OPERATION)"),
-    ("LocalTextLLMClassifier", "LocalTextLLMClassifier(spec=None)"),
+    ("TextLLMClassifier", "TextLLMClassifier(spec=None)"),
     ("VisionLLMClassifier", "VisionLLMClassifier(spec=None)"),
     ("SemanticColumnRoleMapper", "SemanticColumnRoleMapper()"),
     ("SupplyNatureProposer", "SupplyNatureProposer()"),
+    ("StatementReader", "StatementReader()"),
 )
 
 
@@ -76,10 +77,11 @@ _DEFINING_MODULES: dict[str, str] = {
     "extract_invoice_fields_from_text": "cadrumo.adapters.outbound.llm.evidence_draft_text",
     "VisionDocumentTranscriber": "cadrumo.adapters.outbound.llm.evidence_draft_vision",
     "TextInvoiceFieldExtractor": "cadrumo.adapters.outbound.llm.evidence_draft_text",
-    "LocalTextLLMClassifier": "cadrumo.adapters.outbound.llm.text_classifier",
+    "TextLLMClassifier": "cadrumo.adapters.outbound.llm.text_classifier",
     "VisionLLMClassifier": "cadrumo.adapters.outbound.llm.vision_classifier",
     "SemanticColumnRoleMapper": "cadrumo.adapters.outbound.llm.column_role_mapping",
     "SupplyNatureProposer": "cadrumo.adapters.outbound.llm.supply_nature_proposal",
+    "StatementReader": "cadrumo.adapters.outbound.llm.statement_reading",
     "MultimodalImageInput": "cadrumo.adapters.outbound.llm.models",
 }
 

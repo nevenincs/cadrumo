@@ -218,9 +218,6 @@ cli:
           kötődik, amelyet a melléklet azonosítója nem hordoz.'
         extract_off_host_provider_help: A dokumentum elküldése távoli modellnek a
           helyi beolvasás helyett.
-        extract_off_host_provider_is_local: Az --off-host-provider local az alapértelmezés,
-          és semmit nem küld el a gépről. Hagyd el a kapcsolót, vagy adj meg távoli
-          szolgáltatót.
         extract_off_host_unclassified: 'A gépen kívüli olvasás elutasítva: a hozzájárulási
           kapu {outcome} értéket adott vissza, amelyhez ennek a parancsnak nincs szövege.
           A fel nem ismert választ elutasításként kezeljük, hogy a bizonyítékok ne

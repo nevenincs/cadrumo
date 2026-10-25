@@ -332,7 +332,7 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
                 prompt_id="conformance",
                 caller="conformance",
                 text="synthetic",
-                provider=LLMProvider.LOCAL,
+                provider=LLMProvider.AGENT,
                 model="conformance",
                 input_tokens=3,
                 output_tokens=7,

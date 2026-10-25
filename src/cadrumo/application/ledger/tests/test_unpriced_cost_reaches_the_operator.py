@@ -22,7 +22,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.config_support import LLMProvider
+from ....core.config_support import LLMProvider, RetiredLLMProvider
 from ..llm_diagnostics import _aggregate_usage
 from ..llm_diagnostics_ports import LlmUsageDiagnosticRecord
 
@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _record(
     cost: Decimal | None,
     *,
-    provider: LLMProvider = LLMProvider.AGENT,
+    provider: LLMProvider | RetiredLLMProvider = LLMProvider.AGENT,
 ) -> LlmUsageDiagnosticRecord:
     return LlmUsageDiagnosticRecord(
         provider=provider.value,
@@ -77,11 +77,12 @@ def test_an_unpriced_provider_does_not_hide_a_priced_one() -> None:
             [
                 _record(Decimal("1.50"), provider=LLMProvider.AGENT),
                 _record(None, provider=LLMProvider.AGENT),
-                _record(Decimal("4.00"), provider=LLMProvider.LOCAL),
+                # A record written before every call went through the agent, priced by its vendor.
+                _record(Decimal("4.00"), provider=RetiredLLMProvider.ANTHROPIC),
             ],
         )
     }
 
     assert rows[LLMProvider.AGENT.value].cost_estimate_usd is None
-    assert rows[LLMProvider.LOCAL.value].cost_estimate_usd == Decimal("4.00")
-    assert rows[LLMProvider.LOCAL.value].unpriced_calls == 0
+    assert rows[RetiredLLMProvider.ANTHROPIC.value].cost_estimate_usd == Decimal("4.00")
+    assert rows[RetiredLLMProvider.ANTHROPIC.value].unpriced_calls == 0

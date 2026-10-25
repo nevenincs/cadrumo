@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#agent-owned-models'
 date: '2026-10-25'
-modified: '2026-10-25'
+modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:95e09e4cae1931251d9a36a8dbfc80ce64d4fa8532563324bffd97e80b16e776'
+body_hash: 'sha256:b2565548b50d82dbd565e01023968f6d558fc34bef4003b722df97385e13c380'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -391,6 +391,105 @@ related:
 - `S14` `verify:` `python -m dev.quality.types` -> `pass`
 - `S14` `verify:` `pytest src/cadrumo/adapters/outbound/llm src/cadrumo/application/ledger src/cadrumo/entrypoints src/cadrumo_agent_service src/cadrumo_client -q (8856 passed)` -> `pass`
 - `S14` `verify:` `joint tree: ruff check+format, python -m dev.quality.types, lint-imports, contract manifest --check` -> `pass`
+- `S15` `M` `dev/ci/tests/test_cloud_transport_fully_deleted.py`
+- `S15` `M` `dev/operation_contract_manifest/tests/test_operation_frontend_parity.py`
+- `S15` `M` `dev/packaging/smoke_absent_llm.py`
+- `S15` `M` `dev/packaging/tests/test_missing_llm_extra_refuses_instructively.py`
+- `S15` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S15` `M` `dev/quality/metadata/import_load_targets.cadrumo_agent_service.json`
+- `S15` `M` `dev/quality/metadata/import_load_targets.json`
+- `S15` `M` `dev/quality/tests/test_logging_payload_containment.py`
+- `S15` `M` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S15` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S15` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/client.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/consent.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/preconditions.py`
+- `S15` `D` `src/cadrumo/adapters/outbound/llm/pricing.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/providers/base.py`
+- `S15` `D` `src/cadrumo/adapters/outbound/llm/providers/local.py`
+- `S15` `D` `src/cadrumo/adapters/outbound/llm/role_fitness.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/statement_reading.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_cache.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_cache_redacted_entry_eviction.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_cache_roundtrip.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_client.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_dispatch_load_headroom.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_gate.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_marker_declared_at_every_builder.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_injection_regression.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_invoice_prompt_cache_binding.py`
+- `S15` `D` `src/cadrumo/adapters/outbound/llm/tests/test_local_loopback_transport.py`
+- `S15` `D` `src/cadrumo/adapters/outbound/llm/tests/test_local_reader_endpoint_consent.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_local_text_reader_wiring.py`
+- `S15` `D` `src/cadrumo/adapters/outbound/llm/tests/test_local_vision.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_no_cloud_fallback_on_degradation.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_off_host_read_request.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_on_host_inference_admission.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_parameter_capability_boundary.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_provenance_stamp_singularity.py`
+- `S15` `D` `src/cadrumo/adapters/outbound/llm/tests/test_role_fitness.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_shared_rate_limit_pacing.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_statement_reader_setup_refusal.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_statement_reading.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_transport_retry_policy.py`
+- `S15` `D` `src/cadrumo/adapters/outbound/llm/tests/test_unpriced_model_is_not_free.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/tests/test_vision_capability_boundary.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/text_classifier.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/operations/tests/local_reader_operation_support.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_operation.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_read_operations.py`
+- `S15` `M` `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py`
+- `S15` `M` `src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py`
+- `S15` `M` `src/cadrumo/application/ledger/tests/test_audit_transport_uses_the_canonical_grammar.py`
+- `S15` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_reader_readiness_recovery.py`
+- `S15` `M` `src/cadrumo/application/ledger/tests/test_unpriced_cost_reaches_the_operator.py`
+- `S15` `M` `src/cadrumo/application/local_reader.py`
+- `S15` `M` `src/cadrumo/application/local_reader_operation.py`
+- `S15` `M` `src/cadrumo/application/local_reader_provisioning.py`
+- `S15` `M` `src/cadrumo/application/local_reader_status_operation.py`
+- `S15` `M` `src/cadrumo/application/provisioning_contracts.py`
+- `S15` `D` `src/cadrumo/application/provisioning_fitness.py`
+- `S15` `M` `src/cadrumo/application/tests/local_reader_operation_requests.py`
+- `S15` `M` `src/cadrumo/application/tests/test_local_reader.py`
+- `S15` `M` `src/cadrumo/application/tests/test_local_reader_operation_access.py`
+- `S15` `D` `src/cadrumo/application/tests/test_provisioning_fitness.py`
+- `S15` `M` `src/cadrumo/core/component_records.py`
+- `S15` `M` `src/cadrumo/core/config_support.py`
+- `S15` `M` `src/cadrumo/core/provenance_stamp.py`
+- `S15` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S15` `M` `src/cadrumo/core/tests/test_component_records.py`
+- `S15` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/ledger_evidence_commands.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_reader_refusal_settlement.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/test_local_text_reader_wiring.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/test_off_host_consent_fails_closed.py`
+- `S15` `M` `src/cadrumo/entrypoints/ledger_llm_composition.py`
+- `S15` `M` `src/cadrumo/entrypoints/local_reader_operation_composition.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_classification_support.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_seed_support.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/conformance_local_reader_support.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/dependency_operation_gating_support.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/test_dependency_consumer_gating.py`
+- `S15` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S15` `M` `src/cadrumo/locales/ca/common.yml`
+- `S15` `M` `src/cadrumo/locales/en/cli.yml`
+- `S15` `M` `src/cadrumo/locales/en/common.yml`
+- `S15` `M` `src/cadrumo/locales/es/cli.yml`
+- `S15` `M` `src/cadrumo/locales/es/common.yml`
+- `S15` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S15` `M` `src/cadrumo/locales/hu/common.yml`
+- `S15` `A` `src/cadrumo/adapters/outbound/llm/tests/scripted_adapter_support.py`
+- `S15` `verify:` `uv run --no-sync pytest src/cadrumo src/cadrumo_agent_service src/cadrumo_client -q (34951 passed; 4 pre-existing registry test_snapshot_proof failures, also in the baseline)` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest test_dependency_consumer_gating.py test_ledger_import_reader_refusal_settlement.py test_dispatch_load_headroom.py test_on_host_inference_admission.py test_local_reader_operation.py test_local_reader_read_operations.py -m '(unit or integration) and not perf' (99 passed)` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest dev/packaging/tests/test_missing_llm_extra_refuses_instructively.py dev/packaging/tests/test_absent_llm_uninstall_derivation.py -m '' (17 passed, installed cohort built)` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest dev/ci/tests/test_cloud_transport_fully_deleted.py dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_python_provisioning.py -m ''` -> `pass`
+- `S15` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
+- `S15` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `S15` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S15` `verify:` `just check-import-boundaries` -> `pass`
+- `S15` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check (after just generate-operation-contract-manifest)` -> `pass`
+- `S15` `by:` `high-implementer`
 
 ## Notes
 
@@ -420,3 +519,6 @@ related:
 - `S13` Interim: a per-read --vision-model refuses `llm.agent.model_override_absent;` removing the flag, payload field and help strings is deferred to P05.S25 by the orchestrator
 - `S14` Agent runs on a local lane have no on-host memory or slot admission until P03.S15 adds catalogue-size admission; the composition pre-check `admit_local_reader` was removed
 - `S14` S12, S13 and S14 landed as one commit because their renames and port changes interlock at import
+- `S15` Admission with an unknown size: a lane whose catalogue entry states `size_bytes` null or 0 skips the memory-headroom check and still takes the on-host inference slot, logged once at debug level without the model id. The coordinator chose this reading on 2026-10-25. The ADR does not list unknown size among the constraint 10 refusals, its second amendment keeps absent facts null and still selectable, and the previous code skipped an uncatalogued requirement rather than inventing one.
+- `S15` Kept `probe_local_reader:` `application/workstation_check.py` (the doctor) still uses it outside the dispatch path. `admit_local_reader` and the fitness probe were deleted. The fitness verdict file stays declared as a dormant storage location, so existing installations keep it classified.
+- `S15` Pre-existing failures outside this Step: dev/locales `test_parity` and `test_audit` flag `errors.refused.refused_ledger_evidence_local_ai_not_ready` as unused. The key is still used through `EVIDENCE_LOCAL_AI_NOT_READY_KEY` in `application/ledger/evidence_errors.py,` whose name lacks the `_LOCALE_KEY` suffix the scanner reads, so the key was kept. `dev/quality/metadata/application_entrypoint_modules.json` still lists `provisioning_fitness,` and it has no generator or reader in the tree, so it was not edited by hand.

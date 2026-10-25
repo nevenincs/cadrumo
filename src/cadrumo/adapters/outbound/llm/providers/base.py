@@ -1,30 +1,20 @@
 """Provider adapter contract for the LLM outbound subpackage.
 
 Defines the normalized request and response shapes that every concrete provider
-adapter (the agent adapter and the local one) consumes and produces,
-so the higher-level :class:`~llm.LLMClient` can stay
+adapter consumes and produces, so the higher-level :class:`~llm.LLMClient` can stay
 provider-agnostic. Adapters live in sibling modules under
 :mod:`llm.providers`.
 """
 
 from __future__ import annotations
 
-import logging
-import math
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, NoReturn
 
-import httpx
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 
 from .....core.config_support import LLMProvider
 from .....core.models import STRICT_FROZEN_CONFIG
-from ..errors import LLMProviderError, LLMRateLimitError, LLMTransientTransportError
 from ..models import MultimodalImageInput
-
-if TYPE_CHECKING:
-    pass
 
 
 class ProviderRequest(BaseModel):
@@ -112,9 +102,7 @@ class ProviderAdapter(ABC):
         supports_images: Whether :meth:`complete` actually forwards
             :attr:`ProviderRequest.images` to the vendor. Declared as DATA on
             the class rather than left to each adapter to remember, and
-            enforced once at the client's single dispatch point -- the same
-            reasoning :func:`post_provider_request` documents for the transport
-            boundary. Defaults to ``False`` so a newly added adapter is
+            enforced once at the client's single dispatch point. Defaults to ``False`` so a newly added adapter is
             text-only until it has genuinely implemented the image path; the
             failure of the opposite default is silent and unbounded.
     """
@@ -159,177 +147,3 @@ class ProviderAdapter(ABC):
         Returns:
             Normalized :class:`ProviderCompletion` response.
         """
-
-
-def parse_retry_after(value: str | None) -> float | None:
-    """Parse an HTTP ``Retry-After`` header value into seconds.
-
-    Args:
-        value: Raw header value, or ``None`` when the header is absent.
-
-    Returns:
-        Finite, non-negative seconds to wait, or ``None`` when the value is
-        missing or cannot represent a safe delay.
-    """
-    if value is None:
-        return None
-    try:
-        parsed = float(value.strip())
-    except ValueError:
-        return None
-    return parsed if math.isfinite(parsed) and parsed >= 0 else None
-
-
-def raise_rate_limit(*, provider_name: str, model: str, retry_after: str | None) -> NoReturn:
-    """Raise a normalized rate-limit error with parsed retry hint.
-
-    Args:
-        provider_name: Stable provider identity observed at the transport boundary.
-        model: Model identifier carried by the rejected request.
-        retry_after: Raw ``Retry-After`` header value supplied by the provider.
-
-    Raises:
-        LLMRateLimitError: Always raised with the parsed retry hint.
-    """
-    parsed_retry_after = parse_retry_after(retry_after)
-    context: dict[str, str | float | int | bool] = {
-        "provider_name": provider_name,
-        "model": model,
-        "http_status": 429,
-    }
-    if parsed_retry_after is not None:
-        context["retry_after_seconds"] = parsed_retry_after
-    raise LLMRateLimitError(retry_after_seconds=parsed_retry_after, context=context)
-
-
-def parse_provider_response[ProviderResponse: BaseModel](
-    response: httpx.Response,
-    *,
-    provider_name: str,
-    response_model: type[ProviderResponse],
-) -> ProviderResponse:
-    """Validate a successful provider response at the outbound boundary.
-
-    Args:
-        response: Successful HTTP response whose JSON body must match the provider schema.
-        provider_name: Human-readable provider label for the public error.
-        response_model: Strict Pydantic model for the provider response envelope.
-
-    Returns:
-        The validated provider response.
-
-    Raises:
-        LLMProviderError: When a 2xx response body is malformed for its provider.
-    """
-    try:
-        return response_model.model_validate_json(response.text)
-    except ValidationError as exc:
-        raise LLMProviderError(
-            context={
-                "provider_name": provider_name,
-                "provider_response_valid": False,
-                "provider_response_error_type": type(exc).__name__,
-            },
-        ) from exc
-
-
-async def post_provider_request(
-    client: httpx.AsyncClient,
-    url: str,
-    *,
-    provider_name: str,
-    model: str,
-    logger: logging.Logger,
-    headers: Mapping[str, str] | None = None,
-    json: object,
-) -> httpx.Response:
-    """POST to a provider endpoint, mapping transport failure to the typed boundary.
-
-    ``LLMProviderError`` is the declared transport/provider boundary of this
-    subpackage, and the Anthropic adapter maps its SDK's connection and timeout
-    failures onto it. The httpx-based adapters did not agree: Gemini caught
-    :exc:`httpx.RequestError` while OpenAI and the local runtime called
-    ``client.post`` bare, so an unreachable endpoint surfaced as a raw
-    ``ConnectError`` / ``ConnectTimeout`` from two of the four providers. The
-    error TYPE, and therefore every caller's recovery path, depended on which
-    provider happened to be configured — for one and the same failure.
-
-    Routing every httpx provider through this one call makes the boundary a
-    property of the transport rather than of each adapter's memory to catch,
-    and keeps the provider context (name, model) attached to the failure.
-
-    Args:
-        client: The provider adapter's own ``httpx.AsyncClient``.
-        url: Fully resolved endpoint.
-        provider_name: Human-readable provider label for log and error text.
-        model: Model identifier, included in the log context.
-        logger: Adapter logger for transport diagnostics.
-        headers: Optional request headers (auth material, API keys).
-        json: JSON-serialisable request body.
-
-    Returns:
-        The provider's :class:`httpx.Response`, unexamined — status dispatch
-        remains :func:`check_http_error`'s job.
-
-    Raises:
-        LLMTransientTransportError: When the request never produced a response
-            (connection refused, DNS failure, timeout, protocol error). Typed as
-            the TRANSIENT half of the boundary because that is what the failure
-            is: nothing was decided at the model, and a local runtime that is
-            still loading a multi-gigabyte model refuses connections for exactly
-            as long as the load takes. ``httpx.TimeoutException`` is a
-            ``RequestError`` subclass, so a read timeout arrives here too.
-    """
-    try:
-        return await client.post(url, headers=headers, json=json)
-    except httpx.RequestError as exc:
-        logger.debug("%s connection failure model=%s", provider_name, model, exc_info=True)
-        raise LLMTransientTransportError(
-            context={
-                "provider_name": provider_name,
-                "model": model,
-                "transport_error_type": type(exc).__name__,
-            },
-        ) from exc
-
-
-def check_http_error(response: httpx.Response, *, provider_name: str, model: str, logger: logging.Logger) -> None:
-    """Raise a normalized error for a non-2xx LLM HTTP response.
-
-    A 429 raises a rate-limit error carrying the parsed ``Retry-After`` hint;
-    any other non-2xx status raises a provider error. Shared by the OpenAI,
-    Gemini, and local adapters, whose status-dispatch is otherwise identical.
-
-    The 5xx and 4xx branches raise DIFFERENT types, and the split is the whole
-    basis of the retry decision. A 5xx is the server saying it failed to answer
-    a request it accepted, which the same request may survive on a second
-    attempt; a 4xx is the server saying the request itself is wrong, which the
-    same request will never survive. Retrying the second kind spends a bounded
-    budget on a certainty and delays the real refusal.
-
-    Args:
-        response: Provider HTTP response to inspect.
-        provider_name: Human-readable provider label for log and error text.
-        model: Model identifier, included in the log context.
-        logger: Adapter logger for status diagnostics.
-
-    Raises:
-        LLMRateLimitError: On HTTP 429.
-        LLMTransientTransportError: On any 5xx status.
-        LLMProviderError: On any other non-2xx status.
-    """
-    status = response.status_code
-    if status == 429:
-        logger.warning("%s: rate limit response status=%d model=%s", provider_name, status, model)
-        raise_rate_limit(provider_name=provider_name, model=model, retry_after=response.headers.get("retry-after"))
-    if 200 <= status < 300:
-        return
-    if status >= 500:
-        logger.error("%s: server error status=%d model=%s", provider_name, status, model)
-        raise LLMTransientTransportError(
-            context={"provider_name": provider_name, "model": model, "http_status": status},
-        )
-    logger.warning("%s: unexpected HTTP status=%d model=%s", provider_name, status, model)
-    raise LLMProviderError(
-        context={"provider_name": provider_name, "model": model, "http_status": status},
-    )

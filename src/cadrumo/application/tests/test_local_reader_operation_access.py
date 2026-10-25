@@ -11,10 +11,8 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
-from ...core.config import Settings
 from ...core.model_catalogue import ModelRole
 from ...core.operations import profile_operation_subject
-from ..local_reader import RoleFitnessOutcome
 from ..local_reader_contracts import (
     LOCAL_READER_OPERATION_DEFINITION_ID,
     LOCAL_READER_OPERATION_SUBJECT,
@@ -75,13 +73,7 @@ _CASES = {
     "status": _Case(
         LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
         LOCAL_READER_OPERATION_SUBJECT,
-        LocalReaderStatusRequest(probe=False),
-        commits=False,
-    ),
-    "probe": _Case(
-        LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
-        LOCAL_READER_OPERATION_SUBJECT,
-        LocalReaderStatusRequest(probe=True),
+        LocalReaderStatusRequest(),
         commits=False,
     ),
     "report": _Case(
@@ -93,13 +85,9 @@ _CASES = {
 }
 
 
-def _probe(model: str, settings: Settings) -> RoleFitnessOutcome:
-    raise AssertionError(f"access resolution probed {model} under {settings}")
-
-
 def _registry() -> OperationRegistry:
-    provision = build_local_reader_operation_definition(text_probe=_probe)
-    status = build_local_reader_status_definition(text_probe=_probe)
+    provision = build_local_reader_operation_definition()
+    status = build_local_reader_status_definition()
     report = build_local_reader_report_definition()
     return OperationRegistry(
         definitions=(provision, report, status),

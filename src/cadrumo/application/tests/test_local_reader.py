@@ -15,22 +15,18 @@ from typing import ClassVar, override
 
 import pytest
 
-from ...core.component_records import component_records_root, local_ai_chat_url
-from ...core.config import Settings, load_settings, override_settings
+from ...core.component_records import component_records_root
+from ...core.config import load_settings, override_settings
 from ...core.config_runtime_fields import LOCAL_AI_CHAT_URL
 from ...core.hardware import AcceleratorKind, ContentionCause
 from ...core.model_catalogue import ModelRole, default_model_runtime_id, model_candidate
 from ...tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
 from ..local_reader import (
     EXTRACTION_READER_ROLES,
-    RoleFitnessOutcome,
-    RoleFitnessState,
-    admit_local_reader,
     probe_local_reader,
     read_local_reader_status,
     role_model_targets,
     select_role_model,
-    verify_role_target,
 )
 from ..provisioning import (
     AcceleratorDevice,
@@ -42,9 +38,7 @@ from ..provisioning import (
 from ..provisioning_contracts import (
     LOCAL_AI_PROVISION_ACTION_ID,
     ProvisioningPreconditionCondition,
-    provisioning_no_recovery_verdict,
 )
-from ..provisioning_fitness import RoleFitnessVerdict, read_fitness_verdict
 from ..provisioning_runtime import InstalledModel, assess_model_load_contention, runtime_model_names_match
 from .role_model_support import configured_role_model
 
@@ -213,7 +207,7 @@ def test_status_of_an_unreachable_runtime_reports_unknowns_not_absences() -> Non
     assert all(row.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE for row in status.roles)
 
 
-def test_installed_reader_models_are_extraction_ready_with_the_text_model_not_yet_verified() -> None:
+def test_installed_reader_models_are_extraction_ready() -> None:
     with _runtime(installed=[_TEXT]):
         partial = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False)
     with _runtime(installed=[_TEXT, _VISION], residents=[_TEXT]):
@@ -225,83 +219,13 @@ def test_installed_reader_models_are_extraction_ready_with_the_text_model_not_ye
     assert partial_rows[ModelRole.VISION_TRANSCRIPTION].failed_condition_id == (
         ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED
     )
-    assert unverified.extraction_ready is True, "no fitness verdict is not a refusal"
+    assert unverified.extraction_ready is True
     rows = {row.role: row for row in unverified.roles}
-    assert rows[ModelRole.TEXT_EXTRACTION].fitness is RoleFitnessState.NOT_VERIFIED
     assert rows[ModelRole.TEXT_EXTRACTION].ready is True
     assert rows[ModelRole.TEXT_EXTRACTION].resident is True
     assert rows[ModelRole.VISION_TRANSCRIPTION].ready is True
-    assert rows[ModelRole.VISION_TRANSCRIPTION].fitness is None, "only the text role is probed"
     assert rows[ModelRole.VISION_TRANSCRIPTION].resident is False
     assert rows[ModelRole.VISION_TRANSCRIPTION].installed is True
-
-
-class _Probe:
-    """An injected fitness port: records calls and answers a fixed verdict."""
-
-    def __init__(self, *, fit: bool, transport_failed: bool = False) -> None:
-        self.calls: list[str] = []
-        self.endpoints: list[str] = []
-        self._fit = fit
-        self._transport_failed = transport_failed
-
-    def __call__(self, model: str, settings: Settings) -> RoleFitnessOutcome:
-        self.calls.append(model)
-        self.endpoints.append(settings.cadrumo_llm_ollama_chat_url)
-        if self._fit:
-            return RoleFitnessOutcome(
-                role=ModelRole.TEXT_EXTRACTION,
-                model=model,
-                fit=True,
-                answer_parseable=True,
-                grounded=True,
-                answer_budget_tokens=1024,
-                elapsed_ms=1,
-            )
-        condition = (
-            ProvisioningPreconditionCondition.MODEL_READY
-            if self._transport_failed
-            else ProvisioningPreconditionCondition.ROLE_MODEL_FIT_FOR_ROLE
-        )
-        facts = {"model": model, "answer_parseable": False}
-        return RoleFitnessOutcome(
-            role=ModelRole.TEXT_EXTRACTION,
-            model=model,
-            fit=False,
-            transport_failed=self._transport_failed,
-            answer_budget_tokens=1024,
-            elapsed_ms=1,
-            facts=facts,
-            precondition_verdict=provisioning_no_recovery_verdict(condition, facts=facts),
-        )
-
-
-@pytest.fixture(autouse=True)
-def _isolated_verdict_record(tmp_path: Path) -> Generator[None]:
-    with override_settings(cadrumo_local_storage_root=tmp_path):
-        yield
-
-
-def test_verify_refuses_a_loaded_model_that_is_unfit_for_its_role() -> None:
-    probe = _Probe(fit=False)
-    with _runtime(installed=[_TEXT], residents=[_TEXT]):
-        (target,) = role_model_targets((ModelRole.TEXT_EXTRACTION,))
-        outcome = verify_role_target(target, text_probe=probe)
-
-    assert outcome.ready is False
-    assert outcome.answered is True, "the model answered the readiness prompt; fitness is what failed"
-    assert outcome.precondition_verdict is not None
-    assert outcome.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_FIT_FOR_ROLE
-
-
-def test_verify_passes_a_fit_model_and_skips_the_probe_for_unprobed_roles() -> None:
-    probe = _Probe(fit=False)
-    with _runtime(installed=[_VISION], residents=[_VISION]):
-        (target,) = role_model_targets((ModelRole.VISION_TRANSCRIPTION,))
-        outcome = verify_role_target(target, text_probe=probe)
-
-    assert outcome.ready is True
-    assert probe.calls == []
 
 
 # ---------------------------------------------------------------------------
@@ -467,30 +391,6 @@ def test_the_readers_ask_the_server_at_the_address_the_record_names(tmp_path: Pa
             _install_local_ai(tmp_path, address)
             status = probe_local_reader(ModelRole.TEXT_EXTRACTION)
             reader = read_local_reader_status(roles=(ModelRole.TEXT_EXTRACTION,), assess_load=False)
-            sent_to = local_ai_chat_url(load_settings())
     assert status.available is True
-    assert sent_to == chat_url
     assert reader.host.endpoint_url == chat_url
     assert reader.host.executable_located is True and reader.host.reachable is True
-
-
-def test_a_first_use_measures_at_the_recorded_address_and_keys_the_verdict_to_it(tmp_path: Path) -> None:
-    probe = _Probe(fit=False)
-    with _runtime(installed=[_TEXT], digests={_TEXT: "sha256:text-1"}) as chat_url:
-        address = chat_url.removeprefix("http://").removesuffix("/api/chat")
-        with override_settings(cadrumo_llm_ollama_chat_url=LOCAL_AI_CHAT_URL):
-            _install_local_ai(tmp_path, address)
-            status = admit_local_reader(ModelRole.TEXT_EXTRACTION, text_probe=probe)
-            at_record = read_fitness_verdict(
-                endpoint=chat_url, model=_TEXT, digest="sha256:text-1", role=ModelRole.TEXT_EXTRACTION
-            )
-            at_default = read_fitness_verdict(
-                endpoint=LOCAL_AI_CHAT_URL, model=_TEXT, digest="sha256:text-1", role=ModelRole.TEXT_EXTRACTION
-            )
-    assert probe.endpoints == [chat_url], "the probe reads from the server the record names"
-    assert at_record is not None and at_record.verdict is RoleFitnessVerdict.UNFIT
-    assert chat_url != LOCAL_AI_CHAT_URL
-    assert at_default is None, "the verdict is keyed to the address the server answers on"
-    assert status.available is False
-    assert status.precondition_verdict is not None
-    assert status.precondition_verdict.action is None

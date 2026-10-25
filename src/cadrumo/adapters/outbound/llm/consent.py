@@ -61,30 +61,9 @@ __all__ = [
     "classify_off_host_evidence_read",
     "cloud_evidence_read_permitted",
     "mint_evidence_consent_token",
-    "provider_reads_off_host",
 ]
 
 _MINT_REFUSAL_LOCALE_KEY = "llm.evidence.consent.mint_refused"
-
-
-def provider_reads_off_host(provider: LLMProvider) -> bool:
-    """Whether dispatching at ``provider`` removes the request from this host.
-
-    Derived from the enum rather than listed, so a provider added later is
-    off-host by construction: a new member is a new vendor until someone
-    deliberately makes it local, and the failure of a hand-kept cloud list is
-    that the newest transport is the one missing from it.
-
-    ``False`` for :attr:`~core.config_support.LLMProvider.LOCAL` is a claim
-    about the transport, not its endpoint: the dispatch gate in
-    :class:`~llm.LLMClient` additionally refuses evidence at a local endpoint
-    that is not loopback.
-
-    An agent dispatch does not ask this: :attr:`~core.config_support.LLMProvider.AGENT`
-    names the route, not where the selected lane runs, so the dispatch reads
-    the resolved lane's ``reads_off_host`` flag instead.
-    """
-    return provider is not LLMProvider.LOCAL
 
 
 def agent_consent_binding(lane: ModelRunLane, token: EvidenceConsentToken | None) -> ModelRunConsentBinding | None:
@@ -127,8 +106,6 @@ class OffHostEvidenceReadOutcome(StrEnum):
     OFF_HOST_CONSENTED = "off_host_consented"
     #: An acknowledgement was taken but no provider named.
     ACKNOWLEDGEMENT_WITHOUT_PROVIDER = "acknowledgement_without_provider"
-    #: A provider that never leaves this host was named for an off-host read.
-    PROVIDER_READS_ON_HOST = "provider_reads_on_host"
     #: An off-host provider was named with no acknowledgement of the read.
     PROVIDER_WITHOUT_ACKNOWLEDGEMENT = "provider_without_acknowledgement"
 
@@ -146,16 +123,10 @@ def classify_off_host_evidence_read(
     then changes nothing, which is worse than not asking because it trains an
     operator to believe the prompt is meaningless.
 
-    Naming an on-host provider is refused for that second reason. The
-    dispatch-point gate only inspects a token when
-    :func:`provider_reads_off_host` is true, so a token minted against a local
-    provider is silently ignored -- the acknowledgement is taken, recorded
-    against a surface, and covers a read that never leaves the host.
-
     This lives beside :func:`mint_evidence_consent_token` rather than in the
-    surface that asks, because the minting path never sees the provider: it
-    cannot itself refuse a token bound to an on-host read, and a second
-    frontend re-deciding the pairing would be re-deciding it from scratch.
+    surface that asks, because the minting path never sees the provider, and
+    a second frontend re-deciding the pairing would be re-deciding it from
+    scratch.
 
     Args:
         provider: The provider the operator named, or ``None``.
@@ -171,10 +142,6 @@ def classify_off_host_evidence_read(
         if acknowledged:
             return OffHostEvidenceReadOutcome.ACKNOWLEDGEMENT_WITHOUT_PROVIDER
         return OffHostEvidenceReadOutcome.ON_HOST_DEFAULT
-    # Asked through the predicate the dispatch gate itself uses, so a second
-    # on-host transport added later is refused here without being listed.
-    if not provider_reads_off_host(provider):
-        return OffHostEvidenceReadOutcome.PROVIDER_READS_ON_HOST
     if not acknowledged:
         return OffHostEvidenceReadOutcome.PROVIDER_WITHOUT_ACKNOWLEDGEMENT
     return OffHostEvidenceReadOutcome.OFF_HOST_CONSENTED

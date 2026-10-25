@@ -515,7 +515,6 @@ _STATED_FOR_THE_PERSON: Mapping[str, tuple[Mapping[str, Any], ...]] = {
     "ledger.evidence.extract": tuple(
         {"evidence_id": _SAMPLE_EVIDENCE, "off_host_provider": provider.value, "acknowledge_off_host": True}
         for provider in LLMProvider
-        if provider is not LLMProvider.LOCAL
     ),
     "ledger.own_account": (
         {"action": "add", "label": "synthetic", "holding": "titular", "iban": _SAMPLE_IBAN},

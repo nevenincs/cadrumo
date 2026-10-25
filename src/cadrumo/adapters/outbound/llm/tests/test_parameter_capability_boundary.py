@@ -50,7 +50,7 @@ def _request(
 class _RefusesTemperature(ProviderAdapter):
     """An adapter whose model rejects an explicitly-sent temperature."""
 
-    provider = LLMProvider.LOCAL
+    provider = LLMProvider.AGENT
 
     @override
     def unsupported_parameters(self, model: str) -> frozenset[str]:
@@ -100,7 +100,7 @@ def test_an_adapter_declares_no_unsupported_parameters_by_default() -> None:
     """
 
     class _Plain(ProviderAdapter):
-        provider = LLMProvider.LOCAL
+        provider = LLMProvider.AGENT
 
         @override
         async def complete(self, request: ProviderRequest) -> ProviderCompletion:  # pragma: no cover

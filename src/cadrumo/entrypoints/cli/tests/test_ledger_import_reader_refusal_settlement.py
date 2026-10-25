@@ -40,7 +40,7 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusal, ModelRunRefusal
 from ....adapters.outbound.components.tests.recorded_rows import recorded_absent_row
 from ....adapters.outbound.llm.column_role_mapping import resolve_column_roles
 from ....adapters.outbound.llm.providers.agent import model_run_refusal_verdict
-from ....adapters.outbound.llm.statement_reading import LocalStatementReader
+from ....adapters.outbound.llm.statement_reading import StatementReader
 from ....adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
 from ....application.dependency_contracts import DependencyStatusRow
 from ....application.dependency_registry import dependency_item_declarations
@@ -84,7 +84,7 @@ _READABLE_STATEMENT = (
 @contextmanager
 def _production_readers() -> Generator[None]:
     """Bind the column-naming and statement readers exactly as the profile adapter composition does."""
-    with bind_column_role_mapping_resolver(resolve_column_roles), bind_statement_reader_factory(LocalStatementReader):
+    with bind_column_role_mapping_resolver(resolve_column_roles), bind_statement_reader_factory(StatementReader):
         yield
 
 

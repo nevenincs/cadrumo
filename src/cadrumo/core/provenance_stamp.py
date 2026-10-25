@@ -53,8 +53,6 @@ def provenance_transport_label(provider: LLMProvider) -> str:
     token by construction instead of being silently omitted from a hand-kept
     map -- and the newest transport is exactly the one a hand-kept map misses.
     """
-    if provider is LLMProvider.LOCAL:
-        return LOCAL_TRANSPORT_LABEL
     return provider.value.lower()
 
 

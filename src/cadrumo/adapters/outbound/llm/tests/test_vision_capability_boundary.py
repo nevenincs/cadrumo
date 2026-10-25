@@ -34,7 +34,6 @@ from ..client import LLMClient
 from ..errors import LLMConfigError
 from ..models import LLMRequest, MultimodalImageInput
 from ..providers.agent import AgentAdapter
-from ..providers.local import LocalAdapter
 from .model_run_support import IMAGE_LANE, ON_HOST_LANE, TEXT_ONLY_LANE, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -128,13 +127,12 @@ class TestALaneThatTakesNoImagesRefusesThem:
 class TestDeclaredImageCapability:
     """Capability is data on the adapter class, not per-adapter memory."""
 
-    def test_both_adapters_forward_images(self) -> None:
-        """The local adapter sends images itself; the agent adapter hands them to the lane.
+    def test_the_agent_adapter_forwards_images(self) -> None:
+        """The agent adapter hands images to the lane.
 
         Whether a given lane accepts them is the catalog's answer, checked at the
         client's dispatch point, so the agent adapter declares that it carries them.
         """
-        assert LocalAdapter.supports_images is True
         assert AgentAdapter.supports_images is True
 
 

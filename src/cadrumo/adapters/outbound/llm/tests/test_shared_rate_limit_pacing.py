@@ -5,44 +5,30 @@ discovers the same account-wide limit N times and issues N calls into a window
 that already refused the first -- which is not a rate limit being respected but
 N of them being ignored in sequence.
 
-Every case runs real dispatches against a loopback endpoint that answers 429
-with a real ``Retry-After``, and observes the window on the SECOND dispatch,
-which is the one a per-request policy cannot pace.
+Every case runs the client's own dispatch loop with an adapter that answers the
+first item with a rate limit carrying a server delay, and observes the window
+on the SECOND item, which is the one a per-request policy cannot pace.
 """
 
 from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import Generator, Iterator
-from contextlib import contextmanager
-from http import HTTPStatus
+from collections.abc import Iterator
 from pathlib import Path
-from typing import override
 
 import pytest
 
-from .....core.config import override_settings
 from .....core.config_support import LLMProvider
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from .....tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_records import LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
 from .. import client as client_module
-from ..client import (
-    LLMClient,
-    LLMRetryPolicy,
-)
+from ..client import LLMClient, LLMRetryPolicy
 from ..errors import LLMRateLimitError
-from ..models import LLMRequest
 from ._arena_fixtures import reset_client_process_state
+from .scripted_adapter_support import COMPLETION_TEXT, ScriptedAdapter, provider_request
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -62,31 +48,16 @@ def _fresh_process_state() -> Iterator[None]:
     reset_client_process_state()
 
 
-@contextmanager
-def _serve(*, rate_limited: bool) -> Generator[tuple[str, list[float]]]:
-    """Serve a loopback runtime, recording the arrival time of every request."""
-    arrivals: list[float] = []
-
-    class _Endpoint(SilentLoopbackHandler):
-        @override
-        def do_POST(self) -> None:
-            read_json_body(self)
-            arrivals.append(time.monotonic())
-            limited = rate_limited and len(arrivals) == 1
-            write_json_response(
-                self,
-                {"error": "rate limited"} if limited else ollama_chat_reply(" local completion "),
-                status=HTTPStatus.TOO_MANY_REQUESTS if limited else HTTPStatus.OK,
-                extra_headers={"retry-after": str(_RETRY_AFTER_S)} if limited else None,
-            )
-
-    with serving_loopback(_Endpoint, path="/api/chat") as endpoint:
-        yield endpoint, arrivals
+def _rate_limited() -> ScriptedAdapter:
+    return ScriptedAdapter([LLMRateLimitError(retry_after_seconds=_RETRY_AFTER_S)])
 
 
-def _client(tmp_path: Path, *, attempts: int = 1) -> LLMClient:
+def _answering() -> ScriptedAdapter:
+    return ScriptedAdapter([None])
+
+
+def _client(tmp_path: Path, *, attempts: int = 1, budget_s: float = 30.0) -> LLMClient:
     settings = EnvFileFreeSettings(
-        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -96,43 +67,45 @@ def _client(tmp_path: Path, *, attempts: int = 1) -> LLMClient:
         cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
         usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
         run_record_recorder=LLMRunRecorder(root_dir=settings.cadrumo_llm_run_record_dir),
-        retry_policy=LLMRetryPolicy(max_attempts=attempts, initial_backoff_s=0.01, max_backoff_s=0.02, budget_s=30.0),
+        retry_policy=LLMRetryPolicy(
+            max_attempts=attempts, initial_backoff_s=0.01, max_backoff_s=0.02, budget_s=budget_s
+        ),
     )
+
+
+def _dispatch(client: LLMClient, adapter: ScriptedAdapter, prompt: str) -> str:
+    return asyncio.run(client._complete_with_retries(adapter, provider_request(prompt))).text
 
 
 def test_a_rate_limit_on_one_item_paces_the_next_item(tmp_path: Path) -> None:
     """The run-wide property: the second dispatch waits on the first one's window.
 
-    Measured at the SERVER, on the gap between arrivals, because that is the
-    only place the question is decided -- a client that recorded a delay and
-    dispatched anyway would look identical from inside.
+    Measured on the gap between the two items' arrivals at their adapters,
+    because a client that recorded a delay and dispatched anyway would look
+    identical from inside.
     """
-    with _serve(rate_limited=True) as (endpoint, arrivals), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        client = _client(tmp_path)
-        with pytest.raises(LLMRateLimitError):
-            asyncio.run(client.complete(LLMRequest(prompt="first item")))
+    client = _client(tmp_path)
+    first, second = _rate_limited(), _answering()
+    with pytest.raises(LLMRateLimitError):
+        _dispatch(client, first, "first item")
 
-        assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.LOCAL) > 0, "the shared window was never armed"
+    assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.AGENT) > 0, "the shared window was never armed"
 
-        response = asyncio.run(client.complete(LLMRequest(prompt="second item")))
-
-    assert response.text == "local completion"
-    assert len(arrivals) == 2
-    gap = arrivals[1] - arrivals[0]
+    assert _dispatch(client, second, "second item") == COMPLETION_TEXT
+    gap = second.arrived_at[0] - first.arrived_at[0]
     assert gap >= _RETRY_AFTER_S * 0.8, (
         f"the second dispatch arrived {gap:.2f}s after the first, inside the {_RETRY_AFTER_S}s window "
-        "the server asked for; the backoff paced one request rather than the run"
+        "the provider asked for; the backoff paced one request rather than the run"
     )
 
 
 def test_without_a_rate_limit_the_second_item_is_not_delayed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The positive control, and the proof that the window OPENS rather than merely closing.
 
-    Same two dispatches, same server, same client -- only the 429 differs. It
-    establishes that a paced item genuinely would have dispatched immediately
-    without the injection. The window each dispatch's pacing gate saw is
-    recorded at the gate itself rather than inferred from arrival gaps, which
-    under load measure the host, not the pacing.
+    Same two dispatches, same client -- only the rate limit differs. The window
+    each dispatch's pacing gate saw is recorded at the gate itself rather than
+    inferred from arrival gaps, which under load measure the host, not the
+    pacing.
     """
     observed_windows: list[float] = []
     gate = LLMClient._await_shared_pacing
@@ -142,14 +115,12 @@ def test_without_a_rate_limit_the_second_item_is_not_delayed(tmp_path: Path, mon
         await gate(provider, policy)
 
     monkeypatch.setattr(LLMClient, "_await_shared_pacing", staticmethod(recording_gate))
-    with _serve(rate_limited=False) as (endpoint, arrivals), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        client = _client(tmp_path)
-        asyncio.run(client.complete(LLMRequest(prompt="first item")))
-        asyncio.run(client.complete(LLMRequest(prompt="second item")))
+    client = _client(tmp_path)
+    _dispatch(client, _answering(), "first item")
+    _dispatch(client, _answering(), "second item")
 
-    assert len(arrivals) == 2
     assert observed_windows == [0.0, 0.0], f"an unlimited run still asked its dispatches to wait: {observed_windows}"
-    assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.LOCAL) == 0
+    assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.AGENT) == 0
 
 
 def test_the_window_is_shared_across_clients(tmp_path: Path) -> None:
@@ -159,14 +130,13 @@ def test_the_window_is_shared_across_clients(tmp_path: Path) -> None:
     document -- which is how the readers are constructed -- would rediscover the
     same limit for every document.
     """
-    with _serve(rate_limited=True) as (endpoint, arrivals), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        with pytest.raises(LLMRateLimitError):
-            asyncio.run(_client(tmp_path / "first").complete(LLMRequest(prompt="first item")))
+    first, second = _rate_limited(), _answering()
+    with pytest.raises(LLMRateLimitError):
+        _dispatch(_client(tmp_path / "first"), first, "first item")
 
-        asyncio.run(_client(tmp_path / "second").complete(LLMRequest(prompt="second item")))
+    _dispatch(_client(tmp_path / "second"), second, "second item")
 
-    gap = arrivals[1] - arrivals[0]
-    assert gap >= _RETRY_AFTER_S * 0.8
+    assert second.arrived_at[0] - first.arrived_at[0] >= _RETRY_AFTER_S * 0.8
 
 
 def test_a_limit_discovered_on_the_last_attempt_still_paces_the_run(tmp_path: Path) -> None:
@@ -176,12 +146,11 @@ def test_a_limit_discovered_on_the_last_attempt_still_paces_the_run(tmp_path: Pa
     limit unrecorded, and the next item would walk straight into it -- the
     failure being least visible exactly when the run is already struggling.
     """
-    with _serve(rate_limited=True) as (endpoint, _arrivals), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        # One attempt: the loop never reaches its retry branch at all.
-        with pytest.raises(LLMRateLimitError):
-            asyncio.run(_client(tmp_path, attempts=1).complete(LLMRequest(prompt="only attempt")))
+    # One attempt: the loop never reaches its retry branch at all.
+    with pytest.raises(LLMRateLimitError):
+        _dispatch(_client(tmp_path, attempts=1), _rate_limited(), "only attempt")
 
-        assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.LOCAL) > 0
+    assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.AGENT) > 0
 
 
 def test_the_shared_wait_is_bounded_by_the_retry_budget(tmp_path: Path) -> None:
@@ -190,26 +159,12 @@ def test_the_shared_wait_is_bounded_by_the_retry_budget(tmp_path: Path) -> None:
     The window stays armed and readable so a surface can report it, but no
     single dispatch blocks longer than the budget it was given.
     """
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_ollama_text_model="gpt-oss",
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
-    client = LLMClient(
-        settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-        run_record_recorder=LLMRunRecorder(root_dir=settings.cadrumo_llm_run_record_dir),
-        retry_policy=LLMRetryPolicy(max_attempts=1, initial_backoff_s=0.01, max_backoff_s=0.02, budget_s=0.2),
-    )
+    client = _client(tmp_path, budget_s=0.2)
+    with pytest.raises(LLMRateLimitError):
+        _dispatch(client, _rate_limited(), "first item")
 
-    with _serve(rate_limited=True) as (endpoint, _arrivals), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        with pytest.raises(LLMRateLimitError):
-            asyncio.run(client.complete(LLMRequest(prompt="first item")))
-
-        started = time.monotonic()
-        asyncio.run(client.complete(LLMRequest(prompt="second item")))
-        waited = time.monotonic() - started
+    started = time.monotonic()
+    _dispatch(client, _answering(), "second item")
+    waited = time.monotonic() - started
 
     assert waited < _RETRY_AFTER_S, f"the dispatch slept {waited:.2f}s, past the 0.2s budget it was given"

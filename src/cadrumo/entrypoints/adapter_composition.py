@@ -1635,9 +1635,9 @@ def _resolve_column_roles(table: NormalizedTable) -> ColumnRoleMappingPort | Col
 
 
 def _statement_reader() -> StatementReaderPort:
-    from ..adapters.outbound.llm.statement_reading import LocalStatementReader
+    from ..adapters.outbound.llm.statement_reading import StatementReader
 
-    return LocalStatementReader()
+    return StatementReader()
 
 
 @contextmanager

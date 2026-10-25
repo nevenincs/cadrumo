@@ -18,7 +18,7 @@ from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
-from ..local_reader import LocalReaderDocumentReadiness, LocalReaderStatus, RoleFitnessState
+from ..local_reader import LocalReaderDocumentReadiness, LocalReaderStatus
 from ..operations.access_resolution import (
     LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
     OperationAccessContext,
@@ -101,7 +101,7 @@ class ReaderHostProjectionV1(BaseModel):
 
 
 class ReaderRoleProjectionV1(BaseModel):
-    """One locally measured model role and its recorded fitness.
+    """One locally measured model role and its readiness.
 
     ``recovery_action_id`` is the operator action the reader probe named for
     ``failed_condition_id`` -- the local AI setup when the runtime does not
@@ -116,8 +116,6 @@ class ReaderRoleProjectionV1(BaseModel):
     resident: bool | None = None
     load_admitted: bool | None = None
     contention_causes: Annotated[tuple[str, ...], Field(max_length=32)] = ()
-    fitness: RoleFitnessState | None = None
-    fit_for_role: bool | None = None
     ready: bool
     failed_condition_id: InvoiceEvidenceLabel | None = None
     recovery_action_id: NamespacedId | None = None
@@ -163,8 +161,6 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
                     resident=row.resident,
                     load_admitted=row.load_admitted,
                     contention_causes=tuple(cause.value for cause in row.contention_causes),
-                    fitness=row.fitness,
-                    fit_for_role=row.fit_for_role,
                     ready=row.ready,
                     failed_condition_id=row.failed_condition_id,
                     recovery_action_id=row.recovery_action_id,
@@ -186,7 +182,7 @@ class LedgerEvidenceReaderReadinessExecutionResult(BaseModel):
 
 
 class LedgerEvidenceReaderReadinessExecutor:
-    """Read local runtime and recorded fitness without loading a model."""
+    """Read local runtime readiness without loading a model."""
 
     def __init__(self, read_status: Callable[[], LocalReaderStatus]) -> None:
         """Bind the read-only canonical status provider."""

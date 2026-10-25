@@ -27,7 +27,7 @@ from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..errors import LLMConsentError
-from ..text_classifier import LocalTextLLMClassifier
+from ..text_classifier import TextLLMClassifier
 from .model_run_support import DEFAULT_LANE, ON_HOST_LANE, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -45,7 +45,7 @@ def _transaction() -> Transaction:
         return vision_transaction("ev-1")
 
 
-def _reader(tmp_path: Path, spec: PromptSpec) -> LocalTextLLMClassifier:
+def _reader(tmp_path: Path, spec: PromptSpec) -> TextLLMClassifier:
     settings = EnvFileFreeSettings(
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
@@ -56,12 +56,12 @@ def _reader(tmp_path: Path, spec: PromptSpec) -> LocalTextLLMClassifier:
         cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
         usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
     )
-    return LocalTextLLMClassifier(spec=spec, settings=settings, client=client)
+    return TextLLMClassifier(spec=spec, settings=settings, client=client)
 
 
 def test_the_text_reader_names_the_agent_and_its_role_and_carries_no_images() -> None:
     """Its request goes to the agent for the text extraction role, marked as evidence, with text only."""
-    request = LocalTextLLMClassifier(spec=_spec())._request("classify this")
+    request = TextLLMClassifier(spec=_spec())._request("classify this")
 
     assert request.provider_override is LLMProvider.AGENT
     assert request.model_override is None, "the agent resolves the model for the role"
@@ -97,7 +97,7 @@ def test_an_off_host_lane_without_consent_refuses_before_anything_is_sent(tmp_pa
 
 def test_the_provenance_stamp_names_the_agent_transport() -> None:
     """A persisted record says the agent read it; the model is the role's, resolved at dispatch."""
-    reader = LocalTextLLMClassifier(spec=_spec())
+    reader = TextLLMClassifier(spec=_spec())
 
     assert reader.decided_by == "llm:agent-text:configured"
 

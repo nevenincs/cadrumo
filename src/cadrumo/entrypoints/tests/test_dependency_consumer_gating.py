@@ -56,8 +56,7 @@ Browser rows:
 
 Where it stops:
 
-- The local AI transport (``llm.client``) and consumer admission's fitness
-  measurement (``llm.role_fitness``) dispatch on purpose and are exempt by
+- The model transport (``llm.client``) dispatches on purpose and is exempt by
   name; an exemption that no longer matches a discovered site fails.
 - The runtime traffic of loading and keeping a model resident (under
   ``application.provisioning_*``) does not build a request and is not a
@@ -129,7 +128,7 @@ from ...adapters.outbound.llm.client import LLMClient
 from ...adapters.outbound.llm.evidence_draft_text import default_extraction_authority_values
 from ...adapters.outbound.llm.models import LLMRequest
 from ...adapters.outbound.llm.providers.agent import model_run_refusal_verdict
-from ...adapters.outbound.llm.statement_reading import LocalStatementReader
+from ...adapters.outbound.llm.statement_reading import StatementReader
 from ...adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposal
 from ...adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
@@ -356,7 +355,6 @@ _MODEL_ROLE = "cadrumo.core.model_catalogue.ModelRole"
 #: Modules that dispatch to the local AI on purpose, and why that is not a feature consuming it.
 _EXEMPT_DISPATCH_MODULES: Mapping[str, str] = {
     "cadrumo.adapters.outbound.llm.client": "the transport every consumer dispatches through",
-    "cadrumo.adapters.outbound.llm.role_fitness": "consumer admission's fitness measurement of an installed model",
 }
 
 
@@ -850,7 +848,7 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
     "cadrumo.entrypoints.ledger_llm_composition.compose_ledger_llm": _LocalAiConsumer(
         units=frozenset(
             {
-                f"{_LLM}.text_classifier.LocalTextLLMClassifier",
+                f"{_LLM}.text_classifier.TextLLMClassifier",
                 f"{_LLM}.vision_classifier.VisionLLMClassifier",
             }
         ),
@@ -885,11 +883,11 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
         operations=frozenset({"ledger.invoice.import"}),
     ),
     "cadrumo.entrypoints.adapter_composition._statement_reader": _LocalAiConsumer(
-        units=frozenset({f"{_LLM}.statement_reading.LocalStatementReader"}),
+        units=frozenset({f"{_LLM}.statement_reading.StatementReader"}),
         drivers={ModelRole.TEXT_EXTRACTION: _drive_statement_text_read},
         operations=frozenset({"ledger.import"}),
     ),
-    f"{_LLM}.statement_reading.LocalStatementReader": _LocalAiConsumer(
+    f"{_LLM}.statement_reading.StatementReader": _LocalAiConsumer(
         units=frozenset({f"{_LLM}.evidence_draft_vision.VisionDocumentTranscriber"}),
         drivers={ModelRole.VISION_TRANSCRIPTION: _drive_statement_scanned_page},
         operations=frozenset({"ledger.import"}),
@@ -1219,11 +1217,6 @@ def test_discovery_finds_a_new_local_ai_consumer_that_has_no_row(tmp_path: Path)
                 def dispatch():
                     return ProviderRequest()
             """,
-            "adapters/outbound/llm/role_fitness.py": """
-                from .providers.base import ProviderRequest
-                def probe():
-                    return ProviderRequest()
-            """,
             "adapters/outbound/llm/fixture_reader.py": """
                 from ....core.model_catalogue import ModelRole
                 from .models import LLMRequest
@@ -1500,7 +1493,7 @@ class _FixtureReadResult(BaseModel):
 
 def _read_one_statement_page() -> None:
     """Ask the real statement reader for one page; with the model not installed it refuses with the setup verdict."""
-    LocalStatementReader().propose_page(_transcription("05.03.2026 Cafeteria -4,50 EUR"))
+    StatementReader().propose_page(_transcription("05.03.2026 Cafeteria -4,50 EUR"))
 
 
 class _FixtureReadExecutor:

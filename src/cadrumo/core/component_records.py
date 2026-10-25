@@ -14,9 +14,8 @@ and it never decides an item's state: a located component is one whose record
 says where it is and whose named paths are there, not a verdict that it works.
 
 The local AI record also names the fixed loopback address of the one server the
-runtime manager runs from that program. :func:`local_ai_chat_url` is the one
-place the readers learn where to send a request: the operator's own endpoint
-when one is configured, otherwise the address the record names.
+runtime manager runs from that program; :attr:`LocatedLocalAi.chat_url` is that
+server's chat endpoint.
 """
 
 from __future__ import annotations
@@ -53,7 +52,6 @@ __all__ = [
     "LocatedComponent",
     "LocatedLocalAi",
     "component_records_root",
-    "local_ai_chat_url",
     "locate_component",
     "locate_local_ai",
     "read_component_record",
@@ -387,17 +385,3 @@ def locate_local_ai(*, records_root: Path) -> LocatedLocalAi:
 def uses_managed_local_ai(settings: Settings) -> bool:
     """Whether the readers use the server the runtime manager runs, rather than an operator's own endpoint."""
     return settings.cadrumo_llm_ollama_chat_url == LOCAL_AI_CHAT_URL
-
-
-def local_ai_chat_url(settings: Settings) -> str:
-    """Return the chat endpoint the local readers send to.
-
-    An operator who configured another endpoint runs that server themselves, so
-    it is used as written. Otherwise the endpoint is the server the local AI
-    record names; without a record that locates it, the configured default is
-    returned, where nothing Cadrumo runs answers.
-    """
-    if not uses_managed_local_ai(settings):
-        return settings.cadrumo_llm_ollama_chat_url
-    located = locate_local_ai(records_root=component_records_root(settings))
-    return located.chat_url if located.located and located.chat_url is not None else LOCAL_AI_CHAT_URL

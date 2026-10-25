@@ -17,7 +17,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.classification.policies import SensitivityClass
-from .....core.config_support import LLMProvider
+from .....core.config_support import RetiredLLMProvider
 from .....core.redaction.rules import (
     carries_redaction_placeholder,
     default_rules_for_class,
@@ -51,7 +51,7 @@ def _request() -> LLMRequest:
 def _response(text: str) -> LLMResponse:
     return LLMResponse(
         text=text,
-        provider=LLMProvider.LOCAL,
+        provider=RetiredLLMProvider.LOCAL,
         model=_MODEL,
         input_tokens=10,
         output_tokens=20,
@@ -108,10 +108,10 @@ def test_a_row_carrying_a_redaction_placeholder_is_evicted_and_never_returned() 
     object_key = _seed_legacy_row(cache, request, _response(f'{{"supplier_tax_id": "{_NIF}"}}'))
     assert _stored(object_key), "the seed must reach the real store for the eviction to mean anything"
 
-    assert cache.read(request, LLMProvider.LOCAL, _MODEL) is None
+    assert cache.read(request, RetiredLLMProvider.LOCAL, _MODEL) is None
     assert not _stored(object_key), "the replayable row must be gone, not merely skipped"
     # A second read is an ordinary miss: nothing was reinstated.
-    assert cache.read(request, LLMProvider.LOCAL, _MODEL) is None
+    assert cache.read(request, RetiredLLMProvider.LOCAL, _MODEL) is None
 
 
 def test_a_clean_row_is_still_served() -> None:
@@ -120,7 +120,7 @@ def test_a_clean_row_is_still_served() -> None:
     request = _request()
     object_key = _seed_legacy_row(cache, request, _response('{"supplier_name": "Hardware Profesional Sur SL"}'))
 
-    served = cache.read(request, LLMProvider.LOCAL, _MODEL)
+    served = cache.read(request, RetiredLLMProvider.LOCAL, _MODEL)
 
     assert served is not None
     assert served.text == '{"supplier_name": "Hardware Profesional Sur SL"}'

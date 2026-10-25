@@ -1721,8 +1721,6 @@ export type ReaderRole = {
   resident?: boolean | null;
   load_admitted?: boolean | null;
   contention_causes?: string[];
-  fitness?: "fit" | "unfit" | "timed_out" | "not_verified" | null;
-  fit_for_role?: boolean | null;
   ready: boolean;
   failed_condition_id?: string | null;
   /** The operator action the reader check named for `failed_condition_id`,

@@ -30,7 +30,7 @@ from cadrumo.tests.pdf_fixtures import multi_page_text_pdf_bytes
 from cadrumo_client.contracts.model_runs import ModelRunBody
 
 from ..statement_reading import (
-    LocalStatementReader,
+    StatementReader,
     build_statement_page_prompt,
     parse_statement_page_response,
 )
@@ -166,7 +166,7 @@ def _agent(script: _ScriptedAgent) -> Generator[RecordingModelRuns]:
 def test_the_wired_read_keeps_only_the_movements_the_statement_prints() -> None:
     """Balances, totals and invented movements in the replies never become rows."""
     with _agent(_ScriptedAgent(text_replies=_PAGE_REPLIES)) as service:
-        provider = PdfStatementProvider(reader_factory=LocalStatementReader)
+        provider = PdfStatementProvider(reader_factory=StatementReader)
         validation = provider.validate_source(_STATEMENT)
         rows = list(provider.ingest(_STATEMENT))
 
@@ -199,7 +199,7 @@ def test_a_scanned_page_is_transcribed_then_read(tmp_path: Path) -> None:
     )
 
     with _agent(script) as service:
-        rows = list(PdfStatementProvider(reader_factory=LocalStatementReader).ingest(source))
+        rows = list(PdfStatementProvider(reader_factory=StatementReader).ingest(source))
 
     assert [(row.raw.booked_date.isoformat(), row.raw.amount, row.raw.raw_fields["page_number"]) for row in rows] == [
         ("2026-03-05", Decimal("4.50"), "2")
@@ -220,7 +220,7 @@ def test_a_scanned_page_read_back_empty_is_read_again(tmp_path: Path) -> None:
     )
 
     with _agent(script) as service:
-        rows = list(PdfStatementProvider(reader_factory=LocalStatementReader).ingest(source))
+        rows = list(PdfStatementProvider(reader_factory=StatementReader).ingest(source))
 
     assert [(row.raw.booked_date.isoformat(), row.raw.amount) for row in rows] == [("2026-03-05", Decimal("4.50"))]
     assert sum(_carries_images(body) for _, body in service.runs) == 2

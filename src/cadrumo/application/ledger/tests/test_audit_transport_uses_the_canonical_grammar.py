@@ -71,8 +71,8 @@ def test_a_second_reader_does_not_move_the_transport() -> None:
     for one transport, which is exactly the mis-branching the audit field exists
     to prevent.
     """
-    text = build_provenance_stamp(provider=LLMProvider.LOCAL, reader="text", model="m1")
-    vision = build_provenance_stamp(provider=LLMProvider.LOCAL, reader="vision", model="m1")
+    text = build_provenance_stamp(provider=LLMProvider.AGENT, reader="text", model="m1")
+    vision = build_provenance_stamp(provider=LLMProvider.AGENT, reader="vision", model="m1")
 
     assert text != vision
     assert _transport_from_provenance(text) == _transport_from_provenance(vision)

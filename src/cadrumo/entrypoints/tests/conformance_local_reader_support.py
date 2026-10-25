@@ -30,7 +30,7 @@ from .conformance_family_contract import (
 
 def _prepare_status() -> ConformancePreparation:
     endpoint = load_settings().cadrumo_llm_ollama_chat_url
-    request = build_local_reader_status_request(probe=False)
+    request = build_local_reader_status_request()
 
     def verify(outcome: ConformanceOutcome) -> None:
         status = outcome.resolve_result(LocalReaderStatusPublicResultV1)

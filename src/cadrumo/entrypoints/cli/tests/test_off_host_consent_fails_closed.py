@@ -74,11 +74,9 @@ def test_neither_flag_supplied_accepts_the_on_host_default() -> None:
     ("provider", "acknowledged"),
     [
         (None, True),
-        (LLMProvider.LOCAL, True),
-        (LLMProvider.LOCAL, False),
         (LLMProvider.AGENT, False),
     ],
-    ids=["acknowledged_without_provider", "local_acknowledged", "local_unacknowledged", "off_host_unacknowledged"],
+    ids=["acknowledged_without_provider", "off_host_unacknowledged"],
 )
 def test_an_incomplete_off_host_request_is_refused(provider: LLMProvider | None, acknowledged: bool) -> None:
     """Each half-formed pair refuses AT THE CONSENT GATE, before reading anything.
@@ -119,7 +117,6 @@ def test_the_explicit_remote_pair_and_reference_reach_worker_validation() -> Non
     [
         (None, False, OffHostEvidenceReadOutcome.ON_HOST_DEFAULT),
         (None, True, OffHostEvidenceReadOutcome.ACKNOWLEDGEMENT_WITHOUT_PROVIDER),
-        (LLMProvider.LOCAL, True, OffHostEvidenceReadOutcome.PROVIDER_READS_ON_HOST),
         (LLMProvider.AGENT, False, OffHostEvidenceReadOutcome.PROVIDER_WITHOUT_ACKNOWLEDGEMENT),
         (LLMProvider.AGENT, True, OffHostEvidenceReadOutcome.OFF_HOST_CONSENTED),
     ],

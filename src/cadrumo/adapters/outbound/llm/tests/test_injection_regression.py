@@ -29,11 +29,12 @@ discovered. What catches that case is the arithmetic-closure leg, which is
 asserted here too, so the boundary's real strength is recorded as the
 conjunction of the two rather than overstated as the anchor check alone.
 
-The transport half runs against a REAL loopback HTTP server speaking the
-provider wire shape. **The reply that server returns is authored by this test**,
-not by a model: no model is loaded, no inference runs, and nothing leaves the
-host. That makes the transport assertions real (the hostile bytes genuinely
-travel the client path unmodified) while keeping the gate deterministic.
+The transport half runs through the real client and agent adapter against a
+recording agent service. **The reply that service returns is authored by this
+test**, not by a model: no model is loaded, no inference runs, and nothing
+leaves the host. That makes the transport assertions real (the hostile bytes
+genuinely travel the client path unmodified) while keeping the gate
+deterministic.
 
 See Also:
     :func:`~application.ledger.grounding_anchor.evaluate_anchor`
@@ -46,13 +47,9 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Generator
-from contextlib import contextmanager
 from decimal import Decimal
 from hashlib import sha256
-from http import HTTPStatus
 from pathlib import Path
-from typing import override
 
 import pytest
 
@@ -61,18 +58,11 @@ from .....application.ledger.document_transcription import DocumentTranscription
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....application.ledger.grounding_anchor import evaluate_anchor
 from .....application.ledger.invoice_draft_records import InvoiceDraft
-from .....core.config import override_settings
 from .....core.field_grounding import FieldGroundingOutcome
 from .....core.field_origin import FieldOrigin
+from .....core.model_catalogue import ModelRole
 from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from .....tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 from ....inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.usage import UsageRecorder
@@ -80,6 +70,7 @@ from ..client import LLMClient
 from ..invoice_field_contract import anchor_key_for_field
 from ..invoice_field_grounding import parse_invoice_extraction_response
 from ..models import LLMRequest
+from .model_run_support import ON_HOST_LANE, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -141,41 +132,25 @@ def _transcription() -> DocumentTranscription:
     )
 
 
-@contextmanager
-def _serve_authored_reply(reply: str) -> Generator[str]:
-    """Serve one test-authored reply over a real loopback HTTP server.
+def _complete_through_the_client(reply: str, tmp_path: Path) -> str:
+    """Return one test-authored reply as the client receives it from the agent service.
 
     The bytes are this module's, never a model's. What is real here is the
-    transport: the hostile content genuinely crosses the client path.
+    client path: the hostile content genuinely crosses the client and the agent
+    adapter.
     """
-
-    class _Endpoint(SilentLoopbackHandler):
-        @override
-        def do_POST(self) -> None:
-            read_json_body(self)
-            write_json_response(
-                self,
-                ollama_chat_reply(reply, prompt_eval_count=8),
-                status=HTTPStatus.OK,
-            )
-
-    with serving_loopback(_Endpoint, path="/api/chat") as endpoint:
-        yield endpoint
-
-
-def _complete_over_loopback(reply: str, tmp_path: Path) -> str:
     settings = EnvFileFreeSettings(
-        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
     )
-    with _serve_authored_reply(reply) as endpoint, override_settings(cadrumo_llm_ollama_chat_url=endpoint):
+    with serving_agent(lane=ON_HOST_LANE, replies=(reply,)):
         client = LLMClient(
             settings=settings,
             cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
             usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
         )
-        return asyncio.run(client.complete(LLMRequest(prompt="read this invoice"))).text
+        request = LLMRequest(prompt="read this invoice", model_role=ModelRole.TEXT_EXTRACTION)
+        return asyncio.run(client.complete(request)).text
 
 
 def _obedient_payload() -> str:
@@ -289,14 +264,14 @@ class TestNoOutOfSchemaKeySurvives:
 class TestTheHostilePayloadReallyTravelsTheClientPath:
     """The transport does not sanitise, so the schema boundary is what refuses.
 
-    Run against a real loopback server. Without this the schema assertions would
+    Run through the real client. Without this the schema assertions would
     hold over a payload assembled in-process, leaving open whether some earlier
     layer had quietly dropped the offending keys -- in which case the gate would
     be measuring the wrong component.
     """
 
     def test_the_injected_keys_arrive_unmodified_and_are_then_refused(self, tmp_path: Path) -> None:
-        delivered = _complete_over_loopback(_obedient_payload(), tmp_path)
+        delivered = _complete_through_the_client(_obedient_payload(), tmp_path)
 
         for key in _INJECTED_KEYS:
             assert key in delivered, "the transport must not silently strip hostile keys"

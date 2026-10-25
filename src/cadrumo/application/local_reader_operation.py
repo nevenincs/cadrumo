@@ -22,9 +22,6 @@ from ..core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from .local_reader import (
-    TextExtractionFitnessProbe,
-)
 from .local_reader_contracts import (
     LOCAL_READER_EXECUTE_PHASE,
     LOCAL_READER_OPERATION_DEFINITION_ID,
@@ -83,12 +80,8 @@ _PHASES = (
 )
 
 
-def build_local_reader_operation_definition(*, text_probe: TextExtractionFitnessProbe) -> OperationDefinition:
-    """Bind the injected fitness port to the canonical local-reader operation."""
-
-    def build() -> LocalReaderProvisionExecutor:
-        return LocalReaderProvisionExecutor(text_probe=text_probe)
-
+def build_local_reader_operation_definition() -> OperationDefinition:
+    """Build the canonical local-reader operation."""
     return OperationDefinition(
         definition_id=LOCAL_READER_OPERATION_DEFINITION_ID,
         request_type=LocalReaderProvisionRequest,
@@ -97,7 +90,7 @@ def build_local_reader_operation_definition(*, text_probe: TextExtractionFitness
         executor_factory=OperationExecutorFactory(
             request_type=LocalReaderProvisionRequest,
             executor_type=LocalReaderProvisionExecutor,
-            build=build,
+            build=LocalReaderProvisionExecutor,
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset[OperationInteractionKind](),
