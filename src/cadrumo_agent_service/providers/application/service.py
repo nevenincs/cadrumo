@@ -6,7 +6,7 @@ It reads every provider in one answer and performs the person's acts:
 * set or replace a direct credential (and any base URL);
 * choose how the assistant authenticates, without touching a stored key;
 * turn the lane off, which persists ``disabled`` for the assistant (so the
-  development fallback is blocked too) and keeps any stored key;
+  lane is not used) and keeps any stored key;
 * turn an off lane back on, restoring the way it authenticates;
 * reset, which deletes the record and returns the provider to ``unset``.
 
@@ -20,7 +20,7 @@ service; it holds no frontend or transport concern.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
 
@@ -85,7 +85,6 @@ class ProviderSettingsService:
         *,
         store: ProviderSettingsStore,
         catalog_source: ProviderCatalogSource,
-        environment: Mapping[str, str],
         storage_mode: StorageMode,
         clock: Callable[[], datetime] = now,
         cli_state_probe: Callable[[ProviderCatalogEntry], CliState] | None = None,
@@ -93,7 +92,6 @@ class ProviderSettingsService:
         """Bind the service to one profile's store and the process's storage mode."""
         self._store = store
         self._catalog_source = catalog_source
-        self._environment = environment
         self._storage_mode = storage_mode
         self._clock = clock
         self._cli_state_probe = cli_state_probe
@@ -113,8 +111,6 @@ class ProviderSettingsService:
                 status_entry(
                     entry,
                     read,
-                    environment=self._environment,
-                    storage_mode=self._storage_mode,
                     cli_state=self._cli_state(entry),
                 )
                 for entry, read in zip(catalog.providers, reads, strict=True)
@@ -231,8 +227,7 @@ class ProviderSettingsService:
         * a stored credential is used directly again (``direct_api``);
         * a lane that takes only provider sign-in selects that sign-in again;
         * otherwise nothing is left to restore, so the record is deleted and
-          the lane is ``unset`` again, which in development re-enables the
-          environment fallback.
+          the lane is ``unset`` again.
 
         A lane that is not off is refused with ``unknown``.
         """
@@ -371,8 +366,6 @@ class ProviderSettingsService:
             entry=status_entry(
                 entry,
                 read,
-                environment=self._environment,
-                storage_mode=self._storage_mode,
                 cli_state=self._cli_state(entry),
             ),
         )

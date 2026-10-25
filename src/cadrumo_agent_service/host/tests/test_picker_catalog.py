@@ -60,7 +60,6 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, store: MemoryProvi
     service._providers = ProviderSettingsService(
         store=store,
         catalog_source=StaticCatalogSource(),
-        environment={},
         storage_mode=StorageMode.INSTALLED,
     )
     monkeypatch.setattr(service_module, "declared_provider_catalog_response", _document)

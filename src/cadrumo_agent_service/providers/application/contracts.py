@@ -44,7 +44,6 @@ class ProviderCredentialSource(StrEnum):
     """Where the credential a consumer would use comes from."""
 
     PROFILE = "profile"
-    ENVIRONMENT = "environment"
     NONE = "none"
 
 
@@ -115,7 +114,7 @@ class ProviderSettingsStatus(OutputSchema):
     """Masked status of every catalogued provider, in catalog order."""
 
     development: bool
-    """Whether this is a development build, where an unset key may come from the environment."""
+    """Whether this is a development build."""
     providers: tuple[ProviderStatusEntry, ...] = Field(min_length=1)
 
 

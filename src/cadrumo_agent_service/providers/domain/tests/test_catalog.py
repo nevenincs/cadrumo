@@ -13,7 +13,6 @@ from ..catalog import (
     ProviderAuthKind,
     ProviderConsumer,
     ProviderTransport,
-    development_key_variable,
     parse_provider_catalog,
     validate_https_base_url,
 )
@@ -90,13 +89,6 @@ def test_a_valid_document_parses_into_typed_lanes() -> None:
     assert catalog.providers[2].cli_programs == ("example", "example-helper")
     assert catalog.providers[3].default_base_url == "https://plain.example.invalid"
     assert api.consumers == (ProviderConsumer.ASSISTANT,)
-
-
-def test_the_development_variable_is_constructed_from_the_provider_id() -> None:
-    catalog = parse_provider_catalog(_document(_key_lane(), _cli_lane()))
-
-    assert {entry.development_variable for entry in catalog.providers} == {"CADRUMO_LLM_EXAMPLE_API_KEY"}
-    assert development_key_variable("zz_provider") == "CADRUMO_LLM_ZZ_PROVIDER_API_KEY"
 
 
 def test_version_three_retains_presentation_metadata_without_affecting_authentication() -> None:

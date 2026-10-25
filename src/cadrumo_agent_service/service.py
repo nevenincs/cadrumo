@@ -167,9 +167,7 @@ class AgentService:
         self._host_token = bytearray(secrets.token_urlsafe(32), "ascii")
         self._catalog = AgentProviderCatalogSource()
         self._store = SecureProviderSettingsStore(client=client)
-        resolver = ProviderCredentialResolver(
-            store=self._store, catalog_source=self._catalog, environment=os.environ, storage_mode=storage_mode().mode
-        )
+        resolver = ProviderCredentialResolver(store=self._store, catalog_source=self._catalog)
         self._credentials = _GatewayCredentials(
             ProviderSettingsAgentCredentialSource(store=self._store, resolver=resolver, catalog_source=self._catalog),
             gateway_bearer,
@@ -187,7 +185,6 @@ class AgentService:
         self._providers = ProviderSettingsService(
             store=self._store,
             catalog_source=self._catalog,
-            environment=os.environ,
             storage_mode=storage_mode().mode,
             cli_state_probe=self._login_status.probe,
         )

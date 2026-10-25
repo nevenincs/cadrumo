@@ -199,11 +199,9 @@ def test_a_sign_in_is_answered_starting_while_the_tree_retires_and_its_helper_th
     events = _Events()
     service = _service(storage_root, events)
     store = _SignedInStore()
-    resolver = ProviderCredentialResolver(
-        store=store, catalog_source=service._catalog, environment={}, storage_mode=storage_mode().mode
-    )
+    resolver = ProviderCredentialResolver(store=store, catalog_source=service._catalog)
     service._providers = ProviderSettingsService(
-        store=store, catalog_source=service._catalog, environment={}, storage_mode=storage_mode().mode
+        store=store, catalog_source=service._catalog, storage_mode=storage_mode().mode
     )
     service._credentials = _GatewayCredentials(
         ProviderSettingsAgentCredentialSource(store=store, resolver=resolver, catalog_source=service._catalog),

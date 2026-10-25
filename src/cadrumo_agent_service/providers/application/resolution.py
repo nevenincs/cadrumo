@@ -5,14 +5,13 @@ frontend shows and what a consumer receives cannot disagree:
 
 1. A record that cannot be read refuses; it is never treated as absent.
 2. A lane turned off (assistant ``disabled``) or a removed (``disabled``)
-   credential wins over everything, including the development environment.
+   credential wins over everything.
    Turning a lane off keeps its stored key; it is only not used.
 3. For the assistant, a provider-sign-in choice selects the provider's own CLI
    sign-in. It never erases a stored key, which extraction keeps using.
-4. A stored key or token wins over the environment.
-5. An unset credential falls back to the process environment value constructed
-   from the provider id (``CADRUMO_LLM_<ID>_API_KEY``) in development storage
-   mode only. Installed builds have no environment path.
+4. A stored key or token is the only direct credential; with none stored, a
+   lane that takes a key is unavailable. No process environment value stands
+   in for a profile's stored key.
 
 The resolver's result carries the secret. It is for in-process consumers
 (extraction, the hosted-agent controller) and never for frontend output.
@@ -20,7 +19,6 @@ The resolver's result carries the secret. It is for in-process consumers
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from enum import StrEnum
 from typing import Final
 
@@ -30,7 +28,6 @@ from cadrumo.core.hex import Hex64Str
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from cadrumo.core.storage_environment import StorageMode
 
 from ..domain.catalog import ProviderAuthKind, ProviderCatalogEntry, ProviderConsumer, ProviderId
 from ..domain.record import (
@@ -140,35 +137,16 @@ def read_revision(read: ProviderRecordRead) -> str:
     return ABSENT_SECURE_OBJECT_REVISION_ID
 
 
-def _environment_secret(
-    entry: ProviderCatalogEntry, environment: Mapping[str, str], storage_mode: StorageMode
-) -> SecretStr | None:
-    """Return the development fallback secret, or ``None`` outside development."""
-    if storage_mode is not StorageMode.DEVELOPMENT or not entry.auth_kind.accepts_direct_credential:
-        return None
-    if entry.auth_kind.accepts_base_url and entry.default_base_url is None:
-        # The environment carries no gateway URL, so such a key could reach nothing.
-        return None
-    value = environment.get(entry.development_variable)
-    if value is None or not value.strip():
-        return None
-    return SecretStr(value)
-
-
 def status_entry(
     entry: ProviderCatalogEntry,
     read: ProviderRecordRead,
     *,
-    environment: Mapping[str, str],
-    storage_mode: StorageMode,
     cli_state: CliState | None,
 ) -> ProviderStatusEntry:
     """Project one lane's read into masked status."""
     mode = provider_mode(read)
     stored = read.record if isinstance(read, StoredProviderRecord) else None
-    available, source, readiness, reason = _availability(
-        entry, read, mode, environment=environment, storage_mode=storage_mode
-    )
+    available, source, readiness, reason = _availability(entry, read, mode)
     if (
         mode is not ProviderSettingsMode.DISABLED
         and (mode is ProviderSettingsMode.PROVIDER_SIGN_IN or entry.auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY)
@@ -201,9 +179,6 @@ def _availability(
     entry: ProviderCatalogEntry,
     read: ProviderRecordRead,
     mode: ProviderSettingsMode,
-    *,
-    environment: Mapping[str, str],
-    storage_mode: StorageMode,
 ) -> tuple[bool, ProviderCredentialSource, ProviderReadiness, ProviderStatusReason | None]:
     none = ProviderCredentialSource.NONE
     if isinstance(read, UnreadableProviderRecord):
@@ -216,13 +191,6 @@ def _availability(
         return True, none, ProviderReadiness.SIGN_IN_REQUIRED, ProviderStatusReason.SIGN_IN_WITH_PROVIDER_TOOL
     if mode in {ProviderSettingsMode.KEY, ProviderSettingsMode.OAUTH}:
         return True, ProviderCredentialSource.PROFILE, ProviderReadiness.NOT_VERIFIED, None
-    if _environment_secret(entry, environment, storage_mode) is not None:
-        return (
-            True,
-            ProviderCredentialSource.ENVIRONMENT,
-            ProviderReadiness.NOT_VERIFIED,
-            None,
-        )
     return False, none, ProviderReadiness.MISSING, ProviderStatusReason.NOT_CONFIGURED
 
 
@@ -240,14 +208,10 @@ class ProviderCredentialResolver:
         *,
         store: ProviderSettingsStore,
         catalog_source: ProviderCatalogSource,
-        environment: Mapping[str, str],
-        storage_mode: StorageMode,
     ) -> None:
-        """Bind the resolver to one profile's store and the process's storage mode."""
+        """Bind the resolver to one profile's store and the agent's catalog."""
         self._store = store
         self._catalog_source = catalog_source
-        self._environment = environment
-        self._storage_mode = storage_mode
 
     def resolve(self, provider_id: str, consumer: ProviderConsumer) -> ProviderCredentialResolution:
         """Return the effective credential, the sign-in choice, or a typed unavailability."""
@@ -294,18 +258,7 @@ class ProviderCredentialResolver:
                 source=ProviderCredentialSource.PROFILE,
                 generation=record.generation,
             )
-        secret = _environment_secret(entry, self._environment, self._storage_mode)
-        if secret is None:
-            return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.CREDENTIAL_MISSING)
-        return ResolvedDirectCredential(
-            provider=entry.id,
-            consumer=consumer,
-            kind=CredentialKind.API_KEY,
-            secret=secret,
-            base_url=entry.default_base_url,
-            source=ProviderCredentialSource.ENVIRONMENT,
-            generation=_PROCESS_GENERATION,
-        )
+        return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.CREDENTIAL_MISSING)
 
     @staticmethod
     def _assistant_sign_in(

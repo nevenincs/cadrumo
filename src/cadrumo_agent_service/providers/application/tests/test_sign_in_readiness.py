@@ -6,8 +6,6 @@ import json
 
 import pytest
 
-from cadrumo.core.storage_environment import StorageMode
-
 from ...domain.record import ProviderSettingsRecord
 from ..contracts import CliState, ProviderReadiness, ProviderStatusReason
 from ..ports import AbsentProviderRecord, StoredProviderRecord, UnreadableProviderRecord
@@ -40,7 +38,7 @@ def test_cli_sign_in_status_distinguishes_selection_from_missing_and_unusable(st
         read = AbsentProviderRecord(provider="example")
     else:
         read = UnreadableProviderRecord(provider="example", revision=None)
-    status = status_entry(lane, read, environment={}, storage_mode=StorageMode.INSTALLED, cli_state=cli_state)
+    status = status_entry(lane, read, cli_state=cli_state)
     if state != "unreadable" and cli_state is CliState.INSTALLED_SIGNED_IN:
         assert status.readiness is ProviderReadiness.NOT_VERIFIED
         assert status.reason is None

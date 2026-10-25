@@ -72,12 +72,8 @@ def _harness(
 ) -> tuple[ModelRunService, ProviderSettingsService, _RecordingGateway]:
     source = _catalog_source()
     gateway = _RecordingGateway()
-    resolver = ProviderCredentialResolver(
-        store=store, catalog_source=source, environment={}, storage_mode=StorageMode.INSTALLED
-    )
-    settings = ProviderSettingsService(
-        store=store, catalog_source=source, environment={}, storage_mode=StorageMode.INSTALLED
-    )
+    resolver = ProviderCredentialResolver(store=store, catalog_source=source)
+    settings = ProviderSettingsService(store=store, catalog_source=source, storage_mode=StorageMode.INSTALLED)
     return ModelRunService(resolver=resolver, catalog_source=source, gateway=gateway), settings, gateway
 
 
@@ -187,9 +183,7 @@ def test_the_lookup_carries_the_media_the_agent_reports_and_a_run_beyond_them_is
 def test_without_a_ready_agent_every_run_refuses_as_service_unavailable() -> None:
     source = _catalog_source()
     store = MemoryProviderSettingsStore()
-    resolver = ProviderCredentialResolver(
-        store=store, catalog_source=source, environment={}, storage_mode=StorageMode.INSTALLED
-    )
+    resolver = ProviderCredentialResolver(store=store, catalog_source=source)
     gateway = HostedBackgroundRuns(
         endpoint=lambda: None, bearer=bytearray(b"synthetic-bearer"), host_token=bytearray(b"synthetic-host")
     )

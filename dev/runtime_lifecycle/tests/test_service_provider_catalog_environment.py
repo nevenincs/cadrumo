@@ -71,7 +71,6 @@ def test_the_service_runs_the_declared_agent_catalog_and_projects_its_status(tmp
         settings = ProviderSettingsService(
             store=store,
             catalog_source=source,
-            environment={},
             storage_mode=StorageMode.INSTALLED,
         )
         status = settings.status()
@@ -116,7 +115,6 @@ def test_a_service_without_a_declared_agent_returns_typed_catalog_unavailability
         status = ProviderSettingsService(
             store=SecureProviderSettingsStore(client=client),
             catalog_source=source,
-            environment={},
             storage_mode=StorageMode.INSTALLED,
         ).status()
         assert isinstance(status, ProviderSettingsRefusal), status

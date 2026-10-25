@@ -33,18 +33,6 @@ ProviderId = Annotated[str, StringConstraints(pattern=_PROVIDER_ID_PATTERN)]
 CliProgram = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_-]{0,63}$")]
 """The executable name a cli lane runs."""
 
-DEVELOPMENT_KEY_PREFIX: Final = "CADRUMO_LLM_"
-DEVELOPMENT_KEY_SUFFIX: Final = "_API_KEY"
-
-
-def development_key_variable(provider: str) -> str:
-    """Return the environment value a development checkout reads for ``provider``.
-
-    The name is constructed from the provider id the agent reports and never
-    enumerated: no setting field, declaration or table names a provider.
-    """
-    return f"{DEVELOPMENT_KEY_PREFIX}{provider.upper()}{DEVELOPMENT_KEY_SUFFIX}"
-
 
 class ProviderAuthKind(StrEnum):
     """How one lane authenticates."""
@@ -166,11 +154,6 @@ class ProviderCatalogEntry(BaseModel):
         """Return the consumers of this lane: every reported lane serves the agent's assistant."""
         return (ProviderConsumer.ASSISTANT,)
 
-    @property
-    def development_variable(self) -> str:
-        """Return the environment value a development checkout reads for this lane's provider key."""
-        return development_key_variable(self.provider)
-
     def serves(self, consumer: ProviderConsumer) -> bool:
         """Return whether ``consumer`` may use this lane's credential."""
         return consumer in self.consumers
@@ -239,8 +222,6 @@ def parse_provider_catalog(text: str) -> ProviderCatalog:
 
 __all__ = [
     "BASE_URL_MAX_LENGTH",
-    "DEVELOPMENT_KEY_PREFIX",
-    "DEVELOPMENT_KEY_SUFFIX",
     "MAX_CATALOG_LANES",
     "CliProgram",
     "ProviderAuthKind",
@@ -249,7 +230,6 @@ __all__ = [
     "ProviderConsumer",
     "ProviderId",
     "ProviderTransport",
-    "development_key_variable",
     "parse_provider_catalog",
     "validate_https_base_url",
 ]

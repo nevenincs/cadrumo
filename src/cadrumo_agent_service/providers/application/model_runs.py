@@ -3,7 +3,7 @@
 A tax worker's model run names its role and never a lane. The lane is chosen
 here, from the profile's provider settings and the catalog cadrumo-agent
 reports: the first lane in catalog order that is not turned off, that this
-profile can reach (a stored or development credential, or the provider's own
+profile can reach (a stored credential, or the provider's own
 sign-in), and that declares a default model. A per-role selection the person
 stores is a follow-on and, when it exists, wins over that default. Any lane is
 eligible, API or CLI; whether a lane takes an attachment is what the ready

@@ -83,13 +83,6 @@ def synthetic_catalog() -> ProviderCatalog:
     return parse_provider_catalog(synthetic_document())
 
 
-def development_variable(lane_id: str) -> str:
-    """Return the development environment value the synthetic catalog constructs for a lane's key."""
-    entry = synthetic_catalog().entry(lane_id)
-    assert entry is not None, lane_id
-    return entry.development_variable
-
-
 class ProvidedProviderCatalogSource(ProviderCatalogSource):
     """Serve a catalog the test already parsed, unchanged."""
 
