@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-18'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:af359b26e40e7cc1c4d39822186ef004b87b5ab60b322be7ff2aba3d5e591feb'
+body_hash: 'sha256:8f1481d61b57544ac52c88c0edb3c3ac1c8e53a37d38a0b292a8828852d58015'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"

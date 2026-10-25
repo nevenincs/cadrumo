@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#desktop-navigation-register'
 date: '2026-10-24'
-modified: '2026-10-24'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:64d8dbb0c0f74a4d47ad8941f72614aacae48f9fcfbab13c53ffa40b74d94e65'
+body_hash: 'sha256:e4742844acee5d1d98ee1c47a4335484a9caf4da2101850f6c9e8b9b823d2b0a'
 related:
   - "[[2026-10-24-desktop-navigation-register-plan]]"
 ---

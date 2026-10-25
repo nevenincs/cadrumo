@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#rust-component-provisioning'
 date: '2026-10-24'
-modified: '2026-10-24'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:449bdafa7ee0eb69e49cc78fb2d8af88dddc7db5f411fadd6174194f8a4fa9fe'
+body_hash: 'sha256:ea3ef867f649af6979d4c4ad0fe91f9ab0bd4db1dfc27830b789b1d2d36dcff3'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-18-dependency-provisioning-unified-setup-adr]]"

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-agent-host'
 date: '2026-10-13'
-modified: '2026-10-19'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:c3d136af34e0e8023065fe38747086c7ee87e155586094cf03ae1c1be2694205'
+body_hash: 'sha256:28d9b2679cb39e744c9c67c0809fb472da4861b837d3ff404d34760e5050b0c0'
 related:
   - "[[2026-10-12-desktop-agent-host-adr]]"
   - "[[2026-10-12-desktop-agent-host-reference]]"

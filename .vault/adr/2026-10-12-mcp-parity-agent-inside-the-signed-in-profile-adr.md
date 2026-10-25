@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-12'
-modified: '2026-10-21'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:d978bfe3aca62d64dfc26a3ea99fcecba1b2b573cb387956707906eba8190f81'
+body_hash: 'sha256:f5ed7b28edf58a772136a657d214d068ce8dce9b2171fef608e8ad577e86026d'
 related:
   - "[[2026-10-11-mcp-parity-full-parity-adr]]"
   - "[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]"

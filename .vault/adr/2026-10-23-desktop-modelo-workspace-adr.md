@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-modelo-workspace'
 date: '2026-10-23'
-modified: '2026-10-23'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:b1d2ca3ae76dc925bc0aa1cb10bc18b74be02e2a18660fab5e3e0d4fff63bc5b'
+body_hash: 'sha256:0f79268a04fd269d2f037aa2ca9d61066009f7a5a4fa51c623ed0c8764e153c1'
 related:
   - "[[2026-10-23-desktop-ledger-editor-adr]]"
   - "[[2026-09-30-modelo-editor-workbench-adr]]"

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m303-synthetic-generator-primitive-spec'
 date: '2026-06-03'
-modified: '2026-10-03'
-body_hash: 'sha256:da6060f1fe58b763b6294138f08646039cb4dfaf680848e3ec05dc9d85dffab4'
+modified: '2026-10-25'
+body_hash: 'sha256:320bbf549b598c5ab2a81aab56c7cd79fcee650c5271d37654d206dbfe40109b'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"

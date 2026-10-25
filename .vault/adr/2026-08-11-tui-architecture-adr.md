@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-10-22'
+modified: '2026-10-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:d61d58f16270f7ed96cb06bf8689d2d49a6797a0a910c0742761e8f6feb0a8c0'
+body_hash: 'sha256:a45a644fa90e4af849e05aa8964d0d3cfa22f805b36f034e0692a84aadaebd9f'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'

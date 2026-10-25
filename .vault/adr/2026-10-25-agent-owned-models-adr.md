@@ -148,3 +148,13 @@ Basis: the owner's rulings of 2026-10-25, first-hand in conversation. Each accep
 ### `2026-10-13-agent-attachments-adr`
 
 - **Constraint 7 (eligibility and lanes).** "Local model reading needs no external-disclosure grant." is replaced by: "A lane whose catalogue entry sets `reads_off_host` false needs no external-disclosure grant. A lane with it true does. The flag is typed catalogue data, not inferred from a transport." The "A model the person runs on this machine needs no grant" sentence in the historical text reads the same way.
+
+## Amendment 2026-10-25
+
+Basis: the owner's first-hand ruling in conversation on 2026-10-25, "Choice can go to the encrypted storage, good call" and "I approve".
+
+- **Constraint 6 (per-role selection), storage.** "The choice is stored in the per-profile provider settings in the agent service." is replaced by: "The choice is stored in the agent service's own encrypted per-profile record capability, `model-role-selections`, in its own secure-object namespace `cadrumo.model_role_selections`. It is not a provider-settings record. Changing a role's model therefore never moves the provider-settings generation and never replaces the running agent tree."
+- **Capability identity.** The capability mirrors provider settings: a runtime descriptor entry with its own namespace, schema version 1 and classification, one fixed record key, the read, write, delete and generation actions, encryption under the profile key and revision-guarded compare-and-swap. Access is bound to the exact admitted service session and lease, as for provider settings.
+- **States.** Absent means no role is selected. A record that does not decrypt or validate is unreadable, never absent, and only a guarded reset removes it.
+- **No migration.** The reserved provider-settings key that held the selections on 2026-10-25 never shipped. It is dropped without a migration.
+- **Implementation outline.** "The agent service stores one selection per role per profile, beside the provider records" reads as: in a capability of its own, separate from the provider records.

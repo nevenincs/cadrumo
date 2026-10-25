@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-10-14'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:8e07c2e4cbcc315585134169c3e3b8c8f62d2a8ca2cddf4611fceb3a99271d2a'
+body_hash: 'sha256:d01bc9d60dcb505245ace12fba81b35494599d37c20bf748f7c5858d5cc4c7e6'
 related:
   - "[[2026-09-15-runtime-verification-lane03-r03-binding-value-audit]]"
 ---

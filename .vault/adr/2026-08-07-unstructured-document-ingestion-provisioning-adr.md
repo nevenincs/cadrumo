@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-10-18'
+modified: '2026-10-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:d4fa6706458ef124fc0fc815d4e8ecdefe8562e08187aa8e737ae801a7f2b353'
+body_hash: 'sha256:643c0c05e5e79a654b0ba9e2b970597d6696fe5c8abb7e2a9540681a059a3ff6'
 related:
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
   - '[[2026-08-06-llm-package-split-ingest-cascade-reference]]'

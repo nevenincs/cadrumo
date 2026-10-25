@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#live-agent-evaluation'
 date: '2026-10-12'
-modified: '2026-10-21'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:79f617d7a9dfc41a1427ad99d7244288930b044d17a204266b09bdd5fa5c56f6'
+body_hash: 'sha256:4bfd1bb7f226aa7ae332f445f5a7d45387e40ebcc099bc46eeedd13d00d3a610'
 related:
   - "[[2026-10-12-live-agent-evaluation-reference]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"

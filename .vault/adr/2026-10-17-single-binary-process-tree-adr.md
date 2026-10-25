@@ -11,9 +11,9 @@ related:
   - "[[2026-10-03-application-packaging-interpreter-foundation-adr]]"
 supersedes:
   - '2026-10-16-application-distribution-windows-package-identity-adr'
-modified: '2026-10-17'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:90a8362b11aa150ea0748655d67dc6029a300d5a66b6ac8890068540e5cd20b7'
+body_hash: 'sha256:fad47cedafecdae53111ba20b87548955eacf6beba9f236158e8a36954e8bf9a'
 ---
 # `single-binary-process-tree` adr: `One Cadrumo binary runs every Cadrumo process` | (**status:** `accepted`)
 

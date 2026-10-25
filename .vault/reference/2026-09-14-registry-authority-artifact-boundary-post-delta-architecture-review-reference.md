@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-10-03'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:54f5a9f3b96721df90627a2898cb78a83edd9dacec7eaa586ae6b9c8163081c7'
+body_hash: 'sha256:205b2c07685d85d2ee64abc8b9a0d44a84a458ae635cbe75ef3d5d462112d632'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-adr]]"
   - "[[2026-09-09-registry-edition-authoring-adr]]"

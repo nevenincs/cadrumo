@@ -3,31 +3,12 @@ tags:
   - '#audit'
   - '#desktop-modelo-workspace'
 date: '2026-10-24'
-modified: '2026-10-24'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:1eb131dc4496680192823bbfc29bb4cd91271458c606323c253a6ca0ccdd1516'
+body_hash: 'sha256:a1579c0a15e12f00e725acaf1e6ca6c5194f8f671951ca8de7e4c18c9437ca09'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace desktop-modelo-workspace with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `desktop-modelo-workspace` audit: `P01 phase-close review`
 

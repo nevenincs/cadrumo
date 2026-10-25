@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-sign-in'
 date: '2026-10-04'
-modified: '2026-10-22'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:ad302a33a459ff324fa5afd3411598d743ec6ddf25249bb4ef56669aebd71812'
+body_hash: 'sha256:9f623ddbd82e65a1f9abb32d710496ec69b29bd0598fa855edcae69b58b7eb56'
 related:
   - "[[2026-10-04-application-sign-in-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"

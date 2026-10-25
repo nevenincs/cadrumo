@@ -13,8 +13,8 @@ related:
 supersedes:
   - '2026-06-30-agent-harness-adr'
   - '2026-07-01-agent-harness-adr'
-modified: '2026-10-21'
-body_hash: 'sha256:c00e084bec738638d3964ca513a0e752c5893e208e27e795a9d8d6bf46139db0'
+modified: '2026-10-25'
+body_hash: 'sha256:77898c7de317d6f4d7f64155b69d5b48fa8672f80b01e494f64fae6fd23f3adb'
 ---
 # `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
 

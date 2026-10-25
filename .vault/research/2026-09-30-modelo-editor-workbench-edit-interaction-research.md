@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-10-14'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:ff80e229300e1c0920b679201e6a87c935033f73ddecf87cdbda807ce9651fe2'
+body_hash: 'sha256:89b295a7fdde2d05e2878a44edaa1231047c7ce1b9cc8c722dc86eb73d56a0e5'
 related:
   - "[[2026-09-30-modelo-editor-workbench-reference]]"
 ---

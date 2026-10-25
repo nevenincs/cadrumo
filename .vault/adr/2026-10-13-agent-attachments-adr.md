@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#agent-attachments'
 date: '2026-10-13'
-modified: '2026-10-21'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:5953533e0ba7390011164216b7a4cf2d69f26855b41a386afbd490562c5ea3b0'
+body_hash: 'sha256:d1d781ba2e23a49957e4feb45a2f8f4464b97dd32064500a3e9ead3595bf0abb'
 related:
   - "[[2026-10-12-desktop-agent-host-adr]]"
   - "[[2026-10-13-provider-settings-adr]]"

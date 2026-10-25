@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-10-03'
+modified: '2026-10-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:45dc431f90ee2bf1297deb02237003d0530dce127f699a0894e8a983b9505f2f'
+body_hash: 'sha256:4e6c34305c81507e19c9ace57a7e2ce3e424fe121c026e5e19f5045585c6f167'
 related:
   - "[[2026-08-07-justificante-identity-matching-adr]]"
 ---

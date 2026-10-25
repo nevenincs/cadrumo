@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#binding-schema'
 date: '2026-09-11'
-modified: '2026-10-03'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:5ae09254fec7d5e45c20af6dd2e145339644e0898db82ca35218908df7b7807f'
+body_hash: 'sha256:c6d308386192f86dc980afead74ba19c04a641ea21a9e97cd365367e4f636430'
 related:
   - "[[2026-09-11-binding-schema-research]]"
   - "[[2026-09-09-registry-edition-authoring-adr]]"

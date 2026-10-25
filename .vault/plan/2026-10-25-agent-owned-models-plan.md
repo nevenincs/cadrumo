@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-25'
 body_schema: body-v2
-body_hash: 'sha256:e9e7e30c06f6b299187c280b3a1ed4352313022873756d1b6acde733ddfed1d7'
+body_hash: 'sha256:3d73987f01564273e2a1747cbe3dc277369effef65f206c2025af3d5d33b99d6'
 ---
 
 # `agent-owned-models` plan
@@ -51,6 +51,7 @@ Land the per-role selection store and wire, role-based lookup, removal of the un
 - [x] `P01.S05` - Read the selection in the desktop host and expose it to the webview as a typed snapshot; `native/desktop/src-tauri/src/agent/admin.rs, native/desktop/src-tauri/src/agent/gateway.rs`.
 - [x] `P01.S06` - Delete the hosted model ids and their re-exports, which have no production reader; `src/cadrumo/domain/transactions/model_tier.py, src/cadrumo/domain/transactions/__init__.py, src/cadrumo/domain/transactions/llm.py`.
 - [x] `P01.S07` - Add the model-definition gate: refuse model-name and digest literals and model tables in shipped sources, with an explicit burn-down list of current files that later Steps empty, isolated fixtures proving it detects each defect, and a stated stopping point; `dev/quality/tests/test_no_model_definitions.py`.
+- [ ] `P01.S29` - Move the per-role model selections out of the provider-settings capability into their own encrypted model-role-selections capability and namespace, so a selection change never moves the provider-settings generation or replaces the agent tree; `src/cadrumo_agent_service/providers/persistence/store.py, src/cadrumo_agent_service/providers/application/ports.py, src/cadrumo_agent_service/service.py, src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py, dev/packaging/native/service_descriptors.py`.
 
 ### Phase `P02` - Consume the new catalogue
 
