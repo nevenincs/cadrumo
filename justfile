@@ -659,9 +659,11 @@ test-native-live CONFIGURATION="Release": (_native-configure CONFIGURATION)
 # The component engine's tests on Linux. CTest's application.rust runs the crate only
 # on the host that builds the native package, and ordinary native verification builds
 # it on Windows, so Linux behaviour (archive layout, process groups, file modes) is
-# proven here: on a Linux host directly, on Windows inside WSL. The tests run against
-# the checkout in place with Cargo's output outside it, on the Rust release that
-# `native/toolchain.json` pins; another release is refused before anything compiles.
+# proven here: on a Linux host directly, on Windows inside WSL. The second command is
+# the transfer fault set against local TLS servers, whose full-disk case needs Linux.
+# The tests run against the checkout in place with Cargo's output outside it, on the
+# Rust release that `native/toolchain.json` pins; another release is refused before
+# anything compiles.
 [doc('Run the native component engine (provisioning) tests on Linux: directly on Linux, through WSL on Windows.')]
 [group('test')]
 [linux]
@@ -676,6 +678,7 @@ test-native-provisioning-linux:
     fi
     export CARGO_TARGET_DIR="${CADRUMO_PROVISIONING_CARGO_TARGET_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/cadrumo/native-provisioning-target}"
     cargo test --locked --manifest-path native/application/Cargo.toml --lib provisioning:: -- --test-threads=2
+    cargo test --locked --manifest-path native/application/Cargo.toml --features test-support --test provisioning_faults -- --test-threads=2
 
 [doc('Run the native component engine (provisioning) tests on Linux: directly on Linux, through WSL on Windows.')]
 [group('test')]
@@ -1413,10 +1416,10 @@ test-powershell-literal:
 # `cadrumo` image, or one built with cargo, which the tests stage beside the package's
 # pin tables. Every case uses its own throwaway storage root and a local proxy, so
 # nothing reaches a publisher; a source checkout without a built binary has no role.
-[doc('Drive the components role of a built Cadrumo binary from the client, the command line and MCP (external_tool marker).')]
+[doc('Drive the components role of a built Cadrumo binary from the client, the CLI, the TUI, MCP and the acquisition lane (external_tool marker).')]
 [group('test')]
 test-components-role $CADRUMO_DEVELOPMENT_ROLE_IMAGE:
-    uv run --no-sync pytest -v -n0 -m "integration and external_tool" src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py src/cadrumo/entrypoints/cli/tests/test_provision_drives_the_real_role.py src/cadrumo_mcp/mcp/tests/test_setup_tools_drive_the_real_role.py
+    uv run --no-sync pytest -v -n0 -m "integration and external_tool" src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py src/cadrumo/entrypoints/cli/tests/test_provision_drives_the_real_role.py src/cadrumo_mcp/mcp/tests/test_setup_tools_drive_the_real_role.py dev/runtime_lifecycle/tests/test_components_surface_conformance.py dev/smoke/tests/test_acquisition_lane.py
 
 # Run the locale orthography tests. These carry `external_tool` because they
 # read the pinned Hunspell dictionaries that `setup-locale-spelling` installs

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:f16fbea57dc1146791db773dedd96a35c9b98004c087407ebb0fe7a39b551b0c'
+body_hash: 'sha256:aa9da50a1c0905946f242da8558a748d1b01a03cbcd56be61ba81fb8f546e48a'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -819,6 +819,24 @@ related:
 - `S14` `verify:` `dev.quality.unused_symbol_coverage: the two helpers this Step orphaned are deleted; 5 findings remain, none from this Step` -> `fail`
 - `S14` `verify:` `dev.locales audit: only the pre-existing extra errors.refused.refused_ledger_evidence_local_ai_not_ready` -> `pass`
 - `S14` `by:` `implementation-engineer-high`
+- `S15` `A` `dev/quality/tests/test_no_python_provisioning.py`
+- `S15` `A` `native/application/tests/provisioning_faults.rs`
+- `S15` `A` `dev/runtime_lifecycle/tests/test_components_surface_conformance.py`
+- `S15` `A` `dev/smoke/acquisition_lane.py`
+- `S15` `A` `dev/smoke/tests/test_acquisition_lane.py`
+- `S15` `M` `justfile`
+- `S15` `M` `CONTRIBUTING.md`
+- `S15` `M` `dev/quality/metadata/import_load_targets.json`
+- `S15` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S15` `verify:` `pytest -m 'not external_tool' test_no_python_provisioning, test_components_surface_conformance, test_acquisition_lane (21 passed)` -> `pass`
+- `S15` `verify:` `pytest -m 'integration and external_tool' surface conformance and lane real-role cases (3): no built role image on this host, so they stop at the fixture's image requirement` -> `fail`
+- `S15` `verify:` `cargo test --features test-support --test provisioning_faults on Windows (3 passed) and on Linux through WSL (4 passed, with the full-disk case)` -> `pass`
+- `S15` `verify:` `cargo test --lib provisioning:: on Linux through WSL (131 passed)` -> `pass`
+- `S15` `verify:` `cargo clippy --features test-support --test provisioning_faults, and rustfmt --check through stdin` -> `pass`
+- `S15` `verify:` `ruff check, ruff format --check and ty check on the new Python` -> `pass`
+- `S15` `verify:` `dev/tests/test_lane_reachability.py: the new external_tool cases are owned by test-components-role; the remaining unowned cases are test_windows_process (foreign)` -> `fail`
+- `S15` `verify:` `the provisioning gate's rows over the HEAD sources of the deleted modules: archive_fetch, installer, process_control, dependency_receipts, dependency_registry, dependency_setup_operation, local_reader_setup_items, provisioning_browser and provisioning_runtime each refused` -> `pass`
+- `S15` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -898,3 +916,7 @@ related:
 - `S14` S14 the runtime worker authorization protocol loses WorkerServerStart and WorkerServerStarted; the runtime starts no local AI program for any operation
 - `S14` S14 `dev/smoke/acquisition_lane.py` drove the Python setup and is deleted here; S15 adds the lane that drives the role; `playwright_doctor` now launches the shared test browser through the bundled Playwright
 - `S14` S14 the conformance gate for the removed operations moved from 'registered' to 'none registered, no alias anywhere', with phase codes `dependencies.setup.<item>.<step>` exempt as setup steps
+- `S15` S15 the four-surface conformance test lives in `dev/runtime_lifecycle/tests,` not src/cadrumo/entrypoints/tests: the import contract tax-has-no-agent-or-mcp-dependency forbids cadrumo importing `cadrumo_mcp;` the Step scope records the path
+- `S15` S15 desktop parity is held at its wire contract (every code a row carries is a value the desktop host's closed shapes admit) plus the existing host tests in `native/desktop/src-tauri/src/shell/setup/components_tests.rs;` a desktop host test comparing its snapshot with the role needs the CMake-generated tauri configuration and was not built
+- `S15` S15 the acquisition lane's real download is opt-in through --accept-size and was not run here: no built role image and no download in this run; the vanilla-machine run stays pending
+- `S15` S15 CI workflows are unchanged: the fleet owns CI; CONTRIBUTING lists the Linux provisioning lane, the role lane and the acquisition lane beside the gate
