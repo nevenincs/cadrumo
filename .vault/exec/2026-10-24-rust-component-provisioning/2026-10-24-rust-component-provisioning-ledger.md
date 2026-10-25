@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa9da50a1c0905946f242da8558a748d1b01a03cbcd56be61ba81fb8f546e48a'
+body_hash: 'sha256:de9e97fa3fe4217de4100a8f0cc2a1a5ea8488c98ba99e924b009839fead930b'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -837,6 +837,10 @@ related:
 - `S15` `verify:` `dev/tests/test_lane_reachability.py: the new external_tool cases are owned by test-components-role; the remaining unowned cases are test_windows_process (foreign)` -> `fail`
 - `S15` `verify:` `the provisioning gate's rows over the HEAD sources of the deleted modules: archive_fetch, installer, process_control, dependency_receipts, dependency_registry, dependency_setup_operation, local_reader_setup_items, provisioning_browser and provisioning_runtime each refused` -> `pass`
 - `S15` `by:` `implementation-engineer-high`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py`
+- `S25` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_command_aeat_capability_probe.py`
+- `S25` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py src/cadrumo_runtime/host/tests/frontend/cli/test_command_aeat_capability_probe.py -m '' -k 'population or exemption'` -> `pass`
+- `S25` `by:` `implementation-engineer`
 
 ## Notes
 

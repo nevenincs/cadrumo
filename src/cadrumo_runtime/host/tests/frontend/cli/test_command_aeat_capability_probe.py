@@ -122,9 +122,7 @@ _SEDE_CLIENT_MODULES: Final = (
 _AEAT_ADAPTERS: Final = ("adapters", "outbound", "aeat")
 
 #: Optional parameters a command's own handler requires one of.
-_HANDLER_REQUIRED_OPTIONS: Final[dict[str, tuple[str, ...]]] = {
-    "config_provision_remove": ("role",),
-}
+_HANDLER_REQUIRED_OPTIONS: Final[dict[str, tuple[str, ...]]] = {}
 
 #: The quarterly self-assessment modelo the period-scoped live reads are asked
 #: for; any modelo the Sede register holds would do.
@@ -548,7 +546,7 @@ def test_every_aeat_command_is_a_positive_control_or_a_reasoned_exemption() -> N
 def test_the_population_covers_network_commands_and_the_authentication_family() -> None:
     keys = {spec.key for spec in _POPULATION}
 
-    assert {"config_provision_status", "config_auth_test", "config_auth_status"} <= keys
+    assert {"config_provision_verify", "config_auth_test", "config_auth_status"} <= keys
     assert _owning_graph("config_auth_login") is RUNTIME_COMMAND_GRAPH
     for spec in RUNTIME_COMMAND_GRAPH.specs:
         if is_runnable(spec) and command_path(RUNTIME_COMMAND_GRAPH, spec)[:2] == _AUTHENTICATION_FAMILY:

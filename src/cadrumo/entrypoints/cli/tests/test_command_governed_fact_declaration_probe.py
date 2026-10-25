@@ -117,9 +117,7 @@ _EXEMPTIONS: Final[dict[str, str]] = {}
 
 #: Optional parameters a command's own handler requires one of, which the
 #: required-parameter derivation alone would leave the handler to refuse.
-_HANDLER_REQUIRED_OPTIONS: Final[dict[str, tuple[str, ...]]] = {
-    "config_provision_remove": ("role",),
-}
+_HANDLER_REQUIRED_OPTIONS: Final[dict[str, tuple[str, ...]]] = {}
 
 
 # --- raise-site discovery -------------------------------------------------
