@@ -90,9 +90,10 @@ impl LocalAiHost {
             .program?;
         let program =
             Program::new(&pins, Platform::current()?, Locations::under(storage_root)).ok()??;
-        // The supervisor reads the operator's proxy setting through this environment at
-        // every start, so a setting changed after this manager started is the setting
-        // the next server runs under, and one the engine cannot use runs no server.
+        // The supervisor reads the operator's proxy setting from this manager's own
+        // environment, once: a process's environment block cannot be changed from
+        // outside it, so a setting changed afterwards reaches the server at this
+        // manager's next start, and one the engine cannot use runs no server at all.
         let supervisor = ServerSupervisor::new(
             program,
             server_address()?,

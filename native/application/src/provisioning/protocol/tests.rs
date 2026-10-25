@@ -1055,14 +1055,14 @@ fn a_server_started_under_another_proxy_setting_is_never_pulled_through() {
     setup.send(json!({"type": "approve", "plan_digest": review["plan_digest"]}));
     setup.until("notice");
     // The supervisor's server is recorded as started under a setting that is not this
-    // engine's, and no supervisor answers the restart the engine then asks for, so the
-    // same server is still there when it looks again.
+    // engine's. Its environment is its own and this engine cannot change it, so the
+    // refusal names the restart that can instead of asking for one.
     world.serve_local_ai_under(Some(&Sha256Digest::of(b"another setting").to_string()));
     let done = setup.finish();
 
     assert_eq!(
         (&done.result["outcome"], &done.result["failure_category"]),
-        (&json!("failed"), &json!("blocked_by_network")),
+        (&json!("failed"), &json!("program_proxy_differs")),
         "{}",
         done.result
     );

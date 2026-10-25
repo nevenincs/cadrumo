@@ -124,6 +124,7 @@ pub enum Failure {
     MemoryBusy,
     ProgramMissing,
     ProgramNotRunning,
+    ProgramProxyDiffers,
     Interrupted,
     NeedsSignIn,
     NotInThisBuild,

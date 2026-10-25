@@ -17,6 +17,9 @@ pub enum FailureCategory {
     MemoryBusy,
     ProgramMissing,
     ProgramNotRunning,
+    /// The background service runs the local AI server under another proxy setting than
+    /// this engine downloads under, and only a restart of that service can change it.
+    ProgramProxyDiffers,
     Interrupted,
     NeedsSignIn,
     NotInThisBuild,
@@ -25,7 +28,7 @@ pub enum FailureCategory {
 }
 
 impl FailureCategory {
-    pub const ALL: [Self; 16] = [
+    pub const ALL: [Self; 17] = [
         Self::Offline,
         Self::HostUnreachable,
         Self::SecureConnectionFailed,
@@ -37,6 +40,7 @@ impl FailureCategory {
         Self::MemoryBusy,
         Self::ProgramMissing,
         Self::ProgramNotRunning,
+        Self::ProgramProxyDiffers,
         Self::Interrupted,
         Self::NeedsSignIn,
         Self::NotInThisBuild,
@@ -57,6 +61,7 @@ impl FailureCategory {
             Self::MemoryBusy => "memory_busy",
             Self::ProgramMissing => "program_missing",
             Self::ProgramNotRunning => "program_not_running",
+            Self::ProgramProxyDiffers => "program_proxy_differs",
             Self::Interrupted => "interrupted",
             Self::NeedsSignIn => "needs_sign_in",
             Self::NotInThisBuild => "not_in_this_build",
@@ -81,6 +86,7 @@ impl FailureCategory {
                 | Self::Cancelled
                 | Self::SecureConnectionFailed
                 | Self::BlockedByNetwork
+                | Self::ProgramProxyDiffers
         )
     }
 }
@@ -158,7 +164,7 @@ mod tests {
                 serde_json::Value::String(category.as_str().into())
             );
         }
-        assert_eq!(FailureCategory::ALL.len(), 16);
+        assert_eq!(FailureCategory::ALL.len(), 17);
     }
 
     #[test]

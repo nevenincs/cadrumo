@@ -3564,6 +3564,9 @@ desktop:
       offline: You are offline.
       program_missing: The local AI program is not installed.
       program_not_running: The local AI program is not running.
+      program_proxy_differs: Cadrumo's background service is running with a different
+        proxy setting. Restart Cadrumo, or sign out and back in, so it starts with
+        the current one.
       secure_connection_failed: A secure connection could not be made. A network filter
         may be in the way.
       unexpected: Something went wrong.

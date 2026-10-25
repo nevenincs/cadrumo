@@ -1932,6 +1932,9 @@ application:
       offline: Nincs internetkapcsolatod.
       program_missing: A helyi MI-program nincs telepítve.
       program_not_running: A helyi MI-program nem fut.
+      program_proxy_differs: A Cadrumo háttérszolgáltatása másik proxybeállítással
+        fut. Indítsd újra a Cadrumót, vagy jelentkezz ki és újra be, hogy a mostani
+        beállítással induljon.
       secure_connection_failed: Nem sikerült biztonságos kapcsolatot létesíteni. Lehet,
         hogy egy hálózati szűrő akadályozza.
       unexpected: Valami hiba történt.

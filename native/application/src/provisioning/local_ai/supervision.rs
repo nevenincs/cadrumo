@@ -78,9 +78,11 @@ pub enum ServerState {
     Failed,
     /// The owner stopped the server; nothing starts until it resumes.
     Stopped,
-    /// The operator's proxy setting is one the engine cannot use, so no server is run:
-    /// a server started without it would reach the model registry directly, which is
-    /// the opposite of what the setting asks for. The next look reads the setting again.
+    /// The proxy setting this owner started with is one the engine cannot use, so no
+    /// server is run: a server started without it would reach the model registry
+    /// directly, which is the opposite of what the setting asks for. The setting is the
+    /// owner's own environment and cannot change while it runs, so nothing starts until
+    /// the owner is started again with a setting the engine can use.
     ProxyRefused,
 }
 
@@ -101,13 +103,21 @@ pub struct ServerSupervisor {
     restarts: VecDeque<Instant>,
     state: ServerState,
     not_set_up: Option<PointerStamp>,
+    proxy: Option<ProxySettings>,
+    proxy_refused: bool,
 }
 
 impl ServerSupervisor {
     /// Supervises `program`'s server on `address`, a loopback address, contained by
     /// `containment`. `environment` reads the owner's environment: the operating system
     /// settings the server is given, and the operator's proxy for the models it
-    /// downloads, which is read again at every start.
+    /// downloads.
+    ///
+    /// The proxy setting is read here, once. A process's environment block is its own
+    /// and cannot be changed from outside it, so this is the setting for the whole of
+    /// this supervisor's life: a setting the operator changes afterwards reaches the
+    /// server at the next start of the owner. A setting the engine cannot use runs no
+    /// server at all.
     pub fn new(
         program: Program,
         address: SocketAddr,
@@ -119,6 +129,12 @@ impl ServerSupervisor {
                 "the local AI answers on loopback only".into(),
             ));
         }
+        let (proxy, proxy_refused) = match ProxySettings::from_settings(|name| {
+            environment(name).and_then(|value| value.into_string().ok())
+        }) {
+            Ok(proxy) => (proxy, false),
+            Err(_) => (None, true),
+        };
         Ok(Self {
             program,
             address,
@@ -128,6 +144,8 @@ impl ServerSupervisor {
             restarts: VecDeque::new(),
             state: ServerState::NotSetUp,
             not_set_up: None,
+            proxy,
+            proxy_refused,
         })
     }
 
@@ -165,16 +183,11 @@ impl ServerSupervisor {
             ServerState::Restarting { at } if now < at => return self.state,
             _ => {}
         }
-        // Read at every look, so a setting the operator changes after this manager
-        // started is the setting the next server runs under.
-        let proxy = match self.proxy() {
-            Ok(proxy) => proxy,
-            Err(_) => {
-                self.program.stop();
-                self.state = ServerState::ProxyRefused;
-                return self.state;
-            }
-        };
+        if self.proxy_refused {
+            self.program.stop();
+            self.state = ServerState::ProxyRefused;
+            return self.state;
+        }
         if let Some(server) = self.program.server_mut() {
             if server.exited() {
                 // Reaps it, removes its record and gives the lease up.
@@ -203,7 +216,7 @@ impl ServerSupervisor {
             self.address,
             self.containment.as_ref(),
             self.environment.as_ref(),
-            proxy.as_ref(),
+            self.proxy.as_ref(),
         );
         match started {
             Ok(_) => self.state = ServerState::Running,
@@ -229,14 +242,6 @@ impl ServerSupervisor {
             ServerState::Restarting { at: now + delay }
         };
         self.state
-    }
-
-    /// The operator's proxy setting now, read through the owner's environment. An error
-    /// is a setting the engine cannot use, which the role refuses as blocked by network.
-    fn proxy(&self) -> Result<Option<ProxySettings>, Error> {
-        ProxySettings::from_settings(|name| {
-            (self.environment)(name).and_then(|value| value.into_string().ok())
-        })
     }
 
     fn pointer_stamp(&self) -> PointerStamp {

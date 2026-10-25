@@ -1966,6 +1966,9 @@ application:
       offline: No tens connexió.
       program_missing: El programa d'IA local no està instal·lat.
       program_not_running: El programa d'IA local no està en marxa.
+      program_proxy_differs: El servei en segon pla de Cadrumo s’està executant amb
+        una altra configuració de proxy. Reinicia Cadrumo, o tanca la sessió i torna
+        a iniciar-la, perquè arrenqui amb l’actual.
       secure_connection_failed: No s'ha pogut establir una connexió segura. Potser
         un filtre de xarxa ho impedeix.
       unexpected: Alguna cosa ha anat malament.

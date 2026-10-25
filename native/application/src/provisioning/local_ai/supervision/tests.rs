@@ -17,7 +17,7 @@ use std::{
     fs,
     process::Child,
     sync::{
-        Arc, Mutex,
+        Arc,
         atomic::{AtomicUsize, Ordering},
         mpsc,
     },
@@ -43,6 +43,17 @@ fn supervisor(program: Program, address: SocketAddr, containment: Counting) -> S
             crash_loop_limit: 2,
             crash_loop_window: Duration::from_secs(60),
         })
+}
+
+/// Reads the owner's environment with `CADRUMO_PROXY_URL` set to `url`, as a login
+/// start would have given it.
+fn with_proxy(url: &'static str) -> impl Fn(&str) -> Option<OsString> + Send {
+    move |name: &str| {
+        if name == PROXY_URL {
+            return Some(OsString::from(url));
+        }
+        ambient(name)
+    }
 }
 
 fn version_at(address: SocketAddr) -> Option<String> {
@@ -237,42 +248,52 @@ fn the_owner_stops_the_server_at_exit_and_session_end_and_nothing_restarts_it() 
 }
 
 #[test]
-fn the_proxy_setting_is_read_at_every_start_and_one_the_engine_cannot_use_runs_no_server() {
+fn the_setting_the_owner_started_with_runs_the_server_and_one_it_cannot_use_runs_none() {
     let root = tempfile::tempdir().unwrap();
     let locations = Locations::under(root.path());
-    let (program, _) = installed(&locations, "9.8.7");
     let address = free_address();
     let contained = Counting::default();
-    let setting = Arc::new(Mutex::new(String::from("ftp://proxy.example:3128")));
-    let read = Arc::clone(&setting);
-    let mut supervisor = ServerSupervisor::new(
-        program,
-        address,
-        Box::new(contained.clone()),
-        Box::new(move |name: &str| {
-            if name == PROXY_URL {
-                return Some(OsString::from(read.lock().unwrap().clone()));
-            }
-            ambient(name)
-        }),
-    )
-    .unwrap();
     let now = Instant::now();
 
     // A setting the engine cannot use runs no server: one started without it would
     // fetch the models directly, which is the opposite of what the setting asks for.
-    assert_eq!(supervisor.poll(now), ServerState::ProxyRefused);
+    let (program, _) = installed(&locations, "9.8.7");
+    let mut refused = ServerSupervisor::new(
+        program,
+        address,
+        Box::new(contained.clone()),
+        Box::new(with_proxy("ftp://proxy.example:3128")),
+    )
+    .unwrap();
+    assert_eq!(refused.poll(now), ServerState::ProxyRefused);
     assert!(!answers(address));
     assert_eq!(contained.0.load(Ordering::SeqCst), 0);
     assert!(ServerRecord::read(&locations.programs).is_none());
 
-    // The operator corrects the setting after this supervisor started: the next look
-    // reads it, so it is the setting the server runs under.
-    *setting.lock().unwrap() = String::from("http://user:secret@proxy.example:3128");
+    // The owner's environment is its own and cannot change while it runs, so nothing it
+    // looks at again can make that setting usable.
+    assert_eq!(
+        refused.poll(now + Duration::from_secs(600)),
+        ServerState::ProxyRefused
+    );
+    assert!(!answers(address));
+    drop(refused);
+
+    // A correction reaches the server at the next start of the owner: this supervisor
+    // reads it once, and its server runs under it.
+    let address = free_address();
+    let (program, _) = installed(&locations, "9.8.7");
+    let mut supervisor = ServerSupervisor::new(
+        program,
+        address,
+        Box::new(contained.clone()),
+        Box::new(with_proxy("http://user:secret@proxy.example:3128")),
+    )
+    .unwrap();
     assert_eq!(supervisor.poll(now), ServerState::Running);
     let record = ServerRecord::read(&locations.programs).unwrap();
     let corrected = ProxySettings::from_settings(|name| {
-        (name == PROXY_URL).then(|| setting.lock().unwrap().clone())
+        (name == PROXY_URL).then(|| String::from("http://user:secret@proxy.example:3128"))
     })
     .unwrap()
     .unwrap();
@@ -282,9 +303,4 @@ fn the_proxy_setting_is_read_at_every_start_and_one_the_engine_cannot_use_runs_n
         !written.contains("proxy.example") && !written.contains("secret"),
         "the address is a credential; only its digest is recorded: {written}"
     );
-
-    // A setting that becomes unusable stops the server already running under the old one.
-    *setting.lock().unwrap() = String::from("http://proxy.example:0");
-    assert_eq!(supervisor.poll(now), ServerState::ProxyRefused);
-    assert!(!answers(address));
 }

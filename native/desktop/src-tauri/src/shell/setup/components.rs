@@ -1045,6 +1045,7 @@ fn failure(category: FailureCategory) -> wire::Failure {
         FailureCategory::MemoryBusy => wire::Failure::MemoryBusy,
         FailureCategory::ProgramMissing => wire::Failure::ProgramMissing,
         FailureCategory::ProgramNotRunning => wire::Failure::ProgramNotRunning,
+        FailureCategory::ProgramProxyDiffers => wire::Failure::ProgramProxyDiffers,
         FailureCategory::Interrupted => wire::Failure::Interrupted,
         FailureCategory::NeedsSignIn => wire::Failure::NeedsSignIn,
         FailureCategory::NotInThisBuild => wire::Failure::NotInThisBuild,

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:ce182291b0865d22e169f77b624b791fa07d396634b9a8515d7d35672fe15020'
+body_hash: 'sha256:27199edc588ca13d3801f5d96ec2cf0260311b6e492352939f846ccf06e39eaf'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -894,6 +894,19 @@ related:
 - `S17` `by:` `implementation-engineer`
 - `S08` `M` `native/application/src/provisioning/state.rs`
 - `S08` `verify:` `cargo test --offline --lib provisioning:: on native/application (132 passed)` -> `pass`
+- `S17` `M` `native/application/src/provisioning/failure.rs`
+- `S17` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S17` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S17` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S17` `M` `src/cadrumo_client/contracts/failure_categories.py`
+- `S17` `M` `dev/locales/desktop_chrome.py`
+- `S17` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S17` `verify:` `cargo test --offline --lib provisioning:: on native/application (133 passed)` -> `pass`
+- `S17` `verify:` `cargo test --offline --features test-support --test provisioning_faults (3 passed)` -> `pass`
+- `S17` `verify:` `cargo clippy --offline --all-targets -- -D warnings and cargo fmt --check on native/application` -> `pass`
+- `S17` `verify:` `python -m dev.locales status --check` -> `pass`
+- `S17` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S17` `verify:` `pytest test_dependency_wording.py test_dependency_registry_conformance.py dev/locales/tests/test_desktop_chrome.py and the desktop wire parity case (76 passed)` -> `pass`
 
 ## Notes
 
@@ -980,3 +993,4 @@ related:
 - `S25` The desktop crate's parity edit was not compiled here: its clippy gate runs only through CMake, which this session must not run.
 - `S07` `test_settings_lifecycle_gate` chain detector, `test_currency_fields_use_one_annotation` and `test_hashing_adoption` fail on this tree without these edits; reproduced against HEAD's taxonomy.
 - `S17` The server record's schema moves to 2 for the proxy digest, so a server recorded by an earlier build reads as not running until the manager starts one again; no Python or external consumer reads that record.
+- `S17` program-change-lease-reused-for-a-restart is left as recorded and is moot: the engine no longer takes the program-change lease to bounce a server, so the lease serves only the replacement and removal its module describes
