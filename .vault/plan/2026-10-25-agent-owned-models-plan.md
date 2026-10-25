@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-25'
 body_schema: body-v2
-body_hash: 'sha256:db1f4d2a43a848fa5dd472e47b945bc2d3996d80b7ea33f13684fe3712f8f004'
+body_hash: 'sha256:4a70f6b7a7704feb5618031073e9d64bd6cf99cc8cebf40e385e4fe8f551bf95'
 ---
 
 # `agent-owned-models` plan
@@ -88,7 +88,7 @@ Drop model pins from the engine, take the selected local models as input, pull t
 
 Give the person a per-role selection on every surface with licence and vision capability, update documentation and the four locales, prove surface conformance and review.
 
-- [ ] `P05.S24` - Add the per-role selection control to the desktop agent settings, showing licence, vision capability and the recommended entry; `native/desktop/frontend/src/components/agent/AgentSettingsPopover.tsx, native/desktop/frontend/src/dev/catalogue`.
+- [ ] `P05.S24` - Add the per-role selection control to the desktop agent settings, showing licence, vision capability and the recommended entry; replace the picker's offline fallback, which assembles cadrumo-agent's served catalog DTO from its internal modules and fails in a package since background_requests became required, with the public declared_provider_catalog() document shown as not yet observed; `native/desktop/frontend/src/components/agent/AgentSettingsPopover.tsx, native/desktop/frontend/src/dev/catalogue, native/desktop/frontend/src/shell/agentCatalog.ts, src/cadrumo_agent_service/service.py, src/cadrumo_agent_service/adapters/provider_catalog_metadata.py`.
 - [ ] `P05.S25` - Add the selection read and set to the TUI setup flow and the CLI through registered operations, and the read to MCP; `src/cadrumo/entrypoints/tui/setup/screen.py, src/cadrumo/entrypoints/cli/config/_provision_command_specs.py`.
 - [ ] `P05.S26` - Update the how-to, CLI reference, technical articles and API pages that describe local models, pins or the direct adapter; `docs/how-to/classify-with-llm.md, docs/cli/config/provision.rst, docs/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md, docs/technical/articles/168-profile-custody-provisioning-and-runtime-configuration.md`.
 - [ ] `P05.S27` - Add and translate the selection, licence and NO_SELECTION strings in en, es, ca and hu in the informal singular through the dev.locales set-batch workflow; `src/cadrumo/locales/en, src/cadrumo/locales/es, src/cadrumo/locales/ca, src/cadrumo/locales/hu`.
