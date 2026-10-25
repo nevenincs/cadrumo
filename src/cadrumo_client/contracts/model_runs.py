@@ -9,11 +9,12 @@ travels as bounded secret frames because it may hold taxpayer evidence.
 from __future__ import annotations
 
 import base64
+import json
 from enum import StrEnum
 from typing import Annotated, Final, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
+from pydantic import BaseModel, Field, JsonValue, NonNegativeInt, field_validator, model_validator
 
 from cadrumo.core.hex import Hex64Str
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -35,10 +36,24 @@ MODEL_RUN_MAX_ATTACHMENTS: Final = 64
 MODEL_RUN_MAX_ROLES: Final = 16
 """Upper bound on the roles one selections read may report."""
 
+MODEL_RUN_MIN_CONTEXT_TOKENS: Final = 512
+MODEL_RUN_MAX_CONTEXT_TOKENS: Final = 1_048_576
+"""The context window bounds the agent admits for a background run."""
+
+MODEL_RUN_MAX_SCHEMA_BYTES: Final = 32_768
+"""Upper bound on a response schema, as compact UTF-8 JSON."""
+
 _LANE_ID = r"^[a-z][a-z0-9_]{0,39}$"
 _TRANSPORT = r"^[a-z][a-z0-9_]{0,15}$"
 _MODEL = r"^[\x21-\x7e]{1,256}$"
 _ROLE = r"^[a-z][a-z0-9_]{0,63}$"
+
+
+_ContextTokens = Annotated[int, Field(ge=MODEL_RUN_MIN_CONTEXT_TOKENS, le=MODEL_RUN_MAX_CONTEXT_TOKENS)]
+
+
+def _compact_json(value: dict[str, JsonValue]) -> bytes:
+    return json.dumps(value, ensure_ascii=False, allow_nan=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
 
 
 class ModelRunRefusalCode(StrEnum):
@@ -51,7 +66,11 @@ class ModelRunRefusalCode(StrEnum):
     UNKNOWN_ROLE = "unknown_role"
     """The request named a role outside the role vocabulary: a caller defect, not a missing selection."""
     LANE_UNAVAILABLE = "lane_unavailable"
+    MODEL_NOT_INSTALLED = "model_not_installed"
+    """The selected model is not installed on the lane's local server: the person installs it or selects another."""
     INPUT_NOT_SUPPORTED = "input_not_supported"
+    OPTION_NOT_SUPPORTED = "option_not_supported"
+    """The run named a reply option its lane does not honour: a caller defect, not a configuration gap."""
     RUN_FAILED = "run_failed"
     OUTPUT_INVALID = "output_invalid"
     DEADLINE_EXCEEDED = "deadline_exceeded"
@@ -165,6 +184,17 @@ class ModelRunBody(BaseModel):
     attachments: tuple[ModelRunAttachment, ...] = Field(default=(), max_length=MODEL_RUN_MAX_ATTACHMENTS)
     max_output_tokens: Annotated[int, Field(ge=1, le=65_536)]
     temperature: Annotated[float, Field(ge=0.0, le=1.0)] | None = None
+    context_tokens: _ContextTokens | None = None
+    """The context window the run needs; only a lane that honours it receives it."""
+    response_schema: dict[str, JsonValue] | None = None
+    """A JSON Schema object the reply is constrained to; the caller still extracts and validates the reply."""
+
+    @field_validator("response_schema")
+    @classmethod
+    def _schema_within_bound(cls, value: dict[str, JsonValue] | None) -> dict[str, JsonValue] | None:
+        if value is not None and len(_compact_json(value)) > MODEL_RUN_MAX_SCHEMA_BYTES:
+            raise ValueError("response schema exceeds its bound")
+        return value
 
 
 class ModelRunHeader(BaseModel):

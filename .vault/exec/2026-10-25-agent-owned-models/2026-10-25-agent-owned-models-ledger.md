@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:47d0b22bfdf3e34ec0601fa4888be7dc08847f09009abc678645e169cc439734'
+body_hash: 'sha256:0d7ee4cbd3fd1fe772940f74bba3d6edea141d79f9f2ba998e5ba26ebb21f16a'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -162,6 +162,13 @@ related:
 - `S19` `verify:` `cargo fmt --check --manifest-path native/application/Cargo.toml` -> `pass`
 - `S19` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
 - `S19` `by:` `implementation-engineer-high`
+- `S08` `M` `src/cadrumo_client/contracts/model_runs.py`
+- `S08` `M` `src/cadrumo_agent_service/adapters/agent_background_runs.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/llm/providers/agent.py`
+- `S08` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs.py`
+- `S08` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs_gateway.py`
+- `S08` `verify:` `pytest src/cadrumo_agent_service src/cadrumo/adapters/outbound/llm src/cadrumo_client` -> `pass`
+- `S08` `verify:` `pytest -m integration test_agent_background_runs_gateway.py vs cadrumo-agent c60a65c` -> `pass`
 
 ## Notes
 
@@ -174,3 +181,4 @@ related:
 - `S02` S02 Review follow-up: a role outside the vocabulary refuses with the new `unknown_role` code on the client contract, which the tax side reports as a provider error rather than a configuration prompt.
 - `S09` cargo test on native/desktop/src-tauri not run: the launch-guard build script needs the CMake-generated contract.json; rustfmt --check on wire.rs passes. Keyless rendering in ProviderSettings.tsx has no UI test.
 - `S19` The engine keeps the PartLicence type, the licence plan field (now always null), the LicenceCommercialUseBarred advisory and the DifferentModelVersion stale reason because native/desktop/src-tauri still maps them; P04.S22 removes the desktop consumers. The staged `local_ai_models.toml` stays for Python until P03.S16; the engine no longer reads it. The manager test edit was checked with rustfmt only: the manager crate needs CMake build inputs.
+- `S08` run options and c60a65c refusals consumed; per-model typed fields wait for cadrumo-agent S04, Step stays open

@@ -66,8 +66,15 @@ _REFUSALS: Final[Mapping[str, ModelRunRefusalCode]] = {
     "background_request_invalid": ModelRunRefusalCode.RUN_FAILED,
     "background_lane_unsupported": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "input_not_supported": ModelRunRefusalCode.INPUT_NOT_SUPPORTED,
+    "provider_unavailable": ModelRunRefusalCode.LANE_UNAVAILABLE,
+    "unknown_model": ModelRunRefusalCode.LANE_UNAVAILABLE,
+    "model_not_installed": ModelRunRefusalCode.MODEL_NOT_INSTALLED,
+    "background_option_unsupported": ModelRunRefusalCode.OPTION_NOT_SUPPORTED,
 }
 """The agent's admission refusals, in the closed set a tax worker reads."""
+
+_OPTIONS: Final = ("temperature", "context_tokens", "response_schema")
+"""The reply options a background request may name, each forwarded only to a lane that honours it."""
 
 _OUTPUT_LIMIT_EXCEEDED: Final = "output_limit_exceeded"
 
@@ -123,7 +130,18 @@ class HostedBackgroundRuns(BackgroundRunGateway):
     def accepted_media(self, lane: ModelRunLane) -> tuple[ModelRunMediaKind, ...] | None:
         """Read what a background request on ``lane`` may carry from the agent's live catalog."""
         endpoint = self._endpoint()
-        if endpoint is None or not self._bearer:
+        support = None if endpoint is None else self._background_support(endpoint, lane)
+        if support is None:
+            return None
+        images, pdfs = support.get("accepts_images"), support.get("accepts_pdfs")
+        if not isinstance(images, bool) or not isinstance(pdfs, bool):
+            return None
+        accepted = ((ModelRunMediaKind.IMAGE, images), (ModelRunMediaKind.PDF, pdfs))
+        return tuple(kind for kind, taken in accepted if taken)
+
+    def _background_support(self, endpoint: BackgroundRunEndpoint, lane: ModelRunLane) -> dict[str, object] | None:
+        """Return the lane's ``background_requests`` record from the live catalog, or ``None`` when unread."""
+        if not self._bearer:
             return None
         path = "/v1/provider-catalog?" + urlencode({"workspace_root": str(endpoint.workspace_root)})
         try:
@@ -144,12 +162,25 @@ class HostedBackgroundRuns(BackgroundRunGateway):
             support = record.get("background_requests")
             if not isinstance(support, dict):
                 return None
-            images, pdfs = support.get("accepts_images"), support.get("accepts_pdfs")
-            if not isinstance(images, bool) or not isinstance(pdfs, bool):
-                return None
-            accepted = ((ModelRunMediaKind.IMAGE, images), (ModelRunMediaKind.PDF, pdfs))
-            return tuple(kind for kind, taken in accepted if taken)
+            return {key: value for key, value in support.items() if isinstance(key, str)}
         return None
+
+    def _honoured_options(
+        self, endpoint: BackgroundRunEndpoint, lane: ModelRunLane, body: ModelRunBody
+    ) -> dict[str, object]:
+        """Return the reply options ``body`` names that the lane's catalog says it honours.
+
+        An option the lane does not honour is left out rather than sent: the
+        agent refuses a request naming one, and each option only tunes a reply
+        the caller validates anyway. A catalog that cannot be read honours none.
+        """
+        named = {name: getattr(body, name) for name in _OPTIONS if getattr(body, name) is not None}
+        if not named:
+            return {}
+        support = self._background_support(endpoint, lane)
+        listed = None if support is None else support.get("options")
+        honoured = {name for name in listed if isinstance(name, str)} if isinstance(listed, list) else set()
+        return {name: value for name, value in named.items() if name in honoured}
 
     @override
     def run(self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int) -> ModelRunOutput | ModelRunRefusal:
@@ -226,6 +257,7 @@ class HostedBackgroundRuns(BackgroundRunGateway):
                 "system": body.system or "",
                 "max_output_tokens": body.max_output_tokens,
                 "deadline_seconds": deadline_seconds,
+                **self._honoured_options(endpoint, lane, body),
             },
         }
         if files:

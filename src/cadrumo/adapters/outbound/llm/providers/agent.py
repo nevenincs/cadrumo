@@ -43,6 +43,7 @@ _CONFIGURATION_REFUSALS = frozenset(
         ModelRunRefusalCode.PROFILE_LOCKED,
         ModelRunRefusalCode.NO_SELECTION,
         ModelRunRefusalCode.LANE_UNAVAILABLE,
+        ModelRunRefusalCode.MODEL_NOT_INSTALLED,
         ModelRunRefusalCode.INPUT_NOT_SUPPORTED,
     }
 )

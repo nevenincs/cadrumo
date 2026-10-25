@@ -18,7 +18,9 @@ import socket
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from http.client import HTTPConnection
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import Thread
 from typing import Final
 from urllib.parse import urlencode
 
@@ -103,6 +105,19 @@ class _Gateway:
                 provider_id=record["provider_id"], transport=record["transport"], model=models[0]["model"]
             )
         pytest.fail(f"the agent catalog provides no selectable refusal fixture for background={background}, pdf={pdf}")
+
+    def local_lane(self) -> ModelRunLane:
+        """The keyless lane on this computer's server, naming a model its catalog declares."""
+        status, catalog = self.exchange(
+            "GET", "/v1/provider-catalog?" + urlencode({"workspace_root": str(self.endpoint.workspace_root)})
+        )
+        assert status == 200 and isinstance(catalog, dict), (status, catalog)
+        for record in catalog["providers"]:
+            if (record["provider_id"], record["transport"]) == ("ollama", "api"):
+                models = record["catalog"]["models"]
+                assert models, "the local lane must declare a model"
+                return ModelRunLane(provider_id="ollama", transport="api", model=models[0]["model"])
+        pytest.fail("the agent catalog serves no local lane")
 
     def runs(self, *, host_token: str | None = None, run_id: str | None = None) -> HostedBackgroundRuns:
         """The adapter under test, bound to this gateway."""
@@ -202,8 +217,35 @@ def _agent_setting_environment(checkout: Path, values: Mapping[str, str]) -> dic
     return {names[field]: value for field, value in values.items()}
 
 
+class _EmptyOllamaHandler(BaseHTTPRequestHandler):
+    """A loopback Ollama server with nothing installed: the agent's probe reads it, no model runs on it."""
+
+    def do_GET(self) -> None:
+        answers = {"/api/version": {"version": "0.0.0-synthetic"}, "/api/tags": {"models": []}}
+        answer = answers.get(self.path)
+        payload = json.dumps(answer if answer is not None else {"error": "not found"}).encode()
+        self.send_response(200 if answer is not None else 404)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+
 @pytest.fixture(scope="module")
-def gateway(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Gateway]:
+def empty_ollama() -> Iterator[int]:
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _EmptyOllamaHandler)
+    serving = Thread(target=server.serve_forever, name="empty-ollama", daemon=False)
+    serving.start()
+    try:
+        yield int(server.server_address[1])
+    finally:
+        server.shutdown()
+        server.server_close()
+        serving.join()
+
+
+@pytest.fixture(scope="module")
+def gateway(tmp_path_factory: pytest.TempPathFactory, empty_ollama: int) -> Iterator[_Gateway]:
     checkout = _agent_checkout()
     root = tmp_path_factory.mktemp("agent-gateway")
     profile = root / "profile"
@@ -234,6 +276,7 @@ def gateway(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Gateway]:
                 "gateway_service_token": bearer,
                 "internal_token": secrets.token_urlsafe(32),
                 "host_token": host_token,
+                "ollama_base_url": f"http://127.0.0.1:{empty_ollama}",
             },
         )
     )
@@ -356,3 +399,31 @@ def test_a_run_uploads_starts_reads_its_reply_and_deletes_what_it_left(gateway: 
     assert gateway.exchange("GET", f"/v1/runs/{run_id}/reply")[0] == 404
     status, listed = gateway.exchange("GET", f"/v1/conversations/{run_id}/attachments")
     assert status == 404 or (isinstance(listed, dict) and not listed.get("attachments"))
+
+
+def test_a_reply_option_the_lane_does_not_honour_is_refused_by_the_agent_and_never_sent(gateway: _Gateway) -> None:
+    run_id = secrets.token_hex(16)
+    status, answer = gateway.background(
+        run_id,
+        _TOOL_LESS_LANE,
+        background={"system": "", "max_output_tokens": 16, "deadline_seconds": 30, "temperature": 0.0},
+    )
+    assert (status, _refusal_code(answer)) == (422, "background_option_unsupported"), (status, answer)
+
+    body = _body().model_copy(
+        update={"temperature": 0.0, "context_tokens": 4096, "response_schema": {"type": "object"}}
+    )
+    outcome = gateway.runs().run(lane=_TOOL_LESS_LANE, body=body, deadline_seconds=30)
+
+    # Admitted without the options, the run then fails at the provider the disposable profile is not signed in to.
+    assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED), outcome
+
+
+def test_a_model_the_local_server_has_not_installed_is_refused_as_not_installed(gateway: _Gateway) -> None:
+    lane = gateway.local_lane()
+    status, answer = gateway.background(secrets.token_hex(16), lane)
+    assert (status, _refusal_code(answer)) == (422, "model_not_installed"), (status, answer)
+
+    outcome = gateway.runs().run(lane=lane, body=_body(), deadline_seconds=30)
+
+    assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED), outcome

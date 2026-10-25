@@ -6,6 +6,7 @@ import base64
 from pathlib import Path
 
 import pytest
+from pydantic import JsonValue, ValidationError
 
 from cadrumo_client.contracts.model_runs import (
     ModelRunAttachment,
@@ -57,3 +58,25 @@ def test_a_wiped_host_token_or_no_ready_agent_refuses_as_unavailable(tmp_path: P
             code=ModelRunRefusalCode.SERVICE_UNAVAILABLE
         )
     assert absent.accepted_media(_LANE) is None
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        pytest.param({"context_tokens": 511}, id="context-below-floor"),
+        pytest.param({"context_tokens": 1_048_577}, id="context-above-ceiling"),
+        pytest.param({"response_schema": {"description": "x" * 32_768}}, id="schema-over-bound"),
+    ],
+)
+def test_a_reply_option_outside_the_agent_s_bounds_is_refused_by_the_contract(options: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        ModelRunBody.model_validate({"prompt": "Read this.", "max_output_tokens": 16, **options})
+
+
+def test_reply_options_at_the_agent_s_bounds_are_accepted() -> None:
+    schema: dict[str, JsonValue] = {"description": "x" * (32_768 - len('{"description":""}'))}
+    body = ModelRunBody(
+        prompt="Read this.", max_output_tokens=16, context_tokens=512, response_schema=schema, temperature=0.0
+    )
+
+    assert (body.context_tokens, body.response_schema) == (512, schema)
