@@ -24,7 +24,7 @@ import pytest
 from pydantic import BaseModel
 
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
-from ...adapters.persistence.operations.tests.supervisor_test_support import _repositories
+from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.evidence_ingestion_contracts import (
     LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,
@@ -157,7 +157,7 @@ def test_a_batch_paused_for_its_missing_text_model_settles_with_the_local_ai_set
         return receipt.condition, receipt.effect, projection
 
     with _runtime_holding_only_the_vision_model():
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = OperationSupervisor(

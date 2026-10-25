@@ -28,14 +28,14 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     parse_verification_predicate_expression,
 )
 
-from ..compiler._validate_verification_predicates import (
-    _ADVISORY_ONLY_OPERATORS,
-    _BLOCKING_ONLY_OPERATORS,
-    _CASILLA_LIST_OPERATORS,
-)
 from ..compiler.validate_registry_surfaces import (
-    _MIXED_TOKEN_PREDICATE_VALIDATORS,
-    _PROFILE_PREDICATE_VALIDATORS,
+    MIXED_TOKEN_PREDICATE_VALIDATORS,
+    PROFILE_PREDICATE_VALIDATORS,
+)
+from ..compiler.validate_verification_predicates import (
+    ADVISORY_ONLY_OPERATORS,
+    BLOCKING_ONLY_OPERATORS,
+    CASILLA_LIST_OPERATORS,
 )
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ..conformance.registry_schema_support import with_revision as _with_revision
@@ -179,11 +179,11 @@ def test_every_known_operator_is_classified_and_has_an_authoring_route() -> None
     operators = set(VerificationPredicateOperator)
     assert {operator.value for operator in operators} == KNOWN_VERIFICATION_PREDICATE_OPERATORS
     assert set(VERIFICATION_PREDICATE_SPECIFICATIONS) == operators
-    assert not _ADVISORY_ONLY_OPERATORS & _BLOCKING_ONLY_OPERATORS
-    assert _ADVISORY_ONLY_OPERATORS == ADVISORY_PREDICATE_OPERATORS - BLOCKING_PREDICATE_OPERATORS
-    assert _BLOCKING_ONLY_OPERATORS == BLOCKING_PREDICATE_OPERATORS - ADVISORY_PREDICATE_OPERATORS
+    assert not ADVISORY_ONLY_OPERATORS & BLOCKING_ONLY_OPERATORS
+    assert ADVISORY_ONLY_OPERATORS == ADVISORY_PREDICATE_OPERATORS - BLOCKING_PREDICATE_OPERATORS
+    assert BLOCKING_ONLY_OPERATORS == BLOCKING_PREDICATE_OPERATORS - ADVISORY_PREDICATE_OPERATORS
     assert operators == ADVISORY_PREDICATE_OPERATORS | BLOCKING_PREDICATE_OPERATORS
-    routed = set(_MIXED_TOKEN_PREDICATE_VALIDATORS) | set(_PROFILE_PREDICATE_VALIDATORS) | _CASILLA_LIST_OPERATORS
+    routed = set(MIXED_TOKEN_PREDICATE_VALIDATORS) | set(PROFILE_PREDICATE_VALIDATORS) | CASILLA_LIST_OPERATORS
     assert routed == KNOWN_VERIFICATION_PREDICATE_OPERATORS
 
 
@@ -224,7 +224,7 @@ def test_unknown_casilla_token_is_refused_with_locator(
 
 @pytest.mark.parametrize(
     "operator",
-    sorted(_ADVISORY_ONLY_OPERATORS, key=lambda member: member.value),
+    sorted(ADVISORY_ONLY_OPERATORS, key=lambda member: member.value),
 )
 def test_advisory_only_operator_authored_as_blocking_is_refused(operator: VerificationPredicateOperator) -> None:
     expression = _PROBE_EXPRESSIONS[operator]
@@ -237,7 +237,7 @@ def test_advisory_only_operator_authored_as_blocking_is_refused(operator: Verifi
 
 @pytest.mark.parametrize(
     "operator",
-    sorted(_BLOCKING_ONLY_OPERATORS, key=lambda member: member.value),
+    sorted(BLOCKING_ONLY_OPERATORS, key=lambda member: member.value),
 )
 def test_blocking_only_operator_authored_as_advisory_is_refused(operator: VerificationPredicateOperator) -> None:
     expression = _PROBE_EXPRESSIONS[operator]

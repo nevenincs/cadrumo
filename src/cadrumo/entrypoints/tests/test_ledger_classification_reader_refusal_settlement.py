@@ -26,7 +26,7 @@ import pytest
 from pydantic import BaseModel
 
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
-from ...adapters.persistence.operations.tests.supervisor_test_support import _repositories
+from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -173,7 +173,7 @@ def _settle_and_read_detail(
         )
         registration = build_ledger_llm_review_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = OperationSupervisor(

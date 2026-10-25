@@ -23,7 +23,14 @@ from cadrumo.application.user_profile.access_contracts import ProfileAccessBindi
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, OperationAccessRequest
 
-from .supervisor_test_support import _NOW, IdleExecutor, SupervisorRequest, _registry, _repositories, _supervisor
+from .supervisor_test_support import (
+    _NOW,
+    IdleExecutor,
+    SupervisorRequest,
+    _registry,
+    _supervisor,
+    operation_repositories,
+)
 from .test_journal import _claim_lease, _lease, _snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -89,7 +96,7 @@ def _provenance(
 
 
 def _services(root: Path, profile_objects):
-    journal, leases, operands = _repositories(storage_root=root, profile_objects=profile_objects)
+    journal, leases, operands = operation_repositories(storage_root=root, profile_objects=profile_objects)
     supervisor = _supervisor(
         registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
         journal=journal,

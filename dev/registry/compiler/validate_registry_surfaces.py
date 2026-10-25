@@ -25,8 +25,10 @@ from cadrumo.domain.calculations.registry.schema_verification import (
 )
 
 from ._validate_helpers import missing_refs as _missing_refs
-from ._validate_verification_predicates import (
-    _CASILLA_LIST_OPERATORS,
+from .validate_evidence import EvidenceValidator
+from .validate_official_source_guidance_content import deadline_window_content_failures
+from .validate_verification_predicates import (
+    CASILLA_LIST_OPERATORS,
     _advisory_when_ratio_ge_predicate_failures,
     _casilla_equals_implies_diverges_predicate_failures,
     _casilla_equals_implies_numeric_predicate_failures,
@@ -37,14 +39,12 @@ from ._validate_verification_predicates import (
     _profile_field_required_predicate_failures,
     _profile_flag_enabled_predicate_failures,
 )
-from .validate_evidence import EvidenceValidator
-from .validate_official_source_guidance_content import deadline_window_content_failures
 
 # Operators mixing casilla ids with literal tokens, so they cannot route through the
 # generic casilla-list validators. advisory_when_ratio_ge is the sharpest case: the
 # runtime builds its threshold with a bare Decimal and compares outside its own except
 # clause, so an unvalidated literal either never fires (Infinity) or raises uncaught (NaN).
-_MIXED_TOKEN_PREDICATE_VALIDATORS: dict[
+MIXED_TOKEN_PREDICATE_VALIDATORS: dict[
     str,
     Callable[[str, str, str, set[CasillaId], Mapping[CasillaId, CasillaDefinition]], list[str]],
 ] = {
@@ -62,7 +62,7 @@ _MIXED_TOKEN_PREDICATE_VALIDATORS: dict[
     "advisory_when_ratio_ge": _advisory_when_ratio_ge_predicate_failures,
 }
 
-_PROFILE_PREDICATE_VALIDATORS: dict[str, Callable[[str, str, str], list[str]]] = {
+PROFILE_PREDICATE_VALIDATORS: dict[str, Callable[[str, str, str], list[str]]] = {
     "profile_flag_enabled": _profile_flag_enabled_predicate_failures,
     "profile_field_required": _profile_field_required_predicate_failures,
 }
@@ -320,13 +320,13 @@ def _verification_predicate_family_failures(
         ]
     operator = VerificationPredicateOperator(op_name)
     failures = _finding_kind_failures(prefix, owner, operator, finding_kind)
-    mixed_token_validator = _MIXED_TOKEN_PREDICATE_VALIDATORS.get(op_name)
+    mixed_token_validator = MIXED_TOKEN_PREDICATE_VALIDATORS.get(op_name)
     if mixed_token_validator is not None:
         return [*failures, *mixed_token_validator(prefix, owner, expression, casillas, casilla_by_id)]
-    profile_validator = _PROFILE_PREDICATE_VALIDATORS.get(op_name)
+    profile_validator = PROFILE_PREDICATE_VALIDATORS.get(op_name)
     if profile_validator is not None:
         return [*failures, *profile_validator(prefix, owner, expression)]
-    if op_name in _CASILLA_LIST_OPERATORS:
+    if op_name in CASILLA_LIST_OPERATORS:
         # Includes equals(["lhs_id", "rhs_id"]), a binary consistency check whose
         # malformed arity is rejected at authoring time so the predicate never reaches
         # publication, where runtime evaluation would refuse it with a ModeloError.

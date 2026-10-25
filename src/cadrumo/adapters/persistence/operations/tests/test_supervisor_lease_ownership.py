@@ -59,11 +59,11 @@ from .supervisor_test_support import (
     _lapse_settler,
     _leave_settlement_lease_behind,
     _registry,
-    _repositories,
     _request,
     _settle_failed,
     _shared_scope_holder,
     _supervisor,
+    operation_repositories,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -73,7 +73,7 @@ def test_supervisor_renews_exact_lease_before_expiry_and_settles_beyond_original
     """A renewal made while live retains exclusive settlement beyond the original window."""
     observed_at = [_NOW]
     with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state",
             profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
         )
@@ -128,7 +128,7 @@ def test_start_heartbeats_a_quiet_executor_past_the_initial_lease_window(tmp_pat
     """A quiet executor stays exclusively owned and can settle after its first lease expires."""
     observed_at = [_NOW]
     with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state",
             profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
         )
@@ -195,7 +195,7 @@ def test_heartbeat_owner_loss_cancels_executor_without_mutating_winner_bytes(tmp
     observed_at = [_NOW]
     with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=storage_root,
             profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
         )
@@ -266,7 +266,7 @@ def test_exact_lease_renewal_owner_loss_refuses_without_changing_durable_bytes(t
     observed_at = [_NOW]
     with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=storage_root,
             profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
         )
@@ -322,7 +322,7 @@ def test_stale_settle_preserves_declared_resource_and_winner_evidence(tmp_path: 
     """A stale owner cannot close resources before exact lease proof; the winner closes its own once."""
     with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=storage_root,
             profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
         )
@@ -424,7 +424,7 @@ def test_stale_settle_preserves_declared_resource_and_winner_evidence(tmp_path: 
 def test_a_settled_operation_frees_its_subject_for_an_immediate_resubmission(tmp_path: Path) -> None:
     """The operator can act on a terminal state at once: the lease is already gone when it is visible."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
@@ -450,7 +450,7 @@ def test_a_settled_operation_frees_its_subject_for_an_immediate_resubmission(tmp
 def test_a_live_unsettled_holder_refuses_resubmission_with_the_registered_busy_refusal(tmp_path: Path) -> None:
     """A running operation keeps its subject; the refusal is typed, registered and names nothing internal."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
@@ -483,7 +483,7 @@ def test_a_live_unsettled_holder_refuses_resubmission_with_the_registered_busy_r
 def test_a_submission_interrupts_an_unstarted_holder_whose_lease_lapsed(tmp_path: Path) -> None:
     """Nobody started the holder within its whole lease: it had no effect, and it must not hold the subject."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
@@ -527,7 +527,7 @@ def test_a_submission_interrupts_an_unstarted_holder_whose_lease_lapsed(tmp_path
 def test_a_live_unstarted_holder_still_refuses_and_names_itself_to_the_runtime(tmp_path: Path) -> None:
     """Within its lease an unstarted holder may still be started; the refusal carries its id for the operator."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
@@ -584,7 +584,7 @@ def test_settle_lapsed_waits_out_the_grace_then_interrupts_a_started_operation_a
 def test_settle_lapsed_leaves_an_operation_whose_owner_still_renews(tmp_path: Path) -> None:
     """An active lease is a live owner; nothing is taken from it."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         owner = _lapse_settler(journal=journal, leases=leases, operands=operands, at=_NOW)
@@ -622,7 +622,7 @@ def test_settle_lapsed_settles_an_operation_a_changed_definition_can_no_longer_r
 def test_a_lease_whose_holder_has_no_journal_yet_is_a_live_conflict(tmp_path: Path) -> None:
     """A submission between its lease and its journal create is in progress, not a leftover."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         contender = _supervisor(
@@ -660,7 +660,7 @@ def test_the_next_submission_reclaims_a_lease_left_by_a_crash_after_settlement(
 ) -> None:
     """A terminal journal beside a lease its operation still owns is a crash leftover, reclaimed once."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
@@ -694,7 +694,7 @@ def test_the_next_submission_reclaims_a_lease_left_by_a_crash_after_settlement(
 def test_reconciling_a_settled_operation_releases_the_lease_its_crash_left_behind(tmp_path: Path) -> None:
     """Reconciliation frees a leftover of the terminal operation it names, and nothing else."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
@@ -732,7 +732,7 @@ def test_reconciling_a_settled_operation_releases_the_lease_its_crash_left_behin
 def test_an_executor_settlement_frees_its_subject_for_an_immediate_same_subject_submit(tmp_path: Path) -> None:
     """Whatever the definition, settling through its executor releases the subject with the terminal record."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(executor_type=ImmediateResultExecutor, build=ImmediateResultExecutor)

@@ -70,11 +70,11 @@ from .supervisor_test_support import (
     _close_host_over_live_executor,
     _failure_logged,
     _registry,
-    _repositories,
     _request,
     _response,
     _start_and_walk_away,
     _supervisor,
+    operation_repositories,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -84,7 +84,7 @@ def test_host_close_cancels_a_detachable_operation_without_false_terminal_artifa
     """Abandoning a wait leaves the operation running; closing the host cancels it, settling nothing."""
     executor = CancellableResourceExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
@@ -148,7 +148,7 @@ def test_response_consumption_is_exact_single_use_and_durable_across_supervisor_
 ) -> None:
     """Apply and reject both consume one persisted checkpoint once across restart."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(
@@ -207,7 +207,7 @@ def test_response_consumption_is_exact_single_use_and_durable_across_supervisor_
 def test_await_terminal_waits_for_a_real_durable_settlement(tmp_path: Path) -> None:
     """Awaiting a live operation reloads until its terminal journal record exists."""
     with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state",
             profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
         )
@@ -247,7 +247,7 @@ def test_await_terminal_sustained_wait_uses_bounded_real_journal_reads(tmp_path:
     """A non-terminal durable wait backs off instead of repeatedly opening its real journal file."""
     with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=storage_root,
             profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
         )
@@ -300,7 +300,7 @@ def test_await_terminal_sustained_wait_uses_bounded_real_journal_reads(tmp_path:
 def test_token_mismatch_refuses_interaction_mutation_before_consumption(tmp_path: Path) -> None:
     """An equal owner ID cannot adopt another supervisor's different lease token."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(
@@ -338,7 +338,7 @@ def test_token_mismatch_refuses_interaction_mutation_before_consumption(tmp_path
 def test_request_cancel_persists_an_event_free_revision_and_later_terminal_event(tmp_path: Path) -> None:
     """Cancellation retains prior history without inventing a lifecycle event."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         executor = UnacknowledgedCancellationExecutor()
@@ -401,7 +401,7 @@ def test_aggregate_deadline_requests_cooperative_stop_before_timed_out_cleanup_s
     """A real deadline acknowledgement settles as timed out after owned cleanup."""
     executor = DeadlineAcknowledgingExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
@@ -447,7 +447,7 @@ def test_cancelled_terminal_refuses_an_executor_that_stopped_without_acknowledgi
     """Returning from work is not interchangeable with the executor's durable safe-stop fact."""
     executor = UnacknowledgedCancellationExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
@@ -494,7 +494,7 @@ def test_irreversible_section_allows_request_but_refuses_acknowledgement_until_e
     """An unsafe mutation completes before its executor can acknowledge a cooperative stop."""
     executor = IrreversibleSectionExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(
@@ -545,7 +545,7 @@ def test_cleanup_deadline_escalates_to_settling_without_a_false_timeout_terminal
     """A cooperative executor still running beyond cleanup grace leaves durable uncertainty open."""
     executor = CleanupDeadlineExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
@@ -594,7 +594,7 @@ def test_cleanup_deadline_escalates_to_settling_without_a_false_timeout_terminal
 def test_settle_refuses_definition_forbidden_effect_before_cleanup_or_journal_mutation(tmp_path: Path) -> None:
     """Terminal effects use the same definition capability boundary as executor facts."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         executor = DeclaredResourceExecutor()

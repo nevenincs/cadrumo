@@ -25,7 +25,7 @@ import pytest
 from pydantic import BaseModel
 
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
-from ...adapters.persistence.operations.tests.supervisor_test_support import _repositories
+from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
@@ -176,7 +176,7 @@ def test_a_confirm_whose_re_read_needs_the_vision_model_settles_with_the_local_a
         return receipt.condition, receipt.refusal_ref, detail
 
     with _runtime_holding_only_the_text_model():
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = OperationSupervisor(

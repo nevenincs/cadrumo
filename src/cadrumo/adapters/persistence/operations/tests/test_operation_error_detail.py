@@ -73,9 +73,9 @@ from .supervisor_test_support import (
     _assert_sensitive_detail_absent_from_operation_bytes,
     _capabilities,
     _registry,
-    _repositories,
     _request,
     _supervisor,
+    operation_repositories,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -143,7 +143,9 @@ def _settle_and_read(
 ) -> _SettledCase:
     storage_root = tmp_path / "durable-state"
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         supervisor = _supervisor(
             registry=registry,
             journal=journal,
@@ -322,7 +324,7 @@ def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
         payload = ModeloReadinessOperationRequest(profile_id=profile_id, modelo="210", filing_year=2025, period=period)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(profile_id)) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "scope-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(

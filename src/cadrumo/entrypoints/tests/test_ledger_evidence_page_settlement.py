@@ -25,7 +25,7 @@ from pydantic import BaseModel
 
 from ...adapters.inbound.pdf.page_image import PageImageRenderer
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
-from ...adapters.persistence.operations.tests.supervisor_test_support import _repositories
+from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
@@ -142,7 +142,7 @@ def _settle(
     definition = build_ledger_evidence_page_definition(build_ledger_evidence_page_operation_ports(renderer=renderer))
     registration = build_ledger_evidence_page_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-    journal, leases, operands = _repositories(
+    journal, leases, operands = operation_repositories(
         storage_root=tmp_path / "durable-state", profile_objects=profile.repository
     )
     supervisor = OperationSupervisor(

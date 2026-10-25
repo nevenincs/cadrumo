@@ -234,7 +234,7 @@ _TERMINAL_CASES = (
 )
 
 
-def _repositories(
+def operation_repositories(
     *,
     storage_root: Path,
     profile_objects: SecureObjectRepository,
@@ -344,7 +344,9 @@ def test_every_terminal_condition_waits_for_owned_file_cleanup_and_preserves_eff
     """Every terminal fact commits after a real close and retains its independent effect."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         executor = LifecycleExecutor(
             journal=journal,
             resource_root=tmp_path / "owned-files",
@@ -414,7 +416,9 @@ def test_executor_result_reference_settles_successfully_after_owned_cleanup(tmp_
     """A domain result is joined to the receipt only after the real resource closes."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-result-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         result_ref = "sync-run:filed-declarations:child-provenance"
         executor = LifecycleExecutor(
             journal=journal,
@@ -452,7 +456,9 @@ def test_cleanup_failure_refuses_terminal_journal_persistence(tmp_path: Path) ->
     """A reported owned-resource close failure leaves the real journal nonterminal."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         executor = LifecycleExecutor(
             journal=journal,
             resource_root=tmp_path / "owned-files",
@@ -515,7 +521,9 @@ def test_cleanup_timeout_refuses_terminal_journal_persistence(tmp_path: Path) ->
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         executor = LifecycleExecutor(
             journal=journal,
             resource_root=tmp_path / "owned-files",

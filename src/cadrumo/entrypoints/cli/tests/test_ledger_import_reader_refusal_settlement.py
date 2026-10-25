@@ -34,34 +34,34 @@ import typer
 from cadrumo.tests.english_locale_fixture import english_locale_fixture
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
-from ...adapters.outbound.components.tests.recorded_rows import recorded_absent_row
-from ...adapters.outbound.llm.column_role_mapping import resolve_column_roles
-from ...adapters.outbound.llm.statement_reading import LocalStatementReader
-from ...application.dependency_contracts import DependencyStatusRow
-from ...application.dependency_registry import dependency_item_declarations
-from ...application.ledger.actions_import import LedgerProviderID
-from ...application.ledger.column_roles import bind_column_role_mapping_resolver
-from ...application.ledger.import_operation import (
+from ....adapters.outbound.components.tests.recorded_rows import recorded_absent_row
+from ....adapters.outbound.llm.column_role_mapping import resolve_column_roles
+from ....adapters.outbound.llm.statement_reading import LocalStatementReader
+from ....application.dependency_contracts import DependencyStatusRow
+from ....application.dependency_registry import dependency_item_declarations
+from ....application.ledger.actions_import import LedgerProviderID
+from ....application.ledger.column_roles import bind_column_role_mapping_resolver
+from ....application.ledger.import_operation import (
     LEDGER_IMPORT_OPERATION_DEFINITION_ID,
     LedgerImportFileRefusal,
     LedgerImportRequest,
     LedgerImportResultProjection,
 )
-from ...application.ledger.statement_reading import bind_statement_reader_factory
-from ...application.operations.frontend_requests import OperationObservationSuccessV1
-from ...application.operations.registry import OperationRegistry
-from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
-from ...core.config import override_settings
-from ...core.model_catalogue import ModelRole, candidates_for_role, default_model_runtime_id
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...tests.inventory import FIXTURES_DIR
-from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
-from ..cli import ledger_import_commands
-from ..cli._component_setup_rendering import setup_status_source
-from ..cli.errors import command_error_boundary
-from ..cli.tests.cli_runner import invoke_typer_app, semantic_cli_output
-from . import registered_executor_case_support as conformance
+from ....application.ledger.statement_reading import bind_statement_reader_factory
+from ....application.operations.frontend_requests import OperationObservationSuccessV1
+from ....application.operations.registry import OperationRegistry
+from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from ....core.config import override_settings
+from ....core.model_catalogue import ModelRole, candidates_for_role, default_model_runtime_id
+from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....tests.inventory import FIXTURES_DIR
+from ....tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
+from ...tests import registered_executor_case_support as conformance
+from .. import ledger_import_commands
+from .._component_setup_rendering import setup_status_source
+from ..errors import command_error_boundary
+from .cli_runner import invoke_typer_app, semantic_cli_output
 
 __all__ = ["english_locale_fixture"]
 

@@ -52,10 +52,10 @@ from .supervisor_test_support import (
     _capabilities,
     _pending_interaction,
     _registry,
-    _repositories,
     _request,
     _response,
     _supervisor,
+    operation_repositories,
 )
 from .test_censal_operation_executor import (
     _OPERATOR_SCOPE_PORTS,
@@ -151,7 +151,9 @@ def test_running_executor_returning_no_result_settles_failed_with_its_registered
     """A running executor that returns nothing settles failed and releases its subject."""
     storage_root = tmp_path / "durable-state"
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         supervisor = _supervisor(
             registry=_registry(executor_type=EffectThenNoResultExecutor, build=EffectThenNoResultExecutor),
             journal=journal,
@@ -199,7 +201,7 @@ def test_running_executor_returning_no_result_settles_failed_with_its_registered
 def test_resumed_executor_returning_no_result_settles_failed_with_its_registered_code(tmp_path: Path) -> None:
     """The recovery path applies the same rule to a resume that returns nothing while running."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(
@@ -245,7 +247,7 @@ def test_resumed_executor_returning_no_result_settles_failed_with_its_registered
 def test_executor_suspended_at_an_interaction_stays_unsettled(tmp_path: Path) -> None:
     """Returning nothing after publishing a checkpoint waits for the response instead of failing."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
@@ -276,7 +278,7 @@ def test_suspended_executor_answered_before_it_returns_is_not_failed(tmp_path: P
     """A review consumed before its execution returns leaves settlement to the continuation."""
     AnsweredBeforeReturnExecutor.reset()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(

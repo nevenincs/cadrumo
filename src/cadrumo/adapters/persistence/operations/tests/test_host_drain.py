@@ -18,7 +18,7 @@ from cadrumo.application.operations.tests.authority_test_support import unread_a
 from cadrumo.core.operations import OperationLifecycle
 
 from .supervision_support import run_to_settlement
-from .supervisor_test_support import _NOW, IdleExecutor, _registry, _repositories, _request, _supervisor
+from .supervisor_test_support import _NOW, IdleExecutor, _registry, _request, _supervisor, operation_repositories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -44,7 +44,7 @@ class CancellationResistantExecutor:
 
 def test_composed_drain_has_one_deadline_and_reports_uncontained_work(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
 
@@ -116,7 +116,7 @@ def test_composed_drain_has_one_deadline_and_reports_uncontained_work(tmp_path: 
 
 def test_created_submission_remains_recoverable_and_fences_direct_admission(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
 
@@ -168,7 +168,7 @@ def test_created_submission_remains_recoverable_and_fences_direct_admission(tmp_
 def test_operation_count_returns_to_zero_after_durable_settlement(tmp_path: Path) -> None:
     """An idle host is not an in-flight operation; observation does not renew leases."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
 

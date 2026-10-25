@@ -25,7 +25,7 @@ import pytest
 from pydantic import BaseModel
 
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
-from ...adapters.persistence.operations.tests.supervisor_test_support import _repositories
+from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.evidence_errors import EVIDENCE_LOCAL_AI_NOT_READY_KEY, PurchaseInvoiceEvidenceReaderError
@@ -140,7 +140,7 @@ def _settle_and_read_detail(
     definition = build_ledger_evidence_extract_definition(build_invoice_evidence_operation_ports)
     registration = build_ledger_evidence_extract_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-    journal, leases, operands = _repositories(
+    journal, leases, operands = operation_repositories(
         storage_root=tmp_path / "durable-state", profile_objects=profile.repository
     )
     supervisor = OperationSupervisor(

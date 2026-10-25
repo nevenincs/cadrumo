@@ -61,10 +61,10 @@ from .supervisor_test_support import (
     _capabilities,
     _close_host_over_live_executor,
     _registry,
-    _repositories,
     _request,
     _response,
     _supervisor,
+    operation_repositories,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -73,7 +73,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path: Path) -> None:
     """A new owner with no local task admits genuine owner-loss interruption and frees the scope."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         started = asyncio.Event()
@@ -133,7 +133,7 @@ def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path:
 def test_a_submission_recovers_a_started_holder_whose_owner_lapsed(tmp_path: Path) -> None:
     """A runtime that died mid-run must not hold its subject until someone reconciles by hand."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         started = asyncio.Event()
@@ -179,7 +179,9 @@ def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign
     """A target owns only its acquired takeover; the foreign operation record is untouched."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
         owner = _supervisor(
             registry=registry,
@@ -261,7 +263,7 @@ def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign
 def test_reconcile_recovers_an_unstarted_expired_entry_with_new_durable_ownership(tmp_path: Path) -> None:
     """A separate startup supervisor re-establishes only a provably effect-free created entry."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         started = asyncio.Event()
@@ -313,7 +315,7 @@ def test_reconcile_reenters_only_a_declared_valid_checkpoint(tmp_path: Path) -> 
         return executor
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(
@@ -379,7 +381,7 @@ def test_resumed_executor_result_reference_settles_the_recovered_operation(tmp_p
         return executor
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "resumed-result-state",
             profile_objects=profile.repository,
         )
@@ -436,7 +438,7 @@ def test_reconcile_refuses_changed_definition_digest_before_reentry(tmp_path: Pa
         return executor
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         owner_registry = _registry(
@@ -500,7 +502,7 @@ def test_reconcile_refuses_resume_without_a_declared_valid_checkpoint(tmp_path: 
     """An expired resumable definition without a checkpoint settles unknown interruption."""
     ResumableIdleExecutor.reset()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(
@@ -545,7 +547,7 @@ def test_reconcile_refuses_resume_without_a_declared_valid_checkpoint(tmp_path: 
 def test_reconcile_classifies_absent_lease_as_orphan_before_unknown_interruption(tmp_path: Path) -> None:
     """An existing journal without a current durable lease cannot become a resumed operation."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
@@ -593,7 +595,9 @@ def test_secure_review_publication_and_consumed_continuation_recover_without_rea
     DurableContinuationExecutor.reset()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         registry = _registry(
             executor_type=DurableContinuationExecutor,
             build=DurableContinuationExecutor,
@@ -684,7 +688,9 @@ def test_reconcile_refuses_active_or_corrupt_lease_without_journal_mutation(tmp_
     """Live or unreadable owner evidence never authorizes a reconciliation transition."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
         owner = _supervisor(
             registry=registry,

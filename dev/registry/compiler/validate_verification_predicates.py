@@ -28,9 +28,9 @@ from cadrumo.domain.calculations.registry.schema_verification import (
 )
 
 __all__ = [
-    "_ADVISORY_ONLY_OPERATORS",
-    "_BLOCKING_ONLY_OPERATORS",
-    "_CASILLA_LIST_OPERATORS",
+    "ADVISORY_ONLY_OPERATORS",
+    "BLOCKING_ONLY_OPERATORS",
+    "CASILLA_LIST_OPERATORS",
     "_advisory_when_ratio_ge_predicate_failures",
     "_casilla_equals_implies_diverges_predicate_failures",
     "_casilla_equals_implies_numeric_predicate_failures",
@@ -43,7 +43,7 @@ __all__ = [
 ]
 
 
-_CASILLA_LIST_OPERATORS = frozenset(
+CASILLA_LIST_OPERATORS = frozenset(
     specification.operator.value
     for specification in VERIFICATION_PREDICATE_SPECIFICATIONS.values()
     if specification.syntax is VerificationPredicateSyntax.CASILLA_LIST
@@ -53,9 +53,9 @@ _CASILLA_LIST_OPERATORS = frozenset(
 # authored under the kind its evaluator does not serve never reports a finding: a
 # blocking rule over an advisory-only operator always holds, and an advisory over a
 # blocking-only operator never fires.
-_ADVISORY_ONLY_OPERATORS = ADVISORY_PREDICATE_OPERATORS - BLOCKING_PREDICATE_OPERATORS
+ADVISORY_ONLY_OPERATORS = ADVISORY_PREDICATE_OPERATORS - BLOCKING_PREDICATE_OPERATORS
 
-_BLOCKING_ONLY_OPERATORS = BLOCKING_PREDICATE_OPERATORS - ADVISORY_PREDICATE_OPERATORS
+BLOCKING_ONLY_OPERATORS = BLOCKING_PREDICATE_OPERATORS - ADVISORY_PREDICATE_OPERATORS
 
 
 def _finding_kind_failures(
@@ -64,12 +64,12 @@ def _finding_kind_failures(
     operator: VerificationPredicateOperator,
     finding_kind: VerificationFindingKind,
 ) -> list[str]:
-    if finding_kind is VerificationFindingKind.BLOCKING_RULE and operator in _ADVISORY_ONLY_OPERATORS:
+    if finding_kind is VerificationFindingKind.BLOCKING_RULE and operator in ADVISORY_ONLY_OPERATORS:
         return [
             f"{prefix}: {owner} {operator.value} is advisory-only and cannot be authored as a "
             f"{finding_kind.value}; it would never block",
         ]
-    if finding_kind is VerificationFindingKind.ADVISORY and operator in _BLOCKING_ONLY_OPERATORS:
+    if finding_kind is VerificationFindingKind.ADVISORY and operator in BLOCKING_ONLY_OPERATORS:
         return [
             f"{prefix}: {owner} {operator.value} is blocking-only and cannot be authored as "
             f"{finding_kind.value}; it would never fire",

@@ -38,9 +38,9 @@ from .supervisor_test_support import (
     ResumableReviewExecutor,
     _capabilities,
     _registry,
-    _repositories,
     _request,
     _supervisor,
+    operation_repositories,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -56,7 +56,7 @@ def test_commit_timing_keeps_nested_durable_effect_and_failure_boundaries(
     fail_diagnostics: bool,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         effects: list[str] = []
@@ -181,7 +181,7 @@ async def wait_for_executor_entry(entered: asyncio.Event, settlement: asyncio.Ta
 @pytest.mark.parametrize("boundary", [AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, None])
 def test_refusal_prevents_the_corresponding_supervisor_boundary(tmp_path: Path, boundary: AccessAction | None) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         executor, authority = Executor(), Authorization()
@@ -230,7 +230,7 @@ def test_refusal_prevents_the_corresponding_supervisor_boundary(tmp_path: Path, 
 
 def test_a_refused_frontend_start_settles_and_frees_its_subject(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         executor, authority = Executor(), Authorization()
@@ -265,7 +265,7 @@ def test_a_refused_frontend_start_settles_and_frees_its_subject(tmp_path: Path) 
 
 def test_revocation_after_start_admission_prevents_actual_executor_entry(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         executor, authority = Executor(), Authorization()
@@ -324,7 +324,7 @@ class ConcurrentExecutor:
 
 def test_concurrent_sections_do_not_inherit_another_tasks_guard(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         authority = Authorization()
@@ -352,7 +352,7 @@ def test_concurrent_sections_do_not_inherit_another_tasks_guard(tmp_path: Path) 
 
 def test_denied_checkpoint_resume_preserves_the_recoverable_record(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         entered, release = asyncio.Event(), asyncio.Event()
@@ -400,7 +400,7 @@ def test_denied_checkpoint_resume_preserves_the_recoverable_record(tmp_path: Pat
 @pytest.mark.parametrize("expired", [False, True])
 def test_continuation_respects_exact_owner_then_rechecks_executor_authority(tmp_path: Path, expired: bool) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "operations", profile_objects=profile.repository
         )
         executor, authority = Executor(), Authorization()

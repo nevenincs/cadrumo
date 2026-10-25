@@ -765,7 +765,7 @@ def _request(*, subject_ref: str = "subject:one", idempotency_key: str | None = 
     )
 
 
-def _repositories(
+def operation_repositories(
     *,
     storage_root: Path,
     profile_objects: SecureObjectRepository,
@@ -855,7 +855,9 @@ def _admission_supervisor(
     build: Callable[[], object],
     capabilities: OperationCapabilities | None = None,
 ) -> tuple[OperationSupervisor, OperationJournalRepository]:
-    journal, leases, operands = _repositories(storage_root=tmp_path / "durable-state", profile_objects=profile_objects)
+    journal, leases, operands = operation_repositories(
+        storage_root=tmp_path / "durable-state", profile_objects=profile_objects
+    )
     supervisor = _supervisor(
         registry=_registry(executor_type=executor_type, build=build, capabilities=capabilities),
         journal=journal,
@@ -956,7 +958,9 @@ def _abandon_running_operation(
     tmp_path: Path, profile_objects: SecureObjectRepository
 ) -> tuple[OperationJournalRepository, OperationLeaseFilesystemRepository, OperationSecureReferenceRepository, str]:
     """Leave a started operation whose host closed mid-run, with a one-minute lease nobody renews."""
-    journal, leases, operands = _repositories(storage_root=tmp_path / "durable-state", profile_objects=profile_objects)
+    journal, leases, operands = operation_repositories(
+        storage_root=tmp_path / "durable-state", profile_objects=profile_objects
+    )
     started = asyncio.Event()
     executor = WaitingExecutor(started=started, release=asyncio.Event())
     owner = _supervisor(

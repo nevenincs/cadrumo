@@ -45,10 +45,10 @@ from .supervisor_test_support import (
     _capabilities,
     _close_host_over_live_executor,
     _registry,
-    _repositories,
     _request,
     _response,
     _supervisor,
+    operation_repositories,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -58,7 +58,9 @@ def test_detach_preserves_real_journal_cursor_replay_and_pending_interaction(tmp
     """Detaching only re-reads durable state; a new observer replays its exact cursor."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         registry = _registry(
             executor_type=ReviewExecutor,
             build=ReviewExecutor,
@@ -75,7 +77,7 @@ def test_detach_preserves_real_journal_cursor_replay_and_pending_interaction(tmp
         response = _response(intent="reject", operation_id=operation_id, revision=waiting.revision)
         assert isinstance(response, OperationRejectResponse)
         consumed = asyncio.run(supervisor.reject(response))
-        observer_journal, observer_leases, observer_operands = _repositories(
+        observer_journal, observer_leases, observer_operands = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
         observer = _supervisor(
@@ -104,7 +106,7 @@ def test_detach_preserves_real_journal_cursor_replay_and_pending_interaction(tmp
 def test_duplicate_response_is_refused_after_detach_and_same_owner_supervisor_reconstruction(tmp_path: Path) -> None:
     """The persisted consumed checkpoint survives reconstruction by its same durable owner."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(
@@ -155,7 +157,9 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         registry = _registry(
             executor_type=ResumableReviewExecutor,
             build=build,
@@ -187,7 +191,7 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
             token="5" * 64,
             clock=lambda: recovered_at,
         )
-        reloaded_journal, reloaded_leases, _ = _repositories(
+        reloaded_journal, reloaded_leases, _ = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
         scope_ref = operation_conflict_scope_reference(
@@ -238,7 +242,9 @@ def test_expired_running_operation_reconciles_to_unknown_interruption_without_fa
     executor = WaitingExecutor(started=started, release=asyncio.Event())
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         registry = _registry(executor_type=WaitingExecutor, build=lambda: executor)
         owner = _supervisor(
             registry=registry,
@@ -263,7 +269,7 @@ def test_expired_running_operation_reconciles_to_unknown_interruption_without_fa
             clock=lambda: recovered_at,
         )
         terminal = asyncio.run(recovery.reconcile(operation_id))
-        reloaded_journal, reloaded_leases, _ = _repositories(
+        reloaded_journal, reloaded_leases, _ = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
         reloaded = asyncio.run(reloaded_journal.load(operation_id))
@@ -289,8 +295,10 @@ def test_detached_cancellation_race_persists_acknowledgement_before_terminal_set
     executor = DeadlineAcknowledgingExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
-        reloaded_journal, reloaded_leases, _ = _repositories(
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
+        reloaded_journal, reloaded_leases, _ = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
         supervisor = _supervisor(
@@ -363,8 +371,10 @@ def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settle
     instant = [datetime.now(UTC)]
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
-        reloaded_journal, reloaded_leases, _ = _repositories(
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
+        reloaded_journal, reloaded_leases, _ = operation_repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
         supervisor = _supervisor(

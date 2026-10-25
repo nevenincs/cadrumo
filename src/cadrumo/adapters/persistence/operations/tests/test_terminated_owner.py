@@ -19,7 +19,7 @@ from cadrumo.application.operations.persistence.leases import OperationOwnerLeas
 from cadrumo.application.operations.terminated_owner import settle_terminated_operation
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 
-from .supervisor_test_support import _NOW, IdleExecutor, _registry, _repositories, _request, _supervisor
+from .supervisor_test_support import _NOW, IdleExecutor, _registry, _request, _supervisor, operation_repositories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -27,7 +27,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 @pytest.mark.parametrize("entered", [False, True])
 def test_dead_owner_settlement_is_atomic_and_never_resolves_operands(tmp_path: Path, entered: bool) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(storage_root=tmp_path / "journal", profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=tmp_path / "journal", profile_objects=profile.repository
+        )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
 
         async def exercise() -> None:
@@ -110,7 +112,9 @@ def test_dead_owner_settlement_is_atomic_and_never_resolves_operands(tmp_path: P
 
 def test_expired_dead_owner_lease_is_not_renewed_or_released(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(storage_root=tmp_path / "journal", profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=tmp_path / "journal", profile_objects=profile.repository
+        )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
 
         async def exercise() -> None:
@@ -149,7 +153,7 @@ def test_expired_dead_owner_lease_is_not_renewed_or_released(tmp_path: Path) -> 
 def test_raced_lease_replacement_cannot_be_settled_by_dead_owner(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "journal"
-        journal, leases, operands = _repositories(storage_root=root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(storage_root=root, profile_objects=profile.repository)
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
 
         class RacingJournal(OperationJournalRepository):

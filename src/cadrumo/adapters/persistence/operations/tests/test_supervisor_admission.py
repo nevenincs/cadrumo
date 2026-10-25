@@ -70,9 +70,9 @@ from .supervisor_test_support import (
     _capabilities,
     _drifted_registry,
     _registry,
-    _repositories,
     _request,
     _supervisor,
+    operation_repositories,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -85,7 +85,9 @@ def test_timed_out_settlement_refuses_live_executor_before_durable_terminal_comm
     executor = WaitingExecutor(started=started, release=release)
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         supervisor = _supervisor(
             registry=_registry(executor_type=WaitingExecutor, build=lambda: executor),
             journal=journal,
@@ -159,7 +161,9 @@ def test_interrupted_settlement_refuses_known_live_executor_without_mutating_the
     executor = WaitingExecutor(started=started, release=release)
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         supervisor = _supervisor(
             registry=_registry(
                 executor_type=WaitingExecutor,
@@ -214,7 +218,9 @@ def test_filesystem_journal_refuses_non_current_operation_snapshots_without_rewr
     """Pre-release operation journals reject a superseded snapshot without rewriting it."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
         supervisor = _supervisor(
             registry=registry,
@@ -244,7 +250,9 @@ def test_filesystem_journal_refuses_non_current_operation_snapshots_without_rewr
 def test_supervisor_refuses_registry_drift_against_the_pinned_invocation_digest(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         original_registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
         owner = _supervisor(
             registry=original_registry,
@@ -288,7 +296,9 @@ def test_loaded_snapshot_routes_refuse_definition_drift_before_return_or_mutatio
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
         owner = _supervisor(
             registry=registry,
@@ -330,7 +340,7 @@ def test_loaded_snapshot_routes_refuse_definition_drift_before_return_or_mutatio
 def test_submit_replays_a_durable_idempotency_claim_without_second_lease_acquisition(tmp_path: Path) -> None:
     """A replay returns its original operation after the first real durable submit."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
@@ -356,7 +366,7 @@ def test_submit_replays_a_durable_idempotency_claim_without_second_lease_acquisi
 def test_submit_excludes_only_the_exact_definition_subject_conflict_scope(tmp_path: Path) -> None:
     """One definition-subject lease conflicts, while a distinct subject coexists."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
@@ -389,7 +399,7 @@ def test_submit_excludes_only_the_exact_definition_subject_conflict_scope(tmp_pa
 def test_submit_refuses_a_subclass_of_the_registered_request_type(tmp_path: Path) -> None:
     """Admission is exact: a subclass is refused before any lease or journal write, the registered type is not."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
@@ -428,7 +438,7 @@ def test_start_hands_the_executor_exactly_the_registered_request_type(tmp_path: 
     """The real encrypted store restores the submitted operand as the registered type itself."""
     executor = PayloadTypeRecordingExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
@@ -450,7 +460,7 @@ def test_start_refuses_a_restored_operand_that_is_not_exactly_the_registered_typ
     """Restore is exact whatever store is wired: a look-alike operand never reaches the executor."""
     executor = PayloadTypeRecordingExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, store = _repositories(
+        journal, leases, store = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
@@ -493,7 +503,7 @@ def test_start_refuses_each_undeclared_executor_mutation_after_only_the_safe_sta
     reads as an operator-facing failure.
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = _supervisor(
@@ -529,7 +539,9 @@ def test_start_settles_registered_executor_refusal_without_persisting_its_sensit
     """One registered refusal becomes its canonical code rather than captured exception prose."""
     storage_root = tmp_path / "durable-state"
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         supervisor = _supervisor(
             registry=_registry(executor_type=RegisteredRefusalExecutor, build=RegisteredRefusalExecutor),
             journal=journal,
@@ -558,7 +570,9 @@ def test_start_settles_unexpected_executor_failure_with_correlated_opaque_diagno
     storage_root = tmp_path / "durable-state"
     executor = UnexpectedFailureExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         supervisor = _supervisor(
             registry=_registry(
                 executor_type=UnexpectedFailureExecutor,
@@ -610,7 +624,9 @@ def test_start_normalizes_registered_non_refusal_error_to_safe_failed_diagnostic
     """A registered error category other than refusal fails closed without persisting its detail."""
     storage_root = tmp_path / "durable-state"
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         supervisor = _supervisor(
             registry=_registry(executor_type=RegisteredErrorExecutor, build=RegisteredErrorExecutor),
             journal=journal,
@@ -649,7 +665,7 @@ def test_start_normalizes_registered_non_refusal_error_to_safe_failed_diagnostic
 def test_submit_conflict_does_not_publish_an_orphan_idempotency_claim(tmp_path: Path) -> None:
     """A real conflict leaves the retry key free until its journal exists."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
@@ -701,7 +717,7 @@ def test_submit_journal_create_refusal_releases_the_exact_lease_for_retry(tmp_pa
     """A post-acquisition journal refusal releases its exact lease before retry."""
     with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=storage_root,
             profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
         )

@@ -49,9 +49,9 @@ from .supervisor_test_support import (
     SupervisorRequest,
     SupervisorResult,
     _registry,
-    _repositories,
     _request,
     _supervisor,
+    operation_repositories,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -94,7 +94,9 @@ def test_a_malformed_predicate_settles_refused_with_its_code_and_refusal_reason(
     registry = _opted_in_registry()
     storage_root = tmp_path / "durable-state"
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         supervisor = _supervisor(
             registry=registry,
             journal=journal,

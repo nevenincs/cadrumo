@@ -88,7 +88,6 @@ from __future__ import annotations
 import ast
 import asyncio
 import base64
-import importlib
 import os
 import re
 import traceback
@@ -121,12 +120,12 @@ from ...adapters.outbound.aeat.browser.factory import (
     shared_playwright_runtime,
 )
 from ...adapters.outbound.aeat.browser.profile import Profile
-from ...adapters.outbound.aeat.browser.session import BrowserSession
+from ...adapters.outbound.aeat.browser.session import BrowserSession, require_browser_ready
 from ...adapters.outbound.llm.evidence_draft_text import default_extraction_authority_values
 from ...adapters.outbound.llm.statement_reading import LocalStatementReader
 from ...adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposal
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
-from ...adapters.persistence.operations.tests.supervisor_test_support import _repositories
+from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.ledger.column_roles import ColumnRoleReaderUnavailable, column_role_mapping_resolver
 from ...application.ledger.document_transcription import DocumentTranscription
@@ -174,6 +173,8 @@ from ..adapter_composition import build_ledger_evidence_ports, profile_adapter_c
 from ..invoice_intake_operation_composition import build_invoice_intake_ports
 from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 from ..ledger_llm_composition import compose_ledger_llm
+from ..live_state_composition import preflight_filed_history_provider
+from ..operation_composition import _verify_live_preflight
 from .dependency_operation_gating_support import (
     OperationSettler,
     SettledOperation,
@@ -1029,13 +1030,6 @@ def _operation_problems(settled: SettledOperation, posts: Sequence[str], role: M
 _FIXTURE_PROFILE = Profile(name="consumer-gating")
 
 
-def _resolve(origin: str) -> Callable[..., object]:
-    module, name = origin.rsplit(".", 1)
-    resolved = getattr(importlib.import_module(module), name)
-    assert callable(resolved), origin
-    return resolved
-
-
 def _drive_create_browser_session(settings: Settings) -> object:
     return asyncio.run(create_browser_session(settings, _FIXTURE_PROFILE))
 
@@ -1076,20 +1070,16 @@ _BROWSER_STARTS: Mapping[str, Callable[[Settings], object]] = {
 def _drive_live_preflight(settings: Settings) -> object:
     del settings
     with bundled_indexed_authority().operation() as operation:
-        return _resolve("cadrumo.entrypoints.live_state_composition.preflight_filed_history_provider")(
-            uuid4(), operation
-        )
+        return preflight_filed_history_provider(uuid4(), operation)
 
 
 def _drive_identity_check_preflight(settings: Settings) -> object:
     with bundled_indexed_authority().operation() as operation:
-        return _resolve("cadrumo.entrypoints.operation_composition._verify_live_preflight")(
-            settings, uuid4(), operation
-        )
+        return _verify_live_preflight(settings, uuid4(), operation)
 
 
 def _drive_sign_in_readiness(settings: Settings) -> object:
-    return _resolve(_BROWSER_READY)(settings, profile_name=_FIXTURE_PROFILE.name)
+    return require_browser_ready(settings, profile_name=_FIXTURE_PROFILE.name)
 
 
 #: Every preflight handed to a browser operation, with the driver that calls it as its executor does.
@@ -1562,7 +1552,7 @@ def _settle_fixture_read(tmp_path: Path, *, swallow: bool, publish: bool) -> tup
         runtime_holding_nothing(posts),
         bundled_indexed_authority().operation() as operation,
     ):
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         supervisor = OperationSupervisor(
