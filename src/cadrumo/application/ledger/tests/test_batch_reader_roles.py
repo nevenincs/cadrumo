@@ -30,7 +30,6 @@ from ....core.document_shape import DocumentShape
 from ....core.hardware import AcceleratorKind
 from ....core.model_catalogue import ModelRole
 from ....tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
-from ...local_reader import configured_role_model
 from ...provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
@@ -38,6 +37,7 @@ from ...provisioning import (
     SystemMemoryReading,
     probe_hardware_profile,
 )
+from ...tests.role_model_support import configured_role_model
 from ..batch_ingest import _InferenceLaneState, _reader_role_for
 from ..evidence_input_ports import EvidenceDocumentShapeProbe
 

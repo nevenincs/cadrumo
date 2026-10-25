@@ -28,8 +28,8 @@ from ...application.ledger.invoice_draft_extraction import extract_invoice_draft
 from ...application.ledger.invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
 from ...application.ledger.invoice_draft_records import InvoiceDraft, LabelReadingFallbackCause
 from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-from ...application.local_reader import configured_role_model
 from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from ...application.tests.role_model_support import configured_role_model
 from ...core.config import Settings, load_settings, override_settings
 from ...core.document_shape import DocumentShape
 from ...core.errors.error_codes import build_error_envelope

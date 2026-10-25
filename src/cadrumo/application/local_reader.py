@@ -4,7 +4,7 @@ Invoice extraction reads a text-layer document with the TEXT_EXTRACTION model
 and a scanned one with the VISION_TRANSCRIPTION model; column mapping and the
 supply-nature proposal use their own roles. Each reader loads one model for
 its role, so provisioning, status and the reader itself must resolve the same
-identifier -- :func:`configured_role_model` is that single resolution.
+identifier -- :func:`select_role_model` is that single resolution.
 
 The native component engine installs the local AI and the runtime manager runs
 its one server; the engine's local AI record says where the program and the
@@ -104,7 +104,6 @@ __all__ = [
     "RoleModelTarget",
     "TextExtractionFitnessProbe",
     "admit_local_reader",
-    "configured_role_model",
     "local_ai_settings",
     "local_reader_service",
     "probe_local_reader",
@@ -353,20 +352,6 @@ def _role_setting(role: ModelRole, settings: Settings) -> str:
     return settings.cadrumo_llm_ollama_supply_nature_model
 
 
-def configured_role_model(role: ModelRole, settings: Settings | None = None) -> str | None:
-    """Return the runtime model id the on-host reader for ``role`` actually loads.
-
-    The two document readers load their settings as written. The column mapper
-    and the supply-nature proposer resolve through :func:`select_role_model`,
-    so this returns whatever that selection names -- the operator's setting
-    when it differs from the shipped default, otherwise the catalogue's pick
-    for this machine, whatever its free memory says this moment -- or ``None``
-    when no catalogued model can serve the role.
-    """
-    resolved = settings if settings is not None else load_settings()
-    return _role_model(role, resolved, select_role_model(role, resolved))
-
-
 def _role_model(role: ModelRole, settings: Settings, selection: ModelSelection) -> str | None:
     """Return the model ``role``'s reader sends, which momentary headroom never changes."""
     if role in EXTRACTION_READER_ROLES:
@@ -538,7 +523,7 @@ def probe_local_reader(
         settings: Settings carrying the endpoint and role models.
         installed: An inventory already read; read from the runtime when omitted.
         model: The role model a reader already resolved and will send; resolved
-            through :func:`configured_role_model` when omitted. A reader that
+            through :func:`select_role_model` when omitted. A reader that
             passes the id it sends cannot be checked against another model.
         hardware: This computer's measured hardware; measured when omitted.
 
@@ -629,7 +614,7 @@ def admit_local_reader(
         settings: Settings carrying the endpoint and role models.
         text_probe: The text reader's fitness probe, supplied by composition.
         model: The role model the consumer already resolved and will send;
-            resolved through :func:`configured_role_model` when omitted.
+            resolved through :func:`select_role_model` when omitted.
 
     Returns:
         A :class:`DependencyStatus` on the ``local-reader:<role>`` row.

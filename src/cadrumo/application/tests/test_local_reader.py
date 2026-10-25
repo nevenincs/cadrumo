@@ -26,7 +26,6 @@ from ..local_reader import (
     RoleFitnessOutcome,
     RoleFitnessState,
     admit_local_reader,
-    configured_role_model,
     probe_local_reader,
     read_local_reader_status,
     role_model_targets,
@@ -47,6 +46,7 @@ from ..provisioning_contracts import (
 )
 from ..provisioning_fitness import RoleFitnessVerdict, read_fitness_verdict
 from ..provisioning_runtime import InstalledModel, assess_model_load_contention, runtime_model_names_match
+from .role_model_support import configured_role_model
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

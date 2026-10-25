@@ -42,7 +42,6 @@ from ...application.ledger.llm_review_operation import (
     build_ledger_llm_review_registration,
 )
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
-from ...application.local_reader import configured_role_model
 from ...application.operations.error_detail import (
     OperationErrorDetailKind,
     OperationErrorDetailV1,
@@ -57,6 +56,7 @@ from ...application.operations.projection_services import OperationResultProject
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from ...application.tests.role_model_support import configured_role_model
 from ...core.config import load_settings, override_settings
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_catalogue import ModelRole

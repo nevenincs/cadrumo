@@ -35,7 +35,6 @@ from ...application.ledger.evidence_ingestion_operation import (
     build_ledger_evidence_ingestion_definitions,
     build_ledger_evidence_ingestion_registrations,
 )
-from ...application.local_reader import configured_role_model
 from ...application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
@@ -45,6 +44,7 @@ from ...application.operations.projection_services import OperationResultProject
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from ...application.tests.role_model_support import configured_role_model
 from ...core.config import override_settings
 from ...core.model_catalogue import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject

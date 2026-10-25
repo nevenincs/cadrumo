@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....application.local_reader import configured_role_model
+from .....application.tests.role_model_support import configured_role_model
 from .....core.model_catalogue import ModelRole, candidates_for_role, default_model_runtime_id
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from ..supply_nature_proposal import SupplyNatureProposer

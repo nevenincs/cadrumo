@@ -25,7 +25,6 @@ from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
 from ....application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence
 from ....application.ledger.llm_classification_ports import EvidenceImage, LLMClassificationPorts
-from ....application.local_reader import configured_role_model
 from ....application.provisioning import (
     AcceleratorReading,
     HardwareProfile,
@@ -33,6 +32,7 @@ from ....application.provisioning import (
     probe_hardware_profile,
 )
 from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from ....application.tests.role_model_support import configured_role_model
 from ....core.config import Settings, load_settings, override_settings
 from ....core.errors.error_codes import build_error_envelope
 from ....core.hardware import AcceleratorKind

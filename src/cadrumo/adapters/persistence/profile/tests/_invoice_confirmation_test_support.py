@@ -471,7 +471,7 @@ def serving_a_loopback_reader(
     fallback: Mapping[str, str] | None = None,
 ) -> Generator[str]:
     """Serve the deterministic local reading endpoint used by these tests."""
-    from .....application.local_reader import configured_role_model
+    from .....application.tests.role_model_support import configured_role_model
     from .....core.model_catalogue import ModelRole
 
     _LoopbackRequestHandler.replies = tuple(replies)

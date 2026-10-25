@@ -125,7 +125,7 @@ def serving_a_loopback_reader(
     Yields:
         The chat URL, with settings already pointed at it.
     """
-    from ...local_reader import configured_role_model
+    from ...tests.role_model_support import configured_role_model
 
     _LoopbackRequestHandler.replies = tuple(replies)
     _LoopbackRequestHandler.fallback = dict(fallback or {})
