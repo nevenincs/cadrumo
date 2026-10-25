@@ -31,7 +31,8 @@ from ..navigation import (
 )
 from ..presentation import (
     PROFILE_AEAT_AUTH_FOCUS,
-    TUI_VIEWS,
+    TUI_PARAM_FOCUS,
+    TUI_ROUTES,
     opens_aeat_auth,
     presentation_target,
 )
@@ -122,16 +123,16 @@ def _app(
 def test_the_tui_table_covers_exactly_the_registers_tui_views_and_their_parameters() -> None:
     register = load_navigation_register()
     tui_views = register.ids_for(NavigationSurface.TUI)
-    assert TUI_VIEWS.views == tui_views
-    assert set(TUI_VIEWS.params) <= tui_views
+    assert frozenset(TUI_ROUTES) == tui_views
+    assert set(TUI_PARAM_FOCUS) <= tui_views
     for view_id in tui_views:
         element = register.element(view_id)
         assert element is not None
-        assert TUI_VIEWS.params.get(view_id, frozenset()) == frozenset(element.params), view_id
+        assert frozenset(TUI_PARAM_FOCUS.get(view_id, {})) == frozenset(element.params), view_id
 
 
 def test_every_tui_view_opens_a_declared_destination_and_every_destination_is_requestable() -> None:
-    targets = {view_id: presentation_target(ViewLink(view_id=view_id)) for view_id in TUI_VIEWS.views}
+    targets = {view_id: presentation_target(ViewLink(view_id=view_id)) for view_id in TUI_ROUTES}
     assert {target.destination for target in targets.values()} == declared_destination_ids()
     for target in targets.values():
         assert target.focus.destination == target.destination

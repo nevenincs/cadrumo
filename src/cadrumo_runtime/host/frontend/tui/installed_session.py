@@ -269,7 +269,7 @@ async def _run_runtime_session(
         # module the read imports, so no import runs beside another.
         reading = asyncio.ensure_future(asyncio.to_thread(read_profile_language, handoff.client))
         try:
-            import_module(".runtime_workbench", __package__)
+            import_module(f"{__package__}.runtime_workbench")
         finally:
             preference = await reading
         adopt_profile_output_language(preference.language)

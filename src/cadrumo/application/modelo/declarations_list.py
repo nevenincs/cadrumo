@@ -496,15 +496,6 @@ class ModeloDeclarationListRowV1(BaseModel):
     evidence_conflicted: bool = False
 
 
-def worded_declaration_list(
-    workspace: DeclarationsWorkspaceProjectionV1,
-    calendar: DeclarationsCalendarProjectionV1 | None,
-    language: OutputLanguage,
-) -> tuple[ModeloDeclarationListRowV1, ...]:
-    """Every row of the list, in its order, said in the filer's language."""
-    return tuple(worded_list_row(row, language) for row in declaration_list_rows(workspace, calendar))
-
-
 def worded_list_row(row: DeclarationListRow, language: OutputLanguage) -> ModeloDeclarationListRowV1:
     """Say one row in the filer's language, with its step and the AEAT's facts beside its own."""
     step = next_step(row)
@@ -831,7 +822,6 @@ __all__ = [
     "source_words",
     "state_words",
     "worded_creation_targets",
-    "worded_declaration_list",
     "worded_list_row",
     "zone_states",
 ]

@@ -35,13 +35,14 @@ from ..declarations_list import (
     DECLARATION_GROUP_LOCALE_KEYS,
     DeclarationListGroup,
     DeclarationListNextStep,
+    ModeloDeclarationListRowV1,
     calendar_sources,
     deadline_note_words,
     declaration_list_rows,
     group_words,
     source_notices,
     worded_creation_targets,
-    worded_declaration_list,
+    worded_list_row,
     zone_states,
 )
 from ..declarations_list_operation import (
@@ -64,6 +65,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _AS_OF = date(2025, 4, 30)
 _NOW = datetime(2025, 4, 30, 12, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2025, "1T")
+
+
+def worded_declaration_list(
+    workspace: DeclarationsWorkspaceProjectionV1,
+    calendar: DeclarationsCalendarProjectionV1 | None,
+    language: OutputLanguage,
+) -> tuple[ModeloDeclarationListRowV1, ...]:
+    """Every row of the list, in its order, said in ``language``."""
+    return tuple(worded_list_row(row, language) for row in declaration_list_rows(workspace, calendar))
 
 
 def _workspace(*declarations: DeclarationsWorkspaceDeclarationRefV1):

@@ -15,7 +15,7 @@ from typing import Final
 
 from textual.message import Message
 
-from cadrumo_client.contracts.navigation import SurfaceImplementation, ViewLink
+from cadrumo_client.contracts.navigation import ViewLink
 
 from .ledger.controller import LEDGER_TRANSACTION_FOCUS
 from .navigation import TuiDestinationIdV1, TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
@@ -23,7 +23,7 @@ from .navigation import TuiDestinationIdV1, TuiFocusIdentityV1, TuiNavigationTar
 PROFILE_AEAT_AUTH_FOCUS: Final = "profile.aeat_auth"
 """The profile page's focus that opens its AEAT access editor once the page is up."""
 
-_ROUTES: Final[Mapping[str, tuple[TuiDestinationIdV1, str]]] = MappingProxyType(
+TUI_ROUTES: Final[Mapping[str, tuple[TuiDestinationIdV1, str]]] = MappingProxyType(
     {
         "home": ("workbench.home", "presentation.home"),
         "ledger": ("workbench.ledger", "presentation.ledger"),
@@ -40,16 +40,10 @@ _ROUTES: Final[Mapping[str, tuple[TuiDestinationIdV1, str]]] = MappingProxyType(
 )
 """Each register id the TUI implements, with the destination and focus it opens."""
 
-_PARAM_FOCUS: Final[Mapping[str, Mapping[str, str]]] = MappingProxyType(
+TUI_PARAM_FOCUS: Final[Mapping[str, Mapping[str, str]]] = MappingProxyType(
     {"ledger": MappingProxyType({"select": LEDGER_TRANSACTION_FOCUS})}
 )
 """Per register id, each link parameter the TUI honours and the focus that restores its value."""
-
-TUI_VIEWS: Final = SurfaceImplementation(
-    views=frozenset(_ROUTES),
-    params=MappingProxyType({view_id: frozenset(params) for view_id, params in _PARAM_FOCUS.items()}),
-)
-"""What the TUI opens: the register ids it implements and, per id, the parameters it honours."""
 
 
 class PagePresentationRequested(Message):
@@ -70,9 +64,9 @@ def presentation_target(view: ViewLink) -> TuiNavigationTargetV1:
     Raises:
         KeyError: The TUI does not implement the view.
     """
-    route, semantic_key = _ROUTES[view.view_id]
+    route, semantic_key = TUI_ROUTES[view.view_id]
     restore_token: str | None = None
-    honoured = _PARAM_FOCUS.get(view.view_id, {})
+    honoured = TUI_PARAM_FOCUS.get(view.view_id, {})
     for name, value in view.params:
         focus = honoured.get(name)
         if focus is not None:
