@@ -12,9 +12,8 @@ transport itself; the entrypoint composition binds the outbound adapter.
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
 
-from pydantic import BaseModel, Field, NonNegativeInt
+from pydantic import BaseModel, Field
 
 from ..core.hardware import ContentionCause
 from ..core.model_catalogue import ModelRole
@@ -48,7 +47,6 @@ from .provisioning_host import RuntimeHostPlatform, RuntimeInstaller
 __all__ = [
     "LOCAL_READER_STATUS_OPERATION_DEFINITION_ID",
     "LocalReaderHostStatusV1",
-    "LocalReaderLastPullV1",
     "LocalReaderRoleStatusV1",
     "LocalReaderStatusExecutor",
     "LocalReaderStatusPublicResultV1",
@@ -107,18 +105,6 @@ class LocalReaderRoleStatusV1(BaseModel):
     failed_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
 
 
-class LocalReaderLastPullV1(BaseModel):
-    """Public projection of the most recent fetch the serving process attempted."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    model: str = Field(min_length=1)
-    pulled: bool
-    attempted_at: datetime
-    bytes_fetched: NonNegativeInt | None = None
-    failed_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
-
-
 class LocalReaderStatusPublicResultV1(BaseModel):
     """Public projection of the whole local reader at one moment."""
 
@@ -126,7 +112,6 @@ class LocalReaderStatusPublicResultV1(BaseModel):
 
     host: LocalReaderHostStatusV1
     roles: tuple[LocalReaderRoleStatusV1, ...]
-    last_pull: LocalReaderLastPullV1 | None = None
     extraction_ready: bool
     document_readiness: LocalReaderDocumentReadiness
     text_layer_model_fill_available: bool
@@ -190,7 +175,6 @@ def project_local_reader_status_result(result: BaseModel, terminal_receipt: Oper
 def local_reader_status_public_result(status: LocalReaderStatus) -> LocalReaderStatusPublicResultV1:
     """Return the public result of one status read, whichever caller took it."""
     host = status.host
-    last = status.last_pull
     return LocalReaderStatusPublicResultV1(
         host=LocalReaderHostStatusV1(
             platform=host.platform,
@@ -218,17 +202,6 @@ def local_reader_status_public_result(status: LocalReaderStatus) -> LocalReaderS
                 failed_condition_id=row.failed_condition_id,
             )
             for row in status.roles
-        ),
-        last_pull=(
-            None
-            if last is None
-            else LocalReaderLastPullV1(
-                model=last.model,
-                pulled=last.pulled,
-                attempted_at=last.attempted_at,
-                bytes_fetched=last.bytes_fetched,
-                failed_condition_id=last.failed_condition_id,
-            )
         ),
         extraction_ready=status.extraction_ready,
         document_readiness=status.document_readiness,

@@ -8,8 +8,8 @@ import playwright
 import pytest
 from pydantic import ValidationError
 
+from ...core.external_constants import load_external_constants
 from ..browser_archive_pins import BrowserArchivePins, load_browser_archive_pins
-from ..dependency_network import dependency_hosts
 from ..provisioning_browser import installed_playwright_driver_version
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -124,7 +124,8 @@ def test_the_bundled_table_pins_the_installed_driver_from_declared_hosts_only() 
 
     assert pins is not None
     assert pins.playwright_driver == installed_playwright_driver_version(manifest)
-    assert pins.hosts == dependency_hosts("browser")
-    declared = set(dependency_hosts("browser"))
+    hosts = load_external_constants().dependency_hosts.hosts_for("browser")
+    assert pins.hosts == hosts
+    declared = set(hosts)
     for pin in pins.archives:
         assert all(url.split("/")[2] in declared for url in pin.urls)

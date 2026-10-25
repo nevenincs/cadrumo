@@ -1,12 +1,9 @@
-"""Supervised operation for provisioning the local document reader from any frontend.
+"""Supervised operation for loading and measuring the local document reader's models from any frontend.
 
-One definition, ``local-reader.provision``, carries the local-reader actions
-that download nothing -- start, load, verify and remove -- so a TUI button and
-``aeat config provision <verb>`` run the same implementation. Installing the
-local model program and fetching models belong to ``dependencies.setup``.
-
-Process control is injected. The application layer never spawns a process
-itself; the entrypoint composition binds the outbound adapters.
+One definition, ``local-reader.provision``, carries the two local-reader
+actions, load and verify, so a TUI button and ``aeat config provision load``
+run the same implementation. Installing, starting and removing the local AI
+belong to the native component engine; no action here starts a process.
 """
 
 from __future__ import annotations
@@ -16,7 +13,6 @@ from collections.abc import Callable
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.operation_ids import LOCAL_READER_OPERATION_DEFINITION_ID
 
 from ..core.operations import (
     OperationCancellation,
@@ -31,6 +27,7 @@ from .local_reader import (
 )
 from .local_reader_contracts import (
     LOCAL_READER_EXECUTE_PHASE,
+    LOCAL_READER_OPERATION_DEFINITION_ID,
     LOCAL_READER_OPERATION_SUBJECT,
     LOCAL_READER_PREFLIGHT_PHASE,
     LOCAL_READER_SETTLEMENT_PHASE,
@@ -40,7 +37,7 @@ from .local_reader_contracts import (
     LocalReaderProvisionRequest,
     project_local_reader_result,
 )
-from .local_reader_provisioning import LocalReaderProvisionExecutor, RuntimeServerOwnerStart
+from .local_reader_provisioning import LocalReaderProvisionExecutor
 from .operations.access_resolution import (
     LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
     OperationAccessContext,
@@ -65,7 +62,6 @@ from .operations.registry import (
     OperationSchemaBindingV1,
 )
 from .operations.subject_reference import OperationSubjectReferenceV1
-from .provisioning_host import RuntimeSpawner
 from .user_profile.access_errors import ProfileAccessRefusedError
 
 __all__ = [
@@ -80,8 +76,6 @@ __all__ = [
 LOCAL_READER_REQUEST_SCHEMA_VERSION = 3
 LOCAL_READER_RESULT_SCHEMA_VERSION = 3
 
-_ENGINE_ACTIONS = frozenset({LocalReaderProvisionAction.START, LocalReaderProvisionAction.REMOVE})
-
 _PHASES = (
     LOCAL_READER_PREFLIGHT_PHASE,
     LOCAL_READER_EXECUTE_PHASE,
@@ -89,19 +83,11 @@ _PHASES = (
 )
 
 
-def build_local_reader_operation_definition(
-    *,
-    spawn: RuntimeSpawner | RuntimeServerOwnerStart,
-    text_probe: TextExtractionFitnessProbe,
-) -> OperationDefinition:
-    """Bind the injected process and fitness ports to the canonical provisioning operation.
-
-    ``spawn`` starts the runtime's server from the executing process, or
-    through the process that owns it when the executing one is contained.
-    """
+def build_local_reader_operation_definition(*, text_probe: TextExtractionFitnessProbe) -> OperationDefinition:
+    """Bind the injected fitness port to the canonical local-reader operation."""
 
     def build() -> LocalReaderProvisionExecutor:
-        return LocalReaderProvisionExecutor(spawn=spawn, text_probe=text_probe)
+        return LocalReaderProvisionExecutor(text_probe=text_probe)
 
     return OperationDefinition(
         definition_id=LOCAL_READER_OPERATION_DEFINITION_ID,
@@ -125,8 +111,7 @@ def build_local_reader_operation_definition(
             sensitive_input=OperationSensitiveInputPolicy.NONE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
-            # Loading or removing several models can commit only part of
-            # what was asked.
+            # Loading several models can commit only part of what was asked.
             permitted_effects=frozenset(OperationEffect),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
@@ -168,9 +153,8 @@ def bind_machine_provisioning_access[PayloadT: BaseModel](
 
     What is provisioned belongs to the machine, so the request names no profile
     and its subject is the fixed one the operation declares. A request that
-    can install, start, load or remove something carries COMMIT, so a session
-    whose scope holds none is refused it at submission; one that only measures
-    does not.
+    changes something carries COMMIT, so a session whose scope holds none is
+    refused it at submission; one that only measures does not.
     """
     payload = require_access_request_payload(request, definition_id=definition_id, payload_type=payload_type)
     if context.contract.definition_id != definition_id:
@@ -188,17 +172,11 @@ def bind_machine_provisioning_access[PayloadT: BaseModel](
 def resolve_local_reader_provision_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Bind access to the machine's reader, with COMMIT for every action but verify.
+    """Bind access to the machine's reader, with COMMIT for load and none for verify.
 
     Verify measures and changes nothing; load changes what the running program
-    holds in memory. Starting the program and removing a model belong to the
-    native component engine, so they are refused here before anything runs.
+    holds in memory.
     """
-    payload = require_access_request_payload(
-        request, definition_id=LOCAL_READER_OPERATION_DEFINITION_ID, payload_type=LocalReaderProvisionRequest
-    )
-    if payload.action in _ENGINE_ACTIONS:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return bind_machine_provisioning_access(
         request,
         context,

@@ -40,8 +40,6 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerModelRunResult,
     WorkerResponseScopePermit,
     WorkerResponseScopeRequest,
-    WorkerServerStart,
-    WorkerServerStarted,
 )
 from cadrumo_runtime.contracts.worker_enrollment import (
     WorkerApprovalPhaseResult,
@@ -52,7 +50,6 @@ from cadrumo_runtime.contracts.worker_enrollment import (
 )
 
 from ..application.approval_binding import RuntimeApprovalBinding
-from .worker_authorization import runtime_server_start_definitions
 from .worker_authorization_connections import WorkerAuthorizationConnections
 from .worker_authorization_refusals import raise_worker_access_refusal
 from .worker_transport import WorkerChannel
@@ -85,7 +82,6 @@ class WorkerAuthorizationLease:
             None
         )
         self._publication_sent = False
-        self._runtime_server_start_sent = False
         self._model_run_sent = False
 
     def _commit_phase(self, stage: str) -> None:
@@ -174,38 +170,6 @@ class WorkerAuthorizationLease:
         ):
             raise RefusalError(RefusalCode.INVALID_FRAME)
         return EnrollmentTransition(receipt=reply.receipt, published=reply.published)
-
-    def start_runtime_server(self) -> int | None:
-        """Ask the runtime to start the model runtime's server over this exact held COMMIT channel.
-
-        Returns the server's process id, or ``None`` when the runtime started
-        nothing. Nothing this process located is sent: the runtime resolves the
-        program and its environment itself.
-        """
-        channel, permit, request = self._channel, self._permit, self.request
-        if (
-            channel is None
-            or not isinstance(permit, WorkerAuthorizationPermit)
-            or not isinstance(request, WorkerAuthorizationRequest)
-            or request.request.action is not AccessAction.COMMIT
-            or request.request.definition_id not in runtime_server_start_definitions()
-            or self._runtime_server_start_sent
-        ):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        command = WorkerServerStart(request_id=request.request_id, permit_id=permit.permit_id, command_id=uuid4())
-        self._runtime_server_start_sent = True
-        self._settled = False
-        write_document(channel, command, deadline=exchange_deadline())
-        reply = read_document(channel, WorkerServerStarted, deadline=exchange_deadline())
-        if (
-            reply.request_id != request.request_id
-            or reply.permit_id != permit.permit_id
-            or reply.command_id != command.command_id
-            or reply.runtime_boot_id != self.identity.runtime_boot_id
-        ):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        self._settled = True
-        return reply.process_id
 
     def model_run(
         self, role: str, header: ModelRunHeader | None, body: bytearray, *, answer_seconds: float

@@ -2,15 +2,15 @@
 
 Every run goes through the real registry, supervisor, journal and encrypted
 operand store. The model runtime is a real loopback endpoint speaking the
-Ollama wire shapes; only the process spawner and the text fitness probe are
-injected ports, as production composition injects them.
+Ollama wire shapes; only the text fitness probe is an injected port, as
+production composition injects it.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Callable, Coroutine, Generator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -25,7 +25,6 @@ from .....application.local_reader_operation import (
     build_local_reader_operation_definition,
     build_local_reader_operation_registration,
 )
-from .....application.local_reader_provisioning import RuntimeServerOwnerStart
 from .....application.local_reader_report import (
     build_local_reader_report_definition,
     build_local_reader_report_registration,
@@ -41,7 +40,7 @@ from .....application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from .....application.operations.models import OperationIdentity, OperationRequest
+from .....application.operations.models import OperationRequest
 from .....application.operations.registry import OperationRegistry
 from .....application.operations.tests.authority_test_support import unread_authority_operation
 from .....core.config import Settings, override_settings
@@ -167,28 +166,11 @@ def loopback_model_runtime(
 
 
 class ProvisioningPorts:
-    """Injected process and fitness ports that record every call."""
+    """The injected fitness port, recording every call."""
 
-    def __init__(
-        self,
-        *,
-        owner_start: Callable[[OperationIdentity], Coroutine[None, None, int | None]] | None = None,
-    ) -> None:
-        """Start with nothing spawned or probed.
-
-        ``owner_start`` binds the runtime server start to the process that owns
-        the executing one, as a contained worker binds it, in place of
-        :meth:`spawn`.
-        """
-        self.spawned: list[Path] = []
+    def __init__(self) -> None:
+        """Start with nothing probed."""
         self.probed: list[str] = []
-        self.owner_start = owner_start
-
-    def spawn(self, executable: Path, env: Mapping[str, str]) -> int:
-        """Record a runtime server start and report a process id."""
-        del env
-        self.spawned.append(executable)
-        return 1
 
     def probe(self, model: str, settings: Settings) -> RoleFitnessOutcome:
         """Record a fitness probe and report the model fit."""
@@ -207,10 +189,7 @@ class ProvisioningPorts:
 
 def provisioning_registry(ports: ProvisioningPorts) -> OperationRegistry:
     """Register the three local-reader operations over ``ports``."""
-    provision = build_local_reader_operation_definition(
-        spawn=ports.spawn if ports.owner_start is None else RuntimeServerOwnerStart(ports.owner_start),
-        text_probe=ports.probe,
-    )
+    provision = build_local_reader_operation_definition(text_probe=ports.probe)
     status = build_local_reader_status_definition(text_probe=ports.probe)
     report = build_local_reader_report_definition()
     return OperationRegistry(

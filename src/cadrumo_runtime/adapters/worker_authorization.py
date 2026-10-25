@@ -8,7 +8,6 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack, suppress
 from datetime import datetime
-from functools import cache
 from pathlib import Path
 from threading import BoundedSemaphore, Event, Thread
 from uuid import UUID, uuid4, uuid5
@@ -55,8 +54,6 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerOperationsAdvanced,
     WorkerResponseScopePermit,
     WorkerResponseScopeRequest,
-    WorkerServerStart,
-    WorkerServerStarted,
 )
 from cadrumo_runtime.contracts.worker_enrollment import (
     WorkerApprovalPhaseResult,
@@ -68,16 +65,6 @@ from cadrumo_runtime.contracts.worker_enrollment import (
 
 from .native_peer import require_live_native_peer
 from .worker_transport import WorkerChannel, worker_endpoint
-
-
-@cache
-def runtime_server_start_definitions() -> frozenset[str]:
-    """Return the operations whose held COMMIT fence may ask the runtime to start the model program's server.
-
-    None may: starting the local model program belongs to the native component
-    engine, so no product operation can have the runtime start it.
-    """
-    return frozenset[str]()
 
 
 def worker_authorization_namespace(worker_id: UUID) -> UUID:
@@ -128,19 +115,11 @@ class WorkerAuthorizationServer:
         contain: Callable[[], None],
         owner: WorkerAuthorizationOwner | None,
         wall_clock: Callable[[], datetime] = now,
-        runtime_server_starter: Callable[[], int | None] | None = None,
     ) -> None:
-        """Claim a private worker namespace before any operation can request authority.
-
-        ``runtime_server_starter`` starts the model runtime's server from this
-        process and returns its process id, or ``None`` when it started
-        nothing. Without one, a worker's start instruction is answered with
-        nothing started.
-        """
+        """Claim a private worker namespace before any operation can request authority."""
         self.identity, self._pid = identity, process_id
         self._owns_process, self._contain, self._owner = owns_process, contain, owner
         self._wall_clock = wall_clock
-        self._runtime_server_starter = runtime_server_starter
         # A stage's wait for the worker's next frame blocks on this stop too.
         self._stop, self._failed = NativeWake(), Event()
         self._slots = BoundedSemaphore(WORKER_AUTHORIZATION_CONNECTIONS)
@@ -426,11 +405,7 @@ class WorkerAuthorizationServer:
             if isinstance(instruction, WorkerModelRun):
                 self._model_run(channel, self._owner, request, instruction, permit_id)
                 continue
-            reply: AccessRefusal | WorkerApprovalPublished | WorkerServerStarted
-            if isinstance(instruction, WorkerServerStart):
-                reply = self._runtime_server_start_result(request, instruction, permit_id)
-            else:
-                reply = self._publication_result(self._owner, request, instruction, permit_id)
+            reply = self._publication_result(self._owner, request, instruction, permit_id)
             write_document(channel, reply, deadline=time.monotonic() + _FRAME_SECONDS)
 
     def _model_run(
@@ -574,33 +549,6 @@ class WorkerAuthorizationServer:
         if expires <= self._wall_clock():
             raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
         return expires
-
-    def _runtime_server_start_result(
-        self,
-        request: WorkerAuthorizationRequest,
-        instruction: WorkerServerStart,
-        permit_id: UUID,
-    ) -> WorkerServerStarted:
-        """Start the model runtime's server from this process for the worker that may not own one.
-
-        Only the held COMMIT fence of an operation named by
-        :func:`runtime_server_start_definitions` admits the instruction. The
-        worker sends no program and no environment, so its containment still
-        bounds everything it can run.
-        """
-        if (
-            request.request.action is not AccessAction.COMMIT
-            or request.request.definition_id not in runtime_server_start_definitions()
-        ):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        starter = self._runtime_server_starter
-        return WorkerServerStarted(
-            request_id=request.request_id,
-            permit_id=permit_id,
-            command_id=instruction.command_id,
-            runtime_boot_id=self.identity.runtime_boot_id,
-            process_id=None if starter is None else starter(),
-        )
 
     def _publication_result(
         self,

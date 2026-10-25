@@ -30,17 +30,8 @@ from textual.widgets import Button, DataTable, Static
 from cadrumo.tests.components_role_dispatch import RoleReplay
 
 from .....adapters.outbound.aeat.browser.session import require_browser_ready
-from .....application.dependency_contracts import (
-    DependencyBlockedReason,
-    DependencyCheckMode,
-    DependencyProbeOutcome,
-    DependencyProbeReading,
-    DependencyStatusRow,
-)
-from .....application.dependency_registry import (
-    dependency_item_declarations,
-    derive_dependency_row,
-)
+from .....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
+from .....application.dependency_contracts import DependencyStatusRow
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
 from .....application.local_reader import probe_local_reader
 from .....application.modelo.operation_definitions import (
@@ -227,26 +218,6 @@ class _RefusedController:
         raise AssertionError("a settled operation is not detached")
 
 
-def _row(item_id: str, reading: DependencyProbeOutcome) -> DependencyStatusRow:
-    """The item's quick-status row, derived by the real registry from one probe reading."""
-    declaration = next(declaration for declaration in dependency_item_declarations() if declaration.item_id == item_id)
-    blocked = DependencyBlockedReason.NOT_IN_THIS_BUILD if reading is DependencyProbeOutcome.BLOCKED else None
-    return derive_dependency_row(
-        declaration,
-        DependencyProbeReading(
-            item_id=item_id, mode=DependencyCheckMode.QUICK, outcome=reading, blocked_reason=blocked
-        ),
-    )
-
-
-def _absent(item_id: str) -> DependencyStatusRow:
-    return _row(item_id, DependencyProbeOutcome.ABSENT)
-
-
-def _not_in_this_build(item_id: str) -> DependencyStatusRow:
-    return _row(item_id, DependencyProbeOutcome.BLOCKED)
-
-
 class _Host(App[None]):
     """Opens one modal, keeps its outcome, and records every setup navigation request it receives.
 
@@ -314,7 +285,7 @@ def test_a_refusal_names_the_setup_item_its_recorded_verdict_asks_for(tmp_path: 
 @pytest.mark.asyncio
 async def test_a_missing_browser_refusal_offers_its_setup_and_asks_the_root_to_open_it(tmp_path: Path) -> None:
     detail = _browser_detail(tmp_path)
-    host = _Host(_controller(detail), rows=(_absent("browser"), _absent("local_ai")))
+    host = _Host(_controller(detail), rows=(recorded_absent_row("browser"), recorded_absent_row("local_ai")))
     with override_settings(cadrumo_output_language="en"):
         async with host.run_test(size=_SIZE) as pilot:
             await settle_until(pilot, lambda: _offer(host).display, "the setup offer to be shown")
@@ -338,7 +309,7 @@ async def test_a_missing_browser_refusal_offers_its_setup_and_asks_the_root_to_o
 
 @pytest.mark.asyncio
 async def test_closing_a_local_ai_offer_returns_the_settled_outcome_without_navigating() -> None:
-    host = _Host(_controller(_reader_detail()), rows=(_absent("local_ai"),))
+    host = _Host(_controller(_reader_detail()), rows=(recorded_absent_row("local_ai"),))
     with override_settings(cadrumo_output_language="en"):
         async with host.run_test(size=_SIZE) as pilot:
             await settle_until(pilot, lambda: _offer(host).display, "the setup offer to be shown")
@@ -354,7 +325,7 @@ async def test_closing_a_local_ai_offer_returns_the_settled_outcome_without_navi
 @pytest.mark.asyncio
 @pytest.mark.parametrize("detail", [_hardware_detail(), None], ids=["no-recovery verdict", "no detail"])
 async def test_a_refusal_setup_cannot_fix_closes_the_modal_at_once(detail: OperationErrorDetailV1 | None) -> None:
-    host = _Host(_controller(detail), rows=(_absent("local_ai"),))
+    host = _Host(_controller(detail), rows=(recorded_absent_row("local_ai"),))
     async with host.run_test(size=_SIZE) as pilot:
         await settle_until(pilot, lambda: host.closed, "the modal to close on settlement")
 
@@ -368,7 +339,7 @@ async def test_a_refusal_setup_cannot_fix_closes_the_modal_at_once(detail: Opera
 async def test_a_blocked_item_shows_its_own_sentence_and_offers_no_setup() -> None:
     """While this build sets nothing up, the local AI reads blocked: its sentence stands in for the offer."""
     detail = _reader_detail()
-    host = _Host(_controller(detail), rows=(_not_in_this_build("local_ai"),))
+    host = _Host(_controller(detail), rows=(not_in_this_build_row("local_ai"),))
     with override_settings(cadrumo_output_language="en"):
         async with host.run_test(size=_SIZE) as pilot:
             reason = host.modal.query_one("#operation-modal-setup", Static)

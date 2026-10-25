@@ -40,8 +40,8 @@ from cadrumo.application.browser_archive_pins import (
     BrowserArchivePins,
     load_browser_archive_pins,
 )
-from cadrumo.application.dependency_network import dependency_hosts
 from cadrumo.application.provisioning_browser import installed_playwright_driver_version
+from cadrumo.core.external_constants import load_external_constants
 from dev import exit_codes
 from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
@@ -73,6 +73,11 @@ class ListedArchive:
     directory_name: str
     path: str
     urls: tuple[str, ...]
+
+
+def _browser_hosts() -> tuple[str, ...]:
+    """Return the hosts the browser item's archives may come from, as the external constants declare them."""
+    return load_external_constants().dependency_hosts.hosts_for("browser")
 
 
 def _driver_paths() -> tuple[Path, Path]:
@@ -149,7 +154,7 @@ def check_pins(pins: BrowserArchivePins | None, listed: Sequence[ListedArchive],
     problems: list[str] = []
     if pins.playwright_driver != driver:
         problems.append(f"pins are for driver {pins.playwright_driver}, the locked driver is {driver}")
-    if pins.hosts != dependency_hosts("browser"):
+    if pins.hosts != _browser_hosts():
         problems.append("the pinned hosts are not the declared browser hosts")
     expected: dict[tuple[str, str], tuple[str, tuple[str, ...]]] = {
         (a.platform, a.directory_name): (a.path, a.urls) for a in listed
@@ -164,7 +169,7 @@ def check_pins(pins: BrowserArchivePins | None, listed: Sequence[ListedArchive],
     for key in sorted(expected.keys() & actual.keys()):
         if expected[key] != actual[key]:
             problems.append(f"{key[0]} {key[1]} is pinned at another path or with other sources")
-    declared = set(dependency_hosts("browser"))
+    declared = set(_browser_hosts())
     for pin in pins.archives:
         for url in pin.urls:
             if (urlsplit(url).hostname or "") not in declared:
@@ -224,7 +229,7 @@ def generate() -> BrowserArchivePins:
     driver = locked_driver_version()
     if driver is None:
         raise RuntimeError("the locked Playwright driver's version is unreadable")
-    hosts = frozenset(dependency_hosts("browser"))
+    hosts = frozenset(_browser_hosts())
     pins: list[BrowserArchivePin] = []
     for archive in sorted(listed_archives(), key=lambda a: (a.platform, a.directory_name)):
         print(f"browser-pins: {archive.platform} {archive.directory_name}", file=sys.stderr, flush=True)
@@ -241,7 +246,7 @@ def generate() -> BrowserArchivePins:
                 }
             )
         )
-    return BrowserArchivePins(playwright_driver=driver, hosts=dependency_hosts("browser"), archives=tuple(pins))
+    return BrowserArchivePins(playwright_driver=driver, hosts=_browser_hosts(), archives=tuple(pins))
 
 
 def run_check() -> int:

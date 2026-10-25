@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from cadrumo_client.contracts.operation_ids import LOCAL_READER_OPERATION_DEFINITION_ID
-
 from ...core.external_constants import OutputLanguage
 from ...core.model_catalogue import ModelRole
 from ..local_reader_contracts import (
+    LOCAL_READER_OPERATION_DEFINITION_ID,
     LOCAL_READER_OPERATION_SUBJECT,
     LocalReaderProvisionAction,
     LocalReaderProvisionRequest,

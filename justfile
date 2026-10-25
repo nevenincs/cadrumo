@@ -168,11 +168,11 @@ pin-browser-archives *args:
 pin-local-ai *args:
     uv run --no-sync python -m dev.env.local_ai_pins {{args}}
 
-# Verify the managed browser with the browser setup item's own full check,
-# the one `dependencies.verify` runs: required builds, receipt digests and a
-# headless launch whose version must match the bundled Playwright manifest.
+# Verify the managed browser the test lanes share: one headless launch through
+# the bundled Playwright driver, whose reported version must match the driver's
+# manifest. The product's browser item is checked by the components role.
 # Prints the exact remediation command on failure.
-[doc('Run the browser setup item full check, with a real read-only launch.')]
+[doc('Launch the managed browser once through the bundled Playwright, read-only.')]
 [group('doctor')]
 doctor-browser:
     uv run --no-sync python -m dev.env.playwright_doctor

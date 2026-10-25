@@ -5,15 +5,8 @@ the same sentence everywhere and never a category, an operation id or an
 internal term. The sentences live once in the ``application.provisioning``
 subtree of the locale catalogues, in every supported language.
 
-``dependency_copy_details`` is the one technical view: a redacted report a
-person can paste into a support request. It names categories, versions,
-phases, hosts and the operation id, and carries no token, no file path and no
-profile value.
-
-``dependency_wording_view`` is the worded part of every setup result and
-review: each row's words, every item's name, every failure's sentence, the
-retry notice and the details, in one language. A frontend that cannot call
-``tr()`` shows these words as they come, so every surface reads the same.
+The native component engine emits only closed codes; each Python surface
+words them here.
 """
 
 from __future__ import annotations
@@ -22,17 +15,13 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Final
 
-from pydantic import BaseModel
-
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
 from ..core.i18n.render import tr
 from ..core.model_catalogue import ModelRole, ModelSelectionAdvisory
-from ..core.models import STRICT_FROZEN_CONFIG
 from .dependency_contracts import (
     DependencyBlockedReason,
     DependencyItemDeclaration,
-    DependencyItemId,
     DependencyNote,
     DependencyRecoveryAction,
     DependencyStaleReason,
@@ -43,16 +32,10 @@ from .operator_actions.models import PreconditionVerdict
 from .provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
 
 __all__ = [
-    "DEPENDENCY_RETRY_PLACEHOLDERS",
     "DEPENDENCY_WORDING_ROOT",
-    "DependencyFailureWordingV1",
-    "DependencyItemNameV1",
     "DependencyRowWording",
-    "DependencyRowWordingV1",
-    "DependencyWordingV1",
     "column_reader_refusal_reason",
     "dependency_action_key",
-    "dependency_copy_details",
     "dependency_failure_key",
     "dependency_held_sentence",
     "dependency_licence_notice",
@@ -63,13 +46,10 @@ __all__ = [
     "dependency_row_wording",
     "dependency_sentence_key",
     "dependency_space_sentence",
-    "dependency_wording_view",
     "statement_reader_refusal_reason",
 ]
 
 DEPENDENCY_WORDING_ROOT: Final = "application.provisioning"
-DEPENDENCY_RETRY_PLACEHOLDERS: Final = ("{attempt}", "{seconds}")
-"""The two markers the worded retry notice keeps for a frontend to replace with the attempt and the wait."""
 
 _STATE_KEYS: Final = {
     DependencyState.READY: "state.ready",
@@ -226,128 +206,3 @@ def statement_reader_refusal_reason(verdict: PreconditionVerdict, *, locale: str
     if verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID:
         return tr("application.provisioning.refusal.statement_local_ai_not_ready", locale=locale)
     return tr("application.provisioning.refusal.statement_local_ai_unavailable", locale=locale)
-
-
-def dependency_copy_details(
-    rows: Iterable[DependencyStatusRow],
-    *,
-    operation_id: str | None = None,
-    phases: Iterable[str] = (),
-    hosts: Iterable[str] = (),
-) -> str:
-    """Return the redacted technical report "Copy details" puts on the clipboard.
-
-    Only closed values and identifiers go in: item ids, states, reasons,
-    categories, versions, the operation id, phase codes and host names. Facts
-    are left out on purpose, because a fact can carry a path or a profile value.
-    """
-    lines = ["Cadrumo setup details"]
-    if operation_id is not None:
-        lines.append(f"operation: {operation_id}")
-    for row in rows:
-        reason = row.failure_category or row.blocked_reason or row.stale_reason
-        parts = [f"item: {row.item_id}", f"state: {row.state.value}", f"check: {row.mode.value}"]
-        if reason is not None:
-            parts.append(f"reason: {reason.value}")
-        if row.version is not None:
-            parts.append(f"version: {row.version}")
-        if row.note is not None:
-            parts.append(f"note: {row.note.value}")
-        lines.append("; ".join(parts))
-    seen_phases = list(dict.fromkeys(phases))
-    if seen_phases:
-        lines.append("phases: " + ", ".join(seen_phases))
-    seen_hosts = sorted(set(hosts))
-    if seen_hosts:
-        lines.append("hosts: " + ", ".join(seen_hosts))
-    return "\n".join(lines) + "\n"
-
-
-class DependencyItemNameV1(BaseModel):
-    """One item's plain name."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    item_id: DependencyItemId
-    name: str
-
-
-class DependencyRowWordingV1(BaseModel):
-    """One row's words: its item's name, its sentence, an optional note and button label."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    item_id: DependencyItemId
-    name: str
-    sentence: str
-    note: str | None
-    action: str | None
-
-
-class DependencyFailureWordingV1(BaseModel):
-    """One failure category's sentence."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    category: DependencyFailureCategory
-    sentence: str
-
-
-class DependencyWordingV1(BaseModel):
-    """Everything a setup result or review says, already in one language.
-
-    ``retry`` keeps the markers of :data:`DEPENDENCY_RETRY_PLACEHOLDERS`: a
-    retry is announced while the operation runs, and only the attempt and the
-    wait change between announcements.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    names: tuple[DependencyItemNameV1, ...]
-    rows: tuple[DependencyRowWordingV1, ...]
-    failures: tuple[DependencyFailureWordingV1, ...]
-    retry: str
-    details: str
-
-
-def dependency_wording_view(
-    rows: Iterable[DependencyStatusRow],
-    declarations: Iterable[DependencyItemDeclaration],
-    *,
-    locale: str | None = None,
-    operation_id: str | None = None,
-    phases: Iterable[str] = (),
-    hosts: Iterable[str] = (),
-) -> DependencyWordingV1:
-    """Word ``rows``, every declared item's name and every failure in ``locale``, with the details report."""
-    declared = {declaration.item_id: declaration for declaration in declarations}
-    settled = tuple(rows)
-    worded: list[DependencyRowWordingV1] = []
-    for row in settled:
-        declaration = declared.get(row.item_id)
-        if declaration is None:
-            continue
-        wording = dependency_row_wording(row, declaration, locale=locale)
-        worded.append(
-            DependencyRowWordingV1(
-                item_id=row.item_id,
-                name=wording.name,
-                sentence=wording.sentence,
-                note=wording.note,
-                action=wording.action,
-            )
-        )
-    attempt, seconds = DEPENDENCY_RETRY_PLACEHOLDERS
-    return DependencyWordingV1(
-        names=tuple(
-            DependencyItemNameV1(item_id=item_id, name=tr(dependency_name_key(declaration), locale=locale))
-            for item_id, declaration in declared.items()
-        ),
-        rows=tuple(worded),
-        failures=tuple(
-            DependencyFailureWordingV1(category=category, sentence=tr(dependency_failure_key(category), locale=locale))
-            for category in DependencyFailureCategory
-        ),
-        retry=tr(_key("retry"), attempt=attempt, seconds=seconds, locale=locale),
-        details=dependency_copy_details(settled, operation_id=operation_id, phases=phases, hosts=hosts),
-    )

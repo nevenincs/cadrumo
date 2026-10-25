@@ -14,8 +14,8 @@ model reads, and the PDF lane refuses a statement only the statement reader
 reads. Each refused file must carry the verdict naming the local AI setup, and
 no read may be sent to the runtime first. The CLI then renders each settled
 result through its real error boundary and live action resolver, with the
-local AI's quick-status row derived by the real registry as absent: the file's
-sentence and the exact setup command.
+local AI's quick-status row the components role reported as absent: the
+file's sentence and the exact setup command.
 """
 
 from __future__ import annotations
@@ -34,15 +34,11 @@ import typer
 from cadrumo.tests.english_locale_fixture import english_locale_fixture
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
+from ...adapters.outbound.components.tests.recorded_rows import recorded_absent_row
 from ...adapters.outbound.llm.column_role_mapping import resolve_column_roles
 from ...adapters.outbound.llm.statement_reading import LocalStatementReader
-from ...application.dependency_contracts import (
-    DependencyCheckMode,
-    DependencyProbeOutcome,
-    DependencyProbeReading,
-    DependencyStatusRow,
-)
-from ...application.dependency_registry import dependency_item_declarations, derive_dependency_row
+from ...application.dependency_contracts import DependencyStatusRow
+from ...application.dependency_registry import dependency_item_declarations
 from ...application.ledger.actions_import import LedgerProviderID
 from ...application.ledger.column_roles import bind_column_role_mapping_resolver
 from ...application.ledger.import_operation import (
@@ -153,16 +149,8 @@ _LOCAL_AI_FIX = "To fix it, run: aeat config provision pull"
 
 
 def _absent_rows() -> tuple[DependencyStatusRow, ...]:
-    """Every item's quick-status row as the real registry derives it for an item not yet set up."""
-    return tuple(
-        derive_dependency_row(
-            declaration,
-            DependencyProbeReading(
-                item_id=declaration.item_id, mode=DependencyCheckMode.QUICK, outcome=DependencyProbeOutcome.ABSENT
-            ),
-        )
-        for declaration in dependency_item_declarations()
-    )
+    """Every item's quick-status row as the components role reported it on a root without the item."""
+    return tuple(recorded_absent_row(declaration.item_id) for declaration in dependency_item_declarations())
 
 
 def _cli_import_text(

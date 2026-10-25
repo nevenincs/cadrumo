@@ -17,12 +17,10 @@ through the same call, so a refusal cannot pass for the wrong reason.
 
 from __future__ import annotations
 
-import json
 from http import HTTPStatus
 from queue import Queue
 from typing import ClassVar, override
 
-import httpx
 import pytest
 
 from ...core.config import override_settings
@@ -33,7 +31,6 @@ from ...tests.loopback_llm import (
     read_json_body,
     serving_loopback,
     write_json_response,
-    write_raw_response,
 )
 from ..provisioning import (
     AcceleratorDevice,
@@ -46,12 +43,9 @@ from ..provisioning import (
     select_model_for_role,
 )
 from ..provisioning_runtime import (
-    PullFailureKind,
     RuntimeResident,
     assess_model_load_contention,
     cadrumo_selected_models,
-    fetch_runtime_model,
-    last_runtime_pull,
     load_and_verify_model,
     read_runtime_residents,
     unload_runtime_model,
@@ -429,7 +423,6 @@ class _RuntimeLoopbackHandler(SilentLoopbackHandler):
 
     residents: ClassVar[list[dict[str, object]]] = []
     installed: ClassVar[list[dict[str, object]]] = []
-    pull_lines: ClassVar[list[dict[str, object]]] = []
     events: ClassVar[Queue[dict[str, object]]]
 
     @override
@@ -441,12 +434,6 @@ class _RuntimeLoopbackHandler(SilentLoopbackHandler):
     @override
     def do_POST(self) -> None:
         self.events.put({"method": "POST", "path": self.path, "body": dict(read_json_body(self))})
-        if self.path == "/api/pull":
-            # The runtime streams NDJSON progress and closes with a terminal
-            # status line; failures arrive in-stream under HTTP 200.
-            body = "".join(json.dumps(line) + "\n" for line in self.pull_lines).encode("utf-8")
-            write_raw_response(self, body, status=HTTPStatus.OK)
-            return
         write_json_response(self, {"done": True}, status=HTTPStatus.OK)
 
 
@@ -457,12 +444,6 @@ def runtime() -> object:
     _RuntimeLoopbackHandler.events = events
     _RuntimeLoopbackHandler.residents = []
     _RuntimeLoopbackHandler.installed = []
-    _RuntimeLoopbackHandler.pull_lines = [
-        {"status": "pulling manifest"},
-        {"status": "downloading", "completed": GIB // 2, "total": GIB},
-        {"status": "downloading", "completed": GIB, "total": GIB},
-        {"status": "success"},
-    ]
     with serving_loopback(_RuntimeLoopbackHandler, path="/api/chat") as chat_url:
         yield (chat_url, events)
 
@@ -603,28 +584,8 @@ def test_selected_models_are_exactly_the_configured_roles() -> None:
 
 
 # ---------------------------------------------------------------------------
-# the pull and readiness actions, over real HTTP
+# the readiness action, over real HTTP
 # ---------------------------------------------------------------------------
-
-
-def _roomy_profile() -> HardwareProfile:
-    """A machine with headroom to spare, so admission is not the thing under test."""
-    return _profile(
-        kind=AcceleratorKind.NVIDIA_CUDA,
-        devices=(_device(0, total=24 * GIB, free=20 * GIB),),
-        total_ram=64 * GIB,
-        free_ram=48 * GIB,
-    )
-
-
-def _starved_profile() -> HardwareProfile:
-    """A machine measurably short of the requirement, with the shortfall attributable."""
-    return _profile(
-        kind=AcceleratorKind.NVIDIA_CUDA,
-        devices=(_device(0, total=16 * GIB, free=1 * GIB),),
-        total_ram=64 * GIB,
-        free_ram=48 * GIB,
-    )
 
 
 def _paths(events: Queue[dict[str, object]]) -> list[str]:
@@ -633,99 +594,6 @@ def _paths(events: Queue[dict[str, object]]) -> list[str]:
     while not events.empty():
         seen.append(str(events.get_nowait()["path"]))
     return seen
-
-
-def test_a_fetch_issues_the_pull_without_an_admission_read(runtime: tuple[str, Queue[dict[str, object]]]) -> None:
-    """Fetching is a download a person approved; memory is admitted when the model loads, not here."""
-    chat_url, events = runtime
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = fetch_runtime_model("small-model:1b")
-
-    assert outcome.pulled is True
-    assert outcome.failure_kind is None
-    assert outcome.bytes_fetched == GIB
-    assert _paths(events) == ["/api/pull"]
-
-
-def test_a_pull_the_runtime_fails_in_stream_is_not_reported_as_pulled(
-    runtime: tuple[str, Queue[dict[str, object]]],
-) -> None:
-    """HTTP 200 with an ``error`` line is a failed pull, as an unknown model name produces."""
-    chat_url, events = runtime
-    _RuntimeLoopbackHandler.pull_lines = [{"status": "pulling manifest"}, {"error": "file does not exist"}]
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = fetch_runtime_model("no-such-model:1b")
-
-    assert outcome.pulled is False
-    assert outcome.failure_kind is PullFailureKind.NOT_FOUND
-    assert outcome.facts["runtime_reported_error"] is True
-    assert outcome.precondition_verdict is not None
-    assert outcome.precondition_verdict.failed_condition_id == "provisioning.model.pull_succeeded"
-    assert "/api/pull" in _paths(events)
-
-
-def test_a_pull_stream_that_ends_without_success_is_not_reported_as_pulled(
-    runtime: tuple[str, Queue[dict[str, object]]],
-) -> None:
-    """A stream cut before its terminal status proves no complete download."""
-    chat_url, _events = runtime
-    _RuntimeLoopbackHandler.pull_lines = [{"status": "downloading", "completed": 10, "total": GIB}]
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = fetch_runtime_model("small-model:1b")
-
-    assert outcome.pulled is False
-    assert outcome.failure_kind is PullFailureKind.TRUNCATED
-    assert outcome.facts["pull_completed"] is False
-    assert outcome.bytes_fetched == 10
-
-
-def test_http_error_from_progress_callback_keeps_the_last_streamed_byte_count(
-    runtime: tuple[str, Queue[dict[str, object]]],
-) -> None:
-    """A callback transport error retains observed bytes without confirming the pull."""
-    chat_url, _events = runtime
-    _RuntimeLoopbackHandler.pull_lines = [{"status": "success", "completed": GIB, "total": GIB}]
-
-    def fail_after_progress(_progress: object) -> None:
-        raise httpx.ReadError("progress transport failed")
-
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = fetch_runtime_model("small-model:1b", on_progress=fail_after_progress)
-
-    assert outcome.pulled is False
-    assert outcome.bytes_fetched == GIB
-    assert outcome.facts["runtime_error_type"] == "ReadError"
-
-
-def test_every_pull_attempt_is_recorded_as_the_last_pull(runtime: tuple[str, Queue[dict[str, object]]]) -> None:
-    """The status projection's last-pull row reflects the most recent attempt, completed or not."""
-    chat_url, _events = runtime
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        fetch_runtime_model("small-model:1b")
-        pulled = last_runtime_pull()
-        _RuntimeLoopbackHandler.pull_lines = [{"error": "file does not exist"}]
-        fetch_runtime_model("missing-model:1b")
-        failed = last_runtime_pull()
-
-    assert pulled is not None and pulled.model == "small-model:1b" and pulled.pulled is True
-    assert failed is not None and failed.model == "missing-model:1b" and failed.pulled is False
-    assert failed.failed_condition_id == "provisioning.model.pull_succeeded"
-
-
-def test_a_pull_against_an_unreachable_runtime_refuses_naming_the_daemon_command() -> None:
-    """An unreachable runtime is an instructive refusal, never a spawn.
-
-    Driven against a REAL closed loopback port rather than a patched client, so
-    the refusal is produced by an actual failed connection. Port 1 is reserved
-    and never listening.
-    """
-    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-        outcome = fetch_runtime_model("small-model:1b")
-
-    assert outcome.pulled is False
-    assert outcome.failure_kind is PullFailureKind.RUNTIME_UNREACHABLE
-    assert outcome.facts["runtime_reachable"] is False
-    assert outcome.precondition_verdict is not None
 
 
 def test_a_readiness_check_against_an_unreachable_runtime_refuses_naming_the_daemon_command() -> None:

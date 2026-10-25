@@ -85,10 +85,8 @@ from .provisioning_host import ExecutableLookup, RuntimeHostStatus, probe_runtim
 from .provisioning_runtime import (
     InstalledModel,
     ReadinessOutcome,
-    RuntimePullRecord,
     RuntimeResident,
     assess_model_load_contention,
-    last_runtime_pull,
     load_and_verify_model,
     read_installed_models,
     read_runtime_residents,
@@ -797,7 +795,7 @@ def _fitness_refusal(
 ) -> DependencyStatus | None:
     """Return the admission refusal for a model whose current weights were found unfit or too slow."""
     state = recorded_role_fitness(role, model, _inventory_digest(model, inventory), settings)
-    if state not in (RoleFitnessState.UNFIT, RoleFitnessState.TIMED_OUT):
+    if state is not RoleFitnessState.UNFIT and state is not RoleFitnessState.TIMED_OUT:
         return None
     facts: dict[str, ProvisioningFactValue] = {
         "role": role.value,
@@ -911,7 +909,6 @@ class LocalReaderStatus(BaseModel):
 
     host: RuntimeHostStatus
     roles: tuple[LocalReaderRoleStatus, ...]
-    last_pull: RuntimePullRecord | None = None
     extraction_ready: bool
     document_readiness: LocalReaderDocumentReadiness
     text_layer_model_fill_available: bool
@@ -1131,7 +1128,6 @@ def read_local_reader_status(
     roles: Iterable[ModelRole] | None = None,
     assess_load: bool = True,
     which: ExecutableLookup | None = None,
-    pull_record: Callable[[], RuntimePullRecord | None] = last_runtime_pull,
     text_probe: TextExtractionFitnessProbe | None = None,
 ) -> LocalReaderStatus:
     """Measure the runtime host and every role's model into one projection.
@@ -1166,7 +1162,6 @@ def read_local_reader_status(
     return LocalReaderStatus(
         host=host,
         roles=role_rows,
-        last_pull=pull_record(),
         extraction_ready=extraction_ready,
         document_readiness=(
             LocalReaderDocumentReadiness.ALL_DOCUMENTS

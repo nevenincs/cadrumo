@@ -517,12 +517,12 @@ def _record_the_shared_browser_as_the_engine_would() -> None:
     the run's own storage root; a test with a storage root of its own writes it
     there through ``record_shared_browser``.
     """
-    from cadrumo.application.provisioning_browser import (
+    from cadrumo.application.provisioning_browser import required_browser_builds
+    from cadrumo.tests.component_record_support import (
         browser_executable,
         browser_host_platform,
-        required_browser_builds,
+        register_shared_browser,
     )
-    from cadrumo.tests.component_record_support import register_shared_browser
 
     browsers = Path(os.environ["CADRUMO_PLAYWRIGHT_BROWSERS_DIR"])
     builds = required_browser_builds()

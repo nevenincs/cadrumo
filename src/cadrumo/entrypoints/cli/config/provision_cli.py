@@ -57,7 +57,6 @@ from cadrumo_client.commands.registered_operation_errors import invalid_completi
 from cadrumo_client.contracts.command_program import CommandProgram
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
-from cadrumo_client.contracts.operation_ids import LOCAL_READER_OPERATION_DEFINITION_ID
 
 from ....adapters.outbound.components.client import ComponentsRequest, run_components_role
 from ....adapters.outbound.components.protocol import (
@@ -93,6 +92,7 @@ from ....application.dependency_wording import (
     dependency_space_sentence,
 )
 from ....application.local_reader_contracts import (
+    LOCAL_READER_OPERATION_DEFINITION_ID,
     LocalReaderProvisionPublicResultV3,
     build_local_reader_load_request,
 )

@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from ..access_facts import OPERATION_ACCESS_FACTS, operation_access_facts
-from ..person_acts import operation_is_persons_act
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -31,14 +30,15 @@ def test_every_combination_of_the_two_facts_is_recorded_for_some_operation() -> 
     assert recorded == {(False, False), (False, True), (True, False), (True, True)}
 
 
-def test_the_setup_operations_are_recorded_and_the_removed_operations_are_not() -> None:
-    """Setup is not a person's act, so its facts decide what a narrowed scope admits."""
-    for definition_id in ("dependencies.status", "dependencies.verify", "dependencies.setup"):
-        assert not operation_is_persons_act(definition_id, ephemeral_secret_required=False)
-    assert operation_access_facts("dependencies.setup").changes_records
-    assert operation_access_facts("dependencies.setup").reaches_network
-    assert not operation_access_facts("dependencies.status").changes_records
-    assert not operation_access_facts("dependencies.verify").changes_records
-    for removed in ("browser-runtime.provision", "provider-settings.status", "provider-settings.set"):
+def test_the_removed_operations_are_not_recorded() -> None:
+    """Setup belongs to the native components role, so no setup operation has facts of its own."""
+    for removed in (
+        "browser-runtime.provision",
+        "dependencies.setup",
+        "dependencies.status",
+        "dependencies.verify",
+        "provider-settings.status",
+        "provider-settings.set",
+    ):
         with pytest.raises(KeyError):
             operation_access_facts(removed)

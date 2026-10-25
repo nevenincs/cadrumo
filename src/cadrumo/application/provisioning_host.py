@@ -1,23 +1,14 @@
-"""Local model runtime host lifecycle: detect, start and install the runtime itself.
+"""Detect the local model runtime: where it is and whether it answers.
 
 The model-level verbs in :mod:`.provisioning_runtime` assume a runtime is
-already listening. This module owns the step before that, per platform:
+already listening. This module answers whether one is. The local AI is located
+from the native component engine's record -- the program it installed and the
+fixed address the runtime manager's server answers on -- and only that address
+is asked. An operator's own endpoint is asked as configured, with the runtime
+looked for on ``PATH`` and in each platform's standard install location.
 
-* **Detect.** Locate the local AI from the native engine's component record --
-  the program it installed and the fixed address the runtime manager's server
-  answers on -- and ask that address whether it answers. An operator's own
-  endpoint is asked as configured, with the runtime looked for on ``PATH`` and
-  in each platform's standard install location.
-* **Start.** Spawn ``<runtime> serve`` detached when the endpoint is local, the
-  executable is present and nothing answers yet. Starting an already running
-  runtime is a successful no-op, so the verb is idempotent.
-* **Install.** Run the platform package manager -- ``winget`` on Windows,
-  Homebrew on macOS -- for a setup plan the person approved. Linux has no
-  unprivileged installer: the upstream script needs root, so the operator runs
-  it and this module reports the typed refusal.
-
-Nothing here stops, signals or replaces a process Cadrumo did not spawn, and a
-remote endpoint is never started or installed on the operator's behalf.
+Nothing here installs, starts, stops or removes a program: the native component
+engine installs the local AI and the runtime manager runs its server.
 """
 
 from __future__ import annotations
@@ -25,12 +16,9 @@ from __future__ import annotations
 import os
 import shutil
 import sys
-import time
 from collections.abc import Callable, Mapping
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
-from urllib.parse import quote, urlsplit, urlunsplit
 
 import httpx
 from pydantic import Field, model_validator
@@ -39,46 +27,32 @@ from ..core.component_records import component_records_root, locate_local_ai, us
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.loopback_endpoint import endpoint_host_is_loopback
-from ..core.storage_taxonomy import StorageCategory
-from ..core.storage_taxonomy_locations import storage_path
 from ..core.type_guards import is_object_dict
 from .provisioning_contracts import (
-    OLLAMA_INSTALL_TIMEOUT_S,
     OLLAMA_PROBE_TIMEOUT_S,
-    OLLAMA_START_TIMEOUT_S,
     ProvisioningFactValue,
     ProvisioningOutcome,
     ProvisioningPreconditionCondition,
     provisioning_no_recovery_verdict,
     require_provisioning_verdict,
 )
-from .provisioning_runtime import forget_runtime_unreachable, ollama_endpoint
+from .provisioning_runtime import ollama_endpoint
 
 __all__ = [
     "ExecutableLookup",
-    "InstallerRunner",
     "RuntimeHostPlatform",
     "RuntimeHostStatus",
-    "RuntimeInstallOutcome",
     "RuntimeInstaller",
-    "RuntimeSpawner",
-    "RuntimeStartOutcome",
     "available_runtime_installer",
     "current_runtime_platform",
-    "install_runtime",
-    "launch_runtime_server",
     "locate_runtime_executable",
     "probe_runtime_host",
     "read_runtime_version",
-    "runtime_proxy_environment",
-    "start_runtime",
 ]
-
-_START_POLL_INTERVAL_S = 0.5
 
 
 class RuntimeHostPlatform(StrEnum):
-    """The operating-system families whose install and start paths differ."""
+    """The operating-system families whose standard install locations differ."""
 
     WINDOWS = "windows"
     MACOS = "macos"
@@ -87,7 +61,7 @@ class RuntimeHostPlatform(StrEnum):
 
 
 class RuntimeInstaller(StrEnum):
-    """The package manager an install would run, or none this host offers."""
+    """The package manager this host offers, reported as a fact; Cadrumo runs none of them."""
 
     WINGET = "winget"
     HOMEBREW = "homebrew"
@@ -95,10 +69,6 @@ class RuntimeInstaller(StrEnum):
 
 
 type ExecutableLookup = Callable[[str], str | None]
-type RuntimeSpawner = Callable[[Path, Mapping[str, str]], int]
-"""Starts ``<executable> serve`` detached with the given environment; returns its pid."""
-type InstallerRunner = Callable[[RuntimeInstaller, Path, float], int]
-"""Runs the installer's non-interactive runtime install; returns its exit code."""
 
 
 def current_runtime_platform(platform: str | None = None) -> RuntimeHostPlatform:
@@ -138,8 +108,8 @@ def locate_runtime_executable(
     """Return the runtime executable on ``PATH`` or in a standard location, or ``None``.
 
     The standard locations matter as much as ``PATH``: an installer that has
-    just finished updates the user's ``PATH`` for new shells only, so the
-    process that ran it would otherwise not find what it installed.
+    just finished updates the user's ``PATH`` for new shells only, so a process
+    started before it would otherwise not find what it installed.
     """
     found = which("ollama")
     if found is not None and found:
@@ -172,7 +142,7 @@ def available_runtime_installer(
     platform: RuntimeHostPlatform | None = None,
     which: ExecutableLookup = shutil.which,
 ) -> RuntimeInstaller:
-    """Return the package manager this host can install the runtime with."""
+    """Return the package manager this host offers for installing the runtime by hand."""
     resolved = platform if platform is not None else current_runtime_platform()
     return _located_installer(resolved, which)[0]
 
@@ -270,293 +240,4 @@ def probe_runtime_host(
         available=version is not None,
         facts=facts,
         precondition_verdict=verdict,
-    )
-
-
-class RuntimeStartOutcome(ProvisioningOutcome):
-    """The result of asking for a running runtime, including one already running."""
-
-    running: bool
-    already_running: bool = False
-    started_pid: int | None = Field(default=None, ge=0)
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_start_outcome(self) -> RuntimeStartOutcome:
-        require_provisioning_verdict(failed=not self.running, verdict=self.precondition_verdict)
-        return self
-
-
-def _start_refusal(
-    condition: ProvisioningPreconditionCondition,
-    facts: Mapping[str, ProvisioningFactValue],
-) -> RuntimeStartOutcome:
-    return RuntimeStartOutcome(
-        running=False,
-        facts=facts,
-        precondition_verdict=provisioning_no_recovery_verdict(condition, facts=facts),
-    )
-
-
-_LOOPBACK_NO_PROXY: Final = ("localhost", "127.0.0.1", "::1")
-
-
-def runtime_proxy_environment(settings: Settings) -> dict[str, str]:
-    """Return the proxy variables a runtime server Cadrumo starts downloads models through.
-
-    Empty when no proxy is configured, so the server keeps the environment it
-    inherits. Loopback is always exempt, because the runtime's own endpoint
-    and its clients are on this machine.
-    """
-    proxy = settings.cadrumo_proxy_url.strip()
-    if not proxy:
-        return {}
-    parts = urlsplit(proxy)
-    username = settings.cadrumo_proxy_username
-    secret = settings.cadrumo_proxy_password_secret
-    if username and parts.hostname is not None:
-        credentials = quote(username, safe="")
-        if secret is not None and secret.get_secret_value():
-            credentials += ":" + quote(secret.get_secret_value(), safe="")
-        host = parts.hostname if parts.port is None else f"{parts.hostname}:{parts.port}"
-        proxy = urlunsplit((parts.scheme, f"{credentials}@{host}", parts.path, parts.query, parts.fragment))
-    bypass = [entry.strip() for entry in settings.cadrumo_proxy_bypass.split(",") if entry.strip()]
-    no_proxy = ",".join(dict.fromkeys((*bypass, *_LOOPBACK_NO_PROXY)))
-    return {
-        "HTTPS_PROXY": proxy,
-        "HTTP_PROXY": proxy,
-        "NO_PROXY": no_proxy,
-    }
-
-
-def _runtime_server_launch(
-    settings: Settings, *, which: ExecutableLookup
-) -> tuple[Path, dict[str, str]] | RuntimeStartOutcome:
-    """Resolve the executable and environment a server start runs, or the refusal that stops it.
-
-    The server keeps its models, its home and its temporary files under the
-    configured storage root, so the directories are created here and the
-    environment points every location the runtime would default to at them.
-    """
-    endpoint = settings.cadrumo_llm_ollama_chat_url
-    if not endpoint_host_is_loopback(endpoint):
-        return _start_refusal(
-            ProvisioningPreconditionCondition.RUNTIME_ENDPOINT_LOCAL,
-            {"runtime_url": endpoint, "endpoint_local": False},
-        )
-    executable = locate_runtime_executable(which=which)
-    if executable is None:
-        return _start_refusal(
-            ProvisioningPreconditionCondition.RUNTIME_INSTALLED,
-            {"runtime_url": endpoint, "executable_located": False},
-        )
-    parts = urlsplit(endpoint)
-    # Cadrumo's proxy settings reach the server only as the standard variables below.
-    withheld = Settings.proxy_env_var_names()
-    environment = {name: value for name, value in os.environ.items() if name.upper() not in withheld}
-    environment["OLLAMA_HOST"] = f"{parts.hostname}:{parts.port or 11434}"
-    models_root = storage_path(StorageCategory.OLLAMA_MODELS, settings=settings)
-    home_root = storage_path(StorageCategory.OLLAMA_HOME, settings=settings)
-    temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=settings)
-    appdata_root = home_root / "AppData" / "Roaming"
-    local_appdata_root = home_root / "AppData" / "Local"
-    try:
-        models_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        home_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        appdata_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        local_appdata_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-    except OSError as exc:
-        return _start_refusal(
-            ProvisioningPreconditionCondition.RUNTIME_START_SUCCEEDED,
-            {"runtime_url": endpoint, "spawned": False, "start_error_type": exc.__class__.__name__},
-        )
-    environment.update(runtime_proxy_environment(settings))
-    environment["OLLAMA_MODELS"] = str(models_root)
-    environment["HOME"] = str(home_root)
-    environment["USERPROFILE"] = str(home_root)
-    environment["APPDATA"] = str(appdata_root)
-    environment["LOCALAPPDATA"] = str(local_appdata_root)
-    for variable in ("TEMP", "TMP", "TMPDIR"):
-        environment[variable] = str(temporary_root)
-    return executable, environment
-
-
-def launch_runtime_server(
-    settings: Settings | None = None,
-    *,
-    spawn: RuntimeSpawner,
-    which: ExecutableLookup = shutil.which,
-) -> int | None:
-    """Start the configured local runtime's server from this process, without waiting for it to answer.
-
-    For a process asked to start the server on behalf of one that may not own
-    it. The caller sends no program and no environment: both are resolved
-    here, from this process's own settings, exactly as :func:`start_runtime`
-    resolves them.
-
-    Returns:
-        The spawned server's process id, or ``None`` when the endpoint is not
-        this machine, the runtime is not installed, or the launch failed.
-    """
-    resolved = settings if settings is not None else load_settings()
-    launch = _runtime_server_launch(resolved, which=which)
-    if isinstance(launch, RuntimeStartOutcome):
-        return None
-    executable, environment = launch
-    try:
-        return spawn(executable, environment)
-    except OSError:
-        return None
-
-
-def start_runtime(
-    settings: Settings | None = None,
-    *,
-    spawn: RuntimeSpawner,
-    timeout_s: float | None = None,
-    which: ExecutableLookup = shutil.which,
-) -> RuntimeStartOutcome:
-    """Make the configured local runtime answer, starting it only when it does not.
-
-    Idempotent: a runtime that already answers is reported running and nothing
-    is spawned. A remote endpoint is refused rather than started, because a
-    process on this machine cannot make another machine's server answer.
-
-    Args:
-        settings: Settings carrying the endpoint; loaded when omitted.
-        timeout_s: How long to wait for a spawned runtime to answer.
-        spawn: Starts ``<executable> serve`` detached and returns its process id.
-        which: Executable lookup used to locate the runtime.
-
-    Returns:
-        A :class:`RuntimeStartOutcome`. Never raises.
-    """
-    resolved = settings if settings is not None else load_settings()
-    endpoint = resolved.cadrumo_llm_ollama_chat_url
-    if read_runtime_version(resolved) is not None:
-        forget_runtime_unreachable(resolved)
-        return RuntimeStartOutcome(
-            running=True,
-            already_running=True,
-            facts={"runtime_url": endpoint, "runtime_reachable": True, "already_running": True},
-        )
-    launch = _runtime_server_launch(resolved, which=which)
-    if isinstance(launch, RuntimeStartOutcome):
-        return launch
-    executable, environment = launch
-    try:
-        pid = spawn(executable, environment)
-    except OSError as exc:
-        return _start_refusal(
-            ProvisioningPreconditionCondition.RUNTIME_START_SUCCEEDED,
-            {"runtime_url": endpoint, "spawned": False, "start_error_type": exc.__class__.__name__},
-        )
-    bound = timeout_s if timeout_s is not None else OLLAMA_START_TIMEOUT_S
-    started = time.monotonic()
-    while time.monotonic() - started < bound:
-        if read_runtime_version(resolved) is not None:
-            forget_runtime_unreachable(resolved)
-            return RuntimeStartOutcome(
-                running=True,
-                started_pid=pid,
-                facts={"runtime_url": endpoint, "runtime_reachable": True, "started_pid": pid},
-            )
-        time.sleep(_START_POLL_INTERVAL_S)
-    return _start_refusal(
-        ProvisioningPreconditionCondition.RUNTIME_START_SUCCEEDED,
-        {
-            "runtime_url": endpoint,
-            "spawned": True,
-            "started_pid": pid,
-            "waited_ms": int((time.monotonic() - started) * 1000),
-        },
-    )
-
-
-class RuntimeInstallOutcome(ProvisioningOutcome):
-    """The result of an install request, including one that needed no install."""
-
-    installed: bool
-    already_installed: bool = False
-    installer: RuntimeInstaller
-    installer_exit_code: int | None = None
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_install_outcome(self) -> RuntimeInstallOutcome:
-        require_provisioning_verdict(failed=not self.installed, verdict=self.precondition_verdict)
-        return self
-
-
-def install_runtime(
-    *,
-    run: InstallerRunner,
-    platform: RuntimeHostPlatform | None = None,
-    which: ExecutableLookup = shutil.which,
-    replace_existing: bool = False,
-) -> RuntimeInstallOutcome:
-    """Install the local runtime through the platform package manager.
-
-    Called only by the setup operation, after the person approved a plan that
-    says a program will be installed. Idempotent: an executable that is
-    already present is reported installed and nothing runs.
-
-    Args:
-        platform: Host platform; detected when omitted.
-        which: Executable lookup for the runtime and the package manager.
-        run: Runs the install invocation and returns its exit code.
-        replace_existing: Run the installer over a program that is already
-            present, so a program older than this version requires is replaced
-            by the current release.
-
-    Returns:
-        A :class:`RuntimeInstallOutcome`. Never raises.
-    """
-    host_platform = platform if platform is not None else current_runtime_platform()
-    installer, installer_path = _located_installer(host_platform, which)
-    base_facts: dict[str, ProvisioningFactValue] = {"platform": host_platform.value, "installer": installer.value}
-    if not replace_existing and locate_runtime_executable(platform=host_platform, which=which) is not None:
-        return RuntimeInstallOutcome(
-            installed=True,
-            already_installed=True,
-            installer=installer,
-            facts={**base_facts, "executable_located": True},
-        )
-
-    def refusal(
-        condition: ProvisioningPreconditionCondition,
-        extra: Mapping[str, ProvisioningFactValue],
-        exit_code: int | None = None,
-    ) -> RuntimeInstallOutcome:
-        facts = {**base_facts, **extra}
-        return RuntimeInstallOutcome(
-            installed=False,
-            installer=installer,
-            installer_exit_code=exit_code,
-            facts=facts,
-            precondition_verdict=provisioning_no_recovery_verdict(condition, facts=facts),
-        )
-
-    if installer_path is None:
-        return refusal(ProvisioningPreconditionCondition.RUNTIME_INSTALLER_AVAILABLE, {"executable_located": False})
-    try:
-        exit_code = run(installer, installer_path, OLLAMA_INSTALL_TIMEOUT_S)
-    except (OSError, ValueError, TimeoutError) as exc:
-        return refusal(
-            ProvisioningPreconditionCondition.RUNTIME_INSTALL_SUCCEEDED,
-            {"installer_ran": False, "install_error_type": exc.__class__.__name__},
-        )
-    located = locate_runtime_executable(platform=host_platform, which=which) is not None
-    if exit_code != 0 or not located:
-        return refusal(
-            ProvisioningPreconditionCondition.RUNTIME_INSTALL_SUCCEEDED,
-            {"installer_ran": True, "installer_exit_code": exit_code, "executable_located": located},
-            exit_code=exit_code,
-        )
-    return RuntimeInstallOutcome(
-        installed=True,
-        installer=installer,
-        installer_exit_code=exit_code,
-        facts={**base_facts, "installer_ran": True, "installer_exit_code": 0, "executable_located": True},
     )

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#rust-component-provisioning'
 date: '2026-10-24'
-modified: '2026-10-24'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:273e2315a55611b0a9f5679cb27981cc7670a20f2f1783a690629dd697367694'
+body_hash: 'sha256:f16fbea57dc1146791db773dedd96a35c9b98004c087407ebb0fe7a39b551b0c'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -683,6 +683,142 @@ related:
 - `S25` `verify:` `docs i18n set-batch: 0 untranslated, 0 fuzzy, 0 obsolete in the six catalogues` -> `pass`
 - `S25` `verify:` `dev/docs sequence corpus golden gate (no verdict: inputs changed during its 28 min run; the changed sequence has no golden)` -> `fail`
 - `S25` `by:` `implementation-engineer-standard`
+- `S14` `M` `.importlinter`
+- `S14` `M` `conftest.py`
+- `S14` `M` `dev/audit/tests/test_unreachable_frameworks.py`
+- `S14` `M` `dev/env/browser_archive_pins.py`
+- `S14` `M` `dev/env/playwright_doctor.py`
+- `S14` `M` `dev/locales/desktop_chrome.py`
+- `S14` `M` `justfile`
+- `S14` `M` `pyproject.toml`
+- `S14` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/__init__.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/archive_fetch.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/archive_server.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/installer.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/installer_output.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/launch_check.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/process_tree.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/tests/__init__.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/tests/test_archive_fetch.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/tests/test_archive_server.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/tests/test_browser_item_checks.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/tests/test_installer.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/browser_runtime/tests/test_installer_output.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/model_runtime/__init__.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/model_runtime/process_control.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/model_runtime/tests/__init__.py`
+- `S14` `D` `src/cadrumo/adapters/outbound/model_runtime/tests/test_process_control_console.py`
+- `S14` `M` `src/cadrumo/adapters/persistence/operations/tests/local_reader_operation_support.py`
+- `S14` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_operation.py`
+- `S14` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_read_operations.py`
+- `S14` `D` `src/cadrumo/application/dependency_activity.py`
+- `S14` `M` `src/cadrumo/application/dependency_contracts.py`
+- `S14` `D` `src/cadrumo/application/dependency_network.py`
+- `S14` `D` `src/cadrumo/application/dependency_receipts.py`
+- `S14` `M` `src/cadrumo/application/dependency_registry.py`
+- `S14` `D` `src/cadrumo/application/dependency_setup_operation.py`
+- `S14` `D` `src/cadrumo/application/dependency_transfer.py`
+- `S14` `D` `src/cadrumo/application/dependency_withdrawal.py`
+- `S14` `M` `src/cadrumo/application/dependency_wording.py`
+- `S14` `M` `src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py`
+- `S14` `M` `src/cadrumo/application/local_reader.py`
+- `S14` `M` `src/cadrumo/application/local_reader_contracts.py`
+- `S14` `M` `src/cadrumo/application/local_reader_operation.py`
+- `S14` `M` `src/cadrumo/application/local_reader_provisioning.py`
+- `S14` `D` `src/cadrumo/application/local_reader_setup_items.py`
+- `S14` `M` `src/cadrumo/application/local_reader_status_operation.py`
+- `S14` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S14` `M` `src/cadrumo/application/operations/tests/test_access_facts.py`
+- `S14` `M` `src/cadrumo/application/provisioning.py`
+- `S14` `M` `src/cadrumo/application/provisioning_browser.py`
+- `S14` `M` `src/cadrumo/application/provisioning_contracts.py`
+- `S14` `M` `src/cadrumo/application/provisioning_fitness.py`
+- `S14` `M` `src/cadrumo/application/provisioning_host.py`
+- `S14` `M` `src/cadrumo/application/provisioning_runtime.py`
+- `S14` `M` `src/cadrumo/application/tests/local_reader_operation_requests.py`
+- `S14` `M` `src/cadrumo/application/tests/test_browser_archive_pins.py`
+- `S14` `M` `src/cadrumo/application/tests/test_dependency_contracts.py`
+- `S14` `M` `src/cadrumo/application/tests/test_dependency_health_rows.py`
+- `S14` `D` `src/cadrumo/application/tests/test_dependency_network.py`
+- `S14` `D` `src/cadrumo/application/tests/test_dependency_receipts.py`
+- `S14` `M` `src/cadrumo/application/tests/test_dependency_registry.py`
+- `S14` `M` `src/cadrumo/application/tests/test_dependency_registry_conformance.py`
+- `S14` `D` `src/cadrumo/application/tests/test_dependency_transfer.py`
+- `S14` `D` `src/cadrumo/application/tests/test_dependency_transfer_faults.py`
+- `S14` `M` `src/cadrumo/application/tests/test_dependency_wording.py`
+- `S14` `M` `src/cadrumo/application/tests/test_local_reader_operation_access.py`
+- `S14` `D` `src/cadrumo/application/tests/test_local_reader_setup_items.py`
+- `S14` `D` `src/cadrumo/application/tests/test_provisioning_browser_item.py`
+- `S14` `M` `src/cadrumo/application/tests/test_provisioning_fitness.py`
+- `S14` `M` `src/cadrumo/application/tests/test_provisioning_hardware_contention.py`
+- `S14` `M` `src/cadrumo/application/tests/test_provisioning_host.py`
+- `S14` `M` `src/cadrumo/core/errors/registry/_application_part3a1.py`
+- `S14` `M` `src/cadrumo/core/external_constants.py`
+- `S14` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/config/provision_cli.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/tests/test_component_setup_refusal_text.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_batch_cli.py`
+- `S14` `D` `src/cadrumo/entrypoints/dependency_operation_composition.py`
+- `S14` `M` `src/cadrumo/entrypoints/local_reader_operation_composition.py`
+- `S14` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S14` `D` `src/cadrumo/entrypoints/tests/conformance_dependency_support.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/conformance_families.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/test_dependency_consumer_gating.py`
+- `S14` `D` `src/cadrumo/entrypoints/tests/test_dependency_quick_check_bound.py`
+- `S14` `D` `src/cadrumo/entrypoints/tests/test_dependency_setup_operation.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/test_ledger_import_reader_refusal_settlement.py`
+- `S14` `D` `src/cadrumo/entrypoints/tests/test_local_model_setup_operation.py`
+- `S14` `D` `src/cadrumo/entrypoints/tests/test_python_provisioning_withdrawn.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/ledger/tests/setup_status_fixtures.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_draft_setup_offer.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_batch.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_refusal_and_review_setup_offer.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_import_setup_offer.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_setup_offer.py`
+- `S14` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S14` `M` `src/cadrumo/locales/en/errors.yml`
+- `S14` `M` `src/cadrumo/locales/es/errors.yml`
+- `S14` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S14` `M` `src/cadrumo/tests/component_record_support.py`
+- `S14` `D` `src/cadrumo_client/contracts/operation_ids.py`
+- `S14` `M` `src/cadrumo_runtime/adapters/profile_worker.py`
+- `S14` `M` `src/cadrumo_runtime/adapters/worker_authorization.py`
+- `S14` `M` `src/cadrumo_runtime/adapters/worker_authorization_lease.py`
+- `S14` `M` `src/cadrumo_runtime/contracts/worker_authorization.py`
+- `S14` `M` `src/cadrumo_runtime/host/operation_authority.py`
+- `S14` `M` `src/cadrumo_runtime/host/operation_host.py`
+- `S14` `M` `src/cadrumo_runtime/host/profile_host.py`
+- `S14` `M` `src/cadrumo_runtime/host/session_owner.py`
+- `S14` `M` `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py`
+- `S14` `D` `src/cadrumo_runtime/host/tests/frontend/core/adapters/outbound/__init__.py`
+- `S14` `D` `src/cadrumo_runtime/host/tests/frontend/core/adapters/outbound/model_runtime/__init__.py`
+- `S14` `D` `src/cadrumo_runtime/host/tests/frontend/core/adapters/outbound/model_runtime/tests/__init__.py`
+- `S14` `D` `src/cadrumo_runtime/host/tests/frontend/core/adapters/outbound/model_runtime/tests/runtime_server_owner_start_fixture.py`
+- `S14` `D` `src/cadrumo_runtime/host/tests/frontend/core/adapters/outbound/model_runtime/tests/runtime_server_spawn_fixture.py`
+- `S14` `D` `src/cadrumo_runtime/host/tests/frontend/core/adapters/outbound/model_runtime/tests/test_runtime_server_containment.py`
+- `S14` `D` `src/cadrumo_runtime/host/tests/test_runtime_server_start_authority.py`
+- `S14` `M` `src/cadrumo_runtime/host/tests/test_session_hold_operations.py`
+- `S14` `A` `src/cadrumo/adapters/outbound/components/tests/recorded_rows.py`
+- `S14` `R` `src/cadrumo/application/tests/test_provisioning_model_removal.py` -> `src/cadrumo/application/tests/test_provisioning_model_inventory.py`
+- `S14` `D` `dev/smoke/acquisition_lane.py`
+- `S14` `D` `dev/smoke/tests/test_acquisition_lane.py`
+- `S14` `M` `dev/quality/metadata/import_load_targets.json`
+- `S14` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S14` `M` `dev/quality/metadata/import_load_targets.cadrumo_client.json`
+- `S14` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S14` `M` `src/cadrumo/application/tests/test_model_selection.py`
+- `S14` `M` `src/cadrumo/core/tests/test_settings_lifecycle_gate.py`
+- `S14` `verify:` `pytest -m '' focused touched scope (application dependency/provisioning/local reader, persistence local reader operations, components client, CLI and TUI setup offers, consumer gating, session hold, storage liveness, dev env/audit, MCP setup tools): 1325 passed; 7 real-role cases need the role image; the doctor's real launch fails on this host's empty shared browser cache` -> `pass`
+- `S14` `verify:` `pytest -m '' -n 12 src/cadrumo src/cadrumo_runtime src/cadrumo_mcp src/cadrumo_client dev/env dev/audit dev/quality dev/operation_contract_manifest dev/locales/tests dev/runtime_lifecycle/tests dev/smoke dev/packaging/native/tests: 42622 passed, 386 failed, 23 errors; one failure was this Step's (a stale permitted pin site, fixed); the rest are the empty shared browser cache, foreign ledger LLM and modelo work, the Linux dependency evidence, the role image, live gates and P04-era findings` -> `fail`
+- `S14` `verify:` `ruff check and ruff format --check on the touched Python (69 files)` -> `pass`
+- `S14` `verify:` `ty check src: no diagnostic in a touched file; dev.quality.types basedpyright local_reader narrowing fixed` -> `pass`
+- `S14` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S14` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
+- `S14` `verify:` `dev.quality.unused_symbol_coverage: the two helpers this Step orphaned are deleted; 5 findings remain, none from this Step` -> `fail`
+- `S14` `verify:` `dev.locales audit: only the pre-existing extra errors.refused.refused_ledger_evidence_local_ai_not_ready` -> `pass`
+- `S14` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -757,3 +893,8 @@ related:
 - `S25` S25 aeat and cadrumo-mcp profiles pass `CADRUMO_PROXY_URL,` `_USERNAME,` `_BYPASS;` the desktop and manager read their own process environment. This contradicts the 2026-10-18 notes in unified-setup D6 and canonical-environment constraint 12 (no operator-facing image admits them); those notes need amending
 - `S25` S25 MCP `setup_remove` (full surface only) requires confirmed true; the full surface pin row gained it in place, as S13 did for the setup tools, before release
 - `S25` S25 the CLI words the role's following notice; a followed setup asks nothing, so --yes has no effect and a non-interactive run does not ask for approval
+- `S14` S14 kept `browser_archive_pins` (dev packaging coverage and the pin tool read it), the RuntimeInstaller detection fact (local-reader.status and ledger.evidence.reader-readiness publish it and the desktop ledger type requires it) and the `dependency_contracts` row vocabulary the role client decodes; the item declarations keep only their name key and recovery action
+- `S14` S14 local-reader.provision keeps load and verify; its request and result schemas lose start, remove and their fields in place at version 3, and local-reader.status and ledger.evidence.reader-readiness lose `last_pull` in place; the desktop ledger type still declares an optional `last_pull`
+- `S14` S14 the runtime worker authorization protocol loses WorkerServerStart and WorkerServerStarted; the runtime starts no local AI program for any operation
+- `S14` S14 `dev/smoke/acquisition_lane.py` drove the Python setup and is deleted here; S15 adds the lane that drives the role; `playwright_doctor` now launches the shared test browser through the bundled Playwright
+- `S14` S14 the conformance gate for the removed operations moved from 'registered' to 'none registered, no alias anywhere', with phase codes `dependencies.setup.<item>.<step>` exempt as setup steps

@@ -16,11 +16,13 @@ that launches a real browser under its own storage root writes it there with
 from __future__ import annotations
 
 import json
+import platform
+import sys
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from importlib.util import find_spec
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final, Protocol
 
 from ..core.component_records import component_records_root
 
@@ -28,12 +30,69 @@ if TYPE_CHECKING:
     from ..core.config import Settings
 
 __all__ = [
+    "browser_executable",
+    "browser_host_platform",
     "engine_browser_record",
     "installed_driver_version",
     "record_shared_browser",
     "register_shared_browser",
     "write_engine_browser_record",
 ]
+
+_MAC_CHROME_APP: Final = ("Google Chrome for Testing.app", "Contents", "MacOS", "Google Chrome for Testing")
+
+#: Where each build keeps its executable inside its revision directory, by host
+#: platform, as the vendor's own executable table lays out the two Chromium builds.
+_EXECUTABLE_LAYOUT: Final[Mapping[str, Mapping[str, tuple[str, ...]]]] = {
+    "chromium": {
+        "linux-x64": ("chrome-linux64", "chrome"),
+        "linux-arm64": ("chrome-linux-arm64", "chrome"),
+        "mac-x64": ("chrome-mac-x64", *_MAC_CHROME_APP),
+        "mac-arm64": ("chrome-mac-arm64", *_MAC_CHROME_APP),
+        "win-x64": ("chrome-win64", "chrome.exe"),
+    },
+    "chromium-headless-shell": {
+        "linux-x64": ("chrome-headless-shell-linux64", "chrome-headless-shell"),
+        "linux-arm64": ("chrome-headless-shell-linux-arm64", "chrome-headless-shell"),
+        "mac-x64": ("chrome-headless-shell-mac-x64", "chrome-headless-shell"),
+        "mac-arm64": ("chrome-headless-shell-mac-arm64", "chrome-headless-shell"),
+        "win-x64": ("chrome-headless-shell-win64", "chrome-headless-shell.exe"),
+    },
+}
+
+
+class _Build(Protocol):
+    """A browser build the installed driver names: its manifest name and its folder."""
+
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def directory_name(self) -> str: ...
+
+
+def browser_host_platform(*, system: str | None = None, machine: str | None = None) -> str | None:
+    """Return the vendor's platform key for this computer, or ``None`` when it publishes no build for it."""
+    system = sys.platform if system is None else system
+    machine = (platform.machine() if machine is None else machine).lower()
+    arm = machine in {"arm64", "aarch64"}
+    intel = machine in {"x86_64", "amd64", "x64"}
+    if system == "win32":
+        return "win-x64" if intel or arm else None
+    if system.startswith("linux"):
+        return "linux-arm64" if arm else "linux-x64" if intel else None
+    if system == "darwin":
+        return "mac-arm64" if arm else "mac-x64" if intel else None
+    return None
+
+
+def browser_executable(root: Path, build: _Build, host_platform: str) -> Path | None:
+    """Return where ``build`` keeps its executable under ``root``, or ``None`` for an unknown layout."""
+    layout = _EXECUTABLE_LAYOUT.get(build.name, {}).get(host_platform)
+    if layout is None:
+        return None
+    return root.joinpath(build.directory_name, *layout)
+
 
 _ENGINE_BROWSER_RECORD = Path(__file__).parents[1] / "core" / "tests" / "_component_records" / "browser.json"
 _RECORD_NAME = "browser.json"

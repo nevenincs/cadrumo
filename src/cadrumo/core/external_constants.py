@@ -432,10 +432,10 @@ class OnlineServicesSection(_Frozen):
 class DependencyHostsSection(_Frozen):
     """Hosts each setup item downloads from, by host group.
 
-    The network preflight reaches exactly these hosts before a setup moves any
-    byte, and a setup plan names them as its sources. A group name is the
-    ``network_host_group`` of a setup item declaration, or of one part of it:
-    the local AI's group is its program's hosts and its model registry's.
+    The component pins name these hosts as the only sources the native
+    component engine may fetch from, and the pin tools check every pinned
+    source against them. A group is one setup item, or one part of it: the
+    local AI's group is its program's hosts and its model registry's.
     """
 
     browser: tuple[str, ...] = Field(min_length=1)

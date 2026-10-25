@@ -66,7 +66,6 @@ from cadrumo.application.user_profile.custody_ports import bind_profile_custody_
 from cadrumo.application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.time.clock import now
-from cadrumo.entrypoints.local_reader_operation_composition import start_owned_runtime_server
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, OperationResponseScopeAllowed
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -250,7 +249,6 @@ class RuntimeProfileHost:
             authorization=self,
             worker_script=worker_script,
             wall_clock=wall_clock,
-            runtime_server_starter=start_owned_runtime_server,
         )
         self.authority = ProfileSessionAuthority(
             binding=store.binding,

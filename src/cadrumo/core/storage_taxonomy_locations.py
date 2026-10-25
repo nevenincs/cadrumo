@@ -99,7 +99,10 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.OLLAMA_HOME,
         "components/ollama/home",
-        consumer_module="application/provisioning_host.py",
+        dormant_reason=(
+            "The native component engine installs the local AI here and the runtime manager's "
+            "server reads it; no Python product module reads or writes it."
+        ),
         settings_field="cadrumo_ollama_home_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -108,7 +111,10 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.OLLAMA_MODELS,
         "models/ollama",
-        consumer_module="application/provisioning_host.py",
+        dormant_reason=(
+            "The native component engine installs the local AI here and the runtime manager's "
+            "server reads it; no Python product module reads or writes it."
+        ),
         settings_field="cadrumo_ollama_models_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -154,13 +160,13 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
-    # One non-secret setup receipt per installed item. Receipts are evidence a
-    # status probe compares against, never authority, and they sit beside the
+    # The native component engine's receipt and location record per installed
+    # item. They are evidence, never authority, and they sit beside the
     # components they describe, so they follow the root rather than moving alone.
     _location(
         StorageCategory.DEPENDENCY_RECEIPTS,
         "components/receipts",
-        consumer_module="application/dependency_receipts.py",
+        consumer_module="core/component_records.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,

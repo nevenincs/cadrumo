@@ -15,6 +15,7 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Select, Static
 
+from .....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
 from .....application.ledger.batch_ingest import InferencePause
 from .....application.ledger.evidence_ingestion_contracts import LedgerEvidenceBatchRequest
 from .....application.local_reader import probe_local_reader
@@ -31,7 +32,7 @@ from ..evidence_files_write import LedgerEvidenceFilesWriteScreen
 from ..models import LedgerFlowState
 from ..workspace_injection import LedgerWorkspaceInjection
 from .evidence_files_fixtures import EVIDENCE_FILES_REFUSAL_KEY, MemoryEvidenceFilesStore, press, text_of
-from .setup_status_fixtures import LOCAL_AI_HELD, SetupStatusWorkspaceHostApp, absent_row, not_in_this_build_row
+from .setup_status_fixtures import LOCAL_AI_HELD, SetupStatusWorkspaceHostApp
 from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -176,7 +177,7 @@ def _offer(write: LedgerEvidenceFilesWriteScreen) -> SetupItemOffer:
 @pytest.mark.asyncio
 async def test_a_batch_paused_for_the_local_ai_names_it_and_offers_its_setup(tmp_path: Path) -> None:
     store = _paused_store(_local_ai_pause())
-    host = SetupStatusWorkspaceHostApp(_screen(store), rows=(absent_row("local_ai"),))
+    host = SetupStatusWorkspaceHostApp(_screen(store), rows=(recorded_absent_row("local_ai"),))
     with override_settings(cadrumo_output_language="en"):
         async with host.run_test(size=(120, 60)) as pilot:
             await settle(pilot)
@@ -225,7 +226,7 @@ async def test_a_batch_paused_for_a_local_ai_this_build_cannot_set_up_says_why_a
 @pytest.mark.asyncio
 async def test_a_batch_paused_for_a_reason_setup_cannot_end_offers_no_setup(tmp_path: Path) -> None:
     store = _paused_store(_unrecoverable_pause())
-    host = SetupStatusWorkspaceHostApp(_screen(store), rows=(absent_row("local_ai"),))
+    host = SetupStatusWorkspaceHostApp(_screen(store), rows=(recorded_absent_row("local_ai"),))
     with override_settings(cadrumo_output_language="en"):
         async with host.run_test(size=(120, 60)) as pilot:
             await settle(pilot)

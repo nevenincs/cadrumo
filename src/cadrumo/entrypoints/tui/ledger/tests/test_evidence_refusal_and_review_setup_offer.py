@@ -20,6 +20,7 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Static
 
+from .....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
 from .....application.dependency_contracts import DependencyStatusRow
 from .....application.ledger.attachment_review import AttachmentReviewItem
 from .....application.ledger.evidence_errors import (
@@ -53,7 +54,7 @@ from ..models import (
 )
 from ..workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshV1
 from .evidence_files_fixtures import MemoryEvidenceFilesStore, press, synthetic_evidence_id, synthetic_review
-from .setup_status_fixtures import LOCAL_AI_HELD, SetupStatusWorkspaceHostApp, absent_row, not_in_this_build_row
+from .setup_status_fixtures import LOCAL_AI_HELD, SetupStatusWorkspaceHostApp
 from .workspace_fixtures import (
     ledger_context,
     ledger_evidence_action,
@@ -200,7 +201,7 @@ async def _refused_read(
 
 @pytest.mark.asyncio
 async def test_a_read_refused_for_the_local_ai_offers_its_setup_beside_the_refusal() -> None:
-    host, refused, shown, _text, label = await _refused_read(_local_ai_refusal(), (absent_row("local_ai"),))
+    host, refused, shown, _text, label = await _refused_read(_local_ai_refusal(), (recorded_absent_row("local_ai"),))
 
     with override_settings(cadrumo_output_language="en"):
         assert refused == tr(EVIDENCE_LOCAL_AI_NOT_READY_KEY)
@@ -235,7 +236,9 @@ async def test_a_read_refused_while_the_setup_status_cannot_be_read_offers_nothi
 
 @pytest.mark.asyncio
 async def test_a_read_refused_for_a_reason_setup_cannot_end_offers_nothing_and_reads_no_row() -> None:
-    host, refused, shown, _text, label = await _refused_read(_unrecoverable_refusal(), (absent_row("local_ai"),))
+    host, refused, shown, _text, label = await _refused_read(
+        _unrecoverable_refusal(), (recorded_absent_row("local_ai"),)
+    )
 
     assert refused
     assert not shown
@@ -297,7 +300,7 @@ async def _full_review(
 
 @pytest.mark.asyncio
 async def test_a_full_review_whose_label_reading_stood_without_the_local_ai_offers_its_setup() -> None:
-    host, summary_offered, shown, _text, label = await _full_review((absent_row("local_ai"),))
+    host, summary_offered, shown, _text, label = await _full_review((recorded_absent_row("local_ai"),))
 
     assert not summary_offered
     assert shown

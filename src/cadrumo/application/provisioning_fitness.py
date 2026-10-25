@@ -41,7 +41,6 @@ __all__ = [
     "RoleFitnessVerdict",
     "fitness_measurement_lock",
     "fitness_verdict_path",
-    "invalidate_role_fitness",
     "read_fitness_verdict",
     "record_fitness_verdict",
 ]
@@ -150,15 +149,3 @@ def record_fitness_verdict(verdict: RecordedFitnessVerdict, settings: Settings |
         path,
         _FitnessVerdictDocument(schema_version=FITNESS_VERDICT_SCHEMA_VERSION, verdicts=(*kept, verdict)),
     )
-
-
-def invalidate_role_fitness(settings: Settings | None = None) -> None:
-    """Drop every recorded verdict for the configured endpoint, after its model store changed."""
-    resolved = settings if settings is not None else load_settings()
-    path = fitness_verdict_path(resolved)
-    document = _read_document(path)
-    endpoint = resolved.cadrumo_llm_ollama_chat_url
-    kept = tuple(item for item in document.verdicts if item.endpoint != endpoint)
-    if kept == document.verdicts:
-        return
-    _write_document(path, _FitnessVerdictDocument(schema_version=FITNESS_VERDICT_SCHEMA_VERSION, verdicts=kept))

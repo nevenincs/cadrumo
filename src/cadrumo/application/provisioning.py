@@ -23,8 +23,8 @@ from __future__ import annotations
 import contextlib
 import os
 import sys
-from collections.abc import Iterable, Mapping
-from typing import Final, TypedDict
+from collections.abc import Mapping
+from typing import TypedDict
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
@@ -44,7 +44,6 @@ from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.optional_extras import LLM_EXTRA, OPTIONAL_EXTRAS, OptionalExtra, optional_extra_available
 
 __all__ = [
-    "LICENCE_ADVISORIES",
     "LOCAL_MODEL_PROVISIONING_SERVICE",
     "OPTIONAL_EXTRAS",
     "AcceleratorDevice",
@@ -58,10 +57,7 @@ __all__ = [
     "InstalledModel",
     "ModelSelection",
     "OptionalExtra",
-    "PullOutcome",
-    "PullProgress",
     "ReadinessOutcome",
-    "RemoveOutcome",
     "RuntimeResident",
     "SystemMemoryReading",
     "UnloadOutcome",
@@ -69,7 +65,6 @@ __all__ = [
     "below_capacity_floor",
     "binding_free_bytes",
     "cadrumo_selected_models",
-    "model_licence_notice",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
     "probe_local_model_provisioning",
@@ -80,7 +75,6 @@ __all__ = [
     "read_installed_models",
     "read_runtime_residents",
     "read_system_memory",
-    "remove_runtime_model",
     "select_model_for_role",
     "unload_runtime_model",
 ]
@@ -96,10 +90,7 @@ from .provisioning_contracts import (
 from .provisioning_runtime import (
     ContentionSnapshot,
     InstalledModel,
-    PullOutcome,
-    PullProgress,
     ReadinessOutcome,
-    RemoveOutcome,
     RuntimeResident,
     UnloadOutcome,
     assess_model_load_contention,
@@ -107,7 +98,6 @@ from .provisioning_runtime import (
     matches_selected_model,
     read_installed_models,
     read_runtime_residents,
-    remove_runtime_model,
     unload_runtime_model,
 )
 
@@ -735,38 +725,6 @@ class ModelSelection(ProvisioningOutcome):
             model=candidate.runtime_id,
             licence=candidate.licence.name,
         )
-
-
-#: The selection advisories that are about a model's licence, which a person
-#: must see before that model is downloaded.
-LICENCE_ADVISORIES: Final = frozenset(
-    {ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED, ModelSelectionAdvisory.LICENCE_UNVERIFIED}
-)
-
-
-def model_licence_notice(
-    target: str | None, advisories: Iterable[ModelSelectionAdvisory], *, locale: str | None = None
-) -> str | None:
-    """Return the licence notice for a planned model in ``locale``, or ``None`` when it needs none.
-
-    ``target`` is the model a setup plan names, optionally followed by
-    ``@`` and its pinned digest. Only a catalogued model whose licence bars
-    commercial use has a notice: its publisher's text is the evidence the
-    notice repeats. The plan names the model the pins set up for a role, so the
-    notice names the licence by its own title and says what using the model
-    commercially needs, unlike the advisory for a model a person chose.
-    """
-    if target is None or ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED not in set(advisories):
-        return None
-    candidate = model_candidate(target.split("@", 1)[0])
-    if candidate is None:
-        return None
-    return tr(
-        "provisioning.model.licence.plan_non_commercial",
-        model=candidate.runtime_id,
-        licence=candidate.licence.name,
-        locale=locale,
-    )
 
 
 class _SelectionContext(TypedDict):

@@ -72,7 +72,6 @@ from cadrumo_runtime.contracts.worker_authorization import (
 )
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublicationPhase, WorkerApprovalRequest
 
-from ..adapters.worker_authorization import runtime_server_start_definitions
 from ..adapters.worker_authorization_client import WorkerAuthorizationClient
 from ..adapters.worker_authorization_lease import WorkerAuthorizationLease
 from ..application.approval_binding import RuntimeApprovalBinding
@@ -542,25 +541,6 @@ class ProfileWorkerOperationAuthority:
         with diagnostic_scope(new=True):
             async with self.guard(identity, AccessAction.COMMIT):
                 yield
-
-    async def start_runtime_server(self, identity: OperationIdentity) -> int | None:
-        """Ask the runtime to start the model runtime's server under this invocation's own COMMIT fence.
-
-        A server this worker started itself would end with it, so the runtime
-        starts it. The fence is taken on the calling task and held only for
-        the exchange; the answer is the server's process id, or ``None`` when
-        the runtime started nothing.
-        """
-        if identity.definition_id not in runtime_server_start_definitions():
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        async with self.guard(identity, AccessAction.COMMIT):
-            task = asyncio.current_task()
-            lease = None if task is None else self._held_leases.get(task)
-            if lease is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-            return await await_cancellation_complete(
-                asyncio.to_thread(lease.start_runtime_server), task_name="worker-runtime-server-start"
-            )
 
     async def model_run_lookup(self, identity: OperationIdentity, role: str) -> ModelRunLane | ModelRunRefusal:
         """Ask the profile's agent service which lane and model it would use for ``role``."""

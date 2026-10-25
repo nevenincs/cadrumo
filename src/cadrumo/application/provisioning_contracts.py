@@ -13,15 +13,10 @@ from .operator_actions.models import ActionReference, ConditionEvidence, Precond
 
 __all__ = [
     "LOCAL_AI_PROVISION_ACTION_ID",
-    "OLLAMA_INSTALL_TIMEOUT_S",
     "OLLAMA_LOAD_KEEP_ALIVE",
     "OLLAMA_PROBE_CACHE_TTL_S",
     "OLLAMA_PROBE_TIMEOUT_S",
-    "OLLAMA_PULL_TIMEOUT_S",
     "OLLAMA_READINESS_TIMEOUT_S",
-    "OLLAMA_START_TIMEOUT_S",
-    "OLLAMA_STORE_REGISTRY_HOST",
-    "RUNTIME_MINIMUM_VERSION",
     "ProvisioningFactValue",
     "ProvisioningOutcome",
     "ProvisioningPreconditionCondition",
@@ -53,36 +48,16 @@ OLLAMA_PROBE_TIMEOUT_S = 2.0
 # rather than inventing a second cadence.
 OLLAMA_PROBE_CACHE_TTL_S = 10.0
 
-# A model fetch is a multi-gigabyte download over an operator's connection, so
-# it gets its own generous bound rather than the 2s probe timeout, which exists
-# to keep a doctor row responsive and would abort every real pull.
-OLLAMA_PULL_TIMEOUT_S = 3600.0
-
 # Readiness asks whether a LOADED model answers. A cold load of a small vision
 # model is tens of seconds on this class of hardware, so the bound is generous
 # enough not to report a working model as unready while still bounded.
 OLLAMA_READINESS_TIMEOUT_S = 120.0
-
-# A freshly spawned runtime binds its port within a few seconds; the bound is
-# generous for a cold disk while still ending a start that will never answer.
-OLLAMA_START_TIMEOUT_S = 30.0
 
 # How long the runtime keeps a model resident after an explicit load. The
 # runtime's own default is five minutes, which expires before an operator who
 # loaded ahead of a batch has started it; half an hour covers that gap while
 # still releasing memory on an idle machine.
 OLLAMA_LOAD_KEEP_ALIVE = "30m"
-
-# A package-manager install downloads and unpacks an application bundle.
-OLLAMA_INSTALL_TIMEOUT_S = 1800.0
-
-# The oldest runtime release that serves every catalogued default: the vision
-# default (qwen3-vl) first loads on 0.12.7. An older runtime still answers, so it
-# reads as usable but older than this version requires, never as missing.
-RUNTIME_MINIMUM_VERSION = (0, 12, 7)
-
-# The registry host the runtime files unqualified model names under in its store.
-OLLAMA_STORE_REGISTRY_HOST = "registry.ollama.ai"
 
 
 class ProvisioningPreconditionCondition(StrEnum):
@@ -91,13 +66,8 @@ class ProvisioningPreconditionCondition(StrEnum):
     OPTIONAL_EXTRA_IMPORTABLE = "provisioning.optional_extra.importable"
     PLAYWRIGHT_BROWSER_INSTALLED = "provisioning.playwright_browser.installed"
     PLAYWRIGHT_BROWSER_MANIFEST_READABLE = "provisioning.playwright_browser.manifest_readable"
-    PLAYWRIGHT_BROWSER_INSTALL_SUCCEEDED = "provisioning.playwright_browser.install_succeeded"
     RUNTIME_REACHABLE = "provisioning.runtime.reachable"
     RUNTIME_INSTALLED = "provisioning.runtime.installed"
-    RUNTIME_ENDPOINT_LOCAL = "provisioning.runtime.endpoint_local"
-    RUNTIME_START_SUCCEEDED = "provisioning.runtime.start_succeeded"
-    RUNTIME_INSTALLER_AVAILABLE = "provisioning.runtime.installer_available"
-    RUNTIME_INSTALL_SUCCEEDED = "provisioning.runtime.install_succeeded"
     ROLE_MODEL_INSTALLED = "provisioning.role_model.installed"
     ROLE_MODEL_FIT_FOR_ROLE = "provisioning.role_model.fit_for_role"
     ROLE_MODEL_FITNESS_VERIFIED = "provisioning.role_model.fitness_verified"
@@ -112,10 +82,8 @@ class ProvisioningPreconditionCondition(StrEnum):
     MODEL_SELECTED_BY_CADRUMO = "provisioning.model.selected_by_cadrumo"
     MODEL_RESIDENT = "provisioning.model.resident"
     MODEL_LOADED = "provisioning.model.loaded"
-    MODEL_PULL_SUCCEEDED = "provisioning.model.pull_succeeded"
     MODEL_READY = "provisioning.model.ready"
     MODEL_INSTALLED = "provisioning.model.installed"
-    MODEL_REMOVAL_CONFIRMED = "provisioning.model.removal_confirmed"
     LOCAL_MODEL_INVENTORY_READABLE = "provisioning.local_model.inventory_readable"
     LOCAL_MODEL_EXTRA_REQUIRES_MODEL = "provisioning.local_model.extra_requires_model"
     LOCAL_MODEL_MODEL_REQUIRES_EXTRA = "provisioning.local_model.model_requires_extra"

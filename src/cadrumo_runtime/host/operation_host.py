@@ -224,7 +224,6 @@ class ProfileWorkerOperationHost:
         return await asyncio.to_thread(self._composed)
 
     def _compose(self) -> OperationComposedServices:
-        from cadrumo.application.local_reader_provisioning import RuntimeServerOwnerStart
         from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
 
         with startup_phase(_log, "worker_operation_compose"), self._governed():
@@ -238,7 +237,6 @@ class ProfileWorkerOperationHost:
                 profile_rotation_finalizer=self._finalize_password_rotation,
                 modelo_profile_resolver=self._modelo_profile,
                 execution_caller_reader=self._execution_caller,
-                runtime_server_owner_start=RuntimeServerOwnerStart(self._start_runtime_server),
                 journal_committed=self._journal_committed,
             )
 
@@ -277,12 +275,6 @@ class ProfileWorkerOperationHost:
         if self._execution is None or self._closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         return self._execution.execution_caller(identity)
-
-    async def _start_runtime_server(self, identity: OperationIdentity) -> int | None:
-        """Ask the runtime that owns this worker to start the model runtime's server for one invocation."""
-        if self._execution is None or self._closed:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        return await self._execution.start_runtime_server(identity)
 
     def _modelo_profile(self, operation: PinnedAuthorityOperation) -> TaxpayerProfile:
         """Read filing facts only from this worker's immutable profile custody."""

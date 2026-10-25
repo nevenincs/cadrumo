@@ -28,7 +28,6 @@ from .....application.local_reader_status_operation import (
     LocalReaderStatusPublicResultV1,
 )
 from .....application.provisioning_contracts import ProvisioningPreconditionCondition
-from .....application.provisioning_runtime import forget_runtime_unreachable
 from .....application.tests.local_reader_operation_requests import (
     build_local_reader_report_request,
     build_local_reader_status_request,
@@ -112,7 +111,6 @@ def test_a_probing_status_checks_the_text_models_fitness_now(tmp_path: Path) -> 
 def test_status_reports_an_unreachable_runtime_as_a_state_with_its_refusal(tmp_path: Path) -> None:
     ports = ProvisioningPorts()
     with override_settings(cadrumo_llm_ollama_chat_url=_CLOSED_LOCAL_ENDPOINT):
-        forget_runtime_unreachable()
         run = run_supervised(
             tmp_path, ports, build_local_reader_status_request(probe=True), LocalReaderStatusPublicResultV1
         )
@@ -167,7 +165,6 @@ def test_the_report_publishes_the_measured_machine_and_each_roles_selection(tmp_
 def test_the_report_tells_an_unreachable_runtime_from_one_with_nothing_resident(tmp_path: Path) -> None:
     ports = ProvisioningPorts()
     with override_settings(cadrumo_llm_ollama_chat_url=_CLOSED_LOCAL_ENDPOINT):
-        forget_runtime_unreachable()
         unreachable = run_supervised(
             tmp_path / "unreachable", ports, build_local_reader_report_request(), LocalReaderReportPublicResultV1
         )

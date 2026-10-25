@@ -1284,7 +1284,6 @@
         "dev.sanitizer.fixtures",
         "dev.sanitizer.residual_identity",
         "dev.smoke",
-        "dev.smoke.acquisition_lane",
         "dev.smoke.smoke_check",
         "dev.source_tree",
         "dev.test_runs",

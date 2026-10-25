@@ -24,7 +24,6 @@ from ..dependency_registry import BROWSER_DECLARATION, LOCAL_AI_DECLARATION, dep
 from ..dependency_wording import (
     DEPENDENCY_WORDING_ROOT,
     dependency_action_key,
-    dependency_copy_details,
     dependency_failure_key,
     dependency_name_key,
     dependency_note_key,
@@ -120,30 +119,3 @@ def test_the_local_ai_parts_are_named_plainly_in_every_language(locale: str) -> 
     assert english == "Model for document text"
     with pytest.raises(ValueError):
         dependency_part_name("painting", locale=locale)
-
-
-def test_copy_details_carries_identifiers_and_never_facts() -> None:
-    row = DependencyStatusRow(
-        item_id="browser",
-        kind=DependencyItemKind.BROWSER,
-        mode=DependencyCheckMode.FULL,
-        state=DependencyState.FAILED,
-        failure_category=DependencyFailureCategory.SECURE_CONNECTION_FAILED,
-        version="1187",
-        recovery=DependencyRecoveryAction.TRY_AGAIN,
-        recovery_action_id="operator.provision.browser",
-    )
-    report = dependency_copy_details(
-        (row,),
-        operation_id="a" * 64,
-        phases=("dependencies.setup.browser.preflight", "dependencies.setup.browser.preflight"),
-        hosts=("cdn.playwright.dev", "cdn.playwright.dev"),
-    )
-    assert report.splitlines() == [
-        "Cadrumo setup details",
-        "operation: " + "a" * 64,
-        "item: browser; state: failed; check: full; reason: secure_connection_failed; version: 1187",
-        "phases: dependencies.setup.browser.preflight",
-        "hosts: cdn.playwright.dev",
-    ]
-    assert "\\" not in report and "/" not in report

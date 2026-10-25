@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from pathlib import Path
 from uuid import UUID
 
 import pytest
@@ -11,13 +10,13 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
-from cadrumo_client.contracts.operation_ids import LOCAL_READER_OPERATION_DEFINITION_ID
 
 from ...core.config import Settings
 from ...core.model_catalogue import ModelRole
 from ...core.operations import profile_operation_subject
 from ..local_reader import RoleFitnessOutcome
 from ..local_reader_contracts import (
+    LOCAL_READER_OPERATION_DEFINITION_ID,
     LOCAL_READER_OPERATION_SUBJECT,
     LocalReaderProvisionAction,
     LocalReaderProvisionRequest,
@@ -68,12 +67,6 @@ def _provision(action: LocalReaderProvisionAction, **values: object) -> _Case:
     )
 
 
-_ENGINE_CASES = {
-    "start": _provision(LocalReaderProvisionAction.START),
-    "remove": _provision(LocalReaderProvisionAction.REMOVE, role=ModelRole.TEXT_EXTRACTION),
-}
-"""Starting the program and removing a model belong to the native component engine."""
-
 _CASES = {
     "load": _provision(LocalReaderProvisionAction.LOAD, role=ModelRole.TEXT_EXTRACTION),
     "load-model": _provision(LocalReaderProvisionAction.LOAD, model="qwen3:4b"),
@@ -100,16 +93,12 @@ _CASES = {
 }
 
 
-def _spawn(executable: Path, environment: object) -> int:
-    raise AssertionError(f"access resolution started {executable} with {environment}")
-
-
 def _probe(model: str, settings: Settings) -> RoleFitnessOutcome:
     raise AssertionError(f"access resolution probed {model} under {settings}")
 
 
 def _registry() -> OperationRegistry:
-    provision = build_local_reader_operation_definition(spawn=_spawn, text_probe=_probe)
+    provision = build_local_reader_operation_definition(text_probe=_probe)
     status = build_local_reader_status_definition(text_probe=_probe)
     report = build_local_reader_report_definition()
     return OperationRegistry(
@@ -144,7 +133,7 @@ def _context(
 
 
 def test_the_cases_cover_every_provisioning_action_and_every_operation_of_the_family() -> None:
-    cases = (*_CASES.values(), *_ENGINE_CASES.values())
+    cases = tuple(_CASES.values())
     actions = {case.payload.action for case in cases if isinstance(case.payload, LocalReaderProvisionRequest)}
 
     assert actions == set(LocalReaderProvisionAction)
@@ -172,20 +161,6 @@ def test_every_frontend_resolves_each_request_to_the_same_period_independent_acc
         )
         assert on_frontend.policy == on_cli.policy, frontend
         assert on_frontend.request == on_cli.request.model_copy(update={"frontend": frontend}), frontend
-
-
-@pytest.mark.parametrize("access", [AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT])
-@pytest.mark.parametrize("name", sorted(_ENGINE_CASES))
-def test_starting_the_program_or_removing_a_model_is_refused_on_every_frontend(name: str, access: AccessAction) -> None:
-    case = _ENGINE_CASES[name]
-    registry = _registry()
-    context = _context(registry, case, access)
-    for frontend in OperationFrontendProjection:
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            resolve_operation_access(
-                registry=registry, request=_request(case), context=replace(context, frontend=frontend)
-            )
-        assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE, frontend
 
 
 @pytest.mark.parametrize("name", sorted(_CASES))

@@ -4,8 +4,8 @@ The complete CLI batch journey is exercised through the authenticated profile
 worker in ``test_runtime_ledger_evidence_ingestion_native``. These tests isolate
 the CLI-owned presentation of canonical pause, refusal, review, and unreadable
 source results. A pause's text names the local AI and then what the local AI's
-quick-status row allows, derived by the real registry: the setup command for
-an offerable row, the row's sentence for a blocked one. Its raw facts stay in
+quick-status row allows, as the components role reports it: the setup command
+for an offerable row, the row's sentence for a blocked one. Its raw facts stay in
 JSON.
 """
 
@@ -13,14 +13,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.dependency_contracts import (
-    DependencyBlockedReason,
-    DependencyCheckMode,
-    DependencyProbeOutcome,
-    DependencyProbeReading,
-    DependencyStatusRow,
-)
-from ....application.dependency_registry import dependency_item_declarations, derive_dependency_row
+from ....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
+from ....application.dependency_contracts import DependencyStatusRow
 from ....application.ledger.batch_ingest import (
     BatchItemResult,
     BatchItemStatus,
@@ -140,15 +134,6 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
     }
 
 
-def _local_ai_rows(outcome: DependencyProbeOutcome) -> tuple[DependencyStatusRow, ...]:
-    declaration = next(row for row in dependency_item_declarations() if row.item_id == "local_ai")
-    blocked = DependencyBlockedReason.NOT_IN_THIS_BUILD if outcome is DependencyProbeOutcome.BLOCKED else None
-    reading = DependencyProbeReading(
-        item_id="local_ai", mode=DependencyCheckMode.QUICK, outcome=outcome, blocked_reason=blocked
-    )
-    return (derive_dependency_row(declaration, reading),)
-
-
 def _local_ai_pause() -> InferencePause:
     """The pause the local reader probe gives over an unreachable runtime: it names the local AI's setup."""
     status = probe_local_reader(ModelRole.TEXT_EXTRACTION, installed=(), model="reader-model:1b")
@@ -160,23 +145,23 @@ def _local_ai_pause() -> InferencePause:
 
 
 @pytest.mark.parametrize(
-    ("outcome", "action_line"),
+    ("row", "action_line"),
     [
-        (DependencyProbeOutcome.ABSENT, "paused.precondition_action\tTo fix it, run: aeat config provision pull"),
+        (recorded_absent_row("local_ai"), "paused.precondition_action\tTo fix it, run: aeat config provision pull"),
         (
-            DependencyProbeOutcome.BLOCKED,
+            not_in_this_build_row("local_ai"),
             "paused.precondition_action\tLocal AI: This version of Cadrumo does not include this.",
         ),
     ],
     ids=["offerable", "not in this build"],
 )
 def test_a_pause_for_the_local_ai_names_it_then_says_what_its_row_allows(
-    outcome: DependencyProbeOutcome, action_line: str
+    row: DependencyStatusRow, action_line: str
 ) -> None:
     pause = _local_ai_pause()
     run = BatchRunResult(items=(_paused_row("scan.pdf"),), inference_pause=pause)
 
-    with override_settings(cadrumo_output_language="en"), setup_status_source(lambda: _local_ai_rows(outcome)):
+    with override_settings(cadrumo_output_language="en"), setup_status_source(lambda: (row,)):
         lines = _batch_text_lines(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
 
     reason = lines.index("paused\tLocal AI, which reads the paused documents, is not ready.")

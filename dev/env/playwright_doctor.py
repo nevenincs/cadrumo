@@ -1,38 +1,37 @@
-"""Probe whether the workstation's managed browser passes the product's own full check.
+"""Probe whether the workstation's managed browser launches through the bundled Playwright.
 
-This is the ``just doctor-browser`` recipe. It runs the ``browser`` setup item's
-full check, exactly as ``dependencies.verify`` does: the required builds and
-their completion markers, the executables against the install receipt when
-there is one, and one headless launch whose reported version must match the
-bundled Playwright's manifest. A developer check and the product therefore
-agree on what "the browser works" means.
+This is the ``just doctor-browser`` recipe. It launches the headless build in
+the managed browser directory once, through the bundled Playwright driver, and
+compares the version the browser reports with the driver's own manifest. The
+product's browser item is checked by the native component engine; this probe
+only tells a developer whether the browsers the test lanes share are usable.
 
-The item is built with the same real adapters the setup registry binds; the
-check is read-only and downloads nothing. It runs as a standalone process, so a
-hung launch surfaces as a timeout here rather than inside a CLI session.
+The probe is read-only and downloads nothing. It runs as a standalone process,
+so a hung launch surfaces here rather than inside a CLI session.
 
 Exit codes:
 
-* 0 -- the browser is present and launched with the expected version.
-* 1 -- it is not; stderr names what the full check found and the remediation.
+* 0 -- the browser launched and reported the version the driver expects.
+* 1 -- it did not; stderr names what was found and the remediation.
 """
 
 from __future__ import annotations
 
-import asyncio
+import os
 import sys
+from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
 
-from cadrumo.adapters.outbound.browser_runtime.installer import (
-    remove_browser_builds,
-    run_browser_install,
-)
-from cadrumo.adapters.outbound.browser_runtime.launch_check import launch_headless_browser
-from cadrumo.application.dependency_contracts import DependencyCheckMode, DependencyProbeOutcome, DependencyProbeReading
-from cadrumo.application.dependency_receipts import DependencyReceiptStore, dependency_receipts_root
-from cadrumo.application.provisioning_browser import PlaywrightBrowserItem, playwright_browsers_root
+from playwright.sync_api import Error as PlaywrightError
+from playwright.sync_api import sync_playwright
+
+from cadrumo.application.provisioning_browser import playwright_browsers_root, required_browser_builds
 
 REMEDIATION = "run 'playwright install chromium' (or 'just setup-browser') to install the browser binary"
+
+_DRIVER_BROWSERS_VARIABLE = "PLAYWRIGHT_BROWSERS_PATH"
+_HEADLESS_BUILD = "chromium-headless-shell"
 
 
 def managed_browsers_root() -> Path:
@@ -44,27 +43,49 @@ def managed_browsers_root() -> Path:
     return playwright_browsers_root()
 
 
-def browser_full_check() -> DependencyProbeReading:
-    """Run the browser item's full check with the real adapters and return its reading."""
-    item = PlaywrightBrowserItem(
-        install=run_browser_install,
-        launch=launch_headless_browser,
-        remove_builds=remove_browser_builds,
-        receipts=DependencyReceiptStore(dependency_receipts_root()),
-    )
-    return asyncio.run(item.check(DependencyCheckMode.FULL))
+@contextmanager
+def _driver_browsers(root: Path) -> Generator[None]:
+    """Point the driver this process starts at ``root``, restoring the variable afterwards."""
+    previous = os.environ.get(_DRIVER_BROWSERS_VARIABLE)
+    os.environ[_DRIVER_BROWSERS_VARIABLE] = str(root)
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop(_DRIVER_BROWSERS_VARIABLE, None)
+        else:
+            os.environ[_DRIVER_BROWSERS_VARIABLE] = previous
+
+
+def launch_problem() -> str | None:
+    """Launch the managed headless browser once; return what went wrong, or ``None`` when it matched."""
+    builds = required_browser_builds()
+    if builds is None:
+        return "the bundled Playwright driver's browser manifest is unreadable"
+    expected = next((build.browser_version for build in builds if build.name == _HEADLESS_BUILD), None)
+    with _driver_browsers(managed_browsers_root()), sync_playwright() as playwright:
+        try:
+            browser = playwright.chromium.launch(headless=True)
+        except PlaywrightError as error:
+            first = str(error).strip().splitlines()
+            return f"launch failed: {first[0] if first else type(error).__name__}"
+        try:
+            version = browser.version
+        finally:
+            browser.close()
+    if expected is not None and version != expected:
+        return f"it reports version {version}, the driver expects {expected}"
+    return None
 
 
 def run_doctor() -> int:
-    """Run the full check; return the process exit code."""
-    reading = browser_full_check()
-    if reading.outcome is DependencyProbeOutcome.PRESENT and reading.facts.get("launched") is True:
-        print(f"playwright-doctor: the browser launches successfully ({reading.facts.get('launched_version')}).")
+    """Launch the managed browser; return the process exit code."""
+    problem = launch_problem()
+    if problem is None:
+        print("playwright-doctor: the browser launches successfully.")
         return 0
-    found = reading.failure_category or reading.blocked_reason or reading.stale_reason
-    detail = reading.outcome.value if found is None else f"{reading.outcome.value}: {found.value}"
     print(
-        f"playwright-doctor: the managed browser at {managed_browsers_root()} is not launchable ({detail}) "
+        f"playwright-doctor: the managed browser at {managed_browsers_root()} is not launchable ({problem}) "
         f"-- {REMEDIATION}",
         file=sys.stderr,
     )

@@ -53,11 +53,10 @@ Browser rows:
 
 Where it stops:
 
-- The local AI transport (``llm.client``), consumer admission's fitness
-  measurement (``llm.role_fitness``) and setup's launch check
-  (``browser_runtime.launch_check``) dispatch or launch on purpose and are
-  exempt by name; an exemption that no longer matches a discovered site fails.
-- Setup's runtime traffic (pull, load, keep-alive under
+- The local AI transport (``llm.client``) and consumer admission's fitness
+  measurement (``llm.role_fitness``) dispatch on purpose and are exempt by
+  name; an exemption that no longer matches a discovered site fails.
+- The runtime traffic of loading and keeping a model resident (under
   ``application.provisioning_*``) does not build a request and is not a
   consumer. ``src/cadrumo_agent_service`` and the desktop are not scanned.
 - A dispatch reached only through ``self`` attributes, a dynamic import or a
@@ -441,13 +440,6 @@ _BROWSER_RESOURCES = frozenset(
 )
 _LAUNCH_ATTRIBUTES = frozenset({"launch", "launch_persistent_context"})
 _DEFINITION_BUILDER = re.compile(r"^(build_\w*definitions?|AuthOperationPorts)$")
-
-#: Launches that are setup's own measurement of the browser, not a feature using it.
-_EXEMPT_BROWSER_STARTS: Mapping[str, str] = {
-    "cadrumo.adapters.outbound.browser_runtime.launch_check.launch_headless_browser": (
-        "setup's full check launches the revision-exact executable it verifies"
-    ),
-}
 
 type _Function = ast.FunctionDef | ast.AsyncFunctionDef
 
@@ -1189,12 +1181,8 @@ def _row_problems(discovered: Iterable[str], rows: Iterable[str], *, what: str) 
 
 
 def _browser_start_problems(sites: Mapping[str, str | None]) -> list[str]:
-    ungated = [
-        f"{site}: {problem}"
-        for site, problem in sorted(sites.items())
-        if problem is not None and site not in _EXEMPT_BROWSER_STARTS
-    ]
-    return ungated + _row_problems(sites, (*_BROWSER_STARTS, *_EXEMPT_BROWSER_STARTS), what="starts a browser")
+    ungated = [f"{site}: {problem}" for site, problem in sorted(sites.items()) if problem is not None]
+    return ungated + _row_problems(sites, _BROWSER_STARTS, what="starts a browser")
 
 
 def test_every_browser_start_checks_the_browser_first(production: dict[str, _Module]) -> None:
@@ -1317,7 +1305,6 @@ def test_discovery_finds_a_new_local_ai_consumer_that_has_no_row(tmp_path: Path)
 
 def test_a_browser_start_or_preflight_without_a_row_and_a_stale_row_are_reported() -> None:
     sites: dict[str, str | None] = {site: None for site in _BROWSER_STARTS}
-    sites |= {site: "starts unchecked on purpose" for site in _EXEMPT_BROWSER_STARTS}
     sites["cadrumo.fixture.new_start"] = None
     del sites[f"{_FACTORY}.opened_browser_page"]
 

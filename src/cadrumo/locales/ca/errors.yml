@@ -473,9 +473,6 @@ errors:
       ''%{group}'': falta el mòdul requerit ''%{module}''. Aquesta instal·lació és
       incompleta.'
     fail_declaracion_parse: No s'ha pogut interpretar el PDF com una declaració.
-    fail_dependency_preflight_stage: No ha acabat la comprovació de xarxa del servidor
-      de baixada d'un component.
-    fail_dependency_transfer: Ha fallat la baixada d'un component.
     fail_filing_import: No s'ha pogut importar la declaració des del PDF del justificant.
     fail_financial_attachments_attachment_persistence: El magatzem de justificants
       no ha pogut llegir o escriure les dades.
@@ -824,8 +821,6 @@ errors:
       en aquest moment. Espera que acabi i torna-ho a provar.
     locked_cli_operation_still_running: L'operació {operation_id} encara s'està executant.
       Encara no se'n coneix el resultat. Comprova'l abans de tornar-ho a provar.
-    locked_dependency_item: Una altra instal·lació està canviant aquest component
-      ara mateix. Torna-ho a provar quan acabi.
     locked_google_keychain: L'anell de claus del sistema operatiu que desa les credencials
       de Google està bloquejat o no és accessible. Desbloqueja l'anell de claus i
       torna-ho a provar.
@@ -1132,9 +1127,6 @@ errors:
       Torna a executar l'ordre confirmant l'operació.
     refused_corpus_search_input: No s'ha pogut satisfer la sol·licitud de cerca al
       corpus.
-    refused_dependency_proxy_configuration: El paràmetre del servidor intermediari
-      no és una adreça http:// amb un nom d'amfitrió i un port vàlid.
-    refused_dependency_selection: Aquest component no es pot configurar aquí.
     refused_diagnostic_model_invariant: 'Refusat: invariant del model de diagnòstic
       incomplit.'
     refused_einvoice_xml_parse: No s'ha pogut llegir l'XML de la factura electrònica

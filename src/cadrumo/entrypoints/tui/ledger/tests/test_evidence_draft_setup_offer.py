@@ -17,6 +17,7 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Static
 
+from .....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
 from .....application.dependency_contracts import DependencyStatusRow
 from .....application.ledger.attachment_review import AttachmentReviewItem
 from .....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
@@ -36,7 +37,7 @@ from ..models import (
     LedgerReaderReadinessV1,
 )
 from ..workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshV1
-from .setup_status_fixtures import LOCAL_AI_HELD, SetupStatusWorkspaceHostApp, absent_row, not_in_this_build_row
+from .setup_status_fixtures import LOCAL_AI_HELD, SetupStatusWorkspaceHostApp
 from .workspace_fixtures import ledger_context, ledger_evidence_action, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -170,7 +171,7 @@ async def _run(
 
 @pytest.mark.asyncio
 async def test_a_label_reading_without_the_local_ai_offers_its_setup() -> None:
-    host, shown, _text, label = await _run(_local_ai_fallback(), (absent_row("local_ai"),))
+    host, shown, _text, label = await _run(_local_ai_fallback(), (recorded_absent_row("local_ai"),))
 
     assert shown
     assert label == "Set up: Local AI"
@@ -190,7 +191,7 @@ async def test_a_local_ai_this_build_cannot_set_up_shows_its_sentence_and_offers
 
 @pytest.mark.asyncio
 async def test_a_fallback_setup_cannot_end_offers_nothing_and_reads_no_row() -> None:
-    host, shown, _text, label = await _run(_headroom_fallback(), (absent_row("local_ai"),))
+    host, shown, _text, label = await _run(_headroom_fallback(), (recorded_absent_row("local_ai"),))
 
     assert not shown
     assert label is None

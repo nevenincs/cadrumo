@@ -376,15 +376,11 @@ PERMITTED_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
             "core/tests/test_config.py",
             "TestRepoRelativePathNormalisationCoverage.test_relative_audit_flagged_paths_resolve_under_project_root",
         ),
-        # Independent resolver oracles for the managed Playwright cache,
-        # spawned Ollama home and repository-local storage-root default.
+        # Independent resolver oracles for the managed Playwright cache and
+        # the repository-local storage-root default.
         (
             "application/tests/test_provisioning_browser.py",
             "test_browsers_root_defaults_under_the_configured_storage_root",
-        ),
-        (
-            "application/tests/test_provisioning_host.py",
-            "test_start_spawns_the_located_runtime_with_controlled_model_storage_and_waits_for_it",
         ),
         (
             "core/tests/test_storage_environment.py",

@@ -234,33 +234,6 @@ class WorkerAuthorizationReleased(BaseModel):
     permit_id: UUID
 
 
-class WorkerServerStart(BaseModel):
-    """Ask the runtime to start the model runtime's server under one held COMMIT fence.
-
-    The worker is contained, so a server it started itself would end with it.
-    The instruction names no program and no environment: the runtime resolves
-    both from its own settings.
-    """
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    kind: Literal["start_runtime_server"] = "start_runtime_server"
-    request_id: UUID
-    permit_id: UUID
-    command_id: UUID
-
-
-class WorkerServerStarted(BaseModel):
-    """Answer one start instruction; ``process_id`` is absent when the runtime started nothing."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    kind: Literal["runtime_server_started"] = "runtime_server_started"
-    request_id: UUID
-    permit_id: UUID
-    command_id: UUID
-    runtime_boot_id: UUID
-    process_id: NonNegativeInt | None = None
-
-
 class WorkerModelRun(BaseModel):
     """Ask the runtime to have the profile's agent service answer one lookup or run.
 
@@ -300,12 +273,12 @@ class WorkerModelRunResult(BaseModel):
 class WorkerAuthorizationInstruction(
     RootModel[
         Annotated[
-            WorkerAuthorizationRelease | WorkerApprovalPublication | WorkerServerStart | WorkerModelRun,
+            WorkerAuthorizationRelease | WorkerApprovalPublication | WorkerModelRun,
             Field(discriminator="kind"),
         ]
     ]
 ):
-    """Only explicit release, an approval phase, a runtime server start or a model run may use a held fence."""
+    """Only explicit release, an approval phase or a model run may use a held fence."""
 
 
 class WorkerAuthorizationAcknowledgement(BaseModel):

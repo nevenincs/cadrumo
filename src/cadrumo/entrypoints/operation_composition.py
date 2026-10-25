@@ -55,7 +55,6 @@ if TYPE_CHECKING:
     from ..application.live.notification_ports import NotificationsPorts
     from ..application.live.verify import VerifySurface
     from ..application.live.verify_capture_operation import VerifyLiveObservation
-    from ..application.local_reader_provisioning import RuntimeServerOwnerStart
     from ..application.modelo.aggregate_ports import ModeloAggregateOperationPorts, ModeloAggregateOperationPortsFactory
     from ..application.modelo.amendment_action_ports import AmendmentActionPortsFactory
     from ..application.modelo.calculation_action_ports import CalculationActionPortsFactory
@@ -325,7 +324,6 @@ class OperationCompositionInputs:
     modelo_profile_resolver: ModeloWorkVerifyProfileResolver | None = None
     modelo_workbench_read_ports_factory: ModeloWorkbenchReadPortsFactory | None = None
     execution_caller_reader: OperationExecutionCallerReader | None = None
-    runtime_server_owner_start: RuntimeServerOwnerStart | None = None
     connectivity_probe: ConnectivityProbePort | None = None
 
     @cached_property
@@ -633,18 +631,11 @@ def _diagnostics_repair_composition(inputs: OperationCompositionInputs) -> Opera
     return _built(operations.definitions, operations.registrations)
 
 
-def _dependency_operation_composition(inputs: OperationCompositionInputs) -> OperationGroupBuild:
-    from .dependency_operation_composition import build_dependency_operations
-
-    del inputs
-    operations = build_dependency_operations()
-    return _built(operations.definitions, operations.registrations)
-
-
 def _local_reader_operation_composition(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     from .local_reader_operation_composition import build_local_reader_operations
 
-    operations = build_local_reader_operations(owner_start=inputs.runtime_server_owner_start)
+    del inputs
+    operations = build_local_reader_operations()
     return _built(operations.definitions, operations.registrations)
 
 
@@ -2946,7 +2937,6 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.workflow.resume_operation": _workflow_resume_operation,
     "application.workflow.run_read_operation": _workflow_run_read_operation,
     "application.workstation_check_operation": _workstation_check_operation,
-    "entrypoints.dependency_operation_composition": _dependency_operation_composition,
     "entrypoints.diagnostics_repair_composition": _diagnostics_repair_composition,
     "entrypoints.local_reader_operation_composition": _local_reader_operation_composition,
 }
@@ -3034,17 +3024,14 @@ def build_production_operation_registry(
     modelo_profile_resolver: ModeloWorkVerifyProfileResolver | None = None,
     modelo_workbench_read_ports_factory: ModeloWorkbenchReadPortsFactory | None = None,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
-    runtime_server_owner_start: RuntimeServerOwnerStart | None = None,
     connectivity_probe: ConnectivityProbePort | None = None,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory by composing every group eagerly.
 
     This is the validation authority the contract manifest is generated from.
     A ``None`` capability selects its production default.
-    ``runtime_server_owner_start`` is bound by a contained process, which asks
-    its owner to start the model runtime's server because one it started
-    itself would end with it. ``connectivity_probe`` browses to the site the
-    connectivity operation observes.
+    ``connectivity_probe`` browses to the site the connectivity operation
+    observes.
     """
     inputs = OperationCompositionInputs(
         settings=settings,
@@ -3090,7 +3077,6 @@ def build_production_operation_registry(
         modelo_profile_resolver=modelo_profile_resolver,
         modelo_workbench_read_ports_factory=modelo_workbench_read_ports_factory,
         execution_caller_reader=execution_caller_reader,
-        runtime_server_owner_start=runtime_server_owner_start,
         connectivity_probe=connectivity_probe,
     )
     return _compose_every_group(inputs)[0]
@@ -3153,7 +3139,6 @@ def compose_operation_dependencies(
     execution_authority_factory: Callable[[OperationRegistry], OperationExecutionAuthority] | None = None,
     modelo_profile_resolver: ModeloWorkVerifyProfileResolver | None = None,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
-    runtime_server_owner_start: RuntimeServerOwnerStart | None = None,
     journal_committed: Callable[[OperationPersistedSnapshot], None] | None = None,
 ) -> OperationComposedServices:
     """Compose the manifest-backed production registry and all public services.
@@ -3210,7 +3195,6 @@ def compose_operation_dependencies(
         profile_rotation_finalizer=profile_rotation_finalizer,
         modelo_profile_resolver=modelo_profile_resolver,
         execution_caller_reader=execution_caller_reader,
-        runtime_server_owner_start=runtime_server_owner_start,
     )
     resolved_settings = inputs.resolved_settings
     storage_root = effective_storage_root(settings=resolved_settings)

@@ -4,9 +4,9 @@ The verdicts come from the real setup probes: the browser probe reading an
 empty browsers root, and the local reader probe asking a closed runtime port.
 The refusals pass through the real CLI error boundary and the live action
 resolver, both in-process and rebuilt from a worker's recorded error detail.
-The item's quick-status row comes from the real row derivation: absent, so its
-action sets it up, or blocked as not in this build, as the components role and
-a build without it read an item they cannot set up. Text output shows the error's sentence and then
+The item's quick-status row is the one the real components role recorded on a
+root without it, absent with its setup action, or the one every surface reads
+in a build without the role, blocked as not in this build. Text output shows the error's sentence and then
 the exact command for an offerable row, the row's own sentence for a blocked
 row, and nothing more when the status cannot be read; JSON keeps the typed
 action record unchanged.
@@ -29,14 +29,9 @@ from cadrumo_client.commands.registered_operation_errors import detailed_registe
 from ....adapters.outbound.aeat.browser.errors import BrowserError
 from ....adapters.outbound.aeat.browser.session import require_browser_ready
 from ....adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
-from ....application.dependency_contracts import (
-    DependencyBlockedReason,
-    DependencyCheckMode,
-    DependencyProbeOutcome,
-    DependencyProbeReading,
-    DependencyStatusRow,
-)
-from ....application.dependency_registry import dependency_item_declarations, derive_dependency_row
+from ....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
+from ....application.dependency_contracts import DependencyStatusRow
+from ....application.dependency_registry import dependency_item_declarations
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
 from ....application.ledger.preconditions import LedgerPreconditionCondition
 from ....application.local_reader import probe_local_reader
@@ -65,24 +60,15 @@ _LOCAL_AI_HELD = "Local AI: This version of Cadrumo does not include this."
 _BROWSER_HELD = "Browser for the tax agency website: This version of Cadrumo does not include this."
 
 
-def _rows(outcome: DependencyProbeOutcome) -> tuple[DependencyStatusRow, ...]:
-    """Every item's quick-status row, derived by the real registry from one probe reading each."""
-    blocked = DependencyBlockedReason.NOT_IN_THIS_BUILD if outcome is DependencyProbeOutcome.BLOCKED else None
-    return tuple(
-        derive_dependency_row(
-            declaration,
-            DependencyProbeReading(
-                item_id=declaration.item_id, mode=DependencyCheckMode.QUICK, outcome=outcome, blocked_reason=blocked
-            ),
-        )
-        for declaration in dependency_item_declarations()
-    )
+def _rows(row_for: Callable[[str], DependencyStatusRow]) -> tuple[DependencyStatusRow, ...]:
+    """Every item's quick-status row, as the components role or a build without it reports it."""
+    return tuple(row_for(declaration.item_id) for declaration in dependency_item_declarations())
 
 
 @contextmanager
-def _status(outcome: DependencyProbeOutcome) -> Generator[None]:
-    """Bind the invocation's quick setup status to rows of ``outcome``."""
-    with setup_status_source(lambda: _rows(outcome)):
+def _status(row_for: Callable[[str], DependencyStatusRow]) -> Generator[None]:
+    """Bind the invocation's quick setup status to every item's row from ``row_for``."""
+    with setup_status_source(lambda: _rows(row_for)):
         yield
 
 
@@ -139,7 +125,7 @@ def _assert_no_action_record(output: str) -> None:
 def test_a_missing_browser_prints_the_sentence_and_the_setup_command(tmp_path: Path) -> None:
     error = _browser_refusal(tmp_path)
 
-    with _status(DependencyProbeOutcome.ABSENT):
+    with _status(recorded_absent_row):
         result = invoke_typer_app(_refusing_app(lambda: error), [], catch_exceptions=False)
 
     assert result.exit_code != 0
@@ -149,7 +135,7 @@ def test_a_missing_browser_prints_the_sentence_and_the_setup_command(tmp_path: P
 def test_a_browser_this_build_cannot_set_up_prints_its_sentence_and_no_command(tmp_path: Path) -> None:
     error = _browser_refusal(tmp_path)
 
-    with _status(DependencyProbeOutcome.BLOCKED):
+    with _status(not_in_this_build_row):
         result = invoke_typer_app(_refusing_app(lambda: error), [], catch_exceptions=False)
 
     assert result.exit_code != 0
@@ -190,7 +176,7 @@ def test_a_worker_recorded_browser_refusal_prints_the_same_command(tmp_path: Pat
         OperationErrorDetailV1.model_validate_json(detail.model_dump_json()), {}
     )
 
-    with _status(DependencyProbeOutcome.ABSENT):
+    with _status(recorded_absent_row):
         result = invoke_typer_app(_refusing_app(lambda: recorded), [], catch_exceptions=False)
 
     assert result.exit_code != 0
@@ -202,7 +188,7 @@ def test_a_worker_recorded_browser_refusal_prints_the_same_command(tmp_path: Pat
 def test_an_unreachable_local_ai_prints_the_sentence_and_the_setup_command() -> None:
     error = _reader_refusal()
 
-    with _status(DependencyProbeOutcome.ABSENT):
+    with _status(recorded_absent_row):
         result = invoke_typer_app(_refusing_app(lambda: error), [], catch_exceptions=False)
 
     assert result.exit_code != 0
@@ -212,7 +198,7 @@ def test_an_unreachable_local_ai_prints_the_sentence_and_the_setup_command() -> 
 def test_a_local_ai_this_build_cannot_set_up_prints_its_sentence_and_no_command() -> None:
     error = _reader_refusal()
 
-    with _status(DependencyProbeOutcome.BLOCKED):
+    with _status(not_in_this_build_row):
         result = invoke_typer_app(_refusing_app(lambda: error), [], catch_exceptions=False)
 
     assert result.exit_code != 0
@@ -268,12 +254,12 @@ def test_status_rows_show_the_setup_command_for_a_missing_browser(tmp_path: Path
 
     action = resolve_cli_precondition_action(status.precondition_verdict)
 
-    with _status(DependencyProbeOutcome.ABSENT):
+    with _status(recorded_absent_row):
         assert precondition_action_lines(action) == (f"precondition_action\t{_BROWSER_FIX}",)
         lines = dependency_text_lines(dependency_payload(status))
     assert f"{status.service}.precondition_action\t{_BROWSER_FIX}" in lines
     assert not any(".precondition_action." in line for line in lines)
-    with _status(DependencyProbeOutcome.BLOCKED):
+    with _status(not_in_this_build_row):
         assert precondition_action_lines(action) == (f"precondition_action\t{_BROWSER_HELD}",)
     with setup_status_source(_unreadable_status):
         assert precondition_action_lines(action) == ()

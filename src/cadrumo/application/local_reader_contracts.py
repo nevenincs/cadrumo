@@ -1,15 +1,17 @@
-"""Canonical request and result contracts for supervised local-reader provisioning."""
+"""Canonical request and result contracts for the local reader's load and verify actions.
+
+Both act on models the native component engine installed and the runtime
+manager's server holds; neither starts, installs, downloads or removes
+anything.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt
 
-from cadrumo_client.contracts.operation_ids import LOCAL_READER_OPERATION_DEFINITION_ID
-
-from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.external_constants import OutputLanguage
 from ..core.hardware import ContentionCause
 from ..core.model_catalogue import ModelRole
@@ -25,6 +27,7 @@ from .provisioning_runtime import ContentionSnapshot
 
 __all__ = [
     "LOCAL_READER_EXECUTE_PHASE",
+    "LOCAL_READER_OPERATION_DEFINITION_ID",
     "LOCAL_READER_OPERATION_SUBJECT",
     "LOCAL_READER_PREFLIGHT_PHASE",
     "LOCAL_READER_SETTLEMENT_PHASE",
@@ -37,8 +40,6 @@ __all__ = [
     "LocalReaderProvisionPublicResultV3",
     "LocalReaderProvisionRequest",
     "build_local_reader_load_request",
-    "build_local_reader_remove_request",
-    "build_local_reader_start_request",
     "local_reader_fact_mapping",
     "local_reader_public_facts",
     "local_reader_public_result",
@@ -49,6 +50,7 @@ __all__ = [
     "project_local_reader_result",
 ]
 
+LOCAL_READER_OPERATION_DEFINITION_ID = "local-reader.provision"
 LOCAL_READER_OPERATION_SUBJECT = "local-reader:runtime"
 LOCAL_READER_PREFLIGHT_PHASE = "local-reader.provision.preflight"
 LOCAL_READER_EXECUTE_PHASE = "local-reader.provision.execute"
@@ -56,68 +58,28 @@ LOCAL_READER_SETTLEMENT_PHASE = "local-reader.provision.settlement"
 
 
 class LocalReaderProvisionAction(StrEnum):
-    """What one local-reader action does; none of them downloads or installs anything.
+    """What one local-reader action does with a model already installed; neither downloads anything.
 
-    Fetching a model and installing the local model program belong to the
-    registered setup operation, which binds them to the plan a person approved.
+    Load makes the running program hold a model in memory; verify measures it.
+    Installing, starting and removing belong to the native component engine.
     """
 
-    START = "start"
     LOAD = "load"
     VERIFY = "verify"
-    REMOVE = "remove"
-
-
-_MODEL_NAMING_ACTIONS = frozenset(
-    {
-        LocalReaderProvisionAction.LOAD,
-        LocalReaderProvisionAction.VERIFY,
-        LocalReaderProvisionAction.REMOVE,
-    }
-)
 
 
 class LocalReaderProvisionRequest(CredentialFreeOperationRequest):
     """One local-reader action, over one role's model, a named model, or every role's.
 
-    ``model`` names a model outright and is accepted by load, verify and
-    remove; remove requires a role or a model so it never deletes every model
-    by default. ``output_language`` is the language a licence advisory is
-    written in, so the frontend that asked reads it in its own; the host's
-    language applies when it is absent.
+    ``output_language`` is the language a licence advisory is written in, so
+    the frontend that asked reads it in its own; the host's language applies
+    when it is absent.
     """
 
     action: LocalReaderProvisionAction
     role: ModelRole | None = None
     model: str | None = Field(default=None, min_length=1, max_length=256)
     output_language: OutputLanguage | None = None
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_coherent_request(self) -> LocalReaderProvisionRequest:
-        _require_model_naming_action(self.action, self.model)
-        _require_runtime_action_role(self.action, self.role)
-        _require_removal_target(self.action, self.role, self.model)
-        return self
-
-
-def _require_model_naming_action(action: LocalReaderProvisionAction, model: str | None) -> None:
-    if model is not None and action not in _MODEL_NAMING_ACTIONS:
-        raise ValueError("only load, verify and remove accept an explicit model")
-
-
-def _require_runtime_action_role(action: LocalReaderProvisionAction, role: ModelRole | None) -> None:
-    if action is LocalReaderProvisionAction.START and role is not None:
-        raise ValueError("start acts on the local model program, not on a role")
-
-
-def _require_removal_target(
-    action: LocalReaderProvisionAction,
-    role: ModelRole | None,
-    model: str | None,
-) -> None:
-    if action is LocalReaderProvisionAction.REMOVE and role is None and model is None:
-        raise ValueError("remove requires a role or a model")
 
 
 def _request(
@@ -134,11 +96,6 @@ def _request(
     )
 
 
-def build_local_reader_start_request() -> OperationRequest[LocalReaderProvisionRequest]:
-    """Build the request that starts the installed local model program when it is not answering."""
-    return _request(LocalReaderProvisionAction.START)
-
-
 def build_local_reader_load_request(
     role: ModelRole | None = None,
     model: str | None = None,
@@ -147,13 +104,6 @@ def build_local_reader_load_request(
 ) -> OperationRequest[LocalReaderProvisionRequest]:
     """Build the request that loads ``role``'s model, a named model, or every role's model."""
     return _request(LocalReaderProvisionAction.LOAD, role=role, model=model, output_language=output_language)
-
-
-def build_local_reader_remove_request(
-    role: ModelRole | None = None, model: str | None = None
-) -> OperationRequest[LocalReaderProvisionRequest]:
-    """Build the request that removes ``role``'s model or a named model from the runtime's store."""
-    return _request(LocalReaderProvisionAction.REMOVE, role=role, model=model)
 
 
 class LocalReaderModelOutcome(BaseModel):
@@ -172,8 +122,6 @@ class LocalReaderModelOutcome(BaseModel):
     succeeded: bool
     already_satisfied: bool = False
     contention: ContentionSnapshot | None = None
-    freed_bytes: int | None = Field(default=None, ge=0)
-    was_installed: bool = False
     resident: bool = False
     answered: bool = False
     elapsed_ms: int | None = Field(default=None, ge=0)
@@ -187,28 +135,17 @@ class LocalReaderModelOutcome(BaseModel):
 
 
 class LocalReaderProvisionOutcome(BaseModel):
-    """The settled result of one local-reader action.
-
-    ``facts`` and ``precondition_verdict`` describe the program-level action
-    (start); per-model detail is in ``models``.
-    """
+    """The settled result of one local-reader action, one outcome per model in ``models``."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     action: LocalReaderProvisionAction
     succeeded: bool
-    runtime_started: bool = False
-    already_running: bool = False
-    started_pid: int | None = Field(default=None, ge=0)
     models: tuple[LocalReaderModelOutcome, ...] = ()
-    facts: Mapping[str, ProvisioningFactValue] = Field(default_factory=dict)
-    precondition_verdict: PreconditionVerdict | None = None
 
     @property
     def failed_condition_id(self) -> str | None:
-        """Return the first refused condition across the program action and the models."""
-        if self.precondition_verdict is not None:
-            return self.precondition_verdict.failed_condition_id
+        """Return the first refused condition across the models."""
         return next((item.failed_condition_id for item in self.models if not item.succeeded), None)
 
 
@@ -320,8 +257,6 @@ class LocalReaderModelOutcomeV3(BaseModel):
     succeeded: bool
     already_satisfied: bool
     contention: LocalReaderContentionV1 | None = None
-    freed_bytes: NonNegativeInt | None = None
-    was_installed: bool
     resident: bool
     answered: bool
     elapsed_ms: NonNegativeInt | None = None
@@ -338,14 +273,8 @@ class LocalReaderProvisionPublicResultV3(BaseModel):
 
     action: LocalReaderProvisionAction
     succeeded: bool
-    runtime_started: bool
-    already_running: bool
-    started_pid: NonNegativeInt | None = None
     failed_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
     models: tuple[LocalReaderModelOutcomeV3, ...]
-    facts: tuple[LocalReaderFactV1, ...]
-    verdict_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
-    verdict_facts: tuple[LocalReaderFactV1, ...]
 
 
 def _project_model(item: LocalReaderModelOutcome) -> LocalReaderModelOutcomeV3:
@@ -356,8 +285,6 @@ def _project_model(item: LocalReaderModelOutcome) -> LocalReaderModelOutcomeV3:
         succeeded=item.succeeded,
         already_satisfied=item.already_satisfied,
         contention=project_local_reader_contention(item.contention),
-        freed_bytes=item.freed_bytes,
-        was_installed=item.was_installed,
         resident=item.resident,
         answered=item.answered,
         elapsed_ms=item.elapsed_ms,
@@ -379,12 +306,6 @@ def local_reader_public_result(outcome: LocalReaderProvisionOutcome) -> LocalRea
     return LocalReaderProvisionPublicResultV3(
         action=outcome.action,
         succeeded=outcome.succeeded,
-        runtime_started=outcome.runtime_started,
-        already_running=outcome.already_running,
-        started_pid=outcome.started_pid,
         failed_condition_id=outcome.failed_condition_id,
         models=tuple(_project_model(item) for item in outcome.models),
-        facts=local_reader_public_facts(outcome.facts),
-        verdict_condition_id=local_reader_verdict_condition(outcome.precondition_verdict),
-        verdict_facts=local_reader_verdict_facts(outcome.precondition_verdict),
     )

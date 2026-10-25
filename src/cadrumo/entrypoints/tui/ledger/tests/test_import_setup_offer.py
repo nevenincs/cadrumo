@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 from textual.widgets import Button, Input, Static
 
+from .....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
 from .....application.dependency_contracts import DependencyStatusRow
 from .....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
 from .....core.config import override_settings
@@ -31,7 +32,7 @@ from ..models import (
     LedgerImportSourceBindingV1,
 )
 from ..workspace_injection import LedgerWorkspaceInjection
-from .setup_status_fixtures import LOCAL_AI_HELD, SetupStatusWorkspaceHostApp, absent_row, not_in_this_build_row
+from .setup_status_fixtures import LOCAL_AI_HELD, SetupStatusWorkspaceHostApp
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
@@ -131,7 +132,7 @@ async def test_a_file_only_the_local_ai_reads_offers_its_setup_beside_the_previe
     tmp_path: Path,
 ) -> None:
     host, seen, outcome = await _import(
-        tmp_path, _ReaderRefusingImportDoor(LOCAL_AI_PROVISION_ACTION_ID), (absent_row("local_ai"),)
+        tmp_path, _ReaderRefusingImportDoor(LOCAL_AI_PROVISION_ACTION_ID), (recorded_absent_row("local_ai"),)
     )
 
     with override_settings(cadrumo_output_language="en"):
@@ -164,7 +165,7 @@ async def test_an_unreadable_setup_status_offers_nothing(tmp_path: Path) -> None
 
 @pytest.mark.asyncio
 async def test_a_reader_this_computer_cannot_run_is_worded_apart_and_reads_no_row(tmp_path: Path) -> None:
-    host, seen, outcome = await _import(tmp_path, _ReaderRefusingImportDoor(None), (absent_row("local_ai"),))
+    host, seen, outcome = await _import(tmp_path, _ReaderRefusingImportDoor(None), (recorded_absent_row("local_ai"),))
 
     with override_settings(cadrumo_output_language="en"):
         assert tr("tui.ledger.import.refusal.reader_unavailable_here") in outcome

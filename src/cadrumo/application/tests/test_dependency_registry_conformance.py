@@ -28,7 +28,7 @@ import yaml
 
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
-from ...core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, load_external_constants
+from ...core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n.render import lookup_translation
 from ..dependency_contracts import (
     DependencyBlockedReason,
@@ -51,19 +51,21 @@ _REPOSITORY_ROOT: Final = _SOURCE_ROOT.parent
 _LOCALES_ROOT: Final = _PACKAGE_ROOT / "locales"
 _FRONTEND_SOURCE: Final = _REPOSITORY_ROOT / "native" / "desktop" / "frontend" / "src"
 
-_STATUS_OPERATION: Final = "dependencies.status"
-_SETUP_OPERATION: Final = "dependencies.setup"
-_VERIFY_OPERATION: Final = "dependencies.verify"
-_DEPENDENCY_OPERATIONS: Final = frozenset({_STATUS_OPERATION, _SETUP_OPERATION, _VERIFY_OPERATION})
-_REMOVED_OPERATION: Final = "browser-runtime.provision"
+#: The Python setup operations the native components role replaced, and the
+#: browser operation before them; none may be registered or named again.
+_REMOVED_OPERATIONS: Final = (
+    "browser-runtime.provision",
+    "dependencies.setup",
+    "dependencies.status",
+    "dependencies.verify",
+)
 
-#: Operations a ``config provision`` leaf may submit: the three setup
-#: operations and the local-reader actions that download nothing.
 #: The ``config provision`` verbs that run the native components role and submit nothing.
 _COMPONENT_LEAVES: Final = frozenset({"browser", "probe", "pull", "remove", "setup", "status", "verify"})
 #: The operations the local reader's remaining verbs submit in the signed-in profile.
 _LOCAL_READER_OPERATIONS: Final = frozenset({"local-reader.provision", "local-reader.status", "local-reader.report"})
-_DOWNLOADING_LOCAL_READER_ACTIONS: Final = frozenset({"install", "pull", "setup"})
+#: The only local-reader actions: both act on a model already installed.
+_LOCAL_READER_ACTIONS: Final = frozenset({"load", "verify"})
 
 #: Catalogue subtrees that hold setup wording: the plain sentences and actions
 #: every surface shows, the desktop's own setup strings, and the words of the
@@ -101,34 +103,6 @@ def recovery_action_findings(
         for declaration in declarations
         if declaration.recovery_action_id not in catalogued
     ]
-
-
-_HOST_NAME: Final = re.compile(
-    r"^(?=.{1,253}$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$"
-)
-
-
-def host_group_findings(
-    declarations: Iterable[DependencyItemDeclaration],
-    hosts_for: Callable[[str], Sequence[str]],
-) -> list[str]:
-    """Name every item whose host group is undeclared, empty or holds something other than a host name."""
-    findings: list[str] = []
-    for declaration in declarations:
-        group = declaration.network_host_group
-        try:
-            hosts = hosts_for(group)
-        except KeyError:
-            findings.append(f"{declaration.item_id}: host group {group!r} is not declared")
-            continue
-        if not hosts:
-            findings.append(f"{declaration.item_id}: host group {group!r} names no host")
-        findings.extend(
-            f"{declaration.item_id}: host group {group!r} holds {host!r}, which is not a host name"
-            for host in hosts
-            if not _HOST_NAME.fullmatch(host)
-        )
-    return findings
 
 
 def display_name_findings(
@@ -287,18 +261,21 @@ def provision_leaf_findings(rows: Iterable[tuple[tuple[str, ...], str | None]]) 
     return findings
 
 
-def operation_set_findings(definition_ids: Iterable[str]) -> list[str]:
-    """Name every setup operation the registered set lacks, and the removed one it still holds."""
+def removed_operation_findings(definition_ids: Iterable[str]) -> list[str]:
+    """Name every removed operation the registered set still holds."""
     registered = set(definition_ids)
-    findings = [f"{operation} is not registered" for operation in sorted(_DEPENDENCY_OPERATIONS - registered)]
-    if _REMOVED_OPERATION in registered:
-        findings.append(f"{_REMOVED_OPERATION} is still registered")
-    return findings
+    return [f"{operation} is still registered" for operation in _REMOVED_OPERATIONS if operation in registered]
 
 
 def removed_identity_findings(sources: Mapping[str, str], identity: str) -> list[str]:
-    """Name every source that still spells a removed operation id, which would be an alias or a stale caller."""
-    return [f"{origin}: still names {identity!r}" for origin, text in sources.items() if identity in text]
+    """Name every source that still spells a removed operation id, which would be an alias or a stale caller.
+
+    The id must stand alone: the components role's phase codes, such as
+    ``dependencies.setup.browser.plan``, extend the id with further segments
+    and name a setup step, not the operation.
+    """
+    spelled = re.compile(re.escape(identity) + r"(?![\w.-])")
+    return [f"{origin}: still names {identity!r}" for origin, text in sources.items() if spelled.search(text)]
 
 
 # --------------------------------------------------------------------------
@@ -364,8 +341,7 @@ _PYTHON_SURFACES: Final = {
     "MCP": _SOURCE_ROOT / "cadrumo_mcp" / "mcp",
 }
 _REGISTRY_REFERENCE: Final = re.compile(
-    r"\bdependencies\.(?:status|setup|verify)\b|import[^\n]*\bdependency_(?:contracts|registry|wording)\b"
-    r"|\bdependency_(?:contracts|registry|wording) import\b"
+    r"import[^\n]*\bdependency_(?:contracts|registry|wording)\b|\bdependency_(?:contracts|registry|wording) import\b"
 )
 #: The readers that build ``config check``'s setup rows from the registry: the
 #: preflight row builder, and the command that reads the rows through the
@@ -397,24 +373,6 @@ def test_recovery_checker_names_an_item_whose_action_is_not_catalogued() -> None
     assert recovery_action_findings([BROWSER_DECLARATION], {"operator.provision.browser"}) == []
     findings = recovery_action_findings([BROWSER_DECLARATION], {"operator.provision.model"})
     assert findings == ["browser: recovery action 'operator.provision.browser' is not in the operator catalogue"]
-
-
-def test_host_group_checker_names_an_undeclared_group_an_empty_one_and_a_url() -> None:
-    """Preflight can only reach hosts the item's group declares, as bare host names."""
-    groups = {"browser": ("cdn.playwright.dev",), "model_runtime": (), "google": ("https://accounts.google.com",)}
-
-    def hosts_for(group: str) -> tuple[str, ...]:
-        return groups[group]
-
-    google = BROWSER_DECLARATION.model_copy(update={"network_host_group": "google"})
-    runtime = BROWSER_DECLARATION.model_copy(update={"network_host_group": "model_runtime"})
-    unknown = BROWSER_DECLARATION.model_copy(update={"network_host_group": "cdn"})
-    assert host_group_findings([BROWSER_DECLARATION], hosts_for) == []
-    assert host_group_findings([unknown, runtime, google], hosts_for) == [
-        "browser: host group 'cdn' is not declared",
-        "browser: host group 'model_runtime' names no host",
-        "browser: host group 'google' holds 'https://accounts.google.com', which is not a host name",
-    ]
 
 
 def test_display_name_checker_names_a_language_without_authored_text() -> None:
@@ -513,7 +471,7 @@ def test_script_list_checker_names_a_private_item_array_and_ignores_comments() -
 def test_provision_leaf_checker_names_a_component_verb_that_submits_and_a_foreign_operation() -> None:
     """A component verb that submits an operation, or a local reader verb submitting another one, is caught."""
     rows = [
-        (("config", "provision", "status"), _STATUS_OPERATION),
+        (("config", "provision", "status"), "dependencies.status"),
         (("config", "provision", "browser"), None),
         (("config", "provision", "load"), "local-reader.provision"),
         (("config", "provision", "remove"), "local-reader.provision"),
@@ -522,7 +480,7 @@ def test_provision_leaf_checker_names_a_component_verb_that_submits_and_a_foreig
         (("config", "check"), None),
     ]
     assert provision_leaf_findings(rows) == [
-        f"config provision status: submits {_STATUS_OPERATION!r} instead of running the components role",
+        "config provision status: submits 'dependencies.status' instead of running the components role",
         "config provision remove: submits 'local-reader.provision' instead of running the components role",
         "config provision report: submits 'browser-runtime.provision', which is not a local reader operation",
         "config provision report: submits None, which is not a local reader operation",
@@ -530,17 +488,24 @@ def test_provision_leaf_checker_names_a_component_verb_that_submits_and_a_foreig
     assert provision_leaf_findings([(("config", "check"), None)]) == ["the command table has no config provision leaf"]
 
 
-def test_operation_set_checker_names_a_missing_setup_operation_and_the_removed_one() -> None:
-    """The registered set must hold all three setup operations and not the removed browser operation."""
-    assert operation_set_findings([*_DEPENDENCY_OPERATIONS, "local-reader.provision"]) == []
-    findings = operation_set_findings([_STATUS_OPERATION, _SETUP_OPERATION, _REMOVED_OPERATION])
-    assert findings == ["dependencies.verify is not registered", "browser-runtime.provision is still registered"]
+def test_removed_operation_checker_names_each_removed_operation_still_registered() -> None:
+    """A registered set holding a removed setup operation is caught by that operation's name."""
+    assert removed_operation_findings(["local-reader.provision", "local-reader.status"]) == []
+    findings = removed_operation_findings(["dependencies.setup", "browser-runtime.provision", "ledger.list"])
+    assert findings == ["browser-runtime.provision is still registered", "dependencies.setup is still registered"]
 
 
-def test_removed_identity_checker_names_a_lingering_alias() -> None:
-    """A source that still spells the removed operation id is a forwarding alias or a stale caller."""
-    sources = {"a.py": 'ALIAS = "browser-runtime.provision"', "b.py": 'OPERATION = "dependencies.setup"'}
-    assert removed_identity_findings(sources, _REMOVED_OPERATION) == ["a.py: still names 'browser-runtime.provision'"]
+def test_removed_identity_checker_names_a_lingering_alias_and_passes_a_phase_code() -> None:
+    """A source spelling a removed operation id is a forwarding alias or a stale caller; a phase code is not."""
+    sources = {
+        "a.py": 'ALIAS = "browser-runtime.provision"',
+        "b.py": 'OPERATION = "dependencies.setup"',
+        "c.py": 'PHASE = f"dependencies.setup.{item}.plan"',
+    }
+    assert removed_identity_findings(sources, "browser-runtime.provision") == [
+        "a.py: still names 'browser-runtime.provision'"
+    ]
+    assert removed_identity_findings(sources, "dependencies.setup") == ["b.py: still names 'dependencies.setup'"]
 
 
 # --------------------------------------------------------------------------
@@ -560,13 +525,6 @@ def test_the_registry_holds_software_only_one_item_per_kind() -> None:
     declarations = dependency_item_declarations()
     assert [declaration.kind for declaration in declarations] == list(DependencyItemKind)
     assert "google" not in {declaration.item_id for declaration in declarations}
-
-
-def test_every_item_declares_the_hosts_its_preflight_reaches() -> None:
-    """Each item's host group is declared among the external constants with at least one host name."""
-    hosts = load_external_constants().dependency_hosts
-    findings = host_group_findings(dependency_item_declarations(), hosts.hosts_for)
-    assert not findings, "\n".join(findings)
 
 
 def test_every_item_has_its_plain_name_in_every_language() -> None:
@@ -614,12 +572,12 @@ def test_setup_wording_shows_no_internal_term() -> None:
 
 @pytest.mark.parametrize("surface", sorted(_PYTHON_SURFACES))
 def test_python_surface_reads_the_registry_rows_and_keeps_no_item_list(surface: str) -> None:
-    """The CLI, the TUI and MCP reach the setup operations and keep no list of items of their own."""
+    """The CLI, the TUI and MCP read the setup contracts and keep no list of items of their own."""
     root = _PYTHON_SURFACES[surface]
     sources = _read_sources([root], _PYTHON)
     assert sources, f"{surface}: no setup source at {root.relative_to(_REPOSITORY_ROOT).as_posix()}"
     assert any(_REGISTRY_REFERENCE.search(text) for text in sources.values()), (
-        f"{surface}: never reaches a setup operation or the setup contracts"
+        f"{surface}: never reads the setup contracts"
     )
     identities = item_identities(dependency_item_declarations())
     findings = [
@@ -671,14 +629,17 @@ def test_component_verbs_run_the_role_and_the_local_reader_verbs_submit_its_oper
     assert not findings, "\n".join(findings)
 
 
-def test_the_setup_operations_are_registered_and_the_browser_operation_is_gone() -> None:
-    """The shipped contract manifest holds the three setup operations and not the removed browser operation."""
-    findings = operation_set_findings(_manifest_definition_ids())
+def test_no_removed_setup_operation_is_registered() -> None:
+    """The shipped contract manifest holds none of the setup operations the components role replaced."""
+    definition_ids = _manifest_definition_ids()
+    assert "local-reader.status" in definition_ids, "the manifest census found no operation it should hold"
+    findings = removed_operation_findings(definition_ids)
     assert not findings, "\n".join(findings)
 
 
-def test_the_removed_browser_operation_has_no_alias_or_caller_anywhere() -> None:
-    """The removed browser operation id appears in no product, client, runtime, harness or desktop source."""
+@pytest.mark.parametrize("identity", _REMOVED_OPERATIONS)
+def test_a_removed_setup_operation_has_no_alias_or_caller_anywhere(identity: str) -> None:
+    """A removed setup operation id appears in no product, client, runtime, harness or desktop source."""
     roots = [
         _PACKAGE_ROOT,
         _SOURCE_ROOT / "cadrumo_client",
@@ -687,12 +648,12 @@ def test_the_removed_browser_operation_has_no_alias_or_caller_anywhere() -> None
         _FRONTEND_SOURCE,
     ]
     sources = _read_sources(roots, _PYTHON | _SCRIPT | frozenset({".json", ".yml", ".toml"}))
-    findings = removed_identity_findings(sources, _REMOVED_OPERATION)
+    findings = removed_identity_findings(sources, identity)
     assert not findings, "\n".join(findings)
 
 
-def test_the_local_reader_keeps_only_actions_that_download_nothing() -> None:
-    """``local-reader.provision`` no longer installs, pulls or sets up, and takes no consent boolean."""
+def test_the_local_reader_keeps_only_load_and_verify() -> None:
+    """``local-reader.provision`` installs, pulls, starts and removes nothing, and takes no consent boolean."""
     actions = {action.value for action in LocalReaderProvisionAction}
-    assert not actions & _DOWNLOADING_LOCAL_READER_ACTIONS, sorted(actions & _DOWNLOADING_LOCAL_READER_ACTIONS)
+    assert actions == _LOCAL_READER_ACTIONS, sorted(actions ^ _LOCAL_READER_ACTIONS)
     assert "consent" not in LocalReaderProvisionRequest.model_fields

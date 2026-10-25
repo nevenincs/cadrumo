@@ -343,17 +343,6 @@ class Plain:
     }
 
 
-def test_live_archive_server_overrides_use_the_installed_http_contract() -> None:
-    path = REPO_ROOT / "src/cadrumo/adapters/outbound/browser_runtime/archive_server.py"
-    tree = ast.parse(path.read_bytes())
-    module = ShippedModule("cadrumo.adapters.outbound.browser_runtime.archive_server", path, False, tree)
-    contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
-
-    assert {"_Server.daemon_threads", "_Handler.do_GET", "_Handler.log_message"}.isdisjoint(definitions)
-    assert "_Handler._send_verified" in definitions
-
-
 def test_click_dispatch_overrides_are_reached_but_ordinary_methods_are_auditable() -> None:
     module = _module(
         "pkg.commands",

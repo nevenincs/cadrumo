@@ -1,14 +1,9 @@
-"""Compose the operations that provision and report on what the machine holds for local reading.
+"""Compose the operations that load, measure and report on what the machine holds for local reading.
 
-The three operations share one subject, the machine's own model runtime, and
-the same outbound adapters: the model runtime's server start and the text
-reader's fitness probe. The browser builds are set up by ``dependencies.setup``.
-
-The one port whose binding depends on the process is the start of the runtime's
-server. A profile worker is contained, so a server it started itself would end
-with it. The worker therefore binds a start that asks the runtime that owns it,
-the runtime binds :func:`start_owned_runtime_server` to answer, and every
-process that may own the server binds the adapter that starts it directly.
+The three operations share one subject, the local AI the native component
+engine installed and the runtime manager runs, and the same outbound adapter:
+the text reader's fitness probe. Nothing composed here starts, installs or
+removes a program or a model.
 """
 
 from __future__ import annotations
@@ -16,12 +11,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
-from ..adapters.outbound.model_runtime.process_control import spawn_runtime_server
 from ..application.local_reader_operation import (
     build_local_reader_operation_definition,
     build_local_reader_operation_registration,
 )
-from ..application.local_reader_provisioning import RuntimeServerOwnerStart
 from ..application.local_reader_report import (
     build_local_reader_report_definition,
     build_local_reader_report_registration,
@@ -32,40 +25,21 @@ from ..application.local_reader_status_operation import (
 )
 from ..application.operations.operation_definition import OperationDefinition
 from ..application.operations.registry import OperationPublicDefinitionRegistrationV1
-from ..application.provisioning_host import launch_runtime_server
 
-__all__ = ["LocalReaderOperations", "build_local_reader_operations", "start_owned_runtime_server"]
+__all__ = ["LocalReaderOperations", "build_local_reader_operations"]
 
 
 @dataclass(frozen=True, slots=True)
 class LocalReaderOperations:
-    """The definitions and public registrations of the local reader's provisioning family."""
+    """The definitions and public registrations of the local reader's operation family."""
 
     definitions: tuple[OperationDefinition, ...]
     registrations: tuple[OperationPublicDefinitionRegistrationV1, ...]
 
 
-def start_owned_runtime_server() -> int | None:
-    """Start the machine's model runtime server from this process, for a worker that may not own one.
-
-    The program and its environment are resolved here, from this process's own
-    settings. Returns the server's process id, or ``None`` when nothing was
-    started.
-    """
-    return launch_runtime_server(spawn=spawn_runtime_server)
-
-
-def build_local_reader_operations(*, owner_start: RuntimeServerOwnerStart | None = None) -> LocalReaderOperations:
-    """Bind the outbound adapters to the three ``local-reader`` operations.
-
-    ``owner_start`` is bound by a process that is contained and so asks its
-    owner to start the runtime's server. Without it the server is started from
-    the executing process.
-    """
-    provision = build_local_reader_operation_definition(
-        spawn=spawn_runtime_server if owner_start is None else owner_start,
-        text_probe=probe_text_extraction_fitness,
-    )
+def build_local_reader_operations() -> LocalReaderOperations:
+    """Bind the outbound adapters to the three ``local-reader`` operations."""
+    provision = build_local_reader_operation_definition(text_probe=probe_text_extraction_fitness)
     status = build_local_reader_status_definition(text_probe=probe_text_extraction_fitness)
     report = build_local_reader_report_definition()
     return LocalReaderOperations(

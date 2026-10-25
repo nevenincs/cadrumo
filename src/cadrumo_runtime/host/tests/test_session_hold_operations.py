@@ -16,24 +16,6 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, JsonValue, TypeAdapter
 
-from cadrumo.application.dependency_contracts import (
-    DependencyCheckMode,
-    DependencyPlanEntry,
-    DependencySetupPlan,
-    DependencySpaceCheck,
-    dependency_plan_digest,
-    required_free_bytes,
-)
-from cadrumo.application.dependency_setup_operation import (
-    DEPENDENCIES_OPERATION_SUBJECT,
-    DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID,
-    DependencyPlanEntryViewV1,
-    DependencyRegistryFactory,
-    DependencySetupReviewV2,
-    DependencyStatusResultV1,
-    build_dependency_operation_definitions,
-    build_dependency_operation_registrations,
-)
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -69,8 +51,12 @@ from cadrumo.application.user_profile.google_configuration_operation import (
     build_google_configuration_registration,
 )
 from cadrumo.application.user_profile.google_configuration_operation_contracts import (
+    GOOGLE_CONSENT_PRESENTATION_CODE,
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
+    GOOGLE_STATUS_OPERATION_DEFINITION_ID,
     GoogleConfigurationOutcome,
+    GoogleConsentReviewProjection,
+    GoogleStatusProjection,
 )
 from cadrumo.application.user_profile.google_configuration_operation_ports import (
     GoogleConfigurationOperationPortsFactory,
@@ -81,8 +67,12 @@ from cadrumo.application.user_profile.google_configuration_operation_refusal imp
     GoogleConfigurationRefusalProjection,
 )
 from cadrumo.core.hashing import content_hash_hex
-from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.operations import (
+    OperationCancellation,
+    OperationEffect,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from cadrumo_client.contracts import deadline_budget
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -102,7 +92,6 @@ from cadrumo_client.contracts.operation_access import (
     OperationSubmit,
     OperationSubmitted,
 )
-from cadrumo_client.contracts.operation_ids import DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -121,25 +110,22 @@ _SESSION = UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")
 _BOOT = UUID("cccccccc-cccc-4ccc-8ccc-cccccccccccc")
 _CONNECTION = UUID("dddddddd-dddd-4ddd-8ddd-dddddddddddd")
 _DOCUMENT = TypeAdapter(dict[str, JsonValue])
+_SUBJECT = f"profile:{_PROFILE}"
+_PROFILE_PAYLOAD: dict[str, object] = {"profile_id": str(_PROFILE)}
 
 
 def _unbuilt_registry(*_arguments: object) -> object:
     raise AssertionError("the hold never runs an operation itself")
 
 
-_DEFINITIONS = build_dependency_operation_definitions(cast(DependencyRegistryFactory, _unbuilt_registry))
 _GOOGLE_DEFINITIONS = build_google_configuration_definitions(
     cast(GoogleConfigurationOperationPortsFactory, _unbuilt_registry)
 )
-_ALL_DEFINITIONS = tuple(sorted((*_DEFINITIONS, *_GOOGLE_DEFINITIONS), key=lambda definition: definition.definition_id))
 _REGISTRY = OperationRegistry(
-    definitions=_ALL_DEFINITIONS,
+    definitions=tuple(sorted(_GOOGLE_DEFINITIONS, key=lambda definition: definition.definition_id)),
     public_registrations=tuple(
         sorted(
-            (
-                *build_dependency_operation_registrations(_DEFINITIONS),
-                *(build_google_configuration_registration(definition) for definition in _GOOGLE_DEFINITIONS),
-            ),
+            (build_google_configuration_registration(definition) for definition in _GOOGLE_DEFINITIONS),
             key=lambda registration: registration.contract.definition_id,
         )
     ),
@@ -154,32 +140,14 @@ def _json(model: BaseModel) -> dict[str, JsonValue]:
     return _DOCUMENT.validate_python(model.model_dump(mode="json"))
 
 
-def _review(operation_id: str, revision: int, download_bytes: int) -> DependencySetupReviewV2:
-    entry = DependencyPlanEntry(
-        item_id="browser",
-        download_bytes=download_bytes,
-        source_hosts=("cdn.playwright.dev",),
-        destination=StorageCategory.PLAYWRIGHT_BROWSERS,
-    )
-    plan = DependencySetupPlan(
-        entries=(entry,),
-        space=DependencySpaceCheck(free_bytes=10**12, required_bytes=required_free_bytes(download_bytes)),
-    )
-    return DependencySetupReviewV2(
+def _review(operation_id: str, revision: int, proposal: str) -> GoogleConsentReviewProjection:
+    return GoogleConsentReviewProjection(
         identity=OperationIdentity(
-            operation_id=operation_id,
-            definition_id=DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID,
-            subject_ref=DEPENDENCIES_OPERATION_SUBJECT,
+            operation_id=operation_id, definition_id=GOOGLE_LOGIN_OPERATION_DEFINITION_ID, subject_ref=_SUBJECT
         ),
         revision=revision,
-        plan_digest=dependency_plan_digest(plan),
-        entries=(DependencyPlanEntryViewV1(entry=entry, destination_path="components/playwright"),),
-        known_download_bytes=plan.known_download_bytes,
-        has_unknown_size=plan.has_unknown_size,
-        installs_outside_program=plan.installs_outside_program,
-        space=plan.space,
-        space_sufficient=plan.space.sufficient,
-        reviewed_proposal_digest="e" * 64,
+        profile_id=_PROFILE,
+        reviewed_proposal_digest=proposal * 64,
     )
 
 
@@ -193,13 +161,13 @@ class _Operation:
         self.lifecycle = OperationLifecycle.RUNNING
         self.condition: OperationTerminalCondition | None = None
         self.events: list[OperationPublicPhaseEventV1] = []
-        self.review: DependencySetupReviewV2 | None = None
+        self.review: GoogleConsentReviewProjection | None = None
         self.interaction_id = "1" * 64
         self.result: BaseModel | None = None
         self.refusal_ref: str | None = None
-        self.cancellable = definition_id == DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID
+        self.cancellable = self.contract.cancellation is not OperationCancellation.UNSUPPORTED
 
-    def await_review(self, review: DependencySetupReviewV2) -> None:
+    def await_review(self, review: GoogleConsentReviewProjection) -> None:
         self.review = review
         self.lifecycle = OperationLifecycle.WAITING_FOR_INTERACTION
         self.revision = review.revision
@@ -227,7 +195,7 @@ class _Operation:
             operation_id=self.operation_id,
             interaction_id=self.interaction_id,
             revision=self.revision,
-            presentation_code="dependencies.setup.review",
+            presentation_code=GOOGLE_CONSENT_PRESENTATION_CODE,
             response_schema=response,
             expires_at=expires,
             review_reference=OperationReviewProjectionReferenceV1(
@@ -336,7 +304,7 @@ class _Runtime:
             assert operation.review is not None
             schema = operation.contract.review_projection_schema
             assert schema is not None
-            document = OperationReviewProjectionSuccessV1[DependencySetupReviewV2](
+            document = OperationReviewProjectionSuccessV1[GoogleConsentReviewProjection](
                 projection_schema=schema,
                 definition_contract_digest=operation.contract.definition_contract_digest,
                 projection=operation.review,
@@ -426,16 +394,16 @@ def _relay(runtime: _Runtime) -> OperationRelay:
 def _submit(relay: OperationRelay, definition_id: str, payload: dict[str, object]) -> str:
     reply = relay.handle(
         "operation_submit",
-        {"definition_id": definition_id, "subject_ref": DEPENDENCIES_OPERATION_SUBJECT, "payload": payload},
+        {"definition_id": definition_id, "subject_ref": _SUBJECT, "payload": payload},
     )
     assert reply["kind"] == "operation_submitted"
     return cast(str, reply["operation_id"])
 
 
 def _reviewing(runtime: _Runtime, relay: OperationRelay) -> tuple[_Operation, dict[str, object]]:
-    operation_id = _submit(relay, DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID, {"item_ids": ["browser"]})
+    operation_id = _submit(relay, GOOGLE_LOGIN_OPERATION_DEFINITION_ID, _PROFILE_PAYLOAD)
     operation = runtime.operations[operation_id]
-    operation.await_review(_review(operation_id, 2, 100))
+    operation.await_review(_review(operation_id, 2, "e"))
     return operation, relay.handle("operation_review", {"operation_id": operation_id})
 
 
@@ -453,18 +421,15 @@ def test_a_submitted_operation_is_relayed_unchanged_and_watched_until_it_settles
     runtime = _Runtime()
     relay = _relay(runtime)
     assert not relay.watching()
-    operation_id = _submit(relay, DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"mode": "full", "locale": "ca"})
+    operation_id = _submit(relay, GOOGLE_STATUS_OPERATION_DEFINITION_ID, _PROFILE_PAYLOAD)
     (submitted,) = runtime.submitted
-    assert (submitted.definition_id, submitted.subject_ref) == (
-        DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID,
-        DEPENDENCIES_OPERATION_SUBJECT,
-    )
-    assert submitted.payload_json == '{"mode":"full","locale":"ca"}'
+    assert (submitted.definition_id, submitted.subject_ref) == (GOOGLE_STATUS_OPERATION_DEFINITION_ID, _SUBJECT)
+    assert submitted.payload_json == f'{{"profile_id":"{_PROFILE}"}}'
     assert relay.watching()
     with pytest.raises(RelayRefusedError) as unsettled:
         relay.handle("operation_result", {"operation_id": operation_id})
     assert unsettled.value.code == "no_result"
-    result = DependencyStatusResultV1(mode=DependencyCheckMode.FULL, rows=(), complete=True, hardware_limited=False)
+    result = GoogleStatusProjection(profile_id=_PROFILE, session_present=False)
     runtime.operations[operation_id].settle(result)
     observed = relay.handle("operation_observe", {"operation_id": operation_id, "after_cursor": 0})
     assert observed["kind"] == "operation_observed"
@@ -472,28 +437,25 @@ def test_a_submitted_operation_is_relayed_unchanged_and_watched_until_it_settles
     assert observation.projection.lifecycle is OperationLifecycle.TERMINAL
     assert not relay.watching()
     read = relay.handle("operation_result", {"operation_id": operation_id})
-    assert read["definition_id"] == DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID
+    assert read["definition_id"] == GOOGLE_STATUS_OPERATION_DEFINITION_ID
     assert cast(dict[str, object], read["document"])["projection"] == result.model_dump(mode="json")
 
 
 def _financial(definition_id: str, body: object) -> dict[str, object]:
-    return {"definition_id": definition_id, "subject_ref": DEPENDENCIES_OPERATION_SUBJECT, "input": body}
+    return {"definition_id": definition_id, "subject_ref": _SUBJECT, "input": body}
 
 
 def test_financial_input_travels_once_as_the_runtimes_financial_input_and_the_relay_lets_go_of_it() -> None:
     runtime = _Runtime()
-    runtime.financial_definitions.add(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID)
+    runtime.financial_definitions.add(GOOGLE_STATUS_OPERATION_DEFINITION_ID)
     relay = _relay(runtime)
-    request = _financial(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"input_version": 2, "amount": "1.234,56"})
+    request = _financial(GOOGLE_STATUS_OPERATION_DEFINITION_ID, {"input_version": 2, "amount": "1.234,56"})
 
     reply = relay.handle("operation_financial_submit", request)
 
     assert reply["kind"] == "operation_submitted"
     (sent,) = runtime.financial
-    assert (sent.definition_id, sent.subject_ref) == (
-        DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID,
-        DEPENDENCIES_OPERATION_SUBJECT,
-    )
+    assert (sent.definition_id, sent.subject_ref) == (GOOGLE_STATUS_OPERATION_DEFINITION_ID, _SUBJECT)
     assert sent.payload_json == '{"input_version":2,"amount":"1.234,56"}'
     # Never as an ordinary submission, and the bridge's own copy is gone once it is handed over.
     assert runtime.submitted == []
@@ -506,7 +468,7 @@ def test_financial_input_for_a_definition_that_takes_none_is_refused_closed_and_
     relay = _relay(runtime)
 
     with pytest.raises(RelayRefusedError) as refused:
-        relay.handle("operation_financial_submit", _financial(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"a": 1}))
+        relay.handle("operation_financial_submit", _financial(GOOGLE_STATUS_OPERATION_DEFINITION_ID, {"a": 1}))
 
     assert refused.value.code == AccessDenialCode.OPERATION_DENIED.value
     assert (runtime.financial, runtime.operations) == ([], {})
@@ -515,15 +477,15 @@ def test_financial_input_for_a_definition_that_takes_none_is_refused_closed_and_
 
 def test_financial_input_that_is_not_an_object_or_too_large_never_reaches_the_runtime() -> None:
     runtime = _Runtime()
-    runtime.financial_definitions.add(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID)
+    runtime.financial_definitions.add(GOOGLE_STATUS_OPERATION_DEFINITION_ID)
     relay = _relay(runtime)
 
     with pytest.raises(TypeError):
-        relay.handle("operation_financial_submit", _financial(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, []))
+        relay.handle("operation_financial_submit", _financial(GOOGLE_STATUS_OPERATION_DEFINITION_ID, []))
     with pytest.raises(ValueError, match="too large"):
         relay.handle(
             "operation_financial_submit",
-            _financial(DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"text": "x" * SUBMISSION_PAYLOAD_MAX_BYTES}),
+            _financial(GOOGLE_STATUS_OPERATION_DEFINITION_ID, {"text": "x" * SUBMISSION_PAYLOAD_MAX_BYTES}),
         )
     assert runtime.financial == []
 
@@ -532,7 +494,7 @@ def test_a_busy_subject_names_the_operation_that_holds_it() -> None:
     runtime = _Runtime()
     runtime.busy_holder = "7" * 64
     with pytest.raises(RelayRefusedError) as refused:
-        _submit(_relay(runtime), DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID, {})
+        _submit(_relay(runtime), GOOGLE_LOGIN_OPERATION_DEFINITION_ID, _PROFILE_PAYLOAD)
     assert (refused.value.code, refused.value.holder_operation_id) == (AccessDenialCode.SUBJECT_BUSY.value, "7" * 64)
     assert runtime.submitted == []
 
@@ -542,7 +504,7 @@ def test_an_answer_applies_exactly_the_review_it_read_and_a_changed_review_is_re
     relay = _relay(runtime)
     operation, review = _reviewing(runtime, relay)
     assert review["review_digest"] == content_hash_hex(cast(dict[str, JsonValue], review["document"]))
-    operation.review = _review(operation.operation_id, operation.revision, 200)
+    operation.review = _review(operation.operation_id, operation.revision, "d")
     with pytest.raises(RelayRefusedError) as changed:
         relay.handle("operation_respond", _answer(review))
     assert changed.value.code == "review_changed"
@@ -578,7 +540,7 @@ def test_a_rejection_answers_without_applying_and_another_interaction_is_not_pen
 def test_cancel_is_sent_at_the_observed_revision_and_a_stale_one_is_a_closed_refusal() -> None:
     runtime = _Runtime()
     relay = _relay(runtime)
-    operation_id = _submit(relay, DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID, {})
+    operation_id = _submit(relay, GOOGLE_LOGIN_OPERATION_DEFINITION_ID, _PROFILE_PAYLOAD)
     runtime.stale_cancellation = True
     with pytest.raises(RelayRefusedError) as stale:
         relay.handle("operation_cancel", {"operation_id": operation_id, "expected_revision": 1})
@@ -658,16 +620,7 @@ def _declined_google_sign_in() -> GoogleConfigurationOutcome:
 def test_a_refusal_its_definition_details_is_read_like_a_result_and_any_other_refusal_has_none() -> None:
     runtime = _Runtime()
     relay = _relay(runtime)
-    subject = f"profile:{_PROFILE}"
-    submitted = relay.handle(
-        "operation_submit",
-        {
-            "definition_id": GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
-            "subject_ref": subject,
-            "payload": {"profile_id": str(_PROFILE)},
-        },
-    )
-    operation_id = cast(str, submitted["operation_id"])
+    operation_id = _submit(relay, GOOGLE_LOGIN_OPERATION_DEFINITION_ID, _PROFILE_PAYLOAD)
     detail = _declined_google_sign_in()
     runtime.operations[operation_id].refuse(GOOGLE_CONFIGURATION_REFUSAL_CODE, detail)
 
@@ -675,7 +628,7 @@ def test_a_refusal_its_definition_details_is_read_like_a_result_and_any_other_re
 
     assert read["definition_id"] == GOOGLE_LOGIN_OPERATION_DEFINITION_ID
     assert cast(dict[str, object], read["document"])["projection"] == detail.model_dump(mode="json")
-    other = _submit(relay, DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"mode": "quick", "locale": None})
+    other = _submit(relay, GOOGLE_STATUS_OPERATION_DEFINITION_ID, _PROFILE_PAYLOAD)
     runtime.operations[other].refuse(AccessDenialCode.OPERATION_DENIED.value, detail)
     with pytest.raises(RelayRefusedError) as undocumented:
         relay.handle("operation_result", {"operation_id": other})
@@ -696,7 +649,7 @@ def test_relay_uses_one_runtime_budget_across_slow_submit_and_start(monkeypatch:
         return original(request, deadline=deadline)
 
     monkeypatch.setattr(runtime, "operation", slow)
-    operation = _submit(_relay(runtime), DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"mode": "full"})
+    operation = _submit(_relay(runtime), GOOGLE_STATUS_OPERATION_DEFINITION_ID, _PROFILE_PAYLOAD)
     assert operation in runtime.operations
     assert deadlines == [1120.0, 1120.0]
 
@@ -715,7 +668,7 @@ def test_relay_does_not_restart_budget_after_slow_submit(monkeypatch: pytest.Mon
 
     monkeypatch.setattr(runtime, "operation", exhausted)
     with pytest.raises(RelayRefusedError, match="unavailable"):
-        _submit(_relay(runtime), DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"mode": "full"})
+        _submit(_relay(runtime), GOOGLE_STATUS_OPERATION_DEFINITION_ID, _PROFILE_PAYLOAD)
 
 
 def test_relay_logs_transport_cause_without_request_data(
@@ -728,7 +681,7 @@ def test_relay_logs_transport_cause_without_request_data(
 
     monkeypatch.setattr(runtime, "operation", refused)
     with caplog.at_level(logging.WARNING), pytest.raises(RelayRefusedError, match="unavailable"):
-        _submit(_relay(runtime), DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"private": "private-profile-value"})
+        _submit(_relay(runtime), GOOGLE_STATUS_OPERATION_DEFINITION_ID, {"private": "private-profile-value"})
     record = next(record for record in caplog.records if record.message == "session_hold_operation_refused")
     assert record.__dict__["reason"] == "runtime_deadline_exceeded"
     assert record.__dict__["action"] == "operation_submit"

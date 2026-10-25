@@ -1,4 +1,4 @@
-"""Setup rows in ``aeat config check``, built from real registry rows."""
+"""Setup rows in ``aeat config check``, built from rows as the components role reports them."""
 
 from __future__ import annotations
 
@@ -9,38 +9,38 @@ from cadrumo_client.contracts.failure_categories import DependencyFailureCategor
 from ..dependency_contracts import (
     DependencyBlockedReason,
     DependencyCheckMode,
-    DependencyProbeOutcome,
-    DependencyProbeReading,
+    DependencyItemKind,
+    DependencyRecoveryAction,
     DependencyStaleReason,
+    DependencyState,
     DependencyStatusRow,
 )
-from ..dependency_registry import BROWSER_DECLARATION, LOCAL_AI_DECLARATION, derive_dependency_row
 from ..preflight import HealthSeverity, dependency_preflight_checks
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _local_ai(outcome: DependencyProbeOutcome, **fields: object) -> DependencyProbeReading:
-    return DependencyProbeReading.model_validate(
-        {"item_id": "local_ai", "mode": DependencyCheckMode.QUICK, "outcome": outcome, **fields}
+def _local_ai(state: DependencyState, **fields: object) -> DependencyStatusRow:
+    return DependencyStatusRow.model_validate(
+        {"item_id": "local_ai", "kind": DependencyItemKind.LOCAL_AI, "mode": DependencyCheckMode.QUICK, "state": state}
+        | fields
     )
 
 
 def _rows() -> tuple[DependencyStatusRow, ...]:
     return (
-        derive_dependency_row(
-            BROWSER_DECLARATION,
-            DependencyProbeReading(
-                item_id="browser",
-                mode=DependencyCheckMode.QUICK,
-                outcome=DependencyProbeOutcome.PRESENT,
-                version="1187",
-            ),
+        DependencyStatusRow(
+            item_id="browser",
+            kind=DependencyItemKind.BROWSER,
+            mode=DependencyCheckMode.QUICK,
+            state=DependencyState.READY,
+            version="1187",
         ),
-        derive_dependency_row(
-            LOCAL_AI_DECLARATION,
-            _local_ai(DependencyProbeOutcome.ABSENT),
-            last_failure=DependencyFailureCategory.INTERRUPTED,
+        _local_ai(
+            DependencyState.FAILED,
+            failure_category=DependencyFailureCategory.INTERRUPTED,
+            recovery=DependencyRecoveryAction.RESUME,
+            recovery_action_id="operator.provision.local_ai",
         ),
     )
 
@@ -65,16 +65,11 @@ def test_config_check_rows_grade_each_item_and_name_its_recovery() -> None:
 
 
 def test_a_computer_below_the_floor_warns_with_nothing_to_do_and_a_stale_item_is_usable() -> None:
-    hardware = derive_dependency_row(
-        LOCAL_AI_DECLARATION, _local_ai(DependencyProbeOutcome.BLOCKED, blocked_reason=DependencyBlockedReason.HARDWARE)
-    )
+    hardware = _local_ai(DependencyState.BLOCKED, blocked_reason=DependencyBlockedReason.HARDWARE)
     (check,) = dependency_preflight_checks((hardware,))
     assert (check.healthy, check.severity) == (False, HealthSeverity.WARN)
     assert check.precondition_verdict is not None and check.precondition_verdict.action is None
 
-    stale = derive_dependency_row(
-        LOCAL_AI_DECLARATION,
-        _local_ai(DependencyProbeOutcome.DIFFERS, stale_reason=DependencyStaleReason.DIFFERENT_MODEL_VERSION),
-    )
+    stale = _local_ai(DependencyState.STALE, stale_reason=DependencyStaleReason.DIFFERENT_MODEL_VERSION)
     (check,) = dependency_preflight_checks((stale,))
     assert (check.healthy, check.severity) == (True, HealthSeverity.WARN)

@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import re
 from collections.abc import Callable
-from datetime import datetime
 from typing import Annotated, Self
 from urllib.parse import urlsplit
 from uuid import UUID
@@ -124,17 +123,6 @@ class ReaderRoleProjectionV1(BaseModel):
     recovery_action_id: NamespacedId | None = None
 
 
-class ReaderPullProjectionV1(BaseModel):
-    """The process-local last pull, if one was recorded earlier."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    model: InvoiceEvidenceLabel
-    pulled: bool
-    attempted_at: datetime
-    bytes_fetched: Annotated[int, Field(ge=0)] | None = None
-    failed_condition_id: InvoiceEvidenceLabel | None = None
-
-
 class LedgerEvidenceReaderReadinessProjection(BaseModel):
     """Exact-profile reader status without document or tax values."""
 
@@ -142,7 +130,6 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
     profile_id: UUID
     host: ReaderHostProjectionV1
     roles: Annotated[tuple[ReaderRoleProjectionV1, ...], Field(max_length=32)]
-    last_pull: ReaderPullProjectionV1 | None = None
     extraction_ready: bool
     document_readiness: LocalReaderDocumentReadiness
     text_layer_model_fill_available: bool
@@ -151,7 +138,6 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
     def from_status(cls, profile_id: UUID, status: LocalReaderStatus) -> Self:
         """Copy measured host and role facts, and the setup action a role's probe named."""
         host = status.host
-        last_pull = status.last_pull
         version = _reported_version(host.version)
         return cls(
             profile_id=profile_id,
@@ -184,17 +170,6 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
                     recovery_action_id=row.recovery_action_id,
                 )
                 for row in status.roles
-            ),
-            last_pull=(
-                None
-                if last_pull is None
-                else ReaderPullProjectionV1(
-                    model=last_pull.model,
-                    pulled=last_pull.pulled,
-                    attempted_at=last_pull.attempted_at,
-                    bytes_fetched=last_pull.bytes_fetched,
-                    failed_condition_id=last_pull.failed_condition_id,
-                )
             ),
             extraction_ready=status.extraction_ready,
             document_readiness=status.document_readiness,
@@ -309,7 +284,6 @@ __all__ = [
     "LedgerEvidenceReaderReadinessProjection",
     "LedgerEvidenceReaderReadinessRequest",
     "ReaderHostProjectionV1",
-    "ReaderPullProjectionV1",
     "ReaderRoleProjectionV1",
     "build_ledger_evidence_reader_readiness_definition",
     "build_ledger_evidence_reader_readiness_registration",
