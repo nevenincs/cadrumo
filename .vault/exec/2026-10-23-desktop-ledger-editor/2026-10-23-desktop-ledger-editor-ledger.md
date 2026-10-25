@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-ledger-editor'
 date: '2026-10-23'
-modified: '2026-10-24'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:05cf2c14addcab342193e14569e8917724eefa61fb412dcbbf4084ad9f40fc2e'
+body_hash: 'sha256:0cd4d3c57d947a434622fea2031da9e87fedc8062afa39a06907951941d8c8ce'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -776,6 +776,60 @@ related:
 - `S17` `M` `native/desktop/frontend/src/components/ledger/inspector/InvoiceSection.tsx`
 - `S17` `M` `native/desktop/frontend/tests/ledger-matching.spec.ts`
 - `S17` `verify:` `npx playwright test tests/scenarios/ledger-documents.spec.ts tests/ledger-matching.spec.ts` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/WritePause.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/editing/useLedgerApply.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/ledgerApply.ts`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`
+- `S17` `verify:` `npx playwright test tests/scenarios/ledger-pause.spec.ts tests/ledger-apply.spec.ts` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S17` `M` `native/desktop/frontend/tests/ledger-plan.spec.ts`
+- `S17` `M` `native/desktop/frontend/tests/ledger-fixture-host.spec.ts`
+- `S17` `verify:` `playwright ledger-plan ledger-fixture-host ledger-apply ledger-editing ledger-transfer` -> `pass`
+- `S10` `M` `src/cadrumo/entrypoints/cli/operation_ledger_view.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_seed_support.py`
+- `S10` `M` `dev/operation_contract_manifest/tests/test_command_operation_join.py`
+- `S10` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo/adapters/persistence/operations/tests/test_llm_review_operation_persistence.py` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_operation_ledger_llm.py` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k review` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo_runtime host/tests/frontend/tui/test_runtime_ledger_categorisation.py` -> `pass`
+- `S10` `verify:` `pytest dev/operation_contract_manifest/tests (join, generate, census, frontend parity, source scan, runtime requests)` -> `pass`
+- `S10` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
+- `S10` `verify:` `relay_contracts.py --check` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ui/combobox.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/movements/movementWords.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/editing/CellEditor.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/editing/ReviewDialog.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/inspector/inspectorWords.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/movements/ClassifyDialog.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/setup/RuleDialog.tsx`
+- `S17` `M` `native/desktop/frontend/tests/combobox-ranking.spec.ts`
+- `S17` `verify:` `npx playwright test tests/combobox-ranking.spec.ts ledger-editing ledger-inspector ledger-movements ledger-setup data-grid scenarios` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/useSealedMovements.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/editing/LedgerEditing.tsx`
+- `S17` `verify:` `npx playwright test ledger-pause ledger-editing ledger-inspector scenarios` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/editing/MovementEditing.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/editing/editingWords.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S17` `verify:` `npx playwright test ledger-movements ledger-pause ledger-editing ledger-transfer ledger-setup ledger-documents scenarios` -> `pass`
+- `S17` `M` `native/desktop/src-tauri/src/shell/external.rs`
+- `S17` `M` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S17` `M` `native/desktop/src-tauri/src/shell/ledger/files.rs`
+- `S17` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S17` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S17` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/tauriLedger.ts`
+- `S17` `M` `native/desktop/frontend/tests/support/ledger.ts`
+- `S17` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/PeriodSelector.tsx`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-shell.spec.ts`
+- `S17` `verify:` `npx playwright test ledger-shell ledger-transfer ledger-pause scenarios` -> `pass`
+- `S17` `verify:` `npx playwright test data-grid ledger-inspector ledger-movements ledger-editing ledger-focus ledger-benchmark scenarios and tests/data-grid.spec.ts` -> `pass`
+- `S17` `M` `native/desktop/src-tauri/src/shell/settle.rs`
+- `S17` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S17` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
 
 ## Notes
 
@@ -834,3 +888,13 @@ related:
 - `S17` UX2 viewer-scrolls-away 5c1b42b6bd; scrolling the viewer to a reading's place is not done: the reading contract carries no position
 - `S17` ff9165347e grid floor with the panel shut and narrow header; 7dcf276adc UX2 strings batches 1-2
 - `S17` UX2 total-answer-not-kept 3db3117515: the product derives the total by design `(invoice_confirmation` `printed_total_discrepancy;` resolutions only gate), so the window says so; ticket-no-link-path 5745d2b430
+- `S17` UX2 reread-banner-lists-every-name 32b32f97a9; Show selects the counted movements rather than adding a filter chip
+- `S17` e70e0f6305 relay bounds from the generated relayBounds.ts; 4f16c85131 and 2e743779d1 UX2 strings batch 3
+- `S17` UX2 category-ranking-scatter 24f03943ce; two setup scenarios failed once in the batch and passed on their own re-run
+- `S17` UX2 sealed-holdback-rounds ea24622217: the page's lock-read budget raced across overlapping reads, and the review read at most 400; three scenarios failed once in the batch and passed alone
+- `S17` UX2 duplicate-glyph-mismatch e42cf47f36; usage-ratio-copy, colon-count-copy, rule-saved-silently, bulk-chord-overwrites-silently cf829606b6
+- `S17` 28b8bef784 `ledger_files_reveal` for UX2 unknown-export-reread; 08948df368 canonical review id in the scenario host
+- `S17` UX2 period-years-late f6222c7b22; export-saveas-clipped 06e10cb8d8; unknown-export-reread 15d2761612 on the host's revealFile (28b8bef784)
+- `S17` UX2 partial-column-fragments 7c0d45c3c9 (start-edge snap; a column the end group cuts stays counted by its cue); the 5,000-row benchmark missed its budget on some runs on HEAD's grid as well, under machine load
+- `S17` 547927be55 P04R follow-ring-unbounded-residents, host half
+- `S17` b29928b58a: a forgotten write stays unknown to the window (corrects 547927be55, raised by CADRUMO-UX-MODELO)
