@@ -16,6 +16,7 @@ related:
   - "[[2026-08-07-unstructured-document-ingestion-provisioning-adr]]"
   - "[[2026-10-13-application-distribution-native-bundle-llm-extra-adr]]"
   - "[[2026-10-13-agent-attachments-adr]]"
+  - '[[2026-10-25-agent-owned-models-hosted-vision-declaration-research]]'
 ---
 # `agent-owned-models` adr: `Agent-owned AI models` | (**status:** `accepted`)
 
