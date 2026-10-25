@@ -1324,7 +1324,7 @@ test-windows:
         }
     }
     $env:CADRUMO_TEST_MSI_ADAPTER = $inputs.adapter
-    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/mcp_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo/adapters/outbound/model_runtime/tests src/cadrumo_mcp/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests/test_channel_readiness_wait.py src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/mcp_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo_mcp/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests/test_channel_readiness_wait.py src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 [doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
