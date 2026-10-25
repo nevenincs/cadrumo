@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:82df25086f537508ee168bab789afa7a159605b92deab6f2308ea4925fa9fb50'
+body_hash: 'sha256:790d9a602419f5a9c2ba9cc9f6094cb7a43466bb15ff3142aabcd8ac0d0ca00a'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -848,6 +848,11 @@ related:
 - `S25` `M` `src/cadrumo/tests/fixtures/components_role/transcripts.json`
 - `S25` `verify:` `cargo test --offline --lib provisioning::` -> `pass`
 - `S25` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py src/cadrumo/adapters/outbound/components/tests` -> `pass`
+- `S07` `M` `src/cadrumo/core/storage_taxonomy.py`
+- `S07` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S07` `verify:` `pytest src/cadrumo/core/tests src/cadrumo/application/storage_management -m '' -k 'not no_undeclared_module_chains'` -> `pass`
+- `S07` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S07` `by:` `implementation-engineer`
 
 ## Notes
 
@@ -932,3 +937,4 @@ related:
 - `S15` S15 the acquisition lane's real download is opt-in through --accept-size and was not run here: no built role image and no download in this run; the vanilla-machine run stays pending
 - `S15` S15 CI workflows are unchanged: the fleet owns CI; CONTRIBUTING lists the Linux provisioning lane, the role lane and the acquisition lane beside the gate
 - `S25` The desktop crate's parity edit was not compiled here: its clippy gate runs only through CMake, which this session must not run.
+- `S07` `test_settings_lifecycle_gate` chain detector, `test_currency_fields_use_one_annotation` and `test_hashing_adoption` fail on this tree without these edits; reproduced against HEAD's taxonomy.
