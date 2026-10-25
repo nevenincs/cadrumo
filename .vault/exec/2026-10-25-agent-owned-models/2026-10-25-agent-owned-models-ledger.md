@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:770d8458e63185e6251bd9a01fd6a736c6397d0c683f5f32cdadbb2e6ab3dd2b'
+body_hash: 'sha256:229ce51b14faa2355da8d8e50d970cc5a9a2dddc06594f6ef4f0495b11ceade4'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -238,6 +238,31 @@ related:
 - `S08` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
 - `S08` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
 - `S08` `by:` `implementation-engineer-high`
+- `S10` `M` `dev/runtime_lifecycle/tests/test_service_model_run_relay.py`
+- `S10` `M` `dev/runtime_lifecycle/tests/test_service_provider_admin_ingress.py`
+- `S10` `M` `src/cadrumo/adapters/outbound/llm/tests/model_run_support.py`
+- `S10` `M` `src/cadrumo/adapters/outbound/llm/tests/test_agent_dispatch.py`
+- `S10` `M` `src/cadrumo/application/operations/tests/test_model_runs.py`
+- `S10` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs.py`
+- `S10` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs_gateway.py`
+- `S10` `M` `src/cadrumo_agent_service/providers/application/contracts.py`
+- `S10` `M` `src/cadrumo_agent_service/providers/application/model_role_selections.py`
+- `S10` `M` `src/cadrumo_agent_service/providers/application/model_runs.py`
+- `S10` `M` `src/cadrumo_agent_service/providers/application/tests/synthetic_catalog.py`
+- `S10` `M` `src/cadrumo_agent_service/providers/application/tests/test_keyless_lane.py`
+- `S10` `M` `src/cadrumo_agent_service/providers/application/tests/test_model_role_selections.py`
+- `S10` `M` `src/cadrumo_agent_service/providers/application/tests/test_model_runs.py`
+- `S10` `M` `src/cadrumo_client/contracts/model_runs.py`
+- `S10` `M` `src/cadrumo_client/contracts/tests/test_model_runs.py`
+- `S10` `M` `src/cadrumo_runtime/host/tests/test_model_run_admission.py`
+- `S10` `M` `src/cadrumo_runtime/host/tests/test_model_run_authority.py`
+- `S10` `verify:` `pytest src/cadrumo_agent_service src/cadrumo_client src/cadrumo/adapters/outbound/llm -q` -> `pass`
+- `S10` `verify:` `pytest -m integration -n 0 gateway, lifecycle answers, declared catalogue, model-run relay and admin ingress tests against cadrumo-agent 821f4ff` -> `pass`
+- `S10` `verify:` `python -m dev.quality.types` -> `pass`
+- `S10` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S10` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
+- `S10` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
+- `S10` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -254,3 +279,4 @@ related:
 - `S20` The selection arrives as --model `<role>` `<name>` `<size_bytes>` on every command but cancel. `PLAN_CONTRACT_VERSION` stays 2: the plan fields are unchanged, and a model part now carries the bare name as `target_version` and a null licence. The Python client (protocol.py `_a_model_names_its_licence)` refuses a model part without a licence, so it must change in P04.S22 before it passes --model. The real-role Python cases need a built image and were not run.
 - `S21` The engine.rs pull loop over the selection and the hardware.rs floor wording landed with P04.S19, which had to replace the pinned models to compile; this Step adds the read-back through the server list after a pull, retires DifferentModelVersion from every check, and proves the floor and the program-alone plan through the role. The DifferentModelVersion code stays in StaleReason because the desktop wire still names it.
 - `S23` native/application keeps licence wording only in the plan type kept for the desktop (PartLicence, the null licence field, the LicenceCommercialUseBarred advisory); P04.S22 removes the desktop consumers, after which those can go.
+- `S10` Interim under reading A: selection is checked against the declared catalogue only. The owner's ruling on whether a model only the live catalogue lists (installed, not declared) may be selected is pending; S10 stays open until it lands.

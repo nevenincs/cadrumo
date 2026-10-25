@@ -136,6 +136,12 @@ class ProviderSettingsRefusalCode(StrEnum):
     """No runtime took the request, so nothing was read or changed; produced at the frontend, never by the service."""
     PERSON_ACT_REQUIRED = "person_act_required"
     """Produced at dispatch for a frontend that may not change credentials, never by the service."""
+    MODEL_NOT_IN_CATALOGUE = "model_not_in_catalogue"
+    """A role selection names a model the lane's catalogue does not list now; a catalogue that lists it admits it."""
+    LANE_NOT_RUNNABLE = "lane_not_runnable"
+    """A role selection names a lane the agent declares runs no background request."""
+    VISION_REQUIRED = "vision_required"
+    """A role that reads images names a lane that takes no image or a model the catalogue does not mark as vision."""
     UNKNOWN = "unknown"
 
 

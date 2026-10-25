@@ -41,7 +41,7 @@ def _lane(
     default_base_url: str | None = None,
     cli_programs: tuple[str, ...] = (),
     reads_off_host: bool = True,
-    models: tuple[dict[str, Any], ...] = (),
+    models: tuple[dict[str, Any], ...] | None = None,
     recommended: dict[str, str] | None = None,
     background: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -56,7 +56,7 @@ def _lane(
         "agent_credential_id": credential_id,
         "reads_off_host": reads_off_host,
         "cli_programs": list(cli_programs),
-        "models": list(models),
+        "models": list(_hosted_models() if models is None else models),
         "recommended": {} if recommended is None else recommended,
         "background": _HOSTED_BACKGROUND if background is None else background,
     }
@@ -64,8 +64,22 @@ def _lane(
 
 _HOSTED_BACKGROUND: Final = {"runnable": True, "inputs": ["text", "image", "pdf"], "options": []}
 """What a hosted lane's background run takes: every input family and no run option."""
+HOSTED_TEXT_MODELS: Final = ("synthetic-text-1", "synthetic-text-2", "synthetic-text-3")
+"""Models every hosted lane declares with no stated fact, as the agent declares a hosted model."""
+HOSTED_VISION_MODELS: Final = ("synthetic-vision-1", "synthetic-vision-2")
+"""Models every hosted lane declares as vision, and nothing else."""
 KEYLESS_TEXT_MODEL: Final = "synthetic-text:1"
 KEYLESS_VISION_MODEL: Final = "synthetic-vision:1"
+
+
+def _hosted_model(model_id: str, *, vision: bool | None) -> dict[str, Any]:
+    """Return one declared hosted model: only its vision may be stated, as the agent declares a hosted model."""
+    return synthetic_model(model_id, vision=vision) | {"size_bytes": None, "context_length": None, "licence": None}
+
+
+def _hosted_models() -> tuple[dict[str, Any], ...]:
+    text = tuple(_hosted_model(model_id, vision=None) for model_id in HOSTED_TEXT_MODELS)
+    return text + tuple(_hosted_model(model_id, vision=True) for model_id in HOSTED_VISION_MODELS)
 
 
 def synthetic_model(model_id: str, *, vision: bool | None) -> dict[str, Any]:

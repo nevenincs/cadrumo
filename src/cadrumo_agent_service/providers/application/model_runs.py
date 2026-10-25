@@ -11,7 +11,9 @@ catalog reports for background requests, read in the same lookup, and never
 inferred from its transport. Whether a lane reads off-host is likewise the
 catalogue entry's typed declaration, carried with the lane: a run on such a
 lane needs the consent the tax side bound to it, and a run on a lane that stays
-on this computer needs none.
+on this computer needs none. The model's licence, size, vision and context
+window travel with the lane as the catalogue states them, each ``None`` when it
+states nothing; no lookup substitutes a recommended model.
 
 The run goes to cadrumo-agent as a background request through
 :class:`BackgroundRunGateway`. No secret leaves this service with the answer.
@@ -26,6 +28,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunBody,
     ModelRunHeader,
     ModelRunLane,
+    ModelRunLicence,
     ModelRunMediaKind,
     ModelRunOutput,
     ModelRunRefusal,
@@ -35,7 +38,7 @@ from cadrumo_client.contracts.model_runs import (
     model_run_media_kind,
 )
 
-from ..domain.catalog import ProviderCatalog, ProviderConsumer
+from ..domain.catalog import ProviderCatalog, ProviderCatalogEntry, ProviderConsumer
 from ..domain.record import ModelRoleSelection
 from .ports import (
     AbsentModelRoleSelections,
@@ -202,13 +205,9 @@ class _LaneAnswers:
             decided = self._lanes[selection.lane] = self._decide(selection)
         if isinstance(decided, ModelRunRefusal):
             return decided
-        return ModelRunLane(
-            provider_id=decided.provider_id,
-            transport=decided.transport,
-            model=selection.model,
-            reads_off_host=decided.reads_off_host,
-            accepted_media=decided.accepted_media,
-        )
+        catalog = self._read_catalog()
+        entry = catalog.entry(selection.lane) if isinstance(catalog, ProviderCatalog) else None
+        return _model_lane(decided, selection.model, entry)
 
     def _decide(self, selection: ModelRoleSelection) -> ModelRunLane | ModelRunRefusal:
         catalog = self._read_catalog()
@@ -221,11 +220,19 @@ class _LaneAnswers:
         if isinstance(resolution, ProviderCredentialUnavailable):
             return ModelRunRefusal(code=_SIGNED_OUT.get(resolution.reason, ModelRunRefusalCode.LANE_UNAVAILABLE))
         del resolution
-        lane = ModelRunLane(
-            provider_id=entry.provider,
-            transport=entry.transport.value,
-            model=selection.model,
-            reads_off_host=entry.reads_off_host,
+        lane = _model_lane(
+            ModelRunLane(
+                provider_id=entry.provider,
+                transport=entry.transport.value,
+                model=selection.model,
+                reads_off_host=entry.reads_off_host,
+                licence=None,
+                size_bytes=None,
+                vision=None,
+                context_length=None,
+            ),
+            selection.model,
+            entry,
         )
         return lane.model_copy(update={"accepted_media": self._gateway.accepted_media(lane)})
 
@@ -236,6 +243,28 @@ class _LaneAnswers:
             except ProviderCatalogUnavailableError:
                 self._catalog = ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
         return self._catalog
+
+
+def _model_lane(lane: ModelRunLane, model_id: str, entry: ProviderCatalogEntry | None) -> ModelRunLane:
+    """Return ``lane`` carrying ``model_id`` and the facts the lane's catalogue entry states for that model.
+
+    A model the entry does not list carries no fact: each is ``None``, never a value borrowed from another model.
+    """
+    model = None if entry is None else entry.model(model_id)
+    licence = None if model is None else model.licence
+    return ModelRunLane(
+        provider_id=lane.provider_id,
+        transport=lane.transport,
+        model=model_id,
+        reads_off_host=lane.reads_off_host,
+        licence=None
+        if licence is None
+        else ModelRunLicence(spdx=licence.spdx, name=licence.name, digest=licence.digest),
+        size_bytes=None if model is None else model.size_bytes,
+        vision=None if model is None else model.vision,
+        context_length=None if model is None else model.context_length,
+        accepted_media=lane.accepted_media,
+    )
 
 
 __all__ = ["BackgroundRunGateway", "ModelRunService"]

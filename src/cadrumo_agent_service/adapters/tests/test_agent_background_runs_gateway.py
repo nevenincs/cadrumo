@@ -59,7 +59,16 @@ from cadrumo_agent.control.settings_base import env_name
 print(json.dumps({field: env_name(Settings, field) for field in json.loads(sys.argv[1])}))
 """
 _ENVIRONMENT_NAMES: Final = TypeAdapter(dict[str, str])
-_TOOL_LESS_LANE: Final = ModelRunLane(provider_id="claude", transport="cli", model="haiku", reads_off_host=True)
+_TOOL_LESS_LANE: Final = ModelRunLane(
+    provider_id="claude",
+    transport="cli",
+    model="haiku",
+    reads_off_host=True,
+    licence=None,
+    size_bytes=None,
+    vision=None,
+    context_length=None,
+)
 _PNG: Final = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
 )
@@ -108,6 +117,10 @@ class _Gateway:
                 transport=record["transport"],
                 model=models[0]["model"],
                 reads_off_host=(record["provider_id"], record["transport"]) != ("ollama", "api"),
+                licence=None,
+                size_bytes=None,
+                vision=None,
+                context_length=None,
             )
         pytest.fail(f"the agent catalog provides no selectable refusal fixture for background={background}, pdf={pdf}")
 
@@ -122,7 +135,14 @@ class _Gateway:
                 models = record["catalog"]["models"]
                 assert models, "the local lane must declare a model"
                 return ModelRunLane(
-                    provider_id="ollama", transport="api", model=models[0]["model"], reads_off_host=False
+                    provider_id="ollama",
+                    transport="api",
+                    model=models[0]["model"],
+                    reads_off_host=False,
+                    licence=None,
+                    size_bytes=None,
+                    vision=None,
+                    context_length=None,
                 )
         pytest.fail("the agent catalog serves no local lane")
 

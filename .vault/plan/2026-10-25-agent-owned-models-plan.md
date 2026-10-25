@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-25'
 body_schema: body-v2
-body_hash: 'sha256:4a70f6b7a7704feb5618031073e9d64bd6cf99cc8cebf40e385e4fe8f551bf95'
+body_hash: 'sha256:27e58e7dc5557bf0d2f89bc80265901092398979afb4cffa060516c76a6ef1f0'
 ---
 
 # `agent-owned-models` plan
@@ -59,7 +59,7 @@ Parse cadrumo-agent's new catalogue schema version with its typed fields and dec
 
 - [x] `P02.S08` - Parse the declared catalogue schema version 5 with typed models (vision, size_bytes, context_length, licence), the required recommended set naming the lane's models and the required background block (runnable, inputs, run options), and refuse an entry without reads_off_host; installed is a served-catalogue field the declared document does not carry; `src/cadrumo_agent_service/providers/domain/catalog.py, src/cadrumo_agent_service/providers/domain/tests, src/cadrumo_agent_service/providers/application/tests/synthetic_catalog.py, src/cadrumo_agent_service/adapters/agent_provider_catalog.py, src/cadrumo_agent_service/adapters/tests`.
 - [x] `P02.S09` - Admit the keyless loopback auth kind and a loopback base URL, project them into the credential schema, resolution and the desktop provider-settings wire, and launch the hosted agent against the supervised local AI server address; `src/cadrumo_agent_service/providers/domain/catalog.py, src/cadrumo_agent_service/providers/application/resolution.py, src/cadrumo_agent_service/providers/application/service.py, src/cadrumo_agent_service/adapters/agent_provider_catalog.py, src/cadrumo_agent_service/host/launch_environment.py, native/desktop/src-tauri/src/shell/provider_settings/wire.rs, native/desktop/frontend/src/components/settings/types.ts, native/desktop/frontend/src/components/settings/ProviderSettings.tsx`.
-- [ ] `P02.S10` - Validate a role selection against the catalogue: the model must exist and the vision role requires a vision-capable entry; carry licence, size_bytes and reads_off_host in the lane lookup reply; `src/cadrumo_agent_service/providers/application/model_role_selections.py, src/cadrumo_agent_service/providers/application/model_runs.py, src/cadrumo_agent_service/providers/application/contracts.py`.
+- [ ] `P02.S10` - Validate a role selection against the lane's catalogue entries: the lane must run background requests, the model must be one of its entries, and the vision role needs a lane taking images and an entry marked vision; carry licence, size_bytes, vision and context_length beside reads_off_host in the lane lookup reply; the interim checks the declared catalogue only, pending the owner's ruling on live-listed installed models; `src/cadrumo_agent_service/providers/application/model_role_selections.py, src/cadrumo_agent_service/providers/application/model_runs.py, src/cadrumo_agent_service/providers/application/contracts.py, src/cadrumo_client/contracts/model_runs.py, src/cadrumo_agent_service/providers/application/tests`.
 - [x] `P02.S11` - Decide off-host consent from the lane's reads_off_host flag in the tax adapter and bind the token to the resolved lane; carry only reads_off_host, required, in the lane lookup reply ahead of P02.S10 and have the service refuse a consent-less run on an off-host lane; `src/cadrumo/adapters/outbound/llm/consent.py, src/cadrumo/adapters/outbound/llm/providers/agent.py, src/cadrumo/adapters/outbound/llm/client.py, src/cadrumo_client/contracts/model_runs.py, src/cadrumo_agent_service/providers/application/model_runs.py`.
 
 ### Phase `P03` - One dispatch path

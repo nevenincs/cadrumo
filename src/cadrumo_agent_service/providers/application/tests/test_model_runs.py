@@ -160,10 +160,24 @@ def test_each_role_gets_the_lane_and_model_selected_for_it() -> None:
     )
 
     assert runs.lookup("text_extraction") == ModelRunLane(
-        provider_id="example", transport="api", model="synthetic-text-1", reads_off_host=True
+        provider_id="example",
+        transport="api",
+        model="synthetic-text-1",
+        reads_off_host=True,
+        licence=None,
+        size_bytes=None,
+        vision=None,
+        context_length=None,
     )
     assert runs.lookup("vision_transcription") == ModelRunLane(
-        provider_id="example", transport="cli", model="synthetic-vision-1", reads_off_host=True
+        provider_id="example",
+        transport="cli",
+        model="synthetic-vision-1",
+        reads_off_host=True,
+        licence=None,
+        size_bytes=None,
+        vision=True,
+        context_length=None,
     )
 
 
@@ -392,7 +406,16 @@ def test_a_selections_read_reports_every_role_from_one_read_of_the_record() -> N
         ModelRunRoleSelection(
             role="text_extraction",
             selected=ModelRunSelectedModel(lane_id=SIGN_IN_ONLY_LANE, model="synthetic-text-1"),
-            lane=ModelRunLane(provider_id="example", transport="cli", model="synthetic-text-1", reads_off_host=True),
+            lane=ModelRunLane(
+                provider_id="example",
+                transport="cli",
+                model="synthetic-text-1",
+                reads_off_host=True,
+                licence=None,
+                size_bytes=None,
+                vision=None,
+                context_length=None,
+            ),
         ),
         ModelRunRoleSelection(
             role="column_role_mapping",
@@ -484,6 +507,10 @@ def test_a_selections_read_decides_each_lane_once_however_many_roles_share_it() 
         model="synthetic-text-2",
         reads_off_host=True,
         accepted_media=(ModelRunMediaKind.IMAGE,),
+        licence=None,
+        size_bytes=None,
+        vision=None,
+        context_length=None,
     )
     assert lanes["supply_nature_proposal"] == ModelRunLane(
         provider_id="example",
@@ -491,5 +518,9 @@ def test_a_selections_read_decides_each_lane_once_however_many_roles_share_it() 
         model="synthetic-text-3",
         reads_off_host=True,
         accepted_media=(ModelRunMediaKind.IMAGE,),
+        licence=None,
+        size_bytes=None,
+        vision=None,
+        context_length=None,
     )
     assert "synthetic-key" not in repr(states)

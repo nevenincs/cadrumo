@@ -77,7 +77,16 @@ from ..operation_authority import ProfileWorkerOperationAuthority, WorkerOperati
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _DEFINITION = "ledger.evidence.extract"
-_LANE = ModelRunLane(provider_id="example", transport="cli", model="example-model-1", reads_off_host=True)
+_LANE = ModelRunLane(
+    provider_id="example",
+    transport="cli",
+    model="example-model-1",
+    reads_off_host=True,
+    licence=None,
+    size_bytes=None,
+    vision=None,
+    context_length=None,
+)
 _ACTIONS = frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT})
 
 

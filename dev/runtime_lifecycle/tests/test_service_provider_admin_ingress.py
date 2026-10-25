@@ -343,7 +343,11 @@ def test_an_unreadable_selections_record_reports_its_guard_and_a_guarded_reset_c
                 server.port,
                 bytes(admin),
                 _selection_request(
-                    "model_role_set", written.revision, role="text_extraction", provider=KEY_LANE, model="m-1"
+                    "model_role_set",
+                    written.revision,
+                    role="text_extraction",
+                    provider=KEY_LANE,
+                    model="synthetic-text-1",
                 ),
             )
             assert refused["result"] == {"code": "unknown"}

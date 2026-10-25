@@ -24,7 +24,16 @@ from ..models import OperationIdentity
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _IDENTITY = OperationIdentity(operation_id="a" * 64, definition_id="ledger.evidence.extract", subject_ref="profile:x")
-_LANE = ModelRunLane(provider_id="example", transport="cli", model="m", reads_off_host=True)
+_LANE = ModelRunLane(
+    provider_id="example",
+    transport="cli",
+    model="m",
+    reads_off_host=True,
+    licence=None,
+    size_bytes=None,
+    vision=None,
+    context_length=None,
+)
 _STATES = (
     ModelRunRoleSelection(
         role="text_extraction", selected=ModelRunSelectedModel(lane_id="example_cli", model="m"), lane=_LANE

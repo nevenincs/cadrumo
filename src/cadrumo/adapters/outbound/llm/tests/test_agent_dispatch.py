@@ -221,7 +221,16 @@ def test_a_second_reply_without_an_object_refuses_as_output_invalid(tmp_path: Pa
 
 def test_an_injected_port_wins_over_the_bound_one(tmp_path: Path) -> None:
     injected = RecordingModelRuns(
-        lane=ModelRunLane(provider_id="other", transport="cli", model="m", reads_off_host=True)
+        lane=ModelRunLane(
+            provider_id="other",
+            transport="cli",
+            model="m",
+            reads_off_host=True,
+            licence=None,
+            size_bytes=None,
+            vision=None,
+            context_length=None,
+        )
     )
     settings = _settings(tmp_path)
     client = LLMClient(

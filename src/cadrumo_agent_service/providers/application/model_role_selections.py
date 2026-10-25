@@ -9,14 +9,18 @@ role in one answer and performs the person's acts:
 * reset the record, readable or not, at the revision the caller read.
 
 Every change carries the revision the caller read as its guard, is committed
-with a compare-and-swap and is read back. A lane must be one the agent
-reports; whether it is reachable is decided when a run asks for it.
+with a compare-and-swap and is read back. A selection is checked against the
+lane's catalogue entries: the lane must be one the agent reports and runs
+background requests on, the model one of its entries, and a role that reads
+images needs a lane that takes images and a model marked as vision. Whether
+the lane is reachable is decided when a run asks for it.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from datetime import datetime
+from typing import Final
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -24,7 +28,7 @@ from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.core.time.clock import now
 
-from ..domain.catalog import ProviderCatalogEntry
+from ..domain.catalog import BackgroundInput, LaneBackground, ProviderCatalogEntry, ProviderCatalogModel
 from ..domain.record import (
     MODEL_ROLE_SELECTIONS_RECORD_SCHEMA_VERSION,
     ModelId,
@@ -50,6 +54,27 @@ from .ports import (
     StoreRefusal,
     UnreadableModelRoleSelections,
 )
+
+IMAGE_ROLES: Final[frozenset[ModelRole]] = frozenset({ModelRole.VISION_TRANSCRIPTION})
+"""The roles whose runs read images, so their selection must take images."""
+
+
+def selection_refusal(
+    role: ModelRole, model_id: str, *, background: LaneBackground, entries: Iterable[ProviderCatalogModel]
+) -> ProviderSettingsRefusalCode | None:
+    """Return why ``model_id`` on a lane cannot serve ``role``, or ``None`` when it can.
+
+    ``entries`` are the lane's catalogue entries; a model none of them lists is
+    not in the catalogue now, which another source of entries may change.
+    """
+    if not background.runnable:
+        return ProviderSettingsRefusalCode.LANE_NOT_RUNNABLE
+    model = next((entry for entry in entries if entry.id == model_id), None)
+    if model is None:
+        return ProviderSettingsRefusalCode.MODEL_NOT_IN_CATALOGUE
+    if role in IMAGE_ROLES and (BackgroundInput.IMAGE not in background.inputs or model.vision is not True):
+        return ProviderSettingsRefusalCode.VISION_REQUIRED
+    return None
 
 
 class ModelRoleSelectionsService:
@@ -77,9 +102,10 @@ class ModelRoleSelectionsService:
     def select(self, role: str, *, lane: str, model: str, expected_revision: str) -> ModelRoleSelectionsResult:
         """Select ``lane`` and ``model`` for ``role``, replacing any earlier selection for that role only.
 
-        The lane must be one the agent reports. Whether it is reachable is
-        decided when a run asks for it, so a lane can be chosen before its
-        credential is stored.
+        The lane must be one the agent reports, and the model must serve the
+        role by :func:`selection_refusal` against the lane's declared entries.
+        Whether the lane is reachable is decided when a run asks for it, so a
+        lane can be chosen before its credential is stored.
         """
         model_role = _model_role(role)
         if model_role is None or not _is_model_id(model):
@@ -87,6 +113,9 @@ class ModelRoleSelectionsService:
         entry = self._lane(lane)
         if isinstance(entry, ProviderSettingsRefusal):
             return entry
+        refusal = selection_refusal(model_role, model, background=entry.background, entries=entry.models)
+        if refusal is not None:
+            return _refused(refusal)
         current = self._current(expected_revision)
         if isinstance(current, ProviderSettingsRefusal):
             return current
@@ -199,4 +228,4 @@ def _refused(code: ProviderSettingsRefusalCode) -> ProviderSettingsRefusal:
     return ProviderSettingsRefusal(code=code)
 
 
-__all__ = ["ModelRoleSelectionsService"]
+__all__ = ["IMAGE_ROLES", "ModelRoleSelectionsService", "selection_refusal"]

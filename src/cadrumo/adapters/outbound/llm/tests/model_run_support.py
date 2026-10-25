@@ -27,7 +27,16 @@ from cadrumo_client.contracts.model_runs import (
 from .....application.operations.model_runs import bound_model_runs
 from .....core.model_catalogue import ModelRole
 
-DEFAULT_LANE = ModelRunLane(provider_id="example", transport="api", model="example-model-1", reads_off_host=True)
+DEFAULT_LANE = ModelRunLane(
+    provider_id="example",
+    transport="api",
+    model="example-model-1",
+    reads_off_host=True,
+    licence=None,
+    size_bytes=None,
+    vision=None,
+    context_length=None,
+)
 
 
 class RecordingModelRuns:
@@ -100,9 +109,30 @@ IMAGE_LANE = ModelRunLane(
     model="example-model-1",
     reads_off_host=True,
     accepted_media=(ModelRunMediaKind.IMAGE,),
+    licence=None,
+    size_bytes=None,
+    vision=None,
+    context_length=None,
 )
 TEXT_ONLY_LANE = ModelRunLane(
-    provider_id="example", transport="cli", model="example-model-1", reads_off_host=True, accepted_media=()
+    provider_id="example",
+    transport="cli",
+    model="example-model-1",
+    reads_off_host=True,
+    accepted_media=(),
+    licence=None,
+    size_bytes=None,
+    vision=None,
+    context_length=None,
 )
-ON_HOST_LANE = ModelRunLane(provider_id="nearby", transport="api", model="synthetic-reader-1", reads_off_host=False)
+ON_HOST_LANE = ModelRunLane(
+    provider_id="nearby",
+    transport="api",
+    model="synthetic-reader-1",
+    reads_off_host=False,
+    licence=None,
+    size_bytes=None,
+    vision=None,
+    context_length=None,
+)
 """A lane whose catalogue entry declares it stays on this computer."""

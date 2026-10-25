@@ -42,7 +42,16 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_LANE = ModelRunLane(provider_id="example", transport="cli", model="example-model-1", reads_off_host=True)
+_LANE = ModelRunLane(
+    provider_id="example",
+    transport="cli",
+    model="example-model-1",
+    reads_off_host=True,
+    licence=None,
+    size_bytes=None,
+    vision=None,
+    context_length=None,
+)
 _STATES = (
     ModelRunRoleSelection(
         role="text_extraction",
