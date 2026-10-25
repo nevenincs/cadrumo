@@ -9,6 +9,7 @@
 mod admin;
 mod gateway;
 mod launcher;
+mod model_roles;
 pub(crate) mod person;
 pub(crate) mod runner;
 mod session;
@@ -200,6 +201,7 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_status_subscribe,
         agent_status_unsubscribe,
         agent_provider_catalog,
+        agent_model_roles,
         agent_skills,
         agent_skill,
         agent_skill_verify,
@@ -421,6 +423,32 @@ async fn agent_provider_catalog(
             return refused("agent_service_busy");
         }
         Ok(catalog)
+    })
+    .await
+}
+
+/// The person's model selection for every role, as the agent service stores it.
+#[tauri::command]
+async fn agent_model_roles(
+    host: State<'_, Arc<AgentHost>>,
+) -> std::result::Result<model_roles::ModelRoles, Refused> {
+    blocking(&host, |host| {
+        let answer = host
+            .administer(serde_json::json!({"action":"model_roles"}), None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))?;
+        if let Some(code) = model_roles::refusal(&answer) {
+            return refused(code);
+        }
+        model_roles::parse(&answer).ok_or_else(|| {
+            host.refuse(
+                "agent_service_failed",
+                cadrumo_application::error::application::ApplicationError::new(
+                    cadrumo_application::error::application::ErrorCode::ReadFailed,
+                    cadrumo_application::error::application::Operation::Cli,
+                )
+                .with_reason("admin_model_roles_contract"),
+            )
+        })
     })
     .await
 }

@@ -1115,6 +1115,21 @@ export type StartupProgress = {
   failure: HostFailure | null;
 };
 
+/** One role and the lane and model the person selected for it; both null when none is. */
+export type AgentModelRoleSelection = {
+  role: string;
+  lane: string | null;
+  model: string | null;
+};
+
+/**
+ * Every role's selection with the revision a change sends back, or a stored
+ * record nobody can read, which lists no role and carries its reset guard.
+ */
+export type AgentModelRoles =
+  | { state: "readable"; roles: AgentModelRoleSelection[]; revision: string }
+  | { state: "unreadable"; revision: string | null };
+
 export interface HostCommands {
   user_profile_read: {
     args: { language: string };
@@ -1619,6 +1634,8 @@ export interface HostCommands {
   };
   /** cadrumo-agent's catalog, unchanged and unfiltered. */
   agent_provider_catalog: { args: Authorized; result: AgentProviderCatalog };
+  /** The person's model selection for every role, as the agent service stores it. */
+  agent_model_roles: { args: Authorized; result: AgentModelRoles };
   /** cadrumo-agent's skills, as `GET /v1/skills` lists them, unchanged. */
   agent_skills: { args: Authorized; result: unknown };
   /** One skill with its SKILL.md, as `GET /v1/skills/{name}` serves it. A

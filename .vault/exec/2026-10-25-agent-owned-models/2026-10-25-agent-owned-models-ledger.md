@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:22f6021f60d8a1c35b3f6b7441ce47a9ea499c2cb1d7a61187096d854e872381'
+body_hash: 'sha256:871dd266a3cd5ee1082b628df1799d5b8178f0efc85b551fc7721e3da352f1b5'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -106,8 +106,18 @@ related:
 - `S04` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
 - `S04` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
 - `S04` `by:` `vaultspec-high-executor`
+- `S05` `A` `native/desktop/src-tauri/src/agent/model_roles.rs`
+- `S05` `M` `native/desktop/src-tauri/src/agent/mod.rs`
+- `S05` `M` `native/desktop/src-tauri/src/agent/admin.rs`
+- `S05` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S05` `verify:` `rustfmt --edition 2024 --check src/agent/model_roles.rs src/agent/mod.rs src/agent/admin.rs` -> `pass`
+- `S05` `verify:` `cargo test and cargo clippy -D warnings on model_roles.rs in an isolated scratch crate (serde, serde_json, stubbed is_provider_id)` -> `pass`
+- `S05` `verify:` `npx tsc --noEmit, eslint and prettier --check on src/ipc/contract.ts` -> `pass`
+- `S05` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_git_cli.py` -> `pass`
+- `S05` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S03` Wire result shapes live in providers/application/contracts.py beside the provider status shapes; `src/cadrumo_agent_service/contracts.py` needed no change.
 - `S04` The selections read crosses the `cadrumo_client` wire contract, the runtime worker instruction and lease, and the operation authority as well as the three named files.
+- `S05` The desktop crate was not compiled here; mod.rs and admin.rs edits are not compiler-verified. gateway.rs needed no change: the selection is served by the service admin endpoint, not the agent gateway.
