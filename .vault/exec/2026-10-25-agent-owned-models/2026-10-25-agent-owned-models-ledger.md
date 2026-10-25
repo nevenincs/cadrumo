@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:8986516f859e276364835a70bd3c8485dcb70c41ab9ef74d4451e6ab5ac354ce'
+body_hash: 'sha256:20111e087790d0e32421926953deca7a0e78ae5bff5ab700c58f5796cef5ad54'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -50,3 +50,9 @@ related:
 - `S06` `verify:` `lint-imports` -> `pass`
 - `S06` `verify:` `pytest src/cadrumo/domain/transactions dev/quality/tests/test_import_load_worker.py` -> `pass`
 - `S06` `by:` `implementer`
+- `S07` `A` `dev/quality/tests/test_no_model_definitions.py`
+- `S07` `verify:` `ruff check+format` -> `pass`
+- `S07` `verify:` `ty check dev/quality/tests/test_no_model_definitions.py` -> `pass`
+- `S07` `verify:` `lint-imports` -> `pass`
+- `S07` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
+- `S07` `by:` `implementer`

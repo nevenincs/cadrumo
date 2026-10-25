@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-25'
 body_schema: body-v2
-body_hash: 'sha256:47c3754faa1ab54b367bacca9f6f2331a7c8b1c58cb07805ec9895ab827bbcc0'
+body_hash: 'sha256:e7ffaa507a803b73709da68df4fd02ef9c8d90d9408d35820d61515b279918b9'
 ---
 
 # `agent-owned-models` plan
@@ -50,7 +50,7 @@ Land the per-role selection store and wire, role-based lookup, removal of the un
 - [ ] `P01.S04` - Return the per-role selection state through the runtime-to-service lookup frame so the tax side and the CLI and TUI can read it; `src/cadrumo/application/operations/model_runs.py, src/cadrumo_runtime/host/profile_connection_model_runs.py, src/cadrumo_agent_service/host/model_run_relay.py`.
 - [ ] `P01.S05` - Read the selection in the desktop host and expose it to the webview as a typed snapshot; `native/desktop/src-tauri/src/agent/admin.rs, native/desktop/src-tauri/src/agent/gateway.rs`.
 - [x] `P01.S06` - Delete the hosted model ids and their re-exports, which have no production reader; `src/cadrumo/domain/transactions/model_tier.py, src/cadrumo/domain/transactions/__init__.py, src/cadrumo/domain/transactions/llm.py`.
-- [ ] `P01.S07` - Add the model-definition gate: refuse model-name and digest literals and model tables in shipped sources, with an explicit burn-down list of current files that later Steps empty, isolated fixtures proving it detects each defect, and a stated stopping point; `dev/quality/tests/test_no_model_definitions.py`.
+- [x] `P01.S07` - Add the model-definition gate: refuse model-name and digest literals and model tables in shipped sources, with an explicit burn-down list of current files that later Steps empty, isolated fixtures proving it detects each defect, and a stated stopping point; `dev/quality/tests/test_no_model_definitions.py`.
 
 ### Phase `P02` - Consume the new catalogue
 
