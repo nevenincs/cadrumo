@@ -178,6 +178,7 @@ def _read_page(
                 transaction=LedgerTransactionProjection.from_payload(ledger_transaction_payload(item.transaction)),
                 review_status=ledger_transaction_review_status(item.transaction),
                 group_label=item.transaction.group_label,
+                own_account_id=item.transaction.own_account_id,
             )
             for item in page.results
         ),

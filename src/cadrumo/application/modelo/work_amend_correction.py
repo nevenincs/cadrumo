@@ -9,8 +9,9 @@ grammar: the preflight's typed-entry reader with
 override shape, so a value read here is a value the amendment accepts.
 
 :func:`worded_amendment_context` words the correction in the filer's language:
-the filed record, the kinds the period permits, the Modelo 303 rectificativa
-motives when they apply, and each box with its filed figure.
+the filed record (:class:`ModeloRecord`), the kinds the period permits, the
+Modelo 303 rectificativa motives when they apply, and each box with its filed
+figure, read from the revision's :class:`RegistrySnapshot`.
 """
 
 from __future__ import annotations
@@ -91,7 +92,11 @@ def correction_value_grammar(casilla: CasillaDefinition) -> ModeloEditValueGramm
 
 
 def correction_value_grammars(snapshot: RegistrySnapshot) -> Mapping[CasillaId, ModeloEditValueGrammarV1]:
-    """The correction grammar of every casilla the revision defines, by casilla."""
+    """The correction grammar of every casilla the revision defines, by casilla.
+
+    Args:
+        snapshot: The :class:`RegistrySnapshot` whose revision defines the casillas.
+    """
     return MappingProxyType({casilla.id: correction_value_grammar(casilla) for casilla in snapshot.revision.casillas})
 
 
@@ -212,6 +217,16 @@ def worded_amendment_context(
 
     The motives are offered exactly when the command-line wizard asks them: for
     an applicable Modelo 303 rectificativa.
+
+    Args:
+        record: The filed :class:`ModeloRecord` the correction restates.
+        unit: The work unit the record belongs to.
+        snapshot: The :class:`RegistrySnapshot` of the revision the record was filed under.
+        casilla_rows: The calculation's casilla rows.
+        filed_values: The exact figures the filed calculation declares.
+        permitted_kinds: The correction kinds the period permits.
+        motive_applicable: Whether the filed return takes rectificativa motives.
+        language: The filer's language.
     """
     locale = language.value
     motive_applies = motive_applicable and CalculationRevisionAmendmentKind.RECTIFICATIVA in permitted_kinds

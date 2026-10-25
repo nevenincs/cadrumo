@@ -114,7 +114,7 @@ def _detail(event: BucketEvent, language: OutputLanguage) -> str | None:
         return None
     previous = event.payload.get("previous_name")
     new = event.payload.get("new_name")
-    if not previous or not new:
+    if previous is None or previous == "" or new is None or new == "":
         return None
     return tr(_RENAMED_DETAIL_LOCALE_KEY, locale=language.value, previous=previous, new=new)
 

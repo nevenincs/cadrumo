@@ -403,7 +403,7 @@ def row_days(row: DeclarationListRow) -> tuple[int | None, int | None]:
     calendar = row.calendar
     if calendar is None or row.state == "aeat_unlinked" or row.state in _CLOSED_STATES:
         return None, None
-    if calendar.days_overdue:
+    if calendar.days_overdue is not None and calendar.days_overdue != 0:
         return None, calendar.days_overdue
     return max((calendar.adjusted_closes_on - calendar.evaluated_on).days, 0), None
 
@@ -512,6 +512,7 @@ def worded_list_row(row: DeclarationListRow, language: OutputLanguage) -> Modelo
     deadline = row.deadline if row.state != "aeat_unlinked" else None
     remaining, overdue = row_days(row)
     due = deadline is not None and (remaining is not None or overdue is not None)
+    due_deadline = deadline if due else None
     notes = aeat_filing_notes(row, language)
     return ModeloDeclarationListRowV1(
         key=row.key,
@@ -529,7 +530,7 @@ def worded_list_row(row: DeclarationListRow, language: OutputLanguage) -> Modelo
         deadline_text=None if deadline is None else date_text(deadline, language),
         days_remaining=remaining,
         days_overdue=overdue,
-        due_words=deadline_words(deadline, remaining, overdue, language) if due and deadline is not None else None,
+        due_words=deadline_words(due_deadline, remaining, overdue, language) if due_deadline is not None else None,
         due_tone=deadline_tone(remaining, overdue) if due else None,
         state_words=state_words(row, language),
         result_words=result_words(row, language),

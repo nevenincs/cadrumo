@@ -59,6 +59,7 @@ from .....application.ledger.statement_reading import (
     ProposedStatementPage,
 )
 from .....core.decimal.grammar import DecimalSeparatorValue
+from .....core.parsing.codes import IsoCurrencyCode
 from .base import (
     FinancialProviderError,
     infer_day_first,
@@ -169,7 +170,7 @@ class GroundedMovement:
     booked_date: date
     value_date: date | None
     signed_amount: Decimal
-    currency: str
+    currency: IsoCurrencyCode
     description: str
     counterparty: str | None
     balance: Decimal | None
@@ -234,7 +235,7 @@ class _Draft:
     booked_date: date
     value_date: date | None
     value_text: str | None
-    currency: str
+    currency: IsoCurrencyCode
 
 
 def _present(value: str | None) -> str | None:

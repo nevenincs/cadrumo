@@ -58,6 +58,11 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "iva_rate which are strings for the same reason: it shows the operator "
         "what was read, including when what was read is wrong"
     ),
+    "application/ledger/statement_reading.py::currency": (
+        "a reader's proposal for one page, as the model wrote it: a code or a bare "
+        "symbol, which the grounding step resolves against what the page prints "
+        "and refuses when it prints nothing that names it"
+    ),
     "application/ledger/structured_invoice_ports.py::currency": (
         "a structured e-invoice as the parser read it, beside the parsed "
         "country codes and tax ids; the grounding and confirmation steps judge "

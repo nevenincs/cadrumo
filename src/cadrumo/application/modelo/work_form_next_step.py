@@ -175,9 +175,11 @@ def failed_results(form: ModeloWorkForm) -> tuple[ModeloFormField, ...]:
     Each blocks filing on its own: the counts count it once, and the check view
     lists it as its own line.
     """
-    named = {issue.box for issue in form.issues if issue.attention is ModeloFormAttention.BLOCKS and issue.box} | {
-        note.box for note in form.blocking_calculation_notes if note.box is not None
-    }
+    named = {
+        issue.box
+        for issue in form.issues
+        if issue.attention is ModeloFormAttention.BLOCKS and issue.box is not None and issue.box != ""
+    } | {note.box for note in form.blocking_calculation_notes if note.box is not None}
     return tuple(
         field
         for field in result_fields(form).values()

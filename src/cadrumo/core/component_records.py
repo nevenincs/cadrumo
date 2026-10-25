@@ -226,7 +226,7 @@ class LocatedComponent:
     outcome: ComponentLocateOutcome
     version: str | None = None
     folder: Path | None = None
-    paths: Mapping[str, Path] = field(default_factory=dict)
+    paths: Mapping[str, Path] = field(default_factory=dict[str, Path])
     missing: tuple[str, ...] = ()
 
     @property

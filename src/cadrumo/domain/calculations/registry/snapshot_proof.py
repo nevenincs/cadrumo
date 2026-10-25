@@ -9,7 +9,8 @@ the date window in which their wall-clock fact lookups resolve identically are
 recorded in the published database, covered by its physical digest.
 
 At runtime a proof only lets the same validator skip its cross-check calls; it
-never selects, assembles or refuses anything. A request outside the proven set,
+never selects, assembles or refuses anything. It is stated against the
+:class:`RegistrySnapshot` the proven cells build. A request outside the proven set,
 a validator whose sources changed, a date outside the window or a database
 without proofs all run the full validation in the same function. Refusals are
 never recorded: a refusal always comes from the validator itself.
@@ -18,7 +19,6 @@ never recorded: a refusal always comes from the validator itself.
 from __future__ import annotations
 
 import ast
-import hashlib
 import importlib.util
 import os
 import sys
@@ -266,7 +266,7 @@ def _source_bytes(module: str) -> bytes | None:
 
 
 def _source_digest(source: bytes) -> str:
-    return hashlib.sha256(source.replace(b"\r\n", b"\n")).hexdigest()
+    return sha256_hex(source.replace(b"\r\n", b"\n"))
 
 
 def _in_closure_root(module: str) -> bool:
@@ -349,11 +349,11 @@ def snapshot_validator_closure() -> tuple[ValidatorSource, ...]:
         RegistryValidationError: A module of the closure has no readable
             Python source, so no validator digest can be stated for it.
     """
-    from .snapshot import _CROSS_DOMAIN_CHECK_MODULES
+    from .snapshot import cross_domain_check_modules
 
     roots = (
         _SNAPSHOT_MODULE,
-        *(importlib.util.resolve_name(name, _SNAPSHOT_PACKAGE) for name in _CROSS_DOMAIN_CHECK_MODULES),
+        *(importlib.util.resolve_name(name, _SNAPSHOT_PACKAGE) for name in cross_domain_check_modules()),
     )
     pending = [ancestor for root in roots for ancestor in _with_ancestors(root)]
     digests: dict[str, str] = {}

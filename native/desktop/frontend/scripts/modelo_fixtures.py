@@ -27,7 +27,7 @@ import re
 import sys
 import tempfile
 import textwrap
-from collections.abc import AsyncIterator, Iterable, Iterator, Mapping
+from collections.abc import AsyncGenerator, Generator, Iterable, Iterator, Mapping
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -40,6 +40,8 @@ from uuid import UUID
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
 
+from cadrumo.application.modelo.amendment_context_operation import ModeloWorkAmendmentContextProjection
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
 FRONTEND = Path(__file__).resolve().parents[1]
@@ -214,7 +216,7 @@ def _constant_list(doc: str, name: str, items: Iterable[str]) -> str:
 def admitted_by_host() -> tuple[str, ...]:
     """The ids of the host's closed list, as its Rust constant spells them."""
     table = ADMITTED.read_text("utf-8").split("const ADMITTED", 1)[1].split("];", 1)[0]
-    return tuple(sorted(re.findall(r'\(\s*"(modelo\.[^"]+)",', table)))
+    return tuple(sorted(str(found) for found in re.findall(r'\(\s*"(modelo\.[^"]+)",', table)))
 
 
 def _model_roots() -> tuple[list[tuple[str, str, type[BaseModel]]], list[type[BaseModel]]]:
@@ -411,7 +413,7 @@ def render_contract() -> str:
 
 
 @contextmanager
-def _seeded(tmp: Path, *, facts: tuple[Any, ...] = ()) -> Iterator[Any]:
+def _seeded(tmp: Path, *, facts: tuple[Any, ...] = ()) -> Generator[Any]:
     """One synthetic profile, its first declaration the first the envelopes read, under every session adapter."""
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
     from cadrumo.entrypoints.tests.modelo_operator_work_storage import seeded_operator_work
@@ -497,7 +499,7 @@ class _ReadContext:
         return self
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         yield
 
     async def phase(self, phase_code: str) -> None:
@@ -847,7 +849,7 @@ def _write_list(directory: Path, work: Any, name: str) -> None:
 
 
 @cache
-def _registry() -> Any:
+def _registry() -> OperationRegistry:
     """The production operation registry: its executors and their public result projectors."""
     return build_production_operation_registry()
 
@@ -1277,7 +1279,7 @@ def _expect_model(answer: Any) -> BaseModel:
 
 def _request(definition_id: str, document: dict[str, Any]) -> BaseModel:
     """A definition's registered request, from the document a frontend sends."""
-    return cast(BaseModel, _registry().lookup(definition_id).request_type.model_validate_json(json.dumps(document)))
+    return _registry().lookup(definition_id).request_type.model_validate_json(json.dumps(document))
 
 
 def _write_filing_reads(directory: Path, work: Any, name: str) -> Any:
@@ -1338,6 +1340,8 @@ def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None
         subject_ref=_profile_subject(work),
     )
     _write(directory, f"amendment-context-{modelo}.json", context)
+    if not isinstance(context, ModeloWorkAmendmentContextProjection):
+        raise SystemExit("the amendment context read did not publish its projection")
     correction = context.correction
     if correction is None or not correction.rows or not correction.kinds:
         raise SystemExit("the recorded 130 offers no correction")
@@ -1407,13 +1411,13 @@ def _result_path_keys() -> frozenset[str]:
     found = re.search(r"const RESULT_PATH_KEYS: \[&str; \d+\] = \[(.*?)\];", MODELO_SHELL.read_text("utf-8"), re.S)
     if found is None:
         raise SystemExit(f"{MODELO_SHELL} no longer states RESULT_PATH_KEYS as a list")
-    return frozenset(re.findall(r'"([^"]+)"', found.group(1)))
+    return frozenset(str(name) for name in re.findall(r'"([^"]+)"', found.group(1)))
 
 
 def _named(text: str) -> str:
     """An absolute path reduced to its file name, as the host reduces one; any other text unchanged."""
     if re.match(r"^(?:[A-Za-z]:[\\/]|file:|[\\/])", text, re.IGNORECASE):
-        return re.split(r"[\\/]", text)[-1]
+        return str(re.split(r"[\\/]", text)[-1])
     return text
 
 

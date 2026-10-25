@@ -16,6 +16,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import cast
 
 from pydantic import BaseModel
 
@@ -41,7 +42,7 @@ def _optional(schema: dict[str, object]) -> bool:
 def _request_facts(request_type: type[BaseModel]) -> dict[str, object]:
     """The request fields the host fills or substitutes, read from the registered model."""
     schema = request_type.model_json_schema()
-    properties: dict[str, dict[str, object]] = schema.get("properties", {})
+    properties = cast("dict[str, dict[str, object]]", schema.get("properties", {}))
     required = set(schema.get("required", []))
     files: dict[str, str] = {}
     for name, field in properties.items():

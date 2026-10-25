@@ -186,7 +186,7 @@ class _Context:
     box_words: Mapping[str, str]
     listed: frozenset[tuple[str, str]]
 
-    def tr(self, key: str, /, **values: object) -> str:
+    def say(self, key: str, /, **values: object) -> str:
         return tr(key, locale=self.language.value, **values)
 
 
@@ -230,7 +230,7 @@ def _box_words(form: ModeloWorkForm, records: Mapping[str, _RecordValue]) -> dic
 def _listed_missing(form: ModeloWorkForm) -> frozenset[tuple[str, str]]:
     """The boxes the missing values list names, which no finding repeats."""
     if form.filing is not None:
-        return frozenset()
+        return frozenset[tuple[str, str]]()
     return frozenset(
         address_key(field.address) for field in applicable_fields(form) if field.origin is ModeloFormOrigin.NEEDS_INPUT
     )
@@ -261,7 +261,7 @@ def _technical(finding: ModeloVerificationFinding, context: _Context) -> str:
         *(str(ref) for ref in finding.source_refs),
         finding.message_locale_key,
     ]
-    return f"{context.tr(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}"
+    return f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}"
 
 
 def _casilla_address(finding: ModeloVerificationFinding) -> ModeloFormCasillaAddressV1 | None:
@@ -273,15 +273,15 @@ def _record_line(issue: ModeloFormIssue, value: _RecordValue, message: str, cont
     finding = issue.finding
     action_key = issue.action_locale_key
     if finding.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA:
-        message = context.tr(_RECORDS_FIELD_MISSING_LOCALE_KEY if value.has_records else _RECORDS_NONE_LOCALE_KEY)
+        message = context.say(_RECORDS_FIELD_MISSING_LOCALE_KEY if value.has_records else _RECORDS_NONE_LOCALE_KEY)
         action_key = _RECORDS_ACTION_LOCALE_KEY
     return ModeloFormIssueLine(
         level=issue.attention,
         box=None,
         where=value.heading,
         message=message,
-        action=context.tr(_WHAT_TO_DO_LOCALE_KEY, action=context.tr(action_key)),
-        detail=context.tr(DETAIL_LOCALE_KEYS[finding.kind]),
+        action=context.say(_WHAT_TO_DO_LOCALE_KEY, action=context.say(action_key)),
+        detail=context.say(DETAIL_LOCALE_KEYS[finding.kind]),
         technical=_technical(finding, context),
         address=_casilla_address(finding),
         in_records=True,
@@ -295,7 +295,7 @@ def _declaration_target(issue: ModeloFormIssue, context: _Context) -> _Target:
         if kind is ModeloVerificationFindingKind.STALE_CALCULATION
         else _DECLARATION_WHERE_LOCALE_KEY
     )
-    return _Target(issue.box, context.tr(where_key), context.tr(DETAIL_LOCALE_KEYS[kind]), None, None)
+    return _Target(issue.box, context.say(where_key), context.say(DETAIL_LOCALE_KEYS[kind]), None, None)
 
 
 def _off_form_target(issue: ModeloFormIssue, context: _Context) -> _Target:
@@ -303,16 +303,16 @@ def _off_form_target(issue: ModeloFormIssue, context: _Context) -> _Target:
     finding = issue.finding
     casilla_id = str(finding.casilla_id)
     number = issue.box or (casilla_id if _BOX_NUMBER.fullmatch(casilla_id) else None)
-    kind_detail = context.tr(DETAIL_LOCALE_KEYS[finding.kind])
+    kind_detail = context.say(DETAIL_LOCALE_KEYS[finding.kind])
     if number is None:
-        return _Target(None, context.tr(_NOT_ON_FORM_WHERE_LOCALE_KEY), kind_detail, None, None)
-    not_shown = context.tr(_BOX_NOT_ON_FORM_LOCALE_KEY, box=f"[{number}]")
+        return _Target(None, context.say(_NOT_ON_FORM_WHERE_LOCALE_KEY), kind_detail, None, None)
+    not_shown = context.say(_BOX_NOT_ON_FORM_LOCALE_KEY, box=f"[{number}]")
     return _Target(number, None, f"{not_shown} {kind_detail}".strip(), None, None)
 
 
 def _shown_target(issue: ModeloFormIssue, field: ModeloFormField, context: _Context) -> _Target:
     box = field.box or issue.box
-    detail = context.tr(DETAIL_LOCALE_KEYS[issue.finding.kind])
+    detail = context.say(DETAIL_LOCALE_KEYS[issue.finding.kind])
     return _Target(box, _field_words(field), detail, field.address, field)
 
 
@@ -344,7 +344,7 @@ def _finding_line(issue: ModeloFormIssue, context: _Context) -> ModeloFormIssueL
         box=target.box or None,
         where=target.where,
         message=message,
-        action=context.tr(_WHAT_TO_DO_LOCALE_KEY, action=context.tr(issue.action_locale_key)),
+        action=context.say(_WHAT_TO_DO_LOCALE_KEY, action=context.say(issue.action_locale_key)),
         detail=target.detail,
         technical=_technical(finding, context),
         address=target.address,
@@ -364,10 +364,10 @@ def _failed_result_line(field: ModeloFormField, context: _Context) -> ModeloForm
         level=ModeloFormAttention.BLOCKS,
         box=box,
         where=_field_words(field),
-        message=context.tr(_FAILED_RESULT_LOCALE_KEY),
-        action=context.tr(_WHAT_TO_DO_LOCALE_KEY, action=context.tr(_FAILED_RESULT_ACTION_LOCALE_KEY)),
-        detail=context.tr(_FAILED_RESULT_DETAIL_LOCALE_KEY),
-        technical=f"{context.tr(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
+        message=context.say(_FAILED_RESULT_LOCALE_KEY),
+        action=context.say(_WHAT_TO_DO_LOCALE_KEY, action=context.say(_FAILED_RESULT_ACTION_LOCALE_KEY)),
+        detail=context.say(_FAILED_RESULT_DETAIL_LOCALE_KEY),
+        technical=f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
         address=field.address,
     )
 
@@ -378,17 +378,19 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
     address = None if note.casilla_id is None else ModeloFormCasillaAddressV1(casilla_id=note.casilla_id)
     field = None if address is None else context.shown.get(address_key(address))
     named = None if casilla_id is None else (note.box or context.box_words.get(casilla_id))
-    box_text = named or context.tr(_UNNUMBERED_BOX_LOCALE_KEY)
+    box_text = named or context.say(_UNNUMBERED_BOX_LOCALE_KEY)
     codes = [note.reason, *([] if casilla_id is None else [casilla_id])]
     return ModeloFormIssueLine(
         # A note the filing gate refuses on is listed with what blocks filing, as the counts count it.
         level=ModeloFormAttention.BLOCKS if note.withholds_filing else note.attention,
         box=note.box or None,
         where=_note_where(note, field, context),
-        message=context.tr(what_locale_key(note.reason), box=box_text),
-        action=context.tr(_WHAT_TO_DO_LOCALE_KEY, action=context.tr(what_to_do_locale_key(note.reason), box=box_text)),
+        message=context.say(what_locale_key(note.reason), box=box_text),
+        action=context.say(
+            _WHAT_TO_DO_LOCALE_KEY, action=context.say(what_to_do_locale_key(note.reason), box=box_text)
+        ),
         detail=None,
-        technical=f"{context.tr(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
+        technical=f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
         address=None if field is None else field.address,
         surface=SourceSurface.LEDGER if note.reason in RECORDS_REASONS else None,
         from_calculation=True,
@@ -401,8 +403,8 @@ def _note_where(note: ModeloFormCalculationNote, field: ModeloFormField | None, 
     if note.box is not None:
         return None
     if note.reason in RECORDS_REASONS:
-        return context.tr(_RECORDS_WHERE_LOCALE_KEY)
-    return context.tr(_DECLARATION_WHERE_LOCALE_KEY)
+        return context.say(_RECORDS_WHERE_LOCALE_KEY)
+    return context.say(_DECLARATION_WHERE_LOCALE_KEY)
 
 
 def form_issue_lines(form: ModeloWorkForm, language: OutputLanguage) -> tuple[ModeloFormIssueLine, ...]:

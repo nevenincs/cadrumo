@@ -14,8 +14,9 @@ modelo whose official design declares both carrying a credit forward and
 asking for its refund, which is where the refund election exists; every other
 modelo exports with the neutral defaults. The file format is the one the
 revision's registry export layout declares. A declaration recorded as filed
-says whether the AEAT receipt of that filing has been verified, and when;
-nothing here sends anything to the AEAT.
+says whether the AEAT receipt of that filing (its :class:`ModeloRecord`) has been
+verified, and when; the export layout is read from the revision's
+:class:`RegistrySnapshot`. Nothing here sends anything to the AEAT.
 """
 
 from __future__ import annotations
@@ -251,7 +252,11 @@ def asks_export_elections(modelo: str) -> bool:
 
 
 def revision_file_format(snapshot: RegistrySnapshot) -> ExportLayoutFormat | None:
-    """The file format the revision's export layout declares, chosen as the export chooses its layout."""
+    """The file format the revision's export layout declares, chosen as the export chooses its layout.
+
+    Args:
+        snapshot: The :class:`RegistrySnapshot` of the revision.
+    """
     layouts = sorted(snapshot.revision.export_layouts, key=lambda item: item.id)
     return ExportLayoutFormat(layouts[0].format) if layouts else None
 
@@ -357,7 +362,16 @@ def form_export_offer(
     verified: bool,
     filed: bool,
 ) -> ModeloFormExportOffer:
-    """What exporting the declaration offers, in ``language``, and what of it can be done now."""
+    """What exporting the declaration offers, in ``language``, and what of it can be done now.
+
+    Args:
+        modelo: The modelo number.
+        snapshot: The :class:`RegistrySnapshot` whose export layout names the file format.
+        language: The filer's language.
+        form: The declaration's form.
+        verified: Whether the AEAT receipt of the filing is verified.
+        filed: Whether the declaration is recorded as filed.
+    """
     locale = language.value
     asks = asks_export_elections(modelo)
     file_format = revision_file_format(snapshot)
@@ -402,15 +416,21 @@ def form_receipt(
 
     The receipt is verified when that record is in force and the AEAT is seen
     to hold it, backed by the receipt imported for it.
+
+    Args:
+        record: The current :class:`ModeloRecord` of the filing, if any.
+        recorded_at: When the filing was recorded.
+        language: The filer's language.
     """
     evidence = record.external_evidence if record is not None else None
-    verified = (
+    in_force = (
         record is not None
         and record.status is ModeloRecordStatus.VIGENTE
         and record.confirmation is AeatConfirmationState.CONFIRMADA
-        and evidence is not None
     )
-    verified_at = evidence.imported_at if verified and evidence is not None else None
+    verified_evidence = evidence if in_force else None
+    verified = verified_evidence is not None
+    verified_at = None if verified_evidence is None else verified_evidence.imported_at
     locale = language.value
     return ModeloFormReceipt(
         recorded_at=recorded_at,

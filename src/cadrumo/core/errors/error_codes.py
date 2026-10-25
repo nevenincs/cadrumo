@@ -361,7 +361,7 @@ def public_error_context(error: BaseException) -> dict[str, str] | None:
     are left out as well: the envelope may show them, the record never does.
     """
     merged = _merge_error_context(error, None)
-    local = getattr(type(error), "process_local_context_keys", frozenset())
+    local = frozenset[str](getattr(type(error), "process_local_context_keys", ()))
     if merged is not None and local:
         merged = {key: value for key, value in merged.items() if key not in local} or None
     return scrub_error_context(merged)

@@ -144,6 +144,11 @@ _CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = (
 _cross_domain_checks_installed = False
 
 
+def cross_domain_check_modules() -> tuple[str, ...]:
+    """Name the modules whose import installs the cross-domain checks the validator demands."""
+    return _CROSS_DOMAIN_CHECK_MODULES
+
+
 def _install_cross_domain_snapshot_checks() -> None:
     """Import every peer-domain check module so its registration runs.
 

@@ -115,7 +115,7 @@ def entry_grammar(
     against the grammar ``baseline`` admitted for it.
     """
     if isinstance(address, ModeloEditCorrectionAddressV1):
-        return (correction_grammars or {}).get(address.casilla_id)
+        return None if correction_grammars is None else correction_grammars.get(address.casilla_id)
     return modelo_edit_address_grammar(baseline, address)
 
 

@@ -33,7 +33,6 @@ facts, so a frontend only renders it.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Callable, Mapping
 from datetime import date, datetime
@@ -48,6 +47,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
+from ...core.hashing import sha256_hex
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.result_disposition import ResultDisposition
@@ -457,7 +457,7 @@ def _confirm_comparable_of(data: dict[str, Any]) -> ModeloEditWireScalar:
 def _state_digest_of(data: dict[str, Any]) -> str:
     value = comparable_entry(data["value"])
     seen = json.dumps([data["origin"].value, type(value).__name__, None if value is None else str(value)])
-    return hashlib.sha256(seen.encode("utf-8")).hexdigest()
+    return sha256_hex(seen.encode("utf-8"))
 
 
 def _filers_own_of(data: dict[str, Any]) -> bool:

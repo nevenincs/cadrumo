@@ -195,7 +195,7 @@ def test_an_unresolved_working_figure_is_worth_checking_yet_held_as_the_gates_ho
     unprinted = [
         str(field.address.casilla_id)
         for field in form.fields()
-        if isinstance(field.address, ModeloFormCasillaAddressV1) and not field.box
+        if isinstance(field.address, ModeloFormCasillaAddressV1) and (field.box is None or field.box == "")
     ]
     assert unprinted, "the Modelo 210 form keeps some figure it does not print"
     for note in (_Note("unresolved_binding", unprinted[0]), _Note("unresolved_binding")):

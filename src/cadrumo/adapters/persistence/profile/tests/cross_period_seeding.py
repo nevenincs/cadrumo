@@ -11,11 +11,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Final
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from cadrumo.adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
@@ -24,6 +20,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
+from cadrumo.domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import (
@@ -33,6 +30,11 @@ from cadrumo.domain.calculations.registry.tests.cross_period_seeding import (
 )
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
+from cadrumo.domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+)
+from cadrumo.domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
 if TYPE_CHECKING:
     from cadrumo.domain.modelos.work_unit import WorkUnit
@@ -59,10 +61,10 @@ identity mismatch.
 def seed_clean_cross_period_sources(
     work_unit: WorkUnit,
     *,
-    work_unit_repository: WorkUnitCatalogueRepository,
-    calculation_repository: CalculationRevisionCatalogueRepository,
-    filing_repository: ModeloRecordCatalogueRepository,
-    bucket_event_repository: BucketEventHistoryRepository,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Materialise every declared cross-period source through real adapters.

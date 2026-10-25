@@ -36,6 +36,7 @@ from ..edit_models import (
     ModeloEditCorrectionAddressV1,
     ModeloEditParsedValueV1,
     ModeloEditParseReason,
+    ModeloEditParseRefusalV1,
     ModeloEditParseRequestV1,
     ModeloEditRefusedV1,
 )
@@ -226,6 +227,7 @@ def test_a_correction_entry_without_its_revisions_grammars_is_not_writable() -> 
     )
 
     assert isinstance(outcome, ModeloEditRefusedV1)
+    assert isinstance(outcome.refusal, ModeloEditParseRefusalV1)
     assert outcome.refusal.reason is ModeloEditParseReason.ADDRESS_NOT_WRITABLE
 
 

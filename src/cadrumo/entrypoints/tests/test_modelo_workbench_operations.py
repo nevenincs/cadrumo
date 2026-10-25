@@ -813,7 +813,7 @@ def test_preflight_reports_what_becomes_of_each_held_change_by_its_box(
             work.work_unit_id,
             ports=work.ports,
             clock=SEEDED_AT,
-            casilla_inputs={box.address.casilla_id: Decimal("100")},
+            casilla_inputs={_SET_06.address.casilla_id: Decimal("100")},
         )
         stale, _ = _run(
             work, executor, MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID, payload, ModeloEditPreflightProjectionV1

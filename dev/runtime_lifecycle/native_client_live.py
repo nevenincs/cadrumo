@@ -162,10 +162,9 @@ def run(contract: Path, keep: bool) -> int:
                 "--quiet",
             )
             created = envelope.get("result")
-            require(
-                code == 0 and isinstance(created, dict) and isinstance(created.get("work_unit_id"), str),
-                f"work unit create: {code} {envelope}",
-            )
+            work_unit_id = created.get("work_unit_id") if isinstance(created, dict) else None
+            if code != 0 or not isinstance(work_unit_id, str):
+                raise AcceptanceError(f"work unit create: {code} {envelope}")
             password_file = scratch / "password"
             password_file.write_bytes(password.encode("utf-8"))
             cargo_environment = {
@@ -175,7 +174,7 @@ def run(contract: Path, keep: bool) -> int:
                 "CADRUMO_RUNTIME_LIVE_VERSION": str(announcement["product_version"]),
                 "CADRUMO_RUNTIME_LIVE_PROFILE_ID": profile_id,
                 "CADRUMO_RUNTIME_LIVE_PASSWORD_FILE": str(password_file),
-                "CADRUMO_RUNTIME_LIVE_WORK_UNIT": created["work_unit_id"],
+                "CADRUMO_RUNTIME_LIVE_WORK_UNIT": work_unit_id,
             }
             cargo = shutil.which("cargo")
             require(cargo is not None, "cargo is not on PATH")
