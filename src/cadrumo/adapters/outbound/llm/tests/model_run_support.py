@@ -27,7 +27,7 @@ from cadrumo_client.contracts.model_runs import (
 from .....application.operations.model_runs import bound_model_runs
 from .....core.model_catalogue import ModelRole
 
-DEFAULT_LANE = ModelRunLane(provider_id="example", transport="api", model="example-model-1")
+DEFAULT_LANE = ModelRunLane(provider_id="example", transport="api", model="example-model-1", reads_off_host=True)
 
 
 class RecordingModelRuns:
@@ -95,6 +95,14 @@ def serving_agent(
 
 
 IMAGE_LANE = ModelRunLane(
-    provider_id="example", transport="api", model="example-model-1", accepted_media=(ModelRunMediaKind.IMAGE,)
+    provider_id="example",
+    transport="api",
+    model="example-model-1",
+    reads_off_host=True,
+    accepted_media=(ModelRunMediaKind.IMAGE,),
 )
-TEXT_ONLY_LANE = ModelRunLane(provider_id="example", transport="cli", model="example-model-1", accepted_media=())
+TEXT_ONLY_LANE = ModelRunLane(
+    provider_id="example", transport="cli", model="example-model-1", reads_off_host=True, accepted_media=()
+)
+ON_HOST_LANE = ModelRunLane(provider_id="nearby", transport="api", model="synthetic-reader-1", reads_off_host=False)
+"""A lane whose catalogue entry declares it stays on this computer."""

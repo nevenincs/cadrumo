@@ -20,7 +20,7 @@ from ..agent_background_runs import BackgroundRunEndpoint, HostedBackgroundRuns
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_LANE = ModelRunLane(provider_id="example", transport="api", model="example-model-1")
+_LANE = ModelRunLane(provider_id="example", transport="api", model="example-model-1", reads_off_host=True)
 
 
 def _unreachable(tmp_path: Path) -> BackgroundRunEndpoint:

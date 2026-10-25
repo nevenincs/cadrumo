@@ -59,7 +59,7 @@ from cadrumo_agent.control.settings_base import env_name
 print(json.dumps({field: env_name(Settings, field) for field in json.loads(sys.argv[1])}))
 """
 _ENVIRONMENT_NAMES: Final = TypeAdapter(dict[str, str])
-_TOOL_LESS_LANE: Final = ModelRunLane(provider_id="claude", transport="cli", model="haiku")
+_TOOL_LESS_LANE: Final = ModelRunLane(provider_id="claude", transport="cli", model="haiku", reads_off_host=True)
 _PNG: Final = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
 )
@@ -101,8 +101,13 @@ class _Gateway:
                 continue
             models = record["catalog"]["models"]
             assert models, "the selected refusal fixture must name a declared model"
+            # The gateway never reads the flag, and this route does not serve it; the agent's declared
+            # catalogue marks only the keyless local lane, the one ``local_lane`` picks, as on-host.
             return ModelRunLane(
-                provider_id=record["provider_id"], transport=record["transport"], model=models[0]["model"]
+                provider_id=record["provider_id"],
+                transport=record["transport"],
+                model=models[0]["model"],
+                reads_off_host=(record["provider_id"], record["transport"]) != ("ollama", "api"),
             )
         pytest.fail(f"the agent catalog provides no selectable refusal fixture for background={background}, pdf={pdf}")
 
@@ -116,7 +121,9 @@ class _Gateway:
             if (record["provider_id"], record["transport"]) == ("ollama", "api"):
                 models = record["catalog"]["models"]
                 assert models, "the local lane must declare a model"
-                return ModelRunLane(provider_id="ollama", transport="api", model=models[0]["model"])
+                return ModelRunLane(
+                    provider_id="ollama", transport="api", model=models[0]["model"], reads_off_host=False
+                )
         pytest.fail("the agent catalog serves no local lane")
 
     def runs(self, *, host_token: str | None = None, run_id: str | None = None) -> HostedBackgroundRuns:

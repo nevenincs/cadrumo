@@ -51,7 +51,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_LANE = ModelRunLane(provider_id="example", transport="cli", model="example-model-1")
+_LANE = ModelRunLane(provider_id="example", transport="cli", model="example-model-1", reads_off_host=True)
 _ANNOUNCEMENT_SECONDS = 30
 _SERVED = ModelRunServed(provider_id="example", transport="cli", model="example-model-1", agent_version="1")
 

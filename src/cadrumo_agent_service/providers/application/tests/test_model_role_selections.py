@@ -213,7 +213,7 @@ def test_a_selection_made_through_the_service_is_the_lane_a_model_run_resolves()
     )
 
     assert runs.lookup("vision_transcription") == ModelRunLane(
-        provider_id="example", transport="cli", model="synthetic-vision-1"
+        provider_id="example", transport="cli", model="synthetic-vision-1", reads_off_host=True
     )
     assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
 

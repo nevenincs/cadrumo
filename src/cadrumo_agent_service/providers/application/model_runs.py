@@ -8,7 +8,10 @@ choice, not a catalogue default. A selected lane that is turned off, no longer
 reported or not reachable refuses ``lane_unavailable``. Any lane is eligible,
 API or CLI; whether a lane takes an attachment is what the ready agent's live
 catalog reports for background requests, read in the same lookup, and never
-inferred from its transport.
+inferred from its transport. Whether a lane reads off-host is likewise the
+catalogue entry's typed declaration, carried with the lane: a run on such a
+lane needs the consent the tax side bound to it, and a run on a lane that stays
+on this computer needs none.
 
 The run goes to cadrumo-agent as a background request through
 :class:`BackgroundRunGateway`. No secret leaves this service with the answer.
@@ -148,14 +151,21 @@ class ModelRunService:
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         """Run one request on the lane its role resolves to now.
 
-        A run carrying consent is refused when that lane is not the one the
-        consent was recorded for. An attachment the lane's catalog entry says
-        it does not take is refused before anything is sent.
+        A run on a lane that reads off-host is refused unless it carries
+        consent, and a run carrying consent is refused when that lane is not
+        the one the consent was recorded for. The lane is resolved again here,
+        so a selection changed since the tax side's lookup cannot carry a run
+        recorded as on-host to a lane that leaves this computer. An attachment
+        the lane's catalog entry says it does not take is refused before
+        anything is sent.
         """
         lane = self.lookup(header.role)
         if isinstance(lane, ModelRunRefusal):
             return lane
-        if header.consent is not None and not header.consent.matches(lane):
+        if header.consent is None:
+            if lane.reads_off_host:
+                return ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
+        elif not header.consent.matches(lane):
             return ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
         if lane.accepted_media is not None:
             for attachment in body.attachments:
@@ -196,6 +206,7 @@ class _LaneAnswers:
             provider_id=decided.provider_id,
             transport=decided.transport,
             model=selection.model,
+            reads_off_host=decided.reads_off_host,
             accepted_media=decided.accepted_media,
         )
 
@@ -210,7 +221,12 @@ class _LaneAnswers:
         if isinstance(resolution, ProviderCredentialUnavailable):
             return ModelRunRefusal(code=_SIGNED_OUT.get(resolution.reason, ModelRunRefusalCode.LANE_UNAVAILABLE))
         del resolution
-        lane = ModelRunLane(provider_id=entry.provider, transport=entry.transport.value, model=selection.model)
+        lane = ModelRunLane(
+            provider_id=entry.provider,
+            transport=entry.transport.value,
+            model=selection.model,
+            reads_off_host=entry.reads_off_host,
+        )
         return lane.model_copy(update={"accepted_media": self._gateway.accepted_media(lane)})
 
     def _read_catalog(self) -> ProviderCatalog | ModelRunRefusal:

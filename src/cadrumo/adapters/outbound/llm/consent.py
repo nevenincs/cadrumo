@@ -24,6 +24,13 @@ overridden to raise, mirroring
 call fails loudly rather than minting a consent record that outlives the
 invocation.
 
+**An agent dispatch decides from its lane.** The agent service resolves the
+lane a role runs on, and the lane carries its catalogue entry's typed
+``reads_off_host`` declaration. That flag alone says whether the gate applies:
+a lane that stays on this computer needs no token, and a token is bound to the
+resolved lane only when the lane reads off-host, so the service can refuse a
+run that would now reach another lane. See :func:`agent_consent_binding`.
+
 See Also:
     :class:`~core.config.Settings`
         Carries the deployment half of the posture (the gestor bar and the
@@ -37,6 +44,8 @@ from typing import Never, Self, override
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
+from cadrumo_client.contracts.model_runs import ModelRunConsentBinding, ModelRunLane
+
 from ....core.config import Settings
 from ....core.config_support import LLMProvider
 from ....core.errors.hierarchy import pydantic_validation_boundary
@@ -48,6 +57,7 @@ from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 __all__ = [
     "EvidenceConsentToken",
     "OffHostEvidenceReadOutcome",
+    "agent_consent_binding",
     "classify_off_host_evidence_read",
     "cloud_evidence_read_permitted",
     "mint_evidence_consent_token",
@@ -69,8 +79,39 @@ def provider_reads_off_host(provider: LLMProvider) -> bool:
     about the transport, not its endpoint: the dispatch gate in
     :class:`~llm.LLMClient` additionally refuses evidence at a local endpoint
     that is not loopback.
+
+    An agent dispatch does not ask this: :attr:`~core.config_support.LLMProvider.AGENT`
+    names the route, not where the selected lane runs, so the dispatch reads
+    the resolved lane's ``reads_off_host`` flag instead.
     """
     return provider is not LLMProvider.LOCAL
+
+
+def agent_consent_binding(lane: ModelRunLane, token: EvidenceConsentToken | None) -> ModelRunConsentBinding | None:
+    """Bind ``token`` to the resolved agent ``lane``, or return ``None`` when the lane needs no consent.
+
+    The lane's ``reads_off_host`` flag is the only input: no provider id,
+    transport or endpoint stands in for it. A lane that stays on this computer
+    carries no consent, so a token minted before the lane was known is neither
+    sent nor recorded against it. A lane that reads off-host carries the token
+    bound to its provider, transport and model, which the service compares with
+    the lane it resolves at run time; a run without one is refused there.
+
+    Args:
+        lane: The lane the agent service resolved for the request's role.
+        token: The per-invocation consent the dispatch gate honoured, if any.
+
+    Returns:
+        The binding to carry with the run, or ``None``.
+    """
+    if not lane.reads_off_host or token is None:
+        return None
+    return ModelRunConsentBinding(
+        evidence_content_address=token.evidence_content_address,
+        provider_id=lane.provider_id,
+        transport=lane.transport,
+        model=lane.model,
+    )
 
 
 class OffHostEvidenceReadOutcome(StrEnum):

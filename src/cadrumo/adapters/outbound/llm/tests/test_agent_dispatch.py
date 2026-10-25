@@ -26,7 +26,7 @@ from ..consent import EvidenceConsentToken
 from ..errors import LLMConfigError, LLMConsentError, LLMProviderError
 from ..models import LLMRequest
 from ..providers.agent import JSON_REASK_INSTRUCTION
-from .model_run_support import DEFAULT_LANE, RecordingModelRuns, serving_agent
+from .model_run_support import DEFAULT_LANE, ON_HOST_LANE, RecordingModelRuns, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -160,6 +160,46 @@ def test_an_unconsented_evidence_request_is_refused_before_any_run(tmp_path: Pat
     assert service.runs == []
 
 
+def test_an_evidence_request_on_a_lane_declared_on_host_runs_without_consent_or_a_ledger_entry(
+    tmp_path: Path,
+) -> None:
+    """The lane's flag alone decides: no token is demanded, none is sent and nothing is recorded."""
+    with serving_agent(lane=ON_HOST_LANE) as service:
+        response = asyncio.run(
+            _client(_settings(tmp_path, cloud_upload_permitted=False)).complete(_request(evidence_derived=True))
+        )
+
+    assert response.model == "nearby/api/synthetic-reader-1"
+    ((header, _),) = service.runs
+    assert header.consent is None
+    assert EvidenceConsentLedger().load_entries() == ()
+
+
+def test_a_token_taken_before_the_lane_was_known_is_neither_bound_nor_recorded_on_an_on_host_lane(
+    tmp_path: Path,
+) -> None:
+    """A consent sent with an on-host run would be refused by the service as naming another lane."""
+    request = _request(evidence_derived=True, consent_token=_TOKEN)
+    with serving_agent(lane=ON_HOST_LANE) as service:
+        asyncio.run(_client(_settings(tmp_path)).complete(request))
+
+    ((header, _),) = service.runs
+    assert header.consent is None
+    assert EvidenceConsentLedger().load_entries() == ()
+
+
+def test_an_unconsented_evidence_request_on_a_lane_declared_off_host_is_refused_whatever_its_name(
+    tmp_path: Path,
+) -> None:
+    """A lane named like a local one still needs consent when its catalogue entry says it reads off-host."""
+    lane = ON_HOST_LANE.model_copy(update={"reads_off_host": True})
+    with serving_agent(lane=lane) as service, pytest.raises(LLMConsentError):
+        asyncio.run(_client(_settings(tmp_path)).complete(_request(evidence_derived=True)))
+
+    assert service.runs == []
+    assert EvidenceConsentLedger().load_entries() == ()
+
+
 def test_a_json_reply_without_an_object_is_asked_for_once_more(tmp_path: Path) -> None:
     with serving_agent(replies=("I think it is goods.", '{"nature": "goods"}')) as service:
         response = asyncio.run(_client(_settings(tmp_path)).complete(_request(expects_json=True)))
@@ -180,7 +220,9 @@ def test_a_second_reply_without_an_object_refuses_as_output_invalid(tmp_path: Pa
 
 
 def test_an_injected_port_wins_over_the_bound_one(tmp_path: Path) -> None:
-    injected = RecordingModelRuns(lane=ModelRunLane(provider_id="other", transport="cli", model="m"))
+    injected = RecordingModelRuns(
+        lane=ModelRunLane(provider_id="other", transport="cli", model="m", reads_off_host=True)
+    )
     settings = _settings(tmp_path)
     client = LLMClient(
         settings=settings,

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:cee792d1f7f401e66d2f2c5037eae0d8b28954aa64b58ee6949975b072ecd72e'
+body_hash: 'sha256:a5d4f00375c73ca6e28dc4cb6119e6353ad3abdc2e9be1fd6594aaa4599aa3fb'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -202,6 +202,29 @@ related:
 - `S23` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
 - `S23` `verify:` `grep -rniE "qwen|gemma|llama[0-9]|moondream" native/application/src native/application/tests` -> `pass`
 - `S23` `by:` `implementation-engineer-high`
+- `S11` `M` `src/cadrumo_client/contracts/model_runs.py`
+- `S11` `M` `src/cadrumo_agent_service/providers/application/model_runs.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/consent.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/client.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/providers/agent.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/model_run_support.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_agent_dispatch.py`
+- `S11` `M` `src/cadrumo/application/operations/tests/test_model_runs.py`
+- `S11` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs.py`
+- `S11` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs_gateway.py`
+- `S11` `M` `src/cadrumo_agent_service/providers/application/tests/test_model_runs.py`
+- `S11` `M` `src/cadrumo_agent_service/providers/application/tests/test_keyless_lane.py`
+- `S11` `M` `src/cadrumo_agent_service/providers/application/tests/test_model_role_selections.py`
+- `S11` `M` `src/cadrumo_client/contracts/tests/test_model_runs.py`
+- `S11` `M` `src/cadrumo_runtime/host/tests/test_model_run_admission.py`
+- `S11` `M` `src/cadrumo_runtime/host/tests/test_model_run_authority.py`
+- `S11` `M` `dev/runtime_lifecycle/tests/test_service_model_run_relay.py`
+- `S11` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service src/cadrumo/adapters/outbound/llm src/cadrumo_client src/cadrumo/application/ledger plus the model-run runtime, relay and operations tests -q (3799 passed)` -> `pass`
+- `S11` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
+- `S11` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `S11` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S11` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S11` `by:` `implementation-engineer-high`
 
 ## Notes
 

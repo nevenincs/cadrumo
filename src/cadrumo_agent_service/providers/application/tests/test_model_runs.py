@@ -37,6 +37,7 @@ from ..service import ProviderSettingsService
 from .memory_store import MemoryModelRoleSelectionsStore, MemoryProviderSettingsStore
 from .synthetic_catalog import (
     KEY_LANE,
+    KEYLESS_LANE,
     MISSING_LANE,
     OTHER_KEY_LANE,
     SIGN_IN_ONLY_LANE,
@@ -121,6 +122,14 @@ def _header(*, consent: ModelRunConsentBinding | None = None) -> ModelRunHeader:
     return ModelRunHeader(role="text_extraction", deadline_seconds=30, consent=consent)
 
 
+def _consent(
+    transport: str, model: str = "synthetic-text-1", *, provider_id: str = "example"
+) -> ModelRunConsentBinding:
+    return ModelRunConsentBinding(
+        evidence_content_address="a" * 64, provider_id=provider_id, transport=transport, model=model
+    )
+
+
 _BODY = ModelRunBody(prompt="Read this invoice.", max_output_tokens=64)
 _NO_SELECTION = ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
 _LANE_UNAVAILABLE = ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
@@ -151,10 +160,10 @@ def test_each_role_gets_the_lane_and_model_selected_for_it() -> None:
     )
 
     assert runs.lookup("text_extraction") == ModelRunLane(
-        provider_id="example", transport="api", model="synthetic-text-1"
+        provider_id="example", transport="api", model="synthetic-text-1", reads_off_host=True
     )
     assert runs.lookup("vision_transcription") == ModelRunLane(
-        provider_id="example", transport="cli", model="synthetic-vision-1"
+        provider_id="example", transport="cli", model="synthetic-vision-1", reads_off_host=True
     )
 
 
@@ -264,6 +273,63 @@ def test_a_run_whose_consent_names_its_lane_goes_to_the_gateway_on_that_lane() -
     assert deadline == 30
 
 
+def test_a_lane_the_catalogue_declares_on_host_runs_without_consent() -> None:
+    store = MemoryProviderSettingsStore()
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, gateway = _harness(store, selections)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, KEYLESS_LANE, "synthetic-reader-1"))
+
+    lane = runs.lookup("text_extraction")
+    output = runs.run(_header(), _BODY)
+
+    assert isinstance(lane, ModelRunLane) and lane.reads_off_host is False
+    assert isinstance(output, ModelRunOutput)
+    ((ran_on, _, _),) = gateway.runs
+    assert (ran_on.provider_id, ran_on.transport, ran_on.reads_off_host) == ("local", "api", False)
+
+
+def test_a_run_without_consent_on_a_lane_that_reads_off_host_is_refused_before_it_is_sent() -> None:
+    store = MemoryProviderSettingsStore()
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, gateway = _harness(store, selections)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+
+    lane = runs.lookup("text_extraction")
+
+    assert isinstance(lane, ModelRunLane) and lane.reads_off_host is True
+    assert runs.run(_header(), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
+    assert gateway.runs == []
+
+
+def test_consent_recorded_for_a_hosted_lane_does_not_carry_to_the_on_host_lane_now_selected() -> None:
+    store = MemoryProviderSettingsStore()
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, gateway = _harness(store, selections)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, KEYLESS_LANE, "synthetic-text-1"))
+
+    refused = runs.run(_header(consent=_consent("cli")), _BODY)
+
+    assert refused == ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
+    assert gateway.runs == []
+
+
+def test_a_run_decided_on_host_is_refused_when_the_role_now_resolves_to_a_hosted_lane() -> None:
+    """The tax side bound no consent because its lookup found the local lane; the selection then changed."""
+    store = MemoryProviderSettingsStore()
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, gateway = _harness(store, selections)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, KEYLESS_LANE, "synthetic-text-1"))
+    looked_up = runs.lookup("text_extraction")
+    assert isinstance(looked_up, ModelRunLane) and looked_up.reads_off_host is False
+    _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+
+    assert runs.run(_header(), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
+    assert runs.run(_header(consent=_consent("api", provider_id="local")), _BODY) == ModelRunRefusal(
+        code=ModelRunRefusalCode.CONSENT_MISSING
+    )
+    assert gateway.runs == []
+
+
 def test_the_lookup_carries_the_media_the_agent_reports_and_a_run_beyond_them_is_never_sent() -> None:
     store = MemoryProviderSettingsStore()
     selections = MemoryModelRoleSelectionsStore()
@@ -275,7 +341,7 @@ def test_the_lookup_carries_the_media_the_agent_reports_and_a_run_beyond_them_is
     lane = runs.lookup("text_extraction")
 
     assert isinstance(lane, ModelRunLane) and lane.accepted_media == (ModelRunMediaKind.IMAGE,)
-    refused = runs.run(_header(), _BODY.model_copy(update={"attachments": (pdf,)}))
+    refused = runs.run(_header(consent=_consent("cli")), _BODY.model_copy(update={"attachments": (pdf,)}))
     assert refused == ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED)
     assert gateway.runs == []
 
@@ -293,7 +359,9 @@ def test_without_a_ready_agent_every_run_refuses_as_service_unavailable() -> Non
 
     lane = runs.lookup("text_extraction")
     assert isinstance(lane, ModelRunLane) and lane.accepted_media is None
-    assert runs.run(_header(), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
+    assert runs.run(_header(consent=_consent("cli")), _BODY) == ModelRunRefusal(
+        code=ModelRunRefusalCode.SERVICE_UNAVAILABLE
+    )
 
 
 class _CountingSelections(MemoryModelRoleSelectionsStore):
@@ -324,7 +392,7 @@ def test_a_selections_read_reports_every_role_from_one_read_of_the_record() -> N
         ModelRunRoleSelection(
             role="text_extraction",
             selected=ModelRunSelectedModel(lane_id=SIGN_IN_ONLY_LANE, model="synthetic-text-1"),
-            lane=ModelRunLane(provider_id="example", transport="cli", model="synthetic-text-1"),
+            lane=ModelRunLane(provider_id="example", transport="cli", model="synthetic-text-1", reads_off_host=True),
         ),
         ModelRunRoleSelection(
             role="column_role_mapping",
@@ -411,9 +479,17 @@ def test_a_selections_read_decides_each_lane_once_however_many_roles_share_it() 
     assert source.fetches == 3
     lanes = {state.role: state.lane for state in states}
     assert lanes["column_role_mapping"] == ModelRunLane(
-        provider_id="example", transport="cli", model="synthetic-text-2", accepted_media=(ModelRunMediaKind.IMAGE,)
+        provider_id="example",
+        transport="cli",
+        model="synthetic-text-2",
+        reads_off_host=True,
+        accepted_media=(ModelRunMediaKind.IMAGE,),
     )
     assert lanes["supply_nature_proposal"] == ModelRunLane(
-        provider_id="example", transport="cli", model="synthetic-text-3", accepted_media=(ModelRunMediaKind.IMAGE,)
+        provider_id="example",
+        transport="cli",
+        model="synthetic-text-3",
+        reads_off_host=True,
+        accepted_media=(ModelRunMediaKind.IMAGE,),
     )
     assert "synthetic-key" not in repr(states)

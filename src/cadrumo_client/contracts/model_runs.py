@@ -98,6 +98,10 @@ def model_run_media_kind(media_type: str) -> ModelRunMediaKind | None:
 class ModelRunLane(BaseModel):
     """The lane and model the service resolved for one role; nothing here is secret.
 
+    ``reads_off_host`` is the lane's catalogue declaration of whether a run on
+    it sends material off this computer. It has no default: a lane whose
+    catalogue entry says nothing is not a lane, so it cannot read as on-host.
+
     ``accepted_media`` is what the provider catalog reports the lane accepts in
     a background run. ``None`` means the catalog says nothing, and the agent
     decides at admission.
@@ -108,6 +112,7 @@ class ModelRunLane(BaseModel):
     provider_id: Annotated[str, Field(pattern=_LANE_ID)]
     transport: Annotated[str, Field(pattern=_TRANSPORT)]
     model: Annotated[str, Field(pattern=_MODEL)]
+    reads_off_host: bool
     accepted_media: tuple[ModelRunMediaKind, ...] | None = None
 
 
@@ -145,7 +150,11 @@ class ModelRunRoleSelection(BaseModel):
 
 
 class ModelRunConsentBinding(BaseModel):
-    """The lane a person's off-host consent was recorded for, carried with the run it permits."""
+    """The lane a person's off-host consent was recorded for, carried with the run it permits.
+
+    Only a run on a lane that reads off-host carries one, and the service
+    refuses such a run without it.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -198,7 +207,11 @@ class ModelRunBody(BaseModel):
 
 
 class ModelRunHeader(BaseModel):
-    """The non-secret part of a run: the role, the bound on its time and the consent it carries."""
+    """The non-secret part of a run: the role, the bound on its time and the consent it carries.
+
+    ``consent`` is required when the lane the role resolves to reads
+    off-host, and must then name that lane.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 

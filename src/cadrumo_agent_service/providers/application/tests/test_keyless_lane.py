@@ -244,6 +244,6 @@ def test_a_role_selected_on_a_keyless_lane_is_answered_without_any_stored_record
     )
 
     assert runs.lookup("text_extraction") == ModelRunLane(
-        provider_id="local", transport="api", model="synthetic-reader:1"
+        provider_id="local", transport="api", model="synthetic-reader:1", reads_off_host=False
     )
     assert store.records == {}

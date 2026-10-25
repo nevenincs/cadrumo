@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-25'
 body_schema: body-v2
-body_hash: 'sha256:8bcf88c6764058d03d8dddc3a859cbd425a02bc34eaf673a26bfb7ff93260150'
+body_hash: 'sha256:caa3ff0c8e844b3a4c4f6eea794d932fcd22dbb555fb3e9e29346040a2202f6f'
 ---
 
 # `agent-owned-models` plan
@@ -60,7 +60,7 @@ Parse cadrumo-agent's new catalogue schema version with its typed fields and dec
 - [ ] `P02.S08` - Parse the new schema version with the typed fields vision, installed, size_bytes, context_length, licence and reads_off_host, the recommended set and the run options; refuse an entry without reads_off_host; `src/cadrumo_agent_service/providers/domain/catalog.py, src/cadrumo_agent_service/providers/domain/tests`.
 - [x] `P02.S09` - Admit the keyless loopback auth kind and a loopback base URL, project them into the credential schema, resolution and the desktop provider-settings wire, and launch the hosted agent against the supervised local AI server address; `src/cadrumo_agent_service/providers/domain/catalog.py, src/cadrumo_agent_service/providers/application/resolution.py, src/cadrumo_agent_service/providers/application/service.py, src/cadrumo_agent_service/adapters/agent_provider_catalog.py, src/cadrumo_agent_service/host/launch_environment.py, native/desktop/src-tauri/src/shell/provider_settings/wire.rs, native/desktop/frontend/src/components/settings/types.ts, native/desktop/frontend/src/components/settings/ProviderSettings.tsx`.
 - [ ] `P02.S10` - Validate a role selection against the catalogue: the model must exist and the vision role requires a vision-capable entry; carry licence, size_bytes and reads_off_host in the lane lookup reply; `src/cadrumo_agent_service/providers/application/model_role_selections.py, src/cadrumo_agent_service/providers/application/model_runs.py, src/cadrumo_agent_service/providers/application/contracts.py`.
-- [ ] `P02.S11` - Decide off-host consent from the lane's reads_off_host flag in the tax adapter and bind the token to the resolved lane; `src/cadrumo/adapters/outbound/llm/consent.py, src/cadrumo/adapters/outbound/llm/providers/agent.py, src/cadrumo/adapters/outbound/llm/preconditions.py`.
+- [x] `P02.S11` - Decide off-host consent from the lane's reads_off_host flag in the tax adapter and bind the token to the resolved lane; carry only reads_off_host, required, in the lane lookup reply ahead of P02.S10 and have the service refuse a consent-less run on an off-host lane; `src/cadrumo/adapters/outbound/llm/consent.py, src/cadrumo/adapters/outbound/llm/providers/agent.py, src/cadrumo/adapters/outbound/llm/client.py, src/cadrumo_client/contracts/model_runs.py, src/cadrumo_agent_service/providers/application/model_runs.py`.
 
 ### Phase `P03` - One dispatch path
 

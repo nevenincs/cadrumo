@@ -27,7 +27,7 @@ from ..model_runs import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_LANE = ModelRunLane(provider_id="example", transport="cli", model="example-model-1")
+_LANE = ModelRunLane(provider_id="example", transport="cli", model="example-model-1", reads_off_host=True)
 _SERVED = ModelRunServed(provider_id="example", transport="cli", model="example-model-1", agent_version="1")
 _SELECTED = ModelRunSelectedModel(lane_id="example_cli", model="example-model-1")
 _STATE = ModelRunRoleSelection(role="text_extraction", selected=_SELECTED, lane=_LANE)

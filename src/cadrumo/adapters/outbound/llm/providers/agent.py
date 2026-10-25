@@ -49,7 +49,7 @@ _CONFIGURATION_REFUSALS = frozenset(
 )
 
 
-def lane_model_label(lane: ModelRunLane) -> str:
+def lane_model_label(lane: ModelRunLane | ModelRunOutput) -> str:
     """Return the model identity records carry for an agent run: its lane and model together."""
     return f"{lane.provider_id}/{lane.transport}/{lane.model}"
 
@@ -74,7 +74,9 @@ class AgentAdapter(ProviderAdapter):
     """Run one request on the lane the agent service resolved for its role.
 
     The lane was resolved, and any consent bound to it, before this adapter was
-    built, so the service refuses the run if it would now use another lane.
+    built. Consent is bound only when the lane reads off-host, and the service
+    refuses the run if it would now use another lane or an off-host lane
+    without consent.
     Whether the lane accepts the request's attachments was checked against the
     catalog before dispatch; the agent still refuses at admission what it cannot
     take.
@@ -117,10 +119,9 @@ class AgentAdapter(ProviderAdapter):
             output = await self._run(reask)
             if first_json_object(output.text) is None:
                 raise model_run_refusal_error(ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID), role=self._role)
-        served = ModelRunLane(provider_id=output.provider_id, transport=output.transport, model=output.model)
         return ProviderCompletion(
             text=output.text,
-            model=lane_model_label(served),
+            model=lane_model_label(output),
             input_tokens=0,
             output_tokens=0,
         )

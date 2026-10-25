@@ -24,7 +24,6 @@ from pydantic import BaseModel, Field
 
 from cadrumo_client.contracts.model_runs import (
     MODEL_RUN_MAX_DEADLINE_SECONDS,
-    ModelRunConsentBinding,
     ModelRunLane,
     ModelRunMediaKind,
     ModelRunRefusal,
@@ -42,7 +41,7 @@ from ....core.loopback_endpoint import endpoint_host_is_loopback
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.time.clock import now
-from .consent import provider_reads_off_host
+from .consent import agent_consent_binding, provider_reads_off_host
 from .errors import (
     LLMBusyError,
     LLMCacheError,
@@ -466,7 +465,13 @@ class LLMClient:
         # URL the gate judges on-host is then the only URL the request can be
         # posted to.
         local_chat_url = local_ai_chat_url(load_settings()) if provider is LLMProvider.LOCAL else None
-        self._require_evidence_consent(provider, model, request, local_chat_url=local_chat_url)
+        self._require_evidence_consent(
+            provider,
+            model,
+            request,
+            lane=None if agent is None else agent.lane,
+            local_chat_url=local_chat_url,
+        )
         request_id = self._request_id(request)
         cached = self.cache.read(request, provider, model)
         if cached is not None:
@@ -772,6 +777,7 @@ class LLMClient:
         model: str,
         request: LLMRequest,
         *,
+        lane: ModelRunLane | None,
         local_chat_url: str | None,
     ) -> None:
         """Refuse an off-host dispatch of taxpayer evidence without consent.
@@ -824,11 +830,20 @@ class LLMClient:
         refuse to name the local provider for an off-host read, and a ledger
         entry recording ``local`` would not say where the document went.
 
+        **An agent dispatch is off-host exactly when its lane says so.** The
+        resolved lane's typed ``reads_off_host`` flag decides, never the
+        provider, transport or model name. A lane that stays on this computer
+        needs no token and records no ledger entry, because no document leaves
+        the host; its endpoint is the agent service's loopback declaration, not
+        an endpoint this client posts to.
+
         Args:
             provider: The resolved provider this request would dispatch at.
             model: The resolved model this request would dispatch at, recorded
                 in the ledger entry.
             request: The request, carrying its evidence marker and any token.
+            lane: The lane an agent dispatch was resolved to; ``None`` for any
+                other provider.
             local_chat_url: The endpoint a local dispatch will be posted to,
                 the same value handed to the adapter; ``None`` for any other
                 provider.
@@ -842,8 +857,10 @@ class LLMClient:
         """
         if not request.evidence_derived:
             return
-        if not provider_reads_off_host(provider):
-            self._require_loopback_local_reader(provider, local_chat_url)
+        reads_off_host = provider_reads_off_host(provider) if lane is None else lane.reads_off_host
+        if not reads_off_host:
+            if lane is None:
+                self._require_loopback_local_reader(provider, local_chat_url)
             return
         token = request.consent_token
         if self.settings.cadrumo_evidence_gestor_mode or token is None:
@@ -1062,17 +1079,7 @@ class LLMClient:
         if agent is None or request is None:
             msg = "an agent adapter is built only from a resolved lane"
             raise InternalInvariantError(msg)
-        token = request.consent_token if request.evidence_derived else None
-        consent = (
-            None
-            if token is None
-            else ModelRunConsentBinding(
-                evidence_content_address=token.evidence_content_address,
-                provider_id=agent.lane.provider_id,
-                transport=agent.lane.transport,
-                model=agent.lane.model,
-            )
-        )
+        consent = agent_consent_binding(agent.lane, request.consent_token if request.evidence_derived else None)
         return AgentAdapter(
             port=agent.port,
             role=agent.role,
