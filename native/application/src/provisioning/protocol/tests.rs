@@ -1038,6 +1038,59 @@ fn a_follower_reports_the_cancel_the_person_asked_for_and_a_setup_whose_process_
 }
 
 #[test]
+fn a_registry_tag_moved_past_its_pin_fails_the_setup_instead_of_completing_it() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::local_ai(&text, &vision);
+    // The registry answers the first pull with a model other than the pinned manifest,
+    // which is what a moved tag looks like to the engine.
+    let moved = StoredModel::new(5);
+    {
+        let ollama = world.ollama.as_ref().unwrap();
+        let mut state = ollama.state.lock().unwrap();
+        let models = world.root().join("models/ollama");
+        state
+            .installs
+            .insert("qwen3-vl:2b".into(), moved.files(&models, "qwen3-vl:2b"));
+        state
+            .tags
+            .insert("qwen3-vl:2b".into(), moved.digest().to_string());
+    }
+
+    let mut setup = world.start(&["setup", "--item", "local_ai"]);
+    let (_reviewed, review) = setup.until("review");
+    setup.send(json!({"type": "approve", "plan_digest": review["plan_digest"]}));
+    setup.until("notice");
+    world.serve_local_ai();
+    let done = setup.finish();
+
+    assert_eq!(
+        (&done.result["outcome"], &done.result["failure_category"]),
+        (&json!("failed"), &json!("damaged_download")),
+        "{}",
+        done.result
+    );
+    assert_eq!(row(&done.result, "local_ai")["state"], "failed");
+    let requests = world
+        .ollama
+        .as_ref()
+        .unwrap()
+        .state
+        .lock()
+        .unwrap()
+        .requests
+        .clone();
+    assert_eq!(
+        requests
+            .iter()
+            .filter(|line| line.starts_with("POST /api/pull"))
+            .count(),
+        1,
+        "the mismatch is final, so no further pull is asked for: {requests:?}"
+    );
+}
+
+#[test]
 fn an_offline_computer_and_a_full_disk_refuse_before_any_review_or_download() {
     let world = World::browser();
     let offline = world

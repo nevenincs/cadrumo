@@ -160,8 +160,8 @@ impl Models {
     }
 
     /// Pulls `role`'s model through `server` unless it is already present, then reads it
-    /// back as the quick check does: present, or stale when the registry served another
-    /// manifest than the pinned one.
+    /// back as the quick check does. Only the pinned manifest is the model the plan named,
+    /// so a registry that served another one fails this part rather than finishing stale.
     pub fn pull(
         &self,
         server: &Server,
@@ -182,9 +182,11 @@ impl Models {
             pull.cancellation.check()?;
             match pull_once(server, pin, pull)? {
                 Attempt::Done => {
+                    // The approved plan named this model and its pinned manifest digest, so
+                    // another manifest is not what was approved: final here, as the
+                    // browser's digest mismatch is final at its transfer.
                     return match self.installed(pin) {
-                        observation @ (Observation::Present { .. }
-                        | Observation::Differs { .. }) => Ok(observation),
+                        observation @ Observation::Present { .. } => Ok(observation),
                         _ => Err(LocalAiError::Failed(FailureCategory::DamagedDownload)),
                     };
                 }

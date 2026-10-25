@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:790d9a602419f5a9c2ba9cc9f6094cb7a43466bb15ff3142aabcd8ac0d0ca00a'
+body_hash: 'sha256:7772f458587a3f23f7ec0153281fe275e600da69a90230263af877fcfeca92a1'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -853,6 +853,13 @@ related:
 - `S07` `verify:` `pytest src/cadrumo/core/tests src/cadrumo/application/storage_management -m '' -k 'not no_undeclared_module_chains'` -> `pass`
 - `S07` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
 - `S07` `by:` `implementation-engineer`
+- `S08` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S08` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S08` `M` `native/application/src/provisioning/protocol/tests.rs`
+- `S08` `verify:` `cargo test --offline --lib provisioning::` -> `pass`
+- `S08` `verify:` `cargo test --offline --features test-support --test provisioning_faults` -> `pass`
+- `S08` `verify:` `cargo clippy --offline --all-targets -- -D warnings` -> `pass`
+- `S08` `by:` `implementation-engineer`
 
 ## Notes
 

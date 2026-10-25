@@ -384,7 +384,7 @@ fn a_cut_off_pull_is_pulled_again_and_reports_byte_progress_for_the_whole_model(
 }
 
 #[test]
-fn a_registry_serving_another_manifest_leaves_the_model_stale() {
+fn a_registry_serving_another_manifest_fails_the_pull_rather_than_finishing_it() {
     let fixture = fixture();
     let fake = FakeOllama::start("1.0.0");
     {
@@ -401,7 +401,15 @@ fn a_registry_serving_another_manifest_leaves_the_model_stale() {
         RetryPolicy::default(),
         &Cancellation::default(),
     );
-    assert_eq!(pulled.result.unwrap(), STALE);
+    // The approved plan named the pinned manifest, so landing on another one is a
+    // failure of this part: a setup that reported it completed would say an approval
+    // of one model finished as another, and its row would offer a pull that never
+    // converges.
+    assert_eq!(
+        pulled.result.unwrap_err().category(),
+        FailureCategory::DamagedDownload
+    );
+    assert_eq!(pulled.pulls.len(), 1);
 }
 
 #[test]
