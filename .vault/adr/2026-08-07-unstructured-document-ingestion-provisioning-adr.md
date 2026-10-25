@@ -419,3 +419,7 @@ actions (`src/cadrumo/application/provisioning_host.py:360`, `:440`). Under
 that record, installing the runtime program is a planned, approved setup
 item, and starting it is an action that downloads nothing. D7 to D9 are not
 affected.
+
+## Note 2026-10-25: catalogue superseded in substance
+
+This record remains `proposed`. `2026-10-25-agent-owned-models-adr` supersedes D4 in substance: the model catalogue lives in cadrumo-agent, selection is the person's per role, and licence is shown at selection rather than gated. D2 and D3 (hardware profile and fail-closed contention) stand and read the model size from the selected catalogue entry. Per-model parameter support in D4 becomes the catalogue's typed run options.

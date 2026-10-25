@@ -277,3 +277,12 @@ Basis: the owner's approval of 2026-10-24, "all approved, implemnet", answering 
 - The 2026-10-21 amendment's vendor installer and loopback server are removed. Rust extracts each pinned archive into the driver's layout and writes its completion marker. Pins, hop rules and the `not_in_this_build` reading stand.
 
 D2, D4, D9, D10 as amended, D11 and the rest of D12 are unchanged.
+
+### Amendment 2026-10-25: models belong to cadrumo-agent
+
+Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in `2026-10-25-agent-owned-models-adr`: Cadrumo defines no AI model names, digests, sizes, licences, defaults, candidate lists or rankings; cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included; every tax model call goes through the agent service. The earlier wording above stays as history.
+
+- **D1 and the 2026-10-19 amendment, ruling 1.** "`local_ai` is the program and the model each catalogue role reads with" is replaced by: "`local_ai` is the program and the model the person selected for each local role. The parts of its plan are the program, then one pull per selected local model not yet installed. Cadrumo keeps no catalogue role list of models."
+- **D7 (verification).** "The catalogue gains an expected digest per model. When the installed digest differs ... `stale`" is withdrawn. Replaced by: "A local model's integrity is Ollama's content-addressed manifest. Cadrumo keeps no expected digest, and a model has no digest-based `stale` state." The role fitness verdict and the one-token generation follow the 2026-10-24 amendment.
+- **D8 and the 2026-10-19 amendment, ruling 1.** "`--model` still names one catalogue model for every role" is replaced by: "`aeat config provision pull` sets up the program and the models in the per-role selection. `--model` is removed, because the selection is the only input."
+- **D13 (scope).** Added to the out-of-scope list: any model definition owned by Cadrumo. "A Cadrumo-owned model runtime" stays narrowed as on 2026-10-24.

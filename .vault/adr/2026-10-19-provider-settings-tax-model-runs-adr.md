@@ -130,3 +130,15 @@ Accepted 2026-10-19 on the operator's first-hand approval, given in the coordina
 - CADRUMO-AGENT's written agreement the same day to the request path, the per-role resolution, the refusal set, the consent binding, the background-run shape and attachment admission.
 
 Acceptance records the decision. It is not evidence that any of it is built.
+
+### Amendment 2026-10-25: one path for local and hosted reads, per-role selection
+
+Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in `2026-10-25-agent-owned-models-adr`: Cadrumo defines no AI model names, digests, sizes, licences, defaults, candidate lists or rankings; cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included; every tax model call goes through the agent service. The earlier wording above stays as history.
+
+- **Constraint 1 (retirement).** "`LocalAdapter` stays." is replaced by: "`LocalAdapter` and the `LLMProvider.LOCAL` member are deleted, with their tests, the four local-model settings and their defaults."
+- **Constraint 2 (one agent adapter).** "`LLMProvider` keeps `LOCAL` and gains one off-host member for cadrumo-agent." is replaced by: "`LLMProvider` has the one agent member. Every consumer, local or hosted, reaches a model through it." The consumers list gains statement reading.
+- **Constraint 5 (service handler).** "a per-`ModelRole` selection when one exists, otherwise the default selection" is replaced by: "the per-`ModelRole` selection the person stored. When the role has none the handler refuses `no_selection`. It reads no default selection." The sentence "A per-role selection interface is a follow-on and is not part of this record." is withdrawn.
+- **Constraint 7 (typed refusals).** "A refusal never falls back to another lane, to the environment or to the on-host model." is replaced by: "A refusal never falls back to another lane or to the environment." `no_selection` covers any role the person has not configured, local or hosted.
+- **Constraint 8 (consent).** The phrases "when it runs off-host" and "Without one they stay on-host or refuse" are replaced by the catalogue entry's typed `reads_off_host` flag. A lane with the flag true needs the digest-bound token. A lane with it false needs none. The flag is never inferred from a transport or a path.
+- **Constraint 9 (operation contract).** `ledger.evidence.extract` keeps one agent choice. The on-host versus agent switch is removed, and the person's lane is the per-role selection.
+- **Implementation.** "`role_fitness.py` probes `LocalAdapter` only and is unaffected." is replaced by: "`role_fitness.py` is deleted with `LocalAdapter`."

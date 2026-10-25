@@ -71,3 +71,9 @@ Authorization: the owner's ruling of 2026-10-18, "Ship it", choosing to ship the
 Basis: the owner's approval of 2026-10-24, "all approved, implemnet", answering the presented `2026-10-24-rust-component-provisioning-adr` and its two plans.
 
 Chromium builds are provisioned on demand into the installation-wide storage root (`components/playwright`) by the Rust component engine of `2026-10-24-rust-component-provisioning-adr`. This replaces "into profile storage ... through the existing browser provisioning probe and install path". The `[browser]` extra still ships, because Playwright's Python package and driver launch the browser at use time; the driver's installer is no longer run.
+
+### Amendment 2026-10-25: local inference goes through the agent
+
+Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in `2026-10-25-agent-owned-models-adr`: Cadrumo defines no AI model names, digests, sizes, licences, defaults, candidate lists or rankings; cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included; every tax model call goes through the agent service. The earlier wording above stays as history.
+
+- **Constraints and Implementation verification.** "No model weights enter any artifact" stands. The verification sentence "`ledger.classify.review` runs past `ledger.llm.acquire` against a locally provisioned model" reads: against a model the person selected and the Rust engine pulled, reached through the agent service. The `[llm]` closure no longer carries a Cadrumo-owned local inference adapter, because `LocalAdapter` is deleted.

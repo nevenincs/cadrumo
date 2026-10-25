@@ -227,3 +227,9 @@ Before this amendment, constraint 5 read "Catalog/status/set/remove/reset are au
 ## Amendment 2026-10-19 - the agent is told its profile's folder
 
 Accepted 2026-10-19 on operator directive 2026-10-19 under `2026-10-19-google-app-identity-profile-folder-scope-adr`. Constraint 8's "The agent receives no profile identity, password, receipt or session policy, and gains no settings store" now reads: the agent receives the folder of the one profile it runs inside, as `CADRUMO_PROFILE_ROOT`, which it forwards with the storage root to the tools it starts; it still receives no password, receipt or session policy and gains no settings store. The folder path names the profile's identifier. Credentials still travel only on the standard-input frame.
+
+### Amendment 2026-10-25: tax model reading and the extraction note
+
+Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in `2026-10-25-agent-owned-models-adr`: Cadrumo defines no AI model names, digests, sizes, licences, defaults, candidate lists or rankings; cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included; every tax model call goes through the agent service. The earlier wording above stays as history.
+
+- **Former constraint 11, extraction note (history), and constraint 3.** "Cadrumo's own document reading keeps its existing key handling until the owner rules on it" is closed. The owner ruled: tax model reading, local and hosted, goes through the agent, with providers and models from cadrumo-agent's catalogue. The person's per-role selection is stored beside the provider records in the service. Cadrumo holds no model list.

@@ -74,3 +74,9 @@ is a regulatory-neutral runtime knob (it never produces a persisted tax number),
 so changing the default carries no calculation-grounding risk.
 
 ## Codification candidates
+
+## Amendment 2026-10-25: the vision model is the person's selection
+
+Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in `2026-10-25-agent-owned-models-adr`: Cadrumo defines no AI model names, digests, sizes, licences, defaults, candidate lists or rankings; cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included; every tax model call goes through the agent service. The earlier wording above stays as history.
+
+- **Constraints and Implementation.** The setting `aeat_llm_ollama_vision_model` and its default `qwen2.5vl:3b` are deleted. The tiering text (3b default, 7b upgrade, moondream fallback) no longer describes the product. The vision model is the one the person selects for the vision role from cadrumo-agent's catalogue, and it must be marked vision-capable there. The "operator must `ollama pull` the model" prerequisite becomes the local AI setup pull of the selected model. The gestor-allowed, no-upload posture stands: a lane whose catalogue entry sets `reads_off_host` false reads on this host.

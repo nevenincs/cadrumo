@@ -392,3 +392,9 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 >   - the owner narrows page-image grants to one document;
 >   - the owner changes the deletion default.
 >
+
+## Amendment 2026-10-25: local reading consent follows a typed flag
+
+Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in `2026-10-25-agent-owned-models-adr`: Cadrumo defines no AI model names, digests, sizes, licences, defaults, candidate lists or rankings; cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included; every tax model call goes through the agent service. The earlier wording above stays as history.
+
+- **Constraint 7 (eligibility and lanes).** "Local model reading needs no external-disclosure grant." is replaced by: "A lane whose catalogue entry sets `reads_off_host` false needs no external-disclosure grant. A lane with it true does. The flag is typed catalogue data and is never inferred from a transport." The historical sentence "A model the person runs on this machine needs no grant" reads the same way.
