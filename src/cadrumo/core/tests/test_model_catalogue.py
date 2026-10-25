@@ -38,14 +38,11 @@ from ..model_catalogue import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 
-def test_every_role_and_runtime_has_a_commercially_licensed_candidate() -> None:
-    """A commercial deployment must be servable for every role on every runtime."""
-    for runtime in ModelRuntime:
-        for role in ModelRole:
-            eligible = [
-                c for c in candidates_for_role(role, runtime) if c.permitted_under(DeploymentLicencePosture.COMMERCIAL)
-            ]
-            assert eligible, f"{runtime.value}/{role.value} has no commercially-licensed candidate"
+def test_every_role_has_a_commercially_licensed_candidate() -> None:
+    """A commercial deployment must be servable for every role."""
+    for role in ModelRole:
+        eligible = [c for c in candidates_for_role(role) if c.permitted_under(DeploymentLicencePosture.COMMERCIAL)]
+        assert eligible, f"{role.value} has no commercially-licensed candidate"
 
 
 def test_no_default_candidate_in_any_role_bars_commercial_use() -> None:
@@ -89,79 +86,42 @@ def test_shipped_settings_defaults_are_the_catalogued_commercial_defaults() -> N
 
 
 def test_every_runtime_default_is_the_weakest_candidate_for_its_role() -> None:
-    """Bounded from below, on BOTH runtimes — the property, not just the local half.
-
-    Ranked by the axis each runtime actually has: declared memory on-host,
-    published input price off-host. Without a price the hosted ordering silently
-    degrades to alphabetical, and a frontier-tier default sorts as "weakest"
-    because of its name — a mutation that added exactly that passed every other
-    gate in this file.
-    """
+    """Bounded from below: ranked by declared memory, the weakest eligible candidate is the default."""
     required_context = _shipped_defaults().cadrumo_llm_ollama_num_ctx
-    for runtime in ModelRuntime:
-        for role in ModelRole:
-            ordered = candidates_for_role(role, runtime)
-            assert ordered, f"{runtime.value}/{role.value} has no candidates"
-            default = model_candidate(default_model_runtime_id(role, runtime))
-            assert default is not None
-            # Both bars selection applies, so a candidate legitimately excluded
-            # on capability is not mistaken for a default that ranks too high.
-            eligible = [
-                c
-                for c in ordered
-                if c.permitted_under(DeploymentLicencePosture.COMMERCIAL) and c.max_context_tokens >= required_context
-            ]
-            assert eligible, f"{runtime.value}/{role.value} has no eligible candidate"
-            assert default.runtime_id == eligible[0].runtime_id, (
-                f"the {runtime.value} default for {role.value} is {default.runtime_id!r}, "
-                f"but {eligible[0].runtime_id!r} ranks weaker and clears the same bars"
-            )
-
-
-def test_price_presence_tracks_the_runtime() -> None:
-    """The hosted ordering axis exists exactly where memory does not."""
-    for candidate in MODEL_CATALOGUE:
-        if candidate.runtime is ModelRuntime.LOCAL_OLLAMA:
-            assert candidate.input_price_per_mtok_usd is None, candidate.runtime_id
-        else:
-            assert candidate.input_price_per_mtok_usd is not None, candidate.runtime_id
-
-
-def test_a_hosted_candidate_without_a_price_is_refused() -> None:
-    """No ordering axis means selection cannot be bounded from below — refuse it."""
-    hosted = next(c for c in MODEL_CATALOGUE if c.runtime is ModelRuntime.CLOUD_ANTHROPIC)
-    payload = hosted.model_dump() | {"input_price_per_mtok_usd": None}
-    with pytest.raises(ValueError, match="no ordering axis"):
-        ModelCandidate.model_validate(payload)
+    for role in ModelRole:
+        ordered = candidates_for_role(role)
+        assert ordered, f"{role.value} has no candidates"
+        default = model_candidate(default_model_runtime_id(role))
+        assert default is not None
+        # Both bars selection applies, so a candidate legitimately excluded
+        # on capability is not mistaken for a default that ranks too high.
+        eligible = [
+            c
+            for c in ordered
+            if c.permitted_under(DeploymentLicencePosture.COMMERCIAL) and c.max_context_tokens >= required_context
+        ]
+        assert eligible, f"{role.value} has no eligible candidate"
+        assert default.runtime_id == eligible[0].runtime_id, (
+            f"the default for {role.value} is {default.runtime_id!r}, "
+            f"but {eligible[0].runtime_id!r} ranks weaker and clears the same bars"
+        )
 
 
 def test_memory_requirement_presence_tracks_the_runtime() -> None:
-    """The runtime axis is load-bearing: a hosted model has no on-host footprint."""
+    """Every catalogued candidate runs on-host, so each declares the footprint contention is judged against."""
     for candidate in MODEL_CATALOGUE:
-        if candidate.runtime is ModelRuntime.LOCAL_OLLAMA:
-            assert candidate.memory_requirement_bytes is not None, candidate.runtime_id
-        else:
-            assert candidate.memory_requirement_bytes is None, candidate.runtime_id
-
-
-def test_a_hosted_candidate_may_not_claim_a_local_memory_requirement() -> None:
-    """A figure that would be compared against this machine's free memory is refused."""
-    hosted = next(c for c in MODEL_CATALOGUE if c.runtime is ModelRuntime.CLOUD_ANTHROPIC)
-    payload = hosted.model_dump() | {"memory_requirement_bytes": 1_000_000}
-    with pytest.raises(ValueError, match="never run on this machine"):
-        ModelCandidate.model_validate(payload)
+        assert candidate.memory_requirement_bytes is not None, candidate.runtime_id
 
 
 def test_a_local_candidate_must_declare_a_memory_requirement() -> None:
-    """The same validator in the other direction, so neither branch passes vacuously."""
-    local = next(c for c in MODEL_CATALOGUE if c.runtime is ModelRuntime.LOCAL_OLLAMA)
-    payload = local.model_dump() | {"memory_requirement_bytes": None}
+    """A candidate with no footprint cannot be admitted by the contention check, so it is refused."""
+    payload = MODEL_CATALOGUE[0].model_dump() | {"memory_requirement_bytes": None}
     with pytest.raises(ValueError, match="declares no memory requirement"):
         ModelCandidate.model_validate(payload)
 
 
-def test_both_runtimes_accept_their_own_valid_shape() -> None:
-    """Positive control for the two refusals above."""
+def test_every_catalogued_candidate_accepts_its_own_valid_shape() -> None:
+    """Positive control for the refusal above."""
     for candidate in MODEL_CATALOGUE:
         assert ModelCandidate.model_validate(candidate.model_dump()).runtime_id == candidate.runtime_id
 
@@ -229,7 +189,7 @@ def test_candidates_for_role_are_ordered_weakest_first() -> None:
         assert ordered, f"role {role.value} has no candidates"
         requirements = [c.memory_requirement_bytes or 0 for c in ordered]
         assert requirements == sorted(requirements)
-        assert all(c.serves(role) and c.runtime is ModelRuntime.LOCAL_OLLAMA for c in ordered)
+        assert all(c.serves(role) for c in ordered)
 
 
 def test_the_catalogue_carries_a_candidate_excluded_on_context_capability() -> None:
@@ -249,12 +209,11 @@ def test_the_catalogue_carries_a_candidate_excluded_on_context_capability() -> N
 
 def test_default_runtime_ids_resolve_and_serve_their_role() -> None:
     """Every role's default is a catalogued candidate eligible for that role."""
-    for runtime in ModelRuntime:
-        for role in ModelRole:
-            candidate = model_candidate(default_model_runtime_id(role, runtime))
-            assert candidate is not None
-            assert candidate.serves(role)
-            assert candidate.runtime is runtime
+    for role in ModelRole:
+        candidate = model_candidate(default_model_runtime_id(role))
+        assert candidate is not None
+        assert candidate.serves(role)
+        assert candidate.runtime is ModelRuntime.LOCAL_OLLAMA
 
 
 def test_column_role_mapping_is_served_only_by_text_candidates() -> None:
@@ -300,28 +259,17 @@ def _shipped_defaults() -> Settings:
         return settings_without_env_file()
 
 
-def test_every_local_candidate_pins_its_tested_weights_and_no_hosted_one_does() -> None:
-    """A downloaded model is compared against the digest Cadrumo was tested with; a hosted one downloads nothing."""
+def test_every_candidate_pins_its_tested_weights() -> None:
+    """A downloaded model is compared against the digest Cadrumo was tested with."""
     for candidate in MODEL_CATALOGUE:
-        if candidate.runtime is ModelRuntime.LOCAL_OLLAMA:
-            assert candidate.weights_pin is not None, candidate.runtime_id
-        else:
-            assert candidate.weights_pin is None, candidate.runtime_id
+        assert candidate.weights_pin is not None, candidate.runtime_id
     digests = [c.weights_pin.digest for c in MODEL_CATALOGUE if c.weights_pin is not None]
     assert len(digests) == len(set(digests)), "two catalogued tags pin the same weights"
 
 
 def test_a_local_candidate_without_a_weights_pin_is_refused() -> None:
-    local = next(c for c in MODEL_CATALOGUE if c.runtime is ModelRuntime.LOCAL_OLLAMA)
     with pytest.raises(ValueError, match="pins no tested weights digest"):
-        ModelCandidate.model_validate(local.model_dump() | {"weights_pin": None})
-
-
-def test_a_hosted_candidate_with_a_weights_pin_is_refused() -> None:
-    local = next(c for c in MODEL_CATALOGUE if c.runtime is ModelRuntime.LOCAL_OLLAMA)
-    hosted = next(c for c in MODEL_CATALOGUE if c.runtime is ModelRuntime.CLOUD_ANTHROPIC)
-    with pytest.raises(ValueError, match="nothing is downloaded for it"):
-        ModelCandidate.model_validate(hosted.model_dump() | {"weights_pin": local.model_dump()["weights_pin"]})
+        ModelCandidate.model_validate(MODEL_CATALOGUE[0].model_dump() | {"weights_pin": None})
 
 
 def test_a_weights_pin_is_a_bare_sha256() -> None:

@@ -26,10 +26,8 @@ from ...core.hardware import AcceleratorKind, HardwareTier
 from ...core.model_catalogue import (
     DeploymentLicencePosture,
     ModelRole,
-    ModelRuntime,
     ModelSelectionAdvisory,
     candidates_for_role,
-    default_model_runtime_id,
     model_candidate,
 )
 from ...tests.env_scope import settings_without_env_file
@@ -349,9 +347,7 @@ def test_an_override_that_clears_the_context_floor_carries_no_capability_advisor
     assert ModelSelectionAdvisory.OVERRIDE_BELOW_CONTEXT_FLOOR not in selection.advisories
 
 
-_ROLE_MODEL_ENV_VARS = tuple(
-    f"CADRUMO_LLM_{runtime}_{role}_MODEL" for runtime in ("OLLAMA", "CLOUD") for role in ("VISION", "TEXT", "MAPPING")
-)
+_ROLE_MODEL_ENV_VARS = tuple(f"CADRUMO_LLM_OLLAMA_{role}_MODEL" for role in ("VISION", "TEXT", "MAPPING"))
 
 
 def _shipped_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
@@ -377,77 +373,6 @@ def test_the_shipped_settings_defaults_are_what_selection_resolves_to(monkeypatc
     assert text.runtime_id == settings.cadrumo_llm_ollama_text_model
     assert mapping.runtime_id == settings.cadrumo_llm_ollama_mapping_model
     assert model_candidate(settings.cadrumo_llm_ollama_vision_model) is not None
-
-
-def test_the_cloud_runtime_resolves_every_role_to_the_shipped_cloud_default(monkeypatch: pytest.MonkeyPatch) -> None:
-    """A hosted route must land on the catalogue's role-named default."""
-    _shipped_settings(monkeypatch)
-    profile = _cuda_profile(14 * _GIB)
-    for role, configured in (
-        (role, default_model_runtime_id(role, ModelRuntime.CLOUD_ANTHROPIC))
-        for role in (ModelRole.VISION_TRANSCRIPTION, ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING)
-    ):
-        selection = select_model_for_role(role, profile=profile, runtime=ModelRuntime.CLOUD_ANTHROPIC)
-        assert selection.selected
-        assert selection.runtime_id == configured
-        assert selection.candidate is not None
-        assert selection.candidate.runtime is ModelRuntime.CLOUD_ANTHROPIC
-        assert selection.candidate.licence.commercial_use_permitted
-
-
-def test_a_hosted_selection_is_never_refused_for_local_headroom() -> None:
-    """Nothing runs on this machine, so this machine's free memory cannot bar it.
-
-    The discriminating case: on a profile so constrained that every local
-    candidate is refused, the hosted route still resolves and carries neither
-    headroom advisory. Judging a cloud model against local memory would refuse a
-    route that cannot fail that way.
-    """
-    starved = _cuda_profile(1 * _GIB)
-
-    local = select_model_for_role(ModelRole.VISION_TRANSCRIPTION, profile=starved)
-    assert not local.selected
-    assert ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM in local.advisories
-
-    hosted = select_model_for_role(
-        ModelRole.VISION_TRANSCRIPTION,
-        profile=starved,
-        runtime=ModelRuntime.CLOUD_ANTHROPIC,
-    )
-    assert hosted.selected
-    assert ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM not in hosted.advisories
-    assert ModelSelectionAdvisory.FIT_UNVERIFIED not in hosted.advisories
-
-
-def test_an_unmeasurable_machine_does_not_flag_fit_on_a_hosted_selection() -> None:
-    """FIT_UNVERIFIED means 'could not check a local fit' — there is none to check."""
-    unmeasured = _unmeasurable_profile()
-    assert (
-        ModelSelectionAdvisory.FIT_UNVERIFIED
-        in select_model_for_role(
-            ModelRole.VISION_TRANSCRIPTION,
-            profile=unmeasured,
-        ).advisories
-    )
-    hosted = select_model_for_role(
-        ModelRole.VISION_TRANSCRIPTION,
-        profile=unmeasured,
-        runtime=ModelRuntime.CLOUD_ANTHROPIC,
-    )
-    assert hosted.selected
-    assert hosted.advisories == ()
-
-
-def test_the_two_runtimes_never_resolve_to_each_others_models() -> None:
-    """A runtime's selection is scoped to its own candidates, both ways."""
-    profile = _cuda_profile(14 * _GIB)
-    for role in ModelRole:
-        local = select_model_for_role(role, profile=profile)
-        hosted = select_model_for_role(role, profile=profile, runtime=ModelRuntime.CLOUD_ANTHROPIC)
-        assert local.candidate is not None and hosted.candidate is not None
-        assert local.candidate.runtime is ModelRuntime.LOCAL_OLLAMA
-        assert hosted.candidate.runtime is ModelRuntime.CLOUD_ANTHROPIC
-        assert local.runtime_id != hosted.runtime_id
 
 
 def test_the_mapping_role_never_resolves_to_a_vision_tier_model() -> None:

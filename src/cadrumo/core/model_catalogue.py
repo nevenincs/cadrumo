@@ -59,7 +59,6 @@ from .models import STRICT_FROZEN_CONFIG
 from .source_locator import OptionalSourceUrl
 
 __all__ = [
-    "ANTHROPIC_COMMERCIAL_TERMS",
     "APACHE_2_0",
     "DEFAULT_MODEL_BY_RUNTIME_AND_ROLE",
     "MODEL_CATALOGUE",
@@ -108,28 +107,18 @@ class ModelRole(StrEnum):
 
 
 class ModelRuntime(StrEnum):
-    """Where a candidate's weights actually run, which changes what may be judged.
+    """Where a candidate's weights actually run.
 
-    The axis exists because two of the catalogue's bars are meaningless off-host.
-    A hosted model has no local memory requirement to compare against measured
-    free headroom, and no weights to pull; what it has instead is a service
-    contract. Collapsing the two runtimes into one list would force every
-    consumer to special-case that, and would let a cloud model be ranked by a
-    memory figure it does not have.
-
-    The capability and licence bars still apply to both: the prompt is the same
-    size wherever it runs, and "may we use this commercially" is the same
-    question whether the answer comes from a weights licence or a terms of
-    service.
+    Kept as an axis so the settings and selection surfaces name the runtime they
+    resolve against. Claude model ids are never catalogued here: they come from
+    the provider catalogue cadrumo-agent reports.
 
     Members:
 
         LOCAL_OLLAMA: Weights pulled and run on the operator's own machine.
-        CLOUD_ANTHROPIC: A hosted Anthropic API model; nothing runs on-host.
     """
 
     LOCAL_OLLAMA = "local_ollama"
-    CLOUD_ANTHROPIC = "cloud_anthropic"
 
 
 class LicenceVerification(StrEnum):
@@ -142,14 +131,12 @@ class LicenceVerification(StrEnum):
 
     ``PUBLISHER_LICENCE_FILE`` means the publisher's LICENSE text was read;
     ``PUBLISHER_MODEL_CARD`` means its model-card licence field was read;
-    ``PUBLISHER_SERVICE_TERMS`` means its service terms were read; and
     ``UNVERIFIED`` means no publisher text was read and therefore bars a
     commercial-use claim (see :class:`ModelLicence`).
     """
 
     PUBLISHER_LICENCE_FILE = "publisher_licence_file"
     PUBLISHER_MODEL_CARD = "publisher_model_card"
-    PUBLISHER_SERVICE_TERMS = "publisher_service_terms"
     UNVERIFIED = "unverified"
 
 
@@ -296,7 +283,6 @@ class ModelCandidate(BaseModel):
     runtime: ModelRuntime
     roles: frozenset[ModelRole] = Field(min_length=1)
     memory_requirement_bytes: int | None = Field(default=None, gt=0)
-    input_price_per_mtok_usd: Decimal | None = Field(default=None, gt=Decimal("0"))
     max_context_tokens: int = Field(gt=0)
     licence: ModelLicence
     weights_pin: ModelWeightsPin | None = None
@@ -305,71 +291,26 @@ class ModelCandidate(BaseModel):
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
-    def _memory_requirement_matches_the_runtime(self) -> ModelCandidate:
-        """Require a memory figure exactly where one can be measured against.
-
-        A local candidate without it cannot be admitted by the contention check;
-        a cloud candidate WITH one invites a comparison against this machine's
-        free memory that means nothing, because the weights never touch it.
-        """
-        if self.runtime is ModelRuntime.LOCAL_OLLAMA and self.memory_requirement_bytes is None:
+    def _memory_requirement_is_declared(self) -> ModelCandidate:
+        """Require a memory figure, without which the contention check cannot admit the candidate."""
+        if self.memory_requirement_bytes is None:
             msg = f"local candidate {self.runtime_id!r} declares no memory requirement"
             raise ValueError(msg)
-        if self.runtime is not ModelRuntime.LOCAL_OLLAMA and self.memory_requirement_bytes is not None:
-            msg = (
-                f"hosted candidate {self.runtime_id!r} declares a local memory requirement; "
-                f"its weights never run on this machine"
-            )
-            raise ValueError(msg)
         return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
-    def _weights_pin_matches_the_runtime(self) -> ModelCandidate:
-        """Require a pinned digest exactly where weights are downloaded to this machine."""
-        if self.runtime is ModelRuntime.LOCAL_OLLAMA and self.weights_pin is None:
+    def _weights_pin_is_declared(self) -> ModelCandidate:
+        """Require the pinned digest of the weights downloaded to this machine."""
+        if self.weights_pin is None:
             msg = f"local candidate {self.runtime_id!r} pins no tested weights digest"
-            raise ValueError(msg)
-        if self.runtime is not ModelRuntime.LOCAL_OLLAMA and self.weights_pin is not None:
-            msg = f"hosted candidate {self.runtime_id!r} pins weights; nothing is downloaded for it"
-            raise ValueError(msg)
-        return self
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _hosted_candidates_declare_their_price(self) -> ModelCandidate:
-        """Require the ranking axis each runtime actually has.
-
-        Selection is bounded from below, which needs SOME ordering to be bounded
-        against. On-host that axis is the memory requirement; a hosted model has
-        no on-host footprint, so without a declared price its ordering silently
-        degrades to alphabetical -- and a frontier-tier default then sorts as
-        "weakest" purely by its name. The published input price is the honest
-        substitute: it is publisher-verifiable, it tracks tier, and it is the
-        cost the operator actually carries.
-        """
-        if self.runtime is ModelRuntime.LOCAL_OLLAMA and self.input_price_per_mtok_usd is not None:
-            msg = f"local candidate {self.runtime_id!r} declares a per-token price; its weights run on-host for free"
-            raise ValueError(msg)
-        if self.runtime is not ModelRuntime.LOCAL_OLLAMA and self.input_price_per_mtok_usd is None:
-            msg = (
-                f"hosted candidate {self.runtime_id!r} declares no input price, so it has no "
-                f"ordering axis and selection cannot be bounded from below"
-            )
             raise ValueError(msg)
         return self
 
     @property
     def selection_rank(self) -> Decimal:
-        """Return the ascending 'weakest first' key for this candidate's runtime.
-
-        Memory bytes on-host, published input price off-host. Comparable only
-        within one runtime, which is why :func:`candidates_for_role` is scoped to
-        one.
-        """
-        if self.memory_requirement_bytes is not None:
-            return Decimal(self.memory_requirement_bytes)
-        return self.input_price_per_mtok_usd or Decimal(0)
+        """Return the ascending 'weakest first' key: the declared memory requirement."""
+        return Decimal(self.memory_requirement_bytes or 0)
 
     def serves(self, role: ModelRole) -> bool:
         """Return whether this candidate is eligible for ``role``."""
@@ -423,33 +364,6 @@ rather than a fabricated listed one. The publisher's licence file adds "If you
 are commercially using the Materials, you shall request a license from us",
 which is what makes a barred candidate reachable only through an explicit,
 advised operator override rather than through automatic selection.
-"""
-
-
-ANTHROPIC_COMMERCIAL_TERMS: Final = ModelLicence(
-    spdx_id="LicenseRef-Anthropic-Commercial-Terms",
-    name="Anthropic Commercial Terms of Service",
-    commercial_use_permitted=True,
-    verification=LicenceVerification.PUBLISHER_SERVICE_TERMS,
-    source_url="https://www.anthropic.com/legal/commercial-terms",
-    verified_quote=(
-        "Subject to these Terms, Anthropic gives Customer permission to use the Services, "
-        "including to power products and services Customer makes available to its own "
-        "customers and end users"
-    ),
-)
-"""The service contract a hosted Anthropic model is used under.
-
-Not a weights licence -- there are no weights to license -- so it carries an
-SPDX ``LicenseRef-`` identifier and is verified against the publisher's terms of
-service rather than a LICENSE file. The same terms assign output ownership to
-the customer, which is what makes a hosted read usable in a filing-grade
-product at all.
-
-Reading it as a licence keeps ONE gate over both runtimes: "may we use this
-commercially" has to be answered for a hosted model exactly as for a local one,
-and a second, parallel notion of permission is how one of the two answers goes
-unchecked.
 """
 
 
@@ -573,58 +487,19 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
             "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct"
         ),
     ),
-    ModelCandidate(
-        runtime_id="claude-haiku-4-5",
-        runtime=ModelRuntime.CLOUD_ANTHROPIC,
-        roles=frozenset(
-            {
-                ModelRole.VISION_TRANSCRIPTION,
-                ModelRole.TEXT_EXTRACTION,
-                ModelRole.COLUMN_ROLE_MAPPING,
-                ModelRole.SUPPLY_NATURE_PROPOSAL,
-            },
-        ),
-        input_price_per_mtok_usd=Decimal("1"),
-        max_context_tokens=200_000,
-        licence=ANTHROPIC_COMMERCIAL_TERMS,
-        notes=(
-            "The cloud default for every role: the smallest and fastest current Claude "
-            "model, and the tier the provisioning decision names as the off-host proxy "
-            "for the on-host 2B-4B class. It is the lowest-bound capable cloud candidate, "
-            "which is the whole point -- a hosted route must not silently reach a frontier "
-            "tier. Vision-capable: the publisher's model overview states that all current "
-            "Claude models support text and image input and vision. Priced at $1 per million "
-            "input tokens, the cheapest current tier -- against $3 for the mid tier and $5 for "
-            "the frontier tier, which is what makes the ordering real rather than alphabetical. "
-            "Specification and pricing read at "
-            "https://platform.claude.com/docs/en/about-claude/models/overview"
-        ),
-    ),
 )
 
 DEFAULT_MODEL_BY_RUNTIME_AND_ROLE: Final[Mapping[ModelRuntime, Mapping[ModelRole, str]]] = {
     ModelRuntime.LOCAL_OLLAMA: {ModelRole(role): model for role, model in _MODEL_PINS.roles.items()},
-    ModelRuntime.CLOUD_ANTHROPIC: {
-        ModelRole.VISION_TRANSCRIPTION: "claude-haiku-4-5",
-        ModelRole.TEXT_EXTRACTION: "claude-haiku-4-5",
-        ModelRole.COLUMN_ROLE_MAPPING: "claude-haiku-4-5",
-        ModelRole.SUPPLY_NATURE_PROPOSAL: "claude-haiku-4-5",
-    },
 }
 """Every shipped default, keyed by runtime then role -- the source of the settings defaults.
 
-Keyed by runtime as well as role because the two runtimes are configured
-separately and a role's answer differs between them. Declared here rather than
-as literals on :class:`~core.config.Settings` so the licence gate has ONE place
-to read every shipped default from, across both runtimes, and so a default
+Keyed by runtime as well as role so each runtime is configured separately.
+Declared here rather than as literals on :class:`~core.config.Settings` so the
+licence gate has ONE place to read every shipped default from, and so a default
 cannot name a model the catalogue does not describe. The local defaults are the
 model pin table's roles, so the native engine sets up exactly the models the
 settings default to.
-
-That completeness is the point. A per-role gate that only knew about local
-defaults would have passed while every cloud route fell through to a
-frontier-tier model, which is exactly the state this mapping was added to
-correct.
 """
 
 
@@ -660,7 +535,7 @@ def _validate_catalogue() -> None:
     if len(ids) != len(set(ids)):
         msg = "the model catalogue declares a duplicate runtime id"
         raise ValueError(msg)
-    local = {candidate.runtime_id for candidate in MODEL_CATALOGUE if candidate.runtime is ModelRuntime.LOCAL_OLLAMA}
+    local = {candidate.runtime_id for candidate in MODEL_CATALOGUE}
     orphaned = sorted({pin.name for pin in _MODEL_PINS.models} - local)
     if orphaned:
         msg = f"the model pin table pins models the catalogue does not describe: {orphaned}"
@@ -677,25 +552,18 @@ def _validate_catalogue() -> None:
 _validate_catalogue()
 
 
-def candidates_for_role(
-    role: ModelRole,
-    runtime: ModelRuntime = ModelRuntime.LOCAL_OLLAMA,
-) -> tuple[ModelCandidate, ...]:
-    """Return every candidate serving ``role`` on ``runtime``, weakest first.
+def candidates_for_role(role: ModelRole) -> tuple[ModelCandidate, ...]:
+    """Return every candidate serving ``role``, weakest first.
 
-    Scoped to one runtime because the ordering is only meaningful within one:
-    ascending declared memory requirement ranks local candidates, and a hosted
-    candidate has no such figure to be ranked by. Mixing them would sort a cloud
-    model against a number it does not have.
-
-    Within a runtime the order IS the selection order: the design point is the
+    Ascending declared memory requirement is the ordering, and it IS the
+    selection order: the design point is the
     weakest model that clears the capability bars, never the strongest the
     hardware or the budget could reach. A caller that wants a larger model names
     it as an override.
     """
     return tuple(
         sorted(
-            (c for c in MODEL_CATALOGUE if c.serves(role) and c.runtime is runtime),
+            (c for c in MODEL_CATALOGUE if c.serves(role)),
             key=lambda c: (c.selection_rank, c.runtime_id),
         ),
     )
@@ -711,13 +579,10 @@ def model_candidate(runtime_id: str) -> ModelCandidate | None:
     return next((candidate for candidate in MODEL_CATALOGUE if candidate.runtime_id == runtime_id), None)
 
 
-def default_model_runtime_id(
-    role: ModelRole,
-    runtime: ModelRuntime = ModelRuntime.LOCAL_OLLAMA,
-) -> str:
-    """Return the shipped default runtime id for ``role`` on ``runtime``.
+def default_model_runtime_id(role: ModelRole) -> str:
+    """Return the shipped default runtime id for ``role``.
 
-    Supplies the :class:`~core.config.Settings` field defaults for both
-    runtimes, so the settings surface and the licence gate read one value.
+    Supplies the :class:`~core.config.Settings` field defaults, so the settings
+    surface and the licence gate read one value.
     """
-    return DEFAULT_MODEL_BY_RUNTIME_AND_ROLE[runtime][role]
+    return DEFAULT_MODEL_BY_RUNTIME_AND_ROLE[ModelRuntime.LOCAL_OLLAMA][role]

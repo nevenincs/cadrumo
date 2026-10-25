@@ -71,7 +71,7 @@ def test_the_catalogue_reads_its_local_defaults_floors_and_weights_from_the_bund
         ModelRole(role): model for role, model in bundled.roles.items()
     }
     assert set(bundled.roles) == {role.value for role in ModelRole}
-    local = [candidate for candidate in MODEL_CATALOGUE if candidate.runtime is ModelRuntime.LOCAL_OLLAMA]
+    local = list(MODEL_CATALOGUE)
     assert sorted(candidate.runtime_id for candidate in local) == sorted(pin.name for pin in bundled.models)
     for candidate in local:
         pin = bundled.model(candidate.runtime_id)

@@ -752,7 +752,6 @@ def select_model_for_role(
     settings: Settings | None = None,
     override: str | None = None,
     posture: DeploymentLicencePosture = DeploymentLicencePosture.COMMERCIAL,
-    runtime: ModelRuntime = ModelRuntime.LOCAL_OLLAMA,
 ) -> ModelSelection:
     """Resolve ``role`` to the weakest catalogued model that clears every bar.
 
@@ -790,16 +789,12 @@ def select_model_for_role(
             even when uncatalogued or licence-barred, always with advisories.
         posture: The deployment's licence posture; commercial by default,
             because that is what this product is.
-        runtime: Which runtime to resolve against; on-host by default, because
-            the on-host route is the one the product prefers and the one that
-            keeps evidence on the operator's machine. A hosted runtime skips the
-            headroom bar (nothing runs here) and keeps the capability and licence
-            bars, which apply wherever the prompt is served.
 
     Returns:
         A :class:`ModelSelection`. Never raises: an unsatisfiable role returns
         ``selected`` false carrying the measured reason and closed outcome.
     """
+    runtime = ModelRuntime.LOCAL_OLLAMA
     resolved = settings if settings is not None else load_settings()
     hardware = profile if profile is not None else probe_hardware_profile()
     free = binding_free_bytes(hardware)
@@ -828,7 +823,6 @@ def select_model_for_role(
 
     eligible = _eligible_model_candidates(
         role,
-        runtime=runtime,
         required_context=required_context,
         posture=posture,
     )
@@ -858,14 +852,13 @@ def select_model_for_role(
 def _eligible_model_candidates(
     role: ModelRole,
     *,
-    runtime: ModelRuntime,
     required_context: int,
     posture: DeploymentLicencePosture,
 ) -> tuple[ModelCandidate, ...]:
     """Return ordered candidates that clear the capability and licence bars."""
     return tuple(
         candidate
-        for candidate in candidates_for_role(role, runtime)
+        for candidate in candidates_for_role(role)
         if candidate.max_context_tokens >= required_context and candidate.permitted_under(posture)
     )
 
@@ -877,9 +870,6 @@ def _fitting_model_candidates(
     margin: int,
 ) -> tuple[ModelCandidate, ...]:
     """Return eligible candidates that fit local headroom, preserving catalogue order."""
-    # A hosted candidate has no local weights, so the headroom bar does not
-    # apply to it -- comparing this machine's free memory against a model that
-    # never touches it would refuse a route that cannot fail that way.
     return tuple(
         candidate
         for candidate in candidates
@@ -1020,11 +1010,10 @@ def _selection_from_override(
         advisories.append(ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED)
     if candidate.max_context_tokens < context:
         advisories.append(ModelSelectionAdvisory.OVERRIDE_BELOW_CONTEXT_FLOOR)
-    if candidate.memory_requirement_bytes is None:
-        pass  # hosted: nothing runs on this machine, so there is no fit to judge
-    elif free is None:
+    requirement = candidate.memory_requirement_bytes
+    if requirement is not None and free is None:
         advisories.append(ModelSelectionAdvisory.FIT_UNVERIFIED)
-    elif candidate.memory_requirement_bytes + margin > free:
+    elif requirement is not None and free is not None and requirement + margin > free:
         advisories.append(ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM)
 
     return ModelSelection(
