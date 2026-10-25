@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from typing import override
 
 import pytest
 from pydantic import SecretStr
@@ -21,6 +22,8 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunRoleSelection,
+    ModelRunSelectedModel,
 )
 
 from ....adapters.agent_background_runs import HostedBackgroundRuns
@@ -28,7 +31,7 @@ from ...domain.catalog import parse_provider_catalog
 from ...domain.record import ModelRoleSelection, ModelRoleSelectionsRecord, new_settings_generation
 from ..contracts import ProviderSettingsActionAccepted, ProviderSettingsStatus
 from ..model_runs import ModelRunService
-from ..ports import StoreRefusal, StoreRefusalCode
+from ..ports import ModelRoleSelectionsRead, StoreRefusal, StoreRefusalCode
 from ..resolution import ProviderCredentialResolver
 from ..service import ProviderSettingsService
 from .memory_store import MemoryProviderSettingsStore
@@ -274,3 +277,62 @@ def test_without_a_ready_agent_every_run_refuses_as_service_unavailable() -> Non
     lane = runs.lookup("text_extraction")
     assert isinstance(lane, ModelRunLane) and lane.accepted_media is None
     assert runs.run(_header(), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
+
+
+class _CountingStore(MemoryProviderSettingsStore):
+    def __init__(self) -> None:
+        super().__init__()
+        self.selection_reads = 0
+
+    @override
+    def read_role_selections(self) -> ModelRoleSelectionsRead | StoreRefusal:
+        self.selection_reads += 1
+        return super().read_role_selections()
+
+
+def test_a_selections_read_reports_every_role_from_one_read_of_the_record() -> None:
+    store = _CountingStore()
+    runs, _, _ = _harness(store)
+    _select(
+        store,
+        (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"),
+        (ModelRole.COLUMN_ROLE_MAPPING, KEY_LANE, "synthetic-text-2"),
+    )
+
+    states = runs.selections()
+
+    assert store.selection_reads == 1
+    assert states == (
+        ModelRunRoleSelection(role="vision_transcription", refusal=ModelRunRefusalCode.NO_SELECTION),
+        ModelRunRoleSelection(
+            role="text_extraction",
+            selected=ModelRunSelectedModel(lane_id=SIGN_IN_ONLY_LANE, model="synthetic-text-1"),
+            lane=ModelRunLane(provider_id="example", transport="cli", model="synthetic-text-1"),
+        ),
+        ModelRunRoleSelection(
+            role="column_role_mapping",
+            selected=ModelRunSelectedModel(lane_id=KEY_LANE, model="synthetic-text-2"),
+            refusal=ModelRunRefusalCode.LANE_UNAVAILABLE,
+        ),
+        ModelRunRoleSelection(role="supply_nature_proposal", refusal=ModelRunRefusalCode.NO_SELECTION),
+    )
+
+
+def test_a_selections_read_of_a_signed_out_profile_refuses_whole() -> None:
+    store = MemoryProviderSettingsStore()
+    store.refusal = StoreRefusal(code=StoreRefusalCode.PROFILE_LOCKED)
+    runs, _, _ = _harness(store)
+
+    assert runs.selections() == ModelRunRefusal(code=ModelRunRefusalCode.PROFILE_LOCKED)
+
+
+def test_a_selections_read_of_an_unreadable_record_reports_no_selection_as_known() -> None:
+    store = MemoryProviderSettingsStore()
+    store.unreadable_selections = "e" * 64
+    runs, _, _ = _harness(store)
+
+    states = runs.selections()
+
+    assert isinstance(states, tuple)
+    assert {state.refusal for state in states} == {ModelRunRefusalCode.LANE_UNAVAILABLE}
+    assert all(state.selected is None for state in states)

@@ -17,6 +17,8 @@ from ..model_runs import (
     ModelRunMediaKind,
     ModelRunOutcome,
     ModelRunRefusalCode,
+    ModelRunRoleSelection,
+    ModelRunSelectedModel,
     ModelRunServed,
     decode_model_run_body,
     encode_model_run_body,
@@ -27,6 +29,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _LANE = ModelRunLane(provider_id="example", transport="cli", model="example-model-1")
 _SERVED = ModelRunServed(provider_id="example", transport="cli", model="example-model-1", agent_version="1")
+_SELECTED = ModelRunSelectedModel(lane_id="example_cli", model="example-model-1")
+_STATE = ModelRunRoleSelection(role="text_extraction", selected=_SELECTED, lane=_LANE)
 
 
 @pytest.mark.parametrize(
@@ -37,6 +41,9 @@ _SERVED = ModelRunServed(provider_id="example", transport="cli", model="example-
         {"served": _SERVED},
         {"lane": _LANE, "text_byte_count": 3},
         {"refusal": ModelRunRefusalCode.RUN_FAILED, "text_byte_count": 1},
+        {"lane": _LANE, "selections": (_STATE,)},
+        {"selections": (_STATE, _STATE)},
+        {"selections": (_STATE,), "text_byte_count": 1},
     ],
 )
 def test_an_outcome_carries_exactly_one_answer_and_text_only_after_a_served_run(fields: dict[str, object]) -> None:
@@ -48,15 +55,42 @@ def test_the_three_well_formed_outcomes_are_accepted() -> None:
     assert ModelRunOutcome(lane=_LANE).lane == _LANE
     assert ModelRunOutcome(served=_SERVED, text_byte_count=4).text_byte_count == 4
     assert ModelRunOutcome(refusal=ModelRunRefusalCode.CONSENT_MISSING).refusal is ModelRunRefusalCode.CONSENT_MISSING
+    assert ModelRunOutcome(selections=(_STATE,)).selections == (_STATE,)
+    assert ModelRunOutcome(selections=()).selections == ()
 
 
-def _fetched(header: ModelRunHeader | None, body_byte_count: int) -> ModelRunFetched:
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"role": "text_extraction"},
+        {"role": "text_extraction", "lane": _LANE, "refusal": ModelRunRefusalCode.LANE_UNAVAILABLE},
+        {"role": "text_extraction", "lane": _LANE},
+    ],
+    ids=["neither", "both", "lane-without-selection"],
+)
+def test_a_role_state_is_usable_or_refused_and_a_usable_lane_comes_from_a_selection(fields: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        ModelRunRoleSelection.model_validate(fields)
+
+
+def test_a_selected_role_may_still_refuse_and_an_unselected_one_refuses() -> None:
+    unavailable = ModelRunRoleSelection(
+        role="text_extraction", selected=_SELECTED, refusal=ModelRunRefusalCode.LANE_UNAVAILABLE
+    )
+    assert unavailable.selected == _SELECTED
+    unselected = ModelRunRoleSelection(role="vision_transcription", refusal=ModelRunRefusalCode.NO_SELECTION)
+    assert unselected.selected is None
+
+
+def _fetched(
+    header: ModelRunHeader | None, body_byte_count: int, *, role: str | None = "text_extraction"
+) -> ModelRunFetched:
     return ModelRunFetched(
         request_id=uuid4(),
         runtime_boot_id=uuid4(),
         connection_id=uuid4(),
         run_id=uuid4(),
-        role="text_extraction",
+        role=role,
         header=header,
         body_byte_count=body_byte_count,
     )
@@ -70,6 +104,15 @@ def test_a_lookup_carries_no_body_and_a_run_always_does() -> None:
         _fetched(header, 0)
     with pytest.raises(ValidationError):
         _fetched(None, 5)
+
+
+def test_a_selections_read_names_no_role_and_a_run_names_its_headers_role() -> None:
+    assert _fetched(None, 0, role=None).role is None
+    header = ModelRunHeader(role="text_extraction", deadline_seconds=10)
+    with pytest.raises(ValidationError):
+        _fetched(header, 5, role=None)
+    with pytest.raises(ValidationError):
+        _fetched(header, 5, role="vision_transcription")
 
 
 def test_consent_matches_its_own_lane_and_no_other() -> None:

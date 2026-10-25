@@ -13,6 +13,8 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunLane,
     ModelRunOutput,
     ModelRunRefusal,
+    ModelRunRoleSelection,
+    ModelRunSelectedModel,
 )
 
 from ....core.model_catalogue import ModelRole
@@ -23,6 +25,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _IDENTITY = OperationIdentity(operation_id="a" * 64, definition_id="ledger.evidence.extract", subject_ref="profile:x")
 _LANE = ModelRunLane(provider_id="example", transport="cli", model="m")
+_STATES = (
+    ModelRunRoleSelection(
+        role="text_extraction", selected=ModelRunSelectedModel(lane_id="example_cli", model="m"), lane=_LANE
+    ),
+)
 
 
 class _Authority:
@@ -34,6 +41,10 @@ class _Authority:
     async def model_run_lookup(self, identity: OperationIdentity, role: str) -> ModelRunLane | ModelRunRefusal:
         self.calls.append(("lookup:" + role, identity, threading.get_ident()))
         return _LANE
+
+    async def model_run_selections(self, identity: OperationIdentity) -> tuple[ModelRunRoleSelection, ...]:
+        self.calls.append(("selections", identity, threading.get_ident()))
+        return _STATES
 
     async def model_run(
         self, identity: OperationIdentity, header: ModelRunHeader, body: ModelRunBody
@@ -95,3 +106,19 @@ def test_work_on_another_loop_in_a_worker_thread_is_answered_on_the_operations_l
     ((name, identity, answered_on),) = authority.calls
     assert (name, identity) == ("run:vision_transcription", _IDENTITY)
     assert answered_on == owner_thread
+
+
+def test_a_selections_read_reaches_the_authority_for_the_running_operation() -> None:
+    authority = _Authority()
+
+    async def executor() -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
+        port = current_model_run_port()
+        assert port is not None
+        return await port.selections()
+
+    async def scenario() -> None:
+        port = operation_model_run_port(authority, _IDENTITY)
+        assert await run_with_model_runs(port, executor()) == _STATES
+
+    asyncio.run(scenario())
+    assert [(name, identity) for name, identity, _ in authority.calls] == [("selections", _IDENTITY)]

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:c2a8b8fbceee7bacd2d8fe0a1006b74f8162b9fe3411842a0cbca4ab0901bc08'
+body_hash: 'sha256:22f6021f60d8a1c35b3f6b7441ce47a9ea499c2cb1d7a61187096d854e872381'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -86,7 +86,28 @@ related:
 - `S03` `verify:` `ruff check/format, ty check on touched files` -> `pass`
 - `S03` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
 - `S03` `by:` `vaultspec-high-executor`
+- `S04` `M` `src/cadrumo_client/contracts/model_runs.py`
+- `S04` `M` `src/cadrumo_client/contracts/tests/test_model_runs.py`
+- `S04` `M` `src/cadrumo_runtime/contracts/worker_authorization.py`
+- `S04` `M` `src/cadrumo_runtime/adapters/worker_authorization_lease.py`
+- `S04` `M` `src/cadrumo_runtime/host/profile_connection_model_runs.py`
+- `S04` `M` `src/cadrumo_runtime/host/operation_authority.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/test_model_run_authority.py`
+- `S04` `M` `src/cadrumo/application/operations/model_runs.py`
+- `S04` `M` `src/cadrumo/application/operations/tests/test_model_runs.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/llm/tests/model_run_support.py`
+- `S04` `M` `src/cadrumo_agent_service/providers/application/model_runs.py`
+- `S04` `M` `src/cadrumo_agent_service/providers/application/tests/test_model_runs.py`
+- `S04` `M` `src/cadrumo_agent_service/host/model_run_relay.py`
+- `S04` `M` `dev/runtime_lifecycle/tests/test_service_model_run_relay.py`
+- `S04` `verify:` `pytest -m "(unit or integration) and not serial ..." over client contracts, runtime model-run and worker-authorization tests, operations model runs, llm tests, agent service and the service model-run relay (1632 tests)` -> `pass`
+- `S04` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S04` `verify:` `ruff check/format, ty check on touched files and packages` -> `pass`
+- `S04` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S04` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
+- `S04` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S03` Wire result shapes live in providers/application/contracts.py beside the provider status shapes; `src/cadrumo_agent_service/contracts.py` needed no change.
+- `S04` The selections read crosses the `cadrumo_client` wire contract, the runtime worker instruction and lease, and the operation authority as well as the three named files.

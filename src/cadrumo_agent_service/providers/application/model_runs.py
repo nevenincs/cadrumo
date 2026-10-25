@@ -27,12 +27,16 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunRoleSelection,
+    ModelRunSelectedModel,
     model_run_media_kind,
 )
 
 from ..domain.catalog import ProviderConsumer
+from ..domain.record import ModelRoleSelection
 from .ports import (
     AbsentModelRoleSelections,
+    ModelRoleSelectionsRead,
     ProviderCatalogSource,
     ProviderCatalogUnavailableError,
     ProviderSettingsStore,
@@ -92,26 +96,57 @@ class ModelRunService:
             model_role = ModelRole(role)
         except ValueError:
             return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+        read = self._read_selections()
+        if isinstance(read, ModelRunRefusal):
+            return read
+        return self._resolve(model_role, read)[1]
+
+    def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
+        """Return every role's selection and the lane a run would use or why it would refuse.
+
+        The record is read once, so every role is reported from the same state.
+        """
+        read = self._read_selections()
+        if isinstance(read, ModelRunRefusal):
+            return read
+        states: list[ModelRunRoleSelection] = []
+        for model_role in ModelRole:
+            selected, answer = self._resolve(model_role, read)
+            stored = None if selected is None else ModelRunSelectedModel(lane_id=selected.lane, model=selected.model)
+            if isinstance(answer, ModelRunRefusal):
+                states.append(ModelRunRoleSelection(role=model_role.value, selected=stored, refusal=answer.code))
+            else:
+                states.append(ModelRunRoleSelection(role=model_role.value, selected=stored, lane=answer))
+        return tuple(states)
+
+    def _read_selections(self) -> ModelRoleSelectionsRead | ModelRunRefusal:
         read = self._store.read_role_selections()
         if isinstance(read, StoreRefusal):
             return ModelRunRefusal(code=_STORE_SIGNED_OUT.get(read.code, ModelRunRefusalCode.LANE_UNAVAILABLE))
+        return read
+
+    def _resolve(
+        self, model_role: ModelRole, read: ModelRoleSelectionsRead
+    ) -> tuple[ModelRoleSelection | None, ModelRunLane | ModelRunRefusal]:
+        """Return the role's stored selection, if readable, and the lane it resolves to or the refusal."""
         if isinstance(read, UnreadableModelRoleSelections):
             # An unreadable record says nothing about any role, so no role reads as unselected.
-            return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+            return None, ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
         selection = None if isinstance(read, AbsentModelRoleSelections) else read.record.selection(model_role)
         if selection is None:
-            return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+            return None, ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
         try:
             entry = self._catalog_source.catalog().entry(selection.lane)
         except ProviderCatalogUnavailableError:
-            return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+            return selection, ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
         if entry is None:
-            return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+            return selection, ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
         resolution = self._resolver.resolve(entry.id, ProviderConsumer.ASSISTANT)
         if isinstance(resolution, ProviderCredentialUnavailable):
-            return ModelRunRefusal(code=_SIGNED_OUT.get(resolution.reason, ModelRunRefusalCode.LANE_UNAVAILABLE))
+            code = _SIGNED_OUT.get(resolution.reason, ModelRunRefusalCode.LANE_UNAVAILABLE)
+            return selection, ModelRunRefusal(code=code)
         lane = ModelRunLane(provider_id=entry.provider, transport=entry.transport.value, model=selection.model)
-        return lane.model_copy(update={"accepted_media": self._gateway.accepted_media(lane)})
+        return selection, lane.model_copy(update={"accepted_media": self._gateway.accepted_media(lane)})
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         """Run one request on the lane its role resolves to now.

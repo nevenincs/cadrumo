@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
 
 _LOOKUP_ANSWER_SECONDS = 30.0
-"""How long a lane lookup waits for the service; it reads settings and runs nothing."""
+"""How long a lane lookup or selections read waits for the service; it reads settings and runs nothing."""
 
 _ANSWER_MARGIN_SECONDS = 20.0
 """Time beyond a run's own deadline for the service to report the outcome it reached."""
@@ -328,10 +328,15 @@ def _service_still_admitted(
 
 
 def _answers_its_phase(command: WorkerModelRun, outcome: ModelRunOutcome) -> bool:
-    """A lookup is answered by a lane or a refusal, a run by a served run or a refusal."""
+    """A lookup is answered by a lane, a selections read by every role's state, a run by a served run.
+
+    Each may instead be answered by a refusal.
+    """
     if outcome.refusal is not None:
         return True
-    return outcome.lane is not None if command.header is None else outcome.served is not None
+    if command.header is not None:
+        return outcome.served is not None
+    return outcome.lane is not None if command.role is not None else outcome.selections is not None
 
 
 def _refuse(

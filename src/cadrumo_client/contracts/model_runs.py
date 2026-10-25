@@ -32,6 +32,9 @@ MODEL_RUN_MAX_DEADLINE_SECONDS: Final = 900
 
 MODEL_RUN_MAX_ATTACHMENTS: Final = 64
 
+MODEL_RUN_MAX_ROLES: Final = 16
+"""Upper bound on the roles one selections read may report."""
+
 _LANE_ID = r"^[a-z][a-z0-9_]{0,39}$"
 _TRANSPORT = r"^[a-z][a-z0-9_]{0,15}$"
 _MODEL = r"^[\x21-\x7e]{1,256}$"
@@ -85,6 +88,39 @@ class ModelRunLane(BaseModel):
     transport: Annotated[str, Field(pattern=_TRANSPORT)]
     model: Annotated[str, Field(pattern=_MODEL)]
     accepted_media: tuple[ModelRunMediaKind, ...] | None = None
+
+
+class ModelRunSelectedModel(BaseModel):
+    """The lane and model the person stored for one role, as stored; nothing here is secret."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    lane_id: Annotated[str, Field(pattern=_LANE_ID)]
+    model: Annotated[str, Field(pattern=_MODEL)]
+
+
+class ModelRunRoleSelection(BaseModel):
+    """One role's selection state: what is selected, and the lane a run would use or why it would refuse.
+
+    ``selected`` is ``None`` when the role has no selection or the selection
+    could not be read. Exactly one of ``lane`` and ``refusal`` is present, and
+    a usable ``lane`` always comes from a selection.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    role: Annotated[str, Field(pattern=_ROLE)]
+    selected: ModelRunSelectedModel | None = None
+    lane: ModelRunLane | None = None
+    refusal: ModelRunRefusalCode | None = None
+
+    @model_validator(mode="after")
+    def _usable_or_refused(self) -> Self:
+        if (self.lane is None) == (self.refusal is None):
+            raise ValueError("a role's state carries exactly one of a lane or a refusal")
+        if self.lane is not None and self.selected is None:
+            raise ValueError("a usable lane comes only from a selection")
+        return self
 
 
 class ModelRunConsentBinding(BaseModel):
@@ -171,7 +207,9 @@ class ModelRunServed(BaseModel):
 
 
 class ModelRunOutcome(BaseModel):
-    """Exactly one answer to a lookup or a run: a lane, a served run, or a refusal.
+    """Exactly one answer to a lookup, a selections read or a run.
+
+    The answer is a lane, every role's state, a served run, or a refusal.
 
     ``text_byte_count`` is the length of the reply text that follows a served
     run on secret frames, and zero otherwise.
@@ -180,14 +218,17 @@ class ModelRunOutcome(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     lane: ModelRunLane | None = None
+    selections: tuple[ModelRunRoleSelection, ...] | None = Field(default=None, max_length=MODEL_RUN_MAX_ROLES)
     served: ModelRunServed | None = None
     refusal: ModelRunRefusalCode | None = None
     text_byte_count: Annotated[NonNegativeInt, Field(le=MODEL_RUN_MAX_OUTPUT_BYTES)] = 0
 
     @model_validator(mode="after")
     def _exactly_one_answer(self) -> Self:
-        if sum(value is not None for value in (self.lane, self.served, self.refusal)) != 1:
-            raise ValueError("a model run outcome carries exactly one of a lane, a served run or a refusal")
+        if sum(value is not None for value in (self.lane, self.selections, self.served, self.refusal)) != 1:
+            raise ValueError("a model run outcome carries exactly one lane, selections, served run or refusal")
+        if self.selections is not None and len({item.role for item in self.selections}) != len(self.selections):
+            raise ValueError("a selections read reports each role once")
         if (self.served is None) != (self.text_byte_count == 0):
             raise ValueError("reply text follows a served run and nothing else")
         return self
@@ -223,7 +264,11 @@ class ModelRunFetchRequest(BaseModel):
 
 
 class ModelRunFetched(BaseModel):
-    """The waiting request: a lookup when ``header`` is absent, otherwise a run whose body follows."""
+    """The waiting request: a run when ``header`` is present, whose body follows, otherwise a read.
+
+    A read names a ``role`` to look up that role's lane, or none to read every
+    role's selection state.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -232,7 +277,7 @@ class ModelRunFetched(BaseModel):
     runtime_boot_id: UUID
     connection_id: UUID
     run_id: UUID
-    role: Annotated[str, Field(pattern=_ROLE)]
+    role: Annotated[str, Field(pattern=_ROLE)] | None
     header: ModelRunHeader | None = None
     body_byte_count: Annotated[NonNegativeInt, Field(le=MODEL_RUN_MAX_BODY_BYTES)] = 0
 
@@ -240,6 +285,8 @@ class ModelRunFetched(BaseModel):
     def _run_carries_a_body(self) -> Self:
         if (self.header is None) != (self.body_byte_count == 0):
             raise ValueError("a run carries a body and a lookup carries none")
+        if self.header is not None and self.header.role != self.role:
+            raise ValueError("a run names the role its header names")
         return self
 
 
@@ -292,6 +339,7 @@ __all__ = [
     "MODEL_RUN_MAX_BODY_BYTES",
     "MODEL_RUN_MAX_DEADLINE_SECONDS",
     "MODEL_RUN_MAX_OUTPUT_BYTES",
+    "MODEL_RUN_MAX_ROLES",
     "ModelRunAttachment",
     "ModelRunBody",
     "ModelRunCompleteRequest",
@@ -307,6 +355,8 @@ __all__ = [
     "ModelRunRefusal",
     "ModelRunRefusalCode",
     "ModelRunRequested",
+    "ModelRunRoleSelection",
+    "ModelRunSelectedModel",
     "ModelRunServed",
     "decode_model_run_body",
     "encode_model_run_body",

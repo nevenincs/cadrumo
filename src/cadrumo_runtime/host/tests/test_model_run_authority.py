@@ -61,6 +61,8 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunRoleSelection,
+    ModelRunSelectedModel,
     ModelRunServed,
     decode_model_run_body,
 )
@@ -116,7 +118,7 @@ class _AnsweringLease(WorkerAuthorizationLease):
     def __init__(
         self,
         *,
-        answers: list[tuple[WorkerAuthorityRequest, str, ModelRunHeader | None, bytes]],
+        answers: list[tuple[WorkerAuthorityRequest, str | None, ModelRunHeader | None, bytes]],
         outcome: tuple[ModelRunOutcome, bytes],
         connections: WorkerAuthorizationConnections,
         request: WorkerAuthorityRequest,
@@ -126,7 +128,7 @@ class _AnsweringLease(WorkerAuthorizationLease):
 
     @override
     def model_run(
-        self, role: str, header: ModelRunHeader | None, body: bytearray, *, answer_seconds: float
+        self, role: str | None, header: ModelRunHeader | None, body: bytearray, *, answer_seconds: float
     ) -> tuple[ModelRunOutcome, bytearray]:
         self._answers.append((self._fence, role, header, bytes(body)))
         outcome, text = self._outcome
@@ -136,7 +138,7 @@ class _AnsweringLease(WorkerAuthorizationLease):
 class _ClientWitness(WorkerAuthorizationClient):
     def __init__(self, identity: ProfileWorkerIdentity, root: Path) -> None:
         super().__init__(identity=identity, root=root, parent_pid=os.getpid())
-        self.answers: list[tuple[WorkerAuthorityRequest, str, ModelRunHeader | None, bytes]] = []
+        self.answers: list[tuple[WorkerAuthorityRequest, str | None, ModelRunHeader | None, bytes]] = []
         self.outcome: tuple[ModelRunOutcome, bytes] = (ModelRunOutcome(lane=_LANE), b"")
 
     @override
@@ -286,6 +288,43 @@ def test_a_lookup_goes_out_under_the_operations_own_start_fence(
     assert fence.request.action is AccessAction.START
     assert fence.request.definition_id == _DEFINITION
     assert (role, header, body) == (ModelRole.TEXT_EXTRACTION.value, None, b"")
+
+
+def test_a_selections_read_goes_out_without_a_role_under_the_start_fence_and_returns_every_state(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    harness = _harness(_DEFINITION, authority_operation, tmp_path)
+    states = (
+        ModelRunRoleSelection(
+            role=ModelRole.TEXT_EXTRACTION.value,
+            selected=ModelRunSelectedModel(lane_id="example_cli", model=_LANE.model),
+            lane=_LANE,
+        ),
+        ModelRunRoleSelection(role=ModelRole.VISION_TRANSCRIPTION.value, refusal=ModelRunRefusalCode.NO_SELECTION),
+    )
+    harness.client.outcome = (ModelRunOutcome(selections=states), b"")
+
+    async def read() -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
+        await _submitted(harness)
+        return await harness.authority.model_run_selections(harness.identity)
+
+    assert asyncio.run(read()) == states
+    ((fence, role, header, body),) = harness.client.answers
+    assert fence.request.action is AccessAction.START
+    assert (role, header, body) == (None, None, b"")
+
+
+def test_a_selections_read_the_service_refuses_returns_that_refusal(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    harness = _harness(_DEFINITION, authority_operation, tmp_path)
+    harness.client.outcome = (ModelRunOutcome(refusal=ModelRunRefusalCode.NOT_SIGNED_IN), b"")
+
+    async def read() -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
+        await _submitted(harness)
+        return await harness.authority.model_run_selections(harness.identity)
+
+    assert asyncio.run(read()) == ModelRunRefusal(code=ModelRunRefusalCode.NOT_SIGNED_IN)
 
 
 def test_a_run_sends_its_encoded_body_and_returns_the_served_reply(

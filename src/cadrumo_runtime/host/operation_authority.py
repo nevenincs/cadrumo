@@ -62,6 +62,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunRoleSelection,
     encode_model_run_body,
 )
 from cadrumo_runtime.contracts.worker_authorization import (
@@ -550,6 +551,16 @@ class ProfileWorkerOperationAuthority:
             return outcome.lane
         return ModelRunRefusal(code=outcome.refusal or ModelRunRefusalCode.RUN_FAILED)
 
+    async def model_run_selections(
+        self, identity: OperationIdentity
+    ) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
+        """Ask the profile's agent service for every role's selection state; nothing in it is secret."""
+        outcome, text = await self._model_run(identity, None, None, bytearray(), _MODEL_RUN_LOOKUP_SECONDS)
+        text[:] = bytes(len(text))
+        if outcome.selections is not None:
+            return outcome.selections
+        return ModelRunRefusal(code=outcome.refusal or ModelRunRefusalCode.RUN_FAILED)
+
     async def model_run(
         self, identity: OperationIdentity, header: ModelRunHeader, body: ModelRunBody
     ) -> ModelRunOutput | ModelRunRefusal:
@@ -566,7 +577,7 @@ class ProfileWorkerOperationAuthority:
     async def _model_run(
         self,
         identity: OperationIdentity,
-        role: str,
+        role: str | None,
         header: ModelRunHeader | None,
         body: bytearray,
         answer_seconds: float,

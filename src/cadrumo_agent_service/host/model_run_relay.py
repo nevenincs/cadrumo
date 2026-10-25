@@ -27,6 +27,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRefusal,
     ModelRunRefusalCode,
     ModelRunRequested,
+    ModelRunRoleSelection,
     ModelRunServed,
     decode_model_run_body,
 )
@@ -43,6 +44,10 @@ class ModelRuns(Protocol):
 
     def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
         """Return the lane a run for ``role`` would use."""
+        ...
+
+    def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
+        """Return every role's selection state."""
         ...
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
@@ -95,12 +100,19 @@ class ModelRunRelay:
         finally:
             text[:] = bytes(len(text))
 
-    def _outcome(self, role: str, header: ModelRunHeader | None, body: bytearray) -> tuple[ModelRunOutcome, bytearray]:
+    def _outcome(
+        self, role: str | None, header: ModelRunHeader | None, body: bytearray
+    ) -> tuple[ModelRunOutcome, bytearray]:
         runs = self._runs()
         if runs is None:
             return ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE), bytearray()
         try:
             if header is None:
+                if role is None:
+                    states = runs.selections()
+                    if isinstance(states, ModelRunRefusal):
+                        return ModelRunOutcome(refusal=states.code), bytearray()
+                    return ModelRunOutcome(selections=states), bytearray()
                 lane = runs.lookup(role)
                 if isinstance(lane, ModelRunRefusal):
                     return ModelRunOutcome(refusal=lane.code), bytearray()

@@ -24,6 +24,8 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunRoleSelection,
+    ModelRunSelectedModel,
     decode_model_run_body,
     encode_model_run_body,
 )
@@ -41,6 +43,14 @@ pytestmark = [
 ]
 
 _LANE = ModelRunLane(provider_id="example", transport="cli", model="example-model-1")
+_STATES = (
+    ModelRunRoleSelection(
+        role="text_extraction",
+        selected=ModelRunSelectedModel(lane_id="example_cli", model=_LANE.model),
+        lane=_LANE,
+    ),
+    ModelRunRoleSelection(role="vision_transcription", refusal=ModelRunRefusalCode.NO_SELECTION),
+)
 
 
 class _Runs:
@@ -54,6 +64,9 @@ class _Runs:
 
     def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
         return _LANE
+
+    def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
+        return _STATES
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         self.bodies.append(body)
@@ -104,6 +117,20 @@ def test_a_lookup_reaches_the_admitted_service_and_returns_its_lane(tmp_path: Pa
             relay.close()
 
     assert outcome.lane == _LANE
+    assert text == bytearray()
+
+
+def test_a_selections_read_reaches_the_admitted_service_and_returns_every_role_state(tmp_path: Path) -> None:
+    read = WorkerModelRun(request_id=uuid4(), permit_id=uuid4(), command_id=uuid4(), role=None)
+    with service_record_runtime(tmp_path, model_runs=True) as runtime:
+        runs = _Runs()
+        _, relay = _admitted_service(runtime, runs)
+        try:
+            outcome, text = runtime.profiles._relay_model_run(runtime.profile_id, read, bytearray())
+        finally:
+            relay.close()
+
+    assert outcome.selections == _STATES
     assert text == bytearray()
 
 

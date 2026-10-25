@@ -235,10 +235,11 @@ class WorkerAuthorizationReleased(BaseModel):
 
 
 class WorkerModelRun(BaseModel):
-    """Ask the runtime to have the profile's agent service answer one lookup or run.
+    """Ask the runtime to have the profile's agent service answer one lookup, selections read or run.
 
-    Sent under a held START permit. A lookup carries no header and no body; a
-    run's body follows on secret frames. Nothing here, and nothing in the
+    Sent under a held START permit. A lookup names its role and carries no
+    header and no body; a selections read names no role and carries neither;
+    a run's body follows on secret frames. Nothing here, and nothing in the
     reply, is a credential.
     """
 
@@ -247,7 +248,7 @@ class WorkerModelRun(BaseModel):
     request_id: UUID
     permit_id: UUID
     command_id: UUID
-    role: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
+    role: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")] | None
     header: ModelRunHeader | None = None
     body_byte_count: Annotated[NonNegativeInt, Field(le=MODEL_RUN_MAX_BODY_BYTES)] = 0
 
@@ -255,6 +256,8 @@ class WorkerModelRun(BaseModel):
     def _run_carries_a_body(self) -> WorkerModelRun:
         if (self.header is None) != (self.body_byte_count == 0):
             raise ValueError("a run carries a body and a lookup carries none")
+        if self.header is not None and self.header.role != self.role:
+            raise ValueError("a run names the role its header names")
         return self
 
 
