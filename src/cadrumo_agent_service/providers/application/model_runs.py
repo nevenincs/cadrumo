@@ -95,7 +95,8 @@ class ModelRunService:
         try:
             model_role = ModelRole(role)
         except ValueError:
-            return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+            # Not the person's missing choice: pointing them at the selection would hide the caller's defect.
+            return ModelRunRefusal(code=ModelRunRefusalCode.UNKNOWN_ROLE)
         read = self._read_selections()
         if isinstance(read, ModelRunRefusal):
             return read

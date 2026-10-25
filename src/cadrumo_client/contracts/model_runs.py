@@ -48,6 +48,8 @@ class ModelRunRefusalCode(StrEnum):
     NOT_SIGNED_IN = "not_signed_in"
     PROFILE_LOCKED = "profile_locked"
     NO_SELECTION = "no_selection"
+    UNKNOWN_ROLE = "unknown_role"
+    """The request named a role outside the role vocabulary: a caller defect, not a missing selection."""
     LANE_UNAVAILABLE = "lane_unavailable"
     INPUT_NOT_SUPPORTED = "input_not_supported"
     RUN_FAILED = "run_failed"

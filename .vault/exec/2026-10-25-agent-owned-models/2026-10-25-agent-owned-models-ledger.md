@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:b55685c891dc399f9ab5b6a3744a9ce46e5f03ffbd2b01abc890d710ad8c41da'
+body_hash: 'sha256:c5fcd95efd13af9994c428b8624cdd173fff3d0d7c8485bf9afc7c967847bb84'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -123,6 +123,10 @@ related:
 - `S29` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service` -> `pass`
 - `S29` `verify:` `uv run --no-sync pytest -m '' dev/runtime_lifecycle/tests/test_service_provider_admin_ingress.py dev/runtime_lifecycle/tests/test_service_model_run_relay.py` -> `pass`
 - `S29` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S02` `M` `src/cadrumo_client/contracts/model_runs.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/llm/tests/test_agent_dispatch.py`
+- `S02` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service src/cadrumo_client/contracts src/cadrumo/adapters/outbound/llm/tests/test_agent_dispatch.py src/cadrumo_runtime/host/tests/test_model_run_authority.py src/cadrumo/application/operations/tests/test_model_runs.py` -> `pass`
+- `S02` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
 
 ## Notes
 
@@ -132,3 +136,4 @@ related:
 - `S29` Installed packages need a rebuild before the installed runtime admits the model-role-selections capability; the descriptor is staged at assembly.
 - `S02` S02 Review follow-up: a selections read now decides each distinct lane once (one credential record read and one media query per lane) instead of once per role.
 - `S29` S29 Review follow-up: an unreadable selections record always carries its reset guard; a runtime answer for a stored record without a revision refuses unknown. The provider records keep the inherited revision-less shape.
+- `S02` S02 Review follow-up: a role outside the vocabulary refuses with the new `unknown_role` code on the client contract, which the tax side reports as a provider error rather than a configuration prompt.

@@ -169,13 +169,16 @@ def test_a_role_without_a_selection_refuses_while_other_roles_are_selected() -> 
     assert runs.lookup("vision_transcription") == _NO_SELECTION
 
 
-def test_a_role_outside_the_vocabulary_has_no_selection() -> None:
+def test_a_role_outside_the_vocabulary_refuses_as_unknown_not_as_unselected() -> None:
     store = MemoryProviderSettingsStore()
     selections = MemoryModelRoleSelectionsStore()
     runs, _, _ = _harness(store, selections)
     _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
 
-    assert runs.lookup("unknown_role") == _NO_SELECTION
+    assert runs.lookup("unknown_role") == ModelRunRefusal(code=ModelRunRefusalCode.UNKNOWN_ROLE)
+    assert runs.run(ModelRunHeader(role="unknown_role", deadline_seconds=30), _BODY) == ModelRunRefusal(
+        code=ModelRunRefusalCode.UNKNOWN_ROLE
+    )
 
 
 def test_a_selected_lane_turned_off_refuses_and_no_other_lane_is_used() -> None:

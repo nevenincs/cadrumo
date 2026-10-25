@@ -117,6 +117,8 @@ def test_a_lookup_refusal_reaches_the_consumer_without_a_run(tmp_path: Path) -> 
         (ModelRunRefusalCode.RUN_FAILED, LLMProviderError),
         (ModelRunRefusalCode.REFUSED_BY_PROVIDER, LLMProviderError),
         (ModelRunRefusalCode.DEADLINE_EXCEEDED, LLMProviderError),
+        # A caller's misspelled role is a defect, never a prompt to configure a selection.
+        (ModelRunRefusalCode.UNKNOWN_ROLE, LLMProviderError),
         (ModelRunRefusalCode.LANE_UNAVAILABLE, LLMConfigError),
         (ModelRunRefusalCode.CONSENT_MISSING, LLMConsentError),
     ],
