@@ -86,16 +86,12 @@ impl NetworkReport {
 }
 
 /// The hosts an item downloads from, as its pins declare them; `None` when this build
-/// carries no pins for the item.
+/// carries no pins for the item. The local AI's models come from the registries their
+/// selected names state, which the engine adds.
 pub fn item_hosts(pins: &ComponentPins, item: &str) -> Option<BTreeSet<HostName>> {
     match item {
         "browser" => pins.browser.as_ref().map(|browser| browser.hosts.clone()),
-        "local_ai" => match (&pins.program, &pins.models) {
-            (Some(program), Some(models)) => {
-                Some(program.hosts.union(&models.hosts).cloned().collect())
-            }
-            _ => None,
-        },
+        "local_ai" => pins.program.as_ref().map(|program| program.hosts.clone()),
         _ => None,
     }
 }
@@ -361,15 +357,11 @@ mod tests {
         let browser = item_hosts(&pins, "browser").unwrap();
         assert!(browser.contains(&host("cdn.playwright.dev")));
         let local_ai = item_hosts(&pins, "local_ai").unwrap();
-        assert!(
-            local_ai.contains(&host("github.com"))
-                && local_ai.contains(&host("registry.ollama.ai"))
-        );
+        assert!(local_ai.contains(&host("github.com")));
         assert_eq!(item_hosts(&pins, "google"), None);
         let none = ComponentPins {
-            browser: None,
-            program: pins.program.clone(),
-            models: None,
+            browser: pins.browser.clone(),
+            program: None,
         };
         assert_eq!(item_hosts(&none, "local_ai"), None);
     }

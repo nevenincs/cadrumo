@@ -1,9 +1,9 @@
 //! The hardware floor: whether this computer can hold a model at all.
 //!
-//! A model needs its pinned memory, the publisher's stated weight size, either in the
-//! computer's memory or in one NVIDIA card's memory. A computer below that for a role's
+//! A model needs its size, as the selected catalogue entry states it, either in the
+//! computer's memory or in one NVIDIA card's memory. A computer below that for a selected
 //! model reads `blocked hardware` for it: a limit, not a failure, so no button can change
-//! it. A computer whose memory could not be measured is never held back by the floor,
+//! it. A computer with no selected local model is never held back. A computer whose memory could not be measured is never held back by the floor,
 //! because an unread value must not invent a shortfall.
 //!
 //! Memory is read from `/proc/meminfo` on Linux, `sysctl hw.memsize` on macOS and the

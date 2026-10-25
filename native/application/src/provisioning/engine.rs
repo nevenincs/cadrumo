@@ -37,8 +37,13 @@
 //! installs the program, which waits for the manager to stop any server it runs from the
 //! old version, records the program with the fixed address, and then waits, within
 //! [`SERVER_WAIT`], for the manager to start the server before it pulls and checks each
-//! role's model through it. Without a manager the server never comes, and the models
+//! selected model through it. Without a manager the server never comes, and the models
 //! fail as `program_not_running`.
+//!
+//! The local models are the person's selection, which the owner hands the engine with
+//! [`Engine::select_local_models`]: role, model name and download size, as the selected
+//! catalogue entries state them. The engine names no model itself, so with no selection
+//! the local AI is its program alone.
 
 use super::{
     activity::{
@@ -48,11 +53,11 @@ use super::{
     connection::Network,
     failure::FailureCategory,
     follow::{self, Changes},
-    items::{Destination, ItemId, Locations, MODEL_ROLES, PROGRAM_PART},
+    items::{Destination, ItemId, Locations, PROGRAM_PART},
     local_ai::{
         self, LocalAiError,
         hardware::Hardware,
-        models::{Models, Pull},
+        models::{LocalModels, Models, Pull},
         program::{Program, START_BUDGET, Server},
     },
     network::{self, HOST_TIMEOUT, Reachability},
@@ -272,6 +277,8 @@ pub struct Engine {
     config: EngineConfig,
     activity: ActivityStore,
     receipts: ReceiptStore,
+    /// The local models the person selected; none until the owner selects them.
+    local_models: LocalModels,
     /// Arguments a test's stand-in browser is launched with.
     #[cfg(test)]
     pub(crate) browser_leading: Vec<OsString>,
@@ -512,6 +519,7 @@ impl Engine {
         Ok(Self {
             activity: ActivityStore::new(config.locations.activity.clone())?,
             receipts: ReceiptStore::new(config.locations.receipts.clone())?,
+            local_models: LocalModels::default(),
             config,
             #[cfg(test)]
             browser_leading: Vec::new(),
@@ -522,9 +530,15 @@ impl Engine {
         &self.config.locations
     }
 
+    /// Sets the local models every later command plans, pulls, checks and removes: the
+    /// person's selection, as the caller read it. It replaces any earlier selection.
+    pub fn select_local_models(&mut self, models: LocalModels) {
+        self.local_models = models;
+    }
+
     /// Every item's state. A quick check reads local facts only; a full check also runs
     /// each item's network preflight and exercises it: one headless browser launch, and
-    /// one generated token for each role's model.
+    /// one generated token for each selected model.
     pub fn status(
         &mut self,
         mode: CheckMode,
@@ -656,7 +670,7 @@ impl Engine {
     }
 
     /// Removes `items`, each under its writer lock: the browser's builds and receipt, and
-    /// the local AI's program and pinned models.
+    /// the local AI's program and selected models.
     pub fn remove(&mut self, items: &[ItemId], events: &mut dyn FnMut(Event)) -> Report {
         let sink = Sink::new(events);
         let mut removed = Vec::new();
@@ -742,15 +756,18 @@ impl Engine {
         ))
     }
 
-    /// The local AI's program and models, when this build pins both for this platform.
+    /// The local AI's program and the selected models, when this build pins the program
+    /// for this platform.
     fn local_ai_parts(&self) -> Option<Result<(Program, Models), Error>> {
         let platform = self.config.platform?;
-        let models = self.config.pins.models.clone()?;
         let pins = self.config.pins.program.as_ref()?;
         match Program::new(pins, platform, self.config.locations.clone()) {
             Ok(Some(program)) => Some(Ok((
                 program,
-                Models::new(models, self.config.locations.models.clone()),
+                Models::new(
+                    self.local_models.clone(),
+                    self.config.locations.models.clone(),
+                ),
             ))),
             Ok(None) => None,
             Err(error) => Some(Err(error)),
@@ -794,9 +811,11 @@ impl Engine {
             Some(Ok(parts)) => parts,
         };
         let program_observation = program.observe_quick();
-        let model_observations: Vec<Observation> = MODEL_ROLES
+        let model_observations: Vec<Observation> = models
+            .selection()
+            .as_slice()
             .iter()
-            .map(|role| models.observe_quick(role, &hardware))
+            .map(|model| models.observe_quick(model, &hardware))
             .collect();
         let reading = local_ai::reading(
             CheckMode::Quick,
@@ -809,12 +828,14 @@ impl Engine {
         if program_observation != present {
             parts.push(program.plan_part());
         }
-        parts.extend(models.plan_parts().into_iter().filter(|part| {
-            MODEL_ROLES
-                .iter()
+        parts.extend(
+            models
+                .plan_parts()
+                .into_iter()
                 .zip(&model_observations)
-                .any(|(role, observation)| *role == part.part_id && *observation != present)
-        }));
+                .filter(|(_, observation)| **observation != present)
+                .map(|(part, _)| part),
+        );
         let entry = PlanEntry::of_parts(ItemId::LocalAi, parts, Destination::OllamaModels).ok();
         Survey { reading, entry }
     }
@@ -881,7 +902,10 @@ impl Engine {
                     mode: CheckMode::Full,
                     ..survey.reading.clone()
                 });
-                if let Some(hosts) = network::item_hosts(&self.config.pins, item.as_str()) {
+                if let Some(mut hosts) = network::item_hosts(&self.config.pins, item.as_str()) {
+                    if item == ItemId::LocalAi {
+                        hosts.extend(self.local_models.hosts());
+                    }
                     let hosts: Vec<HostName> = hosts.into_iter().collect();
                     let report = network::preflight(&self.config.network, &hosts, HOST_TIMEOUT);
                     survey.reading = survey.reading.held_by_network(&report);
@@ -917,7 +941,7 @@ impl Engine {
     }
 
     /// The local AI's full check: the program's files and the manager's server answering
-    /// for it, then one generated token for each role's model on that server. Without a
+    /// for it, then one generated token for each selected model on that server. Without a
     /// running server the program reads `program_not_running` and each model only as its
     /// files say.
     fn full_local_ai(&mut self) -> Option<Reading> {
@@ -925,14 +949,15 @@ impl Engine {
         let (program, models) = self.local_ai_parts()?.ok()?;
         let program_observation = program.observe_full();
         let present = Observation::Present { note: None };
+        let selected = models.selection().as_slice();
         let models_observed: Vec<Observation> = match program.running_server() {
-            Some(server) if program_observation == present => MODEL_ROLES
+            Some(server) if program_observation == present => selected
                 .iter()
-                .map(|role| models.observe_full(&server, role, &hardware))
+                .map(|model| models.observe_full(&server, model, &hardware))
                 .collect(),
-            _ => MODEL_ROLES
+            _ => selected
                 .iter()
-                .map(|role| models.observe_quick(role, &hardware))
+                .map(|model| models.observe_quick(model, &hardware))
                 .collect(),
         };
         Some(local_ai::reading(
@@ -1360,16 +1385,16 @@ impl Engine {
             )?;
             let mut pulled = BTreeSet::new();
             for part in &entry.parts {
-                let Some(pin) = models.for_role(&part.part_id) else {
+                let Some(model) = models.selection().for_role(&part.part_id) else {
                     continue;
                 };
-                if !pulled.insert(pin.name.clone()) {
+                if !pulled.insert(model.name.to_string()) {
                     continue;
                 }
                 let mut on_event = |event| reporter.transfer(event);
                 let observation = models.pull(
                     &server,
-                    &part.part_id,
+                    model,
                     &mut Pull {
                         policy: self.config.policy,
                         pacing: &mut pacing,
@@ -1380,11 +1405,11 @@ impl Engine {
                 if !observation.usable() {
                     return Err(Stop::Failed(failure_of(observation)));
                 }
-                reporter.offset += pin.download_bytes;
+                reporter.offset += model.size_bytes;
             }
             writer.step(SetupStep::Verify)?;
-            for role in MODEL_ROLES {
-                let observation = models.observe_full(&server, role, &hardware);
+            for model in models.selection().as_slice() {
+                let observation = models.observe_full(&server, model, &hardware);
                 if !observation.usable() {
                     return Err(Stop::Failed(failure_of(observation)));
                 }

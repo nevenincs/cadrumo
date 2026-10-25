@@ -2,9 +2,10 @@
 //!
 //! Two pieces of outside software make Cadrumo work: the browser that reads the tax
 //! agency's website, and the local AI, which is the program that runs models together
-//! with the model every catalogue role reads with. Each is one item, set up once for the
-//! whole installation, in this order. The local AI's program and models are parts of its
-//! plan, never items of their own.
+//! with the model the person selected for each local role. Each is one item, set up once
+//! for the whole installation, in this order. The local AI's program and models are parts
+//! of its plan, never items of their own; with no local selection the item is the
+//! program alone.
 
 use serde::{Deserialize, Serialize};
 use std::{fmt, path::PathBuf, time::Duration};
@@ -46,14 +47,6 @@ impl fmt::Display for ItemId {
     }
 }
 
-/// The catalogue roles the local AI reads with, each a part of its plan after the program.
-pub const MODEL_ROLES: [&str; 4] = [
-    "vision_transcription",
-    "text_extraction",
-    "column_role_mapping",
-    "supply_nature_proposal",
-];
-
 /// The local AI's program part.
 pub const PROGRAM_PART: &str = "program";
 
@@ -85,8 +78,8 @@ pub static LOCAL_AI: ItemDeclaration = ItemDeclaration {
     id: ItemId::LocalAi,
     display_key: "provisioning.dependency.local_ai.name",
     recovery_action: "operator.provision.local_ai",
-    // The program and every role's model each get one item's bound.
-    full_check_budget: Duration::from_secs(60 * (1 + MODEL_ROLES.len() as u64)),
+    // The program's bound; each selected model's check is bounded on its own.
+    full_check_budget: FULL_CHECK_BUDGET,
 };
 
 /// Where a plan stores what it downloads; the codes are the storage categories' names.
@@ -159,7 +152,7 @@ mod tests {
             );
         }
         assert_eq!(ItemId::parse("google"), None);
-        assert_eq!(LOCAL_AI.full_check_budget, Duration::from_secs(300));
+        assert_eq!(LOCAL_AI.full_check_budget, Duration::from_secs(60));
     }
 
     #[test]

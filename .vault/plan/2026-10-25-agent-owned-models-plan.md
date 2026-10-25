@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-25'
 body_schema: body-v2
-body_hash: 'sha256:360a40e4f6665259bf41f86f012e2da908e03fc7c0fc051a5392595c19977cb2'
+body_hash: 'sha256:bc75beac6a68438edbc3a6423c652abcec6ae28230acaab39d29945c7b46d12d'
 ---
 
 # `agent-owned-models` plan
@@ -78,7 +78,7 @@ Send every tax model call through the agent service and delete Cadrumo's direct 
 
 Drop model pins from the engine, take the selected local models as input, pull them with integrity by Ollama's manifest, and keep Ollama program pins and supervision unchanged.
 
-- [ ] `P04.S19` - Remove model pins, model items and licence data from the engine and the staged pin data; keep program pins; `native/application/src/provisioning/pins.rs, native/application/src/provisioning/items.rs, native/application/src/provisioning/local_ai/models.rs`.
+- [x] `P04.S19` - Remove model pins, model items and licence data from the engine and the staged pin data; keep program pins; `native/application/src/provisioning/pins.rs, native/application/src/provisioning/items.rs, native/application/src/provisioning/local_ai/models.rs`.
 - [ ] `P04.S20` - Accept the selected local models as role, model-name and size_bytes triples in the plan and setup commands and bind them in the plan digest; `native/application/src/provisioning/protocol.rs, native/application/src/provisioning/plan.rs, native/application/src/provisioning/role_host.rs`.
 - [ ] `P04.S21` - Pull each selected model on the supervised server, report rows from the selection and Ollama's installed list, and drop digest-based stale; compute the hardware floor from the supplied size_bytes; `native/application/src/provisioning/local_ai/models.rs, native/application/src/provisioning/local_ai/hardware.rs, native/application/src/provisioning/state.rs, native/application/src/provisioning/engine.rs`.
 - [ ] `P04.S22` - Pass the stored selection from the Python component client and the desktop setup host to the role, and delete the pinned model fixtures; `src/cadrumo/adapters/outbound/components/client.py, src/cadrumo/adapters/outbound/components/protocol.py, native/desktop/src-tauri/src/shell/setup/components.rs, native/desktop/frontend/src/dev/setupFixture.ts`.

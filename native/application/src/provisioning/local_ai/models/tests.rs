@@ -1,14 +1,17 @@
 use super::*;
 use crate::provisioning::{
-    items::{ItemId, PROGRAM_PART},
+    items::ItemId,
     local_ai::{fake_ollama::FakeOllama, program::Server, reading},
     plan::PlanEntry,
-    state::CheckMode,
+    state::{CheckMode, StaleReason},
 };
 use serde_json::{Value, json};
 use std::{fs, time::Duration};
 
 const GIB: u64 = 1024 * 1024 * 1024;
+/// Obviously synthetic names: the engine knows no model, so its tests name none.
+const TEXT: &str = "synthetic-text:test";
+const VISION: &str = "synthetic-vision:test";
 
 /// One model as the program stores it: its manifest, and each layer's bytes by digest.
 struct Stored {
@@ -38,22 +41,13 @@ impl Stored {
         Self { manifest, blobs }
     }
 
-    fn digest(&self) -> Sha256Digest {
-        Sha256Digest::of(&self.manifest)
-    }
-
     fn size(&self) -> u64 {
         self.blobs.iter().map(|(_, bytes)| bytes.len() as u64).sum()
     }
 
     fn files(&self, root: &Path, name: &str) -> Vec<(PathBuf, Vec<u8>)> {
-        let (model, tag) = name.split_once(':').unwrap();
         let mut files = vec![(
-            root.join("manifests")
-                .join(REGISTRY)
-                .join("library")
-                .join(model)
-                .join(tag),
+            ModelName::parse(name).unwrap().manifest_path(root),
             self.manifest.clone(),
         )];
         for (digest, bytes) in &self.blobs {
@@ -74,24 +68,17 @@ impl Stored {
     }
 }
 
-fn pins(text: &Stored, vision: &Stored) -> ModelPins {
-    ModelPins::parse(&format!(
-        "hosts = [\"registry.ollama.ai\"]\n\n[roles]\n\
-         vision_transcription = \"qwen3-vl:2b\"\ntext_extraction = \"qwen3:1.7b\"\n\
-         column_role_mapping = \"qwen3:1.7b\"\nsupply_nature_proposal = \"qwen3:1.7b\"\n\n\
-         [[models]]\nname = \"qwen3:1.7b\"\nmanifest_digest = \"{}\"\ndownload_bytes = {}\n\
-         memory_bytes = {}\nlicence = \"Apache-2.0\"\nlicence_name = \"Apache License 2.0\"\n\
-         commercial_use_permitted = true\n\n\
-         [[models]]\nname = \"qwen3-vl:2b\"\nmanifest_digest = \"{}\"\ndownload_bytes = {}\n\
-         memory_bytes = {}\nlicence = \"Apache-2.0\"\nlicence_name = \"Apache License 2.0\"\n\
-         commercial_use_permitted = true\n",
-        text.digest(),
-        text.size(),
-        2 * GIB,
-        vision.digest(),
-        vision.size(),
-        3 * GIB,
-    ))
+fn selected(role: &str, name: &str, size_bytes: u64) -> SelectedModel {
+    SelectedModel::new(role, name, size_bytes).unwrap()
+}
+
+/// The vision role reads with one model and two text roles share another.
+fn selection(text: &Stored, vision: &Stored) -> LocalModels {
+    LocalModels::new(vec![
+        selected("vision_transcription", VISION, vision.size()),
+        selected("text_extraction", TEXT, text.size()),
+        selected("column_role_mapping", TEXT, text.size()),
+    ])
     .unwrap()
 }
 
@@ -106,7 +93,7 @@ fn fixture() -> Fixture {
     let root = tempfile::tempdir().unwrap();
     let text = Stored::new(1);
     let vision = Stored::new(7);
-    let models = Models::new(pins(&text, &vision), root.path().join("models"));
+    let models = Models::new(selection(&text, &vision), root.path().join("models"));
     Fixture {
         root,
         text,
@@ -119,6 +106,10 @@ impl Fixture {
     fn models_root(&self) -> PathBuf {
         self.root.path().join("models")
     }
+
+    fn text_model(&self) -> &SelectedModel {
+        self.models.selection().for_role("text_extraction").unwrap()
+    }
 }
 
 const ROOMY: Hardware = Hardware {
@@ -127,13 +118,91 @@ const ROOMY: Hardware = Hardware {
 };
 
 const PRESENT: Observation = Observation::Present { note: None };
-const STALE: Observation = Observation::Differs {
-    stale: StaleReason::DifferentModelVersion,
-    note: None,
-};
 
 #[test]
-fn the_plan_has_a_part_per_role_and_counts_a_shared_model_once() {
+fn a_selection_takes_well_formed_triples_only_and_orders_them_by_role() {
+    for (role, name, size) in [
+        ("text_extraction", "", 1),
+        ("text_extraction", TEXT, 0),
+        ("", TEXT, 1),
+        ("Text", TEXT, 1),
+        ("program", TEXT, 1),
+        ("text_extraction", "../escape:test", 1),
+        ("text_extraction", "a/b/c/d:test", 1),
+        ("text_extraction", "synthetic:../test", 1),
+        ("text_extraction", "synthetic\\model:test", 1),
+        ("text_extraction", "synthetic model:test", 1),
+        ("text_extraction", "Not.A.Host/space/model:test", 1),
+        ("text_extraction", "synthetic-text:", 1),
+    ] {
+        assert!(
+            SelectedModel::new(role, name, size).is_err(),
+            "{role} {name} {size}"
+        );
+    }
+    let duplicate = LocalModels::new(vec![
+        selected("text_extraction", TEXT, 1),
+        selected("text_extraction", VISION, 1),
+    ]);
+    assert!(duplicate.is_err(), "a role is selected once");
+    let two_sizes = LocalModels::new(vec![
+        selected("text_extraction", TEXT, 1),
+        selected("column_role_mapping", "SYNTHETIC-TEXT:TEST", 2),
+    ]);
+    assert!(two_sizes.is_err(), "one model has one size");
+    let ordered = LocalModels::new(vec![
+        selected("vision_transcription", VISION, 1),
+        selected("column_role_mapping", TEXT, 1),
+    ])
+    .unwrap();
+    assert_eq!(
+        ordered
+            .as_slice()
+            .iter()
+            .map(|model| model.role.as_str())
+            .collect::<Vec<_>>(),
+        ["column_role_mapping", "vision_transcription"]
+    );
+    assert!(LocalModels::default().is_empty());
+}
+
+#[test]
+fn a_name_reads_as_the_program_reads_it() {
+    for (written, shortest, host) in [
+        ("synthetic", "synthetic:latest", "registry.ollama.ai"),
+        (TEXT, TEXT, "registry.ollama.ai"),
+        (
+            "registry.ollama.ai/library/synthetic-text:test",
+            TEXT,
+            "registry.ollama.ai",
+        ),
+        (
+            "someone/synthetic-text:test",
+            "someone/synthetic-text:test",
+            "registry.ollama.ai",
+        ),
+        (
+            "models.example.com/someone/synthetic-text:test",
+            "models.example.com/someone/synthetic-text:test",
+            "models.example.com",
+        ),
+    ] {
+        let name = ModelName::parse(written).unwrap();
+        assert_eq!(name.to_string(), shortest, "{written}");
+        assert_eq!(name.host().as_str(), host, "{written}");
+        assert!(name.same(&ModelName::parse(shortest).unwrap()));
+    }
+    let name = ModelName::parse(TEXT).unwrap();
+    assert!(name.same(&ModelName::parse("Synthetic-Text:TEST").unwrap()));
+    assert!(!name.same(&ModelName::parse("synthetic-text:other").unwrap()));
+    assert_eq!(
+        name.manifest_path(Path::new("/models")),
+        Path::new("/models/manifests/registry.ollama.ai/library/synthetic-text/test")
+    );
+}
+
+#[test]
+fn the_plan_has_a_part_per_selected_role_and_counts_a_shared_model_once() {
     let fixture = fixture();
     let parts = fixture.models.plan_parts();
     assert_eq!(
@@ -141,22 +210,26 @@ fn the_plan_has_a_part_per_role_and_counts_a_shared_model_once() {
             .iter()
             .map(|part| part.part_id.as_str())
             .collect::<Vec<_>>(),
-        MODEL_ROLES
+        [
+            "column_role_mapping",
+            "text_extraction",
+            "vision_transcription"
+        ]
     );
     for part in &parts {
         assert_eq!(part.destination, Some(Destination::OllamaModels));
         assert!(!part.installs_outside_program);
         assert_eq!(part.source_hosts[0].as_str(), "registry.ollama.ai");
+        assert!(part.advisories.is_empty());
+        assert_eq!(part.licence, None, "the engine states no licence");
     }
-    assert_eq!(
-        parts[1].target_version,
-        Some(format!("qwen3:1.7b@{}", fixture.text.digest()))
-    );
-    assert_eq!(parts[1].target_version, parts[3].target_version);
+    assert_eq!(parts[0].target_version.as_deref(), Some(TEXT));
+    assert_eq!(parts[0].target_version, parts[1].target_version);
+    assert_eq!(parts[2].download_bytes, Some(fixture.vision.size()));
     let program = PlanPart {
         part_id: PROGRAM_PART.into(),
         download_bytes: Some(1000),
-        source_hosts: vec![crate::value::HostName::new("github.com").unwrap()],
+        source_hosts: vec![HostName::new("github.com").unwrap()],
         destination: Some(Destination::LocalAiProgram),
         installs_outside_program: false,
         target_version: Some("1.0.0".into()),
@@ -173,58 +246,88 @@ fn the_plan_has_a_part_per_role_and_counts_a_shared_model_once() {
         entry.download_bytes,
         Some(1000 + fixture.text.size() + fixture.vision.size())
     );
+    let elsewhere = Models::new(
+        LocalModels::new(vec![selected(
+            "text_extraction",
+            "models.example.com/someone/synthetic-text:test",
+            5,
+        )])
+        .unwrap(),
+        fixture.models_root(),
+    );
+    assert_eq!(
+        elsewhere.plan_parts()[0].source_hosts[0].as_str(),
+        "models.example.com"
+    );
+    let none = Models::new(LocalModels::default(), fixture.models_root());
+    assert!(none.plan_parts().is_empty(), "no selection plans no model");
 }
 
 #[test]
-fn the_quick_check_reads_the_stored_manifest_against_its_pin() {
+fn the_quick_check_reads_the_stored_manifest_and_its_layers() {
     let fixture = fixture();
     let root = fixture.models_root();
-    let role = "text_extraction";
+    let model = fixture.text_model();
     assert_eq!(
-        fixture.models.observe_quick(role, &ROOMY),
+        fixture.models.observe_quick(model, &ROOMY),
         Observation::Absent
     );
-    fixture.text.write(&root, "qwen3:1.7b");
-    assert_eq!(fixture.models.observe_quick(role, &ROOMY), PRESENT);
+    fixture.text.write(&root, TEXT);
+    assert_eq!(fixture.models.observe_quick(model, &ROOMY), PRESENT);
+    let vision = fixture
+        .models
+        .selection()
+        .for_role("vision_transcription")
+        .unwrap();
     assert_eq!(
-        fixture.models.observe_quick("vision_transcription", &ROOMY),
+        fixture.models.observe_quick(vision, &ROOMY),
         Observation::Absent
     );
-    // Another manifest under the pinned name is a different model version.
-    fixture.vision.write(&root, "qwen3:1.7b");
-    assert_eq!(fixture.models.observe_quick(role, &ROOMY), STALE);
-    fixture.text.write(&root, "qwen3:1.7b");
+    // Whichever manifest the registry served under the name is the model: the program
+    // verified it as it pulled, and the engine pins no digest to compare it with.
+    fixture.vision.write(&root, TEXT);
+    assert_eq!(fixture.models.observe_quick(model, &ROOMY), PRESENT);
+    fixture.text.write(&root, TEXT);
     // A layer that is missing or short reads as a model not yet all there.
-    let files = fixture.text.files(&root, "qwen3:1.7b");
+    let files = fixture.text.files(&root, TEXT);
     fs::write(&files[2].0, b"short").unwrap();
     assert_eq!(
-        fixture.models.observe_quick(role, &ROOMY),
+        fixture.models.observe_quick(model, &ROOMY),
         Observation::Absent
     );
     fs::remove_file(&files[2].0).unwrap();
     assert_eq!(
-        fixture.models.observe_quick(role, &ROOMY),
+        fixture.models.observe_quick(model, &ROOMY),
         Observation::Absent
     );
-    fixture.text.write(&root, "qwen3:1.7b");
-    // A computer too small for the model is held back whatever is stored.
+    fixture.text.write(&root, TEXT);
+    fs::write(&files[0].0, b"{").unwrap();
+    assert_eq!(
+        fixture.models.observe_quick(model, &ROOMY),
+        Observation::Failed(FailureCategory::DamagedDownload)
+    );
+}
+
+#[test]
+fn the_hardware_floor_is_the_size_the_caller_stated() {
+    let fixture = fixture();
+    fixture.text.write(&fixture.models_root(), TEXT);
+    let large = selected("text_extraction", TEXT, 2 * GIB);
     let small = Hardware {
         total_memory_bytes: Some(GIB),
         nvidia_vram_bytes: Some(GIB),
     };
     assert_eq!(
-        fixture.models.observe_quick(role, &small),
+        fixture.models.observe_quick(&large, &small),
         Observation::Blocked(BlockedReason::Hardware)
     );
     let card = Hardware {
         total_memory_bytes: Some(GIB),
         nvidia_vram_bytes: Some(8 * GIB),
     };
-    assert_eq!(fixture.models.observe_quick(role, &card), PRESENT);
-    assert_eq!(
-        fixture.models.observe_quick("no_such_role", &ROOMY),
-        Observation::Blocked(BlockedReason::NotInThisBuild)
-    );
+    assert_eq!(fixture.models.observe_quick(&large, &card), PRESENT);
+    let fitting = selected("text_extraction", TEXT, GIB / 2);
+    assert_eq!(fixture.models.observe_quick(&fitting, &small), PRESENT);
 }
 
 /// A pacing that records each wait instead of waiting.
@@ -272,7 +375,7 @@ fn pull_with(
     let mut sink = |event| events.push(event);
     let result = fixture.models.pull(
         &server,
-        "text_extraction",
+        fixture.text_model(),
         &mut Pull {
             policy,
             pacing: &mut pacing,
@@ -320,10 +423,9 @@ fn a_cut_off_pull_is_pulled_again_and_reports_byte_progress_for_the_whole_model(
             json!({ "status": "writing manifest" }),
             json!({ "status": "success" }),
         ]);
-        state.installs.insert(
-            "qwen3:1.7b".into(),
-            text.files(&fixture.models_root(), "qwen3:1.7b"),
-        );
+        state
+            .installs
+            .insert(TEXT.into(), text.files(&fixture.models_root(), TEXT));
     }
     let pulled = pull_with(
         &fixture,
@@ -332,7 +434,7 @@ fn a_cut_off_pull_is_pulled_again_and_reports_byte_progress_for_the_whole_model(
         &Cancellation::default(),
     );
     assert_eq!(pulled.result.unwrap(), PRESENT);
-    let request = json!({ "model": "qwen3:1.7b", "stream": true });
+    let request = json!({ "model": TEXT, "stream": true });
     assert_eq!(pulled.pulls, [request.clone(), request]);
     assert_eq!(pulled.waits.len(), 1);
     assert!((Duration::from_secs(2)..=Duration::from_secs(3)).contains(&pulled.waits[0]));
@@ -368,7 +470,7 @@ fn a_cut_off_pull_is_pulled_again_and_reports_byte_progress_for_the_whole_model(
         Some(TransferEvent::Retrying { attempt: 2, .. })
     ));
     assert_eq!(
-        fixture.models.observe_quick("text_extraction", &ROOMY),
+        fixture.models.observe_quick(fixture.text_model(), &ROOMY),
         PRESENT
     );
 
@@ -384,27 +486,20 @@ fn a_cut_off_pull_is_pulled_again_and_reports_byte_progress_for_the_whole_model(
 }
 
 #[test]
-fn a_registry_serving_another_manifest_fails_the_pull_rather_than_finishing_it() {
+fn a_pull_the_program_calls_done_but_did_not_store_fails_rather_than_finishing() {
     let fixture = fixture();
     let fake = FakeOllama::start("1.0.0");
-    {
-        let mut state = fake.state.lock().unwrap();
-        state.pulls.push_back(vec![json!({ "status": "success" })]);
-        state.installs.insert(
-            "qwen3:1.7b".into(),
-            fixture.vision.files(&fixture.models_root(), "qwen3:1.7b"),
-        );
-    }
+    fake.state
+        .lock()
+        .unwrap()
+        .pulls
+        .push_back(vec![json!({ "status": "success" })]);
     let pulled = pull_with(
         &fixture,
         &fake,
         RetryPolicy::default(),
         &Cancellation::default(),
     );
-    // The approved plan named the pinned manifest, so landing on another one is a
-    // failure of this part: a setup that reported it completed would say an approval
-    // of one model finished as another, and its row would offer a pull that never
-    // converges.
     assert_eq!(
         pulled.result.unwrap_err().category(),
         FailureCategory::DamagedDownload
@@ -480,14 +575,14 @@ fn pull_failures_take_their_category_and_only_passing_ones_are_retried() {
 }
 
 #[test]
-fn the_full_check_compares_the_servers_digest_and_generates_one_token() {
+fn the_full_check_looks_the_model_up_in_the_servers_list_and_generates_one_token() {
     let fixture = fixture();
-    let role = "text_extraction";
-    fixture.text.write(&fixture.models_root(), "qwen3:1.7b");
+    let model = fixture.text_model();
+    fixture.text.write(&fixture.models_root(), TEXT);
     let fake = FakeOllama::start("1.0.0");
     let server = Server::attached(fake.address(), "1.0.0");
     assert_eq!(
-        fixture.models.observe_full(&server, role, &ROOMY),
+        fixture.models.observe_full(&server, model, &ROOMY),
         Observation::Absent,
         "the server does not list the model"
     );
@@ -495,14 +590,17 @@ fn the_full_check_compares_the_servers_digest_and_generates_one_token() {
         .lock()
         .unwrap()
         .tags
-        .insert("qwen3:1.7b".into(), fixture.vision.digest().to_string());
-    assert_eq!(fixture.models.observe_full(&server, role, &ROOMY), STALE);
-    fake.state
-        .lock()
-        .unwrap()
-        .tags
-        .insert("qwen3:1.7b".into(), fixture.text.digest().to_string());
-    assert_eq!(fixture.models.observe_full(&server, role, &ROOMY), PRESENT);
+        .insert("synthetic-text:other".into(), String::new());
+    assert_eq!(
+        fixture.models.observe_full(&server, model, &ROOMY),
+        Observation::Absent,
+        "another tag of the model is another model"
+    );
+    fake.state.lock().unwrap().tags.insert(
+        "registry.ollama.ai/library/Synthetic-Text:test".into(),
+        String::new(),
+    );
+    assert_eq!(fixture.models.observe_full(&server, model, &ROOMY), PRESENT);
     let generation = fake
         .state
         .lock()
@@ -512,7 +610,7 @@ fn the_full_check_compares_the_servers_digest_and_generates_one_token() {
         .rfind(|body| body["prompt"].is_string())
         .cloned()
         .unwrap();
-    assert_eq!(generation["model"], "qwen3:1.7b");
+    assert_eq!(generation["model"], TEXT);
     assert_eq!(generation["options"]["num_predict"], 1);
     assert_eq!(generation["keep_alive"], 0);
     assert_eq!(generation["stream"], false);
@@ -524,21 +622,24 @@ fn the_full_check_compares_the_servers_digest_and_generates_one_token() {
         ),
         (
             "404 Not Found",
-            json!({ "error": "model 'qwen3:1.7b' not found" }),
+            json!({ "error": "model 'synthetic-text:test' not found" }),
             Observation::Absent,
         ),
         (
             "500 Internal Server Error",
-            json!({ "error": "llama runner process has terminated" }),
+            json!({ "error": "runner process has terminated" }),
             Observation::Failed(FailureCategory::Unexpected),
         ),
     ] {
         fake.state.lock().unwrap().generation = Some((status.into(), answer));
-        assert_eq!(fixture.models.observe_full(&server, role, &ROOMY), expected);
+        assert_eq!(
+            fixture.models.observe_full(&server, model, &ROOMY),
+            expected
+        );
     }
     drop(fake);
     assert_eq!(
-        fixture.models.observe_full(&server, role, &ROOMY),
+        fixture.models.observe_full(&server, model, &ROOMY),
         Observation::Failed(FailureCategory::ProgramNotRunning)
     );
 }
@@ -549,12 +650,18 @@ fn the_local_ai_reads_as_the_worst_of_its_program_and_models() {
     let read = |program, models: &[Observation]| {
         reading(CheckMode::Quick, program, version.clone(), models).observation
     };
+    let older = Observation::Differs {
+        stale: StaleReason::ProgramTooOld,
+        note: None,
+    };
     assert_eq!(read(PRESENT, &[PRESENT, PRESENT]), PRESENT);
-    assert_eq!(read(PRESENT, &[PRESENT, STALE]), STALE);
     assert_eq!(
-        read(PRESENT, &[Observation::Absent, STALE]),
-        Observation::Absent
+        read(PRESENT, &[]),
+        PRESENT,
+        "no selection is the program alone"
     );
+    assert_eq!(read(older, &[PRESENT]), older);
+    assert_eq!(read(older, &[Observation::Absent]), Observation::Absent);
     assert_eq!(
         read(
             Observation::Absent,
@@ -569,11 +676,11 @@ fn the_local_ai_reads_as_the_worst_of_its_program_and_models() {
 }
 
 #[test]
-fn removal_takes_the_pinned_models_and_only_the_layers_nothing_else_uses() {
+fn removal_takes_the_selected_models_and_only_the_layers_nothing_else_uses() {
     let fixture = fixture();
     let root = fixture.models_root();
-    fixture.text.write(&root, "qwen3:1.7b");
-    fixture.vision.write(&root, "qwen3-vl:2b");
+    fixture.text.write(&root, TEXT);
+    fixture.vision.write(&root, VISION);
     // A model the person keeps beside them shares the text model's first layer.
     let shared = &fixture.text.blobs[0];
     let own = vec![9u8; 11];
@@ -595,11 +702,12 @@ fn removal_takes_the_pinned_models_and_only_the_layers_nothing_else_uses() {
 
     fixture.models.remove().unwrap();
     let hardware = Hardware::default();
-    for role in MODEL_ROLES {
+    for model in fixture.models.selection().as_slice() {
         assert_eq!(
-            fixture.models.observe_quick(role, &hardware),
+            fixture.models.observe_quick(model, &hardware),
             Observation::Absent,
-            "{role}"
+            "{}",
+            model.role
         );
     }
     let remaining = |stored: &Stored, name: &str| {
@@ -609,22 +717,30 @@ fn removal_takes_the_pinned_models_and_only_the_layers_nothing_else_uses() {
             .filter(|(path, _)| path.exists())
             .count()
     };
-    assert_eq!(remaining(&fixture.vision, "qwen3-vl:2b"), 0);
+    assert_eq!(remaining(&fixture.vision, VISION), 0);
     assert_eq!(
-        remaining(&fixture.text, "qwen3:1.7b"),
+        remaining(&fixture.text, TEXT),
         1,
         "only the layer the kept model uses stays"
     );
     assert!(kept.is_file() && own_blob.is_file());
 
     fs::write(&kept, b"{").unwrap();
-    fixture.text.write(&root, "qwen3:1.7b");
+    fixture.text.write(&root, TEXT);
     fixture.models.remove().unwrap();
     assert_eq!(
-        remaining(&fixture.text, "qwen3:1.7b"),
+        remaining(&fixture.text, TEXT),
         3,
         "an unreadable kept manifest keeps every layer"
     );
+
+    // Without a selection nothing is removed.
+    fs::write(&kept, b"{}").unwrap();
+    fixture.text.write(&root, TEXT);
+    Models::new(LocalModels::default(), root.clone())
+        .remove()
+        .unwrap();
+    assert_eq!(remaining(&fixture.text, TEXT), 4);
     fs::remove_dir_all(&root).unwrap();
     fixture.models.remove().unwrap();
 }

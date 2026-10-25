@@ -1,13 +1,13 @@
 //! The local AI item: the program that runs models, installed from its pinned portable
 //! archive, the one server run from it on the installation's fixed loopback address, and
-//! the model every catalogue role reads with, pulled through that server.
+//! the model the person selected for each local role, pulled through that server.
 //!
 //! `program` installs, checks, starts, stops and removes the program, records where it
 //! is, and reports a copy installed outside Cadrumo without touching it. `supervision`
 //! is the runtime manager's part: it keeps the server running while the program is set
 //! up. `lease` keeps that server and a change of the program apart across processes.
-//! `models` pulls and checks each role's model through the running server, and
-//! `hardware` decides whether this computer can hold a model at all. `loopback` is the
+//! `models` pulls and checks each selected model through the running server, and
+//! `hardware` decides whether this computer can hold a model of a given size. `loopback` is the
 //! client for the program's own API on this computer. [`reading`] folds the parts into
 //! the item's one reading.
 
@@ -28,8 +28,8 @@ use super::{
 use crate::error::Error;
 use std::fmt;
 
-/// The local AI's one reading from its program's observation and version and each role's
-/// model observation, the worst of them deciding.
+/// The local AI's one reading from its program's observation and version and each selected
+/// model's observation, the worst of them deciding.
 pub fn reading(
     mode: CheckMode,
     program: Observation,

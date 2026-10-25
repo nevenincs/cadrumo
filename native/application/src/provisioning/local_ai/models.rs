@@ -1,12 +1,19 @@
-//! The local AI's models: the pinned model each catalogue role reads with, pulled through
-//! the server the engine started and checked against its pin.
+//! The local AI's models: the model the person selected for each local role, pulled
+//! through the server the engine's manager runs and checked against what that server
+//! holds.
 //!
-//! The program keeps a model as a manifest under `manifests/<registry>/library/<name>/<tag>`
-//! in the models folder and its layers as `blobs/sha256-<hex>`. The manifest's SHA-256 is
-//! the model's identity, the digest the pins record. So the quick check reads files only:
-//! a manifest with the pinned digest whose every layer is stored at its size is present,
-//! one with another digest is stale, and a missing manifest or layer is absent. The full
-//! check asks the server for the same digest and generates one token with the model.
+//! The engine defines no model. Its caller supplies the selection as role, model name and
+//! download size triples, the size as the selected catalogue entry states it, and the
+//! engine plans, pulls and checks exactly those. Integrity is the program's: it verifies
+//! every layer it pulls against the model's content-addressed manifest, so the engine
+//! compares no digest of its own.
+//!
+//! The program keeps a model as a manifest under
+//! `manifests/<host>/<namespace>/<model>/<tag>` in the models folder and its layers as
+//! `blobs/sha256-<hex>`. So the quick check reads files only: a manifest whose every layer
+//! is stored at its size is present, and a missing manifest or layer is absent. The full
+//! check looks the model up in the server's own list of installed models and generates
+//! one token with it.
 //!
 //! A pull streams the program's progress lines into byte progress for the whole model.
 //! The program resumes a model's partial layers by itself, so a pull that was cut off is
@@ -23,23 +30,28 @@ use crate::{
     filesystem,
     provisioning::{
         failure::FailureCategory,
-        items::{Destination, FULL_CHECK_BUDGET, MODEL_ROLES},
-        pins::{ModelPin, ModelPins},
-        plan::{Advisory, PartLicence, PlanPart},
-        state::{BlockedReason, Observation, StaleReason},
+        items::{Destination, FULL_CHECK_BUDGET, PROGRAM_PART},
+        plan::PlanPart,
+        state::{BlockedReason, Observation},
         transfer::{Pacing, RetryPolicy, TransferEvent},
     },
-    value::Sha256Digest,
+    value::{HostName, Sha256Digest},
 };
 use serde::Deserialize;
 use std::{
     collections::{BTreeMap, BTreeSet},
-    io,
+    fmt, io,
     path::{Path, PathBuf},
 };
 
-/// The registry the pinned models come from, as the program names its folder.
-const REGISTRY: &str = "registry.ollama.ai";
+/// The registry, namespace and tag the program reads a name without them as.
+const DEFAULT_REGISTRY: &str = "registry.ollama.ai";
+const DEFAULT_NAMESPACE: &str = "library";
+const DEFAULT_TAG: &str = "latest";
+/// The longest name, and the longest part of one, the engine accepts.
+const NAME_LIMIT: usize = 512;
+const PART_LIMIT: usize = 128;
+const ROLE_LIMIT: usize = 64;
 const MANIFEST_BYTES_LIMIT: u64 = 1024 * 1024;
 /// What the one-token check asks.
 const CHECK_PROMPT: &str = "Reply with one word.";
@@ -56,10 +68,176 @@ struct Manifest {
     layers: Vec<Layer>,
 }
 
-/// The pinned models and where the program keeps them.
+fn invalid(what: &str) -> Error {
+    Error::Invalid(format!("local model selection: {what}"))
+}
+
+/// A model's name as the program's registry spells it, `[[host/]namespace/]model[:tag]`,
+/// with the registry, namespace and tag the program reads an omitted part as.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ModelName {
+    host: HostName,
+    namespace: String,
+    model: String,
+    tag: String,
+}
+
+impl ModelName {
+    /// Reads `value`; refuses an empty name and any part that is not one plain path
+    /// segment, so a name can never point outside the models folder.
+    pub fn parse(value: &str) -> Result<Self, Error> {
+        if value.is_empty() || value.len() > NAME_LIMIT {
+            return Err(invalid("model name"));
+        }
+        let (path, tag) = match value.rsplit_once(':') {
+            Some((path, tag)) if !tag.contains('/') => (path, tag),
+            _ => (value, DEFAULT_TAG),
+        };
+        let parts: Vec<&str> = path.split('/').collect();
+        let (host, namespace, model) = match parts.as_slice() {
+            [model] => (DEFAULT_REGISTRY, DEFAULT_NAMESPACE, *model),
+            [namespace, model] => (DEFAULT_REGISTRY, *namespace, *model),
+            [host, namespace, model] => (*host, *namespace, *model),
+            _ => return Err(invalid("model name")),
+        };
+        let segment = |text: &str, first: fn(u8) -> bool| {
+            text.len() <= PART_LIMIT
+                && text.bytes().next().is_some_and(first)
+                && text
+                    .bytes()
+                    .all(|c| c.is_ascii_alphanumeric() || b"_.-".contains(&c))
+        };
+        if !segment(namespace, |c| c.is_ascii_alphanumeric())
+            || !segment(model, |c| c.is_ascii_alphanumeric())
+            || !segment(tag, |c| c.is_ascii_alphanumeric() || c == b'_')
+        {
+            return Err(invalid("model name"));
+        }
+        Ok(Self {
+            host: HostName::new(host).map_err(|_| invalid("model name"))?,
+            namespace: namespace.to_owned(),
+            model: model.to_owned(),
+            tag: tag.to_owned(),
+        })
+    }
+
+    /// The registry the program pulls this model from.
+    pub fn host(&self) -> &HostName {
+        &self.host
+    }
+
+    /// Whether `other` names the same model; the program compares names regardless of
+    /// case.
+    pub fn same(&self, other: &Self) -> bool {
+        self.host == other.host
+            && self.namespace.eq_ignore_ascii_case(&other.namespace)
+            && self.model.eq_ignore_ascii_case(&other.model)
+            && self.tag.eq_ignore_ascii_case(&other.tag)
+    }
+
+    fn manifest_path(&self, root: &Path) -> PathBuf {
+        root.join("manifests")
+            .join(self.host.as_str())
+            .join(&self.namespace)
+            .join(&self.model)
+            .join(&self.tag)
+    }
+}
+
+/// The shortest spelling the program reads as this model: the default registry and
+/// namespace left out, the tag always written.
+impl fmt::Display for ModelName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.host.as_str() != DEFAULT_REGISTRY {
+            write!(f, "{}/{}/", self.host.as_str(), self.namespace)?;
+        } else if self.namespace != DEFAULT_NAMESPACE {
+            write!(f, "{}/", self.namespace)?;
+        }
+        write!(f, "{}:{}", self.model, self.tag)
+    }
+}
+
+/// One local model the person selected: the role it reads for, its name and its download
+/// size as the selected catalogue entry states it.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SelectedModel {
+    pub role: String,
+    pub name: ModelName,
+    pub size_bytes: u64,
+}
+
+impl SelectedModel {
+    /// One selection triple; refuses a role that is not a plain identifier, an empty or
+    /// malformed name, and a zero size.
+    pub fn new(role: &str, name: &str, size_bytes: u64) -> Result<Self, Error> {
+        let mut bytes = role.bytes();
+        let identifier = role.len() <= ROLE_LIMIT
+            && bytes.next().is_some_and(|c| c.is_ascii_lowercase())
+            && bytes.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'_');
+        if !identifier || role == PROGRAM_PART {
+            return Err(invalid("role"));
+        }
+        if size_bytes == 0 {
+            return Err(invalid("model size"));
+        }
+        Ok(Self {
+            role: role.to_owned(),
+            name: ModelName::parse(name)?,
+            size_bytes,
+        })
+    }
+}
+
+/// The local models the person selected, at most one per role, in role order. Empty
+/// when no local role has a selection: then there is nothing to pull, and no fallback.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct LocalModels(Vec<SelectedModel>);
+
+impl LocalModels {
+    /// Refuses a role selected twice, and a model selected for two roles under two
+    /// different sizes, which no one catalogue entry can state.
+    pub fn new(mut models: Vec<SelectedModel>) -> Result<Self, Error> {
+        models.sort_by(|a, b| a.role.cmp(&b.role));
+        if models.windows(2).any(|pair| pair[0].role == pair[1].role) {
+            return Err(invalid("a role is selected once"));
+        }
+        for (index, model) in models.iter().enumerate() {
+            if models[..index]
+                .iter()
+                .any(|other| other.name.same(&model.name) && other.size_bytes != model.size_bytes)
+            {
+                return Err(invalid("a model has one size"));
+            }
+        }
+        Ok(Self(models))
+    }
+
+    pub fn as_slice(&self) -> &[SelectedModel] {
+        &self.0
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    /// The model selected for `role`, if any.
+    pub fn for_role(&self, role: &str) -> Option<&SelectedModel> {
+        self.0.iter().find(|model| model.role == role)
+    }
+
+    /// The registries the selected models are pulled from.
+    pub fn hosts(&self) -> BTreeSet<HostName> {
+        self.0
+            .iter()
+            .map(|model| model.name.host().clone())
+            .collect()
+    }
+}
+
+/// The selected models and where the program keeps them.
 #[derive(Clone, Debug)]
 pub struct Models {
-    pins: ModelPins,
+    selection: LocalModels,
     root: PathBuf,
 }
 
@@ -77,115 +255,91 @@ enum Attempt {
 }
 
 impl Models {
-    /// The pinned models, kept by the program under `root`, the installation's models
+    /// The selected models, kept by the program under `root`, the installation's models
     /// folder.
-    pub fn new(pins: ModelPins, root: PathBuf) -> Self {
-        Self { pins, root }
+    pub fn new(selection: LocalModels, root: PathBuf) -> Self {
+        Self { selection, root }
     }
 
-    /// The model `role` reads with, when the pins name one.
-    pub fn for_role(&self, role: &str) -> Option<&ModelPin> {
-        self.pins
-            .roles
-            .get(role)
-            .and_then(|name| self.pins.model(name))
+    pub fn selection(&self) -> &LocalModels {
+        &self.selection
     }
 
-    /// One plan part per catalogue role, in role order: the role's pinned model, from the
-    /// pinned registry, into the models folder, under the licence the pins name. Roles
-    /// that share a model share its target, so the plan counts the download once.
+    /// One plan part per selected role, in role order: the selected model, from its
+    /// registry, into the models folder, at the size the caller stated. Roles that share
+    /// a model share its target, so the plan counts the download once.
     pub fn plan_parts(&self) -> Vec<PlanPart> {
-        MODEL_ROLES
+        self.selection
+            .as_slice()
             .iter()
-            .filter_map(|role| {
-                let pin = self.for_role(role)?;
-                Some(PlanPart {
-                    part_id: (*role).into(),
-                    download_bytes: Some(pin.download_bytes),
-                    source_hosts: self.pins.hosts.iter().cloned().collect(),
-                    destination: Some(Destination::OllamaModels),
-                    installs_outside_program: false,
-                    target_version: Some(format!("{}@{}", pin.name, pin.manifest_digest)),
-                    advisories: if pin.commercial_use_permitted {
-                        Vec::new()
-                    } else {
-                        vec![Advisory::LicenceCommercialUseBarred]
-                    },
-                    licence: Some(PartLicence {
-                        spdx_id: pin.licence.clone(),
-                        name: pin.licence_name.clone(),
-                    }),
-                })
+            .map(|model| PlanPart {
+                part_id: model.role.clone(),
+                download_bytes: Some(model.size_bytes),
+                source_hosts: vec![model.name.host().clone()],
+                destination: Some(Destination::OllamaModels),
+                installs_outside_program: false,
+                target_version: Some(model.name.to_string()),
+                advisories: Vec::new(),
+                licence: None,
             })
             .collect()
     }
 
-    /// The quick check of `role`'s model: its manifest and layers on disk, no server.
-    pub fn observe_quick(&self, role: &str, hardware: &Hardware) -> Observation {
-        let Some(pin) = self.for_role(role) else {
-            return Observation::Blocked(BlockedReason::NotInThisBuild);
-        };
-        if hardware.below_floor(pin.memory_bytes) {
+    /// The quick check of `model`: its manifest and layers on disk, no server. A
+    /// computer whose memory cannot hold the model's stated size is held back first.
+    pub fn observe_quick(&self, model: &SelectedModel, hardware: &Hardware) -> Observation {
+        if hardware.below_floor(model.size_bytes) {
             return Observation::Blocked(BlockedReason::Hardware);
         }
-        self.installed(pin)
+        self.installed(&model.name)
     }
 
-    /// The full check of `role`'s model on `server`: the quick check, the digest the
-    /// server reports for it, and one generated token.
-    pub fn observe_full(&self, server: &Server, role: &str, hardware: &Hardware) -> Observation {
-        let quick = self.observe_quick(role, hardware);
+    /// The full check of `model` on `server`: the quick check, the server's own list of
+    /// installed models, and one generated token.
+    pub fn observe_full(
+        &self,
+        server: &Server,
+        model: &SelectedModel,
+        hardware: &Hardware,
+    ) -> Observation {
+        let quick = self.observe_quick(model, hardware);
         if quick != (Observation::Present { note: None }) {
             return quick;
         }
-        let Some(pin) = self.for_role(role) else {
-            return Observation::Blocked(BlockedReason::NotInThisBuild);
-        };
-        match reported_digest(server, &pin.name) {
+        match listed(server, &model.name) {
             Err(error) => return Observation::Failed(error.category()),
-            Ok(None) => return Observation::Absent,
-            Ok(Some(digest)) if digest != pin.manifest_digest => {
-                return Observation::Differs {
-                    stale: StaleReason::DifferentModelVersion,
-                    note: None,
-                };
-            }
-            Ok(Some(_)) => {}
+            Ok(false) => return Observation::Absent,
+            Ok(true) => {}
         }
-        match generate_one_token(server, &pin.name) {
+        match generate_one_token(server, &model.name) {
             Ok(true) => Observation::Present { note: None },
             Ok(false) => Observation::Absent,
             Err(error) => Observation::Failed(error.category()),
         }
     }
 
-    /// Pulls `role`'s model through `server` unless it is already present, then reads it
-    /// back as the quick check does. Only the pinned manifest is the model the plan named,
-    /// so a registry that served another one fails this part rather than finishing stale.
+    /// Pulls `model` through `server` unless it is already present, then reads it back as
+    /// the quick check does.
     pub fn pull(
         &self,
         server: &Server,
-        role: &str,
+        model: &SelectedModel,
         pull: &mut Pull<'_>,
     ) -> Result<Observation, LocalAiError> {
-        let Some(pin) = self.for_role(role) else {
-            return Err(LocalAiError::Failed(FailureCategory::NotInThisBuild));
-        };
-        if self.installed(pin) == (Observation::Present { note: None }) {
+        if self.installed(&model.name) == (Observation::Present { note: None }) {
             (pull.events)(TransferEvent::Progress {
-                completed: pin.download_bytes,
-                total: pin.download_bytes,
+                completed: model.size_bytes,
+                total: model.size_bytes,
             });
             return Ok(Observation::Present { note: None });
         }
         for attempt in 1..=pull.policy.max_attempts {
             pull.cancellation.check()?;
-            match pull_once(server, pin, pull)? {
+            match pull_once(server, model, pull)? {
                 Attempt::Done => {
-                    // The approved plan named this model and its pinned manifest digest, so
-                    // another manifest is not what was approved: final here, as the
-                    // browser's digest mismatch is final at its transfer.
-                    return match self.installed(pin) {
+                    // The program said it has the model; one it did not store whole is
+                    // not the model the plan named.
+                    return match self.installed(&model.name) {
                         observation @ Observation::Present { .. } => Ok(observation),
                         _ => Err(LocalAiError::Failed(FailureCategory::DamagedDownload)),
                     };
@@ -211,20 +365,20 @@ impl Models {
         Err(LocalAiError::Failed(FailureCategory::HostUnreachable))
     }
 
-    /// Removes every pinned model the models folder holds: its manifest, then each layer
-    /// that no manifest left there uses. A model kept beside them keeps its layers, and
-    /// when any kept manifest cannot be read, every layer stays.
+    /// Removes every selected model the models folder holds: its manifest, then each
+    /// layer that no manifest left there uses. A model kept beside them keeps its layers,
+    /// and when any kept manifest cannot be read, every layer stays.
     pub fn remove(&self) -> Result<(), Error> {
         let manifests = self.root.join("manifests");
         filesystem::refuse_links(&manifests)?;
         if std::fs::symlink_metadata(&manifests).is_err() {
             return Ok(());
         }
-        let pinned: BTreeSet<PathBuf> = self
-            .pins
-            .models
+        let selected: BTreeSet<PathBuf> = self
+            .selection
+            .as_slice()
             .iter()
-            .filter_map(|pin| self.manifest_path(&pin.name))
+            .map(|model| model.name.manifest_path(&self.root))
             .collect();
         let mut released = BTreeSet::new();
         let mut kept = BTreeSet::new();
@@ -248,7 +402,7 @@ impl Models {
                             .map(|layer| layer.digest)
                             .collect::<Vec<_>>()
                     });
-                if pinned.contains(&path) {
+                if selected.contains(&path) {
                     released.extend(layers.into_iter().flatten());
                     std::fs::remove_file(&path)?;
                 } else {
@@ -277,23 +431,9 @@ impl Models {
         Ok(())
     }
 
-    fn manifest_path(&self, name: &str) -> Option<PathBuf> {
-        let (model, tag) = name.split_once(':')?;
-        Some(
-            self.root
-                .join("manifests")
-                .join(REGISTRY)
-                .join("library")
-                .join(model)
-                .join(tag),
-        )
-    }
-
-    /// What the models folder holds for `pin`.
-    fn installed(&self, pin: &ModelPin) -> Observation {
-        let Some(path) = self.manifest_path(&pin.name) else {
-            return Observation::Unreadable;
-        };
+    /// What the models folder holds for `name`.
+    fn installed(&self, name: &ModelName) -> Observation {
+        let path = name.manifest_path(&self.root);
         let bytes = match filesystem::bounded_bytes(&path, MANIFEST_BYTES_LIMIT) {
             Ok(bytes) => bytes,
             Err(Error::Io(error)) if error.kind() == io::ErrorKind::NotFound => {
@@ -301,12 +441,6 @@ impl Models {
             }
             Err(_) => return Observation::Unreadable,
         };
-        if Sha256Digest::of(&bytes) != pin.manifest_digest {
-            return Observation::Differs {
-                stale: StaleReason::DifferentModelVersion,
-                note: None,
-            };
-        }
         let Ok(manifest) = serde_json::from_slice::<Manifest>(&bytes) else {
             return Observation::Failed(FailureCategory::DamagedDownload);
         };
@@ -345,10 +479,10 @@ fn retried(category: FailureCategory) -> bool {
 /// for the whole model and its error line into a closed category.
 fn pull_once(
     server: &Server,
-    pin: &ModelPin,
+    model: &SelectedModel,
     pull: &mut Pull<'_>,
 ) -> Result<Attempt, LocalAiError> {
-    let request = serde_json::json!({ "model": pin.name, "stream": true });
+    let request = serde_json::json!({ "model": model.name.to_string(), "stream": true });
     let mut layers: BTreeMap<String, u64> = BTreeMap::new();
     let mut succeeded = false;
     let mut failed = None;
@@ -381,10 +515,10 @@ fn pull_once(
                     let completed = layers
                         .values()
                         .fold(0u64, |sum, bytes| sum.saturating_add(*bytes))
-                        .min(pin.download_bytes);
+                        .min(model.size_bytes);
                     events(TransferEvent::Progress {
                         completed,
-                        total: pin.download_bytes,
+                        total: model.size_bytes,
                     });
                 }
                 Ok(())
@@ -409,8 +543,8 @@ fn pull_once(
         (_, Some(category)) => Attempt::Failed(category),
         (true, None) => {
             events(TransferEvent::Progress {
-                completed: pin.download_bytes,
-                total: pin.download_bytes,
+                completed: model.size_bytes,
+                total: model.size_bytes,
             });
             Attempt::Done
         }
@@ -475,9 +609,8 @@ pub fn pull_error_category(message: &str) -> FailureCategory {
         .map_or(FailureCategory::Unexpected, |(_, category)| *category)
 }
 
-/// The manifest digest the server reports for `name`, or `None` when it has no such
-/// model.
-fn reported_digest(server: &Server, name: &str) -> Result<Option<Sha256Digest>, LocalAiError> {
+/// Whether the server's own list of installed models holds `name`.
+fn listed(server: &Server, name: &ModelName) -> Result<bool, LocalAiError> {
     let (status, body) = server
         .loopback()
         .get("/api/tags")
@@ -487,24 +620,24 @@ fn reported_digest(server: &Server, name: &str) -> Result<Option<Sha256Digest>, 
     }
     let value: serde_json::Value = serde_json::from_slice(&body)
         .map_err(|_| LocalAiError::Failed(FailureCategory::Unexpected))?;
-    let entry = value["models"].as_array().and_then(|models| {
-        models
-            .iter()
-            .find(|model| model["name"] == name || model["model"] == name)
-    });
-    match entry.and_then(|entry| entry["digest"].as_str()) {
-        None => Ok(None),
-        Some(digest) => Sha256Digest::new(digest.trim_start_matches("sha256:"))
-            .map(Some)
-            .map_err(|_| LocalAiError::Failed(FailureCategory::Unexpected)),
-    }
+    let Some(models) = value["models"].as_array() else {
+        return Err(LocalAiError::Failed(FailureCategory::Unexpected));
+    };
+    Ok(models.iter().any(|model| {
+        [&model["name"], &model["model"]].into_iter().any(|listed| {
+            listed
+                .as_str()
+                .and_then(|text| ModelName::parse(text).ok())
+                .is_some_and(|listed| listed.same(name))
+        })
+    }))
 }
 
 /// Generates one token with `name` and unloads it again: `false` when the server does not
 /// have the model. One that does not fit in memory fails as `not_enough_memory`.
-fn generate_one_token(server: &Server, name: &str) -> Result<bool, LocalAiError> {
+fn generate_one_token(server: &Server, name: &ModelName) -> Result<bool, LocalAiError> {
     let request = serde_json::json!({
-        "model": name,
+        "model": name.to_string(),
         "prompt": CHECK_PROMPT,
         "stream": false,
         "keep_alive": 0,

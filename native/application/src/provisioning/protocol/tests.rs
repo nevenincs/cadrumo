@@ -21,6 +21,7 @@ use crate::provisioning::{
     local_ai::{
         fake_ollama::FakeOllama,
         hardware::Hardware,
+        models::{LocalModels, SelectedModel},
         program::{SERVER_RECORD, SERVER_RECORD_SCHEMA, ServerRecord},
     },
     pins::{ComponentPins, Platform},
@@ -46,6 +47,9 @@ use std::{
 const CHILD: &str = "provisioning::protocol::tests::role_child";
 const CHILD_CONFIG: &str = "CADRUMO_TEST_COMPONENTS_ROLE";
 const GIB: u64 = 1024 * 1024 * 1024;
+/// Obviously synthetic names: the engine knows no model, so its tests name none.
+const TEXT: &str = "synthetic-text:test";
+const VISION: &str = "synthetic-vision:test";
 const PROGRAM_VERSION: &str = "9.9.9";
 const PROGRAM_PATH: &str = "/ollama/ollama/releases/download/v9.9.9/ollama.zip";
 const EXECUTABLE: &str = if cfg!(windows) {
@@ -68,6 +72,8 @@ struct ChildConfig {
     free_bytes: Option<u64>,
     /// Measure this computer as the production role does, instead of a roomy fixture.
     measure_hardware: bool,
+    /// The local models selected for the engine, as role, name and size.
+    local_models: Vec<(String, String, u64)>,
     arguments: Vec<String>,
 }
 
@@ -106,6 +112,13 @@ fn child_engine(config: &ChildConfig) -> Result<Engine, Error> {
         policy: RetryPolicy::default(),
     })?;
     engine.browser_leading = fake_leading();
+    engine.select_local_models(LocalModels::new(
+        config
+            .local_models
+            .iter()
+            .map(|(role, name, size)| SelectedModel::new(role, name, *size))
+            .collect::<Result<_, _>>()?,
+    )?);
     Ok(engine)
 }
 
@@ -146,6 +159,8 @@ struct World {
     server: TlsServer,
     ollama: Option<FakeOllama>,
     driver: bool,
+    /// The local models the person selected, as role, name and size.
+    local_models: Vec<(String, String, u64)>,
     spawned: AtomicUsize,
 }
 
@@ -302,46 +317,35 @@ impl World {
             ),
         )
         .unwrap();
-        fs::write(
-            pins.join("local_ai_models.toml"),
-            format!(
-                "hosts = [\"registry.ollama.ai\"]\n\n[roles]\n\
-                 vision_transcription = \"qwen3-vl:2b\"\ntext_extraction = \"qwen3:1.7b\"\n\
-                 column_role_mapping = \"qwen3:1.7b\"\nsupply_nature_proposal = \"qwen3:1.7b\"\n\n\
-                 [[models]]\nname = \"qwen3:1.7b\"\nmanifest_digest = \"{}\"\ndownload_bytes = {}\n\
-                 memory_bytes = {}\nlicence = \"Apache-2.0\"\nlicence_name = \"Apache License 2.0\"\n\
-                 commercial_use_permitted = true\n\n\
-                 [[models]]\nname = \"qwen3-vl:2b\"\nmanifest_digest = \"{}\"\ndownload_bytes = {}\n\
-                 memory_bytes = {}\nlicence = \"Apache-2.0\"\nlicence_name = \"Apache License 2.0\"\n\
-                 commercial_use_permitted = true\n",
-                text.digest(),
-                text.size(),
-                2 * GIB,
-                vision.digest(),
-                vision.size(),
-                3 * GIB,
-            ),
-        )
-        .unwrap();
         let models = directory.path().join("storage/models/ollama");
         let fake = FakeOllama::start(PROGRAM_VERSION);
         {
             let mut state = fake.state.lock().unwrap();
-            // Roles pull in role order: the vision model first, then the text model once.
-            state.pulls = VecDeque::from([vision.pull_lines(), text.pull_lines()]);
-            for (name, model) in [("qwen3-vl:2b", vision), ("qwen3:1.7b", text)] {
+            // Roles pull in role order: the text model once, then the vision model.
+            state.pulls = VecDeque::from([text.pull_lines(), vision.pull_lines()]);
+            for (name, model) in [(VISION, vision), (TEXT, text)] {
                 state
                     .installs
                     .insert(name.into(), model.files(&models, name));
                 state.tags.insert(name.into(), model.digest().to_string());
             }
         }
-        Self::serving(
+        let mut world = Self::serving(
             directory,
             [(PROGRAM_PATH.to_owned(), archive)].into(),
             false,
             Some(fake),
-        )
+        );
+        world.local_models = [
+            ("vision_transcription", VISION, vision.size()),
+            ("text_extraction", TEXT, text.size()),
+            ("column_role_mapping", TEXT, text.size()),
+            ("supply_nature_proposal", TEXT, text.size()),
+        ]
+        .into_iter()
+        .map(|(role, name, size)| (role.to_owned(), name.to_owned(), size))
+        .collect();
+        world
     }
 
     fn serving(
@@ -360,6 +364,7 @@ impl World {
             server,
             ollama,
             driver,
+            local_models: Vec::new(),
             spawned: AtomicUsize::new(0),
         }
     }
@@ -381,6 +386,7 @@ impl World {
                 .map_or_else(|| "127.0.0.1:23743".parse().unwrap(), FakeOllama::address),
             free_bytes: Some(1024 * GIB),
             measure_hardware: false,
+            local_models: self.local_models.clone(),
             arguments: arguments.iter().map(|word| (*word).to_owned()).collect(),
         }
     }
@@ -562,24 +568,12 @@ impl Role {
 }
 
 /// No line carries words: every string is a code, an id, a version, a host, a path or
-/// a digest, none of which holds a space. The one exception is a licence's own title,
-/// a proper name that reads the same in every locale.
+/// a digest, none of which holds a space.
 fn assert_locale_neutral(value: &Value) {
     match value {
         Value::String(text) => assert!(!text.contains(char::is_whitespace), "{text:?}"),
         Value::Array(values) => values.iter().for_each(assert_locale_neutral),
-        Value::Object(map) => {
-            for (key, value) in map {
-                match (key.as_str(), value) {
-                    ("licence", Value::Object(licence)) => {
-                        assert_eq!(licence.len(), 2, "{licence:?}");
-                        assert!(licence["name"].is_string(), "{licence:?}");
-                        assert_locale_neutral(&licence["spdx_id"]);
-                    }
-                    _ => assert_locale_neutral(value),
-                }
-            }
-        }
+        Value::Object(map) => map.values().for_each(assert_locale_neutral),
         _ => {}
     }
 }
@@ -1084,12 +1078,13 @@ fn a_server_started_under_another_proxy_setting_is_never_pulled_through() {
 }
 
 #[test]
-fn a_registry_tag_moved_past_its_pin_fails_the_setup_instead_of_completing_it() {
+fn a_tag_the_registry_moved_is_the_model_the_program_verified() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let world = World::local_ai(&text, &vision);
-    // The registry answers the first pull with a model other than the pinned manifest,
-    // which is what a moved tag looks like to the engine.
+    // The registry answers with a manifest other than the one it served before, which is
+    // what a moved tag looks like. The program verified what it pulled, and the engine
+    // pins no digest, so the setup completes with it.
     let moved = StoredModel::new(5);
     {
         let ollama = world.ollama.as_ref().unwrap();
@@ -1097,10 +1092,8 @@ fn a_registry_tag_moved_past_its_pin_fails_the_setup_instead_of_completing_it() 
         let models = world.root().join("models/ollama");
         state
             .installs
-            .insert("qwen3-vl:2b".into(), moved.files(&models, "qwen3-vl:2b"));
-        state
-            .tags
-            .insert("qwen3-vl:2b".into(), moved.digest().to_string());
+            .insert(VISION.into(), moved.files(&models, VISION));
+        state.tags.insert(VISION.into(), moved.digest().to_string());
     }
 
     let mut setup = world.start(&["setup", "--item", "local_ai"]);
@@ -1110,13 +1103,8 @@ fn a_registry_tag_moved_past_its_pin_fails_the_setup_instead_of_completing_it() 
     world.serve_local_ai();
     let done = setup.finish();
 
-    assert_eq!(
-        (&done.result["outcome"], &done.result["failure_category"]),
-        (&json!("failed"), &json!("damaged_download")),
-        "{}",
-        done.result
-    );
-    assert_eq!(row(&done.result, "local_ai")["state"], "failed");
+    assert_eq!(done.result["outcome"], "completed", "{}", done.result);
+    assert_eq!(row(&done.result, "local_ai")["state"], "ready");
     let requests = world
         .ollama
         .as_ref()
@@ -1131,8 +1119,8 @@ fn a_registry_tag_moved_past_its_pin_fails_the_setup_instead_of_completing_it() 
             .iter()
             .filter(|line| line.starts_with("POST /api/pull"))
             .count(),
-        1,
-        "the mismatch is final, so no further pull is asked for: {requests:?}"
+        2,
+        "each model is pulled once: {requests:?}"
     );
 }
 
@@ -1195,21 +1183,24 @@ fn the_local_ai_installs_its_program_pulls_each_model_once_and_checks_every_role
             .collect::<Vec<_>>(),
         [
             "program",
-            "vision_transcription",
-            "text_extraction",
             "column_role_mapping",
-            "supply_nature_proposal"
+            "supply_nature_proposal",
+            "text_extraction",
+            "vision_transcription"
         ]
     );
     assert_eq!(review["plan"]["contract_version"], 2);
     let parts = entry["parts"].as_array().unwrap();
-    assert_eq!(parts[0]["licence"], Value::Null);
-    for part in &parts[1..] {
-        assert_eq!(
-            part["licence"],
-            json!({"spdx_id": "Apache-2.0", "name": "Apache License 2.0"})
-        );
+    for part in parts {
+        assert_eq!(part["licence"], Value::Null, "the engine states no licence");
     }
+    assert_eq!(
+        parts[1..]
+            .iter()
+            .map(|part| part["target_version"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        [TEXT, TEXT, TEXT, VISION]
+    );
     let total = entry["download_bytes"].as_u64().unwrap();
     assert_eq!(
         total,
@@ -1312,7 +1303,7 @@ fn the_local_ai_installs_its_program_pulls_each_model_once_and_checks_every_role
             .exists()
     );
     let models = world.root().join("models/ollama");
-    for (model, name) in [(&text, "qwen3:1.7b"), (&vision, "qwen3-vl:2b")] {
+    for (model, name) in [(&text, TEXT), (&vision, VISION)] {
         assert!(
             model
                 .files(&models, name)

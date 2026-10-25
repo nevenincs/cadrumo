@@ -323,13 +323,12 @@ mod tests {
             .unwrap();
         let pins = package.join(COMPONENT_PINS);
         fs::create_dir_all(&pins).unwrap();
-        for table in ["local_ai_program.toml", "local_ai_models.toml"] {
-            fs::copy(
-                checkout.join("src/cadrumo/_data/dependencies").join(table),
-                pins.join(table),
-            )
-            .unwrap();
-        }
+        let table = "local_ai_program.toml";
+        fs::copy(
+            checkout.join("src/cadrumo/_data/dependencies").join(table),
+            pins.join(table),
+        )
+        .unwrap();
     }
 
     #[test]

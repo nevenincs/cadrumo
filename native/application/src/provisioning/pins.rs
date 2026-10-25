@@ -1,15 +1,16 @@
 //! The component pins: declarative package data that names the only bytes the engine accepts.
 //!
-//! Three tables sit together in the product package's `cadrumo/_data/dependencies`
-//! folder, which the package layout names `component_pins`. Python reads the same files:
-//! the model table supplies the catalogue's role defaults, weights and memory floors.
+//! Two tables sit together in the product package's `cadrumo/_data/dependencies`
+//! folder, which the package layout names `component_pins`.
 //!
 //! - `browser_archives.toml`: every archive the bundled Playwright driver's Chromium builds
 //!   need, per platform, with its build directory, sources, size and SHA-256.
 //! - `local_ai_program.toml`: the local AI program's official standalone archive per
 //!   platform, with its format, executable, size and SHA-256.
-//! - `local_ai_models.toml`: the model each role reads with, and every pinned model's
-//!   manifest digest, size, memory floor and licence, with the licence's display name.
+//!
+//! The program is pinned; the models it runs are not. Which model a role reads with is
+//! the person's selection, which the caller supplies, and the program verifies each
+//! model it pulls against the model's own content-addressed manifest.
 //!
 //! A table this build does not carry reads as `None`: the item it pins is not in this
 //! build. A table that is present but malformed is refused rather than read partly.
@@ -21,14 +22,10 @@ use crate::{
     value::{HostName, RelativePath, Sha256Digest},
 };
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    path::Path,
-};
+use std::{collections::BTreeSet, path::Path};
 
 pub const BROWSER_ARCHIVES: &str = "browser_archives.toml";
 pub const LOCAL_AI_PROGRAM: &str = "local_ai_program.toml";
-pub const LOCAL_AI_MODELS: &str = "local_ai_models.toml";
 
 const TABLE_BYTES_LIMIT: u64 = 1024 * 1024;
 
@@ -287,103 +284,11 @@ impl ProgramPins {
     }
 }
 
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct RawModel {
-    name: String,
-    manifest_digest: String,
-    download_bytes: u64,
-    memory_bytes: u64,
-    licence: String,
-    licence_name: String,
-    commercial_use_permitted: bool,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct RawModelTable {
-    hosts: Vec<HostName>,
-    roles: BTreeMap<String, String>,
-    models: Vec<RawModel>,
-}
-
-/// One model's tested manifest digest, download size, memory floor and licence.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ModelPin {
-    pub name: String,
-    pub manifest_digest: Sha256Digest,
-    pub download_bytes: u64,
-    /// The publisher's stated weight size: the requirement before any safety margin.
-    pub memory_bytes: u64,
-    /// The licence's SPDX identifier, or its `LicenseRef-` identifier when unlisted.
-    pub licence: String,
-    /// The licence's own title, as a notice names it to a person.
-    pub licence_name: String,
-    pub commercial_use_permitted: bool,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ModelPins {
-    pub hosts: BTreeSet<HostName>,
-    /// Role name to model name, in role order.
-    pub roles: BTreeMap<String, String>,
-    pub models: Vec<ModelPin>,
-}
-
-impl ModelPins {
-    pub fn parse(text: &str) -> Result<Self, Error> {
-        let raw: RawModelTable = parse_table(text)?;
-        let hosts = unique_hosts(raw.hosts)?;
-        let mut names = BTreeSet::new();
-        let mut models = Vec::with_capacity(raw.models.len());
-        for model in raw.models {
-            if !model_name(&model.name)
-                || model.download_bytes == 0
-                || model.memory_bytes == 0
-                || model.licence.is_empty()
-                || model.licence.len() > 128
-                || !display_name(&model.licence_name)
-                || !names.insert(model.name.clone())
-            {
-                return Err(invalid("model pin"));
-            }
-            models.push(ModelPin {
-                name: model.name,
-                manifest_digest: lowercase_digest(&model.manifest_digest)?,
-                download_bytes: model.download_bytes,
-                memory_bytes: model.memory_bytes,
-                licence: model.licence,
-                licence_name: model.licence_name,
-                commercial_use_permitted: model.commercial_use_permitted,
-            });
-        }
-        if models.is_empty()
-            || raw.roles.is_empty()
-            || raw
-                .roles
-                .iter()
-                .any(|(role, model)| !identifier(role) || role.len() > 64 || !names.contains(model))
-        {
-            return Err(invalid("model roles"));
-        }
-        Ok(Self {
-            hosts,
-            roles: raw.roles,
-            models,
-        })
-    }
-
-    pub fn model(&self, name: &str) -> Option<&ModelPin> {
-        self.models.iter().find(|pin| pin.name == name)
-    }
-}
-
 /// Every table this build carries, read from the package's pin folder.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ComponentPins {
     pub browser: Option<BrowserArchivePins>,
     pub program: Option<ProgramPins>,
-    pub models: Option<ModelPins>,
 }
 
 impl ComponentPins {
@@ -394,7 +299,6 @@ impl ComponentPins {
         Ok(Self {
             browser: read_optional(&directory.join(BROWSER_ARCHIVES), BrowserArchivePins::parse)?,
             program: read_optional(&directory.join(LOCAL_AI_PROGRAM), ProgramPins::parse)?,
-            models: read_optional(&directory.join(LOCAL_AI_MODELS), ModelPins::parse)?,
         })
     }
 }
@@ -466,29 +370,6 @@ fn archive_path(value: &str) -> bool {
         && value.split('/').count() > 1
 }
 
-/// A name shown to a person as it is written: one trimmed line of at most 128 bytes.
-fn display_name(value: &str) -> bool {
-    !value.is_empty()
-        && value.len() <= 128
-        && value.trim() == value
-        && !value.chars().any(char::is_control)
-}
-
-fn model_name(value: &str) -> bool {
-    let part = |text: &str| {
-        text.bytes()
-            .next()
-            .is_some_and(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
-            && text
-                .bytes()
-                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || b"._-".contains(&c))
-    };
-    value.len() <= 128
-        && value
-            .split_once(':')
-            .is_some_and(|(name, tag)| part(name) && part(tag))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -511,7 +392,6 @@ mod tests {
         let pins = ComponentPins::load(&committed()).unwrap();
         let browser = pins.browser.unwrap();
         let program = pins.program.unwrap();
-        let models = pins.models.unwrap();
         for platform in [
             Platform::WinX64,
             Platform::LinuxX64,
@@ -528,27 +408,6 @@ mod tests {
                 .hosts
                 .contains(&HostName::new("cdn.playwright.dev").unwrap())
         );
-        assert_eq!(
-            models.roles.keys().map(String::as_str).collect::<Vec<_>>(),
-            [
-                "column_role_mapping",
-                "supply_nature_proposal",
-                "text_extraction",
-                "vision_transcription"
-            ]
-        );
-        for model in models.roles.values() {
-            assert!(models.model(model).unwrap().commercial_use_permitted);
-        }
-        let research = models.model("qwen2.5:3b").unwrap();
-        assert_eq!(
-            (research.licence.as_str(), research.licence_name.as_str()),
-            (
-                "LicenseRef-Qwen-Research",
-                "Qwen RESEARCH LICENSE AGREEMENT"
-            )
-        );
-        assert!(!research.commercial_use_permitted);
     }
 
     #[test]
@@ -559,8 +418,7 @@ mod tests {
             pins,
             ComponentPins {
                 browser: None,
-                program: None,
-                models: None
+                program: None
             }
         );
         assert!(ComponentPins::load(Path::new("relative")).is_err());
@@ -569,7 +427,7 @@ mod tests {
     #[test]
     fn a_present_but_damaged_table_is_refused_rather_than_read_partly() {
         let directory = tempfile::tempdir().unwrap();
-        std::fs::write(directory.path().join(LOCAL_AI_MODELS), "hosts = [").unwrap();
+        std::fs::write(directory.path().join(LOCAL_AI_PROGRAM), "hosts = [").unwrap();
         assert!(ComponentPins::load(directory.path()).is_err());
     }
 
@@ -650,35 +508,6 @@ mod tests {
         for (old, new) in program {
             assert!(
                 ProgramPins::parse(&mutated(LOCAL_AI_PROGRAM, old, new)).is_err(),
-                "{new}"
-            );
-        }
-        let models = [
-            ("manifest_digest = \"", "manifest_digest = \"AB"),
-            (
-                "vision_transcription = \"qwen3-vl:2b\"",
-                "vision_transcription = \"llama3:8b\"",
-            ),
-            ("name = \"moondream:1.8b\"", "name = \"qwen3:1.7b\""),
-            ("memory_bytes = 1700000000", "memory_bytes = 0"),
-            ("name = \"moondream:1.8b\"", "name = \"Moondream\""),
-            (
-                "licence_name = \"Apache License 2.0\"",
-                "licence_name = \"\"",
-            ),
-            (
-                "licence_name = \"Apache License 2.0\"",
-                "licence_name = \" Apache License 2.0\"",
-            ),
-            (
-                "licence_name = \"Apache License 2.0\"",
-                "licence_name = \"Apache\\u0007License 2.0\"",
-            ),
-            ("licence_name = \"Apache License 2.0\"\n", ""),
-        ];
-        for (old, new) in models {
-            assert!(
-                ModelPins::parse(&mutated(LOCAL_AI_MODELS, old, new)).is_err(),
                 "{new}"
             );
         }
