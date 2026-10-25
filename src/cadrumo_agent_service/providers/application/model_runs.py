@@ -5,9 +5,12 @@ are the ones the person selected for that role, stored in the profile's
 own model-role selections record. A role with no selection refuses ``no_selection``. Nothing
 stands in for a missing selection: not another lane, not another role's
 choice, not a catalogue default. A selected lane that is turned off, no longer
-reported or not reachable refuses ``lane_unavailable``, and so does a selected
-model the lane's current entries no longer list: its declared entries and,
-while the agent runs, its live ones. Any lane is eligible,
+reported or not reachable refuses ``lane_unavailable``, and so does a selection
+the lane's current entries no longer serve: its declared entries and, while
+the agent runs, its live ones. The rules a selection was checked against when
+the person made it are applied again: the lane runs background requests, the
+model is listed, and a role that reads images has a lane taking images and an
+entry marked vision. Any lane is eligible,
 API or CLI; whether a lane takes an attachment is what the ready agent's live
 catalog reports for background requests, read in the same lookup, and never
 inferred from its transport. Whether a lane reads off-host is likewise the
@@ -41,9 +44,10 @@ from cadrumo_client.contracts.model_runs import (
     model_run_media_kind,
 )
 
-from ..domain.catalog import CatalogModelFacts, ProviderCatalog, ProviderConsumer
+from ..domain.catalog import CatalogModelFacts, LaneBackground, ProviderCatalog, ProviderConsumer
 from ..domain.record import ModelRoleSelection
 from .lane_entries import current_lane_entries
+from .model_role_selections import selection_refusal
 from .ports import (
     AbsentModelRoleSelections,
     LiveCatalogModels,
@@ -189,6 +193,10 @@ class ModelRunService:
         return self._gateway.run(lane=lane, body=body, deadline_seconds=header.deadline_seconds)
 
 
+type _DecidedLane = tuple[ModelRunLane, LaneBackground, tuple[CatalogModelFacts, ...]]
+"""A lane decided once: its answer without a model, what a background run on it takes, and its current entries."""
+
+
 class _LaneAnswers:
     """Each lane's availability, accepted media and current entries, decided at most once per read of the selections.
 
@@ -210,7 +218,7 @@ class _LaneAnswers:
         self._resolver = resolver
         self._gateway = gateway
         self._catalog: ProviderCatalog | ModelRunRefusal | None = None
-        self._lanes: dict[str, tuple[ModelRunLane, tuple[CatalogModelFacts, ...]] | ModelRunRefusal] = {}
+        self._lanes: dict[str, _DecidedLane | ModelRunRefusal] = {}
 
     def answer(self, selection: ModelRoleSelection) -> ModelRunLane | ModelRunRefusal:
         """Return the lane carrying ``selection``'s model, or the refusal its lane or model meets."""
@@ -219,16 +227,16 @@ class _LaneAnswers:
             decided = self._lanes[selection.lane] = self._decide(selection)
         if isinstance(decided, ModelRunRefusal):
             return decided
-        lane, entries = decided
+        lane, background, entries = decided
         facts = next((entry for entry in entries if entry.id == selection.model), None)
-        if facts is None:
-            # Not listed now: the agent would refuse it as an unknown model, which reads as an unavailable lane.
+        refusal = selection_refusal(selection.role, selection.model, background=background, entries=entries)
+        if facts is None or refusal is not None:
+            # A selection the current entries no longer serve, unlisted or no longer vision-capable for a role
+            # that reads images, would be refused by the agent; it reads as an unavailable lane.
             return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
         return _model_lane(lane, facts)
 
-    def _decide(
-        self, selection: ModelRoleSelection
-    ) -> tuple[ModelRunLane, tuple[CatalogModelFacts, ...]] | ModelRunRefusal:
+    def _decide(self, selection: ModelRoleSelection) -> _DecidedLane | ModelRunRefusal:
         catalog = self._read_catalog()
         if isinstance(catalog, ModelRunRefusal):
             return catalog
@@ -250,7 +258,7 @@ class _LaneAnswers:
             context_length=None,
         )
         accepted = lane.model_copy(update={"accepted_media": self._gateway.accepted_media(lane)})
-        return accepted, current_lane_entries(entry, self._live_models)
+        return accepted, entry.background, current_lane_entries(entry, self._live_models)
 
     def _read_catalog(self) -> ProviderCatalog | ModelRunRefusal:
         if self._catalog is None:

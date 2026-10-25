@@ -179,6 +179,28 @@ def test_a_selected_model_the_current_entries_no_longer_list_refuses_at_lookup_a
     assert states["column_role_mapping"].lane == resolved
 
 
+def test_a_vision_selection_the_live_entry_no_longer_marks_vision_refuses_at_lookup_as_unavailable() -> None:
+    """Selected against the declared entry; the running agent's entry for the same model states no vision."""
+    harness = _Harness(StaticLiveModels(None))
+    assert isinstance(harness.select(ModelRole.VISION_TRANSCRIPTION, KEYLESS_VISION_MODEL), ModelRoleSelectionsStatus)
+    assert isinstance(harness.select(ModelRole.TEXT_EXTRACTION, KEYLESS_VISION_MODEL), ModelRoleSelectionsStatus)
+    declared = harness.runs().lookup("vision_transcription")
+    assert isinstance(declared, ModelRunLane) and declared.vision is True
+
+    for stated in (None, False):
+        harness.live = StaticLiveModels({_LOCAL: (live_model(KEYLESS_VISION_MODEL, vision=stated),)})
+        runs = harness.runs()
+
+        assert runs.lookup("vision_transcription") == ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+        text = runs.lookup("text_extraction")
+        assert isinstance(text, ModelRunLane) and text.vision is stated
+        read = runs.selections()
+        assert isinstance(read, tuple)
+        assert {state.role: state.refusal for state in read}["vision_transcription"] is (
+            ModelRunRefusalCode.LANE_UNAVAILABLE
+        )
+
+
 def test_a_selections_read_reads_each_lanes_live_entries_once() -> None:
     harness = _Harness(_running())
     assert isinstance(harness.select(ModelRole.TEXT_EXTRACTION, _INSTALLED_TEXT), ModelRoleSelectionsStatus)
