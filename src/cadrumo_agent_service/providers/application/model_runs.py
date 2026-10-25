@@ -32,7 +32,7 @@ from cadrumo_client.contracts.model_runs import (
     model_run_media_kind,
 )
 
-from ..domain.catalog import ProviderConsumer
+from ..domain.catalog import ProviderCatalog, ProviderConsumer
 from ..domain.record import ModelRoleSelection
 from .ports import (
     AbsentModelRoleSelections,
@@ -99,19 +99,22 @@ class ModelRunService:
         read = self._read_selections()
         if isinstance(read, ModelRunRefusal):
             return read
-        return self._resolve(model_role, read)[1]
+        return self._resolve(model_role, read, self._lane_answers())[1]
 
     def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
         """Return every role's selection and the lane a run would use or why it would refuse.
 
-        The record is read once, so every role is reported from the same state.
+        The record is read once, and each lane the roles name is decided once,
+        so every role is reported from the same state and a lane two roles
+        share reads its credential and asks for its media only once.
         """
         read = self._read_selections()
         if isinstance(read, ModelRunRefusal):
             return read
+        lanes = self._lane_answers()
         states: list[ModelRunRoleSelection] = []
         for model_role in ModelRole:
-            selected, answer = self._resolve(model_role, read)
+            selected, answer = self._resolve(model_role, read, lanes)
             stored = None if selected is None else ModelRunSelectedModel(lane_id=selected.lane, model=selected.model)
             if isinstance(answer, ModelRunRefusal):
                 states.append(ModelRunRoleSelection(role=model_role.value, selected=stored, refusal=answer.code))
@@ -125,8 +128,12 @@ class ModelRunService:
             return ModelRunRefusal(code=_STORE_SIGNED_OUT.get(read.code, ModelRunRefusalCode.LANE_UNAVAILABLE))
         return read
 
+    def _lane_answers(self) -> _LaneAnswers:
+        return _LaneAnswers(catalog_source=self._catalog_source, resolver=self._resolver, gateway=self._gateway)
+
+    @staticmethod
     def _resolve(
-        self, model_role: ModelRole, read: ModelRoleSelectionsRead
+        model_role: ModelRole, read: ModelRoleSelectionsRead, lanes: _LaneAnswers
     ) -> tuple[ModelRoleSelection | None, ModelRunLane | ModelRunRefusal]:
         """Return the role's stored selection, if readable, and the lane it resolves to or the refusal."""
         if isinstance(read, UnreadableModelRoleSelections):
@@ -135,18 +142,7 @@ class ModelRunService:
         selection = None if isinstance(read, AbsentModelRoleSelections) else read.record.selection(model_role)
         if selection is None:
             return None, ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
-        try:
-            entry = self._catalog_source.catalog().entry(selection.lane)
-        except ProviderCatalogUnavailableError:
-            return selection, ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
-        if entry is None:
-            return selection, ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
-        resolution = self._resolver.resolve(entry.id, ProviderConsumer.ASSISTANT)
-        if isinstance(resolution, ProviderCredentialUnavailable):
-            code = _SIGNED_OUT.get(resolution.reason, ModelRunRefusalCode.LANE_UNAVAILABLE)
-            return selection, ModelRunRefusal(code=code)
-        lane = ModelRunLane(provider_id=entry.provider, transport=entry.transport.value, model=selection.model)
-        return selection, lane.model_copy(update={"accepted_media": self._gateway.accepted_media(lane)})
+        return selection, lanes.answer(selection)
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         """Run one request on the lane its role resolves to now.
@@ -165,6 +161,64 @@ class ModelRunService:
                 if model_run_media_kind(attachment.media_type) not in lane.accepted_media:
                     return ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED)
         return self._gateway.run(lane=lane, body=body, deadline_seconds=header.deadline_seconds)
+
+
+class _LaneAnswers:
+    """Each lane's availability and accepted media, decided at most once for one read of the selections.
+
+    Availability is decided by resolving the lane's credential, because a
+    provider record is only readable whole. The resolution is dropped as soon
+    as it is judged, so no secret outlives the decision or reaches an answer.
+    """
+
+    def __init__(
+        self,
+        *,
+        catalog_source: ProviderCatalogSource,
+        resolver: ProviderCredentialResolver,
+        gateway: BackgroundRunGateway,
+    ) -> None:
+        self._catalog_source = catalog_source
+        self._resolver = resolver
+        self._gateway = gateway
+        self._catalog: ProviderCatalog | ModelRunRefusal | None = None
+        self._lanes: dict[str, ModelRunLane | ModelRunRefusal] = {}
+
+    def answer(self, selection: ModelRoleSelection) -> ModelRunLane | ModelRunRefusal:
+        """Return the lane carrying ``selection``'s model, or the refusal its lane meets."""
+        decided = self._lanes.get(selection.lane)
+        if decided is None:
+            decided = self._lanes[selection.lane] = self._decide(selection)
+        if isinstance(decided, ModelRunRefusal):
+            return decided
+        return ModelRunLane(
+            provider_id=decided.provider_id,
+            transport=decided.transport,
+            model=selection.model,
+            accepted_media=decided.accepted_media,
+        )
+
+    def _decide(self, selection: ModelRoleSelection) -> ModelRunLane | ModelRunRefusal:
+        catalog = self._read_catalog()
+        if isinstance(catalog, ModelRunRefusal):
+            return catalog
+        entry = catalog.entry(selection.lane)
+        if entry is None:
+            return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+        resolution = self._resolver.resolve(entry.id, ProviderConsumer.ASSISTANT)
+        if isinstance(resolution, ProviderCredentialUnavailable):
+            return ModelRunRefusal(code=_SIGNED_OUT.get(resolution.reason, ModelRunRefusalCode.LANE_UNAVAILABLE))
+        del resolution
+        lane = ModelRunLane(provider_id=entry.provider, transport=entry.transport.value, model=selection.model)
+        return lane.model_copy(update={"accepted_media": self._gateway.accepted_media(lane)})
+
+    def _read_catalog(self) -> ProviderCatalog | ModelRunRefusal:
+        if self._catalog is None:
+            try:
+                self._catalog = self._catalog_source.catalog()
+            except ProviderCatalogUnavailableError:
+                self._catalog = ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+        return self._catalog
 
 
 __all__ = ["BackgroundRunGateway", "ModelRunService"]

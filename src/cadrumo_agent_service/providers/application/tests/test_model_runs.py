@@ -27,11 +27,11 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from ....adapters.agent_background_runs import HostedBackgroundRuns
-from ...domain.catalog import parse_provider_catalog
+from ...domain.catalog import ProviderCatalog, parse_provider_catalog
 from ...domain.record import ModelRoleSelection, ModelRoleSelectionsRecord, new_settings_generation
 from ..contracts import ProviderSettingsActionAccepted, ProviderSettingsStatus
 from ..model_runs import ModelRunService
-from ..ports import ModelRoleSelectionsRead, StoreRefusal, StoreRefusalCode
+from ..ports import ModelRoleSelectionsRead, ProviderRecordRead, StoreRefusal, StoreRefusalCode
 from ..resolution import ProviderCredentialResolver
 from ..service import ProviderSettingsService
 from .memory_store import MemoryModelRoleSelectionsStore, MemoryProviderSettingsStore
@@ -63,9 +63,10 @@ class _RecordingGateway:
     def __init__(self) -> None:
         self.runs: list[tuple[ModelRunLane, ModelRunBody, int]] = []
         self.accepts: tuple[ModelRunMediaKind, ...] | None = None
+        self.media_asked: list[tuple[str, str]] = []
 
     def accepted_media(self, lane: ModelRunLane) -> tuple[ModelRunMediaKind, ...] | None:
-        del lane
+        self.media_asked.append((lane.provider_id, lane.transport))
         return self.accepts
 
     def run(self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int) -> ModelRunOutput | ModelRunRefusal:
@@ -351,3 +352,65 @@ def test_a_selections_read_of_an_unreadable_record_reports_no_selection_as_known
     assert isinstance(states, tuple)
     assert {state.refusal for state in states} == {ModelRunRefusalCode.LANE_UNAVAILABLE}
     assert all(state.selected is None for state in states)
+
+
+class _CountingProviderRecords(MemoryProviderSettingsStore):
+    """Count the provider records read: each read is one decrypted credential record."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.lanes_read: list[str] = []
+
+    @override
+    def read(self, provider_ids: tuple[str, ...]) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
+        self.lanes_read.extend(provider_ids)
+        return super().read(provider_ids)
+
+
+class _CountingCatalogSource(ProvidedProviderCatalogSource):
+    def __init__(self, source: ProvidedProviderCatalogSource) -> None:
+        super().__init__(source.catalog())
+        self.fetches = 0
+
+    @override
+    def catalog(self) -> ProviderCatalog:
+        self.fetches += 1
+        return super().catalog()
+
+
+def test_a_selections_read_decides_each_lane_once_however_many_roles_share_it() -> None:
+    """Three roles on one lane and one on another read two credential records and ask for media twice."""
+    store = _CountingProviderRecords()
+    selections = MemoryModelRoleSelectionsStore()
+    source = _CountingCatalogSource(_catalog_source())
+    gateway = _RecordingGateway()
+    gateway.accepts = (ModelRunMediaKind.IMAGE,)
+    resolver = ProviderCredentialResolver(store=store, catalog_source=source)
+    settings = ProviderSettingsService(store=store, catalog_source=source, storage_mode=StorageMode.INSTALLED)
+    runs = ModelRunService(selections=selections, resolver=resolver, catalog_source=source, gateway=gateway)
+    _store_key(settings, KEY_LANE)
+    _select(
+        selections,
+        (ModelRole.VISION_TRANSCRIPTION, KEY_LANE, "synthetic-vision-1"),
+        (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"),
+        (ModelRole.COLUMN_ROLE_MAPPING, SIGN_IN_ONLY_LANE, "synthetic-text-2"),
+        (ModelRole.SUPPLY_NATURE_PROPOSAL, SIGN_IN_ONLY_LANE, "synthetic-text-3"),
+    )
+    store.lanes_read.clear()
+    source.fetches = 0
+
+    states = runs.selections()
+
+    assert isinstance(states, tuple)
+    assert sorted(store.lanes_read) == sorted([KEY_LANE, SIGN_IN_ONLY_LANE])
+    assert sorted(gateway.media_asked) == [("example", "api"), ("example", "cli")]
+    # One fetch to find the lanes, and one inside each of the two credential resolutions.
+    assert source.fetches == 3
+    lanes = {state.role: state.lane for state in states}
+    assert lanes["column_role_mapping"] == ModelRunLane(
+        provider_id="example", transport="cli", model="synthetic-text-2", accepted_media=(ModelRunMediaKind.IMAGE,)
+    )
+    assert lanes["supply_nature_proposal"] == ModelRunLane(
+        provider_id="example", transport="cli", model="synthetic-text-3", accepted_media=(ModelRunMediaKind.IMAGE,)
+    )
+    assert "synthetic-key" not in repr(states)

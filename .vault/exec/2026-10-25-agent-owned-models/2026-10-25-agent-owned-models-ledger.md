@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac1db169f5aa924ae80716f0fda88af4bf50a9492a11910b3626aaa408d87348'
+body_hash: 'sha256:4c2867191789d63ac9744e50eda7e3f01ed6c1097ba0a13a0136269c7b8e3d6d'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -116,6 +116,8 @@ related:
 - `S29` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
 - `S29` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
 - `S29` `by:` `vaultspec-high-executor`
+- `S02` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service` -> `pass`
+- `S02` `verify:` `uv run --no-sync ruff check, ruff format --check and ty check on the touched files` -> `pass`
 
 ## Notes
 
@@ -123,3 +125,4 @@ related:
 - `S04` The selections read crosses the `cadrumo_client` wire contract, the runtime worker instruction and lease, and the operation authority as well as the three named files.
 - `S05` The desktop crate was not compiled here; mod.rs and admin.rs edits are not compiler-verified. gateway.rs needed no change: the selection is served by the service admin endpoint, not the agent gateway.
 - `S29` Installed packages need a rebuild before the installed runtime admits the model-role-selections capability; the descriptor is staged at assembly.
+- `S02` S02 Review follow-up: a selections read now decides each distinct lane once (one credential record read and one media query per lane) instead of once per role.
