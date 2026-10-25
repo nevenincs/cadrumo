@@ -66,6 +66,7 @@ _REFUSALS: Final[Mapping[str, ModelRunRefusalCode]] = {
     "background_request_invalid": ModelRunRefusalCode.RUN_FAILED,
     "background_lane_unsupported": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "input_not_supported": ModelRunRefusalCode.INPUT_NOT_SUPPORTED,
+    "provider_not_selectable": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "provider_unavailable": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "unknown_model": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "model_not_installed": ModelRunRefusalCode.MODEL_NOT_INSTALLED,
