@@ -54,6 +54,9 @@ def collect_official_box_unpopulated_diagnostics(
     casilla and the unpopulated official boxes so the operator-facing surface
     can instruct the transcription.
 
+    The verification side evaluates the same predicate DSL in
+    ``cadrumo.application.modelo.verification_actions``.
+
     Args:
         revision: The :class:`ModeloRevision` whose ADVISORY
             ``implies_any_nonzero`` predicates are evaluated. If the revision
@@ -67,10 +70,6 @@ def collect_official_box_unpopulated_diagnostics(
         ModeloError: An ADVISORY predicate is malformed (unparseable, wrong
             arity, an operator with no advisory evaluator, a non-canonical
             casilla token or an unreadable registry literal).
-
-    See Also:
-        ``cadrumo.application.modelo.verification_actions._evaluate_predicate_expression``:
-            Verification-side evaluator for the same predicate DSL.
     """
     # Lazy imports avoid the calculate/verification action cycle. The domain
     # registry owns predicate syntax; the verification module owns admission

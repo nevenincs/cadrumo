@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,10 +19,6 @@ from .edit_models import (
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
 )
-
-if TYPE_CHECKING:
-    from ...domain.filing.schema import ModeloScalar
-
 
 #: Wire-safe mirror of ``ModeloScalar`` (``Decimal | int | str | bool | date | None``).
 #: ``Decimal`` validates from a JSON number OR a pattern-matched string but
@@ -44,7 +40,7 @@ if TYPE_CHECKING:
 type ModeloEditWireScalar = int | str | bool | date | None
 
 
-def wire_scalar_value(value: ModeloScalar) -> ModeloEditWireScalar:
+def wire_scalar_value(value: Decimal | int | str | bool | date | None) -> ModeloEditWireScalar:
     """Mirror one domain ``ModeloScalar`` onto the payload-safe wire union.
 
     Only ``Decimal`` needs mirroring, and it becomes the exact characters
