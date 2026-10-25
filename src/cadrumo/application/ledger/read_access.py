@@ -50,10 +50,16 @@ def resolve_ledger_read_access(
     *,
     profile_id: UUID,
     periods: frozenset[Period],
+    subject_ref: str | None = None,
 ) -> ResolvedOperationAccess:
-    """Bind a canonical immutable query scope, with empty scope meaning all periods."""
+    """Bind a canonical immutable query scope, with empty scope meaning all periods.
+
+    The request subject is the profile's unless the operation declares a narrower
+    one, which the caller then names in ``subject_ref``.
+    """
     independent = not periods
-    if profile_id != context.profile_id or request.subject_ref != profile_operation_subject(str(profile_id)):
+    expected_subject = profile_operation_subject(str(profile_id)) if subject_ref is None else subject_ref
+    if profile_id != context.profile_id or request.subject_ref != expected_subject:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     if request.definition_id != context.contract.definition_id:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)

@@ -21,7 +21,6 @@ from ....core.operations import (
     OperationEffect,
     OperationInteractionKind,
     OperationTerminalCondition,
-    profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.classification_origin import ClassificationOrigin
@@ -56,6 +55,7 @@ from ..llm_review_contracts import (
     LedgerLlmReviewRequest,
     LedgerLlmSuggestion,
     ledger_llm_review_definition_id,
+    ledger_llm_review_subject,
 )
 from ..llm_review_execution import LedgerLlmOperationPorts, LedgerLlmReviewExecutor, ledger_llm_review_schemas
 from ..llm_review_operand import LedgerLlmReviewedOperand
@@ -118,7 +118,7 @@ def _identity(payload: LedgerLlmReviewRequest) -> OperationIdentity:
     return OperationIdentity(
         operation_id="a" * 64,
         definition_id=ledger_llm_review_definition_id(payload),
-        subject_ref=profile_operation_subject(str(payload.profile_id)),
+        subject_ref=ledger_llm_review_subject(payload),
     )
 
 
@@ -204,7 +204,7 @@ class _Repository:
 class _Case:
     def __init__(self, authority: PinnedAuthorityOperation, mode: _Mode = "classification") -> None:
         self.baseline = _baseline()
-        self.payload = _payload(mode, self.baseline.transaction_id[:12])
+        self.payload = _payload(mode, self.baseline.transaction_id)
         self.identity = _identity(self.payload)
         self.request = OperationRequest[LedgerLlmReviewRequest](
             definition_id=self.identity.definition_id,
@@ -236,6 +236,9 @@ class _Case:
         self.interactions = _Interactions(self.operands)
         self.in_commit = False
 
+        async def refuse_acknowledgement() -> None:
+            raise AssertionError("no cancellation is waiting in this case")
+
         @asynccontextmanager
         async def irreversible_section():
             self.in_commit = True
@@ -253,7 +256,11 @@ class _Case:
                 events=self.events,
                 operands=self.operands,
                 interactions=self.interactions,
-                cancellation=SimpleNamespace(irreversible_section=irreversible_section),
+                cancellation=SimpleNamespace(
+                    cancellation_requested=False,
+                    acknowledge_cancellation=refuse_acknowledgement,
+                    irreversible_section=irreversible_section,
+                ),
             ),
         )
 
@@ -289,7 +296,7 @@ def test_registration_binds_canonical_models_and_separate_response_authority(mod
     def unused_factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerLlmOperationPorts:
         raise AssertionError("registration must not acquire providers")
 
-    payload = _payload(mode, "b" * 12)
+    payload = _payload(mode, "b" * 64)
     definition = operation.build_ledger_llm_review_definition(ledger_llm_review_definition_id(payload), unused_factory)
     registration = operation.build_ledger_llm_review_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
@@ -310,7 +317,7 @@ def test_registration_binds_canonical_models_and_separate_response_authority(mod
             registry=registry,
             request=OperationRequest[BaseModel](
                 definition_id=definition.definition_id,
-                subject_ref=profile_operation_subject(str(_PROFILE)),
+                subject_ref=ledger_llm_review_subject(payload),
                 payload=payload,
             ),
             context=context,
@@ -318,12 +325,13 @@ def test_registration_binds_canonical_models_and_separate_response_authority(mod
         assert action in resolved.policy.actions and not resolved.policy.transaction_authority_required
 
 
-def test_request_normalizes_supported_prefix_and_preserves_rejection_origin() -> None:
-    request = _payload("classification", "  ABCDEF123456  ")
-    assert request.transaction_id == "abcdef123456"
+def test_request_admits_only_the_canonical_id_and_preserves_rejection_origin() -> None:
+    with pytest.raises(ValidationError, match="transaction_id"):
+        _payload("classification", "abcdef123456")
+    assert _payload("classification", "a" * 64).transaction_id == "a" * 64
     rejected = LedgerLlmReviewRequest(
         profile_id=_PROFILE,
-        transaction_id="b" * 12,
+        transaction_id="b" * 64,
         mode="auto_split",
         origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
     )
@@ -331,7 +339,7 @@ def test_request_normalizes_supported_prefix_and_preserves_rejection_origin() ->
     with pytest.raises(ValidationError, match="mode and invocation origin"):
         LedgerLlmReviewRequest(
             profile_id=_PROFILE,
-            transaction_id="b" * 12,
+            transaction_id="b" * 64,
             mode="split",
             origin=LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
         )
@@ -1048,7 +1056,7 @@ async def test_a_response_commits_the_reviewed_decision_whichever_frontend_submi
 def test_an_applied_share_keeps_its_fraction_digits_and_stays_within_zero_to_one(share: str, accepted: bool) -> None:
     values = {
         "profile_id": _PROFILE,
-        "transaction_id": "a" * 12,
+        "transaction_id": "a" * 64,
         "mode": "classification",
         "origin": _ORIGINS["classification"],
         "business_pct": share,

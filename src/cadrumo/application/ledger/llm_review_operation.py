@@ -49,6 +49,7 @@ from .llm_review_contracts import (
     LedgerLlmReviewRequest,
     bound_ledger_llm_projection,
     ledger_llm_review_definition_id,
+    ledger_llm_review_subject,
     ledger_llm_review_subject_reference,
 )
 from .llm_review_execution import (
@@ -87,7 +88,13 @@ def resolve_ledger_llm_review_access(
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if request.definition_id != ledger_llm_review_definition_id(request.payload):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    resolved = resolve_ledger_read_access(
+        request,
+        context,
+        profile_id=request.payload.profile_id,
+        periods=frozenset(),
+        subject_ref=ledger_llm_review_subject(request.payload),
+    )
     disclosures = resolved.policy.disclosures
     if context.action in {AccessAction.REVIEW, AccessAction.RESPOND}:
         schema = context.contract.review_projection_schema
