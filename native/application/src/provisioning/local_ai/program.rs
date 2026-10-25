@@ -175,8 +175,9 @@ pub struct ServerRecord {
     pub executable: PathBuf,
     pub models: PathBuf,
     pub process_id: u32,
-    /// The digest of the proxy setting this server was started under, absent when it
-    /// was started without one. Never the address itself, which is a credential.
+    /// The digest of the route of the proxy setting this server was started under,
+    /// absent when it was started without one. Never the address itself, which is a
+    /// credential, and never its password, which the digest leaves out.
     pub proxy: Option<String>,
 }
 

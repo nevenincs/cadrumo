@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:27199edc588ca13d3801f5d96ec2cf0260311b6e492352939f846ccf06e39eaf'
+body_hash: 'sha256:03ae4a9744ede4d83a606b61e8ebcd34ca94afbaf5521aa771087c844b53e11f'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -907,6 +907,8 @@ related:
 - `S17` `verify:` `python -m dev.locales status --check` -> `pass`
 - `S17` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
 - `S17` `verify:` `pytest test_dependency_wording.py test_dependency_registry_conformance.py dev/locales/tests/test_desktop_chrome.py and the desktop wire parity case (76 passed)` -> `pass`
+- `S17` `verify:` `cargo test --offline --lib provisioning:: (133 passed, incl. the new fingerprint test)` -> `pass`
+- `S17` `verify:` `cargo clippy --offline --all-targets -- -D warnings and cargo fmt --check` -> `pass`
 
 ## Notes
 

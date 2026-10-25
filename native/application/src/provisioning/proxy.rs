@@ -98,16 +98,16 @@ impl ProxySettings {
     /// A digest of the whole effective setting, so one start's setting can be compared
     /// with another's without holding or recording any part of the address.
     ///
-    /// The address is a credential, so only this digest is ever recorded. It covers
-    /// every field a start acts on, the user name and password included, so a changed
-    /// credential reads as a changed setting.
+    /// The address is a credential, so only this digest is ever recorded, and the
+    /// password is left out of the material: the digest is there to tell one route from
+    /// another, and a password that changes on its own routes the download the same way.
+    /// Leaving it out keeps the recorded file from committing to a secret at all.
     pub fn fingerprint(&self) -> Sha256Digest {
         let mut material = Zeroizing::new(String::new());
         for field in [
             self.host.as_str(),
             &self.port.to_string(),
             self.username.as_str(),
-            self.password.as_str(),
             &self.bypass.join(","),
         ] {
             material.push_str(field);
@@ -324,6 +324,42 @@ mod tests {
             !shown.contains("hunter2")
                 && !shown.contains("secret-proxy")
                 && !shown.contains("3128")
+        );
+    }
+
+    #[test]
+    fn the_fingerprint_tells_one_route_from_another_and_commits_to_no_password() {
+        let route = |url: &str| {
+            settings(&[(PROXY_URL, url)])
+                .unwrap()
+                .unwrap()
+                .fingerprint()
+        };
+        assert_eq!(
+            route("http://user:hunter2@proxy.example:3128"),
+            route("http://user:another@proxy.example:3128"),
+            "a password that changes on its own routes the download the same way"
+        );
+        for other in [
+            "http://user:hunter2@proxy.example:8080",
+            "http://user:hunter2@other.example:3128",
+            "http://bob:hunter2@proxy.example:3128",
+        ] {
+            assert_ne!(
+                route("http://user:hunter2@proxy.example:3128"),
+                route(other),
+                "{other}"
+            );
+        }
+        let bypassing = settings(&[
+            (PROXY_URL, "http://user:hunter2@proxy.example:3128"),
+            (PROXY_BYPASS, "corp.example"),
+        ])
+        .unwrap()
+        .unwrap();
+        assert_ne!(
+            route("http://user:hunter2@proxy.example:3128"),
+            bypassing.fingerprint()
         );
     }
 
