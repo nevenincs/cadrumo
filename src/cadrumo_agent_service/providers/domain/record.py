@@ -14,6 +14,10 @@ axes; that state is never persisted.
 The secret travels as :class:`~pydantic.SecretStr`. Every ordinary dump, repr
 and string rendering masks it. Only :func:`provider_settings_record_document`
 reveals it, for the one caller that encrypts the record at rest.
+
+Beside the provider records sits one per-profile record of the person's model
+choice per role: a lane and a model for each role they configured. It holds no
+secret, and a role it does not name has no selection.
 """
 
 from __future__ import annotations
@@ -21,13 +25,14 @@ from __future__ import annotations
 import json
 import secrets
 from enum import StrEnum
-from typing import Final, Literal, Self
+from typing import Annotated, Final, Literal, Self
 
 from pydantic import (
     BaseModel,
     Field,
     FieldSerializationInfo,
     SecretStr,
+    StringConstraints,
     field_serializer,
     field_validator,
     model_validator,
@@ -35,6 +40,7 @@ from pydantic import (
 
 from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.hex import Hex64Str
+from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
 from cadrumo.core.time.utc import UtcInstant
@@ -168,6 +174,66 @@ class ProviderSettingsRecord(BaseModel):
         return self
 
 
+MODEL_ROLE_SELECTIONS_RECORD_SCHEMA_VERSION: Final[Literal[1]] = 1
+
+ModelId = Annotated[str, StringConstraints(pattern=r"^[\x21-\x7e]{1,256}$")]
+"""A model id exactly as the lane's catalogue entry names it: printable ASCII, no spaces."""
+
+
+class ModelRoleSelection(BaseModel):
+    """The lane and model the person chose for one role; nothing here is secret."""
+
+    model_config = _STRICT_FROZEN
+
+    role: ModelRole
+    lane: ProviderId
+    """The catalogue lane id, never the provider identity alone."""
+    model: ModelId
+
+
+class ModelRoleSelectionsRecord(BaseModel):
+    """One profile's per-role model selections, at most one per role.
+
+    A role missing from ``selections`` has no selection. Nothing stands in for
+    it: there is no default, no recommended entry and no other role's choice.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    schema_version: Literal[1]
+    selections: tuple[ModelRoleSelection, ...] = Field(max_length=len(ModelRole))
+    generation: Hex64Str
+    updated_at: UtcInstant
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _one_selection_per_role(self) -> Self:
+        roles = [selection.role for selection in self.selections]
+        if len(roles) != len(set(roles)):
+            raise ValueError("a role carries at most one selection")
+        return self
+
+    def selection(self, role: ModelRole) -> ModelRoleSelection | None:
+        """Return the person's selection for ``role``, or ``None`` when there is none."""
+        return next((selection for selection in self.selections if selection.role is role), None)
+
+
+def model_role_selections_record_document(record: ModelRoleSelectionsRecord) -> bytes:
+    """Return the selections record's at-rest JSON; it carries no secret."""
+    document = record.model_dump(mode="json")
+    return json.dumps(document, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def parse_model_role_selections_record(payload: bytes) -> ModelRoleSelectionsRecord:
+    """Parse at-rest JSON back into a selections record.
+
+    Raises:
+        pydantic.ValidationError: When the payload is not a valid record.
+        UnicodeDecodeError: When the payload is not UTF-8.
+    """
+    return ModelRoleSelectionsRecord.model_validate_json(payload.decode("utf-8"))
+
+
 def provider_settings_record_document(record: ProviderSettingsRecord) -> bytes:
     """Return the record's at-rest JSON, secret included, for encryption only."""
     document = record.model_dump(mode="json", context={"reveal": _REVEAL})
@@ -188,16 +254,22 @@ def parse_provider_settings_record(payload: bytes) -> ProviderSettingsRecord:
 __all__ = [
     "CREDENTIAL_SECRET_MAX_LENGTH",
     "CREDENTIAL_SECRET_MIN_LENGTH",
+    "MODEL_ROLE_SELECTIONS_RECORD_SCHEMA_VERSION",
     "PROVIDER_SETTINGS_RECORD_SCHEMA_VERSION",
     "AssistantAuth",
     "CredentialKind",
     "CredentialSecretRefusal",
     "CredentialState",
+    "ModelId",
+    "ModelRoleSelection",
+    "ModelRoleSelectionsRecord",
     "ProviderCredential",
     "ProviderPreferences",
     "ProviderSettingsRecord",
     "credential_secret_refusal",
+    "model_role_selections_record_document",
     "new_settings_generation",
+    "parse_model_role_selections_record",
     "parse_provider_settings_record",
     "provider_settings_record_document",
 ]

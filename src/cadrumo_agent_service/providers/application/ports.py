@@ -19,7 +19,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
 
 from ..domain.catalog import ProviderCatalog, ProviderId
-from ..domain.record import ProviderSettingsRecord
+from ..domain.record import ModelRoleSelectionsRecord, ProviderSettingsRecord
 
 
 class StoredProviderRecord(BaseModel):
@@ -53,6 +53,36 @@ class UnreadableProviderRecord(BaseModel):
 
 
 type ProviderRecordRead = StoredProviderRecord | AbsentProviderRecord | UnreadableProviderRecord
+
+
+class StoredModelRoleSelections(BaseModel):
+    """The per-role selections record decrypted and validated, with its row revision."""
+
+    model_config = _STRICT_FROZEN
+
+    record: ModelRoleSelectionsRecord
+    revision: Hex64Str
+
+
+class AbsentModelRoleSelections(BaseModel):
+    """No selections record is stored: no role has a selection."""
+
+    model_config = _STRICT_FROZEN
+
+
+class UnreadableModelRoleSelections(BaseModel):
+    """A selections record is stored but cannot be decrypted or validated.
+
+    It fails closed: no role reads as selected or as unselected, and only a
+    guarded reset may remove it.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    revision: Hex64Str | None
+
+
+type ModelRoleSelectionsRead = StoredModelRoleSelections | AbsentModelRoleSelections | UnreadableModelRoleSelections
 
 
 class StoreRefusalCode(StrEnum):
@@ -135,6 +165,20 @@ class ProviderSettingsStore(Protocol):
         """Remove the provider's record only if its revision still equals ``expected_revision``."""
         ...
 
+    def read_role_selections(self) -> ModelRoleSelectionsRead | StoreRefusal:
+        """Return the profile's per-role selections record, absent, or unreadable, or a refusal."""
+        ...
+
+    def write_role_selections(
+        self, record: ModelRoleSelectionsRecord, *, expected_revision: str
+    ) -> StoreRefusal | None:
+        """Commit ``record`` only if the stored selections revision still equals ``expected_revision``."""
+        ...
+
+    def delete_role_selections(self, *, expected_revision: str) -> StoreRefusal | None:
+        """Remove the selections record only if its revision still equals ``expected_revision``."""
+        ...
+
     def observe_generations(self) -> StoreGenerations | None:
         """Return the current generations, or ``None`` when the profile is not usable.
 
@@ -145,7 +189,9 @@ class ProviderSettingsStore(Protocol):
 
 
 __all__ = [
+    "AbsentModelRoleSelections",
     "AbsentProviderRecord",
+    "ModelRoleSelectionsRead",
     "ProviderCatalogSource",
     "ProviderCatalogUnavailableError",
     "ProviderCatalogUnavailableReason",
@@ -154,6 +200,8 @@ __all__ = [
     "StoreGenerations",
     "StoreRefusal",
     "StoreRefusalCode",
+    "StoredModelRoleSelections",
     "StoredProviderRecord",
+    "UnreadableModelRoleSelections",
     "UnreadableProviderRecord",
 ]

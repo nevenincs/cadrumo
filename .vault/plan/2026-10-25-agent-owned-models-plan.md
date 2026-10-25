@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-25'
 body_schema: body-v2
-body_hash: 'sha256:e7ffaa507a803b73709da68df4fd02ef9c8d90d9408d35820d61515b279918b9'
+body_hash: 'sha256:7816ddddb84e0a775d418c5ae44d772e72da7d6403b69ed6271cdc717ee086f3'
 ---
 
 # `agent-owned-models` plan
@@ -44,7 +44,7 @@ Open point for the executor: the selection is stored by the agent service, whose
 
 Land the per-role selection store and wire, role-based lookup, removal of the unread hosted ids and the model-definition gate. None of it needs cadrumo-agent's new catalogue.
 
-- [ ] `P01.S01` - Add the per-profile, per-role model selection record and store with guarded revisions; absent means none and corrupt refuses; `src/cadrumo_agent_service/providers/domain/record.py, src/cadrumo_agent_service/providers/persistence/store.py, src/cadrumo_agent_service/providers/application/ports.py, src/cadrumo_agent_service/providers/persistence/tests`.
+- [x] `P01.S01` - Add the per-profile, per-role model selection record and store with guarded revisions; absent means none and corrupt refuses; `src/cadrumo_agent_service/providers/domain/record.py, src/cadrumo_agent_service/providers/persistence/store.py, src/cadrumo_agent_service/providers/application/ports.py, src/cadrumo_agent_service/providers/persistence/tests`.
 - [ ] `P01.S02` - Select by role in ModelRunService.lookup and refuse NO_SELECTION when the role has none, with no fallback to another lane or a default selection; `src/cadrumo_agent_service/providers/application/model_runs.py, src/cadrumo_agent_service/providers/application/tests`.
 - [ ] `P01.S03` - Serve the selection on the authenticated service API and the typed wire contracts: read all roles, set and clear one role; `src/cadrumo_agent_service/admin.py, src/cadrumo_agent_service/contracts.py, src/cadrumo_agent_service/providers/application/service.py`.
 - [ ] `P01.S04` - Return the per-role selection state through the runtime-to-service lookup frame so the tax side and the CLI and TUI can read it; `src/cadrumo/application/operations/model_runs.py, src/cadrumo_runtime/host/profile_connection_model_runs.py, src/cadrumo_agent_service/host/model_run_relay.py`.

@@ -15,17 +15,35 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ..application.ports import (
+    AbsentModelRoleSelections,
     AbsentProviderRecord,
+    ModelRoleSelectionsRead,
     ProviderRecordRead,
+    StoredModelRoleSelections,
     StoredProviderRecord,
     StoreGenerations,
     StoreRefusal,
     StoreRefusalCode,
+    UnreadableModelRoleSelections,
     UnreadableProviderRecord,
 )
-from ..domain.record import ProviderSettingsRecord, parse_provider_settings_record, provider_settings_record_document
+from ..domain.record import (
+    ModelRoleSelectionsRecord,
+    ProviderSettingsRecord,
+    model_role_selections_record_document,
+    parse_model_role_selections_record,
+    parse_provider_settings_record,
+    provider_settings_record_document,
+)
 
 PROVIDER_RECORD_CAPABILITY: Final = "provider-settings"
+
+MODEL_ROLE_SELECTIONS_KEY: Final = "model_role_selections"
+"""The selections record's key beside the provider records.
+
+A lane id is its provider and transport joined by an underscore, so it ends in
+a transport token. This key ends in none, so it never names a lane's record.
+"""
 
 
 class SecureProviderSettingsStore:
@@ -78,10 +96,50 @@ class SecureProviderSettingsStore:
 
     def write(self, record: ProviderSettingsRecord, *, expected_revision: str) -> StoreRefusal | None:
         """Commit the original schema bytes through runtime repository CAS."""
-        material = bytearray(provider_settings_record_document(record))
+        return self._write(record.provider, provider_settings_record_document(record), expected_revision)
+
+    def delete(self, provider_id: str, *, expected_revision: str) -> StoreRefusal | None:
+        """Delete only the exact revision the caller observed."""
+        return self._delete(provider_id, expected_revision)
+
+    def read_role_selections(self) -> ModelRoleSelectionsRead | StoreRefusal:
+        """Decode the selections record, keeping absent and unreadable apart."""
+        try:
+            reply, material = self._client.record_read(PROVIDER_RECORD_CAPABILITY, MODEL_ROLE_SELECTIONS_KEY)
+            try:
+                refusal = _refusal(reply)
+                if refusal is not None:
+                    return refusal
+                if reply.state == "absent":
+                    return AbsentModelRoleSelections()
+                unreadable = UnreadableModelRoleSelections(revision=reply.revision)
+                if reply.state != "present" or reply.revision is None:
+                    return unreadable
+                try:
+                    record = parse_model_role_selections_record(bytes(material))
+                except (ValidationError, UnicodeDecodeError):
+                    return unreadable
+                return StoredModelRoleSelections(record=record, revision=reply.revision)
+            finally:
+                material[:] = b"\0" * len(material)
+        except (RefusalError, FrontendRefusedError, OSError):
+            return StoreRefusal(code=StoreRefusalCode.UNKNOWN)
+
+    def write_role_selections(
+        self, record: ModelRoleSelectionsRecord, *, expected_revision: str
+    ) -> StoreRefusal | None:
+        """Commit the selections record through runtime repository CAS."""
+        return self._write(MODEL_ROLE_SELECTIONS_KEY, model_role_selections_record_document(record), expected_revision)
+
+    def delete_role_selections(self, *, expected_revision: str) -> StoreRefusal | None:
+        """Delete the selections record only at the exact revision the caller observed."""
+        return self._delete(MODEL_ROLE_SELECTIONS_KEY, expected_revision)
+
+    def _write(self, object_key: str, document: bytes, expected_revision: str) -> StoreRefusal | None:
+        material = bytearray(document)
         try:
             reply = self._client.record_write(
-                PROVIDER_RECORD_CAPABILITY, record.provider, payload=material, expected_revision=expected_revision
+                PROVIDER_RECORD_CAPABILITY, object_key, payload=material, expected_revision=expected_revision
             )
             return _refusal(reply) if reply.state == "written" else _refusal(reply) or _unknown()
         except (RefusalError, FrontendRefusedError, OSError):
@@ -91,11 +149,10 @@ class SecureProviderSettingsStore:
             # Whatever the outcome, the records generation may have moved.
             self.invalidate_generations()
 
-    def delete(self, provider_id: str, *, expected_revision: str) -> StoreRefusal | None:
-        """Delete only the exact revision the caller observed."""
+    def _delete(self, object_key: str, expected_revision: str) -> StoreRefusal | None:
         try:
             reply = self._client.record_delete(
-                PROVIDER_RECORD_CAPABILITY, provider_id, expected_revision=expected_revision
+                PROVIDER_RECORD_CAPABILITY, object_key, expected_revision=expected_revision
             )
             return _refusal(reply) if reply.state == "deleted" else _refusal(reply) or _unknown()
         except (RefusalError, FrontendRefusedError, OSError):
