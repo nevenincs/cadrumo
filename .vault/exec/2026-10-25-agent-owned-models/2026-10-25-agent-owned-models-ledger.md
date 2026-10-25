@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:229ce51b14faa2355da8d8e50d970cc5a9a2dddc06594f6ef4f0495b11ceade4'
+body_hash: 'sha256:c8b62dc74e5dfa6511b67122d5e05ba191122d5c69d47a5a6f3847e2e4b6ba7b'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -263,6 +263,19 @@ related:
 - `S10` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
 - `S10` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
 - `S10` `by:` `implementation-engineer-high`
+- `S10` `M` `src/cadrumo_agent_service/providers/application/ports.py`
+- `S10` `M` `src/cadrumo_agent_service/providers/domain/catalog.py`
+- `S10` `M` `src/cadrumo_agent_service/service.py`
+- `S10` `A` `src/cadrumo_agent_service/adapters/served_catalog_models.py`
+- `S10` `A` `src/cadrumo_agent_service/adapters/tests/test_served_catalog_models.py`
+- `S10` `A` `src/cadrumo_agent_service/providers/application/lane_entries.py`
+- `S10` `A` `src/cadrumo_agent_service/providers/application/tests/test_live_catalogue_selection.py`
+- `S10` `verify:` `pytest src/cadrumo_agent_service src/cadrumo_client src/cadrumo/adapters/outbound/llm -q` -> `pass`
+- `S10` `verify:` `pytest -m integration -n 0 gateway with stub-installed local model, lifecycle answers, declared catalogue, model-run relay and admin ingress tests against cadrumo-agent 821f4ff` -> `pass`
+- `S10` `verify:` `python -m dev.quality.types` -> `pass`
+- `S10` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S10` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
+- `S10` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
 
 ## Notes
 
@@ -280,3 +293,4 @@ related:
 - `S21` The engine.rs pull loop over the selection and the hardware.rs floor wording landed with P04.S19, which had to replace the pinned models to compile; this Step adds the read-back through the server list after a pull, retires DifferentModelVersion from every check, and proves the floor and the program-alone plan through the role. The DifferentModelVersion code stays in StaleReason because the desktop wire still names it.
 - `S23` native/application keeps licence wording only in the plan type kept for the desktop (PartLicence, the null licence field, the LicenceCommercialUseBarred advisory); P04.S22 removes the desktop consumers, after which those can go.
 - `S10` Interim under reading A: selection is checked against the declared catalogue only. The owner's ruling on whether a model only the live catalogue lists (installed, not declared) may be selected is pending; S10 stays open until it lands.
+- `S10` The owner ruled 'both' (ADR amendment 2026-10-25, selectable models): the earlier interim note's pending ruling is settled. Selection now reads the running agent's live entries beside the declared ones, and a lookup whose model the current entries no longer list refuses `lane_unavailable.`

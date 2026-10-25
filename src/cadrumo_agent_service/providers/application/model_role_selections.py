@@ -10,10 +10,12 @@ role in one answer and performs the person's acts:
 
 Every change carries the revision the caller read as its guard, is committed
 with a compare-and-swap and is read back. A selection is checked against the
-lane's catalogue entries: the lane must be one the agent reports and runs
-background requests on, the model one of its entries, and a role that reads
-images needs a lane that takes images and a model marked as vision. Whether
-the lane is reachable is decided when a run asks for it.
+lane's catalogue entries: its declared ones and, while the agent runs, its
+live ones, which add the models installed on a local server. The lane must be
+one the agent reports and runs background requests on, the model one of its
+entries, and a role that reads images needs a lane that takes images and an
+entry marked as vision. Whether the lane is reachable is decided when a run
+asks for it.
 """
 
 from __future__ import annotations
@@ -28,7 +30,7 @@ from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.core.time.clock import now
 
-from ..domain.catalog import BackgroundInput, LaneBackground, ProviderCatalogEntry, ProviderCatalogModel
+from ..domain.catalog import BackgroundInput, CatalogModelFacts, LaneBackground, ProviderCatalogEntry
 from ..domain.record import (
     MODEL_ROLE_SELECTIONS_RECORD_SCHEMA_VERSION,
     ModelId,
@@ -44,8 +46,10 @@ from .contracts import (
     ProviderSettingsRefusalCode,
     is_provider_settings_revision,
 )
+from .lane_entries import current_lane_entries
 from .ports import (
     AbsentModelRoleSelections,
+    LiveCatalogModels,
     ModelRoleSelectionsRead,
     ModelRoleSelectionsStore,
     ProviderCatalogSource,
@@ -60,12 +64,13 @@ IMAGE_ROLES: Final[frozenset[ModelRole]] = frozenset({ModelRole.VISION_TRANSCRIP
 
 
 def selection_refusal(
-    role: ModelRole, model_id: str, *, background: LaneBackground, entries: Iterable[ProviderCatalogModel]
+    role: ModelRole, model_id: str, *, background: LaneBackground, entries: Iterable[CatalogModelFacts]
 ) -> ProviderSettingsRefusalCode | None:
     """Return why ``model_id`` on a lane cannot serve ``role``, or ``None`` when it can.
 
-    ``entries`` are the lane's catalogue entries; a model none of them lists is
-    not in the catalogue now, which another source of entries may change.
+    ``entries`` are the lane's catalogue entries from every source read; a
+    model none of them lists is not in the catalogue now, which a later read
+    may change. An entry whose vision is unknown is not vision-capable.
     """
     if not background.runnable:
         return ProviderSettingsRefusalCode.LANE_NOT_RUNNABLE
@@ -85,11 +90,13 @@ class ModelRoleSelectionsService:
         *,
         store: ModelRoleSelectionsStore,
         catalog_source: ProviderCatalogSource,
+        live_models: LiveCatalogModels,
         clock: Callable[[], datetime] = now,
     ) -> None:
-        """Bind the service to one profile's selections store and the agent's catalog."""
+        """Bind the service to one profile's selections store, the agent's declared catalog and its live entries."""
         self._store = store
         self._catalog_source = catalog_source
+        self._live_models = live_models
         self._clock = clock
 
     def status(self) -> ModelRoleSelectionsResult:
@@ -103,7 +110,7 @@ class ModelRoleSelectionsService:
         """Select ``lane`` and ``model`` for ``role``, replacing any earlier selection for that role only.
 
         The lane must be one the agent reports, and the model must serve the
-        role by :func:`selection_refusal` against the lane's declared entries.
+        role by :func:`selection_refusal` against the lane's current entries.
         Whether the lane is reachable is decided when a run asks for it, so a
         lane can be chosen before its credential is stored.
         """
@@ -113,7 +120,8 @@ class ModelRoleSelectionsService:
         entry = self._lane(lane)
         if isinstance(entry, ProviderSettingsRefusal):
             return entry
-        refusal = selection_refusal(model_role, model, background=entry.background, entries=entry.models)
+        entries = current_lane_entries(entry, self._live_models)
+        refusal = selection_refusal(model_role, model, background=entry.background, entries=entries)
         if refusal is not None:
             return _refused(refusal)
         current = self._current(expected_revision)

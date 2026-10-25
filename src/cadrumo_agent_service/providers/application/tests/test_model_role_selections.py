@@ -31,6 +31,7 @@ from .synthetic_catalog import (
     MISSING_LANE,
     SIGN_IN_ONLY_LANE,
     ProvidedProviderCatalogSource,
+    StaticLiveModels,
     synthetic_catalog,
     synthetic_document,
 )
@@ -39,7 +40,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _service(store: MemoryModelRoleSelectionsStore) -> ModelRoleSelectionsService:
-    return ModelRoleSelectionsService(store=store, catalog_source=ProvidedProviderCatalogSource(synthetic_catalog()))
+    return ModelRoleSelectionsService(
+        store=store, catalog_source=ProvidedProviderCatalogSource(synthetic_catalog()), live_models=StaticLiveModels()
+    )
 
 
 def _status(result: ModelRoleSelectionsStatus | ProviderSettingsRefusal) -> ModelRoleSelectionsStatus:
@@ -215,11 +218,12 @@ def test_a_profile_that_is_not_signed_in_refuses_reads_and_changes() -> None:
 def test_a_selection_made_through_the_service_is_the_lane_a_model_run_resolves() -> None:
     store = MemoryModelRoleSelectionsStore()
     source = ProvidedProviderCatalogSource(synthetic_catalog())
-    service = ModelRoleSelectionsService(store=store, catalog_source=source)
+    service = ModelRoleSelectionsService(store=store, catalog_source=source, live_models=StaticLiveModels())
     runs = ModelRunService(
         selections=store,
         resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=source),
         catalog_source=source,
+        live_models=StaticLiveModels(),
         gateway=_NoMediaGateway(),
     )
     status = _status(
@@ -266,7 +270,9 @@ def _catalog_with(lane_id: str, **fields: Any) -> ProviderCatalog:
 
 
 def _catalog_service(store: MemoryModelRoleSelectionsStore, catalog: ProviderCatalog) -> ModelRoleSelectionsService:
-    return ModelRoleSelectionsService(store=store, catalog_source=ProvidedProviderCatalogSource(catalog))
+    return ModelRoleSelectionsService(
+        store=store, catalog_source=ProvidedProviderCatalogSource(catalog), live_models=StaticLiveModels()
+    )
 
 
 _NOT_RUNNABLE = {"runnable": False, "inputs": [], "options": []}
@@ -392,11 +398,12 @@ def test_the_admission_check_reads_whatever_entries_it_is_given() -> None:
 def test_a_lookup_carries_the_catalogue_facts_of_the_selected_model() -> None:
     store = MemoryModelRoleSelectionsStore()
     source = ProvidedProviderCatalogSource(synthetic_catalog())
-    service = ModelRoleSelectionsService(store=store, catalog_source=source)
+    service = ModelRoleSelectionsService(store=store, catalog_source=source, live_models=StaticLiveModels())
     runs = ModelRunService(
         selections=store,
         resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=source),
         catalog_source=source,
+        live_models=StaticLiveModels(),
         gateway=_NoMediaGateway(),
     )
     _status(

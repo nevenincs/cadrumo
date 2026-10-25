@@ -38,10 +38,12 @@ from .memory_store import MemoryModelRoleSelectionsStore, MemoryProviderSettings
 from .synthetic_catalog import (
     KEY_LANE,
     KEYLESS_LANE,
+    KEYLESS_TEXT_MODEL,
     MISSING_LANE,
     OTHER_KEY_LANE,
     SIGN_IN_ONLY_LANE,
     ProvidedProviderCatalogSource,
+    StaticLiveModels,
     synthetic_document,
 )
 
@@ -84,7 +86,9 @@ def _harness(
     gateway = _RecordingGateway()
     resolver = ProviderCredentialResolver(store=store, catalog_source=source)
     settings = ProviderSettingsService(store=store, catalog_source=source, storage_mode=StorageMode.INSTALLED)
-    runs = ModelRunService(selections=selections, resolver=resolver, catalog_source=source, gateway=gateway)
+    runs = ModelRunService(
+        selections=selections, resolver=resolver, catalog_source=source, live_models=StaticLiveModels(), gateway=gateway
+    )
     return runs, settings, gateway
 
 
@@ -291,7 +295,7 @@ def test_a_lane_the_catalogue_declares_on_host_runs_without_consent() -> None:
     store = MemoryProviderSettingsStore()
     selections = MemoryModelRoleSelectionsStore()
     runs, _, gateway = _harness(store, selections)
-    _select(selections, (ModelRole.TEXT_EXTRACTION, KEYLESS_LANE, "synthetic-reader-1"))
+    _select(selections, (ModelRole.TEXT_EXTRACTION, KEYLESS_LANE, KEYLESS_TEXT_MODEL))
 
     lane = runs.lookup("text_extraction")
     output = runs.run(_header(), _BODY)
@@ -319,7 +323,7 @@ def test_consent_recorded_for_a_hosted_lane_does_not_carry_to_the_on_host_lane_n
     store = MemoryProviderSettingsStore()
     selections = MemoryModelRoleSelectionsStore()
     runs, _, gateway = _harness(store, selections)
-    _select(selections, (ModelRole.TEXT_EXTRACTION, KEYLESS_LANE, "synthetic-text-1"))
+    _select(selections, (ModelRole.TEXT_EXTRACTION, KEYLESS_LANE, KEYLESS_TEXT_MODEL))
 
     refused = runs.run(_header(consent=_consent("cli")), _BODY)
 
@@ -332,7 +336,7 @@ def test_a_run_decided_on_host_is_refused_when_the_role_now_resolves_to_a_hosted
     store = MemoryProviderSettingsStore()
     selections = MemoryModelRoleSelectionsStore()
     runs, _, gateway = _harness(store, selections)
-    _select(selections, (ModelRole.TEXT_EXTRACTION, KEYLESS_LANE, "synthetic-text-1"))
+    _select(selections, (ModelRole.TEXT_EXTRACTION, KEYLESS_LANE, KEYLESS_TEXT_MODEL))
     looked_up = runs.lookup("text_extraction")
     assert isinstance(looked_up, ModelRunLane) and looked_up.reads_off_host is False
     _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
@@ -369,7 +373,9 @@ def test_without_a_ready_agent_every_run_refuses_as_service_unavailable() -> Non
     gateway = HostedBackgroundRuns(
         endpoint=lambda: None, bearer=bytearray(b"synthetic-bearer"), host_token=bytearray(b"synthetic-host")
     )
-    runs = ModelRunService(selections=selections, resolver=resolver, catalog_source=source, gateway=gateway)
+    runs = ModelRunService(
+        selections=selections, resolver=resolver, catalog_source=source, live_models=StaticLiveModels(), gateway=gateway
+    )
 
     lane = runs.lookup("text_extraction")
     assert isinstance(lane, ModelRunLane) and lane.accepted_media is None
@@ -481,7 +487,9 @@ def test_a_selections_read_decides_each_lane_once_however_many_roles_share_it() 
     gateway.accepts = (ModelRunMediaKind.IMAGE,)
     resolver = ProviderCredentialResolver(store=store, catalog_source=source)
     settings = ProviderSettingsService(store=store, catalog_source=source, storage_mode=StorageMode.INSTALLED)
-    runs = ModelRunService(selections=selections, resolver=resolver, catalog_source=source, gateway=gateway)
+    runs = ModelRunService(
+        selections=selections, resolver=resolver, catalog_source=source, live_models=StaticLiveModels(), gateway=gateway
+    )
     _store_key(settings, KEY_LANE)
     _select(
         selections,

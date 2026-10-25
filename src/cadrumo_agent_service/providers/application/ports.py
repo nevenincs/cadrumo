@@ -18,7 +18,7 @@ from cadrumo.core.hex import Hex64Str
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
 
-from ..domain.catalog import ProviderCatalog, ProviderId
+from ..domain.catalog import CatalogModelFacts, ProviderCatalog, ProviderId
 from ..domain.record import ModelRoleSelectionsRecord, ProviderSettingsRecord
 
 
@@ -152,6 +152,22 @@ class ProviderCatalogSource(Protocol):
         ...
 
 
+class LiveCatalogModels(Protocol):
+    """The models the running agent's live catalogue lists for one lane.
+
+    The live catalogue adds what the declared one cannot know, such as the
+    models installed on a local server. It exists only while an agent runs.
+    """
+
+    def lane_models(self, provider: str, transport: str) -> tuple[CatalogModelFacts, ...] | None:
+        """Return the lane's live entries, empty when the lane lists none.
+
+        ``None`` means there is no live catalogue to read: no agent is running,
+        or the one running did not answer with a document that validates.
+        """
+        ...
+
+
 class ProviderSettingsStore(Protocol):
     """Encrypted per-profile provider-settings records for one admitted profile."""
 
@@ -200,6 +216,7 @@ class ModelRoleSelectionsStore(Protocol):
 __all__ = [
     "AbsentModelRoleSelections",
     "AbsentProviderRecord",
+    "LiveCatalogModels",
     "ModelRoleSelectionsRead",
     "ModelRoleSelectionsStore",
     "ProviderCatalogSource",

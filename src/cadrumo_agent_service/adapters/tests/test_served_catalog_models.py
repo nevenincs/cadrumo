@@ -1,0 +1,110 @@
+"""One lane's live entries, read from a document shaped as the agent's gateway serves its catalogue."""
+
+from __future__ import annotations
+
+from typing import Any, Final
+
+import pytest
+
+from ..served_catalog_models import ServedCatalogModels
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_DIGEST: Final = "sha256:" + "2" * 64
+
+
+def _entry(model: str, **overrides: Any) -> dict[str, Any]:
+    """One served model entry with the fields the agent serves, most of which the adapter never reads."""
+    entry: dict[str, Any] = {
+        "entry_id": f"local:{model}",
+        "model": model,
+        "display_name": model,
+        "description": None,
+        "capabilities": [],
+        "native_control_ids": [],
+        "efforts": [],
+        "default_effort": None,
+        "multi_agent_generation": None,
+        "vision": True,
+        "size_bytes": 2_000,
+        "context_length": 8192,
+        "licence": {"spdx": None, "name": "Licence supplied with the model", "digest": _DIGEST},
+        "installed": True,
+    }
+    entry.update(overrides)
+    return entry
+
+
+def _document(*models: object, provider: str = "local", transport: str = "api") -> dict[str, Any]:
+    record = {
+        "provider_id": provider,
+        "transport": transport,
+        "catalog": {"schema_version": 2, "models": list(models), "recommended": {}},
+        "background_requests": {"text": "proven", "image": "proven", "pdf": "unsupported", "options": []},
+    }
+    other = {"provider_id": "example", "transport": "cli", "catalog": {"models": [_entry("synthetic-other:1")]}}
+    return {"api_version": "v1", "providers": [other, record]}
+
+
+def test_the_lanes_entries_are_read_with_their_facts_and_nothing_else() -> None:
+    models = ServedCatalogModels(
+        lambda: _document(
+            _entry("synthetic-installed:1"),
+            _entry("synthetic-plain:1", vision=None, size_bytes=None, context_length=None, licence=None),
+        )
+    )
+
+    entries = models.lane_models("local", "api")
+
+    assert entries is not None
+    assert [entry.id for entry in entries] == ["synthetic-installed:1", "synthetic-plain:1"]
+    installed, plain = entries
+    assert installed.licence is not None
+    assert (installed.vision, installed.size_bytes, installed.context_length, installed.licence.digest) == (
+        True,
+        2_000,
+        8192,
+        _DIGEST,
+    )
+    assert (plain.vision, plain.size_bytes, plain.context_length, plain.licence) == (None, None, None, None)
+
+
+def test_no_running_agent_is_no_live_catalogue_and_an_unlisted_lane_lists_nothing() -> None:
+    assert ServedCatalogModels(lambda: None).lane_models("local", "api") is None
+    assert ServedCatalogModels(lambda: _document(_entry("synthetic-installed:1"))).lane_models("absent", "api") == ()
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        pytest.param(_document(_entry("synthetic-installed:1", size_bytes=0)), id="size-zero"),
+        pytest.param(_document(_entry("synthetic-installed:1", context_length=-1)), id="context-negative"),
+        pytest.param(_document(_entry("synthetic-installed:1", vision="yes")), id="vision-not-a-bool"),
+        pytest.param(_document(_entry("synthetic-installed:1", size_bytes="2000")), id="size-not-an-integer"),
+        pytest.param(
+            _document(_entry("synthetic-installed:1", licence={"spdx": None, "name": "x", "digest": "sha256:zz"})),
+            id="licence-digest-malformed",
+        ),
+        pytest.param(
+            _document(
+                _entry("synthetic-installed:1", licence={"spdx": None, "name": "x", "digest": _DIGEST, "text": "t"})
+            ),
+            id="licence-unknown-field",
+        ),
+        pytest.param(
+            _document({key: value for key, value in _entry("synthetic-installed:1").items() if key != "vision"}),
+            id="vision-missing",
+        ),
+        pytest.param(
+            _document({key: value for key, value in _entry("synthetic-installed:1").items() if key != "model"}),
+            id="model-missing",
+        ),
+        pytest.param(_document(_entry("")), id="model-empty"),
+        pytest.param(_document(_entry("synthetic-installed:1"), "not-an-entry"), id="entry-not-an-object"),
+        pytest.param(
+            {"api_version": "v1", "providers": [{"provider_id": "local", "transport": "api"}]}, id="no-catalog"
+        ),
+    ],
+)
+def test_a_lane_whose_served_entries_do_not_validate_yields_no_live_catalogue(document: dict[str, Any]) -> None:
+    assert ServedCatalogModels(lambda: document).lane_models("local", "api") is None

@@ -9,8 +9,13 @@ from __future__ import annotations
 import json
 from typing import Any, Final, override
 
-from ...domain.catalog import ProviderCatalog, parse_provider_catalog
-from ..ports import ProviderCatalogSource, ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
+from ...domain.catalog import CatalogModelFacts, ProviderCatalog, parse_provider_catalog
+from ..ports import (
+    LiveCatalogModels,
+    ProviderCatalogSource,
+    ProviderCatalogUnavailableError,
+    ProviderCatalogUnavailableReason,
+)
 
 KEY_LANE: Final = "example_api"
 """A plain API-key lane whose credential the agent keys as ``example``."""
@@ -172,3 +177,26 @@ class UnavailableCatalogSource(ProviderCatalogSource):
     @override
     def catalog(self) -> ProviderCatalog:
         raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_NOT_FOUND)
+
+
+class StaticLiveModels(LiveCatalogModels):
+    """A running agent's live entries per lane, or no running agent at all when ``lanes`` is ``None``."""
+
+    def __init__(self, lanes: dict[tuple[str, str], tuple[CatalogModelFacts, ...]] | None = None) -> None:
+        """Keep the live entries each lane lists; a lane absent from ``lanes`` lists none."""
+        self._lanes = lanes
+        self.reads = 0
+
+    @override
+    def lane_models(self, provider: str, transport: str) -> tuple[CatalogModelFacts, ...] | None:
+        self.reads += 1
+        if self._lanes is None:
+            return None
+        return self._lanes.get((provider, transport), ())
+
+
+def live_model(model_id: str, **facts: Any) -> CatalogModelFacts:
+    """Return one live entry through the real model, every fact unstated unless named."""
+    stated: dict[str, Any] = {"vision": None, "size_bytes": None, "context_length": None, "licence": None}
+    stated.update(facts)
+    return CatalogModelFacts.model_validate({"id": model_id, **stated})

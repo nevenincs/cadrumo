@@ -41,6 +41,7 @@ from .adapters.agent_programs import (
 from .adapters.agent_provider_auth_status import AgentProviderAuthStatusProbe
 from .adapters.agent_provider_catalog import AgentProviderCatalogSource
 from .adapters.provider_catalog_metadata import declared_provider_catalog_response
+from .adapters.served_catalog_models import ServedCatalogModels
 from .contracts import HostedCertificationStatus
 from .host.auth_attempt import AuthAttempt
 from .host.bounded_read import BoundedRead, Identity
@@ -176,10 +177,12 @@ class AgentService:
             self._closing,
         )
         selections = SecureModelRoleSelectionsStore(client=client)
+        live_models = ServedCatalogModels(self._live_catalog)
         self._model_runs = ModelRunService(
             selections=selections,
             resolver=resolver,
             catalog_source=self._catalog,
+            live_models=live_models,
             gateway=HostedBackgroundRuns(
                 endpoint=self._background_endpoint, bearer=gateway_bearer, host_token=self._host_token
             ),
@@ -191,7 +194,9 @@ class AgentService:
             storage_mode=storage_mode().mode,
             cli_state_probe=self._login_status.probe,
         )
-        self._model_roles_service = ModelRoleSelectionsService(store=selections, catalog_source=self._catalog)
+        self._model_roles_service = ModelRoleSelectionsService(
+            store=selections, catalog_source=self._catalog, live_models=live_models
+        )
         self._controller: AgentHostController | None = None
         self._auth_attempt: AuthAttempt | None = None
         self._auth_resume_valid: Callable[[], bool] | None = None
@@ -763,6 +768,26 @@ class AgentService:
             raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_FAILED) from error
         finally:
             connection.close()
+
+    def _live_catalog(self) -> dict[str, Any] | None:
+        """Return the ready agent's served catalogue, or ``None`` when no agent is ready or it does not answer.
+
+        A role selection and a lane lookup read it beside the declared
+        catalogue; without it they read the declared catalogue alone. The read
+        is bound to the generation it was asked of, as every served read is.
+        """
+        controller = self._controller
+        if self._closing.is_set() or self.client.lease is None or controller is None or self._workspace is None:
+            return None
+        if not _controller_is_ready(controller):
+            return None
+        ready = controller.published()
+        if ready is None:
+            return None
+        try:
+            return self._served_catalog(ready)
+        except ProviderCatalogUnavailableError:
+            return None
 
     def _hosted_certifications(self) -> list[dict[str, str]]:
         """Return only a recently served snapshot bound to the controller's current generations."""

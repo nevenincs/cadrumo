@@ -5,15 +5,18 @@ are the ones the person selected for that role, stored in the profile's
 own model-role selections record. A role with no selection refuses ``no_selection``. Nothing
 stands in for a missing selection: not another lane, not another role's
 choice, not a catalogue default. A selected lane that is turned off, no longer
-reported or not reachable refuses ``lane_unavailable``. Any lane is eligible,
+reported or not reachable refuses ``lane_unavailable``, and so does a selected
+model the lane's current entries no longer list: its declared entries and,
+while the agent runs, its live ones. Any lane is eligible,
 API or CLI; whether a lane takes an attachment is what the ready agent's live
 catalog reports for background requests, read in the same lookup, and never
 inferred from its transport. Whether a lane reads off-host is likewise the
 catalogue entry's typed declaration, carried with the lane: a run on such a
 lane needs the consent the tax side bound to it, and a run on a lane that stays
 on this computer needs none. The model's licence, size, vision and context
-window travel with the lane as the catalogue states them, each ``None`` when it
-states nothing; no lookup substitutes a recommended model.
+window travel with the lane as the entry it was found in states them, live
+while the agent runs and otherwise declared, each ``None`` when it states
+nothing; no lookup substitutes a recommended model.
 
 The run goes to cadrumo-agent as a background request through
 :class:`BackgroundRunGateway`. No secret leaves this service with the answer.
@@ -38,10 +41,12 @@ from cadrumo_client.contracts.model_runs import (
     model_run_media_kind,
 )
 
-from ..domain.catalog import ProviderCatalog, ProviderCatalogEntry, ProviderConsumer
+from ..domain.catalog import CatalogModelFacts, ProviderCatalog, ProviderConsumer
 from ..domain.record import ModelRoleSelection
+from .lane_entries import current_lane_entries
 from .ports import (
     AbsentModelRoleSelections,
+    LiveCatalogModels,
     ModelRoleSelectionsRead,
     ModelRoleSelectionsStore,
     ProviderCatalogSource,
@@ -88,12 +93,14 @@ class ModelRunService:
         selections: ModelRoleSelectionsStore,
         resolver: ProviderCredentialResolver,
         catalog_source: ProviderCatalogSource,
+        live_models: LiveCatalogModels,
         gateway: BackgroundRunGateway,
     ) -> None:
-        """Bind the service to the profile's selections, resolver, the agent's catalog and the run gateway."""
+        """Bind the service to the profile's selections, resolver, the agent's catalogs and the run gateway."""
         self._selections = selections
         self._resolver = resolver
         self._catalog_source = catalog_source
+        self._live_models = live_models
         self._gateway = gateway
 
     def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
@@ -136,7 +143,12 @@ class ModelRunService:
         return read
 
     def _lane_answers(self) -> _LaneAnswers:
-        return _LaneAnswers(catalog_source=self._catalog_source, resolver=self._resolver, gateway=self._gateway)
+        return _LaneAnswers(
+            catalog_source=self._catalog_source,
+            live_models=self._live_models,
+            resolver=self._resolver,
+            gateway=self._gateway,
+        )
 
     @staticmethod
     def _resolve(
@@ -178,7 +190,7 @@ class ModelRunService:
 
 
 class _LaneAnswers:
-    """Each lane's availability and accepted media, decided at most once for one read of the selections.
+    """Each lane's availability, accepted media and current entries, decided at most once per read of the selections.
 
     Availability is decided by resolving the lane's credential, because a
     provider record is only readable whole. The resolution is dropped as soon
@@ -189,27 +201,34 @@ class _LaneAnswers:
         self,
         *,
         catalog_source: ProviderCatalogSource,
+        live_models: LiveCatalogModels,
         resolver: ProviderCredentialResolver,
         gateway: BackgroundRunGateway,
     ) -> None:
         self._catalog_source = catalog_source
+        self._live_models = live_models
         self._resolver = resolver
         self._gateway = gateway
         self._catalog: ProviderCatalog | ModelRunRefusal | None = None
-        self._lanes: dict[str, ModelRunLane | ModelRunRefusal] = {}
+        self._lanes: dict[str, tuple[ModelRunLane, tuple[CatalogModelFacts, ...]] | ModelRunRefusal] = {}
 
     def answer(self, selection: ModelRoleSelection) -> ModelRunLane | ModelRunRefusal:
-        """Return the lane carrying ``selection``'s model, or the refusal its lane meets."""
+        """Return the lane carrying ``selection``'s model, or the refusal its lane or model meets."""
         decided = self._lanes.get(selection.lane)
         if decided is None:
             decided = self._lanes[selection.lane] = self._decide(selection)
         if isinstance(decided, ModelRunRefusal):
             return decided
-        catalog = self._read_catalog()
-        entry = catalog.entry(selection.lane) if isinstance(catalog, ProviderCatalog) else None
-        return _model_lane(decided, selection.model, entry)
+        lane, entries = decided
+        facts = next((entry for entry in entries if entry.id == selection.model), None)
+        if facts is None:
+            # Not listed now: the agent would refuse it as an unknown model, which reads as an unavailable lane.
+            return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+        return _model_lane(lane, facts)
 
-    def _decide(self, selection: ModelRoleSelection) -> ModelRunLane | ModelRunRefusal:
+    def _decide(
+        self, selection: ModelRoleSelection
+    ) -> tuple[ModelRunLane, tuple[CatalogModelFacts, ...]] | ModelRunRefusal:
         catalog = self._read_catalog()
         if isinstance(catalog, ModelRunRefusal):
             return catalog
@@ -220,21 +239,18 @@ class _LaneAnswers:
         if isinstance(resolution, ProviderCredentialUnavailable):
             return ModelRunRefusal(code=_SIGNED_OUT.get(resolution.reason, ModelRunRefusalCode.LANE_UNAVAILABLE))
         del resolution
-        lane = _model_lane(
-            ModelRunLane(
-                provider_id=entry.provider,
-                transport=entry.transport.value,
-                model=selection.model,
-                reads_off_host=entry.reads_off_host,
-                licence=None,
-                size_bytes=None,
-                vision=None,
-                context_length=None,
-            ),
-            selection.model,
-            entry,
+        lane = ModelRunLane(
+            provider_id=entry.provider,
+            transport=entry.transport.value,
+            model=selection.model,
+            reads_off_host=entry.reads_off_host,
+            licence=None,
+            size_bytes=None,
+            vision=None,
+            context_length=None,
         )
-        return lane.model_copy(update={"accepted_media": self._gateway.accepted_media(lane)})
+        accepted = lane.model_copy(update={"accepted_media": self._gateway.accepted_media(lane)})
+        return accepted, current_lane_entries(entry, self._live_models)
 
     def _read_catalog(self) -> ProviderCatalog | ModelRunRefusal:
         if self._catalog is None:
@@ -245,24 +261,20 @@ class _LaneAnswers:
         return self._catalog
 
 
-def _model_lane(lane: ModelRunLane, model_id: str, entry: ProviderCatalogEntry | None) -> ModelRunLane:
-    """Return ``lane`` carrying ``model_id`` and the facts the lane's catalogue entry states for that model.
-
-    A model the entry does not list carries no fact: each is ``None``, never a value borrowed from another model.
-    """
-    model = None if entry is None else entry.model(model_id)
-    licence = None if model is None else model.licence
+def _model_lane(lane: ModelRunLane, model: CatalogModelFacts) -> ModelRunLane:
+    """Return ``lane`` carrying ``model`` and the facts its entry states, each ``None`` where it states none."""
+    licence = model.licence
     return ModelRunLane(
         provider_id=lane.provider_id,
         transport=lane.transport,
-        model=model_id,
+        model=model.id,
         reads_off_host=lane.reads_off_host,
         licence=None
         if licence is None
         else ModelRunLicence(spdx=licence.spdx, name=licence.name, digest=licence.digest),
-        size_bytes=None if model is None else model.size_bytes,
-        vision=None if model is None else model.vision,
-        context_length=None if model is None else model.context_length,
+        size_bytes=model.size_bytes,
+        vision=model.vision,
+        context_length=model.context_length,
         accepted_media=lane.accepted_media,
     )
 

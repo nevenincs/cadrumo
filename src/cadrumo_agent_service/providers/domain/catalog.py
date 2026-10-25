@@ -164,19 +164,18 @@ class ModelLicence(BaseModel):
     """The digest of the licence text the agent serves for this model."""
 
 
-class ProviderCatalogModel(BaseModel):
-    """One model a lane declares, with the facts the agent states for it.
+class CatalogModelFacts(BaseModel):
+    """One model a lane's catalogue lists and the facts the agent states for it.
 
-    A fact the agent does not state is ``None``; nothing is inferred in its place.
+    These are the fields a role selection is checked against and a lane lookup
+    carries, whichever of the agent's catalogues lists the model. A fact the
+    agent does not state is ``None``; nothing is inferred in its place.
     """
 
     model_config = _STRICT_FROZEN
 
     id: str = Field(min_length=1, max_length=MODEL_ID_MAX_LENGTH)
     """The model value a run names on its lane."""
-    display_name: str = Field(min_length=1)
-    effort: dict[str, JsonValue]
-    """The agent's effort control for the model, carried as declared."""
     vision: bool | None
     """Whether the model reads images; ``None`` when the agent does not state it."""
     size_bytes: PositiveInt | None
@@ -184,6 +183,14 @@ class ProviderCatalogModel(BaseModel):
     context_length: PositiveInt | None
     """The model's context window in tokens, when the agent states it."""
     licence: ModelLicence | None
+
+
+class ProviderCatalogModel(CatalogModelFacts):
+    """One model a lane declares in the agent's declared catalogue, with its presentation fields."""
+
+    display_name: str = Field(min_length=1)
+    effort: dict[str, JsonValue]
+    """The agent's effort control for the model, carried as declared."""
 
 
 class BackgroundInput(StrEnum):
@@ -371,6 +378,7 @@ __all__ = [
     "RECOMMENDED_VALUE_MAX_LENGTH",
     "BackgroundInput",
     "BackgroundOption",
+    "CatalogModelFacts",
     "CliProgram",
     "LaneBackground",
     "LicenceDigest",

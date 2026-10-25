@@ -13,6 +13,7 @@ from cadrumo.core.storage_environment import StorageMode
 from cadrumo_client.contracts.model_runs import (
     ModelRunBody,
     ModelRunLane,
+    ModelRunLicence,
     ModelRunMediaKind,
     ModelRunOutput,
     ModelRunRefusal,
@@ -51,7 +52,13 @@ from ..resolution import (
 )
 from ..service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
 from .memory_store import MemoryModelRoleSelectionsStore, MemoryProviderSettingsStore
-from .synthetic_catalog import KEYLESS_DEFAULT_URL, KEYLESS_LANE, StaticCatalogSource
+from .synthetic_catalog import (
+    KEYLESS_DEFAULT_URL,
+    KEYLESS_LANE,
+    KEYLESS_TEXT_MODEL,
+    StaticCatalogSource,
+    StaticLiveModels,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -228,7 +235,7 @@ def test_a_role_selected_on_a_keyless_lane_is_answered_without_any_stored_record
     selections = MemoryModelRoleSelectionsStore()
     record = ModelRoleSelectionsRecord(
         schema_version=1,
-        selections=(ModelRoleSelection(role=ModelRole.TEXT_EXTRACTION, lane=KEYLESS_LANE, model="synthetic-reader:1"),),
+        selections=(ModelRoleSelection(role=ModelRole.TEXT_EXTRACTION, lane=KEYLESS_LANE, model=KEYLESS_TEXT_MODEL),),
         generation=new_settings_generation(),
         updated_at=datetime(2026, 10, 25, 9, 0, tzinfo=UTC),
     )
@@ -240,17 +247,18 @@ def test_a_role_selected_on_a_keyless_lane_is_answered_without_any_stored_record
         selections=selections,
         resolver=ProviderCredentialResolver(store=store, catalog_source=source),
         catalog_source=source,
+        live_models=StaticLiveModels(),
         gateway=_UnreachableGateway(),
     )
 
     assert runs.lookup("text_extraction") == ModelRunLane(
         provider_id="local",
         transport="api",
-        model="synthetic-reader:1",
+        model=KEYLESS_TEXT_MODEL,
         reads_off_host=False,
-        licence=None,
-        size_bytes=None,
-        vision=None,
-        context_length=None,
+        licence=ModelRunLicence(spdx="MIT", name="Synthetic licence", digest="sha256:" + "0" * 64),
+        size_bytes=1_000_000,
+        vision=False,
+        context_length=4096,
     )
     assert store.records == {}

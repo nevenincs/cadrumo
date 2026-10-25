@@ -1,16 +1,19 @@
-"""Background requests against a real cadrumo-agent gateway, with no provider reachable.
+"""Background requests and the live catalogue against a real cadrumo-agent gateway, with no provider reachable.
 
 The gateway runs from the cadrumo-agent checkout ``CADRUMO_DEV_AGENT_CHECKOUT``
 names, non-hosted, in a disposable home and a disposable user profile, inside
 the service's own kill-on-close job. No provider credential reaches it and the
 profile holds no provider sign-in, so a run it admits fails at the provider's
 authentication instead of making a provider call. A completed reply is proven
-through the hosted service on a signed-in profile, not here.
+through the hosted service on a signed-in profile, not here. The local server
+the agent reads is a stub that reports one synthetic model installed, so the
+agent's live catalogue lists a model its declared catalogue does not.
 """
 
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import os
 import secrets
@@ -27,6 +30,8 @@ from urllib.parse import urlencode
 import pytest
 from pydantic import TypeAdapter
 
+from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo_client.contracts.model_runs import (
     ModelRunAttachment,
@@ -39,8 +44,18 @@ from cadrumo_client.contracts.model_runs import (
 
 from ...host.controller import AgentProcess
 from ...host.launch_environment import system_environment
+from ...providers.application.contracts import (
+    ModelRoleSelectionsStatus,
+    ProviderSettingsRefusal,
+    ProviderSettingsRefusalCode,
+)
+from ...providers.application.model_role_selections import ModelRoleSelectionsService
+from ...providers.application.tests.memory_store import MemoryModelRoleSelectionsStore
 from ..agent_background_runs import HOST_ADMISSION_HEADER, BackgroundRunEndpoint, HostedBackgroundRuns
 from ..agent_process import WindowsAgentProcessLauncher
+from ..agent_programs import PACKAGE_AGENT_VARIABLE
+from ..agent_provider_catalog import AgentProviderCatalogSource
+from ..served_catalog_models import ServedCatalogModels
 
 pytestmark = [
     pytest.mark.integration,
@@ -59,6 +74,12 @@ from cadrumo_agent.control.settings_base import env_name
 print(json.dumps({field: env_name(Settings, field) for field in json.loads(sys.argv[1])}))
 """
 _ENVIRONMENT_NAMES: Final = TypeAdapter(dict[str, str])
+_JSON_OBJECT: Final = TypeAdapter(dict[str, object])
+_INSTALLED_MODEL: Final = "synthetic-installed:1"
+"""The one model the stub local server reports installed; the agent's declared catalogue never lists it."""
+_INSTALLED_SIZE: Final = 4_096
+_INSTALLED_CONTEXT: Final = 2_048
+_INSTALLED_LICENCE: Final = "Synthetic licence text for a synthetic model."
 _TOOL_LESS_LANE: Final = ModelRunLane(
     provider_id="claude",
     transport="cli",
@@ -124,16 +145,24 @@ class _Gateway:
             )
         pytest.fail(f"the agent catalog provides no selectable refusal fixture for background={background}, pdf={pdf}")
 
+    def served_catalog(self) -> dict[str, object]:
+        """The live catalogue document, as the service reads it from the gateway."""
+        status, catalog = self.exchange(
+            "GET", "/v1/provider-catalog?" + urlencode({"workspace_root": str(self.endpoint.workspace_root)})
+        )
+        assert status == 200, (status, catalog)
+        return _JSON_OBJECT.validate_python(catalog)
+
     def local_lane(self) -> ModelRunLane:
-        """The keyless lane on this computer's server, naming a model its catalog declares."""
+        """The keyless lane on this computer's server, naming a declared model the server has not installed."""
         status, catalog = self.exchange(
             "GET", "/v1/provider-catalog?" + urlencode({"workspace_root": str(self.endpoint.workspace_root)})
         )
         assert status == 200 and isinstance(catalog, dict), (status, catalog)
         for record in catalog["providers"]:
             if (record["provider_id"], record["transport"]) == ("ollama", "api"):
-                models = record["catalog"]["models"]
-                assert models, "the local lane must declare a model"
+                models = [model for model in record["catalog"]["models"] if model["installed"] is False]
+                assert models, "the local lane must declare a model the server has not installed"
                 return ModelRunLane(
                     provider_id="ollama",
                     transport="api",
@@ -244,12 +273,29 @@ def _agent_setting_environment(checkout: Path, values: Mapping[str, str]) -> dic
     return {names[field]: value for field, value in values.items()}
 
 
-class _EmptyOllamaHandler(BaseHTTPRequestHandler):
-    """A loopback Ollama server with nothing installed: the agent's probe reads it, no model runs on it."""
+class _StubOllamaHandler(BaseHTTPRequestHandler):
+    """A loopback Ollama server with one synthetic model installed: the agent's probe reads it, no model runs on it.
+
+    It answers the three reads the agent's probe makes: the version, the model
+    list and one model's description, with the fields the probe reads.
+    """
 
     def do_GET(self) -> None:
-        answers = {"/api/version": {"version": "0.0.0-synthetic"}, "/api/tags": {"models": []}}
-        answer = answers.get(self.path)
+        listed = {"name": _INSTALLED_MODEL, "size": _INSTALLED_SIZE, "digest": "0" * 64}
+        answers = {"/api/version": {"version": "0.0.0-synthetic"}, "/api/tags": {"models": [listed]}}
+        self._answer(answers.get(self.path))
+
+    def do_POST(self) -> None:
+        length = int(self.headers.get("Content-Length") or 0)
+        asked = json.loads(self.rfile.read(length) or b"{}")
+        shown = {
+            "capabilities": ["completion"],
+            "model_info": {"synthetic.context_length": _INSTALLED_CONTEXT},
+            "license": _INSTALLED_LICENCE,
+        }
+        self._answer(shown if self.path == "/api/show" and asked.get("model") == _INSTALLED_MODEL else None)
+
+    def _answer(self, answer: object) -> None:
         payload = json.dumps(answer if answer is not None else {"error": "not found"}).encode()
         self.send_response(200 if answer is not None else 404)
         self.send_header("Content-Type", "application/json")
@@ -259,9 +305,9 @@ class _EmptyOllamaHandler(BaseHTTPRequestHandler):
 
 
 @pytest.fixture(scope="module")
-def empty_ollama() -> Iterator[int]:
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _EmptyOllamaHandler)
-    serving = Thread(target=server.serve_forever, name="empty-ollama", daemon=False)
+def stub_ollama() -> Iterator[int]:
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _StubOllamaHandler)
+    serving = Thread(target=server.serve_forever, name="stub-ollama", daemon=False)
     serving.start()
     try:
         yield int(server.server_address[1])
@@ -272,7 +318,7 @@ def empty_ollama() -> Iterator[int]:
 
 
 @pytest.fixture(scope="module")
-def gateway(tmp_path_factory: pytest.TempPathFactory, empty_ollama: int) -> Iterator[_Gateway]:
+def gateway(tmp_path_factory: pytest.TempPathFactory, stub_ollama: int) -> Iterator[_Gateway]:
     checkout = _agent_checkout()
     root = tmp_path_factory.mktemp("agent-gateway")
     profile = root / "profile"
@@ -303,7 +349,7 @@ def gateway(tmp_path_factory: pytest.TempPathFactory, empty_ollama: int) -> Iter
                 "gateway_service_token": bearer,
                 "internal_token": secrets.token_urlsafe(32),
                 "host_token": host_token,
-                "ollama_base_url": f"http://127.0.0.1:{empty_ollama}",
+                "ollama_base_url": f"http://127.0.0.1:{stub_ollama}",
             },
         )
     )
@@ -454,3 +500,52 @@ def test_a_model_the_local_server_has_not_installed_is_refused_as_not_installed(
     outcome = gateway.runs().run(lane=lane, body=_body(), deadline_seconds=30)
 
     assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED), outcome
+
+
+def test_a_model_installed_on_the_local_server_is_selectable_through_the_live_catalogue(gateway: _Gateway) -> None:
+    """The running agent's live entries admit a model only its server holds; without them it is not in the catalogue."""
+    live = ServedCatalogModels(gateway.served_catalog)
+    interpreter = _agent_checkout() / ".venv" / "Scripts" / "python.exe"
+    declared = AgentProviderCatalogSource(received={**os.environ, PACKAGE_AGENT_VARIABLE: str(interpreter)})
+    local = declared.catalog().entry("ollama_api")
+    assert local is not None and local.model(_INSTALLED_MODEL) is None
+
+    entries = live.lane_models("ollama", "api")
+
+    assert entries is not None
+    installed = next(entry for entry in entries if entry.id == _INSTALLED_MODEL)
+    assert (installed.vision, installed.size_bytes, installed.context_length) == (
+        False,
+        _INSTALLED_SIZE,
+        _INSTALLED_CONTEXT,
+    )
+    assert installed.licence is not None
+    assert installed.licence.digest == "sha256:" + hashlib.sha256(_INSTALLED_LICENCE.encode()).hexdigest()
+    assert installed.licence.spdx is None
+
+    running = ModelRoleSelectionsService(
+        store=MemoryModelRoleSelectionsStore(), catalog_source=declared, live_models=live
+    )
+    selected = running.select(
+        ModelRole.TEXT_EXTRACTION.value,
+        lane="ollama_api",
+        model=_INSTALLED_MODEL,
+        expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+    )
+    assert isinstance(selected, ModelRoleSelectionsStatus), selected
+    assert running.select(
+        ModelRole.VISION_TRANSCRIPTION.value,
+        lane="ollama_api",
+        model=_INSTALLED_MODEL,
+        expected_revision=selected.revision,
+    ) == ProviderSettingsRefusal(code=ProviderSettingsRefusalCode.VISION_REQUIRED)
+
+    stopped = ModelRoleSelectionsService(
+        store=MemoryModelRoleSelectionsStore(), catalog_source=declared, live_models=ServedCatalogModels(lambda: None)
+    )
+    assert stopped.select(
+        ModelRole.TEXT_EXTRACTION.value,
+        lane="ollama_api",
+        model=_INSTALLED_MODEL,
+        expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+    ) == ProviderSettingsRefusal(code=ProviderSettingsRefusalCode.MODEL_NOT_IN_CATALOGUE)
