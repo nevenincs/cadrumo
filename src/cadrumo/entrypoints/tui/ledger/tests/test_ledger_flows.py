@@ -577,8 +577,12 @@ async def test_browse_mounts_a_tree_at_the_typed_folder_and_a_choice_fills_the_p
         assert not screen.query("#ledger-import-tree")
         screen.query_one("#ledger-import-path", Input).value = str(tmp_path)
         screen.query_one("#ledger-import-browse", Button).press()
-        # The directory tree keeps its loader worker for as long as it is shown.
-        await settle(pilot, workers=False)
+        # The tree is mounted by a worker that first resolves the folder on a
+        # thread, and then keeps its loader worker for as long as it is shown,
+        # so the wait is for the tree itself rather than for workers to finish.
+        await settle_until(
+            pilot, lambda: bool(screen.query("#ledger-import-tree")), "the browse tree to mount", workers=False
+        )
         tree = screen.query_one("#ledger-import-tree", DirectoryTree)
         assert Path(tree.path) == tmp_path
         screen.post_message(DirectoryTree.FileSelected(tree.root, statement))

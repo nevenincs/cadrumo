@@ -117,10 +117,11 @@ def build_operation_catalogue(registry: OperationRegistry) -> OperationCatalogue
         if typed_operator_input:
             # Imported on use: only the two operations that take the typed operator input need it.
             from ....application.modelo.edit_operator_input import ModeloEditOperatorInputV2
-            from ....application.operations.registry_schema_validation import strict_model_json_schema
+            from ....application.operations.registry_schema_validation import strict_model_input_json_schema
 
             input_type: type[BaseModel] = ModeloEditOperatorInputV2
-            schema: Mapping[str, object] = strict_model_json_schema(ModeloEditOperatorInputV2)
+            # A transient input is only validated, so its contract is the validation shape alone.
+            schema: Mapping[str, object] = strict_model_input_json_schema(ModeloEditOperatorInputV2)
         else:
             input_type = definition.request_type
             schema = registry.describe_public_definition(contract.definition_id).request_json_schema
