@@ -4,10 +4,10 @@ No mock, patch or stub reaches the code under test. Runtime interaction runs
 against a real :class:`~http.server.ThreadingHTTPServer` speaking the runtime's
 ``/api/tags`` wire shape over real ``httpx``.
 
-The optional-extra half of the doctor row is exercised through the real
+The doctor row is exercised through the real
 :func:`~cadrumo.core.optional_extra_available` spec probe against a real
-``sys.path`` entry, so both directions of the partial-install detection run the
-production predicate.
+``sys.path`` entry, so the partial-install detection runs the production
+predicate.
 
 Every refusal case carries a positive control asserting the permitting case
 passes through the same call, so a refusal cannot pass for the wrong reason.
@@ -111,7 +111,7 @@ def test_an_unreachable_runtime_reads_as_unmeasured_not_as_empty() -> None:
 
 
 # ---------------------------------------------------------------------------
-# the partial-provisioning doctor row, in BOTH directions
+# the partial-provisioning doctor row: the pip extra's own direction
 # ---------------------------------------------------------------------------
 
 
@@ -166,26 +166,26 @@ def _installed_extra() -> bool:
     return optional_extra_available(LLM_EXTRA)
 
 
-def test_direction_one_extra_installed_with_no_selected_model_reds_and_names_the_pull(
+def test_the_extra_present_with_no_selected_model_leaves_the_reading_to_the_engines_row(
     store: tuple[str, Queue[dict[str, object]]],
 ) -> None:
-    """The live code path with nothing to load. Remedy is a pull, never an install."""
+    """Whether a model is installed is the component engine's reading, not this row's."""
     if not _installed_extra():
-        pytest.fail("this environment has no llm extra installed; the direction-one fixture cannot be built")
+        pytest.fail("this environment has no llm extra installed; the extra-present fixture cannot be built")
     chat_url, _events = store
     with override_settings(**_selected(chat_url)):
         status = probe_local_model_provisioning(installed=())
     assert status.service == LOCAL_MODEL_PROVISIONING_SERVICE
-    assert status.available is False
-    assert status.precondition_verdict is not None
-    assert status.precondition_verdict.failed_condition_id == "provisioning.local_model.extra_requires_model"
+    assert status.available is True
+    assert status.precondition_verdict is None
+    assert status.facts == {"extra": LLM_EXTRA.extra, "extra_importable": True}
 
 
-def test_direction_two_models_installed_without_the_extra_reds_and_names_the_install(
+def test_models_installed_without_the_extra_reds_and_names_the_install(
     store: tuple[str, Queue[dict[str, object]]],
     extra_absent: None,
 ) -> None:
-    """Disk occupied by models nothing can use. Remedy is the install, never a pull."""
+    """Disk occupied by models nothing can load. Remedy is the install, never a pull."""
     chat_url, _events = store
     with override_settings(**_selected(chat_url)):
         status = probe_local_model_provisioning(
@@ -198,16 +198,11 @@ def test_direction_two_models_installed_without_the_extra_reds_and_names_the_ins
     assert status.facts["present_selected_model_count"] == 1
 
 
-def test_neither_direction_is_satisfiable_by_the_others_evidence(
+def test_no_model_and_no_extra_is_the_coherent_unprovisioned_state(
     store: tuple[str, Queue[dict[str, object]]],
     extra_absent: None,
 ) -> None:
-    """The disjointness claim, run rather than asserted in prose.
-
-    Direction one's model evidence (an empty inventory) paired with direction
-    two's extra evidence (the extra absent) is the coherent unprovisioned state,
-    not a partial one. If a single check stood in for both, this would red.
-    """
+    """Neither half present is coherent, not partial: nothing occupies disk and nothing would load."""
     chat_url, _events = store
     with override_settings(**_selected(chat_url)):
         status = probe_local_model_provisioning(installed=())
@@ -216,7 +211,7 @@ def test_neither_direction_is_satisfiable_by_the_others_evidence(
 
 
 def test_a_coherent_installed_posture_is_green(store: tuple[str, Queue[dict[str, object]]]) -> None:
-    """Positive control for both directions: with both halves present, nothing reds."""
+    """Positive control: with the extra present, no model evidence reds this row."""
     if not _installed_extra():
         pytest.fail("this environment has no llm extra installed; the coherent-posture control cannot be built")
     chat_url, _events = store
@@ -228,34 +223,34 @@ def test_a_coherent_installed_posture_is_green(store: tuple[str, Queue[dict[str,
     assert status.precondition_verdict is None
 
 
-def test_a_model_cadrumo_did_not_select_does_not_satisfy_direction_one(
+def test_a_model_cadrumo_did_not_select_does_not_red_the_missing_extra(
     store: tuple[str, Queue[dict[str, object]]],
+    extra_absent: None,
 ) -> None:
-    """A peer's model on disk is not Cadrumo's model being present."""
-    if not _installed_extra():
-        pytest.fail("this environment has no llm extra installed; this fixture cannot be built")
+    """A peer's model on disk is not Cadrumo's model occupying it, so the extra is not owed."""
     chat_url, _events = store
     with override_settings(**_selected(chat_url)):
         status = probe_local_model_provisioning(
             installed=(InstalledModel(name="llama3:70b", size_bytes=40 * GIB),),
         )
-    assert status.available is False
-    assert status.precondition_verdict is not None
-    assert status.precondition_verdict.failed_condition_id == "provisioning.local_model.extra_requires_model"
+    assert status.available is True
+    assert status.precondition_verdict is None
+    assert status.facts["present_selected_model_count"] == 0
 
 
-def test_an_unreadable_inventory_with_the_extra_present_reds_rather_than_claiming_coherence(
+def test_the_extra_present_asks_for_no_inventory_at_all(
     store: tuple[str, Queue[dict[str, object]]],
 ) -> None:
-    """An opted-in operator who cannot be told what is installed gets a row, not a false all-clear."""
+    """With the extra present nothing here depends on the inventory, so none is read."""
     if not _installed_extra():
         pytest.fail("this environment has no llm extra installed; this fixture cannot be built")
-    chat_url, _events = store
+    chat_url, events = store
     with override_settings(**_selected(chat_url)):
         status = probe_local_model_provisioning(installed=None, installed_measured=False)
-    assert status.available is False
-    assert status.facts["installed_model_inventory_readable"] is False
-    assert status.precondition_verdict is not None
+    assert status.available is True
+    assert status.precondition_verdict is None
+    assert "installed_model_inventory_readable" not in status.facts
+    assert events.empty()
 
 
 def test_an_unreadable_inventory_without_the_extra_says_what_it_could_not_rule_out(

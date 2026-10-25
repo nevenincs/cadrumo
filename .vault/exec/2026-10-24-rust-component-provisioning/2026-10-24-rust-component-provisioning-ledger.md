@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:7772f458587a3f23f7ec0153281fe275e600da69a90230263af877fcfeca92a1'
+body_hash: 'sha256:80d880503273891b835a188f5d0a11acb96eb545e97fa1dbc87b1c7af005b394'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -860,6 +860,11 @@ related:
 - `S08` `verify:` `cargo test --offline --features test-support --test provisioning_faults` -> `pass`
 - `S08` `verify:` `cargo clippy --offline --all-targets -- -D warnings` -> `pass`
 - `S08` `by:` `implementation-engineer`
+- `S14` `M` `src/cadrumo/application/tests/test_provisioning_model_inventory.py`
+- `S14` `verify:` `pytest src/cadrumo/application/tests -m '' -k 'provisioning or workstation or check'` -> `pass`
+- `S14` `verify:` `pytest src/cadrumo/entrypoints/cli/config/tests -m ''` -> `pass`
+- `S14` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S14` `by:` `implementation-engineer`
 
 ## Notes
 

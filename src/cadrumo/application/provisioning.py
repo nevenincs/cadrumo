@@ -1053,37 +1053,28 @@ def probe_local_model_provisioning(
     installed_measured: bool = True,
     settings: Settings | None = None,
 ) -> DependencyStatus:
-    """Detect a PARTIALLY-installed local-inference posture, in both directions.
+    """Detect model files left behind without the ``llm`` package extra.
 
-    Local inference has two independent halves: the ``llm`` package extra, which
-    an operator installs with pip, and the models themselves, which an operator
-    pulls into the runtime. Either half can be present without the other, and the
-    two broken states are not variations of one problem -- they have different
-    causes and different remedies, so a row detecting only one strands every
-    operator who lands in the other with no signal at all.
+    Local inference needs the ``llm`` package extra, which an operator installs
+    with pip, and the models, which the native component engine installs. Only
+    the extra is this row's subject. Whether a model is installed is the
+    engine's reading, reported in the component rows of the same report, which
+    name the setup action a missing model needs; a second judgement here would
+    tell an operator the models are missing while the row beside it offers to
+    set them up.
 
-    * **Extra present, no selected model installed.** The code path is live and
-      the model it would load is absent. The remedy is a pull.
-    * **A selected model installed, extra absent.** Multi-gigabyte models occupy
-      disk that nothing can use, typically after a core reinstall. The remedy is
-      the extra's install command -- or a removal, to reclaim the disk.
+    The one incoherence the extra owns is multi-gigabyte model files occupying
+    disk that nothing can load, typically after a core reinstall. The remedy is
+    the extra's install command -- or a removal, to reclaim the disk.
 
-    The two conditions are disjoint by construction: each requires the extra
-    state the other forbids, so neither can be satisfied by the other's evidence
-    and a check for one can never stand in for the other.
-
-    Coherent postures -- both halves present, or neither -- report available. So
-    does the case where the inventory cannot be read while the extra is ALSO
-    absent: nothing indicates an opted-in local-inference posture, and the
-    detail says plainly that the inventory was not readable so the
-    models-without-extra direction could not be ruled out. When the extra IS
-    present, an unreadable inventory is itself reported, because an operator who
-    opted into local inference and cannot be told what is installed has a real
-    problem rather than an absence.
+    Every other posture reports available, including an unreadable inventory:
+    with the extra present the inventory decides nothing here, and with the
+    extra absent an inventory that cannot be read rules the direction neither
+    in nor out, so the detail says so plainly.
 
     Args:
         installed: The on-disk inventory; read via :func:`read_installed_models`
-            when omitted.
+            when omitted and the extra is absent.
         installed_measured: False when the inventory could not be read.
         settings: Settings carrying the runtime endpoint and role models.
 
@@ -1092,21 +1083,42 @@ def probe_local_model_provisioning(
     """
     resolved = settings if settings is not None else load_settings()
     extra_present = optional_extra_available(LLM_EXTRA)
+    if extra_present:
+        return DependencyStatus(
+            service=LOCAL_MODEL_PROVISIONING_SERVICE,
+            available=True,
+            facts={"extra": LLM_EXTRA.extra, "extra_importable": True},
+        )
     inventory = _resolve_local_model_inventory(
         installed,
         installed_measured=installed_measured,
         settings=resolved,
     )
-
     if inventory is None:
-        return _unreadable_local_model_inventory_status(extra_present)
-
+        return DependencyStatus(
+            service=LOCAL_MODEL_PROVISIONING_SERVICE,
+            available=True,
+            facts={
+                "extra": LLM_EXTRA.extra,
+                "extra_importable": False,
+                "installed_model_inventory_readable": False,
+            },
+        )
     selected = cadrumo_selected_models(resolved)
     present = tuple(sorted(row.name for row in inventory if matches_selected_model(row.name, selected)))
-    return _local_model_provisioning_status(
-        extra_present,
-        selected_count=len(selected),
-        present=present,
+    if not present:
+        return DependencyStatus(
+            service=LOCAL_MODEL_PROVISIONING_SERVICE,
+            available=True,
+            facts={"extra": LLM_EXTRA.extra, "extra_importable": False, "present_selected_model_count": 0},
+        )
+    return _local_model_provisioning_refusal(
+        ProvisioningPreconditionCondition.LOCAL_MODEL_MODEL_REQUIRES_EXTRA,
+        {
+            "extra": LLM_EXTRA.extra,
+            "extra_importable": False,
+            "present_selected_model_count": len(present),
+        },
     )
 
 
@@ -1119,68 +1131,6 @@ def _resolve_local_model_inventory(
     if installed is None and installed_measured:
         return read_installed_models(settings)
     return installed if installed_measured else None
-
-
-def _unreadable_local_model_inventory_status(extra_present: bool) -> DependencyStatus:
-    facts: dict[str, ProvisioningFactValue] = {
-        "extra": LLM_EXTRA.extra,
-        "extra_importable": extra_present,
-        "installed_model_inventory_readable": False,
-    }
-    if extra_present:
-        return _local_model_provisioning_refusal(
-            ProvisioningPreconditionCondition.LOCAL_MODEL_INVENTORY_READABLE,
-            facts,
-        )
-    return DependencyStatus(
-        service=LOCAL_MODEL_PROVISIONING_SERVICE,
-        available=True,
-        facts=facts,
-    )
-
-
-def _local_model_provisioning_status(
-    extra_present: bool,
-    *,
-    selected_count: int,
-    present: tuple[str, ...],
-) -> DependencyStatus:
-    if extra_present and not present:
-        facts = {
-            "extra": LLM_EXTRA.extra,
-            "extra_importable": True,
-            "selected_model_count": selected_count,
-            "present_selected_model_count": 0,
-        }
-        return _local_model_provisioning_refusal(
-            ProvisioningPreconditionCondition.LOCAL_MODEL_EXTRA_REQUIRES_MODEL,
-            facts,
-        )
-    if present and not extra_present:
-        facts = {
-            "extra": LLM_EXTRA.extra,
-            "extra_importable": False,
-            "present_selected_model_count": len(present),
-        }
-        return _local_model_provisioning_refusal(
-            ProvisioningPreconditionCondition.LOCAL_MODEL_MODEL_REQUIRES_EXTRA,
-            facts,
-        )
-    if extra_present:
-        return DependencyStatus(
-            service=LOCAL_MODEL_PROVISIONING_SERVICE,
-            available=True,
-            facts={
-                "extra": LLM_EXTRA.extra,
-                "extra_importable": True,
-                "present_selected_model_count": len(present),
-            },
-        )
-    return DependencyStatus(
-        service=LOCAL_MODEL_PROVISIONING_SERVICE,
-        available=True,
-        facts={"extra": LLM_EXTRA.extra, "extra_importable": False, "present_selected_model_count": 0},
-    )
 
 
 def _local_model_provisioning_refusal(

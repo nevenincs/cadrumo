@@ -85,7 +85,6 @@ class ProvisioningPreconditionCondition(StrEnum):
     MODEL_READY = "provisioning.model.ready"
     MODEL_INSTALLED = "provisioning.model.installed"
     LOCAL_MODEL_INVENTORY_READABLE = "provisioning.local_model.inventory_readable"
-    LOCAL_MODEL_EXTRA_REQUIRES_MODEL = "provisioning.local_model.extra_requires_model"
     LOCAL_MODEL_MODEL_REQUIRES_EXTRA = "provisioning.local_model.model_requires_extra"
 
 
