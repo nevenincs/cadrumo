@@ -40,6 +40,11 @@ pub enum BlockedReason {
 }
 
 /// How a usable item differs from what this version requires or was tested with.
+///
+/// Only the browser's revision and the local AI program's version can differ. A model
+/// is the one the person selected and the program verified, with no pinned version to
+/// differ from, so no check observes `DifferentModelVersion`; the code stays because the
+/// surfaces' wire contracts still name it.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum StaleReason {
@@ -430,7 +435,7 @@ mod tests {
     #[test]
     fn an_interruption_offers_resume_whatever_else_the_check_observed() {
         let differs = Observation::Differs {
-            stale: StaleReason::DifferentModelVersion,
+            stale: StaleReason::OlderRevision,
             note: Some(Note::DownloadedNotLoaded),
         };
         for observation in [
@@ -479,7 +484,7 @@ mod tests {
         );
         assert_eq!(
             row(differs, Activity::Idle, None).state,
-            ItemState::Stale(StaleReason::DifferentModelVersion),
+            ItemState::Stale(StaleReason::OlderRevision),
             "with no recorded failure the difference is what the row reads"
         );
     }
@@ -523,7 +528,7 @@ mod tests {
             (ItemState::Ready, None),
             (ItemState::Unknown, Some(RecoveryAction::CheckAgain)),
             (
-                ItemState::Stale(StaleReason::DifferentModelVersion),
+                ItemState::Stale(StaleReason::OlderRevision),
                 Some(RecoveryAction::Update),
             ),
             (
@@ -550,7 +555,7 @@ mod tests {
     fn rows_serialize_exactly_the_reason_their_state_needs() {
         let mut stale = row(
             Observation::Differs {
-                stale: StaleReason::DifferentModelVersion,
+                stale: StaleReason::OlderRevision,
                 note: Some(Note::DownloadedNotLoaded),
             },
             Activity::Idle,
@@ -563,7 +568,7 @@ mod tests {
                 "item_id": "browser",
                 "mode": "quick",
                 "state": "stale",
-                "stale_reason": "different_model_version",
+                "stale_reason": "older_revision",
                 "note": "downloaded_not_loaded",
                 "version": "0.40.10",
                 "recovery": "update",
@@ -613,7 +618,7 @@ mod tests {
     fn the_local_ai_reads_as_the_worst_of_its_parts() {
         let present = Observation::Present { note: None };
         let differs = Observation::Differs {
-            stale: StaleReason::DifferentModelVersion,
+            stale: StaleReason::OlderRevision,
             note: None,
         };
         let mut program = part(present);
@@ -756,7 +761,7 @@ mod tests {
         let done = rows(
             Observation::Present { note: None },
             Observation::Differs {
-                stale: StaleReason::DifferentModelVersion,
+                stale: StaleReason::OlderRevision,
                 note: None,
             },
         );

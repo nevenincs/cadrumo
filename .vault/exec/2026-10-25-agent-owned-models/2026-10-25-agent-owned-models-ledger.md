@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:fdc6a1c8107f113847558c4a3f5e8833115355bade9d3cce0b952feace1295ad'
+body_hash: 'sha256:1c36d6bdb1b5cde55c393dc6be781bfd89918afc889755698200e34cdca281b2'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -179,6 +179,17 @@ related:
 - `S20` `verify:` `cargo fmt --check --manifest-path native/application/Cargo.toml` -> `pass`
 - `S20` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/components/tests src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py src/cadrumo/entrypoints/cli/config/tests/test_check_setup_rows.py dev/runtime_lifecycle/tests/test_components_surface_conformance.py` -> `pass`
 - `S20` `by:` `implementation-engineer-high`
+- `S21` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S21` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S21` `M` `native/application/src/provisioning/state.rs`
+- `S21` `M` `native/application/src/provisioning/local_ai/fake_ollama.rs`
+- `S21` `M` `native/application/src/provisioning/protocol/tests.rs`
+- `S21` `verify:` `cargo test --locked --manifest-path native/application/Cargo.toml --lib provisioning:: -- --test-threads=2` -> `pass`
+- `S21` `verify:` `cargo test --locked --manifest-path native/application/Cargo.toml --features test-support --test provisioning_faults -- --test-threads=2` -> `pass`
+- `S21` `verify:` `cargo clippy --locked --all-targets --manifest-path native/application/Cargo.toml --all-features -- -D warnings` -> `pass`
+- `S21` `verify:` `cargo fmt --check --manifest-path native/application/Cargo.toml` -> `pass`
+- `S21` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
+- `S21` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -193,3 +204,4 @@ related:
 - `S19` The engine keeps the PartLicence type, the licence plan field (now always null), the LicenceCommercialUseBarred advisory and the DifferentModelVersion stale reason because native/desktop/src-tauri still maps them; P04.S22 removes the desktop consumers. The staged `local_ai_models.toml` stays for Python until P03.S16; the engine no longer reads it. The manager test edit was checked with rustfmt only: the manager crate needs CMake build inputs.
 - `S08` run options and c60a65c refusals consumed; per-model typed fields wait for cadrumo-agent S04, Step stays open
 - `S20` The selection arrives as --model `<role>` `<name>` `<size_bytes>` on every command but cancel. `PLAN_CONTRACT_VERSION` stays 2: the plan fields are unchanged, and a model part now carries the bare name as `target_version` and a null licence. The Python client (protocol.py `_a_model_names_its_licence)` refuses a model part without a licence, so it must change in P04.S22 before it passes --model. The real-role Python cases need a built image and were not run.
+- `S21` The engine.rs pull loop over the selection and the hardware.rs floor wording landed with P04.S19, which had to replace the pinned models to compile; this Step adds the read-back through the server list after a pull, retires DifferentModelVersion from every check, and proves the floor and the program-alone plan through the role. The DifferentModelVersion code stays in StaleReason because the desktop wire still names it.

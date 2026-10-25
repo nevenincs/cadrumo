@@ -11,9 +11,11 @@
 //! The program keeps a model as a manifest under
 //! `manifests/<host>/<namespace>/<model>/<tag>` in the models folder and its layers as
 //! `blobs/sha256-<hex>`. So the quick check reads files only: a manifest whose every layer
-//! is stored at its size is present, and a missing manifest or layer is absent. The full
-//! check looks the model up in the server's own list of installed models and generates
-//! one token with it.
+//! is stored at its size is present, and a missing manifest or layer is absent. There is
+//! no stale model: a manifest other than the one pulled before is the model the program
+//! verified under that name. The full check, and the check after a pull, look the model
+//! up in the server's own list of installed models; the full check then generates one
+//! token with it.
 //!
 //! A pull streams the program's progress lines into byte progress for the whole model.
 //! The program resumes a model's partial layers by itself, so a pull that was cut off is
@@ -319,7 +321,7 @@ impl Models {
     }
 
     /// Pulls `model` through `server` unless it is already present, then reads it back as
-    /// the quick check does.
+    /// the quick check does and in the server's list of installed models.
     pub fn pull(
         &self,
         server: &Server,
@@ -337,12 +339,15 @@ impl Models {
             pull.cancellation.check()?;
             match pull_once(server, model, pull)? {
                 Attempt::Done => {
-                    // The program said it has the model; one it did not store whole is
-                    // not the model the plan named.
-                    return match self.installed(&model.name) {
-                        observation @ Observation::Present { .. } => Ok(observation),
-                        _ => Err(LocalAiError::Failed(FailureCategory::DamagedDownload)),
-                    };
+                    // The program said it has the model; one it did not store whole, or
+                    // does not list, is not the model the plan named.
+                    if self.installed(&model.name) != (Observation::Present { note: None }) {
+                        return Err(LocalAiError::Failed(FailureCategory::DamagedDownload));
+                    }
+                    if !listed(server, &model.name)? {
+                        return Err(LocalAiError::Failed(FailureCategory::DamagedDownload));
+                    }
+                    return Ok(Observation::Present { note: None });
                 }
                 Attempt::Failed(category) if !retried(category) => {
                     return Err(LocalAiError::Failed(category));

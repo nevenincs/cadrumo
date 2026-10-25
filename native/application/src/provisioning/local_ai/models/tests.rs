@@ -436,6 +436,16 @@ fn a_cut_off_pull_is_pulled_again_and_reports_byte_progress_for_the_whole_model(
     assert_eq!(pulled.result.unwrap(), PRESENT);
     let request = json!({ "model": TEXT, "stream": true });
     assert_eq!(pulled.pulls, [request.clone(), request]);
+    assert_eq!(
+        fake.state
+            .lock()
+            .unwrap()
+            .requests
+            .last()
+            .map(String::as_str),
+        Some("GET /api/tags HTTP/1.1"),
+        "the pulled model is read back from the server's own list"
+    );
     assert_eq!(pulled.waits.len(), 1);
     assert!((Duration::from_secs(2)..=Duration::from_secs(3)).contains(&pulled.waits[0]));
     let total = text.size();

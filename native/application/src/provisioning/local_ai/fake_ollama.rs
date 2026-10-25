@@ -48,7 +48,8 @@ pub(crate) struct FakeState {
     pub bodies: Vec<Value>,
     /// The lines each pull answers with, one list per pull in turn; the answer then ends.
     pub pulls: VecDeque<Vec<Value>>,
-    /// The files a pull of a model writes once it answers `success`.
+    /// The files a pull of a model writes once it answers `success`; the pull then lists
+    /// the model, as the program does.
     pub installs: BTreeMap<String, Vec<(PathBuf, Vec<u8>)>>,
     /// The models `/api/tags` reports, by name, with their digests.
     pub tags: BTreeMap<String, String>,
@@ -168,11 +169,12 @@ fn answer(state: &Shared, mut stream: TcpStream) {
             let model = body["model"].as_str().unwrap_or_default().to_owned();
             let lines = guard.pulls.pop_front().unwrap_or_default();
             let succeeds = lines.iter().any(|line| line["status"] == "success");
-            if succeeds {
-                for (path, bytes) in guard.installs.get(&model).into_iter().flatten() {
+            if succeeds && let Some(files) = guard.installs.get(&model).cloned() {
+                for (path, bytes) in &files {
                     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
                     std::fs::write(path, bytes).unwrap();
                 }
+                guard.tags.entry(model).or_default();
             }
             drop(guard);
             let _ = write!(

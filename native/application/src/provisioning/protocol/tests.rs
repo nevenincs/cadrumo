@@ -70,8 +70,10 @@ struct ChildConfig {
     /// The fixed address of the local AI server, which the test answers for itself.
     local_ai_address: SocketAddr,
     free_bytes: Option<u64>,
-    /// Measure this computer as the production role does, instead of a roomy fixture.
+    /// Measure this computer as the production role does, instead of a fixture.
     measure_hardware: bool,
+    /// The fixture computer's memory, with no NVIDIA card.
+    memory_bytes: u64,
     arguments: Vec<String>,
 }
 
@@ -104,7 +106,7 @@ fn child_engine(config: &ChildConfig) -> Result<Engine, Error> {
         scratch: config.root.join("tmp"),
         free_space: Box::new(move |_| free_bytes),
         hardware: (!config.measure_hardware).then_some(Hardware {
-            total_memory_bytes: Some(64 * GIB),
+            total_memory_bytes: Some(config.memory_bytes),
             nvidia_vram_bytes: None,
         }),
         policy: RetryPolicy::default(),
@@ -389,6 +391,7 @@ impl World {
                 .map_or_else(|| "127.0.0.1:23743".parse().unwrap(), FakeOllama::address),
             free_bytes: Some(1024 * GIB),
             measure_hardware: false,
+            memory_bytes: 64 * GIB,
             arguments,
         }
     }
@@ -1313,6 +1316,72 @@ fn the_local_ai_installs_its_program_pulls_each_model_once_and_checks_every_role
                 .all(|(path, _)| !path.exists())
         );
     }
+}
+
+#[test]
+fn the_hardware_floor_is_the_selected_models_size_and_no_selection_is_never_held_back() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let mut world = World::local_ai(&text, &vision);
+    let small = |world: &World, arguments: &[&str]| {
+        world
+            .start_with(&ChildConfig {
+                memory_bytes: GIB,
+                ..world.config(arguments)
+            })
+            .finish()
+    };
+    let fits = small(&world, &["status"]);
+    assert_eq!(
+        row(&fits.result, "local_ai")["state"],
+        "absent",
+        "models of a few hundred bytes fit in any memory"
+    );
+
+    world.local_models[0].2 = 2 * GIB;
+    let held = small(&world, &["status"]);
+    let local_ai = row(&held.result, "local_ai");
+    assert_eq!(
+        (&local_ai["state"], &local_ai["blocked_reason"]),
+        (&json!("blocked"), &json!("hardware")),
+        "{local_ai}"
+    );
+    let refused = small(&world, &["plan", "--item", "local_ai"]);
+    assert_eq!(
+        (
+            &refused.result["outcome"],
+            &refused.result["failure_category"]
+        ),
+        (&json!("refused"), &json!("not_enough_memory")),
+        "{}",
+        refused.result
+    );
+    let roomy = world.run(&["status"]);
+    assert_eq!(row(&roomy.result, "local_ai")["state"], "absent");
+
+    world.local_models.clear();
+    let alone = small(&world, &["plan", "--item", "local_ai"]);
+    assert_eq!(alone.result["outcome"], "ok", "{}", alone.result);
+    let parts = alone.result["plan"]["entries"][0]["parts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|part| part["part_id"].as_str().unwrap().to_owned())
+        .collect::<Vec<_>>();
+    assert_eq!(parts, ["program"], "no selection plans the program alone");
+    assert_eq!(
+        world
+            .ollama
+            .as_ref()
+            .unwrap()
+            .state
+            .lock()
+            .unwrap()
+            .requests
+            .len(),
+        0,
+        "planning asks the server nothing"
+    );
 }
 
 /// A shared output buffer the role writes its lines to in this process.
