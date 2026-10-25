@@ -375,15 +375,28 @@ def read_quick_setup_rows() -> tuple[DependencyStatusRow, ...]:
 
 
 def provision_status(ctx: typer.Context) -> None:
-    """Report every setup item's state from what this computer already has."""
+    """Report every setup item's state from what this computer already has; exit 2 on a refused check."""
     status = _read(ComponentsRequest(ComponentsCommand.STATUS), timeout=_QUICK_STATUS_TIMEOUT_S)
     emit_provision_status(ctx, status, command="config.provision.status", result_type=ProvisionStatusResult)
+    _exit_on_refused_check(status)
 
 
 def provision_probe(ctx: typer.Context) -> None:
-    """Report every setup item's state from its full check."""
+    """Report every setup item's state from its full check; exit 2 on a refused check."""
     status = _checked(ctx, ComponentsRequest(ComponentsCommand.STATUS, full=True))
     emit_provision_status(ctx, status, command="config.provision.probe", result_type=ProvisionProbeResult)
+    _exit_on_refused_check(status)
+
+
+def _exit_on_refused_check(status: ComponentsResultLine) -> None:
+    """Leave a check the engine refused itself with the status its refusal path uses.
+
+    A reading command exits 0, but a check that could not be read is not a
+    computer with nothing set up, and a scripted caller must be able to tell
+    them apart by the exit code and not only by the envelope's category.
+    """
+    if status.failure_category is not None:
+        raise typer.Exit(code=2)
 
 
 def provision_verify(ctx: typer.Context, item: str | None = None) -> None:

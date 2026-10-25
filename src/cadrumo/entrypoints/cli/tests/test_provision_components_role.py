@@ -128,13 +128,15 @@ def test_a_setting_the_engine_refuses_is_worded_as_that_refusal_not_a_broken_pro
 
     result = invoke_cached_cli(["config", "provision", "status"])
 
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 2, result.output
     assert semantic_cli_text(result.stdout).splitlines()[-1] == "Your network blocked the download."
     assert "invalid_frame" not in result.output
 
     replay("status_refused_blocked_by_network")
-    document = _json(invoke_cached_cli(["--format", "json", "config", "provision", "status"]))["result"]
+    as_json = invoke_cached_cli(["--format", "json", "config", "provision", "status"])
+    document = _json(as_json)["result"]
     assert (document["failure_category"], document["complete"], document["items"]) == ("blocked_by_network", False, [])
+    assert as_json.exit_code == 2, "a refused check is not a computer with nothing set up"
 
 
 def test_setup_with_yes_prints_the_plan_then_approves_exactly_its_digest(replay: Any) -> None:

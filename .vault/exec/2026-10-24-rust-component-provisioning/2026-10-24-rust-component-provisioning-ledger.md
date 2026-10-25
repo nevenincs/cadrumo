@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:93dc77c2d814d0cf92ed2ce6d224e325c086bca402107e6ffce48a9c4ce36ae1'
+body_hash: 'sha256:6a9c73ee58a122ecb6d3d83bb292ee3b561103f7789fd8e19784d30965c8fff4'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -922,6 +922,8 @@ related:
 - `S11` `verify:` `npx tsc --noEmit on native/desktop/frontend` -> `pass`
 - `S11` `verify:` `npx eslint and npx prettier --check on the three touched frontend files` -> `pass`
 - `S11` `verify:` `rustfmt --edition 2024 --check on the three touched desktop sources` -> `pass`
+- `S25` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py and dev/runtime_lifecycle/tests/test_components_surface_conformance.py (31 passed)` -> `pass`
+- `S25` `verify:` `ruff check, ruff format --check and ty on both files` -> `pass`
 
 ## Notes
 
