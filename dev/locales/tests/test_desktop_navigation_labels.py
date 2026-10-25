@@ -26,7 +26,7 @@ def test_every_navigation_label_is_generated_in_every_locale(tmp_path: Path) -> 
     assert main(["--output", str(output)]) == 0
     written = json.loads(output.read_text(encoding="utf-8"))
     for locale in DESKTOP_LOCALES:
-        assert DESKTOP_NAVIGATION_LABEL_KEYS <= set(written[locale]), locale
+        assert set(written[locale]) >= DESKTOP_NAVIGATION_LABEL_KEYS, locale
         assert all(written[locale][key].strip() for key in DESKTOP_NAVIGATION_LABEL_KEYS), locale
 
 
@@ -46,4 +46,4 @@ def test_a_missing_label_translation_refuses_generation(tmp_path: Path) -> None:
         desktop_chrome_strings(tmp_path, keys=frozenset({label}), locales=("en", "es"))
     # The canonical catalogues carry every label, so the default projection admits them.
     strings = desktop_chrome_strings(LOCALES_DIR)
-    assert all(DESKTOP_NAVIGATION_LABEL_KEYS <= set(strings[locale]) for locale in DESKTOP_LOCALES)
+    assert all(set(strings[locale]) >= DESKTOP_NAVIGATION_LABEL_KEYS for locale in DESKTOP_LOCALES)

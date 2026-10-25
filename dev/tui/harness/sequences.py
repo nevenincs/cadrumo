@@ -39,7 +39,12 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input
 from textual.worker import WorkerCancelled
 
-from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, ModeloWorkForm, confirmable
+from cadrumo.application.modelo.work_form_models import (
+    TYPED_EDITABILITIES,
+    ModeloFormOrigin,
+    ModeloWorkForm,
+    confirmable,
+)
 from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import load_settings
@@ -64,7 +69,6 @@ from cadrumo.entrypoints.tui.modelo.workbench.review import EditReviewScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.modelo.workbench.search import WorkbenchSearchPanel
 from cadrumo.entrypoints.tui.modelo.workbench.sources import WorkbenchSourcesScreen
-from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import TYPED_EDITABILITIES
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
 from cadrumo.entrypoints.tui.tests.frame import capture
 from cadrumo_client.transport.frontend_client import FrontendClient
