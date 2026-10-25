@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:d7bd48cc4865b01b930d821b2f40e1fd58c398b6887d9f2908734d494fa98534'
+body_hash: 'sha256:43629ec42b03338740d768b5f51d5492895021e50a3de62ce47287f14158f3c1'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -283,6 +283,9 @@ related:
 - `S10` `M` `src/cadrumo_agent_service/adapters/tests/test_served_catalog_models.py`
 - `S10` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service src/cadrumo_client src/cadrumo/adapters/outbound/llm -q` -> `pass`
 - `S10` `by:` `standard-implementer`
+- `S10` `M` `src/cadrumo_agent_service/adapters/agent_background_runs.py`
+- `S10` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service/adapters -q` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo_agent_service/adapters/tests/test_agent_background_runs_gateway.py -m integration -n 0` -> `pass`
 
 ## Notes
 
@@ -303,3 +306,4 @@ related:
 - `S10` The owner ruled 'both' (ADR amendment 2026-10-25, selectable models): the earlier interim note's pending ruling is settled. Selection now reads the running agent's live entries beside the declared ones, and a lookup whose model the current entries no longer list refuses `lane_unavailable.`
 - `S08` P02 review fix: catalogue-bounds-narrower-than-upstream
 - `S10` P02 review fix: catalogue-bounds-narrower-than-upstream
+- `S10` P02 review fix: refusal-mapping-gaps; the real gateway cannot produce these codes or a 503 for a background request, so a unit test covers the mapping table

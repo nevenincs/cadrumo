@@ -66,13 +66,22 @@ _REFUSALS: Final[Mapping[str, ModelRunRefusalCode]] = {
     "background_request_invalid": ModelRunRefusalCode.RUN_FAILED,
     "background_lane_unsupported": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "input_not_supported": ModelRunRefusalCode.INPUT_NOT_SUPPORTED,
+    "unknown_provider": ModelRunRefusalCode.LANE_UNAVAILABLE,
+    "provider_not_executable": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "provider_not_selectable": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "provider_unavailable": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "unknown_model": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "model_not_installed": ModelRunRefusalCode.MODEL_NOT_INSTALLED,
     "background_option_unsupported": ModelRunRefusalCode.OPTION_NOT_SUPPORTED,
 }
-"""The agent's admission refusals, in the closed set a tax worker reads."""
+"""The agent's admission refusals, in the closed set a tax worker reads.
+
+``model_required`` and the effort codes are absent: a background request names
+its model and no effort, so the agent cannot answer one with them.
+"""
+
+_START_UNAVAILABLE: Final = 503
+"""The status the agent starts no run with while it is busy, draining or not ready; its detail carries no code."""
 
 _OPTIONS: Final = ("temperature", "context_tokens", "response_schema")
 """The reply options a background request may name, each forwarded only to a lane that honours it."""
@@ -273,9 +282,8 @@ class HostedBackgroundRuns(BackgroundRunGateway):
         )
         if status in {200, 201}:
             return None
-        code = _refusal_code(payload)
-        _LOGGER.warning("agent background request refused status=%s code=%s", status, code)
-        return ModelRunRefusal(code=_REFUSALS.get(code or "", ModelRunRefusalCode.RUN_FAILED))
+        _LOGGER.warning("agent background request refused status=%s code=%s", status, _refusal_code(payload))
+        return ModelRunRefusal(code=start_refusal(status, payload))
 
     def _settle(
         self, endpoint: BackgroundRunEndpoint, run_id: str, lane: ModelRunLane, deadline: float
@@ -349,6 +357,18 @@ class HostedBackgroundRuns(BackgroundRunGateway):
             connection.close()
 
 
+def start_refusal(status: int, payload: bytes) -> ModelRunRefusalCode:
+    """Return the closed refusal a run start the agent answered with ``status`` and ``payload`` reads as.
+
+    A coded refusal maps through :data:`_REFUSALS`. A ``503`` means the agent
+    could not take a run now, whatever its detail says. Anything else is a
+    failed run.
+    """
+    if status == _START_UNAVAILABLE:
+        return ModelRunRefusalCode.SERVICE_UNAVAILABLE
+    return _REFUSALS.get(_refusal_code(payload) or "", ModelRunRefusalCode.RUN_FAILED)
+
+
 def _refusal_code(payload: bytes) -> str | None:
     try:
         document = json.loads(payload)
@@ -380,4 +400,4 @@ def _outcome(reply: _Reply, lane: ModelRunLane) -> ModelRunOutput | ModelRunRefu
         return ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID)
 
 
-__all__ = ["BackgroundRunEndpoint", "HostedBackgroundRuns"]
+__all__ = ["BackgroundRunEndpoint", "HostedBackgroundRuns", "start_refusal"]

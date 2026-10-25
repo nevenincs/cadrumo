@@ -1,8 +1,9 @@
-"""Background requests the adapter refuses before it reaches any gateway."""
+"""Background requests the adapter refuses before it reaches any gateway, and how it reads the agent's refusals."""
 
 from __future__ import annotations
 
 import base64
+import json
 from pathlib import Path
 
 import pytest
@@ -16,7 +17,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRefusalCode,
 )
 
-from ..agent_background_runs import BackgroundRunEndpoint, HostedBackgroundRuns
+from ..agent_background_runs import BackgroundRunEndpoint, HostedBackgroundRuns, start_refusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -89,3 +90,61 @@ def test_reply_options_at_the_agent_s_bounds_are_accepted() -> None:
     )
 
     assert (body.context_tokens, body.response_schema) == (512, schema)
+
+
+def _selection_refusal(code: str) -> bytes:
+    """The 422 body cadrumo-agent's run start answers a refused selection with."""
+    return json.dumps({"detail": {"code": code, "message": "synthetic refusal", "offered": []}}).encode()
+
+
+@pytest.mark.parametrize(
+    ("status", "payload", "expected"),
+    [
+        pytest.param(
+            422,
+            _selection_refusal("provider_not_executable"),
+            ModelRunRefusalCode.LANE_UNAVAILABLE,
+            id="not-executable",
+        ),
+        pytest.param(
+            422, _selection_refusal("unknown_provider"), ModelRunRefusalCode.LANE_UNAVAILABLE, id="unknown-provider"
+        ),
+        pytest.param(
+            422,
+            _selection_refusal("provider_not_selectable"),
+            ModelRunRefusalCode.LANE_UNAVAILABLE,
+            id="not-selectable",
+        ),
+        pytest.param(
+            422, _selection_refusal("model_not_installed"), ModelRunRefusalCode.MODEL_NOT_INSTALLED, id="not-installed"
+        ),
+        pytest.param(
+            403,
+            _selection_refusal("background_not_admitted"),
+            ModelRunRefusalCode.SERVICE_UNAVAILABLE,
+            id="not-admitted",
+        ),
+        pytest.param(
+            503,
+            json.dumps({"detail": "gateway is draining"}).encode(),
+            ModelRunRefusalCode.SERVICE_UNAVAILABLE,
+            id="busy-agent",
+        ),
+        pytest.param(
+            503, b"service unavailable", ModelRunRefusalCode.SERVICE_UNAVAILABLE, id="busy-agent-without-json"
+        ),
+        pytest.param(
+            422, _selection_refusal("model_without_tools"), ModelRunRefusalCode.RUN_FAILED, id="unmapped-code"
+        ),
+        pytest.param(
+            409,
+            json.dumps({"detail": "predecessor run is not settled"}).encode(),
+            ModelRunRefusalCode.RUN_FAILED,
+            id="uncoded-conflict",
+        ),
+    ],
+)
+def test_a_run_start_the_agent_refuses_reads_as_its_closed_refusal(
+    status: int, payload: bytes, expected: ModelRunRefusalCode
+) -> None:
+    assert start_refusal(status, payload) is expected
