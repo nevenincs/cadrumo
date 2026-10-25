@@ -124,11 +124,14 @@ class ProvisionStatusResult(OutputSchema):
 
     ``complete`` is true when every item is ready or usable; ``hardware_limited``
     names a computer below the model floor, which no setup can fix.
+    ``failure_category`` is the category the engine refused the check itself
+    under, such as a proxy setting it cannot use; it then reports no item.
     """
 
     mode: NonEmptyStr
     complete: bool
     hardware_limited: bool
+    failure_category: str | None = None
     items: list[ProvisionItemPayload] = []
 
 

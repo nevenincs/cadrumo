@@ -330,12 +330,14 @@ pub fn serve(
     }
     let mut engine = match engine() {
         Ok(engine) => engine,
-        Err(_) => {
+        Err(error) => {
+            // A setting the engine cannot use is a classified refusal of its own, not a
+            // protocol fault: the surfaces word the category they are given.
             lines.send(&json!({
                 "type": "result",
                 "command": command.name(),
                 "outcome": "failed",
-                "failure_category": super::failure::FailureCategory::Unexpected,
+                "failure_category": super::browser::failure_category(&error),
             }));
             return 1;
         }

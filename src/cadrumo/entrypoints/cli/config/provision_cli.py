@@ -347,9 +347,16 @@ def _relayed(line: BaseModel) -> str:
 # ── Reading every item's state ──────────────────────────────────────────────
 
 
-def _status(request: ComponentsRequest, *, timeout: float | None) -> ComponentsResultLine:
+def _read(request: ComponentsRequest, *, timeout: float | None) -> ComponentsResultLine:
+    """Return a read the role answered, keeping a classified refusal for its caller to word.
+
+    A refusal the engine classified itself, such as a proxy setting it cannot
+    use, is that category's refusal and not a broken protocol: it comes back as
+    the result it is, with no rows. Only an answer this client cannot use at
+    all, a failure with no category, is a broken frame.
+    """
     result = run_components_role(request, timeout=timeout)
-    if result.outcome is not ComponentsOutcome.OK:
+    if result.outcome is not ComponentsOutcome.OK and result.failure_category is None:
         raise RefusalError(RefusalCode.INVALID_FRAME)
     return result
 
@@ -358,14 +365,18 @@ def read_quick_setup_rows() -> tuple[DependencyStatusRow, ...]:
     """Read every setup item's row from the components role's quick check.
 
     Raises:
-        RefusalError: The role could not be started, broke its protocol, or did not answer in time.
+        RefusalError: The role could not be started, broke its protocol, did not
+            answer in time, or refused the check so that it reported no row.
     """
-    return _status(ComponentsRequest(ComponentsCommand.STATUS), timeout=_QUICK_STATUS_TIMEOUT_S).status_rows()
+    result = _read(ComponentsRequest(ComponentsCommand.STATUS), timeout=_QUICK_STATUS_TIMEOUT_S)
+    if result.outcome is not ComponentsOutcome.OK:
+        raise RefusalError(RefusalCode.UNAVAILABLE, check="components_role_refused_the_check")
+    return result.status_rows()
 
 
 def provision_status(ctx: typer.Context) -> None:
     """Report every setup item's state from what this computer already has."""
-    status = _status(ComponentsRequest(ComponentsCommand.STATUS), timeout=_QUICK_STATUS_TIMEOUT_S)
+    status = _read(ComponentsRequest(ComponentsCommand.STATUS), timeout=_QUICK_STATUS_TIMEOUT_S)
     emit_provision_status(ctx, status, command="config.provision.status", result_type=ProvisionStatusResult)
 
 
@@ -379,18 +390,23 @@ def provision_verify(ctx: typer.Context, item: str | None = None) -> None:
     """Fully check the named item, or every item; exit 2 unless each is usable."""
     status = _checked(ctx, ComponentsRequest(ComponentsCommand.VERIFY, items=verify_items(item)))
     emit_provision_status(ctx, status, command="config.provision.verify", result_type=ProvisionVerifyResult)
-    if not all(row.state in {DependencyState.READY, DependencyState.STALE} for row in status.status_rows()):
+    usable = all(row.state in {DependencyState.READY, DependencyState.STALE} for row in status.status_rows())
+    if status.failure_category is not None or not usable:
         raise typer.Exit(code=2)
 
 
 def _checked(ctx: typer.Context, request: ComponentsRequest) -> ComponentsResultLine:
-    """Run a full check, relaying its progress as a setup's is relayed."""
+    """Run a full check, relaying its progress as a setup's is relayed.
+
+    A refusal the engine classified itself comes back as that result, as
+    :func:`_read` keeps it; only an answer with no category is a broken frame.
+    """
     progress = SetupProgressLine(json_mode=format_of(ctx) is OutputFormat.JSON, interactive=stderr_is_tty())
     try:
         result = run_components_role(request, on_event=progress.observe)
     finally:
         progress.finish()
-    if result.outcome is not ComponentsOutcome.OK:
+    if result.outcome is not ComponentsOutcome.OK and result.failure_category is None:
         raise RefusalError(RefusalCode.INVALID_FRAME)
     return result
 
@@ -596,12 +612,16 @@ def emit_provision_status(
         mode=(status.mode or DependencyCheckMode.QUICK).value,
         complete=status.setup_complete is True,
         hardware_limited=hardware_limited,
+        failure_category=None if status.failure_category is None else status.failure_category.value,
         items=[_item_payload(row) for row in rows],
     )
     lines = _row_lines(rows)
     if hardware_limited:
         lines.append(tr("cli.config.provision.hardware_limited"))
     lines.append(tr("cli.config.provision.complete" if result.complete else "cli.config.provision.incomplete"))
+    if status.failure_category is not None:
+        # The engine refused the check itself, so it reported no row to word.
+        lines.append(tr(dependency_failure_key(status.failure_category)))
     emit_envelope(ctx, command=command, result=result, lines=lines)
 
 

@@ -31,6 +31,7 @@ use cadrumo_application::{
     component::Cancellation,
     error::Error,
     provisioning::{
+        browser::failure_category,
         engine::{Answer, Engine, Event, Outcome as Ended, Report, SetupRequest},
         failure::FailureCategory,
         items::{Destination, ItemId, Locations},
@@ -569,10 +570,13 @@ fn run_setup(
 ) {
     let Installation { mut engine } = match engines() {
         Ok(installation) => installation,
-        Err(_) => {
+        Err(error) => {
+            // A setting the engine cannot use is a classified refusal of its own; the
+            // window words the category it is given, as the role's clients do.
+            let category = failure(failure_category(&error));
             shared.update(|window| {
                 if let Some(track) = window.setup_of(id) {
-                    settle_failed(track, wire::Failure::Unexpected);
+                    settle_failed(track, category);
                 }
             });
             return;

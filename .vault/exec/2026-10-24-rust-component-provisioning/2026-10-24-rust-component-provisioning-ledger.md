@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:de9e97fa3fe4217de4100a8f0cc2a1a5ea8488c98ba99e924b009839fead930b'
+body_hash: 'sha256:82df25086f537508ee168bab789afa7a159605b92deab6f2308ea4925fa9fb50'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -841,6 +841,13 @@ related:
 - `S25` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_command_aeat_capability_probe.py`
 - `S25` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py src/cadrumo_runtime/host/tests/frontend/cli/test_command_aeat_capability_probe.py -m '' -k 'population or exemption'` -> `pass`
 - `S25` `by:` `implementation-engineer`
+- `S25` `M` `native/application/src/provisioning/protocol.rs`
+- `S25` `M` `native/application/src/provisioning/protocol/tests.rs`
+- `S25` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S25` `A` `src/cadrumo/tests/fixtures/components_role/status_refused_blocked_by_network.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/transcripts.json`
+- `S25` `verify:` `cargo test --offline --lib provisioning::` -> `pass`
+- `S25` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py src/cadrumo/adapters/outbound/components/tests` -> `pass`
 
 ## Notes
 
@@ -924,3 +931,4 @@ related:
 - `S15` S15 desktop parity is held at its wire contract (every code a row carries is a value the desktop host's closed shapes admit) plus the existing host tests in `native/desktop/src-tauri/src/shell/setup/components_tests.rs;` a desktop host test comparing its snapshot with the role needs the CMake-generated tauri configuration and was not built
 - `S15` S15 the acquisition lane's real download is opt-in through --accept-size and was not run here: no built role image and no download in this run; the vanilla-machine run stays pending
 - `S15` S15 CI workflows are unchanged: the fleet owns CI; CONTRIBUTING lists the Linux provisioning lane, the role lane and the acquisition lane beside the gate
+- `S25` The desktop crate's parity edit was not compiled here: its clippy gate runs only through CMake, which this session must not run.

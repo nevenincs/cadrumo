@@ -1,0 +1,2 @@
+{"command":"status","protocol":1,"type":"started"}
+{"command":"status","failure_category":"blocked_by_network","outcome":"failed","type":"result"}

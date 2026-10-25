@@ -134,6 +134,13 @@
     ],
     "exit": 0
   },
+  "status_refused_blocked_by_network": {
+    "answers": [],
+    "arguments": [
+      "status"
+    ],
+    "exit": 1
+  },
   "verify_browser_blocked_by_network": {
     "answers": [],
     "arguments": [

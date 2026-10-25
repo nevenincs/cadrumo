@@ -24,6 +24,7 @@ use crate::provisioning::{
         program::{SERVER_RECORD, ServerRecord},
     },
     pins::{ComponentPins, Platform},
+    proxy::{PROXY_URL, ProxySettings},
     test_servers::{
         Released, Reply, Request, TestCertificate, TlsServer, network_nowhere, network_to, response,
     },
@@ -1293,4 +1294,43 @@ fn a_command_line_the_protocol_does_not_have_is_refused_without_an_engine() {
             items: vec![ItemId::Browser]
         })
     );
+}
+
+#[test]
+fn a_setting_the_engine_cannot_use_is_answered_with_that_refusals_own_category() {
+    // The role's clients word the category they are given, so a proxy setting the
+    // engine refuses must not reach them as a protocol fault.
+    for (settings, category) in [
+        (Some("ftp://proxy.example:3128"), "blocked_by_network"),
+        (Some("http://proxy.example:0"), "blocked_by_network"),
+        (None, "unexpected"),
+    ] {
+        let output = Output::default();
+        let code = serve(
+            &[OsString::from("status")],
+            Cursor::new(Vec::new()),
+            output.clone(),
+            || {
+                let proxy = ProxySettings::from_settings(|name| {
+                    settings.filter(|_| name == PROXY_URL).map(str::to_owned)
+                })?;
+                assert!(proxy.is_none(), "a refused setting never becomes a proxy");
+                Err(Error::Invalid("no engine for this case".into()))
+            },
+        );
+
+        assert_eq!(code, 1, "{settings:?}");
+        let written = output.0.lock().unwrap().clone();
+        let lines: Vec<Value> = written
+            .split(|byte| *byte == b'\n')
+            .filter(|line| !line.is_empty())
+            .map(|line| serde_json::from_slice(line).unwrap())
+            .collect();
+        let result = lines.last().unwrap();
+        assert_eq!(result["type"], "result", "{settings:?}");
+        assert_eq!(result["command"], "status", "{settings:?}");
+        assert_eq!(result["outcome"], "failed", "{settings:?}");
+        assert_eq!(result["failure_category"], category, "{settings:?}");
+        assert_eq!(result["rows"], Value::Null, "{settings:?}");
+    }
 }

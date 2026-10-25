@@ -123,6 +123,20 @@ def test_verify_exits_2_with_the_rows_category_and_refuses_an_unknown_item(repla
     assert len(launcher.launches) == 1
 
 
+def test_a_setting_the_engine_refuses_is_worded_as_that_refusal_not_a_broken_protocol(replay: Any) -> None:
+    replay("status_refused_blocked_by_network")
+
+    result = invoke_cached_cli(["config", "provision", "status"])
+
+    assert result.exit_code == 0, result.output
+    assert semantic_cli_text(result.stdout).splitlines()[-1] == "Your network blocked the download."
+    assert "invalid_frame" not in result.output
+
+    replay("status_refused_blocked_by_network")
+    document = _json(invoke_cached_cli(["--format", "json", "config", "provision", "status"]))["result"]
+    assert (document["failure_category"], document["complete"], document["items"]) == ("blocked_by_network", False, [])
+
+
 def test_setup_with_yes_prints_the_plan_then_approves_exactly_its_digest(replay: Any) -> None:
     launcher = replay("setup_browser_completed")
     (review,) = _relayed("setup_browser_completed", kinds={"review"})
