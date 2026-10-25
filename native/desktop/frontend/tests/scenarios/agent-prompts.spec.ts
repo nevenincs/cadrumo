@@ -611,12 +611,7 @@ for (const locale of ["en", "es", "ca", "hu"]) {
     const prompt = column.getByRole("region", {
       name: label("desktop.agent.approval_tool_title", {}, locale),
     });
-    const choices = [
-      "reject_once",
-      "allow_session",
-      "allow_server_session",
-      "allow_once",
-    ];
+    const choices = ["reject_once", "allow_session", "allow_once"];
     for (const choice of choices) {
       await page.goto(
         `/scenarios.html?scenario=signed-in&latency=0&bar=off&asks=approval&lang=${locale}`,
@@ -630,7 +625,7 @@ for (const locale of ["en", "es", "ca", "hu"]) {
         label("desktop.agent.approval_tool_title", {}, locale),
       ]);
       const names = choices.map((id) =>
-        label(`desktop.agent.approval_${id}`, { server: "cadrumo" }, locale),
+        label(`desktop.agent.approval_${id}`, {}, locale),
       );
       expect(await shownOptions(prompt)).toEqual(names);
       await prompt

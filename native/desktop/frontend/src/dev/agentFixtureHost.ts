@@ -163,18 +163,13 @@ const TOOL_OPTIONS: AgentApprovalOption[] = [
   { option_id: "reject-once", name: "Skip this read", kind: "reject_once" },
 ];
 
-// Built-in options from cadrumo-agent's graph/acp_options.py, with distinct
-// tool-session and server-session scopes despite their shared kind.
+// Built-in options from cadrumo-agent's graph/acp_options.py: every tool call,
+// a mounted server's included, offers exactly these three.
 const CANONICAL_OPTIONS: AgentApprovalOption[] = [
   { option_id: "allow_once", name: "Allow once", kind: "allow_once" },
   {
     option_id: "allow_session",
     name: "Allow for this session",
-    kind: "allow_session",
-  },
-  {
-    option_id: "allow_server_session",
-    name: "Allow all cadrumo tools for this session",
     kind: "allow_session",
   },
   { option_id: "reject_once", name: "Reject", kind: "reject_once" },
@@ -804,12 +799,7 @@ export function fixtureAgent({
                   : remembered
                     ? REMEMBERED_OPTIONS
                     : target
-                      ? CANONICAL_OPTIONS.filter(
-                          (option) =>
-                            option.option_id !== "allow_server_session" ||
-                            target.tool === "status" ||
-                            target.tool === "execute",
-                        )
+                      ? CANONICAL_OPTIONS
                       : TOOL_OPTIONS,
           }),
           then: (option) =>

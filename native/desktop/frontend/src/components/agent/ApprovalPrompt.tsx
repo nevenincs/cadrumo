@@ -42,17 +42,9 @@ function optionWords(
   t: Translate,
   source: AgentApproval["source"],
   option: AgentApprovalOption,
-  server?: string | null,
 ): string {
-  if (source === "agent_tool") {
-    if (
-      option.option_id === "allow_server_session" &&
-      option.kind === "allow_session" &&
-      server
-    )
-      return t("desktop.agent.approval_allow_server_session", { server });
-    if (option.option_id === option.kind) return kindWords(t, option.kind);
-  }
+  if (source === "agent_tool" && option.option_id === option.kind)
+    return kindWords(t, option.kind);
   return option.name?.trim() || kindWords(t, option.kind);
 }
 
@@ -180,7 +172,7 @@ export function ApprovalPrompt({
             className="h-auto min-h-control-sm max-w-full py-1 text-left whitespace-normal wrap-anywhere"
             onAction={onDecide ? () => onDecide(option.option_id) : undefined}
           >
-            {optionWords(t, source, option, toolServer)}
+            {optionWords(t, source, option)}
           </AgentTextAction>
         ))}
       </div>

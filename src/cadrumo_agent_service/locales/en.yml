@@ -8,7 +8,6 @@ desktop:
     agent_replied: Agent replied
     approval_allow_always: Allow
     approval_allow_once: Allow once
-    approval_allow_server_session: Allow all {server} tools for this session
     approval_allow_session: Allow for this session
     approval_attachment: 'Attachment: {target}'
     approval_operation: 'Operation: {target}'

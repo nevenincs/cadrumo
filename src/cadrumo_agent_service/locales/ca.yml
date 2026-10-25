@@ -8,8 +8,6 @@ desktop:
     agent_replied: L'agent ha respost
     approval_allow_always: Permet-ho
     approval_allow_once: Permet-ho un cop
-    approval_allow_server_session: Permet totes les eines de {server} durant aquesta
-      sessió
     approval_allow_session: Permet-ho durant aquesta sessió
     approval_attachment: 'Adjunt: {target}'
     approval_operation: 'Operació: {target}'

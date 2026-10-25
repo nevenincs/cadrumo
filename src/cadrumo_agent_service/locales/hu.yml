@@ -8,8 +8,6 @@ desktop:
     agent_replied: Az ügynök válasza
     approval_allow_always: Engedélyezem
     approval_allow_once: Egyszer engedélyezem
-    approval_allow_server_session: A(z) {server} összes eszközének engedélyezése erre
-      a munkamenetre
     approval_allow_session: Engedélyezés erre a munkamenetre
     approval_attachment: 'Melléklet: {target}'
     approval_operation: 'Művelet: {target}'
