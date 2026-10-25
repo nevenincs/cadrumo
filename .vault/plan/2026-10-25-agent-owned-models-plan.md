@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-25'
 body_schema: body-v2
-body_hash: 'sha256:02338cc703782eb13d002122c234ee19845442843777383af6b07ea62eb41e7b'
+body_hash: 'sha256:c6a51a428189d2b2c8e7a40e31681ac05138b29eddda2f4d86df76056d4b2db9'
 ---
 
 # `agent-owned-models` plan
@@ -92,7 +92,7 @@ Give the person a per-role selection on every surface with licence and vision ca
 - [ ] `P05.S25` - Add the selection read and set to the TUI setup flow and the CLI through registered operations, and the read to MCP; `src/cadrumo/entrypoints/tui/setup/screen.py, src/cadrumo/entrypoints/cli/config/_provision_command_specs.py`.
 - [ ] `P05.S26` - Update the how-to, CLI reference, technical articles and API pages that describe local models, pins or the direct adapter; `docs/how-to/classify-with-llm.md, docs/cli/config/provision.rst, docs/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md, docs/technical/articles/168-profile-custody-provisioning-and-runtime-configuration.md`.
 - [ ] `P05.S27` - Add and translate the selection, licence and NO_SELECTION strings in en, es, ca and hu in the informal singular through the dev.locales set-batch workflow; `src/cadrumo/locales/en, src/cadrumo/locales/es, src/cadrumo/locales/ca, src/cadrumo/locales/hu`.
-- [ ] `P05.S28` - Prove selection conformance across desktop, TUI, CLI and MCP and empty the gate burn-down list; `dev/quality/tests/test_no_model_definitions.py, src/cadrumo/entrypoints/tui/setup/tests`.
+- [ ] `P05.S28` - Prove selection conformance across desktop, TUI, CLI and MCP, empty the gate burn-down list, and extend the gate's scanned roots to Rust under native/application, Rust and TypeScript under native/desktop, and env/.env.example, adding the rows model-name, model-digest and model-table for each added file kind plus a model-size row (a byte or gigabyte size bound to a model entry) and a model-licence row (a licence identifier bound to a model entry) in every scanned kind, each shown to catch an isolated defect and to pass a clean fixture, with the stopping point restated; `dev/quality/tests/test_no_model_definitions.py, src/cadrumo/entrypoints/tui/setup/tests`.
 
 ## Parallelization
 
