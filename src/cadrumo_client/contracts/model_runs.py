@@ -43,9 +43,15 @@ MODEL_RUN_MAX_CONTEXT_TOKENS: Final = 1_048_576
 MODEL_RUN_MAX_SCHEMA_BYTES: Final = 32_768
 """Upper bound on a response schema, as compact UTF-8 JSON."""
 
+MODEL_RUN_MODEL_ID_MAX_LENGTH: Final = 512
+"""The longest model id, in characters, the agent's catalogues carry."""
+
+MODEL_RUN_MODEL_ID_PATTERN: Final = r"^[^\x00-\x1f\x7f]{1,512}$"
+"""A model id as the agent's catalogues carry it: 1 to 512 characters, none a C0 control or DEL."""
+
 _LANE_ID = r"^[a-z][a-z0-9_]{0,39}$"
 _TRANSPORT = r"^[a-z][a-z0-9_]{0,15}$"
-_MODEL = r"^[\x21-\x7e]{1,256}$"
+_MODEL = MODEL_RUN_MODEL_ID_PATTERN
 _ROLE = r"^[a-z][a-z0-9_]{0,63}$"
 
 
@@ -100,7 +106,7 @@ class ModelRunLicence(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    spdx: Annotated[str, Field(min_length=1, max_length=128)] | None
+    spdx: Annotated[str, Field(min_length=1, max_length=256)] | None
     name: Annotated[str, Field(min_length=1, max_length=256)]
     digest: Annotated[str, Field(pattern=r"^sha256:[0-9a-f]{64}$")]
 
@@ -129,7 +135,8 @@ class ModelRunLane(BaseModel):
     model: Annotated[str, Field(pattern=_MODEL)]
     reads_off_host: bool
     licence: ModelRunLicence | None
-    size_bytes: PositiveInt | None
+    size_bytes: NonNegativeInt | None
+    """The model's download size in bytes; the agent states ``0`` for an empty or unknown size."""
     vision: bool | None
     context_length: PositiveInt | None
     accepted_media: tuple[ModelRunMediaKind, ...] | None = None
@@ -404,6 +411,8 @@ __all__ = [
     "MODEL_RUN_MAX_DEADLINE_SECONDS",
     "MODEL_RUN_MAX_OUTPUT_BYTES",
     "MODEL_RUN_MAX_ROLES",
+    "MODEL_RUN_MODEL_ID_MAX_LENGTH",
+    "MODEL_RUN_MODEL_ID_PATTERN",
     "ModelRunAttachment",
     "ModelRunBody",
     "ModelRunCompleteRequest",

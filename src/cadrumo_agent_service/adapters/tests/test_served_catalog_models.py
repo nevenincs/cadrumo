@@ -74,10 +74,25 @@ def test_no_running_agent_is_no_live_catalogue_and_an_unlisted_lane_lists_nothin
     assert ServedCatalogModels(lambda: _document(_entry("synthetic-installed:1"))).lane_models("absent", "api") == ()
 
 
+_AGENT_MODEL_ID_LENGTH: Final = 512
+"""cadrumo-agent's longest model id in its served catalogue."""
+
+
+def test_an_entry_at_the_agent_s_bounds_is_read() -> None:
+    """A zero size is the agent's own value for an empty or unknown size; the longest id it serves is read too."""
+    longest = "m" * _AGENT_MODEL_ID_LENGTH
+    models = ServedCatalogModels(lambda: _document(_entry("synthetic-empty:1", size_bytes=0), _entry(longest)))
+
+    entries = models.lane_models("local", "api")
+
+    assert entries is not None
+    assert [(entry.id, entry.size_bytes) for entry in entries] == [("synthetic-empty:1", 0), (longest, 2_000)]
+
+
 @pytest.mark.parametrize(
     "document",
     [
-        pytest.param(_document(_entry("synthetic-installed:1", size_bytes=0)), id="size-zero"),
+        pytest.param(_document(_entry("synthetic-installed:1", size_bytes=-1)), id="size-negative"),
         pytest.param(_document(_entry("synthetic-installed:1", context_length=-1)), id="context-negative"),
         pytest.param(_document(_entry("synthetic-installed:1", vision="yes")), id="vision-not-a-bool"),
         pytest.param(_document(_entry("synthetic-installed:1", size_bytes="2000")), id="size-not-an-integer"),
@@ -100,6 +115,7 @@ def test_no_running_agent_is_no_live_catalogue_and_an_unlisted_lane_lists_nothin
             id="model-missing",
         ),
         pytest.param(_document(_entry("")), id="model-empty"),
+        pytest.param(_document(_entry("m" * (_AGENT_MODEL_ID_LENGTH + 1))), id="model-id-past-the-agent-s-bound"),
         pytest.param(_document(_entry("synthetic-installed:1"), "not-an-entry"), id="entry-not-an-object"),
         pytest.param(
             {"api_version": "v1", "providers": [{"provider_id": "local", "transport": "api"}]}, id="no-catalog"

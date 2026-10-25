@@ -18,19 +18,29 @@ from itertools import pairwise
 from typing import Annotated, Final, Literal, Self
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, Field, JsonValue, PositiveInt, StringConstraints, ValidationError, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    JsonValue,
+    NonNegativeInt,
+    PositiveInt,
+    StringConstraints,
+    ValidationError,
+    model_validator,
+)
 
 from cadrumo.core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_MAX_LENGTH, MODEL_RUN_MODEL_ID_PATTERN
 
 BASE_URL_MAX_LENGTH: Final[int] = 2048
-MAX_CATALOG_LANES: Final[int] = 64
+MAX_CATALOG_LANES: Final[int] = 128
 _BASE_URL_FORBIDDEN: Final[frozenset[str]] = frozenset("*?[%$")
 _LOOPBACK_HOSTS: Final[frozenset[str]] = frozenset({"127.0.0.1", "localhost", "::1"})
 _MAX_PORT: Final[int] = 65535
 RECOMMENDED_KEY_MAX_LENGTH: Final[int] = 64
-RECOMMENDED_VALUE_MAX_LENGTH: Final[int] = 256
-MODEL_ID_MAX_LENGTH: Final[int] = 256
+MODEL_ID_MAX_LENGTH: Final[int] = MODEL_RUN_MODEL_ID_MAX_LENGTH
+RECOMMENDED_VALUE_MAX_LENGTH: Final[int] = MODEL_ID_MAX_LENGTH
 
 _PROVIDER_ID_PATTERN: Final[str] = r"^[a-z][a-z0-9_]{0,39}$"
 _PROVIDER_ID: Final[re.Pattern[str]] = re.compile(_PROVIDER_ID_PATTERN)
@@ -157,7 +167,7 @@ class ModelLicence(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    spdx: str | None = Field(min_length=1, max_length=128)
+    spdx: str | None = Field(min_length=1, max_length=256)
     """The SPDX identifier, when the licence has one."""
     name: str = Field(min_length=1, max_length=256)
     digest: LicenceDigest
@@ -174,12 +184,12 @@ class CatalogModelFacts(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    id: str = Field(min_length=1, max_length=MODEL_ID_MAX_LENGTH)
+    id: str = Field(pattern=MODEL_RUN_MODEL_ID_PATTERN)
     """The model value a run names on its lane."""
     vision: bool | None
     """Whether the model reads images; ``None`` when the agent does not state it."""
-    size_bytes: PositiveInt | None
-    """The model's download size in bytes, when the agent states it."""
+    size_bytes: NonNegativeInt | None
+    """The model's download size in bytes, when the agent states it; ``0`` is the agent's empty or unknown size."""
     context_length: PositiveInt | None
     """The model's context window in tokens, when the agent states it."""
     licence: ModelLicence | None

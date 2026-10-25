@@ -141,6 +141,27 @@ def test_a_body_round_trips_and_one_beyond_its_bound_is_refused() -> None:
         decode_model_run_body(bytes(MODEL_RUN_MAX_BODY_BYTES + 1))
 
 
+_AGENT_MODEL_ID_LENGTH = 512
+"""cadrumo-agent's longest model id in its catalogues."""
+
+
+def test_a_lane_carries_the_agent_s_zero_size_and_refuses_a_negative_one() -> None:
+    assert ModelRunLane.model_validate({**_LANE.model_dump(), "size_bytes": 0}).size_bytes == 0
+    with pytest.raises(ValidationError):
+        ModelRunLane.model_validate({**_LANE.model_dump(), "size_bytes": -1})
+
+
+def test_a_lane_carries_a_model_id_as_long_as_the_agent_allows_and_refuses_one_longer() -> None:
+    longest = "m" * _AGENT_MODEL_ID_LENGTH
+
+    assert ModelRunLane.model_validate({**_LANE.model_dump(), "model": longest}).model == longest
+    assert ModelRunSelectedModel(lane_id="example_cli", model=longest).model == longest
+    with pytest.raises(ValidationError):
+        ModelRunLane.model_validate({**_LANE.model_dump(), "model": longest + "m"})
+    with pytest.raises(ValidationError):
+        ModelRunSelectedModel(lane_id="example_cli", model="synthetic\tmodel")
+
+
 def test_media_kinds_are_read_from_the_media_type_alone() -> None:
     assert model_run_media_kind("image/png") is ModelRunMediaKind.IMAGE
     assert model_run_media_kind("Application/PDF") is ModelRunMediaKind.PDF

@@ -161,10 +161,11 @@ def test_a_change_against_a_stale_revision_is_refused_and_changes_nothing() -> N
     [
         ("unknown_role", KEY_LANE, "synthetic-text-1"),
         ("text_extraction", MISSING_LANE, "synthetic-text-1"),
-        ("text_extraction", KEY_LANE, "has space"),
+        ("text_extraction", KEY_LANE, "has" + chr(9) + "tab"),
+        ("text_extraction", KEY_LANE, "m" * 513),
         ("text_extraction", KEY_LANE, ""),
     ],
-    ids=["unknown-role", "unreported-lane", "model-with-space", "empty-model"],
+    ids=["unknown-role", "unreported-lane", "model-with-control-character", "model-past-the-id-bound", "empty-model"],
 )
 def test_a_selection_naming_an_unknown_role_lane_or_malformed_model_is_refused(
     role: str, lane: str, model: str

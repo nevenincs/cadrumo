@@ -44,6 +44,7 @@ from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
 from cadrumo.core.time.utc import UtcInstant
+from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_PATTERN
 
 from .catalog import BASE_URL_MAX_LENGTH, ProviderId, validate_https_base_url
 
@@ -176,8 +177,8 @@ class ProviderSettingsRecord(BaseModel):
 
 MODEL_ROLE_SELECTIONS_RECORD_SCHEMA_VERSION: Final[Literal[1]] = 1
 
-ModelId = Annotated[str, StringConstraints(pattern=r"^[\x21-\x7e]{1,256}$")]
-"""A model id exactly as the lane's catalogue entry names it: printable ASCII, no spaces."""
+ModelId = Annotated[str, StringConstraints(pattern=MODEL_RUN_MODEL_ID_PATTERN)]
+"""A model id exactly as the lane's catalogue entry names it, under the catalogue's own id rule."""
 
 
 class ModelRoleSelection(BaseModel):

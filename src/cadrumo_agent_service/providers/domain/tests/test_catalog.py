@@ -266,6 +266,68 @@ def test_a_licence_without_an_spdx_identifier_parses() -> None:
     assert (reader.licence.spdx, reader.licence.name) == (None, "Synthetic community licence")
 
 
+_AGENT_MODEL_ID_LENGTH = 512
+"""cadrumo-agent's longest public id, which its catalogues bound a model id by."""
+_AGENT_LANES = 128
+"""The most lanes cadrumo-agent's catalogues carry."""
+_AGENT_DISPLAY_LENGTH = 256
+"""cadrumo-agent's longest display text, which its catalogues bound a licence's SPDX identifier by."""
+
+
+def _lanes(count: int) -> str:
+    """Return a document of ``count`` keyless lanes, each its own provider identity."""
+    return _document(
+        *(
+            _keyless_lane(id=f"local{index}_api", provider=f"local{index}", display_name=f"Local {index}")
+            for index in range(count)
+        )
+    )
+
+
+def test_a_model_the_agent_states_a_zero_size_for_parses_with_that_size() -> None:
+    keyless = parse_provider_catalog(_with_model(size_bytes=0)).entry("local_api")
+
+    assert keyless is not None
+    reader = keyless.model("synthetic-reader:1")
+    assert reader is not None and reader.size_bytes == 0
+
+
+def test_a_model_id_as_long_as_the_agent_allows_parses_and_one_longer_is_refused() -> None:
+    longest = "m" * _AGENT_MODEL_ID_LENGTH
+    document = _document(_keyless_lane(models=[_local_model(longest, vision=False)], recommended={"text": longest}))
+
+    keyless = parse_provider_catalog(document).entry("local_api")
+
+    assert keyless is not None and keyless.model(longest) is not None
+    assert keyless.recommended == {"text": longest}
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_with_model(id=longest + "m"))
+
+
+def test_a_model_id_with_a_control_character_is_refused() -> None:
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_with_model(id="synthetic\x00reader:1"))
+
+
+def test_as_many_lanes_as_the_agent_allows_parse_and_one_more_is_refused() -> None:
+    assert len(parse_provider_catalog(_lanes(_AGENT_LANES)).providers) == _AGENT_LANES
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_lanes(_AGENT_LANES + 1))
+
+
+def test_an_spdx_identifier_as_long_as_the_agent_allows_parses_and_one_longer_is_refused() -> None:
+    longest = "S" * _AGENT_DISPLAY_LENGTH
+    keyless = parse_provider_catalog(_with_licence({"spdx": longest, "name": "Synthetic", "digest": _DIGEST})).entry(
+        "local_api"
+    )
+
+    assert keyless is not None
+    reader = keyless.model("synthetic-reader:1")
+    assert reader is not None and reader.licence is not None and reader.licence.spdx == longest
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_with_licence({"spdx": longest + "S", "name": "Synthetic", "digest": _DIGEST}))
+
+
 def test_the_keyless_kind_takes_no_credential_no_sign_in_and_no_url_override() -> None:
     kind = ProviderAuthKind.NONE
 
@@ -430,7 +492,6 @@ def test_acceptable_base_url_passes() -> None:
             _with_background(_key_lane(), {"runnable": True, "inputs": ["text"], "options": [], "extra": 1}),
             id="background-unknown-field",
         ),
-        pytest.param(_with_model(size_bytes=0), id="size-zero"),
         pytest.param(_with_model(size_bytes=-1), id="size-negative"),
         pytest.param(_with_model(size_bytes="1"), id="size-not-an-integer"),
         pytest.param(_with_model(size_bytes=1.5), id="size-fractional"),
