@@ -32,7 +32,6 @@ use cadrumo_application::provisioning::{
         supervision::{ServerState, ServerSupervisor},
     },
     pins::{ComponentPins, Platform},
-    proxy::ProxySettings,
 };
 use std::{
     net::SocketAddr,
@@ -91,17 +90,14 @@ impl LocalAiHost {
             .program?;
         let program =
             Program::new(&pins, Platform::current()?, Locations::under(storage_root)).ok()??;
-        // A proxy setting the engine cannot use leaves the server to reach the registry
-        // directly, where the engine's own preflight reports the network.
-        let proxy = ProxySettings::from_settings(|name| std::env::var(name).ok())
-            .ok()
-            .flatten();
+        // The supervisor reads the operator's proxy setting through this environment at
+        // every start, so a setting changed after this manager started is the setting
+        // the next server runs under, and one the engine cannot use runs no server.
         let supervisor = ServerSupervisor::new(
             program,
             server_address()?,
             containment(),
             Box::new(|name: &str| std::env::var_os(name)),
-            proxy,
         )
         .ok()?;
         Self::supervise(supervisor).ok()

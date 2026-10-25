@@ -8,6 +8,7 @@
 //! consulted.
 
 use super::{http, proxy::ProxySettings, url::HttpsUrl};
+use crate::value::Sha256Digest;
 use rustls::{ClientConfig, ClientConnection, RootCertStore, StreamOwned, pki_types::ServerName};
 use std::{
     io::{self, BufReader, Read, Write},
@@ -98,6 +99,13 @@ impl Network {
             connect_timeout: Duration::from_secs(10),
             io_timeout: Duration::from_secs(30),
         }
+    }
+
+    /// The digest of the proxy setting this network downloads through; `None` when it
+    /// has none. Compared with a server's record so a server started under another
+    /// setting is never pulled through.
+    pub fn proxy_fingerprint(&self) -> Option<Sha256Digest> {
+        self.proxy.as_ref().map(ProxySettings::fingerprint)
     }
 
     pub(crate) fn proxied(&self, host: &str) -> Option<&ProxySettings> {

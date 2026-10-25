@@ -5,16 +5,19 @@ use crate::provisioning::{
         lease::PROGRAM_CHANGE_BUDGET,
         loopback::Loopback,
         program::{
-            ServerRecord,
+            SERVER_RECORD, ServerRecord,
             tests::{ambient, answers, free_address, installed, stand_in},
         },
     },
     pins::Platform,
+    proxy::{PROXY_URL, ProxySettings},
 };
 use std::{
+    ffi::OsString,
+    fs,
     process::Child,
     sync::{
-        Arc,
+        Arc, Mutex,
         atomic::{AtomicUsize, Ordering},
         mpsc,
     },
@@ -32,20 +35,14 @@ impl Containment for Counting {
 }
 
 fn supervisor(program: Program, address: SocketAddr, containment: Counting) -> ServerSupervisor {
-    ServerSupervisor::new(
-        program,
-        address,
-        Box::new(containment),
-        Box::new(ambient),
-        None,
-    )
-    .unwrap()
-    .with_policy(RestartPolicy {
-        initial_backoff: Duration::from_secs(1),
-        maximum_backoff: Duration::from_secs(4),
-        crash_loop_limit: 2,
-        crash_loop_window: Duration::from_secs(60),
-    })
+    ServerSupervisor::new(program, address, Box::new(containment), Box::new(ambient))
+        .unwrap()
+        .with_policy(RestartPolicy {
+            initial_backoff: Duration::from_secs(1),
+            maximum_backoff: Duration::from_secs(4),
+            crash_loop_limit: 2,
+            crash_loop_window: Duration::from_secs(60),
+        })
 }
 
 fn version_at(address: SocketAddr) -> Option<String> {
@@ -97,7 +94,6 @@ fn a_program_that_is_not_set_up_runs_no_server() {
             "192.0.2.1:23743".parse().unwrap(),
             Box::new(Counting::default()),
             Box::new(ambient),
-            None,
         )
         .is_err(),
         "only a loopback address is served"
@@ -238,4 +234,57 @@ fn the_owner_stops_the_server_at_exit_and_session_end_and_nothing_restarts_it() 
     .unwrap();
     stand_in(&mut observer, "9.8.7");
     assert!(observer.running_server().is_none());
+}
+
+#[test]
+fn the_proxy_setting_is_read_at_every_start_and_one_the_engine_cannot_use_runs_no_server() {
+    let root = tempfile::tempdir().unwrap();
+    let locations = Locations::under(root.path());
+    let (program, _) = installed(&locations, "9.8.7");
+    let address = free_address();
+    let contained = Counting::default();
+    let setting = Arc::new(Mutex::new(String::from("ftp://proxy.example:3128")));
+    let read = Arc::clone(&setting);
+    let mut supervisor = ServerSupervisor::new(
+        program,
+        address,
+        Box::new(contained.clone()),
+        Box::new(move |name: &str| {
+            if name == PROXY_URL {
+                return Some(OsString::from(read.lock().unwrap().clone()));
+            }
+            ambient(name)
+        }),
+    )
+    .unwrap();
+    let now = Instant::now();
+
+    // A setting the engine cannot use runs no server: one started without it would
+    // fetch the models directly, which is the opposite of what the setting asks for.
+    assert_eq!(supervisor.poll(now), ServerState::ProxyRefused);
+    assert!(!answers(address));
+    assert_eq!(contained.0.load(Ordering::SeqCst), 0);
+    assert!(ServerRecord::read(&locations.programs).is_none());
+
+    // The operator corrects the setting after this supervisor started: the next look
+    // reads it, so it is the setting the server runs under.
+    *setting.lock().unwrap() = String::from("http://user:secret@proxy.example:3128");
+    assert_eq!(supervisor.poll(now), ServerState::Running);
+    let record = ServerRecord::read(&locations.programs).unwrap();
+    let corrected = ProxySettings::from_settings(|name| {
+        (name == PROXY_URL).then(|| setting.lock().unwrap().clone())
+    })
+    .unwrap()
+    .unwrap();
+    assert_eq!(record.proxy_fingerprint(), Some(corrected.fingerprint()));
+    let written = fs::read_to_string(locations.programs.join(SERVER_RECORD)).unwrap();
+    assert!(
+        !written.contains("proxy.example") && !written.contains("secret"),
+        "the address is a credential; only its digest is recorded: {written}"
+    );
+
+    // A setting that becomes unusable stops the server already running under the old one.
+    *setting.lock().unwrap() = String::from("http://proxy.example:0");
+    assert_eq!(supervisor.poll(now), ServerState::ProxyRefused);
+    assert!(!answers(address));
 }

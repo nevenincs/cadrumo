@@ -52,6 +52,7 @@ use super::{
     local_ai::{
         self, LocalAiError,
         hardware::Hardware,
+        lease::PROGRAM_CHANGE_BUDGET,
         models::{Models, Pull},
         program::{Program, START_BUDGET, Server},
     },
@@ -1350,7 +1351,14 @@ impl Engine {
                 )?;
             }
             writer.step(SetupStep::Download)?;
-            let server = wait_for_server(&program, &mut pacing, cancellation, sink, &writer)?;
+            let server = server_under_this_proxy(
+                &self.config.network,
+                &program,
+                &mut pacing,
+                cancellation,
+                sink,
+                &writer,
+            )?;
             let mut pulled = BTreeSet::new();
             for part in &entry.parts {
                 let Some(pin) = models.for_role(&part.part_id) else {
@@ -1422,6 +1430,46 @@ impl Engine {
 /// The manager's server for `program`, once it answers. Looks at once, then at growing
 /// intervals within [`SERVER_WAIT`], reporting the wait once; without a server by then
 /// the local AI is `program_not_running`.
+/// The server the models are pulled through, started under the setting this engine
+/// downloads under.
+///
+/// The server fetches the model bytes itself, so a server the supervisor started under
+/// another proxy setting would fetch them through that one. Asking for a program change
+/// is the channel the supervisor already answers: it stops its server, and releasing the
+/// change lets it start one again, reading the setting afresh. Where no supervisor
+/// answers, no server comes back and the wait refuses with the program not running,
+/// which carries the local AI's setup action; a server that comes back still under
+/// another setting refuses as blocked by the network rather than pulling through it.
+fn server_under_this_proxy(
+    network: &Network,
+    program: &Program,
+    pacing: &mut dyn Pacing,
+    cancellation: &Cancellation,
+    sink: &Sink<'_>,
+    writer: &ItemWriter<'_>,
+) -> Result<Server, Stop> {
+    let wanted = network.proxy_fingerprint();
+    let server = wait_for_server(program, pacing, cancellation, sink, writer)?;
+    if server.proxy_fingerprint() == wanted {
+        return Ok(server);
+    }
+    drop(server);
+    let change = program
+        .leases()
+        .change_program(PROGRAM_CHANGE_BUDGET, &mut || {})
+        .map_err(|error| match error {
+            Error::Busy => Stop::Busy,
+            _ => Stop::Failed(FailureCategory::BlockedByNetwork),
+        })?;
+    drop(change);
+    let server = wait_for_server(program, pacing, cancellation, sink, writer)?;
+    if server.proxy_fingerprint() == wanted {
+        Ok(server)
+    } else {
+        Err(Stop::Failed(FailureCategory::BlockedByNetwork))
+    }
+}
+
 fn wait_for_server(
     program: &Program,
     pacing: &mut dyn Pacing,

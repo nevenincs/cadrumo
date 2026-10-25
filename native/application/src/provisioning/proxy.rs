@@ -7,7 +7,7 @@
 //! value has no `Debug` or `Display` that shows any of it, and its texts are wiped on drop.
 
 use super::failure::{FailureCategory, TransferFailure};
-use crate::error::Error;
+use crate::{error::Error, value::Sha256Digest};
 use std::fmt;
 use zeroize::Zeroizing;
 
@@ -93,6 +93,27 @@ impl ProxySettings {
             password,
             bypass,
         }))
+    }
+
+    /// A digest of the whole effective setting, so one start's setting can be compared
+    /// with another's without holding or recording any part of the address.
+    ///
+    /// The address is a credential, so only this digest is ever recorded. It covers
+    /// every field a start acts on, the user name and password included, so a changed
+    /// credential reads as a changed setting.
+    pub fn fingerprint(&self) -> Sha256Digest {
+        let mut material = Zeroizing::new(String::new());
+        for field in [
+            self.host.as_str(),
+            &self.port.to_string(),
+            self.username.as_str(),
+            self.password.as_str(),
+            &self.bypass.join(","),
+        ] {
+            material.push_str(field);
+            material.push('\u{1f}');
+        }
+        Sha256Digest::of(material.as_bytes())
     }
 
     /// Whether `host` is reached directly: equal to, or a subdomain of, a bypass entry.

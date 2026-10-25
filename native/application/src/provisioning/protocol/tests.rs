@@ -21,7 +21,7 @@ use crate::provisioning::{
     local_ai::{
         fake_ollama::FakeOllama,
         hardware::Hardware,
-        program::{SERVER_RECORD, ServerRecord},
+        program::{SERVER_RECORD, SERVER_RECORD_SCHEMA, ServerRecord},
     },
     pins::{ComponentPins, Platform},
     proxy::{PROXY_URL, ProxySettings},
@@ -399,14 +399,21 @@ impl World {
     /// Plays the manager starting its server: records the test's server as the running
     /// one, as the supervisor does once it answers.
     fn serve_local_ai(&self) {
+        self.serve_local_ai_under(None);
+    }
+
+    /// The same, for a server the supervisor started under the proxy setting whose
+    /// digest is `proxy`.
+    fn serve_local_ai_under(&self, proxy: Option<&str>) {
         let ollama = self.ollama.as_ref().unwrap();
         let record = ServerRecord {
-            schema: 1,
+            schema: SERVER_RECORD_SCHEMA,
             address: ollama.address().to_string(),
             version: PROGRAM_VERSION.into(),
             executable: self.programs().join(EXECUTABLE),
             models: self.root().join("models/ollama"),
             process_id: std::process::id(),
+            proxy: proxy.map(str::to_owned),
         };
         fs::write(
             self.programs().join(SERVER_RECORD),
@@ -1035,6 +1042,45 @@ fn a_follower_reports_the_cancel_the_person_asked_for_and_a_setup_whose_process_
         followed.result
     );
     assert_eq!(row(&followed.result, "browser")["recovery"], "resume");
+}
+
+#[test]
+fn a_server_started_under_another_proxy_setting_is_never_pulled_through() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::local_ai(&text, &vision);
+
+    let mut setup = world.start(&["setup", "--item", "local_ai"]);
+    let (_reviewed, review) = setup.until("review");
+    setup.send(json!({"type": "approve", "plan_digest": review["plan_digest"]}));
+    setup.until("notice");
+    // The supervisor's server is recorded as started under a setting that is not this
+    // engine's, and no supervisor answers the restart the engine then asks for, so the
+    // same server is still there when it looks again.
+    world.serve_local_ai_under(Some(&Sha256Digest::of(b"another setting").to_string()));
+    let done = setup.finish();
+
+    assert_eq!(
+        (&done.result["outcome"], &done.result["failure_category"]),
+        (&json!("failed"), &json!("blocked_by_network")),
+        "{}",
+        done.result
+    );
+    let requests = world
+        .ollama
+        .as_ref()
+        .unwrap()
+        .state
+        .lock()
+        .unwrap()
+        .requests
+        .clone();
+    assert!(
+        !requests
+            .iter()
+            .any(|line| line.starts_with("POST /api/pull")),
+        "no model is pulled through it: {requests:?}"
+    );
 }
 
 #[test]

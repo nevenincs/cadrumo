@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:1663a8cd822bb758ed0f2ac4035e8525cc14ad9923de10ea047a51a8547c37e1'
+body_hash: 'sha256:cc3070ae43ae93ec6e9c46c6b3745879e606218693b0db5abd4d19d89453a19c'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -881,6 +881,17 @@ related:
 - `S11` `verify:` `npx tsc --noEmit` -> `pass`
 - `S11` `verify:` `npx eslint src/shell/ledger.ts src/dev/ledgerEvidenceFixture.ts` -> `pass`
 - `S11` `by:` `implementation-engineer`
+- `S17` `M` `native/application/src/provisioning/proxy.rs`
+- `S17` `M` `native/application/src/provisioning/connection.rs`
+- `S17` `M` `native/application/src/provisioning/engine.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/supervision.rs`
+- `S17` `M` `native/application/src/provisioning/local_ai/supervision/tests.rs`
+- `S17` `M` `native/application/src/provisioning/protocol/tests.rs`
+- `S17` `M` `native/manager/src/supervision/local_ai.rs`
+- `S17` `verify:` `cargo test --offline --lib provisioning:: on native/application` -> `pass`
+- `S17` `verify:` `cargo test --offline --lib supervision:: on native/manager` -> `pass`
+- `S17` `verify:` `cargo clippy --offline --all-targets -- -D warnings on both crates` -> `pass`
+- `S17` `by:` `implementation-engineer`
 
 ## Notes
 
@@ -966,3 +977,4 @@ related:
 - `S15` S15 CI workflows are unchanged: the fleet owns CI; CONTRIBUTING lists the Linux provisioning lane, the role lane and the acquisition lane beside the gate
 - `S25` The desktop crate's parity edit was not compiled here: its clippy gate runs only through CMake, which this session must not run.
 - `S07` `test_settings_lifecycle_gate` chain detector, `test_currency_fields_use_one_annotation` and `test_hashing_adoption` fail on this tree without these edits; reproduced against HEAD's taxonomy.
+- `S17` The server record's schema moves to 2 for the proxy digest, so a server recorded by an earlier build reads as not running until the manager starts one again; no Python or external consumer reads that record.

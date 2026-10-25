@@ -57,7 +57,7 @@ use crate::{
         state::{Observation, StaleReason},
         transfer::Transfer,
     },
-    value::{HostName, RelativePath},
+    value::{HostName, RelativePath, Sha256Digest},
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -175,7 +175,13 @@ pub struct ServerRecord {
     pub executable: PathBuf,
     pub models: PathBuf,
     pub process_id: u32,
+    /// The digest of the proxy setting this server was started under, absent when it
+    /// was started without one. Never the address itself, which is a credential.
+    pub proxy: Option<String>,
 }
+
+/// The record shape this build writes and reads.
+pub const SERVER_RECORD_SCHEMA: u32 = 2;
 
 impl ServerRecord {
     /// The record under `programs`, when one is there and readable.
@@ -184,7 +190,13 @@ impl ServerRecord {
             filesystem::bounded_bytes(&programs.join(SERVER_RECORD), SERVER_RECORD_LIMIT).ok()?;
         serde_json::from_slice::<Self>(&bytes)
             .ok()
-            .filter(|record| record.schema == 1)
+            .filter(|record| record.schema == SERVER_RECORD_SCHEMA)
+    }
+
+    /// The proxy setting the server was started under, when the record names a digest
+    /// this build can read.
+    pub fn proxy_fingerprint(&self) -> Option<Sha256Digest> {
+        Sha256Digest::new(self.proxy.clone()?).ok()
     }
 
     fn loopback(&self) -> Option<Loopback> {
@@ -216,6 +228,9 @@ pub struct Server {
     containment: Option<Box<dyn Send>>,
     /// Released last, once the process has ended and its record is gone.
     lease: Option<ServerLease>,
+    /// The digest of the proxy setting this server was started under, absent when it
+    /// was started without one.
+    proxy: Option<Sha256Digest>,
 }
 
 impl std::fmt::Debug for Server {
@@ -249,6 +264,12 @@ impl Server {
         self.loopback
     }
 
+    /// The proxy setting this server was started under; `None` when it was started
+    /// without one, or when its record names no digest this build reads.
+    pub fn proxy_fingerprint(&self) -> Option<Sha256Digest> {
+        self.proxy.clone()
+    }
+
     /// A server the test process answers for itself at `address`, with no child.
     #[cfg(test)]
     pub(crate) fn attached(address: SocketAddr, version: &str) -> Self {
@@ -261,6 +282,7 @@ impl Server {
             record: PathBuf::new(),
             containment: None,
             lease: None,
+            proxy: None,
         }
     }
 
@@ -277,6 +299,7 @@ impl Server {
             record: programs.join(SERVER_RECORD),
             containment: None,
             lease: None,
+            proxy: record.proxy_fingerprint(),
         };
         (record.version == version
             && server
@@ -310,6 +333,7 @@ impl Server {
         record: PathBuf,
         containment: &dyn Containment,
         lease: ServerLease,
+        proxy: Option<Sha256Digest>,
     ) -> Result<Self, LocalAiError> {
         let mut process = Command::new(&command.executable);
         process
@@ -360,6 +384,7 @@ impl Server {
             record,
             containment: Some(guard),
             lease: Some(lease),
+            proxy,
         };
         let announced = server.announced();
         let answered = announced
@@ -758,8 +783,9 @@ impl Program {
         let Some(lease) = self.leases.try_serve()? else {
             return Err(LocalAiError::Engine(Error::Busy));
         };
+        let fingerprint = proxy.map(ProxySettings::fingerprint);
         let command = self.serve_command(&active, address, ambient, proxy)?;
-        self.start_with(command, containment, lease)
+        self.start_with(command, containment, lease, fingerprint)
     }
 
     /// The command a start of `active` runs: `serve` on `address`, with the models, home
@@ -833,6 +859,7 @@ impl Program {
         command: ServeCommand,
         containment: &dyn Containment,
         lease: ServerLease,
+        proxy: Option<Sha256Digest>,
     ) -> Result<&Server, LocalAiError> {
         let home = &self.locations.ollama_home;
         for folder in [
@@ -845,16 +872,24 @@ impl Program {
             fs::create_dir_all(&folder)?;
         }
         let record = self.locations.programs.join(SERVER_RECORD);
-        let server = Server::spawn(command, &self.version, record.clone(), containment, lease)?;
+        let server = Server::spawn(
+            command,
+            &self.version,
+            record.clone(),
+            containment,
+            lease,
+            proxy.clone(),
+        )?;
         filesystem::replace_json(
             &record,
             &ServerRecord {
-                schema: 1,
+                schema: SERVER_RECORD_SCHEMA,
                 address: server.address().to_string(),
                 version: server.version.clone(),
                 executable: server.executable.clone(),
                 models: self.locations.models.clone(),
                 process_id: server.process_id().unwrap_or_default(),
+                proxy: proxy.map(|digest| digest.as_str().to_owned()),
             },
         )?;
         Ok(self.server.insert(server))

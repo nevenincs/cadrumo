@@ -78,6 +78,10 @@ pub enum ServerState {
     Failed,
     /// The owner stopped the server; nothing starts until it resumes.
     Stopped,
+    /// The operator's proxy setting is one the engine cannot use, so no server is run:
+    /// a server started without it would reach the model registry directly, which is
+    /// the opposite of what the setting asks for. The next look reads the setting again.
+    ProxyRefused,
 }
 
 /// The active pointer's file facts, which change whenever a version is activated or
@@ -93,7 +97,6 @@ pub struct ServerSupervisor {
     address: SocketAddr,
     containment: Box<dyn Containment + Send>,
     environment: Environment,
-    proxy: Option<ProxySettings>,
     policy: RestartPolicy,
     restarts: VecDeque<Instant>,
     state: ServerState,
@@ -102,15 +105,14 @@ pub struct ServerSupervisor {
 
 impl ServerSupervisor {
     /// Supervises `program`'s server on `address`, a loopback address, contained by
-    /// `containment`. `environment` reads the owner's environment for the operating
-    /// system settings the server is given; `proxy` is the operator's proxy for the
-    /// models it downloads.
+    /// `containment`. `environment` reads the owner's environment: the operating system
+    /// settings the server is given, and the operator's proxy for the models it
+    /// downloads, which is read again at every start.
     pub fn new(
         program: Program,
         address: SocketAddr,
         containment: Box<dyn Containment + Send>,
         environment: Environment,
-        proxy: Option<ProxySettings>,
     ) -> Result<Self, Error> {
         if !address.ip().is_loopback() {
             return Err(Error::Invalid(
@@ -122,7 +124,6 @@ impl ServerSupervisor {
             address,
             containment,
             environment,
-            proxy,
             policy: RestartPolicy::default(),
             restarts: VecDeque::new(),
             state: ServerState::NotSetUp,
@@ -164,6 +165,16 @@ impl ServerSupervisor {
             ServerState::Restarting { at } if now < at => return self.state,
             _ => {}
         }
+        // Read at every look, so a setting the operator changes after this manager
+        // started is the setting the next server runs under.
+        let proxy = match self.proxy() {
+            Ok(proxy) => proxy,
+            Err(_) => {
+                self.program.stop();
+                self.state = ServerState::ProxyRefused;
+                return self.state;
+            }
+        };
         if let Some(server) = self.program.server_mut() {
             if server.exited() {
                 // Reaps it, removes its record and gives the lease up.
@@ -192,7 +203,7 @@ impl ServerSupervisor {
             self.address,
             self.containment.as_ref(),
             self.environment.as_ref(),
-            self.proxy.as_ref(),
+            proxy.as_ref(),
         );
         match started {
             Ok(_) => self.state = ServerState::Running,
@@ -218,6 +229,14 @@ impl ServerSupervisor {
             ServerState::Restarting { at: now + delay }
         };
         self.state
+    }
+
+    /// The operator's proxy setting now, read through the owner's environment. An error
+    /// is a setting the engine cannot use, which the role refuses as blocked by network.
+    fn proxy(&self) -> Result<Option<ProxySettings>, Error> {
+        ProxySettings::from_settings(|name| {
+            (self.environment)(name).and_then(|value| value.into_string().ok())
+        })
     }
 
     fn pointer_stamp(&self) -> PointerStamp {
