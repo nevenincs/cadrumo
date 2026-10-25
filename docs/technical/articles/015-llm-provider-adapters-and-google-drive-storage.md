@@ -9,7 +9,7 @@
 <!-- preserved:article -->
 ## Scope and capabilities
 
-This chunk completes the LLM client surface with strict request/response records, provider transport adapters, pricing, retention, local-model fitness, and supply-nature proposals. It also covers the Google Drive bytes store and credential/backend factory, shared hash/key/pagination rules, and detached local-runtime process control. The analysis follows the code from request creation through provider normalization and from a storage call through Drive metadata checks.
+This chunk completes the LLM client surface with strict request/response records, provider transport adapters, pricing, retention, local-model fitness, and supply-nature proposals. It also covers the Google Drive bytes store and credential/backend factory, and shared hash/key/pagination rules. The analysis follows the code from request creation through provider normalization and from a storage call through Drive metadata checks.
 
 ## LLM request and provider flow
 
@@ -23,7 +23,7 @@ Supply-nature inference is advisory. The prompt limits input to the first forty 
 
 `GoogleDriveProvider` organizes remote objects beneath an owned vault folder and one folder per namespace. Filenames expose only an eight-character HMAC prefix plus a sanitized label; the full HMAC and content hash live in `appProperties`. Lookups paginate by prefix but require the full HMAC and Cadrumo ownership marker before returning a match. Reads validate metadata size and timestamp, require a full SHA-256 digest, compare returned byte length, then recompute the payload digest before returning bytes. Create/update/delete operations are explicit, and a configurable handoff/acknowledgement pair surrounds provider calls. Drive provider and vault resolution (`src/cadrumo/adapters/outbound/storage/_google_drive.py`) Owned-object lookup (`src/cadrumo/adapters/outbound/storage/_google_drive.py`) Upload boundary (`src/cadrumo/adapters/outbound/storage/_google_drive.py`) Verified download (`src/cadrumo/adapters/outbound/storage/_google_drive.py`) Shared digest and byte-length checks (`src/cadrumo/adapters/outbound/storage/_integrity.py`)
 
-The backend factory checks the active profile, selects local storage or Google Drive, resolves the profile's stored Drive root folder and refuses it unless Drive still shows it as a folder the application created, and hydrates credentials from the installation's Google client and the profile's stored sign-in token. Drive query literals are escaped; ownership and object-key HMAC checks are shared; repeated or non-string pagination tokens become typed failures. Runtime installation uses fixed argument vectors and no shell, with output detached; server spawning intentionally leaves the runtime running after the application exits. Credential selection (`src/cadrumo/adapters/outbound/storage/factory.py`) Provider construction (`src/cadrumo/adapters/outbound/storage/factory.py`) Shared key validation (`src/cadrumo/adapters/outbound/storage/_key_validation.py`) Pagination guard (`src/cadrumo/adapters/outbound/storage/drive_pagination.py`) Detached runtime process control (`src/cadrumo/adapters/outbound/model_runtime/process_control.py`)
+The backend factory checks the active profile, selects local storage or Google Drive, resolves the profile's stored Drive root folder and refuses it unless Drive still shows it as a folder the application created, and hydrates credentials from the installation's Google client and the profile's stored sign-in token. Drive query literals are escaped; ownership and object-key HMAC checks are shared; repeated or non-string pagination tokens become typed failures. Credential selection (`src/cadrumo/adapters/outbound/storage/factory.py`) Provider construction (`src/cadrumo/adapters/outbound/storage/factory.py`) Shared key validation (`src/cadrumo/adapters/outbound/storage/_key_validation.py`) Pagination guard (`src/cadrumo/adapters/outbound/storage/drive_pagination.py`)
 
 ## Security and quality observations
 
@@ -58,8 +58,6 @@ This chunk shows clear provider and storage boundaries: model replies and transp
 - supply_nature_proposal.py (`src/cadrumo/adapters/outbound/llm/supply_nature_proposal.py`) — lines 1–373
 - text_classifier.py (`src/cadrumo/adapters/outbound/llm/text_classifier.py`) — lines 1–145
 - vision_classifier.py (`src/cadrumo/adapters/outbound/llm/vision_classifier.py`) — lines 1–142
-- model_runtime/__init__.py (`src/cadrumo/adapters/outbound/model_runtime/__init__.py`) — lines 1–1
-- process_control.py (`src/cadrumo/adapters/outbound/model_runtime/process_control.py`) — lines 1–101
 - storage/__init__.py (`src/cadrumo/adapters/outbound/storage/__init__.py`) — lines 1–12
 - _google_drive.py (`src/cadrumo/adapters/outbound/storage/_google_drive.py`) — lines 1–1271
 - _google_drive_metadata.py (`src/cadrumo/adapters/outbound/storage/_google_drive_metadata.py`) — lines 1–186
