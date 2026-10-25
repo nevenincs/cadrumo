@@ -74,12 +74,14 @@ class UnreadableModelRoleSelections(BaseModel):
     """A selections record is stored but cannot be decrypted or validated.
 
     It fails closed: no role reads as selected or as unselected, and only a
-    guarded reset may remove it.
+    guarded reset may remove it. It always carries the revision that reset is
+    guarded by: every record in the selections capability was written through
+    the secure-object funnel, which stamps a revision on each write.
     """
 
     model_config = _STRICT_FROZEN
 
-    revision: Hex64Str | None
+    revision: Hex64Str
 
 
 type ModelRoleSelectionsRead = StoredModelRoleSelections | AbsentModelRoleSelections | UnreadableModelRoleSelections

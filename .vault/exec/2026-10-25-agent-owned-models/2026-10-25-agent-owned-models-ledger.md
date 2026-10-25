@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:4c2867191789d63ac9744e50eda7e3f01ed6c1097ba0a13a0136269c7b8e3d6d'
+body_hash: 'sha256:b55685c891dc399f9ab5b6a3744a9ce46e5f03ffbd2b01abc890d710ad8c41da'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -118,6 +118,11 @@ related:
 - `S29` `by:` `vaultspec-high-executor`
 - `S02` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service` -> `pass`
 - `S02` `verify:` `uv run --no-sync ruff check, ruff format --check and ty check on the touched files` -> `pass`
+- `S29` `M` `src/cadrumo_agent_service/providers/application/contracts.py`
+- `S29` `M` `src/cadrumo_agent_service/providers/application/model_role_selections.py`
+- `S29` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service` -> `pass`
+- `S29` `verify:` `uv run --no-sync pytest -m '' dev/runtime_lifecycle/tests/test_service_provider_admin_ingress.py dev/runtime_lifecycle/tests/test_service_model_run_relay.py` -> `pass`
+- `S29` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
 
 ## Notes
 
@@ -126,3 +131,4 @@ related:
 - `S05` The desktop crate was not compiled here; mod.rs and admin.rs edits are not compiler-verified. gateway.rs needed no change: the selection is served by the service admin endpoint, not the agent gateway.
 - `S29` Installed packages need a rebuild before the installed runtime admits the model-role-selections capability; the descriptor is staged at assembly.
 - `S02` S02 Review follow-up: a selections read now decides each distinct lane once (one credential record read and one media query per lane) instead of once per role.
+- `S29` S29 Review follow-up: an unreadable selections record always carries its reset guard; a runtime answer for a stored record without a revision refuses unknown. The provider records keep the inherited revision-less shape.

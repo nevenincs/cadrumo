@@ -175,8 +175,13 @@ class SecureModelRoleSelectionsStore:
                     return refusal
                 if reply.state == "absent":
                     return AbsentModelRoleSelections()
+                if reply.revision is None:
+                    # Every write stamps a revision, so a stored record without
+                    # one is a runtime answer outside the contract, and no reset
+                    # could be guarded by it.
+                    return _unknown()
                 unreadable = UnreadableModelRoleSelections(revision=reply.revision)
-                if reply.state != "present" or reply.revision is None:
+                if reply.state != "present":
                     return unreadable
                 try:
                     record = parse_model_role_selections_record(bytes(material))

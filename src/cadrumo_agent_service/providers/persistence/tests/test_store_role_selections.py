@@ -50,6 +50,7 @@ class _Records:
         self.refusal: ExtensionRecordRefusal | None = None
         self.keys: list[str] = []
         self.capabilities: list[str] = []
+        self.revisionless = False
 
     def _reply(self, state: str, *, revision: str | None = None, byte_count: int = 0) -> ExtensionRecordReply:
         return ExtensionRecordReply.model_validate(
@@ -77,7 +78,7 @@ class _Records:
         if row is None:
             return self._reply("absent"), bytearray()
         if object_key in self.unreadable:
-            return self._reply("unreadable", revision=row[0]), bytearray()
+            return self._reply("unreadable", revision=None if self.revisionless else row[0]), bytearray()
         return self._reply("present", revision=row[0], byte_count=len(row[1])), bytearray(row[1])
 
     def record_write(
@@ -219,3 +220,13 @@ def test_every_exchange_uses_the_selections_capability_and_never_the_provider_re
     assert MODEL_ROLE_SELECTIONS_CAPABILITY != PROVIDER_RECORD_CAPABILITY
     assert records.capabilities == [MODEL_ROLE_SELECTIONS_CAPABILITY] * 3
     assert records.keys == [MODEL_ROLE_SELECTIONS_KEY] * 3
+
+
+def test_a_stored_record_reported_without_a_revision_refuses_rather_than_reading_unguarded() -> None:
+    """Every unreadable record the store reports carries the revision its reset is guarded by."""
+    records = _Records()
+    records.rows[MODEL_ROLE_SELECTIONS_KEY] = ("c" * 64, b"{}")
+    records.unreadable.add(MODEL_ROLE_SELECTIONS_KEY)
+    records.revisionless = True
+
+    assert _store(records).read() == StoreRefusal(code=StoreRefusalCode.UNKNOWN)

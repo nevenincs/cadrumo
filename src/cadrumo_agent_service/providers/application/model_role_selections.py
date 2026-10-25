@@ -171,7 +171,7 @@ def _is_model_id(model: str) -> bool:
     return True
 
 
-def _selections_revision(read: ModelRoleSelectionsRead) -> str | None:
+def _selections_revision(read: ModelRoleSelectionsRead) -> str:
     if isinstance(read, AbsentModelRoleSelections):
         return ABSENT_SECURE_OBJECT_REVISION_ID
     return read.revision

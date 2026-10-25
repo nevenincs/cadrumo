@@ -179,20 +179,19 @@ class ModelRoleSelectionsStatus(OutputSchema):
 
     ``unreadable`` means a stored selections record cannot be read. Then no
     role is listed, because none is known to be selected or unselected, and
-    ``revision`` guards the reset that removes the record.
+    ``revision`` guards the reset that removes the record. Every state carries
+    a revision, so an unreadable record always has a reset route.
     """
 
     unreadable: bool
     roles: tuple[ModelRoleSelectionEntry, ...]
-    revision: ProviderSettingsRevision | None
+    revision: ProviderSettingsRevision
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _roles_follow_readability(self) -> Self:
         if self.unreadable == bool(self.roles):
             raise ValueError("a readable record lists every role and an unreadable one lists none")
-        if not self.unreadable and self.revision is None:
-            raise ValueError("a readable record carries its revision")
         return self
 
 

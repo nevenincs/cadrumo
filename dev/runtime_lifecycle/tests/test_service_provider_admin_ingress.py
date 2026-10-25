@@ -17,7 +17,11 @@ from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_agent_service.adapters.agent_programs import PACKAGE_AGENT_VARIABLE
 from cadrumo_agent_service.admin import AdminAction, AdminServer
 from cadrumo_agent_service.providers.application.tests.synthetic_catalog import KEY_LANE, synthetic_document
-from cadrumo_agent_service.providers.persistence.store import SecureProviderSettingsStore
+from cadrumo_agent_service.providers.persistence.store import (
+    MODEL_ROLE_SELECTIONS_CAPABILITY,
+    MODEL_ROLE_SELECTIONS_KEY,
+    SecureProviderSettingsStore,
+)
 from cadrumo_agent_service.service import AgentService
 from cadrumo_client.contracts.service_access import ServiceConnected
 from cadrumo_runtime.host.tests.test_service_records import service_record_runtime
@@ -294,6 +298,62 @@ def test_a_role_selection_lives_in_its_own_capability_and_never_moves_the_provid
             )
             assert isinstance(stored["result"], dict) and "entry" in stored["result"], stored
             assert provider_generation() != before
+        finally:
+            server.close()
+            service.close()
+            admin[:] = bytes(len(admin))
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows worker custody")
+@pytest.mark.usefixtures("authority_operation")
+def test_an_unreadable_selections_record_reports_its_guard_and_a_guarded_reset_clears_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A record that does not validate is never read as no selection, and its reset is always reachable."""
+    image, _record = stand_in_agent_image(tmp_path, catalog_document=synthetic_document())
+    monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(image))
+    admin = bytearray(b"synthetic-parent-admin-authority")
+    capabilities = (provider_record_capability(), model_role_selections_capability())
+    with service_record_runtime(tmp_path, record_capabilities=capabilities) as runtime:
+        client = runtime.connect_service()
+        service = AgentService(
+            client=client,
+            storage_root=runtime.root,
+            gateway_bearer=bytearray(b"synthetic-gateway"),
+            emit=lambda _: None,
+        )
+        server = AdminServer(service, bearer=admin)
+        try:
+            assert isinstance(runtime.admit(client), ServiceConnected)
+            assert client.claim() is not None
+            written = client.record_write(
+                MODEL_ROLE_SELECTIONS_CAPABILITY,
+                MODEL_ROLE_SELECTIONS_KEY,
+                payload=bytearray(b'{"schema_version":99}'),
+                expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+            )
+            assert written.state == "written"
+
+            unreadable = _exchange(server.port, bytes(admin), _request("model_roles"))["result"]
+            assert isinstance(unreadable, dict)
+            assert unreadable["unreadable"] is True and unreadable["roles"] == []
+            assert unreadable["revision"] == written.revision
+            refused = _exchange(
+                server.port,
+                bytes(admin),
+                _selection_request(
+                    "model_role_set", written.revision, role="text_extraction", provider=KEY_LANE, model="m-1"
+                ),
+            )
+            assert refused["result"] == {"code": "unknown"}
+
+            reset = _selections(
+                _exchange(server.port, bytes(admin), _selection_request("model_roles_reset", written.revision))
+            )
+            assert reset["revision"] == ABSENT_SECURE_OBJECT_REVISION_ID
+            roles = reset["roles"]
+            assert isinstance(roles, list) and all(isinstance(role, dict) and role["lane"] is None for role in roles)
         finally:
             server.close()
             service.close()
