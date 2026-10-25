@@ -917,6 +917,23 @@ EXTENSION_SETTINGS_NAMESPACE = SecureObjectNamespaceDefinition(
     remote_mirror_requires_revision=False,
     remote_mirror_requires_integrity_manifest=False,
 )
+# The person's model choice per role, held apart from the provider records so a
+# selection change never moves the provider-settings records generation. It
+# carries no secret but keeps the provider records' custody: it names models on
+# this machine, so it stays process-local and never mirrors remotely.
+MODEL_ROLE_SELECTIONS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="model_role_selections",
+    namespace="cadrumo.model_role_selections",
+    owner="cadrumo.adapters.persistence.storage.secure_object_namespaces",
+    sensitivity=SensitivityClass.SECRET,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{extension_record_key}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
+)
 LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_cache",
     namespace="cadrumo.adapters.outbound.llm.cache",

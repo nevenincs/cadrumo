@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:4157154783fd1e2754487a2ec104128d88ba388c7b8f754d6d5a24f9817778d7'
+body_hash: 'sha256:ac1db169f5aa924ae80716f0fda88af4bf50a9492a11910b3626aaa408d87348'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -89,9 +89,37 @@ related:
 - `S05` `verify:` `npx tsc --noEmit, eslint and prettier --check on src/ipc/contract.ts` -> `pass`
 - `S05` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_git_cli.py` -> `pass`
 - `S05` `by:` `vaultspec-high-executor`
+- `S29` `M` `src/cadrumo_agent_service/providers/persistence/store.py`
+- `S29` `M` `src/cadrumo_agent_service/providers/application/ports.py`
+- `S29` `M` `src/cadrumo_agent_service/providers/application/service.py`
+- `S29` `M` `src/cadrumo_agent_service/providers/application/model_runs.py`
+- `S29` `M` `src/cadrumo_agent_service/providers/domain/record.py`
+- `S29` `M` `src/cadrumo_agent_service/service.py`
+- `S29` `M` `src/cadrumo_agent_service/providers/application/tests/memory_store.py`
+- `S29` `M` `src/cadrumo_agent_service/providers/application/tests/test_model_runs.py`
+- `S29` `M` `src/cadrumo_agent_service/providers/application/tests/test_model_role_selections.py`
+- `S29` `M` `src/cadrumo_agent_service/providers/persistence/tests/test_store_role_selections.py`
+- `S29` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S29` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S29` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S29` `M` `dev/packaging/native/service_descriptors.py`
+- `S29` `M` `dev/packaging/native/tests/test_service_descriptors.py`
+- `S29` `M` `dev/runtime_lifecycle/tests/provider_catalog_support.py`
+- `S29` `M` `dev/runtime_lifecycle/tests/test_service_provider_admin_ingress.py`
+- `S29` `M` `native/CONTRACT.md`
+- `S29` `M` `.vault/adr/2026-10-25-agent-owned-models-adr.md`
+- `S29` `A` `src/cadrumo_agent_service/providers/application/model_role_selections.py`
+- `S29` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service` -> `pass`
+- `S29` `verify:` `uv run --no-sync pytest -m '' dev/runtime_lifecycle/tests/test_service_provider_admin_ingress.py dev/runtime_lifecycle/tests/test_service_model_run_relay.py` -> `pass`
+- `S29` `verify:` `uv run --no-sync pytest dev/quality/tests/test_secure_store_write_path.py src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py dev/packaging/native/tests/test_service_descriptors.py dev/packaging/tests/test_native_service_descriptors.py` -> `pass`
+- `S29` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S29` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S29` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `S29` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S03` Wire result shapes live in providers/application/contracts.py beside the provider status shapes; `src/cadrumo_agent_service/contracts.py` needed no change.
 - `S04` The selections read crosses the `cadrumo_client` wire contract, the runtime worker instruction and lease, and the operation authority as well as the three named files.
 - `S05` The desktop crate was not compiled here; mod.rs and admin.rs edits are not compiler-verified. gateway.rs needed no change: the selection is served by the service admin endpoint, not the agent gateway.
+- `S29` Installed packages need a rebuild before the installed runtime admits the model-role-selections capability; the descriptor is staged at assembly.

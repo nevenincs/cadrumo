@@ -7,7 +7,11 @@ import shutil
 import sys
 from pathlib import Path
 
-from cadrumo.adapters.persistence.storage.secure_object_namespaces import EXTENSION_SETTINGS_NAMESPACE
+from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
+    EXTENSION_SETTINGS_NAMESPACE,
+    MODEL_ROLE_SELECTIONS_NAMESPACE,
+)
+from cadrumo_agent_service.providers.persistence.store import MODEL_ROLE_SELECTIONS_CAPABILITY
 from cadrumo_client.contracts.extension_records import ExtensionRecordCapability
 
 
@@ -20,6 +24,19 @@ def provider_record_capability() -> ExtensionRecordCapability:
         schema_version=namespace.schema_version,
         classification=namespace.sensitivity,
         key_pattern=r"[a-z][a-z0-9_]*",
+        actions=frozenset({"read", "write", "delete", "generation"}),
+    )
+
+
+def model_role_selections_capability() -> ExtensionRecordCapability:
+    """Bind the synthetic service descriptor to the actual per-role selections record policy."""
+    namespace = MODEL_ROLE_SELECTIONS_NAMESPACE
+    return ExtensionRecordCapability(
+        capability=MODEL_ROLE_SELECTIONS_CAPABILITY,
+        namespace=namespace.namespace,
+        schema_version=namespace.schema_version,
+        classification=namespace.sensitivity,
+        key_pattern=r"^selections$",
         actions=frozenset({"read", "write", "delete", "generation"}),
     )
 

@@ -7,6 +7,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
+    EXTENSION_SETTINGS_NAMESPACE,
+    MODEL_ROLE_SELECTIONS_NAMESPACE,
+)
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo_client.contracts.access_vocabulary import AccessAction
@@ -50,13 +54,24 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
         "record_capabilities": [
             {
                 "capability": "provider-settings",
-                "namespace": "cadrumo.provider_settings",
-                "schema_version": 1,
-                "classification": "secret",
+                "namespace": EXTENSION_SETTINGS_NAMESPACE.namespace,
+                "schema_version": EXTENSION_SETTINGS_NAMESPACE.schema_version,
+                "classification": EXTENSION_SETTINGS_NAMESPACE.sensitivity.value,
                 "key_pattern": "^[a-z][a-z0-9_]{0,39}$",
                 "maximum_bytes": 32768,
                 "actions": ["read", "write", "delete", "generation"],
-            }
+            },
+            # The person's model choice per role, in its own namespace so a
+            # selection change never moves the provider-settings generation.
+            {
+                "capability": "model-role-selections",
+                "namespace": MODEL_ROLE_SELECTIONS_NAMESPACE.namespace,
+                "schema_version": MODEL_ROLE_SELECTIONS_NAMESPACE.schema_version,
+                "classification": MODEL_ROLE_SELECTIONS_NAMESPACE.sensitivity.value,
+                "key_pattern": "^selections$",
+                "maximum_bytes": 32768,
+                "actions": ["read", "write", "delete", "generation"],
+            },
         ],
         # Hosted MCP processes attend through this service's session. The runtime
         # verifies their process ancestry and intersects their scope with this

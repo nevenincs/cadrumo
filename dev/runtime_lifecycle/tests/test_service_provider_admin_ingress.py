@@ -13,14 +13,20 @@ from uuid import uuid4
 import pytest
 from pydantic import JsonValue, TypeAdapter
 
+from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_agent_service.adapters.agent_programs import PACKAGE_AGENT_VARIABLE
 from cadrumo_agent_service.admin import AdminAction, AdminServer
 from cadrumo_agent_service.providers.application.tests.synthetic_catalog import KEY_LANE, synthetic_document
+from cadrumo_agent_service.providers.persistence.store import SecureProviderSettingsStore
 from cadrumo_agent_service.service import AgentService
 from cadrumo_client.contracts.service_access import ServiceConnected
 from cadrumo_runtime.host.tests.test_service_records import service_record_runtime
 
-from .provider_catalog_support import provider_record_capability, stand_in_agent_image
+from .provider_catalog_support import (
+    model_role_selections_capability,
+    provider_record_capability,
+    stand_in_agent_image,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -200,6 +206,94 @@ def test_actual_service_provider_actions_require_parent_authority_and_live_encry
                 assert isinstance(reread, dict)
                 assert _provider_entry(reread) == entry
                 assert "synthetic-provider-secret" not in json.dumps(reread)
+        finally:
+            server.close()
+            service.close()
+            admin[:] = bytes(len(admin))
+
+
+def _selection_request(action: str, revision: str, **fields: str) -> dict[str, JsonValue]:
+    request = _request(action)
+    request.update(expected_revision=revision, **fields)
+    return request
+
+
+def _selections(answer: dict[str, JsonValue]) -> dict[str, JsonValue]:
+    result = answer["result"]
+    assert isinstance(result, dict) and result.get("unreadable") is False, result
+    return result
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows worker custody")
+@pytest.mark.usefixtures("authority_operation")
+def test_a_role_selection_lives_in_its_own_capability_and_never_moves_the_provider_settings_generation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The agent tree is bound to the provider-settings generation, so a model choice must leave it as it is."""
+    image, _record = stand_in_agent_image(tmp_path, catalog_document=synthetic_document())
+    monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(image))
+    admin = bytearray(b"synthetic-parent-admin-authority")
+    capabilities = (provider_record_capability(), model_role_selections_capability())
+    with service_record_runtime(tmp_path, record_capabilities=capabilities) as runtime:
+        client = runtime.connect_service()
+        service = AgentService(
+            client=client,
+            storage_root=runtime.root,
+            gateway_bearer=bytearray(b"synthetic-gateway"),
+            emit=lambda _: None,
+        )
+        server = AdminServer(service, bearer=admin)
+        provider_records = SecureProviderSettingsStore(client=client)
+        try:
+            assert isinstance(runtime.admit(client), ServiceConnected)
+            assert client.claim() is not None
+
+            def provider_generation() -> str:
+                provider_records.invalidate_generations()
+                observed = provider_records.observe_generations()
+                assert observed is not None
+                return observed.provider_settings
+
+            before = provider_generation()
+            initial = _selections(_exchange(server.port, bytes(admin), _request("model_roles")))
+            assert initial["revision"] == ABSENT_SECURE_OBJECT_REVISION_ID
+            selected = _selections(
+                _exchange(
+                    server.port,
+                    bytes(admin),
+                    _selection_request(
+                        "model_role_set",
+                        ABSENT_SECURE_OBJECT_REVISION_ID,
+                        role="text_extraction",
+                        provider=KEY_LANE,
+                        model="synthetic-text-1",
+                    ),
+                )
+            )
+            revision = selected["revision"]
+            assert isinstance(revision, str) and revision != ABSENT_SECURE_OBJECT_REVISION_ID
+            roles = selected["roles"]
+            assert isinstance(roles, list)
+            assert {"role": "text_extraction", "lane": KEY_LANE, "model": "synthetic-text-1"} in roles
+            assert _selections(_exchange(server.port, bytes(admin), _request("model_roles"))) == selected
+            assert provider_generation() == before
+
+            cleared = _selections(
+                _exchange(server.port, bytes(admin), _selection_request("model_roles_reset", revision))
+            )
+            assert cleared["revision"] == ABSENT_SECURE_OBJECT_REVISION_ID
+            assert provider_generation() == before
+
+            # The observation does see a provider-record change, so the equalities above are not vacuous.
+            stored = _exchange(
+                server.port,
+                bytes(admin),
+                _provider_request("set", ABSENT_SECURE_OBJECT_REVISION_ID),
+                secret=b"synthetic-provider-secret",
+            )
+            assert isinstance(stored["result"], dict) and "entry" in stored["result"], stored
+            assert provider_generation() != before
         finally:
             server.close()
             service.close()

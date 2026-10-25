@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:9c720e61b956ecda6b29792ad17b5834aefc36423fd5899516a50d2d36961041'
+body_hash: 'sha256:cb6ccb06c559a12e995d2e6fce4962d7825b43e4c3e2d79fa5ca2b1f135225d8'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"

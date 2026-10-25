@@ -1,7 +1,7 @@
-"""The persistence port the provider-settings service and resolver read and write through.
+"""The persistence ports the provider-settings and model-role services read and write through.
 
-The application owns this contract; the encrypted secure-object adapter
-implements it for one exact admitted profile. The port speaks in typed values
+The application owns these contracts; the encrypted secure-object adapters
+implement them for one exact admitted profile. Each port speaks in typed values
 rather than storage exceptions, so a locked profile, a revision conflict and an
 unreadable record each reach the service as a value it must handle, and none of
 them can read as an absent record.
@@ -165,20 +165,6 @@ class ProviderSettingsStore(Protocol):
         """Remove the provider's record only if its revision still equals ``expected_revision``."""
         ...
 
-    def read_role_selections(self) -> ModelRoleSelectionsRead | StoreRefusal:
-        """Return the profile's per-role selections record, absent, or unreadable, or a refusal."""
-        ...
-
-    def write_role_selections(
-        self, record: ModelRoleSelectionsRecord, *, expected_revision: str
-    ) -> StoreRefusal | None:
-        """Commit ``record`` only if the stored selections revision still equals ``expected_revision``."""
-        ...
-
-    def delete_role_selections(self, *, expected_revision: str) -> StoreRefusal | None:
-        """Remove the selections record only if its revision still equals ``expected_revision``."""
-        ...
-
     def observe_generations(self) -> StoreGenerations | None:
         """Return the current generations, or ``None`` when the profile is not usable.
 
@@ -188,10 +174,32 @@ class ProviderSettingsStore(Protocol):
         ...
 
 
+class ModelRoleSelectionsStore(Protocol):
+    """The encrypted per-role model selections record of one admitted profile.
+
+    It is a record capability of its own, apart from the provider records, so a
+    selection change never moves the provider-settings generation a running
+    agent tree was started under.
+    """
+
+    def read(self) -> ModelRoleSelectionsRead | StoreRefusal:
+        """Return the profile's selections record, absent, or unreadable, or a refusal."""
+        ...
+
+    def write(self, record: ModelRoleSelectionsRecord, *, expected_revision: str) -> StoreRefusal | None:
+        """Commit ``record`` only if the stored revision still equals ``expected_revision``."""
+        ...
+
+    def delete(self, *, expected_revision: str) -> StoreRefusal | None:
+        """Remove the record, readable or not, only if its revision still equals ``expected_revision``."""
+        ...
+
+
 __all__ = [
     "AbsentModelRoleSelections",
     "AbsentProviderRecord",
     "ModelRoleSelectionsRead",
+    "ModelRoleSelectionsStore",
     "ProviderCatalogSource",
     "ProviderCatalogUnavailableError",
     "ProviderCatalogUnavailableReason",

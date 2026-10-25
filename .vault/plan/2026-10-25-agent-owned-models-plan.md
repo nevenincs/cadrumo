@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-25'
 body_schema: body-v2
-body_hash: 'sha256:3d73987f01564273e2a1747cbe3dc277369effef65f206c2025af3d5d33b99d6'
+body_hash: 'sha256:02338cc703782eb13d002122c234ee19845442843777383af6b07ea62eb41e7b'
 ---
 
 # `agent-owned-models` plan
@@ -51,7 +51,7 @@ Land the per-role selection store and wire, role-based lookup, removal of the un
 - [x] `P01.S05` - Read the selection in the desktop host and expose it to the webview as a typed snapshot; `native/desktop/src-tauri/src/agent/admin.rs, native/desktop/src-tauri/src/agent/gateway.rs`.
 - [x] `P01.S06` - Delete the hosted model ids and their re-exports, which have no production reader; `src/cadrumo/domain/transactions/model_tier.py, src/cadrumo/domain/transactions/__init__.py, src/cadrumo/domain/transactions/llm.py`.
 - [x] `P01.S07` - Add the model-definition gate: refuse model-name and digest literals and model tables in shipped sources, with an explicit burn-down list of current files that later Steps empty, isolated fixtures proving it detects each defect, and a stated stopping point; `dev/quality/tests/test_no_model_definitions.py`.
-- [ ] `P01.S29` - Move the per-role model selections out of the provider-settings capability into their own encrypted model-role-selections capability and namespace, so a selection change never moves the provider-settings generation or replaces the agent tree; `src/cadrumo_agent_service/providers/persistence/store.py, src/cadrumo_agent_service/providers/application/ports.py, src/cadrumo_agent_service/service.py, src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py, dev/packaging/native/service_descriptors.py`.
+- [x] `P01.S29` - Move the per-role model selections out of the provider-settings capability into their own encrypted model-role-selections capability and namespace, so a selection change never moves the provider-settings generation or replaces the agent tree; `src/cadrumo_agent_service/providers/persistence/store.py, src/cadrumo_agent_service/providers/application/ports.py, src/cadrumo_agent_service/providers/application/model_role_selections.py, src/cadrumo_agent_service/service.py, src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py, dev/packaging/native/service_descriptors.py`.
 
 ### Phase `P02` - Consume the new catalogue
 
@@ -59,7 +59,7 @@ Parse cadrumo-agent's new catalogue schema version with its typed fields and dec
 
 - [ ] `P02.S08` - Parse the new schema version with the typed fields vision, installed, size_bytes, context_length, licence and reads_off_host, the recommended set and the run options; refuse an entry without reads_off_host; `src/cadrumo_agent_service/providers/domain/catalog.py, src/cadrumo_agent_service/providers/domain/tests`.
 - [ ] `P02.S09` - Admit the keyless loopback auth kind and a loopback base URL, and project them into the credential schema and resolution; `src/cadrumo_agent_service/providers/domain/record.py, src/cadrumo_agent_service/providers/application/resolution.py, src/cadrumo_agent_service/adapters/agent_provider_catalog.py, src/cadrumo_agent_service/adapters/provider_catalog_metadata.py`.
-- [ ] `P02.S10` - Validate a role selection against the catalogue: the model must exist and the vision role requires a vision-capable entry; carry licence, size_bytes and reads_off_host in the lane lookup reply; `src/cadrumo_agent_service/providers/application/service.py, src/cadrumo_agent_service/providers/application/model_runs.py, src/cadrumo_agent_service/providers/application/contracts.py`.
+- [ ] `P02.S10` - Validate a role selection against the catalogue: the model must exist and the vision role requires a vision-capable entry; carry licence, size_bytes and reads_off_host in the lane lookup reply; `src/cadrumo_agent_service/providers/application/model_role_selections.py, src/cadrumo_agent_service/providers/application/model_runs.py, src/cadrumo_agent_service/providers/application/contracts.py`.
 - [ ] `P02.S11` - Decide off-host consent from the lane's reads_off_host flag in the tax adapter and bind the token to the resolved lane; `src/cadrumo/adapters/outbound/llm/consent.py, src/cadrumo/adapters/outbound/llm/providers/agent.py, src/cadrumo/adapters/outbound/llm/preconditions.py`.
 
 ### Phase `P03` - One dispatch path

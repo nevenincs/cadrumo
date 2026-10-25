@@ -69,12 +69,13 @@ from .host.launcher_protocol import launcher_refusal_for, runtime_launcher_refus
 from .host.store_lifecycle import AgentStoreLifecycle
 from .providers.application.agent_credentials import ProviderSettingsAgentCredentialSource
 from .providers.application.contracts import ProviderSettingsRefusal
+from .providers.application.model_role_selections import ModelRoleSelectionsService
 from .providers.application.model_runs import ModelRunService
 from .providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
 from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
 from .providers.domain.catalog import MAX_CATALOG_LANES
-from .providers.persistence.store import SecureProviderSettingsStore
+from .providers.persistence.store import SecureModelRoleSelectionsStore, SecureProviderSettingsStore
 
 _LOGGER = get_logger(__name__)
 HOSTED_CERTIFICATION_CACHE_SECONDS = 5.0
@@ -174,8 +175,9 @@ class AgentService:
             self._host_token,
             self._closing,
         )
+        selections = SecureModelRoleSelectionsStore(client=client)
         self._model_runs = ModelRunService(
-            store=self._store,
+            selections=selections,
             resolver=resolver,
             catalog_source=self._catalog,
             gateway=HostedBackgroundRuns(
@@ -189,6 +191,7 @@ class AgentService:
             storage_mode=storage_mode().mode,
             cli_state_probe=self._login_status.probe,
         )
+        self._model_roles_service = ModelRoleSelectionsService(store=selections, catalog_source=self._catalog)
         self._controller: AgentHostController | None = None
         self._auth_attempt: AuthAttempt | None = None
         self._auth_resume_valid: Callable[[], bool] | None = None
@@ -363,7 +366,7 @@ class AgentService:
         lease = self.client.lease
         if lease is None:
             return {"kind": "refused", "code": "signed_out"}
-        observed = self._providers.model_roles().model_dump(mode="json")
+        observed = self._model_roles_service.status().model_dump(mode="json")
         if self.client.lease != lease:
             return {"kind": "refused", "code": "signed_out"}
         return observed
@@ -379,18 +382,17 @@ class AgentService:
     ) -> dict[str, Any]:
         if expected_revision is None:
             return {"kind": "refused", "code": "invalid_request"}
+        selections = self._model_roles_service
         if action == "model_role_set" and role is not None and lane is not None and model is not None:
-            result = self._providers.set_model_role(role, lane=lane, model=model, expected_revision=expected_revision)
+            result = selections.select(role, lane=lane, model=model, expected_revision=expected_revision)
         elif action == "model_role_clear" and role is not None and lane is None and model is None:
-            result = self._providers.clear_model_role(role, expected_revision=expected_revision)
+            result = selections.clear(role, expected_revision=expected_revision)
         elif action == "model_roles_reset" and role is None and lane is None and model is None:
-            result = self._providers.reset_model_roles(expected_revision=expected_revision)
+            result = selections.reset(expected_revision=expected_revision)
         else:
             return {"kind": "refused", "code": "invalid_request"}
-        # The selections live beside the provider records, so a change moves
-        # the generation a running tree was started under.
-        self._forget_reads()
-        self._replace_superseded()
+        # The selections have a capability of their own: a change leaves the
+        # provider-settings generation, the kept reads and the running tree as they are.
         return result.model_dump(mode="json")
 
     def _catalog_document(self) -> dict[str, Any]:

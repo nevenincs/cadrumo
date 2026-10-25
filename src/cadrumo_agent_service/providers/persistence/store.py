@@ -1,4 +1,4 @@
-"""Provider record decoding over an admitted runtime's opaque encrypted custody."""
+"""Provider and model-role record decoding over an admitted runtime's opaque encrypted custody."""
 
 from __future__ import annotations
 
@@ -38,12 +38,15 @@ from ..domain.record import (
 
 PROVIDER_RECORD_CAPABILITY: Final = "provider-settings"
 
-MODEL_ROLE_SELECTIONS_KEY: Final = "model_role_selections"
-"""The selections record's key beside the provider records.
+MODEL_ROLE_SELECTIONS_CAPABILITY: Final = "model-role-selections"
+"""The selections record's own capability, apart from the provider records.
 
-A lane id is its provider and transport joined by an underscore, so it ends in
-a transport token. This key ends in none, so it never names a lane's record.
+Its records generation is not the provider-settings generation, so a selection
+change never supersedes an agent tree started under the provider records.
 """
+
+MODEL_ROLE_SELECTIONS_KEY: Final = "selections"
+"""The one record the selections capability holds per profile."""
 
 
 class SecureProviderSettingsStore:
@@ -102,61 +105,16 @@ class SecureProviderSettingsStore:
         """Delete only the exact revision the caller observed."""
         return self._delete(provider_id, expected_revision)
 
-    def read_role_selections(self) -> ModelRoleSelectionsRead | StoreRefusal:
-        """Decode the selections record, keeping absent and unreadable apart."""
-        try:
-            reply, material = self._client.record_read(PROVIDER_RECORD_CAPABILITY, MODEL_ROLE_SELECTIONS_KEY)
-            try:
-                refusal = _refusal(reply)
-                if refusal is not None:
-                    return refusal
-                if reply.state == "absent":
-                    return AbsentModelRoleSelections()
-                unreadable = UnreadableModelRoleSelections(revision=reply.revision)
-                if reply.state != "present" or reply.revision is None:
-                    return unreadable
-                try:
-                    record = parse_model_role_selections_record(bytes(material))
-                except (ValidationError, UnicodeDecodeError):
-                    return unreadable
-                return StoredModelRoleSelections(record=record, revision=reply.revision)
-            finally:
-                material[:] = b"\0" * len(material)
-        except (RefusalError, FrontendRefusedError, OSError):
-            return StoreRefusal(code=StoreRefusalCode.UNKNOWN)
-
-    def write_role_selections(
-        self, record: ModelRoleSelectionsRecord, *, expected_revision: str
-    ) -> StoreRefusal | None:
-        """Commit the selections record through runtime repository CAS."""
-        return self._write(MODEL_ROLE_SELECTIONS_KEY, model_role_selections_record_document(record), expected_revision)
-
-    def delete_role_selections(self, *, expected_revision: str) -> StoreRefusal | None:
-        """Delete the selections record only at the exact revision the caller observed."""
-        return self._delete(MODEL_ROLE_SELECTIONS_KEY, expected_revision)
-
     def _write(self, object_key: str, document: bytes, expected_revision: str) -> StoreRefusal | None:
-        material = bytearray(document)
         try:
-            reply = self._client.record_write(
-                PROVIDER_RECORD_CAPABILITY, object_key, payload=material, expected_revision=expected_revision
-            )
-            return _refusal(reply) if reply.state == "written" else _refusal(reply) or _unknown()
-        except (RefusalError, FrontendRefusedError, OSError):
-            return StoreRefusal(code=StoreRefusalCode.UNKNOWN)
+            return _record_write(self._client, PROVIDER_RECORD_CAPABILITY, object_key, document, expected_revision)
         finally:
-            material[:] = b"\0" * len(material)
             # Whatever the outcome, the records generation may have moved.
             self.invalidate_generations()
 
     def _delete(self, object_key: str, expected_revision: str) -> StoreRefusal | None:
         try:
-            reply = self._client.record_delete(
-                PROVIDER_RECORD_CAPABILITY, object_key, expected_revision=expected_revision
-            )
-            return _refusal(reply) if reply.state == "deleted" else _refusal(reply) or _unknown()
-        except (RefusalError, FrontendRefusedError, OSError):
-            return StoreRefusal(code=StoreRefusalCode.UNKNOWN)
+            return _record_delete(self._client, PROVIDER_RECORD_CAPABILITY, object_key, expected_revision)
         finally:
             self.invalidate_generations()
 
@@ -198,6 +156,73 @@ class SecureProviderSettingsStore:
             return StoreGenerations(sign_in=sign_in, provider_settings=reply.records_generation)
         except (RefusalError, FrontendRefusedError, OSError, ValidationError):
             return None
+
+
+class SecureModelRoleSelectionsStore:
+    """Keep the per-role selections in their own descriptor capability; never open a profile repository."""
+
+    def __init__(self, *, client: InstalledServiceClient) -> None:
+        """Bind the store to one runtime-issued service lease."""
+        self._client = client
+
+    def read(self) -> ModelRoleSelectionsRead | StoreRefusal:
+        """Decode the selections record, keeping absent and unreadable apart."""
+        try:
+            reply, material = self._client.record_read(MODEL_ROLE_SELECTIONS_CAPABILITY, MODEL_ROLE_SELECTIONS_KEY)
+            try:
+                refusal = _refusal(reply)
+                if refusal is not None:
+                    return refusal
+                if reply.state == "absent":
+                    return AbsentModelRoleSelections()
+                unreadable = UnreadableModelRoleSelections(revision=reply.revision)
+                if reply.state != "present" or reply.revision is None:
+                    return unreadable
+                try:
+                    record = parse_model_role_selections_record(bytes(material))
+                except (ValidationError, UnicodeDecodeError):
+                    return unreadable
+                return StoredModelRoleSelections(record=record, revision=reply.revision)
+            finally:
+                material[:] = b"\0" * len(material)
+        except (RefusalError, FrontendRefusedError, OSError):
+            return StoreRefusal(code=StoreRefusalCode.UNKNOWN)
+
+    def write(self, record: ModelRoleSelectionsRecord, *, expected_revision: str) -> StoreRefusal | None:
+        """Commit the selections record through runtime repository CAS."""
+        document = model_role_selections_record_document(record)
+        return _record_write(
+            self._client, MODEL_ROLE_SELECTIONS_CAPABILITY, MODEL_ROLE_SELECTIONS_KEY, document, expected_revision
+        )
+
+    def delete(self, *, expected_revision: str) -> StoreRefusal | None:
+        """Delete the selections record only at the exact revision the caller observed."""
+        return _record_delete(
+            self._client, MODEL_ROLE_SELECTIONS_CAPABILITY, MODEL_ROLE_SELECTIONS_KEY, expected_revision
+        )
+
+
+def _record_write(
+    client: InstalledServiceClient, capability: str, object_key: str, document: bytes, expected_revision: str
+) -> StoreRefusal | None:
+    material = bytearray(document)
+    try:
+        reply = client.record_write(capability, object_key, payload=material, expected_revision=expected_revision)
+        return _refusal(reply) if reply.state == "written" else _refusal(reply) or _unknown()
+    except (RefusalError, FrontendRefusedError, OSError):
+        return StoreRefusal(code=StoreRefusalCode.UNKNOWN)
+    finally:
+        material[:] = b"\0" * len(material)
+
+
+def _record_delete(
+    client: InstalledServiceClient, capability: str, object_key: str, expected_revision: str
+) -> StoreRefusal | None:
+    try:
+        reply = client.record_delete(capability, object_key, expected_revision=expected_revision)
+        return _refusal(reply) if reply.state == "deleted" else _refusal(reply) or _unknown()
+    except (RefusalError, FrontendRefusedError, OSError):
+        return StoreRefusal(code=StoreRefusalCode.UNKNOWN)
 
 
 def _unknown() -> StoreRefusal:

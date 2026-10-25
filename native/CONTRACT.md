@@ -501,7 +501,10 @@ excluding `descriptor_digest`. The descriptor file is itself a hashed package
 manifest member and a startup member. The `desktop-session` descriptor admits
 only the staged native desktop parent image and grants no secret-record
 capabilities. The service's provider-settings capability retains the original
-encrypted namespace and schema; no encryption key leaves runtime custody.
+encrypted namespace and schema; no encryption key leaves runtime custody. Its
+model-role-selections capability keeps the person's model choice per role in a
+separate encrypted namespace under one fixed record key, so a selection change
+never moves the provider-settings generation the running agent was started under.
 
 The agent image has no default profile. It admits the invocations declared in its
 invocation table in `native/application-environment.toml`, each selecting its own

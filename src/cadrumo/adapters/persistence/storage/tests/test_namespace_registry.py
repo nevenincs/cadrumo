@@ -126,6 +126,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "google_oauth_metadata",
     "google_drive_config",
     "provider_settings",
+    "model_role_selections",
     "llm_cache",
     "llm_usage",
     "llm_run_telemetry",
@@ -591,8 +592,14 @@ def test_auth_session_cache_namespace_registration_coverage_is_present() -> None
     } <= registered_keys
 
 
-_LOCAL_ONLY_NAMESPACE_KEYS = frozenset({"provider_settings", "google_oauth_token", "google_oauth_metadata"})
-"""Production namespaces that must never reach a remote mirror: provider keys and each profile's Google sign-in."""
+_LOCAL_ONLY_NAMESPACE_KEYS = frozenset(
+    {"provider_settings", "model_role_selections", "google_oauth_token", "google_oauth_metadata"}
+)
+"""Production namespaces that must never reach a remote mirror.
+
+Provider keys, the per-role model choice that names models on this machine, and
+each profile's Google sign-in.
+"""
 
 
 def test_secure_namespaces_default_to_ciphertext_remote_mirror_policy() -> None:
@@ -631,6 +638,20 @@ def test_provider_credentials_are_never_mirrored_or_carried() -> None:
     assert provider_settings.custody_disposition is StorageCustodyDisposition.PROCESS_LOCAL
     for profile in StorageCustodyProfile:
         assert provider_settings not in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(profile)
+
+
+def test_model_role_selections_are_a_namespace_of_their_own_with_the_provider_records_custody() -> None:
+    """The per-role choice is kept apart from the provider records but is never mirrored or carried either."""
+    provider_settings = lookup_namespace_definition("provider_settings")
+    selections = lookup_namespace_definition("model_role_selections")
+
+    assert selections.namespace != provider_settings.namespace
+    assert selections.sensitivity is provider_settings.sensitivity
+    assert selections.scope is StorageNamespaceScope.PROFILE_LOCAL
+    assert selections.custody_disposition is StorageCustodyDisposition.PROCESS_LOCAL
+    assert selections.remote_mirror_policy is StorageRemoteMirrorPolicy.LOCAL_ONLY
+    for profile in StorageCustodyProfile:
+        assert selections not in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(profile)
 
 
 def test_a_profiles_google_sign_in_stays_in_its_profile_folder() -> None:

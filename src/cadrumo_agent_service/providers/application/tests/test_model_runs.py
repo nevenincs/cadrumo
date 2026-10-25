@@ -34,7 +34,7 @@ from ..model_runs import ModelRunService
 from ..ports import ModelRoleSelectionsRead, StoreRefusal, StoreRefusalCode
 from ..resolution import ProviderCredentialResolver
 from ..service import ProviderSettingsService
-from .memory_store import MemoryProviderSettingsStore
+from .memory_store import MemoryModelRoleSelectionsStore, MemoryProviderSettingsStore
 from .synthetic_catalog import (
     KEY_LANE,
     MISSING_LANE,
@@ -76,25 +76,25 @@ class _RecordingGateway:
 
 
 def _harness(
-    store: MemoryProviderSettingsStore,
+    store: MemoryProviderSettingsStore, selections: MemoryModelRoleSelectionsStore
 ) -> tuple[ModelRunService, ProviderSettingsService, _RecordingGateway]:
     source = _catalog_source()
     gateway = _RecordingGateway()
     resolver = ProviderCredentialResolver(store=store, catalog_source=source)
     settings = ProviderSettingsService(store=store, catalog_source=source, storage_mode=StorageMode.INSTALLED)
-    runs = ModelRunService(store=store, resolver=resolver, catalog_source=source, gateway=gateway)
+    runs = ModelRunService(selections=selections, resolver=resolver, catalog_source=source, gateway=gateway)
     return runs, settings, gateway
 
 
-def _select(store: MemoryProviderSettingsStore, *selections: tuple[ModelRole, str, str]) -> None:
+def _select(store: MemoryModelRoleSelectionsStore, *selections: tuple[ModelRole, str, str]) -> None:
     record = ModelRoleSelectionsRecord(
         schema_version=1,
         selections=tuple(ModelRoleSelection(role=role, lane=lane, model=model) for role, lane, model in selections),
         generation=new_settings_generation(),
         updated_at=datetime(2026, 10, 25, 9, 0, tzinfo=UTC),
     )
-    expected = store.selections.revision if store.selections is not None else ABSENT_SECURE_OBJECT_REVISION_ID
-    assert store.write_role_selections(record, expected_revision=expected) is None
+    expected = store.stored.revision if store.stored is not None else ABSENT_SECURE_OBJECT_REVISION_ID
+    assert store.write(record, expected_revision=expected) is None
 
 
 def _revision(settings: ProviderSettingsService, lane: str) -> str:
@@ -128,7 +128,8 @@ _LANE_UNAVAILABLE = ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
 def test_with_no_selection_every_role_refuses_although_reachable_lanes_declare_defaults() -> None:
     """No fallback: a reachable lane with a catalogue default is never chosen for an unselected role."""
     store = MemoryProviderSettingsStore()
-    runs, settings, gateway = _harness(store)
+    selections = MemoryModelRoleSelectionsStore()
+    runs, settings, gateway = _harness(store, selections)
     _store_key(settings, KEY_LANE)
 
     for role in ModelRole:
@@ -139,10 +140,11 @@ def test_with_no_selection_every_role_refuses_although_reachable_lanes_declare_d
 
 def test_each_role_gets_the_lane_and_model_selected_for_it() -> None:
     store = MemoryProviderSettingsStore()
-    runs, settings, _ = _harness(store)
+    selections = MemoryModelRoleSelectionsStore()
+    runs, settings, _ = _harness(store, selections)
     _store_key(settings, KEY_LANE)
     _select(
-        store,
+        selections,
         (ModelRole.TEXT_EXTRACTION, KEY_LANE, "synthetic-text-1"),
         (ModelRole.VISION_TRANSCRIPTION, SIGN_IN_ONLY_LANE, "synthetic-vision-1"),
     )
@@ -157,8 +159,9 @@ def test_each_role_gets_the_lane_and_model_selected_for_it() -> None:
 
 def test_a_role_without_a_selection_refuses_while_other_roles_are_selected() -> None:
     store = MemoryProviderSettingsStore()
-    runs, _, _ = _harness(store)
-    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, _ = _harness(store, selections)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
 
     assert runs.lookup("column_role_mapping") == _NO_SELECTION
     assert runs.lookup("supply_nature_proposal") == _NO_SELECTION
@@ -167,17 +170,19 @@ def test_a_role_without_a_selection_refuses_while_other_roles_are_selected() -> 
 
 def test_a_role_outside_the_vocabulary_has_no_selection() -> None:
     store = MemoryProviderSettingsStore()
-    runs, _, _ = _harness(store)
-    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, _ = _harness(store, selections)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
 
     assert runs.lookup("unknown_role") == _NO_SELECTION
 
 
 def test_a_selected_lane_turned_off_refuses_and_no_other_lane_is_used() -> None:
     store = MemoryProviderSettingsStore()
-    runs, settings, gateway = _harness(store)
+    selections = MemoryModelRoleSelectionsStore()
+    runs, settings, gateway = _harness(store, selections)
     _store_key(settings, OTHER_KEY_LANE)
-    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+    _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
     _turn_off(settings, SIGN_IN_ONLY_LANE)
 
     assert runs.lookup("text_extraction") == _LANE_UNAVAILABLE
@@ -187,24 +192,27 @@ def test_a_selected_lane_turned_off_refuses_and_no_other_lane_is_used() -> None:
 
 def test_a_selected_key_lane_with_no_stored_key_refuses_as_unavailable() -> None:
     store = MemoryProviderSettingsStore()
-    runs, _, _ = _harness(store)
-    _select(store, (ModelRole.TEXT_EXTRACTION, KEY_LANE, "synthetic-text-1"))
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, _ = _harness(store, selections)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, KEY_LANE, "synthetic-text-1"))
 
     assert runs.lookup("text_extraction") == _LANE_UNAVAILABLE
 
 
 def test_a_selected_lane_the_agent_no_longer_reports_refuses_as_unavailable() -> None:
     store = MemoryProviderSettingsStore()
-    runs, _, _ = _harness(store)
-    _select(store, (ModelRole.TEXT_EXTRACTION, MISSING_LANE, "synthetic-text-1"))
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, _ = _harness(store, selections)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, MISSING_LANE, "synthetic-text-1"))
 
     assert runs.lookup("text_extraction") == _LANE_UNAVAILABLE
 
 
 def test_an_unreadable_selections_record_refuses_every_role_rather_than_reading_as_none() -> None:
     store = MemoryProviderSettingsStore()
-    runs, _, _ = _harness(store)
-    store.unreadable_selections = "c" * 64
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, _ = _harness(store, selections)
+    selections.unreadable = "c" * 64
 
     for role in ModelRole:
         assert runs.lookup(role.value) == _LANE_UNAVAILABLE
@@ -212,8 +220,9 @@ def test_an_unreadable_selections_record_refuses_every_role_rather_than_reading_
 
 def test_a_profile_that_is_not_signed_in_refuses_as_such() -> None:
     store = MemoryProviderSettingsStore()
-    store.refusal = StoreRefusal(code=StoreRefusalCode.NOT_SIGNED_IN)
-    runs, _, gateway = _harness(store)
+    selections = MemoryModelRoleSelectionsStore()
+    selections.refusal = StoreRefusal(code=StoreRefusalCode.NOT_SIGNED_IN)
+    runs, _, gateway = _harness(store, selections)
 
     assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NOT_SIGNED_IN)
     assert runs.run(_header(), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.NOT_SIGNED_IN)
@@ -222,8 +231,9 @@ def test_a_profile_that_is_not_signed_in_refuses_as_such() -> None:
 
 def test_a_run_whose_consent_names_another_lane_is_refused_before_it_is_sent() -> None:
     store = MemoryProviderSettingsStore()
-    runs, _, gateway = _harness(store)
-    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, gateway = _harness(store, selections)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
     consent = ModelRunConsentBinding(
         evidence_content_address="a" * 64, provider_id="example", transport="api", model="synthetic-text-1"
     )
@@ -234,8 +244,9 @@ def test_a_run_whose_consent_names_another_lane_is_refused_before_it_is_sent() -
 
 def test_a_run_whose_consent_names_its_lane_goes_to_the_gateway_on_that_lane() -> None:
     store = MemoryProviderSettingsStore()
-    runs, _, gateway = _harness(store)
-    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, gateway = _harness(store, selections)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
     consent = ModelRunConsentBinding(
         evidence_content_address="a" * 64, provider_id="example", transport="cli", model="synthetic-text-1"
     )
@@ -251,8 +262,9 @@ def test_a_run_whose_consent_names_its_lane_goes_to_the_gateway_on_that_lane() -
 
 def test_the_lookup_carries_the_media_the_agent_reports_and_a_run_beyond_them_is_never_sent() -> None:
     store = MemoryProviderSettingsStore()
-    runs, _, gateway = _harness(store)
-    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, gateway = _harness(store, selections)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
     gateway.accepts = (ModelRunMediaKind.IMAGE,)
     pdf = ModelRunAttachment(media_type="application/pdf", base64_data="JVBERi0=")
 
@@ -267,41 +279,42 @@ def test_the_lookup_carries_the_media_the_agent_reports_and_a_run_beyond_them_is
 def test_without_a_ready_agent_every_run_refuses_as_service_unavailable() -> None:
     source = _catalog_source()
     store = MemoryProviderSettingsStore()
-    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+    selections = MemoryModelRoleSelectionsStore()
+    _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
     resolver = ProviderCredentialResolver(store=store, catalog_source=source)
     gateway = HostedBackgroundRuns(
         endpoint=lambda: None, bearer=bytearray(b"synthetic-bearer"), host_token=bytearray(b"synthetic-host")
     )
-    runs = ModelRunService(store=store, resolver=resolver, catalog_source=source, gateway=gateway)
+    runs = ModelRunService(selections=selections, resolver=resolver, catalog_source=source, gateway=gateway)
 
     lane = runs.lookup("text_extraction")
     assert isinstance(lane, ModelRunLane) and lane.accepted_media is None
     assert runs.run(_header(), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
 
 
-class _CountingStore(MemoryProviderSettingsStore):
+class _CountingSelections(MemoryModelRoleSelectionsStore):
     def __init__(self) -> None:
         super().__init__()
         self.selection_reads = 0
 
     @override
-    def read_role_selections(self) -> ModelRoleSelectionsRead | StoreRefusal:
+    def read(self) -> ModelRoleSelectionsRead | StoreRefusal:
         self.selection_reads += 1
-        return super().read_role_selections()
+        return super().read()
 
 
 def test_a_selections_read_reports_every_role_from_one_read_of_the_record() -> None:
-    store = _CountingStore()
-    runs, _, _ = _harness(store)
+    selections = _CountingSelections()
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), selections)
     _select(
-        store,
+        selections,
         (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"),
         (ModelRole.COLUMN_ROLE_MAPPING, KEY_LANE, "synthetic-text-2"),
     )
 
     states = runs.selections()
 
-    assert store.selection_reads == 1
+    assert selections.selection_reads == 1
     assert states == (
         ModelRunRoleSelection(role="vision_transcription", refusal=ModelRunRefusalCode.NO_SELECTION),
         ModelRunRoleSelection(
@@ -320,16 +333,18 @@ def test_a_selections_read_reports_every_role_from_one_read_of_the_record() -> N
 
 def test_a_selections_read_of_a_signed_out_profile_refuses_whole() -> None:
     store = MemoryProviderSettingsStore()
-    store.refusal = StoreRefusal(code=StoreRefusalCode.PROFILE_LOCKED)
-    runs, _, _ = _harness(store)
+    selections = MemoryModelRoleSelectionsStore()
+    selections.refusal = StoreRefusal(code=StoreRefusalCode.PROFILE_LOCKED)
+    runs, _, _ = _harness(store, selections)
 
     assert runs.selections() == ModelRunRefusal(code=ModelRunRefusalCode.PROFILE_LOCKED)
 
 
 def test_a_selections_read_of_an_unreadable_record_reports_no_selection_as_known() -> None:
     store = MemoryProviderSettingsStore()
-    store.unreadable_selections = "e" * 64
-    runs, _, _ = _harness(store)
+    selections = MemoryModelRoleSelectionsStore()
+    selections.unreadable = "e" * 64
+    runs, _, _ = _harness(store, selections)
 
     states = runs.selections()
 

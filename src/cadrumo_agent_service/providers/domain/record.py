@@ -15,9 +15,9 @@ The secret travels as :class:`~pydantic.SecretStr`. Every ordinary dump, repr
 and string rendering masks it. Only :func:`provider_settings_record_document`
 reveals it, for the one caller that encrypts the record at rest.
 
-Beside the provider records sits one per-profile record of the person's model
-choice per role: a lane and a model for each role they configured. It holds no
-secret, and a role it does not name has no selection.
+A separate per-profile record, kept in a record capability of its own, holds
+the person's model choice per role: a lane and a model for each role they
+configured. It holds no secret, and a role it does not name has no selection.
 """
 
 from __future__ import annotations

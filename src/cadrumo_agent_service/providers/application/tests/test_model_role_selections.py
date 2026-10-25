@@ -6,7 +6,6 @@ import pytest
 
 from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from cadrumo.core.storage_environment import StorageMode
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusal, ModelRunRefusalCode
 
 from ..contracts import (
@@ -15,11 +14,11 @@ from ..contracts import (
     ProviderSettingsRefusal,
     ProviderSettingsRefusalCode,
 )
+from ..model_role_selections import ModelRoleSelectionsService
 from ..model_runs import ModelRunService
 from ..ports import StoreRefusal, StoreRefusalCode
 from ..resolution import ProviderCredentialResolver
-from ..service import ProviderSettingsService
-from .memory_store import MemoryProviderSettingsStore
+from .memory_store import MemoryModelRoleSelectionsStore, MemoryProviderSettingsStore
 from .synthetic_catalog import (
     KEY_LANE,
     MISSING_LANE,
@@ -31,12 +30,8 @@ from .synthetic_catalog import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _service(store: MemoryProviderSettingsStore) -> ProviderSettingsService:
-    return ProviderSettingsService(
-        store=store,
-        catalog_source=ProvidedProviderCatalogSource(synthetic_catalog()),
-        storage_mode=StorageMode.INSTALLED,
-    )
+def _service(store: MemoryModelRoleSelectionsStore) -> ModelRoleSelectionsService:
+    return ModelRoleSelectionsService(store=store, catalog_source=ProvidedProviderCatalogSource(synthetic_catalog()))
 
 
 def _status(result: ModelRoleSelectionsStatus | ProviderSettingsRefusal) -> ModelRoleSelectionsStatus:
@@ -62,7 +57,7 @@ def _refused(code: ProviderSettingsRefusalCode) -> ProviderSettingsRefusal:
 
 
 def test_a_fresh_profile_lists_every_role_with_no_selection() -> None:
-    status = _status(_service(MemoryProviderSettingsStore()).model_roles())
+    status = _status(_service(MemoryModelRoleSelectionsStore()).status())
 
     assert status == ModelRoleSelectionsStatus(
         unreadable=False,
@@ -72,9 +67,9 @@ def test_a_fresh_profile_lists_every_role_with_no_selection() -> None:
 
 
 def test_setting_one_role_leaves_the_others_and_replaces_only_its_own_selection() -> None:
-    service = _service(MemoryProviderSettingsStore())
+    service = _service(MemoryModelRoleSelectionsStore())
     first = _status(
-        service.set_model_role(
+        service.select(
             "text_extraction",
             lane=KEY_LANE,
             model="synthetic-text-1",
@@ -82,12 +77,12 @@ def test_setting_one_role_leaves_the_others_and_replaces_only_its_own_selection(
         )
     )
     second = _status(
-        service.set_model_role(
+        service.select(
             "vision_transcription", lane=SIGN_IN_ONLY_LANE, model="synthetic-vision-1", expected_revision=_guard(first)
         )
     )
     third = _status(
-        service.set_model_role(
+        service.select(
             "text_extraction", lane=SIGN_IN_ONLY_LANE, model="synthetic-text-2", expected_revision=_guard(second)
         )
     )
@@ -97,14 +92,14 @@ def test_setting_one_role_leaves_the_others_and_replaces_only_its_own_selection(
         "text_extraction": (SIGN_IN_ONLY_LANE, "synthetic-text-2"),
     }
     assert [entry.role for entry in third.roles] == list(ModelRole)
-    assert service.model_roles() == third
+    assert service.status() == third
     assert len({first.revision, second.revision, third.revision}) == 3
 
 
 def test_clearing_a_role_removes_only_that_selection() -> None:
-    service = _service(MemoryProviderSettingsStore())
+    service = _service(MemoryModelRoleSelectionsStore())
     status = _status(
-        service.set_model_role(
+        service.select(
             "text_extraction",
             lane=KEY_LANE,
             model="synthetic-text-1",
@@ -112,20 +107,18 @@ def test_clearing_a_role_removes_only_that_selection() -> None:
         )
     )
     status = _status(
-        service.set_model_role(
-            "column_role_mapping", lane=KEY_LANE, model="synthetic-text-1", expected_revision=_guard(status)
-        )
+        service.select("column_role_mapping", lane=KEY_LANE, model="synthetic-text-1", expected_revision=_guard(status))
     )
 
-    cleared = _status(service.clear_model_role("text_extraction", expected_revision=_guard(status)))
+    cleared = _status(service.clear("text_extraction", expected_revision=_guard(status)))
 
     assert _selected(cleared) == {"column_role_mapping": (KEY_LANE, "synthetic-text-1")}
 
 
 def test_a_change_against_a_stale_revision_is_refused_and_changes_nothing() -> None:
-    service = _service(MemoryProviderSettingsStore())
+    service = _service(MemoryModelRoleSelectionsStore())
     status = _status(
-        service.set_model_role(
+        service.select(
             "text_extraction",
             lane=KEY_LANE,
             model="synthetic-text-1",
@@ -135,7 +128,7 @@ def test_a_change_against_a_stale_revision_is_refused_and_changes_nothing() -> N
     conflict = _refused(ProviderSettingsRefusalCode.REVISION_CONFLICT)
 
     assert (
-        service.set_model_role(
+        service.select(
             "text_extraction",
             lane=KEY_LANE,
             model="synthetic-text-2",
@@ -143,10 +136,10 @@ def test_a_change_against_a_stale_revision_is_refused_and_changes_nothing() -> N
         )
         == conflict
     )
-    assert service.clear_model_role("text_extraction", expected_revision="f" * 64) == conflict
-    assert service.reset_model_roles(expected_revision="f" * 64) == conflict
-    assert service.set_model_role("text_extraction", lane=KEY_LANE, model="m", expected_revision="not-hex") == conflict
-    assert service.model_roles() == status
+    assert service.clear("text_extraction", expected_revision="f" * 64) == conflict
+    assert service.reset(expected_revision="f" * 64) == conflict
+    assert service.select("text_extraction", lane=KEY_LANE, model="m", expected_revision="not-hex") == conflict
+    assert service.status() == status
 
 
 @pytest.mark.parametrize(
@@ -162,58 +155,56 @@ def test_a_change_against_a_stale_revision_is_refused_and_changes_nothing() -> N
 def test_a_selection_naming_an_unknown_role_lane_or_malformed_model_is_refused(
     role: str, lane: str, model: str
 ) -> None:
-    store = MemoryProviderSettingsStore()
+    store = MemoryModelRoleSelectionsStore()
     service = _service(store)
 
-    refused = service.set_model_role(role, lane=lane, model=model, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID)
+    refused = service.select(role, lane=lane, model=model, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID)
 
     assert refused == _refused(ProviderSettingsRefusalCode.UNKNOWN)
-    assert store.selections is None
+    assert store.stored is None
 
 
 def test_an_unreadable_record_lists_no_role_refuses_changes_and_only_a_guarded_reset_clears_it() -> None:
-    store = MemoryProviderSettingsStore()
-    store.unreadable_selections = "d" * 64
+    store = MemoryModelRoleSelectionsStore()
+    store.unreadable = "d" * 64
     service = _service(store)
 
-    assert service.model_roles() == ModelRoleSelectionsStatus(unreadable=True, roles=(), revision="d" * 64)
+    assert service.status() == ModelRoleSelectionsStatus(unreadable=True, roles=(), revision="d" * 64)
     unknown = _refused(ProviderSettingsRefusalCode.UNKNOWN)
-    assert service.set_model_role("text_extraction", lane=KEY_LANE, model="m", expected_revision="d" * 64) == unknown
-    assert service.clear_model_role("text_extraction", expected_revision="d" * 64) == unknown
+    assert service.select("text_extraction", lane=KEY_LANE, model="m", expected_revision="d" * 64) == unknown
+    assert service.clear("text_extraction", expected_revision="d" * 64) == unknown
 
-    reset = _status(service.reset_model_roles(expected_revision="d" * 64))
+    reset = _status(service.reset(expected_revision="d" * 64))
 
     assert not reset.unreadable and _selected(reset) == {}
     assert reset.revision == ABSENT_SECURE_OBJECT_REVISION_ID
 
 
 def test_a_profile_that_is_not_signed_in_refuses_reads_and_changes() -> None:
-    store = MemoryProviderSettingsStore()
+    store = MemoryModelRoleSelectionsStore()
     store.refusal = StoreRefusal(code=StoreRefusalCode.NOT_SIGNED_IN)
     service = _service(store)
     signed_out = _refused(ProviderSettingsRefusalCode.NOT_SIGNED_IN)
 
-    assert service.model_roles() == signed_out
+    assert service.status() == signed_out
     assert (
-        service.set_model_role(
-            "text_extraction", lane=KEY_LANE, model="m", expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
-        )
+        service.select("text_extraction", lane=KEY_LANE, model="m", expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID)
         == signed_out
     )
 
 
 def test_a_selection_made_through_the_service_is_the_lane_a_model_run_resolves() -> None:
-    store = MemoryProviderSettingsStore()
+    store = MemoryModelRoleSelectionsStore()
     source = ProvidedProviderCatalogSource(synthetic_catalog())
-    service = ProviderSettingsService(store=store, catalog_source=source, storage_mode=StorageMode.INSTALLED)
+    service = ModelRoleSelectionsService(store=store, catalog_source=source)
     runs = ModelRunService(
-        store=store,
-        resolver=ProviderCredentialResolver(store=store, catalog_source=source),
+        selections=store,
+        resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=source),
         catalog_source=source,
         gateway=_NoMediaGateway(),
     )
     status = _status(
-        service.set_model_role(
+        service.select(
             "vision_transcription",
             lane=SIGN_IN_ONLY_LANE,
             model="synthetic-vision-1",
@@ -226,7 +217,7 @@ def test_a_selection_made_through_the_service_is_the_lane_a_model_run_resolves()
     )
     assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
 
-    _status(service.clear_model_role("vision_transcription", expected_revision=_guard(status)))
+    _status(service.clear("vision_transcription", expected_revision=_guard(status)))
     assert runs.lookup("vision_transcription") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
 
 

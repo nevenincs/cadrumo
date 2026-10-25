@@ -1,4 +1,4 @@
-"""An in-memory provider-settings store that keeps the port's revision contract.
+"""In-memory provider-settings and selections stores that keep the ports' revision contract.
 
 It stands in for encrypted custody so service tests isolate the service's own
 decisions: every write gets a fresh revision, and a write or delete whose guard
@@ -17,6 +17,7 @@ from ..ports import (
     AbsentModelRoleSelections,
     AbsentProviderRecord,
     ModelRoleSelectionsRead,
+    ModelRoleSelectionsStore,
     ProviderRecordRead,
     ProviderSettingsStore,
     StoredModelRoleSelections,
@@ -37,8 +38,6 @@ class MemoryProviderSettingsStore(ProviderSettingsStore):
         self.records: dict[str, StoredProviderRecord] = {}
         self.unreadable: dict[str, str] = {}
         self.refusal: StoreRefusal | None = None
-        self.selections: StoredModelRoleSelections | None = None
-        self.unreadable_selections: str | None = None
 
     def put(self, record: ProviderSettingsRecord) -> str:
         """Store ``record`` directly, as an earlier build would have, and return its revision."""
@@ -83,40 +82,48 @@ class MemoryProviderSettingsStore(ProviderSettingsStore):
         return None
 
     @override
-    def read_role_selections(self) -> ModelRoleSelectionsRead | StoreRefusal:
-        if self.refusal is not None:
-            return self.refusal
-        if self.unreadable_selections is not None:
-            return UnreadableModelRoleSelections(revision=self.unreadable_selections)
-        return self.selections if self.selections is not None else AbsentModelRoleSelections()
-
-    def _selections_revision(self) -> str:
-        if self.unreadable_selections is not None:
-            return self.unreadable_selections
-        return self.selections.revision if self.selections is not None else ABSENT_SECURE_OBJECT_REVISION_ID
-
-    @override
-    def write_role_selections(
-        self, record: ModelRoleSelectionsRecord, *, expected_revision: str
-    ) -> StoreRefusal | None:
-        if self.refusal is not None:
-            return self.refusal
-        if self._selections_revision() != expected_revision:
-            return StoreRefusal(code=StoreRefusalCode.REVISION_CONFLICT)
-        self.unreadable_selections = None
-        self.selections = StoredModelRoleSelections(record=record, revision=secrets.token_hex(32))
-        return None
-
-    @override
-    def delete_role_selections(self, *, expected_revision: str) -> StoreRefusal | None:
-        if self.refusal is not None:
-            return self.refusal
-        if self._selections_revision() != expected_revision:
-            return StoreRefusal(code=StoreRefusalCode.REVISION_CONFLICT)
-        self.unreadable_selections = None
-        self.selections = None
-        return None
-
-    @override
     def observe_generations(self) -> StoreGenerations | None:
+        return None
+
+
+class MemoryModelRoleSelectionsStore(ModelRoleSelectionsStore):
+    """The selections record held in memory, guarded by per-write revisions."""
+
+    def __init__(self) -> None:
+        """Start with no record."""
+        self.stored: StoredModelRoleSelections | None = None
+        self.unreadable: str | None = None
+        self.refusal: StoreRefusal | None = None
+
+    @override
+    def read(self) -> ModelRoleSelectionsRead | StoreRefusal:
+        if self.refusal is not None:
+            return self.refusal
+        if self.unreadable is not None:
+            return UnreadableModelRoleSelections(revision=self.unreadable)
+        return self.stored if self.stored is not None else AbsentModelRoleSelections()
+
+    def _revision(self) -> str:
+        if self.unreadable is not None:
+            return self.unreadable
+        return self.stored.revision if self.stored is not None else ABSENT_SECURE_OBJECT_REVISION_ID
+
+    @override
+    def write(self, record: ModelRoleSelectionsRecord, *, expected_revision: str) -> StoreRefusal | None:
+        if self.refusal is not None:
+            return self.refusal
+        if self._revision() != expected_revision:
+            return StoreRefusal(code=StoreRefusalCode.REVISION_CONFLICT)
+        self.unreadable = None
+        self.stored = StoredModelRoleSelections(record=record, revision=secrets.token_hex(32))
+        return None
+
+    @override
+    def delete(self, *, expected_revision: str) -> StoreRefusal | None:
+        if self.refusal is not None:
+            return self.refusal
+        if self._revision() != expected_revision:
+            return StoreRefusal(code=StoreRefusalCode.REVISION_CONFLICT)
+        self.unreadable = None
+        self.stored = None
         return None

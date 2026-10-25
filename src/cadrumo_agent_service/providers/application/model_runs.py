@@ -2,7 +2,7 @@
 
 A tax worker's model run names its role and never a lane. The lane and model
 are the ones the person selected for that role, stored in the profile's
-provider settings. A role with no selection refuses ``no_selection``. Nothing
+own model-role selections record. A role with no selection refuses ``no_selection``. Nothing
 stands in for a missing selection: not another lane, not another role's
 choice, not a catalogue default. A selected lane that is turned off, no longer
 reported or not reachable refuses ``lane_unavailable``. Any lane is eligible,
@@ -37,9 +37,9 @@ from ..domain.record import ModelRoleSelection
 from .ports import (
     AbsentModelRoleSelections,
     ModelRoleSelectionsRead,
+    ModelRoleSelectionsStore,
     ProviderCatalogSource,
     ProviderCatalogUnavailableError,
-    ProviderSettingsStore,
     StoreRefusal,
     StoreRefusalCode,
     UnreadableModelRoleSelections,
@@ -79,13 +79,13 @@ class ModelRunService:
     def __init__(
         self,
         *,
-        store: ProviderSettingsStore,
+        selections: ModelRoleSelectionsStore,
         resolver: ProviderCredentialResolver,
         catalog_source: ProviderCatalogSource,
         gateway: BackgroundRunGateway,
     ) -> None:
         """Bind the service to the profile's selections, resolver, the agent's catalog and the run gateway."""
-        self._store = store
+        self._selections = selections
         self._resolver = resolver
         self._catalog_source = catalog_source
         self._gateway = gateway
@@ -120,7 +120,7 @@ class ModelRunService:
         return tuple(states)
 
     def _read_selections(self) -> ModelRoleSelectionsRead | ModelRunRefusal:
-        read = self._store.read_role_selections()
+        read = self._selections.read()
         if isinstance(read, StoreRefusal):
             return ModelRunRefusal(code=_STORE_SIGNED_OUT.get(read.code, ModelRunRefusalCode.LANE_UNAVAILABLE))
         return read
