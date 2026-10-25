@@ -232,10 +232,6 @@ impl StoredModel {
         Self { manifest, blobs }
     }
 
-    fn digest(&self) -> Sha256Digest {
-        Sha256Digest::of(&self.manifest)
-    }
-
     fn size(&self) -> u64 {
         self.blobs.iter().map(|(_, bytes)| bytes.len() as u64).sum()
     }
@@ -321,7 +317,7 @@ impl World {
                 state
                     .installs
                     .insert(name.into(), model.files(&models, name));
-                state.tags.insert(name.into(), model.digest().to_string());
+                state.tags.insert(name.into());
             }
         }
         let mut world = Self::serving(
@@ -1098,7 +1094,7 @@ fn a_tag_the_registry_moved_is_the_model_the_program_verified() {
         state
             .installs
             .insert(VISION.into(), moved.files(&models, VISION));
-        state.tags.insert(VISION.into(), moved.digest().to_string());
+        state.tags.insert(VISION.into());
     }
 
     let mut setup = world.start(&["setup", "--item", "local_ai"]);
@@ -1338,7 +1334,7 @@ fn the_hardware_floor_is_the_selected_models_size_and_no_selection_is_never_held
         "models of a few hundred bytes fit in any memory"
     );
 
-    world.local_models[0].2 = 2 * GIB;
+    world.local_models[0].2 = GIB + 1;
     let held = small(&world, &["status"]);
     let local_ai = row(&held.result, "local_ai");
     assert_eq!(

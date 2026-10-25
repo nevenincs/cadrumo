@@ -326,7 +326,10 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
     assert_eq!(Some(record.process_id), server.process_id());
     let (status, _) = server
         .loopback()
-        .post("/api/generate", br#"{"model":"qwen3:1.7b","prompt":"hi"}"#)
+        .post(
+            "/api/generate",
+            br#"{"model":"synthetic-model:test","prompt":"hi"}"#,
+        )
         .unwrap();
     assert_eq!(status, 200);
 
@@ -344,7 +347,9 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
     );
     let log = fs::read_to_string(locations.ollama_home.join("requests.log")).unwrap();
     assert!(
-        log.contains(r#"POST /api/generate HTTP/1.1 {"keep_alive":0,"model":"qwen3:1.7b"}"#),
+        log.contains(
+            r#"POST /api/generate HTTP/1.1 {"keep_alive":0,"model":"synthetic-model:test"}"#
+        ),
         "a loaded model is unloaded before the server ends: {log}"
     );
 

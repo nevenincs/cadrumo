@@ -312,21 +312,21 @@ fn the_quick_check_reads_the_stored_manifest_and_its_layers() {
 fn the_hardware_floor_is_the_size_the_caller_stated() {
     let fixture = fixture();
     fixture.text.write(&fixture.models_root(), TEXT);
-    let large = selected("text_extraction", TEXT, 2 * GIB);
     let small = Hardware {
         total_memory_bytes: Some(GIB),
         nvidia_vram_bytes: Some(GIB),
     };
+    let large = selected("text_extraction", TEXT, GIB + 1);
     assert_eq!(
         fixture.models.observe_quick(&large, &small),
         Observation::Blocked(BlockedReason::Hardware)
     );
     let card = Hardware {
         total_memory_bytes: Some(GIB),
-        nvidia_vram_bytes: Some(8 * GIB),
+        nvidia_vram_bytes: Some(GIB + 1),
     };
     assert_eq!(fixture.models.observe_quick(&large, &card), PRESENT);
-    let fitting = selected("text_extraction", TEXT, GIB / 2);
+    let fitting = selected("text_extraction", TEXT, GIB);
     assert_eq!(fixture.models.observe_quick(&fitting, &small), PRESENT);
 }
 
@@ -600,16 +600,17 @@ fn the_full_check_looks_the_model_up_in_the_servers_list_and_generates_one_token
         .lock()
         .unwrap()
         .tags
-        .insert("synthetic-text:other".into(), String::new());
+        .insert("synthetic-text:other".into());
     assert_eq!(
         fixture.models.observe_full(&server, model, &ROOMY),
         Observation::Absent,
         "another tag of the model is another model"
     );
-    fake.state.lock().unwrap().tags.insert(
-        "registry.ollama.ai/library/Synthetic-Text:test".into(),
-        String::new(),
-    );
+    fake.state
+        .lock()
+        .unwrap()
+        .tags
+        .insert("registry.ollama.ai/library/Synthetic-Text:test".into());
     assert_eq!(fixture.models.observe_full(&server, model, &ROOMY), PRESENT);
     let generation = fake
         .state
@@ -651,6 +652,75 @@ fn the_full_check_looks_the_model_up_in_the_servers_list_and_generates_one_token
     assert_eq!(
         fixture.models.observe_full(&server, model, &ROOMY),
         Observation::Failed(FailureCategory::ProgramNotRunning)
+    );
+}
+
+/// The pull path end to end for a model no catalogue has: pulled by the name the
+/// selection spells, stored where the program keeps that name, read back from the
+/// server's list and answering one token, with no digest compared anywhere.
+#[test]
+fn a_synthetic_model_from_any_registry_is_pulled_listed_and_checked_by_its_name() {
+    const SYNTHETIC: &str = "models.example.com/someone/synthetic-model:test";
+    let root = tempfile::tempdir().unwrap();
+    let models_root = root.path().join("models");
+    let stored = Stored::new(3);
+    let models = Models::new(
+        LocalModels::new(vec![selected("text_extraction", SYNTHETIC, stored.size())]).unwrap(),
+        models_root.clone(),
+    );
+    let model = &models.selection().as_slice()[0];
+    let fake = FakeOllama::start("1.0.0");
+    {
+        let mut state = fake.state.lock().unwrap();
+        let mut lines = vec![json!({ "status": "pulling manifest" })];
+        for (digest, bytes) in &stored.blobs {
+            lines.push(progress(digest, bytes.len(), bytes.len()));
+        }
+        lines.push(json!({ "status": "success" }));
+        state.pulls.push_back(lines);
+        state
+            .installs
+            .insert(SYNTHETIC.into(), stored.files(&models_root, SYNTHETIC));
+    }
+    let server = Server::attached(fake.address(), "1.0.0");
+    assert_eq!(models.observe_quick(model, &ROOMY), Observation::Absent);
+    let mut pacing = RecordedPacing::default();
+    let mut events = Vec::new();
+    let pulled = models
+        .pull(
+            &server,
+            model,
+            &mut Pull {
+                policy: RetryPolicy::default(),
+                pacing: &mut pacing,
+                events: &mut |event| events.push(event),
+                cancellation: &Cancellation::default(),
+            },
+        )
+        .unwrap();
+    assert_eq!(pulled, PRESENT);
+    assert!(matches!(
+        events.last(),
+        Some(TransferEvent::Progress { completed, total }) if *completed == stored.size() && *total == stored.size()
+    ));
+    assert!(
+        models_root
+            .join("manifests/models.example.com/someone/synthetic-model/test")
+            .is_file()
+    );
+    assert_eq!(models.observe_full(&server, model, &ROOMY), PRESENT);
+    let state = fake.state.lock().unwrap();
+    let named: Vec<&Value> = state
+        .bodies
+        .iter()
+        .filter(|body| body["model"].is_string())
+        .map(|body| &body["model"])
+        .collect();
+    assert!(!named.is_empty());
+    assert!(named.iter().all(|name| **name == SYNTHETIC), "{named:?}");
+    assert_eq!(
+        models.plan_parts()[0].source_hosts[0].as_str(),
+        "models.example.com"
     );
 }
 

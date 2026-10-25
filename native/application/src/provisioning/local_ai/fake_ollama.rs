@@ -8,7 +8,7 @@
 
 use serde_json::{Value, json};
 use std::{
-    collections::{BTreeMap, VecDeque},
+    collections::{BTreeMap, BTreeSet, VecDeque},
     io::{BufRead, BufReader, Read, Write},
     net::{SocketAddr, TcpListener, TcpStream},
     path::PathBuf,
@@ -51,8 +51,9 @@ pub(crate) struct FakeState {
     /// The files a pull of a model writes once it answers `success`; the pull then lists
     /// the model, as the program does.
     pub installs: BTreeMap<String, Vec<(PathBuf, Vec<u8>)>>,
-    /// The models `/api/tags` reports, by name, with their digests.
-    pub tags: BTreeMap<String, String>,
+    /// The models `/api/tags` reports, by name. The engine reads names only, so the fake
+    /// reports no digest.
+    pub tags: BTreeSet<String>,
     /// The status and body a generation answers with instead of one token.
     pub generation: Option<(String, Value)>,
     /// Whether `POST /fake/exit` ends the process, as a crash would: only in the helper.
@@ -160,7 +161,7 @@ fn answer(state: &Shared, mut stream: TcpStream) {
             let models: Vec<Value> = guard
                 .tags
                 .iter()
-                .map(|(name, digest)| json!({ "name": name, "model": name, "digest": digest }))
+                .map(|name| json!({ "name": name, "model": name }))
                 .collect();
             drop(guard);
             respond(&mut stream, "200 OK", &json!({ "models": models }));
@@ -174,7 +175,7 @@ fn answer(state: &Shared, mut stream: TcpStream) {
                     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
                     std::fs::write(path, bytes).unwrap();
                 }
-                guard.tags.entry(model).or_default();
+                guard.tags.insert(model);
             }
             drop(guard);
             let _ = write!(

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:1c36d6bdb1b5cde55c393dc6be781bfd89918afc889755698200e34cdca281b2'
+body_hash: 'sha256:cee792d1f7f401e66d2f2c5037eae0d8b28954aa64b58ee6949975b072ecd72e'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -190,6 +190,18 @@ related:
 - `S21` `verify:` `cargo fmt --check --manifest-path native/application/Cargo.toml` -> `pass`
 - `S21` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
 - `S21` `by:` `implementation-engineer-high`
+- `S23` `M` `native/application/src/provisioning/local_ai/fake_ollama.rs`
+- `S23` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S23` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S23` `M` `native/application/src/provisioning/local_ai/hardware.rs`
+- `S23` `M` `native/application/src/provisioning/protocol/tests.rs`
+- `S23` `verify:` `cargo test --locked --manifest-path native/application/Cargo.toml --lib provisioning:: -- --test-threads=2` -> `pass`
+- `S23` `verify:` `cargo test --locked --manifest-path native/application/Cargo.toml --features test-support --test provisioning_faults -- --test-threads=2` -> `pass`
+- `S23` `verify:` `cargo clippy --locked --all-targets --manifest-path native/application/Cargo.toml --all-features -- -D warnings` -> `pass`
+- `S23` `verify:` `cargo fmt --check --manifest-path native/application/Cargo.toml` -> `pass`
+- `S23` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
+- `S23` `verify:` `grep -rniE "qwen|gemma|llama[0-9]|moondream" native/application/src native/application/tests` -> `pass`
+- `S23` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -205,3 +217,4 @@ related:
 - `S08` run options and c60a65c refusals consumed; per-model typed fields wait for cadrumo-agent S04, Step stays open
 - `S20` The selection arrives as --model `<role>` `<name>` `<size_bytes>` on every command but cancel. `PLAN_CONTRACT_VERSION` stays 2: the plan fields are unchanged, and a model part now carries the bare name as `target_version` and a null licence. The Python client (protocol.py `_a_model_names_its_licence)` refuses a model part without a licence, so it must change in P04.S22 before it passes --model. The real-role Python cases need a built image and were not run.
 - `S21` The engine.rs pull loop over the selection and the hardware.rs floor wording landed with P04.S19, which had to replace the pinned models to compile; this Step adds the read-back through the server list after a pull, retires DifferentModelVersion from every check, and proves the floor and the program-alone plan through the role. The DifferentModelVersion code stays in StaleReason because the desktop wire still names it.
+- `S23` native/application keeps licence wording only in the plan type kept for the desktop (PartLicence, the null licence field, the LicenceCommercialUseBarred advisory); P04.S22 removes the desktop consumers, after which those can go.

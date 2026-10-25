@@ -235,17 +235,17 @@ mod tests {
 
     #[test]
     fn the_floor_holds_back_only_a_measured_computer_with_no_card_large_enough() {
-        let model = 2 * GIB;
+        let required = GIB + 1;
         let computer = |total, vram| Hardware {
             total_memory_bytes: total,
             nvidia_vram_bytes: vram,
         };
-        assert!(computer(Some(GIB), None).below_floor(model));
-        assert!(computer(Some(GIB), Some(GIB)).below_floor(model));
-        assert!(!computer(Some(GIB), Some(4 * GIB)).below_floor(model));
-        assert!(!computer(Some(model), None).below_floor(model));
-        assert!(!computer(None, None).below_floor(model));
-        assert!(!computer(None, Some(GIB)).below_floor(model));
+        assert!(computer(Some(GIB), None).below_floor(required));
+        assert!(computer(Some(GIB), Some(GIB)).below_floor(required));
+        assert!(!computer(Some(GIB), Some(required)).below_floor(required));
+        assert!(!computer(Some(required), None).below_floor(required));
+        assert!(!computer(None, None).below_floor(required));
+        assert!(!computer(None, Some(GIB)).below_floor(required));
     }
 
     #[test]

@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-25'
 body_schema: body-v2
-body_hash: 'sha256:01039aba219434e24279204afa21ae457c1342e54f18b40f5a266bac89d7b70e'
+body_hash: 'sha256:8bcf88c6764058d03d8dddc3a859cbd425a02bc34eaf673a26bfb7ff93260150'
 ---
 
 # `agent-owned-models` plan
@@ -82,7 +82,7 @@ Drop model pins from the engine, take the selected local models as input, pull t
 - [x] `P04.S20` - Accept the selected local models as role, model-name and size_bytes triples in the plan and setup commands and bind them in the plan digest; `native/application/src/provisioning/protocol.rs, native/application/src/provisioning/plan.rs, native/application/src/provisioning/role_host.rs`.
 - [x] `P04.S21` - Pull each selected model on the supervised server, report rows from the selection and Ollama's installed list, and drop digest-based stale; compute the hardware floor from the supplied size_bytes; `native/application/src/provisioning/local_ai/models.rs, native/application/src/provisioning/local_ai/hardware.rs, native/application/src/provisioning/state.rs, native/application/src/provisioning/engine.rs`.
 - [ ] `P04.S22` - Pass the stored selection from the Python component client and the desktop setup host to the role, and delete the pinned model fixtures; `src/cadrumo/adapters/outbound/components/client.py, src/cadrumo/adapters/outbound/components/protocol.py, native/desktop/src-tauri/src/shell/setup/components.rs, native/desktop/frontend/src/dev/setupFixture.ts`.
-- [ ] `P04.S23` - Prove the pull path with a synthetic model id against the fake Ollama server and remove the remaining model literals from engine tests; `native/application/src/provisioning/local_ai/fake_ollama.rs, native/application/src/provisioning/local_ai/models`.
+- [x] `P04.S23` - Prove the pull path with a synthetic model id against the fake Ollama server and remove the remaining model literals from engine tests; `native/application/src/provisioning/local_ai/fake_ollama.rs, native/application/src/provisioning/local_ai/models`.
 
 ### Phase `P05` - Surfaces and docs
 
