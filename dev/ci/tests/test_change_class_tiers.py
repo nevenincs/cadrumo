@@ -5,7 +5,8 @@ Every change reaches the default branch through the merge gate
 `release.yml` proves and publishes it. The remaining workflows are
 dispatch-only reports. These gates pin that topology: which workflow may start
 on a push, that the merge gate always reaches a verdict, that the verdict
-requires every gate job and refuses fork pull requests, that the release cohort is built once and consumed by every
+requires every gate job, that no fork or untrusted pull request reaches a
+self-hosted runner, that the release cohort is built once and consumed by every
 verifier, and the naming convention. Each gate is paired with an inline
 defective workflow it must refuse. Workflows are enumerated from the
 filesystem.
@@ -142,13 +143,29 @@ def test_the_schedule_gate_refuses_a_cron() -> None:
 
 # --- merge gate ---------------------------------------------------------------
 
-#: The required check. It is never skipped, so it is the one job allowed to
-#: decide the pull request.
+#: The required check. Nothing but a cancellation or a withheld admission
+#: skips it, so it is the one job allowed to decide the pull request.
 _VERDICT_JOB: Final = "verdict"
-_VERDICT_CONDITION: Final = "${{ !cancelled() }}"
-#: The clause that keeps a fork pull request from starting a working job.
 _SAME_REPOSITORY: Final = "github.event.pull_request.head.repo.full_name == github.repository"
-_FORK_HEAD: Final = "github.event.pull_request.head.repo.full_name != github.repository"
+#: The trusted-author clause, byte-identical in every repository on the same
+#: runner fleet: an owner, a collaborator, or the App that writes the release
+#: pull request. Dependabot, other bots and outside contributors are none of these.
+_TRUSTED_AUTHOR: Final = (
+    "(github.event.pull_request.author_association == 'OWNER' || "
+    "github.event.pull_request.author_association == 'COLLABORATOR' || "
+    "github.event.pull_request.user.login == 'nevenincs-release[bot]')"
+)
+#: What admits a job to a self-hosted runner: any event but a pull request, or
+#: a pull request from this repository by a trusted author.
+_ADMISSION: Final = f"(github.event_name != 'pull_request' || ({_SAME_REPOSITORY} && {_TRUSTED_AUTHOR}))"
+_VERDICT_CONDITION: Final = f"${{{{ !cancelled() && {_ADMISSION} }}}}"
+_REQUIRED_CHECK: Final = "Check: Merge gate (Linux)"
+#: A withheld verdict is skipped, and GitHub counts a skipped required check
+#: as passing, so the withheld job must report under another name.
+_WITHHELD_CHECK: Final = "Check: Merge gate withheld (Linux)"
+_VERDICT_NAME: Final = f"${{{{ {_ADMISSION} && '{_REQUIRED_CHECK}' || '{_WITHHELD_CHECK}' }}}}"
+_PULL_REQUEST_EVENTS: Final = frozenset({"pull_request", "pull_request_target"})
+_HUMAN_SENDER: Final = "github.event.sender.type == 'User'"
 
 
 def _needs_list(job: dict[str, Any]) -> list[str]:
@@ -200,6 +217,16 @@ def test_the_merge_gate_reach_check_refuses_a_filter_a_skip_and_an_unwatched_job
     ]
 
 
+def test_the_merge_gate_is_never_dispatched() -> None:
+    """A dispatched gate run attaches its checks to no pull request, so it proves nothing a merge needs.
+
+    Proved able to fail: re-adding `workflow_dispatch:` to the `on:` block of
+    `merge-gate.yml` and running this test alone failed on its assertion;
+    removing it made it pass.
+    """
+    assert "workflow_dispatch" not in _triggers(_document(_MERGE_GATE))
+
+
 def _success_requirement_violations(document: dict[str, Any]) -> list[str]:
     """Why the verdict might report success while a gate job did not succeed."""
     verdict = (document.get("jobs") or {}).get(_VERDICT_JOB) or {}
@@ -243,66 +270,133 @@ def test_the_success_requirement_refuses_a_verdict_that_ignores_results() -> Non
     ]
 
 
-def _fork_refusal_violations(document: dict[str, Any]) -> list[str]:
-    """Why a fork pull request might start a working job or pass the verdict."""
+def _expression(condition: object) -> str:
+    """Return a job ``if:`` as bare expression text."""
+    text = str(condition or "").strip()
+    if text.startswith("${{") and text.endswith("}}"):
+        return text[3:-2].strip()
+    return text
+
+
+def _reaches_self_hosted_runner(job: dict[str, Any]) -> bool:
+    """A self-hosted job, or a reusable-workflow call whose jobs inherit the event."""
+    return "self-hosted" in str(job.get("runs-on", "")) or "uses" in job
+
+
+def _admission_violations(documents: list[tuple[Path, dict[str, Any]]]) -> list[str]:
+    """Why a pull request from a fork or an untrusted author might reach a self-hosted runner."""
     violations: list[str] = []
-    jobs = document.get("jobs") or {}
-    for name, job in jobs.items():
-        if name == _VERDICT_JOB:
+    for path, document in documents:
+        triggers = _triggers(document)
+        if "pull_request_target" in triggers:
+            violations.append(f"{path.name} runs on pull_request_target")
+        if not _PULL_REQUEST_EVENTS & set(triggers):
             continue
-        condition = str(job.get("if", ""))
-        # The clause must be a required conjunct, not one side of an `||`
-        # that another disjunct could satisfy on a fork.
-        if _SAME_REPOSITORY not in condition:
-            violations.append(f"{name} can start on a fork pull request")
-        elif condition.count("||") > 1 or "||" in condition.split(_SAME_REPOSITORY, 1)[1]:
-            violations.append(f"{name} weakens the same-repository condition")
-    verdict = jobs.get(_VERDICT_JOB) or {}
-    refusal = next(
-        (
-            step
-            for step in verdict.get("steps") or []
-            if _FORK_HEAD in str(step.get("if", ""))
-            and "github.event_name == 'pull_request'" in str(step.get("if", ""))
-            and "exit 1" in executed_text(step.get("run"))
-            and step.get("continue-on-error") is not True
-        ),
-        None,
-    )
-    if refusal is None:
-        violations.append(f"{_VERDICT_JOB} does not fail a fork pull request")
-    if any("checkout" in str(step.get("uses", "")) for step in verdict.get("steps") or []):
-        violations.append(f"{_VERDICT_JOB} checks out code, which a fork pull request would supply")
+        types = (triggers.get("pull_request") or {}).get("types") or []
+        for name, job in (document.get("jobs") or {}).items():
+            if not _reaches_self_hosted_runner(job):
+                continue
+            condition = _expression(job.get("if"))
+            position = condition.find(_ADMISSION)
+            if position < 0 or condition[:position].rstrip().endswith("!"):
+                violations.append(f"{path.name}: {name} reaches a self-hosted runner without the admission clause")
+            # The clause must be a required conjunct, not one side of an `||`
+            # that another disjunct could satisfy on an untrusted pull request.
+            elif "||" in condition.replace(_ADMISSION, ""):
+                violations.append(f"{path.name}: {name} widens the admission clause")
+            if "labeled" in types and _HUMAN_SENDER not in condition:
+                violations.append(f"{path.name}: {name} admits a label event a bot raised")
     return violations
 
 
-def test_fork_pull_requests_start_no_job_and_fail_the_verdict() -> None:
-    """Refuse is the only fork policy: no working job, and a red required check."""
-    assert _fork_refusal_violations(_document(_MERGE_GATE)) == []
+def test_no_untrusted_pull_request_reaches_a_self_hosted_runner() -> None:
+    """Only this repository's owner, collaborators and the release App reach the fleet.
+
+    Proved able to fail: deleting `github.event.pull_request.user.login ==
+    'nevenincs-release[bot]'` from the lint job's `if:` in `merge-gate.yml` and
+    running this test alone failed on the `== []` assertion, the helper
+    reporting `merge-gate.yml: lint reaches a self-hosted runner without the
+    admission clause`; restoring the clause made it pass.
+    """
+    documents = [(path, _document(path)) for path in _workflow_paths()]
+    assert any(_PULL_REQUEST_EVENTS & set(_triggers(document)) for _, document in documents), (
+        "no workflow runs on a pull request, so this gate checked nothing"
+    )
+    assert _admission_violations(documents) == []
 
 
-def test_the_fork_refusal_check_detects_each_removed_clause() -> None:
-    """Teeth: each removal is reported on its own, against the live document."""
+def test_the_admission_check_detects_each_weakening() -> None:
+    """Teeth: each weakening is reported on its own, against the live document."""
     unguarded = deepcopy(_document(_MERGE_GATE))
     del unguarded["jobs"][_LINT_JOB]["if"]
     unguarded["jobs"][_GATE_JOB]["if"] = "${{ needs.lint.result == 'success' }}"
-    assert _fork_refusal_violations(unguarded) == [
-        f"{_LINT_JOB} can start on a fork pull request",
-        f"{_GATE_JOB} can start on a fork pull request",
+    assert _admission_violations([(_MERGE_GATE, unguarded)]) == [
+        f"{_MERGE_GATE.name}: {_LINT_JOB} reaches a self-hosted runner without the admission clause",
+        f"{_MERGE_GATE.name}: {_GATE_JOB} reaches a self-hosted runner without the admission clause",
+    ]
+
+    # The former shape: same repository only, so any bot able to push a branch
+    # here, Dependabot included, reached the fleet.
+    same_repository_only = deepcopy(_document(_MERGE_GATE))
+    same_repository_only["jobs"][_LINT_JOB]["if"] = (
+        f"${{{{ github.event_name != 'pull_request' || {_SAME_REPOSITORY} }}}}"
+    )
+    assert _admission_violations([(_MERGE_GATE, same_repository_only)]) == [
+        f"{_MERGE_GATE.name}: {_LINT_JOB} reaches a self-hosted runner without the admission clause"
     ]
 
     widened = deepcopy(_document(_MERGE_GATE))
-    widened["jobs"][_LINT_JOB]["if"] = f"${{{{ {_SAME_REPOSITORY} || github.actor == 'someone' }}}}"
-    assert _fork_refusal_violations(widened) == [f"{_LINT_JOB} weakens the same-repository condition"]
-
-    permissive = deepcopy(_document(_MERGE_GATE))
-    permissive["jobs"][_VERDICT_JOB]["steps"] = [
-        step for step in permissive["jobs"][_VERDICT_JOB]["steps"] if _FORK_HEAD not in str(step.get("if", ""))
+    widened["jobs"][_LINT_JOB]["if"] = f"${{{{ {_ADMISSION} || github.actor == 'someone' }}}}"
+    negated = deepcopy(_document(_MERGE_GATE))
+    negated["jobs"][_LINT_JOB]["if"] = f"${{{{ !{_ADMISSION} }}}}"
+    assert _admission_violations([(_MERGE_GATE, widened), (_MERGE_GATE, negated)]) == [
+        f"{_MERGE_GATE.name}: {_LINT_JOB} widens the admission clause",
+        f"{_MERGE_GATE.name}: {_LINT_JOB} reaches a self-hosted runner without the admission clause",
     ]
-    permissive["jobs"][_VERDICT_JOB]["steps"].insert(0, {"uses": "actions/checkout@" + "0" * 40})
-    assert _fork_refusal_violations(permissive) == [
-        f"{_VERDICT_JOB} does not fail a fork pull request",
-        f"{_VERDICT_JOB} checks out code, which a fork pull request would supply",
+
+    labelled = deepcopy(_document(_MERGE_GATE))
+    _triggers(labelled)["pull_request"]["types"] = ["opened", "labeled"]
+    target = yaml.safe_load("name: Cadrumo Target\non:\n  pull_request_target:\njobs: {}\n")
+    assert _admission_violations([(_MERGE_GATE, labelled), (Path("target.yml"), target)]) == [
+        *(
+            f"{_MERGE_GATE.name}: {job} admits a label event a bot raised"
+            for job in (_LINT_JOB, _GATE_JOB, _VERDICT_JOB)
+        ),
+        "target.yml runs on pull_request_target",
+    ]
+
+
+def _withheld_verdict_violations(document: dict[str, Any]) -> list[str]:
+    """Why a withheld verdict might satisfy the required check, or run untrusted code."""
+    violations: list[str] = []
+    verdict = (document.get("jobs") or {}).get(_VERDICT_JOB) or {}
+    if str(verdict.get("name", "")).strip() != _VERDICT_NAME:
+        violations.append(f"{_VERDICT_JOB} does not report a withheld admission as {_WITHHELD_CHECK!r}")
+    if any("checkout" in str(step.get("uses", "")) for step in verdict.get("steps") or []):
+        violations.append(f"{_VERDICT_JOB} checks out code it never needs")
+    return violations
+
+
+def test_a_withheld_verdict_never_reports_the_required_check() -> None:
+    """An untrusted pull request leaves the required check unreported, so it cannot merge.
+
+    Proved able to fail: replacing the verdict's `name:` in `merge-gate.yml`
+    with the static `"Check: Merge gate (Linux)"` and running this test alone
+    failed on the `== []` assertion, the helper reporting that the verdict
+    does not report a withheld admission as the withheld check; restoring the
+    expression made it pass.
+    """
+    assert _withheld_verdict_violations(_document(_MERGE_GATE)) == []
+
+
+def test_the_withheld_verdict_check_detects_a_static_name_and_a_checkout() -> None:
+    """Teeth: the required name on a skippable job, and a checkout in the verdict, are both reported."""
+    document = deepcopy(_document(_MERGE_GATE))
+    document["jobs"][_VERDICT_JOB]["name"] = _REQUIRED_CHECK
+    document["jobs"][_VERDICT_JOB]["steps"].insert(0, {"uses": "actions/checkout@" + "0" * 40})
+    assert _withheld_verdict_violations(document) == [
+        f"{_VERDICT_JOB} does not report a withheld admission as {_WITHHELD_CHECK!r}",
+        f"{_VERDICT_JOB} checks out code it never needs",
     ]
 
 

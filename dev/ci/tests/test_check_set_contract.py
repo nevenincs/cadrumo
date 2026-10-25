@@ -23,6 +23,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _WORKFLOWS: Final = REPO_ROOT / ".github" / "workflows"
 _MAIN_GROUP_SUFFIX = "${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}"
 _CHECK_GROUPS = frozenset({"check", "test", "build"})
+#: ``${{ <admission> && '<admitted name>' || '<withheld name>' }}``.
+_ADMISSION_NAME = re.compile(r"\$\{\{ .+ && '(?P<admitted>[^']+)' \|\| '(?P<withheld>[^']+)' \}\}")
 
 
 def _documents(root: Path = _WORKFLOWS) -> list[tuple[Path, dict[str, Any]]]:
@@ -71,7 +73,13 @@ def _just_groups() -> set[str]:
 
 
 def test_every_job_name_describes_coverage_with_the_shared_vocabulary() -> None:
-    """Job rows use ``<Kind>: <Subject> [(Platform)]`` and never tool or marker subjects."""
+    """Job rows use ``<Kind>: <Subject> [(Platform)]`` and never tool or marker subjects.
+
+    Both names of a job withheld from untrusted pull requests are checked.
+    Proved able to fail: renaming the merge gate verdict's withheld name to
+    `merge gate withheld` and running this test alone failed on its assertion;
+    restoring the name made it pass.
+    """
     forbidden = _tool_names() | _registered_markers()
     groups = _just_groups()
     assert groups >= _CHECK_GROUPS, f"merge vocabulary is not backed by just groups: {sorted(_CHECK_GROUPS - groups)}"
@@ -95,19 +103,24 @@ def test_every_job_name_describes_coverage_with_the_shared_vocabulary() -> None:
                         f"{path.name}:{key}: dynamic row names are not unique by runtime, phase, platform"
                     )
                 continue
-            match = job_name.fullmatch(name)
-            if match is None:
-                violations.append(f"{path.name}:{key}: invalid job name {name!r}")
-                continue
-            subject_words = {word.casefold() for word in re.findall(r"[A-Za-z0-9_-]+", match.group(2))}
-            leaked = sorted(subject_words & forbidden)
-            if leaked:
-                violations.append(f"{path.name}:{key}: subject names tools/markers {leaked}")
-            platform = match.group(3)
-            platforms = {"Linux", "Windows", "macOS"}
-            qualified = platform and platform.split(", ", 1)[0] in platforms and "${{" in platform
-            if platform and not (platform in platforms or "${{ matrix." in platform or qualified):
-                violations.append(f"{path.name}:{key}: unsupported platform label {platform!r}")
+            # A job withheld from untrusted pull requests carries two literal
+            # names, and each must read as a row on its own.
+            admission = _ADMISSION_NAME.fullmatch(name)
+            candidates = (admission["admitted"], admission["withheld"]) if admission else (name,)
+            for candidate in candidates:
+                match = job_name.fullmatch(candidate)
+                if match is None:
+                    violations.append(f"{path.name}:{key}: invalid job name {candidate!r}")
+                    continue
+                subject_words = {word.casefold() for word in re.findall(r"[A-Za-z0-9_-]+", match.group(2))}
+                leaked = sorted(subject_words & forbidden)
+                if leaked:
+                    violations.append(f"{path.name}:{key}: subject names tools/markers {leaked}")
+                platform = match.group(3)
+                platforms = {"Linux", "Windows", "macOS"}
+                qualified = platform and platform.split(", ", 1)[0] in platforms and "${{" in platform
+                if platform and not (platform in platforms or "${{ matrix." in platform or qualified):
+                    violations.append(f"{path.name}:{key}: unsupported platform label {platform!r}")
             matrix = (job.get("strategy") or {}).get("matrix")
             if matrix and "${{ matrix." not in name:
                 violations.append(f"{path.name}:{key}: matrix rows are not distinguished in the job name")

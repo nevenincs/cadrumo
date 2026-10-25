@@ -24,12 +24,13 @@ import json
 import re
 import shlex
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 import pytest
 import yaml
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 from ..workflow_run_text import executed_text
@@ -288,7 +289,7 @@ def test_release_please_bumps_every_version_surface_the_release_gate_compares() 
     against a version that already exists. So the two are compared here.
     """
     config = json.loads((REPO_ROOT / "release-please-config.json").read_text(encoding="utf-8"))
-    extra_files = set(config["packages"]["."].get("extra-files", []))
+    extra_files = {entry for entry in config["packages"]["."].get("extra-files", []) if isinstance(entry, str)}
 
     companions = sorted(
         path.relative_to(REPO_ROOT).as_posix() for path in (REPO_ROOT / "packaging").glob("*/pyproject.toml")
@@ -306,6 +307,55 @@ def test_release_please_bumps_every_version_surface_the_release_gate_compares() 
         f"release-please does not bump these version surfaces: {sorted(required - extra_files)}. "
         "The release-readiness gate compares them, so a release would be cut and then refused."
     )
+
+
+#: A `toml` extra-file entry addressing one locked project's version.
+_LOCK_VERSION_PATH: Final = re.compile(r"\$\.package\[\?\(@\.name\.value=='(?P<name>[^']+)'\)\]\.version")
+
+
+def _unbumped_locked_projects(config: dict[str, Any], lock: dict[str, Any]) -> set[str]:
+    """Return the projects built from this checkout whose `uv.lock` version release-please leaves behind."""
+    local = {
+        str(package["name"])
+        for package in lock["package"]
+        if {"editable", "directory"} & set(package.get("source") or {})
+    }
+    assert len(local) > _MINIMUM_COMPANION_PROJECTS, (
+        f"only {len(local)} locally built project(s) were found in uv.lock; below this the lock "
+        "has moved or emptied and this gate is inert rather than satisfied"
+    )
+    bumped = {
+        match["name"]
+        for entry in config["packages"]["."].get("extra-files", [])
+        if isinstance(entry, dict) and entry.get("type") == "toml" and entry.get("path") == "uv.lock"
+        if (match := _LOCK_VERSION_PATH.fullmatch(str(entry.get("jsonpath", "")))) is not None
+    }
+    return local - bumped
+
+
+def test_release_please_bumps_every_locked_project_version() -> None:
+    """The release commit carries the `uv.lock` versions itself, so the release branch has one head.
+
+    A locally built project whose locked version release-please does not bump
+    leaves `uv.lock` behind its pyproject, every `--locked` install then refuses
+    the release branch, and the only repair is a second commit on that branch.
+
+    Proved able to fail: deleting the `cadrumo-data-official` entry from
+    `release-please-config.json` and running this test alone failed on its
+    assertion; restoring the entry made it pass.
+    """
+    config = json.loads((REPO_ROOT / "release-please-config.json").read_text(encoding="utf-8"))
+    lock = parse_toml((REPO_ROOT / "uv.lock").read_text(encoding="utf-8"))
+    assert _unbumped_locked_projects(config, lock) == set()
+
+
+def test_the_locked_version_gate_reports_a_dropped_project() -> None:
+    """Teeth: a locked project missing from extra-files is named."""
+    config = json.loads((REPO_ROOT / "release-please-config.json").read_text(encoding="utf-8"))
+    lock = parse_toml((REPO_ROOT / "uv.lock").read_text(encoding="utf-8"))
+    package = config["packages"]["."]
+    package["extra-files"] = [entry for entry in package["extra-files"] if "cadrumo-data-official" not in str(entry)]
+    assert _unbumped_locked_projects(config, lock) == {"cadrumo-data-official"}
 
 
 #: Surfaces the `python` release type rewrites from its own knowledge of the

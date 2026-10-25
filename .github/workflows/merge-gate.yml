@@ -13,35 +13,28 @@ on:
         type: string
         required: false
         default: ""
-  # release-please opens the release pull request with the default token, whose
-  # pushes and pull requests start no workflow runs, so that pull request would
-  # never report this gate. A dispatch is exempt from that rule and its check
-  # run lands on the branch head the pull request is waiting on.
-  # The dispatch takes no ref input: a run always checks out the ref it was
-  # dispatched on. A run's cache writes land in that ref's scope, so checking
-  # out any other ref would execute that ref's code with this ref's cache
-  # token, and a run dispatched on main could poison main's cache.
-  workflow_dispatch:
 
 permissions:
   contents: read
   pull-requests: read
 
 concurrency:
-  # One group per pull request AND per trigger. A dispatched run is a
-  # release proving a branch; a later pull request event on the same branch
+  # One group per pull request AND per trigger. A call from the release
+  # proof is proving a branch; a later pull request event on the same branch
   # must not cancel it. Two pull request events still share a group and
-  # still supersede each other, so that path is unchanged.
+  # still supersede each other.
   group: merge-gate-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
-# Pull requests from forks never start a working job: every job that checks out
-# code carries the same-repository condition, and the verdict, which is never
-# skipped, refuses a fork outright. A skipped required check would read as green.
+# Every job runs on a self-hosted runner, so a pull request reaches one only
+# from this repository and from an owner, a collaborator or the release App.
+# Any other pull request starts no job. The withheld verdict reports under a
+# different name, because GitHub treats a skipped required check as passing:
+# the required check then never reports and the pull request cannot merge.
 jobs:
   lint:
     name: "Check: Lint (Linux)"
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    if: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 150
     steps:
@@ -86,7 +79,7 @@ jobs:
   gate:
     name: "Check: Scoped gate (Linux)"
     needs: lint
-    if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && needs.lint.result == 'success' }}
+    if: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) && needs.lint.result == 'success' }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 180
     env:
@@ -187,19 +180,12 @@ jobs:
           fi
 
   verdict:
-    name: "Check: Merge gate (Linux)"
+    name: "${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) && 'Check: Merge gate (Linux)' || 'Check: Merge gate withheld (Linux)' }}"
     needs: [lint, gate]
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 66
     steps:
-      - name: Refuse fork pull requests
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
-        shell: bash
-        run: |
-          echo "Pull requests from forks are refused; no gate job ran."
-          exit 1
-
       - name: Require every gate job to succeed
         shell: bash
         env:
