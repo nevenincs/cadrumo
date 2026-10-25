@@ -11,9 +11,11 @@ the agent runs, its live ones. The rules a selection was checked against when
 the person made it are applied again: the lane runs background requests, the
 model is listed, and a role that reads images has a lane taking images and an
 entry marked vision. Any lane is eligible,
-API or CLI; whether a lane takes an attachment is what the ready agent's live
-catalog reports for background requests, read in the same lookup, and never
-inferred from its transport. Whether a lane reads off-host is likewise the
+API or CLI; whether a lane takes an attachment, and which reply options it
+honours, is what the ready agent's live catalog reports for background
+requests, never inferred from its transport. One lookup, and one run, reads
+the live catalog once: its entries, media and options come from that one
+snapshot, which no later lookup or run reuses. Whether a lane reads off-host is likewise the
 catalogue entry's typed declaration, carried with the lane: a run on such a
 lane needs the consent the tax side bound to it, and a run on a lane that stays
 on this computer needs none. The model's licence, size, vision and context
@@ -35,7 +37,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunHeader,
     ModelRunLane,
     ModelRunLicence,
-    ModelRunMediaKind,
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
@@ -44,7 +45,7 @@ from cadrumo_client.contracts.model_runs import (
     model_run_media_kind,
 )
 
-from ..domain.catalog import CatalogModelFacts, LaneBackground, ProviderCatalog, ProviderConsumer
+from ..domain.catalog import BackgroundOption, CatalogModelFacts, LaneBackground, ProviderCatalog, ProviderConsumer
 from ..domain.record import ModelRoleSelection
 from .lane_entries import current_lane_entries
 from .model_role_selections import selection_refusal
@@ -79,12 +80,10 @@ _STORE_SIGNED_OUT: dict[StoreRefusalCode, ModelRunRefusalCode] = {
 class BackgroundRunGateway(Protocol):
     """cadrumo-agent's background runs: tool-less, outside the conversation listing, readable by id."""
 
-    def run(self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int) -> ModelRunOutput | ModelRunRefusal:
-        """Run ``body`` on ``lane`` and return the final reply, or refuse with one closed code."""
-        ...
-
-    def accepted_media(self, lane: ModelRunLane) -> tuple[ModelRunMediaKind, ...] | None:
-        """Return the attachment families a background request on ``lane`` may carry; ``None`` when unknown."""
+    def run(
+        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: tuple[BackgroundOption, ...]
+    ) -> ModelRunOutput | ModelRunRefusal:
+        """Run ``body`` on ``lane``, sending only the reply ``options`` it honours; refuse with one closed code."""
         ...
 
 
@@ -109,6 +108,9 @@ class ModelRunService:
 
     def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
         """Return the lane and model the person selected for ``role``; nothing in the answer is secret."""
+        return self._lookup(role, self._lane_answers())
+
+    def _lookup(self, role: str, lanes: _LaneAnswers) -> ModelRunLane | ModelRunRefusal:
         try:
             model_role = ModelRole(role)
         except ValueError:
@@ -117,7 +119,7 @@ class ModelRunService:
         read = self._read_selections()
         if isinstance(read, ModelRunRefusal):
             return read
-        return self._resolve(model_role, read, self._lane_answers())[1]
+        return self._resolve(model_role, read, lanes)[1]
 
     def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
         """Return every role's selection and the lane a run would use or why it would refuse.
@@ -151,7 +153,6 @@ class ModelRunService:
             catalog_source=self._catalog_source,
             live_models=self._live_models,
             resolver=self._resolver,
-            gateway=self._gateway,
         )
 
     @staticmethod
@@ -178,7 +179,8 @@ class ModelRunService:
         the lane's catalog entry says it does not take is refused before
         anything is sent.
         """
-        lane = self.lookup(header.role)
+        lanes = self._lane_answers()
+        lane = self._lookup(header.role, lanes)
         if isinstance(lane, ModelRunRefusal):
             return lane
         if header.consent is None:
@@ -190,7 +192,9 @@ class ModelRunService:
             for attachment in body.attachments:
                 if model_run_media_kind(attachment.media_type) not in lane.accepted_media:
                     return ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED)
-        return self._gateway.run(lane=lane, body=body, deadline_seconds=header.deadline_seconds)
+        return self._gateway.run(
+            lane=lane, body=body, deadline_seconds=header.deadline_seconds, options=lanes.honoured_options(lane)
+        )
 
 
 type _DecidedLane = tuple[ModelRunLane, LaneBackground, tuple[CatalogModelFacts, ...]]
@@ -199,6 +203,9 @@ type _DecidedLane = tuple[ModelRunLane, LaneBackground, tuple[CatalogModelFacts,
 
 class _LaneAnswers:
     """Each lane's availability, accepted media and current entries, decided at most once per read of the selections.
+
+    Every lane is decided from one snapshot of the live catalogue, taken here
+    and read when first needed, which also answers a run's reply options.
 
     Availability is decided by resolving the lane's credential, because a
     provider record is only readable whole. The resolution is dropped as soon
@@ -211,12 +218,10 @@ class _LaneAnswers:
         catalog_source: ProviderCatalogSource,
         live_models: LiveCatalogModels,
         resolver: ProviderCredentialResolver,
-        gateway: BackgroundRunGateway,
     ) -> None:
         self._catalog_source = catalog_source
-        self._live_models = live_models
+        self._live_models = live_models.snapshot()
         self._resolver = resolver
-        self._gateway = gateway
         self._catalog: ProviderCatalog | ModelRunRefusal | None = None
         self._lanes: dict[str, _DecidedLane | ModelRunRefusal] = {}
 
@@ -257,8 +262,14 @@ class _LaneAnswers:
             vision=None,
             context_length=None,
         )
-        accepted = lane.model_copy(update={"accepted_media": self._gateway.accepted_media(lane)})
+        background = self._live_models.lane_background(entry.provider, entry.transport.value)
+        accepted = lane.model_copy(update={"accepted_media": None if background is None else background.accepted_media})
         return accepted, entry.background, current_lane_entries(entry, self._live_models)
+
+    def honoured_options(self, lane: ModelRunLane) -> tuple[BackgroundOption, ...]:
+        """Return the reply options ``lane`` honours, from the same snapshot; none when the snapshot does not say."""
+        background = self._live_models.lane_background(lane.provider_id, lane.transport)
+        return () if background is None else background.options
 
     def _read_catalog(self) -> ProviderCatalog | ModelRunRefusal:
         if self._catalog is None:

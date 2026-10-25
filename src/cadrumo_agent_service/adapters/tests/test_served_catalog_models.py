@@ -6,6 +6,10 @@ from typing import Any, Final
 
 import pytest
 
+from cadrumo_client.contracts.model_runs import ModelRunMediaKind
+
+from ...providers.application.ports import LiveLaneBackground
+from ...providers.domain.catalog import BackgroundOption
 from ..served_catalog_models import ServedCatalogModels
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -124,3 +128,74 @@ def test_an_entry_at_the_agent_s_bounds_is_read() -> None:
 )
 def test_a_lane_whose_served_entries_do_not_validate_yields_no_live_catalogue(document: dict[str, Any]) -> None:
     assert ServedCatalogModels(lambda: document).lane_models("local", "api") is None
+
+
+def _with_background(support: object) -> dict[str, Any]:
+    document = _document(_entry("synthetic-installed:1"))
+    document["providers"][1]["background_requests"] = support
+    return document
+
+
+def test_a_lanes_background_support_is_read_as_its_media_and_honoured_options() -> None:
+    support = {
+        "text": "proven",
+        "accepts_images": True,
+        "accepts_pdfs": False,
+        "options": ["response_schema", "seed", 7, "temperature"],
+    }
+
+    background = ServedCatalogModels(lambda: _with_background(support)).lane_background("local", "api")
+
+    assert background == LiveLaneBackground(
+        accepted_media=(ModelRunMediaKind.IMAGE,),
+        options=(BackgroundOption.TEMPERATURE, BackgroundOption.RESPONSE_SCHEMA),
+    )
+
+
+@pytest.mark.parametrize(
+    ("support", "expected"),
+    [
+        pytest.param(
+            {"accepts_images": "yes", "accepts_pdfs": True, "options": ["temperature"]},
+            LiveLaneBackground(accepted_media=None, options=(BackgroundOption.TEMPERATURE,)),
+            id="media-flag-not-a-bool",
+        ),
+        pytest.param(
+            {"accepts_images": False, "accepts_pdfs": False, "options": "temperature"},
+            LiveLaneBackground(accepted_media=(), options=()),
+            id="options-not-a-list",
+        ),
+        pytest.param(None, None, id="no-background-record"),
+    ],
+)
+def test_background_support_the_document_does_not_state_reads_as_unknown(
+    support: object, expected: LiveLaneBackground | None
+) -> None:
+    assert ServedCatalogModels(lambda: _with_background(support)).lane_background("local", "api") == expected
+
+
+def test_no_running_agent_or_an_unlisted_lane_states_no_background_support() -> None:
+    assert ServedCatalogModels(lambda: None).lane_background("local", "api") is None
+    assert (
+        ServedCatalogModels(lambda: _document(_entry("synthetic-installed:1"))).lane_background("absent", "api") is None
+    )
+
+
+def test_a_snapshot_reads_the_document_once_when_first_asked_and_answers_everything_from_it() -> None:
+    reads: list[int] = []
+
+    def read() -> dict[str, Any]:
+        reads.append(1)
+        return _with_background({"accepts_images": True, "accepts_pdfs": True, "options": []})
+
+    models = ServedCatalogModels(read)
+    snapshot = models.snapshot()
+    assert reads == []
+
+    assert snapshot.lane_models("local", "api") is not None
+    assert snapshot.lane_background("local", "api") is not None
+    assert snapshot.lane_models("example", "cli") is not None
+    assert len(reads) == 1
+
+    models.snapshot().lane_background("local", "api")
+    assert len(reads) == 2

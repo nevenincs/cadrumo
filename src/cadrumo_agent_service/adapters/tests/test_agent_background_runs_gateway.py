@@ -51,6 +51,7 @@ from ...providers.application.contracts import (
 )
 from ...providers.application.model_role_selections import ModelRoleSelectionsService
 from ...providers.application.tests.memory_store import MemoryModelRoleSelectionsStore
+from ...providers.domain.catalog import BackgroundOption
 from ..agent_background_runs import HOST_ADMISSION_HEADER, BackgroundRunEndpoint, HostedBackgroundRuns
 from ..agent_process import WindowsAgentProcessLauncher
 from ..agent_programs import PACKAGE_AGENT_VARIABLE
@@ -152,6 +153,12 @@ class _Gateway:
         )
         assert status == 200, (status, catalog)
         return _JSON_OBJECT.validate_python(catalog)
+
+    def honoured(self, lane: ModelRunLane) -> tuple[BackgroundOption, ...]:
+        """The reply options the live catalogue says ``lane`` honours, read as the service reads them."""
+        background = ServedCatalogModels(self.served_catalog).lane_background(lane.provider_id, lane.transport)
+        assert background is not None, "the agent's live catalogue must describe the lane's background runs"
+        return background.options
 
     def local_lane(self) -> ModelRunLane:
         """The keyless lane on this computer's server, naming a declared model the server has not installed."""
@@ -405,7 +412,7 @@ def test_without_the_host_s_own_token_the_agent_refuses_and_the_run_is_unavailab
     assert (status, _refusal_code(answer)) == (403, "background_not_admitted")
 
     runs = gateway.runs(host_token=secrets.token_urlsafe(32), run_id=run_id)
-    assert runs.run(lane=_TOOL_LESS_LANE, body=_body(), deadline_seconds=30) == ModelRunRefusal(
+    assert runs.run(lane=_TOOL_LESS_LANE, body=_body(), deadline_seconds=30, options=()) == ModelRunRefusal(
         code=ModelRunRefusalCode.SERVICE_UNAVAILABLE
     )
     assert gateway.exchange("GET", f"/v1/runs/{run_id}/reply")[0] == 404
@@ -417,7 +424,7 @@ def test_a_lane_that_cannot_run_without_tools_is_refused_as_unavailable(gateway:
     status, answer = gateway.background(run_id, lane)
     assert (status, _refusal_code(answer)) == (422, "background_lane_unsupported"), (status, answer)
 
-    assert gateway.runs().run(lane=lane, body=_body(), deadline_seconds=30) == ModelRunRefusal(
+    assert gateway.runs().run(lane=lane, body=_body(), deadline_seconds=30, options=()) == ModelRunRefusal(
         code=ModelRunRefusalCode.LANE_UNAVAILABLE
     )
 
@@ -426,10 +433,13 @@ def test_a_pdf_on_a_lane_that_takes_none_is_refused_and_its_upload_removed(gatew
     run_id = secrets.token_hex(16)
     lane = gateway.lane_for_refusal(background=True, pdf=False)
 
-    refused = gateway.runs(run_id=run_id).run(lane=lane, body=_body(("application/pdf", _PDF)), deadline_seconds=30)
+    refused = gateway.runs(run_id=run_id).run(
+        lane=lane, body=_body(("application/pdf", _PDF)), deadline_seconds=30, options=()
+    )
 
     assert refused == ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED), refused
-    assert gateway.runs().accepted_media(lane) == (ModelRunMediaKind.IMAGE,)
+    background = ServedCatalogModels(gateway.served_catalog).lane_background(lane.provider_id, lane.transport)
+    assert background is not None and background.accepted_media == (ModelRunMediaKind.IMAGE,)
     status, listed = gateway.exchange("GET", f"/v1/conversations/{run_id}/attachments")
     assert status == 404 or (isinstance(listed, dict) and not listed.get("attachments"))
 
@@ -464,7 +474,7 @@ def test_a_run_uploads_starts_reads_its_reply_and_deletes_what_it_left(gateway: 
     run_id = secrets.token_hex(16)
 
     outcome = gateway.runs(run_id=run_id).run(
-        lane=_TOOL_LESS_LANE, body=_body(("image/png", _PNG)), deadline_seconds=60
+        lane=_TOOL_LESS_LANE, body=_body(("image/png", _PNG)), deadline_seconds=60, options=()
     )
 
     # The disposable profile holds no provider sign-in, so the admitted run fails at the provider.
@@ -486,7 +496,9 @@ def test_a_reply_option_the_lane_does_not_honour_is_refused_by_the_agent_and_nev
     body = _body().model_copy(
         update={"temperature": 0.0, "context_tokens": 4096, "response_schema": {"type": "object"}}
     )
-    outcome = gateway.runs().run(lane=_TOOL_LESS_LANE, body=body, deadline_seconds=30)
+    honoured = gateway.honoured(_TOOL_LESS_LANE)
+    assert honoured == ()
+    outcome = gateway.runs().run(lane=_TOOL_LESS_LANE, body=body, deadline_seconds=30, options=honoured)
 
     # Admitted without the options, the run then fails at the provider the disposable profile is not signed in to.
     assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED), outcome
@@ -497,7 +509,7 @@ def test_a_model_the_local_server_has_not_installed_is_refused_as_not_installed(
     status, answer = gateway.background(secrets.token_hex(16), lane)
     assert (status, _refusal_code(answer)) == (422, "model_not_installed"), (status, answer)
 
-    outcome = gateway.runs().run(lane=lane, body=_body(), deadline_seconds=30)
+    outcome = gateway.runs().run(lane=lane, body=_body(), deadline_seconds=30, options=())
 
     assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED), outcome
 

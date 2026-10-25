@@ -14,7 +14,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunBody,
     ModelRunLane,
     ModelRunLicence,
-    ModelRunMediaKind,
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
@@ -85,12 +84,10 @@ def _entry(service: ProviderSettingsService) -> ProviderStatusEntry:
 class _UnreachableGateway:
     """A gateway with no running agent: the lookup needs none, and a run is refused."""
 
-    def accepted_media(self, lane: ModelRunLane) -> tuple[ModelRunMediaKind, ...] | None:
-        del lane
-        return None
-
-    def run(self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int) -> ModelRunOutput | ModelRunRefusal:
-        del lane, body, deadline_seconds
+    def run(
+        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: object
+    ) -> ModelRunOutput | ModelRunRefusal:
+        del lane, body, deadline_seconds, options
         return ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
 
 

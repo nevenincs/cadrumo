@@ -49,7 +49,7 @@ def test_a_format_no_background_request_carries_is_refused_as_unsupported(tmp_pa
     )
     text = ModelRunAttachment(media_type="text/plain", base64_data=base64.b64encode(b"x").decode())
 
-    assert runs.run(lane=_LANE, body=_body(text), deadline_seconds=30) == ModelRunRefusal(
+    assert runs.run(lane=_LANE, body=_body(text), deadline_seconds=30, options=()) == ModelRunRefusal(
         code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED
     )
 
@@ -64,10 +64,9 @@ def test_a_wiped_host_token_or_no_ready_agent_refuses_as_unavailable(tmp_path: P
     )
 
     for runs in (wiped, absent):
-        assert runs.run(lane=_LANE, body=_body(), deadline_seconds=30) == ModelRunRefusal(
+        assert runs.run(lane=_LANE, body=_body(), deadline_seconds=30, options=()) == ModelRunRefusal(
             code=ModelRunRefusalCode.SERVICE_UNAVAILABLE
         )
-    assert absent.accepted_media(_LANE) is None
 
 
 @pytest.mark.parametrize(

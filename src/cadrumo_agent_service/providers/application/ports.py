@@ -17,8 +17,9 @@ from pydantic import BaseModel
 from cadrumo.core.hex import Hex64Str
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
+from cadrumo_client.contracts.model_runs import ModelRunMediaKind
 
-from ..domain.catalog import CatalogModelFacts, ProviderCatalog, ProviderId
+from ..domain.catalog import BackgroundOption, CatalogModelFacts, ProviderCatalog, ProviderId
 from ..domain.record import ModelRoleSelectionsRecord, ProviderSettingsRecord
 
 
@@ -152,12 +153,36 @@ class ProviderCatalogSource(Protocol):
         ...
 
 
+class LiveLaneBackground(BaseModel):
+    """What the running agent's live catalogue says a background run on one lane takes."""
+
+    model_config = _STRICT_FROZEN
+
+    accepted_media: tuple[ModelRunMediaKind, ...] | None
+    """The attachment families the lane takes; ``None`` when the catalogue does not say."""
+    options: tuple[BackgroundOption, ...]
+    """The reply options the lane honours; empty when it honours none or does not say."""
+
+
 class LiveCatalogModels(Protocol):
-    """The models the running agent's live catalogue lists for one lane.
+    """The models the running agent's live catalogue lists for one lane, and what its background runs take.
 
     The live catalogue adds what the declared one cannot know, such as the
     models installed on a local server. It exists only while an agent runs.
     """
+
+    def snapshot(self) -> LiveCatalogModels:
+        """Return a view that answers every question from one read of the live catalogue, made when first asked.
+
+        A lookup or a run takes one snapshot, so its entries, media and
+        options come from the same document. A snapshot is never kept past the
+        lookup or run that took it.
+        """
+        ...
+
+    def lane_background(self, provider: str, transport: str) -> LiveLaneBackground | None:
+        """Return what a background run on the lane takes; ``None`` when no live catalogue says."""
+        ...
 
     def lane_models(self, provider: str, transport: str) -> tuple[CatalogModelFacts, ...] | None:
         """Return the lane's live entries, empty when the lane lists none.
@@ -217,6 +242,7 @@ __all__ = [
     "AbsentModelRoleSelections",
     "AbsentProviderRecord",
     "LiveCatalogModels",
+    "LiveLaneBackground",
     "ModelRoleSelectionsRead",
     "ModelRoleSelectionsStore",
     "ProviderCatalogSource",

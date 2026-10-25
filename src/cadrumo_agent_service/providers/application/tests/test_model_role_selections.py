@@ -253,11 +253,8 @@ def test_a_selection_made_through_the_service_is_the_lane_a_model_run_resolves()
 
 
 class _NoMediaGateway:
-    def accepted_media(self, lane: ModelRunLane) -> None:
-        del lane
-
-    def run(self, *, lane: ModelRunLane, body: object, deadline_seconds: int) -> ModelRunRefusal:
-        del lane, body, deadline_seconds
+    def run(self, *, lane: ModelRunLane, body: object, deadline_seconds: int, options: object) -> ModelRunRefusal:
+        del lane, body, deadline_seconds, options
         return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
 
 

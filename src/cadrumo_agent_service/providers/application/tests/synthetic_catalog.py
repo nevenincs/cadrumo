@@ -12,6 +12,7 @@ from typing import Any, Final, override
 from ...domain.catalog import CatalogModelFacts, ProviderCatalog, parse_provider_catalog
 from ..ports import (
     LiveCatalogModels,
+    LiveLaneBackground,
     ProviderCatalogSource,
     ProviderCatalogUnavailableError,
     ProviderCatalogUnavailableReason,
@@ -180,12 +181,32 @@ class UnavailableCatalogSource(ProviderCatalogSource):
 
 
 class StaticLiveModels(LiveCatalogModels):
-    """A running agent's live entries per lane, or no running agent at all when ``lanes`` is ``None``."""
+    """A running agent's live entries and background support per lane; ``None`` for either is no live answer.
 
-    def __init__(self, lanes: dict[tuple[str, str], tuple[CatalogModelFacts, ...]] | None = None) -> None:
-        """Keep the live entries each lane lists; a lane absent from ``lanes`` lists none."""
+    ``snapshots`` counts the snapshots taken, each standing for one read of the
+    agent's served document; the snapshot is this same unchanging double.
+    """
+
+    def __init__(
+        self,
+        lanes: dict[tuple[str, str], tuple[CatalogModelFacts, ...]] | None = None,
+        *,
+        backgrounds: dict[tuple[str, str], LiveLaneBackground] | None = None,
+    ) -> None:
+        """Keep the live entries and background support each lane states; an absent lane states none."""
         self._lanes = lanes
+        self._backgrounds = backgrounds
         self.reads = 0
+        self.snapshots = 0
+
+    @override
+    def snapshot(self) -> StaticLiveModels:
+        self.snapshots += 1
+        return self
+
+    @override
+    def lane_background(self, provider: str, transport: str) -> LiveLaneBackground | None:
+        return None if self._backgrounds is None else self._backgrounds.get((provider, transport))
 
     @override
     def lane_models(self, provider: str, transport: str) -> tuple[CatalogModelFacts, ...] | None:

@@ -31,13 +31,13 @@ from cadrumo_client.contracts.model_runs import (
     MODEL_RUN_MAX_OUTPUT_BYTES,
     ModelRunBody,
     ModelRunLane,
-    ModelRunMediaKind,
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
 )
 
 from ..providers.application.model_runs import BackgroundRunGateway
+from ..providers.domain.catalog import BackgroundOption
 
 _LOGGER = get_logger(__name__)
 
@@ -51,7 +51,6 @@ SETTLE_MARGIN_SECONDS: Final = 10
 BACKGROUND_MIN_DEADLINE_SECONDS: Final = 5
 BACKGROUND_MAX_DEADLINE_SECONDS: Final = 3600
 _RESPONSE_MAX_BYTES: Final = 8 * 1024 * 1024
-_CATALOG_MAX_BYTES: Final = 256 * 1024
 
 _EXTENSIONS: Final[Mapping[str, str]] = {
     "image/png": ".png",
@@ -82,9 +81,6 @@ its model and no effort, so the agent cannot answer one with them.
 
 _START_UNAVAILABLE: Final = 503
 """The status the agent starts no run with while it is busy, draining or not ready; its detail carries no code."""
-
-_OPTIONS: Final = ("temperature", "context_tokens", "response_schema")
-"""The reply options a background request may name, each forwarded only to a lane that honours it."""
 
 _OUTPUT_LIMIT_EXCEEDED: Final = "output_limit_exceeded"
 
@@ -137,64 +133,16 @@ class HostedBackgroundRuns(BackgroundRunGateway):
         self._run_ids = run_ids
 
     @override
-    def accepted_media(self, lane: ModelRunLane) -> tuple[ModelRunMediaKind, ...] | None:
-        """Read what a background request on ``lane`` may carry from the agent's live catalog."""
-        endpoint = self._endpoint()
-        support = None if endpoint is None else self._background_support(endpoint, lane)
-        if support is None:
-            return None
-        images, pdfs = support.get("accepts_images"), support.get("accepts_pdfs")
-        if not isinstance(images, bool) or not isinstance(pdfs, bool):
-            return None
-        accepted = ((ModelRunMediaKind.IMAGE, images), (ModelRunMediaKind.PDF, pdfs))
-        return tuple(kind for kind, taken in accepted if taken)
+    def run(
+        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: tuple[BackgroundOption, ...]
+    ) -> ModelRunOutput | ModelRunRefusal:
+        """Upload the attachments, start the request, wait for its reply, then delete what it left.
 
-    def _background_support(self, endpoint: BackgroundRunEndpoint, lane: ModelRunLane) -> dict[str, object] | None:
-        """Return the lane's ``background_requests`` record from the live catalog, or ``None`` when unread."""
-        if not self._bearer:
-            return None
-        path = "/v1/provider-catalog?" + urlencode({"workspace_root": str(endpoint.workspace_root)})
-        try:
-            status, payload = self._exchange(endpoint, "GET", path, limit=_CATALOG_MAX_BYTES)
-            if status != 200:
-                return None
-            document = json.loads(payload)
-        except (_GatewayUnreachableError, ValueError):
-            return None
-        records = document.get("providers") if isinstance(document, dict) else None
-        if not isinstance(records, list):
-            return None
-        for record in records:
-            if not isinstance(record, dict):
-                continue
-            if (record.get("provider_id"), record.get("transport")) != (lane.provider_id, lane.transport):
-                continue
-            support = record.get("background_requests")
-            if not isinstance(support, dict):
-                return None
-            return {key: value for key, value in support.items() if isinstance(key, str)}
-        return None
-
-    def _honoured_options(
-        self, endpoint: BackgroundRunEndpoint, lane: ModelRunLane, body: ModelRunBody
-    ) -> dict[str, object]:
-        """Return the reply options ``body`` names that the lane's catalog says it honours.
-
-        An option the lane does not honour is left out rather than sent: the
-        agent refuses a request naming one, and each option only tunes a reply
-        the caller validates anyway. A catalog that cannot be read honours none.
+        ``options`` are the reply options the lane honours. One ``body`` names
+        and the lane does not honour is left out rather than sent: the agent
+        refuses a request naming one, and each option only tunes a reply the
+        caller validates anyway.
         """
-        named = {name: getattr(body, name) for name in _OPTIONS if getattr(body, name) is not None}
-        if not named:
-            return {}
-        support = self._background_support(endpoint, lane)
-        listed = None if support is None else support.get("options")
-        honoured = {name for name in listed if isinstance(name, str)} if isinstance(listed, list) else set()
-        return {name: value for name, value in named.items() if name in honoured}
-
-    @override
-    def run(self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int) -> ModelRunOutput | ModelRunRefusal:
-        """Upload the attachments, start the request, wait for its reply, then delete what it left."""
         endpoint = self._endpoint()
         if endpoint is None or not self._bearer or not self._host_token:
             return ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
@@ -215,7 +163,7 @@ class HostedBackgroundRuns(BackgroundRunGateway):
                 if refusal is not None:
                     return refusal
             bounded = min(max(deadline_seconds, BACKGROUND_MIN_DEADLINE_SECONDS), BACKGROUND_MAX_DEADLINE_SECONDS)
-            refusal = self._start(endpoint, run_id, lane, body, files, bounded)
+            refusal = self._start(endpoint, run_id, lane, body, files, bounded, options)
             if refusal is not None:
                 return refusal
             started = True
@@ -253,7 +201,9 @@ class HostedBackgroundRuns(BackgroundRunGateway):
         body: ModelRunBody,
         files: list[tuple[str, str, bytes]],
         deadline_seconds: int,
+        options: tuple[BackgroundOption, ...],
     ) -> ModelRunRefusal | None:
+        named = {option.value: getattr(body, option.value) for option in options}
         request: dict[str, object] = {
             "run_id": run_id,
             "message": body.prompt,
@@ -267,7 +217,7 @@ class HostedBackgroundRuns(BackgroundRunGateway):
                 "system": body.system or "",
                 "max_output_tokens": body.max_output_tokens,
                 "deadline_seconds": deadline_seconds,
-                **self._honoured_options(endpoint, lane, body),
+                **{name: value for name, value in named.items() if value is not None},
             },
         }
         if files:

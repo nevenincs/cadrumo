@@ -27,11 +27,11 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from ....adapters.agent_background_runs import HostedBackgroundRuns
-from ...domain.catalog import ProviderCatalog, parse_provider_catalog
+from ...domain.catalog import BackgroundOption, ProviderCatalog, parse_provider_catalog
 from ...domain.record import ModelRoleSelection, ModelRoleSelectionsRecord, new_settings_generation
 from ..contracts import ProviderSettingsActionAccepted, ProviderSettingsStatus
 from ..model_runs import ModelRunService
-from ..ports import ModelRoleSelectionsRead, ProviderRecordRead, StoreRefusal, StoreRefusalCode
+from ..ports import LiveLaneBackground, ModelRoleSelectionsRead, ProviderRecordRead, StoreRefusal, StoreRefusalCode
 from ..resolution import ProviderCredentialResolver
 from ..service import ProviderSettingsService
 from .memory_store import MemoryModelRoleSelectionsStore, MemoryProviderSettingsStore
@@ -65,29 +65,33 @@ def _catalog_source() -> ProvidedProviderCatalogSource:
 class _RecordingGateway:
     def __init__(self) -> None:
         self.runs: list[tuple[ModelRunLane, ModelRunBody, int]] = []
-        self.accepts: tuple[ModelRunMediaKind, ...] | None = None
-        self.media_asked: list[tuple[str, str]] = []
+        self.options: list[tuple[BackgroundOption, ...]] = []
 
-    def accepted_media(self, lane: ModelRunLane) -> tuple[ModelRunMediaKind, ...] | None:
-        self.media_asked.append((lane.provider_id, lane.transport))
-        return self.accepts
-
-    def run(self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int) -> ModelRunOutput | ModelRunRefusal:
+    def run(
+        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: tuple[BackgroundOption, ...]
+    ) -> ModelRunOutput | ModelRunRefusal:
         self.runs.append((lane, body, deadline_seconds))
+        self.options.append(options)
         return ModelRunOutput(
             text="{}", provider_id=lane.provider_id, transport=lane.transport, model=lane.model, agent_version="t"
         )
 
 
 def _harness(
-    store: MemoryProviderSettingsStore, selections: MemoryModelRoleSelectionsStore
+    store: MemoryProviderSettingsStore,
+    selections: MemoryModelRoleSelectionsStore,
+    live: StaticLiveModels | None = None,
 ) -> tuple[ModelRunService, ProviderSettingsService, _RecordingGateway]:
     source = _catalog_source()
     gateway = _RecordingGateway()
     resolver = ProviderCredentialResolver(store=store, catalog_source=source)
     settings = ProviderSettingsService(store=store, catalog_source=source, storage_mode=StorageMode.INSTALLED)
     runs = ModelRunService(
-        selections=selections, resolver=resolver, catalog_source=source, live_models=StaticLiveModels(), gateway=gateway
+        selections=selections,
+        resolver=resolver,
+        catalog_source=source,
+        live_models=StaticLiveModels() if live is None else live,
+        gateway=gateway,
     )
     return runs, settings, gateway
 
@@ -135,6 +139,12 @@ def _consent(
 
 
 _BODY = ModelRunBody(prompt="Read this invoice.", max_output_tokens=64)
+
+
+def _background(media: tuple[ModelRunMediaKind, ...] | None, *options: BackgroundOption) -> LiveLaneBackground:
+    return LiveLaneBackground(accepted_media=media, options=options)
+
+
 _NO_SELECTION = ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
 _LANE_UNAVAILABLE = ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
 
@@ -351,9 +361,9 @@ def test_a_run_decided_on_host_is_refused_when_the_role_now_resolves_to_a_hosted
 def test_the_lookup_carries_the_media_the_agent_reports_and_a_run_beyond_them_is_never_sent() -> None:
     store = MemoryProviderSettingsStore()
     selections = MemoryModelRoleSelectionsStore()
-    runs, _, gateway = _harness(store, selections)
+    live = StaticLiveModels(backgrounds={("example", "cli"): _background((ModelRunMediaKind.IMAGE,))})
+    runs, _, gateway = _harness(store, selections, live)
     _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
-    gateway.accepts = (ModelRunMediaKind.IMAGE,)
     pdf = ModelRunAttachment(media_type="application/pdf", base64_data="JVBERi0=")
 
     lane = runs.lookup("text_extraction")
@@ -479,16 +489,17 @@ class _CountingCatalogSource(ProvidedProviderCatalogSource):
 
 
 def test_a_selections_read_decides_each_lane_once_however_many_roles_share_it() -> None:
-    """Three roles on one lane and one on another read two credential records and ask for media twice."""
+    """Three roles on one lane and one on another read two credential records and one live catalogue snapshot."""
     store = _CountingProviderRecords()
     selections = MemoryModelRoleSelectionsStore()
     source = _CountingCatalogSource(_catalog_source())
     gateway = _RecordingGateway()
-    gateway.accepts = (ModelRunMediaKind.IMAGE,)
+    image = _background((ModelRunMediaKind.IMAGE,))
+    live = StaticLiveModels(backgrounds={("example", "api"): image, ("example", "cli"): image})
     resolver = ProviderCredentialResolver(store=store, catalog_source=source)
     settings = ProviderSettingsService(store=store, catalog_source=source, storage_mode=StorageMode.INSTALLED)
     runs = ModelRunService(
-        selections=selections, resolver=resolver, catalog_source=source, live_models=StaticLiveModels(), gateway=gateway
+        selections=selections, resolver=resolver, catalog_source=source, live_models=live, gateway=gateway
     )
     _store_key(settings, KEY_LANE)
     _select(
@@ -505,7 +516,7 @@ def test_a_selections_read_decides_each_lane_once_however_many_roles_share_it() 
 
     assert isinstance(states, tuple)
     assert sorted(store.lanes_read) == sorted([KEY_LANE, SIGN_IN_ONLY_LANE])
-    assert sorted(gateway.media_asked) == [("example", "api"), ("example", "cli")]
+    assert live.snapshots == 1
     # One fetch to find the lanes, and one inside each of the two credential resolutions.
     assert source.fetches == 3
     lanes = {state.role: state.lane for state in states}
@@ -532,3 +543,39 @@ def test_a_selections_read_decides_each_lane_once_however_many_roles_share_it() 
         context_length=None,
     )
     assert "synthetic-key" not in repr(states)
+
+
+def test_one_run_reads_its_media_and_its_options_from_one_live_catalogue_snapshot() -> None:
+    """The lookup a run repeats and the options it sends come from one snapshot; the next run takes its own."""
+    store = MemoryProviderSettingsStore()
+    selections = MemoryModelRoleSelectionsStore()
+    live = StaticLiveModels(
+        backgrounds={
+            ("example", "cli"): _background(
+                (ModelRunMediaKind.IMAGE,), BackgroundOption.TEMPERATURE, BackgroundOption.RESPONSE_SCHEMA
+            )
+        }
+    )
+    runs, _, gateway = _harness(store, selections, live)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+    image = ModelRunAttachment(media_type="image/png", base64_data="iVBORw0=")
+    body = _BODY.model_copy(update={"attachments": (image,), "temperature": 0.0})
+
+    assert isinstance(runs.run(_header(consent=_consent("cli")), body), ModelRunOutput)
+    assert isinstance(runs.run(_header(consent=_consent("cli")), body), ModelRunOutput)
+
+    assert live.snapshots == 2
+    assert gateway.options == [(BackgroundOption.TEMPERATURE, BackgroundOption.RESPONSE_SCHEMA)] * 2
+    assert gateway.runs[0][0].accepted_media == (ModelRunMediaKind.IMAGE,)
+
+
+def test_a_run_on_a_lane_the_live_catalogue_does_not_describe_sends_no_option() -> None:
+    store = MemoryProviderSettingsStore()
+    selections = MemoryModelRoleSelectionsStore()
+    runs, _, gateway = _harness(store, selections)
+    _select(selections, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+
+    assert isinstance(runs.run(_header(consent=_consent("cli")), _BODY), ModelRunOutput)
+
+    assert gateway.options == [()]
+    assert gateway.runs[0][0].accepted_media is None

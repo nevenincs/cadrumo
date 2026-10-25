@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:7835e4b9ed17376696f005399754e5263f6397eebb41e6937d7e4035062b5ae5'
+body_hash: 'sha256:8f27276f7a30cf1e64e6a1ed67cf386300569915c6fbd19b3d2d28a303547d83'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -288,6 +288,10 @@ related:
 - `S10` `verify:` `pytest src/cadrumo_agent_service/adapters/tests/test_agent_background_runs_gateway.py -m integration -n 0` -> `pass`
 - `S10` `M` `src/cadrumo_agent_service/providers/application/tests/test_live_catalogue_selection.py`
 - `S10` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service -q` -> `pass`
+- `S10` `M` `src/cadrumo_agent_service/adapters/served_catalog_models.py`
+- `S10` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service src/cadrumo_client src/cadrumo/adapters/outbound/llm -q` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo_agent_service/adapters/tests/test_agent_background_runs_gateway.py -m integration -n 0` -> `pass`
+- `S10` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
 
 ## Notes
 
@@ -310,3 +314,4 @@ related:
 - `S10` P02 review fix: catalogue-bounds-narrower-than-upstream
 - `S10` P02 review fix: refusal-mapping-gaps; the real gateway cannot produce these codes or a 503 for a background request, so a unit test covers the mapping table
 - `S10` P02 review fix: lookup-does-not-reapply-the-role-rules
+- `S10` P02 review fix: three-catalogue-reads-per-run
