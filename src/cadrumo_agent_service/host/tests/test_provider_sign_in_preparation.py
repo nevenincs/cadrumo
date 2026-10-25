@@ -62,6 +62,8 @@ def _entry() -> ProviderStatusEntry:
         "revoked",
         "unsupported",
         "api_lane",
+        "keyless_lane",
+        "gui_keyless_lane",
         "gui_unsupported",
     ),
 )
@@ -97,9 +99,11 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
         )
     monkeypatch.setattr(service_module, "hosted_python", lambda: python)
     monkeypatch.setattr(service._catalog, "catalog", synthetic_catalog)
-    monkeypatch.setattr(service._catalog, "sign_in_providers", lambda: () if outcome == "unsupported" else ("example",))
     monkeypatch.setattr(
-        service._catalog, "gui_sign_in_providers", lambda: () if outcome == "gui_unsupported" else ("example",)
+        service._catalog, "sign_in_providers", lambda: () if outcome == "unsupported" else ("example", "local")
+    )
+    monkeypatch.setattr(
+        service._catalog, "gui_sign_in_providers", lambda: () if outcome == "gui_unsupported" else ("example", "local")
     )
     calls: list[str] = []
 
@@ -115,14 +119,17 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     monkeypatch.setenv(EXTERNAL_BIN_DIRECTORIES_VARIABLE, str(tmp_path))
     monkeypatch.setenv("CODEX_HOME", "must-not-cross")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "must-not-cross")
-    lane = "example_api" if outcome == "api_lane" else "example_cli"
+    # A keyless lane is refused by its kind alone, although its provider is listed as signing in.
+    lane = {"api_lane": "example_api", "keyless_lane": "local_api", "gui_keyless_lane": "local_api"}.get(
+        outcome, "example_cli"
+    )
     answer = service.admin(
         "connect" if outcome.startswith("gui_") else "sign_in",
         provider=lane,
         expected_revision="0" * 64,
         method="browser",
     )
-    if outcome in {"unsupported", "api_lane", "gui_unsupported"}:
+    if outcome in {"unsupported", "api_lane", "keyless_lane", "gui_keyless_lane", "gui_unsupported"}:
         assert calls == []
         assert answer == {"kind": "refused", "code": "sign_in_unavailable"}
         assert not (tmp_path / "agent").exists()

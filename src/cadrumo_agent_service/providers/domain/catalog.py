@@ -2,8 +2,9 @@
 
 Each entry is one lane the agent can run: one way into a provider identity,
 over its API or through its CLI. Cadrumo keeps no list of providers or lanes.
-Which exist, how each authenticates, its default gateway URL and the id the
-agent keys its credential by are the agent's own declarations, parsed here from
+Which exist, how each authenticates, its default gateway URL, whether it sends
+material off this computer and the id the agent keys its credential by are the
+agent's own declarations, parsed here from
 the document the agent serves at run time. Every Cadrumo name for a lane is
 constructed from the ids the agent reports.
 """
@@ -15,7 +16,7 @@ from enum import StrEnum
 from typing import Annotated, Final, Literal, Self
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationError, model_validator
 
 from cadrumo.core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -23,6 +24,10 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 BASE_URL_MAX_LENGTH: Final[int] = 2048
 MAX_CATALOG_LANES: Final[int] = 64
 _BASE_URL_FORBIDDEN: Final[frozenset[str]] = frozenset("*?[%$")
+_LOOPBACK_HOSTS: Final[frozenset[str]] = frozenset({"127.0.0.1", "localhost", "::1"})
+_MAX_PORT: Final[int] = 65535
+RECOMMENDED_KEY_MAX_LENGTH: Final[int] = 64
+RECOMMENDED_VALUE_MAX_LENGTH: Final[int] = 256
 
 _PROVIDER_ID_PATTERN: Final[str] = r"^[a-z][a-z0-9_]{0,39}$"
 _PROVIDER_ID: Final[re.Pattern[str]] = re.compile(_PROVIDER_ID_PATTERN)
@@ -40,11 +45,13 @@ class ProviderAuthKind(StrEnum):
     API_KEY = "api_key"
     API_KEY_WITH_BASE_URL = "api_key_with_base_url"
     PROVIDER_SIGN_IN_ONLY = "provider_sign_in_only"
+    NONE = "none"
+    """A keyless lane: it takes no stored credential and no provider sign-in, and reaches a server on this computer."""
 
     @property
     def accepts_direct_credential(self) -> bool:
         """Return whether a profile may store a credential for this kind."""
-        return self is not ProviderAuthKind.PROVIDER_SIGN_IN_ONLY
+        return self in {ProviderAuthKind.API_KEY, ProviderAuthKind.API_KEY_WITH_BASE_URL}
 
     @property
     def accepts_provider_sign_in(self) -> bool:
@@ -105,6 +112,40 @@ def validate_https_base_url(value: str) -> str:
     return value
 
 
+def validate_loopback_http_base_url(value: str) -> str:
+    """Return ``value`` when it is an ``http`` origin on this computer.
+
+    A keyless lane reaches only a local server, so its endpoint is plain
+    ``http`` to the host ``127.0.0.1``, ``localhost`` or ``[::1]``, with any
+    port and no path beyond ``/``. Embedded credentials, a query and a fragment
+    are refused. The message never repeats the value.
+
+    Raises:
+        ValueError: When the URL is not a loopback ``http`` origin.
+    """
+    if not value or len(value) > BASE_URL_MAX_LENGTH or value != value.strip():
+        raise ValueError("base URL must be a non-empty trimmed string within the length bound")
+    if any(character.isspace() or not 0x20 < ord(character) < 0x7F for character in value):
+        raise ValueError("base URL must be printable ASCII without whitespace")
+    # The brackets of ``[::1]`` are the one pattern character a loopback origin may carry.
+    if any(mark in value for mark in "?#@\\") or any(character in _BASE_URL_FORBIDDEN - {"["} for character in value):
+        raise ValueError("base URL must not carry credentials, a query, a fragment or a pattern character")
+    parts = urlsplit(value)
+    if parts.scheme != "http" or not value.startswith("http://"):
+        raise ValueError("a keyless lane's base URL must use http")
+    if parts.path not in {"", "/"}:
+        raise ValueError("a keyless lane's base URL must carry no path")
+    if parts.hostname not in _LOOPBACK_HOSTS:
+        raise ValueError("a keyless lane's base URL must name 127.0.0.1, localhost or [::1]")
+    try:
+        port = parts.port
+    except ValueError:
+        raise ValueError("base URL port must be a number") from None
+    if parts.netloc.endswith(":") or (port is not None and not 0 < port <= _MAX_PORT):
+        raise ValueError("base URL port must be a number from 1 to 65535")
+    return value
+
+
 class ProviderCatalogEntry(BaseModel):
     """One lane the agent reports and a profile can manage a credential for."""
 
@@ -120,6 +161,8 @@ class ProviderCatalogEntry(BaseModel):
     description: str
     auth_kind: ProviderAuthKind
     default_base_url: str | None
+    reads_off_host: bool
+    """Whether a run on this lane sends material off this computer; the agent's typed declaration, never inferred."""
     agent_credential_id: ProviderId | None
     """The id the agent's hosting frame keys this lane's credential by; absent when the lane takes none."""
     cli_programs: tuple[CliProgram, ...]
@@ -129,12 +172,11 @@ class ProviderCatalogEntry(BaseModel):
     default_model: str | None = None
     models: tuple[dict[str, JsonValue], ...] = ()
     unread: tuple[dict[str, JsonValue], ...] = ()
-
-    @field_validator("default_base_url")
-    @classmethod
-    @pydantic_validation_boundary
-    def _default_base_url_is_https(cls, value: str | None) -> str | None:
-        return None if value is None else validate_https_base_url(value)
+    recommended: dict[
+        Annotated[str, StringConstraints(min_length=1, max_length=RECOMMENDED_KEY_MAX_LENGTH)],
+        Annotated[str, StringConstraints(min_length=1, max_length=RECOMMENDED_VALUE_MAX_LENGTH)],
+    ] = Field(default_factory=dict)
+    """The agent's recommended model id per capability; empty when it states none, never applied by Cadrumo."""
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -147,6 +189,15 @@ class ProviderCatalogEntry(BaseModel):
             raise ValueError("cli programs must not repeat")
         if (self.agent_credential_id is not None) != self.auth_kind.accepts_direct_credential:
             raise ValueError("a lane declares a credential id exactly when it takes a credential")
+        if self.auth_kind is ProviderAuthKind.NONE:
+            if self.default_base_url is None:
+                raise ValueError("a keyless lane declares its loopback base URL")
+            validate_loopback_http_base_url(self.default_base_url)
+        elif self.default_base_url is not None:
+            validate_https_base_url(self.default_base_url)
+        model_ids = {identifier for model in self.models if isinstance(identifier := model.get("id"), str)}
+        if self.models and not set(self.recommended.values()) <= model_ids:
+            raise ValueError("a recommended entry names one of its lane's models")
         return self
 
     @property
@@ -164,7 +215,7 @@ class ProviderCatalog(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    schema_version: Literal[3]
+    schema_version: Literal[4]
     providers: tuple[ProviderCatalogEntry, ...] = Field(min_length=1, max_length=MAX_CATALOG_LANES)
     icon_attribution: dict[str, JsonValue]
 
@@ -223,6 +274,8 @@ def parse_provider_catalog(text: str) -> ProviderCatalog:
 __all__ = [
     "BASE_URL_MAX_LENGTH",
     "MAX_CATALOG_LANES",
+    "RECOMMENDED_KEY_MAX_LENGTH",
+    "RECOMMENDED_VALUE_MAX_LENGTH",
     "CliProgram",
     "ProviderAuthKind",
     "ProviderCatalog",
@@ -232,4 +285,5 @@ __all__ = [
     "ProviderTransport",
     "parse_provider_catalog",
     "validate_https_base_url",
+    "validate_loopback_http_base_url",
 ]

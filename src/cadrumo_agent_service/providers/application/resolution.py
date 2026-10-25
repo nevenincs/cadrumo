@@ -12,6 +12,8 @@ frontend shows and what a consumer receives cannot disagree:
 4. A stored key or token is the only direct credential; with none stored, a
    lane that takes a key is unavailable. No process environment value stands
    in for a profile's stored key.
+5. A keyless lane needs no record: unless it is turned off it resolves as
+   usable with no credential, whatever an older record still holds.
 
 The resolver's result carries the secret. It is for in-process consumers
 (extraction, the hosted-agent controller) and never for frontend output.
@@ -109,7 +111,19 @@ class ProviderCredentialUnavailable(BaseModel):
     reason: ProviderCredentialUnavailableReason
 
 
-type ProviderCredentialResolution = ResolvedDirectCredential | ResolvedProviderSignIn | ProviderCredentialUnavailable
+class ResolvedKeyless(BaseModel):
+    """A keyless lane is usable with no credential; Cadrumo hands over no secret and no URL."""
+
+    model_config = _STRICT_FROZEN
+
+    provider: ProviderId
+    consumer: ProviderConsumer
+    generation: Hex64Str
+
+
+type ProviderCredentialResolution = (
+    ResolvedDirectCredential | ResolvedProviderSignIn | ResolvedKeyless | ProviderCredentialUnavailable
+)
 
 
 def provider_mode(read: ProviderRecordRead) -> ProviderSettingsMode:
@@ -128,6 +142,13 @@ def provider_mode(read: ProviderRecordRead) -> ProviderSettingsMode:
     return ProviderSettingsMode.UNSET
 
 
+def lane_mode(entry: ProviderCatalogEntry, read: ProviderRecordRead) -> ProviderSettingsMode:
+    """Return the mode of one lane: a keyless lane is only ever unset or turned off."""
+    if entry.auth_kind is ProviderAuthKind.NONE:
+        return ProviderSettingsMode.DISABLED if _keyless_turned_off(read) else ProviderSettingsMode.UNSET
+    return provider_mode(read)
+
+
 def read_revision(read: ProviderRecordRead) -> str:
     """Return the guard an action must send for this read."""
     if isinstance(read, StoredProviderRecord):
@@ -144,11 +165,13 @@ def status_entry(
     cli_state: CliState | None,
 ) -> ProviderStatusEntry:
     """Project one lane's read into masked status."""
-    mode = provider_mode(read)
+    mode = lane_mode(entry, read)
     stored = read.record if isinstance(read, StoredProviderRecord) else None
+    credential = stored.credential if stored is not None and entry.auth_kind.accepts_direct_credential else None
     available, source, readiness, reason = _availability(entry, read, mode)
     if (
-        mode is not ProviderSettingsMode.DISABLED
+        entry.auth_kind is not ProviderAuthKind.NONE
+        and mode is not ProviderSettingsMode.DISABLED
         and (mode is ProviderSettingsMode.PROVIDER_SIGN_IN or entry.auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY)
         and not isinstance(read, UnreadableProviderRecord)
     ):
@@ -163,12 +186,12 @@ def status_entry(
         auth_kind=entry.auth_kind,
         consumers=entry.consumers,
         mode=mode,
-        credential_saved=stored is not None and stored.credential is not None,
+        credential_saved=credential is not None,
         available=available,
         source=source,
         readiness=readiness,
         reason=reason,
-        base_url=stored.credential.base_url if stored is not None and stored.credential is not None else None,
+        base_url=credential.base_url if credential is not None else None,
         default_base_url=entry.default_base_url,
         cli_state=cli_state,
         revision=read_revision(read),
@@ -185,7 +208,7 @@ def _availability(
         return False, none, ProviderReadiness.UNUSABLE, ProviderStatusReason.RECORD_UNREADABLE
     if mode is ProviderSettingsMode.DISABLED:
         return False, none, ProviderReadiness.DISABLED, ProviderStatusReason.TURNED_OFF
-    if mode is ProviderSettingsMode.PROVIDER_SIGN_IN:
+    if mode is ProviderSettingsMode.PROVIDER_SIGN_IN or entry.auth_kind is ProviderAuthKind.NONE:
         return True, none, ProviderReadiness.NOT_VERIFIED, None
     if entry.auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY:
         return True, none, ProviderReadiness.SIGN_IN_REQUIRED, ProviderStatusReason.SIGN_IN_WITH_PROVIDER_TOOL
@@ -239,6 +262,11 @@ class ProviderCredentialResolver:
         if isinstance(read, UnreadableProviderRecord):
             return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.RECORD_UNREADABLE)
         record = read.record if isinstance(read, StoredProviderRecord) else None
+        if entry.auth_kind is ProviderAuthKind.NONE:
+            if _keyless_turned_off(read):
+                return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.PROVIDER_DISABLED)
+            generation = record.generation if record is not None else _PROCESS_GENERATION
+            return ResolvedKeyless(provider=entry.id, consumer=consumer, generation=generation)
         if record is not None and record.credential_state is CredentialState.DISABLED:
             if record.assistant_auth is AssistantAuth.PROVIDER_SIGN_IN:
                 return ResolvedProviderSignIn(provider=entry.id, consumer=consumer, generation=record.generation)
@@ -277,6 +305,14 @@ class ProviderCredentialResolver:
         return None
 
 
+def _keyless_turned_off(read: ProviderRecordRead) -> bool:
+    """Return whether a keyless lane's record turns it off; no other stored field applies to it."""
+    if not isinstance(read, StoredProviderRecord):
+        return False
+    record = read.record
+    return record.assistant_auth is AssistantAuth.DISABLED or record.credential_state is CredentialState.DISABLED
+
+
 def _unavailable(
     provider_id: str,
     consumer: ProviderConsumer,
@@ -299,7 +335,9 @@ __all__ = [
     "ProviderCredentialUnavailable",
     "ProviderCredentialUnavailableReason",
     "ResolvedDirectCredential",
+    "ResolvedKeyless",
     "ResolvedProviderSignIn",
+    "lane_mode",
     "provider_mode",
     "read_revision",
     "status_entry",

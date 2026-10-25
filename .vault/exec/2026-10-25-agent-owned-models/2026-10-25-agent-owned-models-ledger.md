@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:c5fcd95efd13af9994c428b8624cdd173fff3d0d7c8485bf9afc7c967847bb84'
+body_hash: 'sha256:47d0b22bfdf3e34ec0601fa4888be7dc08847f09009abc678645e169cc439734'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -127,6 +127,41 @@ related:
 - `S02` `M` `src/cadrumo/adapters/outbound/llm/tests/test_agent_dispatch.py`
 - `S02` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service src/cadrumo_client/contracts src/cadrumo/adapters/outbound/llm/tests/test_agent_dispatch.py src/cadrumo_runtime/host/tests/test_model_run_authority.py src/cadrumo/application/operations/tests/test_model_runs.py` -> `pass`
 - `S02` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S09` `M` `src/cadrumo_agent_service/providers/domain/catalog.py`
+- `S09` `M` `src/cadrumo_agent_service/providers/domain/tests/test_catalog.py`
+- `S09` `M` `src/cadrumo_agent_service/providers/application/resolution.py`
+- `S09` `M` `src/cadrumo_agent_service/providers/application/service.py`
+- `S09` `A` `src/cadrumo_agent_service/providers/application/tests/test_keyless_lane.py`
+- `S09` `M` `src/cadrumo_agent_service/providers/application/tests/synthetic_catalog.py`
+- `S09` `M` `src/cadrumo_agent_service/adapters/agent_provider_catalog.py`
+- `S09` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_provider_catalog.py`
+- `S09` `M` `src/cadrumo_agent_service/host/launch_environment.py`
+- `S09` `M` `src/cadrumo_agent_service/host/tests/test_launch_environment.py`
+- `S09` `M` `src/cadrumo_agent_service/host/tests/test_provider_sign_in_preparation.py`
+- `S09` `M` `native/desktop/src-tauri/src/shell/provider_settings/wire.rs`
+- `S09` `M` `native/desktop/frontend/src/components/settings/types.ts`
+- `S09` `M` `native/desktop/frontend/src/components/settings/ProviderSettings.tsx`
+- `S09` `verify:` `uv run --no-sync pytest -q src/cadrumo_agent_service` -> `pass`
+- `S09` `verify:` `pytest -m "integration and external_tool and windows_only" src/cadrumo_agent_service/host/tests/test_lifecycle_answers.py::test_a_sign_in_is_answered_starting_while_the_tree_retires_and_its_helper_then_runs` -> `pass`
+- `S09` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S09` `verify:` `npx tsc --noEmit` -> `pass`
+- `S09` `by:` `implementation-engineer-high`
+- `S19` `M` `native/application/src/provisioning/pins.rs`
+- `S19` `M` `native/application/src/provisioning/items.rs`
+- `S19` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S19` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S19` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S19` `M` `native/application/src/provisioning/local_ai/hardware.rs`
+- `S19` `M` `native/application/src/provisioning/engine.rs`
+- `S19` `M` `native/application/src/provisioning/network.rs`
+- `S19` `M` `native/application/src/provisioning/protocol/tests.rs`
+- `S19` `M` `native/manager/src/supervision/local_ai.rs`
+- `S19` `verify:` `cargo test --locked --manifest-path native/application/Cargo.toml --lib provisioning:: -- --test-threads=2` -> `pass`
+- `S19` `verify:` `cargo test --locked --manifest-path native/application/Cargo.toml --features test-support --test provisioning_faults -- --test-threads=2` -> `pass`
+- `S19` `verify:` `cargo clippy --locked --all-targets --manifest-path native/application/Cargo.toml --all-features -- -D warnings` -> `pass`
+- `S19` `verify:` `cargo fmt --check --manifest-path native/application/Cargo.toml` -> `pass`
+- `S19` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
+- `S19` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -137,3 +172,5 @@ related:
 - `S02` S02 Review follow-up: a selections read now decides each distinct lane once (one credential record read and one media query per lane) instead of once per role.
 - `S29` S29 Review follow-up: an unreadable selections record always carries its reset guard; a runtime answer for a stored record without a revision refuses unknown. The provider records keep the inherited revision-less shape.
 - `S02` S02 Review follow-up: a role outside the vocabulary refuses with the new `unknown_role` code on the client contract, which the tax side reports as a provider error rather than a configuration prompt.
+- `S09` cargo test on native/desktop/src-tauri not run: the launch-guard build script needs the CMake-generated contract.json; rustfmt --check on wire.rs passes. Keyless rendering in ProviderSettings.tsx has no UI test.
+- `S19` The engine keeps the PartLicence type, the licence plan field (now always null), the LicenceCommercialUseBarred advisory and the DifferentModelVersion stale reason because native/desktop/src-tauri still maps them; P04.S22 removes the desktop consumers. The staged `local_ai_models.toml` stays for Python until P03.S16; the engine no longer reads it. The manager test edit was checked with rustfmt only: the manager crate needs CMake build inputs.

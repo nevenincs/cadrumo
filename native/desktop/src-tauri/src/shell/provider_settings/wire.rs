@@ -68,6 +68,9 @@ pub enum AuthKind {
     ApiKey,
     ApiKeyWithBaseUrl,
     ProviderSignInOnly,
+    /// A lane on this computer that takes no key and no sign-in.
+    #[serde(rename = "none")]
+    Keyless,
 }
 
 /// What may use a provider. Extraction is not one of them.
@@ -396,7 +399,10 @@ impl Entry {
             && (self.transport == Transport::Cli) == self.cli_state.is_some()
             && self.consumers.len() <= 1
             // Only a lane that takes a key can hold one, and a key mode has one.
-            && (!self.credential_saved || self.auth_kind != AuthKind::ProviderSignInOnly)
+            && (!self.credential_saved
+                || matches!(self.auth_kind, AuthKind::ApiKey | AuthKind::ApiKeyWithBaseUrl))
+            // A keyless lane is only ever unset or turned off.
+            && (self.auth_kind != AuthKind::Keyless || matches!(self.mode, Mode::Unset | Mode::Disabled))
             && (self.credential_saved || !matches!(self.mode, Mode::Key | Mode::OauthToken));
         if ok { Ok(self) } else { Err(protocol()) }
     }
@@ -520,6 +526,50 @@ mod tests {
             "readiness": "sign_in_required", "reason": "sign_in_with_provider_tool",
             "cli_state": "installed_signed_out", "revision": "absent"
         })
+    }
+
+    fn keyless() -> Value {
+        json!({
+            "id": "local_api", "provider": "local", "display_name": "Local", "transport": "api",
+            "auth_kind": "none", "consumers": ["assistant"], "mode": "unset",
+            "credential_saved": false,
+            "available": true, "source": "none", "readiness": "not_verified",
+            "reason": null, "base_url": null, "default_base_url": "http://127.0.0.1:41000",
+            "revision": "absent"
+        })
+    }
+
+    #[test]
+    fn a_keyless_lane_is_admitted_with_no_key_and_no_sign_in() {
+        let read = status_of(&[keyless()]);
+        assert_eq!(read.providers[0].auth_kind, AuthKind::Keyless);
+        assert!(read.permits_agent("local", "api"));
+        let sent = serde_json::to_value(&read).unwrap();
+        assert_eq!(sent["providers"][0]["auth_kind"], "none");
+        assert_eq!(
+            sent["providers"][0]["default_base_url"],
+            "http://127.0.0.1:41000"
+        );
+
+        let mut off = keyless();
+        off["mode"] = json!("disabled");
+        off["available"] = json!(false);
+        off["readiness"] = json!("disabled");
+        off["reason"] = json!("turned_off");
+        assert!(!status_of(&[off]).permits_agent("local", "api"));
+
+        let mut with_key = keyless();
+        with_key["credential_saved"] = json!(true);
+        let mut signing_in = keyless();
+        signing_in["mode"] = json!("provider_sign_in");
+        let mut keyed = keyless();
+        keyed["mode"] = json!("key");
+        for entry in [with_key, signing_in, keyed] {
+            assert_eq!(
+                failed(status(success(envelope(&[entry]))))["code"],
+                "read_failed"
+            );
+        }
     }
 
     fn success(result: Value) -> Outcome {

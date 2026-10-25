@@ -26,6 +26,9 @@ GATEWAY_LANE: Final = "gateway_cli"
 GATEWAY_DEFAULT_URL: Final = "https://gateway.example.invalid/v1"
 BARE_GATEWAY_LANE: Final = "bare_cli"
 """An API-key-with-base-url lane with no default, so a key needs a stored URL."""
+KEYLESS_LANE: Final = "local_api"
+"""A keyless lane on this computer: no credential, no sign-in, a loopback endpoint."""
+KEYLESS_DEFAULT_URL: Final = "http://127.0.0.1:41000"
 MISSING_LANE: Final = "no_such_lane"
 
 
@@ -37,6 +40,7 @@ def _lane(
     credential_id: str | None,
     default_base_url: str | None = None,
     cli_programs: tuple[str, ...] = (),
+    reads_off_host: bool = True,
 ) -> dict[str, Any]:
     return {
         "id": f"{provider}_{transport}",
@@ -47,12 +51,13 @@ def _lane(
         "auth_kind": auth_kind,
         "default_base_url": default_base_url,
         "agent_credential_id": credential_id,
+        "reads_off_host": reads_off_host,
         "cli_programs": list(cli_programs),
     }
 
 
 def synthetic_document() -> str:
-    """Return the schema-version-3 document the synthetic agent serves."""
+    """Return the schema-version-4 document the synthetic agent serves."""
     lanes = [
         _lane("bare", "cli", "api_key_with_base_url", credential_id="bare", cli_programs=("example",)),
         _lane(
@@ -72,10 +77,18 @@ def synthetic_document() -> str:
             default_base_url=GATEWAY_DEFAULT_URL,
             cli_programs=("example", "example-helper"),
         ),
+        _lane(
+            "local",
+            "api",
+            "none",
+            credential_id=None,
+            default_base_url=KEYLESS_DEFAULT_URL,
+            reads_off_host=False,
+        ),
         _lane("other", "api", "api_key", credential_id="other"),
         _lane("third", "cli", "api_key", credential_id="third", cli_programs=("third",)),
     ]
-    return json.dumps({"schema_version": 3, "providers": lanes, "icon_attribution": {}})
+    return json.dumps({"schema_version": 4, "providers": lanes, "icon_attribution": {}})
 
 
 def synthetic_catalog() -> ProviderCatalog:

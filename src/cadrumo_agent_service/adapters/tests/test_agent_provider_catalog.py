@@ -99,6 +99,21 @@ def test_the_agent_is_asked_for_its_offline_declaration_in_a_credential_free_env
             ProviderCatalogUnavailableReason.CATALOG_MALFORMED,
         ),
         pytest.param(
+            _ok(
+                json.dumps(
+                    {
+                        "schema_version": 4,
+                        "providers": [
+                            {key: value for key, value in lane.items() if key != "reads_off_host"}
+                            for lane in json.loads(synthetic_document())["providers"]
+                        ],
+                        "icon_attribution": {},
+                    }
+                )
+            ),
+            ProviderCatalogUnavailableReason.CATALOG_MALFORMED,
+        ),
+        pytest.param(
             AgentInvocationResult(status=0, standard_output=b"x" * (256 * 1024 + 1)),
             ProviderCatalogUnavailableReason.CATALOG_MALFORMED,
         ),

@@ -15,12 +15,13 @@ from ..catalog import (
     ProviderTransport,
     parse_provider_catalog,
     validate_https_base_url,
+    validate_loopback_http_base_url,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _document(*lanes: dict[str, Any], schema_version: int = 3) -> str:
+def _document(*lanes: dict[str, Any], schema_version: int = 4) -> str:
     return json.dumps({"schema_version": schema_version, "providers": list(lanes), "icon_attribution": {}})
 
 
@@ -34,6 +35,7 @@ def _key_lane(**overrides: Any) -> dict[str, Any]:
         "auth_kind": "api_key",
         "default_base_url": None,
         "agent_credential_id": "example",
+        "reads_off_host": True,
         "cli_programs": [],
     }
     lane.update(overrides)
@@ -50,7 +52,26 @@ def _cli_lane(**overrides: Any) -> dict[str, Any]:
         "auth_kind": "provider_sign_in_only",
         "default_base_url": None,
         "agent_credential_id": None,
+        "reads_off_host": True,
         "cli_programs": ["example"],
+    }
+    lane.update(overrides)
+    return lane
+
+
+def _keyless_lane(**overrides: Any) -> dict[str, Any]:
+    lane: dict[str, Any] = {
+        "id": "local_api",
+        "provider": "local",
+        "transport": "api",
+        "display_name": "Local",
+        "description": "Synthetic keyless lane on this computer",
+        "auth_kind": "none",
+        "default_base_url": "http://127.0.0.1:41000",
+        "agent_credential_id": None,
+        "reads_off_host": False,
+        "cli_programs": [],
+        "models": [{"id": "synthetic-reader:1"}, {"id": "synthetic-viewer:1"}],
     }
     lane.update(overrides)
     return lane
@@ -91,7 +112,7 @@ def test_a_valid_document_parses_into_typed_lanes() -> None:
     assert api.consumers == (ProviderConsumer.ASSISTANT,)
 
 
-def test_version_three_retains_presentation_metadata_without_affecting_authentication() -> None:
+def test_version_four_retains_presentation_metadata_without_affecting_authentication() -> None:
     icon = {"key": "example", "variants": [{"variant": "mono", "media_type": "image/svg+xml", "sha256": "a" * 64}]}
     effort = {"reasoning": "supported", "control": "levels", "levels": ["low", "high"], "default": "low"}
     document = json.loads(_document(_cli_lane(icon=icon, models=[{"id": "sample", "effort": effort}])))
@@ -105,6 +126,65 @@ def test_version_three_retains_presentation_metadata_without_affecting_authentic
     assert catalog.icon_attribution == document["icon_attribution"]
     assert catalog.providers[0].agent_credential_id is None
     assert catalog.providers[0].auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY
+
+
+def test_a_keyless_lane_parses_with_its_loopback_url_and_on_host_flag() -> None:
+    catalog = parse_provider_catalog(
+        _document(_key_lane(), _keyless_lane(recommended={"vision": "synthetic-viewer:1"}))
+    )
+
+    keyless = catalog.entry("local_api")
+    assert keyless is not None
+    assert keyless.auth_kind is ProviderAuthKind.NONE
+    assert (keyless.agent_credential_id, keyless.default_base_url) == (None, "http://127.0.0.1:41000")
+    assert keyless.reads_off_host is False
+    assert keyless.recommended == {"vision": "synthetic-viewer:1"}
+    assert catalog.providers[0].reads_off_host is True
+    assert catalog.providers[0].recommended == {}
+
+
+def test_the_keyless_kind_takes_no_credential_no_sign_in_and_no_url_override() -> None:
+    kind = ProviderAuthKind.NONE
+
+    assert (kind.accepts_direct_credential, kind.accepts_provider_sign_in, kind.accepts_base_url) == (
+        False,
+        False,
+        False,
+    )
+
+
+@pytest.mark.parametrize(
+    "url",
+    ["http://127.0.0.1:11434", "http://localhost:1", "http://[::1]:65535", "http://127.0.0.1/", "http://localhost"],
+)
+def test_loopback_http_origins_pass(url: str) -> None:
+    assert validate_loopback_http_base_url(url) == url
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://127.0.0.1:11434",
+        "http://192.0.2.1:11434",
+        "http://gateway.example.invalid:11434",
+        "http://127.0.0.2:11434",
+        "http://[::2]:11434",
+        "http://[::1:11434",
+        "http://127.0.0.1:11434/*",
+        "http://127.0.0.1:11434/api",
+        "http://user:pw@127.0.0.1:11434",
+        "http://127.0.0.1:11434?q=1",
+        "http://127.0.0.1:11434#frag",
+        "http://127.0.0.1:0",
+        "http://127.0.0.1:65536",
+        "http://127.0.0.1:",
+        " http://127.0.0.1:11434",
+        "",
+    ],
+)
+def test_non_loopback_or_decorated_urls_are_refused(url: str) -> None:
+    with pytest.raises(ValueError):
+        validate_loopback_http_base_url(url)
 
 
 def test_entry_lookup_refuses_ids_outside_the_lane_grammar() -> None:
@@ -147,7 +227,40 @@ def test_acceptable_base_url_passes() -> None:
 @pytest.mark.parametrize(
     "document",
     [
-        pytest.param(_document(_key_lane(), schema_version=4), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=5), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=3), id="retired-schema-version-three"),
+        pytest.param(
+            _document({key: value for key, value in _key_lane().items() if key != "reads_off_host"}),
+            id="missing-reads-off-host",
+        ),
+        pytest.param(
+            _document({key: value for key, value in _keyless_lane().items() if key != "reads_off_host"}),
+            id="keyless-lane-missing-reads-off-host",
+        ),
+        pytest.param(_document(_key_lane(reads_off_host="false")), id="reads-off-host-not-a-bool"),
+        pytest.param(_document(_keyless_lane(default_base_url="https://127.0.0.1:41000")), id="https-on-keyless"),
+        pytest.param(_document(_keyless_lane(default_base_url="http://192.0.2.1:41000")), id="non-loopback-http"),
+        pytest.param(_document(_keyless_lane(default_base_url="http://127.0.0.1:41000/api")), id="loopback-path"),
+        pytest.param(
+            _document(_keyless_lane(default_base_url="http://user:pw@127.0.0.1:41000")), id="loopback-credential"
+        ),
+        pytest.param(_document(_keyless_lane(default_base_url="http://127.0.0.1:41000?q=1")), id="loopback-query"),
+        pytest.param(_document(_keyless_lane(default_base_url=None)), id="keyless-without-url"),
+        pytest.param(_document(_key_lane(default_base_url="http://127.0.0.1:41000")), id="http-on-key-lane"),
+        pytest.param(
+            _document(
+                _cli_lane(
+                    auth_kind="api_key_with_base_url",
+                    agent_credential_id="example",
+                    default_base_url="http://localhost:41000",
+                )
+            ),
+            id="http-on-gateway-lane",
+        ),
+        pytest.param(_document(_keyless_lane(agent_credential_id="local")), id="credential-id-on-keyless"),
+        pytest.param(_document(_keyless_lane(recommended={"vision": "not-listed:1"})), id="recommended-not-listed"),
+        pytest.param(_document(_keyless_lane(recommended={"": "synthetic-reader:1"})), id="recommended-empty-key"),
+        pytest.param(_document(_keyless_lane(recommended={"vision": 1})), id="recommended-not-a-string"),
         pytest.param(_document(_key_lane(), schema_version=2), id="retired-schema-version"),
         pytest.param(_document(_key_lane(), schema_version=0), id="schema-version-zero"),
         pytest.param(_document(), id="no-lanes"),

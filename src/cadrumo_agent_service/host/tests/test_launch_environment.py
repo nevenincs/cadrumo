@@ -10,9 +10,11 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.core.config_runtime_fields import LOCAL_AI_SERVER_ADDRESS
 from cadrumo.core.storage_environment import STORAGE_ROOT, normalize_storage_path
 from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE
 
+from ...providers.domain.catalog import validate_loopback_http_base_url
 from ..launch_environment import (
     ADVERTISED_VARIABLES,
     AGENT_LOG_LEVEL_VARIABLE,
@@ -22,6 +24,7 @@ from ..launch_environment import (
     GATEWAY_PORT_VARIABLE,
     GATEWAY_SLOTS,
     HOSTED_ROOT_VARIABLE,
+    OLLAMA_BASE_URL_VARIABLE,
     PROGRAM_AEAT_VARIABLE,
     PROGRAM_PYTHON_VARIABLE,
     TOOL_SERVER_ARGUMENTS_VARIABLE,
@@ -441,3 +444,21 @@ def test_agent_diagnostic_capture_level(tmp_path: Path, override: str | None, ex
         received={} if override is None else {AGENT_LOG_LEVEL_VARIABLE: override},
     )
     assert environment[AGENT_LOG_LEVEL_VARIABLE] == expected
+
+
+@pytest.mark.parametrize("platform", ["win32", "linux"])
+def test_the_agent_reaches_the_supervised_local_ai_server_and_no_inherited_one(tmp_path: Path, platform: str) -> None:
+    environment = agent_launch_environment(
+        storage_root=tmp_path / "storage",
+        agent_root=tmp_path / "agent",
+        relay=tmp_path / "cadrumo-mcp",
+        aeat=None,
+        python=None,
+        received={OLLAMA_BASE_URL_VARIABLE: "http://127.0.0.1:1", "OLLAMA_HOST": "192.0.2.1:1"},
+        sys_platform=platform,
+    )
+    assert environment[OLLAMA_BASE_URL_VARIABLE] == f"http://{LOCAL_AI_SERVER_ADDRESS}"
+    assert (
+        validate_loopback_http_base_url(environment[OLLAMA_BASE_URL_VARIABLE]) == environment[OLLAMA_BASE_URL_VARIABLE]
+    )
+    assert "OLLAMA_HOST" not in environment

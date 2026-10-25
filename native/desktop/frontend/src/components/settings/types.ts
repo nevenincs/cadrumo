@@ -3,10 +3,11 @@
 // key is ever part of it; the section can say whether a key is there, never
 // what it is.
 
-/** How a provider is reached: by a key, a key and a gateway's address, or
- * only the provider's own sign-in. */
+/** How a provider is reached: by a key, a key and a gateway's address,
+ * only the provider's own sign-in, or nothing at all, for a server on this
+ * computer. */
 export type ProviderAuthKind =
-  "api_key" | "api_key_with_base_url" | "provider_sign_in_only";
+  "api_key" | "api_key_with_base_url" | "provider_sign_in_only" | "none";
 
 /** What the profile holds for a provider. */
 export type ProviderMode =

@@ -26,6 +26,9 @@ function connectionStatus(provider: ProviderStatus): ConnectionStatus {
   if (provider.readiness === "unusable") return "setup_needed";
   // An app connection needs its app, whatever it signs in with.
   if (provider.cliState === "not_installed") return "setup_needed";
+  // A connection with no key and no sign-in has nothing to set up.
+  if (provider.authKind === "none")
+    return provider.readiness === "ready" ? "ready" : "not_checked";
   if (provider.authKind === "provider_sign_in_only") {
     if (
       provider.cliState === "installed_signed_in" ||
@@ -116,6 +119,7 @@ function detailWords(t: Translate, provider: ProviderStatus): string | null {
     return t("desktop.providers.detail_app_missing", {
       provider: provider.name,
     });
+  if (provider.authKind === "none") return null;
   if (provider.authKind === "provider_sign_in_only") {
     if (status === "setup_needed")
       return t("desktop.providers.reason_check_settings");
@@ -274,6 +278,7 @@ function WayRow({
   const headingId = useId();
   const [editing, setEditing] = useState(false);
   const signInOnly = provider.authKind === "provider_sign_in_only";
+  const keyless = provider.authKind === "none";
   const hasKey = provider.mode === "key" || provider.mode === "oauth_token";
   const off = provider.mode === "disabled";
   const state = connectionStatus(provider);
@@ -282,7 +287,9 @@ function WayRow({
   const address =
     provider.authKind === "api_key_with_base_url"
       ? (provider.baseUrl ?? provider.defaultBaseUrl)
-      : undefined;
+      : keyless
+        ? provider.defaultBaseUrl
+        : undefined;
   return (
     <li
       data-lane={provider.id}
@@ -338,7 +345,7 @@ function WayRow({
           <span>{refusalWords(t, outcome.code)}</span>
         </p>
       )}
-      {!off && (
+      {!off && !keyless && (
         <div className="grid gap-2 pt-1">
           {signInOnly ? (
             signInSupported ? (

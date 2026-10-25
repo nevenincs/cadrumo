@@ -60,7 +60,7 @@ from .ports import (
     StoreRefusalCode,
     UnreadableProviderRecord,
 )
-from .resolution import provider_mode, read_revision, status_entry
+from .resolution import lane_mode, read_revision, status_entry
 
 
 class AssistantAuthChoice(StrEnum):
@@ -237,7 +237,10 @@ class ProviderSettingsService:
         current = self._current(entry, expected_revision)
         if isinstance(current, ProviderSettingsRefusal):
             return current
-        if not isinstance(current, StoredProviderRecord) or provider_mode(current) is not ProviderSettingsMode.DISABLED:
+        if (
+            not isinstance(current, StoredProviderRecord)
+            or lane_mode(entry, current) is not ProviderSettingsMode.DISABLED
+        ):
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
         previous = current.record
         if previous.credential is not None and entry.auth_kind.accepts_direct_credential:
@@ -271,7 +274,7 @@ class ProviderSettingsService:
         return frozenset(
             (entry.provider, entry.transport.value)
             for entry, read in zip(catalog.providers, reads, strict=True)
-            if isinstance(read, StoredProviderRecord) and provider_mode(read) is ProviderSettingsMode.DISABLED
+            if isinstance(read, StoredProviderRecord) and lane_mode(entry, read) is ProviderSettingsMode.DISABLED
         )
 
     def reset(self, provider_id: str, *, expected_revision: str) -> ProviderSettingsActionResult:

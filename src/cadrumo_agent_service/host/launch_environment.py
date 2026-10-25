@@ -11,7 +11,8 @@ and the admitted runtime's storage root, which the agent forwards to the program
 starts so that they serve the runtime's root and never resolve a default of
 their own. It also tells the agent, in plain variables, what Cadrumo supplies:
 the programs the agent may run, the tool server it may mount with its
-arguments, and the names it forwards. Skills and rules ship with the agent
+arguments, the names it forwards, and the address of the local AI server the
+runtime manager supervises, which the agent's keyless local lane reaches. Skills and rules ship with the agent
 image; the service does not override their locations. The agent reads the
 supplied variables; Cadrumo keeps no list of the agent's providers or lanes,
 and the agent reads each tool's trust from the tool server's own declarations.
@@ -27,6 +28,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from cadrumo.core.config_runtime_fields import LOCAL_AI_SERVER_ADDRESS
 from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
 from cadrumo.core.storage_environment import (
     STORAGE_ROOT,
@@ -64,6 +66,9 @@ TOOL_SERVER_ARGUMENTS_VARIABLE: Final = "CADRUMO_AGENT_TOOL_SERVER_ARGS_CADRUMO"
 """The JSON array of arguments the agent gives that tool server."""
 FORWARD_VARIABLE: Final = "CADRUMO_AGENT_FORWARD"
 """The comma-separated names the agent forwards to the tool servers and programs it starts."""
+OLLAMA_BASE_URL_VARIABLE: Final = "CADRUMO_AGENT_OLLAMA_BASE_URL"
+"""The loopback origin of the local AI server the runtime manager supervises."""
+OLLAMA_BASE_URL: Final = f"http://{LOCAL_AI_SERVER_ADDRESS}"
 ADVERTISED_VARIABLES: Final = frozenset(
     {
         PROGRAM_AEAT_VARIABLE,
@@ -71,6 +76,7 @@ ADVERTISED_VARIABLES: Final = frozenset(
         TOOL_SERVER_VARIABLE,
         TOOL_SERVER_ARGUMENTS_VARIABLE,
         FORWARD_VARIABLE,
+        OLLAMA_BASE_URL_VARIABLE,
     }
 )
 """What the service advertises to the gateway under the agent's prefix."""
@@ -278,4 +284,5 @@ def agent_launch_environment(
     if PROFILE_ROOT_VARIABLE in environment:
         forwarded.append(PROFILE_ROOT_VARIABLE)
     environment[FORWARD_VARIABLE] = ",".join(forwarded)
+    environment[OLLAMA_BASE_URL_VARIABLE] = OLLAMA_BASE_URL
     return environment
