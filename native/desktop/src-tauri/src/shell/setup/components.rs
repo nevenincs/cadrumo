@@ -119,6 +119,9 @@ struct CheckTrack {
     operation_id: String,
     kind: CheckKind,
     stage: CheckStage,
+    /// The category a refused check carried, which the window words as it words a row's;
+    /// `None` for a check that is running, done, or failed with no category at all.
+    failure: Option<wire::Failure>,
 }
 
 struct SetupTrack {
@@ -304,6 +307,7 @@ impl Components {
             operation_id: id.clone(),
             kind,
             stage: CheckStage::Running,
+            failure: None,
         });
         let engines = self.engines.clone();
         let shared = self.shared.clone();
@@ -326,15 +330,20 @@ impl Components {
                     .check
                     .as_ref()
                     .is_some_and(|check| check.operation_id == id);
-                let stage = match report {
+                // A refusal the engine classified itself, such as a setting it cannot
+                // use, is that category's refusal: the window is given the category to
+                // word, as the role's other clients are given it.
+                let (stage, category) = match report {
                     Ok(report) if report.outcome.succeeded() => {
                         window.rows = Some((report.mode, report.rows));
-                        CheckStage::Done
+                        (CheckStage::Done, None)
                     }
-                    _ => CheckStage::Failed,
+                    Ok(report) => (CheckStage::Failed, report.failure.map(failure)),
+                    Err(error) => (CheckStage::Failed, Some(failure(failure_category(&error)))),
                 };
                 if let Some(check) = window.check.as_mut().filter(|_| current) {
                     check.stage = stage;
+                    check.failure = category;
                 }
             });
         });
@@ -551,6 +560,7 @@ impl Components {
                 operation_id: check.operation_id.clone(),
                 kind: check.kind,
                 stage: check.stage,
+                failure: check.failure,
             }),
             setup: window.setup.as_ref().map(run),
             details: details(read.unwrap_or_default(), window.setup.as_ref()),

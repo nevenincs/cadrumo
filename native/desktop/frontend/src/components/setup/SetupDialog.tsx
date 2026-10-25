@@ -358,6 +358,10 @@ export function SetupDialog({
     (row) => focus === null || row.item === focus,
   );
   const main = snapshot ? mainAction(t, run, rows) : null;
+  // A check the engine refused under a category of its own, such as a setting
+  // it cannot use: it reports no row, so its sentence is the only thing to say.
+  const checkFailure =
+    snapshot?.check?.stage === "failed" ? snapshot.check.failure : null;
   const description =
     stage === "review"
       ? t("desktop.setup.lead_review")
@@ -389,8 +393,14 @@ export function SetupDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
+        {checkFailure !== null && (
+          <Alert role="alert">{failureWords(t, checkFailure)}</Alert>
+        )}
+
         {control.read.kind === "loading" ||
-        (snapshot !== null && snapshot.rows.length === 0) ? (
+        (snapshot !== null &&
+          snapshot.rows.length === 0 &&
+          checkFailure === null) ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Spinner />
             {t("desktop.setup.checking")}

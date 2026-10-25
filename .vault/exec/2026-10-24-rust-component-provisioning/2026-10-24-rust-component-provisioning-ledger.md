@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:5ec95f7dbf901985ebc3adf1b707d999f88356a860f64d10fed3f936f635e337'
+body_hash: 'sha256:93dc77c2d814d0cf92ed2ce6d224e325c086bca402107e6ffce48a9c4ce36ae1'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -917,6 +917,11 @@ related:
 - `S13` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache (30 kept, 0 broken)` -> `pass`
 - `S13` `verify:` `pytest dev/quality/tests/test_no_python_provisioning.py (9 passed)` -> `pass`
 - `S13` `by:` `implementation-engineer`
+- `S11` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S11` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S11` `verify:` `npx tsc --noEmit on native/desktop/frontend` -> `pass`
+- `S11` `verify:` `npx eslint and npx prettier --check on the three touched frontend files` -> `pass`
+- `S11` `verify:` `rustfmt --edition 2024 --check on the three touched desktop sources` -> `pass`
 
 ## Notes
 
@@ -1004,3 +1009,4 @@ related:
 - `S07` `test_settings_lifecycle_gate` chain detector, `test_currency_fields_use_one_annotation` and `test_hashing_adoption` fail on this tree without these edits; reproduced against HEAD's taxonomy.
 - `S17` The server record's schema moves to 2 for the proxy digest, so a server recorded by an earlier build reads as not running until the manager starts one again; no Python or external consumer reads that record.
 - `S17` program-change-lease-reused-for-a-restart is left as recorded and is moot: the engine no longer takes the program-change lease to bounce a server, so the lease serves only the replacement and removal its module describes
+- `S11` the desktop crate was not compiled here: its build needs the CMake-generated tauri inputs, so the new check-refusal host test and the wire field rest on review; the Python wire-contract parity case covers the Failure vocabulary

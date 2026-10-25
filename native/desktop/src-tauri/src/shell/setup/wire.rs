@@ -283,6 +283,9 @@ pub struct Check {
     pub operation_id: String,
     pub kind: CheckKind,
     pub stage: CheckStage,
+    /// The category a failed check carried, worded as a row's failure is; absent while
+    /// the check runs, when it is done, and when a failure carried no category.
+    pub failure: Option<Failure>,
 }
 
 /// One part of the local AI's plan: its program, or the model one role reads

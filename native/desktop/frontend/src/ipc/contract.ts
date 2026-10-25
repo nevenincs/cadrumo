@@ -937,6 +937,9 @@ export type SetupCheck = {
   operation_id: string;
   kind: "status_quick" | "status_full" | "verify";
   stage: "running" | "done" | "failed";
+  /** The category a failed check carried, worded as a row's failure is; null
+   * while it runs, when it is done, and when a failure carried no category. */
+  failure: SetupFailureCategory | null;
 };
 
 /** One part of the local AI's plan: `program`, or the catalogue role whose

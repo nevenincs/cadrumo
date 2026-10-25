@@ -661,6 +661,36 @@ async fn an_item_this_build_cannot_set_up_settles_with_its_refusal() {
 }
 
 #[tokio::test]
+async fn a_setting_the_engine_cannot_use_gives_the_check_its_category() {
+    // What a refused setting looks like to the window: the installation's engine cannot
+    // be built, and the error carries the category the engine classified it under.
+    let engines: Arc<Engines> = Arc::new(|| {
+        Err(Error::Download(
+            cadrumo_application::provisioning::failure::TransferFailure::final_(
+                FailureCategory::BlockedByNetwork,
+            ),
+        ))
+    });
+    let components = Components::new(engines);
+
+    components.check(wire::CheckMode::Quick);
+
+    let checked = until(&components, |view| {
+        view.check
+            .as_ref()
+            .is_some_and(|check| check.stage != CheckStage::Running)
+    })
+    .await;
+    let check = checked.check.unwrap();
+    assert_eq!(
+        (check.stage, check.failure),
+        (CheckStage::Failed, Some(wire::Failure::BlockedByNetwork)),
+        "the window words the category, as the role's other clients do"
+    );
+    assert!(checked.rows.is_empty());
+}
+
+#[tokio::test]
 async fn a_full_check_replaces_the_rows_it_read() {
     let fixture = Fixture::new(Serving::Whole);
     let components = Components::new(fixture.engines());
