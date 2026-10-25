@@ -1,18 +1,14 @@
-"""The wired reading path, end to end, against a real loopback reader.
+"""The wired reading path, end to end, through the agent's model-run port.
 
-Stands up a real :class:`~http.server.ThreadingHTTPServer` on a loopback port
-speaking the runtime's ``/api/chat`` wire shape, and points the settings at it.
-Real HTTP, the real provider client, the real router, the real grounding stage.
-**No model is loaded and no inference runs** -- the reply is authored by the
-test, which is what makes this runnable on a machine with no accelerator and in
-CI.
+The real reader, the real client, the real router and the real grounding stage
+run against a recording stand-in for the agent service behind the model-run
+port, on a lane that stays on this computer. **No model is loaded and no
+inference runs** -- the reply is authored by the test, which is what makes this
+runnable on a machine with no accelerator and in CI.
 
-This is not a mock and not a patch: nothing in the code under test is
-substituted. The REPLY is supplied, exactly as a reply from a real runtime would
-be, and everything downstream of the socket is production code. The
-bind-thread-shutdown plumbing and the wire envelope come from the shared
-loopback home, so there is one loopback shape in the tree; only the
-request-recording behaviour is declared here.
+Nothing in the code under test is substituted. The REPLY is supplied, exactly
+as the agent service would return a run's final text, and everything on this
+side of the port is production code.
 
 What it exists to prove is the thing no unit suite could: that a document
 entering `extract_invoice_draft_from_evidence` comes out the other side with
@@ -26,10 +22,8 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Iterator
-from http import HTTPStatus
 from pathlib import Path
-from queue import Queue
-from typing import ClassVar, override
+from typing import ClassVar
 
 import pytest
 
@@ -53,23 +47,14 @@ from cadrumo.application.ledger.invoice_extraction_authority import (
     default_invoice_extraction_period,
 )
 from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceRecord
-from cadrumo.core.config import Settings, load_settings, override_settings
-from cadrumo.core.config_support import LLMProvider
+from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.document_shape import DocumentShape
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
-from cadrumo.tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 
-READING_RUNTIME_MODEL = "qwen2.5:7b"
-
+from .model_run_support import ON_HOST_LANE, RecordingModelRuns, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -95,7 +80,6 @@ def _reader_ports(*, operation: PinnedAuthorityOperation) -> InvoiceDraftExtract
     def read_text(
         transcription: DocumentTranscription,
         settings: Settings,
-        _provider: LLMProvider | None,
         _consent_token: EvidenceConsentProof | None,
         authority_values: object,
         /,
@@ -150,42 +134,25 @@ _READER_REPLY: dict[str, str | None] = {
 }
 
 
-class _LoopbackRequestHandler(SilentLoopbackHandler):
-    """A real local endpoint speaking the runtime's ``/api/chat`` wire shape."""
+class _Script:
+    """The reply the agent stand-in returns for every run."""
 
     reply: ClassVar[str] = ""
-    requests: ClassVar[Queue[dict[str, object]]]
-
-    @override
-    def do_POST(self) -> None:
-        self.requests.put(dict(read_json_body(self)))
-        write_json_response(
-            self,
-            ollama_chat_reply(
-                self.reply,
-                model=READING_RUNTIME_MODEL,
-                prompt_eval_count=100,
-                eval_count=50,
-            ),
-            status=HTTPStatus.OK,
-        )
 
 
 @pytest.fixture
-def reader(secure_object_test_profile: TestRuntimeProfile) -> Iterator[tuple[str, Queue[dict[str, object]]]]:
-    """Serve a real reader endpoint on a loopback port; yield its URL and requests.
+def reader(secure_object_test_profile: TestRuntimeProfile) -> Iterator[RecordingModelRuns]:
+    """Bind the agent stand-in on an on-host lane; yield it so each run it received is observable.
 
     Depends on ``secure_object_test_profile`` for the real bucket runtime: the reading path
     writes run record through the profile-bound encrypted repository, so a
-    read with no active bucket fails before the transport is reached. Taking the
+    read with no active bucket fails before the port is reached. Taking the
     shared fixture keeps this a REAL storage runtime rather than disabling the
     run-record write to make the test pass.
     """
-    requests: Queue[dict[str, object]] = Queue()
-    _LoopbackRequestHandler.requests = requests
-    _LoopbackRequestHandler.reply = json.dumps(_READER_REPLY)
-    with serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url:
-        yield (chat_url, requests)
+    _Script.reply = json.dumps(_READER_REPLY)
+    with serving_agent(lane=ON_HOST_LANE, answer=lambda _body: _Script.reply) as service:
+        yield service
 
 
 def _control_evidence() -> EvidenceInput:
@@ -199,12 +166,10 @@ def _control_evidence() -> EvidenceInput:
     )
 
 
-def _read_through_the_wired_path(chat_url: str):
+def _read_through_the_wired_path():
     evidence = _control_evidence()
     period = default_invoice_extraction_period()
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url), bundled_indexed_authority().operation() as operation:
-        # ``settings`` is required rather than resolved internally, so the
-        # override above reaches the read instead of being silently bypassed.
+    with bundled_indexed_authority().operation() as operation:
         legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
         return invoice_draft_extraction_module._read_transcription_semantically(
             evidence,
@@ -218,40 +183,34 @@ def _read_through_the_wired_path(chat_url: str):
 
 
 def test_the_read_actually_reaches_the_loopback_endpoint(
-    reader: tuple[str, Queue[dict[str, object]]],
+    reader: RecordingModelRuns,
 ) -> None:
     """Anchor: if the request never arrives, every assertion below is vacuous."""
-    chat_url, requests = reader
+    _read_through_the_wired_path()
 
-    _read_through_the_wired_path(chat_url)
-
-    sent = requests.get_nowait()
-    assert sent["stream"] is False
-    assert isinstance(sent["messages"], list)
+    ((header, body),) = reader.runs
+    assert header.role == "text_extraction"
+    assert body.prompt
 
 
 def test_the_transcription_not_the_raw_bytes_is_what_the_reader_receives(
-    reader: tuple[str, Queue[dict[str, object]]],
+    reader: RecordingModelRuns,
 ) -> None:
     """The reader is fed the document's TEXT, which is what makes the anchor check external.
 
     If the router ever fed the reader something it also produced, the anchor
     check would be verifying a model against itself.
     """
-    chat_url, requests = reader
+    _read_through_the_wired_path()
 
-    _read_through_the_wired_path(chat_url)
-
-    sent = requests.get_nowait()
-    messages = sent["messages"]
-    assert isinstance(messages, list), "the wired request carried no message list"
-    prompt = "".join(str(message.get("content", "")) for message in messages if isinstance(message, dict))
+    ((_, body),) = reader.runs
+    prompt = body.prompt
     assert "Reformas Delta SL" in prompt, "the document's own text did not reach the reader"
     assert "766,30" in prompt
 
 
 def test_a_real_anchor_is_upgraded_to_anchored_on_the_wired_path(
-    reader: tuple[str, Queue[dict[str, object]]],
+    reader: RecordingModelRuns,
 ) -> None:
     """The upgrade, proven end to end rather than on a hand-built draft.
 
@@ -259,9 +218,8 @@ def test_a_real_anchor_is_upgraded_to_anchored_on_the_wired_path(
     transcription and checks each claim. This is the single assertion that the
     campaign's stages are a pipeline and not a library.
     """
-    chat_url, _ = reader
 
-    draft = _read_through_the_wired_path(chat_url)
+    draft = _read_through_the_wired_path()
 
     by_field = {envelope.field: envelope for envelope in draft.provenance}
     assert by_field["taxable_base"].grounding is FieldGroundingOutcome.ANCHORED
@@ -269,12 +227,11 @@ def test_a_real_anchor_is_upgraded_to_anchored_on_the_wired_path(
 
 
 def test_a_percentage_anchor_survives_the_wired_path(
-    reader: tuple[str, Queue[dict[str, object]]],
+    reader: RecordingModelRuns,
 ) -> None:
     """`21%` anchoring the value `21` is the most common field in the corpus."""
-    chat_url, _ = reader
 
-    draft = _read_through_the_wired_path(chat_url)
+    draft = _read_through_the_wired_path()
 
     rate = next(e for e in draft.provenance if e.field == "iva_rate")
     assert rate.grounding is FieldGroundingOutcome.ANCHORED
@@ -282,7 +239,7 @@ def test_a_percentage_anchor_survives_the_wired_path(
 
 
 def test_a_fabricated_anchor_is_rejected_on_the_wired_path(
-    reader: tuple[str, Queue[dict[str, object]]],
+    reader: RecordingModelRuns,
 ) -> None:
     """Anti-fabrication where it matters: a figure the document does not print.
 
@@ -290,9 +247,8 @@ def test_a_fabricated_anchor_is_rejected_on_the_wired_path(
     absent from the page. The wired path must not let it ground, and must strip
     the anchor it could not verify.
     """
-    chat_url, _ = reader
 
-    draft = _read_through_the_wired_path(chat_url)
+    draft = _read_through_the_wired_path()
 
     fabricated = next(e for e in draft.provenance if e.field == "iva_amount")
     assert fabricated.grounding is FieldGroundingOutcome.UNANCHORED
@@ -300,25 +256,23 @@ def test_a_fabricated_anchor_is_rejected_on_the_wired_path(
 
 
 def test_the_closure_finding_reaches_the_draft_on_the_wired_path(
-    reader: tuple[str, Queue[dict[str, object]]],
+    reader: RecordingModelRuns,
 ) -> None:
     """The second leg runs end to end: 890,00 against a base and cuota that miss it."""
-    chat_url, _ = reader
 
-    draft = _read_through_the_wired_path(chat_url)
+    draft = _read_through_the_wired_path()
 
     kinds = {finding.kind for finding in draft.discrepancies}
     assert DraftDiscrepancyKind.ARITHMETIC_CLOSURE in kinds
 
 
 def test_the_transcription_address_is_stamped_on_the_wired_path(
-    reader: tuple[str, Queue[dict[str, object]]],
+    reader: RecordingModelRuns,
 ) -> None:
     """The draft is tied to the exact artefact it was read from."""
-    chat_url, _ = reader
     evidence = _control_evidence()
 
-    draft = _read_through_the_wired_path(chat_url)
+    draft = _read_through_the_wired_path()
 
     assert (
         draft.transcription_sha256
@@ -330,7 +284,7 @@ def test_the_transcription_address_is_stamped_on_the_wired_path(
 
 
 def test_a_clean_document_extracts_without_findings_on_the_wired_path(
-    reader: tuple[str, Queue[dict[str, object]]],
+    reader: RecordingModelRuns,
 ) -> None:
     """POSITIVE CONTROL for the whole suite, and for the refusal cases elsewhere.
 
@@ -342,8 +296,7 @@ def test_a_clean_document_extracts_without_findings_on_the_wired_path(
     anchors that are all really printed, so a clean read must yield no
     arithmetic-closure finding.
     """
-    chat_url, _ = reader
-    _LoopbackRequestHandler.reply = json.dumps(
+    _Script.reply = json.dumps(
         {
             "taxable_base": "766,30",
             "taxable_base_anchor": "766,30",
@@ -356,7 +309,7 @@ def test_a_clean_document_extracts_without_findings_on_the_wired_path(
         },
     )
 
-    draft = _read_through_the_wired_path(chat_url)
+    draft = _read_through_the_wired_path()
 
     assert not [f for f in draft.discrepancies if f.kind is DraftDiscrepancyKind.ARITHMETIC_CLOSURE]
     assert all(
@@ -367,7 +320,7 @@ def test_a_clean_document_extracts_without_findings_on_the_wired_path(
 
 
 def test_a_short_figure_does_not_anchor_inside_a_longer_one_on_the_wired_path(
-    reader: tuple[str, Queue[dict[str, object]]],
+    reader: RecordingModelRuns,
 ) -> None:
     """The anchor boundary, exercised END TO END rather than only in its unit suite.
 
@@ -382,8 +335,7 @@ def test_a_short_figure_does_not_anchor_inside_a_longer_one_on_the_wired_path(
     matching left all eight cases green. A suite that only exercises the easy
     shape cannot see the defect the hard shape produces.
     """
-    chat_url, _ = reader
-    _LoopbackRequestHandler.reply = json.dumps(
+    _Script.reply = json.dumps(
         {
             "taxable_base": "766,30",
             "taxable_base_anchor": "766,30",
@@ -392,7 +344,7 @@ def test_a_short_figure_does_not_anchor_inside_a_longer_one_on_the_wired_path(
         },
     )
 
-    draft = _read_through_the_wired_path(chat_url)
+    draft = _read_through_the_wired_path()
 
     fragment = next(e for e in draft.provenance if e.field == "iva_amount")
     assert fragment.grounding is FieldGroundingOutcome.UNANCHORED, (

@@ -1,11 +1,12 @@
-"""A statement export whose column-naming model is missing refuses with the local AI setup.
+"""A statement export whose column-naming role cannot be run refuses with the service's typed verdict.
 
 The import runs through the real provider detection, the mapped tabular lane,
-the composed column-role mapper and the application import action, against an
-Ollama-shaped loopback runtime. What the person receives is the operation's
-refusal, so the cases assert the projected operation error detail as well as the
-raised error: the verdict, with ``operator.provision.local_ai`` as its action,
-is what every surface routes to setup.
+the composed column-role mapper, the production client and agent adapter and
+the application import action, against a recording stand-in for the agent
+service behind the model-run port. What the person receives is the operation's
+refusal, so the cases assert the projected operation error detail as well as
+the raised error: the verdict names the refused run and the role, and no other
+lane or model is tried.
 
 The control is the same file under a mapper that answered and established
 nothing: that stays the unsupported-file refusal and names no component.
@@ -15,11 +16,11 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from http import HTTPStatus
 from pathlib import Path
-from typing import override
 
 import pytest
+
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from .....application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from .....application.ledger.actions_import import prepare_ledger_source_import
@@ -27,14 +28,14 @@ from .....application.ledger.column_roles import ColumnRoleReaderUnavailable, bi
 from .....application.ledger.import_ports import LedgerImportReaderUnavailableError
 from .....application.ledger.models import LedgerSourceImportCommand
 from .....application.operations.error_detail import build_operation_error_detail
-from .....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
-from .....core.config import override_settings
+from .....core.model_catalogue import ModelRole
 from .....core.tabular import NormalizedTable
 from .....domain.transactions.errors import TransactionValidationError
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from .....tests.inventory import FIXTURES_DIR
-from .....tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
+from ....outbound.llm.client import LLMClient
 from ....outbound.llm.column_role_mapping import ColumnRoleProposal, SemanticColumnRoleMapper, resolve_column_roles
+from ....outbound.llm.tests.model_run_support import ON_HOST_LANE, serving_agent
 from ..ledger_import import build_ledger_import_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
@@ -43,40 +44,21 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
 #: only the mapping lane can read it.
 _UNKNOWN_FORMAT_FIXTURE = FIXTURES_DIR / "financial" / "tabular-dialects" / "expenses_app_export_2026.csv"
 
-#: A port nothing listens on, so the runtime genuinely does not answer.
-_CLOSED_ENDPOINT = "http://127.0.0.1:1/api/chat"
-
 
 @contextmanager
-def _runtime_without_models() -> Generator[str]:
-    """Serve a runtime that answers and holds no model at all."""
-
-    class _Runtime(SilentLoopbackHandler):
-        @override
-        def do_GET(self) -> None:
-            if self.path == "/api/tags":
-                write_json_response(self, {"models": []}, status=HTTPStatus.OK)
-            else:
-                self.send_error(HTTPStatus.NOT_FOUND)
-
-    with serving_loopback(_Runtime, path="/api/chat") as endpoint:
-        yield endpoint
-
-
-@contextmanager
-def _composed_mapper(tmp_path: Path, endpoint: str) -> Generator[None]:
-    """Bind the production column-role resolver against the runtime at ``endpoint``."""
+def _composed_mapper(tmp_path: Path) -> Generator[None]:
+    """Bind the production column-role resolver over the production client."""
     settings = EnvFileFreeSettings(
-        cadrumo_llm_ollama_chat_url=endpoint,
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
     )
 
     def resolve(table: NormalizedTable) -> ColumnRoleProposal | ColumnRoleReaderUnavailable | None:
-        return resolve_column_roles(table, mapper=SemanticColumnRoleMapper(settings=settings))
+        mapper = SemanticColumnRoleMapper(client=LLMClient(settings=settings), settings=settings)
+        return resolve_column_roles(table, mapper=mapper)
 
-    with override_settings(cadrumo_llm_ollama_chat_url=endpoint), bind_column_role_mapping_resolver(resolve):
+    with bind_column_role_mapping_resolver(resolve):
         yield
 
 
@@ -87,12 +69,12 @@ def _import_unknown_export() -> None:
     )
 
 
-def _assert_refusal_offers_setup(error: LedgerImportReaderUnavailableError, condition: str) -> None:
+def _assert_refusal_names(error: LedgerImportReaderUnavailableError, code: ModelRunRefusalCode) -> None:
     verdict = error.terminal_precondition_verdict
     assert verdict is not None
-    assert verdict.failed_condition_id == condition
-    assert verdict.action is not None
-    assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert verdict.failed_condition_id == "llm.agent.model_run_completed"
+    assert verdict.evidence[0].values["model_run_refusal"] == code.value
+    assert verdict.evidence[0].values["model_role"] == ModelRole.COLUMN_ROLE_MAPPING.value
     assert nested_terminal_precondition_verdict(error) == verdict
 
     detail = build_operation_error_detail(error)
@@ -100,27 +82,27 @@ def _assert_refusal_offers_setup(error: LedgerImportReaderUnavailableError, cond
     assert detail.error_code == "REFUSED_LEDGER_IMPORT_READER"
     projected = detail.precondition_verdict()
     assert projected is not None
-    assert projected.action is not None
-    assert projected.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert projected.failed_condition_id == verdict.failed_condition_id
 
 
-def test_a_missing_mapping_model_refuses_the_import_with_the_local_ai_setup(tmp_path: Path) -> None:
+def test_a_role_with_no_selection_refuses_the_import_with_its_typed_verdict(tmp_path: Path) -> None:
     with (
-        _runtime_without_models() as endpoint,
-        _composed_mapper(tmp_path, endpoint),
+        serving_agent(lane=ON_HOST_LANE, lookup_refusal=ModelRunRefusalCode.NO_SELECTION) as service,
+        _composed_mapper(tmp_path),
         pytest.raises(LedgerImportReaderUnavailableError) as raised,
     ):
         _import_unknown_export()
 
-    _assert_refusal_offers_setup(raised.value, ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value)
+    _assert_refusal_names(raised.value, ModelRunRefusalCode.NO_SELECTION)
     assert isinstance(raised.value, TransactionValidationError), "callers handling import refusals keep handling it"
+    assert service.runs == []
 
 
-def test_an_unanswering_runtime_refuses_the_import_with_the_local_ai_setup(tmp_path: Path) -> None:
-    with _composed_mapper(tmp_path, _CLOSED_ENDPOINT), pytest.raises(LedgerImportReaderUnavailableError) as raised:
+def test_no_running_service_refuses_the_import_as_service_unavailable(tmp_path: Path) -> None:
+    with _composed_mapper(tmp_path), pytest.raises(LedgerImportReaderUnavailableError) as raised:
         _import_unknown_export()
 
-    _assert_refusal_offers_setup(raised.value, ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value)
+    _assert_refusal_names(raised.value, ModelRunRefusalCode.SERVICE_UNAVAILABLE)
 
 
 def test_a_mapper_that_established_nothing_stays_an_unsupported_file() -> None:

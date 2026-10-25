@@ -18,11 +18,14 @@ Local AI rows:
   whose site is gone.
 - Roles. Every ``ModelRole`` has at least one driven consumer, and a unit that
   names its role in its request is driven under that role at every site.
-- Behaviour. Each row's drivers call the composed site against a real
-  loopback runtime that answers its inventory with no models and records
-  every request it is sent. The outcome must carry a verdict whose action is
-  ``operator.provision.local_ai`` and whose ``role`` fact is the driven role,
-  and the runtime must have received no request.
+- Behaviour. Each row's drivers call the composed site against a recording
+  stand-in for the agent service that refuses the role's lookup and records
+  every run it is sent, once per gated refusal code. The outcome must carry the
+  verdict the real model-run verdict builder makes for that code and role: for
+  ``model_not_installed`` its action is ``operator.provision.local_ai``, and for
+  ``no_selection`` it names no action and states ``role_selection_required``.
+  Its ``role`` fact must be the driven role, and the service must have been
+  sent no run.
 
 Local AI operation rows:
 
@@ -32,10 +35,10 @@ Local AI operation rows:
   row in ``_OPERATION_ROWS``, and every row must be named by a consumer.
 - Behaviour. Each operation row settles its operation through the production
   registry and the real supervisor, journal and encrypted operand store, in an
-  enrolled profile, against the same empty runtime. What a client in another
+  enrolled profile, against the same refusing service. What a client in another
   process reads of it, the recorded error detail of a stopped operation or the
-  public result of a successful one, must carry the consumer's verdict naming
-  ``operator.provision.local_ai`` for the driven role, with no request sent.
+  public result of a successful one, must carry the consumer's verdict for the
+  refusal code and the driven role, with no run sent.
   An operation that swallows the refusal into its result, or stops without
   publishing its detail, fails here.
 
@@ -61,8 +64,9 @@ Where it stops:
   consumer. ``src/cadrumo_agent_service`` and the desktop are not scanned.
 - A dispatch reached only through ``self`` attributes, a dynamic import or a
   value read from a mapping is not discovered.
-- A behavioural row proves the refusal for the empty-inventory runtime and the
-  empty browsers root. It does not prove the order inside an operation
+- A behavioural row proves the refusal for the gated lookup refusals and the
+  empty browsers root. A refusal that only a run, rather than the lookup,
+  returns is covered by the client's agent dispatch tests. It does not prove the order inside an operation
   executor: that its registered preflight runs before credentials load is
   covered by the operation tests for the capture, identity-check and sign-in
   executors, not here.
@@ -72,9 +76,9 @@ Where it stops:
 - Which registered operation reaches a local AI consumer is declared on the
   consumer row, not discovered: a new operation composed over an existing
   consumer passes until someone names it there. Each operation is settled
-  through one lane per row, against an absent model only; a runtime that does
-  not answer, or a refusal raised only on another lane, is covered by the
-  consumer rows and the operations' own settlement tests.
+  through one lane per row, once per gated refusal code; a refusal raised only
+  on another lane is covered by the consumer rows and the operations' own
+  settlement tests.
 - Browser operations are held to their preflight here, not to what they
   publish: that a live capture or sign-in refusal publishes its verdict is
   covered by those operations' own settlement tests.
@@ -96,17 +100,17 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
-from http import HTTPStatus
 from io import BytesIO
 from pathlib import Path
 from textwrap import dedent
 from typing import override
 from uuid import UUID, uuid4
 
-import httpx
 import pytest
 from PIL import Image
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.model_runs import ModelRunBody, ModelRunHeader, ModelRunRefusal, ModelRunRefusalCode
 
 from ...adapters.outbound.aeat.browser.errors import (
     BrowserNotReadyError,
@@ -121,9 +125,13 @@ from ...adapters.outbound.aeat.browser.factory import (
 )
 from ...adapters.outbound.aeat.browser.profile import Profile
 from ...adapters.outbound.aeat.browser.session import BrowserSession, require_browser_ready
+from ...adapters.outbound.llm.client import LLMClient
 from ...adapters.outbound.llm.evidence_draft_text import default_extraction_authority_values
+from ...adapters.outbound.llm.models import LLMRequest
+from ...adapters.outbound.llm.providers.agent import model_run_refusal_verdict
 from ...adapters.outbound.llm.statement_reading import LocalStatementReader
 from ...adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposal
+from ...adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -135,7 +143,6 @@ from ...application.ledger.invoice_draft_extraction_ports import InvoiceDraftRea
 from ...application.ledger.llm_classification_ports import EvidenceImage
 from ...application.ledger.read_access import resolve_ledger_read_access
 from ...application.ledger.statement_reading import statement_reader_factory
-from ...application.local_reader import probe_local_reader
 from ...application.operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ...application.operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ...application.operations.contract_manifest import OperationContractManifestV1
@@ -154,9 +161,10 @@ from ...application.provisioning_contracts import (
     provisioning_no_recovery_verdict,
 )
 from ...core.config import Settings, load_settings, override_settings
+from ...core.config_support import LLMProvider
 from ...core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...core.image_media_type import ImageMediaType
-from ...core.model_catalogue import ModelRole, candidates_for_role, default_model_runtime_id
+from ...core.model_catalogue import ModelRole
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.operator_action_enums import NoRecoveryOutcome
@@ -168,7 +176,6 @@ from ...domain.transactions.llm import PromptSpec
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...tests.llm_vision_evidence_support import png_image
-from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
 from ..adapter_composition import build_ledger_evidence_ports, profile_adapter_composition
 from ..invoice_intake_operation_composition import build_invoice_intake_ports
 from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
@@ -177,11 +184,12 @@ from ..live_state_composition import preflight_filed_history_provider
 from ..operation_composition import _verify_live_preflight
 from .dependency_operation_gating_support import (
     OperationSettler,
+    RecordingRunsAuthority,
     SettledOperation,
+    agent_refusing,
     operation_runtime,
     published_verdicts,
     read_published,
-    runtime_holding_nothing,
     settle_classify_review,
     settle_evidence_batch,
     settle_evidence_confirm,
@@ -578,65 +586,36 @@ def _operation_browser_preflights(modules: Mapping[str, _Module]) -> tuple[froze
 # -- Shared runtime and outcomes -------------------------------------------------
 
 
-def _operator_named_model(role: ModelRole) -> str:
-    """Return a catalogued model for ``role`` other than its default, as an operator would name one.
-
-    A named model is honoured as written, so the rows of the selected roles
-    exercise an operator's setting rather than the catalogue's choice.
-    """
-    return next(
-        candidate.runtime_id
-        for candidate in candidates_for_role(role)
-        if candidate.runtime_id != default_model_runtime_id(role)
-    )
-
-
-_OPERATOR_MAPPING_MODEL = _operator_named_model(ModelRole.COLUMN_ROLE_MAPPING)
-_OPERATOR_SUPPLY_NATURE_MODEL = _operator_named_model(ModelRole.SUPPLY_NATURE_PROPOSAL)
-#: The document readers' models, named as the shipped defaults so no row depends
-#: on this host's settings. The probe judges them against installed memory only,
-#: never against what is free while the gate runs beside other work.
-_VISION_MODEL = default_model_runtime_id(ModelRole.VISION_TRANSCRIPTION)
-_TEXT_MODEL = default_model_runtime_id(ModelRole.TEXT_EXTRACTION)
+#: The lookup refusals every consumer is driven under: one that local AI setup
+#: recovers, and one that only the person's role selection does.
+_GATED_REFUSALS = (ModelRunRefusalCode.MODEL_NOT_INSTALLED, ModelRunRefusalCode.NO_SELECTION)
 
 
 @dataclass(frozen=True)
 class _Runtime:
-    """A local AI runtime that holds no model, and what it was sent."""
+    """An agent service that refuses every lookup, and what it was sent."""
 
     settings: Settings
-    posts: list[str]
+    service: RecordingModelRuns
+
+    @property
+    def posts(self) -> list[str]:
+        """Return the role of every run the service was sent."""
+        return [header.role for header, _body in self.service.runs]
 
 
 @contextmanager
-def _runtime_holding_nothing(tmp_path: Path) -> Generator[_Runtime]:
-    """Serve a real loopback runtime whose inventory is empty and that records every request it is sent."""
-    posts: list[str] = []
-
-    class _EmptyRuntime(SilentLoopbackHandler):
-        @override
-        def do_GET(self) -> None:
-            write_json_response(self, {"models": []}, status=HTTPStatus.OK)
-
-        @override
-        def do_POST(self) -> None:
-            posts.append(self.path)
-            self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR)
-
+def _agent_refusing(tmp_path: Path, code: ModelRunRefusalCode) -> Generator[_Runtime]:
+    """Bind an agent service refusing every lookup with ``code``, with private LLM stores."""
     with (
-        serving_loopback(_EmptyRuntime, path="/api/chat") as chat_url,
+        agent_refusing(code) as service,
         override_settings(
-            cadrumo_llm_ollama_chat_url=chat_url,
-            cadrumo_llm_ollama_vision_model=_VISION_MODEL,
-            cadrumo_llm_ollama_text_model=_TEXT_MODEL,
-            cadrumo_llm_ollama_mapping_model=_OPERATOR_MAPPING_MODEL,
-            cadrumo_llm_ollama_supply_nature_model=_OPERATOR_SUPPLY_NATURE_MODEL,
             cadrumo_llm_cache_dir=tmp_path / "llm-cache",
             cadrumo_llm_usage_dir=tmp_path / "llm-usage",
             cadrumo_llm_run_record_dir=tmp_path / "llm-runs",
         ),
     ):
-        yield _Runtime(settings=load_settings(), posts=posts)
+        yield _Runtime(settings=load_settings(), service=service)
 
 
 def _outcome(run: Callable[[], object]) -> object:
@@ -669,22 +648,36 @@ def _described(outcome: object) -> str:
     return f"{type(outcome).__name__}{where}"
 
 
-def _local_ai_gating_problems(outcome: object, posts: Sequence[str], role: ModelRole) -> list[str]:
-    """Return why an outcome is not a local AI refusal for ``role`` made before any request."""
+def _local_ai_gating_problems(
+    outcome: object, posts: Sequence[str], role: ModelRole, code: ModelRunRefusalCode
+) -> list[str]:
+    """Return why an outcome is not the typed refusal for ``code`` and ``role`` made before any run."""
     problems: list[str] = []
     if posts:
-        problems.append(f"sent {len(posts)} request(s) to the local AI before refusing: {sorted(set(posts))}")
+        problems.append(f"sent {len(posts)} run(s) to the agent before refusing: {sorted(set(posts))}")
     verdict = _verdict_of(outcome)
     if verdict is None:
         problems.append(f"ended in {_described(outcome)} carrying no verdict")
         return problems
-    if verdict.action is None:
-        problems.append(f"verdict {verdict.failed_condition_id} names no setup action")
-    elif verdict.action.action_id != LOCAL_AI_PROVISION_ACTION_ID:
-        problems.append(f"verdict names {verdict.action.action_id}, not {LOCAL_AI_PROVISION_ACTION_ID}")
+    expected = model_run_refusal_verdict(ModelRunRefusal(code=code), role=role)
+    if verdict.failed_condition_id != expected.failed_condition_id:
+        problems.append(f"verdict {verdict.failed_condition_id} is not {expected.failed_condition_id}")
+    expected_action = None if expected.action is None else expected.action.action_id
+    action = None if verdict.action is None else verdict.action.action_id
+    if action != expected_action:
+        problems.append(
+            f"verdict names no setup action, not {expected_action}"
+            if action is None
+            else f"verdict names {action}, not {expected_action}"
+        )
     spoken = sorted({str(evidence.values.get("role")) for evidence in verdict.evidence})
     if role.value not in spoken:
         problems.append(f"verdict speaks for role {spoken}, not {role.value}")
+    expected_facts = expected.evidence[0].values
+    observed_facts = {key: value for evidence in verdict.evidence for key, value in evidence.values.items()}
+    missing = sorted(key for key, value in expected_facts.items() if observed_facts.get(key) != value)
+    if missing:
+        problems.append(f"verdict does not state {missing} as the {code.value} refusal does")
     return problems
 
 
@@ -777,18 +770,18 @@ def _drive_evidence_text_read(runtime: _Runtime) -> object:
     with bundled_indexed_authority().operation() as operation:
         values = default_extraction_authority_values(operation=operation)
         return _extraction_ports().read_text(
-            _transcription("FACTURA 7 Base 10,00 IVA 2,10 Total 12,10"), runtime.settings, None, None, values
+            _transcription("FACTURA 7 Base 10,00 IVA 2,10 Total 12,10"), runtime.settings, None, values
         )
 
 
 def _drive_evidence_vision_read(runtime: _Runtime) -> object:
     image = VisionImage(base64_data=_png_base64(), media_type=ImageMediaType.PNG)
-    return _extraction_ports().transcribe_vision((image,), "b" * 64, runtime.settings, None, None)
+    return _extraction_ports().transcribe_vision((image,), "b" * 64, runtime.settings, None)
 
 
 def _drive_evidence_supply_nature(runtime: _Runtime) -> object:
     return _extraction_ports().propose_supply_nature(
-        _transcription("Licencia anual de software\nSoporte remoto"), runtime.settings
+        _transcription("Licencia anual de software\nSoporte remoto"), runtime.settings, None
     )
 
 
@@ -858,7 +851,7 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
         units=frozenset(
             {
                 f"{_LLM}.text_classifier.LocalTextLLMClassifier",
-                f"{_LLM}.vision_classifier.LocalVisionLLMClassifier",
+                f"{_LLM}.vision_classifier.VisionLLMClassifier",
             }
         ),
         drivers={
@@ -868,22 +861,12 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
         operations=frozenset({"ledger.classify.review", "ledger.split.review"}),
     ),
     "cadrumo.entrypoints.ledger_evidence_extraction_composition._invoice_read_text": _LocalAiConsumer(
-        units=frozenset(
-            {
-                f"{_LLM}.evidence_draft_text.TextInvoiceFieldExtractor",
-                f"{_LLM}.evidence_draft_text.extract_invoice_fields_from_text",
-            }
-        ),
+        units=frozenset({f"{_LLM}.evidence_draft_text.TextInvoiceFieldExtractor"}),
         drivers={ModelRole.TEXT_EXTRACTION: _drive_evidence_text_read},
         operations=frozenset({"ledger.evidence.extract", "ledger.evidence.confirm", "ledger.evidence.batch"}),
     ),
     "cadrumo.entrypoints.ledger_evidence_extraction_composition._invoice_transcribe_vision": _LocalAiConsumer(
-        units=frozenset(
-            {
-                f"{_LLM}.evidence_draft_vision.LocalVisionDocumentTranscriber",
-                f"{_LLM}.evidence_draft_vision.transcribe_document_images",
-            }
-        ),
+        units=frozenset({f"{_LLM}.evidence_draft_vision.VisionDocumentTranscriber"}),
         drivers={ModelRole.VISION_TRANSCRIPTION: _drive_evidence_vision_read},
         operations=frozenset({"ledger.evidence.extract", "ledger.evidence.confirm", "ledger.evidence.batch"}),
     ),
@@ -907,7 +890,7 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
         operations=frozenset({"ledger.import"}),
     ),
     f"{_LLM}.statement_reading.LocalStatementReader": _LocalAiConsumer(
-        units=frozenset({f"{_LLM}.evidence_draft_vision.LocalVisionDocumentTranscriber"}),
+        units=frozenset({f"{_LLM}.evidence_draft_vision.VisionDocumentTranscriber"}),
         drivers={ModelRole.VISION_TRANSCRIPTION: _drive_statement_scanned_page},
         operations=frozenset({"ledger.import"}),
     ),
@@ -1013,7 +996,9 @@ def _operation_coverage_problems(
     return problems
 
 
-def _operation_problems(settled: SettledOperation, posts: Sequence[str], role: ModelRole) -> list[str]:
+def _operation_problems(
+    settled: SettledOperation, posts: Sequence[str], role: ModelRole, code: ModelRunRefusalCode
+) -> list[str]:
     """Return why a settled operation does not let another process route its person to the local AI setup."""
     what = f"{settled.definition_id} settled {settled.condition.value}"
     if settled.published is None:
@@ -1021,7 +1006,7 @@ def _operation_problems(settled: SettledOperation, posts: Sequence[str], role: M
     verdicts = published_verdicts(settled.published)
     if not verdicts:
         return [f"{what} and its published {type(settled.published).__name__} carries no verdict"]
-    attempts = [_local_ai_gating_problems(verdict, posts, role) for verdict in verdicts]
+    attempts = [_local_ai_gating_problems(verdict, posts, role, code) for verdict in verdicts]
     return [] if any(not attempt for attempt in attempts) else [f"{what}: {problem}" for problem in attempts[0]]
 
 
@@ -1114,22 +1099,23 @@ def test_every_local_ai_consumer_has_a_gated_row(production: dict[str, _Module])
 
 
 _LOCAL_AI_DRIVES = [
-    pytest.param(role, driver, id=f"{site.rsplit('.', 1)[-1]}-{role.value}")
+    pytest.param(role, driver, code, id=f"{site.rsplit('.', 1)[-1]}-{role.value}-{code.value}")
     for site, consumer in _LOCAL_AI_CONSUMERS.items()
     for role, driver in consumer.drivers.items()
+    for code in _GATED_REFUSALS
 ]
 
 
-@pytest.mark.parametrize(("role", "driver"), _LOCAL_AI_DRIVES)
-def test_a_local_ai_consumer_refuses_with_its_setup_before_any_request(
-    tmp_path: Path, role: ModelRole, driver: _Driver
+@pytest.mark.parametrize(("role", "driver", "code"), _LOCAL_AI_DRIVES)
+def test_a_local_ai_consumer_refuses_typed_before_any_run(
+    tmp_path: Path, role: ModelRole, driver: _Driver, code: ModelRunRefusalCode
 ) -> None:
     with (
         isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_BUCKET_ID),
-        _runtime_holding_nothing(tmp_path) as runtime,
+        _agent_refusing(tmp_path, code) as runtime,
     ):
         outcome = _outcome(lambda: driver(runtime))
-        problems = _local_ai_gating_problems(outcome, runtime.posts, role)
+        problems = _local_ai_gating_problems(outcome, runtime.posts, role, code)
 
     assert not problems, "\n".join(problems)
 
@@ -1143,20 +1129,25 @@ def test_every_operation_that_wraps_a_consumer_has_an_operation_row() -> None:
 
 
 _OPERATION_DRIVES = [
-    pytest.param(definition_id, drive, id=f"{definition_id}-{drive.role.value}")
+    pytest.param(definition_id, drive, code, id=f"{definition_id}-{drive.role.value}-{code.value}")
     for definition_id, drives in _OPERATION_ROWS.items()
     for drive in drives
+    for code in _GATED_REFUSALS
 ]
 
 
-@pytest.mark.parametrize(("definition_id", "drive"), _OPERATION_DRIVES)
-def test_an_operation_that_wraps_a_consumer_settles_with_its_setup_verdict_readable(
-    tmp_path: Path, operation: PinnedAuthorityOperation, definition_id: str, drive: _OperationDrive
+@pytest.mark.parametrize(("definition_id", "drive", "code"), _OPERATION_DRIVES)
+def test_an_operation_that_wraps_a_consumer_settles_with_its_refusal_verdict_readable(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    definition_id: str,
+    drive: _OperationDrive,
+    code: ModelRunRefusalCode,
 ) -> None:
     del operation
-    with operation_runtime(tmp_path) as runtime:
+    with operation_runtime(tmp_path, code) as runtime:
         settled = drive.settle(runtime)
-        problems = _operation_problems(settled, runtime.posts, drive.role)
+        problems = _operation_problems(settled, runtime.posts, drive.role, code)
 
     assert settled.definition_id == definition_id
     assert not problems, "\n".join(problems)
@@ -1318,35 +1309,47 @@ def test_discovery_reports_an_exemption_that_no_longer_dispatches(tmp_path: Path
 
 
 def test_a_consumer_that_skips_the_check_or_names_no_action_is_reported(tmp_path: Path) -> None:
-    with _runtime_holding_nothing(tmp_path) as runtime:
-        chat_url = runtime.settings.cadrumo_llm_ollama_chat_url
+    code = ModelRunRefusalCode.MODEL_NOT_INSTALLED
+    with _agent_refusing(tmp_path, code) as runtime:
+        client = LLMClient(settings=runtime.settings)
+        request = LLMRequest(
+            prompt="Read this.", provider_override=LLMProvider.AGENT, model_role=ModelRole.TEXT_EXTRACTION
+        )
 
         def skips_the_check() -> object:
-            return httpx.post(chat_url, json={"model": "any", "messages": []}, timeout=5.0)
+            # A consumer that runs without asking the service for its lane first.
+            header = ModelRunHeader(role=ModelRole.TEXT_EXTRACTION.value, deadline_seconds=30)
+            return asyncio.run(runtime.service.run(header, ModelRunBody(prompt="Read this.", max_output_tokens=16)))
 
         def names_no_action() -> object:
             raise InvoiceDraftReaderUnavailableError(
                 RuntimeError("reader"),
                 precondition_verdict=provisioning_no_recovery_verdict(
-                    ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
-                    facts={"role": ModelRole.TEXT_EXTRACTION.value, "role_model_selected": False},
+                    ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+                    facts={"role": ModelRole.TEXT_EXTRACTION.value, "role_model_installed": False},
                 ),
             )
 
-        skipped = _local_ai_gating_problems(_outcome(skips_the_check), runtime.posts, ModelRole.TEXT_EXTRACTION)
-        runtime.posts.clear()
-        actionless = _local_ai_gating_problems(_outcome(names_no_action), runtime.posts, ModelRole.TEXT_EXTRACTION)
-        text_verdict = probe_local_reader(ModelRole.TEXT_EXTRACTION, runtime.settings).precondition_verdict
-        wrong_role = _local_ai_gating_problems(text_verdict, runtime.posts, ModelRole.VISION_TRANSCRIPTION)
-        correct = _local_ai_gating_problems(text_verdict, runtime.posts, ModelRole.TEXT_EXTRACTION)
+        skipped = _local_ai_gating_problems(_outcome(skips_the_check), runtime.posts, ModelRole.TEXT_EXTRACTION, code)
+        runtime.service.runs.clear()
+        actionless = _local_ai_gating_problems(
+            _outcome(names_no_action), runtime.posts, ModelRole.TEXT_EXTRACTION, code
+        )
+        refused = _outcome(lambda: asyncio.run(client.complete(request)))
+        wrong_role = _local_ai_gating_problems(refused, runtime.posts, ModelRole.VISION_TRANSCRIPTION, code)
+        wrong_code = _local_ai_gating_problems(
+            refused, runtime.posts, ModelRole.TEXT_EXTRACTION, ModelRunRefusalCode.NO_SELECTION
+        )
+        correct = _local_ai_gating_problems(refused, runtime.posts, ModelRole.TEXT_EXTRACTION, code)
 
-    assert any(problem.startswith("sent 1 request(s) to the local AI") for problem in skipped), skipped
+    assert any(problem.startswith("sent 1 run(s) to the agent") for problem in skipped), skipped
     assert any("carrying no verdict" in problem for problem in skipped), skipped
-    assert actionless == [
-        f"verdict {ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE.value} names no setup action"
-    ]
-    assert wrong_role == ["verdict speaks for role ['text_extraction'], not vision_transcription"]
-    assert correct == [], "the real probe's refusal is what a gated consumer returns"
+    assert any(f"names no setup action, not {LOCAL_AI_PROVISION_ACTION_ID}" in problem for problem in actionless), (
+        actionless
+    )
+    assert any(p == "verdict speaks for role ['text_extraction'], not vision_transcription" for p in wrong_role)
+    assert any(f"names {LOCAL_AI_PROVISION_ACTION_ID}, not None" in problem for problem in wrong_code), wrong_code
+    assert correct == [], "the real client's refusal is what a gated consumer returns"
 
 
 _FIXTURE_SESSION = """
@@ -1496,7 +1499,7 @@ class _FixtureReadResult(BaseModel):
 
 
 def _read_one_statement_page() -> None:
-    """Ask the real statement reader for one page; with no model it refuses with the setup verdict."""
+    """Ask the real statement reader for one page; with the model not installed it refuses with the setup verdict."""
     LocalStatementReader().propose_page(_transcription("05.03.2026 Cafeteria -4,50 EUR"))
 
 
@@ -1546,10 +1549,9 @@ def _settle_fixture_read(tmp_path: Path, *, swallow: bool, publish: bool) -> tup
         definition=definition, public_result_type=_FixtureReadResult, access_resolver=_fixture_access
     )
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-    posts: list[str] = []
     with (
         isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_BUCKET_ID) as profile,
-        runtime_holding_nothing(posts),
+        agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as agent,
         bundled_indexed_authority().operation() as operation,
     ):
         journal, leases, operands = operation_repositories(
@@ -1569,6 +1571,7 @@ def _settle_fixture_read(tmp_path: Path, *, swallow: bool, publish: bool) -> tup
             execution_timeout=timedelta(minutes=2),
             cleanup_timeout=timedelta(minutes=1),
             response_token_factory=lambda: "3" * 64,
+            execution_authority=RecordingRunsAuthority(agent),
         )
         service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
@@ -1595,7 +1598,7 @@ def _settle_fixture_read(tmp_path: Path, *, swallow: bool, publish: bool) -> tup
             )
 
         settled = asyncio.run(settle())
-    return settled, posts
+    return settled, [header.role for header, _body in agent.runs]
 
 
 def test_an_operation_that_swallows_or_withholds_a_consumer_refusal_is_reported(tmp_path: Path) -> None:
@@ -1603,15 +1606,17 @@ def test_an_operation_that_swallows_or_withholds_a_consumer_refusal_is_reported(
     withheld, withheld_posts = _settle_fixture_read(tmp_path / "withheld", swallow=False, publish=False)
     published, published_posts = _settle_fixture_read(tmp_path / "published", swallow=False, publish=True)
 
-    assert _operation_problems(swallowed, swallowed_posts, ModelRole.TEXT_EXTRACTION) == [
+    code = ModelRunRefusalCode.MODEL_NOT_INSTALLED
+    assert _operation_problems(swallowed, swallowed_posts, ModelRole.TEXT_EXTRACTION, code) == [
         "ledger.fixture-read settled succeeded and its published _FixtureReadResult carries no verdict"
     ]
-    assert _operation_problems(withheld, withheld_posts, ModelRole.TEXT_EXTRACTION) == [
+    assert _operation_problems(withheld, withheld_posts, ModelRole.TEXT_EXTRACTION, code) == [
         "ledger.fixture-read settled refused with no detail or result a client in another process can read"
     ]
-    assert _operation_problems(published, published_posts, ModelRole.TEXT_EXTRACTION) == [], (
+    assert _operation_problems(published, published_posts, ModelRole.TEXT_EXTRACTION, code) == [], (
         "an operation that lets the real consumer's refusal stop it, and publishes it, is what a gated row settles as"
     )
-    assert _operation_problems(published, published_posts, ModelRole.VISION_TRANSCRIPTION) == [
+    assert (
         "ledger.fixture-read settled refused: verdict speaks for role ['text_extraction'], not vision_transcription"
-    ]
+        in _operation_problems(published, published_posts, ModelRole.VISION_TRANSCRIPTION, code)
+    )

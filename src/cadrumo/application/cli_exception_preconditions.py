@@ -99,7 +99,9 @@ def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVe
     follows only exception-bearing structural links: Pydantic contexts and
     Python causal chains.  Exactly one registered exception carrying a valid
     terminal verdict is admitted; zero or multiple candidates fail closed to
-    the generic validation outcome.
+    the generic validation outcome. A wrapper that carries the very verdict of
+    the error it wraps is one candidate, not two: the verdicts are equal, so
+    the outcome is not ambiguous.
     """
     pending: list[BaseException] = [error]
     seen: set[int] = set()
@@ -116,9 +118,10 @@ def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVe
             candidates[identity] = verdict
         pending.extend(_nested_exception_links(current))
 
-    if len(candidates) != 1:
+    distinct = {verdict.model_dump_json(): verdict for verdict in candidates.values()}
+    if len(distinct) != 1:
         return None
-    return next(iter(candidates.values()))
+    return next(iter(distinct.values()))
 
 
 def cli_exception_envelope_view(error: CadrumoError) -> CadrumoError:

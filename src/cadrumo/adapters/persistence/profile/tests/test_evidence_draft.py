@@ -51,17 +51,17 @@ from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition
 from cadrumo.core.config import Settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.document_shape import DocumentShape
-from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.tests.llm_vision_evidence_support import json_array, run_against_loopback_ollama
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
+from .....core.model_catalogue import ModelRole
 from .....domain.iva.schema import InvoiceKind
+from ....outbound.llm.tests.model_run_support import IMAGE_LANE, serving_agent
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     InvoiceAuthorityFixture,
@@ -303,15 +303,15 @@ def _png_bytes() -> bytes:
 
 
 class TestExtractInvoiceDraftFromEvidenceVisionFallback:
-    """Real-behaviour tests: a scan-only PDF / image falls back to on-host vision.
+    """Real-behaviour tests: a scan-only PDF / image falls back to the vision role.
 
     ``transcribe_text_layer`` (the acquisition-stage primitive) still refuses on a
     scan-only PDF or an image (see ``test_image_evidence_has_no_text_layer_and_refuses``
     above); this class covers the wiring layer
-    (``extract_invoice_draft_from_evidence``) that catches that refusal and falls
-    back to the on-host local-vision reader -- driven against a real loopback
-    Ollama HTTP server, never a mock. No file is written and no byte leaves the
-    host at any point in the fallback.
+    (``extract_invoice_draft_from_evidence``) that catches that refusal, rasterises
+    on this computer and sends the pages to the vision role through the agent
+    path, answered by a recording stand-in for the agent service. The lane is
+    declared on-host, so no consent is asked, and no file is written.
     """
 
     _invoice_authority: InvoiceAuthorityFixture
@@ -360,10 +360,8 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         assert record.media_kind is MediaKind.PDF
 
-        def _call() -> InvoiceDraft:
-            return self._extract(evidence_id=record.evidence_id, settings=isolated_settings)
-
-        observed, draft = run_against_loopback_ollama(self._extraction_json(), _call)
+        with serving_agent(replies=(self._extraction_json(),), lane=IMAGE_LANE) as service:
+            draft = self._extract(evidence_id=record.evidence_id, settings=isolated_settings)
 
         assert draft.supplier_tax_id == _SUPPLIER_CIF
         assert draft.invoice_number == "2026-0142"
@@ -373,11 +371,11 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
         assert draft.iva_amount == Decimal("21.00")
         assert draft.grand_total == Decimal("121.00")
 
-        # The request genuinely carried a rasterised image, not inlined text.
-        body = STR_KEYED_MAPPING_ADAPTER.validate_python(observed["body"])
-        messages = json_array(body["messages"])
-        user_message = STR_KEYED_MAPPING_ADAPTER.validate_python(messages[-1])
-        assert user_message.get("images")
+        # The vision run genuinely carried rasterised page images, not inlined text.
+        vision_runs = [body for header, body in service.runs if header.role == ModelRole.VISION_TRANSCRIPTION.value]
+        assert len(vision_runs) == 1
+        assert vision_runs[0].attachments
+        assert all(item.media_type == "image/png" for item in vision_runs[0].attachments)
 
     def test_image_attachment_falls_back_to_vision_and_grounds_fields(
         self,
@@ -391,10 +389,8 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
         record = svc.add(bucket_id=_BUCKET_ID, source_path=image_path).record
         assert record.media_kind is MediaKind.IMAGE
 
-        def _call() -> InvoiceDraft:
-            return self._extract(attachment_id=record.attachment_id, settings=isolated_settings)
-
-        _observed, draft = run_against_loopback_ollama(self._extraction_json(), _call)
+        with serving_agent(replies=(self._extraction_json(),), lane=IMAGE_LANE):
+            draft = self._extract(attachment_id=record.attachment_id, settings=isolated_settings)
         assert draft.taxable_base == Decimal("100.00")
         assert draft.grand_total == Decimal("121.00")
 
@@ -412,10 +408,8 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
 
         empty_dir = tmp_path_factory.mktemp("no-write-expected-vision-fallback")
 
-        def _call() -> InvoiceDraft:
-            return self._extract(evidence_id=record.evidence_id, settings=isolated_settings)
-
-        run_against_loopback_ollama(self._extraction_json(), _call)
+        with serving_agent(replies=(self._extraction_json(),), lane=IMAGE_LANE):
+            self._extract(evidence_id=record.evidence_id, settings=isolated_settings)
         assert scan_directory(empty_dir) == ()
 
     def test_llm_vision_disabled_refuses_instructively_not_silently(

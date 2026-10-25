@@ -167,7 +167,6 @@ def _extract_invoice_evidence_projection(
         evidence_id=payload.evidence_id,
         attachment_id=payload.attachment_id,
         settings=ports.settings,
-        off_host_provider=payload.off_host_provider,
         consent_token=consent_token,
         ports=ports.extraction_ports,
         operation=context.authority_operation,

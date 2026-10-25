@@ -60,12 +60,11 @@ _MARKER = "SURFACE_OUTCOMES:"
 # guard is not represented here.
 _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
     ("rasterise_pdf_pages_to_base64_png", "rasterise_pdf_pages_to_base64_png(b'%PDF-1.4\\n')"),
-    ("transcribe_document_images", "transcribe_document_images(_PAGES, source_content_sha256='0' * 64)"),
     ("extract_invoice_fields_from_text", "extract_invoice_fields_from_text(_TRANSCRIPTION, operation=_OPERATION)"),
-    ("LocalVisionDocumentTranscriber", "LocalVisionDocumentTranscriber()"),
+    ("VisionDocumentTranscriber", "VisionDocumentTranscriber()"),
     ("TextInvoiceFieldExtractor", "TextInvoiceFieldExtractor(operation=_OPERATION)"),
     ("LocalTextLLMClassifier", "LocalTextLLMClassifier(spec=None)"),
-    ("LocalVisionLLMClassifier", "LocalVisionLLMClassifier(spec=None)"),
+    ("VisionLLMClassifier", "VisionLLMClassifier(spec=None)"),
     ("SemanticColumnRoleMapper", "SemanticColumnRoleMapper()"),
     ("SupplyNatureProposer", "SupplyNatureProposer()"),
 )
@@ -73,13 +72,12 @@ _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
 
 #: Defining module for each guarded surface exercised by the installed probe.
 _DEFINING_MODULES: dict[str, str] = {
-    "rasterise_pdf_pages_to_base64_png": "cadrumo.adapters.outbound.llm.providers.local",
-    "transcribe_document_images": "cadrumo.adapters.outbound.llm.evidence_draft_vision",
+    "rasterise_pdf_pages_to_base64_png": "cadrumo.adapters.outbound.llm.pdf_rasterisation",
     "extract_invoice_fields_from_text": "cadrumo.adapters.outbound.llm.evidence_draft_text",
-    "LocalVisionDocumentTranscriber": "cadrumo.adapters.outbound.llm.evidence_draft_vision",
+    "VisionDocumentTranscriber": "cadrumo.adapters.outbound.llm.evidence_draft_vision",
     "TextInvoiceFieldExtractor": "cadrumo.adapters.outbound.llm.evidence_draft_text",
     "LocalTextLLMClassifier": "cadrumo.adapters.outbound.llm.text_classifier",
-    "LocalVisionLLMClassifier": "cadrumo.adapters.outbound.llm.vision_classifier",
+    "VisionLLMClassifier": "cadrumo.adapters.outbound.llm.vision_classifier",
     "SemanticColumnRoleMapper": "cadrumo.adapters.outbound.llm.column_role_mapping",
     "SupplyNatureProposer": "cadrumo.adapters.outbound.llm.supply_nature_proposal",
     "MultimodalImageInput": "cadrumo.adapters.outbound.llm.models",
@@ -165,7 +163,6 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
         import cadrumo
         from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
         from cadrumo.core.field_origin import FieldOrigin
-        from cadrumo.core.image_media_type import ImageMediaType
         from cadrumo.core.optional_extras import (
             LLM_EXTRA,
             MissingOptionalExtraError,
@@ -179,7 +176,6 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
         # installed cohort's own bundled authority supplies it.
         _AUTHORITY_LEASE = ExitStack()
         _OPERATION = _AUTHORITY_LEASE.enter_context(bundled_indexed_authority().operation())
-        _PAGES = (MultimodalImageInput.from_base64("aGk=", ImageMediaType.PNG),)
         _TRANSCRIPTION = DocumentTranscription(
             text="factura",
             page_count=1,

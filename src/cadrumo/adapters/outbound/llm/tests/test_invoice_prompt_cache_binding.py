@@ -39,7 +39,7 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.transactions.lineage_models import DecisionProvenance
 from ....persistence.llm.cache import LLMCache
 from ..evidence_draft_text import TextInvoiceFieldExtractor
-from ..evidence_draft_vision import LocalVisionDocumentTranscriber
+from ..evidence_draft_vision import VisionDocumentTranscriber
 from ..models import LLMRequest
 from .prompt_support import build_invoice_extraction_prompt
 
@@ -140,14 +140,10 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         operation: PinnedAuthorityOperation,
         annual_2026_values: InvoiceExtractionAuthorityValues,
     ) -> None:
-        extractor = TextInvoiceFieldExtractor(
-            model="some-text-model",
-            operation=operation,
-            authority_values=annual_2026_values,
-        )
+        extractor = TextInvoiceFieldExtractor(operation=operation, authority_values=annual_2026_values)
         compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
 
-        assert extractor.decided_by == f"llm:local-text-extract:some-text-model:rates-{compiled.rate_provenance}"
+        assert extractor.decided_by == f"llm:agent-text-extract:configured:rates-{compiled.rate_provenance}"
         assert "2026-0A" in extractor.decided_by
 
     def test_a_different_rate_period_produces_a_different_stamp(
@@ -158,28 +154,21 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         q4_2024_values: InvoiceExtractionAuthorityValues,
     ) -> None:
         """The discriminating control: the stamp moves when the rates move."""
-        annual = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=annual_2026_values)
-        q4 = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=q4_2024_values)
+        annual = TextInvoiceFieldExtractor(operation=operation, authority_values=annual_2026_values)
+        q4 = TextInvoiceFieldExtractor(operation=operation, authority_values=q4_2024_values)
 
         assert annual.decided_by != q4.decided_by
 
-    def test_the_transport_half_is_still_derived_from_the_provider(
+    def test_the_transport_half_names_the_agent(
         self,
         *,
         operation: PinnedAuthorityOperation,
         annual_2026_values: InvoiceExtractionAuthorityValues,
     ) -> None:
-        """The pre-existing property survives the extension."""
-        local = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=annual_2026_values)
-        cloud = TextInvoiceFieldExtractor(
-            model="m",
-            provider=LLMProvider.AGENT,
-            operation=operation,
-            authority_values=annual_2026_values,
-        )
+        """The pre-existing property survives the extension: the stamp names the transport the read uses."""
+        extractor = TextInvoiceFieldExtractor(operation=operation, authority_values=annual_2026_values)
 
-        assert local.decided_by.startswith("llm:local-text-extract:")
-        assert not cloud.decided_by.startswith("llm:local-text-extract:")
+        assert extractor.decided_by.startswith("llm:agent-text-extract:")
 
     def test_the_extended_stamp_still_persists_as_a_decision_provenance(
         self,
@@ -193,12 +182,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         the shape rule here: a longer stamp that the record refuses is a broken
         stamp, and the record is the authority on that.
         """
-        extractor = TextInvoiceFieldExtractor(
-            model="claude-haiku-4-5-20251001",
-            provider=LLMProvider.AGENT,
-            operation=operation,
-            authority_values=annual_2026_values,
-        )
+        extractor = TextInvoiceFieldExtractor(operation=operation, authority_values=annual_2026_values)
 
         provenance = DecisionProvenance(decided_by=extractor.decided_by, decided_at=now())
 
@@ -212,19 +196,18 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         withdrawal must be able to enumerate. A model identifier alone names the
         vendor only to a reader who already knows the catalogue.
         """
-        local = LocalVisionDocumentTranscriber(model="qwen2.5vl:3b").transcriber_identity
-        cloud = LocalVisionDocumentTranscriber(provider=LLMProvider.AGENT).transcriber_identity
+        transcriber = VisionDocumentTranscriber()
+        nearby = transcriber.transcriber_identity("nearby/api/synthetic-vision:1")
+        faraway = transcriber.transcriber_identity("faraway/api/synthetic-vision:1")
 
-        # The transport rides its own field now. It began folded into ``name``,
+        # The transport rides its own field. It began folded into ``name``,
         # which is contracted to say WHICH reader produced the text and not to
         # carry a coarse label -- so asserting it there was asserting the
         # contract violation rather than the property.
-        assert local.transport == "local"
-        assert cloud.transport == "agent"
-        assert local.transport != cloud.transport
-        assert local.name == "qwen2.5vl:3b", "the name is the reader, with nothing else folded in"
-        assert local.revision.startswith("prompt-v")
-        assert "rates-" not in local.name, "stage one compiles no rates, so it must claim none"
-        # The complete typed identity keeps the trust contexts distinct without
+        assert nearby.transport == "agent"
+        assert nearby.name == "nearby/api/synthetic-vision:1", "the name is the served lane and model, nothing else"
+        assert nearby.revision.startswith("prompt-v")
+        assert "rates-" not in nearby.name, "stage one compiles no rates, so it must claim none"
+        # The complete typed identity keeps two lanes distinct without
         # maintaining a second derived cache-key surface.
-        assert local != cloud
+        assert nearby != faraway

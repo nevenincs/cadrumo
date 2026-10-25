@@ -20,6 +20,8 @@ from typing import ClassVar, NamedTuple, TypedDict, override
 import httpx
 import pytest
 
+from cadrumo_client.contracts.model_runs import ModelRunBody
+
 from .....application.invoices.catalogue_creation_ports import CatalogueCreationPorts
 from .....application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .....application.ledger.document_transcription import DocumentTranscription
@@ -53,7 +55,6 @@ from .....application.ledger.invoice_draft_records import InvoiceDraft
 from .....application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
 from .....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from .....core.config import Settings, override_settings
-from .....core.config_support import LLMProvider
 from .....core.operator_action_enums import ActionEvidenceProvenance
 from .....core.optional_extras import MissingOptionalExtraError
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -75,15 +76,16 @@ from ....inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from ....outbound.llm.consent import EvidenceConsentToken
 from ....outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
 from ....outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
-from ....outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscriber
+from ....outbound.llm.evidence_draft_vision import VisionDocumentTranscriber
 from ....outbound.llm.models import MultimodalImageInput
+from ....outbound.llm.pdf_rasterisation import rasterise_pdf_pages_to_base64_png
 from ....outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
-from ....outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ....outbound.llm.tests.load_headroom_support import (
     extract_invoice_text_under_admitted_load,
     propose_supply_nature_under_admitted_load,
     transcribe_document_images_under_admitted_load,
 )
+from ....outbound.llm.tests.model_run_support import IMAGE_LANE, serving_agent
 from ...storage.attachment import AttachmentStore
 from ...storage.runtime_repository import secure_object_repository_for_bucket
 from ...storage.sql.secure_objects import SecureObjectRepository
@@ -202,14 +204,13 @@ def _invoice_draft_extraction_ports(
     def read_text(
         transcription: DocumentTranscription,
         settings: Settings,
-        provider: LLMProvider | None,
         consent_token: EvidenceConsentProof | None,
         authority_values: object,
     ) -> InvoiceDraft:
         try:
             if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
                 raise TypeError("invoice text extraction requires resolved authority values")
-            if provider is None:
+            if consent_token is None:
                 return extract_invoice_text_under_admitted_load(
                     transcription,
                     settings=settings,
@@ -217,18 +218,18 @@ def _invoice_draft_extraction_ports(
                     operation=operation,
                 )
             return TextInvoiceFieldExtractor(
-                provider=provider,
                 settings=settings,
                 authority_values=authority_values,
                 operation=operation,
-                consent_token=(None if consent_token is None else _require_evidence_consent_token(consent_token)),
+                consent_token=_require_evidence_consent_token(consent_token),
             ).extract(transcription=transcription)
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
 
     def propose_supply_nature(
-        transcription: DocumentTranscription, settings: Settings
+        transcription: DocumentTranscription, settings: Settings, consent_token: EvidenceConsentProof | None
     ) -> SupplyNatureProposalResult | None:
+        del consent_token
         try:
             return propose_supply_nature_under_admitted_load(transcription.text.splitlines(), settings=settings)
         except Exception:
@@ -244,19 +245,17 @@ def _invoice_draft_extraction_ports(
         images: tuple[VisionImage, ...],
         source_content_sha256: str,
         settings: Settings,
-        provider: LLMProvider | None,
         consent_token: EvidenceConsentProof | None,
     ) -> DocumentTranscription:
         try:
             inputs = tuple(MultimodalImageInput.from_base64(image.base64_data, image.media_type) for image in images)
-            if provider is None:
+            if consent_token is None:
                 return transcribe_document_images_under_admitted_load(
                     inputs, source_content_sha256=source_content_sha256, settings=settings
                 )
-            return LocalVisionDocumentTranscriber(
-                provider=provider,
+            return VisionDocumentTranscriber(
                 settings=settings,
-                consent_token=(None if consent_token is None else _require_evidence_consent_token(consent_token)),
+                consent_token=_require_evidence_consent_token(consent_token),
             ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
@@ -443,11 +442,12 @@ class _LoopbackRequestHandler(SilentLoopbackHandler):
             status=HTTPStatus.OK,
         )
 
-    def _fields_for(self, prompt: str) -> Mapping[str, str]:
-        for marker, fields in self.replies:
+    @classmethod
+    def fields_for(cls, prompt: str) -> Mapping[str, str]:
+        for marker, fields in cls.replies:
             if marker in prompt:
                 return fields
-        return self.fallback
+        return cls.fallback
 
     @override
     def do_POST(self) -> None:
@@ -455,7 +455,7 @@ class _LoopbackRequestHandler(SilentLoopbackHandler):
         write_json_response(
             self,
             ollama_chat_reply(
-                json.dumps(dict(self._fields_for(prompt))),
+                json.dumps(dict(self.fields_for(prompt))),
                 model=READING_RUNTIME_MODEL,
                 prompt_eval_count=100,
                 eval_count=50,
@@ -485,9 +485,16 @@ def serving_a_loopback_reader(
         )
         if model is not None
     )
+
+    def answer(body: ModelRunBody) -> str:
+        return json.dumps(dict(_LoopbackRequestHandler.fields_for(json.dumps([body.system, body.prompt]))))
+
+    # A reader that goes through the agent service is answered by the same
+    # replies, matched on the run body, as one that still reads the endpoint.
     with (
         serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url,
         override_settings(cadrumo_llm_ollama_chat_url=chat_url),
+        serving_agent(lane=IMAGE_LANE, answer=answer),
     ):
         yield chat_url
 

@@ -1,4 +1,4 @@
-"""Stage two reads the stage-one artefact, on-host, under the role-named model.
+"""Stage two reads the stage-one artefact, through the agent, for the text extraction role.
 
 The enrolment gate for the semantic extraction surface. It is deliberately about
 the WIRING rather than about reading quality: accuracy is owned by the measured
@@ -14,41 +14,41 @@ Four properties, each of which has failed somewhere in this repository before:
   defensible while a text layer was the only thing that could reach this reader;
   now that a vision transcription can, it would launder a rasterised read into
   an exact-looking one.
-* The provider is pinned LOCAL at the call site rather than inherited, because
-  the shipped default is a cloud vendor.
-* The model comes from the role-named text-extraction setting, not the vision
-  one -- the two roles are sized independently and must stay independently
-  resolvable, since the text roles have to be satisfiable on a machine that can
-  host no vision model at all.
+* The read names the text extraction role and no model, so the agent service
+  runs it on the lane and model the person selected for that role.
+* A taxpayer's document is marked as evidence unless the caller names the
+  public corpus, so a lane that reads off the host refuses it without consent.
 
-No model runs here. The transport is asserted through an injected client,
-because running local inference has crashed this development host.
+No model runs here. The real client dispatches to a recording stand-in for the
+agent service, so what was sent, and for which role, is observed at the
+model-run port.
 """
 
 from __future__ import annotations
 
 import json
-from decimal import Decimal
-from typing import TYPE_CHECKING, override
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from .....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from .....core.config import load_settings
-from .....core.config_support import LLMProvider
 from .....core.field_origin import FieldOrigin
+from .....core.model_catalogue import ModelRole
 from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from .....core.time.clock import now
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....tests.fixtures.settings import EnvFileFreeSettings
+from ....persistence.llm.cache import LLMCache
+from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
+from ..errors import LLMConsentError
 from ..evidence_draft_text import TextInvoiceFieldExtractor
-from ..models import LLMResponse
+from .model_run_support import DEFAULT_LANE, ON_HOST_LANE, RecordingModelRuns, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 if TYPE_CHECKING:
     from .....application.ledger.invoice_draft_records import InvoiceDraft
-    from ..models import LLMRequest
 
 _REPLY = json.dumps(
     {
@@ -61,34 +61,6 @@ _REPLY = json.dumps(
 )
 
 
-class _CapturingClient(LLMClient):
-    """Captures the request the reader builds. No transport, no inference.
-
-    Subclasses the client the reader's ``client`` parameter declares, so it is
-    substitutable for the real one rather than merely shaped like it -- the
-    same form the sibling reader tests use.
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.requests: list[LLMRequest] = []
-
-    @override
-    async def complete(self, request: LLMRequest) -> LLMResponse:
-        self.requests.append(request)
-        return LLMResponse(
-            text=_REPLY,
-            provider=LLMProvider.LOCAL,
-            model="stub",
-            input_tokens=0,
-            output_tokens=0,
-            cost_estimate_usd=Decimal("0"),
-            cache_hit=False,
-            created_at=now(),
-            request_id="wiring",
-        )
-
-
 def _transcription(origin: FieldOrigin, *, name: str = "pdfplumber") -> DocumentTranscription:
     return DocumentTranscription(
         text="FACTURA\nProveedor: EJEMPLO SL B12345674\nBase imponible 100,00 EUR",
@@ -98,28 +70,45 @@ def _transcription(origin: FieldOrigin, *, name: str = "pdfplumber") -> Document
     )
 
 
-def _extract(
-    transcription: DocumentTranscription, *, operation: PinnedAuthorityOperation
-) -> tuple[_CapturingClient, InvoiceDraft]:
-    client = _CapturingClient()
-    extractor = TextInvoiceFieldExtractor(
-        model="stub-text", client=client, operation=operation, settings=load_settings()
+def _extractor(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation, public_corpus: bool = False
+) -> TextInvoiceFieldExtractor:
+    settings = EnvFileFreeSettings(
+        cadrumo_llm_cache_dir=tmp_path / "cache",
+        cadrumo_llm_usage_dir=tmp_path / "usage",
+        cadrumo_llm_run_record_dir=tmp_path / "run-record",
     )
-    return client, extractor.extract(transcription=transcription)
+    client = LLMClient(
+        settings=settings,
+        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
+        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
+    )
+    return TextInvoiceFieldExtractor(client=client, operation=operation, settings=settings, public_corpus=public_corpus)
 
 
-def test_the_stage_takes_the_transcription_artefact_and_reads_its_text(*, operation: PinnedAuthorityOperation) -> None:
+def _extract(
+    transcription: DocumentTranscription, tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> tuple[RecordingModelRuns, InvoiceDraft]:
+    extractor = _extractor(tmp_path, operation=operation)
+    with serving_agent(replies=(_REPLY,), lane=ON_HOST_LANE) as service:
+        draft = extractor.extract(transcription=transcription)
+    return service, draft
+
+
+def test_the_stage_takes_the_transcription_artefact_and_reads_its_text(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The document text the model receives is the transcription's own."""
     transcription = _transcription(FieldOrigin.TEXT_LAYER)
-    client, _draft = _extract(transcription, operation=operation)
+    service, _draft = _extract(transcription, tmp_path, operation=operation)
 
-    assert len(client.requests) == 1
-    assert transcription.text in client.requests[0].prompt
+    ((_, body),) = service.runs
+    assert transcription.text in body.prompt
 
 
 @pytest.mark.parametrize("origin", [FieldOrigin.TEXT_LAYER, FieldOrigin.VISION])
 def test_every_envelope_carries_the_transcribers_origin_not_a_hardcoded_one(
-    origin: FieldOrigin, *, operation: PinnedAuthorityOperation
+    origin: FieldOrigin, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Both acquisition origins must survive to the envelope, unchanged.
 
@@ -130,70 +119,48 @@ def test_every_envelope_carries_the_transcribers_origin_not_a_hardcoded_one(
     Mutation that must trip this: replace ``transcription.transcriber.origin``
     with a literal ``FieldOrigin.TEXT_LAYER`` in ``TextInvoiceFieldExtractor``.
     """
-    _client, draft = _extract(_transcription(origin), operation=operation)
+    _service, draft = _extract(_transcription(origin), tmp_path, operation=operation)
 
     envelopes = draft.provenance
     assert envelopes, "the fixture must produce envelopes, or this passes vacuously"
     assert {envelope.origin for envelope in envelopes} == {origin}
 
 
-def test_the_request_pins_local_and_carries_no_images(*, operation: PinnedAuthorityOperation) -> None:
-    """On-host by expression, and text-only: a rasterised text document is a defect."""
-    client, _draft = _extract(_transcription(FieldOrigin.TEXT_LAYER), operation=operation)
-    request = client.requests[0]
-
-    assert request.provider_override is LLMProvider.LOCAL
-    assert not request.images
-
-
-def test_the_request_is_marked_evidence_derived_unless_the_corpus_is_named(
-    *, operation: PinnedAuthorityOperation
+def test_the_read_names_the_text_extraction_role_and_carries_no_images(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """Naming the public corpus is the deliberate act; forgetting gets the gate.
+    """The agent resolves the role's lane and model; a rasterised text document is a defect."""
+    service, _draft = _extract(_transcription(FieldOrigin.TEXT_LAYER), tmp_path, operation=operation)
 
-    The default direction is fail-closed, so a caller that says nothing about
-    where its pages came from is treated as holding a taxpayer's document.
-    """
-    client = _CapturingClient()
-    TextInvoiceFieldExtractor(model="stub-text", client=client, operation=operation, settings=load_settings()).extract(
-        transcription=_transcription(FieldOrigin.TEXT_LAYER),
-    )
-    assert client.requests[0].evidence_derived is True
-
-    corpus_client = _CapturingClient()
-    TextInvoiceFieldExtractor(
-        model="stub-text",
-        client=corpus_client,
-        operation=operation,
-        settings=load_settings(),
-        public_corpus=True,
-    ).extract(transcription=_transcription(FieldOrigin.TEXT_LAYER))
-    assert corpus_client.requests[0].evidence_derived is False
+    assert service.lookups == [ModelRole.TEXT_EXTRACTION]
+    ((header, body),) = service.runs
+    assert header.role == ModelRole.TEXT_EXTRACTION.value
+    assert header.consent is None, "a lane that stays on this computer carries no consent"
+    assert body.attachments == ()
 
 
-def test_the_default_local_model_is_the_text_extraction_role_not_the_vision_one(
-    *, operation: PinnedAuthorityOperation
+def test_the_document_is_evidence_unless_the_corpus_is_named(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The two local roles resolve independently, and this stage takes the text one.
+    """Naming the public corpus is the deliberate act; forgetting gets the consent gate.
 
-    They are separate because the capability bars differ in BOTH directions:
-    only vision transcription needs image input, and the text roles must be
-    satisfiable on a machine that cannot host a vision model at all. A stage
-    that reached for the vision setting would make text extraction impossible
-    on exactly those machines.
+    On a lane that reads off the host, the unconsented taxpayer document is
+    refused before anything is sent. The named corpus passes the client's gate
+    and reaches the service, which then refuses the consent-less run itself.
     """
-    settings = load_settings()
-    client = _CapturingClient()
-    TextInvoiceFieldExtractor(client=client, operation=operation, settings=settings).extract(
-        transcription=_transcription(FieldOrigin.TEXT_LAYER),
-    )
+    transcription = _transcription(FieldOrigin.TEXT_LAYER)
+    with serving_agent(replies=(_REPLY,), lane=DEFAULT_LANE) as evidence, pytest.raises(LLMConsentError):
+        _extractor(tmp_path / "evidence", operation=operation).extract(transcription=transcription)
+    assert evidence.runs == []
 
-    assert client.requests[0].model_override == settings.cadrumo_llm_ollama_text_model
-    assert client.requests[0].model_override != settings.cadrumo_llm_ollama_vision_model
+    with serving_agent(replies=(_REPLY,), lane=DEFAULT_LANE) as corpus, pytest.raises(LLMConsentError):
+        _extractor(tmp_path / "corpus", operation=operation, public_corpus=True).extract(transcription=transcription)
+    ((header, _),) = corpus.runs
+    assert header.consent is None
 
 
 def test_the_role_evidence_the_model_returned_reaches_the_draft_envelope(
-    *, operation: PinnedAuthorityOperation
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Stage two carries the role-evidence claim through, unchecked and intact.
 
@@ -202,7 +169,7 @@ def test_the_role_evidence_the_model_returned_reaches_the_draft_envelope(
     role evidence does not resolve, so losing it here would silently disable
     counterparty auto-fill with nothing reporting a failure.
     """
-    _client, draft = _extract(_transcription(FieldOrigin.TEXT_LAYER), operation=operation)
+    _service, draft = _extract(_transcription(FieldOrigin.TEXT_LAYER), tmp_path, operation=operation)
 
     supplier = next(e for e in draft.provenance if e.field == "supplier_tax_id")
     assert supplier.role_evidence == "Proveedor:"

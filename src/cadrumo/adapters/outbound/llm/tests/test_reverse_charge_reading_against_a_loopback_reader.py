@@ -1,10 +1,11 @@
 """The reverse-charge classification pair, read end to end off real documents.
 
-Two documents that differ in one printed line, read through a real loopback
-endpoint speaking the runtime's wire shape. **No model is loaded and no
-inference runs** -- the reply is authored by the test, exactly as a reply from a
-real runtime would arrive, and everything downstream of the socket is production
-code: the real provider client, the real router, the real grounding stage.
+Two documents that differ in one printed line, read through the agent's
+model-run port, answered by a recording stand-in for the agent service on a
+lane that stays on this computer. **No model is loaded and no inference runs**
+-- the reply is authored by the test, exactly as the service would return a
+run's final text, and everything on this side of the port is production code:
+the real client, the real router, the real grounding stage.
 
 **Both fixtures are real documents rather than authored drafts.** The mention
 and the repercutido line are printed on the page and come back through the
@@ -34,10 +35,8 @@ import hashlib
 import json
 from collections.abc import Iterator
 from decimal import Decimal
-from http import HTTPStatus
 from pathlib import Path
-from queue import Queue
-from typing import ClassVar, override
+from typing import ClassVar
 
 import pytest
 
@@ -64,8 +63,7 @@ from cadrumo.application.ledger.regime_contradiction import (
     regime_contradiction_finding,
 )
 from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceRecord
-from cadrumo.core.config import Settings, load_settings, override_settings
-from cadrumo.core.config_support import LLMProvider
+from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.document_shape import DocumentShape
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_origin import FieldOrigin
@@ -81,15 +79,8 @@ from cadrumo.domain.calculations.registry.iva_category_catalogue import (
 )
 from cadrumo.domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
 from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
-from cadrumo.tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 
-READING_RUNTIME_MODEL = "qwen2.5:7b"
+from .model_run_support import ON_HOST_LANE, serving_agent
 
 
 def _text_layer_ports_for_pages(pages: tuple[str, ...]) -> EvidenceTextLayerPorts:
@@ -136,7 +127,6 @@ def _reader_ports(evidence: EvidenceInput, *, operation: PinnedAuthorityOperatio
     def read_text(
         transcription: DocumentTranscription,
         settings: Settings,
-        _provider: LLMProvider | None,
         _consent_token: EvidenceConsentProof | None,
         authority_values: object,
         /,
@@ -196,42 +186,25 @@ _RETENCION_REPLY = _LAWFUL_REPLY | {
 }
 
 
-class _LoopbackRequestHandler(SilentLoopbackHandler):
-    """A real endpoint speaking the runtime's ``/api/chat`` shape."""
+class _Script:
+    """The reply the agent stand-in returns for the next run."""
 
-    reply: ClassVar[str]
-    requests: ClassVar[Queue[dict[str, object]]]
-
-    @override
-    def do_POST(self) -> None:
-        self.requests.put(dict(read_json_body(self)))
-        write_json_response(
-            self,
-            ollama_chat_reply(
-                self.reply,
-                model=READING_RUNTIME_MODEL,
-                prompt_eval_count=100,
-                eval_count=50,
-            ),
-            status=HTTPStatus.OK,
-        )
+    reply: ClassVar[str] = ""
 
 
 @pytest.fixture
 def serve(secure_object_test_profile: TestRuntimeProfile) -> Iterator[object]:
-    """Serve a real reader on a loopback port; yield a callable taking the reply.
+    """Bind the agent stand-in on an on-host lane; yield a callable taking the reply.
 
     Depends on ``secure_object_test_profile`` for the real bucket runtime, because the
     reading path writes run record through the profile-bound encrypted
     repository. Taking the shared fixture keeps this a real storage runtime
     rather than disabling the run-record write to make the test pass.
     """
-    requests: Queue[dict[str, object]] = Queue()
-    _LoopbackRequestHandler.requests = requests
-    with serving_loopback(_LoopbackRequestHandler, path="/api/chat") as url:
+    with serving_agent(lane=ON_HOST_LANE, answer=lambda _body: _Script.reply):
 
         def read(document: Path, reply: dict[str, str | None]):
-            _LoopbackRequestHandler.reply = json.dumps(reply)
+            _Script.reply = json.dumps(reply)
             payload = document.read_bytes()
             evidence = EvidenceInput(
                 mime_type="application/pdf",
@@ -240,19 +213,15 @@ def serve(secure_object_test_profile: TestRuntimeProfile) -> Iterator[object]:
                 content_sha256=hashlib.sha256(payload).hexdigest(),
                 attachment_id="c" * 64,
             )
-            with override_settings(cadrumo_llm_ollama_chat_url=url):
-                # ``settings`` is required rather than resolved internally, so
-                # the override reaches the read instead of being silently
-                # bypassed.
-                return invoice_draft_extraction_module._read_transcription_semantically(
-                    evidence,
-                    transcribe_text_layer(evidence, text_layer_ports=_TEXT_LAYER_PORTS),
-                    settings=load_settings(),
-                    authority_period=default_invoice_extraction_period(),
-                    operation=operation,
-                    legends=legends,
-                    ports=_reader_ports(evidence, operation=operation),
-                )
+            return invoice_draft_extraction_module._read_transcription_semantically(
+                evidence,
+                transcribe_text_layer(evidence, text_layer_ports=_TEXT_LAYER_PORTS),
+                settings=load_settings(),
+                authority_period=default_invoice_extraction_period(),
+                operation=operation,
+                legends=legends,
+                ports=_reader_ports(evidence, operation=operation),
+            )
 
         with _indexed_authority_for_test().operation() as operation:
             legends = resolve_regime_legends(

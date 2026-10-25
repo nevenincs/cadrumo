@@ -182,58 +182,35 @@ def test_gestor_mode_refuses_even_a_minted_token(tmp_path: Path) -> None:
     assert bodies.qsize() == 0
 
 
-def test_the_unpinned_text_reader_cannot_reach_around_the_gate(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> None:
-    """A reader constructed at a cloud provider refuses, pin or no pin.
+def test_the_text_reader_cannot_reach_around_the_gate(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
+    """The text reader on a lane that reads off the host refuses an unconsented document.
 
-    ``extract_invoice_fields_from_text`` is exported with no provider pin, and
-    its extractor's LOCAL default is a floor rather than the boundary. This
-    walks the documented way past that floor -- name the provider and the model
-    -- and lands on the gate.
+    The reader names no provider and no model: the agent resolves the lane for
+    the text extraction role, and the lane's own flag decides whether the read
+    leaves the host. With that flag set, nothing reaches the service.
     """
     settings = _settings(tmp_path)
     with _serve_agent() as bodies:
-        extractor = TextInvoiceFieldExtractor(
-            provider=LLMProvider.AGENT,
-            model="gpt-4.1",
-            settings=settings,
-            client=_client(settings),
-            operation=operation,
-        )
+        extractor = TextInvoiceFieldExtractor(settings=settings, client=_client(settings), operation=operation)
         with pytest.raises(LLMConsentError):
             extractor.extract(transcription=_transcription())
 
     assert bodies.qsize() == 0
 
 
-def test_the_router_wrapper_pins_local_by_expression_not_by_omission() -> None:
-    """The wrapper the evidence router calls STATES its pin.
+def test_the_router_wrapper_sends_nothing_off_host_without_consent(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The wrapper the evidence router calls carries no consent, so an off-host lane refuses it.
 
-    ``extract_invoice_fields_from_text`` takes no provider argument, so today it
-    is pinned on-host by construction -- which is the right answer reached the
-    weakest possible way. Widening this signature with a pass-through
-    ``provider`` would open the off-host route for every router call with no
-    diff line that looks like a confidentiality change.
-
-    Asserted over the AST rather than by calling it: the property is that the
-    pin is WRITTEN, and a behavioural test passes identically whether the value
-    was stated or inherited from a default, which is precisely the distinction
-    this case exists to make.
+    Observed at the service rather than read off the source: what keeps the
+    document on the host is the dispatch-point refusal, whatever the wrapper's
+    signature says.
     """
-    tree = ast.parse(textwrap.dedent(inspect.getsource(extract_invoice_fields_from_text)))
-    pinned = [
-        keyword
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        for keyword in node.keywords
-        if keyword.arg == "provider"
-    ]
-    assert pinned, (
-        "the router wrapper no longer states its provider pin. Restore it, or -- if the pin was "
-        "deliberately widened -- confirm the dispatch-point consent gate still refuses the off-host "
-        "route, because that refusal and not this pin is what keeps the document on the host."
-    )
+    with _serve_agent() as bodies, pytest.raises(LLMConsentError):
+        extract_invoice_fields_from_text(_transcription(), operation=operation, settings=_settings(tmp_path))
+
+    assert bodies.qsize() == 0
 
 
 # ── The positive controls ────────────────────────────────────────────────────
@@ -282,20 +259,16 @@ def test_the_public_corpus_escape_reaches_the_provider_through_the_reader(
 ) -> None:
     """POSITIVE CONTROL for the reach-around case, through the same class.
 
-    Its sibling refusal builds a ``TextInvoiceFieldExtractor`` at a cloud
-    provider -- which is exactly what widening the router wrapper with a
-    pass-through ``provider`` would produce -- and asserts nothing reaches the
-    endpoint. This case differs from it in ONE variable, the evidence marker,
-    and reaches the service. Without it, that refusal is equally satisfied by a
-    reader that can no longer dispatch at all. The service itself then refuses
+    Its sibling refusal builds a ``TextInvoiceFieldExtractor`` on a lane that
+    reads off the host and asserts nothing reaches the endpoint. This case
+    differs from it in ONE variable, the evidence marker, and reaches the
+    service. Without it, that refusal is equally satisfied by a reader that can no longer dispatch at all. The service itself then refuses
     the consent-less run on its off-host lane, so the observation is the run it
     received, not a reply.
     """
     settings = _settings(tmp_path)
     with serving_agent() as service, pytest.raises(LLMConsentError):
         extractor = TextInvoiceFieldExtractor(
-            provider=LLMProvider.AGENT,
-            model="gpt-4.1",
             settings=settings,
             client=_client(settings),
             operation=operation,

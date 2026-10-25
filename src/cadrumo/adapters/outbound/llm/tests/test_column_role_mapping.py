@@ -1,8 +1,9 @@
 """Semantic column-role mapping: allow-list refusal, never-refuse-whole, determinism.
 
-The model boundary is crossed for real -- the production :class:`LLMClient`,
-the local provider adapter and HTTP transport against an Ollama-shaped loopback
-service -- so the transport is exercised rather than stood in for.
+The client boundary is crossed for real -- the production :class:`LLMClient`,
+its consent gate and the agent adapter -- against a recording stand-in for the
+agent service behind the model-run port, so what the service was asked is
+observed rather than assumed.
 
 These gates are structural. They prove that a reply is constrained to the
 :class:`~cadrumo.core.FieldRole` allow-list, that no wrong answer about one
@@ -19,37 +20,26 @@ import csv
 import json
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
-from http import HTTPStatus
 from pathlib import Path
-from queue import Queue
-from typing import override
 
 import pytest
 
-from .....application.provisioning import select_model_for_role
-from .....application.provisioning_contracts import ProvisioningPreconditionCondition
-from .....core.config import override_settings
-from .....core.config_support import LLMProvider
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+
 from .....core.field_role import FieldRole
 from .....core.model_catalogue import ModelRole
-from .....core.operator_action_enums import NoRecoveryOutcome
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from .....tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 from ..client import LLMClient
 from ..column_role_mapping import (
     SemanticColumnRoleMapper,
     build_column_role_mapping_prompt,
     parse_column_role_mapping_response,
     permitted_column_roles,
+    resolve_header_roles,
 )
-from ..errors import LLMConfigError, LLMValidationError
-from .load_headroom_support import admitting_hardware_profile
+from ..consent import EvidenceConsentToken
+from ..errors import LLMConsentError, LLMValidationError
+from .model_run_support import DEFAULT_LANE, ON_HOST_LANE, RecordingModelRuns, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -70,23 +60,6 @@ _LIBRO_REGISTRO_ROLES: dict[str, FieldRole] = {
     "importe_retencion": FieldRole.RETENCION_AMOUNT,
     "total_factura": FieldRole.GRAND_TOTAL,
 }
-
-
-def test_no_candidate_preserves_the_selection_verdict() -> None:
-    """An unsatisfied role selection reaches the error boundary without prose."""
-    settings = EnvFileFreeSettings(cadrumo_llm_ollama_num_ctx=1_000_000)
-
-    with pytest.raises(LLMConfigError) as raised:
-        SemanticColumnRoleMapper(settings=settings)
-
-    verdict = raised.value.terminal_precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE.value
-    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
-    assert verdict.action is None
-    assert verdict.evidence[0].values == raised.value.context
-    assert verdict.evidence[0].values["required_context_tokens"] == 1_000_000
-    assert raised.value.args == ()
 
 
 def _libro_registro_rows() -> list[list[str]]:
@@ -348,148 +321,130 @@ def test_parsing_is_deterministic() -> None:
     assert parse_column_role_mapping_response(reply, headers) == parse_column_role_mapping_response(reply, headers)
 
 
-# ── The real model boundary ──────────────────────────────────────────────────
+# ── The client boundary ──────────────────────────────────────────────────────
+
+_TOKEN = EvidenceConsentToken(surface="runtime:ledger.import", evidence_content_address="d" * 64)
 
 
-@contextmanager
-def _serve_ollama(reply_text: str) -> Generator[tuple[str, Queue[dict[str, object]]]]:
-    """Serve one Ollama-shaped loopback endpoint returning ``reply_text``."""
-    events: Queue[dict[str, object]] = Queue()
-
-    class _OllamaEndpoint(SilentLoopbackHandler):
-        @override
-        def do_POST(self) -> None:
-            events.put({"body": read_json_body(self)})
-            write_json_response(
-                self,
-                ollama_chat_reply(reply_text, prompt_eval_count=40, eval_count=30),
-                status=HTTPStatus.OK,
-            )
-
-    with serving_loopback(_OllamaEndpoint, path="/api/chat") as endpoint:
-        yield endpoint, events
-
-
-@contextmanager
-def _mapper(tmp_path: Path, endpoint: str) -> Generator[SemanticColumnRoleMapper]:
-    """Yield a mapper bound to the production client over a loopback provider.
-
-    The endpoint is set through ``override_settings`` as well as on the injected
-    settings: the local adapter resolves its chat URL from the process-wide
-    settings rather than from the client's injected ones, so injection alone
-    would send the request to a real Ollama host that is not running here. The
-    client runs under a measured reading that admits the role's model, so the
-    case does not depend on whether this host's accelerator can be read.
-    """
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_ollama_chat_url=endpoint,
+def _settings(tmp_path: Path) -> EnvFileFreeSettings:
+    return EnvFileFreeSettings(
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
     )
-    role_model = select_model_for_role(ModelRole.COLUMN_ROLE_MAPPING).runtime_id
-    assert role_model is not None, "the column-role mapping role selects no model to dispatch to"
-    client = LLMClient(
-        settings=settings,
-        hardware_profile=admitting_hardware_profile(role_model, settings=settings),
-        runtime_residents=(),
-    )
-    with override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        yield SemanticColumnRoleMapper(client=client, settings=settings)
 
 
-def test_the_role_decides_the_model_not_the_general_default(tmp_path: Path) -> None:
-    """The mapping call goes to the role's model, never to another configured model.
-
-    Answering a short-string selection task on anything but the role's model is
-    the standing directive's exact prohibition.
-    """
-    expected = select_model_for_role(ModelRole.COLUMN_ROLE_MAPPING).runtime_id
-
-    with _serve_ollama(_full_libro_registro_reply()) as (endpoint, events), _mapper(tmp_path, endpoint) as mapper:
-        mapper.map(_libro_registro_headers())
-
-    body = events.get_nowait()["body"]
-    assert isinstance(body, dict)
-    assert body["model"] == expected
-
-
-def test_an_explicitly_pinned_model_outranks_the_role(tmp_path: Path) -> None:
-    """A caller that names a model owns the choice; the role does not override it.
-
-    This is the seam the measurement lane runs a gated engine through, so it
-    has to be reachable without editing this module.
-    """
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
-    with (
-        _serve_ollama(_full_libro_registro_reply()) as (endpoint, events),
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-    ):
+@contextmanager
+def _mapper(
+    tmp_path: Path,
+    reply_text: str,
+    *,
+    on_host: bool = True,
+    consent_token: EvidenceConsentToken | None = None,
+    lookup_refusal: ModelRunRefusalCode | None = None,
+) -> Generator[tuple[SemanticColumnRoleMapper, RecordingModelRuns]]:
+    """Yield a mapper over the production client, with the agent service it reaches."""
+    settings = _settings(tmp_path)
+    lane = ON_HOST_LANE if on_host else DEFAULT_LANE
+    with serving_agent(replies=(reply_text,), lane=lane, lookup_refusal=lookup_refusal) as service:
         mapper = SemanticColumnRoleMapper(
-            model="operator-pinned-model",
-            provider=LLMProvider.LOCAL,
-            client=LLMClient(settings=settings),
-            settings=settings,
+            client=LLMClient(settings=settings), settings=settings, consent_token=consent_token
         )
+        yield mapper, service
+
+
+def test_the_mapping_asks_the_service_for_its_own_role(tmp_path: Path) -> None:
+    """The lane and model are the person's selection for this role; the mapper names neither."""
+    with _mapper(tmp_path, _full_libro_registro_reply()) as (mapper, service):
         mapper.map(_libro_registro_headers())
 
-    body = events.get_nowait()["body"]
-    assert isinstance(body, dict)
-    assert body["model"] == "operator-pinned-model"
+    assert service.lookups == [ModelRole.COLUMN_ROLE_MAPPING]
+    header, body = service.runs[0]
+    assert header.role == ModelRole.COLUMN_ROLE_MAPPING.value
+    assert body.temperature == 0.0
+    assert mapper.decided_by == "llm:agent-column-role-map:configured"
+
+
+def test_a_role_with_no_selection_is_reported_with_its_typed_verdict(tmp_path: Path) -> None:
+    """``no_selection`` reaches the import as an unavailable reader, and no run is tried."""
+    with _mapper(tmp_path, "{}", lookup_refusal=ModelRunRefusalCode.NO_SELECTION) as (mapper, service):
+        outcome = resolve_header_roles(_libro_registro_headers(), mapper=mapper)
+
+    assert outcome is not None
+    assert not hasattr(outcome, "roles")
+    verdict = outcome.precondition_verdict
+    assert verdict.evidence[0].values["model_run_refusal"] == "no_selection"
+    assert verdict.evidence[0].values["model_role"] == ModelRole.COLUMN_ROLE_MAPPING.value
+    assert service.runs == []
+
+
+def test_an_off_host_lane_without_consent_is_refused_before_any_run(tmp_path: Path) -> None:
+    """The headers come from a taxpayer's file, so an off-host lane needs consent."""
+    with (
+        _mapper(tmp_path, _full_libro_registro_reply(), on_host=False) as (mapper, service),
+        pytest.raises(LLMConsentError),
+    ):
+        mapper.map(_libro_registro_headers())
+
+    assert service.runs == []
+
+
+def test_an_off_host_lane_with_consent_binds_it_to_the_run(tmp_path: Path) -> None:
+    """A consented mapping on an off-host lane runs, carrying consent for that lane."""
+    with _mapper(tmp_path, _full_libro_registro_reply(), on_host=False, consent_token=_TOKEN) as (mapper, service):
+        proposal = mapper.map(_libro_registro_headers())
+
+    header, _body = service.runs[0]
+    assert header.consent is not None
+    assert proposal.roles[_libro_registro_headers().index("base_imponible")] is FieldRole.TAXABLE_BASE
 
 
 def test_the_libro_registro_headers_map_over_the_real_client(tmp_path: Path) -> None:
-    """The motivating file maps end to end across the real client and transport.
+    """The motivating file maps end to end across the real client.
 
     The reply is authored here, so this proves the wiring and the projection of
     a reply into a proposal -- not that a model produces this reply.
     """
     headers = _libro_registro_headers()
-    with _serve_ollama(_full_libro_registro_reply()) as (endpoint, events), _mapper(tmp_path, endpoint) as mapper:
+    with _mapper(tmp_path, _full_libro_registro_reply()) as (mapper, service):
         proposal = mapper.map(headers)
 
     assert proposal.roles[headers.index("base_imponible")] is FieldRole.TAXABLE_BASE
     assert proposal.roles[headers.index("importe_retencion")] is FieldRole.RETENCION_AMOUNT
     assert proposal.roles[headers.index("total_factura")] is FieldRole.GRAND_TOTAL
     assert {column.header for column in proposal.unmapped_columns} == {"tipo_retencion"}
-    assert events.qsize() == 1, "the headers are mapped once per file, never per row"
+    assert len(service.runs) == 1, "the headers are mapped once per file, never per row"
 
 
 def test_the_dispatched_prompt_carries_no_cell_value(tmp_path: Path) -> None:
-    """What crosses the wire is headers and role tokens; no data value goes out."""
+    """What crosses the boundary is headers and role tokens; no data value goes out."""
     rows = _libro_registro_rows()
-    with _serve_ollama(_full_libro_registro_reply()) as (endpoint, events), _mapper(tmp_path, endpoint) as mapper:
+    with _mapper(tmp_path, _full_libro_registro_reply()) as (mapper, service):
         mapper.map(tuple(rows[0]))
 
-    body = events.get_nowait()["body"]
-    assert isinstance(body, dict)
-    dispatched = json.dumps(body)
+    dispatched = json.dumps(service.runs[0][1].model_dump(mode="json"))
     for value in _distinctive_cell_values():
         assert value not in dispatched
 
 
-def test_an_unusable_reply_from_the_real_transport_raises(tmp_path: Path) -> None:
+def test_an_unusable_reply_from_the_real_client_raises(tmp_path: Path) -> None:
     """A reply carrying no object surfaces as a typed refusal rather than a silent blank."""
-    with (
-        _serve_ollama("I am not able to label these columns.") as (endpoint, _events),
-        _mapper(tmp_path, endpoint) as mapper,
-        pytest.raises(LLMValidationError) as raised,
-    ):
-        mapper.map(_libro_registro_headers())
+    replies = ("I am not able to label these columns.", '{"assignments": "none"}')
+    settings = _settings(tmp_path)
+    with serving_agent(replies=replies, lane=ON_HOST_LANE):
+        mapper = SemanticColumnRoleMapper(client=LLMClient(settings=settings), settings=settings)
+        with pytest.raises(LLMValidationError) as raised:
+            mapper.map(_libro_registro_headers())
     verdict = raised.value.terminal_precondition_verdict
     assert verdict is not None
-    assert verdict.failed_condition_id == "llm.column_mapping.response_parseable"
+    assert verdict.failed_condition_id == "llm.column_mapping.response_schema_valid"
 
 
-def test_an_out_of_allow_list_reply_from_the_real_transport_still_imports(tmp_path: Path) -> None:
-    """Across the real transport too, one bad token costs its column and not the file."""
+def test_an_out_of_allow_list_reply_from_the_real_client_still_imports(tmp_path: Path) -> None:
+    """Across the real client too, one bad token costs its column and not the file."""
     headers = _libro_registro_headers()
     reply = _reply([(0, FieldRole.INVOICE_DATE.value), (4, "totally_invented_role"), (9, FieldRole.GRAND_TOTAL.value)])
-    with _serve_ollama(reply) as (endpoint, _events), _mapper(tmp_path, endpoint) as mapper:
+    with _mapper(tmp_path, reply) as (mapper, _service):
         proposal = mapper.map(headers)
 
     assert [item.proposed_role for item in proposal.rejected_role_proposals] == ["totally_invented_role"]

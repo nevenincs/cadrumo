@@ -92,14 +92,9 @@ _CLAIM_UNINSTALL_RESTORES_REFUSAL: Final[str] = "uninstalling the extra returns 
 #: the lane pass by driving things that were never gated.
 _INFERENCE_SURFACES: Final[tuple[tuple[str, str, str], ...]] = (
     (
-        "cadrumo.adapters.outbound.llm.providers.local",
+        "cadrumo.adapters.outbound.llm.pdf_rasterisation",
         "rasterise_pdf_pages_to_base64_png",
         "rasterise_pdf_pages_to_base64_png(b'%PDF-1.4\\n')",
-    ),
-    (
-        "cadrumo.adapters.outbound.llm.evidence_draft_vision",
-        "transcribe_document_images",
-        "transcribe_document_images(_PAGES, source_content_sha256='0' * 64)",
     ),
     (
         "cadrumo.adapters.outbound.llm.evidence_draft_text",
@@ -108,22 +103,22 @@ _INFERENCE_SURFACES: Final[tuple[tuple[str, str, str], ...]] = (
     ),
     (
         "cadrumo.adapters.outbound.llm.vision_classifier",
-        "LocalVisionLLMClassifier",
-        "LocalVisionLLMClassifier(spec=None)",
+        "VisionLLMClassifier",
+        "VisionLLMClassifier(spec=None)",
     ),
     (
         "cadrumo.adapters.outbound.llm.text_classifier",
         "LocalTextLLMClassifier",
         "LocalTextLLMClassifier(spec=None)",
     ),
-    # The three constructors the convenience wrappers above build. Each is
+    # The reader constructors. Each is
     # public at its own module and carries the guard itself, so the derivation
     # enrolls it and the completeness claim covers it. The guard precedes
     # settings, authority, and model resolution; inert inputs exercise that cut.
     (
         "cadrumo.adapters.outbound.llm.evidence_draft_vision",
-        "LocalVisionDocumentTranscriber",
-        "LocalVisionDocumentTranscriber()",
+        "VisionDocumentTranscriber",
+        "VisionDocumentTranscriber()",
     ),
     (
         "cadrumo.adapters.outbound.llm.evidence_draft_text",
@@ -375,21 +370,19 @@ import json
 
 from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from cadrumo.core.field_origin import FieldOrigin
-from cadrumo.core.image_media_type import ImageMediaType
 from cadrumo.core.optional_extras import MissingOptionalExtraError
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.adapters.outbound.llm.models import MultimodalImageInput
 {_surface_imports()}
 
-# Both surfaces take a TYPED argument, so the driver builds each one here rather
+# The text surface takes a TYPED argument, so the driver builds it here rather
 # than inline in the call expression. That placement is the point: Python
 # evaluates arguments before the callee, so an argument that fails to construct
 # raises BEFORE the guarded surface is entered -- the entry would be classified
 # "other" and could never reach the refusal the lane asserts. Built outside the
 # try, a broken driver fails loudly as a driver rather than masquerading as a
-# surface outcome. Both constructions are core-only: typed models, no optional
+# surface outcome. The construction is core-only: a typed model, no optional
 # dependency.
-_PAGES = (MultimodalImageInput.from_base64("aGk=", ImageMediaType.PNG),)
 _TRANSCRIPTION = DocumentTranscription(
     text="factura",
     page_count=1,
@@ -618,21 +611,19 @@ import json
 
 from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from cadrumo.core.field_origin import FieldOrigin
-from cadrumo.core.image_media_type import ImageMediaType
 from cadrumo.core.optional_extras import MissingOptionalExtraError
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.adapters.outbound.llm.models import MultimodalImageInput
 {_surface_imports()}
 
-# Both surfaces take a TYPED argument, so the driver builds each one here rather
+# The text surface takes a TYPED argument, so the driver builds it here rather
 # than inline in the call expression. That placement is the point: Python
 # evaluates arguments before the callee, so an argument that fails to construct
 # raises BEFORE the guarded surface is entered -- the entry would be classified
 # "other" and could never reach the refusal the lane asserts. Built outside the
 # try, a broken driver fails loudly as a driver rather than masquerading as a
-# surface outcome. Both constructions are core-only: typed models, no optional
+# surface outcome. The construction is core-only: a typed model, no optional
 # dependency.
-_PAGES = (MultimodalImageInput.from_base64("aGk=", ImageMediaType.PNG),)
 _TRANSCRIPTION = DocumentTranscription(
     text="factura",
     page_count=1,

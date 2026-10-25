@@ -34,15 +34,13 @@ unprefixed name that existed nowhere in production pass -- rot that is latent,
 silent and misattributed, because the green looked like a statement about the
 tree when it was a statement about the filter.
 
-**The minting side is now a partition, not a sweep.** Every stamp a reader could
-mint once named an on-host transport, because the provider axis had collapsed
-with the deletion. It has not stayed collapsed: three readers took a provider
-back when off-host evidence reading was re-sanctioned. So the readers are
-partitioned by whether a caller can reach them off-host at all -- those with no
-provider parameter must stamp on-host, and those with one must stamp the
-transport they actually ran at. The partition is checked against the readers
-discovered in source, because the assertion this replaced said it ran over the
-readers that exist while naming two of five.
+**The minting side is one declared set, not a sweep.** Every reader now reads
+through the agent service, which resolves the lane for the role; whether that
+lane reads off the host is its catalogue flag, read at the dispatch point's
+consent check. So no reader declares a provider, and every reader must stamp
+the agent transport rather than claim the on-host one it cannot know. The set
+is checked against the readers discovered in source, because an assertion that
+said it ran over the readers that exist once named two of five.
 
 **The set is symbols, never the word ``subprocess``.** Other product features
 legitimately spawn subprocesses, so a word-sweep would delete unrelated
@@ -64,8 +62,7 @@ from cadrumo.tests.inventory import SRC_CADRUMO, non_test_package_python_files, 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 if TYPE_CHECKING:
-    from cadrumo.application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
-    from cadrumo.core.config_support import LLMProvider
+    pass
 
 _DELETED_CLOUD_SYMBOL_FAMILIES: dict[str, tuple[str, ...]] = {
     "transport and provider builders": (
@@ -343,224 +340,129 @@ def _transport_of(stamp: str) -> str:
     return transport
 
 
-def _text_classifier_transport() -> str:
+def _agent_column_role_mapper_transport() -> str:
+    from cadrumo.adapters.outbound.llm.column_role_mapping import SemanticColumnRoleMapper
+
+    return _transport_of(SemanticColumnRoleMapper().decided_by)
+
+
+def _agent_supply_nature_proposer_transport() -> str:
+    from cadrumo.adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
+
+    return _transport_of(SupplyNatureProposer().decided_by)
+
+
+def _agent_text_classifier_transport() -> str:
     from cadrumo.adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
     from cadrumo.domain.transactions.llm import prompt_spec_with_every_spending_category
 
     with bundled_indexed_authority().operation() as operation:
         spec = prompt_spec_with_every_spending_category(year=2025, operation=operation)
-        return _transport_of(LocalTextLLMClassifier(spec=spec, model="qwen2.5:3b").decided_by)
+        return _transport_of(LocalTextLLMClassifier(spec=spec).decided_by)
 
 
-def _vision_classifier_transport() -> str:
-    from cadrumo.adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
-    from cadrumo.domain.transactions.llm import prompt_spec_with_every_spending_category
-
-    with bundled_indexed_authority().operation() as operation:
-        spec = prompt_spec_with_every_spending_category(year=2025, operation=operation)
-        return _transport_of(LocalVisionLLMClassifier(spec=spec, model="qwen2.5vl:3b").decided_by)
-
-
-def _pinned_authority_values() -> InvoiceExtractionAuthorityValues:
-    """Return injected regulatory values for the text extractor's compiled prompt.
-
-    Injected rather than resolved through the registry because this gate asks
-    only what TRANSPORT a stamp names; resolving real rates would couple a
-    transport assertion to registry load, which in this tree fails under
-    concurrent writes and would red this gate for a reason that has nothing to
-    do with the property it pins.
-    """
+def _agent_text_extractor_transport() -> str:
     from decimal import Decimal
 
+    from cadrumo.adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
     from cadrumo.application.ledger.invoice_extraction_authority import (
         InvoiceExtractionAuthorityValues,
         default_invoice_extraction_period,
     )
     from cadrumo.domain.iva.schema import IvaCategory
 
-    return InvoiceExtractionAuthorityValues(
+    # Injected rather than resolved: this gate asks only what transport a stamp
+    # names, and resolving real rates would couple it to registry load.
+    values = InvoiceExtractionAuthorityValues(
         period=default_invoice_extraction_period(),
         iva_rate_pcts=(Decimal("21"),),
         retencion_rate_pcts=(Decimal("15"),),
         no_printed_tax_categories=(IvaCategory("domestic_zero"),),
         regime_legend_phrases=("operación exenta",),
     )
-
-
-def _text_extractor_transport(provider: LLMProvider | None = None) -> str:
-    from cadrumo.adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
-    from cadrumo.core.config_support import LLMProvider
-
-    resolved = provider if provider is not None else LLMProvider.LOCAL
-    model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
     with bundled_indexed_authority().operation() as operation:
-        reader = TextInvoiceFieldExtractor(
-            model=model,
-            provider=resolved,
-            operation=operation,
-            authority_values=_pinned_authority_values(),
-        )
-        return _transport_of(reader.decided_by)
+        return _transport_of(TextInvoiceFieldExtractor(operation=operation, authority_values=values).decided_by)
 
 
-def _vision_transcriber_transport(provider: LLMProvider | None = None) -> str:
-    from cadrumo.adapters.outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscriber
-    from cadrumo.core.config_support import LLMProvider
+def _agent_vision_classifier_transport() -> str:
+    from cadrumo.adapters.outbound.llm.vision_classifier import VisionLLMClassifier
+    from cadrumo.domain.transactions.llm import prompt_spec_with_every_spending_category
 
-    resolved = provider if provider is not None else LLMProvider.LOCAL
-    model = "qwen2.5vl:3b" if resolved is LLMProvider.LOCAL else "claude-haiku-4-5-20251001"
-    return LocalVisionDocumentTranscriber(model=model, provider=resolved).transcriber_identity.transport
-
-
-def _column_role_mapper_transport(provider: LLMProvider | None = None) -> str:
-    from cadrumo.adapters.outbound.llm.column_role_mapping import SemanticColumnRoleMapper
-    from cadrumo.core.config_support import LLMProvider
-
-    resolved = provider if provider is not None else LLMProvider.LOCAL
-    model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
-    # The model is pinned rather than left to resolve, because resolution runs
-    # the on-host hardware admission check and would make this gate's result a
-    # property of the machine it ran on.
-    return _transport_of(SemanticColumnRoleMapper(model=model, provider=resolved).decided_by)
+    with bundled_indexed_authority().operation() as operation:
+        spec = prompt_spec_with_every_spending_category(year=2025, operation=operation)
+        return _transport_of(VisionLLMClassifier(spec=spec).decided_by)
 
 
-def _supply_nature_proposer_transport(provider: LLMProvider | None = None) -> str:
-    from cadrumo.adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
-    from cadrumo.core.config_support import LLMProvider
+def _agent_vision_transcriber_transport() -> str:
+    from cadrumo.adapters.outbound.llm.evidence_draft_vision import VisionDocumentTranscriber
 
-    resolved = provider if provider is not None else LLMProvider.LOCAL
-    model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
-    # Pinned for the reason the column-role mapper's builder states: resolving
-    # the role would run the on-host hardware admission check and make this
-    # gate's result a property of the machine it ran on.
-    return _transport_of(SupplyNatureProposer(model=model, provider=resolved).decided_by)
+    return VisionDocumentTranscriber().transcriber_identity("nearby/api/synthetic-vision:1").transport
 
 
-_READERS_WITH_NO_PROVIDER_AXIS: dict[str, Callable[[], str]] = {
-    "LocalTextLLMClassifier": _text_classifier_transport,
-    "LocalVisionLLMClassifier": _vision_classifier_transport,
+def _agent_statement_reader_transport() -> str:
+    from cadrumo.adapters.outbound.llm.statement_reading import LocalStatementReader
+
+    return _transport_of(LocalStatementReader().decided_by)
+
+
+_READERS_THROUGH_THE_AGENT: dict[str, Callable[[], str]] = {
+    "LocalTextLLMClassifier": _agent_text_classifier_transport,
+    "TextInvoiceFieldExtractor": _agent_text_extractor_transport,
+    "LocalStatementReader": _agent_statement_reader_transport,
+    "VisionLLMClassifier": _agent_vision_classifier_transport,
+    "VisionDocumentTranscriber": _agent_vision_transcriber_transport,
+    "SemanticColumnRoleMapper": _agent_column_role_mapper_transport,
+    "SupplyNatureProposer": _agent_supply_nature_proposer_transport,
 }
-"""Readers a caller can reach with no consent token, keyed to their transport.
+"""Readers whose every read goes through the agent service, keyed to their transport.
 
-Their constructors declare no ``provider`` parameter at all, so no call site can
-ask them for an off-host read. That structural claim is asserted below rather
-than trusted: it is what makes their on-host transport a property of the class
-instead of an observation about the one instance this module builds.
-"""
-
-_READERS_WITH_A_PROVIDER_AXIS: dict[str, Callable[[LLMProvider | None], str]] = {
-    "TextInvoiceFieldExtractor": _text_extractor_transport,
-    "LocalVisionDocumentTranscriber": _vision_transcriber_transport,
-    "SemanticColumnRoleMapper": _column_role_mapper_transport,
-    "SupplyNatureProposer": _supply_nature_proposer_transport,
-}
-"""Readers that accept a provider, keyed to a builder taking the provider.
-
-Reaching one of these off-host with a taxpayer's document requires a
-per-invocation consent token at the dispatch choke point. What this module pins
-about them is not that they refuse -- the consent suite owns that -- but that
-when they do run off-host they SAY SO. A stamp reading ``local`` for a read
-served off-host is the artefact a consent withdrawal enumerates by transport and
-therefore cannot see, which is precisely the artefact most needing
-re-derivation.
+They declare no provider parameter: the agent resolves the lane for the role,
+and whether that lane reads off the host is its catalogue flag, which the
+dispatch point's consent check reads. What this module pins about them is that
+their stamp never claims the on-host transport, because a stamp cannot know
+which lane served the read and a consent withdrawal enumerates by transport.
 """
 
 
-def test_every_transport_mintable_without_a_consent_token_is_on_host() -> None:
-    """A reader with no provider axis can only ever stamp an on-host transport.
+def test_a_reader_through_the_agent_never_stamps_the_on_host_transport() -> None:
+    """Each agent reader has no provider axis and stamps the agent transport.
 
-    This is the narrowed descendant of an assertion that once swept every
-    reader. It was true when the cloud transport had just been deleted and the
-    provider axis really had collapsed; it is not true now, because off-host
-    evidence reading was re-sanctioned behind the consent gate and three readers
-    took a provider back. Left unnarrowed it would have been a gate asserting a
-    property the tree no longer has -- and the honest narrowing is by the
-    property that still holds, not by dropping the readers that stopped
-    satisfying it. Those move to the honesty assertion below rather than out of
-    the module.
-
-    The complementary half is deliberately NOT asserted: pre-existing persisted
-    records keep the cloud transport they were stamped with, because that is the
-    honest history of how those classifications were reached. Rewriting them
-    would erase the fact that some data did once leave the host. What this pins
-    is the minting side.
+    Asserted on the constructed stamp, because a reader that assembled a
+    hardcoded ``local`` label would satisfy any source-level pattern while
+    hiding its reads from a withdrawal survey.
     """
     import inspect
 
+    from cadrumo.adapters.outbound.llm.column_role_mapping import SemanticColumnRoleMapper
+    from cadrumo.adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
+    from cadrumo.adapters.outbound.llm.evidence_draft_vision import VisionDocumentTranscriber
+    from cadrumo.adapters.outbound.llm.statement_reading import LocalStatementReader
+    from cadrumo.adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
     from cadrumo.adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
-    from cadrumo.adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
+    from cadrumo.adapters.outbound.llm.vision_classifier import VisionLLMClassifier
+    from cadrumo.core.config_support import LLMProvider
     from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 
     classes = {
         "LocalTextLLMClassifier": LocalTextLLMClassifier,
-        "LocalVisionLLMClassifier": LocalVisionLLMClassifier,
+        "TextInvoiceFieldExtractor": TextInvoiceFieldExtractor,
+        "LocalStatementReader": LocalStatementReader,
+        "VisionLLMClassifier": VisionLLMClassifier,
+        "VisionDocumentTranscriber": VisionDocumentTranscriber,
+        "SemanticColumnRoleMapper": SemanticColumnRoleMapper,
+        "SupplyNatureProposer": SupplyNatureProposer,
     }
-    assert set(classes) == set(_READERS_WITH_NO_PROVIDER_AXIS)
-
-    transports: dict[str, str] = {}
-    for name, build in _READERS_WITH_NO_PROVIDER_AXIS.items():
+    assert set(classes) == set(_READERS_THROUGH_THE_AGENT)
+    for name, build in _READERS_THROUGH_THE_AGENT.items():
         parameters = inspect.signature(classes[name].__init__).parameters
-        assert "provider" not in parameters, (
-            f"{name} now declares a provider parameter, so it is no longer mintable on-host by "
-            "construction; move it to the provider-axis set, where its off-host stamp is checked "
-            "for honesty instead of asserted absent"
-        )
+        assert "provider" not in parameters, f"{name} declares a provider again; the agent picks the lane"
         transport = build()
-        assert transport == LOCAL_TRANSPORT_LABEL, (
-            f"{name} stamps transport {transport!r}; a reader reachable with no consent token must "
-            "never name an off-host transport"
-        )
-        transports[name] = transport
-
-    assert transports, "no reader was checked at all; this gate would pass over nothing"
+        assert transport == LLMProvider.AGENT.value.lower(), f"{name} stamps transport {transport!r}"
+        assert transport != LOCAL_TRANSPORT_LABEL
 
 
-def test_a_reader_reachable_only_under_consent_stamps_the_transport_it_actually_used() -> None:
-    """Both directions, because either alone is indistinguishable from a broken reader.
-
-    The on-host direction is this test's positive control: without it, an
-    off-host reader that had stopped stamping anything meaningful -- or one whose
-    constructor silently ignored the provider -- could still satisfy "not local"
-    by accident. And the off-host direction is what stops the gate degrading into
-    a restatement of the on-host default, which every reader satisfies while
-    saying nothing about the case the consent apparatus exists for.
-
-    Asserted on the CONSTRUCTED stamp rather than on source text, because a
-    reader that assembled a hardcoded label would satisfy any source-level
-    pattern while storing the same lie.
-    """
-    from cadrumo.core.config_support import LLMProvider
-    from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-
-    off_host = {
-        "TextInvoiceFieldExtractor": LLMProvider.AGENT,
-        "LocalVisionDocumentTranscriber": LLMProvider.AGENT,
-        "SemanticColumnRoleMapper": LLMProvider.AGENT,
-        "SupplyNatureProposer": LLMProvider.AGENT,
-    }
-    assert set(off_host) == set(_READERS_WITH_A_PROVIDER_AXIS)
-
-    for name, build in _READERS_WITH_A_PROVIDER_AXIS.items():
-        provider = off_host[name]
-        on_host_transport = build(LLMProvider.LOCAL)
-        assert on_host_transport == LOCAL_TRANSPORT_LABEL, (
-            f"{name} stamps {on_host_transport!r} for an on-host read; the positive control fails, so "
-            "its off-host result below proves nothing"
-        )
-
-        off_host_transport = build(provider)
-        assert off_host_transport == provider.value.lower(), (
-            f"{name} ran at {provider.value} and stamped transport {off_host_transport!r}; a consented "
-            "off-host read must record the transport it used or the withdrawal survey cannot find it"
-        )
-        assert off_host_transport != on_host_transport, (
-            f"{name} stamps the same transport whether or not a provider was named, so the provider it "
-            "was given reaches the stamp not at all"
-        )
-
-
-def test_every_stamp_producing_reader_is_declared_in_one_of_the_two_sets() -> None:
-    """The partition is total over the readers that exist, or this module stops.
+def test_every_stamp_producing_reader_is_declared_as_a_reader_through_the_agent() -> None:
+    """The declared set is total over the readers that exist, or this module stops.
 
     The assertion this replaced claimed to run "over the readers that actually
     exist rather than over a hand-kept list", and it did not: it built two
@@ -568,7 +470,7 @@ def test_every_stamp_producing_reader_is_declared_in_one_of_the_two_sets() -> No
     package, one of which could already mint an off-host stamp. That is the
     failure mode of a set that has stopped driving its own verification -- the
     same one the reinstated-symbol mapping above was reshaped to remove -- so the
-    partition is checked against a discovered set rather than asserted by count.
+    declared set is checked against a discovered set rather than asserted by count.
 
     Discovered from source rather than by importing the package, because a
     reader class that fails to import would silently shrink the discovered set
@@ -590,10 +492,9 @@ def test_every_stamp_producing_reader_is_declared_in_one_of_the_two_sets() -> No
                 discovered.add(node.name)
 
     assert discovered, "no stamp-producing reader was discovered; this gate is pointed at nothing"
-    declared = set(_READERS_WITH_NO_PROVIDER_AXIS) | set(_READERS_WITH_A_PROVIDER_AXIS)
+    declared = set(_READERS_THROUGH_THE_AGENT)
     assert discovered == declared, (
-        f"the declared reader partition does not cover the readers that exist. Undeclared: "
+        f"the declared readers do not cover the readers that exist. Undeclared: "
         f"{sorted(discovered - declared)}. Declared but absent: {sorted(declared - discovered)}. Every "
-        "stamp producer belongs in exactly one set -- on-host by construction, or provider-bearing and "
-        "held to stamping the transport it actually used."
+        "stamp producer reads through the agent and is held to stamping the agent transport."
     )

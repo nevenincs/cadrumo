@@ -23,6 +23,12 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from .....application.operations.model_runs import ModelRunPort
+from .....application.operator_actions.models import PreconditionVerdict
+from .....application.provisioning_contracts import (
+    LOCAL_AI_PROVISION_ACTION_ID,
+    ProvisioningPreconditionCondition,
+    provisioning_setup_verdict,
+)
 from .....core.config_support import LLMProvider
 from .....core.model_catalogue import ModelRole
 from .....core.operator_action_enums import ActionEvidenceProvenance
@@ -54,15 +60,34 @@ def lane_model_label(lane: ModelRunLane | ModelRunOutput) -> str:
     return f"{lane.provider_id}/{lane.transport}/{lane.model}"
 
 
-def model_run_refusal_error(refusal: ModelRunRefusal, *, role: ModelRole) -> LLMError:
-    """Return the typed error a consumer receives for a refused model run."""
+def model_run_refusal_verdict(refusal: ModelRunRefusal, *, role: ModelRole) -> PreconditionVerdict:
+    """Return the typed verdict for a refused model run, naming its recovery where one is registered.
+
+    A selected model the lane's local server does not hold is supplied by the
+    local AI setup, so that refusal names it. A role with no selection says so
+    in a stable fact and names no action until a selection action is
+    registered. Every other refusal keeps a no-recovery verdict.
+    """
     facts: dict[str, str | int | bool] = {"model_run_refusal": refusal.code.value, "model_role": role.value}
-    verdict = llm_no_recovery_verdict(
+    if refusal.code is ModelRunRefusalCode.MODEL_NOT_INSTALLED:
+        return provisioning_setup_verdict(
+            ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+            facts={**facts, "role": role.value, "role_model_installed": False},
+            action_id=LOCAL_AI_PROVISION_ACTION_ID,
+        )
+    if refusal.code is ModelRunRefusalCode.NO_SELECTION:
+        facts |= {"role": role.value, "role_selection_required": True}
+    return llm_no_recovery_verdict(
         LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED,
         facts=facts,
         provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
     )
-    context = {"provider": LLMProvider.AGENT.value, **facts}
+
+
+def model_run_refusal_error(refusal: ModelRunRefusal, *, role: ModelRole) -> LLMError:
+    """Return the typed error a consumer receives for a refused model run."""
+    verdict = model_run_refusal_verdict(refusal, role=role)
+    context = {"provider": LLMProvider.AGENT.value, **verdict.evidence[0].values}
     if refusal.code is ModelRunRefusalCode.CONSENT_MISSING:
         return LLMConsentError(context=context, precondition_verdict=verdict)
     if refusal.code in _CONFIGURATION_REFUSALS:
@@ -133,4 +158,10 @@ class AgentAdapter(ProviderAdapter):
         return result
 
 
-__all__ = ["JSON_REASK_INSTRUCTION", "AgentAdapter", "lane_model_label", "model_run_refusal_error"]
+__all__ = [
+    "JSON_REASK_INSTRUCTION",
+    "AgentAdapter",
+    "lane_model_label",
+    "model_run_refusal_error",
+    "model_run_refusal_verdict",
+]

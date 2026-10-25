@@ -9,34 +9,20 @@ transcription obtained by any other means had nowhere to go.
 This module is the second stage that made splitting them possible: text in,
 grounded :class:`~application.ledger.invoice_draft_records.InvoiceDraft` out. Both acquisition lanes
 now feed it -- the deterministic text-layer extractor and
-:class:`~llm.LocalVisionDocumentTranscriber`, which transcribes and interprets
+:class:`~llm.evidence_draft_vision.VisionDocumentTranscriber`, which transcribes and interprets
 nothing. Splitting it out means the
 transcription stage can be swapped, measured or replaced independently of the
 understanding stage, and it makes any already-transcribed text -- a PDF text
 layer, an OCR result, an EN16931 payload rendered back to prose -- usable.
 
-**Defaults to LOCAL, like the vision reader.** This paragraph previously said
-the opposite -- that the reader took whatever provider the caller had
-configured, because "the sensitive-data posture is owned by the calling flow's
-consent gate, not by this primitive". That reasoning was sound and the premise
-was false: no such consent gate had been built, while the shipped provider
-default is a cloud vendor. The two together meant reading a taxpayer's invoice
-sent the document's text off-host by configuration alone, with nothing at the
-call site expressing that choice.
-
-The default is therefore stated here rather than inherited. An off-host read
-stays possible -- the measurement corpus is public, synthetic and explicitly
-sanctioned for it -- but requires naming BOTH the provider and the model, which
-makes it a deliberate act at the call site instead of a property of the
-environment. A named provider with no model refuses, mirroring the vision
-reader's guard.
-
-This is a floor, not the consent gate. The gate itself is
-:class:`LLMClient`'s per-invocation evidence-consent check, applied at
-the client's dispatch choke point where no caller can reach around it by
-constructing a request directly: this reader marks every request it builds as
-evidence-derived unless the caller names the public corpus, and an off-host
-dispatch of a marked request without a per-invocation consent token refuses.
+**One dispatch path.** Every read names the text extraction role and goes to the
+agent service, which runs it on the lane and model the person selected for that
+role. Whether the read leaves this computer is that lane's catalogue flag. The
+reader marks every request it builds as evidence-derived unless the caller
+names the public corpus, and :class:`LLMClient`'s per-invocation
+evidence-consent check refuses a marked request on a lane that reads off the
+host without a consent token. A public-corpus read carries no consent, so the
+agent service refuses it on such a lane.
 
 **Language-neutral by design.** The vision prompt opens "a scanned Spanish
 invoice"; invoices reaching this path are international, in arbitrary languages
@@ -53,7 +39,7 @@ See Also:
         Typed draft this reader returns after grounded re-validation.
     :func:`~llm.invoice_field_grounding.ground_extracted_fields`
         Shared grounded re-validation this reader and the vision reader both use.
-    :func:`~llm.transcribe_document_images`
+    :class:`~llm.evidence_draft_vision.VisionDocumentTranscriber`
         Sibling ACQUISITION stage for evidence carrying no text layer at all.
         It produces the transcription this reader consumes; it does not read
         fields.
@@ -171,12 +157,6 @@ class TextInvoiceFieldExtractor:
     """Read an invoice's text with a language model into a grounded :class:`InvoiceDraft`.
 
     Args:
-        model: Optional model identifier; ``None`` uses the configured LOCAL
-            text model. Required when ``provider`` is not LOCAL, because the
-            only default that exists names a local model no vendor serves.
-        provider: Which provider carries the read. Defaults to LOCAL so a
-            taxpayer's document does not leave the host by default; naming a
-            cloud provider is a deliberate call-site act.
         client: Injected :class:`~llm.LLMClient` (dependency
             injection for tests); default-constructed against the resolved
             settings otherwise.
@@ -192,9 +172,9 @@ class TextInvoiceFieldExtractor:
             second consumer of the calculation authorities. ``None`` falls back
             to the current civil year's values.
         consent_token: Per-invocation off-host consent proof, minted through
-            :func:`~llm.consent.mint_evidence_consent_token`. Required only for
-            an off-host read of real evidence; ``None`` is correct for every
-            on-host read.
+            :func:`~llm.consent.mint_evidence_consent_token`. Required for a
+            read of real evidence on a lane that reads off the host; ``None``
+            reads only on a lane that stays on this computer.
         public_corpus: Whether the text handed to this reader comes from the
             public, synthetic measurement corpus rather than from a taxpayer's
             document. Defaults to ``False`` -- the fail-closed direction, so a
@@ -211,8 +191,6 @@ class TextInvoiceFieldExtractor:
     def __init__(
         self,
         *,
-        model: str | None = None,
-        provider: LLMProvider = LLMProvider.LOCAL,
         client: LLMClient | None = None,
         operation: PinnedAuthorityOperation,
         settings: Settings | None = None,
@@ -227,18 +205,10 @@ class TextInvoiceFieldExtractor:
         # error raised on the way to it.
         require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
-        self._provider = provider
         self._operation = operation
         self._consent_token = consent_token
         self._public_corpus = public_corpus
         self._fields = fields
-        # Off-host, the agent service picks the lane and model for the role, so
-        # this reader names none.
-        self._model: str | None = (
-            (model if model is not None else resolved_settings.cadrumo_llm_ollama_text_model)
-            if provider is LLMProvider.LOCAL
-            else None
-        )
         self._authority_values = (
             authority_values
             if authority_values is not None
@@ -259,27 +229,19 @@ class TextInvoiceFieldExtractor:
         """Provenance stamp: transport, reader, model, and the rates compiled in.
 
         Distinct from the vision stamp so a persisted record always says which
-        reader produced the fields. The model segment is ``configured`` when the
-        caller pinned nothing, because the effective model is then the active
-        provider's default rather than a fact this object holds.
+        reader produced the fields. The model segment is ``configured``,
+        because the agent resolves the model for the role at dispatch rather
+        than this object holding it.
 
         The trailing rate-provenance token answers the question the model name
         cannot: the prompt now enumerates registry-resolved rates, so which
         rates were in force for this read is part of how the figure was reached.
 
-        **The transport segment is DERIVED from the provider actually used**,
-        matching the vision reader. It was previously absent, so this stamp
-        could not say whether a read had left the host -- and a model name does
-        not answer that, because a vendor model identifier reveals the vendor
-        only to a reader who already knows the catalogue. A consent withdrawal
-        enumerates cloud-derived artefacts BY this segment, so a stamp that
-        omits it makes a withdrawal silently incomplete: the artefact that most
-        needs re-deriving is the one the survey cannot see.
         """
         return build_provenance_stamp(
-            provider=self._provider,
+            provider=LLMProvider.AGENT,
             reader="text-extract",
-            model=self._model or "configured",
+            model="configured",
             qualifier=f"rates-{self._compiled_prompt().rate_provenance}",
         )
 
@@ -323,22 +285,7 @@ class TextInvoiceFieldExtractor:
         )
 
     def _build_request(self, evidence_text: str) -> LLMRequest:
-        """Build the completion request for ``evidence_text``.
-
-        Carries an EXPLICIT ``provider_override``. It previously carried none,
-        so the provider was whatever the settings resolved to -- and the shipped
-        default is a cloud vendor, which meant reading a taxpayer's invoice sent
-        the document's text off-host by configuration alone, with nothing at the
-        call site saying so.
-
-        The default is now :attr:`~llm.LLMProvider.LOCAL` and
-        it is stated here rather than inherited, because the confidentiality
-        guarantee is that sensitive financial data stays on the host. Running
-        this reader against a hosted model remains possible, but only by naming
-        both the provider and the model, which makes the off-host read a
-        deliberate act at the call site instead of a property of the
-        environment.
-        """
+        """Build the text extraction request the agent runs for ``evidence_text``."""
         return LLMRequest(
             prompt=build_text_field_extraction_prompt(
                 evidence_text,
@@ -346,8 +293,7 @@ class TextInvoiceFieldExtractor:
                 values=self._authority_values,
                 fields=self._fields,
             ),
-            provider_override=self._provider,
-            model_override=self._model,
+            provider_override=LLMProvider.AGENT,
             evidence_derived=not self._public_corpus,
             consent_token=self._consent_token,
             model_role=ModelRole.TEXT_EXTRACTION,
@@ -374,33 +320,19 @@ def extract_invoice_fields_from_text(
     transcription: DocumentTranscription,
     *,
     operation: PinnedAuthorityOperation,
-    model: str | None = None,
     settings: Settings | None = None,
     authority_values: InvoiceExtractionAuthorityValues | None = None,
 ) -> InvoiceDraft:
     """Convenience wrapper: build a :class:`TextInvoiceFieldExtractor` and extract.
 
-    This is the entry point the evidence router calls, and it takes no provider
-    argument. The provider is therefore pinned LOCAL, and the pin is written out
-    below rather than inherited from the extractor's default: a pin held by NOT
-    passing an argument is the weakest possible statement of a confidentiality
-    property, because widening this signature with a pass-through ``provider``
-    would open the off-host route for every router call without a single diff
-    line that looks like a confidentiality change.
-
-    The pin is documentation, not the boundary. Widening this signature cannot
-    actually send a taxpayer's document off-host, because the extractor marks
-    every request it builds as evidence-derived and
-    :class:`LLMClient`'s per-invocation evidence-consent check refuses a
-    marked request at any off-host provider without a per-invocation consent
-    token. That is the property to preserve if this signature ever changes: the
-    refusal lives below this function, not in it.
+    The read carries no consent token, so it runs only on a text extraction
+    lane that stays on this computer; on a lane that reads off the host the
+    client's evidence-consent check refuses it before anything is sent.
 
     Args:
         transcription: The acquisition-stage transcription to read.
         operation: The caller-owned generation-pinned authority operation used
             for authority resolution and field grounding.
-        model: Optional model override.
         settings: Optional resolved settings override.
         authority_values: Application-resolved regulatory values for the prompt.
             The routing caller resolves these ONCE per document and passes them
@@ -411,9 +343,7 @@ def extract_invoice_fields_from_text(
         :class:`InvoiceDraft`: The grounded, best-effort extracted fields.
     """
     extractor = TextInvoiceFieldExtractor(
-        model=model,
         settings=settings,
-        provider=LLMProvider.LOCAL,
         operation=operation,
         authority_values=authority_values,
     )

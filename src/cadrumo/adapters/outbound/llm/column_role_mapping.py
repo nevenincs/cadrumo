@@ -67,7 +67,7 @@ from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError, requi
 from ....core.provenance_stamp import build_provenance_stamp
 from ....core.tabular import NormalizedTable
 from .consent import EvidenceConsentToken
-from .errors import LLMConfigError, LLMValidationError
+from .errors import LLMValidationError
 from .models import LLMRequest
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from .response_json import first_json_object as _first_json_object
@@ -504,31 +504,21 @@ def parse_column_role_mapping_response(text: str, headers: Sequence[str]) -> Col
 class SemanticColumnRoleMapper:
     """Establish one table's column roles with a language model, once per file.
 
-    Binds to :class:`~llm.LLMClient` and nothing lower, so
-    which engine answers -- an on-host runtime or a gated hosted one -- is
-    configuration rather than a fact this class holds.
+    Binds to :class:`~llm.LLMClient` and nothing lower. Every mapping runs
+    through the agent service under
+    :attr:`~core.model_catalogue.ModelRole.COLUMN_ROLE_MAPPING`, so the lane and
+    model are the ones the person selected for that role. This class names no
+    model and no provider of its own. A role with no selection, an unavailable
+    lane or a model that is not installed refuses with the service's typed
+    verdict; nothing here substitutes another lane or model.
 
-    **The model comes from the role, never from a general default.** A mapping
-    call selects among a handful of short strings. So the model is resolved
-    through :func:`~application.local_reader.select_role_model` against
-    :attr:`~core.model_catalogue.ModelRole.COLUMN_ROLE_MAPPING`: the mapping
-    setting when an operator changed it, otherwise the WEAKEST catalogued
-    candidate clearing the capability, licence and headroom bars on this
-    machine. Re-pointing that role in the catalogue re-points this lane with no
-    edit here. Setup provisions and the reader probe checks the same
-    resolution, so the model this mapper sends is the one they speak for.
-
-    A role-resolved or pinned model is an on-host runtime id, so it runs on the
-    LOCAL provider. The only way off-host is naming AGENT, which asks the agent
-    service to pick the lane and model for the role. That read always rides
-    behind the evidence consent gate, so it needs a consent token.
+    The headers come from a taxpayer's own file, so the request is marked
+    evidence-derived. A lane whose catalogue entry reads off-host needs the
+    per-invocation consent token; a lane that stays on this computer needs
+    none.
 
     Args:
-        model: Optional runtime id, honoured over the role resolution. Passed
-            to selection as the operator override, so a licence-barred or
-            uncatalogued choice is still honoured -- and still advised on.
-        provider: The transport. ``None`` means LOCAL; AGENT takes no model.
-        consent_token: The per-invocation off-host consent an AGENT read needs.
+        consent_token: The per-invocation consent an off-host lane needs.
         client: Injected client (dependency injection for callers holding one);
             default-constructed against the resolved settings otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
@@ -537,29 +527,19 @@ class SemanticColumnRoleMapper:
     def __init__(
         self,
         *,
-        model: str | None = None,
-        provider: LLMProvider | None = None,
         client: LLMClient | None = None,
         settings: Settings | None = None,
         consent_token: EvidenceConsentToken | None = None,
     ) -> None:
-        """Build the mapper against a model and settings."""
+        """Build the mapper against settings and an optional consent token."""
         # Ahead of every other statement, so the refusal is what an operator
-        # without the extra sees rather than a settings or model-resolution
-        # error raised on the way to it. This is the point the tabular lane
-        # splits at: a known fixed-layout file never reaches here and imports
-        # fully on a core install, while an unknown header vocabulary needs the
-        # mapping call and refuses with the install hint.
+        # without the extra sees rather than a settings error raised on the way
+        # to it. This is the point the tabular lane splits at: a known
+        # fixed-layout file never reaches here and imports fully on a core
+        # install, while an unknown header vocabulary needs the mapping call
+        # and refuses with the install hint.
         require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
-        self._settings = resolved_settings
-        self._provider = provider if provider is not None else LLMProvider.LOCAL
-        self._model_pinned = model is not None
-        self._model: str | None = (
-            (model if model is not None else self._role_model(resolved_settings))
-            if self._provider is LLMProvider.LOCAL
-            else None
-        )
         self._consent_token = consent_token
         if client is None:
             # The provider transports load only when a mapping is actually requested.
@@ -572,65 +552,19 @@ class SemanticColumnRoleMapper:
             )
         self._client = client
 
-    @staticmethod
-    def _role_model(settings: Settings) -> str:
-        """Resolve the tabular-mapping role to a runtime id on this machine.
-
-        Deferred import: the selection surface sits in the application tier,
-        which reaches back into this package, so an eager binding would close
-        that loop at import time.
-
-        Raises:
-            LLMConfigError: When no catalogued candidate clears the bars here.
-                Naming a model that cannot serve would push the failure into
-                inference, where it reaches the operator as a timeout instead
-                of as a refusal carrying its own remediation.
-        """
-        from ....application.local_reader import select_role_model
-
-        selection = select_role_model(ModelRole.COLUMN_ROLE_MAPPING, settings)
-        if not selection.selected or selection.runtime_id is None:
-            raise LLMConfigError(
-                context=selection.facts,
-                precondition_verdict=selection.precondition_verdict,
-            )
-        return selection.runtime_id
-
-    def reader_refusal(self) -> PreconditionVerdict | None:
-        """Return why the on-host model this mapper loads cannot answer now, or ``None``.
-
-        Asked of the runtime itself through the reader probe, about the exact
-        model this mapper sends, so a runtime that does not answer and a role
-        model that is not installed each come back as the probe's verdict
-        naming the local AI setup. ``None`` when the reader can run, and
-        whenever the probe cannot speak for this mapper: an off-host transport,
-        or a model the caller pinned rather than the role's, which setup would
-        not install.
-
-        Deferred import for the same reason as :meth:`_role_model`.
-        """
-        if self._provider is not LLMProvider.LOCAL or self._model_pinned:
-            return None
-        from ....application.local_reader import probe_local_reader
-
-        status = probe_local_reader(ModelRole.COLUMN_ROLE_MAPPING, self._settings, model=self._model)
-        return None if status.available else status.precondition_verdict
-
     @property
     def decided_by(self) -> str:
-        """Provenance stamp naming the transport and model a mapping was reached with.
+        """Provenance stamp naming the transport a mapping was reached with.
 
-        This stamp previously named no transport at all, which had two costs.
-        It could not say whether a mapping had left the host -- and this is the
-        one reader besides the extractors that accepts a provider, so it is the
-        one that can. And its reader name parsed AS a transport, so a survey
-        classifying artefacts by that segment read ``column`` where it expected
-        a transport.
+        The transport is the agent service. The model segment is
+        ``configured`` because the lane and model are the person's role
+        selection, resolved by the service at dispatch, not a fact this class
+        holds.
         """
         return build_provenance_stamp(
-            provider=self._provider,
+            provider=LLMProvider.AGENT,
             reader="column-role-map",
-            model=self._model or "configured",
+            model="configured",
         )
 
     def map(self, headers: Sequence[str]) -> ColumnRoleProposal:
@@ -659,16 +593,16 @@ class SemanticColumnRoleMapper:
         **The evidence marker is stated, and it is stated True.** What crosses
         this seam is the file's schema -- the header labels a bank or a billing
         tool printed to name its own columns -- and never a cell value. Those
-        labels still come from a taxpayer's own file, so an off-host mapping
-        rides behind the same per-invocation consent as every other read of a
-        taxpayer's document, and an on-host mapping is unaffected.
+        labels still come from a taxpayer's own file, so a mapping on a lane that
+        reads off-host rides behind the same per-invocation consent as every
+        other read of a taxpayer's document, and a lane that stays on this
+        computer is unaffected.
         """
         return LLMRequest(
             prompt=build_column_role_mapping_prompt(headers),
             max_tokens=_MAX_REPLY_TOKENS,
             temperature=_MAPPING_TEMPERATURE,
-            provider_override=self._provider,
-            model_override=self._model,
+            provider_override=LLMProvider.AGENT,
             evidence_derived=True,
             consent_token=self._consent_token,
             model_role=ModelRole.COLUMN_ROLE_MAPPING,
@@ -711,14 +645,13 @@ def resolve_header_roles(
 
     Missing optional capability remains a typed refusal.
 
-    A reader that could not be asked is reported, not declined: the role's
-    runtime and model are checked before the call and again after a failed
-    one, and an unavailable reader returns
-    :class:`~application.ledger.column_roles.ColumnRoleReaderUnavailable`
-    carrying the verdict, which names the local AI setup when setup can
-    supply what is missing. A catalogue that names no model this computer can
-    run is reported the same way, with its no-action verdict. Only a model
-    that answered and established nothing declines the headers with ``None``.
+    A reader that could not be asked is reported, not declined: a model run
+    the agent service refused -- no selection for the role, an unavailable
+    lane, a model that is not installed, an off-host lane without consent --
+    returns :class:`~application.ledger.column_roles.ColumnRoleReaderUnavailable`
+    carrying the refusal's typed verdict. No other lane or model is tried.
+    Only a model that answered and established nothing declines the headers
+    with ``None``.
 
     Args:
         headers: The header cells, in column order.
@@ -729,18 +662,9 @@ def resolve_header_roles(
         resolved = mapper if mapper is not None else SemanticColumnRoleMapper()
     except MissingOptionalExtraError:
         raise
-    except LLMConfigError as exc:
-        verdict = _carried_verdict(exc)
-        if verdict is None:
-            _logger.warning("semantic column-role mapping is not configured on this host", exc_info=True)
-            return None
-        return ColumnRoleReaderUnavailable(precondition_verdict=verdict)
     except CadrumoError:
         _logger.warning("semantic column-role mapping could not be prepared for this table", exc_info=True)
         return None
-    refusal = resolved.reader_refusal()
-    if refusal is not None:
-        return ColumnRoleReaderUnavailable(precondition_verdict=refusal)
     try:
         proposal = resolved.map(headers)
     except MissingOptionalExtraError:
@@ -749,9 +673,7 @@ def resolve_header_roles(
         _logger.warning("semantic column-role mapping could not establish roles for this table", exc_info=True)
         return None
     except (CadrumoError, httpx.HTTPError) as exc:
-        # The runtime can stop or lose the model between the check and the
-        # call; asked again, the probe names that cause.
-        verdict = resolved.reader_refusal() or _carried_verdict(exc)
+        verdict = _carried_verdict(exc)
         if verdict is None:
             _logger.warning("semantic column-role mapping could not establish roles for this table", exc_info=True)
             return None

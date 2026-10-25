@@ -1,4 +1,4 @@
-"""On-host VISION TRANSCRIPTION of a scan-only PDF or image: stage one, and only stage one.
+"""VISION TRANSCRIPTION of a scan-only PDF or image: stage one, and only stage one.
 
 This module reads pixels into text. It does not read pixels into fields, and the
 difference is the whole reason it was refitted.
@@ -33,12 +33,11 @@ every downstream check that is not the anchor check -- and it would pass that
 one too, since the fabrication would be in the transcription the check runs
 against.
 
-**On-host by default, and the default is stated rather than inherited.** The
-shipped provider default is a cloud vendor, so a reader that took whatever the
-environment resolved would send a taxpayer's document off-host by configuration
-alone. Naming another provider requires naming its model too, which makes an
-off-host read a deliberate act at the call site. That is a floor, not the gate:
-the gate is the client's per-invocation evidence-consent check, and every
+**One dispatch path, and consent follows the lane.** Every read goes to the
+agent service for the vision transcription role, and the person's selection
+for that role decides the lane and model. Whether the lane reads off-host is the
+catalogue entry's typed flag, never this module's guess. A lane that reads
+off-host needs the per-invocation, digest-bound consent token, and every
 request built here is marked evidence-derived unless the caller names the
 public, synthetic measurement corpus.
 
@@ -74,8 +73,7 @@ __all__ = [
     "VISION_TRANSCRIPTION_PROMPT",
     "VISION_TRANSCRIPTION_PROMPT_ID",
     "VISION_TRANSCRIPTION_PROMPT_VERSION",
-    "LocalVisionDocumentTranscriber",
-    "transcribe_document_images",
+    "VisionDocumentTranscriber",
     "vision_transcription_prompt_registry",
 ]
 
@@ -144,8 +142,8 @@ def vision_transcription_prompt_registry() -> PromptRegistry:
     return registry
 
 
-class LocalVisionDocumentTranscriber:
-    """Transcribe rendered document pages on-host with a local vision model.
+class VisionDocumentTranscriber:
+    """Transcribe rendered document pages with the model selected for vision transcription.
 
     Stage one of the reading pipeline for evidence that carries no text layer.
     It produces text and nothing else; every judgement about what that text
@@ -153,19 +151,14 @@ class LocalVisionDocumentTranscriber:
     returns.
 
     Args:
-        model: Vision model identifier; ``None`` uses the configured LOCAL
-            vision model. Required when ``provider`` is not LOCAL, because the
-            only default that exists names a local model no vendor serves.
-        provider: Which provider carries the read. Defaults to LOCAL so a
-            taxpayer's document does not leave the host by default.
         client: Injected :class:`~llm.LLMClient` (dependency
             injection for tests); default-constructed against the resolved
             settings otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
         consent_token: Per-invocation off-host consent proof, minted through
-            :func:`~llm.consent.mint_evidence_consent_token`. Required only for
-            an off-host read of real evidence; ``None`` is correct for every
-            on-host read.
+            :func:`~llm.consent.mint_evidence_consent_token`. Needed only when
+            the selected lane reads off-host; ``None`` is correct for a lane
+            that stays on this computer.
         public_corpus: Whether the pages handed to this reader come from the
             public, synthetic measurement corpus rather than from a taxpayer's
             document. Defaults to ``False`` -- the fail-closed direction, so a
@@ -175,32 +168,22 @@ class LocalVisionDocumentTranscriber:
     def __init__(
         self,
         *,
-        model: str | None = None,
-        provider: LLMProvider = LLMProvider.LOCAL,
         client: LLMClient | None = None,
         settings: Settings | None = None,
         consent_token: EvidenceConsentToken | None = None,
         public_corpus: bool = False,
     ) -> None:
-        """Build the vision reader, subject to the on-host consent gate."""
+        """Build the vision reader for the vision transcription role."""
         # Ahead of every other statement, so the refusal is what an operator
-        # without the extra sees rather than a settings or model-resolution
-        # error raised on the way to it.
+        # without the extra sees rather than a settings error raised on the way
+        # to it.
         require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
-        self._provider = provider
         self._consent_token = consent_token
         self._public_corpus = public_corpus
         self._prompt = vision_transcription_prompt_registry().get(VISION_TRANSCRIPTION_PROMPT_ID)
-        # Off-host, the agent service picks the lane and model for the role, so
-        # this reader names none.
-        self._model: str | None = (
-            (model if model is not None else resolved_settings.cadrumo_llm_ollama_vision_model)
-            if provider is LLMProvider.LOCAL
-            else None
-        )
-        # A local vision model on consumer hardware can take minutes; give the
-        # vision read its own (longer) timeout, mirroring LocalVisionLLMClassifier.
+        # A vision read can take minutes; give it its own (longer) timeout,
+        # mirroring VisionLLMClassifier.
         vision_settings = resolved_settings.model_copy(
             update={"cadrumo_llm_default_timeout_s": resolved_settings.cadrumo_llm_vision_read_timeout_s},
         )
@@ -214,35 +197,24 @@ class LocalVisionDocumentTranscriber:
             )
         )
 
-    @property
-    def transcriber_identity(self) -> TranscriberIdentity:
-        """Return the provenance stamp for this reader.
+    def transcriber_identity(self, model: str) -> TranscriberIdentity:
+        """Return the provenance stamp for a read the agent served with ``model``.
 
         The revision folds the prompt version because the prompt is half of what
         produced the text: the same model under different instructions returns a
         different reading of the same pixels. A revision naming only the model
         would erase which instructions produced the recorded text.
 
-        The TRANSPORT is recorded for a different reason, and it is not
-        tidiness. A transcription is a durable artefact derived from the
-        document, so if it was produced off-host it is one of the artefacts a
-        consent withdrawal must enumerate -- and a model identifier reveals the
-        vendor only to a reader who already knows the catalogue. Recorded this
-        way, the artefact that most needs re-deriving is not the one the survey
-        cannot see.
-
-        It rides its own field rather than the name, which is where it began.
-        ``name`` is contracted to say which reader produced the text and
-        explicitly not to carry a coarse label, so folding the transport
-        through it broke that contract and made a third provenance grammar --
-        one no parser knew, on top of the two the stamp constructor had just
-        collapsed into one. The reason for recording it was right; only the
-        place was wrong.
+        The TRANSPORT is recorded because a transcription is a durable artefact
+        derived from the document: if a consent is withdrawn, the artefacts read
+        through the agent must be enumerable. ``model`` is the lane-qualified
+        label the agent reported for the run, so the name says which lane and
+        model produced the text.
         """
         return TranscriberIdentity(
             origin=FieldOrigin.VISION,
-            name=self._model or "configured",
-            transport=provenance_transport_label(self._provider),
+            name=model,
+            transport=provenance_transport_label(LLMProvider.AGENT),
             revision=f"prompt-v{self._prompt.version}",
         )
 
@@ -257,7 +229,7 @@ class LocalVisionDocumentTranscriber:
         Args:
             evidence_images: In-memory page/image renders of the evidence, each
                 carrying its declared media type (built by the caller from
-                :func:`~llm.rasterise_pdf_pages_to_base64_png`
+                :func:`~llm.pdf_rasterisation.rasterise_pdf_pages_to_base64_png`
                 for a scan-only PDF, or from the raw bytes of an image
                 attachment).
             source_content_sha256: Content address of the SOURCE bytes. Supplied
@@ -287,8 +259,7 @@ class LocalVisionDocumentTranscriber:
             )
         request = LLMRequest(
             prompt=self._prompt.template,
-            provider_override=self._provider,
-            model_override=self._model,
+            provider_override=LLMProvider.AGENT,
             images=evidence_images,
             evidence_derived=not self._public_corpus,
             consent_token=self._consent_token,
@@ -308,36 +279,5 @@ class LocalVisionDocumentTranscriber:
             text=text,
             page_count=len(evidence_images),
             source_content_sha256=source_content_sha256,
-            transcriber=(
-                self.transcriber_identity
-                if self._model is not None
-                else self.transcriber_identity.model_copy(update={"name": response.model})
-            ),
+            transcriber=self.transcriber_identity(response.model),
         )
-
-
-def transcribe_document_images(
-    evidence_images: tuple[MultimodalImageInput, ...],
-    *,
-    source_content_sha256: str,
-    model: str | None = None,
-    provider: LLMProvider = LLMProvider.LOCAL,
-    settings: Settings | None = None,
-) -> DocumentTranscription:
-    """Convenience wrapper: build a :class:`LocalVisionDocumentTranscriber` and transcribe.
-
-    Args:
-        evidence_images: In-memory page/image renders of the evidence.
-        source_content_sha256: Content address of the source bytes.
-        model: Optional vision model override.
-        provider: Transport serving the read. Defaults to
-            :attr:`~llm.LLMProvider.LOCAL`, so the production
-            route stays on-host; naming another provider is the caller's
-            explicit, per-invocation decision to read off-host.
-        settings: Optional resolved settings override.
-
-    Returns:
-        :class:`~application.ledger.document_transcription.DocumentTranscription`: The transcription.
-    """
-    transcriber = LocalVisionDocumentTranscriber(model=model, provider=provider, settings=settings)
-    return transcriber.transcribe(evidence_images=evidence_images, source_content_sha256=source_content_sha256)

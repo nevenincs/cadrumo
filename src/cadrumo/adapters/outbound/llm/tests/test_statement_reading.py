@@ -1,50 +1,40 @@
-"""The on-host statement reader: its instruction, its reply parsing, and the wired path.
+"""The statement reader: its instruction, its reply parsing, and the wired path.
 
-The wired cases stand up a real loopback endpoint speaking the runtime's
-``/api/chat`` wire shape and read a statement PDF through the real
+The wired cases read a statement PDF through the real
 :class:`~cadrumo.adapters.inbound.financial.providers.pdf_statement.PdfStatementProvider`,
-the real reader, the real client and the real grounding stage. No model is
-loaded: each reply is authored by the test, modelled on what the local text
-model was measured returning for the same page -- including the balances it
-listed as movements and the movements it invented -- so the wired path is
-proven to keep only what the page prints.
+the real reader, the real client and the real grounding stage, with a
+recording stand-in for the agent service behind the model-run port. No model
+is loaded: each reply is authored by the test, modelled on what a text model
+was measured returning for the same page -- including the balances it listed
+as movements and the movements it invented -- so the wired path is proven to
+keep only what the page prints.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
 from decimal import Decimal
-from http import HTTPStatus
 from pathlib import Path
-from queue import Queue
-from typing import ClassVar, override
 
 import pytest
 
 from cadrumo.adapters.inbound.financial.providers.pdf_statement import PdfStatementProvider
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.ledger.statement_reading import ProposedDirection
-from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.tests.inventory import FIXTURES_DIR
-from cadrumo.tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 from cadrumo.tests.pdf_fixtures import multi_page_text_pdf_bytes
+from cadrumo_client.contracts.model_runs import ModelRunBody
 
-from ..evidence_draft_vision import VISION_TRANSCRIPTION_PROMPT_ID, LocalVisionDocumentTranscriber
 from ..statement_reading import (
-    STATEMENT_READING_PROMPT_ID,
     LocalStatementReader,
     build_statement_page_prompt,
     parse_statement_page_response,
 )
-from .load_headroom_support import admitting_client
+from .model_run_support import IMAGE_LANE, RecordingModelRuns, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -137,95 +127,46 @@ def test_a_reply_carrying_no_object_marks_the_page_unusable() -> None:
     assert page.movements == ()
 
 
-def _messages(body: dict[str, object]) -> list[dict[str, object]]:
-    """Return the request's message objects."""
-    messages = body.get("messages")
-    return [message for message in messages if isinstance(message, dict)] if isinstance(messages, list) else []
+class _ScriptedAgent:
+    """Answer page reads in order and scanned-page transcriptions with one transcription."""
+
+    def __init__(self, *, text_replies: tuple[str, ...], transcription: str = "", empty_transcriptions: int = 0):
+        self.text_replies = list(text_replies)
+        self.transcription = transcription
+        self.empty_transcriptions = empty_transcriptions
+
+    def answer(self, body: ModelRunBody) -> str:
+        if body.attachments:
+            if self.empty_transcriptions > 0:
+                self.empty_transcriptions -= 1
+                return ""
+            return self.transcription
+        return self.text_replies.pop(0)
 
 
-def _carries_images(body: dict[str, object]) -> bool:
-    """Whether the request is a vision request."""
-    return any(message.get("images") for message in _messages(body))
-
-
-def _prompt(body: dict[str, object]) -> str:
-    """Return the request's prompt text."""
-    return "".join(str(message.get("content", "")) for message in _messages(body))
-
-
-class _ScriptedRuntime(SilentLoopbackHandler):
-    """A real local endpoint holding both reader models.
-
-    It answers text requests in order and vision requests with a transcription.
-    """
-
-    text_replies: ClassVar[Queue[str]]
-    transcription: ClassVar[str] = ""
-    empty_transcriptions: ClassVar[int] = 0
-    requests: ClassVar[Queue[dict[str, object]]]
-
-    @override
-    def do_GET(self) -> None:
-        if self.path != "/api/tags":
-            self.send_error(HTTPStatus.NOT_FOUND)
-            return
-        settings = load_settings()
-        models = (settings.cadrumo_llm_ollama_text_model, settings.cadrumo_llm_ollama_vision_model)
-        write_json_response(self, {"models": [{"name": name, "size": 1} for name in models]}, status=HTTPStatus.OK)
-
-    @override
-    def do_POST(self) -> None:
-        body = dict(read_json_body(self))
-        self.requests.put(body)
-        if _carries_images(body):
-            content = "" if _ScriptedRuntime.empty_transcriptions > 0 else self.transcription
-            _ScriptedRuntime.empty_transcriptions = max(0, _ScriptedRuntime.empty_transcriptions - 1)
-        else:
-            content = self.text_replies.get_nowait()
-        write_json_response(self, ollama_chat_reply(content, model=str(body.get("model"))), status=HTTPStatus.OK)
+def _carries_images(body: ModelRunBody) -> bool:
+    """Whether the run is a vision run."""
+    return bool(body.attachments)
 
 
 @pytest.fixture
-def runtime(secure_object_test_profile: TestRuntimeProfile) -> Iterator[tuple[str, Queue[dict[str, object]]]]:
-    """Serve the scripted runtime on loopback; the real bucket runtime backs the client's records."""
+def records(secure_object_test_profile: TestRuntimeProfile) -> Iterator[None]:
+    """The real bucket runtime backs the client's cache, usage and run records."""
     _ = secure_object_test_profile
-    requests: Queue[dict[str, object]] = Queue()
-    _ScriptedRuntime.requests = requests
-    _ScriptedRuntime.empty_transcriptions = 0
-    _ScriptedRuntime.text_replies = Queue()
-    for reply in _PAGE_REPLIES:
-        _ScriptedRuntime.text_replies.put(reply)
-    with serving_loopback(_ScriptedRuntime, path="/api/chat") as chat_url:
-        yield chat_url, requests
+    yield
 
 
-def _reader() -> LocalStatementReader:
-    settings = load_settings()
-    client = admitting_client(
-        settings.cadrumo_llm_ollama_text_model,
-        settings=settings,
-        caller="cadrumo.adapters.outbound.llm.statement_reading",
-        prompt_id=STATEMENT_READING_PROMPT_ID,
-    )
-    vision = LocalVisionDocumentTranscriber(
-        settings=settings,
-        client=admitting_client(
-            settings.cadrumo_llm_ollama_vision_model,
-            settings=settings,
-            caller="cadrumo.adapters.outbound.llm.evidence_draft_vision",
-            prompt_id=VISION_TRANSCRIPTION_PROMPT_ID,
-        ),
-    )
-    return LocalStatementReader(settings=settings, client=client, vision_transcriber=vision)
+@contextmanager
+def _agent(script: _ScriptedAgent) -> Generator[RecordingModelRuns]:
+    with serving_agent(lane=IMAGE_LANE, answer=script.answer) as service:
+        yield service
 
 
-def test_the_wired_read_keeps_only_the_movements_the_statement_prints(
-    runtime: tuple[str, Queue[dict[str, object]]],
-) -> None:
+@pytest.mark.usefixtures("records")
+def test_the_wired_read_keeps_only_the_movements_the_statement_prints() -> None:
     """Balances, totals and invented movements in the replies never become rows."""
-    chat_url, requests = runtime
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        provider = PdfStatementProvider(reader_factory=_reader)
+    with _agent(_ScriptedAgent(text_replies=_PAGE_REPLIES)) as service:
+        provider = PdfStatementProvider(reader_factory=LocalStatementReader)
         validation = provider.validate_source(_STATEMENT)
         rows = list(provider.ingest(_STATEMENT))
 
@@ -238,52 +179,48 @@ def test_the_wired_read_keeps_only_the_movements_the_statement_prints(
         ("2025-01-20", Decimal("3500.00"), TransactionDirection.INCOMING, "EUR"),
     ]
     assert sum("dropped" in warning for warning in validation.warnings) == 7
-    sent = [requests.get_nowait() for _ in range(requests.qsize())]
-    assert len(sent) == len(_PAGE_REPLIES), "each page is read once across validation and ingest"
-    assert "Zinsertrag 01.01.2025 +8,55EUR" in _prompt(sent[0])
-    assert {body["think"] for body in sent} == {False}
+    assert len(service.runs) == len(_PAGE_REPLIES), "each page is read once across validation and ingest"
+    assert "Zinsertrag 01.01.2025 +8,55EUR" in service.runs[0][1].prompt
+    assert {header.role for header, _ in service.runs} == {ModelRole.TEXT_EXTRACTION.value}
+    assert {header.consent for header, _ in service.runs} == {None}
+    # Copying printed values has one right answer, so the reader asks for no sampling variety.
+    assert {(body.temperature, body.max_output_tokens) for _, body in service.runs} == {(0.0, 4096)}
+    assert {row.raw.raw_fields["read_by"] for row in rows} == {"llm:agent-statement-read:configured"}
 
 
-def test_a_scanned_page_is_transcribed_on_host_then_read(
-    runtime: tuple[str, Queue[dict[str, object]]],
-    tmp_path: Path,
-) -> None:
-    """A page with no text layer goes to the vision model for text, then to the text model."""
-    chat_url, requests = runtime
+@pytest.mark.usefixtures("records")
+def test_a_scanned_page_is_transcribed_then_read(tmp_path: Path) -> None:
+    """A page with no text layer goes to the vision role for text, then to the text role."""
     source = tmp_path / "scan.pdf"
     source.write_bytes(multi_page_text_pdf_bytes(("Account statement March 2026",), ()))
-    _ScriptedRuntime.transcription = "Coffee shop 05.03.2026 -4,50 EUR"
-    _ScriptedRuntime.text_replies = Queue()
-    _ScriptedRuntime.text_replies.put(_reply())
-    _ScriptedRuntime.text_replies.put(_reply(_movement("05.03.2026", "-4,50 EUR", "Coffee shop", "out")))
+    script = _ScriptedAgent(
+        text_replies=(_reply(), _reply(_movement("05.03.2026", "-4,50 EUR", "Coffee shop", "out"))),
+        transcription="Coffee shop 05.03.2026 -4,50 EUR",
+    )
 
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        rows = list(PdfStatementProvider(reader_factory=_reader).ingest(source))
+    with _agent(script) as service:
+        rows = list(PdfStatementProvider(reader_factory=LocalStatementReader).ingest(source))
 
     assert [(row.raw.booked_date.isoformat(), row.raw.amount, row.raw.raw_fields["page_number"]) for row in rows] == [
         ("2026-03-05", Decimal("4.50"), "2")
     ]
-    sent = [requests.get_nowait() for _ in range(requests.qsize())]
-    assert sum(_carries_images(body) for body in sent) == 1
+    vision = [header.role for header, body in service.runs if _carries_images(body)]
+    assert vision == [ModelRole.VISION_TRANSCRIPTION.value]
 
 
-def test_a_scanned_page_read_back_empty_is_read_again(
-    runtime: tuple[str, Queue[dict[str, object]]],
-    tmp_path: Path,
-) -> None:
+@pytest.mark.usefixtures("records")
+def test_a_scanned_page_read_back_empty_is_read_again(tmp_path: Path) -> None:
     """A vision read that spent its budget and returned no text is retried, not taken as a blank page."""
-    chat_url, requests = runtime
     source = tmp_path / "scan.pdf"
     source.write_bytes(multi_page_text_pdf_bytes(("Account statement March 2026",), ()))
-    _ScriptedRuntime.transcription = "Coffee shop 05.03.2026 -4,50 EUR"
-    _ScriptedRuntime.empty_transcriptions = 1
-    _ScriptedRuntime.text_replies = Queue()
-    _ScriptedRuntime.text_replies.put(_reply())
-    _ScriptedRuntime.text_replies.put(_reply(_movement("05.03.2026", "-4,50 EUR", "Coffee shop", "out")))
+    script = _ScriptedAgent(
+        text_replies=(_reply(), _reply(_movement("05.03.2026", "-4,50 EUR", "Coffee shop", "out"))),
+        transcription="Coffee shop 05.03.2026 -4,50 EUR",
+        empty_transcriptions=1,
+    )
 
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        rows = list(PdfStatementProvider(reader_factory=_reader).ingest(source))
+    with _agent(script) as service:
+        rows = list(PdfStatementProvider(reader_factory=LocalStatementReader).ingest(source))
 
     assert [(row.raw.booked_date.isoformat(), row.raw.amount) for row in rows] == [("2026-03-05", Decimal("4.50"))]
-    sent = [requests.get_nowait() for _ in range(requests.qsize())]
-    assert sum(_carries_images(body) for body in sent) == 2
+    assert sum(_carries_images(body) for _, body in service.runs) == 2

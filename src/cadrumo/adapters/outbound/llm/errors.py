@@ -54,7 +54,7 @@ class LLMTransientTransportError(LLMProviderError):
 
 
 class LLMPdfRasterisationError(LLMError):
-    """Raised when :func:`~llm.rasterise_pdf_pages_to_base64_png` fails."""
+    """Raised when :func:`~llm.pdf_rasterisation.rasterise_pdf_pages_to_base64_png` fails."""
 
 
 class LLMCacheError(LLMError):

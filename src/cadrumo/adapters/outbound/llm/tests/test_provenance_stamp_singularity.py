@@ -189,15 +189,11 @@ def test_no_transcriber_identity_folds_its_transport_into_a_name() -> None:
     """
     from .....application.ledger.evidence_textlayer import text_layer_transcriber_identity
     from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-    from ..evidence_draft_vision import LocalVisionDocumentTranscriber
+    from ..evidence_draft_vision import VisionDocumentTranscriber
 
     identities = [
         text_layer_transcriber_identity(),
-        LocalVisionDocumentTranscriber(model="qwen2.5vl:3b").transcriber_identity,
-        LocalVisionDocumentTranscriber(
-            model="claude-haiku-4-5-20251001",
-            provider=LLMProvider.AGENT,
-        ).transcriber_identity,
+        VisionDocumentTranscriber().transcriber_identity("nearby/api/synthetic-vision:1"),
     ]
 
     assert any(identity.transport != LOCAL_TRANSPORT_LABEL for identity in identities), (

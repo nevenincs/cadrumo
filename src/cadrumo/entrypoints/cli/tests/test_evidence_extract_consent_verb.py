@@ -41,7 +41,6 @@ from ....adapters.persistence.llm.cache import LLMCache
 from ....adapters.persistence.llm.usage import UsageRecorder
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from ....core.config_support import LLMProvider
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -157,7 +156,6 @@ def test_a_minted_token_carries_an_evidence_read_all_the_way_to_the_endpoint(
 
     with _serve_agent() as bodies:
         extractor = TextInvoiceFieldExtractor(
-            provider=LLMProvider.AGENT,
             settings=settings,
             client=_client(settings),
             consent_token=token,
@@ -189,7 +187,6 @@ def test_the_same_read_without_the_token_reaches_nothing(
 
     with _serve_agent() as bodies:
         extractor = TextInvoiceFieldExtractor(
-            provider=LLMProvider.AGENT,
             settings=settings,
             client=_client(settings),
             operation=operation,

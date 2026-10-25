@@ -32,7 +32,6 @@ from .....application.provisioning import (
     select_model_for_role,
 )
 from .....core.config import Settings
-from .....core.config_support import LLMProvider
 from .....core.hardware import AcceleratorKind
 from .....core.model_catalogue import ModelRole, model_candidate
 from .....core.optional_extras import MissingOptionalExtraError
@@ -40,7 +39,7 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..client import LLMClient
 from ..errors import LLMProviderError
 from ..evidence_draft_text import TextInvoiceFieldExtractor
-from ..evidence_draft_vision import VISION_TRANSCRIPTION_PROMPT_ID, LocalVisionDocumentTranscriber
+from ..evidence_draft_vision import VISION_TRANSCRIPTION_PROMPT_ID, VisionDocumentTranscriber
 from ..models import MultimodalImageInput
 from ..supply_nature_proposal import SUPPLY_NATURE_PROMPT_ID, SupplyNatureProposal, SupplyNatureProposer
 
@@ -174,9 +173,8 @@ def transcribe_document_images_under_admitted_load(
     source_content_sha256: str,
     settings: Settings,
 ) -> DocumentTranscription:
-    """Transcribe evidence images on the LOCAL route the router pins, under an admitting measurement."""
-    return LocalVisionDocumentTranscriber(
-        provider=LLMProvider.LOCAL,
+    """Transcribe evidence images through the agent, as the router does, under an admitting measurement."""
+    return VisionDocumentTranscriber(
         client=admitting_vision_transcription_client(settings=settings),
         settings=settings,
     ).transcribe(evidence_images=evidence_images, source_content_sha256=source_content_sha256)
@@ -194,9 +192,9 @@ def extraction_ports_under_admitted_load(ports: InvoiceDraftExtractionPorts) -> 
     Mirrors the composition root's own local branches, including where the
     authority operation is opened: per call, from the bundled indexed authority,
     so the read runs under the same authority production gives it and only the
-    client's measured reading differs. The off-host branches are delegated back
-    to ``ports`` untouched, because a provider that reads off host is never
-    assessed for on-host headroom.
+    client's measured reading differs. A read carrying an off-host consent
+    token is delegated back to ``ports`` untouched, because a lane that reads
+    off host is never assessed for on-host headroom.
 
     The reader-unavailable wrapping is reproduced too: these ports are the ones
     the extraction use case reads through, and it distinguishes an unavailable
@@ -206,12 +204,11 @@ def extraction_ports_under_admitted_load(ports: InvoiceDraftExtractionPorts) -> 
     def read_text(
         transcription: DocumentTranscription,
         settings: Settings,
-        provider: LLMProvider | None,
         consent_token: EvidenceConsentProof | None,
         authority_values: object,
     ) -> InvoiceDraft:
-        if provider is not None:
-            return ports.read_text(transcription, settings, provider, consent_token, authority_values)
+        if consent_token is not None:
+            return ports.read_text(transcription, settings, consent_token, authority_values)
         try:
             if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
                 raise TypeError("text reader requires resolved invoice extraction authority values")
@@ -225,7 +222,10 @@ def extraction_ports_under_admitted_load(ports: InvoiceDraftExtractionPorts) -> 
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
 
-    def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNatureProposal | None:
+    def propose_supply_nature(
+        transcription: DocumentTranscription, settings: Settings, consent_token: EvidenceConsentProof | None
+    ) -> SupplyNatureProposal | None:
+        del consent_token
         try:
             return propose_supply_nature_under_admitted_load(transcription.text.splitlines(), settings=settings)
         except Exception:
@@ -235,11 +235,10 @@ def extraction_ports_under_admitted_load(ports: InvoiceDraftExtractionPorts) -> 
         images: tuple[VisionImage, ...],
         source_content_sha256: str,
         settings: Settings,
-        provider: LLMProvider | None,
         consent_token: EvidenceConsentProof | None,
     ) -> DocumentTranscription:
-        if provider is not None:
-            return ports.transcribe_vision(images, source_content_sha256, settings, provider, consent_token)
+        if consent_token is not None:
+            return ports.transcribe_vision(images, source_content_sha256, settings, consent_token)
         try:
             inputs = tuple(MultimodalImageInput.from_base64(image.base64_data, image.media_type) for image in images)
             return transcribe_document_images_under_admitted_load(
@@ -263,13 +262,12 @@ def extract_invoice_text_under_admitted_load(
     authority_values: InvoiceExtractionAuthorityValues,
     operation: PinnedAuthorityOperation,
 ) -> InvoiceDraft:
-    """Read an invoice's text on the LOCAL route the evidence router pins, under an admitting measurement.
+    """Read an invoice's text through the agent, as the evidence router does, under an admitting measurement.
 
     The client carries the reader's own caller and prompt identity, so usage
     and run record are recorded exactly as the router's read records them.
     """
     return TextInvoiceFieldExtractor(
-        provider=LLMProvider.LOCAL,
         client=admitting_text_extraction_client(settings=settings),
         settings=settings,
         operation=operation,

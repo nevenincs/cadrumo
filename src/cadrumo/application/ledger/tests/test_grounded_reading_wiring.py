@@ -24,7 +24,6 @@ from pathlib import Path
 import pytest
 
 from ....core.config import Settings, load_settings
-from ....core.config_support import LLMProvider
 from ....core.document_shape import DocumentShape
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.errors.error_codes import build_error_envelope
@@ -113,7 +112,6 @@ def _reader_unavailable_ports() -> InvoiceDraftExtractionPorts:
     def unavailable(
         _transcription: DocumentTranscription,
         _settings: Settings,
-        _off_host_provider: LLMProvider | None,
         _consent_token: EvidenceConsentProof | None,
         _authority_values: object,
         /,
@@ -127,7 +125,6 @@ def _reader_unavailable_ports() -> InvoiceDraftExtractionPorts:
         _images: tuple[VisionImage, ...],
         _prompt: str,
         _settings: Settings,
-        _off_host_provider: LLMProvider | None,
         _consent_token: EvidenceConsentProof | None,
         /,
     ) -> DocumentTranscription:
@@ -419,7 +416,6 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
     def reader(
         transcription: DocumentTranscription,
         _settings: Settings,
-        _off_host_provider: LLMProvider | None,
         _consent_token: EvidenceConsentProof | None,
         _authority_values: object,
         /,

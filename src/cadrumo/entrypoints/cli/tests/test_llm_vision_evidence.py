@@ -1,11 +1,10 @@
-"""Real-behaviour tests for the on-host vision evidence read path.
+"""Real-behaviour tests for the vision evidence read path.
 
-A scan-only PDF or an image is read in memory by a LOCAL vision model: the
-evidence resolves to base64 images (never inlined text), routes to the
-:class:`LocalVisionLLMClassifier`, and is sent to a loopback Ollama endpoint --
-no cloud consent, gestor-allowed, nothing written to disk, no byte leaving the
-host. The classifier is driven against a real local HTTP server (no mocks) and
-its response is parsed through the same allow-list the subprocess path uses.
+A scan-only PDF is rasterised on this computer and an image is read as its own
+bytes: the evidence resolves to base64 images (never inlined text) in memory,
+nothing written to disk, and routes to :class:`VisionLLMClassifier`, which asks
+the agent service for the vision role. A refusal from the service reaches the
+operator as a typed reader refusal; no other lane or model is tried.
 """
 
 from __future__ import annotations
@@ -18,23 +17,23 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
-from ....adapters.outbound.llm.tests.load_headroom_support import admitting_vision_classify_client
-from ....adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
+from ....adapters.outbound.llm.tests.model_run_support import serving_agent
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
 from ....application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence, resolve_llm_evidence
 from ....application.ledger.llm_classification_ports import EvidenceImage
 from ....application.ledger.preconditions import LedgerPreconditionCondition
-from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
-from ....core.config import Settings, override_settings
+from ....core.config import Settings
 from ....core.image_media_type import ImageMediaType
+from ....core.model_catalogue import ModelRole
 from ....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from ....domain.transactions.llm import prompt_spec_with_saturation_fields
 from ....domain.transactions.tests.vision_evidence_support import vision_transaction
 from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from ....tests.llm_vision_evidence_support import png_image
-from ...ledger_llm_composition import VisionReader, compose_ledger_llm
+from ...ledger_llm_composition import compose_ledger_llm
 from .persistence_vision_evidence_support import (
     add_evidence,
     scan_only_pdf,
@@ -51,7 +50,7 @@ __all__ = ["profile"]
 
 
 def _llm_ports(profile: TestRuntimeProfile):
-    """Compose the canonical evidence and local-reader ports for the profile."""
+    """Compose the canonical evidence and reader ports for the profile."""
     return compose_ledger_llm(bucket_id=profile.bucket_id, settings=profile.settings).ports
 
 
@@ -59,10 +58,10 @@ def test_scan_only_pdf_resolves_to_images_gestor_allowed_no_consent(
     profile: TestRuntimeProfile,
     tmp_path: Path,
 ) -> None:
-    """A scan-only PDF resolves to declared PNG page images on-host, even for a gestor."""
+    """A scan-only PDF is rasterised on this computer to declared PNG page images, even for a gestor."""
     evidence_id = add_evidence(profile, tmp_path, name="scan.pdf", data=scan_only_pdf())
-    # Gestor mode ON and cloud upload NOT permitted: the on-host vision path must
-    # still resolve (no cloud consent needed) -- this is the gestor read path.
+    # Gestor mode ON and cloud upload NOT permitted: rasterisation is local, so
+    # resolving the pages needs no consent -- this is the gestor read path.
     gestor: Settings = profile.settings.model_copy(
         update={"cadrumo_evidence_gestor_mode": True, "cadrumo_evidence_cloud_upload_permitted": False},
     )
@@ -157,65 +156,39 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     )
 
 
-def test_unreachable_reader_preserves_the_provisioning_refusal(
-    profile: TestRuntimeProfile,
+@pytest.mark.parametrize(
+    "code",
+    [ModelRunRefusalCode.NO_SELECTION, ModelRunRefusalCode.MODEL_NOT_INSTALLED, ModelRunRefusalCode.LANE_UNAVAILABLE],
+)
+def test_a_refused_vision_lookup_reaches_the_operator_as_a_typed_reader_refusal(
+    profile: TestRuntimeProfile, code: ModelRunRefusalCode
 ) -> None:
-    """A real reader connection failure carries its machine facts and exact verdict."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        settings = profile.settings.model_copy(
-            update={
-                "cadrumo_llm_ollama_chat_url": "http://127.0.0.1:1/api/chat",
-                "cadrumo_llm_vision_read_timeout_s": 1,
-            },
-        )
-        evidence = ResolvedEvidence(
-            reference="reader-unavailable",
-            text=None,
-            images=(
-                EvidenceImage.from_base64(
-                    base64.b64encode(png_image()).decode("ascii"),
-                    ImageMediaType.PNG,
-                ),
-            ),
-        )
-        ports = compose_ledger_llm(bucket_id=profile.bucket_id, settings=settings).ports
-        spec = prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test)
-        # Built on the reader's own constructor seam with a client whose measured
-        # reading admits the vision model: the dispatch point refuses a catalogued
-        # local model without measured headroom and fails closed where it cannot
-        # read the accelerator, so the port's default client would raise that
-        # refusal here instead of the connection one this case asserts.
-        reader = VisionReader(
-            LocalVisionLLMClassifier(
-                spec=spec,
-                settings=settings,
-                client=admitting_vision_classify_client(settings=settings),
-            ),
-            settings=settings,
+    """The service's refusal is the verdict the operator sees, with nothing run and nothing else tried."""
+    evidence = ResolvedEvidence(
+        reference="reader-unavailable",
+        text=None,
+        images=(EvidenceImage.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),),
+    )
+    ports = compose_ledger_llm(bucket_id=profile.bucket_id, settings=profile.settings).ports
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        serving_agent(lookup_refusal=code) as service,
+        pytest.raises(PurchaseInvoiceEvidenceReaderError) as raised,
+    ):
+        classify_with_evidence(
+            vision_transaction("reader-unavailable"),
+            evidence,
+            text_classifier=None,
+            spec=prompt_spec_with_saturation_fields(year=2025, operation=operation),
+            vision_classifier=None,
+            vision_model=None,
+            settings=profile.settings,
+            ports=ports,
         )
 
-        # The local adapter reads its endpoint from the process settings when it
-        # sends, not from the settings a client was built with, so the refused
-        # port must be set there too or a runtime serving the default port
-        # answers and the connection failure under test never happens.
-        with (
-            override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"),
-            pytest.raises(PurchaseInvoiceEvidenceInputError) as raised,
-        ):
-            classify_with_evidence(
-                vision_transaction("reader-unavailable"),
-                evidence,
-                text_classifier=None,
-                spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
-                vision_classifier=reader,
-                vision_model=None,
-                settings=settings,
-                ports=ports,
-            )
-
-        verdict = raised.value.terminal_precondition_verdict
-        assert verdict is not None
-        assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
-        assert verdict.evidence[0].values["runtime_reachable"] is False
-        assert verdict.action is not None
-        assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.evidence[0].values["model_run_refusal"] == code.value
+    assert verdict.evidence[0].values["model_role"] == ModelRole.VISION_TRANSCRIPTION.value
+    assert service.lookups == [ModelRole.VISION_TRANSCRIPTION]
+    assert service.runs == []

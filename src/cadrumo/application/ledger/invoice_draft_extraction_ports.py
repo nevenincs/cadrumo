@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ...core.config import Settings
-from ...core.config_support import LLMProvider
 from ...core.errors.hierarchy import CadrumoError
 from ...core.image_media_type import ImageMediaType
 from ...domain.iva.supply_nature import SupplyNature
@@ -124,19 +123,20 @@ class InvoiceDraftExtractionPorts:
     evidence_input_ports: EvidenceInputPorts
     text_layer_ports: EvidenceTextLayerPorts
     parse_structured_invoice: StructuredInvoiceReader
-    read_text: Callable[
-        [DocumentTranscription, Settings, LLMProvider | None, EvidenceConsentProof | None, object], InvoiceDraft
+    read_text: Callable[[DocumentTranscription, Settings, EvidenceConsentProof | None, object], InvoiceDraft]
+    propose_supply_nature: Callable[
+        [DocumentTranscription, Settings, EvidenceConsentProof | None], SupplyNatureProposalResult | None
     ]
-    propose_supply_nature: Callable[[DocumentTranscription, Settings], SupplyNatureProposalResult | None]
     """Propose goods-or-services for a person to confirm; ``None`` when there is nothing to report.
 
     A reader that could not be asked answers with its verdict on
     ``reader_unavailable`` rather than raising: the proposal is optional, so
-    its absence never refuses a read.
+    its absence never refuses a read. The consent proof is the one the read
+    already carries; a lane that reads off-host is refused without it.
     """
     rasterise_pdf: Callable[[bytes], tuple[str, ...]]
     transcribe_vision: Callable[
-        [tuple[VisionImage, ...], str, Settings, LLMProvider | None, EvidenceConsentProof | None], DocumentTranscription
+        [tuple[VisionImage, ...], str, Settings, EvidenceConsentProof | None], DocumentTranscription
     ]
     consent_binding_error: Callable[[dict[str, object]], Exception]
 

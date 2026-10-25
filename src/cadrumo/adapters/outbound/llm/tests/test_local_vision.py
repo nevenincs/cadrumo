@@ -1,8 +1,7 @@
-"""On-host vision read: in-memory PDF rasterisation plus the LocalAdapter images path.
+"""On-host vision read: the LocalAdapter images path.
 
-Proves a scan-only PDF is rasterised to base64 PNG pages fully in process memory
-and that :class:`cadrumo.adapters.outbound.llm.providers.local.LocalAdapter`
-forwards those images on the Ollama ``images`` message field to a loopback
+Proves that :class:`cadrumo.adapters.outbound.llm.providers.local.LocalAdapter`
+forwards rasterised page images on the Ollama ``images`` message field to a loopback
 endpoint -- so a local vision model can read the document with no byte leaving
 the host (``sensitive-financial-data-secure-storage-only``).
 """
@@ -10,7 +9,6 @@ the host (``sensitive-financial-data-secure-storage-only``).
 from __future__ import annotations
 
 import asyncio
-import base64
 import io
 from collections.abc import Mapping
 from http import HTTPStatus
@@ -29,8 +27,9 @@ from .....tests.loopback_llm import (
     write_json_response,
 )
 from ..models import MultimodalImageInput
+from ..pdf_rasterisation import rasterise_pdf_pages_to_base64_png
 from ..providers.base import ProviderRequest
-from ..providers.local import LocalAdapter, rasterise_pdf_pages_to_base64_png
+from ..providers.local import LocalAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -41,15 +40,6 @@ def _scan_only_pdf() -> bytes:
     buffer = io.BytesIO()
     image.save(buffer, format="PDF")
     return buffer.getvalue()
-
-
-def test_rasterise_pdf_pages_to_base64_png_returns_in_memory_png() -> None:
-    """A scan-only PDF rasterises to a base64 PNG page, fully in memory."""
-    pages = rasterise_pdf_pages_to_base64_png(_scan_only_pdf())
-
-    assert len(pages) == 1
-    decoded = base64.b64decode(pages[0])
-    assert decoded[:8] == b"\x89PNG\r\n\x1a\n"
 
 
 class _ObservedOllamaRequest(SilentLoopbackHandler):

@@ -50,6 +50,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ...domain.iva.schema import InvoiceKind
 from ..operator_actions.models import PreconditionVerdict
+from ..provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
 from .invoice_draft_records import LabelReadingFallback
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
@@ -456,17 +457,19 @@ class _InferenceLaneState:
     attempted, so learning about it by attempting would defeat it.
 
     Reader availability is per ROLE, not batch-wide, because that is how it
-    actually fails: a machine with a text model and no vision model reads every
-    text-layer PDF and can read no scan. Each role is probed at most once, ahead
-    of the first document that needs it, so the first such document is PAUSED
-    with the provisioning outcome rather than refused as though the document
-    were at fault -- and a role that is present keeps working while another is
-    missing.
+    actually fails: a person can have a text selection and no vision selection,
+    and then every text-layer PDF reads and no scan does. Every read goes
+    through the agent service, which answers a role it cannot serve at its
+    lookup, before anything is sent. So the first document of a role is
+    attempted, and when its refusal carries the service's typed model-run
+    verdict -- the ``model_run_refusal`` fact, or the local AI setup action --
+    that verdict closes the role it names, and every later document of that
+    role is paused with it. A role that is served keeps working while another
+    is not.
 
-    A document whose role probed available can still refuse for want of a
-    reader, because a text-layer PDF may escalate to vision inside the
-    extractor. That discovery still closes the role it names, so the pause
-    reaches every later document of that role.
+    A refusal without that verdict -- a failed run, a document fault -- closes
+    nothing: it is that document's refusal, and the next document of the role
+    is still attempted.
     """
 
     __slots__ = ("_assessed", "_contention", "_profile", "_reader_pauses", "_settings")
@@ -493,33 +496,30 @@ class _InferenceLaneState:
             return False
         return role is None or self._reader_is_available(role)
 
-    def close_if_no_reader_is_available(self, role: ModelRole | None = None) -> None:
-        """Close one role when a refusal turns out to be the environment's.
+    def close_if_no_reader_is_available(self, verdict: PreconditionVerdict | None) -> None:
+        """Close the role a refused document's verdict names, when the verdict says its reader cannot run.
 
-        Asks the runtime whether that reader is actually there, rather than
-        reading an error string. ``None`` probes both reading roles, which is
-        what a refusal from a document the lane could not attribute needs.
+        Only the service's typed model-run refusal and the local AI setup
+        refusal close a role, and the role closed is the one the verdict
+        names, so a vision refusal reached by a text-layer PDF escalating to
+        vision closes vision, not text. Any other refusal closes nothing.
         """
-        if self._contention is not None:
+        if self._contention is not None or verdict is None:
             return
-        roles = (role,) if role is not None else (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION)
-        for candidate in roles:
-            self._reader_is_available(candidate)
+        role = _reader_refusal_role(verdict)
+        if role is None or role in self._reader_pauses:
+            return
+        facts: dict[str, str | int | bool] = {
+            key: value
+            for evidence in verdict.evidence
+            for key, value in evidence.values.items()
+            if isinstance(value, str | int | bool)
+        }
+        self._reader_pauses[role] = _inference_pause(facts=facts, precondition_verdict=verdict)
 
     def _reader_is_available(self, role: ModelRole) -> bool:
-        """Return whether ``role``'s reader can run, probing it at most once."""
-        if role in self._reader_pauses:
-            return False
-        from ..local_reader import probe_local_reader
-
-        status = probe_local_reader(role, self._settings)
-        if status.available:
-            return True
-        self._reader_pauses[role] = _inference_pause(
-            facts=status.facts,
-            precondition_verdict=status.precondition_verdict,
-        )
-        return False
+        """Return whether ``role`` is still open in this run."""
+        return role not in self._reader_pauses
 
     def pause(self) -> InferencePause | None:
         """Return the pause that closed work, or ``None`` when nothing closed."""
@@ -564,6 +564,26 @@ def _assess_model_load_contention_once(
                 precondition_verdict=snapshot.precondition_verdict,
             )
     return None
+
+
+#: The fact the agent service's model-run refusal states; its presence is what
+#: makes a refusal the reader's rather than the document's.
+_MODEL_RUN_REFUSAL_FACT: Final[str] = "model_run_refusal"
+
+
+def _reader_refusal_role(verdict: PreconditionVerdict) -> ModelRole | None:
+    """Return the role a reader refusal names, or ``None`` when the verdict is not a reader refusal."""
+    facts = {key: value for evidence in verdict.evidence for key, value in evidence.values.items()}
+    sets_up_local_ai = verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    if _MODEL_RUN_REFUSAL_FACT not in facts and not sets_up_local_ai:
+        return None
+    named = facts.get("model_role", facts.get("role"))
+    if not isinstance(named, str):
+        return None
+    try:
+        return ModelRole(named)
+    except ValueError:
+        return None
 
 
 def _inference_pause(
@@ -919,7 +939,7 @@ def _run_planned_batch_item(
         write_draft=write_draft,
     )
     if row.status == "refused":
-        lane.close_if_no_reader_is_available(role)
+        lane.close_if_no_reader_is_available(row.refusal_verdict)
     return row
 
 

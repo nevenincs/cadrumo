@@ -30,7 +30,6 @@ from .....application.ledger.invoice_draft_records import InvoiceDraft
 from .....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from .....application.ledger.structured_invoice_ports import StructuredInvoiceRecord
 from .....core.config import Settings
-from .....core.config_support import LLMProvider
 from .....core.document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
@@ -76,7 +75,6 @@ def _unused_text_layer(data: bytes) -> tuple[str, ...]:
 def _unused_text_reader(
     _transcription: DocumentTranscription,
     _settings: Settings,
-    _provider: LLMProvider | None,
     _consent_token: EvidenceConsentProof | None,
     _authority_values: object,
 ) -> InvoiceDraft:
@@ -86,6 +84,7 @@ def _unused_text_reader(
 def _unused_supply_nature(
     _transcription: DocumentTranscription,
     _settings: Settings,
+    _consent_token: EvidenceConsentProof | None,
 ) -> SupplyNatureProposalResult | None:
     raise AssertionError("supply-nature proposal is not part of this structured-record test")
 
@@ -94,7 +93,6 @@ def _unused_vision_reader(
     _images: tuple[VisionImage, ...],
     _prompt: str,
     _settings: Settings,
-    _provider: LLMProvider | None,
     _consent_token: EvidenceConsentProof | None,
 ) -> DocumentTranscription:
     raise AssertionError("vision reading is not part of this structured-record test")

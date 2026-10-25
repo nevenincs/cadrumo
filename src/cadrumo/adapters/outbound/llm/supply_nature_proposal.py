@@ -51,7 +51,6 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Final
 
-import httpx
 from pydantic import BaseModel, Field
 
 from ....application.operator_actions.models import PreconditionVerdict
@@ -64,7 +63,7 @@ from ....core.provenance_stamp import build_provenance_stamp
 from ....domain.iva.supply_nature import SupplyNature
 from .client import LLMClient
 from .consent import EvidenceConsentToken
-from .errors import LLMConfigError, LLMProviderError
+from .errors import LLMConfigError, LLMConsentError
 from .models import LLMRequest
 from .response_json import first_json_object as _first_json_object
 
@@ -132,12 +131,13 @@ class SupplyNatureProposal(BaseModel):
             the document rather than about the reply.
         note: The model's own short reason, kept verbatim for the operator and
             never parsed. Empty when nothing usable arrived.
-        reader_unavailable: Why no model was asked, when the on-host reader
-            could not answer: the runtime does not answer or the role's model is
-            not installed. The verdict names the local AI setup, so the person
-            learns that the proposal is missing because a component is, not
-            because the document said nothing. ``None`` whenever a model was
-            asked or nothing needed asking.
+        reader_unavailable: Why no model was asked, when the agent service
+            refused the run: the role has no selection, its lane is
+            unavailable, its model is not installed, or an off-host lane had
+            no consent. The person learns that the proposal is missing because
+            a selection or component is, not because the document said
+            nothing. ``None`` whenever a model was asked or nothing needed
+            asking.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -262,49 +262,31 @@ def parse_supply_nature_response(text: str) -> SupplyNatureProposal:
 class SupplyNatureProposer:
     """Ask a model for one proposal, for a person to accept or discard.
 
-    Binds to :class:`~llm.LLMClient` and nothing lower, so which engine answers
-    is configuration rather than a fact this class holds.
-
-    **The model comes from the role, never the general default.** Left to
-    itself the client would answer on the configured frontier model for a task
-    that is choosing between two words. The role resolves through
-    :func:`~application.provisioning.select_model_for_role` against
-    :attr:`~core.model_catalogue.ModelRole.SUPPLY_NATURE_PROPOSAL`, which names the WEAKEST
-    catalogued candidate clearing the capability, licence and headroom bars --
-    and that role clears wherever the column-role mapper does, because it is
-    the same selection job over a smaller vocabulary.
+    Binds to :class:`~llm.LLMClient` and nothing lower. Every proposal runs
+    through the agent service under
+    :attr:`~core.model_catalogue.ModelRole.SUPPLY_NATURE_PROPOSAL`, so the lane
+    and model are the ones the person selected for that role. This class names
+    no model and no provider of its own, and a refused run is never retried on
+    another lane or model.
 
     Args:
-        model: Optional on-host runtime id, honoured over the role resolution.
-        provider: The transport. ``None`` means LOCAL. AGENT asks the agent
-            service, which picks the lane and model for the role, so it takes
-            no model and needs a consent token, because the descriptions are
-            document content.
         client: Injected client; default-constructed otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
-        consent_token: The per-invocation off-host consent an AGENT read needs.
+        consent_token: The per-invocation consent a lane that reads off-host
+            needs, because the line descriptions are document content. A lane
+            that stays on this computer needs none.
     """
 
     def __init__(
         self,
         *,
-        model: str | None = None,
-        provider: LLMProvider | None = None,
         client: LLMClient | None = None,
         settings: Settings | None = None,
         consent_token: EvidenceConsentToken | None = None,
     ) -> None:
-        """Build the proposer against a model and settings."""
+        """Build the proposer against settings and an optional consent token."""
         require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
-        self._settings = resolved_settings
-        self._provider = provider if provider is not None else LLMProvider.LOCAL
-        self._model_pinned = model is not None
-        self._model: str | None = (
-            (model if model is not None else self._role_model(resolved_settings))
-            if self._provider is LLMProvider.LOCAL
-            else None
-        )
         self._consent_token = consent_token
         self._client = (
             client
@@ -316,56 +298,17 @@ class SupplyNatureProposer:
             )
         )
 
-    @staticmethod
-    def _role_model(settings: Settings) -> str:
-        """Resolve the proposal role to a runtime id on this machine.
-
-        Resolved through the same selection as the reader probe, so the model
-        the probe checks is the model a proposal is sent to, and an operator's
-        model setting is honoured by both.
-
-        Deferred import: the selection surface sits in the application tier,
-        which reaches back into this package, so an eager binding would close
-        that loop at import time.
-
-        Raises:
-            LLMConfigError: When no catalogued candidate clears the bars here.
-        """
-        from ....application.local_reader import select_role_model
-
-        selection = select_role_model(ModelRole.SUPPLY_NATURE_PROPOSAL, settings)
-        if not selection.selected or selection.runtime_id is None:
-            raise LLMConfigError(
-                context=selection.facts,
-                precondition_verdict=selection.precondition_verdict,
-            )
-        return selection.runtime_id
-
-    def reader_refusal(self) -> PreconditionVerdict | None:
-        """Return why the on-host model this proposer loads cannot answer now, or ``None``.
-
-        Asked of the runtime through the reader probe, so an unanswering
-        runtime and an uninstalled role model each come back as the probe's
-        verdict naming the local AI setup. ``None`` when the reader can run,
-        and whenever the probe cannot speak for this proposer: an off-host
-        transport, or a model the caller pinned rather than the role's.
-
-        Deferred import for the same reason as :meth:`_role_model`.
-        """
-        if self._provider is not LLMProvider.LOCAL or self._model_pinned:
-            return None
-        from ....application.local_reader import probe_local_reader
-
-        status = probe_local_reader(ModelRole.SUPPLY_NATURE_PROPOSAL, self._settings)
-        return None if status.available else status.precondition_verdict
-
     @property
     def decided_by(self) -> str:
-        """Provenance stamp naming the transport and model a proposal was reached with."""
+        """Provenance stamp naming the transport a proposal was reached with.
+
+        The model segment is ``configured``: the lane and model are the
+        person's role selection, resolved by the service at dispatch.
+        """
         return build_provenance_stamp(
-            provider=self._provider,
+            provider=LLMProvider.AGENT,
             reader="supply-nature-proposal",
-            model=self._model or "configured",
+            model="configured",
         )
 
     def propose(self, descriptions: Sequence[str]) -> SupplyNatureProposal:
@@ -381,25 +324,21 @@ class SupplyNatureProposer:
         Returns:
             The proposal. Empty whenever nothing was asked, the model declined,
             or its reply did not survive containment -- all of which leave the
-            operator asked exactly as they were. When the on-host reader could
-            not be asked, checked before the call and again after a failed one,
-            the proposal carries that refusal on ``reader_unavailable``.
+            operator asked exactly as they were. When the agent service refused
+            the run -- no selection for the role, an unavailable lane, a model
+            that is not installed, an off-host lane without consent -- the
+            proposal carries that typed verdict on ``reader_unavailable``.
         """
         prompt = build_supply_nature_prompt(descriptions)
         if not prompt:
             return SupplyNatureProposal()
-        refusal = self.reader_refusal()
-        if refusal is not None:
-            return SupplyNatureProposal(reader_unavailable=refusal)
         try:
             response = asyncio.run(self._client.complete(self._build_request(prompt)))
-        except (LLMProviderError, httpx.HTTPError):
-            # The runtime can stop or lose the model between the check and the
-            # call; asked again, the probe names that cause.
-            refusal = self.reader_refusal()
-            if refusal is None:
+        except (LLMConfigError, LLMConsentError) as exc:
+            verdict = exc.terminal_precondition_verdict
+            if verdict is None:
                 raise
-            return SupplyNatureProposal(reader_unavailable=refusal)
+            return SupplyNatureProposal(reader_unavailable=verdict)
         return parse_supply_nature_response(response.text)
 
     def _build_request(self, prompt: str) -> LLMRequest:
@@ -422,8 +361,7 @@ class SupplyNatureProposer:
             prompt=prompt,
             max_tokens=_MAX_REPLY_TOKENS,
             temperature=_PROPOSAL_TEMPERATURE,
-            provider_override=self._provider,
-            model_override=self._model,
+            provider_override=LLMProvider.AGENT,
             evidence_derived=True,
             consent_token=self._consent_token,
             model_role=ModelRole.SUPPLY_NATURE_PROPOSAL,

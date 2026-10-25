@@ -129,7 +129,7 @@ async def test_on_host_executor_captures_full_draft_with_no_consent_write(monkey
     monkeypatch.setattr(extract_operation, "resolve_invoice_evidence_authority_legends", lambda _context: ())
 
     def read(**kwargs: object) -> InvoiceDraft:
-        assert kwargs["off_host_provider"] is None
+        assert "off_host_provider" not in kwargs
         assert kwargs["consent_token"] is None
         assert not recorder.active
         recorder.timeline.append(("reader", "on-host"))
@@ -171,7 +171,7 @@ async def test_off_host_executor_reports_the_actual_append_effect(
     )
 
     def read(**kwargs: object) -> InvoiceDraft:
-        assert kwargs["off_host_provider"] is LLMProvider.AGENT
+        assert "off_host_provider" not in kwargs
         assert cast(EvidenceConsentProof, kwargs["consent_token"]).evidence_content_address == _SOURCE
         before, after = hooks[0]
         assert before is not None and after is not None

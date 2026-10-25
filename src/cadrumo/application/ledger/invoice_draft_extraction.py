@@ -1,4 +1,4 @@
-"""On-host routing of one stored evidence reference to a typed invoice draft.
+"""Routing of one stored evidence reference to a typed invoice draft.
 
 Holds the reading layer that decides which reader a given document is handed
 to, and the three readers' wiring. It never persists an
@@ -31,11 +31,11 @@ stored MIME type:
   values, which is what makes the anchor check an external check rather than a
   model confirming itself.
 - A **scan-only PDF or image** has nothing to transcribe, so it falls back to the
-  on-host LOCAL vision reader (:mod:`~llm.evidence_draft_vision`) -- the same
-  rasterise-then-read-with-Ollama transport
-  :class:`~llm.vision_classifier.LocalVisionLLMClassifier` already uses for
-  classification, gated by :attr:`~core.capabilities.ServiceCapability.LLM_VISION` and never a
-  cloud call.
+  vision reader (:mod:`~llm.evidence_draft_vision`): a PDF is rasterised to page
+  images on this computer, and the images go to the model the person selected
+  for the vision transcription role, the same route
+  :class:`~llm.vision_classifier.VisionLLMClassifier` uses for classification.
+  Gated by :attr:`~core.capabilities.ServiceCapability.LLM_VISION`.
 
 The escalation is one-directional and the asymmetry is deliberate. A document
 with no text layer genuinely needs a reader that works on pixels, so it escalates.
@@ -45,9 +45,11 @@ running a heavier engine they did not ask for -- see
 :func:`_refuse_a_text_read_with_no_reader`. A profile that has opted out of vision
 reading likewise gets a typed, instructive refusal, never a silent empty draft.
 
-Everything here runs on-host and in-memory only. The evidence bytes, the
-transcription and the draft never touch disk and are never sent to a cloud
-provider. This module performs no filesystem write.
+Everything here runs in memory. The evidence bytes, the transcription and the
+draft never touch disk, and this module performs no filesystem write. Whether
+the model-bearing stages read off-host is the selected lane's typed flag; a lane
+that does is refused at the client's dispatch point without the consent token
+this module threads through, bound to these bytes.
 
 :func:`extract_invoice_draft_from_evidence` is the CLI-facing
 wiring layer: it resolves an already-stored ``purchase_invoice_evidence`` record
@@ -75,7 +77,7 @@ See Also:
         Non-interactive confirm step that re-extracts, applies overrides, and
         delegates the catalogue write.
     :mod:`~llm.evidence_draft_vision`
-        On-host vision fallback for scan-only PDFs and image attachments.
+        Vision fallback for scan-only PDFs and image attachments.
 """
 
 from __future__ import annotations
@@ -85,17 +87,14 @@ from typing import TYPE_CHECKING, NoReturn
 from ...core.capabilities import ServiceCapability
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
-from ...core.config_support import LLMProvider
 from ...core.document_shape import PDF_CONTAINER_SHAPES, STRUCTURED_DOCUMENT_SHAPES
 from ...core.external_constants import XML_MIME_TYPE
 from ...core.field_origin import FieldOrigin
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.logging import get_logger
-from ...core.model_catalogue import ModelRole
 from ...core.optional_extras import MissingOptionalExtraError
 from ...domain.attachments.models import normalize_media_type
 from ...domain.iva.supply_nature import SupplyNature
-from ..local_reader import probe_local_reader
 from ..operator_actions.models import PreconditionVerdict
 from ..user_profile.capabilities import resolve_active_capability
 from .document_transcription import DocumentTranscription
@@ -186,7 +185,6 @@ def extract_invoice_draft_from_evidence(
     evidence_id: str | None = None,
     attachment_id: str | None = None,
     settings: Settings | None = None,
-    off_host_provider: LLMProvider | None = None,
     consent_token: EvidenceConsentProof | None = None,
     ports: InvoiceDraftExtractionPorts,
     operation: PinnedAuthorityOperation,
@@ -205,9 +203,9 @@ def extract_invoice_draft_from_evidence(
     and routes them to the reader the document's shape selects. Exactly one of *evidence_id* /
     *attachment_id* must be supplied.
 
-    Nothing is written to disk and nothing leaves the host: the resolved
-    bytes and the extracted text stay in process memory for the duration of
-    this call (``sensitive-financial-data-secure-storage-only``).
+    Nothing is written to disk: the resolved bytes and the extracted text stay
+    in process memory for the duration of this call
+    (``sensitive-financial-data-secure-storage-only``).
 
     Args:
         bucket_id: Active ledger bucket the evidence or attachment belongs to.
@@ -215,14 +213,11 @@ def extract_invoice_draft_from_evidence(
         attachment_id: A linked attachment id, or ``None``.
         settings: Resolved ``Settings``. When ``None``, ``load_settings()`` is
             used so test overrides via ``override_settings()`` are honoured.
-        off_host_provider: Provider to route the MODEL-BEARING stages at, or
-            ``None`` for the on-host default. Widening this signature does not
-            widen the boundary: the refusal lives below this function, at the
-            client's single dispatch point, so a caller naming a cloud provider
-            without a token is refused there rather than trusted here.
         consent_token: Per-invocation off-host consent proof, minted through
-            :func:`~llm.mint_evidence_consent_token`. ``None`` is correct for
-            every on-host read.
+            :func:`~llm.mint_evidence_consent_token` and bound to these bytes.
+            ``None`` is correct when the selected lanes stay on this computer;
+            a lane that reads off-host refuses without it at the client's
+            dispatch point.
         operation: Caller-owned pinned authority operation used to resolve the
             invoice extraction authority values.
             The lease must remain open for the complete extraction operation.
@@ -242,9 +237,8 @@ def extract_invoice_draft_from_evidence(
             resolves outside the bytes-bearing evidence-record id space (a
             catalogue-invoice id carries fiscal totals, not a document), when the
             resolved evidence's media type is unsupported, or when a scan-only
-            PDF / image falls back to the on-host vision reader and that reader
-            is disabled for the profile or the local Ollama runtime is
-            unreachable.
+            PDF / image falls back to the vision reader and that reader is
+            disabled for the profile or cannot be run.
     """
     if (evidence_id is None) == (attachment_id is None):
         raise PurchaseInvoiceEvidenceInputError(
@@ -316,7 +310,6 @@ def extract_invoice_draft_from_evidence(
                 evidence_input,
                 transcription,
                 settings=resolved_settings,
-                off_host_provider=off_host_provider,
                 consent_token=consent_token,
                 taxpayer_tax_id=filer_tax_id,
                 authority_period=authority_period,
@@ -327,7 +320,6 @@ def extract_invoice_draft_from_evidence(
     return _extract_invoice_fields_via_vision(
         evidence_input,
         settings=resolved_settings,
-        off_host_provider=off_host_provider,
         consent_token=consent_token,
         taxpayer_tax_id=filer_tax_id,
         authority_period=authority_period,
@@ -448,6 +440,7 @@ def _proposed_supply_nature(
     transcription: DocumentTranscription,
     *,
     settings: Settings,
+    consent_token: EvidenceConsentProof | None,
     ports: InvoiceDraftExtractionPorts,
 ) -> SupplyNature | None:
     """Return a model's proposal about goods-or-services, or ``None``.
@@ -462,9 +455,13 @@ def _proposed_supply_nature(
     containment -- yields no proposal and leaves the operator asked exactly as
     they were. A reader that could not be asked is logged with the condition
     its verdict names.
+
+    ``consent_token`` is the proof the read already carries. The proposal reads
+    the same document, so a lane that reads off-host needs it as much as the
+    extraction does; without it that lane refuses and no proposal is made.
     """
     try:
-        proposal = ports.propose_supply_nature(transcription, settings)
+        proposal = ports.propose_supply_nature(transcription, settings, consent_token)
     except Exception:
         proposal = None
     nature = None if proposal is None else proposal.nature
@@ -523,7 +520,6 @@ def _read_transcription_fields(
     transcription: DocumentTranscription,
     *,
     settings: Settings,
-    off_host_provider: LLMProvider | None,
     consent_token: EvidenceConsentProof | None,
     authority_values: object,
     operation: PinnedAuthorityOperation,
@@ -538,7 +534,7 @@ def _read_transcription_fields(
     if labels is not None and labels.complete:
         return labels.draft, None
     try:
-        model_read = ports.read_text(transcription, settings, off_host_provider, consent_token, authority_values)
+        model_read = ports.read_text(transcription, settings, consent_token, authority_values)
     except InvoiceDraftReaderUnavailableError as exc:
         return _label_read_after_reader_unavailable(labels, exc)
     except (InvoiceDraftReaderHeadroomRefusedError, InvoiceDraftReaderBusyRefusedError) as exc:
@@ -552,7 +548,6 @@ def _read_transcription_semantically(
     transcription: DocumentTranscription,
     *,
     settings: Settings,
-    off_host_provider: LLMProvider | None = None,
     consent_token: EvidenceConsentProof | None = None,
     taxpayer_tax_id: str | None = None,
     propose_supply_nature: bool = False,
@@ -593,8 +588,6 @@ def _read_transcription_semantically(
             swallowed into a vision run.
         settings: Resolved settings, passed down rather than reloaded so the
             caller's overrides govern the model this stage resolves.
-        off_host_provider: Provider to route the SEMANTIC stage at, or ``None``
-            for the on-host default.
         consent_token: Per-invocation off-host consent proof, or ``None``.
         taxpayer_tax_id: The filer's own identifier, resolved once at the public
             entry from the active profile. Handed down rather than looked up
@@ -638,7 +631,6 @@ def _read_transcription_semantically(
     read, fallback = _read_transcription_fields(
         transcription,
         settings=settings,
-        off_host_provider=off_host_provider,
         consent_token=consent_token,
         authority_values=authority_values,
         operation=operation,
@@ -654,7 +646,7 @@ def _read_transcription_semantically(
             # reaches a second model changes what the verb costs and what
             # leaves the host.
             "proposed_supply_nature": (
-                _proposed_supply_nature(transcription, settings=settings, ports=ports)
+                _proposed_supply_nature(transcription, settings=settings, consent_token=consent_token, ports=ports)
                 if propose_supply_nature
                 else None
             ),
@@ -712,7 +704,7 @@ def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
     Before that a structured document could not be ingested at all, so the
     fallback chain was never handed one. Admitting the extension without closing
     the chain would route every unrecognised XML -- a SII or VERI*FACTU record,
-    a TicketBAI record, any XML at all -- to the on-host vision model, whose
+    a TicketBAI record, any XML at all -- to the vision model, whose
     capability is ON by default.
 
     The refusal names the syntaxes that ARE read, so an operator holding a
@@ -884,7 +876,6 @@ def _extract_invoice_fields_via_vision(
     evidence: EvidenceInput,
     *,
     settings: Settings,
-    off_host_provider: LLMProvider | None = None,
     consent_token: EvidenceConsentProof | None = None,
     taxpayer_tax_id: str | None = None,
     authority_period: Period,
@@ -892,7 +883,7 @@ def _extract_invoice_fields_via_vision(
     legends: tuple[RegimeLegend, ...],
     ports: InvoiceDraftExtractionPorts,
 ) -> InvoiceDraft:
-    """Rasterise/encode *evidence*, TRANSCRIBE it with the on-host vision model, then read it.
+    """Rasterise/encode *evidence*, TRANSCRIBE it with the vision role's model, then read it.
 
     Two stages, not one, and the split is what earns this path its grounding.
     The vision model produces a :class:`DocumentTranscription` and interprets
@@ -907,11 +898,12 @@ def _extract_invoice_fields_via_vision(
 
     Gated by :attr:`~core.capabilities.ServiceCapability.LLM_VISION` -- an operator who has
     opted out gets a typed refusal naming the capability toggle, never a silent
-    empty draft. A missing/unreachable local Ollama runtime, or an unrasterisable
-    PDF, is converted to the same instructive refusal the classification vision
-    path uses (:func:`~application.local_reader.probe_local_reader`). An absent
+    empty draft. A reader the agent service refuses -- no selection for the
+    role, a model not installed, a lane that does not take images -- reaches the
+    operator with the refusal's own typed verdict; no other lane or model is
+    tried. An unrasterisable PDF refuses as an unavailable reader. An absent
     ``llm`` extra is reported separately as typed dependency facts, so a
-    dependency gap is never mistaken for a daemon-reachability problem.
+    dependency gap is never mistaken for a reader problem.
     """
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
         facts = {"llm_vision_enabled": False}
@@ -946,25 +938,17 @@ def _extract_invoice_fields_via_vision(
         # is deliberate rather than thorough: on a scan-only document the pixels
         # ARE the evidence, so a consent that covered only the semantic stage
         # would take an operator's acknowledgement and then leave the read
-        # entirely on-host -- an acknowledgement that changes nothing, which is
-        # worse than not asking.
-        transcription = ports.transcribe_vision(
-            images, evidence.content_sha256, settings, off_host_provider, consent_token
-        )
+        # without the consent it was given -- an acknowledgement that changes
+        # nothing, which is worse than not asking.
+        transcription = ports.transcribe_vision(images, evidence.content_sha256, settings, consent_token)
     except InvoiceDraftReaderUnavailableError as exc:
-        # Ordered ahead of the runtime-failure branch deliberately. A missing
-        # `llm` extra is a dependency problem, not a reachability problem: the
-        # branch below probes runtime reachability, which is a different failed
-        # condition and must not replace the dependency identity.
+        # Ordered ahead of the verdict branch deliberately. A missing `llm`
+        # extra is a dependency problem, and its identity must not be replaced
+        # by a reader verdict.
         cause = exc.cause
         if isinstance(cause, MissingOptionalExtraError):
             _refuse_with_unavailable_reader(cause, availability_fact="vision_reader_available")
         verdict = exc.precondition_verdict
-        # Only an on-host read is the local runtime's to explain: a failed
-        # off-host read probed here would send the person to set up a local AI
-        # they did not choose to read with.
-        if verdict is None and off_host_provider in (None, LLMProvider.LOCAL):
-            verdict = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, settings).precondition_verdict
         if verdict is not None:
             _refuse_with_reader_verdict(verdict, cause=cause)
         facts: dict[str, str | bool] = {
@@ -984,13 +968,12 @@ def _extract_invoice_fields_via_vision(
     # OUTSIDE the try, deliberately, and for the same reason the text lane's
     # semantic read sits outside its transcription try: a failure here is a
     # statement about the semantic READER, and converting it into "vision
-    # reading failed" would send the operator to restart a daemon that read the
+    # reading failed" would send the operator to fix a reader that read the
     # page perfectly well.
     return _read_transcription_semantically(
         evidence,
         transcription,
         settings=settings,
-        off_host_provider=off_host_provider,
         consent_token=consent_token,
         taxpayer_tax_id=taxpayer_tax_id,
         authority_period=authority_period,

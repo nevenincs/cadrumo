@@ -2,30 +2,46 @@
 
 Every driver runs one operation through the production registry and the real
 supervisor, journal and encrypted operand store, inside an enrolled profile,
-against a real loopback runtime that answers its inventory with no model and
-records every request it is sent. What the driver returns is what a frontend
-in another process can read of the settled operation: its recorded error
-detail when it stopped, or its public result when it succeeded. Either may
-carry the reader probe's verdict, and the gate judges that verdict.
+against a recording stand-in for the agent service that refuses every model
+run lookup with one refusal code and records every run it is sent. The
+supervisor reaches that service through an execution authority that admits the
+operation and answers its model runs, as the runtime host does. What the driver
+returns is what a frontend in another process can read of the settled
+operation: its recorded error detail when it stopped, or its public result when
+it succeeded. Either may carry the refused run's verdict, and the gate judges
+that verdict.
 """
 
 from __future__ import annotations
 
 import asyncio
 import hashlib
-from collections.abc import Awaitable, Callable, Generator
-from contextlib import contextmanager
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from http import HTTPStatus
+from functools import partial
 from pathlib import Path
-from typing import Protocol, override
+from typing import Protocol
 from uuid import UUID
 
+import pytest
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+from cadrumo_client.contracts.model_runs import (
+    ModelRunBody,
+    ModelRunHeader,
+    ModelRunLane,
+    ModelRunOutput,
+    ModelRunRefusal,
+    ModelRunRefusalCode,
+    ModelRunRoleSelection,
+)
 
 from ...adapters.outbound.llm.column_role_mapping import resolve_column_roles
 from ...adapters.outbound.llm.statement_reading import LocalStatementReader
+from ...adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, RecordingModelRuns, serving_agent
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...application.invoices.catalogue_intake_contracts import (
     INVOICE_IMPORT_OPERATION_DEFINITION_ID,
@@ -68,33 +84,21 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
+from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.subject_reference import expected_operation_subject
 from ...application.operator_actions.models import PreconditionVerdict
 from ...application.operator_actions.projection import PreconditionVerdictSnapshot
-from ...core.config import override_settings
-from ...core.model_catalogue import ModelRole, candidates_for_role, default_model_runtime_id
+from ...core.model_catalogue import ModelRole
 from ...core.operations import OperationTerminalCondition
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.models import Attachment
 from ...domain.iva.schema import InvoiceKind
 from ...tests.inventory import FIXTURES_DIR
 from ...tests.llm_vision_evidence_support import png_image
-from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
 from ...tests.pdf_fixtures import text_pdf_bytes
 from . import registered_executor_case_support as conformance
 
-#: An operator-named mapping model, honoured as written.
-_OPERATOR_MAPPING_MODEL = next(
-    candidate.runtime_id
-    for candidate in candidates_for_role(ModelRole.COLUMN_ROLE_MAPPING)
-    if candidate.runtime_id != default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING)
-)
-#: The document readers' models, named as the shipped defaults so no row depends
-#: on this host's settings. The probe judges them against installed memory only,
-#: never against what is free while the gate runs beside other work.
-_VISION_MODEL = default_model_runtime_id(ModelRole.VISION_TRANSCRIPTION)
-_TEXT_MODEL = default_model_runtime_id(ModelRole.TEXT_EXTRACTION)
 _EXPORT_ONLY_THE_MAPPER_READS = FIXTURES_DIR / "financial" / "tabular-dialects" / "expenses_app_export_2026.csv"
 _BOOK_ONLY_THE_MAPPER_READS = FIXTURES_DIR / "financial" / "tabular-dialects" / "libro_facturas_expedidas_2025_2026.csv"
 _READABLE_STATEMENT = (
@@ -182,7 +186,12 @@ class OperationRuntime:
     registry: OperationRegistry
     profile_id: UUID
     tmp_path: Path
-    posts: list[str]
+    service: RecordingModelRuns
+
+    @property
+    def posts(self) -> list[str]:
+        """Return the role of every run the service was sent."""
+        return [header.role for header, _body in self.service.runs]
 
     def settle(self, definition_id: str, payload: BaseModel, result_type: type[BaseModel]) -> SettledOperation:
         """Submit, start and settle ``payload``, then read what another process can read of it."""
@@ -213,48 +222,89 @@ class OperationRuntime:
         return asyncio.run(run())
 
 
-@contextmanager
-def runtime_holding_nothing(posts: list[str]) -> Generator[None]:
-    """Serve a real local AI runtime whose inventory is empty and that records every request it is sent."""
+class RecordingRunsAuthority:
+    """An execution authority that admits every operation and answers its model runs from ``service``.
 
-    class _EmptyRuntime(SilentLoopbackHandler):
-        @override
-        def do_GET(self) -> None:
-            write_json_response(self, {"models": []}, status=HTTPStatus.OK)
+    It stands in for the runtime host's authority, which has its own tests; the
+    supervisor binds the port it offers for each running operation exactly as
+    it binds the host's.
+    """
 
-        @override
-        def do_POST(self) -> None:
-            posts.append(self.path)
-            self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR)
+    def __init__(self, service: RecordingModelRuns) -> None:
+        self._service = service
 
-    with (
-        serving_loopback(_EmptyRuntime, path="/api/chat") as chat_url,
-        override_settings(
-            cadrumo_llm_ollama_chat_url=chat_url,
-            cadrumo_llm_ollama_vision_model=_VISION_MODEL,
-            cadrumo_llm_ollama_text_model=_TEXT_MODEL,
-            cadrumo_llm_ollama_mapping_model=_OPERATOR_MAPPING_MODEL,
-            # The documented setting for a host whose headroom cannot be
-            # measured, so the reader is the only cause a lane can stop for.
-            cadrumo_llm_contention_check_override=True,
-        ),
-    ):
+    async def require[Payload: BaseModel](
+        self, *, identity: OperationIdentity, request: OperationRequest[Payload], action: AccessAction
+    ) -> None:
+        del identity, request, action
+
+    @asynccontextmanager
+    async def commit_guard(self, identity: OperationIdentity) -> AsyncGenerator[None]:
+        del identity
         yield
 
+    async def model_run_lookup(self, identity: OperationIdentity, role: str) -> ModelRunLane | ModelRunRefusal:
+        del identity
+        return await self._service.lookup(ModelRole(role))
+
+    async def model_run_selections(
+        self, identity: OperationIdentity
+    ) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
+        del identity
+        return await self._service.selections()
+
+    async def model_run(
+        self, identity: OperationIdentity, header: ModelRunHeader, body: ModelRunBody
+    ) -> ModelRunOutput | ModelRunRefusal:
+        del identity
+        return await self._service.run(header, body)
+
 
 @contextmanager
-def operation_runtime(tmp_path: Path) -> Generator[OperationRuntime]:
+def agent_refusing(
+    code: ModelRunRefusalCode | None,
+    *,
+    at_run: bool = False,
+    lane: ModelRunLane = ON_HOST_LANE,
+) -> Generator[RecordingModelRuns]:
+    """Bind an agent service on ``lane`` that refuses with ``code`` and records every run it is sent.
+
+    The refusal answers every lookup, or with ``at_run`` every run after a
+    lookup that resolved ``lane``. ``None`` refuses nothing.
+    """
+    lookup_refusal, run_refusal = (None, code) if at_run else (code, None)
+    with serving_agent(lane=lane, lookup_refusal=lookup_refusal, run_refusal=run_refusal) as service:
+        yield service
+
+
+@contextmanager
+def operation_runtime(
+    tmp_path: Path,
+    code: ModelRunRefusalCode | None,
+    *,
+    at_run: bool = False,
+    lane: ModelRunLane = ON_HOST_LANE,
+) -> Generator[OperationRuntime]:
     """Enrol a profile under the production registry, with the readers its adapter composition binds."""
-    posts: list[str] = []
     with (
-        runtime_holding_nothing(posts),
-        bind_column_role_mapping_resolver(resolve_column_roles),
-        bind_statement_reader_factory(LocalStatementReader),
-        conformance.conformance_operation_runtime(
-            tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
-        ) as (driver, registry, profile_id),
+        agent_refusing(code, at_run=at_run, lane=lane) as service,
+        pytest.MonkeyPatch.context() as patch,
     ):
-        yield OperationRuntime(driver=driver, registry=registry, profile_id=profile_id, tmp_path=tmp_path, posts=posts)
+        patch.setattr(
+            conformance,
+            "compose_operation_services",
+            partial(conformance.compose_operation_services, execution_authority=RecordingRunsAuthority(service)),
+        )
+        with (
+            bind_column_role_mapping_resolver(resolve_column_roles),
+            bind_statement_reader_factory(LocalStatementReader),
+            conformance.conformance_operation_runtime(
+                tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
+            ) as (driver, registry, profile_id),
+        ):
+            yield OperationRuntime(
+                driver=driver, registry=registry, profile_id=profile_id, tmp_path=tmp_path, service=service
+            )
 
 
 def _stored_image(runtime: OperationRuntime) -> tuple[str, str]:
@@ -412,11 +462,12 @@ __all__ = [
     "OperationRuntime",
     "OperationSettler",
     "ProjectionResolver",
+    "RecordingRunsAuthority",
     "SettledOperation",
+    "agent_refusing",
     "operation_runtime",
     "published_verdicts",
     "read_published",
-    "runtime_holding_nothing",
     "settle_classify_review",
     "settle_evidence_batch",
     "settle_evidence_confirm",

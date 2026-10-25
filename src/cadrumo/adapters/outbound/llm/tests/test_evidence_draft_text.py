@@ -346,85 +346,27 @@ class TestFabricatedValuesAreDroppedRatherThanTrusted:
 
 
 class TestExtractorRequestShape:
-    """The built request, asserted without dispatching it."""
+    """The built request, asserted without dispatching it: one path, through the agent."""
 
-    def test_an_explicit_model_rides_the_request_and_the_provenance_stamp(
+    def test_the_request_names_the_agent_and_its_role_and_no_model(
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
-        extractor = TextInvoiceFieldExtractor(model="some-text-model", settings=load_settings(), operation=operation)
-
-        assert extractor._build_request("Invoice 42").model_override == "some-text-model"
-        assert extractor.decided_by.startswith("llm:local-text-extract:some-text-model:")
-
-
-class TestExtractorPinsTheHostByDefault:
-    """The reader pins LOCAL rather than inheriting whatever is configured.
-
-    This class replaces two assertions that stated the OPPOSITE, and the
-    inversion is the point rather than a tidy-up. They were
-    ``test_the_request_pins_no_provider`` -- asserting
-    ``request.provider_override is None`` -- and
-    ``test_an_unpinned_model_says_so_rather_than_naming_one``, which asserted the
-    provenance stamp read ``configured`` because no model was pinned.
-
-    Both were written when carrying no override looked like neutrality. It is
-    not neutral: the provider setting then defaulted to a cloud vendor, so pinning
-    NOTHING meant a taxpayer's invoice text left the host by default, with no
-    consent gate, no default-off posture, and nothing at the call site saying
-    so. The tests asserted exactly the property that produced that exposure, and
-    would have gone green again the moment anyone reverted the fix.
-
-    They are inverted rather than deleted for that reason: a test that once
-    forbade the right behaviour is worth keeping as a guard against its return.
-
-    Split into its own class rather than renamed in place so the sibling
-    heading stays honest -- the remaining case in
-    :class:`TestExtractorRequestShape` really is about request shape, while
-    these are about the host boundary.
-    """
-
-    def test_the_request_pins_the_local_provider(self, *, operation: PinnedAuthorityOperation) -> None:
-        """Was: "pins no provider". Now: pins LOCAL, explicitly."""
+        """The agent service picks the lane and model for the role, so the reader names the role only."""
         extractor = TextInvoiceFieldExtractor(settings=load_settings(), operation=operation)
 
         request = extractor._build_request("Invoice 42\nTotal 121,00")
-
-        assert request.provider_override is LLMProvider.LOCAL
-        assert request.images == ()
-        assert "Invoice 42" in request.prompt
-
-    def test_the_default_read_names_its_local_model_rather_than_deferring(
-        self, *, operation: PinnedAuthorityOperation
-    ) -> None:
-        """Was: the stamp read ``configured`` because nothing was pinned.
-
-        A stamp saying ``configured`` recorded that the reader did not know
-        which model had read the document -- which is precisely the state that
-        made the off-host default invisible in provenance.
-        """
-        extractor = TextInvoiceFieldExtractor(settings=load_settings(), operation=operation)
-
-        assert extractor._build_request("Invoice 42").model_override is not None
-        assert not extractor.decided_by.startswith("llm:local-text-extract:configured:")
-
-    def test_an_agent_read_names_no_model_and_states_its_role(self, *, operation: PinnedAuthorityOperation) -> None:
-        """Off-host, the agent service picks the lane and model for the role.
-
-        The reader therefore sends no model of its own -- a local model id
-        forwarded off-host would ask a lane for a model it does not serve -- and
-        names the role, which is what the service resolves against.
-        """
-        extractor = TextInvoiceFieldExtractor(
-            provider=LLMProvider.AGENT,
-            model="ignored-local-model",
-            settings=load_settings(),
-            operation=operation,
-        )
-
-        request = extractor._build_request("Invoice 42")
 
         assert request.provider_override is LLMProvider.AGENT
         assert request.model_override is None
         assert request.model_role is ModelRole.TEXT_EXTRACTION
         assert request.expects_json is True
+        assert request.evidence_derived is True
+        assert request.images == ()
+        assert "Invoice 42" in request.prompt
         assert extractor.decided_by.startswith("llm:agent-text-extract:configured:")
+
+    def test_only_the_named_public_corpus_reads_unmarked(self, *, operation: PinnedAuthorityOperation) -> None:
+        """Naming the corpus is the deliberate act; saying nothing marks the request as evidence."""
+        corpus = TextInvoiceFieldExtractor(settings=load_settings(), operation=operation, public_corpus=True)
+
+        assert corpus._build_request("Invoice 42").evidence_derived is False

@@ -1,10 +1,9 @@
-"""Real-behaviour tests for the on-host vision TRANSCRIBER and the shared grounding it feeds.
+"""Real-behaviour tests for the vision TRANSCRIBER and the shared grounding it feeds.
 
 Covers the parsing/grounding primitives directly (adversarial JSON, hallucinated
-tax ids, unparsable dates/amounts) and the full transport against a real loopback
-Ollama HTTP server (no mocks) -- exactly the harness
-``llm_vision_evidence_support.run_against_loopback_ollama`` already uses for the
-classification vision path.
+tax ids, unparsable dates/amounts) and the transcriber through the production
+:class:`~llm.LLMClient`, its consent gate and the real agent adapter, with a
+recording stand-in for the agent service behind the model-run port.
 
 The vision reader's own tests assert what it must NOT do as much as what it
 does. It is stage one: pixels to text. A test proving it returns fields would be
@@ -13,8 +12,8 @@ emits a transcription, that its prompt names no invoice field, and that its
 module reaches no field-grounding symbol at all.
 
 See Also:
-    :class:`~llm.evidence_draft_vision.LocalVisionDocumentTranscriber`
-        On-host Ollama transport exercised through the loopback server.
+    :class:`~llm.evidence_draft_vision.VisionDocumentTranscriber`
+        Vision-role reader exercised through the agent path.
     :func:`~llm.invoice_field_grounding.parse_invoice_extraction_response`
         JSON-object recovery and strict schema boundary covered by adversarial
         response cases.
@@ -23,7 +22,7 @@ See Also:
         unparsable values.
     :func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`
         Text-layer-first orchestration path that routes scan-only evidence to
-        this local vision fallback.
+        this vision fallback.
 """
 
 from __future__ import annotations
@@ -39,24 +38,22 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunMediaKind, ModelRunRefusalCode
 
-from .....application.ledger.document_transcription import DocumentTranscription
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
-from .....core.config import load_settings
 from .....core.decimal.coercion import coerce_finite_european_decimal
 from .....core.field_origin import FieldOrigin
 from .....core.image_media_type import ImageMediaType
-from .....tests.llm_vision_evidence_support import (
-    json_array,
-    json_object,
-    png_image,
-    run_against_loopback_ollama,
-)
-from ..evidence_draft_vision import (
-    VISION_TRANSCRIPTION_PROMPT,
-    LocalVisionDocumentTranscriber,
-    transcribe_document_images,
-)
+from .....core.model_catalogue import ModelRole
+from .....tests.fixtures.settings import EnvFileFreeSettings
+from .....tests.llm_vision_evidence_support import png_image
+from ....persistence.llm.cache import LLMCache
+from ....persistence.llm.consent_ledger import EvidenceConsentLedger
+from ....persistence.llm.usage import UsageRecorder
+from ..client import LLMClient
+from ..consent import EvidenceConsentToken
+from ..errors import LLMConfigError, LLMConsentError
+from ..evidence_draft_vision import VISION_TRANSCRIPTION_PROMPT, VisionDocumentTranscriber
 from ..invoice_extraction_prompt import default_extraction_period
 from ..invoice_field_contract import anchor_key_for_field, role_evidence_key_for_field
 from ..invoice_field_grounding import (
@@ -68,6 +65,7 @@ from ..invoice_field_grounding import (
     parse_invoice_extraction_response,
 )
 from ..models import MultimodalImageInput
+from .model_run_support import TEXT_ONLY_LANE, serving_agent
 from .prompt_support import build_invoice_extraction_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -297,100 +295,171 @@ class TestGroundExtractedFields:
         assert draft.currency is None
 
 
-class TestLocalVisionDocumentTranscriber:
-    """Real-behaviour tests against a loopback Ollama HTTP server. No mocks."""
+#: A synthetic vision lane whose catalogue entry stays on this computer.
+_ON_HOST_VISION_LANE = ModelRunLane(
+    provider_id="nearby",
+    transport="api",
+    model="synthetic-vision:1",
+    reads_off_host=False,
+    accepted_media=(ModelRunMediaKind.IMAGE,),
+    licence=None,
+    size_bytes=None,
+    vision=True,
+    context_length=None,
+)
+_OFF_HOST_VISION_LANE = _ON_HOST_VISION_LANE.model_copy(update={"provider_id": "faraway", "reads_off_host": True})
+_CONSENT = EvidenceConsentToken(surface="runtime:ledger.evidence.extract", evidence_content_address=_SOURCE_SHA)
 
-    def test_transcribes_a_real_vision_response_into_the_stage_one_artefact(
-        self,
-    ) -> None:
-        """Text in, text out, stamped with the reader that produced it."""
-        images = (MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),)
 
-        def _call() -> DocumentTranscription:
-            transcriber = LocalVisionDocumentTranscriber(model="qwen-test")
-            return transcriber.transcribe(evidence_images=images, source_content_sha256=_SOURCE_SHA)
+def _images() -> tuple[MultimodalImageInput, ...]:
+    return (MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),)
 
-        observed, transcription = run_against_loopback_ollama(_TRANSCRIBED_PAGE, _call)
+
+def _transcriber(
+    tmp_path: pathlib.Path, *, consent_token: EvidenceConsentToken | None = None
+) -> VisionDocumentTranscriber:
+    settings = EnvFileFreeSettings(
+        cadrumo_llm_cache_dir=tmp_path / "cache",
+        cadrumo_llm_usage_dir=tmp_path / "usage",
+        cadrumo_llm_run_record_dir=tmp_path / "run-record",
+    )
+    client = LLMClient(
+        settings=settings,
+        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
+        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
+    )
+    return VisionDocumentTranscriber(client=client, settings=settings, consent_token=consent_token)
+
+
+def _refusal_code(error: LLMConfigError) -> object:
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None
+    return verdict.evidence[0].values["model_run_refusal"]
+
+
+class TestVisionDocumentTranscriber:
+    """The transcriber reaches the agent service for the vision role, and only there."""
+
+    def test_transcribes_a_vision_reply_into_the_stage_one_artefact(self, tmp_path: pathlib.Path) -> None:
+        """Pages in as image attachments, text out, stamped with the lane that produced it."""
+        images = _images()
+        with serving_agent(replies=(_TRANSCRIBED_PAGE,), lane=_ON_HOST_VISION_LANE) as service:
+            transcription = _transcriber(tmp_path).transcribe(evidence_images=images, source_content_sha256=_SOURCE_SHA)
 
         assert transcription.text == _TRANSCRIBED_PAGE.strip()
         assert transcription.page_count == 1
         assert transcription.source_content_sha256 == _SOURCE_SHA
         assert transcription.transcriber.origin is FieldOrigin.VISION
-        assert "qwen-test" in transcription.transcriber.name
+        assert transcription.transcriber.name == "nearby/api/synthetic-vision:1"
+        assert transcription.transcriber.transport == "agent"
+        assert transcription.transcriber.revision.startswith("prompt-v")
+        assert service.lookups == [ModelRole.VISION_TRANSCRIPTION]
+        ((header, body),) = service.runs
+        assert header.role == ModelRole.VISION_TRANSCRIPTION.value
+        # The lane stays on this computer, so no consent rides the run.
+        assert header.consent is None
+        assert [(item.media_type, item.base64_data) for item in body.attachments] == [
+            (image.media_type.value, image.base64_data) for image in images
+        ]
 
-        # The base64 image genuinely rode the Ollama request payload.
-        body = json_object(observed["body"])
-        messages = json_array(body["messages"])
-        user_message = json_object(messages[-1])
-        assert user_message["images"] == [image.base64_data for image in images]
-
-    def test_the_prompt_that_rode_the_request_asks_for_no_invoice_field(
-        self,
-    ) -> None:
+    def test_the_prompt_that_rode_the_run_asks_for_no_invoice_field(self, tmp_path: pathlib.Path) -> None:
         """Stage one must not be told what to look for.
 
-        Asserted on the payload that actually left the process rather than on
+        Asserted on the run body that actually left the process rather than on
         the constant, because the constant proves what was written and this
         proves what was sent. A model handed field names finds them, and a
         transcription steered toward an expected answer is no longer an
         independent reading for the anchor check to run against.
         """
-        images = (MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),)
+        with serving_agent(replies=(_TRANSCRIBED_PAGE,), lane=_ON_HOST_VISION_LANE) as service:
+            _transcriber(tmp_path).transcribe(evidence_images=_images(), source_content_sha256=_SOURCE_SHA)
 
-        def _call() -> DocumentTranscription:
-            return transcribe_document_images(images, source_content_sha256=_SOURCE_SHA, model="qwen-test")
-
-        observed, _transcription = run_against_loopback_ollama(_TRANSCRIBED_PAGE, _call)
-        body = json_object(observed["body"])
-        messages = json_array(body["messages"])
-        user_message = json_object(messages[-1])
-        content = user_message["content"]
-        assert isinstance(content, str)
-
+        ((_header, body),) = service.runs
         for field_name in ExtractedInvoiceFields.model_fields:
-            assert field_name not in content, f"the transcription prompt names the invoice field {field_name!r}"
-        assert anchor_key_for_field("taxable_base") not in content
+            assert field_name not in body.prompt, f"the transcription prompt names the invoice field {field_name!r}"
+        assert anchor_key_for_field("taxable_base") not in body.prompt
 
-    def test_an_empty_model_reply_refuses_rather_than_reporting_a_blank_document(
-        self,
-    ) -> None:
+    def test_an_empty_model_reply_refuses_rather_than_reporting_a_blank_document(self, tmp_path: pathlib.Path) -> None:
         """A reader that returned nothing is not a document that says nothing.
 
         Passing an empty transcription on would hand the semantic stage a
         document it would honestly report as carrying no fields, converting a
         reader failure into a confident statement about the taxpayer's paper.
         """
-        images = (MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),)
-
-        def _call() -> DocumentTranscription:
-            return transcribe_document_images(images, source_content_sha256=_SOURCE_SHA, model="qwen-test")
-
-        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-            run_against_loopback_ollama("   \n  ", _call)
+        with (
+            serving_agent(replies=("   \n  ",), lane=_ON_HOST_VISION_LANE),
+            pytest.raises(PurchaseInvoiceEvidenceInputError) as raised,
+        ):
+            _transcriber(tmp_path).transcribe(evidence_images=_images(), source_content_sha256=_SOURCE_SHA)
         verdict = raised.value.terminal_precondition_verdict
         assert verdict is not None
         assert verdict.failed_condition_id == "llm.evidence.transcription_nonempty"
         assert verdict.evidence[0].values == {"transcription_nonempty": False}
 
-    def test_no_pages_refuses_without_dispatching(self) -> None:
-        """Model-free: an empty page tuple is caught before any transport."""
-        transcriber = LocalVisionDocumentTranscriber(model="qwen-test", settings=load_settings())
-
-        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-            transcriber.transcribe(evidence_images=(), source_content_sha256=_SOURCE_SHA)
+    def test_no_pages_refuses_without_asking_the_service(self, tmp_path: pathlib.Path) -> None:
+        with (
+            serving_agent(lane=_ON_HOST_VISION_LANE) as service,
+            pytest.raises(PurchaseInvoiceEvidenceInputError) as raised,
+        ):
+            _transcriber(tmp_path).transcribe(evidence_images=(), source_content_sha256=_SOURCE_SHA)
         verdict = raised.value.terminal_precondition_verdict
         assert verdict is not None
         assert verdict.failed_condition_id == "llm.evidence.images_present"
         assert verdict.evidence[0].values == {"evidence_image_count": 0, "evidence_images_present": False}
+        assert service.lookups == []
+        assert service.runs == []
 
-    def test_the_transcriber_identity_folds_the_prompt_version(self) -> None:
-        """Two prompts are two readings of the same pixels, so the cache must tell them apart."""
-        transcriber = LocalVisionDocumentTranscriber(model="qwen2.5vl:3b", settings=load_settings())
-        identity = transcriber.transcriber_identity
+    def test_an_off_host_lane_without_consent_refuses_before_any_run(self, tmp_path: pathlib.Path) -> None:
+        """The pages are the evidence, so a lane that reads off-host needs the per-read consent."""
+        with (
+            serving_agent(replies=(_TRANSCRIBED_PAGE,), lane=_OFF_HOST_VISION_LANE) as service,
+            pytest.raises(LLMConsentError),
+        ):
+            _transcriber(tmp_path).transcribe(evidence_images=_images(), source_content_sha256=_SOURCE_SHA)
 
-        assert identity.origin is FieldOrigin.VISION
-        assert identity.name.endswith("qwen2.5vl:3b")
-        assert identity.revision.startswith("prompt-v")
+        assert service.runs == []
+        assert EvidenceConsentLedger().load_entries() == ()
+
+    def test_an_off_host_lane_with_consent_binds_it_to_the_lane_and_records_it(self, tmp_path: pathlib.Path) -> None:
+        with serving_agent(replies=(_TRANSCRIBED_PAGE,), lane=_OFF_HOST_VISION_LANE) as service:
+            _transcriber(tmp_path, consent_token=_CONSENT).transcribe(
+                evidence_images=_images(), source_content_sha256=_SOURCE_SHA
+            )
+
+        ((header, _body),) = service.runs
+        assert header.consent is not None
+        assert header.consent.evidence_content_address == _SOURCE_SHA
+        assert header.consent.matches(_OFF_HOST_VISION_LANE)
+        (entry,) = EvidenceConsentLedger().load_entries()
+        assert entry.evidence_content_address == _SOURCE_SHA
+        assert entry.model == "faraway/api/synthetic-vision:1"
+
+    @pytest.mark.parametrize(
+        "code",
+        [
+            ModelRunRefusalCode.NO_SELECTION,
+            ModelRunRefusalCode.MODEL_NOT_INSTALLED,
+            ModelRunRefusalCode.LANE_UNAVAILABLE,
+        ],
+    )
+    def test_a_lookup_refusal_reaches_the_caller_typed_and_nothing_else_is_tried(
+        self, tmp_path: pathlib.Path, code: ModelRunRefusalCode
+    ) -> None:
+        with serving_agent(lookup_refusal=code) as service, pytest.raises(LLMConfigError) as caught:
+            _transcriber(tmp_path).transcribe(evidence_images=_images(), source_content_sha256=_SOURCE_SHA)
+
+        assert _refusal_code(caught.value) == code.value
+        assert service.lookups == [ModelRole.VISION_TRANSCRIPTION]
+        assert service.runs == []
+
+    def test_a_lane_that_takes_no_images_refuses_input_not_supported_before_any_run(
+        self, tmp_path: pathlib.Path
+    ) -> None:
+        with serving_agent(lane=TEXT_ONLY_LANE) as service, pytest.raises(LLMConfigError) as caught:
+            _transcriber(tmp_path).transcribe(evidence_images=_images(), source_content_sha256=_SOURCE_SHA)
+
+        assert _refusal_code(caught.value) == "input_not_supported"
+        assert service.runs == []
 
 
 class TestTheVisionStageInterpretsNothing:

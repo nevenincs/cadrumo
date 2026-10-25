@@ -18,7 +18,6 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 from ....core.config import Settings
-from ....core.config_support import LLMProvider
 from ....core.document_shape import DocumentShape
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
@@ -547,7 +546,7 @@ def test_a_rule_closure_finding_yields_to_the_model_figures_it_cleared(operation
 
 
 type _TextReader = Callable[
-    [DocumentTranscription, Settings, LLMProvider | None, EvidenceConsentProof | None, object],
+    [DocumentTranscription, Settings, EvidenceConsentProof | None, object],
     InvoiceDraft,
 ]
 
@@ -572,7 +571,6 @@ def _router_ports(pages: tuple[str, ...], *, read_text: _TextReader) -> InvoiceD
         _images: tuple[VisionImage, ...],
         _address: str,
         _settings: Settings,
-        _provider: LLMProvider | None,
         _consent: EvidenceConsentProof | None,
     ) -> DocumentTranscription:
         raise AssertionError("the vision reader is not part of a text-layer case")
@@ -583,7 +581,7 @@ def _router_ports(pages: tuple[str, ...], *, read_text: _TextReader) -> InvoiceD
         text_layer_ports=text_layer_ports_for_pages(pages),
         parse_structured_invoice=structured_not_expected,
         read_text=read_text,
-        propose_supply_nature=lambda _transcription, _settings: None,
+        propose_supply_nature=lambda _transcription, _settings, _consent_token: None,
         rasterise_pdf=lambda _data: (),
         transcribe_vision=vision_not_expected,
         consent_binding_error=lambda _facts: RuntimeError("consent binding was not expected"),

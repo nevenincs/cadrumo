@@ -1,18 +1,21 @@
-"""A statement import whose reader needs the local AI settles with the setup verdict on that file.
+"""A statement import whose reader cannot be run settles with the refused run's verdict on that file.
 
 The registered ``ledger.import`` runs through the production registry, the real
 supervisor, journal and encrypted operand store, and the column-naming and
-statement readers the profile adapter composition binds, against a real
-loopback runtime that answers its inventory with no model and records every
-read it is sent. The result is then read back the way a frontend in another
-process reads it: as the settled public projection.
+statement readers the profile adapter composition binds. The readers reach a
+recording stand-in for the agent service through the operation's execution
+authority, as they reach the runtime host; the service refuses every lookup
+with one refusal code and records every run it is sent. The result is then read
+back the way a frontend in another process reads it: as the settled public
+projection.
 
 One file of a folder can need the local AI while the others import, so the
 verdict rides on that file's refusal rather than refusing the operation: the
 CSV lane imports a readable statement beside an export only the column-naming
 model reads, and the PDF lane refuses a statement only the statement reader
-reads. Each refused file must carry the verdict naming the local AI setup, and
-no read may be sent to the runtime first. The CLI then renders each settled
+reads. A selected model that is not installed must carry the verdict naming the
+local AI setup; a role with no selection must carry its typed verdict naming no
+action. No run may be sent first. The CLI then renders each settled
 result through its real error boundary and live action resolver, with the
 local AI's quick-status row the components role reported as absent: the
 file's sentence and the exact setup command.
@@ -23,9 +26,8 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
-from http import HTTPStatus
+from functools import partial
 from pathlib import Path
-from typing import override
 from uuid import UUID
 
 import pytest
@@ -33,10 +35,13 @@ import typer
 
 from cadrumo.tests.english_locale_fixture import english_locale_fixture
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.contracts.model_runs import ModelRunRefusal, ModelRunRefusalCode
 
 from ....adapters.outbound.components.tests.recorded_rows import recorded_absent_row
 from ....adapters.outbound.llm.column_role_mapping import resolve_column_roles
+from ....adapters.outbound.llm.providers.agent import model_run_refusal_verdict
 from ....adapters.outbound.llm.statement_reading import LocalStatementReader
+from ....adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
 from ....application.dependency_contracts import DependencyStatusRow
 from ....application.dependency_registry import dependency_item_declarations
 from ....application.ledger.actions_import import LedgerProviderID
@@ -50,14 +55,13 @@ from ....application.ledger.import_operation import (
 from ....application.ledger.statement_reading import bind_statement_reader_factory
 from ....application.operations.frontend_requests import OperationObservationSuccessV1
 from ....application.operations.registry import OperationRegistry
-from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
-from ....core.config import override_settings
-from ....core.model_catalogue import ModelRole, candidates_for_role, default_model_runtime_id
+from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
+from ....core.model_catalogue import ModelRole
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.inventory import FIXTURES_DIR
-from ....tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
 from ...tests import registered_executor_case_support as conformance
+from ...tests.dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing
 from .. import ledger_import_commands
 from .._component_setup_rendering import setup_status_source
 from ..errors import command_error_boundary
@@ -76,14 +80,6 @@ _READABLE_STATEMENT = (
     "08/04/2026;08/04/2026;Transferencia recibida CLIENTE UNO;1500,25;4300,75;EUR\n"
 )
 
-#: An operator-named mapping model. The catalogue's own choice is sized to the
-#: free memory measured now and can refuse without a setup action on a busy host.
-_OPERATOR_MAPPING_MODEL = next(
-    candidate.runtime_id
-    for candidate in candidates_for_role(ModelRole.COLUMN_ROLE_MAPPING)
-    if candidate.runtime_id != default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING)
-)
-
 
 @contextmanager
 def _production_readers() -> Generator[None]:
@@ -93,26 +89,15 @@ def _production_readers() -> Generator[None]:
 
 
 @contextmanager
-def _runtime_holding_nothing(posts: list[str]) -> Generator[None]:
-    """Serve a real runtime that answers its inventory with no model and records every read it is sent."""
-
-    class _EmptyRuntime(SilentLoopbackHandler):
-        @override
-        def do_GET(self) -> None:
-            write_json_response(self, {"models": []}, status=HTTPStatus.OK)
-
-        @override
-        def do_POST(self) -> None:
-            posts.append(self.path)
-            self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR)
-
-    with (
-        serving_loopback(_EmptyRuntime, path="/api/chat") as chat_url,
-        override_settings(
-            cadrumo_llm_ollama_chat_url=chat_url, cadrumo_llm_ollama_mapping_model=_OPERATOR_MAPPING_MODEL
-        ),
-    ):
-        yield
+def _agent_refusing(code: ModelRunRefusalCode) -> Generator[RecordingModelRuns]:
+    """Run operations against an agent service refusing every lookup with ``code``."""
+    with agent_refusing(code) as service, pytest.MonkeyPatch.context() as patch:
+        patch.setattr(
+            conformance,
+            "compose_operation_services",
+            partial(conformance.compose_operation_services, execution_authority=RecordingRunsAuthority(service)),
+        )
+        yield service
 
 
 def _settle_import(
@@ -174,14 +159,20 @@ def _cli_import_text(
     return result.exit_code, semantic_cli_output(result)
 
 
-def _assert_names_the_local_ai_setup(refusal: LedgerImportFileRefusal, role: ModelRole) -> None:
+def _assert_carries_the_refusal(refusal: LedgerImportFileRefusal, role: ModelRole, code: ModelRunRefusalCode) -> None:
     assert refusal.reason_code == "reader_unavailable"
-    assert refusal.precondition_verdict is not None, "the settled result lost the reader probe's verdict"
+    assert refusal.precondition_verdict is not None, "the settled result lost the refused run's verdict"
     verdict = refusal.precondition_verdict.to_verdict()
-    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
+    assert verdict == model_run_refusal_verdict(ModelRunRefusal(code=code), role=role)
     assert {str(item.values.get("role")) for item in verdict.evidence} == {role.value}
-    assert verdict.action is not None
-    assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+
+
+def _assert_names_the_local_ai_setup(refusal: LedgerImportFileRefusal, role: ModelRole) -> None:
+    _assert_carries_the_refusal(refusal, role, ModelRunRefusalCode.MODEL_NOT_INSTALLED)
+    assert refusal.precondition_verdict is not None
+    action = refusal.precondition_verdict.to_verdict().action
+    assert action is not None
+    assert action.action_id == LOCAL_AI_PROVISION_ACTION_ID
 
 
 def test_a_folder_imports_its_readable_statement_and_names_the_local_ai_for_the_export_it_needs(
@@ -192,9 +183,8 @@ def test_a_folder_imports_its_readable_statement_and_names_the_local_ai_for_the_
     folder.mkdir()
     (folder / "a_readable.csv").write_text(_READABLE_STATEMENT, encoding="utf-8")
     (folder / "b_expenses_export.csv").write_bytes(_UNKNOWN_FORMAT_EXPORT.read_bytes())
-    posts: list[str] = []
     with (
-        _runtime_holding_nothing(posts),
+        _agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as service,
         _production_readers(),
         conformance.conformance_operation_runtime(
             tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
@@ -207,7 +197,7 @@ def test_a_folder_imports_its_readable_statement_and_names_the_local_ai_for_the_
     (refusal,) = result.refused_files
     assert refusal.file_name == "b_expenses_export.csv"
     _assert_names_the_local_ai_setup(refusal, ModelRole.COLUMN_ROLE_MAPPING)
-    assert posts == [], "a read was sent before the reader was checked"
+    assert service.runs == [], "a run was sent although the lookup refused"
 
     exit_code, text = _cli_import_text(monkeypatch, result, effect, folder)
     assert exit_code == 0, text
@@ -216,13 +206,12 @@ def test_a_folder_imports_its_readable_statement_and_names_the_local_ai_for_the_
     assert f"  {_LOCAL_AI_FIX}" in lines
 
 
-def test_a_pdf_statement_whose_reader_has_no_model_settles_with_the_local_ai_setup(
+def test_a_pdf_statement_whose_reader_model_is_not_installed_settles_with_the_local_ai_setup(
     tmp_path: Path, operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     del operation
-    posts: list[str] = []
     with (
-        _runtime_holding_nothing(posts),
+        _agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as service,
         _production_readers(),
         conformance.conformance_operation_runtime(
             tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
@@ -237,7 +226,7 @@ def test_a_pdf_statement_whose_reader_has_no_model_settles_with_the_local_ai_set
     (refusal,) = result.refused_files
     assert refusal.file_name == _PDF_STATEMENT.name
     _assert_names_the_local_ai_setup(refusal, ModelRole.TEXT_EXTRACTION)
-    assert posts == [], "a read was sent before the reader was checked"
+    assert service.runs == [], "a run was sent although the lookup refused"
 
     exit_code, text = _cli_import_text(monkeypatch, result, effect, _PDF_STATEMENT)
     assert exit_code != 0
@@ -245,6 +234,31 @@ def test_a_pdf_statement_whose_reader_has_no_model_settles_with_the_local_ai_set
     assert f"Statement not read: {_PDF_STATEMENT.name} is read by the local AI, which is not ready." in lines[0]
     assert lines[-1] == f"  {_LOCAL_AI_FIX}", text
     assert "failed_condition_id" not in text
+
+
+def test_an_export_whose_role_has_no_selection_settles_with_its_typed_refusal(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    del operation
+    folder = tmp_path / "statements"
+    folder.mkdir()
+    (folder / "b_expenses_export.csv").write_bytes(_UNKNOWN_FORMAT_EXPORT.read_bytes())
+    with (
+        _agent_refusing(ModelRunRefusalCode.NO_SELECTION) as service,
+        _production_readers(),
+        conformance.conformance_operation_runtime(
+            tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
+        ) as (driver, registry, profile_id),
+    ):
+        _effect, result = _settle_import(driver, registry, profile_id, files=(folder,), provider=LedgerProviderID.AUTO)
+
+    (refusal,) = result.refused_files
+    _assert_carries_the_refusal(refusal, ModelRole.COLUMN_ROLE_MAPPING, ModelRunRefusalCode.NO_SELECTION)
+    assert refusal.precondition_verdict is not None
+    verdict = refusal.precondition_verdict.to_verdict()
+    assert verdict.action is None, "no selection action is registered, so none is named"
+    assert verdict.evidence[0].values["role_selection_required"] is True
+    assert service.runs == []
 
 
 def test_a_file_refusal_carries_a_verdict_exactly_when_its_reader_was_unavailable() -> None:

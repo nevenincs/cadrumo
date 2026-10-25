@@ -1,11 +1,11 @@
-"""A failed vision read names the local AI setup only when the read ran on the local AI.
+"""A failed vision read is explained by its own verdict, never by a guessed local setup.
 
-The vision lane asks the local reader probe why a transcription failed when the
-failure carries no verdict of its own. That probe measures the local runtime,
-so it explains an on-host read only: an off-host read that failed while the
-local runtime is also absent must not tell the person to set up a local AI they
-did not choose to read with. The probe is real and asks a closed loopback port;
-the transcription port is the input under test, failing without a verdict.
+Every vision read goes through the agent service, whose refusal carries the
+verdict the person needs: the selection to make or the setup to run. The router
+reports that verdict unchanged. A failure that carries no verdict is a reader
+that did not answer; the router names the unavailable reader and points at no
+setup, because nothing it could probe knows which lane the person selected.
+The transcription port is the input under test.
 """
 
 from __future__ import annotations
@@ -15,11 +15,12 @@ import hashlib
 import pytest
 
 from ....core.config import Settings
-from ....core.config_support import LLMProvider
 from ....core.document_shape import DocumentShape
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.iva.regime_legend import resolve_regime_legends
 from ....tests.llm_vision_evidence_support import png_image
+from ...operator_actions.models import PreconditionVerdict
+from ...provisioning_contracts import ProvisioningPreconditionCondition, provisioning_setup_verdict
 from .. import invoice_draft_extraction as invoice_draft_extraction_module
 from ..document_transcription import DocumentTranscription
 from ..evidence_errors import PurchaseInvoiceEvidenceReaderError
@@ -39,8 +40,6 @@ from ._evidence_textlayer_test_support import text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: A port nothing listens on, so the local runtime genuinely does not answer.
-_CLOSED_ENDPOINT = "http://127.0.0.1:1/api/chat"
 _LOCAL_AI_SETUP = "operator.provision.local_ai"
 
 
@@ -59,16 +58,17 @@ def _image_evidence() -> EvidenceInput:
     )
 
 
-def _ports_whose_vision_read_fails() -> InvoiceDraftExtractionPorts:
+def _ports_whose_vision_read_fails(verdict: PreconditionVerdict | None) -> InvoiceDraftExtractionPorts:
     def failing_vision_read(
         _images: tuple[VisionImage, ...],
         _source_sha256: str,
         _settings: Settings,
-        _off_host_provider: LLMProvider | None,
         _consent_token: EvidenceConsentProof | None,
         /,
     ) -> DocumentTranscription:
-        raise InvoiceDraftReaderUnavailableError(_ProviderReadFailedError("provider did not answer"))
+        raise InvoiceDraftReaderUnavailableError(
+            _ProviderReadFailedError("provider did not answer"), precondition_verdict=verdict
+        )
 
     def text_reader_was_not_expected(*_args: object) -> InvoiceDraft:
         raise AssertionError("an image carries no text layer to read")
@@ -90,7 +90,7 @@ def _ports_whose_vision_read_fails() -> InvoiceDraftExtractionPorts:
     )
 
 
-def _refusal(provider: LLMProvider | None) -> PurchaseInvoiceEvidenceReaderError:
+def _refusal(verdict: PreconditionVerdict | None) -> PurchaseInvoiceEvidenceReaderError:
     with (
         bundled_indexed_authority().operation() as operation,
         pytest.raises(PurchaseInvoiceEvidenceReaderError) as raised,
@@ -98,9 +98,8 @@ def _refusal(provider: LLMProvider | None) -> PurchaseInvoiceEvidenceReaderError
         invoice_draft_extraction_module.extract_invoice_draft_from_evidence(
             bucket_id="c" * 64,
             evidence_id="d" * 16,
-            settings=Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT),
-            off_host_provider=provider,
-            ports=_ports_whose_vision_read_fails(),
+            settings=Settings(),
+            ports=_ports_whose_vision_read_fails(verdict),
             operation=operation,
             legends=resolve_regime_legends(
                 operation=operation, effective_date=default_invoice_extraction_period().end_date
@@ -109,18 +108,21 @@ def _refusal(provider: LLMProvider | None) -> PurchaseInvoiceEvidenceReaderError
     return raised.value
 
 
-def test_a_failed_off_host_read_names_no_local_ai_setup() -> None:
-    verdict = _refusal(LLMProvider.AGENT).terminal_precondition_verdict
+def test_a_failed_read_without_a_verdict_names_the_reader_and_no_setup() -> None:
+    verdict = _refusal(None).terminal_precondition_verdict
 
     assert verdict is not None
     assert verdict.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value
-    assert verdict.action is None, "an off-host read was told to set up the local AI"
+    assert verdict.action is None, "a reader that did not answer was explained by a guessed setup"
 
 
-@pytest.mark.parametrize("provider", [None, LLMProvider.LOCAL], ids=["default", "local"])
-def test_a_failed_on_host_read_is_explained_by_the_local_reader_probe(provider: LLMProvider | None) -> None:
-    verdict = _refusal(provider).terminal_precondition_verdict
+def test_a_refused_read_reports_the_services_own_verdict_unchanged() -> None:
+    service_verdict = provisioning_setup_verdict(
+        ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+        action_id=_LOCAL_AI_SETUP,
+        facts={"role": "vision_transcription", "role_model_installed": False},
+    )
 
-    assert verdict is not None
-    assert verdict.action is not None
-    assert verdict.action.action_id == _LOCAL_AI_SETUP
+    verdict = _refusal(service_verdict).terminal_precondition_verdict
+
+    assert verdict == service_verdict

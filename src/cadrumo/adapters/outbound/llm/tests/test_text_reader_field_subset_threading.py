@@ -27,7 +27,6 @@ from typing import Any, override
 import pytest
 
 from .....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from .....core.config_support import LLMProvider
 from .....core.field_origin import FieldOrigin
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..client import LLMClient
@@ -71,8 +70,6 @@ def _prompt_the_reader_builds(*, fields: list[str] | None, operation: PinnedAuth
     """Return the prompt a reader configured with ``fields`` actually sends."""
     client = _CapturingClient(caller="tests.text_reader_field_subset", prompt_id="invoice-extraction")
     reader = TextInvoiceFieldExtractor(
-        model="test-text-model",
-        provider=LLMProvider.AGENT,
         client=client,
         operation=operation,
         fields=fields,
@@ -159,8 +156,6 @@ def test_the_provenance_stamp_describes_the_prompt_that_was_sent(*, operation: P
 
     client = _CapturingClient(caller="tests.text_reader_field_subset", prompt_id="invoice-extraction")
     reader = TextInvoiceFieldExtractor(
-        model="test-text-model",
-        provider=LLMProvider.AGENT,
         client=client,
         operation=operation,
         fields=selection,

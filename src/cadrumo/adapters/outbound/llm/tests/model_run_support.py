@@ -11,7 +11,7 @@ service refuses it before anything goes to the agent.
 
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from queue import Queue
 
@@ -53,8 +53,10 @@ class RecordingModelRuns:
         lookup_refusal: ModelRunRefusalCode | None = None,
         run_refusal: ModelRunRefusalCode | None = None,
         served_lane: ModelRunLane | None = None,
+        answer: Callable[[ModelRunBody], str] | None = None,
     ) -> None:
         self._replies = list(replies)
+        self._answer = answer
         self._lane = lane
         self._served = served_lane or lane
         self._lookup_refusal = lookup_refusal
@@ -85,7 +87,10 @@ class RecordingModelRuns:
             return ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
         if self._run_refusal is not None:
             return ModelRunRefusal(code=self._run_refusal)
-        text = self._replies.pop(0) if len(self._replies) > 1 else self._replies[0]
+        if self._answer is not None:
+            text = self._answer(body)
+        else:
+            text = self._replies.pop(0) if len(self._replies) > 1 else self._replies[0]
         return ModelRunOutput(
             text=text,
             provider_id=self._served.provider_id,
@@ -102,9 +107,16 @@ def serving_agent(
     lane: ModelRunLane = DEFAULT_LANE,
     lookup_refusal: ModelRunRefusalCode | None = None,
     run_refusal: ModelRunRefusalCode | None = None,
+    answer: Callable[[ModelRunBody], str] | None = None,
 ) -> Generator[RecordingModelRuns]:
-    """Bind a recording service for the current context, as a running operation would."""
-    port = RecordingModelRuns(replies=replies, lane=lane, lookup_refusal=lookup_refusal, run_refusal=run_refusal)
+    """Bind a recording service for the current context, as a running operation would.
+
+    ``answer``, when given, authors each reply from the run body it answers,
+    in place of the scripted ``replies``.
+    """
+    port = RecordingModelRuns(
+        replies=replies, lane=lane, lookup_refusal=lookup_refusal, run_refusal=run_refusal, answer=answer
+    )
     with bound_model_runs(port):
         yield port
 

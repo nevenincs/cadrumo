@@ -1,20 +1,12 @@
-"""On-host TEXT evidence reader: classify/split from an extracted text layer.
+"""TEXT evidence reader: classify/split from an extracted text layer.
 
-Closes the capability gap that made the privacy posture inverted. Until this
-existed, a document's transport was decided by an accident of how it was
-produced: a scan-only PDF was read on-host by a local vision model, while a
-PDF that happened to carry a text layer -- the *more* machine-readable
-document -- was the one whose contents left the machine to a cloud subprocess.
-The same taxpayer invoice took a different route depending on whether someone
-had scanned it or exported it.
+A document's text layer and a scanned document's pixels reach the model by the
+same route: through the agent service, on the lane and model the person
+selected for the role. Whether the read leaves this computer is the selected
+lane's catalogue flag, never the shape of the document, and a lane that reads
+off the host needs the per-invocation consent this reader's caller supplies.
 
-This reader removes the fork's cause rather than its symptom. Text-layer
-evidence now takes the same on-host path scanned evidence already took, over
-loopback HTTP to a local model, so no document class routes off-host and the
-gestor bar that applied to one arm of the fork and not the other disappears
-with it.
-
-It is deliberately a sibling of :class:`LocalVisionLLMClassifier` rather than a
+It is deliberately a sibling of :class:`~llm.vision_classifier.VisionLLMClassifier` rather than a
 generalisation of it. The two differ only in transport -- text in the prompt
 versus images on the message -- and they share the prompt spec and the
 allow-list-guarded response parsing, which are the contracts that keep a model
@@ -29,6 +21,7 @@ import asyncio
 
 from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
+from ....core.model_catalogue import ModelRole
 from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
 from ....domain.transactions.llm import (
@@ -41,33 +34,35 @@ from ....domain.transactions.llm import (
 )
 from ....domain.transactions.models import Transaction
 from .client import LLMClient
+from .consent import EvidenceConsentToken
 from .models import LLMRequest
 
 __all__ = ["LocalTextLLMClassifier"]
 
 
 class LocalTextLLMClassifier:
-    """Classify or split a transaction from extracted evidence text, on-host.
+    """Classify or split a transaction from extracted evidence text through the agent.
 
     Args:
         spec: Prompt spec carrying the registry-grounded category and
             IVA-category allow-lists -- the same spec every other classifier
             uses, so the model's answer space is identical whichever transport
             reads the document.
-        model: Local Ollama text model identifier; defaults to
-            ``Settings.cadrumo_llm_ollama_text_model``.
         client: Injected :class:`LLMClient` for tests; default-constructed
             against the resolved settings otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
+        consent_token: Per-invocation off-host consent proof. ``None`` reads
+            only on a lane that stays on this computer; a lane that reads off
+            the host refuses the request without one.
     """
 
     def __init__(
         self,
         *,
         spec: PromptSpec,
-        model: str | None = None,
         client: LLMClient | None = None,
         settings: Settings | None = None,
+        consent_token: EvidenceConsentToken | None = None,
     ) -> None:
         """Build the classifier around one prompt spec."""
         # Ahead of every other statement, so the refusal is what an operator
@@ -76,7 +71,7 @@ class LocalTextLLMClassifier:
         require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
         self._spec = spec
-        self._model = model if model is not None else resolved_settings.cadrumo_llm_ollama_text_model
+        self._consent_token = consent_token
         # Text generation on consumer hardware is slower than a cloud call and
         # faster than a vision read; it borrows the vision read's longer budget
         # rather than the general LLM timeout, which is sized for a hosted API.
@@ -97,13 +92,14 @@ class LocalTextLLMClassifier:
     def decided_by(self) -> str:
         """Provenance stamp recorded as ``classified_by``.
 
-        Distinct from both the vision stamp and the retired cloud stamps, so a
-        persisted record always says which on-host transport read it.
+        Distinct from the vision stamp, so a persisted record always says which
+        reader produced it. The model segment is ``configured`` because the
+        agent resolves the model for the role at dispatch.
         """
-        return build_provenance_stamp(provider=LLMProvider.LOCAL, reader="text", model=self._model)
+        return build_provenance_stamp(provider=LLMProvider.AGENT, reader="text", model="configured")
 
     def classify(self, transaction: Transaction, *, evidence_text: str | None) -> LLMClassificationResponse:
-        """Classify ``transaction``, reading any extracted evidence text on-host.
+        """Classify ``transaction``, reading any extracted evidence text.
 
         Args:
             transaction: The transaction to classify.
@@ -132,14 +128,12 @@ class LocalTextLLMClassifier:
         return parse_split_response(response.text, spec=self._spec)
 
     def _request(self, prompt: str) -> LLMRequest:
-        """Build a LOCAL-provider text request; no images, no off-host transport."""
+        """Build a text extraction request for the agent; no images, always marked as evidence."""
         return LLMRequest(
             prompt=prompt,
-            provider_override=LLMProvider.LOCAL,
-            model_override=self._model,
-            # Marked even though the pin above makes the dispatch gate
-            # unreachable from here: the marker states what the content IS, and
-            # a later change that relaxes the pin must not silently also relax
-            # the confidentiality posture.
+            provider_override=LLMProvider.AGENT,
             evidence_derived=True,
+            consent_token=self._consent_token,
+            model_role=ModelRole.TEXT_EXTRACTION,
+            expects_json=True,
         )
