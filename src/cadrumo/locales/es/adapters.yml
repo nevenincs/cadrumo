@@ -144,6 +144,10 @@ adapters:
         tag_plan_mismatch: Las páginas dibujadas del resumen del cálculo no se corresponden
           con su plan de etiquetado en la página {page} ({detail}); el resumen se
           rechaza en lugar de etiquetarse de forma aproximada.
+    components:
+      errors:
+        contract_mismatch: El programa de preparación de esta instalación habla una
+          versión que esta copia de Cadrumo no lee, así que no se preparó nada.
     storage:
       _factory:
         errors:

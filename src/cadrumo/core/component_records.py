@@ -60,8 +60,6 @@ __all__ = [
     "uses_managed_local_ai",
 ]
 
-#: The record shape the engine writes.
-COMPONENT_RECORD_VERSION: Final = 1
 #: The local AI record's path naming the program's executable.
 LOCAL_AI_PROGRAM_PATH: Final = "program"
 #: The local AI record's path naming the models folder.

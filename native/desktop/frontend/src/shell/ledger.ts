@@ -1747,13 +1747,6 @@ export type ReaderReadinessResult = {
     failed_condition_id?: string | null;
   };
   roles: ReaderRole[];
-  last_pull?: {
-    model: string;
-    pulled: boolean;
-    attempted_at: string;
-    bytes_fetched?: number | null;
-    failed_condition_id?: string | null;
-  } | null;
   extraction_ready: boolean;
   document_readiness: "all_documents" | "text_layer_only";
   text_layer_model_fill_available: boolean;

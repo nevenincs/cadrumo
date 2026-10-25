@@ -73,7 +73,6 @@ __all__ = [
     "ComponentsLauncher",
     "ComponentsRequest",
     "ComponentsReviewer",
-    "components_role_available",
     "launch_components_role",
     "not_in_this_build_result",
     "run_components_role",
@@ -282,11 +281,6 @@ def launch_components_role(
     if sys.platform == "win32":
         return _WindowsLaunch(image, arguments, environment, directory)
     return _PosixLaunch(image, arguments, environment, directory)
-
-
-def components_role_available() -> bool:
-    """Whether this build has the Cadrumo binary that runs the components role."""
-    return components_role_image() is not None
 
 
 def _blocked_rows(items: Sequence[DependencyItemKind], mode: DependencyCheckMode) -> tuple[ComponentsRow, ...]:

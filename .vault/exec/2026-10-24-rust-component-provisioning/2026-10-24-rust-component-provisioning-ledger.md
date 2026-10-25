@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:80d880503273891b835a188f5d0a11acb96eb545e97fa1dbc87b1c7af005b394'
+body_hash: 'sha256:1663a8cd822bb758ed0f2ac4035e8525cc14ad9923de10ea047a51a8547c37e1'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -865,6 +865,22 @@ related:
 - `S14` `verify:` `pytest src/cadrumo/entrypoints/cli/config/tests -m ''` -> `pass`
 - `S14` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
 - `S14` `by:` `implementation-engineer`
+- `S14` `M` `src/cadrumo/adapters/outbound/components/client.py`
+- `S14` `M` `src/cadrumo/adapters/outbound/components/protocol.py`
+- `S14` `M` `src/cadrumo/adapters/outbound/components/tests/test_client.py`
+- `S14` `M` `src/cadrumo/core/component_records.py`
+- `S14` `M` `src/cadrumo/core/errors/registry/_adapters_part3.py`
+- `S14` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S14` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S14` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S14` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S14` `verify:` `pytest src/cadrumo/adapters/outbound/components/tests src/cadrumo/core/tests/test_component_records.py src/cadrumo/core/errors/tests -m ''` -> `pass`
+- `S14` `verify:` `python -m dev.locales status --check` -> `pass`
+- `S11` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S11` `M` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S11` `verify:` `npx tsc --noEmit` -> `pass`
+- `S11` `verify:` `npx eslint src/shell/ledger.ts src/dev/ledgerEvidenceFixture.ts` -> `pass`
+- `S11` `by:` `implementation-engineer`
 
 ## Notes
 

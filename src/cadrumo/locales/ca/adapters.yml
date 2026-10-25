@@ -144,6 +144,11 @@ adapters:
         tag_plan_mismatch: Les pàgines dibuixades del resum del càlcul no es corresponen
           amb el pla d'etiquetatge a la pàgina {page} ({detail}); el resum es rebutja
           en lloc d'etiquetar-se de manera aproximada.
+    components:
+      errors:
+        contract_mismatch: El programa de preparació d'aquesta instal·lació parla
+          una versió que aquesta còpia de Cadrumo no llegeix, així que no es va preparar
+          res.
     storage:
       _factory:
         errors:

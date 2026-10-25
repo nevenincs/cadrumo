@@ -133,6 +133,10 @@ adapters:
         tag_plan_mismatch: The drawn calculation summary pages do not match their
           tagging plan on page {page} ({detail}); the summary is refused rather than
           tagged approximately.
+    components:
+      errors:
+        contract_mismatch: The setup program of this installation speaks a version
+          this copy of Cadrumo does not read, so nothing was set up.
     storage:
       _factory:
         errors:

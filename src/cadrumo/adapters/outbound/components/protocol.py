@@ -46,7 +46,7 @@ from ....application.dependency_contracts import (
     DependencyStatusRow,
     dependency_item_kind,
 )
-from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ....core.identifier_grammar import NamespacedId
 from ....core.model_catalogue import ModelSelectionAdvisory
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -454,8 +454,14 @@ _LINE: Final[TypeAdapter[ComponentsLine]] = TypeAdapter(
 )
 
 
-class ComponentsContractMismatchError(Exception):
-    """The role speaks a protocol or plan contract version this client does not: it belongs to another build."""
+class ComponentsContractMismatchError(CadrumoError):
+    """The role speaks a protocol or plan contract version this client does not: it belongs to another build.
+
+    An internal control signal of :func:`~adapters.outbound.components.client.run_components_role`,
+    which catches it and answers the items as not in this build, so it reaches
+    no operator. It still descends from the registry-bound hierarchy, because
+    every refusal in the product trees does.
+    """
 
 
 _FIELDS: Final[TypeAdapter[dict[str, object]]] = TypeAdapter(dict[str, object])

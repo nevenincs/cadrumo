@@ -27,7 +27,6 @@ from .....application.dependency_contracts import (
 from .....core.package_interpreter import ROLE_IMAGE_OPTION
 from .....core.storage_environment import StorageMode, StorageModeEvidence
 from .....tests.components_role_replay import ReplayLauncher, transcript_lines
-from .. import client as client_module
 from .. import role_image as role_image_module
 from ..client import (
     ComponentsCancellation,
@@ -373,7 +372,6 @@ def test_an_installed_package_runs_the_desktop_image_its_manifest_names(
     assert components_role_image(environ={}) is None
     monkeypatch.setattr(sys, "executable", str(tmp_path / "elsewhere" / "python.exe"))
     assert components_role_image(environ={}) is None
-    assert client_module.components_role_available() is False
 
 
 def test_a_role_of_another_plan_contract_reads_as_not_in_this_build_and_is_never_answered(image: Path) -> None:
