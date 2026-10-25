@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:03ae4a9744ede4d83a606b61e8ebcd34ca94afbaf5521aa771087c844b53e11f'
+body_hash: 'sha256:5ec95f7dbf901985ebc3adf1b707d999f88356a860f64d10fed3f936f635e337'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -909,6 +909,14 @@ related:
 - `S17` `verify:` `pytest test_dependency_wording.py test_dependency_registry_conformance.py dev/locales/tests/test_desktop_chrome.py and the desktop wire parity case (76 passed)` -> `pass`
 - `S17` `verify:` `cargo test --offline --lib provisioning:: (133 passed, incl. the new fingerprint test)` -> `pass`
 - `S17` `verify:` `cargo clippy --offline --all-targets -- -D warnings and cargo fmt --check` -> `pass`
+- `S13` `M` `src/cadrumo_mcp/mcp/component_setup.py`
+- `S13` `M` `dev/runtime_lifecycle/tests/test_components_surface_conformance.py`
+- `S13` `verify:` `pytest dev/runtime_lifecycle/tests/test_components_surface_conformance.py src/cadrumo/entrypoints/tui/setup/tests src/cadrumo_mcp (158 passed)` -> `pass`
+- `S13` `verify:` `the new parity case fails on the prior door.py and component_setup.py refusal conditions (runtime_invalid_frame)` -> `pass`
+- `S13` `verify:` `ruff check, ruff format --check and ty on the touched modules` -> `pass`
+- `S13` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache (30 kept, 0 broken)` -> `pass`
+- `S13` `verify:` `pytest dev/quality/tests/test_no_python_provisioning.py (9 passed)` -> `pass`
+- `S13` `by:` `implementation-engineer`
 
 ## Notes
 

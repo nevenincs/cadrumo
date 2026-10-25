@@ -45,7 +45,7 @@ from typing import Any, Final
 import pytest
 from click.testing import Result
 from textual.pilot import Pilot
-from textual.widgets import Button
+from textual.widgets import Button, Static
 
 from cadrumo.adapters.outbound.components import client as components_client
 from cadrumo.adapters.outbound.components.protocol import (
@@ -65,8 +65,10 @@ from cadrumo.application.dependency_contracts import (
     DependencyState,
     DependencyStatusRow,
 )
+from cadrumo.application.dependency_wording import dependency_failure_key
 from cadrumo.core.config import override_settings
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
+from cadrumo.core.i18n.render import tr
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.setup.door import ComponentsSetupDoor
@@ -183,6 +185,22 @@ def tui_rows() -> list[Row]:
     return [_status_row(row) for row in screen.rows]
 
 
+def tui_status_text() -> str:
+    """What the TUI's setup screen says beneath its rows after its first read."""
+    said: list[str] = []
+
+    async def read(screen: SetupScreen, _app: ScreenHostApp[None], _pilot: Pilot[None]) -> None:
+        said.append(str(screen.query_one("#setup-status", Static).content))
+
+    asyncio.run(_tui_session(read))
+    return said[-1]
+
+
+def cli_status_text() -> str:
+    """What ``aeat config provision status`` prints."""
+    return semantic_cli_text(invoke_cached_cli(["config", "provision", "status"]).stdout)
+
+
 # --------------------------------------------------------------------------
 # Recorded conversations of the real role
 # --------------------------------------------------------------------------
@@ -216,6 +234,34 @@ def test_every_surface_shows_the_rows_the_role_reports(replay: Callable[..., Rol
     assert len(engine) == 2, "the recording names both items, so the comparison reads every row"
     for surface, rows in shown.items():
         assert rows == engine, surface
+
+
+@pytest.mark.unit
+def test_every_surface_words_a_check_the_role_refused_under_its_own_category(
+    replay: Callable[..., RoleReplay],
+) -> None:
+    refused = _recorded_result("status_refused_blocked_by_network")
+    assert refused.failure_category is not None and not refused.rows
+    sentence = tr(dependency_failure_key(refused.failure_category), locale="en")
+
+    replay(status=["status_refused_blocked_by_network"])
+    with override_settings(cadrumo_output_language="en"):
+        cli = cli_status_text()
+    replay(status=["status_refused_blocked_by_network"])
+    tui = tui_status_text()
+    replay(status=["status_refused_blocked_by_network"])
+    mcp = mcp_reply("setup_status", {})
+
+    for surface, shown in {"cli": cli, "tui": tui}.items():
+        assert sentence in shown, surface
+        assert refused.failure_category.value not in shown, f"{surface} shows the category itself"
+        assert "invalid_frame" not in shown.casefold(), f"{surface} read a classified refusal as a broken frame"
+    assert (mcp["outcome"], mcp["failure_category"], mcp["failure"], mcp["rows"]) == (
+        refused.outcome.value,
+        refused.failure_category.value,
+        sentence,
+        [],
+    )
 
 
 @pytest.mark.unit

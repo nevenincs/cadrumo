@@ -93,7 +93,14 @@ async def _run(
 
 
 def _checked(result: ComponentsResultLine) -> ComponentsResultLine:
-    if result.outcome is not ComponentsOutcome.OK:
+    """Return a read the role answered, keeping a classified refusal for the screen to word.
+
+    A refusal the engine classified itself, such as a proxy setting it cannot
+    use, is that category's refusal and not a broken protocol: it comes back as
+    the result it is, with no rows, as the command line keeps it. Only an answer
+    this door cannot use at all, a failure with no category, is a broken frame.
+    """
+    if result.outcome is not ComponentsOutcome.OK and result.failure_category is None:
         raise RefusalError(RefusalCode.INVALID_FRAME)
     return result
 

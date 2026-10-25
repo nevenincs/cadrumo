@@ -360,6 +360,9 @@ class SetupScreen(AccountChromeScreen):
         lines = [tr("tui.setup.complete" if status.setup_complete is True else "tui.setup.incomplete")]
         if any(row.blocked_reason is DependencyBlockedReason.HARDWARE for row in self._rows):
             lines.append(tr("tui.setup.hardware_limited"))
+        if status.failure_category is not None:
+            # The engine refused the check itself, so it reported no row to word.
+            lines.append(tr(dependency_failure_key(status.failure_category)))
         self._set_status("\n".join(lines))
 
     def _unavailable(self) -> None:

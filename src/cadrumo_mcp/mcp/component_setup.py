@@ -201,10 +201,14 @@ async def _run(
 async def run_setup_tool(request: ComponentsRequest, *, language: str, progress: ProgressSink | None) -> dict[str, Any]:
     """Run one setup tool's role command and answer with its codes and their words in ``language``.
 
+    A check the engine refused under a category of its own, such as a proxy
+    setting it cannot use, is answered as that refusal: its outcome, its
+    category and the category's sentence, with no row.
+
     Raises:
         RefusalError: The role could not be started, broke its protocol, did
-            not answer a read in time, or reported a completed setup of a plan
-            other than the approved one.
+            not answer a read in time, refused a check with no category at all,
+            or reported a completed setup of a plan other than the approved one.
     """
     loop = asyncio.get_running_loop()
     events: asyncio.Queue[ComponentsEvent | None] = asyncio.Queue()
@@ -250,8 +254,10 @@ async def run_setup_tool(request: ComponentsRequest, *, language: str, progress:
     if (
         request.command in {ComponentsCommand.STATUS, ComponentsCommand.VERIFY}
         and result.outcome is not ComponentsOutcome.OK
+        and result.failure_category is None
     ):
-        # A check always reports its rows; any other outcome is a broken exchange.
+        # A check either reports its rows or refuses under a category of its own, as the
+        # command line keeps it; an outcome with neither is a broken exchange.
         raise RefusalError(RefusalCode.INVALID_FRAME)
     if (
         request.command is ComponentsCommand.SETUP
