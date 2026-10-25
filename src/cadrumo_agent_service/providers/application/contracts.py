@@ -11,15 +11,18 @@ key.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Self
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
+from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.hex import is_hex64
 from cadrumo.core.json_contract import OutputSchema
+from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 from ..domain.catalog import ProviderAuthKind, ProviderConsumer, ProviderId, ProviderTransport
+from ..domain.record import ModelId
 
 ProviderSettingsRevision = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 """A status revision: the stored row's opaque revision, or all zeros when no record exists."""
@@ -155,8 +158,52 @@ class ProviderSettingsActionAccepted(BaseModel):
 type ProviderSettingsActionResult = ProviderSettingsActionAccepted | ProviderSettingsRefusal
 
 
+class ModelRoleSelectionEntry(OutputSchema):
+    """One role and the lane and model the person selected for it; both ``None`` when there is none."""
+
+    role: ModelRole
+    lane: ProviderId | None
+    """The catalogue lane id the selection names."""
+    model: ModelId | None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _selected_or_not(self) -> Self:
+        if (self.lane is None) != (self.model is None):
+            raise ValueError("a role names a lane and a model together, or neither")
+        return self
+
+
+class ModelRoleSelectionsStatus(OutputSchema):
+    """Every role and its selection, in role-vocabulary order, with the record's guard.
+
+    ``unreadable`` means a stored selections record cannot be read. Then no
+    role is listed, because none is known to be selected or unselected, and
+    ``revision`` guards the reset that removes the record.
+    """
+
+    unreadable: bool
+    roles: tuple[ModelRoleSelectionEntry, ...]
+    revision: ProviderSettingsRevision | None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _roles_follow_readability(self) -> Self:
+        if self.unreadable == bool(self.roles):
+            raise ValueError("a readable record lists every role and an unreadable one lists none")
+        if not self.unreadable and self.revision is None:
+            raise ValueError("a readable record carries its revision")
+        return self
+
+
+type ModelRoleSelectionsResult = ModelRoleSelectionsStatus | ProviderSettingsRefusal
+
+
 __all__ = [
     "CliState",
+    "ModelRoleSelectionEntry",
+    "ModelRoleSelectionsResult",
+    "ModelRoleSelectionsStatus",
     "ProviderCredentialSource",
     "ProviderReadiness",
     "ProviderSettingsActionAccepted",

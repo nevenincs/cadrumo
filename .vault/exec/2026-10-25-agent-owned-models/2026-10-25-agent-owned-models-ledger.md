@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:d42b988e2700cac4f3aef81d6249d14aedf2bde44ddc5ed25285354abab194e3'
+body_hash: 'sha256:c2a8b8fbceee7bacd2d8fe0a1006b74f8162b9fe3411842a0cbca4ab0901bc08'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -74,3 +74,19 @@ related:
 - `S02` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
 - `S02` `verify:` `ruff check/format, ty check on touched files` -> `pass`
 - `S02` `by:` `vaultspec-high-executor`
+- `S03` `M` `src/cadrumo_agent_service/admin.py`
+- `S03` `M` `src/cadrumo_agent_service/service.py`
+- `S03` `M` `src/cadrumo_agent_service/providers/application/contracts.py`
+- `S03` `M` `src/cadrumo_agent_service/providers/application/service.py`
+- `S03` `A` `src/cadrumo_agent_service/providers/application/tests/test_model_role_selections.py`
+- `S03` `M` `src/cadrumo_agent_service/host/tests/test_admin_authority.py`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_service_provider_admin_ingress.py`
+- `S03` `verify:` `pytest -m "(unit or integration) and not serial ..." src/cadrumo_agent_service dev/runtime_lifecycle/tests/test_service_provider_admin_ingress.py dev/runtime_lifecycle/tests/test_service_model_run_relay.py` -> `pass`
+- `S03` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S03` `verify:` `ruff check/format, ty check on touched files` -> `pass`
+- `S03` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S03` `by:` `vaultspec-high-executor`
+
+## Notes
+
+- `S03` Wire result shapes live in providers/application/contracts.py beside the provider status shapes; `src/cadrumo_agent_service/contracts.py` needed no change.

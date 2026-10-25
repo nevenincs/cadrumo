@@ -77,6 +77,10 @@ def _read(stream: socket.socket) -> dict[str, object]:
         "connect",
         "connect_status",
         "connect_cancel",
+        "model_roles",
+        "model_role_set",
+        "model_role_clear",
+        "model_roles_reset",
     ],
 )
 def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(action: str) -> None:
@@ -102,6 +106,12 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
         request["attempt_id"] = str(uuid4())
     if action == "auth":
         request["choice"] = "provider_sign_in"
+    if action in {"model_role_set", "model_role_clear", "model_roles_reset"}:
+        request["expected_revision"] = "0" * 64
+    if action in {"model_role_set", "model_role_clear"}:
+        request["role"] = "text_extraction"
+    if action == "model_role_set":
+        request.update(provider="synthetic_api", model="synthetic-model-1")
     secret = b"synthetic-provider-secret"
     if action == "set":
         request["secret_bytes"] = len(secret)

@@ -43,6 +43,8 @@ class _AdminRecorder:
         choice: Literal["direct_api", "provider_sign_in"] | None = None,
         method: Literal["browser", "device"] | None = None,
         attempt_id: str | None = None,
+        role: str | None = None,
+        model: str | None = None,
         secret: bytearray | None = None,
     ) -> dict[str, JsonValue]:
         values: dict[str, str | bytearray | None] = {
@@ -52,6 +54,8 @@ class _AdminRecorder:
             "choice": choice,
             "method": method,
             "attempt_id": attempt_id,
+            "role": role,
+            "model": model,
             "secret": secret,
         }
         self.calls.append((action, values))

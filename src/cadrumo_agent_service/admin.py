@@ -42,6 +42,10 @@ type AdminAction = Literal[
     "connect",
     "connect_status",
     "connect_cancel",
+    "model_roles",
+    "model_role_set",
+    "model_role_clear",
+    "model_roles_reset",
 ]
 
 
@@ -58,6 +62,8 @@ class AdminTarget(Protocol):
         choice: Literal["direct_api", "provider_sign_in"] | None = None,
         method: Literal["browser", "device"] | None = None,
         attempt_id: str | None = None,
+        role: str | None = None,
+        model: str | None = None,
         secret: bytearray | None = None,
     ) -> JsonValue:
         """Apply validated metadata and separately framed secret bytes under service authority."""
@@ -77,6 +83,8 @@ class AdminRequest(BaseModel):
     choice: Literal["direct_api", "provider_sign_in"] | None = None
     method: Literal["browser", "device"] | None = None
     attempt_id: UUID | None = None
+    role: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")] | None = None
+    model: Annotated[str, Field(pattern=r"^[\x21-\x7e]{1,256}$")] | None = None
     secret_bytes: Annotated[int, Field(ge=1, le=ADMIN_SECRET_MAX_BYTES)] | None = None
 
 
@@ -242,6 +250,8 @@ class AdminServer:
                 choice=request.choice,
                 method=request.method,
                 attempt_id=str(request.attempt_id) if request.attempt_id is not None else None,
+                role=request.role,
+                model=request.model,
                 secret=secret,
             )
         except ProviderCatalogUnavailableError:

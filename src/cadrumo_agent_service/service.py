@@ -228,11 +228,15 @@ class AgentService:
         choice: str | None = None,
         method: str | None = None,
         attempt_id: str | None = None,
+        role: str | None = None,
+        model: str | None = None,
         secret: bytearray | None = None,
     ) -> Any:
         """Apply one bounded masked administration request under the live lease."""
         if action in {"connect_status", "connect_cancel"}:
             return self._observe_sign_in(attempt_id, cancel=action == "connect_cancel")
+        if action == "model_roles":
+            return self._model_roles()
         if action in {"catalog", "status"}:
             if self._closing.is_set():
                 return {"kind": "refused", "code": "service_stopping"}
@@ -248,6 +252,8 @@ class AgentService:
             "choice": choice,
             "method": method,
             "attempt_id": attempt_id,
+            "role": role,
+            "model": model,
             "secret": secret,
         }
         if action == "start":
@@ -297,6 +303,8 @@ class AgentService:
         choice: str | None,
         method: str | None,
         attempt_id: str | None,
+        role: str | None,
+        model: str | None,
         secret: bytearray | None,
     ) -> Any:
         if self._closing.is_set():
@@ -309,6 +317,10 @@ class AgentService:
             if not self._schedule_start():
                 return {"kind": "refused", "code": "service_stopping"}
             return {"kind": "starting"}
+        if action in {"model_role_set", "model_role_clear", "model_roles_reset"}:
+            return self._change_model_roles(
+                action, role=role, lane=provider, model=model, expected_revision=expected_revision
+            )
         if provider is None or expected_revision is None:
             return {"kind": "refused", "code": "invalid_request"}
         if action == "sign_in":
@@ -341,6 +353,43 @@ class AgentService:
         self._forget_reads()
         # A tree started under the settings this change superseded is replaced
         # on the start thread, which retires it and publishes what follows.
+        self._replace_superseded()
+        return result.model_dump(mode="json")
+
+    def _model_roles(self) -> dict[str, Any]:
+        """Read every role's selection; a plain store read that never waits on the agent tree."""
+        if self._closing.is_set():
+            return {"kind": "refused", "code": "service_stopping"}
+        lease = self.client.lease
+        if lease is None:
+            return {"kind": "refused", "code": "signed_out"}
+        observed = self._providers.model_roles().model_dump(mode="json")
+        if self.client.lease != lease:
+            return {"kind": "refused", "code": "signed_out"}
+        return observed
+
+    def _change_model_roles(
+        self,
+        action: str,
+        *,
+        role: str | None,
+        lane: str | None,
+        model: str | None,
+        expected_revision: str | None,
+    ) -> dict[str, Any]:
+        if expected_revision is None:
+            return {"kind": "refused", "code": "invalid_request"}
+        if action == "model_role_set" and role is not None and lane is not None and model is not None:
+            result = self._providers.set_model_role(role, lane=lane, model=model, expected_revision=expected_revision)
+        elif action == "model_role_clear" and role is not None and lane is None and model is None:
+            result = self._providers.clear_model_role(role, expected_revision=expected_revision)
+        elif action == "model_roles_reset" and role is None and lane is None and model is None:
+            result = self._providers.reset_model_roles(expected_revision=expected_revision)
+        else:
+            return {"kind": "refused", "code": "invalid_request"}
+        # The selections live beside the provider records, so a change moves
+        # the generation a running tree was started under.
+        self._forget_reads()
         self._replace_superseded()
         return result.model_dump(mode="json")
 

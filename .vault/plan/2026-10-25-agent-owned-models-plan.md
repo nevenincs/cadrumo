@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-25'
 body_schema: body-v2
-body_hash: 'sha256:c7a03ee9f482e2340866402b04ccf9ed17e30cb8bffd2aa5d5dc9699860ca772'
+body_hash: 'sha256:dc78dddad95831bcf894faa21444b5854533f96f2937ebbbb3a17c7928a42ab7'
 ---
 
 # `agent-owned-models` plan
@@ -46,7 +46,7 @@ Land the per-role selection store and wire, role-based lookup, removal of the un
 
 - [x] `P01.S01` - Add the per-profile, per-role model selection record and store with guarded revisions; absent means none and corrupt refuses; `src/cadrumo_agent_service/providers/domain/record.py, src/cadrumo_agent_service/providers/persistence/store.py, src/cadrumo_agent_service/providers/application/ports.py, src/cadrumo_agent_service/providers/persistence/tests`.
 - [x] `P01.S02` - Select by role in ModelRunService.lookup and refuse NO_SELECTION when the role has none, with no fallback to another lane or a default selection; `src/cadrumo_agent_service/providers/application/model_runs.py, src/cadrumo_agent_service/providers/application/tests`.
-- [ ] `P01.S03` - Serve the selection on the authenticated service API and the typed wire contracts: read all roles, set and clear one role; `src/cadrumo_agent_service/admin.py, src/cadrumo_agent_service/contracts.py, src/cadrumo_agent_service/providers/application/service.py`.
+- [x] `P01.S03` - Serve the selection on the authenticated service API and the typed wire contracts: read all roles, set and clear one role; `src/cadrumo_agent_service/admin.py, src/cadrumo_agent_service/contracts.py, src/cadrumo_agent_service/providers/application/service.py`.
 - [ ] `P01.S04` - Return the per-role selection state through the runtime-to-service lookup frame so the tax side and the CLI and TUI can read it; `src/cadrumo/application/operations/model_runs.py, src/cadrumo_runtime/host/profile_connection_model_runs.py, src/cadrumo_agent_service/host/model_run_relay.py`.
 - [ ] `P01.S05` - Read the selection in the desktop host and expose it to the webview as a typed snapshot; `native/desktop/src-tauri/src/agent/admin.rs, native/desktop/src-tauri/src/agent/gateway.rs`.
 - [x] `P01.S06` - Delete the hosted model ids and their re-exports, which have no production reader; `src/cadrumo/domain/transactions/model_tier.py, src/cadrumo/domain/transactions/__init__.py, src/cadrumo/domain/transactions/llm.py`.
