@@ -38,6 +38,8 @@ from typing import override
 
 import pytest
 
+from cadrumo_client.contracts.model_runs import ModelRunLane
+
 from .....core.config import Settings
 from .....core.config_support import LLMProvider
 from .....core.external_constants import UTF_8_ENCODING
@@ -53,7 +55,7 @@ from ..consent import EvidenceConsentToken
 from ..errors import LLMConsentError
 from ..models import LLMRequest
 from ..providers.agent import lane_model_label
-from .model_run_support import DEFAULT_LANE, RecordingModelRuns
+from .model_run_support import DEFAULT_LANE, ON_HOST_LANE, RecordingModelRuns
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -71,9 +73,10 @@ class _CapturingClient(LLMClient):
         *,
         settings: Settings | None = None,
         consent_ledger: EvidenceConsentLedger | None = None,
+        lane: ModelRunLane = DEFAULT_LANE,
     ) -> None:
-        """Forward the two dependencies the cases here vary, and bind the recording service."""
-        self.service = RecordingModelRuns(replies=(_COMPLETION_TEXT,))
+        """Forward the dependencies the cases here vary, and bind the recording service on ``lane``."""
+        self.service = RecordingModelRuns(replies=(_COMPLETION_TEXT,), lane=lane)
         super().__init__(settings=settings, consent_ledger=consent_ledger, model_runs=self.service)
 
 
@@ -173,14 +176,21 @@ def test_save_custody_requires_both_callbacks() -> None:
 
 
 def test_an_on_host_or_unmarked_request_records_nothing(client: _CapturingClient) -> None:
-    """The ledger records off-host EVIDENCE dispatches, not every completion."""
-    asyncio.run(
-        client.complete(
-            LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.AGENT, model_role=ModelRole.TEXT_EXTRACTION)
-        )
-    )
+    """The ledger records off-host EVIDENCE dispatches, not every completion.
 
-    assert len(client.service.runs) == 1
+    An evidence read on a lane that stays on this computer completes without
+    an entry. An unmarked request on the off-host lane is sent without consent,
+    so the service refuses it, and it records nothing either.
+    """
+    on_host = _CapturingClient(settings=_consented_settings(), lane=ON_HOST_LANE)
+    on_host_request = _evidence_request().model_copy(update={"consent_token": None})
+    unmarked = LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.AGENT, model_role=ModelRole.TEXT_EXTRACTION)
+
+    assert asyncio.run(on_host.complete(on_host_request)).text == _COMPLETION_TEXT
+    with pytest.raises(LLMConsentError):
+        asyncio.run(client.complete(unmarked))
+
+    assert (len(on_host.service.runs), len(client.service.runs)) == (1, 1)
     assert EvidenceConsentLedger().load_entries() == ()
 
 

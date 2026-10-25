@@ -2,8 +2,11 @@
 
 Unit tests of the LLM client use it in place of the runtime and service, which
 are exercised by their own integration tests. It records every lookup and run
-it receives, so "the document left the host" stays an observation, and
-answers with scripted replies or a scripted refusal.
+it receives, so "the document reached the service" stays an observation, and
+answers with scripted replies or a scripted refusal. It applies the service's
+own consent rule, shared through the run header: a run on a lane that reads
+off-host without consent for that lane is refused ``consent_missing``, as the
+service refuses it before anything goes to the agent.
 """
 
 from __future__ import annotations
@@ -77,6 +80,9 @@ class RecordingModelRuns:
     async def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         self.runs.append((header, body))
         self.bodies.put(body.model_dump_json())
+        if not header.consent_admits(self._lane):
+            # The service's own rule: nothing is sent on a lane the run's consent does not admit.
+            return ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
         if self._run_refusal is not None:
             return ModelRunRefusal(code=self._run_refusal)
         text = self._replies.pop(0) if len(self._replies) > 1 else self._replies[0]
@@ -104,10 +110,10 @@ def serving_agent(
 
 
 IMAGE_LANE = ModelRunLane(
-    provider_id="example",
+    provider_id="nearby",
     transport="api",
-    model="example-model-1",
-    reads_off_host=True,
+    model="synthetic-reader-1",
+    reads_off_host=False,
     accepted_media=(ModelRunMediaKind.IMAGE,),
     licence=None,
     size_bytes=None,
@@ -115,10 +121,10 @@ IMAGE_LANE = ModelRunLane(
     context_length=None,
 )
 TEXT_ONLY_LANE = ModelRunLane(
-    provider_id="example",
+    provider_id="nearby",
     transport="cli",
-    model="example-model-1",
-    reads_off_host=True,
+    model="synthetic-reader-1",
+    reads_off_host=False,
     accepted_media=(),
     licence=None,
     size_bytes=None,

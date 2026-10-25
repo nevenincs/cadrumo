@@ -59,6 +59,11 @@ def _request(**fields: object) -> LLMRequest:
     return LLMRequest.model_validate(base | fields)
 
 
+def _consented(**fields: object) -> LLMRequest:
+    """A request the service admits on the default lane, which reads off-host: it carries evidence consent."""
+    return _request(evidence_derived=True, consent_token=_TOKEN, **fields)
+
+
 def _refusal_code(error: LLMConfigError | LLMConsentError) -> object:
     verdict = error.terminal_precondition_verdict
     assert verdict is not None
@@ -87,7 +92,7 @@ def test_an_agent_request_that_names_no_role_refuses_before_asking(tmp_path: Pat
 
 def test_a_completed_run_returns_the_reply_and_names_the_lane_that_served_it(tmp_path: Path) -> None:
     with serving_agent(replies=('{"nature": "goods"}',)) as service:
-        response = asyncio.run(_client(_settings(tmp_path)).complete(_request()))
+        response = asyncio.run(_client(_settings(tmp_path)).complete(_consented()))
 
     assert response.text == '{"nature": "goods"}'
     assert response.provider is LLMProvider.AGENT
@@ -96,7 +101,7 @@ def test_a_completed_run_returns_the_reply_and_names_the_lane_that_served_it(tmp
     assert service.lookups == [ModelRole.SUPPLY_NATURE_PROPOSAL]
     ((header, body),) = service.runs
     assert header.role == ModelRole.SUPPLY_NATURE_PROPOSAL.value
-    assert header.consent is None
+    assert header.consent is not None and header.consent.matches(DEFAULT_LANE)
     assert body.prompt == "Classify these lines."
 
 
@@ -128,7 +133,7 @@ def test_each_run_refusal_maps_to_its_typed_error_and_is_not_retried(
 ) -> None:
     """A run whose outcome the service reported is never re-sent as if it had not run."""
     with serving_agent(run_refusal=code) as service, pytest.raises(error_type):
-        asyncio.run(_client(_settings(tmp_path)).complete(_request()))
+        asyncio.run(_client(_settings(tmp_path)).complete(_consented()))
 
     assert len(service.runs) == 1
 
@@ -202,7 +207,7 @@ def test_an_unconsented_evidence_request_on_a_lane_declared_off_host_is_refused_
 
 def test_a_json_reply_without_an_object_is_asked_for_once_more(tmp_path: Path) -> None:
     with serving_agent(replies=("I think it is goods.", '{"nature": "goods"}')) as service:
-        response = asyncio.run(_client(_settings(tmp_path)).complete(_request(expects_json=True)))
+        response = asyncio.run(_client(_settings(tmp_path)).complete(_consented(expects_json=True)))
 
     assert response.text == '{"nature": "goods"}'
     first, second = (body for _, body in service.runs)
@@ -212,7 +217,7 @@ def test_a_json_reply_without_an_object_is_asked_for_once_more(tmp_path: Path) -
 
 def test_a_second_reply_without_an_object_refuses_as_output_invalid(tmp_path: Path) -> None:
     with serving_agent(replies=("no object here",)) as service, pytest.raises(LLMProviderError) as caught:
-        asyncio.run(_client(_settings(tmp_path)).complete(_request(expects_json=True)))
+        asyncio.run(_client(_settings(tmp_path)).complete(_consented(expects_json=True)))
 
     assert len(service.runs) == 2
     assert caught.value.context is not None
@@ -240,7 +245,7 @@ def test_an_injected_port_wins_over_the_bound_one(tmp_path: Path) -> None:
         model_runs=injected,
     )
     with serving_agent() as bound:
-        response = asyncio.run(client.complete(_request()))
+        response = asyncio.run(client.complete(_consented()))
 
     assert response.model == "other/cli/m"
     assert bound.runs == []

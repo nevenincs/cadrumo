@@ -245,6 +245,17 @@ class ModelRunHeader(BaseModel):
     deadline_seconds: Annotated[int, Field(ge=1, le=MODEL_RUN_MAX_DEADLINE_SECONDS)]
     consent: ModelRunConsentBinding | None = None
 
+    def consent_admits(self, lane: ModelRunLane) -> bool:
+        """Return whether this run's consent admits it on ``lane``, the lane its role resolves to now.
+
+        A lane that reads off-host admits only a run carrying consent recorded
+        for that lane. A lane that stays on this computer needs none, but
+        consent recorded for another lane never admits a run.
+        """
+        if self.consent is None:
+            return not lane.reads_off_host
+        return self.consent.matches(lane)
+
 
 class ModelRunOutput(BaseModel):
     """The run's final reply text and the lane that produced it."""

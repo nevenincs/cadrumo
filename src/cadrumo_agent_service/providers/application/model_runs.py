@@ -183,10 +183,7 @@ class ModelRunService:
         lane = self._lookup(header.role, lanes)
         if isinstance(lane, ModelRunRefusal):
             return lane
-        if header.consent is None:
-            if lane.reads_off_host:
-                return ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
-        elif not header.consent.matches(lane):
+        if not header.consent_admits(lane):
             return ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
         if lane.accepted_media is not None:
             for attachment in body.attachments:

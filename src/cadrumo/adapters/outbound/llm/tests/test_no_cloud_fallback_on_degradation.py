@@ -34,6 +34,7 @@ from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_records import LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient, LLMRetryPolicy
+from ..consent import EvidenceConsentToken
 from ..errors import LLMConsentError, LLMError
 from ..models import LLMRequest
 from ._arena_fixtures import _fresh_arena
@@ -72,8 +73,9 @@ def _dead_local_endpoint() -> str:
     return f"http://127.0.0.1:{port}/api/chat"
 
 
-def _client(tmp_path: Path) -> LLMClient:
+def _client(tmp_path: Path, *, cloud_upload_permitted: bool = False) -> LLMClient:
     settings = EnvFileFreeSettings(
+        cadrumo_evidence_cloud_upload_permitted=cloud_upload_permitted,
         # The off-host route is fully usable: a service is bound and answers.
         # If a fallback existed, nothing here would stop it.
         cadrumo_llm_ollama_text_model="gpt-oss",
@@ -140,20 +142,24 @@ def test_a_permitted_request_pinned_at_the_cloud_does_reach_the_recorder(tmp_pat
     exists and also failed". Asserting zero arrivals cannot distinguish "nothing
     was sent" from "nothing could have been recorded".
 
-    Unmarked and deliberately pinned, so no gate stands between the request and
-    the transport. Nothing about this makes a fallback reachable: the request
-    NAMES its provider, which is the operator choosing, not a degradation
-    choosing for them.
+    Consented and deliberately pinned, so the request carries everything the
+    off-host route admits: the service refuses any run on an off-host lane that
+    carries no consent for it. Nothing about this makes a fallback reachable:
+    the request NAMES its provider, which is the operator choosing, not a
+    degradation choosing for them.
     """
     with _cloud_recorder() as service:
         request = LLMRequest(
-            prompt="a routine unmarked prompt",
-            evidence_derived=False,
+            prompt="a routine consented prompt",
+            evidence_derived=True,
+            consent_token=EvidenceConsentToken(
+                surface="runtime:ledger.evidence.extract", evidence_content_address="d" * 64
+            ),
             provider_override=LLMProvider.AGENT,
             model_role=ModelRole.TEXT_EXTRACTION,
         )
         with override_settings(cadrumo_llm_ollama_chat_url=_dead_local_endpoint()):
-            response = asyncio.run(_client(tmp_path).complete(request))
+            response = asyncio.run(_client(tmp_path, cloud_upload_permitted=True).complete(request))
 
         assert len(service.runs) == 1
 

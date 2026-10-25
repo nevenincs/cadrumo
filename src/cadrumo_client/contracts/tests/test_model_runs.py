@@ -133,6 +133,25 @@ def test_consent_matches_its_own_lane_and_no_other() -> None:
     assert not consent.matches(_LANE.model_copy(update={"model": "example-model-2"}))
 
 
+def test_an_off_host_lane_admits_only_a_run_consented_for_it_and_an_on_host_lane_needs_none() -> None:
+    consent = ModelRunConsentBinding(
+        evidence_content_address="a" * 64, provider_id="example", transport="cli", model="example-model-1"
+    )
+    on_host = _LANE.model_copy(update={"reads_off_host": False})
+    unconsented = ModelRunHeader(role="text_extraction", deadline_seconds=30)
+    consented = ModelRunHeader(role="text_extraction", deadline_seconds=30, consent=consent)
+    elsewhere = ModelRunHeader(
+        role="text_extraction",
+        deadline_seconds=30,
+        consent=consent.model_copy(update={"model": "example-model-2"}),
+    )
+
+    assert (unconsented.consent_admits(_LANE), consented.consent_admits(_LANE)) == (False, True)
+    assert not elsewhere.consent_admits(_LANE)
+    assert unconsented.consent_admits(on_host)
+    assert not elsewhere.consent_admits(on_host)
+
+
 def test_a_body_round_trips_and_one_beyond_its_bound_is_refused() -> None:
     body = ModelRunBody(system="Be terse.", prompt="Read this.", max_output_tokens=32)
     encoded = encode_model_run_body(body)

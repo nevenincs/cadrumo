@@ -261,16 +261,20 @@ def test_an_unmarked_request_is_not_gated(tmp_path: Path) -> None:
     A column-role mapping or a public-corpus measurement carries no taxpayer
     content, and gating it would make the boundary a blanket cloud ban wearing
     a consent gate's name.
+
+    The client's gate passes it, so the run reaches the service. On a lane that
+    reads off-host the service then refuses a run that carries no consent, so
+    nothing leaves the host; that refusal is the service's, after the gate.
     """
     settings = _settings(tmp_path)
     request = LLMRequest(
         prompt="Map these headers.", provider_override=LLMProvider.AGENT, model_role=ModelRole.COLUMN_ROLE_MAPPING
     )
-    with _serve_agent() as bodies:
-        response = asyncio.run(_client(settings).complete(request))
+    with serving_agent() as service, pytest.raises(LLMConsentError):
+        asyncio.run(_client(settings).complete(request))
 
-    assert response.text == "{}"
-    assert bodies.qsize() == 1
+    ((header, _),) = service.runs
+    assert header.consent is None
 
 
 def test_the_public_corpus_escape_reaches_the_provider_through_the_reader(
@@ -282,11 +286,13 @@ def test_the_public_corpus_escape_reaches_the_provider_through_the_reader(
     provider -- which is exactly what widening the router wrapper with a
     pass-through ``provider`` would produce -- and asserts nothing reaches the
     endpoint. This case differs from it in ONE variable, the evidence marker,
-    and reaches the endpoint. Without it, that refusal is equally satisfied by a
-    reader that can no longer dispatch at all.
+    and reaches the service. Without it, that refusal is equally satisfied by a
+    reader that can no longer dispatch at all. The service itself then refuses
+    the consent-less run on its off-host lane, so the observation is the run it
+    received, not a reply.
     """
     settings = _settings(tmp_path)
-    with _serve_agent() as bodies:
+    with serving_agent() as service, pytest.raises(LLMConsentError):
         extractor = TextInvoiceFieldExtractor(
             provider=LLMProvider.AGENT,
             model="gpt-4.1",
@@ -297,7 +303,8 @@ def test_the_public_corpus_escape_reaches_the_provider_through_the_reader(
         )
         extractor.extract(transcription=_transcription())
 
-    assert bodies.qsize() == 1
+    ((header, _),) = service.runs
+    assert header.consent is None
 
 
 def test_a_local_evidence_read_needs_no_consent() -> None:

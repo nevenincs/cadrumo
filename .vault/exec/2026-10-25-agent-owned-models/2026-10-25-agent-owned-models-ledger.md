@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:8f27276f7a30cf1e64e6a1ed67cf386300569915c6fbd19b3d2d28a303547d83'
+body_hash: 'sha256:82a5df5dba9a1fce984ff4c07d4f33b5f56d95faa00d06262da339fbeda53576'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -292,6 +292,13 @@ related:
 - `S10` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service src/cadrumo_client src/cadrumo/adapters/outbound/llm -q` -> `pass`
 - `S10` `verify:` `pytest src/cadrumo_agent_service/adapters/tests/test_agent_background_runs_gateway.py -m integration -n 0` -> `pass`
 - `S10` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_gate.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_ledger.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_no_cloud_fallback_on_degradation.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_vision_capability_boundary.py`
+- `S11` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service src/cadrumo_client src/cadrumo/adapters/outbound/llm -q` -> `pass`
+- `S11` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `S11` `by:` `standard-implementer`
 
 ## Notes
 
@@ -315,3 +322,4 @@ related:
 - `S10` P02 review fix: refusal-mapping-gaps; the real gateway cannot produce these codes or a 503 for a background request, so a unit test covers the mapping table
 - `S10` P02 review fix: lookup-does-not-reapply-the-role-rules
 - `S10` P02 review fix: three-catalogue-reads-per-run
+- `S11` P02 review fix: non-evidence-off-host-runs-always-refused (test part only; the stand-in now applies the service consent rule, shared as `ModelRunHeader.consent_admits;` client.py and the `evidence_draft` readers unchanged)

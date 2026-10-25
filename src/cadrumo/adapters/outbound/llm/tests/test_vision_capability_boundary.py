@@ -35,7 +35,7 @@ from ..errors import LLMConfigError
 from ..models import LLMRequest, MultimodalImageInput
 from ..providers.agent import AgentAdapter
 from ..providers.local import LocalAdapter
-from .model_run_support import IMAGE_LANE, TEXT_ONLY_LANE, serving_agent
+from .model_run_support import IMAGE_LANE, ON_HOST_LANE, TEXT_ONLY_LANE, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -104,7 +104,7 @@ class TestALaneThatTakesNoImagesRefusesThem:
     def test_the_agents_own_admission_refusal_reaches_the_consumer_as_the_same_code(self, tmp_path: Path) -> None:
         """A lane whose catalog says nothing is asked; the agent decides at admission."""
         with (
-            serving_agent(run_refusal=ModelRunRefusalCode.INPUT_NOT_SUPPORTED) as service,
+            serving_agent(lane=ON_HOST_LANE, run_refusal=ModelRunRefusalCode.INPUT_NOT_SUPPORTED) as service,
             pytest.raises(LLMConfigError) as caught,
         ):
             asyncio.run(_client(_settings(tmp_path)).complete(_vision_request()))
