@@ -175,6 +175,7 @@ class AgentService:
             self._closing,
         )
         self._model_runs = ModelRunService(
+            store=self._store,
             resolver=resolver,
             catalog_source=self._catalog,
             gateway=HostedBackgroundRuns(

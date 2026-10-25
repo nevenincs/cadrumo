@@ -1,12 +1,14 @@
-"""Which lane answers a tax model run, decided by the real resolver over the profile's settings."""
+"""Which lane answers a tax model run: the person's selection for its role, through the real resolver."""
 
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.core.storage_environment import StorageMode
 from cadrumo_client.contracts.model_runs import (
@@ -23,6 +25,7 @@ from cadrumo_client.contracts.model_runs import (
 
 from ....adapters.agent_background_runs import HostedBackgroundRuns
 from ...domain.catalog import parse_provider_catalog
+from ...domain.record import ModelRoleSelection, ModelRoleSelectionsRecord, new_settings_generation
 from ..contracts import ProviderSettingsActionAccepted, ProviderSettingsStatus
 from ..model_runs import ModelRunService
 from ..ports import StoreRefusal, StoreRefusalCode
@@ -31,6 +34,7 @@ from ..service import ProviderSettingsService
 from .memory_store import MemoryProviderSettingsStore
 from .synthetic_catalog import (
     KEY_LANE,
+    MISSING_LANE,
     OTHER_KEY_LANE,
     SIGN_IN_ONLY_LANE,
     ProvidedProviderCatalogSource,
@@ -40,6 +44,7 @@ from .synthetic_catalog import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _DEFAULT_MODELS = {KEY_LANE: "example-model-a", SIGN_IN_ONLY_LANE: "example-model-c", OTHER_KEY_LANE: "other-model"}
+"""Catalogue defaults on three lanes, so a test can show the lookup never reads one."""
 
 
 def _catalog_source() -> ProvidedProviderCatalogSource:
@@ -74,7 +79,19 @@ def _harness(
     gateway = _RecordingGateway()
     resolver = ProviderCredentialResolver(store=store, catalog_source=source)
     settings = ProviderSettingsService(store=store, catalog_source=source, storage_mode=StorageMode.INSTALLED)
-    return ModelRunService(resolver=resolver, catalog_source=source, gateway=gateway), settings, gateway
+    runs = ModelRunService(store=store, resolver=resolver, catalog_source=source, gateway=gateway)
+    return runs, settings, gateway
+
+
+def _select(store: MemoryProviderSettingsStore, *selections: tuple[ModelRole, str, str]) -> None:
+    record = ModelRoleSelectionsRecord(
+        schema_version=1,
+        selections=tuple(ModelRoleSelection(role=role, lane=lane, model=model) for role, lane, model in selections),
+        generation=new_settings_generation(),
+        updated_at=datetime(2026, 10, 25, 9, 0, tzinfo=UTC),
+    )
+    expected = store.selections.revision if store.selections is not None else ABSENT_SECURE_OBJECT_REVISION_ID
+    assert store.write_role_selections(record, expected_revision=expected) is None
 
 
 def _revision(settings: ProviderSettingsService, lane: str) -> str:
@@ -89,47 +106,105 @@ def _turn_off(settings: ProviderSettingsService, lane: str) -> None:
     )
 
 
+def _store_key(settings: ProviderSettingsService, lane: str) -> None:
+    stored = settings.set_credential(
+        lane, secret=SecretStr("synthetic-key"), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+    )
+    assert isinstance(stored, ProviderSettingsActionAccepted)
+
+
 def _header(*, consent: ModelRunConsentBinding | None = None) -> ModelRunHeader:
     return ModelRunHeader(role="text_extraction", deadline_seconds=30, consent=consent)
 
 
 _BODY = ModelRunBody(prompt="Read this invoice.", max_output_tokens=64)
+_NO_SELECTION = ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+_LANE_UNAVAILABLE = ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
 
 
-def test_a_cli_lane_reached_by_its_own_sign_in_is_the_default_when_no_key_is_stored() -> None:
-    """Parity: the default selection is the first reachable lane in catalog order, CLI or API."""
-    runs, _, _ = _harness(MemoryProviderSettingsStore())
+def test_with_no_selection_every_role_refuses_although_reachable_lanes_declare_defaults() -> None:
+    """No fallback: a reachable lane with a catalogue default is never chosen for an unselected role."""
+    store = MemoryProviderSettingsStore()
+    runs, settings, gateway = _harness(store)
+    _store_key(settings, KEY_LANE)
 
-    assert runs.lookup("text_extraction") == ModelRunLane(
-        provider_id="example", transport="cli", model="example-model-c"
-    )
+    for role in ModelRole:
+        assert runs.lookup(role.value) == _NO_SELECTION
+    assert runs.run(_header(), _BODY) == _NO_SELECTION
+    assert gateway.runs == []
 
 
-def test_an_earlier_lane_with_a_stored_key_wins() -> None:
+def test_each_role_gets_the_lane_and_model_selected_for_it() -> None:
     store = MemoryProviderSettingsStore()
     runs, settings, _ = _harness(store)
-    stored = settings.set_credential(
-        KEY_LANE, secret=SecretStr("synthetic-key"), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+    _store_key(settings, KEY_LANE)
+    _select(
+        store,
+        (ModelRole.TEXT_EXTRACTION, KEY_LANE, "synthetic-text-1"),
+        (ModelRole.VISION_TRANSCRIPTION, SIGN_IN_ONLY_LANE, "synthetic-vision-1"),
     )
-    assert isinstance(stored, ProviderSettingsActionAccepted)
 
     assert runs.lookup("text_extraction") == ModelRunLane(
-        provider_id="example", transport="api", model="example-model-a"
+        provider_id="example", transport="api", model="synthetic-text-1"
+    )
+    assert runs.lookup("vision_transcription") == ModelRunLane(
+        provider_id="example", transport="cli", model="synthetic-vision-1"
     )
 
 
-def test_a_lane_turned_off_is_never_chosen() -> None:
+def test_a_role_without_a_selection_refuses_while_other_roles_are_selected() -> None:
     store = MemoryProviderSettingsStore()
-    runs, settings, _ = _harness(store)
+    runs, _, _ = _harness(store)
+    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+
+    assert runs.lookup("column_role_mapping") == _NO_SELECTION
+    assert runs.lookup("supply_nature_proposal") == _NO_SELECTION
+    assert runs.lookup("vision_transcription") == _NO_SELECTION
+
+
+def test_a_role_outside_the_vocabulary_has_no_selection() -> None:
+    store = MemoryProviderSettingsStore()
+    runs, _, _ = _harness(store)
+    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
+
+    assert runs.lookup("unknown_role") == _NO_SELECTION
+
+
+def test_a_selected_lane_turned_off_refuses_and_no_other_lane_is_used() -> None:
+    store = MemoryProviderSettingsStore()
+    runs, settings, gateway = _harness(store)
+    _store_key(settings, OTHER_KEY_LANE)
+    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
     _turn_off(settings, SIGN_IN_ONLY_LANE)
 
-    assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+    assert runs.lookup("text_extraction") == _LANE_UNAVAILABLE
+    assert runs.run(_header(), _BODY) == _LANE_UNAVAILABLE
+    assert gateway.runs == []
 
-    stored = settings.set_credential(
-        OTHER_KEY_LANE, secret=SecretStr("synthetic-key"), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
-    )
-    assert isinstance(stored, ProviderSettingsActionAccepted)
-    assert runs.lookup("text_extraction") == ModelRunLane(provider_id="other", transport="api", model="other-model")
+
+def test_a_selected_key_lane_with_no_stored_key_refuses_as_unavailable() -> None:
+    store = MemoryProviderSettingsStore()
+    runs, _, _ = _harness(store)
+    _select(store, (ModelRole.TEXT_EXTRACTION, KEY_LANE, "synthetic-text-1"))
+
+    assert runs.lookup("text_extraction") == _LANE_UNAVAILABLE
+
+
+def test_a_selected_lane_the_agent_no_longer_reports_refuses_as_unavailable() -> None:
+    store = MemoryProviderSettingsStore()
+    runs, _, _ = _harness(store)
+    _select(store, (ModelRole.TEXT_EXTRACTION, MISSING_LANE, "synthetic-text-1"))
+
+    assert runs.lookup("text_extraction") == _LANE_UNAVAILABLE
+
+
+def test_an_unreadable_selections_record_refuses_every_role_rather_than_reading_as_none() -> None:
+    store = MemoryProviderSettingsStore()
+    runs, _, _ = _harness(store)
+    store.unreadable_selections = "c" * 64
+
+    for role in ModelRole:
+        assert runs.lookup(role.value) == _LANE_UNAVAILABLE
 
 
 def test_a_profile_that_is_not_signed_in_refuses_as_such() -> None:
@@ -143,9 +218,11 @@ def test_a_profile_that_is_not_signed_in_refuses_as_such() -> None:
 
 
 def test_a_run_whose_consent_names_another_lane_is_refused_before_it_is_sent() -> None:
-    runs, _, gateway = _harness(MemoryProviderSettingsStore())
+    store = MemoryProviderSettingsStore()
+    runs, _, gateway = _harness(store)
+    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
     consent = ModelRunConsentBinding(
-        evidence_content_address="a" * 64, provider_id="example", transport="api", model="example-model-a"
+        evidence_content_address="a" * 64, provider_id="example", transport="api", model="synthetic-text-1"
     )
 
     assert runs.run(_header(consent=consent), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
@@ -153,9 +230,11 @@ def test_a_run_whose_consent_names_another_lane_is_refused_before_it_is_sent() -
 
 
 def test_a_run_whose_consent_names_its_lane_goes_to_the_gateway_on_that_lane() -> None:
-    runs, _, gateway = _harness(MemoryProviderSettingsStore())
+    store = MemoryProviderSettingsStore()
+    runs, _, gateway = _harness(store)
+    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
     consent = ModelRunConsentBinding(
-        evidence_content_address="a" * 64, provider_id="example", transport="cli", model="example-model-c"
+        evidence_content_address="a" * 64, provider_id="example", transport="cli", model="synthetic-text-1"
     )
 
     output = runs.run(_header(consent=consent), _BODY)
@@ -168,7 +247,9 @@ def test_a_run_whose_consent_names_its_lane_goes_to_the_gateway_on_that_lane() -
 
 
 def test_the_lookup_carries_the_media_the_agent_reports_and_a_run_beyond_them_is_never_sent() -> None:
-    runs, _, gateway = _harness(MemoryProviderSettingsStore())
+    store = MemoryProviderSettingsStore()
+    runs, _, gateway = _harness(store)
+    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
     gateway.accepts = (ModelRunMediaKind.IMAGE,)
     pdf = ModelRunAttachment(media_type="application/pdf", base64_data="JVBERi0=")
 
@@ -183,11 +264,12 @@ def test_the_lookup_carries_the_media_the_agent_reports_and_a_run_beyond_them_is
 def test_without_a_ready_agent_every_run_refuses_as_service_unavailable() -> None:
     source = _catalog_source()
     store = MemoryProviderSettingsStore()
+    _select(store, (ModelRole.TEXT_EXTRACTION, SIGN_IN_ONLY_LANE, "synthetic-text-1"))
     resolver = ProviderCredentialResolver(store=store, catalog_source=source)
     gateway = HostedBackgroundRuns(
         endpoint=lambda: None, bearer=bytearray(b"synthetic-bearer"), host_token=bytearray(b"synthetic-host")
     )
-    runs = ModelRunService(resolver=resolver, catalog_source=source, gateway=gateway)
+    runs = ModelRunService(store=store, resolver=resolver, catalog_source=source, gateway=gateway)
 
     lane = runs.lookup("text_extraction")
     assert isinstance(lane, ModelRunLane) and lane.accepted_media is None

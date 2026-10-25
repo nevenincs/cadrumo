@@ -1,14 +1,14 @@
 """Which lane answers a tax model run, and the run itself, for one admitted profile.
 
-A tax worker's model run names its role and never a lane. The lane is chosen
-here, from the profile's provider settings and the catalog cadrumo-agent
-reports: the first lane in catalog order that is not turned off, that this
-profile can reach (a stored credential, or the provider's own
-sign-in), and that declares a default model. A per-role selection the person
-stores is a follow-on and, when it exists, wins over that default. Any lane is
-eligible, API or CLI; whether a lane takes an attachment is what the ready
-agent's live catalog reports for background requests, read in the same
-lookup, and never inferred from its transport.
+A tax worker's model run names its role and never a lane. The lane and model
+are the ones the person selected for that role, stored in the profile's
+provider settings. A role with no selection refuses ``no_selection``. Nothing
+stands in for a missing selection: not another lane, not another role's
+choice, not a catalogue default. A selected lane that is turned off, no longer
+reported or not reachable refuses ``lane_unavailable``. Any lane is eligible,
+API or CLI; whether a lane takes an attachment is what the ready agent's live
+catalog reports for background requests, read in the same lookup, and never
+inferred from its transport.
 
 The run goes to cadrumo-agent as a background request through
 :class:`BackgroundRunGateway`. No secret leaves this service with the answer.
@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from cadrumo.core.model_catalogue import ModelRole
 from cadrumo_client.contracts.model_runs import (
     ModelRunBody,
     ModelRunHeader,
@@ -30,7 +31,15 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from ..domain.catalog import ProviderConsumer
-from .ports import ProviderCatalogSource, ProviderCatalogUnavailableError
+from .ports import (
+    AbsentModelRoleSelections,
+    ProviderCatalogSource,
+    ProviderCatalogUnavailableError,
+    ProviderSettingsStore,
+    StoreRefusal,
+    StoreRefusalCode,
+    UnreadableModelRoleSelections,
+)
 from .resolution import (
     ProviderCredentialResolver,
     ProviderCredentialUnavailable,
@@ -40,6 +49,11 @@ from .resolution import (
 _SIGNED_OUT: dict[ProviderCredentialUnavailableReason, ModelRunRefusalCode] = {
     ProviderCredentialUnavailableReason.NOT_SIGNED_IN: ModelRunRefusalCode.NOT_SIGNED_IN,
     ProviderCredentialUnavailableReason.PROFILE_LOCKED: ModelRunRefusalCode.PROFILE_LOCKED,
+}
+
+_STORE_SIGNED_OUT: dict[StoreRefusalCode, ModelRunRefusalCode] = {
+    StoreRefusalCode.NOT_SIGNED_IN: ModelRunRefusalCode.NOT_SIGNED_IN,
+    StoreRefusalCode.PROFILE_LOCKED: ModelRunRefusalCode.PROFILE_LOCKED,
 }
 
 
@@ -61,34 +75,43 @@ class ModelRunService:
     def __init__(
         self,
         *,
+        store: ProviderSettingsStore,
         resolver: ProviderCredentialResolver,
         catalog_source: ProviderCatalogSource,
         gateway: BackgroundRunGateway,
     ) -> None:
-        """Bind the service to the profile's resolver, the agent's catalog and the run gateway."""
+        """Bind the service to the profile's selections, resolver, the agent's catalog and the run gateway."""
+        self._store = store
         self._resolver = resolver
         self._catalog_source = catalog_source
         self._gateway = gateway
 
     def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
-        """Return the lane and model a run for ``role`` would use; nothing in the answer is secret."""
-        del role  # Every role takes the default selection until a per-role selection exists.
+        """Return the lane and model the person selected for ``role``; nothing in the answer is secret."""
         try:
-            catalog = self._catalog_source.catalog()
+            model_role = ModelRole(role)
+        except ValueError:
+            return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+        read = self._store.read_role_selections()
+        if isinstance(read, StoreRefusal):
+            return ModelRunRefusal(code=_STORE_SIGNED_OUT.get(read.code, ModelRunRefusalCode.LANE_UNAVAILABLE))
+        if isinstance(read, UnreadableModelRoleSelections):
+            # An unreadable record says nothing about any role, so no role reads as unselected.
+            return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+        selection = None if isinstance(read, AbsentModelRoleSelections) else read.record.selection(model_role)
+        if selection is None:
+            return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+        try:
+            entry = self._catalog_source.catalog().entry(selection.lane)
         except ProviderCatalogUnavailableError:
             return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
-        for entry in catalog.providers:
-            if entry.default_model is None:
-                continue
-            resolution = self._resolver.resolve(entry.id, ProviderConsumer.ASSISTANT)
-            if isinstance(resolution, ProviderCredentialUnavailable):
-                signed_out = _SIGNED_OUT.get(resolution.reason)
-                if signed_out is not None:
-                    return ModelRunRefusal(code=signed_out)
-                continue
-            lane = ModelRunLane(provider_id=entry.provider, transport=entry.transport.value, model=entry.default_model)
-            return lane.model_copy(update={"accepted_media": self._gateway.accepted_media(lane)})
-        return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+        if entry is None:
+            return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+        resolution = self._resolver.resolve(entry.id, ProviderConsumer.ASSISTANT)
+        if isinstance(resolution, ProviderCredentialUnavailable):
+            return ModelRunRefusal(code=_SIGNED_OUT.get(resolution.reason, ModelRunRefusalCode.LANE_UNAVAILABLE))
+        lane = ModelRunLane(provider_id=entry.provider, transport=entry.transport.value, model=selection.model)
+        return lane.model_copy(update={"accepted_media": self._gateway.accepted_media(lane)})
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         """Run one request on the lane its role resolves to now.

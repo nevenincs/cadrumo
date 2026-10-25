@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:c5273b624b0b169e7f98ffd8303d04633221d1a7585dba13f7673a6fbb650cdf'
+body_hash: 'sha256:d42b988e2700cac4f3aef81d6249d14aedf2bde44ddc5ed25285354abab194e3'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -66,3 +66,11 @@ related:
 - `S01` `verify:` `ruff check/format, ty check on touched files` -> `pass`
 - `S01` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
 - `S01` `by:` `vaultspec-high-executor`
+- `S02` `M` `src/cadrumo_agent_service/providers/application/model_runs.py`
+- `S02` `M` `src/cadrumo_agent_service/providers/application/tests/test_model_runs.py`
+- `S02` `M` `src/cadrumo_agent_service/service.py`
+- `S02` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider src/cadrumo_agent_service` -> `pass`
+- `S02` `verify:` `pytest dev/runtime_lifecycle/tests/test_service_model_run_relay.py dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_secure_store_write_path.py` -> `pass`
+- `S02` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S02` `verify:` `ruff check/format, ty check on touched files` -> `pass`
+- `S02` `by:` `vaultspec-high-executor`
