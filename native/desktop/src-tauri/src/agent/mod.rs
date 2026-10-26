@@ -163,17 +163,43 @@ impl AgentHost {
         Ok(())
     }
 
-    /// The column receives only `code`; the failure behind it is recorded with
-    /// its reason and cause chain.
+    /// The column receives a stable code; failures outside initial admission
+    /// retain their reason and cause chain in diagnostics.
     fn refuse(
         &self,
         code: &str,
         error: cadrumo_application::error::application::ApplicationError,
     ) -> Refused {
-        self.diagnostics
-            .host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
-        Refused::new(code.to_owned())
+        command_refusal(
+            &self.diagnostics,
+            &self.supervisor.status().state,
+            code,
+            error,
+        )
     }
+}
+
+/// Calls racing service admission are retryable; other failures keep their diagnostics.
+fn command_refusal(
+    diagnostics: &Diagnostics,
+    state: &supervisor::State,
+    code: &str,
+    error: cadrumo_application::error::application::ApplicationError,
+) -> Refused {
+    use cadrumo_application::error::application::ErrorCode;
+    let awaiting_admission = matches!(state, supervisor::State::Starting)
+        && matches!(
+            (error.code, error.reason.as_deref()),
+            (
+                ErrorCode::SessionUnavailable,
+                Some("agent_service_unavailable")
+            ) | (ErrorCode::ReadFailed, Some("agent_admin_unavailable"))
+        );
+    if awaiting_admission {
+        return Refused::new("agent_service_busy".to_owned());
+    }
+    diagnostics.host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
+    Refused::new(code.to_owned())
 }
 
 /// Registers the host once the shell's sign-in owner exists.
@@ -850,6 +876,61 @@ async fn agent_attach<R: Runtime>(
 mod tests {
     use super::*;
     use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+
+    #[test]
+    fn admission_races_are_quiet_and_retryable_only_while_starting() {
+        for (code, reason) in [
+            (ErrorCode::SessionUnavailable, "agent_service_unavailable"),
+            (ErrorCode::ReadFailed, "agent_admin_unavailable"),
+        ] {
+            for (state, expected, failures) in [
+                (supervisor::State::Starting, "agent_service_busy", 0),
+                (supervisor::State::Stopped, "agent_service_failed", 1),
+                (
+                    supervisor::State::Ready {
+                        agent_version: "synthetic".into(),
+                    },
+                    "agent_service_failed",
+                    1,
+                ),
+                (
+                    supervisor::State::Refused {
+                        code: supervisor::Refusal::ServiceFailed,
+                    },
+                    "agent_service_failed",
+                    1,
+                ),
+            ] {
+                let diagnostics = Diagnostics::default();
+                let error = ApplicationError::new(code, Operation::Cli).with_reason(reason);
+                let refused = command_refusal(&diagnostics, &state, "agent_service_failed", error);
+                assert_eq!(refused.code, expected);
+                assert_eq!(diagnostics.snapshot(u64::MAX).events.len(), failures);
+            }
+        }
+    }
+
+    #[test]
+    fn unexpected_startup_failures_remain_visible() {
+        for (code, reason) in [
+            (ErrorCode::ReadFailed, "admin_document_parse"),
+            (ErrorCode::Panic, "agent_admin_unavailable"),
+            (ErrorCode::SessionUnavailable, "person_session_retired"),
+        ] {
+            let diagnostics = Diagnostics::default();
+            let error = ApplicationError::new(code, Operation::Cli).with_reason(reason);
+            let refused = command_refusal(
+                &diagnostics,
+                &supervisor::State::Starting,
+                "agent_service_failed",
+                error,
+            );
+            assert_eq!(refused.code, "agent_service_failed");
+            let snapshot = diagnostics.snapshot(u64::MAX);
+            assert_eq!(snapshot.events.len(), 1);
+            assert_eq!(snapshot.events[0].failure.as_ref().unwrap().code, code);
+        }
+    }
 
     #[test]
     fn provider_selection_preserves_busy_and_sign_in_refusals() {
