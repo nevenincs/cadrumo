@@ -390,6 +390,48 @@ async def test_the_local_ai_is_never_planned_set_up_or_removed_here(
     assert replay.launches == []
 
 
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("tool", "arguments"),
+    [
+        ("setup_status", {"model": "synthetic-text:test"}),
+        ("setup_plan", {"items": ["browser"], "model": "synthetic-text:test"}),
+        ("setup", {"plan_digest": "1" * 64, "items": ["browser"], "model": "synthetic-text:test"}),
+        ("setup_remove", {"items": ["browser"], "confirmed": True, "model": "synthetic-text:test"}),
+    ],
+)
+async def test_no_setup_tool_takes_a_model_and_a_call_naming_one_starts_no_role(
+    role_replay: _Replay, tool: str, arguments: dict[str, object]
+) -> None:
+    replay = role_replay(
+        status=["status_quick"],
+        plan=["plan_browser"],
+        setup=["setup_browser_completed"],
+        remove=["remove_absent_browser"],
+    )
+    adapter = _adapter()
+    try:
+        reply = await adapter.call(tool, arguments)
+    finally:
+        await adapter.close()
+
+    assert reply == {"outcome": "refused", "code": "invalid_request"}
+    assert replay.launches == []
+
+
+def test_no_setup_tool_declares_a_model_argument() -> None:
+    declared = {
+        name: schema
+        for name, _description, schema in MCP_TOOL_CATALOGUE
+        if name in {"setup_status", "setup_plan", "setup", "setup_remove"}
+    }
+
+    assert set(declared) == {"setup_status", "setup_plan", "setup", "setup_remove"}
+    for name, schema in declared.items():
+        assert schema["additionalProperties"] is False, f"{name} accepts arguments it does not declare"
+        assert not [field for field in schema["properties"] if "model" in field], f"{name} takes a model"
+
+
 def test_only_the_status_tool_names_the_local_ai_among_its_items() -> None:
     items = {
         name: schema["properties"]["items"]["items"]["enum"]

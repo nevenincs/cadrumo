@@ -60,11 +60,23 @@ Where each row stops:
   (``dependencies.setup``, ``dependencies.status``, ``dependencies.verify``).
   The components role's phase codes extend the id with further segments and
   pass.
+- Local AI request. A ``ComponentsRequest(...)`` call whose command is spelled
+  plan, setup or remove and whose items name the local AI, or a list or tuple
+  literal that spells a plan, setup or remove command line with ``--item
+  local_ai``. Only the desktop plans, sets up or removes the local AI; a status
+  or a verify may name it. A command or items held in a variable are not seen:
+  the request's own constructor refuses them when they are built.
+- Model argument. A string that is exactly ``--model`` or begins with
+  ``--model=``, in any module. The person's selection is the agent's and only
+  the desktop hands it to the engine, so no product Python passes a model on a
+  command line. A longer option name, such as ``--vision-model``, is another
+  option and passes this row.
 """
 
 from __future__ import annotations
 
 import ast
+import itertools
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from functools import cached_property
@@ -105,6 +117,15 @@ _PROGRAM_NAMES: Final = frozenset({"ollama", *_PROGRAM_FILES})
 _PIN_MODULES: Final = ("cadrumo.application.browser_archive_pins",)
 _PIN_MODULE_NAMES: Final = frozenset(module.rsplit(".", 1)[1] for module in _PIN_MODULES)
 _REMOVED_OPERATIONS: Final = frozenset({"dependencies.setup", "dependencies.status", "dependencies.verify"})
+
+#: The request type that carries a command and its items to the components role.
+_REQUEST_TYPE: Final = "ComponentsRequest"
+#: The commands that plan, set up or remove what is installed; the local AI is outside them.
+_CHANGING_COMMANDS: Final = frozenset({"plan", "setup", "remove"})
+_LOCAL_AI_MEMBER: Final = "LOCAL_AI"
+_LOCAL_AI_WORD: Final = "local_ai"
+_ITEM_FLAG: Final = "--item"
+_MODEL_FLAG: Final = "--model"
 
 #: Process starters, by the module they are reached through.
 _QUALIFIED_STARTERS: Final[Mapping[str, frozenset[str]]] = {
@@ -453,6 +474,64 @@ def operation_findings(source: Source) -> list[str]:
     ]
 
 
+def _command_word(node: ast.expr | None) -> str | None:
+    """Return the command a request names, spelled as a member (``ComponentsCommand.SETUP``) or a string."""
+    if isinstance(node, ast.Attribute):
+        return node.attr.lower()
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value.lower()
+    return None
+
+
+def _names_local_ai(node: ast.expr | None) -> bool:
+    """Whether an expression spells the local AI item, as a member or as its id."""
+    return node is not None and any(
+        (isinstance(part, ast.Attribute) and part.attr == _LOCAL_AI_MEMBER)
+        or (isinstance(part, ast.Constant) and part.value == _LOCAL_AI_WORD)
+        for part in ast.walk(node)
+    )
+
+
+def _argument(call: ast.Call, position: int, keyword: str) -> ast.expr | None:
+    if len(call.args) > position:
+        return call.args[position]
+    return next((item.value for item in call.keywords if item.arg == keyword), None)
+
+
+def _command_line_names_local_ai(words: list[str]) -> bool:
+    return _ITEM_FLAG + "=" + _LOCAL_AI_WORD in words or any(
+        flag == _ITEM_FLAG and item == _LOCAL_AI_WORD for flag, item in itertools.pairwise(words)
+    )
+
+
+def local_ai_request_findings(source: Source) -> list[str]:
+    """Name a module that asks for the local AI to be planned, set up or removed."""
+    findings = [
+        f"{source.module}:{call.lineno}: builds a {word} request naming the local AI"
+        for name, call in source.calls()
+        if name == _REQUEST_TYPE
+        and (word := _command_word(_argument(call, 0, "command"))) in _CHANGING_COMMANDS
+        and _names_local_ai(_argument(call, 1, "items"))
+    ]
+    for node in ast.walk(source.tree):
+        if not isinstance(node, ast.List | ast.Tuple):
+            continue
+        words = [item.value for item in node.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)]
+        changing = sorted(set(words) & _CHANGING_COMMANDS)
+        if changing and _command_line_names_local_ai(words):
+            findings.append(f"{source.module}:{node.lineno}: spells a {changing[0]} command line naming the local AI")
+    return findings
+
+
+def model_argument_findings(source: Source) -> list[str]:
+    """Name a module that spells a ``--model`` argument."""
+    return [
+        f"{source.module}: passes the argument {text!r}"
+        for text in sorted(set(source.strings))
+        if text == _MODEL_FLAG or text.startswith(_MODEL_FLAG + "=")
+    ]
+
+
 def provisioning_findings(source: Source, hosts: Iterable[str]) -> list[str]:
     """Every row's findings for one module."""
     return [
@@ -465,6 +544,8 @@ def provisioning_findings(source: Source, hosts: Iterable[str]) -> list[str]:
         *record_findings(source),
         *state_findings(source),
         *operation_findings(source),
+        *local_ai_request_findings(source),
+        *model_argument_findings(source),
     ]
 
 
@@ -661,6 +742,44 @@ def test_a_module_that_names_a_removed_setup_operation_is_refused() -> None:
         "fixture.operation: names the removed setup operation 'dependencies.setup'"
     ]
     assert operation_findings(phase) == [], "a phase code names a setup step, not the operation"
+
+
+def test_a_module_that_asks_for_the_local_ai_to_be_planned_set_up_or_removed_is_refused() -> None:
+    member = parse_source(
+        "fixture.member",
+        "def ask():\n    return ComponentsRequest(ComponentsCommand.SETUP, items=(DependencyItemKind.LOCAL_AI,))\n",
+    )
+    keyword = parse_source(
+        "fixture.keyword",
+        "def ask():\n    return ComponentsRequest(command=ComponentsCommand.REMOVE, items=('local_ai',))\n",
+    )
+    line = parse_source("fixture.line", "ARGUMENTS = ['--role', 'components', 'plan', '--item', 'local_ai']\n")
+    joined = parse_source("fixture.joined", "ARGUMENTS = ('setup', '--item=local_ai')\n")
+    reading = parse_source(
+        "fixture.reading",
+        "def ask(browser):\n"
+        "    ComponentsRequest(ComponentsCommand.STATUS, items=(DependencyItemKind.LOCAL_AI,))\n"
+        "    ComponentsRequest(ComponentsCommand.VERIFY, items=('local_ai',))\n"
+        "    ComponentsRequest(ComponentsCommand.SETUP, items=(browser,))\n"
+        "    ComponentsRequest(ComponentsCommand.SETUP)\n"
+        "    return ['status', '--item', 'local_ai'], ['setup', '--item', 'browser'], ['setup', 'local_ai']\n",
+    )
+    assert local_ai_request_findings(member) == ["fixture.member:2: builds a setup request naming the local AI"]
+    assert local_ai_request_findings(keyword) == ["fixture.keyword:2: builds a remove request naming the local AI"]
+    assert local_ai_request_findings(line) == ["fixture.line:1: spells a plan command line naming the local AI"]
+    assert local_ai_request_findings(joined) == ["fixture.joined:1: spells a setup command line naming the local AI"]
+    assert local_ai_request_findings(reading) == [], (
+        "reading or checking the local AI, and setting up the browser, pass"
+    )
+
+
+def test_a_module_that_passes_a_model_argument_is_refused() -> None:
+    flag = parse_source("fixture.flag", "ARGUMENTS = ['setup', '--model', 'vision_transcription', 'synthetic', '1']\n")
+    joined = parse_source("fixture.joined", "FLAG = '--model=synthetic'\n")
+    other = parse_source("fixture.other", "FLAGS = ('--vision-model', '--models-dir', '--item', 'model')\n")
+    assert model_argument_findings(flag) == ["fixture.flag: passes the argument '--model'"]
+    assert model_argument_findings(joined) == ["fixture.joined: passes the argument '--model=synthetic'"]
+    assert model_argument_findings(other) == [], "a longer option name is another option"
 
 
 # --------------------------------------------------------------------------

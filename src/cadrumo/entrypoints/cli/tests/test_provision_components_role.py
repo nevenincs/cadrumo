@@ -185,6 +185,40 @@ def test_the_local_ai_has_no_command_that_pulls_it() -> None:
     assert "No such command" in refused.output
 
 
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["setup", "--yes", "--model", "synthetic-text:test"],
+        ["setup", "--yes", "local_ai"],
+        ["browser", "--yes", "--model", "synthetic-text:test"],
+        ["browser", "--yes", "local_ai"],
+        ["remove", "browser", "--yes", "--model", "synthetic-text:test"],
+        ["status", "--model", "synthetic-text:test"],
+        ["verify", "--model", "synthetic-text:test"],
+        ["probe", "--model", "synthetic-text:test"],
+    ],
+    ids=[
+        "setup-model",
+        "setup-local-ai",
+        "browser-model",
+        "browser-local-ai",
+        "remove-model",
+        "status-model",
+        "verify-model",
+        "probe-model",
+    ],
+)
+def test_no_provision_command_takes_a_model_or_names_the_local_ai_to_set_up_and_none_starts_the_role(
+    replay: Any, arguments: list[str]
+) -> None:
+    launcher = replay("setup_browser_completed")
+
+    result = invoke_cached_cli(["config", "provision", *arguments])
+
+    assert result.exit_code == 2, result.output
+    assert launcher.launches == [], "a command line that is not the command's own started the engine"
+
+
 def test_without_yes_and_without_a_terminal_the_plan_is_shown_declined_and_approval_asked(replay: Any) -> None:
     launcher = replay("setup_declined")
 

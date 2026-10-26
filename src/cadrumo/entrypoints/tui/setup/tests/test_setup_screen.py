@@ -317,6 +317,26 @@ async def test_the_local_ai_row_points_to_the_desktop_and_enter_starts_no_setup(
 
 
 @pytest.mark.asyncio
+async def test_setting_up_everything_asks_the_role_for_no_local_ai_and_no_model(role_replay: _Replay) -> None:
+    replay = role_replay(status=["status_quick"], setup=["setup_browser_completed"])
+    screen = SetupScreen(ComponentsSetupDoor())
+    with override_settings(cadrumo_output_language="en"):
+        app = _Host(screen)
+        async with app.run_test(size=_SIZE) as pilot:
+            await _settled(pilot, screen)
+            await pilot.click("#btn-setup-all")
+            await _dialog(pilot, app)
+            await pilot.click("#btn-confirm-accept")
+            await settle_until(pilot, lambda: "Setup finished." in _notices(app), "the setup to settle")
+            await _settled(pilot, screen)
+
+    assert replay.commands() == [("status",), ("setup",), ("status",)]
+    for launch in replay.launches:
+        assert "local_ai" not in launch.arguments
+        assert not any(argument.startswith("--model") for argument in launch.arguments)
+
+
+@pytest.mark.asyncio
 async def test_set_up_everything_is_offered_only_while_the_role_has_something_to_set_up(role_replay: _Replay) -> None:
     role_replay(status=["status_quick_browser_ready"])
     screen = SetupScreen(ComponentsSetupDoor())
