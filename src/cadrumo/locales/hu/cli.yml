@@ -3271,9 +3271,6 @@ cli:
       system_state_not_assignable: 'A(z) ''%{value}'' besorolást a Cadrumo automatikusan
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED.'
       taxable_base_help: Adóköteles alapösszeg.
-      vision_model_help: 'Nem használható: minden feladat azzal a modellel olvas,
-        amelyet a Cadrumo asztali alkalmazásában választottál hozzá, ezért a megadott
-        modellt a program elutasítja.'
     counterparty:
       errors:
         nothing_asserted: 'A(z) ''{identifier}'' megerősítéséhez legalább egy válasz

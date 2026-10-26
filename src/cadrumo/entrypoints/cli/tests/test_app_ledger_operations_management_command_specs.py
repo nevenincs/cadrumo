@@ -822,7 +822,6 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
                 is_flag=True,
                 flag_value=True,
             ),
-            _expected_option("vision_model", "--vision-model", "cli.ledger.classify.vision_model_help"),
             _expected_option("reason", "--reason", "cli.ledger.merge.reason_help", default=_EMPTY_DEFAULT),
             _expected_option(
                 "yes",
@@ -1123,7 +1122,7 @@ def test_shared_ledger_construction_contracts_are_exact_and_reused() -> None:
         assert {spec.key: spec for spec in LEDGER_LIFECYCLE_COMMAND_SPECS}[key].parameters[-1] is _LEDGER_ACTOR_OPTION
     assert management["app_ledger_merge"].parameters[1] is _MERGE_REASON_OPTION
     assert {spec.key: spec for spec in LEDGER_LIFECYCLE_COMMAND_SPECS}["app_ledger_split"].parameters[
-        7
+        6
     ] is _MERGE_REASON_OPTION
     for spec, positions in (
         (operations["app_ledger_export"], (3, 4)),

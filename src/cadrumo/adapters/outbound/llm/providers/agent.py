@@ -95,36 +95,6 @@ def model_run_refusal_verdict(refusal: ModelRunRefusal, *, role: ModelRole) -> P
     )
 
 
-def model_override_refusal_error(*, role: ModelRole) -> LLMConfigError:
-    """Return the refusal for a request that names a model for ``role``.
-
-    The model a role reads with is the person's selection for that role, held
-    by the agent service. A run names a role, never a model, so a named model
-    would be silently ignored if it were accepted. The name itself stays out of
-    the refusal.
-    """
-    facts: dict[str, str | int | bool] = {"model_override_present": True, "model_role": role.value}
-    return LLMConfigError(
-        context=facts,
-        precondition_verdict=llm_no_recovery_verdict(
-            LLMPreconditionCondition.AGENT_MODEL_OVERRIDE_ABSENT,
-            facts=facts,
-            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-        ),
-    )
-
-
-def refuse_vision_model_override(model: str | None) -> None:
-    """Refuse a named vision model before anything is read; ``None`` passes.
-
-    Raises:
-        LLMConfigError: When ``model`` is given, even empty, with the
-            ``llm.agent.model_override_absent`` verdict.
-    """
-    if model is not None:
-        raise model_override_refusal_error(role=ModelRole.VISION_TRANSCRIPTION)
-
-
 def model_run_refusal_error(refusal: ModelRunRefusal, *, role: ModelRole) -> LLMError:
     """Return the typed error a consumer receives for a refused model run."""
     verdict = model_run_refusal_verdict(refusal, role=role)
@@ -209,8 +179,6 @@ __all__ = [
     "JSON_REASK_INSTRUCTION",
     "AgentAdapter",
     "lane_model_label",
-    "model_override_refusal_error",
     "model_run_refusal_error",
     "model_run_refusal_verdict",
-    "refuse_vision_model_override",
 ]

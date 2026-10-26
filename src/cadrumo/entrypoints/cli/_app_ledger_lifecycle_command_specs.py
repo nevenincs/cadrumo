@@ -155,7 +155,6 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _boolean_flag_option("llm", ("--llm",), "cli.ledger.split.llm_help"),
             _boolean_flag_option("apply", ("--apply",), "cli.ledger.split.apply_help"),
             _boolean_flag_option("read_evidence", ("--read-evidence",), "cli.ledger.split.read_evidence_help"),
-            _optional_text_option("vision_model", ("--vision-model",), "cli.ledger.classify.vision_model_help"),
             _MERGE_REASON_OPTION,
             _boolean_flag_option("yes", ("--yes",), "cli.ledger.split.yes_help"),
             _optional_text_option("actor", ("--actor",), "cli.ledger.split.actor_help"),

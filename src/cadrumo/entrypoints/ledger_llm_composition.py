@@ -13,7 +13,6 @@ from ..adapters.inbound.einvoice.shape import probe_document_shape
 from ..adapters.outbound.llm.errors import LLMCacheError, LLMConfigError, LLMProviderError
 from ..adapters.outbound.llm.models import MultimodalImageInput
 from ..adapters.outbound.llm.pdf_rasterisation import rasterise_pdf_pages_to_base64_png
-from ..adapters.outbound.llm.providers.agent import model_override_refusal_error, refuse_vision_model_override
 from ..adapters.outbound.llm.text_classifier import TextLLMClassifier
 from ..adapters.outbound.llm.vision_classifier import VisionLLMClassifier
 from ..adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
@@ -62,28 +61,17 @@ def _reader_unavailable(verdict: PreconditionVerdict) -> PurchaseInvoiceEvidence
 
 
 class VisionReader:
-    """Convert application evidence values into the adapter's transport values.
+    """Convert application evidence values into the adapter's transport values."""
 
-    ``refusal`` is set when the read cannot be run as asked: it is raised at the
-    read, inside the caller's reader boundary, so it reaches the operator as a
-    typed reader refusal.
-    """
-
-    def __init__(self, reader: VisionLLMClassifier, *, refusal: LLMConfigError | None = None) -> None:
+    def __init__(self, reader: VisionLLMClassifier) -> None:
         self._reader = reader
-        self._refusal = refusal
-
-    def _require_reader(self) -> VisionLLMClassifier:
-        if self._refusal is not None:
-            raise self._refusal
-        return self._reader
 
     @property
     def decided_by(self) -> str:
         return self._reader.decided_by
 
     def classify(self, transaction: Transaction, *, evidence_images: tuple[EvidenceImage, ...]):
-        return self._require_reader().classify(
+        return self._reader.classify(
             transaction,
             evidence_images=tuple(
                 MultimodalImageInput(
@@ -96,7 +84,7 @@ class VisionReader:
         )
 
     def propose_split(self, transaction: Transaction, *, evidence_images: tuple[EvidenceImage, ...]):
-        return self._require_reader().propose_split(
+        return self._reader.propose_split(
             transaction,
             evidence_images=tuple(
                 MultimodalImageInput(
@@ -222,13 +210,9 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
         text_layer_ports=text_layer_ports,
         rasterise_pdf=rasterise_pdf_pages_to_base64_png,
         make_text_classifier=make_text_classifier,
-        make_vision_classifier=lambda spec, model: VisionReader(
-            VisionLLMClassifier(spec=spec, settings=settings),
-            refusal=None if model is None else model_override_refusal_error(role=ModelRole.VISION_TRANSCRIPTION),
-        ),
+        make_vision_classifier=lambda spec: VisionReader(VisionLLMClassifier(spec=spec, settings=settings)),
         run_reader=run_reader,
         record_classifier_run=record_classifier_run,
-        refuse_vision_model_override=refuse_vision_model_override,
     )
     return LedgerLlmComposition(
         ports=ports,

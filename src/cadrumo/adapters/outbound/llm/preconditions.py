@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 class LLMPreconditionCondition(StrEnum):
     """Closed failed-condition identities owned by LLM dispatch and readers."""
 
-    AGENT_MODEL_OVERRIDE_ABSENT = "llm.agent.model_override_absent"
     AGENT_MODEL_ROLE_NAMED = "llm.agent.model_role_named"
     AGENT_MODEL_RUN_COMPLETED = "llm.agent.model_run_completed"
     COLUMN_MAPPING_HEADERS_PRESENT = "llm.column_mapping.headers_present"

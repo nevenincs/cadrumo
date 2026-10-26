@@ -8,7 +8,6 @@ from typing import NoReturn
 
 import pytest
 
-from .....adapters.outbound.llm.providers.agent import refuse_vision_model_override
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import (
     apply_saturated_llm_classification,
@@ -59,7 +58,6 @@ _LLM_PORTS = LLMClassificationPorts(
     make_vision_classifier=_unused_llm_port,
     run_reader=_run_reader,
     record_classifier_run=_record_classifier_run,
-    refuse_vision_model_override=refuse_vision_model_override,
 )
 
 

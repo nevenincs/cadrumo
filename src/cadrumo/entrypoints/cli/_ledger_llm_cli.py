@@ -71,15 +71,10 @@ def _run_review(
     reject: bool,
     actor: str | None,
     read_evidence: bool,
-    vision_model: str | None,
     reason: str,
     business_pct: str | None = None,
 ) -> LedgerLlmReviewProjection | LedgerLlmOperationResult:
     """Use the canonical reviewed-operation driver and correlate the settled proposal."""
-    from ...adapters.outbound.llm.providers.agent import refuse_vision_model_override
-
-    # The person's selection is the only model choice; a named model is refused before anything is read.
-    refuse_vision_model_override(vision_model)
     client = bound_profile_client(ctx)
     # A review holds the movement it names: the operator's handle is resolved
     # to its canonical id first, so every ask about one movement conflicts.
@@ -95,7 +90,6 @@ def _run_review(
             business_pct=display_decimal(percentage) if percentage is not None else None,
             actor=actor,
             read_evidence=read_evidence,
-            vision_model=vision_model,
             reason=reason,
         )
     except ValidationError as error:
@@ -522,7 +516,6 @@ class LedgerLlmRouteArguments(TypedDict):
     apply: bool
     actor: str | None
     read_evidence: bool
-    vision_model: str | None
     reject: bool
     reason: str
 
@@ -536,7 +529,6 @@ def dispatch_autosplit(
     apply: bool,
     actor: str | None,
     read_evidence: bool,
-    vision_model: str | None,
     reject: bool = False,
     reason: str = "",
 ) -> None:
@@ -565,7 +557,6 @@ def dispatch_autosplit(
         reject=reject,
         actor=actor,
         read_evidence=read_evidence,
-        vision_model=vision_model,
         reason=reason,
     )
     if isinstance(outcome, LedgerLlmReviewProjection):
@@ -584,7 +575,6 @@ def ledger_classify_llm(
     apply: bool,
     actor: str | None,
     read_evidence: bool = False,
-    vision_model: str | None = None,
     reject: bool = False,
     reason: str = "",
 ) -> None:
@@ -613,7 +603,6 @@ def ledger_classify_llm(
         reject=reject,
         actor=actor,
         read_evidence=read_evidence,
-        vision_model=vision_model,
         reason=reason,
         business_pct=business_pct,
     )
@@ -633,7 +622,6 @@ def ledger_saturate_llm(
     apply: bool,
     actor: str | None,
     read_evidence: bool = False,
-    vision_model: str | None = None,
     reject: bool = False,
     reason: str = "",
 ) -> None:
@@ -664,7 +652,6 @@ def ledger_saturate_llm(
         reject=reject,
         actor=actor,
         read_evidence=read_evidence,
-        vision_model=vision_model,
         reason=reason,
         business_pct=business_pct,
     )

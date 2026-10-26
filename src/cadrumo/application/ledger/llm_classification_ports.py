@@ -197,13 +197,9 @@ class LLMClassificationPorts:
     text_layer_ports: EvidenceTextLayerPorts
     rasterise_pdf: Callable[[bytes], tuple[str, ...]]
     make_text_classifier: Callable[[PromptSpec], LLMClassifier]
-    make_vision_classifier: Callable[[PromptSpec, str | None], VisionClassifier]
+    make_vision_classifier: Callable[[PromptSpec], VisionClassifier]
     run_reader: Callable[[ModelRole, Callable[[], object]], object]
     record_classifier_run: Callable[[Callable[[], object], str], object]
-    #: Raises the typed refusal when a request names a vision model; ``None`` passes.
-    #: The person's selection is the only model choice, so a named model is
-    #: refused before anything is read rather than silently ignored.
-    refuse_vision_model_override: Callable[[str | None], None]
 
 
 __all__ = [

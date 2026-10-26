@@ -69,7 +69,7 @@ Where each row stops:
 - Model argument. A string that is exactly ``--model`` or begins with
   ``--model=``, in any module. The person's selection is the agent's and only
   the desktop hands it to the engine, so no product Python passes a model on a
-  command line. A longer option name, such as ``--vision-model``, is another
+  command line. A longer option name, such as ``--model-file``, is another
   option and passes this row.
 """
 
@@ -776,7 +776,7 @@ def test_a_module_that_asks_for_the_local_ai_to_be_planned_set_up_or_removed_is_
 def test_a_module_that_passes_a_model_argument_is_refused() -> None:
     flag = parse_source("fixture.flag", "ARGUMENTS = ['setup', '--model', 'vision_transcription', 'synthetic', '1']\n")
     joined = parse_source("fixture.joined", "FLAG = '--model=synthetic'\n")
-    other = parse_source("fixture.other", "FLAGS = ('--vision-model', '--models-dir', '--item', 'model')\n")
+    other = parse_source("fixture.other", "FLAGS = ('--model-file', '--models-dir', '--item', 'model')\n")
     assert model_argument_findings(flag) == ["fixture.flag: passes the argument '--model'"]
     assert model_argument_findings(joined) == ["fixture.joined: passes the argument '--model=synthetic'"]
     assert model_argument_findings(other) == [], "a longer option name is another option"

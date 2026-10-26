@@ -43,7 +43,7 @@ def test_only_an_absent_service_or_selection_leaves_the_review_unproven(code: Mo
 def test_a_refusal_fact_under_another_condition_is_a_contradiction() -> None:
     """The fact counts only on the verdict of a refused model run, not wherever the key appears."""
     verdict = llm_no_recovery_verdict(
-        LLMPreconditionCondition.AGENT_MODEL_OVERRIDE_ABSENT,
+        LLMPreconditionCondition.AGENT_MODEL_ROLE_NAMED,
         facts={"model_run_refusal": ModelRunRefusalCode.NO_SELECTION.value},
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
     )

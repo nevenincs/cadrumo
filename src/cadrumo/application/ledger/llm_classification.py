@@ -276,7 +276,6 @@ def classify_with_evidence(
     text_classifier: LLMClassifier | None,
     spec: PromptSpec,
     vision_classifier: VisionClassifier | None,
-    vision_model: str | None,
     settings: Settings,
     ports: LLMClassificationPorts,
 ) -> tuple[LLMClassificationResponse, str]:
@@ -287,8 +286,7 @@ def classify_with_evidence(
     evidence is read on the text-extraction selection, so an absent
     ``text_classifier`` is resolved from ``ports`` rather than refused. A
     selected lane that reads off the host needs the per-call consent and
-    refuses without it. ``vision_model`` must be ``None``: the selection is the
-    only model choice, and a named model is refused.
+    refuses without it.
 
     Raises:
         PurchaseInvoiceEvidenceInputError: When the role's reader is unavailable;
@@ -299,7 +297,7 @@ def classify_with_evidence(
     if evidence is not None and evidence.is_images:
         # The vision path shells out through LLMClient.complete, which records
         # its own run-timing record -- do not double-record here.
-        vision = vision_classifier or ports.make_vision_classifier(spec, vision_model)
+        vision = vision_classifier or ports.make_vision_classifier(spec)
         images = evidence.images
         response = _reader_classification(
             ports.run_reader(
@@ -354,14 +352,10 @@ def _split_with_evidence(
     proposer: LLMSplitProposer | None,
     spec: PromptSpec,
     vision_classifier: VisionClassifier | None,
-    vision_model: str | None,
     settings: Settings,
     ports: LLMClassificationPorts,
 ) -> tuple[LLMSplitResponse, str]:
     """Propose a split, routing scan/image evidence to the vision-transcription reader.
-
-    ``vision_model`` must be ``None``: the person's vision-transcription
-    selection is the only model choice, and a named model is refused.
 
     Raises:
         TransactionValidationError: When the evidence is not images and no
@@ -370,7 +364,7 @@ def _split_with_evidence(
     if evidence is not None and evidence.is_images:
         # The vision path shells out through LLMClient.complete, which records
         # its own run-timing record -- do not double-record here.
-        vision = vision_classifier or ports.make_vision_classifier(spec, vision_model)
+        vision = vision_classifier or ports.make_vision_classifier(spec)
         images = evidence.images
         response = _reader_split(
             ports.run_reader(
@@ -452,7 +446,6 @@ def suggest_llm_classification(
     operation: PinnedAuthorityOperation,
     classifier: LLMClassifier | None = None,
     vision_classifier: VisionClassifier | None = None,
-    vision_model: str | None = None,
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
     read_evidence: bool = False,
     settings: Settings,
@@ -476,9 +469,6 @@ def suggest_llm_classification(
             classifier is the only non-default case.
         vision_classifier: Injected vision classifier used when the evidence is
             a scan-only PDF or image; default-resolved otherwise.
-        vision_model: Must be ``None``. A named model is refused with
-            ``llm.agent.model_override_absent``, because the person's
-            vision-transcription selection is the only model choice.
         transaction_repository: Injected catalogue repository.
         read_evidence: When True, resolve the transaction's linked evidence and
             read it: a text-layer PDF on the text-extraction selection, a
@@ -522,7 +512,6 @@ def suggest_llm_classification(
             operation=operation,
         ),
         vision_classifier=vision_classifier,
-        vision_model=vision_model,
         settings=resolved_settings,
         ports=ports,
     )
@@ -763,7 +752,6 @@ def saturate_llm_classification(
     operation: PinnedAuthorityOperation,
     classifier: LLMClassifier | None = None,
     vision_classifier: VisionClassifier | None = None,
-    vision_model: str | None = None,
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
     on_date: date | None = None,
     read_evidence: bool = False,
@@ -789,9 +777,6 @@ def saturate_llm_classification(
             classifier overrides it, with the saturation prompt spec.
         vision_classifier: Injected vision classifier used when the evidence is
             a scan-only PDF or image; default-resolved otherwise.
-        vision_model: Must be ``None``. A named model is refused with
-            ``llm.agent.model_override_absent``, because the person's
-            vision-transcription selection is the only model choice.
         transaction_repository: Injected catalogue repository.
         on_date: Effective date used to resolve the registry rate; defaults to
             the transaction's value date (or booked date).
@@ -835,7 +820,6 @@ def saturate_llm_classification(
             operation=operation,
         ),
         vision_classifier=vision_classifier,
-        vision_model=vision_model,
         settings=resolved_settings,
         ports=ports,
     )
@@ -1165,7 +1149,6 @@ def suggest_evidence_split(
     operation: PinnedAuthorityOperation,
     proposer: LLMSplitProposer | None = None,
     vision_classifier: VisionClassifier | None = None,
-    vision_model: str | None = None,
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
     on_date: date | None = None,
     read_evidence: bool = True,
@@ -1192,9 +1175,6 @@ def suggest_evidence_split(
             proposer is the only non-default case.
         vision_classifier: Injected vision classifier used when the evidence is
             a scan-only PDF or image; default-resolved otherwise.
-        vision_model: Must be ``None``. A named model is refused with
-            ``llm.agent.model_override_absent``, because the person's
-            vision-transcription selection is the only model choice.
         transaction_repository: Injected catalogue repository.
         on_date: Effective date used to resolve each child's registry rate;
             defaults to the transaction's value date (or booked date).
@@ -1239,7 +1219,6 @@ def suggest_evidence_split(
             operation=operation,
         ),
         vision_classifier=vision_classifier,
-        vision_model=vision_model,
         settings=resolved_settings,
         ports=ports,
     )

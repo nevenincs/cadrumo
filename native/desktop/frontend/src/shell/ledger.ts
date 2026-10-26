@@ -994,7 +994,6 @@ export type LedgerLlmReviewRequest = {
   business_pct?: string | null;
   actor?: string | null;
   read_evidence?: boolean;
-  vision_model?: string | null;
   reason?: string;
   preview?: boolean;
 };

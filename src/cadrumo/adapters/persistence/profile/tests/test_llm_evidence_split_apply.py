@@ -8,7 +8,6 @@ from typing import NoReturn
 
 import pytest
 
-from .....adapters.outbound.llm.providers.agent import refuse_vision_model_override
 from .....application.ledger.actions_split_merge import split_transaction_with_classified_children
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import apply_evidence_split, suggest_evidence_split
@@ -63,7 +62,6 @@ _LLM_PORTS = LLMClassificationPorts(
     make_vision_classifier=_unused_llm_port,
     run_reader=_run_reader,
     record_classifier_run=_record_classifier_run,
-    refuse_vision_model_override=refuse_vision_model_override,
 )
 
 

@@ -181,7 +181,6 @@ def test_a_refused_vision_lookup_reaches_the_operator_as_a_typed_reader_refusal(
             text_classifier=None,
             spec=prompt_spec_with_saturation_fields(year=2025, operation=operation),
             vision_classifier=None,
-            vision_model=None,
             settings=profile.settings,
             ports=ports,
         )

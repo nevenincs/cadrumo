@@ -22,7 +22,6 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.adapters.outbound.llm.providers.agent import refuse_vision_model_override
 from cadrumo.adapters.outbound.llm.tests.subprocess_classifier_support import SubprocessLLMClassifier
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -269,7 +268,6 @@ def _case(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Gene
                     make_vision_classifier=_unused_reader,
                     run_reader=_run_reader,
                     record_classifier_run=_record_reader,
-                    refuse_vision_model_override=refuse_vision_model_override,
                 ),
             )
             barrier = _ResumeBarrier()

@@ -53,7 +53,6 @@ class LedgerLlmReviewRequest(BaseModel):
     business_pct: LedgerLlmDecimalText | None = None
     actor: Annotated[str, Field(min_length=1, max_length=64)] | None = None
     read_evidence: bool = False
-    vision_model: LedgerLlmShortText | None = None
     reason: LedgerLlmLongText = ""
     preview: bool = False
 

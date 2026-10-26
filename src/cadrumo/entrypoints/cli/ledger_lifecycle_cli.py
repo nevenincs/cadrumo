@@ -333,7 +333,6 @@ def ledger_split(
     llm: bool = False,
     apply: bool = False,
     read_evidence: bool = False,
-    vision_model: str | None = None,
     reason: str = "",
     yes: bool = False,
     actor: str | None = None,
@@ -347,7 +346,6 @@ def ledger_split(
             child_description=list(child_description),
             apply=apply,
             read_evidence=read_evidence,
-            vision_model=vision_model,
             reason=reason,
             yes=yes,
             actor=actor,
@@ -544,7 +542,6 @@ def _ledger_split_llm(
     child_description: list[str],
     apply: bool,
     read_evidence: bool,
-    vision_model: str | None,
     reason: str,
     yes: bool,
     actor: str | None,
@@ -563,11 +560,9 @@ def _ledger_split_llm(
     """
     from cadrumo_client.contracts.contracts import RefusalCode
 
-    from ...adapters.outbound.llm.providers.agent import refuse_vision_model_override
     from ...application.operations.schema_identity import OperationSchemaIdentityV1
     from .operation_ledger_view import resolve_ledger_transaction_id
 
-    refuse_vision_model_override(vision_model)
     _validate_split_llm_options(
         child_amount=child_amount,
         child_description=child_description,
@@ -584,7 +579,6 @@ def _ledger_split_llm(
         preview=not apply,
         actor=actor,
         read_evidence=read_evidence,
-        vision_model=vision_model,
         reason=reason,
     )
     reviewed: LedgerLlmReviewProjection | None = None

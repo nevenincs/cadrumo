@@ -148,7 +148,6 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _boolean_flag_option("apply", ("--apply",), "cli.ledger.classify.apply_help"),
             _boolean_flag_option("saturate", ("--saturate",), "cli.ledger.classify.saturate_help"),
             _boolean_flag_option("read_evidence", ("--read-evidence",), "cli.ledger.classify.read_evidence_help"),
-            _optional_text_option("vision_model", ("--vision-model",), "cli.ledger.classify.vision_model_help"),
             _boolean_flag_option("auto_split", ("--auto-split",), "cli.ledger.classify.auto_split_help"),
             _boolean_flag_option("reject", ("--reject",), "cli.ledger.classify.reject_help"),
             _optional_text_option("reason", ("--reason",), "cli.ledger.classify.reason_help"),

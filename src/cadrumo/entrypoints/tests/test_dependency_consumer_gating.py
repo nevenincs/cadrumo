@@ -757,7 +757,7 @@ def _drive_ledger_vision_classifier(runtime: _Runtime) -> object:
     image = EvidenceImage.from_base64(_png_base64(), ImageMediaType.PNG)
     with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
         transaction = _transaction()
-    return ports.make_vision_classifier(PromptSpec(), None).classify(transaction, evidence_images=(image,))
+    return ports.make_vision_classifier(PromptSpec()).classify(transaction, evidence_images=(image,))
 
 
 def _extraction_ports():

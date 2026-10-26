@@ -3304,9 +3304,6 @@ cli:
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED.'
       taxable_base_help: Import de base imposable
-      vision_model_help: 'No s''admet: cada tasca llegeix amb el model que has triat
-        per a ella a l''aplicació d''escriptori de Cadrumo, així que es rebutja indicar-hi
-        un model.'
     counterparty:
       errors:
         nothing_asserted: 'Per confirmar ''{identifier}'' cal almenys una resposta:
