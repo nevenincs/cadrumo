@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import ctypes
 import json
 import math
 import os
@@ -98,6 +99,12 @@ def test_exit_waiter_survives_the_original_handles_closing(tmp_path: Path) -> No
 
 
 def test_a_refused_creation_names_the_failed_call_and_its_win32_error(tmp_path: Path) -> None:
+    assert sys.platform == "win32"
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    error_mode = kernel.GetThreadErrorMode
+    error_mode.argtypes = ()
+    error_mode.restype = ctypes.c_ulong
+    previous_error_mode = error_mode()
     not_an_image = tmp_path / "synthetic.exe"
     not_an_image.write_bytes(b"synthetic, not a Windows image")
     scope = WindowsProcessScope()
@@ -115,6 +122,7 @@ def test_a_refused_creation_names_the_failed_call_and_its_win32_error(tmp_path: 
     # Windows picks which image-format error it reports; a captured one is never zero.
     assert re.fullmatch(r"create_process_winerror_[1-9][0-9]*", caught.value.check or "")
     assert str(tmp_path) not in str(caught.value)
+    assert error_mode() == previous_error_mode
 
 
 def test_launch_does_not_inherit_ambient_inheritable_handles(tmp_path: Path) -> None:

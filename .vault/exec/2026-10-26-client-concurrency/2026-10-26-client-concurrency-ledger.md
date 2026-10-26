@@ -5,7 +5,7 @@ tags:
 date: '2026-10-26'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:69015de59dadb0d3b68115de97cf63dc8a5d2d873a4782fb06b5dabeb056ecc6'
+body_hash: 'sha256:11b0efa941bbc46885fa109d02032d625d0f64b72eaa7ab0931440c29634e941'
 related:
   - "[[2026-10-26-client-concurrency-plan]]"
 ---
@@ -69,6 +69,9 @@ related:
 - `S04` `M` `src/cadrumo_client/transport/tests/test_runtime_client.py`
 - `S04` `verify:` `installed opener ownership and metadata cancellation/deadline tests: 17 passed` -> `pass`
 - `S04` `verify:` `installed opener Ruff and ty` -> `pass`
+- `S04` `M` `src/cadrumo_client/transport/windows_process.py`
+- `S04` `M` `src/cadrumo_client/transport/tests/test_windows_process.py`
+- `S04` `verify:` `native Windows process containment tests: 11 passed` -> `pass`
 
 ## Notes
 
@@ -79,3 +82,4 @@ related:
 - `S03` Whole-project ty now reports two diagnostics in concurrent `dev/quality/tests/test_no_model_definitions.py` only. Provisioning timing assertion fails isolated (4.693s); integrated review remains open.
 - `S04` Quick status no longer launches hardware queries; full checks/setup retain measurement. First live auth run had one rotation deadline failure; unchanged instrumented rerun passed in29s; canonical rerun and packaged matrix pending.
 - `S04` Moved immutable installation/authority metadata reads off the event loop and into the same opening deadline before acquiring native endpoints.
+- `S04` py-spy native stack proved CreateProcessW was blocked in an invalid-image modal dialog. Apply thread-local `SEM_FAILCRITICALERRORS` during creation and restore prior mode; stopped only the identified hung test process and reran native tests.

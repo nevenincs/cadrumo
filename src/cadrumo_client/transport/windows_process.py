@@ -106,6 +106,12 @@ def _launch_in_job(
         ctypes.POINTER(_ProcessInformation),
     )
     create.restype = wintypes.BOOL
+    get_error_mode = kernel.GetThreadErrorMode
+    get_error_mode.argtypes = ()
+    get_error_mode.restype = wintypes.DWORD
+    set_error_mode = kernel.SetThreadErrorMode
+    set_error_mode.argtypes = (wintypes.DWORD, ctypes.POINTER(wintypes.DWORD))
+    set_error_mode.restype = wintypes.BOOL
     count = 1 if standard_handles is None else 2
     size = ctypes.c_size_t()
     initialize(None, count, 0, ctypes.byref(size))
@@ -141,19 +147,28 @@ def _launch_in_job(
         # EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT |
         # CREATE_NO_WINDOW. Inherit no handles, including this job handle,
         # beyond the standard handles the handle list names.
-        if not create(
-            str(executable),
-            command,
-            None,
-            None,
-            inherited is not None,
-            0x08080400,
-            block,
-            str(directory),
-            ctypes.byref(startup),
-            ctypes.byref(information),
-        ):
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("create_process"))
+        # CREATE_NO_WINDOW does not suppress the loader's invalid-image dialog.
+        # SEM_FAILCRITICALERRORS returns that error to this launching thread;
+        # preserve every other thread's policy and restore ours after the call.
+        previous_error_mode = get_error_mode()
+        if not set_error_mode(previous_error_mode | 0x0001, None):
+            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("launch_error_mode"))
+        try:
+            if not create(
+                str(executable),
+                command,
+                None,
+                None,
+                inherited is not None,
+                0x08080400,
+                block,
+                str(directory),
+                ctypes.byref(startup),
+                ctypes.byref(information),
+            ):
+                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("create_process"))
+        finally:
+            set_error_mode(previous_error_mode, None)
         return int(information.process), int(information.thread), int(information.pid)
     finally:
         destroy(attributes)
