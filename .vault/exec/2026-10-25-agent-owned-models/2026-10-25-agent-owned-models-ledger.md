@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:0af118fb13127d927ea0370fc865180c37e446f5cf7d75ed52d63cb5d561c239'
+body_hash: 'sha256:8c767e86ce60736297b8336deddbe0387a3a1647fbef784976ac4696b0be3f72'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1225,6 +1225,15 @@ related:
 - `S22` `verify:` `uv run --no-sync pytest -n 0 -m '' test_dependency_contracts, test_dependency_wording, test_dependency_registry_conformance and the desktop wire conformance tests: 58 passed` -> `pass`
 - `S22` `verify:` `native/desktop/frontend: tsc --noEmit, eslint and prettier --check on contract.ts, setupFixture.ts and setupWords.ts` -> `pass`
 - `S22` `by:` `vaultspec-high-executor`
+- `S27` `D` `src/cadrumo/core/loopback_endpoint.py`
+- `S27` `D` `src/cadrumo/core/tests/test_loopback_endpoint.py`
+- `S27` `M` `dev/quality/metadata/import_load_targets.json`
+- `S27` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S27` `M` `docs/technical/articles/014-llm-dispatch-consent-and-invoice-reading-pipeline.md`
+- `S27` `M` `docs/technical/topics/external-integrations-and-local-runtime.md`
+- `S27` `verify:` `uv run --no-sync pytest -n 0 dev/quality/tests/test_import_load_worker.py` -> `pass`
+- `S27` `verify:` `just check-style` -> `pass`
+- `S27` `by:` `implementation-engineer`
 
 ## Notes
 
@@ -1304,3 +1313,6 @@ related:
 - `S22` Also closes the P05.S31 residue: the `downloaded_not_loaded` note had no producer and is gone from the engine (state.rs), the desktop wire and host mapping, the TypeScript SetupNote, the Python DependencyNote and application.provisioning.note in four locales. Commit 79ff11cdcf.
 - `S22` Pending in the working tree, held by another session's uncommitted hunks in the same files: the `desktop_chrome.py` declared family and key `(desktop.setup.note.downloaded_not_loaded)` and the `desktop.setup.note.downloaded_not_loaded` leaf in src/cadrumo/locales/{en,es,ca,hu}/common.yml. Their removal is made in the working tree and is committed once those files hold only this change.
 - `S22` The desktop crate (wire.rs, components.rs) is not built here: only the application.rust CMake test target was run. The remaining Note variant, `own_network_settings,` also has no producer; the tests that carried the deleted variant use it.
+- `S27` plan-close review medium findings: loopback-endpoint-module-is-test-only and technical-docs-still-describe-local-memory-admission are closed; reader-panel-names-roles-by-id-and-hides-why is built and verified in the working tree but uncommitted, because the four common.yml catalogues and `dev/locales/desktop_chrome.py` carry another session's uncommitted removal of the `downloaded_not_loaded` note and the wait reached 30 minutes.
+- `S27` just check-import-boundaries exits 7 on other sessions' uncommitted work: private imports in `dev/ci/profile_wizard_benchmark.py` and `dev/ci/runtime_journal_benchmark.py,` and the new module `cadrumo.core.unread_settings,` which `import_load_targets.json` does not list yet. The deleted module leaves no stale row: no recorded module is missing from the tree, and the first run loaded 4944 of 4944 modules and kept 30 of 30 contracts.
+- `S27` just check-types exits 1 on two ty diagnostics in another session's uncommitted `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs.py;` none are in files this work touched.
