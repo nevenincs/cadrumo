@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c0156fb20e89066b821c518e65713dd6a909cfa3981a5d1b48af820cc8e15a7'
+body_hash: 'sha256:333798d8561fb4fc114e56aff85bb4a9abf1cf850a1a612ee5f9463b4f1c2776'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1366,6 +1366,9 @@ related:
 - `S27` `verify:` `python -m dev.docs.sequences check --page how-to/profile-setup` -> `pass`
 - `S27` `verify:` `uv run --no-sync pytest -n 0 dev/locales/tests/test_audit.py dev/locales/tests/test_parity.py dev/locales/tests/test_locale_translation_honesty.py (3 fail on other sessions' errors.refused keys only)` -> `fail`
 - `S27` `by:` `standard-executor`
+- `S31` `M` `src/cadrumo/core/tests/test_unread_settings.py`
+- `S31` `M` `dev/locales/tests/test_audit.py`
+- `S31` `verify:` `uv run --no-sync pytest -n 0 src/cadrumo/core/tests/test_unread_settings.py dev/locales/tests/test_audit.py dev/locales/tests/test_parity.py` -> `pass`
 
 ## Notes
 
