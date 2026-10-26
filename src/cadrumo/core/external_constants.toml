@@ -316,5 +316,5 @@ drive_file = "https://www.googleapis.com/auth/drive.file"
 ## so only the registry itself is declared.
 [dependency_hosts]
 browser = ["cdn.playwright.dev", "playwright.download.prss.microsoft.com", "storage.googleapis.com"]
-model_runtime = ["github.com", "release-assets.githubusercontent.com", "cdn.winget.microsoft.com"]
+model_runtime = ["github.com", "release-assets.githubusercontent.com"]
 model_registry = ["registry.ollama.ai"]

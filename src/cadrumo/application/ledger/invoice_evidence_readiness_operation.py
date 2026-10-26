@@ -32,7 +32,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..provisioning_host import RuntimeHostPlatform, RuntimeInstaller
+from ..provisioning_host import RuntimeHostPlatform
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .invoice_evidence_operation import (
     InvoiceEvidenceLabel,
@@ -96,7 +96,6 @@ class ReaderHostProjectionV1(BaseModel):
     reachable: bool
     version: Annotated[str, Field(min_length=1, max_length=64)] | None = None
     version_withheld: bool = False
-    installer: RuntimeInstaller
     available: bool
     failed_condition_id: InvoiceEvidenceLabel | None = None
 
@@ -148,7 +147,6 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
                 reachable=host.reachable,
                 version=version,
                 version_withheld=host.version is not None and version is None,
-                installer=host.installer,
                 available=host.available,
                 failed_condition_id=(
                     None if host.precondition_verdict is None else host.precondition_verdict.failed_condition_id

@@ -20,8 +20,6 @@ from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write
 from ..provisioning_contracts import ProvisioningPreconditionCondition
 from ..provisioning_host import (
     RuntimeHostPlatform,
-    RuntimeInstaller,
-    available_runtime_installer,
     current_runtime_platform,
     locate_runtime_executable,
     probe_runtime_host,
@@ -106,24 +104,6 @@ def test_absent_runtime_is_not_located(tmp_path: Path) -> None:
     )
 
 
-@pytest.mark.parametrize(
-    ("platform", "found", "expected"),
-    [
-        (RuntimeHostPlatform.WINDOWS, {"winget": "winget.exe"}, RuntimeInstaller.WINGET),
-        (RuntimeHostPlatform.WINDOWS, {}, RuntimeInstaller.NONE),
-        (RuntimeHostPlatform.MACOS, {"brew": "/opt/homebrew/bin/brew"}, RuntimeInstaller.HOMEBREW),
-        # Linux has no unprivileged installer even when a package manager exists.
-        (RuntimeHostPlatform.LINUX, {"brew": "/home/linuxbrew/bin/brew"}, RuntimeInstaller.NONE),
-    ],
-)
-def test_installer_availability_per_platform(
-    platform: RuntimeHostPlatform,
-    found: Mapping[str, str],
-    expected: RuntimeInstaller,
-) -> None:
-    assert available_runtime_installer(platform=platform, which=_lookup(found)) is expected
-
-
 def test_version_is_read_from_a_real_endpoint_and_absent_from_a_closed_one() -> None:
     with _runtime(up=True) as chat_url, override_settings(cadrumo_llm_ollama_chat_url=chat_url):
         assert read_runtime_version() == "0.9.0"
@@ -134,10 +114,10 @@ def test_version_is_read_from_a_real_endpoint_and_absent_from_a_closed_one() -> 
 def test_host_probe_names_install_when_nothing_is_located(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
     with override_settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT):
-        status = probe_runtime_host(platform=RuntimeHostPlatform.WINDOWS, which=_lookup({"winget": "winget.exe"}))
+        status = probe_runtime_host(platform=RuntimeHostPlatform.WINDOWS, which=_lookup({}))
     assert status.available is False
     assert status.executable_located is False
-    assert status.installer is RuntimeInstaller.WINGET
+    assert "installer" not in status.facts
     assert status.precondition_verdict is not None
     assert status.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALLED
 

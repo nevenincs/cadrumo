@@ -36,7 +36,7 @@ from .operations.operation_definition import OperationDefinition, build_single_p
 from .operations.owner import OperationExecutorContext
 from .operations.registry import OperationPublicDefinitionRegistrationV1
 from .operations.subject_reference import OperationSubjectReferenceV1
-from .provisioning_host import RuntimeHostPlatform, RuntimeInstaller
+from .provisioning_host import RuntimeHostPlatform
 
 __all__ = [
     "LOCAL_READER_STATUS_OPERATION_DEFINITION_ID",
@@ -70,7 +70,6 @@ class LocalReaderHostStatusV1(BaseModel):
     executable_located: bool
     reachable: bool
     version: str | None = None
-    installer: RuntimeInstaller
     facts: tuple[LocalReaderFactV1, ...]
     verdict_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
     verdict_facts: tuple[LocalReaderFactV1, ...]
@@ -168,7 +167,6 @@ def local_reader_status_public_result(status: LocalReaderStatus) -> LocalReaderS
             executable_located=host.executable_located,
             reachable=host.reachable,
             version=host.version,
-            installer=host.installer,
             facts=local_reader_public_facts(host.facts),
             verdict_condition_id=local_reader_verdict_condition(host.precondition_verdict),
             verdict_facts=local_reader_verdict_facts(host.precondition_verdict),

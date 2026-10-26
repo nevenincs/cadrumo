@@ -1740,7 +1740,6 @@ export type ReaderReadinessResult = {
     reachable: boolean;
     version?: string | null;
     version_withheld?: boolean;
-    installer: "winget" | "homebrew" | "none";
     available: boolean;
     failed_condition_id?: string | null;
   };

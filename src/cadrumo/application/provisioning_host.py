@@ -42,8 +42,6 @@ __all__ = [
     "ExecutableLookup",
     "RuntimeHostPlatform",
     "RuntimeHostStatus",
-    "RuntimeInstaller",
-    "available_runtime_installer",
     "current_runtime_platform",
     "locate_runtime_executable",
     "probe_runtime_host",
@@ -58,14 +56,6 @@ class RuntimeHostPlatform(StrEnum):
     MACOS = "macos"
     LINUX = "linux"
     OTHER = "other"
-
-
-class RuntimeInstaller(StrEnum):
-    """The package manager this host offers, reported as a fact; Cadrumo runs none of them."""
-
-    WINGET = "winget"
-    HOMEBREW = "homebrew"
-    NONE = "none"
 
 
 type ExecutableLookup = Callable[[str], str | None]
@@ -122,31 +112,6 @@ def locate_runtime_executable(
     return None
 
 
-def _located_installer(
-    platform: RuntimeHostPlatform,
-    which: ExecutableLookup,
-) -> tuple[RuntimeInstaller, Path | None]:
-    if platform is RuntimeHostPlatform.WINDOWS:
-        found = which("winget")
-        if found is not None and found:
-            return RuntimeInstaller.WINGET, Path(found)
-    if platform is RuntimeHostPlatform.MACOS:
-        found = which("brew")
-        if found is not None and found:
-            return RuntimeInstaller.HOMEBREW, Path(found)
-    return RuntimeInstaller.NONE, None
-
-
-def available_runtime_installer(
-    *,
-    platform: RuntimeHostPlatform | None = None,
-    which: ExecutableLookup = shutil.which,
-) -> RuntimeInstaller:
-    """Return the package manager this host offers for installing the runtime by hand."""
-    resolved = platform if platform is not None else current_runtime_platform()
-    return _located_installer(resolved, which)[0]
-
-
 def read_runtime_version(settings: Settings | None = None) -> str | None:
     """Return the runtime's reported version, or ``None`` when nothing answers."""
     resolved = settings if settings is not None else load_settings()
@@ -176,7 +141,6 @@ class RuntimeHostStatus(ProvisioningOutcome):
     executable_located: bool
     reachable: bool
     version: str | None = None
-    installer: RuntimeInstaller
     available: bool
 
     @model_validator(mode="after")
@@ -212,14 +176,12 @@ def probe_runtime_host(
         executable_located = locate_runtime_executable(platform=host_platform, which=which) is not None
         version = read_runtime_version(resolved)
     local = endpoint_host_is_loopback(endpoint)
-    installer = available_runtime_installer(platform=host_platform, which=which)
     facts: dict[str, ProvisioningFactValue] = {
         "platform": host_platform.value,
         "runtime_url": endpoint,
         "endpoint_local": local,
         "executable_located": executable_located,
         "runtime_reachable": version is not None,
-        "installer": installer.value,
     }
     verdict = None
     if version is None:
@@ -236,7 +198,6 @@ def probe_runtime_host(
         executable_located=executable_located,
         reachable=version is not None,
         version=version,
-        installer=installer,
         available=version is not None,
         facts=facts,
         precondition_verdict=verdict,
