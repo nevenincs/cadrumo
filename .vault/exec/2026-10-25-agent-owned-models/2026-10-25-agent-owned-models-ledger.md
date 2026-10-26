@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:372c57aad95c3946c3be416ff81bb2c992c586962979953d74bcb975e102af51'
+body_hash: 'sha256:8c0156fb20e89066b821c518e65713dd6a909cfa3981a5d1b48af820cc8e15a7'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1310,6 +1310,62 @@ related:
 - `S31` `verify:` `ruff check . and ruff format --check .` -> `pass`
 - `S31` `verify:` `just check-types` -> `pass`
 - `S31` `verify:` `just check-import-boundaries` -> `fail`
+- `S27` `M` `docs/_sequences/contracts/how-to/profile-setup/profile-setup-capabilities.seq`
+- `S27` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-bindings.json`
+- `S27` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-requires.json`
+- `S27` `M` `docs/_sequences/how-to/censo-update/censo-update-preflight.json`
+- `S27` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-applicability.json`
+- `S27` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-report.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-100/modelo-100-dependencies.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-100/modelo-100-inspect-inputs.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-130/modelo-130-inspect-boxes.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-303/modelo-303-inspect-boxes.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-349/modelo-349-inspect.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-390/modelo-390-inspect.json`
+- `S27` `M` `docs/_sequences/how-to/profile-setup/profile-setup-flag-help.json`
+- `S27` `M` `docs/_sequences/how-to/profile-setup/profile-setup-inspect.json`
+- `S27` `M` `docs/_sequences/how-to/protect-data-access/protect-data-access-machine-secret-help.json`
+- `S27` `M` `docs/_sequences/how-to/review-calculation-values/review-values-bindings.json`
+- `S27` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-missing-values.json`
+- `S27` `M` `docs/how-to/profile-setup.md`
+- `S27` `M` `docs/locales/ca/LC_MESSAGES/how-to/profile-setup.po`
+- `S27` `M` `docs/locales/ca/LC_MESSAGES/workstation-setup.po`
+- `S27` `M` `docs/locales/es/LC_MESSAGES/how-to/profile-setup.po`
+- `S27` `M` `docs/locales/es/LC_MESSAGES/workstation-setup.po`
+- `S27` `M` `docs/locales/hu/LC_MESSAGES/how-to/profile-setup.po`
+- `S27` `M` `docs/locales/hu/LC_MESSAGES/workstation-setup.po`
+- `S27` `M` `docs/technical/articles/204-cadrumo-user-profile-schema.md`
+- `S27` `M` `docs/technical/topics/bundled-knowledge-and-localization.md`
+- `S27` `M` `docs/workstation-setup.md`
+- `S27` `M` `native/desktop/frontend/src/dev/fixtures/userProfile.json`
+- `S27` `M` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S27` `M` `src/cadrumo/adapters/persistence/profile/tests/test_evidence_draft.py`
+- `S27` `M` `src/cadrumo/application/ledger/evidence_textlayer.py`
+- `S27` `M` `src/cadrumo/application/ledger/llm_classification.py`
+- `S27` `M` `src/cadrumo/application/user_profile/capabilities.py`
+- `S27` `M` `src/cadrumo/application/user_profile/tests/test_capabilities.py`
+- `S27` `M` `src/cadrumo/core/capabilities.py`
+- `S27` `M` `src/cadrumo/domain/user_profile/tests/test_schema.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/tests/test_llm_vision_evidence.py`
+- `S27` `M` `src/cadrumo/locales/ca/profile.yml`
+- `S27` `M` `src/cadrumo/locales/ca/wizard.yml`
+- `S27` `M` `src/cadrumo/locales/en/profile.yml`
+- `S27` `M` `src/cadrumo/locales/en/wizard.yml`
+- `S27` `M` `src/cadrumo/locales/es/profile.yml`
+- `S27` `M` `src/cadrumo/locales/es/wizard.yml`
+- `S27` `M` `src/cadrumo/locales/hu/profile.yml`
+- `S27` `M` `src/cadrumo/locales/hu/wizard.yml`
+- `S27` `verify:` `uv run --no-sync pytest -n 0 application/user_profile/tests/test_capabilities.py domain/user_profile/tests/test_schema.py (21 passed)` -> `pass`
+- `S27` `verify:` `uv run --no-sync pytest -n 0 test_llm_vision_evidence.py test_evidence_draft.py test_llm_evidence_no_split.py test_evidence_textlayer.py (52 passed)` -> `pass`
+- `S27` `verify:` `uv run --no-sync pytest -n 0 dev/docs/tests/test_docs_localization.py (12 passed)` -> `pass`
+- `S27` `verify:` `just check-style` -> `pass`
+- `S27` `verify:` `just check-format` -> `pass`
+- `S27` `verify:` `just check-types` -> `pass`
+- `S27` `verify:` `just check-data-format` -> `pass`
+- `S27` `verify:` `python -m dev.desktop_profile_fixture --check` -> `pass`
+- `S27` `verify:` `python -m dev.docs.sequences check --page how-to/profile-setup` -> `pass`
+- `S27` `verify:` `uv run --no-sync pytest -n 0 dev/locales/tests/test_audit.py dev/locales/tests/test_parity.py dev/locales/tests/test_locale_translation_honesty.py (3 fail on other sessions' errors.refused keys only)` -> `fail`
+- `S27` `by:` `standard-executor`
 
 ## Notes
 
@@ -1398,3 +1454,8 @@ related:
 - `S31` The `refused_llm_busy` and `canonical_invoice_draft_reader_busy_refused` error strings and the capabilities.py docstring reference stay for a follow-up: another session holds uncommitted hunks in those shared files.
 - `S31` check-import-boundaries reports only findings in another session's untracked dev/ci benchmark modules and the dev target set they make stale; no finding is in a file this Step touched.
 - `S31` The error string for the unread-setting refusal and its test wait for another session to commit `src/cadrumo/locales/*/errors.yml.`
+- `S27` owner ruling: `llm_vision` no longer promises on-host reading
+- `S27` fa19b570dc also carries one line of another session's uncommitted capabilities.py docstring fix `(probe_model_runtime_hardware_floor` to `probe_local_inference_hardware),` which the S31 note left for a follow-up
+- `S27` `llm_classification.py:252` is an English-only operator message with no catalogue key, reworded in place; :267 is the fallback text for `application.ledger.errors.split_requires_image_evidence,` reworded in four locales through dev.locales set-batch
+- `S27` the profile schema description is part of the published authority identity, so the authority was republished and the 14 goldens that record the generation were refreshed; sequences that record calculation revision ids (troubleshooting, review-calculation-values, modelo-130, 303, 349, 390, 100 and others) diverge until refreshed against the new generation with python -m dev.docs.sequences refresh
+- `S27` the dev.locales audit and parity tests fail only on `errors.refused.refused_unread_setting` (missing) and the two `busy_refused` keys (extra), which belong to other sessions
