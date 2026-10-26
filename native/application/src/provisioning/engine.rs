@@ -271,7 +271,8 @@ pub struct EngineConfig {
     pub scratch: PathBuf,
     /// The bytes free on the volume holding a path, or `None` when it cannot be read.
     pub free_space: Box<FreeSpace>,
-    /// This computer's memory when the owner measured it; the engine measures otherwise.
+    /// This computer's memory when the owner measured it; full checks and setup
+    /// measure it otherwise. Quick status uses only an existing measurement.
     pub hardware: Option<Hardware>,
     pub policy: RetryPolicy,
 }
@@ -861,7 +862,10 @@ impl Engine {
     }
 
     fn survey_local_ai(&mut self) -> Survey {
-        let hardware = self.hardware();
+        // Quick status reads local facts only. Hardware discovery can launch slow
+        // driver queries; full checks and setup own that work and retain its result.
+        // An unmeasured capacity must not invent a hardware shortfall.
+        let hardware = self.config.hardware.unwrap_or_default();
         let (program, models) = match self.local_ai_parts() {
             None => return Survey::not_in_this_build(),
             Some(Err(_)) => return Survey::unreadable(),

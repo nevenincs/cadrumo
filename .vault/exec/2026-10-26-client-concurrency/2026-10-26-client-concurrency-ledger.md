@@ -5,7 +5,7 @@ tags:
 date: '2026-10-26'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:85d2cf7dde3ebd9552d33e9cf534cd7c364a9bd3be6a9f51ba46b040b3980da5'
+body_hash: 'sha256:6d952ae9ed02dc0e6ae753c0117da82aafd2eda72a2e0b438b366e23daafc04b'
 related:
   - "[[2026-10-26-client-concurrency-plan]]"
 ---
@@ -61,6 +61,10 @@ related:
 - `S03` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_language_captures.py`
 - `S03` `verify:` `ty and Ruff on 12 recovery consumer files` -> `pass`
 - `S03` `verify:` `account factory tests after final signatures: 7 passed` -> `pass`
+- `S04` `M` `native/application/src/provisioning/engine.rs`
+- `S04` `M` `dev/quality/tests/test_no_model_definitions.py`
+- `S04` `verify:` `application.rust application.fmt application.clippy after quick-status hardware fix` -> `pass`
+- `S04` `verify:` `model-definition gate 56 tests and scoped ty/Ruff` -> `pass`
 
 ## Notes
 
@@ -69,3 +73,4 @@ related:
 - `S02` Include the native idle-read dependency and preserve the handshake deadline across header and payload.
 - `S03` Fresh connection attempts receive the remaining rotation budget through CLI and TUI; late admission is refused and closed. Read-only Luna opener review passed.
 - `S03` Whole-project ty now reports two diagnostics in concurrent `dev/quality/tests/test_no_model_definitions.py` only. Provisioning timing assertion fails isolated (4.693s); integrated review remains open.
+- `S04` Quick status no longer launches hardware queries; full checks/setup retain measurement. First live auth run had one rotation deadline failure; unchanged instrumented rerun passed in29s; canonical rerun and packaged matrix pending.
