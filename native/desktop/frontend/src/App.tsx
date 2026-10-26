@@ -68,6 +68,7 @@ import {
   routeProvisioningRefusals,
   type ProvisioningRecovery,
 } from "./shell/provisioningRecovery";
+import { ModelChoiceContext, type ModelChoice } from "./shell/agentModelChoice";
 import { useAbout } from "./shell/about";
 import { accountLabel } from "./components/accountWords";
 import { SignedOut, SignInDialog } from "./components/SignIn";
@@ -1399,6 +1400,19 @@ export function App({ host }: { host: Host }) {
   );
 
   const { openView, openLink: openViewLink, resolve: resolveView } = nav;
+  // Where the model of each role is chosen is the agent's settings: a page
+  // beside a role with none chosen leads to the agent column, where the host
+  // lets the person read and change the choices.
+  const agentSession = host.agentSession;
+  const modelChoice = useMemo<ModelChoice | null>(
+    () =>
+      agentSession?.modelRoles &&
+      agentSession.setModelRole &&
+      agentSession.clearModelRole
+        ? { open: () => openView("agent") }
+        : null,
+    [agentSession, openView],
+  );
   // The register element of the main view shown: the first pane's page, or
   // its Ledger section; nothing while the first pane is put away.
   const shownViewId = firstPaneShown
@@ -2896,45 +2910,47 @@ export function App({ host }: { host: Host }) {
         />
       ) : ledgerOn && routedLedger ? (
         <ProvisioningRecoveryContext.Provider value={provisioning}>
-          <LedgerPage
-            key={reader ?? ""}
-            port={routedLedger}
-            reader={reader}
-            withheld={
-              <SignedOut
-                account={account}
-                lead={t("desktop.ledger.signed_out")}
-                quiet
-                onSignIn={askSignIn}
-              />
-            }
-            locale={locale}
-            shown={firstPaneShown}
-            page={ledgerPage}
-            view={layout.ledgerView}
-            onViewChange={changeLedgerView}
-            memory={ledgerKept.memory}
-            contribute={contribute}
-            copy={(text) => host.writeClipboard(text)}
-            onFloor={setLedgerFloor}
-            pane={{
-              title: t("desktop.ledger.title"),
-              onToggleMaximize: () => toggleMaximize("docs"),
-              controls: [
-                maximizeControl("docs", "desktop.ledger.maximize"),
-                ...splitControls.map((control) => ({
-                  ...control,
-                  yields: true,
-                })),
-                {
-                  id: "close",
-                  icon: "close",
-                  label: t("desktop.ledger.close"),
-                  run: closePage,
-                },
-              ],
-            }}
-          />
+          <ModelChoiceContext.Provider value={modelChoice}>
+            <LedgerPage
+              key={reader ?? ""}
+              port={routedLedger}
+              reader={reader}
+              withheld={
+                <SignedOut
+                  account={account}
+                  lead={t("desktop.ledger.signed_out")}
+                  quiet
+                  onSignIn={askSignIn}
+                />
+              }
+              locale={locale}
+              shown={firstPaneShown}
+              page={ledgerPage}
+              view={layout.ledgerView}
+              onViewChange={changeLedgerView}
+              memory={ledgerKept.memory}
+              contribute={contribute}
+              copy={(text) => host.writeClipboard(text)}
+              onFloor={setLedgerFloor}
+              pane={{
+                title: t("desktop.ledger.title"),
+                onToggleMaximize: () => toggleMaximize("docs"),
+                controls: [
+                  maximizeControl("docs", "desktop.ledger.maximize"),
+                  ...splitControls.map((control) => ({
+                    ...control,
+                    yields: true,
+                  })),
+                  {
+                    id: "close",
+                    icon: "close",
+                    label: t("desktop.ledger.close"),
+                    run: closePage,
+                  },
+                ],
+              }}
+            />
+          </ModelChoiceContext.Provider>
         </ProvisioningRecoveryContext.Provider>
       ) : (
         <PaneHeader

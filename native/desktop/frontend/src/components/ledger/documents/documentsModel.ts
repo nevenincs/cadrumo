@@ -19,6 +19,7 @@ import type {
   FindingResolutionAction,
   InvoiceKind,
   JsonValue,
+  ReaderRole,
 } from "../../../shell/ledger";
 import {
   TAX_AMOUNT_RULE,
@@ -613,3 +614,14 @@ export function holdsUpdate(
 
 /** The name a file is shown by: the last part of what the result names. */
 export const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
+
+/** The reader check's condition for a role the agent resolves no model
+ * for. */
+const NO_USABLE_MODEL = "provisioning.selected_model.available";
+
+/** Whether a role is not ready because it has no model to run: the person
+ * chose none, or the agent cannot use the one chosen. The choice is made in
+ * the agent's settings; no setup supplies it. */
+export function roleNeedsModel(role: ReaderRole): boolean {
+  return !role.ready && role.failed_condition_id === NO_USABLE_MODEL;
+}

@@ -65,6 +65,8 @@ type Tools = {
   seed: boolean;
   /** Whether the local AI is missing on this computer. */
   readerMissing: boolean;
+  /** Whether the vision role has no model chosen. */
+  readerUnselected: boolean;
 };
 
 type Reading = {
@@ -97,6 +99,10 @@ const RUNTIME_INSTALLED = "provisioning.runtime.installed";
 /** What the reader check found short: this computer's memory for the role's
  * model, which no setup supplies. */
 const HARDWARE_FLOOR_MET = "provisioning.hardware_floor.met";
+/** What the reader check found missing for a role the agent resolves no model
+ * for: none is chosen, or the one chosen cannot run. The person chooses it in
+ * the agent's settings, which no setup replaces. */
+const SELECTED_MODEL_AVAILABLE = "provisioning.selected_model.available";
 
 /** A label reading that stood without the model fill the local AI gives. */
 const withoutReader = (unread: string[]): LabelReadingFallback => ({
@@ -1414,21 +1420,31 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       },
       roles: [
         {
-          role: "document_text",
+          role: "text_extraction",
           model: "reader-text-small",
           installed: true,
           ready: true,
           failed_condition_id: null,
         },
-        {
-          role: "document_vision",
-          model: "reader-vision-medium",
-          installed: true,
-          ready: false,
-          failed_condition_id: HARDWARE_FLOOR_MET,
-          // Memory is not something setup supplies, so the check names none.
-          recovery_action_id: null,
-        },
+        tools.readerUnselected
+          ? {
+              role: "vision_transcription",
+              model: null,
+              installed: null,
+              ready: false,
+              failed_condition_id: SELECTED_MODEL_AVAILABLE,
+              // Setup cannot choose a model for the person: the check names none.
+              recovery_action_id: null,
+            }
+          : {
+              role: "vision_transcription",
+              model: "reader-vision-medium",
+              installed: true,
+              ready: false,
+              failed_condition_id: HARDWARE_FLOOR_MET,
+              // Memory is not something setup supplies, so the check names none.
+              recovery_action_id: null,
+            },
       ],
       extraction_ready: true,
       document_readiness: "text_layer_only",
@@ -1456,7 +1472,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         available: false,
         failed_condition_id: RUNTIME_INSTALLED,
       },
-      roles: [role("document_text"), role("document_vision")],
+      roles: [role("text_extraction"), role("vision_transcription")],
       extraction_ready: false,
       document_readiness: "text_layer_only",
       text_layer_model_fill_available: false,

@@ -4,6 +4,7 @@ import type {
   ConfirmationBlocker,
   EvidenceDraft,
   EvidenceRecord,
+  ReaderRole,
 } from "../src/shell/ledger";
 import {
   confirmation,
@@ -13,6 +14,7 @@ import {
   holdsUpdate,
   recordUpdate,
   resolutionOf,
+  roleNeedsModel,
   sameReading,
 } from "../src/components/ledger/documents/documentsModel";
 import { hexId } from "./support/ledger";
@@ -274,4 +276,32 @@ test("a record's correction sends only what changed and clears with a blank", ()
       update.request,
     ),
   ).toBe(true);
+});
+
+test("a role asks for a model only when it has none to run", () => {
+  const held: ReaderRole = {
+    role: "vision_transcription",
+    model: null,
+    installed: null,
+    ready: false,
+    failed_condition_id: "provisioning.selected_model.available",
+    recovery_action_id: null,
+  };
+  expect(roleNeedsModel(held)).toBe(true);
+  // A role that reads, or is held back for another reason, is not told that
+  // it has no model.
+  expect(
+    roleNeedsModel({ ...held, ready: true, failed_condition_id: null }),
+  ).toBe(false);
+  for (const condition of [
+    "provisioning.role_model.installed",
+    "provisioning.runtime.installed",
+    "provisioning.hardware_floor.met",
+  ])
+    expect(roleNeedsModel({ ...held, failed_condition_id: condition })).toBe(
+      false,
+    );
+  expect(roleNeedsModel({ role: "vision_transcription", ready: false })).toBe(
+    false,
+  );
 });

@@ -1,6 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { agentColumn } from "../support/agent";
+import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 
 // The Documents section over the scenario's `documents` ledger: readings
@@ -753,4 +755,49 @@ test("a confirmed ticket no movement settles offers the movements near its day, 
   await options.first().click();
   await expect(done.locator(".ledger-draft-link-staged")).toBeVisible();
   await expect(target.locator(".ledger-tray")).toBeVisible();
+});
+
+test("a reader with no model chosen is named in words, says so and leads to the agent", async ({
+  page: target,
+}) => {
+  await seedLayout(target, { layout: { agentShown: false } });
+  await openDocuments(target, undefined, "reader_unselected");
+  await tab(target, "readers").click();
+  const readers = section(target).locator(".ledger-readers");
+  const roles = readers.locator(".ledger-reader-role");
+  await expect(roles).toHaveCount(2);
+  // Each role is named in words, never by the id the service uses.
+  const served = ["text_extraction", "vision_transcription"];
+  for (const [index, role] of served.entries()) {
+    await expect(roles.nth(index)).toContainText(
+      label("desktop.agent.model_role_heading", {
+        role: label(`desktop.setup.role.${role}`),
+      }),
+    );
+    await expect(roles.nth(index)).not.toContainText(role);
+  }
+  // The role that reads asks for nothing.
+  await expect(roles.first()).toContainText(
+    label("desktop.ledger.documents.reader.ready"),
+  );
+  await expect(roles.first().locator(".ledger-reader-no-model")).toHaveCount(0);
+  await expect(roles.first().getByRole("button")).toHaveCount(0);
+  // The role with no model says so, and setup, which cannot choose one, is
+  // not what it offers.
+  const vision = roles.nth(1);
+  await expect(vision).toContainText(
+    label("desktop.ledger.documents.reader.not_ready"),
+  );
+  await expect(vision.locator(".ledger-reader-no-model")).toHaveText(
+    label("desktop.ledger.documents.reader.no_model"),
+  );
+  await expect(readers.locator(".setup-offer")).toHaveCount(0);
+  // It leads to the agent, where the model of each role is chosen.
+  await expect(agentColumn(target)).toBeHidden();
+  await vision
+    .getByRole("button", {
+      name: label("desktop.ledger.documents.reader.choose_model"),
+    })
+    .click();
+  await expect(agentColumn(target)).toBeVisible();
 });

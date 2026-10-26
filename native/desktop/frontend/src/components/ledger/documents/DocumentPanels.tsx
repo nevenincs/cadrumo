@@ -9,6 +9,8 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
+import { useModelChoice } from "../../../shell/agentModelChoice";
+import { roleWords } from "../../../shell/agentModelRoles";
 import { provisionActionOf } from "../../../shell/provisioningRecovery";
 import type {
   AttachmentReviewItem,
@@ -31,7 +33,7 @@ import { write } from "../invoices/invoiceWrites";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import { batchStatusLabel, sourceLabel } from "./documentWords";
 import { extractionLanding } from "./documentLanding";
-import { fileName } from "./documentsModel";
+import { fileName, roleNeedsModel } from "./documentsModel";
 import type { Read } from "./useLedgerRead";
 
 function Failed({
@@ -629,13 +631,14 @@ export function ReaderReadiness({
   onRetry(): void;
 }) {
   const t = useStrings();
+  const modelChoice = useModelChoice();
   if (read.phase === "failed")
     return <Failed t={t} read={read} onRetry={onRetry} />;
   if (!read.value) return <Reading t={t} />;
   const ready = read.value;
   // Each role that is not ready says which setup, if any, supplies what it
-  // lacks; a role held back by memory or this computer's hardware names
-  // none. One offer per distinct setup.
+  // lacks; a role whose lack no setup supplies names none. One offer per
+  // distinct setup.
   const setups = [
     ...new Set(
       ready.roles
@@ -683,31 +686,54 @@ export function ReaderReadiness({
                 })
             : t("desktop.ledger.documents.reader.unavailable"),
         )}
-        {ready.roles.map((role) => (
-          <li
-            key={role.role}
-            className="ledger-reader-role flex items-start gap-2 border-b border-border py-2"
-          >
-            <Icon
-              name={role.ready ? "check" : "unplug"}
-              size="sm"
-              className={role.ready ? "text-success" : "text-warning"}
-            />
-            <span className="grid min-w-0 flex-1">
-              <span className="font-medium">{role.role}</span>
-              {role.model && (
-                <span className="text-sm text-muted-foreground">
-                  {role.model}
+        {ready.roles.map((role) => {
+          const needsModel = roleNeedsModel(role);
+          return (
+            <li
+              key={role.role}
+              className="ledger-reader-role flex items-start gap-2 border-b border-border py-2"
+            >
+              <Icon
+                name={role.ready ? "check" : "unplug"}
+                size="sm"
+                className={role.ready ? "text-success" : "text-warning"}
+              />
+              <span className="grid min-w-0 flex-1 gap-1">
+                <span className="font-medium">
+                  {t("desktop.agent.model_role_heading", {
+                    role: roleWords(t, role.role),
+                  })}
                 </span>
-              )}
-            </span>
-            <span className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
-              {role.ready
-                ? t("desktop.ledger.documents.reader.ready")
-                : t("desktop.ledger.documents.reader.not_ready")}
-            </span>
-          </li>
-        ))}
+                {role.model && (
+                  <span className="text-sm text-muted-foreground">
+                    {role.model}
+                  </span>
+                )}
+                {needsModel && (
+                  <span className="ledger-reader-no-model text-sm text-muted-foreground">
+                    {t("desktop.ledger.documents.reader.no_model")}
+                  </span>
+                )}
+                {needsModel && modelChoice && (
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    className="ledger-reader-choose-model justify-self-start"
+                    onClick={modelChoice.open}
+                  >
+                    <Icon name="agent" />
+                    {t("desktop.ledger.documents.reader.choose_model")}
+                  </Button>
+                )}
+              </span>
+              <span className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
+                {role.ready
+                  ? t("desktop.ledger.documents.reader.ready")
+                  : t("desktop.ledger.documents.reader.not_ready")}
+              </span>
+            </li>
+          );
+        })}
         <li className="flex items-start gap-2 border-b border-border py-2">
           <Icon name="lock" size="sm" className="text-muted-foreground" />
           <span className="min-w-0 flex-1 font-medium">

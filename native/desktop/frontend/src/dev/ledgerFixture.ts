@@ -117,6 +117,8 @@ export const LEDGER_SHAPES = [
   "documents",
   // The `documents` ledger on a computer whose local AI is not set up.
   "reader_missing",
+  // The `documents` ledger where the vision role has no model chosen.
+  "reader_unselected",
 ] as const;
 export type LedgerShape = (typeof LEDGER_SHAPES)[number];
 
@@ -1867,8 +1869,12 @@ export function ledgerFixture(options: Options): LedgerPort {
     now,
     fileOf: (token) => fileOf(token, "documents"),
     issuesFor: (period) => issues(ledger, period),
-    seed: shape === "documents" || shape === "reader_missing",
+    seed:
+      shape === "documents" ||
+      shape === "reader_missing" ||
+      shape === "reader_unselected",
     readerMissing: shape === "reader_missing",
+    readerUnselected: shape === "reader_unselected",
   });
   const reads: Partial<
     Record<LedgerDefinitionId, (request: JsonObject) => JsonObject>

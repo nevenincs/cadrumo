@@ -1520,8 +1520,11 @@ desktop:
       reader:
         all_documents: Every document
         available: Available
+        choose_model: Open the agent
         extraction: Reading documents
         host: Local model host
+        no_model: No usable model is chosen. Choose or check the model in the agent
+          settings.
         not_ready: Not ready
         off_host: Reading off this computer
         off_host_note: Only with your acknowledgement, each time
@@ -3581,7 +3584,6 @@ desktop:
       doing.
     not_now: Not now
     note:
-      downloaded_not_loaded: Downloaded, not loaded yet.
       own_network_settings: Uses its own network settings.
     open: Open setup
     outcome_cancelled: Setup was cancelled. What was already downloaded is kept.

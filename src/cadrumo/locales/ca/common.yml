@@ -1549,8 +1549,11 @@ desktop:
       reader:
         all_documents: Tots els documents
         available: Disponible
+        choose_model: Obre l'agent
         extraction: Lectura de documents
         host: Servidor local de models
+        no_model: No hi ha cap model utilitzable triat. Tria o revisa el model a la
+          configuració de l'agent.
         not_ready: No disponible
         off_host: Lectura fora d'aquest ordinador
         off_host_note: Només amb la teva conformitat, cada vegada
@@ -3636,7 +3639,6 @@ desktop:
       com va.
     not_now: Ara no
     note:
-      downloaded_not_loaded: Baixat, encara sense carregar.
       own_network_settings: Fa servir la seva pròpia configuració de xarxa.
     open: Obre la configuració
     outcome_cancelled: S'ha cancel·lat la configuració. El que ja s'havia baixat es

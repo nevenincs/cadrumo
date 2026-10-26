@@ -1552,8 +1552,11 @@ desktop:
       reader:
         all_documents: Todos los documentos
         available: Disponible
+        choose_model: Abrir el agente
         extraction: Lectura de documentos
         host: Servidor local de modelos
+        no_model: No hay ningún modelo utilizable elegido. Elige o revisa el modelo
+          en los ajustes del agente.
         not_ready: No disponible
         off_host: Lectura fuera de este equipo
         off_host_note: Solo con tu conformidad, cada vez
@@ -3635,7 +3638,6 @@ desktop:
       va.
     not_now: Ahora no
     note:
-      downloaded_not_loaded: Descargado, aún sin cargar.
       own_network_settings: Usa su propia configuración de red.
     open: Abrir la configuración
     outcome_cancelled: Se ha cancelado la configuración. Lo ya descargado se conserva.

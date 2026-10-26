@@ -20,7 +20,8 @@ import { OffHostDialog } from "./OffHostDialog";
 // records, the attachments, the folder intake, what was sent off this
 // computer, and the readers that make the readings. Shapes: `documents` holds
 // readings to review, `reader_missing` is the same on a computer whose local
-// AI is not set up.
+// AI is not set up, and `reader_unselected` is the same where the vision role
+// has no model chosen.
 
 const noop = () => undefined;
 

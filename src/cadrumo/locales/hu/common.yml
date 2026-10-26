@@ -1534,8 +1534,11 @@ desktop:
       reader:
         all_documents: Minden dokumentum
         available: Elérhető
+        choose_model: Az ügynök megnyitása
         extraction: Dokumentumok beolvasása
         host: Helyi modellkiszolgáló
+        no_model: Nincs használható modell kiválasztva. Válaszd ki vagy ellenőrizd
+          a modellt az ügynök beállításaiban.
         not_ready: Nem kész
         off_host: Beolvasás a gépen kívül
         off_host_note: Csak a jóváhagyásoddal, minden alkalommal
@@ -3612,7 +3615,6 @@ desktop:
       hogy áll.
     not_now: Most nem
     note:
-      downloaded_not_loaded: Letöltve, még nincs betöltve.
       own_network_settings: A saját hálózati beállításait használja.
     open: Beállítás megnyitása
     outcome_cancelled: A beállítás megszakadt. Ami már letöltődött, megmarad.
