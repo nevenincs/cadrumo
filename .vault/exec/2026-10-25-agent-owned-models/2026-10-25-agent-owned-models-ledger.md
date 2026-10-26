@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:333798d8561fb4fc114e56aff85bb4a9abf1cf850a1a612ee5f9463b4f1c2776'
+body_hash: 'sha256:5177b56fe07cf06c158bc2294539f8a263b1a8513bf4adeee9395f60d19240dd'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1369,6 +1369,47 @@ related:
 - `S31` `M` `src/cadrumo/core/tests/test_unread_settings.py`
 - `S31` `M` `dev/locales/tests/test_audit.py`
 - `S31` `verify:` `uv run --no-sync pytest -n 0 src/cadrumo/core/tests/test_unread_settings.py dev/locales/tests/test_audit.py dev/locales/tests/test_parity.py` -> `pass`
+- `S31` `M` `native/application/src/provisioning/state.rs`
+- `S31` `M` `native/application/src/provisioning/browser.rs`
+- `S31` `M` `native/application/src/provisioning/engine.rs`
+- `S31` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S31` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S31` `M` `native/application/src/provisioning/local_ai/program.rs`
+- `S31` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S31` `M` `native/application/src/provisioning/local_ai/supervision.rs`
+- `S31` `M` `native/application/src/provisioning/receipts.rs`
+- `S31` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S31` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S31` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S31` `M` `native/desktop/frontend/src/components/setup/SetupRowItem.tsx`
+- `S31` `M` `native/desktop/frontend/src/components/setup/setupWords.ts`
+- `S31` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S31` `M` `src/cadrumo/application/dependency_contracts.py`
+- `S31` `M` `src/cadrumo/application/dependency_wording.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/components/protocol.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/setup/screen.py`
+- `S31` `M` `src/cadrumo_mcp/mcp/component_setup.py`
+- `S31` `M` `src/cadrumo/application/tests/test_dependency_contracts.py`
+- `S31` `M` `src/cadrumo/application/tests/test_dependency_wording.py`
+- `S31` `M` `src/cadrumo/application/tests/test_dependency_registry_conformance.py`
+- `S31` `M` `dev/runtime_lifecycle/tests/test_components_surface_conformance.py`
+- `S31` `M` `dev/locales/desktop_chrome.py`
+- `S31` `M` `src/cadrumo/locales/en/application.yml`
+- `S31` `M` `src/cadrumo/locales/es/application.yml`
+- `S31` `M` `src/cadrumo/locales/ca/application.yml`
+- `S31` `M` `src/cadrumo/locales/hu/application.yml`
+- `S31` `verify:` `ctest -C Debug --tests-regex application.rust` -> `pass`
+- `S31` `verify:` `ctest -C Debug --tests-regex application.fmt` -> `pass`
+- `S31` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
+- `S31` `verify:` `uv run --no-sync pytest src/cadrumo/application/tests/test_dependency_contracts.py src/cadrumo/application/tests/test_dependency_wording.py src/cadrumo/application/tests/test_dependency_registry_conformance.py src/cadrumo/adapters/outbound/components/tests/test_protocol.py src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py src/cadrumo/entrypoints/cli/tests/test_provision_offline_status.py src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py src/cadrumo_mcp/mcp/tests/test_setup_tools.py -n 2` -> `pass`
+- `S31` `verify:` `uv run --no-sync pytest dev/locales/tests/test_audit.py dev/locales/tests/test_desktop_chrome.py dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_python_provisioning.py dev/quality/tests/test_no_unread_settings.py dev/runtime_lifecycle/tests/test_components_surface_conformance.py -n 2` -> `pass`
+- `S31` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S31` `verify:` `just check-style` -> `pass`
+- `S31` `verify:` `just check-format` -> `pass`
+- `S31` `verify:` `tsc --noEmit` -> `pass`
+- `S31` `verify:` `eslint on the touched frontend files` -> `pass`
+- `S31` `verify:` `prettier --check on the touched frontend files` -> `pass`
+- `S31` `verify:` `just check-import-boundaries` -> `fail`
 
 ## Notes
 
@@ -1462,3 +1503,7 @@ related:
 - `S27` `llm_classification.py:252` is an English-only operator message with no catalogue key, reworded in place; :267 is the fallback text for `application.ledger.errors.split_requires_image_evidence,` reworded in four locales through dev.locales set-batch
 - `S27` the profile schema description is part of the published authority identity, so the authority was republished and the 14 goldens that record the generation were refreshed; sequences that record calculation revision ids (troubleshooting, review-calculation-values, modelo-130, 303, 349, 390, 100 and others) diverge until refreshed against the new generation with python -m dev.docs.sequences refresh
 - `S27` the dev.locales audit and parity tests fail only on `errors.refused.refused_unread_setting` (missing) and the two `busy_refused` keys (extra), which belong to other sessions
+- `S31` check-import-boundaries fails only on `dev/ci/profile_wizard_benchmark.py,` `dev/ci/runtime_journal_benchmark.py` and the stale dev import-load-target metadata those uncommitted dev/ci files cause; all 30 contracts kept and no finding is in a file this commit touched.
+- `S31` desktop.fmt fails on rustfmt drift already in HEAD at native/desktop/src-tauri/src/shell/ledger/tests.rs and shell/setup/components.rs `remove_model;` no reported diff is in a line this commit changed.
+- `S31` The components role bytes are unchanged: the engine never serialised a note, so `PROTOCOL_VERSION` 1 and `PLAN_CONTRACT_VERSION` 3 stay. The desktop wire row drops its always-null note field and is read only by the same-build window.
+- `S31` native/CONTRACT.md names no row field, so it needed no change.
