@@ -1,9 +1,0 @@
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01 --irpf-income-categories actividad_economica
-@step Rank obligations around today.
-aeat app overview agenda --allow-incomplete
-@step Rank obligations around another reference date.
-aeat app overview agenda --date 2026-04-15 --allow-incomplete
-@step Widen the upcoming window to 30 days.
-@result aeat --format json app overview agenda --date 2026-04-15 --horizon 30 --allow-incomplete
-@expect result.horizon_days == 30
-@expect exit_code == 0

@@ -1,3 +1,0 @@
-@step Open the paged descendant editor for the active profile.
-@static aeat config profile descendiente
-@blocked interactive-tty The bare group opens the paged editor; measured exit 2 even after config login, "This console cannot host interactive questions."

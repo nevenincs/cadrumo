@@ -1,1 +1,0 @@
-"""Repository documentation tooling package."""

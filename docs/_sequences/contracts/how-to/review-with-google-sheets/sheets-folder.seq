@@ -1,6 +1,0 @@
-@step Check the Google connection status for the active profile.
-cadrumo-runtime --format json config google status
-@step Show the Drive folder created for the active profile.
-@result aeat --format json config google folder view
-@expect result.configured == false
-@expect exit_code == 0

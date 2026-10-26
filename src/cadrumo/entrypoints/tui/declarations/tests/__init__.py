@@ -1,1 +1,0 @@
-"""Declarations TUI tests."""

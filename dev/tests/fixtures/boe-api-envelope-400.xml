@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<response>
-  <status>
-    <code>400</code>
-    <text>No soportado ningún mime type de la cabecera Accept.</text>
-  </status>
-  <data/>
-</response>

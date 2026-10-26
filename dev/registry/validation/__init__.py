@@ -1,1 +1,0 @@
-"""Registry-owned validation modules."""

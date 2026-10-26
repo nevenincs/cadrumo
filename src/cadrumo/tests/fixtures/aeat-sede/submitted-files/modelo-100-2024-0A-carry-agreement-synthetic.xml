@@ -1,2 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<Declaracion xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" modelo="100" ejercicio="2024" periodo="0A" versionxsd="1.02"><Aux><Idioma>C</Idioma><VERSION>1.02</VERSION><NIF_EEDD>00000000T</NIF_EEDD></Aux><DatosEconomicos><Resultados><BaseImponibleRes><BIGRALH>12345.67</BIGRALH><BIAHOH>2345.67</BIAHOH></BaseImponibleRes><BaseLiquidableRes><BIGRALJ>12345.67</BIGRALJ><BIAHOJ>2345.67</BIAHOJ></BaseLiquidableRes></Resultados></DatosEconomicos></Declaracion>

@@ -1,3 +1,0 @@
-@step Sign in to Google for the active profile.
-@static cadrumo-runtime config google login
-@blocked external-service Needs a Google sign-in in a browser and a live Google API the sandbox has no credentials for.

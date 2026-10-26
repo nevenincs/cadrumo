@@ -1,1 +1,0 @@
-"""Asset acceptance tests."""

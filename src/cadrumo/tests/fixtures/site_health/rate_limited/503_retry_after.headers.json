@@ -1,7 +1,0 @@
-{
-  "http_status": 503,
-  "headers": {
-    "Content-Type": "text/html",
-    "Retry-After": "60"
-  }
-}

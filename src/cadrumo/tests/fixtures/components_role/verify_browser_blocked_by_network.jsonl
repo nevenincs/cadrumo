@@ -1,3 +1,0 @@
-{"command":"verify","protocol":1,"type":"started"}
-{"item_id":"browser","phase_code":"dependencies.setup.browser.verify","step":"verify","type":"phase"}
-{"command":"verify","mode":"full","outcome":"ok","rows":[{"failure_category":"blocked_by_network","item_id":"browser","mode":"full","recovery":"try_again","recovery_action_id":"operator.provision.browser","size_estimate_bytes":332691793,"state":"failed","version":"156.0.8078.4"}],"setup_complete":false,"type":"result"}

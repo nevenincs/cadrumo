@@ -1,3 +1,0 @@
-@step Review the available history filters before querying a profile.
-@result aeat config profile history --help
-@expect exit_code == 0

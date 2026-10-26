@@ -1,3 +1,0 @@
-@step Re-run the wizard over an existing profile to change its facts.
-@static aeat config profile edit my-profile
-@blocked interactive-tty Without --quiet the guided edit prompts; measured exit 2, "The guided setup could not open an interactive prompt in this run."

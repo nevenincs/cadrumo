@@ -1,1 +1,0 @@
-"""AEAT Sync application namespace."""

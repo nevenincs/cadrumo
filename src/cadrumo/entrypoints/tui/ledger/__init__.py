@@ -1,1 +1,0 @@
-"""Ledger workspace TUI package."""

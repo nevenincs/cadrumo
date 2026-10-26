@@ -1,1 +1,0 @@
-"""Calendar acceptance tests."""

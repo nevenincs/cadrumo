@@ -1,4 +1,0 @@
-@step Clear the Google session for the active profile.
-@result cadrumo-runtime --format json config google logout
-@expect result.token_removed == false
-@expect exit_code == 0
