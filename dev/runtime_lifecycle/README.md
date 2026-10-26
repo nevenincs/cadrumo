@@ -2,7 +2,7 @@
 
 Run these tests from Windows commands, including non-desktop contexts. They exercise
 real binaries and native interprocess communication (IPC) without opening or
-driving Tauri. A successful run reports **5 passed** and records timing
+driving Tauri. A successful run reports **10 passed** and records timing
 measurements in JUnit.
 
 See the [project overview](../../README.md), [development setup](../../CONTRIBUTING.md),
@@ -82,6 +82,9 @@ The scenarios check:
 - Password login, shared receipt reuse, A-to-B-to-A profile switching through the
   shipped command-line interface (CLI), immutable profile connection scope, logout,
   revoked old sessions, and rejection of a previously valid receipt proof.
+- Packaged password rotation, retirement of old authority, rejection of the old
+  password, and a fresh stored sign-in resumed through the native credential store.
+  Rotation advances the password generation once and preserves the data-key epoch.
 - Two exact-runtime crashes. The kill uses a retained native handle checked
   against the verified IPC peer and test Job. Recovery requires the manager's
   exit/launch events, a different verified boot, and rejection of the old session.

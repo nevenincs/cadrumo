@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import json
+import secrets
+import time
 from contextlib import AsyncExitStack
 
 import pytest
@@ -11,7 +14,17 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 
-from ..client_probes import _call, _mcp_read, _mcp_refuse_profile, _tui, attend_mcp, issue_key, mcp_edit_profile
+from ..client_probes import (
+    _call,
+    _mcp_read,
+    _mcp_refuse_profile,
+    _private_request,
+    _refused,
+    _tui,
+    attend_mcp,
+    issue_key,
+    mcp_edit_profile,
+)
 from ..harness import LifecycleHarness, Profile
 from ..mcp_proof_support import owned_stdio
 from ..proof_support import ProcessIdentity
@@ -33,6 +46,48 @@ async def _signed_in_reads(harness: LifecycleHarness, profile: Profile, label: s
     view = (await asyncio.to_thread(harness.cli, "profile", "view", profile_secret=profile.password))["result"]
     assert view["display_name"] == label
     await asyncio.to_thread(_tui, harness, profile, admitted=True)
+
+
+def test_packaged_password_rotation_retires_old_authority_and_resumes_new_receipt(harness: LifecycleHarness) -> None:
+    profile = harness.create_profile("Packaged rotation")
+    replacement = secrets.token_urlsafe(24)
+    harness.cli("login", "Packaged rotation", "--secrets-stdin", secret={"passphrase": profile.password})
+    original = harness.connect(profile.profile_id)
+    original.client.resume_receipt()
+    original_session = original.client.session_id
+    started = time.monotonic()
+    changed = harness.cli(
+        "passphrase",
+        "change",
+        "--secrets-stdin",
+        secret={
+            "current_passphrase": profile.password,
+            "new_passphrase": replacement,
+            "new_passphrase_confirmation": replacement,
+        },
+        reveal_identifiers=True,
+    )
+    harness.metrics["password_rotation_seconds"] = time.monotonic() - started
+    result = changed["result"]
+    assert result["profile_id"] == str(profile.profile_id)
+    assert result["changed"] is True
+    # A newly created profile starts at generation one; this is one mutation.
+    assert result["password_generation"] == 2
+    assert result["dek_epoch_preserved"] is True
+    rendered = json.dumps(changed)
+    assert profile.password not in rendered and replacement not in rendered
+    _refused(_private_request(original, original_session))
+    harness.cli("login", "Packaged rotation", "--secrets-stdin", secret={"passphrase": replacement})
+    resumed = harness.connect(profile.profile_id)
+    resumed.client.resume_receipt()
+    assert resumed.client.status().status.credential_authenticated
+    signed_out = resumed.client.human_sign_out()
+    assert signed_out.receipt_removed and signed_out.keychain_removed
+    # A rejected password starts the real admission throttle, so test it last.
+    rejected = harness.cli(
+        "login", "Packaged rotation", "--secrets-stdin", secret={"passphrase": profile.password}, expect_success=False
+    )
+    assert rejected["error"]["context"]["reason"] == "credential_rejected"
 
 
 @pytest.mark.anyio
