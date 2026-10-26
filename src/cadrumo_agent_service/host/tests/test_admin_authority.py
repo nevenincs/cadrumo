@@ -11,7 +11,7 @@ from uuid import uuid4
 import pytest
 from pydantic import JsonValue, ValidationError
 
-from ...admin import AdminServer
+from ...admin import AdminRequest, AdminServer
 from ...contracts import ServiceStartupFrame
 from ...service import _GatewayCredentials
 from ..controller import AgentGenerations, ResolvedAgentCredentials
@@ -154,3 +154,15 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
 def test_startup_refuses_missing_or_shared_authority(document: dict[str, str]) -> None:
     with pytest.raises(ValidationError):
         ServiceStartupFrame.model_validate(document)
+
+
+@pytest.mark.parametrize("model", ["synthetic-vision:1", "synthetic vision/1", "m" * 512, "é" * 512])
+def test_a_role_selection_names_any_model_id_the_catalogues_carry(model: str) -> None:
+    request = AdminRequest(version=1, request_id=uuid4(), action="model_role_set", model=model)
+    assert request.model == model
+
+
+@pytest.mark.parametrize("model", ["", "m" * 513, "tab\there", "line\nbreak", "del\x7f"])
+def test_a_model_id_outside_the_shared_rule_is_refused(model: str) -> None:
+    with pytest.raises(ValidationError):
+        AdminRequest(version=1, request_id=uuid4(), action="model_role_set", model=model)

@@ -40,7 +40,7 @@ from .adapters.agent_programs import (
 )
 from .adapters.agent_provider_auth_status import AgentProviderAuthStatusProbe
 from .adapters.agent_provider_catalog import AgentProviderCatalogSource
-from .adapters.provider_catalog_metadata import declared_provider_catalog_response
+from .adapters.provider_catalog_metadata import DECLARED_CATALOG_KIND, declared_provider_catalog_response
 from .adapters.served_catalog_models import ServedCatalogModels
 from .contracts import HostedCertificationStatus
 from .host.auth_attempt import AuthAttempt
@@ -117,6 +117,21 @@ def service_failure(error: Exception) -> dict[str, Any]:
 def _controller_is_ready(controller: AgentHostController) -> bool:
     """Read the controller's live state without inferring readiness from credentials."""
     return controller.state is AgentHostState.READY
+
+
+def _without_lanes(
+    document: dict[str, Any], turned_off: frozenset[tuple[str, str]], *, provider_field: str
+) -> dict[str, Any]:
+    """Return ``document`` without the lanes whose provider and transport are in ``turned_off``."""
+    lanes = document.get("providers")
+    if not isinstance(lanes, list):
+        return document
+    kept = [
+        lane
+        for lane in lanes
+        if not (isinstance(lane, dict) and (lane.get(provider_field), lane.get("transport")) in turned_off)
+    ]
+    return {**document, "providers": kept}
 
 
 class _GatewayCredentials(AgentCredentialSource):
@@ -727,15 +742,15 @@ class AgentService:
         if self.client.lease is None:
             return document
         turned_off = self._providers.turned_off_lanes()
-        lanes = document.get("providers")
-        if turned_off is None or not turned_off or not isinstance(lanes, list):
+        if turned_off is None or not turned_off:
             return document
-        kept = [
-            lane
-            for lane in lanes
-            if not (isinstance(lane, dict) and (lane.get("provider_id"), lane.get("transport")) in turned_off)
-        ]
-        return {**document, "providers": kept}
+        if document.get("kind") == DECLARED_CATALOG_KIND:
+            declared = document.get("catalog")
+            if not isinstance(declared, dict):
+                return document
+            # A declared lane names its provider identity ``provider``.
+            return {**document, "catalog": _without_lanes(declared, turned_off, provider_field="provider")}
+        return _without_lanes(document, turned_off, provider_field="provider_id")
 
     def _served_catalog(self, ready: AgentReady) -> dict[str, Any]:
         """Relay the admitted agent's actual bounded catalogue without projecting fields."""

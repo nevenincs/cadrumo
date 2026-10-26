@@ -15,6 +15,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 
+from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_PATTERN
+
 from .host.credential_frame import wipe
 from .providers.application.ports import ProviderCatalogUnavailableError
 
@@ -84,7 +86,7 @@ class AdminRequest(BaseModel):
     method: Literal["browser", "device"] | None = None
     attempt_id: UUID | None = None
     role: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")] | None = None
-    model: Annotated[str, Field(pattern=r"^[\x21-\x7e]{1,256}$")] | None = None
+    model: Annotated[str, Field(pattern=MODEL_RUN_MODEL_ID_PATTERN)] | None = None
     secret_bytes: Annotated[int, Field(ge=1, le=ADMIN_SECRET_MAX_BYTES)] | None = None
 
 
