@@ -237,7 +237,8 @@ def test_password_factory_borrows_original_and_supplies_distinct_fresh_reader(mo
     client, fresh = _StrictClient(), _StrictClient()
     fresh._profile_id = client.profile_id
 
-    async def open_fresh() -> FrontendClient:
+    async def open_fresh(*, timeout: float) -> FrontendClient:
+        assert timeout == 12.5
         return fresh
 
     def unavailable_profile(_context: object) -> object:
@@ -261,7 +262,7 @@ def test_password_factory_borrows_original_and_supplies_distinct_fresh_reader(mo
         assert borrowed is client
         assert bytes(current_passphrase) == b"current-password"
         assert bytes(new_passphrase) == bytes(new_passphrase_confirmation) == b"replacement-password"
-        reader = fresh_client()
+        reader = fresh_client(12.5)
         assert reader is fresh and reader is not client
         reader.close()
         return ProfileRotationCompletion(operation_id="a" * 64, outcome=outcome)

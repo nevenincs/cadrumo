@@ -47,6 +47,7 @@ from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRec
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
 from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -156,9 +157,9 @@ def _run_registration_screen() -> bool:
         _release_bootstrap_custody()
 
 
-async def _open_client(profile_id: UUID) -> FrontendClient:
+async def _open_client(profile_id: UUID, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
     return await open_installed_client(
-        profile_id=profile_id, frontend=OperationFrontendProjection.TUI, presents_pages=True
+        profile_id=profile_id, frontend=OperationFrontendProjection.TUI, presents_pages=True, timeout=timeout
     )
 
 
@@ -248,8 +249,8 @@ async def _run_runtime_session(
             )
             return await app.run_async(headless=headless, auto_pilot=auto_pilot)
 
-        async def open_recovery_client() -> FrontendClient:
-            return await _open_client(handoff.profile_id)
+        async def open_recovery_client(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
+            return await _open_client(handoff.profile_id, timeout=timeout)
 
         def requester_for_human(client: FrontendClient) -> RuntimeAutomationRequesterScreen:
             if client is not handoff.client:

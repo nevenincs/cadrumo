@@ -217,13 +217,9 @@ class AutomationRequesterJourney:
         return observed
 
     def wait_for_terminal(self) -> AutomationRequesterCompletion:
-        """Drive incremental steps within the original total budget."""
+        """Drive steps within the total budget; the runtime poll waits for delivery work."""
         while True:
             self.step()
             completion = self._terminal
             if completion is not None:
                 return completion
-            try:
-                time.sleep(min(0.05, self._remaining()))
-            except RefusalError as error:
-                raise self._uncertain(error) from error

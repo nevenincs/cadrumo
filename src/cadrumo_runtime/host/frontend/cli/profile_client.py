@@ -9,14 +9,19 @@ import typer
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo_client.commands.profile_binding import subscribe_profile_notices
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 
-def open_cli_profile_client(profile_id: UUID, ctx: typer.Context | None = None) -> FrontendClient:
+def open_cli_profile_client(
+    profile_id: UUID, ctx: typer.Context | None = None, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+) -> FrontendClient:
     """Open an exact CLI client and optionally attach its notice lifetime to a command."""
     from cadrumo_client.transport.installed_client import open_installed_client
 
-    client = asyncio.run(open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
+    client = asyncio.run(
+        open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI, timeout=timeout)
+    )
     try:
         if ctx is not None:
             subscribe_profile_notices(ctx, client)

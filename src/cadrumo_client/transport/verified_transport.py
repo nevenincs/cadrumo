@@ -10,6 +10,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo.core.logging import get_logger
+
 from ..contracts.access_management import SessionInventoryTransfer
 from ..contracts.contracts import ByteChannel, RefusalCode, RefusalError, ServerHello
 from ..contracts.deadline_budget import remaining_budget
@@ -147,7 +149,10 @@ class VerifiedTransport:
                 receivers = tuple(self._disconnect_receivers)
                 self._disconnect_receivers.clear()
             for disconnected in receivers:
-                disconnected()
+                try:
+                    disconnected()
+                except Exception as error:
+                    get_logger(__name__).warning("disconnect callback failed error_type=%s", type(error).__name__)
 
     def _close_after_failure(self, error: BaseException) -> None:
         retained = error.__dict__.get("_transport_cleanup")

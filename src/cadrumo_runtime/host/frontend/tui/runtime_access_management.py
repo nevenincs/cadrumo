@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from contextlib import suppress
-from typing import TYPE_CHECKING, ClassVar, cast, override
+from typing import TYPE_CHECKING, ClassVar, Protocol, cast, override
 from uuid import UUID
 
 from textual.app import App, ComposeResult
@@ -23,6 +23,7 @@ from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.tui.components.theme import tokenised
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.profile_access import status_admits_session
 from cadrumo_client.transport.frontend_client import FrontendClient
 
@@ -33,7 +34,13 @@ from .runtime_access_projection import session_rows
 if TYPE_CHECKING:
     from .secret.automation_requester import HumanAutomationRequesterFactory
 
-type RecoveryClientOpener = Callable[[], Awaitable[FrontendClient]]
+
+class RecoveryClientOpener(Protocol):
+    """Open a fresh connection within the recovery operation's remaining budget."""
+
+    async def __call__(self, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
+        """Return an owned connection before the supplied timeout."""
+        ...
 
 
 class _RecoveryClientCleanup:

@@ -110,7 +110,7 @@ def passphrase_change(
                 current_passphrase=current,
                 new_passphrase=replacement,
                 new_passphrase_confirmation=confirmation,
-                fresh_client=lambda: open_cli_profile_client(profile_id, ctx),
+                fresh_client=lambda timeout: open_cli_profile_client(profile_id, ctx, timeout=timeout),
             )
             outcome = completion.outcome
         except BaseException as primary:

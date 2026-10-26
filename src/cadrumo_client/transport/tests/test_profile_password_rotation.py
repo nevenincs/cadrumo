@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import time
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import cast
@@ -242,12 +243,16 @@ def _run(
     fresh_client: Callable[[], _Client],
     timeout: float = 60,
 ) -> None:
+    def open_fresh(remaining: float) -> FrontendClient:
+        assert 0 < remaining <= timeout
+        return cast(FrontendClient, fresh_client())
+
     run_profile_password_rotation(
         cast(FrontendClient, original),
         current_passphrase=proofs[0],
         new_passphrase=proofs[1],
         new_passphrase_confirmation=proofs[2],
-        fresh_client=lambda: cast(FrontendClient, fresh_client()),
+        fresh_client=open_fresh,
         timeout=timeout,
     )
 
@@ -344,6 +349,64 @@ def test_wrong_fresh_candidate_is_closed_without_receiving_replacement_proof(wro
     assert caught.value.reason == AccessDenialCode.PROFILE_MISMATCH.value
     assert candidate.login_calls == 0 and candidate.close_calls == 1
     assert original.close_calls == 0
+    _assert_wiped(proofs)
+
+
+def test_prolonged_retirement_backs_off_without_resubmitting(monkeypatch: pytest.MonkeyPatch) -> None:
+    original = _Client(profile_id=uuid4())
+    candidates = [
+        _Client(
+            profile_id=original.profile_id,
+            login_error=FrontendRefusedError(AutomationCustodyCode.CONFLICT.value),
+        )
+        for _ in range(7)
+    ]
+    candidates.append(
+        _Client(
+            profile_id=original.profile_id,
+            login_error=FrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value),
+        )
+    )
+    pending = iter(candidates)
+    delays: list[float] = []
+    monkeypatch.setattr(time, "sleep", delays.append)
+    proofs = _proofs()
+    with pytest.raises(ProfileMutationRunError) as caught:
+        _run(original, proofs, fresh_client=lambda: next(pending))
+    assert caught.value.reason == AccessDenialCode.AUTHENTICATION_REQUIRED.value
+    assert delays == [0.05, 0.1, 0.2, 0.4, 0.8, 1.0, 1.0]
+    assert all(client.close_calls == 1 for client in candidates)
+    assert original.submissions == original.secret_submissions == original.starts == 1
+    _assert_wiped(proofs)
+
+
+def test_fresh_open_receives_remaining_budget_and_cannot_admit_after_it_expires(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    instant = [100.0]
+    monkeypatch.setattr(time, "monotonic", lambda: instant[0])
+    original = _Client(profile_id=uuid4())
+    successor = _Client(profile_id=original.profile_id)
+    proofs = _proofs()
+    budgets: list[float] = []
+
+    def open_fresh(remaining: float) -> FrontendClient:
+        budgets.append(remaining)
+        instant[0] += remaining
+        return cast(FrontendClient, successor)
+
+    with pytest.raises(ProfileMutationRunError):
+        run_profile_password_rotation(
+            cast(FrontendClient, original),
+            current_passphrase=proofs[0],
+            new_passphrase=proofs[1],
+            new_passphrase_confirmation=proofs[2],
+            fresh_client=open_fresh,
+            timeout=3,
+        )
+    assert budgets == [3.0]
+    assert successor.login_calls == 0 and successor.close_calls == 1
+    assert original.submissions == original.secret_submissions == original.starts == 1
     _assert_wiped(proofs)
 
 

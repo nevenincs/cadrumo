@@ -53,8 +53,10 @@ def test_runtime_change_uses_exact_target_and_wipes_all_buffers(
     captured: dict[str, object] = {}
     buffers: list[bytearray] = []
 
-    def open_client(target: UUID, _ctx: typer.Context) -> _Client:
+    def open_client(target: UUID, _ctx: typer.Context, *, timeout: float | None = None) -> _Client:
         assert target == profile_id
+        if clients:
+            assert timeout == 12.5
         client = _Client(target)
         if not clients:
             client.fail_close = close_fails
@@ -67,14 +69,14 @@ def test_runtime_change_uses_exact_target_and_wipes_all_buffers(
         current_passphrase: bytearray,
         new_passphrase: bytearray,
         new_passphrase_confirmation: bytearray,
-        fresh_client: Callable[[], _Client],
+        fresh_client: Callable[[float], _Client],
     ) -> SimpleNamespace:
         assert client is clients[0]
         assert bytes(current_passphrase) == b"current-secret"
         assert bytes(new_passphrase) == b"replacement-secret"
         assert bytes(new_passphrase_confirmation) == b"replacement-secret"
         buffers.extend((current_passphrase, new_passphrase, new_passphrase_confirmation))
-        successor = fresh_client()
+        successor = fresh_client(12.5)
         assert successor is clients[1] and successor is not client
         successor.close()
         return SimpleNamespace(

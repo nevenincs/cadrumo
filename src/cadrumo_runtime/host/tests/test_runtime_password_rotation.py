@@ -108,8 +108,10 @@ def _native_runtime(tmp_path: Path) -> Generator[tuple[UUID, UUID, LaunchDoor, U
                     endpoint.close()
 
 
-def _fresh_client(launch: LaunchDoor, profile_id: UUID) -> FrontendClient:
-    return asyncio.run(FrontendClient.open(launch, profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
+def _fresh_client(launch: LaunchDoor, profile_id: UUID, timeout: float = 90) -> FrontendClient:
+    return asyncio.run(
+        FrontendClient.open(launch, profile_id=profile_id, frontend=OperationFrontendProjection.CLI, timeout=timeout)
+    )
 
 
 def test_rotation_requires_fresh_successor_login_and_wipes_all_proofs(tmp_path: Path) -> None:
@@ -118,8 +120,8 @@ def test_rotation_requires_fresh_successor_login_and_wipes_all_proofs(tmp_path: 
             profile_id=profile_id, installation_id=installation_id, os_owner_id=owner_id(), root=root
         )
 
-        def fresh_client() -> FrontendClient:
-            return _fresh_client(launch, profile_id)
+        def fresh_client(timeout: float = 90) -> FrontendClient:
+            return _fresh_client(launch, profile_id, timeout)
 
         with (
             fresh_client() as client,
@@ -175,8 +177,8 @@ def test_wrong_current_password_refuses_without_retiring_original_session(tmp_pa
             profile_id=profile_id, installation_id=installation_id, os_owner_id=owner_id(), root=root
         )
 
-        def fresh_client() -> FrontendClient:
-            return _fresh_client(launch, profile_id)
+        def fresh_client(timeout: float = 90) -> FrontendClient:
+            return _fresh_client(launch, profile_id, timeout)
 
         with fresh_client() as client:
             client.login_password(bytearray(PROFILE_INPUT.encode()))

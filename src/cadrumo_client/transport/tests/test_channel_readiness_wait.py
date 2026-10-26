@@ -196,8 +196,9 @@ def test_an_idle_subscription_waits_once_and_an_exchange_claims_the_connection_a
 
 
 @pytest.mark.parametrize("closure", ["local", "peer", "exchange"])
+@pytest.mark.parametrize("broken_subscriber", [False, True])
 def test_every_connection_close_wakes_subscribers_once(
-    pair: tuple[WindowsChannel, WindowsChannel], closure: str
+    pair: tuple[WindowsChannel, WindowsChannel], closure: str, broken_subscriber: bool
 ) -> None:
     server, client = pair
     with ThreadPoolExecutor(max_workers=1) as pool:
@@ -221,7 +222,12 @@ def test_every_connection_close_wakes_subscribers_once(
         calls.append(None)
         disconnected.set()
 
+    def broken() -> None:
+        raise ValueError("synthetic callback failure")
+
     try:
+        if broken_subscriber:
+            connection.subscribe_session_events(lambda _event: None, disconnected=broken)
         connection.subscribe_session_events(lambda _event: None, disconnected=closed)
         if closure == "local":
             connection.close()

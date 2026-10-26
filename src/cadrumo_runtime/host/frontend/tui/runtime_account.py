@@ -85,8 +85,8 @@ def compose_runtime_account_factories(
     def password() -> PassphraseScreen:
         require_binding()
 
-        async def open_fresh() -> FrontendClient:
-            return await open_recovery_client()
+        async def open_fresh(timeout: float) -> FrontendClient:
+            return await open_recovery_client(timeout=timeout)
 
         def rotate(current: str, replacement: str, confirmation: str) -> PassphraseChangeAttempt:
             require_binding()
@@ -96,7 +96,7 @@ def compose_runtime_account_factories(
                     current_passphrase=bytearray(current, "utf-8"),
                     new_passphrase=bytearray(replacement, "utf-8"),
                     new_passphrase_confirmation=bytearray(confirmation, "utf-8"),
-                    fresh_client=lambda: asyncio.run(open_fresh()),
+                    fresh_client=lambda timeout: asyncio.run(open_fresh(timeout)),
                 )
             except ProfileMutationRunError as error:
                 if (

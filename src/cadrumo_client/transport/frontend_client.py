@@ -18,6 +18,7 @@ from cadrumo.application.user_profile.automation_custody_port import AutomationS
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from cadrumo.core.async_cleanup import await_cancellation_complete
+from cadrumo.core.logging import get_logger
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 
 from ..contracts.access_management import (
@@ -225,8 +226,12 @@ class FrontendClient(ProfileViewFrontend):
                 return
             self._session_id = None
             receivers = tuple(self._retirement_receivers)
-        for receive in receivers:
-            receive()
+            observers = tuple(self._operation_receivers)
+        for receive in (*receivers, *observers):
+            try:
+                receive()
+            except Exception as error:
+                get_logger(__name__).warning("retirement callback failed error_type=%s", type(error).__name__)
 
     def _connection_failed(self) -> None:
         with self._event_guard:
@@ -240,7 +245,10 @@ class FrontendClient(ProfileViewFrontend):
             # So does an asker waiting for its answer.
             askers = tuple(self._answer_receivers)
         for receive in (*receivers, *watchers, *observers, *askers):
-            receive()
+            try:
+                receive()
+            except Exception as error:
+                get_logger(__name__).warning("disconnect callback failed error_type=%s", type(error).__name__)
 
     def subscribe_session_retirement(self, receive: Callable[[], None]) -> Callable[[], None]:
         """Subscribe a nonblocking private-view clearing callback, never a proof consumer."""
