@@ -126,6 +126,60 @@ def _cleanup(error: BaseException) -> AsyncResourceCleanupError:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("cancel", [False, True])
+async def test_metadata_lookup_keeps_loop_responsive_and_acquires_no_endpoint_after_abort(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, cancel: bool
+) -> None:
+    started, release, finished = threading.Event(), threading.Event(), threading.Event()
+
+    def version() -> str:
+        started.set()
+        try:
+            assert release.wait(10), "test did not release metadata lookup"
+            return "opener-test"
+        finally:
+            finished.set()
+
+    def unexpected_endpoint(**_kwargs: object) -> _Endpoint:
+        raise AssertionError("aborted metadata lookup must not acquire an endpoint")
+
+    monkeypatch.setattr(installed_client, "effective_storage_root", lambda: tmp_path)
+    monkeypatch.setattr(installed_client, "installed_product_version", version)
+    monkeypatch.setattr(installed_client, "WindowsEndpoint", unexpected_endpoint)
+    monkeypatch.setattr(installed_client, "PosixEndpoint", unexpected_endpoint)
+    opening = asyncio.create_task(
+        installed_client.open_installed_client(
+            profile_id=uuid4(), frontend=OperationFrontendProjection.EXTERNAL_CLIENT, timeout=0.5
+        )
+    )
+    try:
+        assert await asyncio.to_thread(started.wait, 5)
+        if cancel:
+            opening.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await opening
+        else:
+            with pytest.raises(RefusalError) as caught:
+                await opening
+            assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    finally:
+        release.set()
+        assert await asyncio.to_thread(finished.wait, 5)
+
+
+@pytest.mark.asyncio
+async def test_os_metadata_timeout_remains_unavailable(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def unavailable_version() -> str:
+        raise TimeoutError("synthetic metadata timeout")
+
+    monkeypatch.setattr(installed_client, "effective_storage_root", lambda: tmp_path)
+    monkeypatch.setattr(installed_client, "installed_product_version", unavailable_version)
+    with pytest.raises(RefusalError) as caught:
+        await _open(uuid4())
+    assert caught.value.reason is RefusalCode.UNAVAILABLE
+
+
+@pytest.mark.asyncio
 async def test_success_transfers_exact_client_only_after_endpoint_retirement(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-26'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d952ae9ed02dc0e6ae753c0117da82aafd2eda72a2e0b438b366e23daafc04b'
+body_hash: 'sha256:69015de59dadb0d3b68115de97cf63dc8a5d2d873a4782fb06b5dabeb056ecc6'
 related:
   - "[[2026-10-26-client-concurrency-plan]]"
 ---
@@ -65,6 +65,10 @@ related:
 - `S04` `M` `dev/quality/tests/test_no_model_definitions.py`
 - `S04` `verify:` `application.rust application.fmt application.clippy after quick-status hardware fix` -> `pass`
 - `S04` `verify:` `model-definition gate 56 tests and scoped ty/Ruff` -> `pass`
+- `S04` `M` `src/cadrumo_client/transport/installed_client.py`
+- `S04` `M` `src/cadrumo_client/transport/tests/test_runtime_client.py`
+- `S04` `verify:` `installed opener ownership and metadata cancellation/deadline tests: 17 passed` -> `pass`
+- `S04` `verify:` `installed opener Ruff and ty` -> `pass`
 
 ## Notes
 
@@ -74,3 +78,4 @@ related:
 - `S03` Fresh connection attempts receive the remaining rotation budget through CLI and TUI; late admission is refused and closed. Read-only Luna opener review passed.
 - `S03` Whole-project ty now reports two diagnostics in concurrent `dev/quality/tests/test_no_model_definitions.py` only. Provisioning timing assertion fails isolated (4.693s); integrated review remains open.
 - `S04` Quick status no longer launches hardware queries; full checks/setup retain measurement. First live auth run had one rotation deadline failure; unchanged instrumented rerun passed in29s; canonical rerun and packaged matrix pending.
+- `S04` Moved immutable installation/authority metadata reads off the event loop and into the same opening deadline before acquiring native endpoints.
