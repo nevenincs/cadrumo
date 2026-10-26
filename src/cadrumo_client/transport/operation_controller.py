@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import cast
 from uuid import UUID, uuid4
 
@@ -622,6 +622,11 @@ async def await_terminal_projection(
     request schema is an invalid frame; the deadline bounds both observation
     and waiting.
     """
+    remaining_budget(deadline)
+    if controller.deadline is not None:
+        remaining_budget(controller.deadline)
+        deadline = min(deadline, controller.deadline)
+    controller = replace(controller, deadline=deadline)
     with AsyncOperationChanges(controller.client) as changes:
         return await _await_terminal(controller, changes, definition_id, subject_ref, request_schema, deadline)
 

@@ -29,7 +29,7 @@ from cadrumo.domain.iva.schema import InvoiceKind
 from ...contracts.contracts import RefusalCode, RefusalError
 from ...contracts.operation_access import OperationAcknowledged, OperationControl, OperationSubmit, OperationSubmitted
 from ..frontend_client import FrontendClient
-from ..operation_controller import OperationController
+from ..operation_controller import OperationController, await_terminal_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -214,3 +214,37 @@ def test_retained_exchange_bounds_call_budget_without_replacing_original_deadlin
     assert asyncio.run(controller.start()) == _OPERATION_ID
     assert client.operation_deadlines == [expected]
     assert controller.deadline == deadline
+
+
+@pytest.mark.parametrize(("original", "expected"), [(None, 110.0), (105.0, 105.0), (120.0, 110.0)])
+def test_terminal_wait_applies_its_deadline_to_the_wire_exchange(
+    monkeypatch: pytest.MonkeyPatch, original: float | None, expected: float
+) -> None:
+    monkeypatch.setattr(time, "monotonic", lambda: 100.0)
+    client = _RecordingClient()
+
+    def unavailable(_request: object, *, deadline: float) -> None:
+        client.operation_deadlines.append(deadline)
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+
+    monkeypatch.setattr(client, "operation", unavailable)
+    controller = OperationController(
+        client=cast(FrontendClient, client),
+        operation_id=_OPERATION_ID,
+        session_id=client.session_id,
+        deadline=original,
+    )
+    contract = client.registry.lookup_public_contract(INVOICE_ADD_OPERATION_DEFINITION_ID)
+    with pytest.raises(RefusalError) as raised:
+        asyncio.run(
+            await_terminal_projection(
+                controller,
+                definition_id=contract.definition_id,
+                subject_ref=profile_operation_subject(str(client.profile_id)),
+                request_schema=contract.request_schema,
+                deadline=110.0,
+            )
+        )
+    assert raised.value.reason is RefusalCode.UNAVAILABLE
+    assert client.operation_deadlines == [expected]
+    assert controller.deadline == original
