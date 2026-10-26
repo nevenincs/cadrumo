@@ -165,6 +165,15 @@ pub fn admit_documents(query: &DocumentsQuery) -> Result<(Option<&str>, Option<&
     Ok((after, q))
 }
 
+pub fn admit_document_removal(conversation: &str, name: Option<&str>) -> Result<(), Refused> {
+    if !gateway::run_id(conversation)
+        || name.is_some_and(|name| !plain_name(name) || name.starts_with('.'))
+    {
+        return Err(refused("agent_invalid_request"));
+    }
+    Ok(())
+}
+
 /// One stored document as the column reads it: its name, size, time, digest
 /// and type, and nothing else the agent says of it.
 pub fn document_record(item: &Value) -> Result<Value, Refused> {
@@ -1127,6 +1136,17 @@ impl Session {
         documents_page(&page)
     }
 
+    pub fn remove_documents(
+        &self,
+        supervisor: &Supervisor,
+        conversation: &str,
+        name: Option<&str>,
+    ) -> Result<(), Refused> {
+        admit_document_removal(conversation, name)?;
+        let gateway = Self::gateway(supervisor)?;
+        Client::new(&gateway).remove_attachments(conversation, name)
+    }
+
     /// Starts the conversation's next run with the person's message. A
     /// conversation whose last run is live takes no message: nothing is
     /// queued behind it.
@@ -1673,6 +1693,30 @@ mod tests {
             query(None, Some(&"x".repeat(NAME_LIMIT + 1))),
         ] {
             assert!(admit_documents(&bad).is_err());
+        }
+    }
+
+    #[test]
+    fn document_removal_refuses_paths_and_unadmitted_conversation_ids() {
+        assert!(admit_document_removal("run-1", None).is_ok());
+        assert!(admit_document_removal("run-1", Some("factura ñ.pdf")).is_ok());
+        for name in [
+            "",
+            ".hidden",
+            "../a.pdf",
+            "C:\\a.pdf",
+            "a/b.pdf",
+            "a\nb.pdf",
+        ] {
+            assert_eq!(
+                admit_document_removal("run-1", Some(name))
+                    .unwrap_err()
+                    .code,
+                "agent_invalid_request"
+            );
+        }
+        for conversation in ["", "../run", "a/b"] {
+            assert!(admit_document_removal(conversation, None).is_err());
         }
     }
 

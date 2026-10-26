@@ -681,8 +681,25 @@ test.describe("the conversations the history lists", () => {
       "Not available yet",
     ]);
     expect(rows.find((row) => row.id === "b")?.current).toBe(true);
-    // Cadrumo's custody serves no documents, so none is counted.
-    expect(rows.every((row) => row.documentCount === 0)).toBe(true);
+    // No document listing was supplied, so these counts are unknown.
+    expect(rows.every((row) => row.documentCount === undefined)).toBe(true);
+  });
+
+  test("only counts read for the profile's conversations are shown", () => {
+    const groups = conversationGroups(
+      [record("a", "Read"), record("b", "Not read")],
+      {
+        locale: "en",
+        archived: false,
+        currentId: "a",
+        untitled: "Untitled",
+        now: NOW,
+        documentCounts: { a: 3 },
+      },
+    );
+    const rows = groups.flatMap((group) => group.conversations);
+    expect(rows.find((row) => row.id === "a")?.documentCount).toBe(3);
+    expect(rows.find((row) => row.id === "b")?.documentCount).toBeUndefined();
   });
 });
 

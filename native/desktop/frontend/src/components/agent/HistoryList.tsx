@@ -33,7 +33,7 @@ function DeleteConfirmation({
   const t = useStrings();
   const textId = useId();
   const question =
-    conversation.documentCount > 0
+    conversation.documentCount !== undefined && conversation.documentCount > 0
       ? t("desktop.agent.delete_confirm", {
           title: conversation.title,
           count: conversation.documentCount,
@@ -303,19 +303,20 @@ export function HistoryList({
                           </span>
                           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <span>{conversation.lastActivityLabel}</span>
-                            {conversation.documentCount > 0 && (
-                              <span className="flex items-center gap-0.5">
-                                <Icon name="page" size="xs" />
-                                <span aria-hidden="true">
-                                  {conversation.documentCount}
+                            {conversation.documentCount !== undefined &&
+                              conversation.documentCount > 0 && (
+                                <span className="flex items-center gap-0.5">
+                                  <Icon name="page" size="xs" />
+                                  <span aria-hidden="true">
+                                    {conversation.documentCount}
+                                  </span>
+                                  <span className="sr-only">
+                                    {t("desktop.agent.row_documents", {
+                                      count: conversation.documentCount,
+                                    })}
+                                  </span>
                                 </span>
-                                <span className="sr-only">
-                                  {t("desktop.agent.row_documents", {
-                                    count: conversation.documentCount,
-                                  })}
-                                </span>
-                              </span>
-                            )}
+                              )}
                           </span>
                         </AgentTextAction>
                         <div className="flex shrink-0 gap-0.5 opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100 pointer-coarse:opacity-100">

@@ -613,12 +613,14 @@ export function conversationGroups(
     currentId,
     untitled,
     now = new Date(),
+    documentCounts,
   }: {
     locale: string;
     archived: boolean;
     currentId: string | null;
     untitled: string;
     now?: Date;
+    documentCounts?: Readonly<Record<string, number>>;
   },
 ): ConversationGroup[] {
   const days = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
@@ -653,8 +655,9 @@ export function conversationGroups(
       id: record.id,
       title: record.title || untitled,
       lastActivityLabel: agoLabel(locale, at, now),
-      // Cadrumo's custody serves no documents yet, so none is counted.
-      documentCount: 0,
+      ...(documentCounts?.[record.id] !== undefined
+        ? { documentCount: documentCounts[record.id] }
+        : {}),
       archived: record.archived,
       current: record.id === currentId,
     });
@@ -674,9 +677,10 @@ export function useConversationGroups(
     archived: boolean;
     currentId: string | null;
     untitled: string;
+    documentCounts?: Readonly<Record<string, number>>;
   },
 ): ConversationGroup[] | null {
-  const { locale, archived, currentId, untitled } = options;
+  const { locale, archived, currentId, untitled, documentCounts } = options;
   return useMemo(
     () =>
       read.kind === "ready"
@@ -685,9 +689,10 @@ export function useConversationGroups(
             archived,
             currentId,
             untitled,
+            documentCounts,
           })
         : null,
-    [read, locale, archived, currentId, untitled],
+    [read, locale, archived, currentId, untitled, documentCounts],
   );
 }
 

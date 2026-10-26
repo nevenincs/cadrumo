@@ -90,13 +90,12 @@ export const UPLOADING_FILES: StagedAttachment[] = [
   ...READY_FILES.slice(0, 1),
   {
     id: "u1",
-    name: "facturas-septiembre.zip",
-    extension: "zip",
+    name: "facturas-septiembre.pdf",
+    extension: "pdf",
     sizeBytes: 8_400_000,
-    kind: "archive",
+    kind: "document",
     state: "uploading",
     progress: 0.4,
-    memberCount: 23,
   },
   {
     id: "u2",

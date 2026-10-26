@@ -48,8 +48,7 @@ const TILES: StagedAttachment[] = [
     extension: "zip",
     sizeBytes: 8_400_000,
     kind: "archive",
-    state: "ready",
-    memberCount: 23,
+    state: "refused",
   },
   {
     id: "t6",

@@ -564,10 +564,11 @@ test("a message is held at the agent's limit of 65536 characters", async ({
   ).toHaveLength(0);
 });
 
-test("the documents are not available yet, and the door says so", async ({
+test("a host without document storage keeps the documents door unavailable", async ({
   page: target,
 }) => {
-  await open(target);
+  scenarioOnly("This host deliberately offers no document storage.");
+  await open(target, "signed-in", "&documents=unavailable");
   const door = column(target)
     .getByRole("button", { name: label("desktop.agent.documents") })
     .first();
@@ -586,8 +587,7 @@ test("the documents are not available yet, and the door says so", async ({
       name: label("desktop.agent.welcome_title"),
     }),
   ).toBeVisible();
-  // And a conversation that has files in a custody that does not exist yet has
-  // no document counted, and none asked for.
+  // No listing is fabricated where the host offers none.
   if (live()) return;
   expect(
     (await calls(target)).filter((call) => call.startsWith("agentDocuments")),

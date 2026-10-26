@@ -8,7 +8,7 @@ import { DropOverlay } from "./DropOverlay";
 
 type Args = { armed: boolean; fileCount?: number };
 
-const ACCEPTED = ["PDF", "JPG", "PNG", "HEIC", "XLSX", "CSV", "XML", "ZIP"];
+const ACCEPTED = ["PDF", "JPG", "PNG", "HEIC", "XLSX", "CSV", "XML"];
 
 const meta = {
   title: "Shell/Agent/Drop overlay",

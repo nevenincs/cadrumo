@@ -1242,6 +1242,32 @@ export function fixtureAgent({
                 delete window.__fixtureAgentDrop;
             };
           },
+          async removeDocuments(conversationId, name) {
+            say(`agentRemoveDocuments ${conversationId} ${name ?? "all"}`);
+            await check();
+            if (name === undefined) storage.delete(conversationId);
+            else {
+              if (
+                !stored(conversationId).some(
+                  (document) => document.name === name,
+                )
+              )
+                throw coded("agent_gateway_attachment_not_found");
+              storage.set(
+                conversationId,
+                stored(conversationId).filter(
+                  (document) => document.name !== name,
+                ),
+              );
+            }
+          },
+          async attachmentPolicy() {
+            await check();
+            return {
+              max_file_bytes: 100_000_000,
+              extensions: ["pdf", "png", "jpg", "xlsx", "csv", "xml", "txt"],
+            };
+          },
           async attach(conversationId, filterLabel, onEvent, dropId) {
             say(`agentAttach ${conversationId} ${filterLabel}`);
             if (dropId) say(`agentAttachDrop ${conversationId} ${dropId}`);

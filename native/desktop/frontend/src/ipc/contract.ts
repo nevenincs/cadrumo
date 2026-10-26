@@ -17,6 +17,7 @@ import type {
   AgentUploadEvent,
   AgentDropSignal,
   AgentUploadPick,
+  AgentAttachmentPolicy,
   AgentSendResult,
   AgentServiceStatus,
   AgentStreamEvent,
@@ -1646,6 +1647,11 @@ export interface HostCommands {
     args: Authorized<{ subscription: number }>;
     result: null;
   };
+  agent_documents_remove: {
+    args: Authorized<{ conversationId: string; name?: string }>;
+    result: null;
+  };
+  agent_attachment_policy: { args: Authorized; result: AgentAttachmentPolicy };
   agent_send: {
     args: Authorized<{ request: AgentSendRequest }>;
     result: AgentSendResult;

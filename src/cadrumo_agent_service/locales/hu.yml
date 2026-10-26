@@ -32,7 +32,6 @@ desktop:
     choose_model: Válassz modellt
     choose_provider: Válassz szolgáltatót
     close_documents: Dokumentumok bezárása
-    collapse_members: 'Fájlok elrejtése: {name}'
     condition_budget_exhausted: A költségkeret elfogyott
     condition_credits_exhausted: Elfogytak a kreditek
     condition_invalid_request: A szolgáltató elutasította a kérést
@@ -60,11 +59,13 @@ desktop:
     delete_confirm_bare: 'Törlöd ezt: „{title}”? Ez nem vonható vissza.'
     delete_incomplete: A törlés még nem fejeződött be. A Cadrumo az ügynökszolgáltatás
       újraindításakor folytatja a törlést.
+    document_remove_failed: A fájl törlését nem sikerült megerősíteni. Újabb próbálkozás
+      előtt frissítsd a listát.
+    document_selected: Kiválasztva a következő üzenethez
+    document_selection_limit: Egy üzenet legfeljebb {count} fájlra hivatkozhat.
     documents: Dokumentumok
     documents_attached: 'Ebben a beszélgetésben: {count}'
     documents_empty: Ebben a beszélgetésben még nincs dokumentum
-    documents_failed: 'Hibás: {count}'
-    documents_review: 'Ellenőrzésre vár: {count}'
     drop_accepts: 'Elfogadott típusok: {types}'
     drop_hint: 'Elengedéskor tartsd lenyomva: {key}'
     drop_release: Engedd el a fájlok hozzáadásához
@@ -79,7 +80,6 @@ desktop:
     effort_medium: Közepes
     effort_ultra: Ultra
     effort_xhigh: Nagyon magas
-    expand_members: 'Fájlok megjelenítése: {name}'
     files_summary: 'Fájlok: {count} · {size}'
     hide: Ügynök elrejtése
     history: Előzmények
@@ -179,9 +179,14 @@ desktop:
     reference_refused: Az egyik megnevezett dokumentumot nem lehet megosztani az ügynökkel.
     references_unavailable: Ennek a beszélgetésnek a tárolt dokumentumai most nem
       érhetők el.
+    refresh_documents: Frissítés
     refused: Nem elfogadva
     remove_all: Az összes eltávolítása
     remove_document: 'Eltávolítás: {name}'
+    remove_document_confirm: Törlöd a(z) „{name}” fájlt ebből a beszélgetésből? A
+      rá hivatkozó üzenetek többé nem tudják elolvasni.
+    remove_documents_confirm: Törlöd a beszélgetés mind a(z) {count} tárolt dokumentumát?
+      Ez nem vonható vissza.
     remove_file: 'Eltávolítás: {name}'
     rename: Átnevezés
     rename_label: Beszélgetés neve
@@ -196,10 +201,6 @@ desktop:
     resize: Ügynök átméretezése
     restore: Visszaállítás
     retry: Próbáld újra
-    role_context: Kontextus
-    role_information: Információ
-    role_label: Felhasználás
-    role_ledger: Főkönyvi adatok
     row_documents: 'Dokumentumok: {count}'
     search_history: Keresés a beszélgetésekben
     send: Küldés
@@ -256,12 +257,7 @@ desktop:
     slash_label: Készségek és parancsok
     slash_loading: Az ügynök készségeinek beolvasása…
     slash_skills: Készségek
-    status_extracting: Olvasás
-    status_failed: Hibás
-    status_needs_review: Ellenőrzésre vár
     status_ready: Kész
-    status_skipped: Kihagyva
-    status_uploading: Feltöltés
     stop: Leállítás
     stopped: Leállítva
     thinking: Gondolatmenet
@@ -293,6 +289,7 @@ desktop:
     uploading: Feltöltés
     uploading_name: 'Feltöltés: {name}'
     usage: 'Felhasznált tokenek: {input} elküldve, {output} fogadva'
+    use_document: '{name} használata a következő üzenetben'
     waiting_on_you: Rád vár
     welcome_lead: Adózási kérdésed van? Kérdezz egy Modelóról vagy egy határidőről,
       vagy adj hozzá nyugtákat, számlákat és banki kivonatokat a + gombbal.

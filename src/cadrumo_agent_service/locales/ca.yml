@@ -32,7 +32,6 @@ desktop:
     choose_model: Tria un model
     choose_provider: Tria un proveïdor
     close_documents: Tanca els documents
-    collapse_members: Amaga els fitxers de {name}
     condition_budget_exhausted: Pressupost esgotat
     condition_credits_exhausted: Sense crèdits
     condition_invalid_request: El proveïdor ha rebutjat la petició
@@ -60,11 +59,13 @@ desktop:
     delete_confirm_bare: Vols suprimir «{title}»? No es pot desfer.
     delete_incomplete: L’eliminació encara no ha acabat. Cadrumo continuarà la neteja
       quan es reiniciï el servei de l’agent.
+    document_remove_failed: No s’ha pogut confirmar l’eliminació del fitxer. Actualitza
+      la llista abans de tornar-ho a provar.
+    document_selected: Seleccionat per al missatge següent
+    document_selection_limit: Un missatge pot mencionar com a màxim {count} fitxers.
     documents: Documents
     documents_attached: 'En aquesta conversa: {count}'
     documents_empty: Encara no hi ha documents en aquesta conversa
-    documents_failed: 'Amb error: {count}'
-    documents_review: 'Per revisar: {count}'
     drop_accepts: 'S''accepten: {types}'
     drop_hint: Mantén premuda la tecla {key} per deixar anar
     drop_release: Deixa anar per afegir els fitxers
@@ -79,7 +80,6 @@ desktop:
     effort_medium: Mitjà
     effort_ultra: Ultra
     effort_xhigh: Molt alt
-    expand_members: Mostra els fitxers de {name}
     files_summary: 'Fitxers: {count} · {size}'
     hide: Amaga l'agent
     history: Historial
@@ -181,9 +181,14 @@ desktop:
     reference_refused: Un document que has esmentat no es pot compartir amb l'agent.
     references_unavailable: Els documents desats d'aquesta conversa no estan disponibles
       ara.
+    refresh_documents: Actualitza
     refused: No acceptat
     remove_all: Treu-ho tot
     remove_document: Treu {name}
+    remove_document_confirm: Vols eliminar «{name}» d’aquesta conversa? Els missatges
+      que el mencionen ja no el podran llegir.
+    remove_documents_confirm: Vols eliminar els {count} documents desats d’aquesta
+      conversa? Aquesta acció no es pot desfer.
     remove_file: Treu {name}
     rename: Canvia el nom
     rename_label: Nom de la conversa
@@ -198,10 +203,6 @@ desktop:
     resize: Canvia la mida de l'agent
     restore: Restaura
     retry: Torna-ho a provar
-    role_context: Context
-    role_information: Informació
-    role_label: Fes-lo servir com a
-    role_ledger: Dades del llibre
     row_documents: 'Documents: {count}'
     search_history: Cerca converses
     send: Envia
@@ -259,12 +260,7 @@ desktop:
     slash_label: Habilitats i ordres
     slash_loading: S'estan llegint les habilitats de l'agent…
     slash_skills: Habilitats
-    status_extracting: S'està llegint
-    status_failed: Amb error
-    status_needs_review: Per revisar
     status_ready: A punt
-    status_skipped: Omès
-    status_uploading: S'està pujant
     stop: Atura
     stopped: Aturat
     thinking: Raonament
@@ -296,6 +292,7 @@ desktop:
     uploading: S'està pujant
     uploading_name: S'està pujant {name}
     usage: 'Tokens utilitzats: {input} enviats, {output} rebuts'
+    use_document: Utilitza {name} al missatge següent
     waiting_on_you: Esperant la teva resposta
     welcome_lead: Alguna cosa d'impostos? Pregunta per un model o un termini, o afegeix
       rebuts, factures i extractes bancaris amb +.

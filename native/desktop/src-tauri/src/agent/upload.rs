@@ -28,7 +28,7 @@ const REPORT_EVERY: u64 = 512 * 1024;
 const PICK_LIMIT: usize = 200;
 
 /// What a conversation's storage takes: `GET /v1/attachments/policy`.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct Policy {
     pub max_file_bytes: u64,
     /// The extensions it takes, lowercase and without their dot.
@@ -329,6 +329,10 @@ mod tests {
 
     #[test]
     fn the_policy_reads_its_bound_and_extensions_once_each() {
+        assert_eq!(
+            serde_json::to_value(policy()).unwrap(),
+            json!({ "max_file_bytes": 10, "extensions": ["pdf", "txt"] })
+        );
         assert_eq!(
             policy(),
             Policy {

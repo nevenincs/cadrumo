@@ -293,6 +293,11 @@ export type AgentUploadPick = {
   code: string | null;
 };
 
+export type AgentAttachmentPolicy = {
+  max_file_bytes: number;
+  extensions: string[];
+};
+
 /** Where one upload is: how far it has been sent, stored, or refused. */
 export type AgentUploadEvent =
   | { kind: "progress"; id: string; sent: number }
@@ -585,6 +590,11 @@ export interface AgentSession {
   observeDrops?(
     listener: (signal: AgentDropSignal) => void,
   ): Promise<() => void>;
+  /** Deletes one stored file, or all of this conversation's stored files.
+   * Removing a staged reference alone does not call this. */
+  removeDocuments?(conversationId: string, name?: string): Promise<void>;
+  /** The storage's admitted formats and per-file bound. */
+  attachmentPolicy?(): Promise<AgentAttachmentPolicy>;
   /** Stops a reply that is still working. The run is `cancelling` until it
    * is `cancelled`. */
   cancel(replyId: string): Promise<void>;

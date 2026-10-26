@@ -32,7 +32,6 @@ desktop:
     choose_model: Elige un modelo
     choose_provider: Elige un proveedor
     close_documents: Cerrar los documentos
-    collapse_members: Ocultar los archivos de {name}
     condition_budget_exhausted: Presupuesto agotado
     condition_credits_exhausted: Sin créditos
     condition_invalid_request: El proveedor rechazó la petición
@@ -60,11 +59,13 @@ desktop:
     delete_confirm_bare: ¿Eliminar «{title}»? No se puede deshacer.
     delete_incomplete: La eliminación aún no ha terminado. Cadrumo continuará la limpieza
       cuando se reinicie el servicio del agente.
+    document_remove_failed: No se pudo confirmar la eliminación del archivo. Actualiza
+      la lista antes de intentarlo de nuevo.
+    document_selected: Seleccionado para el próximo mensaje
+    document_selection_limit: Un mensaje puede mencionar como máximo {count} archivos.
     documents: Documentos
     documents_attached: 'En esta conversación: {count}'
     documents_empty: Todavía no hay documentos en esta conversación
-    documents_failed: 'Con error: {count}'
-    documents_review: 'Por revisar: {count}'
     drop_accepts: 'Se aceptan: {types}'
     drop_hint: Mantén pulsada la tecla {key} para soltar
     drop_release: Suelta para añadir los archivos
@@ -79,7 +80,6 @@ desktop:
     effort_medium: Medio
     effort_ultra: Ultra
     effort_xhigh: Muy alto
-    expand_members: Mostrar los archivos de {name}
     files_summary: 'Archivos: {count} · {size}'
     hide: Ocultar el agente
     history: Historial
@@ -179,9 +179,14 @@ desktop:
       agente.
     references_unavailable: Los documentos guardados de esta conversación no están
       disponibles ahora.
+    refresh_documents: Actualizar
     refused: No aceptado
     remove_all: Quitar todo
     remove_document: Quitar {name}
+    remove_document_confirm: ¿Eliminar «{name}» de esta conversación? Los mensajes
+      que lo mencionan ya no podrán leerlo.
+    remove_documents_confirm: ¿Eliminar los {count} documentos guardados de esta conversación?
+      Esta acción no se puede deshacer.
     remove_file: Quitar {name}
     rename: Cambiar nombre
     rename_label: Nombre de la conversación
@@ -196,10 +201,6 @@ desktop:
     resize: Cambiar el tamaño del agente
     restore: Restaurar
     retry: Vuelve a intentarlo
-    role_context: Contexto
-    role_information: Información
-    role_label: Usar como
-    role_ledger: Datos del libro
     row_documents: 'Documentos: {count}'
     search_history: Buscar conversaciones
     send: Enviar
@@ -257,12 +258,7 @@ desktop:
     slash_label: Habilidades y comandos
     slash_loading: Leyendo las habilidades del agente…
     slash_skills: Habilidades
-    status_extracting: Leyendo
-    status_failed: Con error
-    status_needs_review: Por revisar
     status_ready: Listo
-    status_skipped: Omitido
-    status_uploading: Subiendo
     stop: Detener
     stopped: Detenido
     thinking: Razonamiento
@@ -294,6 +290,7 @@ desktop:
     uploading: Subiendo
     uploading_name: Subiendo {name}
     usage: 'Tokens usados: {input} enviados, {output} recibidos'
+    use_document: Usar {name} en el próximo mensaje
     waiting_on_you: Esperando tu respuesta
     welcome_lead: ¿Algo sobre impuestos? Pregunta por un modelo o un plazo, o añade
       recibos, facturas y extractos bancarios con +.

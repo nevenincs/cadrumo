@@ -21,10 +21,19 @@ import {
   selectionRecord,
 } from "../shell/agentCatalog";
 import { useRememberedChoice } from "../shell/agentChoice";
-import { DocumentLister, documentRefs } from "../shell/agentDocuments";
+import {
+  DocumentLister,
+  documentRefs,
+  extensionOf,
+  fileKindOf,
+  MAX_REFERENCES,
+} from "../shell/agentDocuments";
+import { useDocumentInventory } from "../shell/agentDocumentInventory";
 import { useStagedDocuments } from "../shell/agentStaging";
 import { useAgentDrops } from "../shell/agentDrops";
 import { DropOverlay } from "./agent/DropOverlay";
+import { DocumentsPanel } from "./agent/DocumentsPanel";
+import { StagedAttachmentsDialog } from "./agent/StagedAttachmentsDialog";
 import {
   newestReply,
   useAgentStatus,
@@ -95,7 +104,7 @@ const NO_SELECTION: AgentSelection = {
   modelId: "",
 };
 
-type Panel = "none" | "history" | "settings";
+type Panel = "none" | "history" | "settings" | "documents";
 
 export type AgentColumnControl = {
   openLocalAi(): void;
@@ -301,6 +310,7 @@ export function AgentColumn({
   // them is shown, for its title. Opening the history asks again, so it is
   // never the list from the last time.
   const historyOpen = panel === "history";
+  const documentsOpen = panel === "documents";
   const wanted = historyOpen || conversationId !== null;
   const readConversations = useMemo(
     () =>
@@ -386,13 +396,6 @@ export function AgentColumn({
         : { ranWith: null, usage: null },
     [live.read, locale, t],
   );
-  const groups = useConversationGroups(conversations, {
-    locale,
-    archived,
-    currentId: conversationId,
-    untitled: t("desktop.agent.unavailable"),
-  });
-
   // cadrumo-agent's skills, which `/` lists, and the skill command shown.
   const skills = useSkillInventory(session);
   const reviewSkill = useMemo(() => session?.skill?.bind(session), [session]);
@@ -674,12 +677,45 @@ export function AgentColumn({
 
   // The stored documents the next message names: chosen with `@`, or
   // attached and stored first. A send that does not go keeps them.
+  const [documentsVersion, setDocumentsVersion] = useState(0);
+  const [attachmentsShown, setAttachmentsShown] = useState<{
+    reader: string | null;
+    conversation: string | null;
+  } | null>(null);
   const staging = useStagedDocuments({
     reader,
     conversationId,
     session,
     filterLabel: t("desktop.agent.attach_filter"),
     t,
+    onStored: () => setDocumentsVersion((held) => held + 1),
+  });
+  const documents = useDocumentInventory({
+    agent,
+    session,
+    reader,
+    conversationId,
+    enabled: serviceReadable,
+    version: documentsVersion,
+  });
+  const readAttachmentPolicy = useMemo(
+    () =>
+      serviceReadable && session?.attachmentPolicy
+        ? session.attachmentPolicy.bind(session)
+        : null,
+    [serviceReadable, session],
+  );
+  const attachmentPolicy = useAgentRead(readAttachmentPolicy);
+  const removeDocument = async (name: string | null) => {
+    if (await documents.remove?.(name))
+      staging.remove(name === null ? null : `stored:${name}`);
+  };
+  const groups = useConversationGroups(conversations, {
+    locale,
+    archived,
+    currentId: conversationId,
+    untitled: t("desktop.agent.unavailable"),
+    documentCounts: documents.counts,
   });
   useEffect(() => {
     if (!pending?.conversationId || live.read.kind !== "ready") return;
@@ -730,6 +766,7 @@ export function AgentColumn({
             if (id === null) {
               id = (await session.startConversation()).id;
               started(id);
+              if (documentsOpen) change({ panel: "documents" });
             }
           } catch (error) {
             change({ sendFailure: failureCode(error) });
@@ -972,9 +1009,18 @@ export function AgentColumn({
         }
         onMenu={onMenu}
         historyOpen={historyOpen}
-        // Each door opens only where a host serves the agent; elsewhere it
-        // says it is not available yet. The documents door is never open:
-        // Cadrumo's custody serves the agent none yet.
+        documentsOpen={documentsOpen}
+        documentCount={
+          documents.read.kind === "ready" ? documents.read.value.length : 0
+        }
+        onToggleDocuments={
+          serviceReadable && agent?.documents
+            ? () => {
+                documents.refresh();
+                toggle("documents");
+              }
+            : undefined
+        }
         onNewConversation={
           agent
             ? () =>
@@ -1125,6 +1171,56 @@ export function AgentColumn({
                 ))}
             </div>
           )
+        ) : documentsOpen ? (
+          <div className="flex min-h-0 flex-1 flex-col">
+            {documents.failed && (
+              <p role="alert" className="px-3 py-2 text-sm text-destructive">
+                {t("desktop.agent.document_remove_failed")}
+              </p>
+            )}
+            {documents.read.kind === "ready" ? (
+              <DocumentsPanel
+                key={`${reader}:${conversationId}`}
+                documents={documents.read.value.map((document) => ({
+                  id: document.name,
+                  name: document.name,
+                  extension: extensionOf(document.name),
+                  sizeBytes: document.size_bytes,
+                  kind: fileKindOf(document.name, document.media_type),
+                }))}
+                locale={locale}
+                busy={documents.busy}
+                selectionLimit={MAX_REFERENCES}
+                selectedIds={staging
+                  .namedFor(conversationId)
+                  .map((document) => document.name)}
+                onClose={() => change({ panel: "none" })}
+                onAddFiles={attach ? () => void attach() : undefined}
+                onRefresh={documents.refresh}
+                onUse={(name) => {
+                  const document =
+                    documents.read.kind === "ready"
+                      ? documents.read.value.find(
+                          (document) => document.name === name,
+                        )
+                      : undefined;
+                  if (document) staging.name(document);
+                }}
+                onRemove={
+                  documents.remove
+                    ? (name) => void removeDocument(name)
+                    : undefined
+                }
+              />
+            ) : documents.read.kind === "failed" ? (
+              <SectionFailure
+                words={t("desktop.agent.mention_failed")}
+                onRetry={documents.refresh}
+              />
+            ) : (
+              <ReadState read={documents.read} icon="page" />
+            )}
+          </div>
         ) : historyOpen ? (
           groups ? (
             <div className="flex min-h-0 flex-1 flex-col">
@@ -1318,6 +1414,9 @@ export function AgentColumn({
             onAddFiles={attach ? () => void attach() : undefined}
             onRemoveAttachment={staging.remove}
             onRemoveAllAttachments={() => staging.remove(null)}
+            onShowAllAttachments={() =>
+              setAttachmentsShown({ reader, conversation: conversationId })
+            }
             providers={offer?.providers ?? NO_PROVIDERS}
             models={offer?.models ?? NO_MODELS}
             selection={selection ?? NO_SELECTION}
@@ -1361,10 +1460,35 @@ export function AgentColumn({
           onClose={() => setSkillShown(null)}
         />
       )}
+      {shown &&
+        attachmentsShown !== null &&
+        attachmentsShown.reader === reader &&
+        attachmentsShown.conversation === conversationId && (
+          <StagedAttachmentsDialog
+            attachments={staging.staged}
+            locale={locale}
+            onRemove={staging.remove}
+            onRemoveAll={() => staging.remove(null)}
+            onAddFiles={attach ? () => void attach() : undefined}
+            onClose={() => setAttachmentsShown(null)}
+            onAfterClose={() =>
+              dropping.target.current
+                ?.querySelector<HTMLElement>("textarea")
+                ?.focus()
+            }
+          />
+        )}
       <DropOverlay
         visible={dropping.drag !== null}
         armed={dropping.drag?.armed}
         fileCount={dropping.drag?.count}
+        acceptedTypes={
+          attachmentPolicy.kind === "ready"
+            ? attachmentPolicy.value.extensions.map((extension) =>
+                extension.toUpperCase(),
+              )
+            : undefined
+        }
         locale={locale}
       />
     </div>

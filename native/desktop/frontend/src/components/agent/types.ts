@@ -99,7 +99,8 @@ export type ConversationSummary = {
   title: string;
   /** When it was last active, already worded, e.g. "3 days ago". */
   lastActivityLabel: string;
-  documentCount: number;
+  /** Absent until this conversation's files have been read. */
+  documentCount?: number;
   archived: boolean;
   /** The conversation the column is showing now. */
   current?: boolean;
@@ -111,13 +112,6 @@ export type ConversationGroup = {
   conversations: readonly ConversationSummary[];
 };
 
-/** How a document is used in the conversation. */
-export type DocumentRole = "context" | "information" | "ledger";
-
-/** Where a document is on its way to being usable in the conversation. */
-export type DocumentStatus =
-  "uploading" | "ready" | "extracting" | "needsReview" | "failed" | "skipped";
-
 /** A document that is part of the conversation. */
 export type ConversationDocument = {
   id: string;
@@ -125,14 +119,8 @@ export type ConversationDocument = {
   /** The extension without its dot, as the file is named. */
   extension: string;
   sizeBytes: number;
-  role: DocumentRole;
-  status: DocumentStatus;
   /** What the file is, for its icon; without it the generic page is drawn. */
   kind?: FileKind;
-  /** A preview of an image, already safe to show. */
-  thumbnailUrl?: string;
-  /** The files inside an archive. */
-  members?: readonly ConversationDocument[];
 };
 
 /** A file that went with a message the person sent, as the transcript shows

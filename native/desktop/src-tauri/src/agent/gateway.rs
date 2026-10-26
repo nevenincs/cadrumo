@@ -295,6 +295,29 @@ impl Client {
         Self::answer(response)
     }
 
+    /// Removes one stored name, or the conversation's entire attachment store.
+    pub fn remove_attachments(
+        &self,
+        conversation: &str,
+        name: Option<&str>,
+    ) -> Result<(), Refused> {
+        let mut path = format!("{}/conversations/{conversation}/attachments", self.base);
+        if let Some(name) = name {
+            path.push('/');
+            path.push_str(&segment(name));
+        }
+        let response = self
+            .calls
+            .delete(path)
+            .header("Authorization", &self.authorization)
+            .call()
+            .map_err(|_| unreachable())?;
+        if response.status().is_success() && response.status().as_u16() != 204 {
+            return Err(Refused::new("agent_gateway_unreadable".to_owned()));
+        }
+        Self::answer(response).map(|_| ())
+    }
+
     /// `GET /v1/runs/{id}/history`.
     pub fn history(&self, run: &str) -> Result<Value, Refused> {
         self.get(&format!("/runs/{run}/history"))
@@ -359,6 +382,88 @@ impl Client {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn document_removal_uses_the_conversation_route_and_requires_a_completed_response() {
+        use std::{
+            io::{Read, Write},
+            net::TcpListener,
+        };
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = std::thread::spawn(move || {
+            for (route, status, body) in [
+                (
+                    "/v1/conversations/run-1/attachments/factura%20%C3%B1.pdf",
+                    "204 No Content",
+                    "",
+                ),
+                ("/v1/conversations/run-1/attachments", "204 No Content", ""),
+                (
+                    "/v1/conversations/run-1/attachments/missing.pdf",
+                    "404 Not Found",
+                    r#"{"detail":{"code":"attachment_not_found"}}"#,
+                ),
+                (
+                    "/v1/conversations/run-1/attachments/pending.pdf",
+                    "202 Accepted",
+                    "",
+                ),
+            ] {
+                let (mut socket, _) = listener.accept().unwrap();
+                socket
+                    .set_read_timeout(Some(Duration::from_secs(5)))
+                    .unwrap();
+                let mut request = Vec::new();
+                let mut byte = [0u8; 1];
+                while !request.ends_with(b"\r\n\r\n") {
+                    socket.read_exact(&mut byte).unwrap();
+                    request.push(byte[0]);
+                }
+                let request = String::from_utf8(request).unwrap();
+                assert_eq!(
+                    request.lines().next().unwrap(),
+                    format!("DELETE {route} HTTP/1.1")
+                );
+                assert!(
+                    request
+                        .to_ascii_lowercase()
+                        .contains("authorization: bearer test")
+                );
+                write!(
+                    socket,
+                    "HTTP/1.1 {status}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len()
+                )
+                .unwrap();
+            }
+        });
+        let client = Client {
+            base: format!("http://{address}/v1"),
+            authorization: "Bearer test".to_owned(),
+            calls: agent(Some(CALL_DEADLINE)),
+            streams: agent(None),
+        };
+        client
+            .remove_attachments("run-1", Some("factura ñ.pdf"))
+            .unwrap();
+        client.remove_attachments("run-1", None).unwrap();
+        assert_eq!(
+            client
+                .remove_attachments("run-1", Some("missing.pdf"))
+                .unwrap_err()
+                .code,
+            "agent_gateway_attachment_not_found"
+        );
+        assert_eq!(
+            client
+                .remove_attachments("run-1", Some("pending.pdf"))
+                .unwrap_err()
+                .code,
+            "agent_gateway_unreadable"
+        );
+        server.join().unwrap();
+    }
 
     #[test]
     fn ids_follow_the_gateway_grammar() {

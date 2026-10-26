@@ -70,7 +70,9 @@ function Column({
             documents={DOCUMENTS}
             locale={locale}
             onClose={NOOP}
-            onRoleChange={NOOP}
+            onAddFiles={NOOP}
+            onRefresh={NOOP}
+            onUse={NOOP}
             onRemove={NOOP}
           />
         ) : (
@@ -118,7 +120,7 @@ function Column({
           visible={dragging !== "none"}
           armed={dragging === "armed"}
           fileCount={2}
-          acceptedTypes={["PDF", "JPG", "PNG", "XLSX", "CSV", "ZIP"]}
+          acceptedTypes={["PDF", "JPG", "PNG", "XLSX", "CSV"]}
           locale={locale}
         />
       </aside>

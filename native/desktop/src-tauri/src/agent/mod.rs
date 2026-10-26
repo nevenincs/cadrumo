@@ -253,7 +253,9 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_history,
         agent_snapshot,
         agent_documents,
+        agent_documents_remove,
         agent_attach,
+        agent_attachment_policy,
         agent_drop_observe,
         agent_drop_unobserve,
         runtime_attendance_inventory,
@@ -826,6 +828,19 @@ async fn agent_documents(
     .await
 }
 
+#[tauri::command]
+async fn agent_documents_remove(
+    host: State<'_, Arc<AgentHost>>,
+    conversation_id: String,
+    name: Option<String>,
+) -> std::result::Result<(), Refused> {
+    blocking(&host, move |host| {
+        host.session
+            .remove_documents(&host.supervisor, &conversation_id, name.as_deref())
+    })
+    .await
+}
+
 /// Opens the host's file dialog over the window, for files of the kinds the
 /// conversation's storage takes, and streams each one the person picks into
 /// that storage. It answers with what was picked, each queued or refused
@@ -917,6 +932,17 @@ async fn agent_drop_observe<R: Runtime>(
 #[tauri::command]
 fn agent_drop_unobserve(host: State<'_, Arc<AgentHost>>, subscription: u32) {
     host.drops.clear(Some(subscription));
+}
+
+#[tauri::command]
+async fn agent_attachment_policy(
+    host: State<'_, Arc<AgentHost>>,
+) -> std::result::Result<upload::Policy, Refused> {
+    blocking(&host, |host| {
+        let gateway = Session::gateway(&host.supervisor)?;
+        upload::policy_of(&gateway::Client::new(&gateway).attachment_policy()?)
+    })
+    .await
 }
 
 #[cfg(test)]

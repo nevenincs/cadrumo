@@ -102,13 +102,17 @@ export function useStagedDocuments({
   session,
   filterLabel,
   t,
+  onStored,
 }: {
   reader: string | null;
   conversationId: string | null;
   session: AgentSession | undefined;
   filterLabel: string;
   t: Translate;
+  onStored?: () => void;
 }): StagedDocuments {
+  const stored = useRef(onStored);
+  stored.current = onStored;
   const [staging, setStaging] = useState<Staging>({
     reader,
     conversation: conversationId,
@@ -199,6 +203,7 @@ export function useStagedDocuments({
             }
           });
         const onEvent = (event: AgentUploadEvent) => {
+          if (event.kind === "stored") stored.current?.();
           if (announced) apply(event);
           else early.push(event);
         };

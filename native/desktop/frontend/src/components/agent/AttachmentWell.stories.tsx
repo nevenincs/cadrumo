@@ -65,8 +65,7 @@ const ARCHIVES: StagedAttachment[] = [
     extension: "zip",
     sizeBytes: 8_400_000,
     kind: "archive",
-    state: "ready",
-    memberCount: 23,
+    state: "refused",
   },
   {
     id: "z2",
@@ -74,8 +73,7 @@ const ARCHIVES: StagedAttachment[] = [
     extension: "zip",
     sizeBytes: 310_000,
     kind: "archive",
-    state: "ready",
-    memberCount: 1,
+    state: "refused",
   },
   {
     id: "z3",
@@ -83,9 +81,7 @@ const ARCHIVES: StagedAttachment[] = [
     extension: "zip",
     sizeBytes: 2_600_000,
     kind: "archive",
-    state: "uploading",
-    progress: 0.4,
-    memberCount: 12,
+    state: "refused",
   },
 ];
 
@@ -156,7 +152,7 @@ export const Refused: Story = {
 };
 
 export const Zip: Story = {
-  name: "ZIP archives",
+  name: "ZIP archives refused by the storage policy",
   args: { attachments: ARCHIVES },
 };
 

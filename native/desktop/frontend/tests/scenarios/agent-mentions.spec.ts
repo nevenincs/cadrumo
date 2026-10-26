@@ -47,10 +47,13 @@ test("an @ lists every stored document above the composer, and the list scrolls"
   await field(target).click();
   await field(target).pressSequentially("@");
   await expect(options(target)).toHaveCount(244);
-  // Every page was read, one after another.
+  // The header reads every page for its count; each new @ reads them again.
   expect(
     (await calls(target)).filter((call) => call.startsWith("agentDocuments")),
   ).toEqual([
+    "agentDocuments c-iva-t3",
+    "agentDocuments c-iva-t3 after factura-2026-099.pdf",
+    "agentDocuments c-iva-t3 after factura-2026-199.pdf",
     "agentDocuments c-iva-t3",
     "agentDocuments c-iva-t3 after factura-2026-099.pdf",
     "agentDocuments c-iva-t3 after factura-2026-199.pdf",

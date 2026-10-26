@@ -529,6 +529,12 @@ function tauriAgent(call: HostCall): {
           );
         };
       },
+      removeDocuments: (conversationId, name) =>
+        call("agent_documents_remove", {
+          conversationId,
+          ...(name === undefined ? {} : { name }),
+        }).then(() => undefined),
+      attachmentPolicy: () => call("agent_attachment_policy", {}),
       cancel: (replyId) =>
         call("agent_cancel", { replyId }).then(() => undefined),
       pending: (conversationId) => call("agent_pending", { conversationId }),

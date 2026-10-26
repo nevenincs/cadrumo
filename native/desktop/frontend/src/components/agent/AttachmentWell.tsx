@@ -35,6 +35,7 @@ export function AttachmentWell({
   onRemove,
   onRemoveAll,
   onShowAll,
+  expanded = false,
 }: {
   attachments: readonly StagedAttachment[];
   locale: string;
@@ -42,6 +43,8 @@ export function AttachmentWell({
   onRemoveAll?: () => void;
   /** Open the full list of staged files. */
   onShowAll?: () => void;
+  /** Shows every staged file in the full-list dialog. */
+  expanded?: boolean;
 }) {
   const t = useStrings();
   const list = useRef<HTMLUListElement>(null);
@@ -61,7 +64,7 @@ export function AttachmentWell({
   if (empty) return null;
 
   const capacity = columns * ROWS;
-  const folds = attachments.length > capacity;
+  const folds = !expanded && attachments.length > capacity;
   const shown = folds ? attachments.slice(0, capacity - 1) : attachments;
   const hidden = attachments.length - shown.length;
   const total = attachments.reduce((sum, file) => sum + file.sizeBytes, 0);

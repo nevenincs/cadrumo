@@ -1,291 +1,240 @@
-import { useId, useState } from "react";
-import { cn } from "@/components/ui/cn";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
-import { IconButton } from "@/components/ui/icon-button";
-import { NativeSelect } from "@/components/ui/native-select";
-import { useStrings, type Translate } from "../../shell/strings";
-import { AgentIconAction } from "./AgentAction";
+import { useStrings } from "../../shell/strings";
+import { AgentIconAction, AgentTextAction } from "./AgentAction";
 import { extensionLabel, formatSize, KIND_GLYPH } from "./files";
-import type {
-  ConversationDocument,
-  DocumentRole,
-  DocumentStatus,
-} from "./types";
+import type { ConversationDocument } from "./types";
 
-const ROLES: readonly DocumentRole[] = ["context", "information", "ledger"];
-
-function roleWords(t: Translate): Record<DocumentRole, string> {
-  return {
-    context: t("desktop.agent.role_context"),
-    information: t("desktop.agent.role_information"),
-    ledger: t("desktop.agent.role_ledger"),
-  };
-}
-
-function statusWords(t: Translate): Record<DocumentStatus, string> {
-  return {
-    uploading: t("desktop.agent.status_uploading"),
-    ready: t("desktop.agent.status_ready"),
-    extracting: t("desktop.agent.status_extracting"),
-    needsReview: t("desktop.agent.status_needs_review"),
-    failed: t("desktop.agent.status_failed"),
-    skipped: t("desktop.agent.status_skipped"),
-  };
-}
-
-// Filled while a document is usable or on its way, hollow once it is not.
-const STATUS_DOT: Record<DocumentStatus, string> = {
-  uploading: "bg-faint",
-  ready: "bg-success",
-  extracting: "bg-faint",
-  needsReview: "bg-warning",
-  failed: "ring-1 ring-destructive ring-inset",
-  skipped: "ring-1 ring-faint ring-inset",
-};
-
-function StatusLabel({ status }: { status: DocumentStatus }) {
-  const t = useStrings();
-  return (
-    <span
-      className={cn(
-        "flex items-center gap-1.5",
-        status === "failed" && "text-destructive",
-        status === "needsReview" && "text-warning",
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className={cn("size-1.5 shrink-0 rounded-full", STATUS_DOT[status])}
-      />
-      {statusWords(t)[status]}
-    </span>
-  );
-}
-
-/** A document's preview or type, at the size of a control. */
-function DocumentMark({ document }: { document: ConversationDocument }) {
-  if (document.kind === "image" && document.thumbnailUrl)
-    return (
-      <img
-        src={document.thumbnailUrl}
-        alt=""
-        className="size-control-md shrink-0 rounded-md object-cover"
-      />
-    );
-  return (
-    <span
-      aria-hidden="true"
-      className="flex size-control-md shrink-0 items-center justify-center rounded-md bg-accent text-muted-foreground"
-    >
-      <Icon name={document.kind ? KIND_GLYPH[document.kind] : "page"} />
-    </span>
-  );
-}
-
-function MemberRow({
-  member,
-  locale,
-}: {
-  member: ConversationDocument;
-  locale: string;
-}) {
-  return (
-    <li className="flex min-w-0 items-center gap-2 py-1 pr-2 pl-20 text-xs text-muted-foreground">
-      <span
-        className="min-w-0 flex-1 truncate text-foreground"
-        title={member.name}
-      >
-        {member.name}
-      </span>
-      <StatusLabel status={member.status} />
-      <span className="shrink-0 tabular-nums">
-        {formatSize(locale, member.sizeBytes)}
-      </span>
-    </li>
-  );
-}
-
-function DocumentRow({
-  document,
-  locale,
-  onRoleChange,
-  onRemove,
-}: {
-  document: ConversationDocument;
-  locale: string;
-  onRoleChange?: (role: DocumentRole) => void;
-  onRemove?: () => void;
-}) {
-  const t = useStrings();
-  const [open, setOpen] = useState(false);
-  const roleId = useId();
-  const reasonId = useId();
-  const membersId = useId();
-  const roles = roleWords(t);
-  const members = document.members ?? [];
-  return (
-    <li className="grid gap-1 border-b py-2 last:border-b-0">
-      <div className="flex min-w-0 items-center gap-2 px-2">
-        {members.length > 0 ? (
-          <IconButton
-            label={
-              open
-                ? t("desktop.agent.collapse_members", { name: document.name })
-                : t("desktop.agent.expand_members", { name: document.name })
-            }
-            aria-expanded={open}
-            aria-controls={membersId}
-            onClick={() => setOpen((was) => !was)}
-          >
-            <Icon name={open ? "chevronDown" : "forward"} />
-          </IconButton>
-        ) : (
-          <span aria-hidden="true" className="size-control-xs shrink-0" />
-        )}
-        <DocumentMark document={document} />
-        <div className="grid min-w-0 flex-1">
-          <span className="truncate text-foreground" title={document.name}>
-            {document.name}
-          </span>
-          <span className="flex min-w-0 flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-            <span>{extensionLabel(document.extension)}</span>
-            <span className="tabular-nums">
-              {formatSize(locale, document.sizeBytes)}
-            </span>
-            <StatusLabel status={document.status} />
-          </span>
-        </div>
-        <AgentIconAction
-          icon="close"
-          label={t("desktop.agent.remove_document", { name: document.name })}
-          onAction={onRemove}
-        />
-      </div>
-      {/* At the column's default width the reason wraps under the select
-          rather than squeezing the role names. */}
-      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pr-2 pl-20">
-        <label
-          htmlFor={roleId}
-          className="shrink-0 text-xs text-muted-foreground"
-        >
-          {t("desktop.agent.role_label")}
-        </label>
-        <div className="shrink-0">
-          <NativeSelect
-            id={roleId}
-            controlSize="sm"
-            value={document.role}
-            disabled={!onRoleChange}
-            aria-describedby={onRoleChange ? undefined : reasonId}
-            onChange={(event) => {
-              const role = ROLES.find((value) => value === event.target.value);
-              if (role) onRoleChange?.(role);
-            }}
-          >
-            {ROLES.map((role) => (
-              <option key={role} value={role}>
-                {roles[role]}
-              </option>
-            ))}
-          </NativeSelect>
-        </div>
-        {!onRoleChange && (
-          <span id={reasonId} className="text-xs text-faint">
-            {t("desktop.agent.unavailable")}
-          </span>
-        )}
-      </div>
-      {members.length > 0 && (
-        <ul id={membersId} hidden={!open}>
-          {members.map((member) => (
-            <MemberRow key={member.id} member={member} locale={locale} />
-          ))}
-        </ul>
-      )}
-    </li>
-  );
-}
-
-/**
- * The documents that are part of the conversation: what each is, how it is
- * used, and where it is on its way to being usable. An archive's row opens
- * to the files inside it; files it did not take say they were skipped.
- */
+/** The conversation's stored files. Using one selects a reference for the
+ * next message; deleting it removes the stored file after confirmation. */
 export function DocumentsPanel({
   documents,
   locale,
+  busy = false,
+  selectedIds = [],
+  selectionLimit,
   onClose,
-  onRoleChange,
+  onAddFiles,
+  onRefresh,
+  onUse,
   onRemove,
 }: {
   documents: readonly ConversationDocument[];
   locale: string;
+  busy?: boolean;
+  selectedIds?: readonly string[];
+  selectionLimit?: number;
   onClose?: () => void;
-  onRoleChange?: (id: string, role: DocumentRole) => void;
-  onRemove?: (id: string) => void;
+  onAddFiles?: () => void;
+  onRefresh?: () => void;
+  onUse?: (id: string) => void;
+  /** Null removes every stored file. */
+  onRemove?: (id: string | null) => void;
 }) {
   const t = useStrings();
-  const titleId = useId();
+  const section = useRef<HTMLElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  const removing = useRef<{ id: string | null } | null>(null);
+  const [confirming, setConfirming] = useState<{
+    id: string | null;
+    name: string;
+  } | null>(null);
+  const askToRemove = (id: string | null, name: string) => {
+    opener.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    setConfirming({ id, name });
+  };
+  useEffect(() => {
+    const pending = removing.current;
+    if (
+      !pending ||
+      (pending.id === null
+        ? documents.length > 0
+        : documents.some((document) => document.id === pending.id))
+    )
+      return;
+    removing.current = null;
+    if (document.activeElement === document.body) section.current?.focus();
+  }, [documents]);
   const total = documents.reduce((sum, file) => sum + file.sizeBytes, 0);
-  const review = documents.filter(
-    (file) => file.status === "needsReview",
-  ).length;
-  const failed = documents.filter((file) => file.status === "failed").length;
   return (
     <section
-      aria-labelledby={titleId}
+      ref={section}
+      tabIndex={-1}
+      aria-label={t("desktop.agent.documents")}
       className="flex min-h-0 flex-1 flex-col bg-background"
     >
-      <div className="flex h-control-lg shrink-0 items-center gap-2 bg-chrome pr-1.5 pl-3">
-        <h2 id={titleId} className="min-w-0 flex-1 truncate font-semibold">
+      <div className="flex min-h-control-lg shrink-0 flex-wrap items-center gap-2 bg-chrome pr-1.5 pl-3">
+        <h2 className="min-w-0 flex-1 truncate font-semibold">
           {t("desktop.agent.documents")}
         </h2>
+        <AgentIconAction
+          icon="plus"
+          label={t("desktop.agent.add_files")}
+          onAction={busy ? undefined : onAddFiles}
+        />
         <AgentIconAction
           icon="close"
           label={t("desktop.agent.close_documents")}
           onAction={onClose}
         />
       </div>
+      <div className="flex shrink-0 flex-wrap items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
+        <span>
+          {t("desktop.agent.files_summary", {
+            count: documents.length,
+            size: formatSize(locale, total),
+          })}
+        </span>
+        <span className="flex-1" />
+        {onRefresh && (
+          <AgentTextAction
+            variant="ghost"
+            size="xs"
+            onAction={busy ? undefined : onRefresh}
+          >
+            {t("desktop.agent.refresh_documents")}
+          </AgentTextAction>
+        )}
+        {documents.length > 0 && onRemove && (
+          <AgentTextAction
+            variant="ghost"
+            size="xs"
+            onAction={busy ? undefined : () => askToRemove(null, "")}
+          >
+            {t("desktop.agent.remove_all")}
+          </AgentTextAction>
+        )}
+      </div>
       {documents.length === 0 ? (
         <EmptyState heading={t("desktop.agent.documents_empty")} />
       ) : (
-        <>
-          <p className="flex shrink-0 flex-wrap gap-x-2 px-3 py-2 text-xs text-muted-foreground">
-            <span>
-              {t("desktop.agent.files_summary", {
-                count: documents.length,
-                size: formatSize(locale, total),
-              })}
-            </span>
-            {review > 0 && (
-              <span className="text-warning">
-                {t("desktop.agent.documents_review", { count: review })}
-              </span>
-            )}
-            {failed > 0 && (
-              <span className="text-destructive">
-                {t("desktop.agent.documents_failed", { count: failed })}
-              </span>
-            )}
-          </p>
-          <ul className="min-h-0 flex-1 overflow-y-auto">
-            {documents.map((document) => (
-              <DocumentRow
+        <ul className="min-h-0 flex-1 overflow-y-auto">
+          {documents.map((document) => {
+            const selected = selectedIds.includes(document.id);
+            return (
+              <li
                 key={document.id}
-                document={document}
-                locale={locale}
-                onRoleChange={
-                  onRoleChange
-                    ? (role) => onRoleChange(document.id, role)
-                    : undefined
-                }
-                onRemove={onRemove ? () => onRemove(document.id) : undefined}
-              />
-            ))}
-          </ul>
-        </>
+                className="flex min-w-0 items-center gap-2 border-b px-2 py-2 last:border-b-0"
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex size-control-md shrink-0 items-center justify-center rounded-md bg-accent text-muted-foreground"
+                >
+                  <Icon
+                    name={document.kind ? KIND_GLYPH[document.kind] : "page"}
+                  />
+                </span>
+                <div className="grid min-w-0 flex-1">
+                  <span
+                    className="truncate text-foreground"
+                    title={document.name}
+                  >
+                    {document.name}
+                  </span>
+                  <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                    <span>{extensionLabel(document.extension)}</span>
+                    <span className="tabular-nums">
+                      {formatSize(locale, document.sizeBytes)}
+                    </span>
+                    <span>
+                      {selected
+                        ? t("desktop.agent.document_selected")
+                        : t("desktop.agent.status_ready")}
+                    </span>
+                  </span>
+                </div>
+                {onUse && (
+                  <AgentIconAction
+                    icon={selected ? "check" : "plus"}
+                    label={t("desktop.agent.use_document", {
+                      name: document.name,
+                    })}
+                    onAction={!busy ? () => onUse(document.id) : undefined}
+                    heldBy={
+                      selected
+                        ? t("desktop.agent.document_selected")
+                        : selectionLimit !== undefined &&
+                            selectedIds.length >= selectionLimit
+                          ? t("desktop.agent.document_selection_limit", {
+                              count: selectionLimit,
+                            })
+                          : undefined
+                    }
+                  />
+                )}
+                <AgentIconAction
+                  icon="close"
+                  label={t("desktop.agent.remove_document", {
+                    name: document.name,
+                  })}
+                  onAction={
+                    !busy && onRemove
+                      ? () => askToRemove(document.id, document.name)
+                      : undefined
+                  }
+                />
+              </li>
+            );
+          })}
+        </ul>
       )}
+      <Dialog
+        open={confirming !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirming(null);
+        }}
+      >
+        <DialogContent
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            if (opener.current?.isConnected) opener.current.focus();
+            else section.current?.focus();
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>{t("desktop.agent.delete")}</DialogTitle>
+            <DialogDescription>
+              {confirming?.id === null
+                ? t("desktop.agent.remove_documents_confirm", {
+                    count: documents.length,
+                  })
+                : t("desktop.agent.remove_document_confirm", {
+                    name: confirming?.name ?? "",
+                  })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setConfirming(null)}>
+              {t("desktop.agent.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={busy || !onRemove}
+              onClick={() => {
+                if (confirming) {
+                  removing.current = { id: confirming.id };
+                  onRemove?.(confirming.id);
+                }
+                setConfirming(null);
+              }}
+            >
+              {t("desktop.agent.delete")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
