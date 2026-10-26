@@ -163,7 +163,7 @@ just verify-reviewed-operation build/windows-x64/stage/Release/app
 Prerequisites: the package's own `bin/aeat`, `bin/cadrumo-runtime` and
 `bin/cadrumo-mcp`, built with the optional `llm` extra (a core-only package
 refuses local-model work with `ERROR_OPTIONAL_EXTRA_MISSING`); an installed
-Ollama and an existing model store holding `qwen3:1.7b` (`--ollama-models`,
+Ollama and an existing model store holding a model the operator set up (`--ollama-models`,
 default `~/.ollama/models`); and a free loopback port 11434. No remote service is used and nothing is downloaded. The
 attendance approval only admits the MCP connection; the review is answered on
 its own interaction.

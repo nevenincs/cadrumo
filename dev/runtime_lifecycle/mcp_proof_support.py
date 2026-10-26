@@ -32,7 +32,6 @@ from .proof_support import ProcessIdentity, verified_relay
 
 _CALL_SECONDS = 150
 _OLLAMA_URL = "http://127.0.0.1:11434"
-_LOCAL_TEXT_MODEL = "qwen3:1.7b"
 _JSONRPC_MESSAGE_ADAPTER = TypeAdapter(JSONRPCMessage)
 
 
@@ -217,11 +216,12 @@ def model_store(chosen: Path | None) -> Path:
 
 @contextlib.contextmanager
 def local_model(scratch: Path, models: Path) -> Generator[bool]:
-    """Serve the local text model on the loopback port for the block; say whether it is available.
+    """Serve the given model store on the loopback port for the block; say whether it holds any model.
 
-    A server this harness did not start is never used or stopped. Ollama's
-    pruning of blobs it does not recognise is switched off, so an existing
-    model store is only read.
+    Cadrumo names no model: the store is the one the operator set up, and the
+    lane reads with whatever model it holds. A server this harness did not
+    start is never used or stopped. Ollama's pruning of blobs it does not
+    recognise is switched off, so an existing model store is only read.
     """
     try:
         httpx.get(f"{_OLLAMA_URL}/api/tags", timeout=1)
@@ -251,7 +251,7 @@ def local_model(scratch: Path, models: Path) -> Generator[bool]:
             if not isinstance(tags, dict):
                 raise AcceptanceError("the owned local model server did not reach readiness")
             names = {item.get("name") for item in tags.get("models", []) if isinstance(item, dict)}
-            yield _LOCAL_TEXT_MODEL in names
+            yield bool(names - {None})
         finally:
             # The server starts a model runner per loaded model; stopping only the server leaves it running.
             with suppress(psutil.Error):

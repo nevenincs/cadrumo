@@ -21,9 +21,9 @@ per step:
 
 The attendance approval admits the MCP connection; it is not the review's
 answer, which is given by ``respond`` on the review's own interaction. Run it
-with ``just verify-reviewed-operation PACKAGE``. It needs the local
-``qwen3:1.7b`` model in an Ollama store (``--ollama-models``, by default
-Cadrumo's own) and reports the review unproven without it, or when the package
+with ``just verify-reviewed-operation PACKAGE``. It needs a local model the
+operator set up in an Ollama store (``--ollama-models``, by default Cadrumo's
+own) and reports the review unproven without one, or when the package
 was built without the optional ``llm`` extra and so refuses local-model work;
 nothing is downloaded.
 """
@@ -289,7 +289,7 @@ async def run(programs: Programs, package: Path | None, scratch: Path, *, models
         receipt.record("profile_ready")
         with local_model(scratch, models) as available:
             if not available:
-                receipt.unproven.append("reviewed operation: no local qwen3:1.7b model in the given store")
+                receipt.unproven.append("reviewed operation: no local model in the given store")
             else:
                 if profile.profile_id is None:
                     raise AcceptanceError("created profile has no verified identity")

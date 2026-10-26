@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:aee3109788a4b1d5fdae5770b6312613f49203fb5ed0311915659f1eb0aee588'
+body_hash: 'sha256:b330321bf8564cd9ef57a4a0ff2d74246438fb0c399e9a8dd5d45642c5d21c7a'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -690,6 +690,20 @@ related:
 - `S17` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
 - `S17` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
 - `S17` `by:` `high-implementer`
+- `S18` `M` `justfile`
+- `S18` `M` `dev/env/local_ai_pins.py`
+- `S18` `M` `src/cadrumo/_data/dependencies/local_ai_program.toml`
+- `S18` `M` `dev/runtime_lifecycle/mcp_proof_support.py`
+- `S18` `M` `dev/runtime_lifecycle/reviewed_operation.py`
+- `S18` `M` `dev/runtime_lifecycle/README.md`
+- `S18` `verify:` `uv run --no-sync pytest dev/packaging/tests -m '' (1043 passed, 19 skipped; 32 serial tests held by xdist) then -m serial -n 0 (32 passed, installed cohort built)` -> `pass`
+- `S18` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_python_provisioning.py dev/ci/tests/test_cloud_transport_fully_deleted.py dev/env/tests/test_local_ai_pins.py -m ''` -> `pass`
+- `S18` `verify:` `uv run --no-sync python -m dev.env.local_ai_pins --check` -> `pass`
+- `S18` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `S18` `verify:` `just check-import-boundaries` -> `pass`
+- `S18` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S18` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
+- `S18` `by:` `high-implementer`
 
 ## Notes
 
@@ -733,3 +747,6 @@ related:
 - `S17` `num_ctx` had no reader after P03.S16 (the ranking's context bar), and the agent adapter sends no `context_tokens,` so the setting was deleted rather than mapped.
 - `S17` `cadrumo_llm_model_runtime_memory_floor_bytes` kept as the program's hardware floor (coordinator ruling 2026-10-26); only its description changed, to name no model. Amended ADR constraint 9 governs the engine, not this setting.
 - `S17` The burn-down list is empty: `config_runtime_fields.py` was its last entry, and the gate requires removing a file that no longer offends. The generated environment page was regenerated with python -m `dev.docs.env_reference.`
+- `S18` Coordinator ruling 2026-10-26: pin-local-ai becomes pin-local-ai-program, covering the Ollama program archives only. `local_ai_program.toml` was re-rendered through `render_pins(load_program_pins())` with no download; it is byte-identical apart from its header line.
+- `S18` The unit lane was reused from P03.S17: this Step changes no Python under src, and the only src file is the pin table's header comment.
+- `S18` The reviewed-operation lane reads with whatever model the operator's store holds instead of a pinned name. docs/how-to/classify-with-llm.md still names models; P05.S26 owns it.
