@@ -211,6 +211,49 @@ Examples are `src/cadrumo/adapters/outbound/llm/tests/test_cache.py:37`, `src/ca
 
 Reword in place, and regenerate the environment page from its owner.
 
+### python-hardware-floor-judges-the-selected-model | high | The local reader still decides in Python that this computer cannot hold the selected model, though the amended ADRs leave Python no hardware judgement.
+
+`src/cadrumo/application/local_reader.py:263` calls `below_capacity_floor` (`src/cadrumo/application/provisioning.py:394`) with the catalogue `size_bytes` of the selected on-host lane. When it holds, the role is refused with `HARDWARE_FLOOR_MET` and no recovery (`local_reader.py:274`, `src/cadrumo/application/provisioning_contracts.py:42`). The check runs first, ahead of the program and installed checks. A refused vision or text role makes `extraction_ready` false and the document readiness `text_layer_only` (`local_reader.py:360`). The person sees that verdict through `ledger.evidence.reader-readiness` (`src/cadrumo/entrypoints/operation_composition.py:2578`), the TUI evidence line (`src/cadrumo/entrypoints/tui/ledger/evidence_records.py:127`) and the desktop reader panel. It refuses no run: a dispatch still goes to cadrumo-agent, which may load the model. So readiness can say a role cannot read while the read would succeed. The function's own docstring says it repeats the native engine's rule. The amended records leave Python no such judgement. Constraint 8 of `2026-10-25-agent-owned-models-adr` now says Cadrumo performs no hardware or contention admission (`.vault/adr/2026-10-25-agent-owned-models-adr.md:66`, from `7f8bcb493c`). Constraint 12 of `2026-10-24-rust-component-provisioning-adr` says Python keeps none. Amended constraint 9 gives `blocked hardware` to Rust (`.vault/adr/2026-10-25-agent-owned-models-adr.md:113`). The earlier finding `load-admission-ruling-is-not-in-the-adrs` asked the amendment to say whether this read survives. The amendment says nothing survives, so the code now contradicts the binding records and the owner's ruling. Fix, within `P05.S31`: delete the floor branch, `below_capacity_floor` and `HARDWARE_FLOOR_MET` with their tests (`src/cadrumo/application/tests/test_local_reader.py:245`, `:268`, `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_import.py:272`) and the desktop fixture (`native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts:101`), and leave a blocked computer to the desktop setup that owns it under constraint 9. The measured-hardware doctor row (`provisioning.py:419`) and the report's figures (`src/cadrumo/application/local_reader_report.py:111`) judge nothing and can stay.
+
+### unproduced-own-network-settings-note | medium | The setup note `own_network_settings` has no producer, yet every layer declares it.
+
+`Note::OwnNetworkSettings` (`native/application/src/provisioning/state.rs:56`) is now the engine's only note. It is built only inside that file's test module (`state.rs:383`; cases at `:442`, `:562`, `:672`). No engine path sets it, and none has since `1e6383dc63` introduced it. The value is still declared in every other layer:
+
+- the desktop host maps it (`native/desktop/src-tauri/src/shell/setup/components.rs:1085`, `native/desktop/src-tauri/src/shell/setup/wire.rs:121`);
+- the TypeScript contract types it (`native/desktop/frontend/src/ipc/contract.ts:856`), and a dev fixture shows it (`native/desktop/frontend/src/dev/setupFixture.ts:140`);
+- the desktop chrome registers it (`dev/locales/desktop_chrome.py:515`);
+- Python declares it as `DependencyNote.OWN_NETWORK_SETTINGS` (`src/cadrumo/application/dependency_contracts.py:129`);
+- `common.yml` and `application.yml` word it in all four locales (`src/cadrumo/locales/en/common.yml:3587`, `src/cadrumo/locales/en/application.yml:1861`).
+
+`79ff11cdcf` moved the deleted note's test cases onto it, and its `P04.S22` ledger note records that it has no producer. This is the same shape as `downloaded-not-loaded-note-has-no-producer`. It rates medium rather than high only because this plan did not introduce it and no ruling of this plan supersedes what it means. The default under the owner's deletion ruling is to remove it from every layer, with its locale keys through the `dev.locales` remove-batch. Making the engine produce it for the local AI program instead would be a decision for `rust-component-provisioning`.
+
+### authority-republish-leaves-sequence-goldens-stale | medium | The `llm_vision` schema rewording republished the authority, and its own ledger note says the calculation-revision goldens still diverge.
+
+`fa19b570dc` changed the profile schema description (`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml:143`), which is part of the published authority identity. The commit refreshed only the `authority_generation` value in 14 goldens, for example `docs/_sequences/how-to/modelo-130/modelo-130-inspect-boxes.json:235`. The `P05.S27` ledger note for that commit says that sequences which record calculation revision ids diverge until `python -m dev.docs.sequences refresh` is run against the new generation. Its examples are troubleshooting, review-calculation-values, modelo-130, 303, 349, 390 and 100. No commit since then refreshes them, and the only recorded check is `python -m dev.docs.sequences check --page how-to/profile-setup`. This review did not run the sequence check, because of the load limit, so the divergence rests on the executor's own record. Fix: refresh the affected pages through `dev.docs.sequences`, then run its `check` over them.
+
+### rule-06-skill-reference-still-cites-model-admission | medium | The `cadrumo-start` skill's copy of rule 06 still lists memory admission and links the deleted `provisioning_runtime.py`.
+
+`29e8e905aa` rewrote `.vaultspec/rules/06-application-orchestration-and-diagnostics.md` and its provider copies. However, the skill reference that the earlier finding also named still reads "memory admission for model load" and names the readiness probe that "may cold-load a model". Both lines link `src/cadrumo/application/provisioning_runtime.py` (`.vaultspec/skills/cadrumo-start/references/06-application-orchestration-and-diagnostics.md:7`, `:9`). The generated `.claude/skills` and `.agents/skills` copies repeat them. The source is the owner's policy. Propose aligning it to the rewritten rule, apply that only on request, then run `vaultspec-core sync`.
+
+### retired-busy-cause-makes-stored-drafts-unreadable | low | Deleting `INFERENCE_SLOT_BUSY` makes a stored draft document that carries it fail to load as a whole.
+
+`1f9e0dff79` removed the member from `LabelReadingFallbackCause` (`src/cadrumo/application/ledger/invoice_draft_records.py:407`). The cause is persisted on `StoredExtractionDraft.label_reading_fallback` (`src/cadrumo/application/ledger/extraction_draft_store.py:94`). That field lives inside the per-profile `ExtractionDraftDocument`, one encrypted object that holds every draft of the profile. A row written with `inference_slot_busy` now fails strict enum validation, so the whole document refuses to load. `write_extraction_draft` loads that document before it writes (`extraction_draft_store.py:150`). Every stored draft of the profile is therefore unreadable, and every new extraction fails to save, until the record is repaired. The encrypted bytes are not lost. Exposure is narrow. The member existed from `a92f1aef2e` (2026-10-02) to this commit, and `v0.5.1` has no `LabelReadingFallbackCause` at all, so no release wrote it. It was written only when a second concurrent on-host read in one process found the single slot held, and the label rules had read at least one field. An unreleased value needs no compatibility window, so the deletion is permitted. The codebase's precedent for a retired persisted value is a read-only member (`RetiredLLMProvider`, `src/cadrumo/core/config_support.py:109`). Recommend either the same pattern for the retired cause, or recording that no development profile holds it.
+
+### reader-panel-words-only-the-missing-model | low | The reader panel now words each role and leads to the model choice, but other failed conditions still show a bare "Not ready", and an unavailable service reads as no model chosen.
+
+`a2486bbf53` resolves the main part of `reader-panel-names-roles-by-id-and-hides-why`: roles are worded through `roleWords`, and a role without a usable model offers the agent column. However, `roleNeedsModel` (`native/desktop/frontend/src/components/ledger/documents/documentsModel.ts:625`) keys on `provisioning.selected_model.available`. `_refusal_judgement` (`src/cadrumo/application/local_reader.py:245`) gives that condition to every lookup refusal, including `service_unavailable` (`local_reader.py:101`). With the agent service down, the panel therefore says no usable model is chosen and sends the person to the agent settings. The installed-state-unknown condition (`RUNTIME_REACHABLE`, `local_reader.py:290`) still renders `reader.not_ready` alone (`DocumentPanels.tsx:732`). The hardware-floor case goes with the high finding above. Carry the residue, or word the unknown and unavailable conditions from facts the readiness row already distinguishes.
+
+### stale-on-host-and-slot-wording-remains | low | Docstrings still describe the deleted local path, and two now name the on-host slot that `1f9e0dff79` deleted.
+
+Fixed since the last round: the vision timeout description (`src/cadrumo/core/config_runtime_fields.py`) and the generated `docs/reference/environment-overrides.md`. Still wrong:
+
+- the deleted slot, in `src/cadrumo/application/ledger/invoice_draft_extraction.py:25` ("another read holds every on-host inference slot") and `src/cadrumo/adapters/outbound/llm/preconditions.py:5` ("a full on-host slot");
+- the local vision path, in `src/cadrumo/domain/transactions/llm.py:5`, `:350`, `:527`, `:643` and `:829`, `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py:380`, `src/cadrumo/adapters/inbound/financial/providers/pdf_statement.py:5`, `src/cadrumo/application/ledger/statement_reading.py:6`, `src/cadrumo/application/ledger/evidence_input.py:5`, `src/cadrumo/application/ledger/document_transcription.py:84` and `src/cadrumo/core/field_origin.py:54`;
+- `src/cadrumo/core/image_media_type.py:6`, which names "the local Ollama transport";
+- `src/cadrumo/adapters/outbound/llm/consent.py:153`, which calls on-host reading "the default", when the person's selection decides it.
+
+Text-layer extraction and PDF rasterisation do run on this computer, so the wording in `src/cadrumo/application/ledger/evidence_textlayer.py` and `src/cadrumo/adapters/outbound/llm/pdf_rasterisation.py` is correct. Reword the others in place.
+
 ## Recommendations
 
 - Reopen `P01.S03` for the first finding, or carry it as an explicit consequence. The decision a follow-on ADR must make, if the owner prefers the current behaviour: whether a non-secret per-profile setting stored beside the credentials participates in the agent tree's generation binding, or whether that binding covers credential-bearing records only. This review does not make that choice.
@@ -244,6 +287,25 @@ Reword in place, and regenerate the environment page from its owner.
 - The two low findings are recorded and not scheduled.
 - Observation, not a finding of this plan: the `rust-component-provisioning` record `2026-10-26-rust-component-provisioning-registered-operations-adr` (commit `70d7db9e1e`) states that the full-screen gate `dev/operation_contract_manifest/tests/test_operation_catalogue.py:601` has failed since the TUI setup screen began importing the components adapter. That plan owns the gate. This review did not run it.
 - Observation: the 2026-10-26 amendment of `2026-10-24-rust-component-provisioning-adr` holds where this review read it. The desktop refuses to remove a model that a role still names (`native/desktop/src-tauri/src/shell/setup/components.rs:590`). It admits the engine only with selections on keyless lanes that are not turned off (`native/desktop/src-tauri/src/shell/setup/admission.rs:87`).
+
+- Plan-close re-review of the fixes at `ff6026da4c`: the verdict is REVISION REQUIRED. Status of the earlier plan-close findings:
+  - `vision-model-option-kept-to-refuse` is resolved by `e7fe2457c2`. No `--vision-model`, `vision_model` field, refusal port, precondition or help key remains, and the parser refuses the option as unknown.
+  - `downloaded-not-loaded-note-has-no-producer` is resolved by `79ff11cdcf` and `a2486bbf53`; no token remains in `src`, `dev`, `native` or `docs`. Its sibling, `own_network_settings`, is recorded above.
+  - `load-admission-ruling-is-not-in-the-adrs` is resolved as record work by `7f8bcb493c`. The amended text now makes `python-hardware-floor-judges-the-selected-model` a contradiction.
+  - `product-identity-locale-gate-fails` is resolved by `21cddd50f2` and `04abf17c71`: the whole locale audit file passes.
+  - `loopback-endpoint-module-is-test-only` is resolved by `892a124d82`.
+  - `technical-docs-still-describe-local-memory-admission` is resolved by `99ea665eee` and `1f9e0dff79`.
+  - `vision-capability-promises-on-host-reading` is resolved by `fa19b570dc` and `e2ebdeff1c` under the owner's ruling. Its follow-on decision is settled by that ruling.
+  - `reader-panel-names-roles-by-id-and-hides-why` is mostly resolved; the residue is recorded as low.
+  - `rule-06-cites-deleted-model-admission` is resolved for the rule by `29e8e905aa`; the skill-reference residue is recorded as medium.
+- `python-hardware-floor-judges-the-selected-model` keeps `P05.S31` open.
+- `P05.S27` should stay open until its own recorded sequence divergence is refreshed and checked. That is its Step verification, not a reopening.
+- `P04.S22` and `P05.S25` carry no remaining finding of their own. They can close on their recorded verification. The native build and the real-role tests stay plan-close pending items.
+- `unproduced-own-network-settings-note` needs either deletion under the owner's ruling or a `rust-component-provisioning` decision to produce it. This review does not choose.
+- The unread-setting refusal held up under reading and test, with no finding. The refusal carries names and a count, never a value. An empty value is skipped, consistent with `env_ignore_empty`. Case is folded, and the dotenv check prints keys only. Observations:
+  - The process-environment check covers only the `CADRUMO_LLM_` family. Retired names in other families, such as the removed `CADRUMO_NATIVE_BUILD_ROOT` and `CADRUMO_SCOOP_ROOT`, are caught only in `env/.env` by `just setup-env`, not in a process environment.
+  - The refusal is raised from the settings source as `UnreadSettingError`, not as a pydantic `ValidationError`, so a boot path that catches only validation errors renders it through the generic error path.
+  - A value of only whitespace counts as set.
 
 ## Verification
 
@@ -321,3 +383,19 @@ Pending, not code defects:
 - No ledger row shows two plan Verification items: "the CLI renders the `NO_SELECTION` refusal in each" locale, and "a selection made on the desktop is read back unchanged by the CLI, TUI and MCP lookup". This review found no test that demonstrates either end to end. Owner: the orchestrator. Next action: point to the covering tests or run them.
 
 Reasoned from source, with no gap found: the engine admission and its single desktop caller; the read-only components role; the Python request refusal; the absence of any Ollama HTTP client or `ollama` import in product Python; the absence of model tables, of model-pin data, and of `provisioning_runtime`, `provisioning_host`, `model_catalogue`, `local_ai_pins` and `role_fitness` in code; the run-start and frame timeouts; and the local reader's installed-state and program-row sources. The generated `docs/api`, `docs/_static/cli-tree.json`, `docs/cli` and the `docs/locales/pot` catalogues still name deleted modules and verbs. They are ignored build output, not committed references.
+
+Plan-close fix re-review at `ff6026da4c`. The reviewed inputs had no uncommitted edits; the shared worktree's unrelated edits, such as `src/cadrumo/core/locks.py`, were left in place. Each test command below ran with `-n 0 -m ''`:
+
+- `uv run --no-sync pytest src/cadrumo/core/tests/test_unread_settings.py dev/quality/tests/test_no_unread_settings.py dev/env/tests/test_dotenv.py src/cadrumo/application/tests/test_local_reader.py src/cadrumo/entrypoints/cli/tests/test_ledger_llm_model_option_absent.py`: 64 passed, exit 0, in 9 s. Log: `var/storage/development/.logs/test-runs/2026-10-26/20261026T185448.230052Z-pytest-13952-5a197ddb/`. It was run because the unread-setting check is new behaviour that question 3 asked about, the local reader holds the hardware floor, and the option test is the removal's acceptance check.
+- `uv run --no-sync pytest dev/locales/tests/test_audit.py`: 13 passed, exit 0, in 246 s. Log: `var/storage/development/.logs/test-runs/2026-10-26/20261026T185502.391758Z-pytest-20848-0892cadc/`. It was run because this file failed at the last review and no clean run of it is recorded since.
+
+Reasoned from source, with no gap found:
+
+- cadrumo-agent `main` treats `max_output_tokens` as optional on the background-run request, so omitting it after `1f9e0dff79` is accepted upstream. Read in `src/cadrumo_agent/api/schemas/gateway.py:269` of the sibling checkout; the pinned revision was not checked.
+- No condition id is an enum on persisted verdicts (`failed_condition_id` is a `NamespacedId`), so the deleted slot condition breaks no stored verdict.
+
+Pending, not code defects:
+
+- The final native tree is still not built. Rust changed again in `79ff11cdcf`. Owner: the plan's orchestrator. Next action: the CMake targets `desktop-host-unit-test` and `desktop-host-unit-clippy`, plus the application crate's provisioning tests, on a tree that no concurrent build owns.
+- The sequence refresh named in `authority-republish-leaves-sequence-goldens-stale`. Owner: the `P05.S27` executor. Next action: `python -m dev.docs.sequences refresh`, then `check`, for the affected pages.
+- Unchanged from the last review: the real-role tests, and the `NO_SELECTION` rendering and selection read-back items of the plan's Verification.
