@@ -117,12 +117,13 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class ResolvedEvidence:
-    """A transaction's linked evidence resolved for an on-host read.
+    """A transaction's linked evidence resolved for a read by role.
 
     Exactly one read mode is populated: ``text`` for a text-layer PDF (inlined into
-    the prompt and fed to the cloud subprocess classifier, consent-gated) or
-    ``images`` for a scan-only PDF / image (read in memory by the LOCAL vision
-    model, on-host, gestor-allowed). The ``images`` are transient
+    the prompt the text-extraction role reads) or ``images`` for a scan-only PDF /
+    image (read in memory by the vision-transcription role). Either role's
+    selected lane, when it reads off the host, needs the per-call consent. The
+    ``images`` are transient
     FINANCIAL-derived bytes and MUST never be persisted or logged
     (``sensitive-financial-data-secure-storage-only``).
     """
@@ -133,7 +134,7 @@ class ResolvedEvidence:
 
     @property
     def is_images(self) -> bool:
-        """Whether this evidence routes to the on-host vision reader."""
+        """Whether this evidence routes to the vision-transcription reader."""
         return bool(self.images)
 
 
@@ -198,20 +199,21 @@ def resolve_llm_evidence(
     settings: Settings,
     ports: LLMClassificationPorts,
 ) -> ResolvedEvidence | None:
-    """Resolve a transaction's linked evidence to an on-host read, or ``None``.
+    """Resolve a transaction's linked evidence to its text or its page images, or ``None``.
 
-    Returns ``None`` when the transaction has no linked evidence. A text-layer PDF
-    yields ``text`` and routes to the cloud subprocess classifier, so it is gated by
-    the cloud-upload consent posture (default-off, gestor-barred, per-invocation). A
-    scan-only PDF or an image yields base64 ``images`` and is read in memory by the
-    LOCAL Ollama vision model -- fully on-host, needing no cloud consent and
-    permitted for gestor deployments. Bytes are read from secure storage into memory
-    only; nothing is written to disk
-    (``sensitive-financial-data-secure-storage-only``).
+    Returns ``None`` when the transaction has no linked evidence. A PDF with a
+    text layer yields ``text``, which the text-extraction role reads. A scan-only
+    PDF or an image yields base64 ``images``, which the vision-transcription role
+    reads, and only while the profile's ``llm_vision`` capability is on. Each
+    role is read by an agent run on the lane the person selected for it; a lane
+    whose catalogue entry reads off the host refuses without the per-call
+    consent. Bytes are read from secure storage into memory only; nothing is
+    written to disk (``sensitive-financial-data-secure-storage-only``).
 
     Raises:
-        PurchaseInvoiceEvidenceInputError: When a text-layer read would transmit to a
-            cloud model but the per-invocation consent gate is not satisfied.
+        PurchaseInvoiceEvidenceInputError: When the linked evidence cannot be read
+            as a document or image, or image evidence meets a profile whose
+            ``llm_vision`` capability is off.
     """
     evidence_id = transaction.purchase_invoice_evidence_id
     attachment_ids = transaction.attachment_ids
@@ -223,7 +225,7 @@ def resolve_llm_evidence(
         try:
             text = extract_evidence_text(evidence_input, text_layer_ports=ports.text_layer_ports)
         except PurchaseInvoiceEvidenceInputError:
-            text = ""  # scan-only / no usable text layer -> on-host vision path
+            text = ""  # scan-only / no usable text layer -> vision path
         if text:
             return ResolvedEvidence(reference=reference, text=text, images=())
         images = tuple(
@@ -239,9 +241,9 @@ def resolve_llm_evidence(
                 detect_image_media_type(evidence_input.data),
             ),
         )
-    # The on-host vision read is the only path that reaches here. Gate it on the
-    # profile's llm_vision capability — opting out disables scanned/image reading
-    # entirely (a typed refusal, never a silent skip).
+    # Only image evidence reaches here. Gate it on the profile's llm_vision
+    # capability — opting out disables scanned/image reading entirely (a typed
+    # refusal, never a silent skip).
     from ...core.capabilities import ServiceCapability
     from ..user_profile.capabilities import resolve_active_capability
 
@@ -256,10 +258,10 @@ def resolve_llm_evidence(
     return ResolvedEvidence(reference=reference, text=None, images=images)
 
 
-# Raised when a split proposal has no reader to route to. The on-host vision
-# model is the only split proposer the composition wires, and it reads images
-# only, so a text-layer or evidence-less transaction reaches no proposer at
-# all. The remedy is image or scan evidence, or the manual split flags -- not a
+# Raised when a split proposal has no reader to route to. The vision
+# transcription reader is the only split proposer the composition wires, and it
+# reads images only, so a text-layer or evidence-less transaction reaches no
+# proposer at all. The remedy is image or scan evidence, or the manual split flags -- not a
 # provider, because none is selectable.
 _SPLIT_NEEDS_IMAGE_EVIDENCE = (
     "proposing a split needs scanned or image evidence for the on-host reader; "
@@ -278,17 +280,19 @@ def classify_with_evidence(
     settings: Settings,
     ports: LLMClassificationPorts,
 ) -> tuple[LLMClassificationResponse, str]:
-    """Classify, routing scan/image evidence to the on-host vision classifier.
+    """Classify through the agent by role: images to vision transcription, text or none to text extraction.
 
-    Returns ``(response, provenance)``. Image evidence is read by the local vision
-    model (``llm:local-vision:<model>`` provenance) and needs no ``text_classifier``;
-    text or no evidence runs the local text reader, so an absent
-    ``text_classifier`` is resolved from ``ports`` rather than refused.
-    ``vision_model`` overrides the settings default vision model for this read.
+    Returns ``(response, provenance)``. Image evidence is read on the person's
+    vision-transcription selection and needs no ``text_classifier``; text or no
+    evidence is read on the text-extraction selection, so an absent
+    ``text_classifier`` is resolved from ``ports`` rather than refused. A
+    selected lane that reads off the host needs the per-call consent and
+    refuses without it. ``vision_model`` must be ``None``: the selection is the
+    only model choice, and a named model is refused.
 
     Raises:
-        PurchaseInvoiceEvidenceInputError: When the on-host reader is unavailable;
-            the error carries the provisioning probe's exact precondition verdict.
+        PurchaseInvoiceEvidenceInputError: When the role's reader is unavailable;
+            the error carries the reader's exact precondition verdict.
         LLMClassifierError: When the reader call fails after its preconditions are
             confirmed satisfied.
     """
@@ -306,13 +310,9 @@ def classify_with_evidence(
         return response, vision.decided_by
     text = evidence.text if evidence is not None else None
     if text_classifier is None:
-        # The LOCAL text reader, wired here for the first time. Before it
-        # existed this branch refused unless the operator supplied a cloud
-        # provider, which is what made a text-layer PDF the one document class
-        # whose contents left the host -- the more machine-readable document
-        # taking the less private route, decided by nothing but how it happened
-        # to be produced. Text-layer evidence now takes the same on-host path
-        # scanned evidence already took.
+        # The text-extraction reader. Text-layer evidence takes the same agent
+        # path, under the same consent rule, as scanned evidence, so how a
+        # document happened to be produced never decides where it is read.
         local_text = ports.make_text_classifier(spec)
         return _reader_classification(
             ports.run_reader(
@@ -358,9 +358,10 @@ def _split_with_evidence(
     settings: Settings,
     ports: LLMClassificationPorts,
 ) -> tuple[LLMSplitResponse, str]:
-    """Propose a split, routing scan/image evidence to the on-host vision classifier.
+    """Propose a split, routing scan/image evidence to the vision-transcription reader.
 
-    ``vision_model`` overrides the settings default vision model for this read.
+    ``vision_model`` must be ``None``: the person's vision-transcription
+    selection is the only model choice, and a named model is refused.
 
     Raises:
         TransactionValidationError: When the evidence is not images and no
@@ -470,18 +471,20 @@ def suggest_llm_classification(
         transaction_id: Stable id of the transaction to classify.
         operation: Generation-pinned authority operation for the prompt's
             dated category vocabulary and profile hints.
-        classifier: Injected classifier (dependency injection for tests). With
-            the cloud transports deleted the on-host reader is the default, so
-            an injected classifier is the only non-default case.
-        vision_classifier: Injected on-host vision classifier used when the
-            evidence is a scan-only PDF or image; default-resolved otherwise.
-        vision_model: Overrides the settings default local vision model (e.g.
-            ``qwen2.5vl:7b``) for an image/scan read; ``None`` uses the default.
+        classifier: Injected classifier (dependency injection for tests). The
+            agent's text-extraction reader is the default, so an injected
+            classifier is the only non-default case.
+        vision_classifier: Injected vision classifier used when the evidence is
+            a scan-only PDF or image; default-resolved otherwise.
+        vision_model: Must be ``None``. A named model is refused with
+            ``llm.agent.model_override_absent``, because the person's
+            vision-transcription selection is the only model choice.
         transaction_repository: Injected catalogue repository.
-        read_evidence: When True, resolve the transaction's linked evidence and read
-            it on-host — a text-layer PDF is inlined and sent to the cloud
-            classifier (consent-gated), a scan-only PDF or image is read by the
-            local vision model (no consent needed). Off by default.
+        read_evidence: When True, resolve the transaction's linked evidence and
+            read it: a text-layer PDF on the text-extraction selection, a
+            scan-only PDF or image on the vision-transcription selection. A
+            selected lane that reads off the host needs the per-call consent.
+            Off by default.
         settings: Injected settings; defaults to ``load_settings()``.
         ports: Injected evidence-reading and classifier execution ports.
         reviewed_transaction: Immutable caller-captured row used instead of
@@ -781,13 +784,14 @@ def saturate_llm_classification(
         transaction_id: Stable id of the transaction to classify.
         operation: Generation-pinned authority operation for the prompt's
             dated category and IVA projections.
-        classifier: Injected classifier (dependency injection for tests). With
-            the cloud transports deleted the on-host reader is the default; an
-            injected classifier overrides it, with the saturation prompt spec.
-        vision_classifier: Injected on-host vision classifier used when the
-            evidence is a scan-only PDF or image; default-resolved otherwise.
-        vision_model: Overrides the settings default local vision model (e.g.
-            ``qwen2.5vl:7b``) for an image/scan read; ``None`` uses the default.
+        classifier: Injected classifier (dependency injection for tests). The
+            agent's text-extraction reader is the default; an injected
+            classifier overrides it, with the saturation prompt spec.
+        vision_classifier: Injected vision classifier used when the evidence is
+            a scan-only PDF or image; default-resolved otherwise.
+        vision_model: Must be ``None``. A named model is refused with
+            ``llm.agent.model_override_absent``, because the person's
+            vision-transcription selection is the only model choice.
         transaction_repository: Injected catalogue repository.
         on_date: Effective date used to resolve the registry rate; defaults to
             the transaction's value date (or booked date).
@@ -1183,13 +1187,14 @@ def suggest_evidence_split(
         transaction_id: Stable id of the transaction to split.
         operation: Generation-pinned authority operation for the prompt's
             dated category and IVA projections.
-        proposer: Injected split proposer (dependency injection for tests). With
-            the cloud transports deleted the on-host reader is the default, so
-            an injected proposer is the only non-default case.
-        vision_classifier: Injected on-host vision classifier used when the
-            evidence is a scan-only PDF or image; default-resolved otherwise.
-        vision_model: Overrides the settings default local vision model (e.g.
-            ``qwen2.5vl:7b``) for an image/scan read; ``None`` uses the default.
+        proposer: Injected split proposer (dependency injection for tests). The
+            agent's vision-transcription reader is the default, so an injected
+            proposer is the only non-default case.
+        vision_classifier: Injected vision classifier used when the evidence is
+            a scan-only PDF or image; default-resolved otherwise.
+        vision_model: Must be ``None``. A named model is refused with
+            ``llm.agent.model_override_absent``, because the person's
+            vision-transcription selection is the only model choice.
         transaction_repository: Injected catalogue repository.
         on_date: Effective date used to resolve each child's registry rate;
             defaults to the transaction's value date (or booked date).

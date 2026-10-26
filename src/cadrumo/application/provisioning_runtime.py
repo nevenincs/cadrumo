@@ -131,9 +131,9 @@ def read_runtime_residents(settings: Settings | None = None) -> tuple[RuntimeRes
 def runtime_model_names_match(left: str, right: str) -> bool:
     """Return whether two runtime model names denote the same tagged model.
 
-    An untagged name means ``:latest`` to the runtime, so ``qwen3`` and
-    ``qwen3:latest`` match while ``qwen3:1.7b`` and ``qwen3:8b`` do not -- a
-    different size is a different download and a different memory claim. Every
+    An untagged name means ``:latest`` to the runtime, so ``reader`` and
+    ``reader:latest`` match while ``reader:small`` and ``reader:large`` do not --
+    a different tag is a different download and a different memory claim. Every
     "is this exact model present or loaded" question uses this comparison.
     """
 
