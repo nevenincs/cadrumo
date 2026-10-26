@@ -30,7 +30,7 @@ from urllib.parse import urlencode
 import pytest
 from pydantic import TypeAdapter
 
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo_client.contracts.model_runs import (

@@ -40,13 +40,12 @@ class ProvisionContentionPayload(OutputSchema):
     free_vram_bytes: int | None = None
     free_system_memory_bytes: int | None = None
     shortfall_bytes: int | None = None
-    unloadable_models: list[str] = []
     facts: ProvisioningFactPayload = Field(default_factory=dict)
     precondition_action: ResolvedPreconditionAction | None = None
 
 
 class ProvisionModelPayload(OutputSchema):
-    """One role's resolved model and whether it is present in the runtime."""
+    """One role's selected lane: the model it loads on this computer, and whether the runtime holds it."""
 
     role: NonEmptyStr
     model: str | None = None
@@ -60,8 +59,8 @@ class ProvisionReportResult(OutputSchema):
     """JSON envelope for ``aeat config provision report``.
 
     The doctor rows for local inference in one place: what the machine measures,
-    which model each role resolves to, and whether that model could be loaded
-    right now. Read-only -- it pulls nothing and loads nothing.
+    the lane the person selected for each role, and whether the first on-host
+    model of known size could be loaded right now. Read-only -- it pulls nothing and loads nothing.
     """
 
     accelerator: str
@@ -73,29 +72,6 @@ class ProvisionReportResult(OutputSchema):
     residents: list[str] = []
     models: list[ProvisionModelPayload] = []
     contention: ProvisionContentionPayload | None = None
-
-
-class ProvisionLoadItemPayload(OutputSchema):
-    """One model load, or one role whose selection refused before any load.
-
-    ``already_loaded`` marks a model that was resident before the request, so
-    nothing was sent to the runtime.
-    """
-
-    model: NonEmptyStr | None = None
-    roles: list[str] = []
-    loaded: bool
-    already_loaded: bool = False
-    elapsed_ms: int | None = None
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
-    precondition_action: ResolvedPreconditionAction | None = None
-
-
-class ProvisionLoadResult(OutputSchema):
-    """JSON envelope for ``aeat config provision load``; ``loaded`` is true only when every item loaded."""
-
-    loaded: bool
-    models: list[ProvisionLoadItemPayload] = []
 
 
 class ProvisionItemPayload(OutputSchema):
@@ -202,8 +178,6 @@ __all__ = [
     "ProvisionBrowserResult",
     "ProvisionContentionPayload",
     "ProvisionItemPayload",
-    "ProvisionLoadItemPayload",
-    "ProvisionLoadResult",
     "ProvisionModelPayload",
     "ProvisionProbeResult",
     "ProvisionPullResult",

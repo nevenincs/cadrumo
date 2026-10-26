@@ -38,7 +38,7 @@ from ...application.operations.frontend_requests import (
 from ...application.operations.registry import OperationRegistry
 from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
 from ...core.config import override_settings
-from ...core.model_catalogue import ModelRole, candidates_for_role, default_model_runtime_id
+from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.schema import InvoiceKind
@@ -53,14 +53,6 @@ _LIBRO = FIXTURES_DIR / "financial" / "tabular-dialects" / "libro_facturas_exped
 #: Cell values of that book; none may reach the published detail.
 _BOOK_VALUES = ("2025/0142", "Talleres Berrocal", "A82645177", "4272.00")
 _READER_REFUSAL_CODE = "REFUSED_LEDGER_IMPORT_READER"
-
-#: An operator-named mapping model. The catalogue's own choice is sized to the
-#: free memory measured now and can refuse without a setup action on a busy host.
-_OPERATOR_MAPPING_MODEL = next(
-    candidate.runtime_id
-    for candidate in candidates_for_role(ModelRole.COLUMN_ROLE_MAPPING)
-    if candidate.runtime_id != default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING)
-)
 
 
 @contextmanager
@@ -79,9 +71,7 @@ def _runtime_holding_nothing(posts: list[str]) -> Generator[None]:
 
     with (
         serving_loopback(_EmptyRuntime, path="/api/chat") as chat_url,
-        override_settings(
-            cadrumo_llm_ollama_chat_url=chat_url, cadrumo_llm_ollama_mapping_model=_OPERATOR_MAPPING_MODEL
-        ),
+        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
     ):
         yield
 

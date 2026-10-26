@@ -59,7 +59,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....domain.iva.schema import InvoiceKind
 from ....outbound.llm.tests.model_run_support import IMAGE_LANE, serving_agent
 from ._invoice_confirmation_test_support import (

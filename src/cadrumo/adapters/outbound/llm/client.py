@@ -68,7 +68,7 @@ if TYPE_CHECKING:
     from ...persistence.llm.run_records import LLMRunRecorder
     from ...persistence.llm.usage import UsageRecorder
 from ....core.config_support import LLMProvider
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from .models import LLMRequest, LLMResponse, PromptRegistry
 from .providers.agent import AgentAdapter, lane_model_label, model_run_refusal_error
 from .providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest

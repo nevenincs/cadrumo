@@ -23,7 +23,7 @@ import pytest
 from cadrumo.adapters.inbound.financial.providers.pdf_statement import PdfStatementProvider
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.ledger.statement_reading import ProposedDirection
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.tests.inventory import FIXTURES_DIR
 from cadrumo.tests.pdf_fixtures import multi_page_text_pdf_bytes

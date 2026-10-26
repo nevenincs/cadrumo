@@ -56,7 +56,7 @@ from ....application.ledger.statement_reading import bind_statement_reader_facto
 from ....application.operations.frontend_requests import OperationObservationSuccessV1
 from ....application.operations.registry import OperationRegistry
 from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.inventory import FIXTURES_DIR

@@ -16,12 +16,12 @@ from cadrumo.tests.english_locale_fixture import english_locale_fixture
 from ....core.config import Settings
 from ....core.errors.error_codes import resolve_error_message
 from ....core.field_role import FieldRole
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ....tests.inventory import FIXTURES_DIR
 from ...dependency_wording import column_reader_refusal_reason
 from ...ledger.column_roles import ColumnRoleReaderUnavailable
 from ...ledger.import_ports import LedgerImportReaderUnavailableError
-from ...local_reader import probe_local_reader
+from ...local_reader import probe_local_ai_program
 from ...provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
 from ..bulk_import import read_bulk_invoice_import_source
 
@@ -34,7 +34,7 @@ _CLOSED_ENDPOINT = "http://127.0.0.1:1/api/chat"
 
 
 def _unanswering_reader() -> ColumnRoleReaderUnavailable:
-    status = probe_local_reader(ModelRole.COLUMN_ROLE_MAPPING, Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
+    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
     assert status.precondition_verdict is not None
     return ColumnRoleReaderUnavailable(precondition_verdict=status.precondition_verdict)
 

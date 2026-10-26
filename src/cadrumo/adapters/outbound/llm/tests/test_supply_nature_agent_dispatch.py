@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....domain.iva.supply_nature import SupplyNature
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from ..client import LLMClient

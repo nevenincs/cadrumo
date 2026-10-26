@@ -65,7 +65,7 @@ def prepare_invoice_evidence_conformance_case(
         return InvoiceEvidenceConformanceCase(
             request=LedgerEvidenceReaderReadinessRequest(profile_id=profile_id),
             expected_read=LedgerEvidenceReaderReadinessProjection.from_status(
-                profile_id=profile_id, status=read_local_reader_status()
+                profile_id=profile_id, status=read_local_reader_status({})
             ),
         )
     upsert_test_profile_facts(

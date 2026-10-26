@@ -4245,10 +4245,6 @@ overview:
 provisioning:
   model:
     licence:
-      non_commercial_advisory: El modelo %{model} está sujeto a la %{licence}, que
-        no permite el uso comercial. Lo has indicado tú de forma explícita, así que
-        Cadrumo lo utilizará, pero una gestoría comercial necesita una licencia aparte
-        del editor.
       plan_non_commercial: El modelo %{model} está sujeto a la %{licence}, que no
         permite el uso comercial. Si lo usas en una gestoría comercial, necesitas
         una licencia aparte del editor.

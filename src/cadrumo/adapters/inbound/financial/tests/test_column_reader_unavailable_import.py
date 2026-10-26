@@ -28,7 +28,7 @@ from .....application.ledger.column_roles import ColumnRoleReaderUnavailable, bi
 from .....application.ledger.import_ports import LedgerImportReaderUnavailableError
 from .....application.ledger.models import LedgerSourceImportCommand
 from .....application.operations.error_detail import build_operation_error_detail
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....core.tabular import NormalizedTable
 from .....domain.transactions.errors import TransactionValidationError
 from .....tests.fixtures.settings import EnvFileFreeSettings

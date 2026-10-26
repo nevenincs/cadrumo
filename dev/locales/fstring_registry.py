@@ -197,7 +197,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
     from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS, ErrorCategory
     from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-    from cadrumo.core.model_catalogue import ModelRole
+    from cadrumo.core.model_roles import ModelRole
     from cadrumo.core.operations import OperationTerminalCondition
     from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue

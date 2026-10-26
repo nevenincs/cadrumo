@@ -14,7 +14,7 @@ from .....application.ledger.llm_classification import apply_evidence_split, sug
 from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSplitApplyResult
 from .....application.ledger.models import ManualLedgerTransactionPatch, SplitChildCommand
 from .....core.config import load_settings
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState

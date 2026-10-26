@@ -1,10 +1,9 @@
-"""Generate and check the local AI pins the product's component engine trusts.
+"""Generate and check the local AI program pins the product's component engine trusts.
 
-``just pin-local-ai`` regenerates ``src/cadrumo/_data/dependencies/
-local_ai_program.toml`` and, through :mod:`dev.env.local_ai_model_pins`, the
-manifest digests and sizes of ``local_ai_models.toml``; ``--only`` limits it to
-one table, so the model manifests can be refreshed without downloading the
-program archives. It reads one Ollama release from the publisher's
+This regenerates ``src/cadrumo/_data/dependencies/local_ai_program.toml``. The
+pins cover the program archive per platform only: models are the person's
+selection, pulled through the program's server and verified by its own
+content-addressed manifests. It reads one Ollama release from the publisher's
 release listing, downloads every platform's official standalone archive once
 over HTTPS from the declared model-runtime hosts, and records its address,
 archive format, executable, size and SHA-256. A digest is accepted only when
@@ -19,9 +18,8 @@ a ZIP's central directory and a gzip tar's member list. A zstd tar's layout is
 the publisher's documented one (``bin/ollama``); the engine still refuses an
 installed archive that does not contain its pinned executable.
 
-``--check`` downloads nothing. It validates both committed tables, their hosts
-against their declared groups, and that each is exactly what its renderer
-writes.
+``--check`` downloads nothing. It validates the committed table, its hosts
+against their declared group, and that it is exactly what its renderer writes.
 
 Exit codes follow :mod:`dev.exit_codes`: ``OK``, ``DRIFT`` when ``--check``
 finds a difference, and ``FAILED`` when a listing or download fails.
@@ -50,16 +48,6 @@ from cadrumo.core.toml import parse_toml
 from cadrumo.core.type_guards import is_object_list
 from dev import exit_codes
 from dev._paths import REPO_ROOT
-
-from .local_ai_model_pins import (
-    MODELS_PATH,
-    check_model_pins,
-    generate_model_pins,
-    load_model_pins,
-    registry_fetch,
-    render_model_pins,
-)
-from .local_ai_model_pins import declared_hosts as declared_model_hosts
 
 PINS_PATH: Final = REPO_ROOT / "src" / "cadrumo" / "_data" / "dependencies" / "local_ai_program.toml"
 
@@ -392,25 +380,10 @@ def generate(version: str | None) -> ProgramPins:
     return ProgramPins(program="ollama", version=resolved, hosts=visited, archives=tuple(archives))
 
 
-type Table = Literal["program", "models"]
-
-#: The tables each ``--only`` choice covers; without it, both.
-_TABLES: Final[Mapping[str | None, tuple[Table, ...]]] = {
-    None: ("program", "models"),
-    "program": ("program",),
-    "models": ("models",),
-}
-
-
-def run_check(tables: Sequence[Table] = ("program", "models")) -> int:
-    """Validate the committed tables; return the exit code."""
-    problems: list[str] = []
-    if "program" in tables:
-        rendered = PINS_PATH.read_text(encoding="utf-8")
-        problems += check_pins(load_program_pins(rendered), rendered)
-    if "models" in tables:
-        rendered = MODELS_PATH.read_text(encoding="utf-8")
-        problems += check_model_pins(load_model_pins(rendered), rendered)
+def run_check() -> int:
+    """Validate the committed table; return the exit code."""
+    rendered = PINS_PATH.read_text(encoding="utf-8")
+    problems = check_pins(load_program_pins(rendered), rendered)
     for problem in problems:
         print(f"local-ai-pins: {problem}", file=sys.stderr)
     return exit_codes.DRIFT if problems else exit_codes.OK
@@ -423,33 +396,16 @@ def _write_program(version: str | None) -> None:
     print(f"local-ai-pins: wrote {len(pins.archives)} archives of {pins.version} to {PINS_PATH.relative_to(REPO_ROOT)}")
 
 
-def _write_models() -> None:
-    fetch, close = registry_fetch(declared_model_hosts())
-    try:
-        pins = generate_model_pins(load_model_pins(), fetch)
-    finally:
-        close()
-    MODELS_PATH.write_text(render_model_pins(pins), encoding="utf-8", newline="\n")
-    print(f"local-ai-pins: wrote {len(pins.models)} model manifests to {MODELS_PATH.relative_to(REPO_ROOT)}")
-
-
 def main(argv: Sequence[str] | None = None) -> int:
-    """Generate the local AI pin tables, or with ``--check`` validate the committed ones."""
+    """Generate the local AI program pin table, or with ``--check`` validate the committed one."""
     parser = argparse.ArgumentParser(prog="local_ai_pins", description=__doc__)
     parser.add_argument("--check", action="store_true", help="validate without downloading")
-    parser.add_argument("--only", choices=("program", "models"), help="regenerate or check one table")
     parser.add_argument("--version", help="the program release to pin, such as 0.40.10 (default: the latest)")
     arguments = parser.parse_args(argv)
-    tables = _TABLES[arguments.only]
-    if arguments.version is not None and "program" not in tables:
-        parser.error("--version names a program release; it does not apply to the model table")
     if arguments.check:
-        return run_check(tables)
+        return run_check()
     try:
-        if "program" in tables:
-            _write_program(arguments.version)
-        if "models" in tables:
-            _write_models()
+        _write_program(arguments.version)
     except (httpx.HTTPError, OSError, RuntimeError, ValueError, tarfile.TarError, zipfile.BadZipFile) as error:
         print(f"local-ai-pins: {error}", file=sys.stderr)
         return exit_codes.FAILED

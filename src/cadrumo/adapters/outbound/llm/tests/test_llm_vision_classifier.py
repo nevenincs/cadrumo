@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunMediaKind, ModelRunRefusalCode
 
 from .....core.image_media_type import ImageMediaType
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....domain.categories.spending_category import SpendingCategory
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification

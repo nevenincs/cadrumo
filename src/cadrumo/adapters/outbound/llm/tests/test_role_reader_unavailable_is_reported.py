@@ -29,7 +29,7 @@ from .....application.operator_actions.models import PreconditionVerdict
 from .....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
 from .....core.config import Settings
 from .....core.field_role import FieldRole
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....core.tabular import NormalizedTable, normalize_tabular_bytes
 from .....domain.iva.supply_nature import SupplyNature
 from .....tests.fixtures.settings import EnvFileFreeSettings

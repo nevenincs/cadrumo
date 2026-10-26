@@ -17,7 +17,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunSelectedModel,
 )
 
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ..model_runs import current_model_run_port, operation_model_run_port, run_with_model_runs
 from ..models import OperationIdentity
 

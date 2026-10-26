@@ -39,7 +39,7 @@ from http import HTTPStatus
 from typing import ClassVar, override
 
 from ....core.config import override_settings
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -132,11 +132,7 @@ def serving_a_loopback_reader(
     # Captured here rather than read in the handler: the server answers on its
     # own thread, which does not see this process's settings override.
     _LoopbackRequestHandler.installed_models = tuple(
-        model
-        for model in (
-            configured_role_model(role) for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION)
-        )
-        if model is not None
+        configured_role_model(role) for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION)
     )
     with (
         serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url,

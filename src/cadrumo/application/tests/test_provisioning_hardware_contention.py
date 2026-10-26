@@ -8,8 +8,7 @@ construction and the production comparison logic -- nothing about this host's
 actual GPU state (which changes minute to minute under an automation fleet) can reach
 the assertions. Runtime interaction runs against a real
 :class:`~http.server.ThreadingHTTPServer` speaking the runtime's wire shape, so
-the ``/api/ps`` read and the unload request exercise real HTTP through real
-``httpx``.
+the ``/api/ps`` read exercises real HTTP through real ``httpx``.
 
 Every refusal case carries a positive control asserting the permit case passes
 through the same call, so a refusal cannot pass for the wrong reason.
@@ -25,7 +24,6 @@ import pytest
 
 from ...core.config import override_settings
 from ...core.hardware import AcceleratorKind, ContentionCause
-from ...core.model_catalogue import ModelRole
 from ...tests.loopback_llm import (
     SilentLoopbackHandler,
     read_json_body,
@@ -40,15 +38,11 @@ from ..provisioning import (
     probe_hardware_profile,
     probe_local_inference_hardware,
     read_system_memory,
-    select_model_for_role,
 )
 from ..provisioning_runtime import (
     RuntimeResident,
     assess_model_load_contention,
-    cadrumo_selected_models,
-    load_and_verify_model,
     read_runtime_residents,
-    unload_runtime_model,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -170,7 +164,7 @@ def test_diagnostic_row_renders_measured_figures_as_numbers() -> None:
 def test_unreadable_accelerator_refuses_the_load() -> None:
     """The fail-closed core: an unmeasurable machine must not be admitted."""
     snapshot = assess_model_load_contention(
-        "qwen2.5vl:3b",
+        "synthetic-resident:small",
         3 * GIB,
         profile=_profile(kind=AcceleratorKind.UNKNOWN),
         residents=(),
@@ -185,7 +179,7 @@ def test_unreadable_accelerator_refuses_the_load() -> None:
 def test_measured_headroom_admits_the_load() -> None:
     """Positive control for the refusal above: the same call admits on measured headroom."""
     snapshot = assess_model_load_contention(
-        "qwen2.5vl:3b",
+        "synthetic-resident:small",
         3 * GIB,
         profile=_profile(
             kind=AcceleratorKind.NVIDIA_CUDA,
@@ -201,7 +195,7 @@ def test_measured_headroom_admits_the_load() -> None:
 def test_readable_accelerator_with_unreadable_free_figure_refuses() -> None:
     """A present-but-unreadable device is unknown headroom, which refuses."""
     snapshot = assess_model_load_contention(
-        "qwen2.5vl:3b",
+        "synthetic-resident:small",
         3 * GIB,
         profile=_profile(kind=AcceleratorKind.NVIDIA_CUDA, devices=(_device(0, total=16 * GIB, free=None),)),
         residents=(),
@@ -213,7 +207,7 @@ def test_readable_accelerator_with_unreadable_free_figure_refuses() -> None:
 def test_cpu_only_machine_is_judged_against_free_system_memory() -> None:
     """A measured-zero-device machine binds on RAM, and both directions are exercised."""
     admitted = assess_model_load_contention(
-        "qwen2.5:3b",
+        "synthetic-text:small",
         2 * GIB,
         profile=_profile(kind=AcceleratorKind.NONE, free_ram=16 * GIB),
         residents=(),
@@ -222,7 +216,7 @@ def test_cpu_only_machine_is_judged_against_free_system_memory() -> None:
     assert admitted.binding_free_bytes == 16 * GIB
 
     refused = assess_model_load_contention(
-        "qwen2.5:3b",
+        "synthetic-text:small",
         2 * GIB,
         profile=_profile(kind=AcceleratorKind.NONE, free_ram=1 * GIB),
         residents=(),
@@ -233,7 +227,7 @@ def test_cpu_only_machine_is_judged_against_free_system_memory() -> None:
 def test_cpu_only_machine_with_unreadable_free_memory_refuses() -> None:
     """Even a measured-zero-device machine refuses when its free RAM is unknown."""
     snapshot = assess_model_load_contention(
-        "qwen2.5:3b",
+        "synthetic-text:small",
         2 * GIB,
         profile=_profile(kind=AcceleratorKind.NONE, free_ram=None),
         residents=(),
@@ -282,33 +276,30 @@ def test_the_override_admits_an_unmeasurable_machine_but_never_a_measured_shortf
 # ---------------------------------------------------------------------------
 
 
-def test_shortfall_explained_by_our_residents_names_the_unload_remediation() -> None:
-    """Memory our runtime holds is reclaimable, and the refusal says to unload it."""
+def test_shortfall_explained_by_the_runtime_residents_is_attributed_to_them() -> None:
+    """Memory the runtime holds is attributed to its residents, not to a peer."""
     with override_settings(
-        cadrumo_llm_ollama_vision_model="qwen2.5vl:3b",
         cadrumo_llm_contention_safety_margin_bytes=0,
     ):
         snapshot = assess_model_load_contention(
-            "qwen2.5vl:7b",
+            "synthetic-load:large",
             8 * GIB,
             profile=_profile(
                 kind=AcceleratorKind.NVIDIA_CUDA,
                 devices=(_device(0, total=16 * GIB, free=4 * GIB),),
             ),
-            residents=(RuntimeResident(name="qwen2.5vl:3b", size_bytes=5 * GIB, size_vram_bytes=5 * GIB),),
+            residents=(RuntimeResident(name="synthetic-resident:small", size_bytes=5 * GIB, size_vram_bytes=5 * GIB),),
         )
     assert snapshot.admitted is False
     assert snapshot.causes == (ContentionCause.RUNTIME_RESIDENT,)
-    assert snapshot.unloadable_models == ("qwen2.5vl:3b",)
-    assert snapshot.facts["unloadable_model_count"] == 1
     assert snapshot.precondition_verdict is not None
 
 
 def test_shortfall_unexplained_by_residents_is_attributed_to_a_peer_process() -> None:
-    """Memory nothing of ours holds is a peer's, and the refusal must not say 'unload'."""
+    """Memory no resident holds is a peer's."""
     with override_settings(cadrumo_llm_contention_safety_margin_bytes=0):
         snapshot = assess_model_load_contention(
-            "qwen2.5vl:7b",
+            "synthetic-load:large",
             8 * GIB,
             profile=_profile(
                 kind=AcceleratorKind.NVIDIA_CUDA,
@@ -318,7 +309,6 @@ def test_shortfall_unexplained_by_residents_is_attributed_to_a_peer_process() ->
         )
     assert snapshot.admitted is False
     assert snapshot.causes == (ContentionCause.PEER_PROCESS,)
-    assert snapshot.unloadable_models == ()
     peer_attributed_bytes = snapshot.facts["peer_attributed_bytes"]
     assert isinstance(peer_attributed_bytes, int)
     assert peer_attributed_bytes > 0
@@ -328,55 +318,30 @@ def test_shortfall_unexplained_by_residents_is_attributed_to_a_peer_process() ->
 def test_a_partially_explained_shortfall_names_both_causes_and_both_remediations() -> None:
     """Residents that help but do not cover it must not read as a complete remedy."""
     with override_settings(
-        cadrumo_llm_ollama_vision_model="qwen2.5vl:3b",
         cadrumo_llm_contention_safety_margin_bytes=0,
     ):
         snapshot = assess_model_load_contention(
-            "qwen2.5vl:7b",
+            "synthetic-load:large",
             10 * GIB,
             profile=_profile(
                 kind=AcceleratorKind.NVIDIA_CUDA,
                 devices=(_device(0, total=16 * GIB, free=2 * GIB),),
             ),
-            residents=(RuntimeResident(name="qwen2.5vl:3b", size_bytes=3 * GIB, size_vram_bytes=3 * GIB),),
+            residents=(RuntimeResident(name="synthetic-resident:small", size_bytes=3 * GIB, size_vram_bytes=3 * GIB),),
         )
     assert snapshot.admitted is False
     assert snapshot.causes == (ContentionCause.RUNTIME_RESIDENT, ContentionCause.PEER_PROCESS)
     assert snapshot.resident_attributed_bytes == 3 * GIB
-    assert snapshot.facts["unloadable_model_count"] == 1
     peer_attributed_bytes = snapshot.facts["peer_attributed_bytes"]
     assert isinstance(peer_attributed_bytes, int)
     assert peer_attributed_bytes > 0
-
-
-def test_a_resident_cadrumo_did_not_select_is_reported_but_never_offered_for_unload() -> None:
-    """The runtime holding it does not make it ours to evict."""
-    with override_settings(
-        cadrumo_llm_ollama_vision_model="qwen2.5vl:3b",
-        cadrumo_llm_ollama_text_model="qwen2.5:3b",
-        cadrumo_llm_contention_safety_margin_bytes=0,
-    ):
-        snapshot = assess_model_load_contention(
-            "qwen2.5vl:7b",
-            8 * GIB,
-            profile=_profile(
-                kind=AcceleratorKind.NVIDIA_CUDA,
-                devices=(_device(0, total=16 * GIB, free=4 * GIB),),
-            ),
-            residents=(RuntimeResident(name="llama3:70b", size_bytes=5 * GIB, size_vram_bytes=5 * GIB),),
-        )
-    assert snapshot.causes == (ContentionCause.RUNTIME_RESIDENT,)
-    assert snapshot.unloadable_models == ()
-    assert snapshot.facts["resident_count"] == 1
-    assert snapshot.facts["unloadable_model_count"] == 0
-    assert snapshot.precondition_verdict is not None
 
 
 def test_an_unreadable_resident_set_refuses_even_though_the_shortfall_is_measured() -> None:
     """A measured shortfall with no attribution input refuses rather than blaming a peer."""
     with override_settings(cadrumo_llm_contention_safety_margin_bytes=0):
         snapshot = assess_model_load_contention(
-            "qwen2.5vl:7b",
+            "synthetic-load:large",
             8 * GIB,
             profile=_profile(
                 kind=AcceleratorKind.NVIDIA_CUDA,
@@ -394,7 +359,7 @@ def test_the_motivating_machine_state_refuses() -> None:
     """The live case this was built for: a 16 GiB card with under 4 GiB free must refuse a 7B load."""
     with override_settings(cadrumo_llm_contention_safety_margin_bytes=GIB):
         snapshot = assess_model_load_contention(
-            "qwen2.5vl:7b",
+            "synthetic-load:large",
             6 * GIB,
             profile=_profile(
                 kind=AcceleratorKind.NVIDIA_CUDA,
@@ -409,7 +374,7 @@ def test_the_motivating_machine_state_refuses() -> None:
 
 
 # ---------------------------------------------------------------------------
-# the runtime read and the unload action, over real HTTP
+# the runtime read, over real HTTP
 # ---------------------------------------------------------------------------
 
 
@@ -451,10 +416,10 @@ def runtime() -> object:
 def test_resident_set_is_read_from_the_runtime_ps_endpoint(runtime: tuple[str, Queue[dict[str, object]]]) -> None:
     """The read hits ``/api/ps`` and parses the runtime's own attribution figures."""
     chat_url, events = runtime
-    _RuntimeLoopbackHandler.residents = [{"name": "qwen2.5vl:3b", "size": 4 * GIB, "size_vram": 3 * GIB}]
+    _RuntimeLoopbackHandler.residents = [{"name": "synthetic-resident:small", "size": 4 * GIB, "size_vram": 3 * GIB}]
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
         residents = read_runtime_residents()
-    assert residents == (RuntimeResident(name="qwen2.5vl:3b", size_bytes=4 * GIB, size_vram_bytes=3 * GIB),)
+    assert residents == (RuntimeResident(name="synthetic-resident:small", size_bytes=4 * GIB, size_vram_bytes=3 * GIB),)
     assert events.get_nowait() == {"method": "GET", "path": "/api/ps"}
 
 
@@ -462,184 +427,3 @@ def test_an_unreachable_runtime_reads_as_unmeasured_not_as_empty() -> None:
     """``None`` and ``()`` are different states and the unreachable case must yield ``None``."""
     with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
         assert read_runtime_residents() is None
-
-
-def test_unload_releases_a_selected_resident_with_a_zero_keep_alive_and_no_prompt(
-    runtime: tuple[str, Queue[dict[str, object]]],
-) -> None:
-    """The release must carry no prompt, so it can never become a load."""
-    chat_url, events = runtime
-    with override_settings(
-        cadrumo_llm_ollama_chat_url=chat_url,
-        cadrumo_llm_ollama_vision_model="qwen2.5vl:3b",
-    ):
-        outcome = unload_runtime_model(
-            "qwen2.5vl:3b",
-            residents=(RuntimeResident(name="qwen2.5vl:3b", size_bytes=4 * GIB, size_vram_bytes=3 * GIB),),
-        )
-    assert outcome.unloaded is True
-    assert outcome.was_resident is True
-    posted = events.get_nowait()
-    assert posted["method"] == "POST"
-    assert posted["body"] == {"model": "qwen2.5vl:3b", "keep_alive": 0}
-    body = posted["body"]
-    assert isinstance(body, dict)
-    assert "prompt" not in body
-
-
-def test_a_selection_with_no_declared_requirement_declines_to_be_assessed() -> None:
-    """An unknown memory requirement must not be assessed as zero.
-
-    Zero is not a neutral placeholder on this path: it reaches
-    ``assess_model_load_contention`` as the amount the model needs, so the
-    check reports the load ADMITTED against a figure nobody supplied. Three
-    call sites derived this guard independently and each missed this fourth
-    case, which is why the accessor owns it.
-
-    Mutation that must trip this: return ``(runtime_id, requirement or 0)``.
-    """
-    selection = select_model_for_role(
-        ModelRole.VISION_TRANSCRIPTION,
-        profile=_profile(kind=AcceleratorKind.NONE, total_ram=128 * GIB, free_ram=96 * GIB),
-    )
-    assert selection.candidate is not None, "this host catalogues no vision candidate; the case below is vacuous"
-    # Positive control: fully declared, the load is assessable.
-    assert selection.assessable_load is not None
-
-    stripped = selection.model_copy(
-        update={"candidate": selection.candidate.model_copy(update={"memory_requirement_bytes": None})},
-    )
-
-    assert stripped.assessable_load is None, (
-        "a candidate declaring no memory requirement must not yield an assessable load; "
-        "assessing it would report admitted on evidence nobody has"
-    )
-
-
-def test_unload_refuses_a_model_cadrumo_did_not_select_and_sends_nothing(
-    runtime: tuple[str, Queue[dict[str, object]]],
-) -> None:
-    """Cadrumo never touches what it did not load -- and the guard is proven by silence on the wire."""
-    chat_url, events = runtime
-    with override_settings(
-        cadrumo_llm_ollama_chat_url=chat_url,
-        cadrumo_llm_ollama_vision_model="qwen2.5vl:3b",
-        cadrumo_llm_ollama_text_model="qwen2.5:3b",
-    ):
-        outcome = unload_runtime_model(
-            "llama3:70b",
-            residents=(RuntimeResident(name="llama3:70b", size_bytes=40 * GIB, size_vram_bytes=40 * GIB),),
-        )
-    assert outcome.unloaded is False
-    assert outcome.facts["selected_by_cadrumo"] is False
-    assert outcome.precondition_verdict is not None
-    assert events.empty(), "a refused unload must not reach the runtime at all"
-
-
-def test_unload_of_a_non_resident_model_is_a_no_op_and_never_loads_it(
-    runtime: tuple[str, Queue[dict[str, object]]],
-) -> None:
-    """The residency guard is what stops the release call from bringing a model in."""
-    chat_url, events = runtime
-    with override_settings(
-        cadrumo_llm_ollama_chat_url=chat_url,
-        cadrumo_llm_ollama_vision_model="qwen2.5vl:3b",
-    ):
-        outcome = unload_runtime_model("qwen2.5vl:3b", residents=())
-    assert outcome.unloaded is False
-    assert outcome.was_resident is False
-    assert events.empty(), "a non-resident release must not reach the runtime at all"
-
-
-def test_unload_with_an_unreadable_resident_set_does_nothing(
-    runtime: tuple[str, Queue[dict[str, object]]],
-) -> None:
-    """Unknown residency is not permission to act."""
-    chat_url, events = runtime
-    with override_settings(
-        cadrumo_llm_ollama_chat_url=chat_url,
-        cadrumo_llm_ollama_vision_model="qwen2.5vl:3b",
-    ):
-        outcome = unload_runtime_model("qwen2.5vl:3b", residents=None, residents_measured=False)
-    assert outcome.unloaded is False
-    assert events.empty()
-
-
-def test_selected_models_are_exactly_the_configured_roles() -> None:
-    """The unload boundary is the configured selection, nothing wider and nothing missed.
-
-    Every role gets a distinct value so an omitted role is visible: a set built
-    from only some of the roles would still match if an omitted one shared a
-    default with another, which is exactly the state the shipped defaults are in.
-    """
-    with override_settings(
-        cadrumo_llm_ollama_vision_model="vision-model",
-        cadrumo_llm_ollama_text_model="text-model",
-        cadrumo_llm_ollama_mapping_model="mapping-model",
-        cadrumo_llm_ollama_supply_nature_model="supply-nature-model",
-    ):
-        assert cadrumo_selected_models() == frozenset(
-            {"vision-model", "text-model", "mapping-model", "supply-nature-model"}
-        )
-
-
-# ---------------------------------------------------------------------------
-# the readiness action, over real HTTP
-# ---------------------------------------------------------------------------
-
-
-def _paths(events: Queue[dict[str, object]]) -> list[str]:
-    """Drain every request the runtime stub actually received, in order."""
-    seen: list[str] = []
-    while not events.empty():
-        seen.append(str(events.get_nowait()["path"]))
-    return seen
-
-
-def test_a_readiness_check_against_an_unreachable_runtime_refuses_naming_the_daemon_command() -> None:
-    """Same boundary on the verify path, and the same real closed port."""
-    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-        outcome = load_and_verify_model("small-model:1b")
-
-    assert outcome.ready is False
-    assert outcome.answered is False
-    assert outcome.facts["runtime_reachable"] is False
-    assert outcome.precondition_verdict is not None
-
-
-def test_a_readiness_check_reports_ready_when_the_runtime_answers(
-    runtime: tuple[str, Queue[dict[str, object]]],
-) -> None:
-    """Positive control for both refusal cases above.
-
-    A verify that reported unready unconditionally would satisfy every refusal
-    assertion in this file. This is what distinguishes "refuses correctly" from
-    "refuses always".
-    """
-    chat_url, events = runtime
-    _RuntimeLoopbackHandler.residents = [{"name": "small-model:1b", "size": 1 * GIB, "size_vram": 1 * GIB}]
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = load_and_verify_model("small-model:1b")
-
-    assert outcome.ready is True
-    assert outcome.answered is True
-    assert outcome.resident is True
-    assert outcome.elapsed_ms is not None
-    assert events.get_nowait()["path"] == "/api/ps"
-    assert events.get_nowait()["path"] == "/api/generate"
-
-
-def test_a_readiness_check_for_a_model_that_is_not_installed_names_the_pull_and_loads_nothing(
-    runtime: tuple[str, Queue[dict[str, object]]],
-) -> None:
-    """An absent model is reported as absent; the check never asks the runtime to load it."""
-    chat_url, events = runtime
-    _RuntimeLoopbackHandler.installed = [{"name": "other-model:1b", "size": GIB}]
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = load_and_verify_model("small-model:1b")
-
-    assert outcome.ready is False
-    assert outcome.facts["model_installed"] is False
-    assert outcome.precondition_verdict is not None
-    assert outcome.precondition_verdict.failed_condition_id == "provisioning.model.installed"
-    assert "/api/generate" not in _paths(events)

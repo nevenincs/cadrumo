@@ -8,21 +8,11 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
-from ...core.model_catalogue import ModelRole
 from ...core.operations import profile_operation_subject
-from ..local_reader_contracts import (
-    LOCAL_READER_OPERATION_DEFINITION_ID,
-    LOCAL_READER_OPERATION_SUBJECT,
-    LocalReaderProvisionAction,
-    LocalReaderProvisionRequest,
-)
-from ..local_reader_operation import (
-    build_local_reader_operation_definition,
-    build_local_reader_operation_registration,
-)
+from ..local_reader_contracts import LOCAL_READER_OPERATION_SUBJECT
 from ..local_reader_report import (
     LOCAL_READER_REPORT_OPERATION_DEFINITION_ID,
     LocalReaderReportRequest,
@@ -48,51 +38,29 @@ _DESTINATION = UUID("5aa00000-0000-4000-8000-0000000000bb")
 
 @dataclass(frozen=True, slots=True)
 class _Case:
-    """One request of the provisioning family and whether it can change what the machine holds."""
+    """One read of the local-reader family."""
 
     definition_id: str
     subject_ref: str
     payload: BaseModel
-    commits: bool
-
-
-def _provision(action: LocalReaderProvisionAction, **values: object) -> _Case:
-    return _Case(
-        definition_id=LOCAL_READER_OPERATION_DEFINITION_ID,
-        subject_ref=LOCAL_READER_OPERATION_SUBJECT,
-        payload=LocalReaderProvisionRequest.model_validate({"action": action, **values}),
-        commits=action is not LocalReaderProvisionAction.VERIFY,
-    )
 
 
 _CASES = {
-    "load": _provision(LocalReaderProvisionAction.LOAD, role=ModelRole.TEXT_EXTRACTION),
-    "load-model": _provision(LocalReaderProvisionAction.LOAD, model="qwen3:4b"),
-    "verify": _provision(LocalReaderProvisionAction.VERIFY, role=ModelRole.TEXT_EXTRACTION),
-    "verify-model": _provision(LocalReaderProvisionAction.VERIFY, model="qwen3:4b"),
     "status": _Case(
-        LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
-        LOCAL_READER_OPERATION_SUBJECT,
-        LocalReaderStatusRequest(),
-        commits=False,
+        LOCAL_READER_STATUS_OPERATION_DEFINITION_ID, LOCAL_READER_OPERATION_SUBJECT, LocalReaderStatusRequest()
     ),
     "report": _Case(
-        LOCAL_READER_REPORT_OPERATION_DEFINITION_ID,
-        LOCAL_READER_OPERATION_SUBJECT,
-        LocalReaderReportRequest(),
-        commits=False,
+        LOCAL_READER_REPORT_OPERATION_DEFINITION_ID, LOCAL_READER_OPERATION_SUBJECT, LocalReaderReportRequest()
     ),
 }
 
 
 def _registry() -> OperationRegistry:
-    provision = build_local_reader_operation_definition()
     status = build_local_reader_status_definition()
     report = build_local_reader_report_definition()
     return OperationRegistry(
-        definitions=(provision, report, status),
+        definitions=(report, status),
         public_registrations=(
-            build_local_reader_operation_registration(provision),
             build_local_reader_report_registration(report),
             build_local_reader_status_registration(status),
         ),
@@ -120,11 +88,7 @@ def _context(
     )
 
 
-def test_the_cases_cover_every_provisioning_action_and_every_operation_of_the_family() -> None:
-    cases = tuple(_CASES.values())
-    actions = {case.payload.action for case in cases if isinstance(case.payload, LocalReaderProvisionRequest)}
-
-    assert actions == set(LocalReaderProvisionAction)
+def test_the_cases_cover_every_operation_of_the_family() -> None:
     assert {case.definition_id for case in _CASES.values()} == {
         contract.definition_id for contract in _registry().public_contract_set.definitions
     }
@@ -142,7 +106,7 @@ def test_every_frontend_resolves_each_request_to_the_same_period_independent_acc
 
     assert on_cli.request.period_independent and not on_cli.request.periods
     assert not on_cli.policy.requires_human and not on_cli.policy.requires_all_periods
-    assert (AccessAction.COMMIT in on_cli.policy.actions) is case.commits
+    assert AccessAction.COMMIT not in on_cli.policy.actions
     for frontend in OperationFrontendProjection:
         on_frontend = resolve_operation_access(
             registry=registry, request=_request(case), context=replace(context, frontend=frontend)
@@ -152,7 +116,7 @@ def test_every_frontend_resolves_each_request_to_the_same_period_independent_acc
 
 
 @pytest.mark.parametrize("name", sorted(_CASES))
-def test_a_scope_that_holds_no_commit_submits_the_reads_and_no_request_that_can_change_the_machine(
+def test_a_scope_that_holds_no_commit_submits_every_read(
     name: str,
 ) -> None:
     case = _CASES[name]
@@ -161,13 +125,10 @@ def test_a_scope_that_holds_no_commit_submits_the_reads_and_no_request_that_can_
 
     decision = policy_decision(resolved, registry, disclosures=resolved.policy.disclosures)
 
-    if case.commits:
-        assert isinstance(decision, AccessDenied) and decision.code is AccessDenialCode.OPERATION_DENIED
-    else:
-        assert isinstance(decision, AccessAllowed)
+    assert isinstance(decision, AccessAllowed)
 
 
-@pytest.mark.parametrize("name", ["verify", "status", "report"])
+@pytest.mark.parametrize("name", ["status", "report"])
 def test_the_result_discloses_profile_values_to_the_requesting_destination_alone(name: str) -> None:
     case = _CASES[name]
     registry = _registry()
@@ -179,7 +140,7 @@ def test_the_result_discloses_profile_values_to_the_requesting_destination_alone
     assert {item.destination_id for item in resolved.policy.disclosures} == {_DESTINATION}
 
 
-@pytest.mark.parametrize("name", ["verify", "status", "report"])
+@pytest.mark.parametrize("name", ["status", "report"])
 @pytest.mark.parametrize(
     "subject_ref",
     [profile_operation_subject(str(PROFILE_ID)), str(PROFILE_ID), "9b0c2f4e-5a1d-4c3b-8e7f-0a1b2c3d4e5f"],

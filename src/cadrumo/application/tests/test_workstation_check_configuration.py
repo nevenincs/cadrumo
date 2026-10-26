@@ -31,13 +31,13 @@ def _report(monkeypatch: pytest.MonkeyPatch, *, profile_values: dict[str, str]) 
             settings=load_settings(),
         )
 
-    vision = DependencyStatus(service="local-reader:vision_transcription", available=True)
+    program = DependencyStatus(service="local-ai:program", available=True)
     google = DependencyStatus(service="extra:google", available=True)
     browser = DependencyStatus(service="extra:browser", available=True)
     extras = (google, browser)
 
-    def dependencies() -> tuple[tuple[DependencyStatus, ...], DependencyStatus, tuple[DependencyStatus, ...]]:
-        return (vision, *extras), vision, extras
+    def dependencies() -> tuple[tuple[DependencyStatus, ...], tuple[DependencyStatus, ...]]:
+        return (program, *extras), extras
 
     def preflight(
         *,

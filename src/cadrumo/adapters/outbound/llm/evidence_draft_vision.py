@@ -60,7 +60,7 @@ from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputE
 from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
 from ....core.field_origin import FieldOrigin
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import provenance_transport_label

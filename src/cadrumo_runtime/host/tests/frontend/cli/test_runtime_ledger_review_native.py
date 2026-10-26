@@ -29,7 +29,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
-from cadrumo.core.config import load_settings, override_settings, reset_settings_cache
+from cadrumo.core.config import override_settings, reset_settings_cache
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionLifecycleState
@@ -56,6 +56,9 @@ pytestmark = [
     pytest.mark.windows_only,
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
+
+#: Synthetic models the reading endpoint answers as.
+_READING_MODELS = ("cadrumo-test-text-reader:1b", "cadrumo-test-vision-reader:1b")
 
 
 @dataclass(frozen=True)
@@ -148,8 +151,7 @@ def native_review(
 ) -> Iterator[_NativeReview]:
     """Configure a real socket before the isolated native worker is created."""
     state = _EndpointState()
-    configured = load_settings()
-    models = (configured.cadrumo_llm_ollama_text_model, configured.cadrumo_llm_ollama_vision_model)
+    models = _READING_MODELS
 
     class _Endpoint(SilentLoopbackHandler):
         @override
@@ -310,10 +312,7 @@ def _provider_once(
     messages = [json_object(message) for message in json_array(request["messages"])]
     has_images = any(bool(message.get("images")) for message in messages)
     assert has_images is review.endpoint.answers[marker].images
-    assert request["model"] in {
-        load_settings().cadrumo_llm_ollama_text_model,
-        load_settings().cadrumo_llm_ollama_vision_model,
-    }
+    assert request["model"] in set(_READING_MODELS)
     return result
 
 

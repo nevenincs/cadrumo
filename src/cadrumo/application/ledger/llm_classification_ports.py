@@ -16,7 +16,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.transaction_ids import TransactionId
 from ...core.image_media_type import ImageMediaType
-from ...core.model_catalogue import ModelRole
+from ...core.model_roles import ModelRole
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.iva.schema import IvaCategory

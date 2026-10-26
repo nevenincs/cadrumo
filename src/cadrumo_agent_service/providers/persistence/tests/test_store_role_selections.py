@@ -10,7 +10,7 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_client.contracts.extension_records import ExtensionRecordRefusal, ExtensionRecordReply
 from cadrumo_client.transport.service_client import InstalledServiceClient

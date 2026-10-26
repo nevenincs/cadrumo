@@ -96,7 +96,6 @@ _PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.R
 # What the first composition imports: its own entry points, the persistence and
 # supervisor modules it binds, and the profile operations a session reads first.
 _COMPOSITION_MODULES = (
-    "cadrumo.application.local_reader_provisioning",
     "cadrumo.entrypoints.operation_composition",
     "cadrumo.adapters.persistence.operations.durability_router",
     "cadrumo.adapters.persistence.operations.journal",

@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.document_shape import DocumentShape
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ..batch_ingest import _reader_role_for
 from ..evidence_input_ports import EvidenceDocumentShapeProbe
 

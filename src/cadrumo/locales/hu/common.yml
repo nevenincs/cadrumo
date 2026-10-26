@@ -4217,10 +4217,6 @@ overview:
 provisioning:
   model:
     licence:
-      non_commercial_advisory: A(z) %{model} modellre a(z) %{licence} vonatkozik,
-        amely nem engedélyezi a kereskedelmi felhasználást. Ezt kifejezetten te adtad
-        meg, ezért a Cadrumo használni fogja, de kereskedelmi könyvelői tevékenységhez
-        külön licencet kell kérni a kiadótól.
       plan_non_commercial: A(z) %{model} modellre a(z) %{licence} vonatkozik, amely
         nem engedélyezi a kereskedelmi felhasználást. Ha kereskedelmi könyvelői tevékenységhez
         használod, külön licencet kell kérned a kiadótól.

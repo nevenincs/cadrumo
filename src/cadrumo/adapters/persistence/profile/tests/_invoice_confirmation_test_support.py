@@ -20,7 +20,7 @@ from typing import ClassVar, NamedTuple, TypedDict, override
 import httpx
 import pytest
 
-from cadrumo_client.contracts.model_runs import ModelRunBody
+from cadrumo_client.contracts.model_runs import ModelRunBody, ModelRunLane
 
 from .....application.invoices.catalogue_creation_ports import CatalogueCreationPorts
 from .....application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
@@ -469,21 +469,18 @@ def serving_a_loopback_reader(
     replies: Sequence[ReaderReply],
     *,
     fallback: Mapping[str, str] | None = None,
+    lane: ModelRunLane = IMAGE_LANE,
 ) -> Generator[str]:
-    """Serve the deterministic local reading endpoint used by these tests."""
+    """Serve the deterministic reading used by these tests, through an agent that resolves every role to ``lane``."""
     from .....application.tests.role_model_support import configured_role_model
-    from .....core.model_catalogue import ModelRole
+    from .....core.model_roles import ModelRole
 
     _LoopbackRequestHandler.replies = tuple(replies)
     _LoopbackRequestHandler.fallback = dict(fallback or {})
     # Captured here rather than read in the handler: the server answers on its
     # own thread, which does not see this process's settings override.
     _LoopbackRequestHandler.installed_models = tuple(
-        model
-        for model in (
-            configured_role_model(role) for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION)
-        )
-        if model is not None
+        configured_role_model(role) for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION)
     )
 
     def answer(body: ModelRunBody) -> str:
@@ -494,7 +491,7 @@ def serving_a_loopback_reader(
     with (
         serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url,
         override_settings(cadrumo_llm_ollama_chat_url=chat_url),
-        serving_agent(lane=IMAGE_LANE, answer=answer),
+        serving_agent(lane=lane, answer=answer),
     ):
         yield chat_url
 

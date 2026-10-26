@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunLicence, ModelRunRefusal, ModelRunRefusalCode
 

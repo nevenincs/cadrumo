@@ -40,7 +40,7 @@ from pydantic import (
 
 from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.hex import Hex64Str
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
 from cadrumo.core.time.utc import UtcInstant

@@ -19,7 +19,6 @@ import pytest
 
 from ...core.config import load_settings, override_settings
 from ...core.errors.hierarchy import CadrumoError, CoreError, CoreValidationError
-from ...core.model_catalogue import ModelRole
 from ...core.optional_extras import OPTIONAL_EXTRAS, MissingOptionalExtraError, OptionalExtra, require_optional_extra
 from ...core.storage_taxonomy import StorageGrouping
 from ...core.storage_taxonomy_locations import storage_tree_targets
@@ -27,7 +26,7 @@ from ...domain.calculations.registry.authority_store import AuthorityDescriptor,
 from ...domain.calculations.registry.errors import AuthorityDescriptorUnavailableError
 from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_raw_response
 from ..cli_provisioning import admit_cli_authority, provision_cli_storage
-from ..local_reader import probe_local_reader
+from ..local_reader import LOCAL_AI_PROGRAM_SERVICE, probe_local_ai_program
 from ..provisioning import DependencyStatus, probe_optional_extra, probe_optional_extras
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -60,13 +59,13 @@ def _serve_ollama_tags(payload: object) -> Generator[str]:
         yield endpoint
 
 
-def test_local_reader_probe_unreachable_returns_unavailable_with_remediation() -> None:
+def test_local_ai_program_probe_unreachable_returns_unavailable_with_remediation() -> None:
     """An unreachable runtime yields a typed unavailable result, never an exception."""
     # Port 1 is reserved/closed — the connection is refused fast.
     with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-        status = probe_local_reader(ModelRole.VISION_TRANSCRIPTION)
+        status = probe_local_ai_program()
     assert isinstance(status, DependencyStatus)
-    assert status.service == "local-reader:vision_transcription"
+    assert status.service == LOCAL_AI_PROGRAM_SERVICE
     assert status.available is False
     assert status.facts["runtime_reachable"] is False
     assert status.precondition_verdict is not None
@@ -74,12 +73,12 @@ def test_local_reader_probe_unreachable_returns_unavailable_with_remediation() -
 
 
 @pytest.mark.parametrize("payload", ([], {"models": None}, {"models": [{"name": 7}]}))
-def test_local_reader_probe_malformed_successful_tags_response_is_unavailable(payload: object) -> None:
+def test_local_ai_program_probe_malformed_successful_tags_response_is_unavailable(payload: object) -> None:
     """A real successful tags response with the wrong JSON shape stays a typed unavailable result."""
     with _serve_ollama_tags(payload) as endpoint, override_settings(cadrumo_llm_ollama_chat_url=f"{endpoint}/api/chat"):
-        status = probe_local_reader(ModelRole.VISION_TRANSCRIPTION)
+        status = probe_local_ai_program()
 
-    assert status.service == "local-reader:vision_transcription"
+    assert status.service == LOCAL_AI_PROGRAM_SERVICE
     assert status.available is False
     assert status.facts["runtime_reachable"] is False
     assert status.precondition_verdict is not None

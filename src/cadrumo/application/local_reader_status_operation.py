@@ -1,7 +1,7 @@
 """Read operation for the local document reader's status, from any frontend.
 
-``local-reader.status`` measures the runtime host and every reader role's
-model into one projection. Nothing is started, pulled, loaded or installed.
+``local-reader.status`` measures the runtime host and judges the lane the
+person selected for every reader role into one projection. Nothing is started, pulled, loaded or installed.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ import asyncio
 from pydantic import BaseModel, Field
 
 from ..core.hardware import ContentionCause
-from ..core.model_catalogue import ModelRole
+from ..core.model_roles import ModelRole
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operations import OperationEffect
 from ..core.time.clock import now
@@ -19,6 +19,7 @@ from .local_reader import (
     LocalReaderDocumentReadiness,
     LocalReaderStatus,
     read_local_reader_status,
+    read_role_lanes,
 )
 from .local_reader_contracts import (
     LOCAL_READER_OPERATION_SUBJECT,
@@ -119,7 +120,8 @@ class LocalReaderStatusExecutor:
             raise ValueError("local-reader operation subject must name the local runtime")
         await context.events.phase(LOCAL_READER_STATUS_OPERATION_DEFINITION_ID)
         await context.events.effect(OperationEffect.NONE)
-        status = await asyncio.to_thread(read_local_reader_status)
+        lanes = await read_role_lanes(ModelRole)
+        status = await asyncio.to_thread(read_local_reader_status, lanes)
         return await context.operands.put(status, written_at=now())
 
 
@@ -146,7 +148,6 @@ def resolve_local_reader_status_access(
         definition_id=LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
         payload_type=LocalReaderStatusRequest,
         subject_ref=LOCAL_READER_OPERATION_SUBJECT,
-        commits=lambda _payload: False,
     )
 
 

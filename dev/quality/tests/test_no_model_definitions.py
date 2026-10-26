@@ -81,9 +81,7 @@ _TABLE_KEYS: Final = frozenset({"model_id", "model_name", "runtime_id", "manifes
 #: Files that define a model today. Later Steps remove entries; none may be added.
 _BURN_DOWN: Final = frozenset(
     {
-        "src/cadrumo/_data/dependencies/local_ai_models.toml",
         "src/cadrumo/core/config_runtime_fields.py",
-        "src/cadrumo/core/model_catalogue.py",
     }
 )
 

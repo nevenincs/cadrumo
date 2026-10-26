@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 
 from ..record import (
     AssistantAuth,

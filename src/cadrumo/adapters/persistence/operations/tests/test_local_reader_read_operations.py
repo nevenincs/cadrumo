@@ -1,7 +1,8 @@
 """The supervised reads of the local reader: its status and the machine report.
 
 Every run goes through the real registry, supervisor, journal and encrypted
-operand store against a real loopback runtime. Each public result is compared
+operand store against a real loopback runtime, with the person's selection
+answered through the operation's model-run port. Each public result is compared
 with what the application reads directly under the same settings, so the
 operation is shown to publish the measurement and nothing else.
 """
@@ -33,9 +34,10 @@ from .....application.tests.local_reader_operation_requests import (
     build_local_reader_status_request,
 )
 from .....core.config import override_settings
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....core.operations import OperationEffect
 from .local_reader_operation_support import (
+    READER_LANES,
     TEXT_MODEL,
     VISION_MODEL,
     LoopbackModelRuntime,
@@ -52,7 +54,7 @@ _CLOSED_LOCAL_ENDPOINT = "http://127.0.0.1:1/api/chat"
 def test_status_publishes_the_host_and_every_role_without_loading_a_model(tmp_path: Path) -> None:
     with loopback_model_runtime(installed={TEXT_MODEL}, residents={TEXT_MODEL}) as chat_url:
         run = run_supervised(tmp_path, build_local_reader_status_request(), LocalReaderStatusPublicResultV1)
-        direct = read_local_reader_status()
+        direct = read_local_reader_status(READER_LANES)
         requests = list(LoopbackModelRuntime.requests)
 
     status = run.result
@@ -108,7 +110,7 @@ def test_status_reports_an_unreachable_runtime_as_a_state_with_its_refusal(tmp_p
 def test_the_report_publishes_the_measured_machine_and_each_roles_selection(tmp_path: Path) -> None:
     with loopback_model_runtime(installed={TEXT_MODEL}, residents={TEXT_MODEL}):
         run = run_supervised(tmp_path, build_local_reader_report_request(), LocalReaderReportPublicResultV1)
-        direct = read_local_reader_report()
+        direct = read_local_reader_report(READER_LANES)
         requests = list(LoopbackModelRuntime.requests)
 
     report = run.result

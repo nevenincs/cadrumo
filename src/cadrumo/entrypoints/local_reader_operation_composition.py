@@ -1,6 +1,6 @@
-"""Compose the operations that load, measure and report on what the machine holds for local reading.
+"""Compose the operations that measure and report on what the machine holds for local reading.
 
-The three operations share one subject, the local AI the native component
+The two operations share one subject, the local AI the native component
 engine installed and the runtime manager runs. Nothing composed here starts,
 installs or removes a program or a model.
 """
@@ -9,10 +9,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..application.local_reader_operation import (
-    build_local_reader_operation_definition,
-    build_local_reader_operation_registration,
-)
 from ..application.local_reader_report import (
     build_local_reader_report_definition,
     build_local_reader_report_registration,
@@ -36,14 +32,12 @@ class LocalReaderOperations:
 
 
 def build_local_reader_operations() -> LocalReaderOperations:
-    """Build the three ``local-reader`` operations."""
-    provision = build_local_reader_operation_definition()
+    """Build the two ``local-reader`` operations."""
     status = build_local_reader_status_definition()
     report = build_local_reader_report_definition()
     return LocalReaderOperations(
-        definitions=(provision, status, report),
+        definitions=(status, report),
         registrations=(
-            build_local_reader_operation_registration(provision),
             build_local_reader_status_registration(status),
             build_local_reader_report_registration(report),
         ),

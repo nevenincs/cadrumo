@@ -33,7 +33,6 @@ from .....adapters.outbound.aeat.browser.session import require_browser_ready
 from .....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
 from .....application.dependency_contracts import DependencyStatusRow
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
-from .....application.local_reader import probe_local_reader
 from .....application.modelo.operation_definitions import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     build_modelo_work_calculate_definition,
@@ -53,11 +52,16 @@ from .....application.operations.frontend_projection import (
 from .....application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
-from .....application.provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
+from .....application.provisioning_contracts import (
+    LOCAL_AI_PROVISION_ACTION_ID,
+    ProvisioningPreconditionCondition,
+    provisioning_no_recovery_verdict,
+    provisioning_setup_verdict,
+)
 from .....application.search.workbench import WorkbenchDestinationAdmissionState
 from .....core.config import Settings, override_settings
 from .....core.errors.hierarchy import CadrumoError
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...app import CadrumoTuiApp
 from ...navigation import (
@@ -117,12 +121,14 @@ def _browser_detail(empty_cache: Path) -> OperationErrorDetailV1:
 
 
 def _reader_detail() -> OperationErrorDetailV1:
-    """The detail an evidence read records when the role's model is not installed."""
-    status = probe_local_reader(ModelRole.TEXT_EXTRACTION, installed=(), model="reader-model:1b")
+    """The detail an evidence read records when the role's selected model is not installed."""
+    verdict = provisioning_setup_verdict(
+        ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+        facts={"role": ModelRole.TEXT_EXTRACTION.value, "role_model_installed": False},
+        action_id=LOCAL_AI_PROVISION_ACTION_ID,
+    )
     return _recorded(
-        PurchaseInvoiceEvidenceReaderError(
-            translated_message=_READER_MESSAGE_KEY, precondition_verdict=status.precondition_verdict
-        )
+        PurchaseInvoiceEvidenceReaderError(translated_message=_READER_MESSAGE_KEY, precondition_verdict=verdict)
     )
 
 

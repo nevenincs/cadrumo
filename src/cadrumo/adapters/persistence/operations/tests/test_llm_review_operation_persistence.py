@@ -87,7 +87,7 @@ from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.config import load_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,

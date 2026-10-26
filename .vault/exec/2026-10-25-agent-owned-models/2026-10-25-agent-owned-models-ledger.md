@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:b2565548b50d82dbd565e01023968f6d558fc34bef4003b722df97385e13c380'
+body_hash: 'sha256:f3e2f12ce6f4489842146ee69e5e63717f6785fa42e7ce7561e31ac5f5bd685b'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -490,6 +490,196 @@ related:
 - `S15` `verify:` `just check-import-boundaries` -> `pass`
 - `S15` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check (after just generate-operation-contract-manifest)` -> `pass`
 - `S15` `by:` `high-implementer`
+- `S16` `D` `dev/env/local_ai_model_pins.py`
+- `S16` `M` `dev/env/local_ai_pins.py`
+- `S16` `D` `dev/env/tests/data/ollama_manifests/moondream_1.8b.json`
+- `S16` `D` `dev/env/tests/data/ollama_manifests/qwen2.5_3b.json`
+- `S16` `D` `dev/env/tests/data/ollama_manifests/qwen2.5vl_3b.json`
+- `S16` `D` `dev/env/tests/data/ollama_manifests/qwen2.5vl_7b.json`
+- `S16` `D` `dev/env/tests/data/ollama_manifests/qwen3-vl_2b.json`
+- `S16` `D` `dev/env/tests/data/ollama_manifests/qwen3_1.7b.json`
+- `S16` `D` `dev/env/tests/test_local_ai_model_pins.py`
+- `S16` `M` `dev/locales/fstring_registry.py`
+- `S16` `M` `dev/locales/tests/test_audit.py`
+- `S16` `M` `dev/locales/tests/test_dynamic_prefix_registry_coverage.py`
+- `S16` `M` `dev/packaging/lane_verification_core.py`
+- `S16` `M` `dev/packaging/tests/test_native_layout_entrypoints.py`
+- `S16` `M` `dev/packaging/tests/test_overview_provisioning_action_recovery.py`
+- `S16` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S16` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S16` `M` `dev/quality/metadata/import_load_targets.json`
+- `S16` `M` `dev/quality/tests/test_no_model_definitions.py`
+- `S16` `M` `dev/quality/tests/test_no_python_provisioning.py`
+- `S16` `M` `docs/reference/environment-overrides.md`
+- `S16` `M` `env/.env.example`
+- `S16` `D` `src/cadrumo/_data/dependencies/local_ai_models.toml`
+- `S16` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S16` `M` `src/cadrumo/adapters/inbound/financial/tests/test_column_reader_unavailable_import.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/components/protocol.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/client.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/column_role_mapping.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/evidence_draft_text.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/evidence_draft_vision.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/models.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/providers/agent.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/statement_reading.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/supply_nature_proposal.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/load_headroom_support.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/model_run_support.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_agent_dispatch.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_client.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_column_role_mapping.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_dispatch_load_headroom.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_gate.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_ledger.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_draft_text.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_draft_vision.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_injection_regression.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_llm_vision_classifier.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_local_text_reader_wiring.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_no_cloud_fallback_on_degradation.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_on_host_inference_admission.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_role_reader_unavailable_is_reported.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_stage_two_semantic_reader_wiring.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_statement_reader_setup_refusal.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_statement_reading.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_supply_nature_agent_dispatch.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_transport_retry_policy.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/tests/test_vision_capability_boundary.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/text_classifier.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/llm/vision_classifier.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/operations/tests/local_reader_operation_support.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/operations/tests/test_llm_review_operation_persistence.py`
+- `S16` `D` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_operation.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_read_operations.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/_invoice_confirmation_test_support.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_batch_inference_pacing.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_batch_ingest_runner.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_evidence_draft.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_llm_evidence_no_split.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_llm_evidence_split.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_llm_evidence_split_apply.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_llm_reject_split.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_llm_saturation.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_llm_saturation_apply.py`
+- `S16` `M` `src/cadrumo/application/dependency_contracts.py`
+- `S16` `M` `src/cadrumo/application/dependency_wording.py`
+- `S16` `M` `src/cadrumo/application/invoices/tests/test_bulk_import_reader_reason.py`
+- `S16` `M` `src/cadrumo/application/invoices/tests/test_catalogue_intake_operation.py`
+- `S16` `M` `src/cadrumo/application/ledger/batch_ingest.py`
+- `S16` `M` `src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py`
+- `S16` `M` `src/cadrumo/application/ledger/llm_classification.py`
+- `S16` `M` `src/cadrumo/application/ledger/llm_classification_ports.py`
+- `S16` `M` `src/cadrumo/application/ledger/tests/loopback_reader.py`
+- `S16` `M` `src/cadrumo/application/ledger/tests/test_batch_reader_roles.py`
+- `S16` `M` `src/cadrumo/application/ledger/tests/test_evidence_reader_refusal_key.py`
+- `S16` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_operation_contracts.py`
+- `S16` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_reader_readiness_recovery.py`
+- `S16` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_readiness_external_client_access.py`
+- `S16` `M` `src/cadrumo/application/local_reader.py`
+- `S16` `M` `src/cadrumo/application/local_reader_contracts.py`
+- `S16` `M` `src/cadrumo/application/local_reader_operation.py`
+- `S16` `D` `src/cadrumo/application/local_reader_provisioning.py`
+- `S16` `M` `src/cadrumo/application/local_reader_report.py`
+- `S16` `M` `src/cadrumo/application/local_reader_status_operation.py`
+- `S16` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S16` `M` `src/cadrumo/application/operations/model_runs.py`
+- `S16` `M` `src/cadrumo/application/operations/tests/test_model_runs.py`
+- `S16` `M` `src/cadrumo/application/provisioning.py`
+- `S16` `M` `src/cadrumo/application/provisioning_contracts.py`
+- `S16` `M` `src/cadrumo/application/provisioning_runtime.py`
+- `S16` `M` `src/cadrumo/application/tests/local_reader_operation_requests.py`
+- `S16` `M` `src/cadrumo/application/tests/role_model_support.py`
+- `S16` `M` `src/cadrumo/application/tests/test_dependency_registry_conformance.py`
+- `S16` `M` `src/cadrumo/application/tests/test_local_reader.py`
+- `S16` `M` `src/cadrumo/application/tests/test_local_reader_operation_access.py`
+- `S16` `D` `src/cadrumo/application/tests/test_model_selection.py`
+- `S16` `M` `src/cadrumo/application/tests/test_provisioning.py`
+- `S16` `M` `src/cadrumo/application/tests/test_provisioning_hardware_contention.py`
+- `S16` `M` `src/cadrumo/application/tests/test_provisioning_model_inventory.py`
+- `S16` `D` `src/cadrumo/application/tests/test_supply_nature_model_setting.py`
+- `S16` `M` `src/cadrumo/application/tests/test_workstation_check_configuration.py`
+- `S16` `M` `src/cadrumo/application/tests/test_workstation_check_operation.py`
+- `S16` `M` `src/cadrumo/application/workstation_check.py`
+- `S16` `D` `src/cadrumo/application/workstation_contention.py`
+- `S16` `M` `src/cadrumo/core/capabilities.py`
+- `S16` `M` `src/cadrumo/core/config_runtime_fields.py`
+- `S16` `D` `src/cadrumo/core/local_ai_pins.py`
+- `S16` `D` `src/cadrumo/core/model_catalogue.py`
+- `S16` `D` `src/cadrumo/core/tests/test_local_ai_pins.py`
+- `S16` `D` `src/cadrumo/core/tests/test_model_catalogue.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/_provision_command_specs.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/check_payloads.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/provision_cli.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/provision_payloads.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/tests/test_check_hardware_rows.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/tests/test_config_command_specs.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_component_setup_refusal_text.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_evidence_extract_consent_verb.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_batch_cli.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_reader_refusal_settlement.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_llm_vision_classifier.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_llm_vision_evidence.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_offline_status.py`
+- `S16` `M` `src/cadrumo/entrypoints/ledger_llm_composition.py`
+- `S16` `M` `src/cadrumo/entrypoints/local_reader_operation_composition.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/conformance_workstation_check_support.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/dependency_operation_gating_support.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/invoice_evidence_operation_test_support.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/registered_executor_payload_support.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_dependency_consumer_gating.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_evidence_batch_reader_lane.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_evidence_batch_reader_pause_settlement.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_evidence_confirm_reader_refusal_settlement.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_evidence_reader_precheck.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_evidence_reader_refusal_settlement.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_invoice_import_reader_refusal_settlement.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_ledger_classification_reader_refusal_settlement.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_batch.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_refusal_and_review_setup_offer.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_setup_offer.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py`
+- `S16` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S16` `M` `src/cadrumo/locales/ca/common.yml`
+- `S16` `M` `src/cadrumo/locales/en/cli.yml`
+- `S16` `M` `src/cadrumo/locales/en/common.yml`
+- `S16` `M` `src/cadrumo/locales/es/cli.yml`
+- `S16` `M` `src/cadrumo/locales/es/common.yml`
+- `S16` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S16` `M` `src/cadrumo/locales/hu/common.yml`
+- `S16` `M` `src/cadrumo/tests/llm_vision_evidence_support.py`
+- `S16` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs_gateway.py`
+- `S16` `M` `src/cadrumo_agent_service/providers/application/contracts.py`
+- `S16` `M` `src/cadrumo_agent_service/providers/application/model_role_selections.py`
+- `S16` `M` `src/cadrumo_agent_service/providers/application/model_runs.py`
+- `S16` `M` `src/cadrumo_agent_service/providers/application/tests/test_keyless_lane.py`
+- `S16` `M` `src/cadrumo_agent_service/providers/application/tests/test_live_catalogue_selection.py`
+- `S16` `M` `src/cadrumo_agent_service/providers/application/tests/test_model_role_selections.py`
+- `S16` `M` `src/cadrumo_agent_service/providers/application/tests/test_model_runs.py`
+- `S16` `M` `src/cadrumo_agent_service/providers/domain/record.py`
+- `S16` `M` `src/cadrumo_agent_service/providers/domain/tests/test_record.py`
+- `S16` `M` `src/cadrumo_agent_service/providers/persistence/tests/test_store_role_selections.py`
+- `S16` `M` `src/cadrumo_runtime/host/operation_host.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_runtime_workstation_check_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_evidence_label_reading_notice.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_review_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_evidence.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_import.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/test_model_run_authority.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/test_session_hold_product_neutral.py`
+- `S16` `A` `src/cadrumo/core/model_roles.py`
+- `S16` `verify:` `uv run --no-sync pytest src/cadrumo src/cadrumo_agent_service src/cadrumo_client -q (34837 passed; 9 failed: the 4 baseline test_snapshot_proof plus 5 stale assertions on the removed load verb and doctor rows, fixed and rerun green)` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest test_local_reader.py test_local_reader_read_operations.py test_local_reader_operation_access.py test_invoice_evidence_reader_readiness_recovery.py test_batch_ingest_runner.py test_batch_inference_pacing.py test_provisioning*.py -m '(unit or integration) and not perf'` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_python_provisioning.py dev/ci/tests/test_cloud_transport_fully_deleted.py dev/env/tests/test_local_ai_pins.py dev/packaging/tests/test_native_layout_entrypoints.py dev/docs/tests/test_env_reference.py -m ''` -> `pass`
+- `S16` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `S16` `verify:` `just check-import-boundaries` -> `pass`
+- `S16` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check (after just generate-operation-contract-manifest)` -> `pass`
+- `S16` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
+- `S16` `by:` `high-implementer`
 
 ## Notes
 
@@ -522,3 +712,11 @@ related:
 - `S15` Admission with an unknown size: a lane whose catalogue entry states `size_bytes` null or 0 skips the memory-headroom check and still takes the on-host inference slot, logged once at debug level without the model id. The coordinator chose this reading on 2026-10-25. The ADR does not list unknown size among the constraint 10 refusals, its second amendment keeps absent facts null and still selectable, and the previous code skipped an uncatalogued requirement rather than inventing one.
 - `S15` Kept `probe_local_reader:` `application/workstation_check.py` (the doctor) still uses it outside the dispatch path. `admit_local_reader` and the fitness probe were deleted. The fitness verdict file stays declared as a dormant storage location, so existing installations keep it classified.
 - `S15` Pre-existing failures outside this Step: dev/locales `test_parity` and `test_audit` flag `errors.refused.refused_ledger_evidence_local_ai_not_ready` as unused. The key is still used through `EVIDENCE_LOCAL_AI_NOT_READY_KEY` in `application/ledger/evidence_errors.py,` whose name lacks the `_LOCALE_KEY` suffix the scanner reads, so the key was kept. `dev/quality/metadata/application_entrypoint_modules.json` still lists `provisioning_fitness,` and it has no generator or reader in the tree, so it was not edited by hand.
+- `S16` Ruling A (coordinator 2026-10-26): local-reader.status, local-reader.report and ledger.evidence.reader-readiness read each role's lane through the model-run port lookup; only on-host lanes name a model; a role with no selection reports `SELECTED_MODEL_AVAILABLE` with no action.
+- `S16` Deleted local-reader.provision (load, verify), aeat config provision load, its --role/--model options, their locale keys (locales-remove-batch), the direct load, unload and verify in `provisioning_runtime,` the selected-model unload set and the contention snapshot's `unloadable_models` field and facts.
+- `S16` Contract changes: local-reader.provision removed from the manifest; local-reader.report drops `contention.unloadable_models` and widens model ids to 512 characters; local-reader.status and reader-readiness rows now come from the selection (off-host lanes ready with no model); the status, report and readiness schema versions are unchanged, as in P03.S15.
+- `S16` Doctor: one local-ai:program row for the program's health replaces the per-role local-reader rows; the contention row (dispatch admission covers it) and the `local_model_provisioning` row (it needed Cadrumo model names) are dropped; the vision-reader issue goes with the per-role rows.
+- `S16` ModelSelectionAdvisory moved unchanged to `application/dependency_contracts.py,` not components/protocol.py: application may not import adapters, and protocol.py already imports the engine-wire enums from there.
+- `S16` Batch: the pre-check is gone; a read refused for measured contention closes the lane for the run and its document is paused, not refused.
+- `S16` The four model settings and their env/.env.example lines moved into this Step because their defaults came from the deleted table; the env-example parity gate and the generated environment page required the lines here. The dev model-pin generator moved here too, because it imported the deleted loader.
+- `S16` Pre-existing, unchanged by this Step: 7 integration tests in entrypoints/tests (evidence, confirm, batch pause, classification, invoice import refusal settlement) still assert the inventory-probe refusal the extract path stopped using in P03.S14/S15 (the HEAD extract path calls no inventory probe); `cadrumo_runtime` `test_ledger_evidence_label_reading_notice` fails `REFUSED_LOCAL_RUNTIME` `runtime_invalid_frame.`

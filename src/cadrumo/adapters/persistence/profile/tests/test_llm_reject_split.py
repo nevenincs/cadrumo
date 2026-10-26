@@ -16,7 +16,7 @@ from .....application.ledger.llm_classification import (
 )
 from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMClassificationSuggestion
 from .....core.config import load_settings
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,

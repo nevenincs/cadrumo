@@ -52,7 +52,7 @@ from ...core.document_shape import PDF_CONTAINER_SHAPES
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.logging import get_logger
-from ...core.model_catalogue import ModelRole
+from ...core.model_roles import ModelRole
 from ...core.provenance_stamp import provenance_stamp_transport
 from ...core.time.clock import now
 from ...core.time.utc import coerce_utc_aware

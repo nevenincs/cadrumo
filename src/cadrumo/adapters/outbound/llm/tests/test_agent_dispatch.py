@@ -16,7 +16,7 @@ import pytest
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusalCode
 
 from .....core.config_support import LLMProvider
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.consent_ledger import EvidenceConsentLedger

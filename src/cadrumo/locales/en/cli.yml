@@ -2501,12 +2501,6 @@ cli:
       help: 'Set up and check what Cadrumo needs on this computer: the browser for
         the tax agency website and the local AI, its program and models.'
       incomplete: Some components are not ready yet.
-      load:
-        help: Load models into memory so the first read does not wait, every role's
-          model unless --role or --model narrows it. Refuses before loading when memory
-          is short.
-        model_help: Name of the model to load. It must already be downloaded. Defaults
-          to the model chosen for the role.
       outcome:
         busy: Another setup is changing this right now. Try again when it has finished.
         cancelled: You cancelled the setup.
@@ -2546,8 +2540,6 @@ cli:
       report:
         help: Report this computer's memory, the model chosen for each role, and whether
           it can be loaded now.
-      role_help: Model role to act on (vision transcription, text extraction, tabular
-        mapping, supply-nature proposal). Defaults to every role.
       setup:
         help: Set up every component that is not ready yet. Shows what will be downloaded,
           how large it is and where it is stored, and asks before anything is downloaded.

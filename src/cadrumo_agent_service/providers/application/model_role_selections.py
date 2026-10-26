@@ -26,7 +26,7 @@ from typing import Final
 
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.core.time.clock import now
 

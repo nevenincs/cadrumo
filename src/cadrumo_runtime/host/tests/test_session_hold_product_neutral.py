@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _FORBIDDEN_MODULE_PREFIXES = (
     "cadrumo.application.dependency_",
     "cadrumo.application.provisioning",
-    "cadrumo.core.model_catalogue",
+    "cadrumo.core.model_roles",
     "cadrumo.adapters.outbound.google",
     "cadrumo.entrypoints",
 )
@@ -79,7 +79,7 @@ def test_no_runtime_command_imports_product_setup_or_the_google_adapters() -> No
                 "import cadrumo.application.dependency_setup_operation.X",
             ],
         ),
-        ("import cadrumo.core.model_catalogue\n", ["import cadrumo.core.model_catalogue"]),
+        ("import cadrumo.core.model_roles\n", ["import cadrumo.core.model_roles"]),
         ("from cadrumo.application import dependency_wording\n", ["import cadrumo.application.dependency_wording"]),
         ('DEFINITION = "dependencies.setup"\n', ["text dependencies.setup"]),
         ('SUBJECT = "dependencies:installation"\n', ["text dependencies:installation"]),

@@ -147,7 +147,7 @@ def _report() -> WorkstationCheckReport:
                 facts={"records": 4, "assembled": True},
             ),
         ),
-        issues=("synthetic:vision",),
+        issues=(),
     )
 
 
@@ -308,9 +308,9 @@ def test_canonical_report_keeps_issue_exit_semantics_and_checks_profile_each_sta
         observed.append(capability.value)
         return decisions[capability]
 
-    def dependencies() -> tuple[tuple[DependencyStatus, ...], DependencyStatus, tuple[DependencyStatus, ...]]:
+    def dependencies() -> tuple[tuple[DependencyStatus, ...], tuple[DependencyStatus, ...]]:
         observed.append("dependencies")
-        return report.dependencies, report.dependencies[0], ()
+        return report.dependencies, ()
 
     def preflight(**kwargs: object) -> tuple[PreflightCheck, ...]:
         assert kwargs["operator_probe_ports"] is probes

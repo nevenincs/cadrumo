@@ -1,7 +1,8 @@
-"""The measured machine and model-selection report for local inference, and its read operation.
+"""The measured machine and per-role selection report for local inference, and its read operation.
 
-:func:`read_local_reader_report` measures hardware, resolves a model for each
-reader role and judges whether the first assessable one could be loaded right
+:func:`read_local_reader_report` measures hardware, reports the lane the
+person selected for each role and judges whether the first on-host model of
+known size could be loaded right
 now. ``local-reader.report`` serves that measurement to every frontend. It
 reads only: nothing is pulled, loaded or started.
 """
@@ -13,12 +14,20 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
+from cadrumo_client.contracts.model_runs import (
+    MODEL_RUN_MODEL_ID_MAX_LENGTH,
+    ModelRunLane,
+    ModelRunRefusal,
+    ModelRunRefusalCode,
+)
+
 from ..core.config import Settings, load_settings
 from ..core.hardware import AcceleratorKind
-from ..core.model_catalogue import ModelRole
+from ..core.model_roles import ModelRole
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operations import OperationEffect
 from ..core.time.clock import now
+from .local_reader import RoleLane, lane_requirement_bytes, read_role_lanes
 from .local_reader_contracts import (
     LOCAL_READER_OPERATION_SUBJECT,
     LocalReaderContentionV1,
@@ -37,8 +46,12 @@ from .operations.owner import OperationExecutorContext
 from .operations.registry import OperationPublicDefinitionRegistrationV1
 from .operations.subject_reference import OperationSubjectReferenceV1
 from .operator_actions.models import PreconditionVerdict
-from .provisioning import probe_hardware_profile, select_model_for_role
-from .provisioning_contracts import ProvisioningFactValue
+from .provisioning import probe_hardware_profile
+from .provisioning_contracts import (
+    ProvisioningFactValue,
+    ProvisioningPreconditionCondition,
+    provisioning_no_recovery_verdict,
+)
 from .provisioning_runtime import (
     ContentionSnapshot,
     assess_model_load_contention,
@@ -101,11 +114,16 @@ class LocalReaderReport(BaseModel):
     contention: ContentionSnapshot | None = None
 
 
-def read_local_reader_report(settings: Settings | None = None) -> LocalReaderReport:
-    """Measure hardware, select a model per role, and judge admission of the first assessable load.
+def read_local_reader_report(
+    lanes: Mapping[ModelRole, RoleLane], settings: Settings | None = None
+) -> LocalReaderReport:
+    """Measure hardware, report each role's selected lane, and judge admission of the first assessable load.
 
-    Reads only, and never raises for an unreachable runtime or an unmeasurable
-    device: each is reported as the state it is.
+    ``lanes`` is what :func:`~.local_reader.read_role_lanes` resolved for every
+    role. Only a lane that stays on this computer names a model here, because
+    only its model loads on this machine; an off-host lane is selected and
+    names none. Reads only, and never raises for an unreachable runtime or an
+    unmeasurable device: each is reported as the state it is.
     """
     resolved = settings if settings is not None else load_settings()
     profile = probe_hardware_profile()
@@ -114,21 +132,12 @@ def read_local_reader_report(settings: Settings | None = None) -> LocalReaderRep
     models: list[LocalReaderReportModel] = []
     primary: tuple[str, int] | None = None
     for role in ModelRole:
-        selection = select_model_for_role(role, profile=profile, settings=resolved)
-        runtime_id = selection.runtime_id
-        models.append(
-            LocalReaderReportModel(
-                role=role,
-                model=runtime_id,
-                selected=selection.selected,
-                resident=runtime_id is not None
-                and any(runtime_model_names_match(name, runtime_id) for name in resident_names),
-                facts=selection.facts,
-                precondition_verdict=selection.precondition_verdict,
-            )
-        )
-        if primary is None:
-            primary = selection.assessable_load
+        row = _report_model(role, lanes.get(role), resident_names)
+        models.append(row)
+        answer = lanes.get(role)
+        if primary is None and isinstance(answer, ModelRunLane) and not answer.reads_off_host:
+            requirement = lane_requirement_bytes(answer)
+            primary = None if requirement is None else (answer.model, requirement)
     contention = None
     if primary is not None:
         contention = assess_model_load_contention(
@@ -152,6 +161,37 @@ def read_local_reader_report(settings: Settings | None = None) -> LocalReaderRep
     )
 
 
+def _report_model(role: ModelRole, answer: RoleLane | None, resident_names: tuple[str, ...]) -> LocalReaderReportModel:
+    if not isinstance(answer, ModelRunLane):
+        code = (answer or ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)).code
+        facts: dict[str, ProvisioningFactValue] = {
+            "role": role.value,
+            "model_run_refusal": code.value,
+            "role_selection_required": code is ModelRunRefusalCode.NO_SELECTION,
+        }
+        return LocalReaderReportModel(
+            role=role,
+            selected=False,
+            facts=facts,
+            precondition_verdict=provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE, facts=facts
+            ),
+        )
+    if answer.reads_off_host:
+        return LocalReaderReportModel(role=role, selected=True, facts={"role": role.value, "reads_off_host": True})
+    facts = {"role": role.value, "reads_off_host": False, "selected_model": answer.model}
+    requirement = lane_requirement_bytes(answer)
+    if requirement is not None:
+        facts["size_bytes"] = requirement
+    return LocalReaderReportModel(
+        role=role,
+        model=answer.model,
+        selected=True,
+        resident=any(runtime_model_names_match(name, answer.model) for name in resident_names),
+        facts=facts,
+    )
+
+
 class LocalReaderReportRequest(CredentialFreeOperationRequest):
     """One report read; the machine is the whole subject, so the request carries nothing."""
 
@@ -162,7 +202,7 @@ class LocalReaderReportModelV1(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     role: ModelRole
-    model: str | None = Field(default=None, min_length=1, max_length=256)
+    model: str | None = Field(default=None, min_length=1, max_length=MODEL_RUN_MODEL_ID_MAX_LENGTH)
     selected: bool
     resident: bool
     facts: tuple[LocalReaderFactV1, ...]
@@ -199,7 +239,8 @@ class LocalReaderReportExecutor:
             raise ValueError("local-reader operation subject must name the local runtime")
         await context.events.phase(LOCAL_READER_REPORT_OPERATION_DEFINITION_ID)
         await context.events.effect(OperationEffect.NONE)
-        report = await asyncio.to_thread(read_local_reader_report)
+        lanes = await read_role_lanes(ModelRole)
+        report = await asyncio.to_thread(read_local_reader_report, lanes)
         return await context.operands.put(report, written_at=now())
 
 
@@ -226,7 +267,6 @@ def resolve_local_reader_report_access(
         definition_id=LOCAL_READER_REPORT_OPERATION_DEFINITION_ID,
         payload_type=LocalReaderReportRequest,
         subject_ref=LOCAL_READER_OPERATION_SUBJECT,
-        commits=lambda _payload: False,
     )
 
 

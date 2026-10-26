@@ -59,7 +59,7 @@ from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, 
 from ...application.tests.role_model_support import configured_role_model
 from ...core.config import load_settings, override_settings
 from ...core.errors.error_codes import get_registered_error_code
-from ...core.model_catalogue import ModelRole
+from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.transactions.enums import TransactionDirection
@@ -105,7 +105,7 @@ def _runtime_holding_only_the_vision_model() -> Generator[None]:
     """Serve a runtime that holds the vision model but not the text model a classification reads with."""
     _InventoryRuntime.reads = []
     vision = configured_role_model(ModelRole.VISION_TRANSCRIPTION)
-    _InventoryRuntime.installed = () if vision is None else (vision,)
+    _InventoryRuntime.installed = (vision,)
     with (
         serving_loopback(_InventoryRuntime, path="/api/chat") as chat_url,
         override_settings(cadrumo_llm_ollama_chat_url=chat_url),

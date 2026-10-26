@@ -2702,12 +2702,6 @@ cli:
         para la web de la Agencia Tributaria y la IA local, con su programa y sus
         modelos.'
       incomplete: Algunos componentes aún no están listos.
-      load:
-        help: Carga los modelos en memoria para que la primera lectura no espere,
-          el de cada rol salvo que --role o --model lo limiten. Se niega antes de
-          cargar si falta memoria.
-        model_help: Nombre del modelo que cargar. Debe estar ya descargado. Por defecto,
-          el modelo elegido para el rol.
       outcome:
         busy: Otra preparación está cambiando esto ahora mismo. Vuelve a intentarlo
           cuando termine.
@@ -2748,9 +2742,6 @@ cli:
       report:
         help: Indica la memoria de este ordenador, el modelo elegido para cada rol
           y si se puede cargar ahora.
-      role_help: Rol del modelo sobre el que actuar (transcripción de imágenes, extracción
-        de texto, mapeo de tablas, propuesta de naturaleza de la operación). Por defecto,
-        todos los roles.
       setup:
         help: Prepara todos los componentes que aún no están listos. Muestra qué se
           va a descargar, cuánto ocupa y dónde se guarda, y te pregunta antes de descargar

@@ -31,14 +31,13 @@ from .....application.ledger.evidence_errors import (
 from .....application.ledger.invoice_draft_records import LabelReadingFallbackCause
 from .....application.ledger.invoice_evidence_operation_dtos import LabelReadingFallbackProjectionV1
 from .....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
-from .....application.local_reader import probe_local_reader
+from .....application.local_reader import probe_local_ai_program
 from .....application.operations.error_detail import build_operation_error_detail
 from .....application.operator_actions.models import PreconditionVerdict
 from .....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
 from .....core.config import Settings, override_settings
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
-from .....core.model_catalogue import ModelRole
 from ...setup.offer import SetupItemOffer
 from ...tests.settling import settle, settle_until
 from ..controller import LedgerWorkspaceController
@@ -71,7 +70,7 @@ _CLOSED_ENDPOINT = "http://127.0.0.1:1/api/chat"
 
 def _probe_verdict() -> PreconditionVerdict:
     """The verdict the real reader probe gives for a local AI that does not answer."""
-    status = probe_local_reader(ModelRole.TEXT_EXTRACTION, Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
+    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
     verdict = status.precondition_verdict
     assert verdict is not None
     assert verdict.action is not None

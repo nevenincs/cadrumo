@@ -24,7 +24,7 @@ from ...application.ledger.evidence_ingestion_contracts import (
     LedgerEvidenceBatchProjection,
     LedgerEvidenceBatchRequest,
 )
-from ...core.model_catalogue import ModelRole
+from ...core.model_roles import ModelRole
 from ...core.operations import OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.schema import InvoiceKind

@@ -423,7 +423,6 @@
         "dev.env.browser_archive_pins",
         "dev.env.clean",
         "dev.env.environment_state",
-        "dev.env.local_ai_model_pins",
         "dev.env.local_ai_pins",
         "dev.env.playwright_doctor",
         "dev.env.playwright_setup",

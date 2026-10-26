@@ -70,6 +70,6 @@ def test_every_platform_locates_the_component_pins_inside_its_staged_product_pac
 
     assert paths["component_pins"] == f"{paths['packages']}/cadrumo/_data/dependencies"
     staged = REPO_ROOT / "src" / Path(paths["component_pins"]).relative_to(paths["packages"])
-    assert {"browser_archives.toml", "local_ai_models.toml", "local_ai_program.toml"} <= {
-        child.name for child in staged.iterdir()
-    }
+    staged_names = {child.name for child in staged.iterdir()}
+    assert {"browser_archives.toml", "local_ai_program.toml"} <= staged_names
+    assert "local_ai_models.toml" not in staged_names, "no model pins are staged; models are the person's selection"

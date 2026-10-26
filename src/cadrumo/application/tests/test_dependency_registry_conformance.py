@@ -40,7 +40,6 @@ from ..dependency_contracts import (
     DependencyState,
 )
 from ..dependency_registry import BROWSER_DECLARATION, dependency_item_declarations
-from ..local_reader_contracts import LocalReaderProvisionAction, LocalReaderProvisionRequest
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -51,21 +50,21 @@ _REPOSITORY_ROOT: Final = _SOURCE_ROOT.parent
 _LOCALES_ROOT: Final = _PACKAGE_ROOT / "locales"
 _FRONTEND_SOURCE: Final = _REPOSITORY_ROOT / "native" / "desktop" / "frontend" / "src"
 
-#: The Python setup operations the native components role replaced, and the
-#: browser operation before them; none may be registered or named again.
+#: The Python setup operations the native components role replaced, the
+#: browser operation before them, and the local reader's direct load and
+#: verify; none may be registered or named again.
 _REMOVED_OPERATIONS: Final = (
     "browser-runtime.provision",
     "dependencies.setup",
     "dependencies.status",
     "dependencies.verify",
+    "local-reader.provision",
 )
 
 #: The ``config provision`` verbs that run the native components role and submit nothing.
 _COMPONENT_LEAVES: Final = frozenset({"browser", "probe", "pull", "remove", "setup", "status", "verify"})
 #: The operations the local reader's remaining verbs submit in the signed-in profile.
-_LOCAL_READER_OPERATIONS: Final = frozenset({"local-reader.provision", "local-reader.status", "local-reader.report"})
-#: The only local-reader actions: both act on a model already installed.
-_LOCAL_READER_ACTIONS: Final = frozenset({"load", "verify"})
+_LOCAL_READER_OPERATIONS: Final = frozenset({"local-reader.status", "local-reader.report"})
 
 #: Catalogue subtrees that hold setup wording: the plain sentences and actions
 #: every surface shows, the desktop's own setup strings, and the words of the
@@ -473,15 +472,15 @@ def test_provision_leaf_checker_names_a_component_verb_that_submits_and_a_foreig
     rows = [
         (("config", "provision", "status"), "dependencies.status"),
         (("config", "provision", "browser"), None),
-        (("config", "provision", "load"), "local-reader.provision"),
-        (("config", "provision", "remove"), "local-reader.provision"),
+        (("config", "provision", "report"), "local-reader.report"),
+        (("config", "provision", "remove"), "local-reader.report"),
         (("config", "provision", "report"), "browser-runtime.provision"),
         (("config", "provision", "report"), None),
         (("config", "check"), None),
     ]
     assert provision_leaf_findings(rows) == [
         "config provision status: submits 'dependencies.status' instead of running the components role",
-        "config provision remove: submits 'local-reader.provision' instead of running the components role",
+        "config provision remove: submits 'local-reader.report' instead of running the components role",
         "config provision report: submits 'browser-runtime.provision', which is not a local reader operation",
         "config provision report: submits None, which is not a local reader operation",
     ]
@@ -490,9 +489,15 @@ def test_provision_leaf_checker_names_a_component_verb_that_submits_and_a_foreig
 
 def test_removed_operation_checker_names_each_removed_operation_still_registered() -> None:
     """A registered set holding a removed setup operation is caught by that operation's name."""
-    assert removed_operation_findings(["local-reader.provision", "local-reader.status"]) == []
-    findings = removed_operation_findings(["dependencies.setup", "browser-runtime.provision", "ledger.list"])
-    assert findings == ["browser-runtime.provision is still registered", "dependencies.setup is still registered"]
+    assert removed_operation_findings(["local-reader.report", "local-reader.status"]) == []
+    findings = removed_operation_findings(
+        ["dependencies.setup", "browser-runtime.provision", "local-reader.provision", "ledger.list"]
+    )
+    assert findings == [
+        "browser-runtime.provision is still registered",
+        "dependencies.setup is still registered",
+        "local-reader.provision is still registered",
+    ]
 
 
 def test_removed_identity_checker_names_a_lingering_alias_and_passes_a_phase_code() -> None:
@@ -650,10 +655,3 @@ def test_a_removed_setup_operation_has_no_alias_or_caller_anywhere(identity: str
     sources = _read_sources(roots, _PYTHON | _SCRIPT | frozenset({".json", ".yml", ".toml"}))
     findings = removed_identity_findings(sources, identity)
     assert not findings, "\n".join(findings)
-
-
-def test_the_local_reader_keeps_only_load_and_verify() -> None:
-    """``local-reader.provision`` installs, pulls, starts and removes nothing, and takes no consent boolean."""
-    actions = {action.value for action in LocalReaderProvisionAction}
-    assert actions == _LOCAL_READER_ACTIONS, sorted(actions ^ _LOCAL_READER_ACTIONS)
-    assert "consent" not in LocalReaderProvisionRequest.model_fields

@@ -42,7 +42,7 @@ from ..application.ledger.llm_classification_ports import (
 from ..application.ledger.preconditions import LedgerPreconditionCondition
 from ..application.operator_actions.models import PreconditionVerdict
 from ..core.config import Settings
-from ..core.model_catalogue import ModelRole
+from ..core.model_roles import ModelRole
 from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.time.clock import now
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol

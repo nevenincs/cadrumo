@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.core.storage_environment import StorageMode
 from cadrumo_client.contracts.model_runs import (

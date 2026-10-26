@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo_client.contracts.model_runs import (
     ModelRunBody,
     ModelRunHeader,

@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.outbound.llm.tests.model_run_support import IMAGE_LANE, serving_agent
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
     LedgerEvidenceAttachmentIngestor,
@@ -37,21 +38,15 @@ from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
 from cadrumo.application.ledger.extraction_draft_store import load_extraction_drafts
 from cadrumo.application.ledger.invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
 from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-from cadrumo.application.provisioning import (
-    AcceleratorDevice,
-    AcceleratorReading,
-    HardwareProfile,
-    SystemMemoryReading,
-    probe_hardware_profile,
-)
+from cadrumo.application.local_reader import EXTRACTION_READER_ROLES
 from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
-from cadrumo.core.config import Settings, load_settings, override_settings
+from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.hardware import AcceleratorKind
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
+from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusalCode
 
 from .....domain.iva.schema import InvoiceKind
 from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
@@ -122,15 +117,15 @@ def _run_batch(
     sources: list[Path],
     direction: InvoiceKind = InvoiceKind.RECEIVED,
     settings: Settings | None = None,
-    hardware_profile: HardwareProfile | None = None,
+    lane: ModelRunLane = IMAGE_LANE,
     on_item: Callable[[BatchItemResult], None] | None = None,
 ) -> BatchRunResult:
     """Run the application batch through ports composed by this outer test.
 
-    Without explicit settings the run reads through the loopback reader, never
-    the host's runtime: the profile's settings snapshot is aligned to the served
-    endpoint and to the models that endpoint reports installed, so the outcome
-    cannot depend on which models this machine happens to have pulled.
+    Without explicit settings the run reads through the loopback reader, whose
+    agent resolves every role to ``lane``, never the host's runtime: the
+    profile's settings snapshot is aligned to the served endpoint, so the
+    outcome cannot depend on what this machine happens to have set up.
     """
     if settings is not None:
         return _run_batch_with(
@@ -138,10 +133,9 @@ def _run_batch(
             sources=sources,
             direction=direction,
             settings=settings,
-            hardware_profile=hardware_profile,
             on_item=on_item,
         )
-    with serving_a_loopback_reader(replies=()):
+    with serving_a_loopback_reader(replies=(), lane=lane):
         served = load_settings()
         # Admission inputs are pinned to their declared defaults, so a host's
         # local configuration cannot open or close the lane under test.
@@ -158,8 +152,6 @@ def _run_batch(
             update={
                 **declared,
                 "cadrumo_llm_ollama_chat_url": served.cadrumo_llm_ollama_chat_url,
-                "cadrumo_llm_ollama_text_model": served.cadrumo_llm_ollama_text_model,
-                "cadrumo_llm_ollama_vision_model": served.cadrumo_llm_ollama_vision_model,
             },
         )
         return _run_batch_with(
@@ -167,7 +159,6 @@ def _run_batch(
             sources=sources,
             direction=direction,
             settings=aligned,
-            hardware_profile=hardware_profile,
             on_item=on_item,
         )
 
@@ -178,7 +169,6 @@ def _run_batch_with(
     sources: list[Path],
     direction: InvoiceKind,
     settings: Settings,
-    hardware_profile: HardwareProfile | None,
     on_item: Callable[[BatchItemResult], None] | None,
 ) -> BatchRunResult:
     period = default_invoice_extraction_period()
@@ -195,29 +185,27 @@ def _run_batch_with(
             operation=operation,
             legends=legends,
             on_item=on_item,
-            profile=hardware_profile,
         )
 
 
-def _measurable_headroom() -> HardwareProfile:
-    """A machine whose free memory is readable and ample, so admission admits.
+#: The person's selection, read on this computer, for a model no computer holds.
+#: Dispatch admits an on-host lane against the size its catalogue entry states,
+#: so a read of it is refused for measured contention on any host before
+#: anything is loaded.
+_OVERSIZED_LANE = IMAGE_LANE.model_copy(update={"size_bytes": 2**50})
 
-    Injected rather than probed, and that is the point. The host running these
-    tests reports no readable accelerator, so its admission check fails CLOSED —
-    correctly. Left to the host, every gate below would measure the pause path
-    and none would measure the behaviour it names.
-    """
-    return probe_hardware_profile(
-        memory=SystemMemoryReading(total_bytes=64 * _GIB, free_bytes=48 * _GIB),
-        accelerator=AcceleratorReading(
-            kind=AcceleratorKind.NVIDIA_CUDA,
-            devices=(AcceleratorDevice(index=0, name="card-0", total_vram_bytes=24 * _GIB, free_vram_bytes=12 * _GIB),),
-        ),
-    )
+#: The measured-contention refusals of on-host load admission.
+_CONTENTION = frozenset(
+    {
+        ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value,
+        ProvisioningPreconditionCondition.LOAD_HEADROOM_MEASURABLE.value,
+        ProvisioningPreconditionCondition.RESIDENT_SET_READABLE.value,
+    }
+)
 
 
 def _run(profile: TestRuntimeProfile, folder: Path) -> BatchRunResult:
-    return _run_batch(profile, sources=[folder], hardware_profile=_measurable_headroom())
+    return _run_batch(profile, sources=[folder])
 
 
 def test_a_poisoned_document_does_not_end_the_run(
@@ -516,32 +504,11 @@ def test_the_same_document_under_two_directions_is_two_records(
 class TestInferencePacing:
     """A contended machine must cost the batch its readable items, not its whole run.
 
-    Contention is produced from **injected measurements** driven through the real
-    `assess_model_load_contention`, which is the same seam that primitive's own
-    suite uses. Nothing here substitutes the admission decision: the production
-    function computes the refusal, from a hardware profile that states a
-    shortfall rather than one asserting the answer.
+    Contention is produced by the real dispatch admission: the selected on-host
+    lane states a size no computer holds, so the production
+    ``assess_model_load_contention`` refuses the load from this host's own
+    measurements, whatever they are. Nothing here substitutes the decision.
     """
-
-    @staticmethod
-    def _contended() -> HardwareProfile:
-        """A machine with a real accelerator whose free figure cannot be read.
-
-        This shape rather than a small-free-memory one, because selection and
-        admission share the free-memory bar: a machine too small to admit a
-        model is also too small to select one, so it never reaches the pacing
-        decision at all. An unreadable free figure is the reachable state where
-        a model IS selected and the load is still refused — "could not tell" is
-        not evidence of headroom, and refusing it is the primitive's fail-closed
-        core.
-        """
-        return probe_hardware_profile(
-            memory=SystemMemoryReading(total_bytes=64 * _GIB, free_bytes=48 * _GIB),
-            accelerator=AcceleratorReading(
-                kind=AcceleratorKind.NVIDIA_CUDA,
-                devices=(AcceleratorDevice(index=0, name="card-0", total_vram_bytes=24 * _GIB, free_vram_bytes=None),),
-            ),
-        )
 
     def test_a_contended_machine_still_completes_every_deterministic_item(
         self,
@@ -561,7 +528,7 @@ class TestInferencePacing:
         result = _run_batch(
             runtime_profile,
             sources=[folder],
-            hardware_profile=self._contended(),
+            lane=_OVERSIZED_LANE,
         )
 
         statuses = {item.source_name: item.status for item in result.items}
@@ -582,15 +549,12 @@ class TestInferencePacing:
         result = _run_batch(
             runtime_profile,
             sources=[folder],
-            hardware_profile=self._contended(),
+            lane=_OVERSIZED_LANE,
         )
 
         assert [item.status for item in result.items] == ["paused"] * 3
         assert result.inference_pause is not None, "three paused documents must carry one stated cause"
-        assert result.inference_pause.precondition_verdict.failed_condition_id == (
-            ProvisioningPreconditionCondition.LOAD_HEADROOM_MEASURABLE.value
-        )
-        assert result.inference_pause.facts["binding_free_measured"] is False
+        assert result.inference_pause.precondition_verdict.failed_condition_id in _CONTENTION
         # No per-item refusal text: the model forbids a reason under a non-refused
         # status, so this also proves the pause did not smuggle one in per row.
         assert all(item.refusal_verdict is None for item in result.items)
@@ -611,7 +575,7 @@ class TestInferencePacing:
         result = _run_batch(
             runtime_profile,
             sources=[folder],
-            hardware_profile=self._contended(),
+            lane=_OVERSIZED_LANE,
         )
 
         assert not result.any_failed, "a deferred document has not failed"
@@ -631,8 +595,8 @@ class TestInferencePacing:
         folder.mkdir()
         (folder / _SCAN).write_bytes((_CORPUS / _SCAN).read_bytes())
 
-        def _over_the_folder(profile: HardwareProfile) -> BatchRunResult:
-            """Run the same folder twice, varying only the hardware it sees.
+        def _over_the_folder(lane: ModelRunLane) -> BatchRunResult:
+            """Run the same folder twice, varying only the size the selected entry states.
 
             Spelled out rather than splatted from a shared dict, which widened
             every argument to the union of all of them and checked none of them.
@@ -640,31 +604,31 @@ class TestInferencePacing:
             return _run_batch(
                 runtime_profile,
                 sources=[folder],
-                hardware_profile=profile,
+                lane=lane,
             )
 
-        paused = _over_the_folder(self._contended())
+        paused = _over_the_folder(_OVERSIZED_LANE)
         # The contention clears; the same folder is re-run against a new
         # measured outcome.
-        later = _over_the_folder(_measurable_headroom())
+        later = _over_the_folder(IMAGE_LANE)
 
         assert paused.items[0].status == "paused"
         assert later.items[0].status != "paused", "once the contention clears, the deferred item must be attempted"
 
-    def test_a_machine_with_no_reader_pauses_every_document_on_one_typed_reason(
+    def test_a_role_with_no_selection_spends_one_document_and_pauses_the_rest_on_one_typed_reason(
         self,
         runtime_profile: TestRuntimeProfile,
         tmp_path: Path,
     ) -> None:
         """The other way the lane closes, and the one the operator meets most.
 
-        The reader is made genuinely unreachable by pointing the runtime at a
-        closed port — a real failure of the real client, not a substituted one.
-        Admission has nothing to refuse here (the machine has headroom). The
-        per-role reader probe already proves the runtime unreachable before any
-        document is spent, so no document pays for the discovery: every one is
-        deferred, and the run carries the typed reason once. An unavailable
-        machine is not an unreadable document, which a refusal would conflate.
+        The agent service answers the vision role's lookup with no selection,
+        before anything is sent. The first document of each role learns it and
+        is refused with that typed verdict; it closes the role, so every later
+        document of that role is deferred on the stated cause rather than
+        refused again. A role with no
+        selection is not an unreadable document, which a refusal per document
+        would conflate.
 
         Documents that need no model still complete on a closed lane; that half
         is pinned by
@@ -675,31 +639,32 @@ class TestInferencePacing:
         for name in (_SCAN, "com_2026_0005_camera_photo.jpg", "commons_invoice_1.jpg"):
             (folder / name).write_bytes((_CORPUS / name).read_bytes())
 
-        # Port 1 on loopback: reserved, never listening, so the client's connect
-        # genuinely fails rather than being told to fail.
-        with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-            result = _run_batch(
-                runtime_profile,
-                sources=[folder],
-                settings=load_settings(),
-                hardware_profile=_measurable_headroom(),
-            )
+        with serving_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION) as service:
+            result = _run_batch(runtime_profile, sources=[folder], settings=load_settings())
 
-        statuses = [item.status for item in result.items]
-        assert statuses == ["paused", "paused", "paused"], (
-            f"no document may be spent on a known-absent reader: {statuses}"
-        )
-        # The item model forbids a reason under a non-refused status, so each row
-        # is tied to the run's one stated cause by needing the closed lane.
-        assert all(item.refusal_verdict is None for item in result.items), "a paused item carries no per-item refusal"
+        refused = [item for item in result.items if item.status == "refused"]
+        paused = [item for item in result.items if item.status == "paused"]
+        # Each reader role learns it once: at most one document per role is spent.
+        assert 1 <= len(refused) <= len(EXTRACTION_READER_ROLES), [item.status for item in result.items]
+        assert paused, "the rest wait on the closed roles"
+        assert len(refused) + len(paused) == 3
+        assert service.runs == [], "nothing is sent for a role with no selection"
+        for item in refused:
+            assert item.refusal_verdict is not None
+            values = {
+                key: value for evidence in item.refusal_verdict.evidence for key, value in evidence.values.items()
+            }
+            assert values["model_run_refusal"] == ModelRunRefusalCode.NO_SELECTION.value
+        assert all(item.refusal_verdict is None for item in paused), "a paused item carries no per-item refusal"
         assert all(item.needed_inference for item in result.items)
         assert result.inference_pause is not None
-        assert result.inference_pause.precondition_verdict.failed_condition_id == (
-            ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
-        )
-        assert result.inference_pause.facts["runtime_reachable"] is False
-        assert result.inference_pause.facts["operator_endpoint"] is True
-        assert "runtime_url" not in result.inference_pause.facts, "the pause never publishes the address"
+        stated = {
+            key: value
+            for item in result.inference_pause.precondition_verdict.evidence
+            for key, value in item.values.items()
+        }
+        assert stated["model_run_refusal"] == ModelRunRefusalCode.NO_SELECTION.value
+        assert stated["role_selection_required"] is True
 
     def test_a_document_needing_a_reader_is_read_when_one_is_there(
         self,
@@ -752,7 +717,6 @@ class TestInferencePacing:
                 runtime_profile,
                 sources=[folder],
                 settings=load_settings(),
-                hardware_profile=_measurable_headroom(),
             )
 
         assert result.inference_pause is None, "a reachable reader must leave the lane open"
@@ -772,7 +736,7 @@ class TestInferencePacing:
     ) -> None:
         """Positive control for the whole class: pacing must not fire on work needing no model.
 
-        Deliberately run on the CONTENDED profile. Nothing here needs a reader,
+        Deliberately run with the CONTENDED selection. Nothing here needs a reader,
         so a closed lane is irrelevant to it — and a run that paused these
         anyway would be pacing on the machine's state rather than on the work's
         actual needs.
@@ -785,7 +749,7 @@ class TestInferencePacing:
         result = _run_batch(
             runtime_profile,
             sources=[folder],
-            hardware_profile=self._contended(),
+            lane=_OVERSIZED_LANE,
         )
 
         assert result.inference_pause is None, "a run with no model in its future must not probe the hardware"

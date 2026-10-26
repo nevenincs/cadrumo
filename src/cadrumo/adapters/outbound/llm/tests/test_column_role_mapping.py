@@ -27,7 +27,7 @@ import pytest
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from .....core.field_role import FieldRole
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from ..client import LLMClient
 from ..column_role_mapping import (

@@ -31,11 +31,15 @@ from .....adapters.outbound.components.protocol import (
     decode_components_line,
 )
 from .....adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
-from .....application.dependency_contracts import DependencyBlockedReason, DependencyItemKind, DependencyState
+from .....application.dependency_contracts import (
+    DependencyBlockedReason,
+    DependencyItemKind,
+    DependencyState,
+    ModelSelectionAdvisory,
+)
 from .....application.dependency_registry import dependency_item_declarations
 from .....application.dependency_wording import dependency_row_wording
 from .....core.config import override_settings
-from .....core.model_catalogue import ModelSelectionAdvisory
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from ...components.dialogs import ConfirmScreen

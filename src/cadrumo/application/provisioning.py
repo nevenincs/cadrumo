@@ -5,9 +5,9 @@ service or optional package extra is usable on this workstation and returns a
 typed :class:`DependencyStatus`. :mod:`cadrumo.application.cli_provisioning`
 owns CLI authority admission and command storage materialization.
 
-The on-host readers are probed per role by
-:func:`~cadrumo.application.local_reader.probe_local_reader`, so a down server or
-an unpulled model becomes an instructive refusal instead of a raw stack trace.
+The local AI program is probed by
+:func:`~cadrumo.application.local_reader.probe_local_ai_program`, so a down server
+becomes an instructive refusal instead of a raw stack trace.
 The ``aeat config check`` command renders this module's
 statuses as
 :class:`~cadrumo.entrypoints.cli.config.check_payloads.CheckDependencyPayload`
@@ -23,28 +23,15 @@ from __future__ import annotations
 import contextlib
 import os
 import sys
-from collections.abc import Mapping
-from typing import TypedDict
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ..core.config import Settings, load_settings
-from ..core.hardware import AcceleratorKind, ContentionCause, HardwareTier, hardware_tier_for_free_bytes
-from ..core.i18n.render import tr
-from ..core.model_catalogue import (
-    DeploymentLicencePosture,
-    ModelCandidate,
-    ModelRole,
-    ModelRuntime,
-    ModelSelectionAdvisory,
-    candidates_for_role,
-    model_candidate,
-)
+from ..core.hardware import AcceleratorKind, ContentionCause, HardwareTier
 from ..core.models import STRICT_FROZEN_CONFIG
-from ..core.optional_extras import LLM_EXTRA, OPTIONAL_EXTRAS, OptionalExtra, optional_extra_available
+from ..core.optional_extras import OPTIONAL_EXTRAS, OptionalExtra, optional_extra_available
 
 __all__ = [
-    "LOCAL_MODEL_PROVISIONING_SERVICE",
     "OPTIONAL_EXTRAS",
     "AcceleratorDevice",
     "AcceleratorKind",
@@ -55,19 +42,14 @@ __all__ = [
     "HardwareProfile",
     "HardwareTier",
     "InstalledModel",
-    "ModelSelection",
     "OptionalExtra",
-    "ReadinessOutcome",
     "RuntimeResident",
     "SystemMemoryReading",
-    "UnloadOutcome",
     "assess_model_load_contention",
     "below_capacity_floor",
     "binding_free_bytes",
-    "cadrumo_selected_models",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
-    "probe_local_model_provisioning",
     "probe_model_runtime_hardware_floor",
     "probe_optional_extra",
     "probe_optional_extras",
@@ -75,8 +57,6 @@ __all__ = [
     "read_installed_models",
     "read_runtime_residents",
     "read_system_memory",
-    "select_model_for_role",
-    "unload_runtime_model",
 ]
 
 from ..core.errors.hierarchy import pydantic_validation_boundary
@@ -90,15 +70,10 @@ from .provisioning_contracts import (
 from .provisioning_runtime import (
     ContentionSnapshot,
     InstalledModel,
-    ReadinessOutcome,
     RuntimeResident,
-    UnloadOutcome,
     assess_model_load_contention,
-    cadrumo_selected_models,
-    matches_selected_model,
     read_installed_models,
     read_runtime_residents,
-    unload_runtime_model,
 )
 
 
@@ -290,18 +265,10 @@ def probe_model_runtime_hardware_floor(
         return DependencyStatus(
             service="model-runtime-hardware-floor",
             available=False,
-            facts={
-                "total_memory_bytes": observed,
-                "memory_floor_bytes": floor,
-                "vision_model": resolved.cadrumo_llm_ollama_vision_model,
-            },
+            facts={"total_memory_bytes": observed, "memory_floor_bytes": floor},
             precondition_verdict=provisioning_no_recovery_verdict(
                 ProvisioningPreconditionCondition.HARDWARE_FLOOR_MET,
-                facts={
-                    "total_memory_bytes": observed,
-                    "memory_floor_bytes": floor,
-                    "vision_model": resolved.cadrumo_llm_ollama_vision_model,
-                },
+                facts={"total_memory_bytes": observed, "memory_floor_bytes": floor},
             ),
         )
     return DependencyStatus(
@@ -540,10 +507,8 @@ def probe_hardware_profile(
 def binding_free_bytes(profile: HardwareProfile) -> int | None:
     """Return free memory in the arena that actually binds a model load, or ``None``.
 
-    The one place the arena rule lives, shared by
-    :func:`assess_model_load_contention` (which acts on it) and
-    :func:`select_model_for_role` (which plans against it), so the two can never
-    disagree about which figure binds. A device load is bound by device memory,
+    The one place the arena rule lives, which
+    :func:`assess_model_load_contention` acts on. A device load is bound by device memory,
     a measured-accelerator-free machine by system memory, and an *unmeasurable*
     accelerator by nothing that may be trusted -- which is ``None``, and is why
     :attr:`~core.hardware.AcceleratorKind.UNKNOWN` does not fall through to system
@@ -624,514 +589,6 @@ def probe_local_inference_hardware(profile: HardwareProfile | None = None) -> De
             facts=facts,
         )
     return DependencyStatus(service="local-inference-hardware", available=True, facts=facts)
-
-
-class ModelSelection(ProvisioningOutcome):
-    """Which model a role resolved to, and everything the operator should know about it.
-
-    A *planning* result, not an admission decision. It answers "which model
-    should this role use on this machine"; whether that model may be loaded
-    right now is :func:`assess_model_load_contention`'s question, asked later
-    and against readings taken at that moment. Keeping the two apart is what
-    lets selection stay useful on a machine whose headroom is momentarily gone.
-
-    ``selected`` false means no catalogued candidate cleared the bars, and
-    ``runtime_id`` is then ``None`` rather than a fallback -- naming a model
-    that cannot serve the role would push the failure into inference, where it
-    surfaces as a timeout instead of as a refusal.
-
-    ``advisories`` is never empty for an override that carries a licence,
-    context or headroom concern. An override is honoured, because the operator's
-    explicit setting outranks the catalogue's preference -- but it is never
-    honoured silently.
-    """
-
-    role: ModelRole
-    runtime: ModelRuntime
-    runtime_id: str | None = None
-    candidate: ModelCandidate | None = None
-    posture: DeploymentLicencePosture
-    tier: HardwareTier
-    binding_free_bytes: int | None = Field(default=None, ge=0)
-    required_context_tokens: int = Field(gt=0)
-    safety_margin_bytes: NonNegativeInt
-    override_applied: bool = False
-    selected: bool
-    advisories: tuple[ModelSelectionAdvisory, ...] = ()
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_selection_outcome(self) -> ModelSelection:
-        require_provisioning_verdict(failed=not self.selected, verdict=self.precondition_verdict)
-        return self
-
-    @property
-    def assessable_load(self) -> tuple[str, int] | None:
-        """Return ``(runtime_id, required_bytes)`` when a load can be assessed at all.
-
-        ``None`` when this role selected nothing, or when the chosen candidate
-        declares no memory requirement. The second case matters as much as the
-        first and is easier to miss: an unknown requirement read as zero flows
-        into :func:`assess_model_load_contention` as the amount the model
-        needs, so the check reports the load ADMITTED on evidence nobody has.
-
-        Owned here because every caller was re-deriving the same three-part
-        guard -- selected, runtime id, candidate -- and each one that forgot the
-        fourth part (the requirement itself being optional) fail-opened in its
-        own way. A caller that cannot assess should say so rather than assess
-        against an invented number.
-        """
-        if not self.selected or self.runtime_id is None or self.candidate is None:
-            return None
-        requirement = self.candidate.memory_requirement_bytes
-        return None if requirement is None else (self.runtime_id, requirement)
-
-    @property
-    def capacity_runtime_id(self) -> str | None:
-        """Return the model this role reads with on this computer, whatever its free memory says now.
-
-        The selected model, or, when only the headroom bar refused, the
-        smallest eligible model that bar measured. Candidates are ordered by
-        ascending requirement and the first that fits wins, so headroom never
-        changes which model a role uses; it only says whether that model fits
-        this moment. ``None`` when the capability or licence bars left no
-        candidate, which no amount of memory changes.
-        """
-        if self.selected:
-            return self.runtime_id
-        verdict = self.precondition_verdict
-        if verdict is None or verdict.failed_condition_id != ProvisioningPreconditionCondition.SELECTED_MODEL_FITS:
-            return None
-        named = self.facts.get("selected_model")
-        return named if isinstance(named, str) and named else None
-
-    @property
-    def licence_advisory(self) -> str:
-        """Return the localised non-commercial licence advisory, or an empty string.
-
-        Non-empty exactly when
-        :attr:`~core.model_catalogue.ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED` is
-        present, which automatic selection can never produce -- so this string
-        appearing is itself the signal that an override reached past the
-        commercial posture.
-        """
-        if ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED not in self.advisories:
-            return ""
-        candidate = self.candidate
-        if candidate is None:
-            return ""
-        return tr(
-            "provisioning.model.licence.non_commercial_advisory",
-            model=candidate.runtime_id,
-            licence=candidate.licence.name,
-        )
-
-
-class _SelectionContext(TypedDict):
-    """The fields every :class:`ModelSelection` branch shares.
-
-    A TypedDict rather than a bare mapping so the splat below stays checked:
-    every return path in this surface builds one ``ModelSelection`` from a
-    common context plus its own outcome fields, and an untyped splat would let a
-    renamed or mistyped shared field through to runtime.
-    """
-
-    role: ModelRole
-    runtime: ModelRuntime
-    posture: DeploymentLicencePosture
-    tier: HardwareTier
-    binding_free_bytes: int | None
-    required_context_tokens: int
-    safety_margin_bytes: int
-
-
-def select_model_for_role(
-    role: ModelRole,
-    *,
-    profile: HardwareProfile | None = None,
-    settings: Settings | None = None,
-    override: str | None = None,
-    posture: DeploymentLicencePosture = DeploymentLicencePosture.COMMERCIAL,
-) -> ModelSelection:
-    """Resolve ``role`` to the weakest catalogued model that clears every bar.
-
-    **Bounded from below, never maximised.** Candidates are ordered by ascending
-    memory requirement and the FIRST survivor wins, so a machine with headroom
-    to spare still gets the small model. A larger model is an operator's
-    explicit choice, which is why nothing here ranks on capability above the
-    floor.
-
-    Three bars, applied in this order and each for a different reason:
-
-    * **Context window.** A model whose window cannot hold the configured
-      request window is excluded on *capability*, not preference -- it cannot do
-      the job at any price.
-    * **Licence.** Under a ``COMMERCIAL`` posture a candidate whose publisher
-      text bars commercial use is not eligible. This is the bar that moved the
-      shipped default.
-    * **Measured headroom.** Requirement plus the configured safety margin
-      against free memory in the binding arena.
-
-    An unmeasurable machine does **not** refuse here, and that is deliberate
-    rather than a softening of the fail-closed rule: refusing to *name* a model
-    because headroom is momentarily unreadable would break provisioning on
-    exactly the machines that most need to pull one, while the load itself is
-    still failed closed by :func:`assess_model_load_contention` at the act. The
-    selection says so with
-    :attr:`~core.model_catalogue.ModelSelectionAdvisory.FIT_UNVERIFIED`.
-
-    Args:
-        role: The role to resolve.
-        profile: Measured hardware; probed when omitted.
-        settings: Settings carrying the context window and safety margin; loaded
-            when omitted.
-        override: An operator-named runtime id that outranks selection. Honoured
-            even when uncatalogued or licence-barred, always with advisories.
-        posture: The deployment's licence posture; commercial by default,
-            because that is what this product is.
-
-    Returns:
-        A :class:`ModelSelection`. Never raises: an unsatisfiable role returns
-        ``selected`` false carrying the measured reason and closed outcome.
-    """
-    runtime = ModelRuntime.LOCAL_OLLAMA
-    resolved = settings if settings is not None else load_settings()
-    hardware = profile if profile is not None else probe_hardware_profile()
-    free = binding_free_bytes(hardware)
-    tier = hardware_tier_for_free_bytes(free)
-    required_context = resolved.cadrumo_llm_ollama_num_ctx
-    margin = resolved.cadrumo_llm_contention_safety_margin_bytes
-    base = _SelectionContext(
-        role=role,
-        runtime=runtime,
-        posture=posture,
-        tier=tier,
-        binding_free_bytes=free,
-        required_context_tokens=required_context,
-        safety_margin_bytes=margin,
-    )
-
-    if override is not None:
-        return _selection_from_override(
-            override,
-            base=base,
-            posture=posture,
-            free=free,
-            margin=margin,
-            context=required_context,
-        )
-
-    eligible = _eligible_model_candidates(
-        role,
-        required_context=required_context,
-        posture=posture,
-    )
-    if not eligible:
-        return _selection_without_eligible_candidate(
-            base,
-            role=role,
-            runtime=runtime,
-            required_context=required_context,
-            posture=posture,
-        )
-
-    fitting = _fitting_model_candidates(eligible, free=free, margin=margin)
-    if not fitting:
-        return _selection_without_fitting_candidate(
-            base,
-            role=role,
-            runtime=runtime,
-            free=free,
-            margin=margin,
-            smallest=eligible[0],
-        )
-
-    return _selected_model_selection(base, candidate=fitting[0], free=free)
-
-
-def _eligible_model_candidates(
-    role: ModelRole,
-    *,
-    required_context: int,
-    posture: DeploymentLicencePosture,
-) -> tuple[ModelCandidate, ...]:
-    """Return ordered candidates that clear the capability and licence bars."""
-    return tuple(
-        candidate
-        for candidate in candidates_for_role(role)
-        if candidate.max_context_tokens >= required_context and candidate.permitted_under(posture)
-    )
-
-
-def _fitting_model_candidates(
-    candidates: tuple[ModelCandidate, ...],
-    *,
-    free: int | None,
-    margin: int,
-) -> tuple[ModelCandidate, ...]:
-    """Return eligible candidates that fit local headroom, preserving catalogue order."""
-    return tuple(
-        candidate
-        for candidate in candidates
-        if candidate.memory_requirement_bytes is None
-        or free is None
-        or candidate.memory_requirement_bytes + margin <= free
-    )
-
-
-def _selection_without_eligible_candidate(
-    base: _SelectionContext,
-    *,
-    role: ModelRole,
-    runtime: ModelRuntime,
-    required_context: int,
-    posture: DeploymentLicencePosture,
-) -> ModelSelection:
-    """Return the typed refusal when capability and licence filters leave no candidate."""
-    facts: dict[str, ProvisioningFactValue] = {
-        "role": role.value,
-        "runtime": runtime.value,
-        "required_context_tokens": required_context,
-        "deployment_posture": posture.value,
-        "eligible_candidate_count": 0,
-    }
-    return _selection_refusal(
-        base,
-        condition=ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
-        facts=facts,
-    )
-
-
-def _selection_without_fitting_candidate(
-    base: _SelectionContext,
-    *,
-    role: ModelRole,
-    runtime: ModelRuntime,
-    free: int | None,
-    margin: int,
-    smallest: ModelCandidate,
-) -> ModelSelection:
-    """Return the typed refusal when the first eligible model cannot fit."""
-    needed = (smallest.memory_requirement_bytes or 0) + margin
-    facts: dict[str, ProvisioningFactValue] = {
-        "role": role.value,
-        "runtime": runtime.value,
-        "binding_free_bytes": free if free is not None else 0,
-        "required_bytes": needed,
-        "selected_model": smallest.runtime_id,
-    }
-    return _selection_refusal(
-        base,
-        condition=ProvisioningPreconditionCondition.SELECTED_MODEL_FITS,
-        facts=facts,
-        advisories=(ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM,),
-    )
-
-
-def _selection_refusal(
-    base: _SelectionContext,
-    *,
-    condition: ProvisioningPreconditionCondition,
-    facts: Mapping[str, ProvisioningFactValue],
-    advisories: tuple[ModelSelectionAdvisory, ...] = (),
-) -> ModelSelection:
-    """Build one failed selection with its immutable evidence and verdict."""
-    return ModelSelection(
-        **base,
-        selected=False,
-        advisories=advisories,
-        facts=facts,
-        precondition_verdict=provisioning_no_recovery_verdict(condition, facts=facts),
-    )
-
-
-def _selected_model_selection(
-    base: _SelectionContext,
-    *,
-    candidate: ModelCandidate,
-    free: int | None,
-) -> ModelSelection:
-    """Project the first fitting candidate, retaining unknown-fit evidence."""
-    advisories: list[ModelSelectionAdvisory] = []
-    if free is None and candidate.memory_requirement_bytes is not None:
-        advisories.append(ModelSelectionAdvisory.FIT_UNVERIFIED)
-    return ModelSelection(
-        **base,
-        runtime_id=candidate.runtime_id,
-        candidate=candidate,
-        selected=True,
-        advisories=tuple(advisories),
-        facts={
-            "role": base["role"].value,
-            "runtime": base["runtime"].value,
-            "selected_model": candidate.runtime_id,
-            "required_context_tokens": base["required_context_tokens"],
-            "selected_model_requirement_known": candidate.memory_requirement_bytes is not None,
-            "binding_free_measured": free is not None,
-        },
-    )
-
-
-def _selection_from_override(
-    override: str,
-    *,
-    base: _SelectionContext,
-    posture: DeploymentLicencePosture,
-    free: int | None,
-    margin: int,
-    context: int,
-) -> ModelSelection:
-    """Honour an operator-named model, attaching every concern it carries.
-
-    The override always wins -- an operator who names a model has made a
-    decision this function is not entitled to overturn. What it is entitled to
-    do is refuse to be quiet about it, which is the whole of this helper.
-    """
-    candidate = model_candidate(override)
-    if candidate is None:
-        return ModelSelection(
-            **base,
-            runtime_id=override,
-            selected=True,
-            override_applied=True,
-            advisories=(
-                ModelSelectionAdvisory.OVERRIDE_NOT_IN_CATALOGUE,
-                ModelSelectionAdvisory.LICENCE_UNVERIFIED,
-            ),
-            facts={
-                "selected_model": override,
-                "selected_model_catalogued": False,
-                "override_applied": True,
-            },
-        )
-
-    advisories: list[ModelSelectionAdvisory] = []
-    if not candidate.permitted_under(posture):
-        advisories.append(ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED)
-    if candidate.max_context_tokens < context:
-        advisories.append(ModelSelectionAdvisory.OVERRIDE_BELOW_CONTEXT_FLOOR)
-    requirement = candidate.memory_requirement_bytes
-    if requirement is not None and free is None:
-        advisories.append(ModelSelectionAdvisory.FIT_UNVERIFIED)
-    elif requirement is not None and free is not None and requirement + margin > free:
-        advisories.append(ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM)
-
-    return ModelSelection(
-        **base,
-        runtime_id=candidate.runtime_id,
-        candidate=candidate,
-        selected=True,
-        override_applied=True,
-        advisories=tuple(advisories),
-        facts={
-            "selected_model": candidate.runtime_id,
-            "selected_model_catalogued": True,
-            "override_applied": True,
-            "selected_model_requirement_known": candidate.memory_requirement_bytes is not None,
-        },
-    )
-
-
-#: The doctor row id for the local-inference provisioning coherence check.
-LOCAL_MODEL_PROVISIONING_SERVICE = "local_model_provisioning"
-
-
-def probe_local_model_provisioning(
-    *,
-    installed: tuple[InstalledModel, ...] | None = None,
-    installed_measured: bool = True,
-    settings: Settings | None = None,
-) -> DependencyStatus:
-    """Detect model files left behind without the ``llm`` package extra.
-
-    Local inference needs the ``llm`` package extra, which an operator installs
-    with pip, and the models, which the native component engine installs. Only
-    the extra is this row's subject. Whether a model is installed is the
-    engine's reading, reported in the component rows of the same report, which
-    name the setup action a missing model needs; a second judgement here would
-    tell an operator the models are missing while the row beside it offers to
-    set them up.
-
-    The one incoherence the extra owns is multi-gigabyte model files occupying
-    disk that nothing can load, typically after a core reinstall. The remedy is
-    the extra's install command -- or a removal, to reclaim the disk.
-
-    Every other posture reports available, including an unreadable inventory:
-    with the extra present the inventory decides nothing here, and with the
-    extra absent an inventory that cannot be read rules the direction neither
-    in nor out, so the detail says so plainly.
-
-    Args:
-        installed: The on-disk inventory; read via :func:`read_installed_models`
-            when omitted and the extra is absent.
-        installed_measured: False when the inventory could not be read.
-        settings: Settings carrying the runtime endpoint and role models.
-
-    Returns:
-        A :class:`DependencyStatus` naming the direction and its remedy.
-    """
-    resolved = settings if settings is not None else load_settings()
-    extra_present = optional_extra_available(LLM_EXTRA)
-    if extra_present:
-        return DependencyStatus(
-            service=LOCAL_MODEL_PROVISIONING_SERVICE,
-            available=True,
-            facts={"extra": LLM_EXTRA.extra, "extra_importable": True},
-        )
-    inventory = _resolve_local_model_inventory(
-        installed,
-        installed_measured=installed_measured,
-        settings=resolved,
-    )
-    if inventory is None:
-        return DependencyStatus(
-            service=LOCAL_MODEL_PROVISIONING_SERVICE,
-            available=True,
-            facts={
-                "extra": LLM_EXTRA.extra,
-                "extra_importable": False,
-                "installed_model_inventory_readable": False,
-            },
-        )
-    selected = cadrumo_selected_models(resolved)
-    present = tuple(sorted(row.name for row in inventory if matches_selected_model(row.name, selected)))
-    if not present:
-        return DependencyStatus(
-            service=LOCAL_MODEL_PROVISIONING_SERVICE,
-            available=True,
-            facts={"extra": LLM_EXTRA.extra, "extra_importable": False, "present_selected_model_count": 0},
-        )
-    return _local_model_provisioning_refusal(
-        ProvisioningPreconditionCondition.LOCAL_MODEL_MODEL_REQUIRES_EXTRA,
-        {
-            "extra": LLM_EXTRA.extra,
-            "extra_importable": False,
-            "present_selected_model_count": len(present),
-        },
-    )
-
-
-def _resolve_local_model_inventory(
-    installed: tuple[InstalledModel, ...] | None,
-    *,
-    installed_measured: bool,
-    settings: Settings,
-) -> tuple[InstalledModel, ...] | None:
-    if installed is None and installed_measured:
-        return read_installed_models(settings)
-    return installed if installed_measured else None
-
-
-def _local_model_provisioning_refusal(
-    condition: ProvisioningPreconditionCondition,
-    facts: Mapping[str, ProvisioningFactValue],
-) -> DependencyStatus:
-    return DependencyStatus(
-        service=LOCAL_MODEL_PROVISIONING_SERVICE,
-        available=False,
-        facts=facts,
-        precondition_verdict=provisioning_no_recovery_verdict(condition, facts=facts),
-    )
 
 
 def probe_optional_extras() -> tuple[DependencyStatus, ...]:

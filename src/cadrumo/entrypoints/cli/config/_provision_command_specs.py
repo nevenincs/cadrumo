@@ -5,10 +5,10 @@ the native component engine's role, which reaches only installation-wide
 components no profile holds, so they declare only profile-free capabilities and
 run without a session: the quick check reads local files, a full check reaches
 the network, a setup downloads into component storage and a removal deletes
-from it. The local reader's actions (report, load) submit registered
-operations through the runtime in the signed-in profile's session, so their
-policies declare installation storage beside the network rather than the
-profile-free set that would skip the session.
+from it. The local reader's report submits a registered operation through the
+runtime in the signed-in profile's session, so its policy declares
+installation storage beside the network rather than the profile-free set that
+would skip the session.
 """
 
 from __future__ import annotations
@@ -47,9 +47,6 @@ _COMPONENT_REMOVE = ExecutionPolicySpec(
 )
 # Reads installation storage and the network and changes nothing.
 _SETUP_READ = ExecutionPolicySpec(_STORAGE_AND_NETWORK, frozenset({"none"}), "external-io", CommandWriteRoute.NONE)
-_SETUP_WRITE = ExecutionPolicySpec(
-    _STORAGE_AND_NETWORK, frozenset({"network", "local-state"}), "external-io", CommandWriteRoute.NONE
-)
 
 _YES = OptionSpec(
     name="yes",
@@ -57,13 +54,6 @@ _YES = OptionSpec(
     value=ValueContract(DeferredTarget("builtins", "bool")),
     default=ParameterDefault.value(False),
     help_key=TranslationKey("cli.config.provision.yes_help"),
-)
-_ROLE = OptionSpec(
-    name="role",
-    declarations=("--role",),
-    value=ValueContract(DeferredTarget("....core.model_catalogue", "ModelRole", __package__)),
-    default=ParameterDefault.value(None),
-    help_key=TranslationKey("cli.config.provision.role_help"),
 )
 _ITEM = OptionSpec(
     name="item",
@@ -203,28 +193,6 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         policy=_COMPONENT_REMOVE,
         handler=_handler("provision_remove"),
         result_schema=_schema("ProvisionRemoveResult", "config.provision.remove"),
-    ),
-    CommandSpec(
-        "config_provision_load",
-        "config_provision",
-        "load",
-        kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey("cli.config.provision.load.help"),
-        short_help_key=None,
-        invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            OptionSpec(
-                name="model",
-                declarations=("--model",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.config.provision.load.model_help"),
-            ),
-            _ROLE,
-        ),
-        policy=_SETUP_WRITE,
-        handler=_handler("provision_load"),
-        result_schema=_schema("ProvisionLoadResult", "config.provision.load"),
     ),
     CommandSpec(
         "config_provision_setup",

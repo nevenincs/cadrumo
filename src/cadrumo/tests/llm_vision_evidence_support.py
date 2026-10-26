@@ -10,7 +10,7 @@ from typing import ClassVar, override
 
 from PIL import Image
 
-from ..core.config import load_settings, override_settings
+from ..core.config import override_settings
 from ..core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from .loopback_llm import (
     SilentLoopbackHandler,
@@ -85,11 +85,8 @@ def run_against_loopback_ollama[T](
     _ObservedOllamaRequest.content = content
     # Captured here rather than read in the handler: the server answers on its
     # own thread, which does not see this process's settings override.
-    settings = load_settings()
     _ObservedOllamaRequest.installed_models = tuple(
-        installed
-        if installed is not None
-        else (settings.cadrumo_llm_ollama_text_model, settings.cadrumo_llm_ollama_vision_model)
+        installed if installed is not None else ("synthetic-text-extraction", "synthetic-vision-transcription")
     )
     with (
         serving_loopback(_ObservedOllamaRequest, path="/api/chat") as endpoint,

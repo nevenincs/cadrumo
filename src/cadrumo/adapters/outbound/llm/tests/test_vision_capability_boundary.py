@@ -28,7 +28,7 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from .....core.config_support import LLMProvider
 from .....core.image_media_type import ImageMediaType
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from ..client import LLMClient
 from ..errors import LLMConfigError
@@ -54,7 +54,6 @@ def _png_image() -> MultimodalImageInput:
 def _settings(tmp_path: Path) -> EnvFileFreeSettings:
     """Settings whose LLM stores stay inside ``tmp_path``."""
     return EnvFileFreeSettings(
-        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",

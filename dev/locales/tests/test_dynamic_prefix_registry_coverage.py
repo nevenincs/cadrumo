@@ -535,9 +535,6 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("application/overview/pipeline_operation.py", "_capture_overview_pipeline"),
         ("application/overview/read_operation.py", "_capture"),
         ("application/review/read_operation.py", "_capture"),
-        # The local-reader provisioning operation writes its licence advisory in the
-        # requesting frontend's language inside one with-block around the run.
-        ("application/local_reader_provisioning.py", "provision_local_reader"),
         # CSV row refusals are rendered synchronously inside the worker handoff;
         # the invocation language is restored before the batch result returns.
         ("application/ledger/bulk_classify_operation.py", "classify"),
@@ -581,7 +578,6 @@ _PROJECTION_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("application/overview/pipeline_operation.py", "_capture_overview_pipeline"),
         ("application/overview/read_operation.py", "_capture"),
         ("application/review/read_operation.py", "_capture"),
-        ("application/local_reader_provisioning.py", "provision_local_reader"),
         ("application/ledger/bulk_classify_operation.py", "classify"),
     }
 )

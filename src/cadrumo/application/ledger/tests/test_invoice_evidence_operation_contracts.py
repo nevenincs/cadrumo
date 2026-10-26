@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import cast
 from uuid import UUID, uuid4
 
@@ -12,9 +12,10 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ....core.config_support import LLMProvider
+from ....core.model_roles import ModelRole
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.iva.schema import InvoiceKind
-from ...local_reader import LocalReaderStatus
+from ...local_reader import LocalReaderStatus, RoleLane
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import (
@@ -57,7 +58,9 @@ def _registrations() -> tuple[OperationRegistry, tuple[OperationPublicDefinition
 
     typed_factory: InvoiceEvidenceOperationPortsFactory = unused_factory
     definitions = (
-        build_ledger_evidence_reader_readiness_definition(cast(Callable[[], LocalReaderStatus], lambda: None)),
+        build_ledger_evidence_reader_readiness_definition(
+            cast(Callable[[Mapping[ModelRole, RoleLane]], LocalReaderStatus], lambda _lanes: None)
+        ),
         build_ledger_evidence_extract_definition(typed_factory),
         build_ledger_evidence_confirm_definition(typed_factory),
     )

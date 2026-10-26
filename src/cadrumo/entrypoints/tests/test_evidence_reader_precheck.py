@@ -32,7 +32,7 @@ from ...application.operator_actions.models import PreconditionVerdict
 from ...core.config import Settings, load_settings
 from ...core.document_shape import DocumentShape
 from ...core.errors.error_codes import build_error_envelope
-from ...core.model_catalogue import ModelRole
+from ...core.model_roles import ModelRole
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.iva.regime_legend import resolve_regime_legends
 from ...tests.llm_vision_evidence_support import png_image

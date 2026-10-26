@@ -4171,9 +4171,6 @@ overview:
 provisioning:
   model:
     licence:
-      non_commercial_advisory: Model %{model} is covered by the %{licence}, which
-        does not permit commercial use. You named it explicitly, so Cadrumo will use
-        it, but a commercial filing practice needs a separate licence from the publisher.
       plan_non_commercial: Model %{model} is covered by the %{licence}, which does
         not permit commercial use. Using it in a commercial filing practice needs
         a separate licence from its publisher.

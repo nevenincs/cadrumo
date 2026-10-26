@@ -2670,12 +2670,6 @@ cli:
         az adóhivatal webhelyéhez használt böngészőt és a helyi MI-t, a programjával
         és a modelljeivel.'
       incomplete: Néhány összetevő még nem áll készen.
-      load:
-        help: Betölti a modelleket a memóriába, hogy az első olvasásnak ne kelljen
-          várnia; minden szerep modelljét, hacsak a --role vagy a --model nem szűkíti.
-          Betöltés előtt elutasítja, ha kevés a memória.
-        model_help: A betöltendő modell neve. Már letöltöttnek kell lennie. Alapértelmezés
-          szerint a szerephez választott modell.
       outcome:
         busy: Egy másik előkészítés éppen ezt módosítja. Próbáld újra, ha befejeződött.
         cancelled: Megszakítottad az előkészítést.
@@ -2715,9 +2709,6 @@ cli:
       report:
         help: Jelzi a számítógép memóriáját, az egyes szerepekhez választott modellt,
           és hogy most betölthető-e.
-      role_help: A modell szerepe, amelyre a művelet vonatkozik (képek átírása, szöveg
-        kinyerése, táblázatoszlopok megfeleltetése, ügylettípus javaslata). Alapértelmezés
-        szerint minden szerep.
       setup:
         help: Előkészít minden összetevőt, amely még nem áll készen. Megmutatja, mi
           töltődik le, mekkora és hová kerül, és megkérdez, mielőtt bármit letöltene.

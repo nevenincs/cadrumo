@@ -18,7 +18,7 @@ from typing import Final
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
 from ..core.i18n.render import tr
-from ..core.model_catalogue import ModelRole, ModelSelectionAdvisory
+from ..core.model_roles import ModelRole
 from .dependency_contracts import (
     DependencyBlockedReason,
     DependencyItemDeclaration,
@@ -27,6 +27,7 @@ from .dependency_contracts import (
     DependencyStaleReason,
     DependencyState,
     DependencyStatusRow,
+    ModelSelectionAdvisory,
 )
 from .operator_actions.models import PreconditionVerdict
 from .provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID

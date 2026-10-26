@@ -30,7 +30,7 @@ from .....application.provisioning_contracts import (
     provisioning_setup_verdict,
 )
 from .....core.config_support import LLMProvider
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....core.operator_action_enums import ActionEvidenceProvenance
 from ..errors import LLMConfigError, LLMConsentError, LLMError, LLMProviderError
 from ..preconditions import LLMPreconditionCondition, llm_no_recovery_verdict

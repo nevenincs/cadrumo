@@ -84,7 +84,7 @@ _HTTP_CLIENT_MODULES: Final = frozenset(
 _PULL_ENDPOINTS: Final = ("/api/pull", "api/pull", "/api/delete", "api/delete")
 _ENDPOINT_WORDS: Final = frozenset({"pull", "delete"})
 #: The modules that read the component pins: the bytes only the engine may fetch.
-_PIN_MODULES: Final = ("cadrumo.application.browser_archive_pins", "cadrumo.core.local_ai_pins")
+_PIN_MODULES: Final = ("cadrumo.application.browser_archive_pins",)
 _PIN_MODULE_NAMES: Final = frozenset(module.rsplit(".", 1)[1] for module in _PIN_MODULES)
 _REMOVED_OPERATIONS: Final = frozenset({"dependencies.setup", "dependencies.status", "dependencies.verify"})
 

@@ -27,7 +27,7 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 from .....core.config_support import LLMProvider
 from .....core.directory_scan import scan_directory
 from .....core.errors.error_codes import build_error_envelope
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_records import LLMRunRecorder

@@ -72,7 +72,6 @@ from ...application.ledger.tests.manual_transaction_support import create_manual
 from ...application.ledger.update_contracts import LedgerUpdatePatch
 from ...application.ledger.usage_ratio_repository import save_usage_ratio_profile
 from ...application.live.verify import VerifyService, VerifySurface
-from ...application.local_reader_contracts import LOCAL_READER_OPERATION_SUBJECT, LocalReaderProvisionAction
 from ...application.modelo.aggregate_request import ModeloAggregateOperationRequest
 from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2
 from ...application.modelo.invoice_withholding_capture_contracts import (
@@ -104,7 +103,6 @@ from ...core.external_constants import OutputLanguage
 from ...core.identity_check_verdict import IdentityCheckVerdict
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.ledger_sort import LedgerSortField
-from ...core.model_catalogue import ModelRole
 from ...core.operations import profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
@@ -337,9 +335,6 @@ def _payload(
             secret = _CREDENTIAL_INPUT.encode()
         case "user-profile.logout":
             values = {"profile_id": profile_id}
-        case "local-reader.provision":
-            subject_ref = LOCAL_READER_OPERATION_SUBJECT
-            values = {"action": LocalReaderProvisionAction.VERIFY, "role": ModelRole.TEXT_EXTRACTION}
         case "live.expedientes.capture.single":
             subject_ref = profile_operation_subject(str(profile_id))
             values = {"profile_id": profile_id, "modelo": "303", "year": 2025}

@@ -46,7 +46,7 @@ from ...application.operations.supervisor import OperationSupervisor
 from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
 from ...application.tests.role_model_support import configured_role_model
 from ...core.config import override_settings
-from ...core.model_catalogue import ModelRole
+from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.iva.schema import InvoiceKind
@@ -101,7 +101,7 @@ def _runtime_holding_only_the_vision_model() -> Generator[None]:
     """
     _InventoryRuntime.reads = []
     vision = configured_role_model(ModelRole.VISION_TRANSCRIPTION)
-    _InventoryRuntime.installed = () if vision is None else (vision,)
+    _InventoryRuntime.installed = (vision,)
     with (
         serving_loopback(_InventoryRuntime, path="/api/chat") as chat_url,
         override_settings(cadrumo_llm_ollama_chat_url=chat_url, cadrumo_llm_contention_check_override=True),

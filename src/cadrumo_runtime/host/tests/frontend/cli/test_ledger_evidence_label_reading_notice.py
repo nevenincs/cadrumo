@@ -52,7 +52,6 @@ from cadrumo.adapters.persistence.llm.run_records import LLMRunRecorder
 from cadrumo.adapters.persistence.llm.usage import UsageRecorder
 from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.model_catalogue import model_candidate
 from cadrumo.tests.fixtures.settings import EnvFileFreeSettings
 from cadrumo.tests.loopback_llm import (
     SilentLoopbackHandler,
@@ -108,6 +107,7 @@ _UNLABELLED_LINES = ("B1234567X B17283946 766,30",)
 #: not assess such a model, so the cases whose subject is NOT admission run the
 #: same way on every host whatever its free memory.
 _UNASSESSED_MODEL = "cadrumo-test-unassessed-reader:1b"
+_TEXT_MODEL = "cadrumo-test-text-reader:1b"
 
 #: A margin no machine can satisfy, so the real admission check refuses on every
 #: host: a measurable one falls short, an unmeasurable one fails closed.
@@ -128,7 +128,7 @@ def _recording_runtime() -> Generator[tuple[str, list[str]]]:
     not recorded, because they load nothing.
     """
     arrivals: list[str] = []
-    installed = (load_settings().cadrumo_llm_ollama_text_model, _UNASSESSED_MODEL)
+    installed = (_TEXT_MODEL, _UNASSESSED_MODEL)
 
     class _Runtime(SilentLoopbackHandler):
         @override
@@ -175,14 +175,6 @@ def _extract(evidence_id: str) -> tuple[int, dict[str, Any]]:
 
 def _label_reading_notices(envelope: dict[str, Any]) -> list[dict[str, Any]]:
     return [notice for notice in envelope.get("notices", []) if notice["code"] in _LABEL_READING_CODES]
-
-
-def test_the_refused_model_is_one_the_admission_check_assesses() -> None:
-    """Anchor the detector: a model with no declared requirement is never refused, so the case would be vacuous."""
-    candidate = model_candidate(load_settings().cadrumo_llm_ollama_text_model)
-
-    assert candidate is not None
-    assert candidate.memory_requirement_bytes is not None
 
 
 def test_a_headroom_refused_fill_leaves_the_label_reading_standing_and_never_touches_the_runtime(
@@ -320,7 +312,7 @@ def test_a_fill_the_runtime_answers_is_merged_without_a_label_reading_notice(tmp
 
     with (
         _recording_runtime() as (chat_url, arrivals),
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url, cadrumo_llm_ollama_text_model=_UNASSESSED_MODEL),
+        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
     ):
         evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
@@ -336,7 +328,7 @@ def test_an_unreachable_runtime_leaves_the_label_reading_standing_with_a_warning
 
     with (
         _unreachable_runtime_url() as chat_url,
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url, cadrumo_llm_ollama_text_model=_UNASSESSED_MODEL),
+        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
     ):
         evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
@@ -401,7 +393,6 @@ def _start_holding_read(tmp_path: Path) -> tuple[threading.Thread, list[object]]
     root = tmp_path / "holding-read"
     settings = EnvFileFreeSettings(
         cadrumo_llm_ollama_chat_url=load_settings().cadrumo_llm_ollama_chat_url,
-        cadrumo_llm_ollama_text_model=_UNASSESSED_MODEL,
         cadrumo_llm_cache_dir=root / "cache",
         cadrumo_llm_usage_dir=root / "usage",
         cadrumo_llm_run_record_dir=root / "run-record",
@@ -468,7 +459,7 @@ def _runtime_with_the_slot(tmp_path: Path, *, held: bool) -> Generator[list[str]
 
     with (
         serving_loopback(_Runtime, path="/api/chat") as chat_url,
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url, cadrumo_llm_ollama_text_model=_UNASSESSED_MODEL),
+        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
     ):
         if not held:
             yield arrivals

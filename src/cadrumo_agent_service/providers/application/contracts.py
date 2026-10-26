@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.hex import is_hex64
 from cadrumo.core.json_contract import OutputSchema
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 from ..domain.catalog import ProviderAuthKind, ProviderConsumer, ProviderId, ProviderTransport

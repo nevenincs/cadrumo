@@ -26,7 +26,6 @@ from ....adapters.outbound.components import client as components_client
 from ....adapters.outbound.components.protocol import ComponentsNoticeCode, ComponentsNoticeLine, ComponentsPlan
 from ....adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from ....application.dependency_registry import dependency_item_declarations
-from ....application.local_reader_contracts import LocalReaderProvisionAction, LocalReaderProvisionRequest
 from ....application.local_reader_report import LocalReaderReportRequest
 from ..command_operation_table import COMMAND_OPERATION_ROWS
 from ..config import provision_cli
@@ -416,7 +415,7 @@ class _StopError(Exception):
     """Ends a recorded submission before any result is rendered."""
 
 
-def test_the_local_reader_leaves_still_submit_their_registered_operations(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_the_local_reader_report_still_submits_its_registered_operation(monkeypatch: pytest.MonkeyPatch) -> None:
     submitted: list[tuple[str, BaseModel]] = []
 
     def record(client: object, payload: BaseModel, **options: Any) -> Any:
@@ -426,14 +425,13 @@ def test_the_local_reader_leaves_still_submit_their_registered_operations(monkey
 
     monkeypatch.setattr(provision_cli, "run_registered_operation", record)
     monkeypatch.setattr(provision_cli, "bound_profile_client", lambda ctx: object())
-    for leaf in ("load", "report"):
+    for leaf in ("report",):
         with pytest.raises(_StopError):
             getattr(provision_cli, f"provision_{leaf}")(object())
 
     rows = {path[2]: operation for path, operation in COMMAND_OPERATION_ROWS if path[:2] == ("config", "provision")}
-    assert [definition for definition, _ in submitted] == [rows["load"], rows["report"]]
-    actions = [payload.action for _, payload in submitted if isinstance(payload, LocalReaderProvisionRequest)]
-    assert actions == [LocalReaderProvisionAction.LOAD]
+    assert [definition for definition, _ in submitted] == [rows["report"]]
+    assert "load" not in rows, "the local reader no longer loads a model directly"
     assert isinstance(submitted[-1][1], LocalReaderReportRequest)
 
 

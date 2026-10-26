@@ -18,11 +18,15 @@ from textual.widgets import Button, DataTable, Input, Select, Static
 from .....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
 from .....application.ledger.batch_ingest import InferencePause
 from .....application.ledger.evidence_ingestion_contracts import LedgerEvidenceBatchRequest
-from .....application.local_reader import probe_local_reader
-from .....application.provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
+from .....application.provisioning_contracts import (
+    LOCAL_AI_PROVISION_ACTION_ID,
+    ProvisioningPreconditionCondition,
+    provisioning_no_recovery_verdict,
+    provisioning_setup_verdict,
+)
 from .....core.config import override_settings
 from .....core.i18n.render import tr
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....domain.iva.schema import InvoiceKind
 from ...setup.offer import SetupItemOffer
 from ...tests.settling import settle, settle_until
@@ -146,10 +150,13 @@ async def test_a_refused_batch_is_shown_on_the_write_step(tmp_path: Path) -> Non
 
 
 def _local_ai_pause() -> InferencePause:
-    """The pause the local reader probe gives when the role's model is not installed: it names the setup."""
-    status = probe_local_reader(ModelRole.TEXT_EXTRACTION, installed=(), model="reader-model:1b")
-    assert status.precondition_verdict is not None
-    return InferencePause(facts={"role_model_installed": False}, precondition_verdict=status.precondition_verdict)
+    """The pause a refused read gives when the role's selected model is not installed: it names the setup."""
+    verdict = provisioning_setup_verdict(
+        ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+        facts={"role": ModelRole.TEXT_EXTRACTION.value, "role_model_installed": False},
+        action_id=LOCAL_AI_PROVISION_ACTION_ID,
+    )
+    return InferencePause(facts={"role_model_installed": False}, precondition_verdict=verdict)
 
 
 def _unrecoverable_pause() -> InferencePause:

@@ -29,7 +29,7 @@ from .....application.dependency_wording import statement_reader_refusal_reason
 from .....application.ledger.import_ports import LedgerImportReaderUnavailableError
 from .....application.ledger.statement_reading import bind_statement_reader_factory
 from .....application.operator_actions.models import PreconditionVerdict
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from .....tests.inventory import FIXTURES_DIR
 from .....tests.pdf_fixtures import multi_page_text_pdf_bytes

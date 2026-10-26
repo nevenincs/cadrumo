@@ -43,7 +43,7 @@ from cadrumo_client.contracts.model_runs import ModelRunLane
 from .....core.config import Settings
 from .....core.config_support import LLMProvider
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....domain.evidence_consent.record import EvidenceConsentLedgerEntry
 from ....persistence.llm import consent_ledger as consent_ledger_module
 from ....persistence.llm.consent_ledger import EvidenceConsentLedger

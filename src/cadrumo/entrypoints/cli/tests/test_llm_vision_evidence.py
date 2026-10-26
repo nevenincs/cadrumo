@@ -27,7 +27,7 @@ from ....application.ledger.llm_classification_ports import EvidenceImage
 from ....application.ledger.preconditions import LedgerPreconditionCondition
 from ....core.config import Settings
 from ....core.image_media_type import ImageMediaType
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from ....domain.transactions.llm import prompt_spec_with_saturation_fields
 from ....domain.transactions.tests.vision_evidence_support import vision_transaction

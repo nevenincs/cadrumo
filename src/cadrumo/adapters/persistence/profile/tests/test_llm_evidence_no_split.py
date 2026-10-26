@@ -16,7 +16,7 @@ from .....application.ledger.llm_classification import (
 )
 from .....application.ledger.llm_classification_ports import LLMClassificationPorts
 from .....core.config import load_settings
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.categories.spending_category import SpendingCategory
 from .....domain.iva.schema import IvaCategory

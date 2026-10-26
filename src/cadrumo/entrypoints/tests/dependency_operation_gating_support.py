@@ -89,7 +89,7 @@ from ...application.operations.registry import OperationRegistry
 from ...application.operations.subject_reference import expected_operation_subject
 from ...application.operator_actions.models import PreconditionVerdict
 from ...application.operator_actions.projection import PreconditionVerdictSnapshot
-from ...core.model_catalogue import ModelRole
+from ...core.model_roles import ModelRole
 from ...core.operations import OperationTerminalCondition
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.models import Attachment

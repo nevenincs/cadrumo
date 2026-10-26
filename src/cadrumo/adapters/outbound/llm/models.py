@@ -21,7 +21,7 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hashing import sha256_hex
 from ....core.identity.digest import ContentDigest
 from ....core.image_media_type import ImageMediaType
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from .consent import EvidenceConsentToken

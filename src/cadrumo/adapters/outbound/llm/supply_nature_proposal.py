@@ -56,7 +56,7 @@ from pydantic import BaseModel, Field
 from ....application.operator_actions.models import PreconditionVerdict
 from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
@@ -264,7 +264,7 @@ class SupplyNatureProposer:
 
     Binds to :class:`~llm.LLMClient` and nothing lower. Every proposal runs
     through the agent service under
-    :attr:`~core.model_catalogue.ModelRole.SUPPLY_NATURE_PROPOSAL`, so the lane
+    :attr:`~core.model_roles.ModelRole.SUPPLY_NATURE_PROPOSAL`, so the lane
     and model are the ones the person selected for that role. This class names
     no model and no provider of its own, and a refused run is never retried on
     another lane or model.

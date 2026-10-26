@@ -36,7 +36,7 @@ from .....application.provisioning_runtime import (
     read_runtime_residents,
 )
 from .....core.hardware import ContentionCause
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_records import LLMRunRecorder

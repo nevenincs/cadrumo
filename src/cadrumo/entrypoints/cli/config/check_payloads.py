@@ -51,7 +51,7 @@ class CheckDependencyPayload(OutputSchema):
     :class:`ConfigCheckResult`
     and mirrors
     :class:`DependencyStatus` rows from
-    :func:`~application.local_reader.probe_local_reader`,
+    :func:`~application.local_reader.probe_local_ai_program`,
     :func:`~application.provisioning_browser.probe_playwright_browser`, and
     :func:`probe_optional_extras`. The application-owned facts and verdict are
     the full dependency explanation; this boundary resolves the verdict against

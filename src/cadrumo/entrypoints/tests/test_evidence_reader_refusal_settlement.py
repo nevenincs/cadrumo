@@ -52,7 +52,7 @@ from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, 
 from ...application.tests.role_model_support import configured_role_model
 from ...core.config import override_settings
 from ...core.errors.error_codes import get_registered_error_code
-from ...core.model_catalogue import ModelRole
+from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.models import Attachment
@@ -105,7 +105,7 @@ def _runtime_holding(role: ModelRole) -> Generator[None]:
     """Serve a runtime holding only the configured model of ``role``."""
     _InventoryRuntime.reads = []
     model = configured_role_model(role)
-    _InventoryRuntime.installed = () if model is None else (model,)
+    _InventoryRuntime.installed = (model,)
     with (
         serving_loopback(_InventoryRuntime, path="/api/chat") as chat_url,
         override_settings(cadrumo_llm_ollama_chat_url=chat_url),

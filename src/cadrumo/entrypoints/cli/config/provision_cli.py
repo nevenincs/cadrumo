@@ -11,8 +11,8 @@ no state of its own and needs no signed-in profile:
 * **probe** -- the full check of every component.
 * **verify** -- the full check of the named component, or of every one.
 * **setup**, **browser**, **pull** -- set up every component that offers it,
-  the browser, or the local AI (its program and every role's model, as one
-  item). Each prints the plan the role asks to approve and asks; ``--yes``
+  the browser, or the local AI (its program and the models the person
+  selected, as one item). Each prints the plan the role asks to approve and asks; ``--yes``
   approves exactly the printed plan. Without ``--yes`` and without a terminal
   to ask on, the plan is declined, nothing moves and the command says it needs
   your approval. A setup that finds its component already being set up
@@ -25,8 +25,9 @@ no state of its own and needs no signed-in profile:
 
 Where this build has no Cadrumo binary, every component reads as not in this
 build. The local AI's server is the runtime manager's to start and stop, so
-no command here starts it. **report** and **load** are the local reader's
-actions, submitted as registered operations in the signed-in profile.
+no command here starts it. **report** is the local reader's read, submitted
+as a registered operation in the signed-in profile: it reports the measured
+hardware and the lane the person selected for each role.
 
 While a setup runs, text mode draws one progress line on standard error and
 JSON mode writes each line the role sends there as one JSON object, so
@@ -82,6 +83,7 @@ from ....application.dependency_contracts import (
     DependencyItemKind,
     DependencyState,
     DependencyStatusRow,
+    ModelSelectionAdvisory,
 )
 from ....application.dependency_registry import dependency_item_declarations
 from ....application.dependency_wording import (
@@ -91,11 +93,6 @@ from ....application.dependency_wording import (
     dependency_row_wording,
     dependency_space_sentence,
 )
-from ....application.local_reader_contracts import (
-    LOCAL_READER_OPERATION_DEFINITION_ID,
-    LocalReaderProvisionPublicResultV3,
-    build_local_reader_load_request,
-)
 from ....application.local_reader_report import (
     LOCAL_READER_REPORT_OPERATION_DEFINITION_ID,
     LocalReaderReportPublicResultV1,
@@ -104,8 +101,7 @@ from ....application.local_reader_report import (
 from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_surface.action_targets import ACTION_TARGETS
 from ....core.i18n.render import tr
-from ....core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
-from ....core.model_catalogue import ModelRole, ModelSelectionAdvisory
+from ....core.json_contract import ResolvedPreconditionAction
 from ....core.operations import OperationTerminalCondition
 from ....core.output_rendering import OutputFormat
 from ....core.storage_taxonomy import StorageCategory
@@ -118,8 +114,6 @@ from .provision_payloads import (
     ProvisionBrowserResult,
     ProvisionContentionPayload,
     ProvisionItemPayload,
-    ProvisionLoadItemPayload,
-    ProvisionLoadResult,
     ProvisionModelPayload,
     ProvisionProbeResult,
     ProvisionPullResult,
@@ -136,22 +130,17 @@ if TYPE_CHECKING:
     from ....application.local_reader_contracts import (
         LocalReaderContentionV1,
         LocalReaderFactV1,
-        LocalReaderModelOutcomeV3,
-        LocalReaderProvisionRequest,
     )
-    from ....application.operations.models import OperationRequest
     from ....application.operator_actions.models import PreconditionVerdict
 
 __all__ = [
     "SetupProgressLine",
     "SetupReview",
-    "emit_provision_load",
     "emit_provision_remove",
     "emit_provision_report",
     "emit_provision_setup",
     "emit_provision_status",
     "provision_browser",
-    "provision_load",
     "provision_probe",
     "provision_pull",
     "provision_remove",
@@ -168,7 +157,6 @@ __all__ = [
 _CALL_TIMEOUT_S: Final = 120.0
 # Each settlement wait is at least the call timeout, which the client requires.
 _QUICK_SETTLEMENT_S: Final = _CALL_TIMEOUT_S
-_LOCAL_READER_SETTLEMENT_S: Final = 900.0
 _PENDING_CHECK_COMMAND: Final = "aeat config provision status"
 _QUICK_STATUS_TIMEOUT_S: Final = 30.0
 """A quick check answers within its 2 s bound; this only stops a role that hangs."""
@@ -778,39 +766,8 @@ def _require_settled[ResultT: BaseModel](completed: RegisteredOperationCompletio
         raise invalid_completion_error(completed)
 
 
-# ── Local reader actions that download nothing ──────────────────────────────
-
-
-def _local_reader(
-    ctx: typer.Context, request: OperationRequest[LocalReaderProvisionRequest]
-) -> LocalReaderProvisionPublicResultV3:
-    completed = run_registered_operation(
-        bound_profile_client(ctx),
-        request.payload,
-        definition_id=LOCAL_READER_OPERATION_DEFINITION_ID,
-        subject_ref=request.subject_ref,
-        result_type=LocalReaderProvisionPublicResultV3,
-        request_version=2,
-        result_version=2,
-        timeout=_CALL_TIMEOUT_S,
-        settlement_timeout=_LOCAL_READER_SETTLEMENT_S,
-        pending_check_command=_PENDING_CHECK_COMMAND,
-    )
-    _require_settled(completed)
-    return completed.projection
-
-
-def provision_load(
-    ctx: typer.Context,
-    model: str | None = None,
-    role: ModelRole | None = None,
-) -> None:
-    """Load downloaded models into memory, refusing before the load when it is not admitted."""
-    emit_provision_load(ctx, _local_reader(ctx, build_local_reader_load_request(role, model)))
-
-
 def provision_report(ctx: typer.Context) -> None:
-    """Report the measured hardware, the per-role model selection, and admission."""
+    """Report the measured hardware, each role's selected lane, and admission."""
     from ....application.local_reader_contracts import LOCAL_READER_OPERATION_SUBJECT
 
     completed = run_registered_operation(
@@ -827,14 +784,6 @@ def provision_report(ctx: typer.Context) -> None:
     )
     _require_settled(completed)
     emit_provision_report(ctx, completed.projection)
-
-
-def _licence_notices(result: LocalReaderProvisionPublicResultV3) -> tuple[Notice, ...]:
-    advisories = (message for item in result.models for message in item.licence_advisories)
-    return tuple(
-        Notice(severity=NoticeSeverity.WARNING, code="provisioning.model.licence.non_commercial", message=message)
-        for message in dict.fromkeys(advisories)
-    )
 
 
 def _action(verdict: PreconditionVerdict | None) -> ResolvedPreconditionAction | None:
@@ -869,18 +818,9 @@ def _contention_payload(contention: LocalReaderContentionV1 | None) -> Provision
         free_vram_bytes=contention.free_vram_bytes,
         free_system_memory_bytes=contention.free_system_memory_bytes,
         shortfall_bytes=contention.shortfall_bytes,
-        unloadable_models=list(contention.unloadable_models),
         facts=_reader_facts(contention.facts),
         precondition_action=_reader_action(contention.verdict_condition_id, contention.verdict_facts),
     )
-
-
-def _roles(item: LocalReaderModelOutcomeV3) -> list[str]:
-    return [role.value for role in item.roles]
-
-
-def _item_action(item: LocalReaderModelOutcomeV3) -> ResolvedPreconditionAction | None:
-    return _reader_action(item.verdict_condition_id, item.verdict_facts)
 
 
 def _provision_result_lines(result: object) -> tuple[str, ...]:
@@ -910,34 +850,8 @@ def _provision_result_lines(result: object) -> tuple[str, ...]:
     return tuple(lines)
 
 
-def emit_provision_load(ctx: typer.Context, outcome: LocalReaderProvisionPublicResultV3) -> None:
-    """Emit the load envelope, exiting 2 unless every resolved model is loaded."""
-    items = [
-        ProvisionLoadItemPayload(
-            model=item.model,
-            roles=_roles(item),
-            loaded=item.succeeded,
-            already_loaded=item.already_satisfied,
-            elapsed_ms=item.elapsed_ms,
-            facts=_reader_facts(item.facts),
-            precondition_action=_item_action(item),
-        )
-        for item in outcome.models
-    ]
-    result = ProvisionLoadResult(loaded=outcome.succeeded, models=items)
-    emit_envelope(
-        ctx,
-        command="config.provision.load",
-        result=result,
-        lines=_provision_result_lines(result),
-        notices=_licence_notices(outcome),
-    )
-    if not result.loaded:
-        raise typer.Exit(code=2)
-
-
 def emit_provision_report(ctx: typer.Context, report: LocalReaderReportPublicResultV1) -> None:
-    """Emit the measured hardware, the per-role model selection and the admission verdict."""
+    """Emit the measured hardware, each role's selected lane and the admission verdict."""
     result = ProvisionReportResult(
         accelerator=report.accelerator.value,
         total_vram_bytes=report.total_vram_bytes,

@@ -2680,12 +2680,6 @@ cli:
         per al web de l''Agència Tributària i la IA local, amb el seu programa i els
         seus models.'
       incomplete: Alguns components encara no estan a punt.
-      load:
-        help: Carrega els models a la memòria perquè la primera lectura no esperi,
-          el de cada rol tret que --role o --model ho limitin. Es nega abans de carregar
-          si falta memòria.
-        model_help: Nom del model que cal carregar. Ja ha d'estar baixat. Per defecte,
-          el model triat per al rol.
       outcome:
         busy: Una altra preparació està canviant això ara mateix. Torna-ho a provar
           quan acabi.
@@ -2726,9 +2720,6 @@ cli:
       report:
         help: Indica la memòria d'aquest ordinador, el model triat per a cada rol
           i si es pot carregar ara.
-      role_help: Rol del model sobre el qual actuar (transcripció d'imatges, extracció
-        de text, mapatge de taules, proposta de naturalesa de l'operació). Per defecte,
-        tots els rols.
       setup:
         help: Prepara tots els components que encara no estan a punt. Mostra què es
           baixarà, quant ocupa i on es desa, i et pregunta abans de baixar res.

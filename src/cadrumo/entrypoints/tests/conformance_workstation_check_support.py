@@ -2,21 +2,18 @@
 
 from __future__ import annotations
 
-from ...application.local_reader import EXTRACTION_READER_ROLES, local_reader_service
+from ...application.local_reader import LOCAL_AI_PROGRAM_SERVICE
 from ...application.operations.public_scalar import PublicNamedScalar, PublicScalar
-from ...application.provisioning import LOCAL_MODEL_PROVISIONING_SERVICE
 from ...application.provisioning_browser import PLAYWRIGHT_BROWSER_SERVICE
 from ...application.workstation_check_operation import (
     WORKSTATION_CHECK_OPERATION_DEFINITION_ID,
     WorkstationCheckProjection,
     WorkstationCheckRequest,
 )
-from ...application.workstation_contention import CONTENTION_ROW_ID
 from ...core.auth_provider import AuthProviderKind
 from ...core.capabilities import ServiceCapability
 from ...core.component_records import uses_managed_local_ai
 from ...core.config import load_settings
-from ...core.model_catalogue import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.optional_extras import OPTIONAL_EXTRAS
 from .conformance_family_contract import (
@@ -52,25 +49,24 @@ def _prepare_check(context: ConformanceFamilyContext) -> ConformancePreparation:
             assert row.enabled is (False if barred else row.capability.default_enabled), row.capability
             assert row.source.value == ("safety_floor" if barred else "default"), row.capability
             assert row.capability.value in row.reason
-        reader_services = [local_reader_service(role) for role in EXTRACTION_READER_ROLES]
         assert [row.service for row in projection.dependencies] == [
-            *reader_services,
+            LOCAL_AI_PROGRAM_SERVICE,
             "model-runtime-hardware-floor",
             "local-inference-hardware",
-            CONTENTION_ROW_ID,
-            LOCAL_MODEL_PROVISIONING_SERVICE,
             PLAYWRIGHT_BROWSER_SERVICE,
             *(f"extra:{extra.extra}" for extra in OPTIONAL_EXTRAS),
         ]
         by_service = {row.service: row for row in projection.dependencies}
-        for role, service in zip(EXTRACTION_READER_ROLES, reader_services, strict=True):
-            reader = by_service[service]
-            assert reader.available is False, service
-            assert _fact(reader.facts, "role") == role.value
-            assert _fact(reader.facts, "runtime_reachable") is False
-            assert _fact(reader.facts, "operator_endpoint") is not uses_managed_local_ai(load_settings())
-            assert all(item.value != runtime_url for item in reader.facts), "the row never publishes the address"
-            assert reader.precondition_verdict is not None, service
+        program = by_service[LOCAL_AI_PROGRAM_SERVICE]
+        assert program.available is False
+        assert not {"role", "model"} & {item.key for item in program.facts}, "the program row judges no model"
+        if uses_managed_local_ai(load_settings()):
+            assert _fact(program.facts, "local_ai_located") is False
+        else:
+            assert _fact(program.facts, "runtime_reachable") is False
+            assert _fact(program.facts, "operator_endpoint") is True
+        assert all(item.value != runtime_url for item in program.facts), "the row never publishes the address"
+        assert program.precondition_verdict is not None
         checks = [row.check for row in projection.preflight]
         provider_checks = [f"auth-provider:{kind.value}" for kind in AuthProviderKind]
         assert checks[: len(provider_checks)] == provider_checks
@@ -81,8 +77,6 @@ def _prepare_check(context: ConformanceFamilyContext) -> ConformancePreparation:
         assert storage_root.healthy is True
         enabled = {row.capability: row.enabled for row in projection.capabilities}
         expected_issues: list[str] = []
-        if enabled[ServiceCapability.LLM_VISION]:
-            expected_issues.append(local_reader_service(ModelRole.VISION_TRANSCRIPTION))
         if enabled[ServiceCapability.GOOGLE_EXPORT] and (not by_service[_GOOGLE_EXTRA].available):
             expected_issues.append(_GOOGLE_EXTRA)
         if enabled[ServiceCapability.CLOUD_EVIDENCE_UPLOAD] and (not cloud_upload_permitted):
@@ -126,13 +120,9 @@ def _retained_workstation_prepare(context: ConformanceFamilyContext) -> Conforma
             services = {row.service for row in result.dependencies}
             assert "extra:google" in services and result.preflight
             assert len(services) == len(result.dependencies)
-            readers = tuple(row for row in result.dependencies if row.service.startswith("local-reader:"))
-            assert {row.service for row in readers} == {
-                "local-reader:text_extraction",
-                "local-reader:vision_transcription",
-            }
-            assert all(not row.available for row in readers)
-            assert all(row.to_status().facts["runtime_reachable"] is False for row in readers)
+            assert not any(row.service.startswith("local-reader:") for row in result.dependencies)
+            (program,) = (row for row in result.dependencies if row.service == LOCAL_AI_PROGRAM_SERVICE)
+            assert not program.available
 
         return ConformancePreparation(
             profile_operation_subject(str(context.profile_id)),

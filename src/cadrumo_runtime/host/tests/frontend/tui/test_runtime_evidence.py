@@ -62,7 +62,7 @@ from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
     StructuredInvoiceClassProjectionV1,
 )
 from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceClassificationKind
-from cadrumo.application.local_reader import probe_local_reader
+from cadrumo.application.local_reader import probe_local_ai_program
 from cadrumo.application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
@@ -78,7 +78,6 @@ from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
-from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -680,10 +679,8 @@ async def test_an_extraction_whose_result_disagrees_with_a_receipt_that_saved_no
 async def test_a_refused_extraction_raises_its_recorded_reason_with_the_verdict_naming_the_local_ai_setup(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The recorded detail is the one the real reader probe's refusal publishes, read back as another process reads it."""
-    status = probe_local_reader(
-        ModelRole.TEXT_EXTRACTION, Settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat")
-    )
+    """The recorded detail is the one the real program probe's refusal publishes, read back as another process reads it."""
+    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"))
     verdict = status.precondition_verdict
     assert verdict is not None
     detail = build_operation_error_detail(

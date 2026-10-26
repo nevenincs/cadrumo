@@ -24,7 +24,7 @@ from cadrumo.application.ledger.import_operation import (
     build_ledger_import_definition,
     build_ledger_import_registration,
 )
-from cadrumo.application.local_reader import probe_local_reader
+from cadrumo.application.local_reader import probe_local_ai_program
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -34,12 +34,14 @@ from cadrumo.application.operations.persistence.replay import OperationReplaySta
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.application.operator_actions.projection import PreconditionVerdictSnapshot
-from cadrumo.application.provisioning import AcceleratorReading, SystemMemoryReading, probe_hardware_profile
-from cadrumo.application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
+from cadrumo.application.provisioning_contracts import (
+    LOCAL_AI_PROVISION_ACTION_ID,
+    ProvisioningPreconditionCondition,
+    provisioning_no_recovery_verdict,
+)
 from cadrumo.core.config import Settings
-from cadrumo.core.hardware import AcceleratorKind
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -260,21 +262,16 @@ _CLOSED_ENDPOINT = "http://127.0.0.1:1/api/chat"
 
 
 def _reader_verdict(*, below_floor: bool) -> PreconditionVerdict:
-    """The verdict the real reader probe gives the column mapper: no answer, or a computer too small for it."""
-    hardware = (
-        probe_hardware_profile(
-            memory=SystemMemoryReading(total_bytes=1024**3, free_bytes=1024**3 // 4),
-            accelerator=AcceleratorReading(kind=AcceleratorKind.NONE),
+    """The verdict the column mapper meets: no local AI answering, or a model too large for this computer."""
+    if below_floor:
+        return provisioning_no_recovery_verdict(
+            ProvisioningPreconditionCondition.HARDWARE_FLOOR_MET,
+            facts={"role": ModelRole.COLUMN_ROLE_MAPPING.value, "model": "synthetic-mapper", "required_bytes": 2**31},
         )
-        if below_floor
-        else None
-    )
-    status = probe_local_reader(
-        ModelRole.COLUMN_ROLE_MAPPING, Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT), hardware=hardware
-    )
+    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
     verdict = status.precondition_verdict
     assert verdict is not None
-    assert (verdict.action is None) is below_floor
+    assert verdict.action is not None
     return verdict
 
 

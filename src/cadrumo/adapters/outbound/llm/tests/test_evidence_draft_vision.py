@@ -44,7 +44,7 @@ from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInput
 from .....core.decimal.coercion import coerce_finite_european_decimal
 from .....core.field_origin import FieldOrigin
 from .....core.image_media_type import ImageMediaType
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from .....tests.llm_vision_evidence_support import png_image
 from ....persistence.llm.cache import LLMCache

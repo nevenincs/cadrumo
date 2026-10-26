@@ -2,15 +2,17 @@
 
 Every run goes through the real registry, supervisor, journal and encrypted
 operand store. The model runtime is a real loopback endpoint speaking the
-Ollama wire shapes.
+Ollama wire shapes. Each role's lane is answered by an execution authority
+standing in for the runtime host and the agent service, which have their own
+tests; the supervisor binds the model-run port it offers exactly as it binds
+the host's. Every model id is synthetic.
 """
 
 from __future__ import annotations
 
 import asyncio
-import json
-from collections.abc import Generator, Mapping
-from contextlib import contextmanager
+from collections.abc import AsyncGenerator, Generator, Mapping
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
@@ -19,10 +21,18 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from .....application.local_reader_operation import (
-    build_local_reader_operation_definition,
-    build_local_reader_operation_registration,
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+from cadrumo_client.contracts.model_runs import (
+    ModelRunBody,
+    ModelRunHeader,
+    ModelRunLane,
+    ModelRunOutput,
+    ModelRunRefusal,
+    ModelRunRefusalCode,
+    ModelRunRoleSelection,
 )
+
+from .....application.local_reader import RoleLane
 from .....application.local_reader_report import (
     build_local_reader_report_definition,
     build_local_reader_report_registration,
@@ -38,11 +48,11 @@ from .....application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from .....application.operations.models import OperationRequest
+from .....application.operations.models import OperationIdentity, OperationRequest
 from .....application.operations.registry import OperationRegistry
 from .....application.operations.tests.authority_test_support import unread_authority_operation
 from .....core.config import override_settings
-from .....core.model_catalogue import ModelRole, default_model_runtime_id
+from .....core.model_roles import ModelRole
 from .....core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
 from .....tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
 from ...storage.tests.secure_sql import isolated_runtime_profile
@@ -51,7 +61,7 @@ from ..lease import OperationLeaseFilesystemRepository
 from ..secure_references import operation_secure_reference_repository
 
 __all__ = [
-    "MAPPING_MODEL",
+    "READER_LANES",
     "TEXT_MODEL",
     "VISION_MODEL",
     "LoopbackModelRuntime",
@@ -62,17 +72,70 @@ __all__ = [
     "run_supervised_in",
 ]
 
-VISION_MODEL = default_model_runtime_id(ModelRole.VISION_TRANSCRIPTION)
-TEXT_MODEL = default_model_runtime_id(ModelRole.TEXT_EXTRACTION)
-MAPPING_MODEL = default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING)
+VISION_MODEL = "synthetic-vision:small"
+TEXT_MODEL = "synthetic-text:small"
+
+
+def _on_host_lane(model: str) -> ModelRunLane:
+    return ModelRunLane(
+        provider_id="ollama",
+        transport="api",
+        model=model,
+        reads_off_host=False,
+        licence=None,
+        size_bytes=1024,
+        vision=None,
+        context_length=None,
+    )
+
+
+#: The person's selection: both reader roles on the local lane, no other role selected.
+READER_LANES: Mapping[ModelRole, RoleLane] = {
+    ModelRole.TEXT_EXTRACTION: _on_host_lane(TEXT_MODEL),
+    ModelRole.VISION_TRANSCRIPTION: _on_host_lane(VISION_MODEL),
+    ModelRole.COLUMN_ROLE_MAPPING: ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION),
+    ModelRole.SUPPLY_NATURE_PROPOSAL: ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION),
+}
+
+
+class _SelectionAuthority:
+    """An execution authority that admits every operation and answers each role's lookup from ``lanes``."""
+
+    def __init__(self, lanes: Mapping[ModelRole, RoleLane]) -> None:
+        self._lanes = lanes
+
+    async def require[Payload: BaseModel](
+        self, *, identity: OperationIdentity, request: OperationRequest[Payload], action: AccessAction
+    ) -> None:
+        del identity, request, action
+
+    @asynccontextmanager
+    async def commit_guard(self, identity: OperationIdentity) -> AsyncGenerator[None]:
+        del identity
+        yield
+
+    async def model_run_lookup(self, identity: OperationIdentity, role: str) -> ModelRunLane | ModelRunRefusal:
+        del identity
+        return self._lanes[ModelRole(role)]
+
+    async def model_run_selections(
+        self, identity: OperationIdentity
+    ) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
+        del identity
+        return ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
+
+    async def model_run(
+        self, identity: OperationIdentity, header: ModelRunHeader, body: ModelRunBody
+    ) -> ModelRunOutput | ModelRunRefusal:
+        del identity, header, body
+        return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
 
 
 class LoopbackModelRuntime(SilentLoopbackHandler):
-    """A loopback runtime whose inventory and resident set change as a real one's would."""
+    """A loopback runtime answering its version, inventory and resident set, and recording anything sent to it."""
 
     installed: ClassVar[set[str]] = set()
     residents: ClassVar[set[str]] = set()
-    pull_fails: ClassVar[bool] = False
     requests: ClassVar[list[tuple[str, Mapping[str, object]]]] = []
 
     @override
@@ -90,71 +153,28 @@ class LoopbackModelRuntime(SilentLoopbackHandler):
 
     @override
     def do_POST(self) -> None:
-        body = read_json_body(self)
-        type(self).requests.append((self.path, body))
-        model = str(body.get("model"))
-        if self.path == "/api/pull":
-            self._pull(model)
-        elif self.path == "/api/generate":
-            if model not in self.installed:
-                write_json_response(self, {"error": "model not found"}, status=HTTPStatus.NOT_FOUND)
-                return
-            if "prompt" not in body:
-                self.residents.add(model)
-                write_json_response(self, {"done": True, "done_reason": "load"}, status=HTTPStatus.OK)
-                return
-            write_json_response(self, {"done": True, "response": "ok"}, status=HTTPStatus.OK)
-        else:
-            self.send_error(HTTPStatus.NOT_FOUND)
-
-    @override
-    def do_DELETE(self) -> None:
-        body = read_json_body(self)
-        type(self).requests.append((self.path, body))
-        model = str(body.get("model"))
-        if self.path != "/api/delete" or model not in self.installed:
-            self.send_error(HTTPStatus.NOT_FOUND)
-            return
-        self.installed.discard(model)
-        self.residents.discard(model)
-        write_json_response(self, {}, status=HTTPStatus.OK)
-
-    def _pull(self, model: str) -> None:
-        if self.pull_fails:
-            lines = [{"status": "pulling manifest"}, {"error": "registry unavailable"}]
-        else:
-            self.installed.add(model)
-            lines = [{"status": "downloading", "completed": 512, "total": 1024}, {"status": "success"}]
-        payload = "".join(json.dumps(line) + "\n" for line in lines).encode()
-        self.send_response(HTTPStatus.OK)
-        self.send_header("Content-Type", "application/x-ndjson")
-        self.send_header("Content-Length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
+        # A read sends nothing; whatever arrives is recorded so a test can say so.
+        type(self).requests.append((self.path, read_json_body(self)))
+        self.send_error(HTTPStatus.NOT_FOUND)
 
 
 @contextmanager
 def loopback_model_runtime(
-    *, installed: set[str], residents: set[str], pull_fails: bool = False, required_headroom_bytes: int | None = None
+    *, installed: set[str], residents: set[str], required_headroom_bytes: int | None = None
 ) -> Generator[str]:
     """Serve the loopback runtime and point the reader's settings at it.
 
     Admission is overridden open by default, so it does not depend on how busy
     the test host's memory happens to be. ``required_headroom_bytes`` instead
-    enforces admission with that safety margin, which a test about a refused
-    load sets beyond any host's memory.
+    enforces admission with that safety margin.
     """
     LoopbackModelRuntime.installed = set(installed)
     LoopbackModelRuntime.residents = set(residents)
-    LoopbackModelRuntime.pull_fails = pull_fails
     LoopbackModelRuntime.requests = []
     with (
         serving_loopback(LoopbackModelRuntime, path="/api/chat") as chat_url,
         override_settings(
             cadrumo_llm_ollama_chat_url=chat_url,
-            cadrumo_llm_ollama_vision_model=VISION_MODEL,
-            cadrumo_llm_ollama_text_model=TEXT_MODEL,
-            cadrumo_llm_ollama_mapping_model=MAPPING_MODEL,
             cadrumo_llm_contention_safety_margin_bytes=required_headroom_bytes or 0,
             cadrumo_llm_contention_check_override=required_headroom_bytes is None,
         ),
@@ -163,21 +183,21 @@ def loopback_model_runtime(
 
 
 def provisioning_registry() -> OperationRegistry:
-    """Register the three local-reader operations."""
-    provision = build_local_reader_operation_definition()
+    """Register the two local-reader operations."""
     status = build_local_reader_status_definition()
     report = build_local_reader_report_definition()
     return OperationRegistry(
-        definitions=(provision, report, status),
+        definitions=(report, status),
         public_registrations=(
-            build_local_reader_operation_registration(provision),
             build_local_reader_report_registration(report),
             build_local_reader_status_registration(status),
         ),
     )
 
 
-def _services(root: Path, registry: OperationRegistry) -> tuple[OperationComposedServices, OperationJournalRepository]:
+def _services(
+    root: Path, registry: OperationRegistry, lanes: Mapping[ModelRole, RoleLane]
+) -> tuple[OperationComposedServices, OperationJournalRepository]:
     journal = OperationJournalRepository(storage_root=root)
     services = compose_operation_services(
         registry=registry,
@@ -193,6 +213,7 @@ def _services(root: Path, registry: OperationRegistry) -> tuple[OperationCompose
         lease_duration=timedelta(minutes=5),
         execution_timeout=timedelta(seconds=60),
         cleanup_timeout=timedelta(seconds=5),
+        execution_authority=_SelectionAuthority(lanes),
     )
     return services, journal
 
@@ -210,9 +231,11 @@ def run_supervised[RequestT: BaseModel, ResultT: BaseModel](
     tmp_path: Path,
     request: OperationRequest[RequestT],
     result_type: type[ResultT],
+    *,
+    lanes: Mapping[ModelRole, RoleLane] = READER_LANES,
 ) -> SupervisedRun[ResultT]:
-    """Settle ``request`` and resolve its public result as a frontend would."""
-    return run_supervised_in(tmp_path, provisioning_registry(), request, result_type)
+    """Settle ``request`` with ``lanes`` selected and resolve its public result as a frontend would."""
+    return run_supervised_in(tmp_path, provisioning_registry(), request, result_type, lanes=lanes)
 
 
 def run_supervised_in[RequestT: BaseModel, ResultT: BaseModel](
@@ -220,11 +243,13 @@ def run_supervised_in[RequestT: BaseModel, ResultT: BaseModel](
     registry: OperationRegistry,
     request: OperationRequest[RequestT],
     result_type: type[ResultT],
+    *,
+    lanes: Mapping[ModelRole, RoleLane] = READER_LANES,
 ) -> SupervisedRun[ResultT]:
     """Submit, start and settle ``request`` in ``registry``, then resolve its public result as a frontend would."""
 
     async def run(root: Path) -> SupervisedRun[ResultT]:
-        services, journal = _services(root, registry)
+        services, journal = _services(root, registry, lanes)
         try:
             submitted = await services.submission.submit(request, actor_ref="operator:local-reader-test")
             operation_id = submitted.receipt.operation_id

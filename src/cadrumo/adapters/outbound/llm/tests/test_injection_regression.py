@@ -60,7 +60,7 @@ from .....application.ledger.grounding_anchor import evaluate_anchor
 from .....application.ledger.invoice_draft_records import InvoiceDraft
 from .....core.field_grounding import FieldGroundingOutcome
 from .....core.field_origin import FieldOrigin
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from ....inbound.pdf.page_text_extraction import extract_pages_text_from_bytes

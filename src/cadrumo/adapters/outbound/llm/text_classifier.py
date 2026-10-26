@@ -21,7 +21,7 @@ import asyncio
 
 from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
 from ....domain.transactions.llm import (

@@ -13,10 +13,8 @@ from .operator_actions.models import ActionReference, ConditionEvidence, Precond
 
 __all__ = [
     "LOCAL_AI_PROVISION_ACTION_ID",
-    "OLLAMA_LOAD_KEEP_ALIVE",
     "OLLAMA_PROBE_CACHE_TTL_S",
     "OLLAMA_PROBE_TIMEOUT_S",
-    "OLLAMA_READINESS_TIMEOUT_S",
     "ProvisioningFactValue",
     "ProvisioningOutcome",
     "ProvisioningPreconditionCondition",
@@ -48,17 +46,6 @@ OLLAMA_PROBE_TIMEOUT_S = 2.0
 # rather than inventing a second cadence.
 OLLAMA_PROBE_CACHE_TTL_S = 10.0
 
-# Readiness asks whether a LOADED model answers. A cold load of a small vision
-# model is tens of seconds on this class of hardware, so the bound is generous
-# enough not to report a working model as unready while still bounded.
-OLLAMA_READINESS_TIMEOUT_S = 120.0
-
-# How long the runtime keeps a model resident after an explicit load. The
-# runtime's own default is five minutes, which expires before an operator who
-# loaded ahead of a batch has started it; half an hour covers that gap while
-# still releasing memory on an idle machine.
-OLLAMA_LOAD_KEEP_ALIVE = "30m"
-
 
 class ProvisioningPreconditionCondition(StrEnum):
     """Stable failed-condition identities emitted by provisioning policy."""
@@ -71,18 +58,9 @@ class ProvisioningPreconditionCondition(StrEnum):
     ROLE_MODEL_INSTALLED = "provisioning.role_model.installed"
     HARDWARE_FLOOR_MET = "provisioning.hardware_floor.met"
     SELECTED_MODEL_AVAILABLE = "provisioning.selected_model.available"
-    SELECTED_MODEL_FITS = "provisioning.selected_model.fits"
-    SELECTED_MODEL_CATALOGUED = "provisioning.selected_model.catalogued"
     LOAD_HEADROOM_MEASURABLE = "provisioning.load_headroom.measurable"
     LOAD_CAPACITY_AVAILABLE = "provisioning.load_capacity.available"
     RESIDENT_SET_READABLE = "provisioning.resident_set.readable"
-    MODEL_SELECTED_BY_CADRUMO = "provisioning.model.selected_by_cadrumo"
-    MODEL_RESIDENT = "provisioning.model.resident"
-    MODEL_LOADED = "provisioning.model.loaded"
-    MODEL_READY = "provisioning.model.ready"
-    MODEL_INSTALLED = "provisioning.model.installed"
-    LOCAL_MODEL_INVENTORY_READABLE = "provisioning.local_model.inventory_readable"
-    LOCAL_MODEL_MODEL_REQUIRES_EXTRA = "provisioning.local_model.model_requires_extra"
 
 
 ProvisioningFactValue = str | int | bool

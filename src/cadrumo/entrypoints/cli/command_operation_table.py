@@ -350,7 +350,6 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("config", "profile", "validate"), "user-profile.view"),
     (("config", "profile", "view"), "user-profile.view"),
     (("config", "provision", "browser"), None),
-    (("config", "provision", "load"), "local-reader.provision"),
     (("config", "provision", "probe"), None),
     (("config", "provision", "pull"), None),
     (("config", "provision", "remove"), None),

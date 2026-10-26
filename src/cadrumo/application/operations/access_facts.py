@@ -336,9 +336,6 @@ _NETWORK_WRITES: Final = (
     "live.notifications.document.capture",
     "live.verify.nif-iva",
     "live.verify.tgvi",
-    # Load and verify ask the local model runtime at its endpoint setting, which
-    # can name another host.
-    "local-reader.provision",
     # A calculation that values foreign assets looks exchange rates up at the
     # central bank, so the operations that calculate reach the network.
     "modelo.aggregate",

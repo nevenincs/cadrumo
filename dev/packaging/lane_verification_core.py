@@ -419,7 +419,7 @@ from cadrumo.adapters.persistence.storage.master_key.bucket_session import Bucke
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.core.config import Settings
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import (
     AttachmentBytesContent,

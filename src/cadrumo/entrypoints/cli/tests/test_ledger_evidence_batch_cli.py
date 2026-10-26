@@ -25,12 +25,11 @@ from ....application.ledger.batch_ingest import (
 )
 from ....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
 from ....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
-from ....application.local_reader import probe_local_reader
+from ....application.local_reader import probe_local_ai_program
 from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
-from ....core.config import override_settings
+from ....core.config import Settings, override_settings
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
-from ....core.model_catalogue import ModelRole
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.iva.schema import InvoiceKind
 from .._component_setup_rendering import setup_status_source
@@ -135,8 +134,8 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
 
 
 def _local_ai_pause() -> InferencePause:
-    """The pause the local reader probe gives over an unreachable runtime: it names the local AI's setup."""
-    status = probe_local_reader(ModelRole.TEXT_EXTRACTION, installed=(), model="reader-model:1b")
+    """The pause an unreachable local AI program gives: it names the local AI's setup."""
+    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"))
     assert status.precondition_verdict is not None
     return InferencePause(
         facts={"runtime_reachable": False, "runtime_url": "http://127.0.0.1:11434"},

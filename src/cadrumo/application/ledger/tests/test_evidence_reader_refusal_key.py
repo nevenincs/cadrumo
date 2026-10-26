@@ -10,8 +10,8 @@ import pytest
 
 from ....core.config import Settings
 from ....core.errors.error_codes import resolve_error_message
-from ....core.model_catalogue import ModelRole
-from ...local_reader import probe_local_reader
+from ....core.model_roles import ModelRole
+from ...local_reader import probe_local_ai_program
 from ...operator_actions.models import PreconditionVerdict
 from ...provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
 from ..evidence_errors import (
@@ -28,7 +28,7 @@ _CLOSED_ENDPOINT = "http://127.0.0.1:1/api/chat"
 
 
 def test_an_unanswering_local_ai_is_named_with_its_setup() -> None:
-    status = probe_local_reader(ModelRole.TEXT_EXTRACTION, Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
+    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
     assert status.available is False
 
     key = evidence_reader_refusal_key(status.precondition_verdict)

@@ -60,7 +60,7 @@ from ....core.config_support import LLMProvider
 from ....core.errors.hierarchy import CadrumoError
 from ....core.field_role import FieldRole
 from ....core.logging import get_logger
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError, require_optional_extra
@@ -506,7 +506,7 @@ class SemanticColumnRoleMapper:
 
     Binds to :class:`~llm.LLMClient` and nothing lower. Every mapping runs
     through the agent service under
-    :attr:`~core.model_catalogue.ModelRole.COLUMN_ROLE_MAPPING`, so the lane and
+    :attr:`~core.model_roles.ModelRole.COLUMN_ROLE_MAPPING`, so the lane and
     model are the ones the person selected for that role. This class names no
     model and no provider of its own. A role with no selection, an unavailable
     lane or a model that is not installed refuses with the service's typed

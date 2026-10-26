@@ -50,7 +50,7 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionKind,
     SessionState,
 )
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 from cadrumo_client.contracts.model_runs import (

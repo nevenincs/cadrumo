@@ -29,7 +29,7 @@ from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInput
 from .....core.config import load_settings
 from .....core.config_support import LLMProvider
 from .....core.field_origin import FieldOrigin
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....core.operator_action_enums import NoRecoveryOutcome
 from ..errors import LLMValidationError
 from ..evidence_draft_text import (

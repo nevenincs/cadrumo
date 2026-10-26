@@ -120,13 +120,9 @@ def _run_provisioning_matrix(*, work_dir: Path, python: Path, state_name: str) -
         from pathlib import Path
 
         import cadrumo
-        from cadrumo.application.provisioning import (
-            probe_local_model_provisioning,
-            probe_optional_extra,
-        )
-        from cadrumo.application.provisioning_runtime import InstalledModel
+        from cadrumo.application.provisioning import probe_optional_extra
         from cadrumo.core.optional_extras import LLM_EXTRA, optional_extra_available
-        from cadrumo.core.config import load_settings, override_settings
+        from cadrumo.core.config import override_settings
         from cadrumo.core.json_contract import validate_registered_result
         from cadrumo.entrypoints.cli.config.check_cli import dependency_payload, dependency_text_lines
         from cadrumo.entrypoints.cli.config.check_payloads import ConfigCheckResult
@@ -145,15 +141,7 @@ def _run_provisioning_matrix(*, work_dir: Path, python: Path, state_name: str) -
         matrix = {{}}
         for locale in {locales}:
             with override_settings(cadrumo_output_language=locale):
-                selected_model = load_settings().cadrumo_llm_ollama_vision_model
-                matrix[locale] = [
-                    project(probe_optional_extra(LLM_EXTRA)),
-                    project(
-                        probe_local_model_provisioning(
-                            installed=(InstalledModel(name=selected_model, size_bytes=1),),
-                        ),
-                    ),
-                ]
+                matrix[locale] = [project(probe_optional_extra(LLM_EXTRA))]
         print(
             {_PROVISIONING_MARKER!r}
             + json.dumps(
@@ -351,10 +339,7 @@ def test_real_optional_extra_outcomes_reach_config_json_and_text_without_an_over
     assert set(absent_matrix) == set(SUPPORTED_OUTPUT_LANGUAGES)
     assert set(present_matrix) == set(SUPPORTED_OUTPUT_LANGUAGES)
 
-    expected_absent_conditions = (
-        ProvisioningPreconditionCondition.OPTIONAL_EXTRA_IMPORTABLE.value,
-        ProvisioningPreconditionCondition.LOCAL_MODEL_MODEL_REQUIRES_EXTRA.value,
-    )
+    expected_absent_conditions = (ProvisioningPreconditionCondition.OPTIONAL_EXTRA_IMPORTABLE.value,)
     baseline: list[dict[str, object]] | None = None
     for locale in SUPPORTED_OUTPUT_LANGUAGES:
         rows = absent_matrix[locale]

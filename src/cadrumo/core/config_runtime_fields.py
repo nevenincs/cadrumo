@@ -12,7 +12,6 @@ from typing import Final
 from pydantic import Field
 
 from .config_timeouts import CadrumoTimeoutSettings
-from .model_catalogue import ModelRole, default_model_runtime_id
 
 #: The loopback address the runtime manager's local AI server listens on. The package's
 #: environment declaration states the same address for the native side; a package-side
@@ -49,61 +48,6 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
             "Per-request timeout for the on-host local vision read; larger than the "
             "general LLM timeout because a local vision model on consumer hardware "
             "(CPU or a modest GPU) can take one to several minutes to read an invoice"
-        ),
-    )
-    cadrumo_llm_ollama_vision_model: str = Field(
-        default=default_model_runtime_id(ModelRole.VISION_TRANSCRIPTION),
-        description=(
-            "Local Ollama vision model used to read scanned/image evidence on-host "
-            "(the default, gestor-allowed posture); must be a multimodal model pulled "
-            "into the local Ollama runtime. The default is the weakest catalogued "
-            "candidate that clears the capability bars under a COMMERCIAL licence "
-            "posture -- qwen3-vl:2b, Apache-2.0, ~1.9 GB. It replaces qwen2.5vl:3b, "
-            "which is measured-equivalent at this discipline but carries the Qwen "
-            "Research licence and therefore bars commercial use. Every accepted value "
-            "and its licence are declared in the core model catalogue; overriding to a "
-            "research-licensed candidate is permitted and surfaces a licence advisory"
-        ),
-    )
-    cadrumo_llm_ollama_text_model: str = Field(
-        default=default_model_runtime_id(ModelRole.TEXT_EXTRACTION),
-        description=(
-            "Local Ollama TEXT model used to classify a text-layer document on-host. "
-            "Chosen under the same constraints that bind the vision default rather "
-            "than beside it: qwen3:1.7b is Apache-2.0 and ~1.4 GB, comfortably under "
-            "the declared memory floor, so a machine provisioned for the vision "
-            "default is provisioned for this one. It replaces qwen2.5:3b, which is one "
-            "of the two Qwen2.5 sizes released under the Qwen Research licence rather "
-            "than Apache-2.0 -- easy to miss, and the reason the licence flag is "
-            "declared per candidate. This model reads only the extracted text and "
-            "selects from the registry allow-list; it never emits a regulated number"
-        ),
-    )
-    cadrumo_llm_ollama_mapping_model: str = Field(
-        default=default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING),
-        description=(
-            "Local Ollama model used to name what each column of a delimited table "
-            "holds, from its header strings alone. Deliberately its own setting rather "
-            "than sharing the text one: column-role mapping is strictly EASIER than the "
-            "text read -- a selection over a short closed vocabulary given a handful of "
-            "short headers, not a document read -- so it must be sizeable DOWN "
-            "independently. Sharing the field would silently drag it upward the next "
-            "time the text role needs a larger model. It defaults to the same qwen3:1.7b "
-            "(Apache-2.0, ~1.4 GB), so it introduces no new hardware floor and no second "
-            "model to pull. This model never emits a regulated number; it selects from "
-            "the closed column-role vocabulary"
-        ),
-    )
-    cadrumo_llm_ollama_supply_nature_model: str = Field(
-        default=default_model_runtime_id(ModelRole.SUPPLY_NATURE_PROPOSAL),
-        description=(
-            "Local Ollama model used to propose whether an invoice's lines describe "
-            "goods or services, for the person to confirm. Its own setting for the "
-            "same reason as the mapping one: the proposal is a choice between two "
-            "values from a few short lines, so it must be sizeable DOWN independently "
-            "of the text read. Left at its default, the catalogue picks the smallest "
-            "candidate this computer can run; a different value names the model "
-            "outright. The proposal is advisory and never emits a regulated number"
         ),
     )
     cadrumo_llm_model_runtime_memory_floor_bytes: int = Field(

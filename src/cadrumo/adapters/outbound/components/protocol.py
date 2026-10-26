@@ -44,11 +44,11 @@ from ....application.dependency_contracts import (
     DependencyStaleReason,
     DependencyState,
     DependencyStatusRow,
+    ModelSelectionAdvisory,
     dependency_item_kind,
 )
 from ....core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ....core.identifier_grammar import NamespacedId
-from ....core.model_catalogue import ModelSelectionAdvisory
 from ....core.models import STRICT_FROZEN_CONFIG
 
 __all__ = [

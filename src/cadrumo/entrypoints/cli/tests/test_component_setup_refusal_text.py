@@ -34,14 +34,14 @@ from ....application.dependency_contracts import DependencyStatusRow
 from ....application.dependency_registry import dependency_item_declarations
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
 from ....application.ledger.preconditions import LedgerPreconditionCondition
-from ....application.local_reader import probe_local_reader
+from ....application.local_reader import probe_local_ai_program
 from ....application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
 from ....application.provisioning_browser import probe_playwright_browser
 from ....application.provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
 from ....core.config import Settings
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
-from ....core.model_catalogue import ModelRole
+from ....core.model_roles import ModelRole
 from .._component_setup_rendering import setup_status_source
 from ..common import resolve_cli_precondition_action
 from ..config.check_cli import dependency_payload, dependency_text_lines
@@ -85,7 +85,7 @@ def _browser_refusal(tmp_path: Path) -> BrowserError:
 
 
 def _reader_refusal() -> PurchaseInvoiceEvidenceReaderError:
-    status = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
+    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
     assert status.available is False
     assert status.precondition_verdict is not None
     return PurchaseInvoiceEvidenceReaderError(

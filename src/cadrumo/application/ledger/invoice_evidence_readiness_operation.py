@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Annotated, Self
 from urllib.parse import urlsplit
 from uuid import UUID
@@ -15,10 +15,11 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.identifier_grammar import NamespacedId
+from ...core.model_roles import ModelRole
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
-from ..local_reader import LocalReaderDocumentReadiness, LocalReaderStatus
+from ..local_reader import LocalReaderDocumentReadiness, LocalReaderStatus, RoleLane, read_role_lanes
 from ..operations.access_resolution import (
     LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
     OperationAccessContext,
@@ -101,7 +102,7 @@ class ReaderHostProjectionV1(BaseModel):
 
 
 class ReaderRoleProjectionV1(BaseModel):
-    """One locally measured model role and its readiness.
+    """One role's selected lane, measured locally when it stays on this computer, and its readiness.
 
     ``recovery_action_id`` is the operator action the reader probe named for
     ``failed_condition_id`` -- the local AI setup when the runtime does not
@@ -182,9 +183,9 @@ class LedgerEvidenceReaderReadinessExecutionResult(BaseModel):
 
 
 class LedgerEvidenceReaderReadinessExecutor:
-    """Read local runtime readiness without loading a model."""
+    """Read reader readiness from each role's selected lane without loading a model."""
 
-    def __init__(self, read_status: Callable[[], LocalReaderStatus]) -> None:
+    def __init__(self, read_status: Callable[[Mapping[ModelRole, RoleLane]], LocalReaderStatus]) -> None:
         """Bind the read-only canonical status provider."""
         self._read_status = read_status
 
@@ -200,7 +201,8 @@ class LedgerEvidenceReaderReadinessExecutor:
         await context.events.effect(OperationEffect.NONE)
 
         async def read_and_capture() -> str:
-            status = await asyncio.to_thread(self._read_status)
+            lanes = await read_role_lanes(ModelRole)
+            status = await asyncio.to_thread(self._read_status, lanes)
             result = LedgerEvidenceReaderReadinessProjection.from_status(profile_id, status)
             check_invoice_evidence_result_size(result)
             return await context.operands.put(
@@ -212,7 +214,7 @@ class LedgerEvidenceReaderReadinessExecutor:
 
 
 def build_ledger_evidence_reader_readiness_definition(
-    read_status: Callable[[], LocalReaderStatus],
+    read_status: Callable[[Mapping[ModelRole, RoleLane]], LocalReaderStatus],
 ) -> OperationDefinition:
     """Register one read-only local reader measurement for the exact profile."""
     return build_single_phase_definition(

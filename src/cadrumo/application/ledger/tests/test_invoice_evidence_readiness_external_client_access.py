@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 from types import SimpleNamespace
 from typing import cast
@@ -13,9 +14,10 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.config import override_settings
+from ....core.model_roles import ModelRole
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
-from ...local_reader import LocalReaderStatus, read_local_reader_status
+from ...local_reader import LocalReaderStatus, RoleLane, read_local_reader_status
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -44,13 +46,14 @@ _ENDPOINT = f"http://{_USER}:{_USER_CREDENTIAL}@127.0.0.1:1/{_PATH_CREDENTIAL}/a
 _CREDENTIAL_FRAGMENTS = (_USER, _USER_CREDENTIAL, _PATH_CREDENTIAL, _QUERY_CREDENTIAL, "api/chat", "key=")
 
 
-def _status() -> LocalReaderStatus:
+def _status(lanes: Mapping[ModelRole, RoleLane]) -> LocalReaderStatus:
     """Measure the real reader status against an endpoint that answers nothing."""
     with override_settings(cadrumo_llm_ollama_chat_url=_ENDPOINT):
-        return read_local_reader_status(assess_load=False)
+        return read_local_reader_status(lanes, assess_load=False)
 
 
-def _unread_status() -> LocalReaderStatus:
+def _unread_status(lanes: Mapping[ModelRole, RoleLane]) -> LocalReaderStatus:
+    del lanes
     raise AssertionError("registration and access resolution must not measure the reader")
 
 
@@ -96,7 +99,7 @@ def test_readiness_is_admitted_alike_on_every_frontend_for_either_kind_of_sessio
 
 
 def test_the_projection_names_where_the_reader_answers_and_nothing_else_of_the_configured_address() -> None:
-    status = _status()
+    status = _status({})
     assert status.host.endpoint_url == _ENDPOINT
 
     projection = LedgerEvidenceReaderReadinessProjection.from_status(_PROFILE, status)
@@ -149,7 +152,7 @@ def test_only_the_scheme_host_and_port_of_an_address_are_kept_and_one_without_a_
 def test_what_the_endpoint_reports_as_its_version_is_released_only_when_it_reads_as_one(
     reported: str, released: str | None, withheld: bool
 ) -> None:
-    measured = _status()
+    measured = _status({})
     answering = measured.host.model_copy(
         update={"reachable": True, "available": True, "version": reported, "precondition_verdict": None}
     )
@@ -165,7 +168,7 @@ def test_what_the_endpoint_reports_as_its_version_is_released_only_when_it_reads
 
 
 def test_an_endpoint_that_answers_nothing_reports_no_version_and_withholds_none() -> None:
-    projection = LedgerEvidenceReaderReadinessProjection.from_status(_PROFILE, _status())
+    projection = LedgerEvidenceReaderReadinessProjection.from_status(_PROFILE, _status({}))
 
     assert (projection.host.version, projection.host.version_withheld) == (None, False)
 

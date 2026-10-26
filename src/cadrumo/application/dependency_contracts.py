@@ -41,6 +41,7 @@ __all__ = [
     "DependencyStaleReason",
     "DependencyState",
     "DependencyStatusRow",
+    "ModelSelectionAdvisory",
     "dependency_item_kind",
 ]
 
@@ -171,6 +172,39 @@ class DependencySetupStep(StrEnum):
     INSTALL = "install"
     VERIFY = "verify"
     CLEANUP = "cleanup"
+
+
+class ModelSelectionAdvisory(StrEnum):
+    """Why a resolved selection is worth telling the operator about.
+
+    Selection never fails silently and an override is never honoured silently.
+    Each member keys one operator-visible statement, so a caller renders the
+    reason rather than re-deriving it from the selection's shape.
+
+    Members:
+
+        LICENCE_COMMERCIAL_USE_BARRED: The selected model's licence bars
+            commercial use under the active posture. Only reachable through an
+            explicit override; automatic selection excludes such candidates.
+        LICENCE_UNVERIFIED: No publisher licence text backs the selected model,
+            so no licence claim can be made about it at all.
+        OVERRIDE_NOT_IN_CATALOGUE: The operator named a model the catalogue does
+            not describe, so neither its licence nor its fit could be judged.
+        OVERRIDE_BELOW_CONTEXT_FLOOR: The selected model's context window is
+            smaller than the configured request window.
+        FIT_EXCEEDS_MEASURED_HEADROOM: The selected model's requirement plus the
+            safety margin exceeds measured free memory.
+        FIT_UNVERIFIED: Free memory could not be measured, so fit was not
+            checked here. The load itself still fails closed at
+            :func:`~application.provisioning_runtime.assess_model_load_contention`.
+    """
+
+    LICENCE_COMMERCIAL_USE_BARRED = "licence_commercial_use_barred"
+    LICENCE_UNVERIFIED = "licence_unverified"
+    OVERRIDE_NOT_IN_CATALOGUE = "override_not_in_catalogue"
+    OVERRIDE_BELOW_CONTEXT_FLOOR = "override_below_context_floor"
+    FIT_EXCEEDS_MEASURED_HEADROOM = "fit_exceeds_measured_headroom"
+    FIT_UNVERIFIED = "fit_unverified"
 
 
 class DependencyItemDeclaration(BaseModel):

@@ -1,8 +1,8 @@
 """Measured hardware readings for LLM dispatch tests.
 
-The dispatch point refuses a catalogued local model unless a measured reading
-shows headroom for it, and it fails closed on a machine whose free memory it
-cannot read. A test whose subject is the transport, the prompt or the reply
+The dispatch point refuses an on-host lane's model unless a measured reading
+shows headroom for the size its catalogue entry states, and it fails closed on
+a machine whose free memory it cannot read. A test whose subject is the transport, the prompt or the reply
 must therefore state the measurement it runs under; left to the host, the same
 case admits on a workstation with a readable accelerator and refuses on a
 runner without one.
@@ -29,11 +29,9 @@ from .....application.provisioning import (
     AcceleratorReading,
     HardwareProfile,
     SystemMemoryReading,
-    select_model_for_role,
 )
 from .....core.config import Settings
 from .....core.hardware import AcceleratorKind
-from .....core.model_catalogue import ModelRole, model_candidate
 from .....core.optional_extras import MissingOptionalExtraError
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..client import LLMClient
@@ -68,18 +66,18 @@ def measured_hardware_profile(
     )
 
 
-def admitting_hardware_profile(model: str, *, settings: Settings) -> HardwareProfile:
-    """A measured reading with exactly the headroom ``model`` needs under ``settings``.
+#: The size a test lane's catalogue entry states for its model, which an admitting reading holds exactly.
+ADMITTED_REQUIREMENT_BYTES = 2 * 1024**3
 
-    The figure is the catalogue's declared requirement plus the configured
-    safety margin, so the real admission comparison runs and admits at its
-    boundary rather than being bypassed.
+
+def admitting_hardware_profile(*, settings: Settings) -> HardwareProfile:
+    """A measured reading with exactly the headroom a lane of :data:`ADMITTED_REQUIREMENT_BYTES` needs.
+
+    The figure is that size plus the configured safety margin, so the real
+    admission comparison runs and admits at its boundary rather than being
+    bypassed for an on-host lane that states its size.
     """
-    candidate = model_candidate(model)
-    requirement = (
-        0 if candidate is None or candidate.memory_requirement_bytes is None else candidate.memory_requirement_bytes
-    )
-    required = requirement + settings.cadrumo_llm_contention_safety_margin_bytes
+    required = ADMITTED_REQUIREMENT_BYTES + settings.cadrumo_llm_contention_safety_margin_bytes
     return measured_hardware_profile(
         free_vram_bytes=required,
         free_ram_bytes=required,
@@ -88,14 +86,8 @@ def admitting_hardware_profile(model: str, *, settings: Settings) -> HardwarePro
     )
 
 
-def admitting_client(
-    model: str,
-    *,
-    settings: Settings,
-    caller: str,
-    prompt_id: str,
-) -> LLMClient:
-    """A client carrying ``caller``/``prompt_id`` under a measurement that admits ``model``.
+def admitting_client(*, settings: Settings, caller: str, prompt_id: str) -> LLMClient:
+    """A client carrying ``caller``/``prompt_id`` under a measurement that admits the lane's load.
 
     Each reader stamps its own caller and prompt identity on the request it
     builds, and usage and run record are keyed on them. A test that injects a
@@ -106,7 +98,7 @@ def admitting_client(
         settings=settings,
         caller=caller,
         prompt_id=prompt_id,
-        hardware_profile=admitting_hardware_profile(model, settings=settings),
+        hardware_profile=admitting_hardware_profile(settings=settings),
         runtime_residents=(),
     )
 
@@ -114,7 +106,6 @@ def admitting_client(
 def admitting_text_extraction_client(*, settings: Settings) -> LLMClient:
     """An admitting client with the invoice-text reader's identity."""
     return admitting_client(
-        settings.cadrumo_llm_ollama_text_model,
         settings=settings,
         caller="cadrumo.adapters.outbound.llm.evidence_draft_text",
         prompt_id="ledger-invoice-text-extract",
@@ -124,43 +115,15 @@ def admitting_text_extraction_client(*, settings: Settings) -> LLMClient:
 def admitting_vision_transcription_client(*, settings: Settings) -> LLMClient:
     """An admitting client with the vision-transcription reader's identity."""
     return admitting_client(
-        settings.cadrumo_llm_ollama_vision_model,
         settings=settings,
         caller="cadrumo.adapters.outbound.llm.evidence_vision_transcription",
         prompt_id=VISION_TRANSCRIPTION_PROMPT_ID,
     )
 
 
-def admitting_vision_classify_client(*, settings: Settings, model: str | None = None) -> LLMClient:
-    """An admitting client with the vision-classifier reader's identity."""
-    return admitting_client(
-        settings.cadrumo_llm_ollama_vision_model if model is None else model,
-        settings=settings,
-        caller="cadrumo.application.ledger.vision",
-        prompt_id="ledger-vision-classify",
-    )
-
-
-def admitting_text_classify_client(*, settings: Settings, model: str | None = None) -> LLMClient:
-    """An admitting client with the text-classifier reader's identity."""
-    return admitting_client(
-        settings.cadrumo_llm_ollama_text_model if model is None else model,
-        settings=settings,
-        caller="cadrumo.adapters.outbound.llm.text",
-        prompt_id="ledger-text-classify",
-    )
-
-
 def admitting_supply_nature_client(*, settings: Settings) -> LLMClient:
-    """An admitting client with the supply-nature proposer's identity.
-
-    The proposer dispatches the model its ROLE selects rather than a configured
-    default, so the measurement is sized to that selection.
-    """
-    selection = select_model_for_role(ModelRole.SUPPLY_NATURE_PROPOSAL, settings=settings)
-    assert selection.runtime_id is not None, "the supply-nature role selects no model to dispatch to"
+    """An admitting client with the supply-nature proposer's identity."""
     return admitting_client(
-        selection.runtime_id,
         settings=settings,
         caller="cadrumo.adapters.outbound.llm.supply_nature_proposal",
         prompt_id=SUPPLY_NATURE_PROMPT_ID,

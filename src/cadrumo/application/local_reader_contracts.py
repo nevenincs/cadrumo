@@ -1,22 +1,21 @@
-"""Canonical request and result contracts for the local reader's load and verify actions.
+"""Public projections shared by the local reader's read operations.
 
-Both act on models the native component engine installed and the runtime
-manager's server holds; neither starts, installs, downloads or removes
-anything.
+Facts, refusals and the measured admission verdict of one model load, as the
+``local-reader`` reads publish them. Nothing here starts, loads, installs,
+downloads or removes anything.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from enum import StrEnum
+from typing import Final
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ..core.external_constants import OutputLanguage
+from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_MAX_LENGTH
+
 from ..core.hardware import ContentionCause
-from ..core.model_catalogue import ModelRole
 from ..core.models import STRICT_FROZEN_CONFIG
-from .operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
 from .operator_actions.models import PreconditionVerdict
 from .provisioning_contracts import (
     ProvisioningFactValue,
@@ -26,127 +25,18 @@ from .provisioning_contracts import (
 from .provisioning_runtime import ContentionSnapshot
 
 __all__ = [
-    "LOCAL_READER_EXECUTE_PHASE",
-    "LOCAL_READER_OPERATION_DEFINITION_ID",
     "LOCAL_READER_OPERATION_SUBJECT",
-    "LOCAL_READER_PREFLIGHT_PHASE",
-    "LOCAL_READER_SETTLEMENT_PHASE",
     "LocalReaderContentionV1",
     "LocalReaderFactV1",
-    "LocalReaderModelOutcome",
-    "LocalReaderModelOutcomeV3",
-    "LocalReaderProvisionAction",
-    "LocalReaderProvisionOutcome",
-    "LocalReaderProvisionPublicResultV3",
-    "LocalReaderProvisionRequest",
-    "build_local_reader_load_request",
     "local_reader_fact_mapping",
     "local_reader_public_facts",
-    "local_reader_public_result",
     "local_reader_public_verdict",
     "local_reader_verdict_condition",
     "local_reader_verdict_facts",
     "project_local_reader_contention",
-    "project_local_reader_result",
 ]
 
-LOCAL_READER_OPERATION_DEFINITION_ID = "local-reader.provision"
-LOCAL_READER_OPERATION_SUBJECT = "local-reader:runtime"
-LOCAL_READER_PREFLIGHT_PHASE = "local-reader.provision.preflight"
-LOCAL_READER_EXECUTE_PHASE = "local-reader.provision.execute"
-LOCAL_READER_SETTLEMENT_PHASE = "local-reader.provision.settlement"
-
-
-class LocalReaderProvisionAction(StrEnum):
-    """What one local-reader action does with a model already installed; neither downloads anything.
-
-    Load makes the running program hold a model in memory; verify measures it.
-    Installing, starting and removing belong to the native component engine.
-    """
-
-    LOAD = "load"
-    VERIFY = "verify"
-
-
-class LocalReaderProvisionRequest(CredentialFreeOperationRequest):
-    """One local-reader action, over one role's model, a named model, or every role's.
-
-    ``output_language`` is the language a licence advisory is written in, so
-    the frontend that asked reads it in its own; the host's language applies
-    when it is absent.
-    """
-
-    action: LocalReaderProvisionAction
-    role: ModelRole | None = None
-    model: str | None = Field(default=None, min_length=1, max_length=256)
-    output_language: OutputLanguage | None = None
-
-
-def _request(
-    action: LocalReaderProvisionAction,
-    *,
-    role: ModelRole | None = None,
-    model: str | None = None,
-    output_language: OutputLanguage | None = None,
-) -> OperationRequest[LocalReaderProvisionRequest]:
-    return OperationRequest(
-        definition_id=LOCAL_READER_OPERATION_DEFINITION_ID,
-        subject_ref=LOCAL_READER_OPERATION_SUBJECT,
-        payload=LocalReaderProvisionRequest(action=action, role=role, model=model, output_language=output_language),
-    )
-
-
-def build_local_reader_load_request(
-    role: ModelRole | None = None,
-    model: str | None = None,
-    *,
-    output_language: OutputLanguage | None = None,
-) -> OperationRequest[LocalReaderProvisionRequest]:
-    """Build the request that loads ``role``'s model, a named model, or every role's model."""
-    return _request(LocalReaderProvisionAction.LOAD, role=role, model=model, output_language=output_language)
-
-
-class LocalReaderModelOutcome(BaseModel):
-    """What happened to one model, or to one role whose selection refused.
-
-    ``already_satisfied`` marks a model that needed nothing, such as one
-    already resident for a load. ``contention`` is the measured admission
-    verdict that refused a load before anything was sent.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    model: str | None = None
-    roles: tuple[ModelRole, ...]
-    licence_advisories: tuple[str, ...] = ()
-    succeeded: bool
-    already_satisfied: bool = False
-    contention: ContentionSnapshot | None = None
-    resident: bool = False
-    answered: bool = False
-    elapsed_ms: int | None = Field(default=None, ge=0)
-    facts: Mapping[str, ProvisioningFactValue] = Field(default_factory=dict)
-    precondition_verdict: PreconditionVerdict | None = None
-
-    @property
-    def failed_condition_id(self) -> str | None:
-        """Return the refused condition, when there is one."""
-        return None if self.precondition_verdict is None else self.precondition_verdict.failed_condition_id
-
-
-class LocalReaderProvisionOutcome(BaseModel):
-    """The settled result of one local-reader action, one outcome per model in ``models``."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    action: LocalReaderProvisionAction
-    succeeded: bool
-    models: tuple[LocalReaderModelOutcome, ...] = ()
-
-    @property
-    def failed_condition_id(self) -> str | None:
-        """Return the first refused condition across the models."""
-        return next((item.failed_condition_id for item in self.models if not item.succeeded), None)
+LOCAL_READER_OPERATION_SUBJECT: Final = "local-reader:runtime"
 
 
 class LocalReaderFactV1(BaseModel):
@@ -214,14 +104,13 @@ class LocalReaderContentionV1(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    model: str = Field(min_length=1, max_length=256)
+    model: str = Field(min_length=1, max_length=MODEL_RUN_MODEL_ID_MAX_LENGTH)
     admitted: bool
     causes: tuple[ContentionCause, ...]
     required_bytes: NonNegativeInt
     free_vram_bytes: NonNegativeInt | None = None
     free_system_memory_bytes: NonNegativeInt | None = None
     shortfall_bytes: NonNegativeInt | None = None
-    unloadable_models: tuple[str, ...]
     facts: tuple[LocalReaderFactV1, ...]
     verdict_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
     verdict_facts: tuple[LocalReaderFactV1, ...]
@@ -239,73 +128,7 @@ def project_local_reader_contention(snapshot: ContentionSnapshot | None) -> Loca
         free_vram_bytes=snapshot.free_vram_bytes,
         free_system_memory_bytes=snapshot.free_system_memory_bytes,
         shortfall_bytes=snapshot.shortfall_bytes,
-        unloadable_models=snapshot.unloadable_models,
         facts=local_reader_public_facts(snapshot.facts),
         verdict_condition_id=local_reader_verdict_condition(snapshot.precondition_verdict),
         verdict_facts=local_reader_verdict_facts(snapshot.precondition_verdict),
-    )
-
-
-class LocalReaderModelOutcomeV3(BaseModel):
-    """Public projection of one model outcome."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    model: str | None = Field(default=None, min_length=1, max_length=256)
-    roles: tuple[ModelRole, ...]
-    licence_advisories: tuple[str, ...] = ()
-    succeeded: bool
-    already_satisfied: bool
-    contention: LocalReaderContentionV1 | None = None
-    resident: bool
-    answered: bool
-    elapsed_ms: NonNegativeInt | None = None
-    failed_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
-    facts: tuple[LocalReaderFactV1, ...]
-    verdict_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
-    verdict_facts: tuple[LocalReaderFactV1, ...]
-
-
-class LocalReaderProvisionPublicResultV3(BaseModel):
-    """Public projection of a settled provisioning operation."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    action: LocalReaderProvisionAction
-    succeeded: bool
-    failed_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
-    models: tuple[LocalReaderModelOutcomeV3, ...]
-
-
-def _project_model(item: LocalReaderModelOutcome) -> LocalReaderModelOutcomeV3:
-    return LocalReaderModelOutcomeV3(
-        model=item.model,
-        roles=item.roles,
-        licence_advisories=item.licence_advisories,
-        succeeded=item.succeeded,
-        already_satisfied=item.already_satisfied,
-        contention=project_local_reader_contention(item.contention),
-        resident=item.resident,
-        answered=item.answered,
-        elapsed_ms=item.elapsed_ms,
-        failed_condition_id=item.failed_condition_id,
-        facts=local_reader_public_facts(item.facts),
-        verdict_condition_id=local_reader_verdict_condition(item.precondition_verdict),
-        verdict_facts=local_reader_verdict_facts(item.precondition_verdict),
-    )
-
-
-def project_local_reader_result(result: BaseModel, terminal_receipt: OperationTerminalReceipt) -> BaseModel:
-    """Project a settled operation outcome into its credential-free public result."""
-    del terminal_receipt
-    return local_reader_public_result(LocalReaderProvisionOutcome.model_validate(result, strict=True))
-
-
-def local_reader_public_result(outcome: LocalReaderProvisionOutcome) -> LocalReaderProvisionPublicResultV3:
-    """Return the public result of one provisioning outcome, whichever caller ran it."""
-    return LocalReaderProvisionPublicResultV3(
-        action=outcome.action,
-        succeeded=outcome.succeeded,
-        failed_condition_id=outcome.failed_condition_id,
-        models=tuple(_project_model(item) for item in outcome.models),
     )

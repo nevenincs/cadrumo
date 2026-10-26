@@ -27,7 +27,7 @@ from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPo
 from .....application.ledger.llm_classification import saturate_llm_classification
 from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSaturatedSuggestion
 from .....core.config import load_settings
-from .....core.model_catalogue import ModelRole
+from .....core.model_roles import ModelRole
 from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
 )

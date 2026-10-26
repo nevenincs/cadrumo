@@ -51,7 +51,7 @@ def test_a_removal_declares_the_component_storage_it_deletes_from_and_no_network
     assert policy.destructive
 
 
-@pytest.mark.parametrize("leaf", ["status", "probe", "verify", "setup", "browser", "pull", "report", "load", "remove"])
+@pytest.mark.parametrize("leaf", ["status", "probe", "verify", "setup", "browser", "pull", "report", "remove"])
 def test_only_the_component_leaves_run_without_a_profile_session(leaf: str) -> None:
     profile_free = command_is_profile_free(COMMAND_GRAPH.spec(f"config_provision_{leaf}"))
 
@@ -62,7 +62,8 @@ def test_the_local_ai_server_has_no_start_leaf_because_the_manager_runs_it() -> 
     leaves = {node.path[-1] for node in COMMAND_GRAPH.nodes() if node.path[1:3] == ("config", "provision")}
 
     assert "start" not in leaves
-    assert {"status", "setup", "verify", "remove", "load", "report"} <= leaves
+    assert {"status", "setup", "verify", "remove", "report"} <= leaves
+    assert "load" not in leaves, "the local reader loads no model directly"
 
 
 def test_the_local_ai_setup_takes_no_model_of_the_operators_choosing() -> None:

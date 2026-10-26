@@ -163,7 +163,7 @@ from ...core.config import Settings, load_settings, override_settings
 from ...core.config_support import LLMProvider
 from ...core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...core.image_media_type import ImageMediaType
-from ...core.model_catalogue import ModelRole
+from ...core.model_roles import ModelRole
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.operator_action_enums import NoRecoveryOutcome
@@ -350,7 +350,7 @@ _REQUEST_TYPES = frozenset(
         "cadrumo.adapters.outbound.llm.providers.base.ProviderRequest",
     }
 )
-_MODEL_ROLE = "cadrumo.core.model_catalogue.ModelRole"
+_MODEL_ROLE = "cadrumo.core.model_roles.ModelRole"
 
 #: Modules that dispatch to the local AI on purpose, and why that is not a feature consuming it.
 _EXEMPT_DISPATCH_MODULES: Mapping[str, str] = {
@@ -1210,7 +1210,7 @@ def test_discovery_finds_a_new_local_ai_consumer_that_has_no_row(tmp_path: Path)
     modules = _write_tree(
         tmp_path,
         {
-            "core/model_catalogue.py": "class ModelRole:\n    TEXT_EXTRACTION = 'text_extraction'\n",
+            "core/model_roles.py": "class ModelRole:\n    TEXT_EXTRACTION = 'text_extraction'\n",
             "adapters/outbound/llm/models.py": "class LLMRequest:\n    pass\n",
             "adapters/outbound/llm/client.py": """
                 from .providers.base import ProviderRequest
@@ -1218,7 +1218,7 @@ def test_discovery_finds_a_new_local_ai_consumer_that_has_no_row(tmp_path: Path)
                     return ProviderRequest()
             """,
             "adapters/outbound/llm/fixture_reader.py": """
-                from ....core.model_catalogue import ModelRole
+                from ....core.model_roles import ModelRole
                 from .models import LLMRequest
 
                 class FixtureReader:
