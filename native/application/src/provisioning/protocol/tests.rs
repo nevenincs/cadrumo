@@ -16,12 +16,12 @@ use crate::provisioning::{
             launchable_archives,
         },
     },
-    engine::EngineConfig,
+    engine::{EngineConfig, Outcome},
     items::{Locations, QUICK_CHECK_BUDGET},
     local_ai::{
         fake_ollama::FakeOllama,
         hardware::Hardware,
-        models::{LocalModels, SelectedModel},
+        models::{LocalModels, ModelName, SelectedModel},
         program::{SERVER_RECORD, SERVER_RECORD_SCHEMA, ServerRecord},
     },
     pins::{ComponentPins, Platform},
@@ -1470,6 +1470,62 @@ fn the_role_as_it_ships_reports_the_local_ai_but_never_provisions_it() {
             .len(),
         0,
         "no model was pulled"
+    );
+}
+
+#[test]
+fn the_desktop_engine_removes_one_model_and_keeps_the_program_and_the_rest() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::local_ai(&text, &vision);
+    let models = world.root().join("models/ollama");
+    let store = |stored: &StoredModel, name: &str| {
+        for (path, bytes) in stored.files(&models, name) {
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(path, bytes).unwrap();
+        }
+    };
+    let remaining = |stored: &StoredModel, name: &str| {
+        stored
+            .files(&models, name)
+            .iter()
+            .filter(|(path, _)| path.exists())
+            .count()
+    };
+    store(&text, TEXT);
+    store(&vision, VISION);
+    let receipt = world.root().join("components/receipts/local_ai.json");
+    fs::create_dir_all(receipt.parent().unwrap()).unwrap();
+    fs::write(&receipt, b"{}").unwrap();
+    let name = ModelName::parse(TEXT).unwrap();
+    let engine = |admitted: Option<Vec<(String, String, u64)>>| {
+        child_engine(&ChildConfig {
+            admitted,
+            ..world.config(&[])
+        })
+        .unwrap()
+    };
+
+    let refused = engine(None).remove_model(&name, &mut |_| {});
+    assert_eq!(
+        (refused.outcome, refused.item),
+        (Outcome::Refused, Some(ItemId::LocalAi)),
+        "an engine the desktop did not admit removes no model"
+    );
+    assert_eq!(remaining(&text, TEXT), 3);
+
+    let mut phases = Vec::new();
+    let removed = engine(world.admitted.clone()).remove_model(&name, &mut |event| {
+        phases.push(event_value(event));
+    });
+    assert_eq!(removed.outcome, Outcome::Removed, "{:?}", removed.failure);
+    assert_eq!(removed.items, [ItemId::LocalAi]);
+    assert_eq!(remaining(&text, TEXT), 0);
+    assert_eq!(remaining(&vision, VISION), 3, "every other model stays");
+    assert!(receipt.is_file(), "the local AI's receipt stays");
+    assert!(
+        phases.iter().any(|event| event["type"] == "phase"),
+        "the removal runs under the local AI's writer: {phases:?}"
     );
 }
 

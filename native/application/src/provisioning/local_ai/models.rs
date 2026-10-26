@@ -372,17 +372,28 @@ impl Models {
     /// layer that no manifest left there uses. A model kept beside them keeps its layers,
     /// and when any kept manifest cannot be read, every layer stays.
     pub fn remove(&self) -> Result<(), Error> {
+        self.remove_manifests(
+            &self
+                .selection
+                .as_slice()
+                .iter()
+                .map(|model| model.name.manifest_path(&self.root))
+                .collect(),
+        )
+    }
+
+    /// Removes the model `name` alone, selected or not, under the same rule as
+    /// [`Self::remove`]: every other model and the layers it uses stay.
+    pub fn remove_named(&self, name: &ModelName) -> Result<(), Error> {
+        self.remove_manifests(&BTreeSet::from([name.manifest_path(&self.root)]))
+    }
+
+    fn remove_manifests(&self, selected: &BTreeSet<PathBuf>) -> Result<(), Error> {
         let manifests = self.root.join("manifests");
         filesystem::refuse_links(&manifests)?;
         if std::fs::symlink_metadata(&manifests).is_err() {
             return Ok(());
         }
-        let selected: BTreeSet<PathBuf> = self
-            .selection
-            .as_slice()
-            .iter()
-            .map(|model| model.name.manifest_path(&self.root))
-            .collect();
         let mut released = BTreeSet::new();
         let mut kept = BTreeSet::new();
         let mut unreadable = false;

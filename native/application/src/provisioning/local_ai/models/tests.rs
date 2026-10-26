@@ -820,3 +820,65 @@ fn removal_takes_the_selected_models_and_only_the_layers_nothing_else_uses() {
     fs::remove_dir_all(&root).unwrap();
     fixture.models.remove().unwrap();
 }
+
+#[test]
+fn a_named_model_is_removed_alone_and_the_layers_others_use_stay() {
+    let fixture = fixture();
+    let root = fixture.models_root();
+    fixture.text.write(&root, TEXT);
+    fixture.vision.write(&root, VISION);
+    // A third model, outside any selection, shares the text model's config layer.
+    let shared = &fixture.text.blobs[0];
+    let other = root.join("manifests/registry.ollama.ai/library/other/latest");
+    fs::create_dir_all(other.parent().unwrap()).unwrap();
+    let other_manifest = json!({
+        "schemaVersion": 2,
+        "config": { "digest": shared.0, "size": shared.1.len() },
+        "layers": [],
+    })
+    .to_string();
+    fs::write(&other, &other_manifest).unwrap();
+    let remaining = |stored: &Stored, name: &str| {
+        stored
+            .files(&root, name)
+            .into_iter()
+            .filter(|(path, _)| path.exists())
+            .count()
+    };
+    let unselected = Models::new(LocalModels::default(), root.clone());
+
+    unselected
+        .remove_named(&ModelName::parse(TEXT).unwrap())
+        .unwrap();
+    assert_eq!(
+        remaining(&fixture.text, TEXT),
+        1,
+        "only the layer another model uses stays"
+    );
+    assert_eq!(
+        remaining(&fixture.vision, VISION),
+        4,
+        "every other model stays"
+    );
+    assert!(other.is_file());
+
+    fixture.text.write(&root, TEXT);
+    fs::write(&other, b"{").unwrap();
+    unselected
+        .remove_named(&ModelName::parse(TEXT).unwrap())
+        .unwrap();
+    assert_eq!(
+        remaining(&fixture.text, TEXT),
+        3,
+        "an unreadable kept manifest keeps every layer"
+    );
+
+    unselected
+        .remove_named(&ModelName::parse("synthetic-absent:test").unwrap())
+        .unwrap();
+    assert_eq!(
+        remaining(&fixture.vision, VISION),
+        4,
+        "a model not stored removes nothing"
+    );
+}

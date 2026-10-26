@@ -61,7 +61,7 @@ use super::{
     local_ai::{
         self, LocalAiError,
         hardware::Hardware,
-        models::{LocalModels, Models, Pull},
+        models::{LocalModels, ModelName, Models, Pull},
         program::{Program, START_BUDGET, Server},
     },
     network::{self, HOST_TIMEOUT, Reachability},
@@ -719,6 +719,41 @@ impl Engine {
         Report {
             items: removed,
             ..Report::new(Outcome::Removed, self.quick_rows(&ItemId::ALL))
+        }
+    }
+
+    /// Removes the local model `name` alone, under the local AI's writer lock: its
+    /// manifest and each layer no other stored model uses, keeping the program, its
+    /// receipt and every other model. The desktop clears the roles that selected it
+    /// first, so the local AI's row then reads from the remaining selection. Only an
+    /// engine admitted to provision the local AI removes one; any other is refused.
+    pub fn remove_model(&mut self, name: &ModelName, events: &mut dyn FnMut(Event)) -> Report {
+        let item = ItemId::LocalAi;
+        if let Some(refusal) = self.read_only_refusal(&[item]) {
+            return refusal;
+        }
+        let sink = Sink::new(events);
+        let observer = |step| sink.emit(Event::Phase { item, step });
+        let removed = self
+            .activity
+            .begin_observed(item, SetupStep::Cleanup, &observer)
+            .map_err(Stop::from)
+            .and_then(|writer| {
+                let models =
+                    Models::new(LocalModels::default(), self.config.locations.models.clone());
+                let outcome = models.remove_named(name).map_err(Stop::from);
+                finish(writer, outcome)
+            });
+        let rows = self.quick_rows(&ItemId::ALL);
+        match removed {
+            Ok(()) => Report {
+                items: vec![item],
+                ..Report::new(Outcome::Removed, rows)
+            },
+            Err(Stop::Busy) => Report::new(Outcome::Busy, rows).for_item(item, None),
+            Err(Stop::Failed(category)) => {
+                Report::new(Outcome::Failed, rows).for_item(item, Some(category))
+            }
         }
     }
 
