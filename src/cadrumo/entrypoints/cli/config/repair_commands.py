@@ -12,7 +12,6 @@ from ....adapters.outbound.aeat.browser.connectivity import (
     probe_browser_connectivity as _probe_browser_connectivity,
 )
 from ....application.connectivity_probe import probe_connectivity as _probe_connectivity
-from ....application.diagnostic_models import DiagnosticCheck
 from ....application.diagnostics import (
     build_config_repair_report as _build_config_repair_report,
 )
@@ -44,7 +43,6 @@ from ..common import emit_envelope, resolve_cli_precondition_action
 from .connectivity_rendering import render_browser_connectivity_text as _render_browser_connectivity_text
 
 if TYPE_CHECKING:
-    from ....application.dependency_contracts import DependencyStatusRow
     from ....application.diagnostic_models import SecureObjectIntegrityReport
     from ....application.workflow.events import WorkflowStateResetFingerprint
 
@@ -55,13 +53,11 @@ def repair(ctx: typer.Context) -> None:
         return
     from cadrumo_client.commands.payloads import ConfigRepairResult
 
+    from ...diagnostics_repair_composition import read_component_setup_checks
     from ..state_projection_support import diagnostics_ports
-    from .check_cli import read_setup_rows
 
-    setup_rows = read_setup_rows()
-    report = _build_config_repair_report(
-        ports=diagnostics_ports(ctx), setup_checks=[_setup_check(row) for row in setup_rows or ()]
-    )
+    setup_checks = read_component_setup_checks()
+    report = _build_config_repair_report(ports=diagnostics_ports(ctx), setup_checks=setup_checks or ())
     document = _repair_report_document(report, resolve_action=resolve_cli_precondition_action)
     result = strict_round_trip(ConfigRepairResult, document)
     emit_envelope(
@@ -69,48 +65,8 @@ def repair(ctx: typer.Context) -> None:
         command="config.repair",
         result=result,
         lines=_render_config_repair_text(report).splitlines(),
-        notices=() if setup_rows is not None else (_setup_status_notice(),),
+        notices=() if setup_checks is not None else (_setup_status_notice(),),
     )
-
-
-def _setup_check(row: DependencyStatusRow) -> DiagnosticCheck:
-    """Grade one row the component engine reported: ready is ok, anything else a warning naming its button."""
-    from ....application.dependency_contracts import DependencyState
-    from ....application.dependency_registry import dependency_item_declarations
-    from ....application.dependency_wording import dependency_held_sentence
-    from ....application.diagnostic_models import (
-        DiagnosticStatus,
-        diagnostic_action_verdict,
-        diagnostic_no_recovery_verdict,
-    )
-    from ....core.operator_action_enums import NoRecoveryOutcome
-
-    declaration = next(
-        declaration for declaration in dependency_item_declarations() if declaration.item_id == row.item_id
-    )
-    name = f"setup.{row.item_id}"
-    summary = dependency_held_sentence(row, declaration)
-    if row.state is DependencyState.READY:
-        return DiagnosticCheck(name=name, status=DiagnosticStatus.OK, summary=summary)
-    values: dict[str, str | bool | int] = {"item": row.item_id, "state": row.state.value}
-    reason = row.failure_category or row.blocked_reason or row.stale_reason
-    if reason is not None:
-        values["reason"] = reason.value
-    condition_id = "diagnostics.setup.item_usable"
-    evidence_id = f"{condition_id}.observation"
-    verdict = (
-        diagnostic_no_recovery_verdict(
-            condition_id=condition_id,
-            evidence_id=evidence_id,
-            values=values,
-            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-        )
-        if row.recovery_action_id is None
-        else diagnostic_action_verdict(
-            condition_id=condition_id, evidence_id=evidence_id, values=values, action_id=row.recovery_action_id
-        )
-    )
-    return DiagnosticCheck(name=name, status=DiagnosticStatus.WARN, summary=summary, precondition_verdict=verdict)
 
 
 def _setup_status_notice() -> Notice:
