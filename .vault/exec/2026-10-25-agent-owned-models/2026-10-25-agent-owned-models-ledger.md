@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a4b8c9a590561f1b5db9dd0c5ea8d6b8f6a9726905ad3fbcddc74f9fba59a95'
+body_hash: 'sha256:a0833b813e606f77520231ee8b4345db6fa671ddc5520513af26fcf965a633a3'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1252,6 +1252,50 @@ related:
 - `S22` `M` `src/cadrumo/locales/hu/common.yml`
 - `S22` `verify:` `uv run --no-sync pytest -n 0 -m '' dev/locales/tests/test_desktop_chrome.py dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_python_provisioning.py: all passed` -> `pass`
 - `S27` `by:` `vaultspec-high-executor`
+- `S31` `M` `dev/docs/sequences/golden_store.py`
+- `S31` `M` `dev/quality/tests/test_no_model_definitions.py`
+- `S31` `M` `docs/technical/articles/014-llm-dispatch-consent-and-invoice-reading-pipeline.md`
+- `S31` `M` `docs/technical/articles/015-llm-provider-adapters-and-google-drive-storage.md`
+- `S31` `M` `docs/technical/articles/028-runtime-admission-canonical-state-and-storage-route-policy.md`
+- `S31` `M` `docs/technical/articles/029-installed-workbench-generations-and-workstation-checks.md`
+- `S31` `M` `docs/technical/articles/112-settings-storage-routing-corpus-citations-and-credentials.md`
+- `S31` `M` `docs/technical/topics/core-authority-and-shared-controls.md`
+- `S31` `M` `docs/technical/topics/external-integrations-and-local-runtime.md`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/preconditions.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/providers/base.py`
+- `S31` `R` `src/cadrumo/adapters/outbound/llm/tests/_arena_fixtures.py` -> `src/cadrumo/adapters/outbound/llm/tests/_client_process_state.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/tests/test_no_cloud_fallback_on_degradation.py`
+- `S31` `D` `src/cadrumo/adapters/outbound/llm/tests/test_on_host_inference_admission.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/tests/test_shared_rate_limit_pacing.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/tests/test_transport_retry_policy.py`
+- `S31` `M` `src/cadrumo/adapters/persistence/storage/tests/test_extraction_draft_store.py`
+- `S31` `M` `src/cadrumo/application/ledger/invoice_draft_extraction.py`
+- `S31` `M` `src/cadrumo/application/ledger/tests/test_batch_ingest.py`
+- `S31` `M` `src/cadrumo/application/ledger/tests/test_evidence_ingestion_operation.py`
+- `S31` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_operation_dtos.py`
+- `S31` `M` `src/cadrumo/application/ledger/tests/test_invoice_label_reader.py`
+- `S31` `M` `src/cadrumo/core/errors/registry/_adapters_part2.py`
+- `S31` `M` `src/cadrumo/core/errors/registry/_application_part3a2.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/_evidence_field_notices.py`
+- `S31` `M` `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_draft.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_evidence_draft_label_reading.py`
+- `S31` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S31` `M` `src/cadrumo/locales/ca/common.yml`
+- `S31` `M` `src/cadrumo/locales/en/cli.yml`
+- `S31` `M` `src/cadrumo/locales/en/common.yml`
+- `S31` `M` `src/cadrumo/locales/es/cli.yml`
+- `S31` `M` `src/cadrumo/locales/es/common.yml`
+- `S31` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S31` `M` `src/cadrumo/locales/hu/common.yml`
+- `S31` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_runtime_workstation_check_native.py`
+- `S31` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_evidence_review_label_reading_cli.py`
+- `S31` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_ledger_evidence_draft_row.py`
+- `S31` `verify:` `pytest focused llm/ledger/runtime-host unit tests` -> `pass`
+- `S31` `verify:` `ruff check . and ruff format --check .` -> `pass`
+- `S31` `verify:` `just check-types` -> `pass`
+- `S31` `verify:` `operation_contract_manifest.generate --check` -> `pass`
+- `S31` `by:` `implementer-high`
 
 ## Notes
 
@@ -1337,3 +1381,4 @@ related:
 - `S27` a2486bbf53 also carries P04.S22's `downloaded_not_loaded` locale removal in the shared catalogues
 - `S22` Locale part of the `downloaded_not_loaded` removal: the `desktop_chrome.py` declared family and key and the `desktop.setup.note.downloaded_not_loaded` leaf in four common.yml catalogues were committed by the orchestrator in a2486bbf53, together with another agent's reader-panel keys. No `downloaded_not_loaded` token remains in src, dev, native or docs at HEAD.
 - `S27` Re-run at a2486bbf53 with the shared catalogues committed: `dev/locales/tests/test_audit.py` has 11 passed and 2 failed, `test_committed_catalogues_follow_contextual_product_identity_contract` and `test_committed_catalogues_pass_production_audit.` Both fail only on manager.audit(): `errors.refused.refused_unread_setting` is missing and four `*_busy_refused` keys are extra, because other sessions' uncommitted edits to core/errors/registry, adapters/outbound/llm/errors.py and `core/unread_settings.py` add and remove the code that names them. All key-set assertions of the identity gate pass.
+- `S31` The `refused_llm_busy` and `canonical_invoice_draft_reader_busy_refused` error strings and the capabilities.py docstring reference stay for a follow-up: another session holds uncommitted hunks in those shared files.
